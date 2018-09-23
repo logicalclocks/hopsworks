@@ -43,11 +43,11 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('ProjectCtrl', ['$scope', '$rootScope', '$location', '$routeParams', '$route', '$timeout', 'UtilsService',
+        .controller('ProjectCtrl', ['$scope', '$rootScope', '$location', '$routeParams', '$route',  '$window', 'UtilsService',
           'growl', 'ProjectService', 'AuthService', 'ModalService', 'ActivityService', '$cookies', 'DataSetService', 'EndpointService',
           'UserService', 'TourService', 'PythonDepsService', 'StorageService', 'CertService', 'VariablesService', 'FileSaver', 'Blob',
           'AirflowService',
-          function ($scope, $rootScope, $location, $routeParams, $route, $timeout, UtilsService, growl, ProjectService, AuthService,
+          function ($scope, $rootScope, $location, $routeParams, $route, $window, UtilsService, growl, ProjectService, AuthService,
                   ModalService, ActivityService, $cookies, DataSetService, EndpointService, UserService, TourService, PythonDepsService,
                   StorageService, CertService, VariablesService, FileSaver, Blob, AirflowService) {
 
@@ -772,6 +772,18 @@ angular.module('hopsWorksApp')
             };
 
 
+            self.purgeAirflowDagsLocal = function () {
+              AirflowService.purgeAirflowDagsLocal(self.projectId).then(
+                      function (success) {
+                        growl.success(success.data.successMessage,
+                                {title: 'Success', ttl: 1000});
+
+                      }, function (error) {
+                growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+
+              });              
+            };
+            
             self.copyFromHdfs = function () {
               
               AirflowService.copyFromHdfsToAirflow(self.projectId).then(
@@ -788,11 +800,12 @@ angular.module('hopsWorksApp')
             self.copyToHdfs = function () {
               AirflowService.copyFromAirflowToHdfs(self.projectId).then(
                       function (success) {
-                        growl.success(success.data.successMessage,
-                                {title: 'Success', ttl: 1000});
+                        growl.success("Copied from $AIRFLOW_HOME/dags to Resources/airflow/dags", 
+                        {title: 'Success', ttl: 1000});
 
                       }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                growl.error("Problem copying from $AIRFLOW_HOME/dags to Resources/airflow/dags", 
+                {title: 'Error', ttl: 5000});
 
               });
             };

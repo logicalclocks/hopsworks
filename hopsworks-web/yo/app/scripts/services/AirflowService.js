@@ -23,11 +23,14 @@
 angular.module('hopsWorksApp')
         .factory('AirflowService', ['$http', function ($http) {
             return {
+              purgeAirflowDagsLocal: function (projectId) {
+                return $http.get('/api/project/' + projectId + '/airflow/purgeAirflowDagsLocal');
+              },
               copyFromHdfsToAirflow: function (projectId) {
-                return $http.get('/api/project/' + projectId + '/airflow/copyFromAirflowToHdfs');
+                return $http.get('/api/project/' + projectId + '/airflow/copyFromHdfsToAirflow');
               },
               copyFromAirflowToHdfs: function (projectId) {
-                return $http.get('/api/project/' + projectId + '/airflow/copyToAirflowFromHdfs');
+                return $http.get('/api/project/' + projectId + '/airflow/copyFromAirflowToHdfs');
               }
 
             };
