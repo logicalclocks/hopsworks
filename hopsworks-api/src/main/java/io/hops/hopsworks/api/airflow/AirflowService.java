@@ -16,6 +16,7 @@
  */
 package io.hops.hopsworks.api.airflow;
 
+import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
@@ -60,6 +61,8 @@ public class AirflowService {
   private Integer projectId;
   // No @EJB annotation for Project, it's injected explicitly in ProjectService.
   private Project project;
+  
+  private static enum AirflowOp { TO_HDFS, FROM_HDFS, PURGE_LOCAL };
 
   public AirflowService() {
   }
@@ -74,32 +77,45 @@ public class AirflowService {
   }
 
   @GET
+  @Path("purgeAirflowDagsLocal")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  public Response purgeAirflowDagsLocal(@Context HttpServletRequest req) {
+    Users user = userFacade.findByEmail(req.getRemoteUser());
+    String projectUsername = hdfsUsersController.getHdfsUserName(project, user);
+    copyHdfsAirflow(AirflowOp.PURGE_LOCAL, projectUsername);
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
+  }
+  
+  @GET
   @Path("copyFromAirflowToHdfs")
-  @Produces(MediaType.TEXT_PLAIN)
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response copyFromAirflowToHdfs(@Context HttpServletRequest req) {
     Users user = userFacade.findByEmail(req.getRemoteUser());
     String projectUsername = hdfsUsersController.getHdfsUserName(project, user);
-    copyHdfsAirflow(false, projectUsername);
+    copyHdfsAirflow(AirflowOp.TO_HDFS, projectUsername);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 
   @GET
   @Path("copyToAirflowFromHdfs")
-  @Produces(MediaType.TEXT_PLAIN)
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response copyToAirflowFromHdfs(@Context HttpServletRequest req) {
     Users user = userFacade.findByEmail(req.getRemoteUser());
     String projectUsername = hdfsUsersController.getHdfsUserName(project, user);
-    copyHdfsAirflow(true, projectUsername);
+    copyHdfsAirflow(AirflowOp.FROM_HDFS, projectUsername);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
 
   }
 
-  public boolean copyHdfsAirflow(boolean toHdfs, String projectUsername) {
+  public boolean copyHdfsAirflow(AirflowOp op, String projectUsername) {
 
     try {
       String script = settings.getHopsworksDomainDir() + "/bin/copyHdfsAirflow.sh";
-      String copyCommand = toHdfs ? "toHdfs" : "fromHdfs";
-
+      String copyCommand = op.toString();
+      
       String[] command = {script, copyCommand, project.getName(), projectUsername};
 
       ProcessBuilder ps = new ProcessBuilder(command);
