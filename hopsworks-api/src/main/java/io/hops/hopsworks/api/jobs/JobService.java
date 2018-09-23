@@ -516,9 +516,43 @@ public class JobService {
             + appId + "/prox/" + trackingUrl;
         urls.add(new YarnAppUrlsDTO("spark", trackingUrl));
       }
-      urls.addAll(getTensorBoardUrls(hdfsUser, appId));
     } catch (Exception e) {
       LOGGER.log(Level.SEVERE, "exception while geting job ui " + e.
+          getLocalizedMessage(), e);
+    }
+
+    GenericEntity<List<YarnAppUrlsDTO>> listUrls = new GenericEntity<List<YarnAppUrlsDTO>>(urls) { };
+
+    return noCacheResponse.getNoCacheResponseBuilder(response)
+        .entity(listUrls).build();
+  }
+
+  /**
+   * Get the Job UI url for the specified job
+   * <p>
+   * @param appId
+   * @param sc
+   * @return url
+   * @throws AppException
+   */
+  @GET
+  @Path("/{appId}/tensorboard")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  public Response getTensorBoardUrls(@PathParam("appId") String appId,
+                                     @Context SecurityContext sc) throws AppException {
+    Response noAccess = checkAccessRight(appId);
+    if (noAccess != null) {
+      return noAccess;
+    }
+    Response.Status response = Response.Status.OK;
+    List<YarnAppUrlsDTO> urls = new ArrayList<>();
+    String hdfsUser = getHdfsUser(sc);
+
+    try {
+      urls.addAll(getTensorBoardUrls(hdfsUser, appId));
+    } catch (Exception e) {
+      LOGGER.log(Level.SEVERE, "Exception while getting TensorBoard endpoints" + e.
           getLocalizedMessage(), e);
     }
 

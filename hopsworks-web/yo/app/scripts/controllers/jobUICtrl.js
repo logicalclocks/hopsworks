@@ -63,6 +63,7 @@ angular.module('hopsWorksApp')
             self.loading = false;
             self.loadingText = "";
             self.sessions = [];
+            self.tbUrls = [];
             self.session;
             self.tfExecutorId;
 
@@ -339,6 +340,25 @@ angular.module('hopsWorksApp')
 //            }, 5000);
 //
 //          }]);
+
+            var getTensorBoardUrls = function () {
+              JobService.getTensorBoardUrls(self.projectId, self.appId).then(
+                      function (success) {
+                        self.tbUrls = success.data;
+                      }, function (error) {
+                growl.error(error.data.errorMsg, {title: 'Error fetching TensorBoard urls.', ttl: 15000});
+                stopLoading();
+              });
+            };
+
+            getTensorBoardUrls();
+
+            var startPolling = function() {
+                self.poller = $interval(function() {
+                    getTensorBoardUrls();
+                }, 7000);
+            };
+            startPolling();
 
             angular.module('hopsWorksApp').directive('bindHtmlUnsafe', function ($parse, $compile) {
               return function ($scope, $element, $attrs) {
