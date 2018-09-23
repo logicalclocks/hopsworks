@@ -46,11 +46,11 @@ angular.module('hopsWorksApp')
         .controller('MainCtrl', ['$interval', '$http', '$cookies', '$location', '$scope', '$rootScope',
           'AuthService', 'UtilsService', 'ElasticService', 'DelaProjectService',
           'DelaService', 'md5', 'ModalService', 'ProjectService', 'growl',
-          'MessageService', '$routeParams', '$window', 'HopssiteService', 'BannerService',
+          'MessageService', '$routeParams', '$window', 'HopssiteService', 'BannerService', 'AirflowService',
           function ($interval, $http, $cookies, $location, $scope, $rootScope, AuthService, UtilsService,
                   ElasticService, DelaProjectService, DelaService, md5, ModalService,
                   ProjectService, growl,
-                  MessageService, $routeParams, $window, HopssiteService, BannerService) {
+                  MessageService, $routeParams, $window, HopssiteService, BannerService, AirflowService) {
             const MIN_SEARCH_TERM_LEN = 2;
             var self = this;
 
@@ -461,18 +461,18 @@ angular.module('hopsWorksApp')
             self.connectToAirflow = function () {
 
 //              $http.get('http://localhost:12358/hopsworks-api/airflow').then(function (response) {
-                // store the token in the local storage for further use
+              // store the token in the local storage for further use
 //                var _csrf_token = response.headers('X-CSRFToken');
 //              var _csrf_token = csrf_token();
-                var username = 'admin';
-                var password = 'admin';
-                self.ui = "/hopsworks-api/airflow/";
+              var username = 'admin';
+              var password = 'admin';
+              self.ui = "/hopsworks-api/airflow/";
 //                login?q=username=" + username +
 //                        "&password=" + password;
 //                + "&_csrf_token=" + _csrf_token;
-                
+
 //                xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token() }}");
-                self.openWindow();
+              self.openWindow();
 
 //              });
             };
@@ -480,10 +480,27 @@ angular.module('hopsWorksApp')
 
             self.copyFromHdfs = function () {
               
+              AirflowService.copyFromHdfsToAirflow().then(
+                      function (success) {
+                        growl.success(success.data.successMessage,
+                                {title: 'Success', ttl: 1000});
+
+                      }, function (error) {
+                growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+
+              });
             };
-            
+
             self.copyToHdfs = function () {
-              
+              AirflowService.copyFromAirflowToHdfs().then(
+                      function (success) {
+                        growl.success(success.data.successMessage,
+                                {title: 'Success', ttl: 1000});
+
+                      }, function (error) {
+                growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+
+              });
             };
 
 
