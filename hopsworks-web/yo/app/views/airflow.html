@@ -20,34 +20,34 @@
   <div ng-include="'nav.html'"></div>
 
 
-  <div id="wrapper" class="toggled">
+  <div id="wrapper" class="toggled" ng-controller="ProjectCtrl as projectCtrl">
     <div class="overlay"></div>
 
     <div ng-include="'navProject.html'"></div>
     <div class="job-content-wrapper">
       <h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.projectName}} / Jobs</h3>
     </div>
-    <div class="">
+    <div class="" >
       <!-- Page Content -->
       <div class="content" style="overflow: hidden; margin-top: 50px;" >
 
         <div class="row" style="margin-top: 40px">
-          <div class="col-sm-2 col-md-2 col-lg-2" >
+          <div class="col-sm-1 col-md-1 col-lg-1" >
             <img class="pull-left" style="margin-left:20px;" height="40" width="40" src="images/airflow-200x198.png"/>
           </div>
 
-          <div class="col-sm-6 col-md-2 col-md-offset-1">
-            <button class="btn btn-success active" ng-click="mainCtrl.connectToAirflow()" type="button" id="newAirflow">
+          <div class="col-sm-6 col-md-2">
+            <button class="btn btn-success active" ng-click="projectCtrl.connectToAirflow()" type="button" id="newAirflow">
               Connect to Airflow
             </button>
           </div>
           <div class="col-sm-6 col-md-2 col-md-offset-1">
-            <button class="btn btn-primary active" ng-click="mainCtrl.copyToHdfs()" type="button" id="cpAirflowToHdfs">
+            <button class="btn btn-primary active" ng-click="projectCtrl.copyToHdfs()" type="button" id="cpAirflowToHdfs">
               Copy Airflow Dags -> HDFS
             </button>
           </div>
           <div class="col-sm-6 col-md-2 col-md-offset-1">
-            <button class="btn btn-primary active" ng-click="mainCtrl.copyfromHdfs()" type="button" id="cpAirflowToHdfs">
+            <button class="btn btn-primary active" ng-click="projectCtrl.copyfromHdfs()" type="button" id="cpAirflowToHdfs">
               Copy HDFS Dags -> Airflow 
             </button>
           </div>

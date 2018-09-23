@@ -46,9 +46,10 @@ angular.module('hopsWorksApp')
         .controller('ProjectCtrl', ['$scope', '$rootScope', '$location', '$routeParams', '$route', '$timeout', 'UtilsService',
           'growl', 'ProjectService', 'AuthService', 'ModalService', 'ActivityService', '$cookies', 'DataSetService', 'EndpointService',
           'UserService', 'TourService', 'PythonDepsService', 'StorageService', 'CertService', 'VariablesService', 'FileSaver', 'Blob',
+          'AirflowService',
           function ($scope, $rootScope, $location, $routeParams, $route, $timeout, UtilsService, growl, ProjectService, AuthService,
                   ModalService, ActivityService, $cookies, DataSetService, EndpointService, UserService, TourService, PythonDepsService,
-                  StorageService, CertService, VariablesService, FileSaver, Blob) {
+                  StorageService, CertService, VariablesService, FileSaver, Blob, AirflowService) {
 
             var self = this;
             self.loadedView = false;
@@ -93,11 +94,10 @@ angular.module('hopsWorksApp')
             // We could instead implement a service to get all the available types but this will do it for now
             if ($rootScope.isDelaEnabled) {
               // , 'RSTUDIO'
-              self.projectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'AIRFLOW', 'DELA', 'SERVING'];
+              self.projectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'DELA', 'SERVING', 'EXPERIMENTS'];
             } else {
-              self.projectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'AIRFLOW', 'SERVING'];
+              self.projectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'SERVING', 'EXPERIMENTS'];
             }
-
             $scope.activeService = "home";
 
             self.alreadyChoosenServices = [];
@@ -116,6 +116,7 @@ angular.module('hopsWorksApp')
             $scope.$on('$viewContentLoaded', function () {
               self.loadedView = true;
             });
+
 
 
             var getEndpoint = function () {
@@ -201,10 +202,23 @@ angular.module('hopsWorksApp')
                         });
 
                         // Remove already choosen services from the service selection
+                        // Check if airflow there already.
+                        var foundAirflow = false;
                         self.alreadyChoosenServices.forEach(function (entry) {
                           var index = self.projectTypes.indexOf(entry.toUpperCase());
                           self.projectTypes.splice(index, 1);
+                          if (entry.toUpperCase() === "AIRFLOW") {
+                            foundAirflow = true;
+                          }
                         });
+                        if (!foundAirflow) {
+                          AuthService.isAdmin().then(
+                                  function (success) {
+                                    self.projectTypes.push('AIRFLOW');
+                                  }, function (error) {
+                          });
+                        }
+
 
                         $cookies.put("projectID", self.projectId);
                         //set the project name under which the search is performed
@@ -535,7 +549,7 @@ angular.module('hopsWorksApp')
             };
 
             self.showAirflow = function () {
-              return showService("Airflow") && self.isAdmin();
+              return showService("Airflow");
             };
 
             self.showRStudio = function () {
@@ -733,18 +747,56 @@ angular.module('hopsWorksApp')
             };
             getVersions();
 
-           var checkeIsAdmin = function () {
-              AuthService.isAdmin().then(
+
+            self.openWindow = function () {
+              $window.open(self.ui, '_blank');
+            }
+
+            self.connectToAirflow = function () {
+
+//              $http.get('http://localhost:12358/hopsworks-api/airflow').then(function (response) {
+              // store the token in the local storage for further use
+//                var _csrf_token = response.headers('X-CSRFToken');
+//              var _csrf_token = csrf_token();
+              var username = 'admin';
+              var password = 'admin';
+              self.ui = "/hopsworks-api/airflow/";
+//                login?q=username=" + username +
+//                        "&password=" + password;
+//                + "&_csrf_token=" + _csrf_token;
+
+//                xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token() }}");
+              self.openWindow();
+
+//              });
+            };
+
+
+            self.copyFromHdfs = function () {
+              
+              AirflowService.copyFromHdfsToAirflow(self.projectId).then(
                       function (success) {
-                        $cookies.put("isAdmin", success.data === 'true');
+                        growl.success(success.data.successMessage,
+                                {title: 'Success', ttl: 1000});
+
                       }, function (error) {
-                $cookies.put("isAdmin", false);
+                growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+
               });
             };
-            checkeIsAdmin();
-            self.isAdmin = function () {
-              return $cookies.get('isAdmin');
+
+            self.copyToHdfs = function () {
+              AirflowService.copyFromAirflowToHdfs(self.projectId).then(
+                      function (success) {
+                        growl.success(success.data.successMessage,
+                                {title: 'Success', ttl: 1000});
+
+                      }, function (error) {
+                growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+
+              });
             };
+
 
 
 

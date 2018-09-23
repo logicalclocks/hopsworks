@@ -62,11 +62,11 @@ angular.module('hopsWorksApp')
             self.projectTeam = [];
             if ($rootScope.isDelaEnabled) {
               // , 'RSTUDIO'
-              self.projectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'AIRFLOW', 'DELA', 'SERVING', 'EXPERIMENTS'];
-              self.selectionProjectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'AIRFLOW', 'DELA', 'SERVING', 'EXPERIMENTS'];
+              self.projectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'DELA', 'SERVING', 'EXPERIMENTS'];
+              self.selectionProjectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'DELA', 'SERVING', 'EXPERIMENTS'];
             } else {
-              self.projectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE','AIRFLOW', 'SERVING', 'EXPERIMENTS'];
-              self.selectionProjectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'AIRFLOW', 'SERVING', 'EXPERIMENTS'];
+              self.projectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'SERVING', 'EXPERIMENTS'];
+              self.selectionProjectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'SERVING', 'EXPERIMENTS'];
             }
 
             self.projectName = '';
