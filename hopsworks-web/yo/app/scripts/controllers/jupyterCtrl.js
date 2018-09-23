@@ -55,7 +55,7 @@ angular.module('hopsWorksApp')
             self.projectName;
             self.toggleValue = false;
             self.tourService = TourService;
-            self.tourService.currentStep_TourEight = 0;
+            self.tourService.currentStep_TourEight = -1;
             self.projectId = $routeParams.projectID;
             var statusMsgs = ['stopped    ', "running    ", 'stopping...', 'restarting...'];
             self.ui = "";
@@ -506,7 +506,8 @@ angular.module('hopsWorksApp')
                         timeToShutdown();
                     },
                     function(error) {
-                        self.val.shutdownLevel = 4;
+                        self.val.shutdownLevel = 6;
+                        self.tourService.currentStep_TourEight = 0;
                         // nothing to do
                     }
                 );
@@ -812,8 +813,8 @@ angular.module('hopsWorksApp')
                         if (self.tourService.currentStep_TourEight == 8 || self.tourService.currentStep_TourEight == 9) {
                             self.tourService.currentStep_TourEight = 10;
                         } else {
-                                                      self.tourService.currentStep_TourEight = -1;
-                                                  }
+                            self.tourService.currentStep_TourEight = -1;
+                        }
                         if (error.data !== undefined && error.status === 404) {
                             growl.error("Anaconda not enabled yet - retry starting Jupyter again in a few seconds.", {
                                 title: 'Error',
@@ -846,6 +847,5 @@ angular.module('hopsWorksApp')
                 );
 
             };
-
         }
     ]);
