@@ -369,7 +369,9 @@ angular.module('hopsWorksApp')
               // If not running, start a new instance
 
 //              http://localhost:8080/hopsworks/#!/project/1/settings
-
+             if (self.tourService.currentStep_TourTwo > -1) {
+                self.tourService.resetTours();
+              }
 
 //              if (self.currentProject.projectName.startsWith("demo_tensorflow")) {
 //                self.goToUrl('jupyter');

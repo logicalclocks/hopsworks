@@ -719,7 +719,7 @@
                      ng-if="projectCtrl.loadedView && projectCtrl.tourService.activeTour === 'deep_learning'
           && (projectCtrl.tourService.informAndTips
               || projectCtrl.tourService.tipsOnly) && !jupyterCtrl.loading &&
-              !(self.ui !=='' && (self.tourService.currentStep_TourEight >= 1 ||  self.tourService.currentStep_TourEight <= 10))">
+              !(self.ui !=='' && (self.tourService.currentStep_TourEight >= 0 ||  self.tourService.currentStep_TourEight <= 10))">
         <virtual-step
                       class="ng-scope"
                       tourtip="Before starting Jupyter you need to select an appropriate mode depending on what type of job you intend to run. The 'Experiment' option should be selected as this tour will explain how to run plain non-distributed TensorFlow code."
@@ -841,7 +841,7 @@
                 tourtip-step="13"
                 tourtip-element="#datasetsTab"
                 tourtip-placement="right"
-                tourtip-next-label="Finish The Tour"
+                tourtip-next-label="Next"
                 tourtip-offset-vertical="-15"
                 on-proceed=""
         ></virtual-step>
@@ -851,7 +851,7 @@
                 tourtip-step="14"
                 tourtip-element="#pythonTab"
                 tourtip-placement="right"
-                tourtip-next-label="Finish The Tour"
+                tourtip-next-label="Next"
                 tourtip-offset-vertical="-15"
                 on-proceed=""
         ></virtual-step>
