@@ -611,9 +611,8 @@ angular.module('hopsWorksApp')
             self.openWindow = function() {
                 $window.open(self.ui, '_blank');
                 timeToShutdown();
-                console.log(self.tourService.currentStep_TourEight);
-                if (self.tourService.currentStep_TourEight == 10) {
-                    self.tourService.currentStep_TourEight = 11;
+                if (self.tourService.currentStep_TourEight == 8) {
+                    self.tourService.currentStep_TourEight = 9;
                 }
             }
 
@@ -803,15 +802,15 @@ angular.module('hopsWorksApp')
                         $window.open(self.ui, '_blank');
                         $timeout(stopLoading(), 5000);
                         timeToShutdown();
-                        if (self.tourService.currentStep_TourEight == 8 || self.tourService.currentStep_TourEight == 9) {
-                            self.tourService.currentStep_TourEight = 10;
+                        if (self.tourService.currentStep_TourEight == 6 || self.tourService.currentStep_TourEight == 7) {
+                            self.tourService.currentStep_TourEight = 8;
                         } else {
                             self.tourService.currentStep_TourEight = -1;
                         }
                     },
                     function(error) {
-                        if (self.tourService.currentStep_TourEight == 8 || self.tourService.currentStep_TourEight == 9) {
-                            self.tourService.currentStep_TourEight = 10;
+                        if (self.tourService.currentStep_TourEight == 6 || self.tourService.currentStep_TourEight == 7) {
+                            self.tourService.currentStep_TourEight = 8;
                         } else {
                             self.tourService.currentStep_TourEight = -1;
                         }
