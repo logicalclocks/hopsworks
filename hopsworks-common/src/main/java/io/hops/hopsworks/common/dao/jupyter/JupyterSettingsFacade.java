@@ -50,8 +50,8 @@ import org.apache.commons.codec.digest.DigestUtils;
 
 /**
  * The jupyter_settings table stores the most recent configuration settings from the user's Hopsworks UI.
- * That is, what version did the user pick (tensorflow, dynamic/static spark, horovod, TfOnSpark, etc)
- * How many executors (CPU/Memory/GPus), etc...
+ * That is, what version did the user pick (tensorflow, dynamic/static spark, etc)
+ * How many executors (CPU/Memory/GPUs), etc...
  */
 @Stateless
 public class JupyterSettingsFacade {
