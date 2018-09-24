@@ -489,14 +489,6 @@ angular.module('hopsWorksApp')
                 $location.path('/#!/project/' + self.projectId + '/jupyter');
             };
 
-            self.maybeHorovodTour = function(clusterUtilCtrl) {
-                if (clusterUtilCtrl.allocatedGPUs !== 0 || clusterUtilCtrl.availableGPUs !== 0) {
-                    self.tourService.currentStep_TourEight = 4;
-                } else {
-                    self.tourService.currentStep_TourEight = 5;
-                }
-            };
-
             var init = function() {
                 JupyterService.running(self.projectId).then(
                     function(success) {

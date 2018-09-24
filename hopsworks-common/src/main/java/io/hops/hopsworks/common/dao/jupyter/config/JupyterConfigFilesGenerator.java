@@ -629,7 +629,8 @@ public class JupyterConfigFilesGenerator {
 
       sparkMagicParams.put("spark.shuffle.service.enabled", new ConfigProperty("", HopsUtils.IGNORE, "true"));
 
-      sparkMagicParams.put("spark.submit.deployMode", new ConfigProperty("", HopsUtils.IGNORE, "cluster"));
+      sparkMagicParams.put("spark.submit.deployMode", new ConfigProperty("", HopsUtils.IGNORE,
+          "cluster"));
 
       sparkMagicParams.put("spark.tensorflow.application", new ConfigProperty(
           "spark_tensorflow_application", HopsUtils.IGNORE,
@@ -641,10 +642,8 @@ public class JupyterConfigFilesGenerator {
 
       sparkMagicParams.put("spark.executor.gpus", new ConfigProperty(
           "spark_executor_gpus", HopsUtils.IGNORE,
-          (isDistributedTraining || isParallelExperiment || isExperiment) ? Integer.toString(js.getNumExecutorGpus()): "0"));
-
-      sparkMagicParams.put("spark.driver.gpus", new ConfigProperty( "spark_driver_gpus", HopsUtils.IGNORE,
-          (isExperiment) ? Integer.toString(js.getNumDriverGpus()) : "0"));
+          (isDistributedTraining || isParallelExperiment || isExperiment) ? Integer.toString(js.getNumExecutorGpus()):
+              "0"));
 
       sparkMagicParams.put("spark.dynamicAllocation.enabled", new ConfigProperty(
           "spark_dynamicAllocation_enabled", HopsUtils.OVERWRITE,
