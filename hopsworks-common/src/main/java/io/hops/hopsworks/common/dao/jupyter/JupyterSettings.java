@@ -288,6 +288,9 @@ public class JupyterSettings implements Serializable {
   @Transient  
   private String baseDir = "/Jupyter/";
 
+  @Transient
+  private String distributionStrategy;
+
   public JupyterSettings() {
   }
 
@@ -579,4 +582,11 @@ public class JupyterSettings implements Serializable {
     this.faultTolerant = faultTolerant;
   }
 
+  public String getDistributionStrategy() {
+    return distributionStrategy;
+  }
+
+  public void setDistributionStrategy(String distributionStrategy) {
+    this.distributionStrategy = distributionStrategy;
+  }
 }

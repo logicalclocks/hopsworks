@@ -96,6 +96,16 @@ angular.module('hopsWorksApp')
             }];
             self.logLevelSelected;
 
+            self.distribution_strategies = [{
+                id: 1,
+                name: 'CollectiveAllReduceStrategy'
+            }, {
+                id: 2,
+                name: 'ParameterServerStrategy'
+            }];
+
+            self.distributionStrategySelected;
+
             self.shutdown_levels = [{
                 id: 1,
                 name: '1'
@@ -121,11 +131,6 @@ angular.module('hopsWorksApp')
             self.shutdownLevelSelected;
             self.timeLeftInMinutes = 0;
             self.addShutdownHours;
-
-            self.openTFDoc = function() {
-                $window.open('http://hops.readthedocs.io/en/latest/user_guide/hopsworks/tensorflow.html', '_blank');
-            };
-
 
             //  (Group/World readable, not writable)
             //  (Group readable and writable)
@@ -163,6 +168,10 @@ angular.module('hopsWorksApp')
 
             self.changeLogLevel = function() {
                 self.val.logLevel = self.logLevelSelected.name;
+            };
+
+            self.changeDistributionStrategy = function() {
+                self.val.distributionStrategy = self.distributionStrategySelected.name;
             };
 
             self.changeShutdownLevel = function() {

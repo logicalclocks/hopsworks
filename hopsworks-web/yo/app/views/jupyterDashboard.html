@@ -140,7 +140,7 @@
                              id="distributedTraining">
                       Distributed Training
                       <i class="fa fa-info-circle" 
-                         uib-tooltip="Distributed Training."
+                         uib-tooltip="Distributed Training using CollectiveAllReduceStrategy, ParameterServerStrategy and MirroredStrategy is configured here."
                           tooltip-placement="right" style="margin-left: 10px">
                       </i>
                     </label>
@@ -201,6 +201,25 @@
                     <div class="text-right col-md-4">AppMaster memory (MB)<i class="fa fa-info-circle" uib-tooltip="The amount of memory, in MB, that should be requested for the Yarn Application Master container. 1024 MB is more than sufficient for most cases." style="margin-left: 10px"></i></div>
                     <div class="col-md-2 jupyter-left">
                       <input type="number" step="1" ng-model="jupyterCtrl.val.appmasterMemory" min="1024" class="form-control">
+                    </div>
+                  </div>
+                </div>
+                <div class="row" ng-if="jupyterCtrl.val.mode === 'distributedTraining'">
+                  <div class="row clusterparams">
+                    <div class="text-right col-md-4">DistributionStrategy <i class="fa fa-info-circle"
+                                                                  uib-tooltip="Pick your DistributionStrategy"
+                                                                  style="margin-left: 10px"></i>
+                    </div>
+                    <div class="col-md-2 jupyter-left">
+                      <ui-select ng-model="jupyterCtrl.distributionStrategySelected" theme="bootstrap"
+                                 on-select="jupyterCtrl.changeDistributionStrategy()">
+                        <ui-select-match >
+                          <span ng-bind="jupyterCtrl.distributionStrategySelected.name"></span>
+                        </ui-select-match>
+                        <ui-select-choices repeat="strategy in (jupyterCtrl.distribution_strategies | filter: $select.search) track by level.strategy">
+                          <span ng-bind="strategy.name | highlight: $select.search"></span>
+                        </ui-select-choices>
+                      </ui-select>
                     </div>
                   </div>
                 </div>
