@@ -440,6 +440,7 @@ public class JupyterConfigFilesGenerator {
       sparkMagicParams.put("driverMemory", new ConfigProperty("driver_memory", HopsUtils.IGNORE,
           Integer.toString(js.getAppmasterMemory()) + "m"));
       sparkMagicParams.put("numExecutors", new ConfigProperty("num_executors", HopsUtils.IGNORE,
+          (isExperiment)? "1":
               (isDistributedTraining) ? Integer.toString(js.getNumExecutors() + js.getNumTfPs()):
                   (isSparkDynamic) ? Integer.toString(js.getDynamicMinExecutors()):
                       Integer.toString(js.getNumExecutors())));
@@ -662,7 +663,8 @@ public class JupyterConfigFilesGenerator {
 
       sparkMagicParams.put("spark.dynamicAllocation.maxExecutors", new ConfigProperty(
           "spark_dynamicAllocation_maxExecutors", HopsUtils.OVERWRITE,
-          (isExperiment || isParallelExperiment) ? Integer.toString(js.getNumExecutors()) :
+          (isExperiment) ? "1":
+          (isParallelExperiment) ? Integer.toString(js.getNumExecutors()) :
                   (isDistributedTraining) ? Integer.toString(js.getNumExecutors() + js.getNumTfPs()) :
                   Integer.toString(js.getDynamicMaxExecutors())));
 

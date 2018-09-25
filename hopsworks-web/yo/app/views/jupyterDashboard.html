@@ -80,7 +80,7 @@
             </div>
 
             <div class="col-sm-2 col-md-2 col-lg-2" style="margin-top:-20px;" ng-if="jupyterCtrl.ui === ''">
-              <button class="btn btn-success active" ng-click="jupyterCtrl.start()" type="button" id="newNotebook">
+              <button class="btn btn-success active" ng-click="jupyterCtrl.start()" type="button" id="newNotebook" style="width:90px;">
                 Start
               </button>
             </div>
@@ -340,7 +340,7 @@
                     <div class="col-md-2 jupyter-left"><input type="number" ng-init="0"  ng-model="jupyterCtrl.val.numDriverGpus" min="0" class="form-control"></div>
                   </div>
                 </div>
-                <div class="row" ng-if="jupyterCtrl.val.mode === 'parallelexperiments'" >
+                <div class="row" ng-if="jupyterCtrl.val.mode === 'parallelexperiments' || jupyterCtrl.val.mode === 'experiment'" >
                   <div class="row clusterparams">
                     <div class="text-right col-md-4">Fault-tolerant mode<i class="fa fa-info-circle"
                                                                            uib-tooltip="Whether to retry on failure and enable machine/executor blacklisting. This setting should be disabled during development and enabled during training."

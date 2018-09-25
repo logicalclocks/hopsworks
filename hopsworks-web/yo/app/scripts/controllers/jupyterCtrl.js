@@ -797,7 +797,7 @@ angular.module('hopsWorksApp')
                     function(success) {
                         self.toggleValue = true;
                         self.config = success.data;
-                        growl.info("Started Notebook server! Will shut down the notebook server and any running applications in  " + self.val.shutdownLevelSelected + " hours.", {
+                        growl.info("Started Notebook server! Will shut down the notebook server and any running applications in  " + self.shutdownLevelSelected.name + " hours.", {
                             title: 'Info',
                             ttl: 20000
                         });
