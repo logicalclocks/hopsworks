@@ -264,7 +264,7 @@ angular.module('hopsWorksApp')
                 self.val.numDriverGpus = 0;
             }
 
-            self.setTfExecutor = function() {
+            self.setMultiExecutor = function() {
                 // If leaving TF Driver mode, change default executor memory to 4096
                 self.val.executorMemory = 4096;
                 self.val.appmasterMemory = 1024;
@@ -273,17 +273,17 @@ angular.module('hopsWorksApp')
                 self.val.numExecutors = 2;
             };
 
-            self.setTfDriver = function() {
+            self.setSingleExecutor = function() {
                 // For TF in Driver mode, we set the minimal number of executors and
                 // minimal amount of memory and fix a single core for the Driver.
-                self.val.appmasterMemory = 4096;
+                self.val.appmasterMemory = 1024;
                 self.val.appmasterCores = 1;
                 self.val.numExecutorCores = 1;
                 self.val.numExecutorGpus = 0;
                 self.val.numDriverGpus = 0;
                 self.val.numExecutors = 1;
                 // 128MB is hard-coded in hops-hadoop/templates/../yarn-site.xml
-                self.val.executorMemory = 1024;
+                self.val.executorMemory = 4096;
             };
             self.showLivyUI = function(appId) {
                 self.job.type = "TENSORFLOW";
@@ -561,6 +561,8 @@ angular.module('hopsWorksApp')
                         } else {
                             self.logLevelSelected = self.log_levels[2];
                         }
+
+                        self.distributionStrategySelected = self.distribution_strategies[0]
 
                         if (self.val.shutdownLevel <= "1") {
                             self.shutdownLevelSelected = self.shutdown_levels[0];

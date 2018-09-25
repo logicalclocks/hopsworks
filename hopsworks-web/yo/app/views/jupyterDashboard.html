@@ -119,7 +119,7 @@
                 <div class="col-md-8" style="margin-left: 10px; margin-top:-10px;">
                   <div class="btn-group blocks" style="padding: 10px;" ng-if="jupyterCtrl.ui === ''">
                     <label class="btn btn-primary" id="experimentLabel">
-                      <input class="active" type="radio" value="experiment" ng-click="jupyterCtrl.setTfDriver();"
+                      <input class="active" type="radio" value="experiment" ng-click="jupyterCtrl.setSingleExecutor();"
                              data-ng-model="jupyterCtrl.val.mode" id="experiment">
                       Experiment
                       <i class="fa fa-info-circle"
@@ -128,7 +128,7 @@
                       </i>
                     </label>
                     <label class="btn btn-primary" id="parallelExperimentLabel">
-                      <input type="radio" value="parallelexperiments" ng-click="jupyterCtrl.setTfExecutor();" data-ng-model="jupyterCtrl.val.mode" id="parallelexperiments">
+                      <input type="radio" value="parallelexperiments" ng-click="jupyterCtrl.setMultiExecutor();" data-ng-model="jupyterCtrl.val.mode" id="parallelexperiments">
                       Parallel Experiments
                       <i class="fa fa-info-circle" 
                          uib-tooltip="Used for for parallel hyperparameter optimization. Use the hops python library to run grid search or differential evolution on PySpark Executors, each with 1 CPU and up to N GPUs per Executor."
@@ -136,7 +136,7 @@
                       </i>
                     </label>
                     <label class="btn btn-primary" id="distributedTrainingLabel">
-                      <input type="radio" name="distributedTraining" value="distributedTraining" ng-click="jupyterCtrl.setTfExecutor();" data-ng-model="jupyterCtrl.val.mode"
+                      <input type="radio" name="distributedTraining" value="distributedTraining" ng-click="jupyterCtrl.setMultiExecutor();" data-ng-model="jupyterCtrl.val.mode"
                              id="distributedTraining">
                       Distributed Training
                       <i class="fa fa-info-circle" 
@@ -204,25 +204,6 @@
                     </div>
                   </div>
                 </div>
-                <div class="row" ng-if="jupyterCtrl.val.mode === 'distributedTraining'">
-                  <div class="row clusterparams">
-                    <div class="text-right col-md-4">DistributionStrategy <i class="fa fa-info-circle"
-                                                                  uib-tooltip="Pick your DistributionStrategy"
-                                                                  style="margin-left: 10px"></i>
-                    </div>
-                    <div class="col-md-2 jupyter-left">
-                      <ui-select ng-model="jupyterCtrl.distributionStrategySelected" theme="bootstrap"
-                                 on-select="jupyterCtrl.changeDistributionStrategy()">
-                        <ui-select-match >
-                          <span ng-bind="jupyterCtrl.distributionStrategySelected.name"></span>
-                        </ui-select-match>
-                        <ui-select-choices repeat="strategy in (jupyterCtrl.distribution_strategies | filter: $select.search) track by level.strategy">
-                          <span ng-bind="strategy.name | highlight: $select.search"></span>
-                        </ui-select-choices>
-                      </ui-select>
-                    </div>
-                  </div>
-                </div>
                 <div class="row" ng-if="jupyterCtrl.val.mode === 'sparkstatic' || jupyterCtrl.val.mode === 'sparkdynamic'">
                   <div class="row clusterparams">
                     <div class="text-right col-md-4">AppMaster virtual cores<i class="fa fa-info-circle" uib-tooltip="The number of virtual cores that should be requested for the Yarn Application Master container." style="margin-left: 10px"></i></div>
@@ -231,8 +212,27 @@
                     </div>
                   </div>
                 </div>
+                  <div class="row" ng-if="jupyterCtrl.val.mode === 'distributedTraining'">
+                      <div class="row clusterparams">
+                          <div class="text-right col-md-4">DistributionStrategy <i class="fa fa-info-circle"
+                                                                                   uib-tooltip="Pick your DistributionStrategy"
+                                                                                   style="margin-left: 10px"></i>
+                          </div>
+                          <div class="col-md-2 jupyter-left">
+                              <ui-select ng-model="jupyterCtrl.distributionStrategySelected" theme="bootstrap"
+                                         on-select="jupyterCtrl.changeDistributionStrategy()">
+                                  <ui-select-match >
+                                      <span ng-bind="jupyterCtrl.distributionStrategySelected.name"></span>
+                                  </ui-select-match>
+                                  <ui-select-choices repeat="strategy in (jupyterCtrl.distribution_strategies | filter: $select.search) track by strategy.name">
+                                      <span ng-bind="strategy.name | highlight: $select.search"></span>
+                                  </ui-select-choices>
+                              </ui-select>
+                          </div>
+                      </div>
+                  </div>
 
-                <div class="row" ng-if="jupyterCtrl.val.mode === 'distributedTraining'">
+                <div class="row" ng-show="jupyterCtrl.val.mode === 'distributedTraining' && jupyterCtrl.val.distributionStrategy === 'ParameterServerStrategy'">
                   <div class="row clusterparams">
                     <div class="text-right col-md-4">Parameter servers <i class="fa fa-info-circle"
                                                                           uib-tooltip="Number of parameter servers in Distributed TensorFlow."

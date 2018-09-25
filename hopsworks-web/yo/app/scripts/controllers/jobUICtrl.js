@@ -346,8 +346,6 @@ angular.module('hopsWorksApp')
                       function (success) {
                         self.tbUrls = success.data;
                       }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Error fetching TensorBoard urls.', ttl: 15000});
-                stopLoading();
               });
             };
 
