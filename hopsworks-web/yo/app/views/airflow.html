@@ -28,9 +28,10 @@
       <h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.projectName}} / Jobs</h3>
     </div>
     <!-- Page Content -->
-    <div class="content" style="overflow: hidden; margin-top: 50px;" >
+    <!--class="content"--> 
+    <div style="overflow: hidden; margin-top: 50px;" >
 
-      <div class="row" style="margin-top: 40px">
+      <div class="row" style="margin-top: 40px; height: 60px;" >
         <div class="col-sm-1 col-md-1 col-lg-1" >
           <img class="pull-left" style="margin-left:20px;" height="40" width="40" src="images/airflow-200x198.png"/>
         </div>
@@ -38,6 +39,11 @@
         <div class="col-sm-6 col-md-1">
           <button class="btn btn-success active" ng-click="projectCtrl.connectToAirflow()" type="button" id="newAirflow">
             Connect to Airflow
+          </button>
+        </div>
+        <div class="col-sm-6 col-md-1 col-md-offset-1">
+          <button class="btn btn-primary active" ng-click="projectCtrl.restartAirflow()" type="button" id="restartAirflow">
+            Restart Airflow Webserver (refresh dags)
           </button>
         </div>
 <!--        <div class="col-sm-6 col-md-1 col-md-offset-1">
@@ -56,8 +62,6 @@
           </button>
         </div>-->
       </div>
-    </div>
-    <div style="margin-top: 20px" >
       <div angular-filemanager></div>
     </div>
   </div>

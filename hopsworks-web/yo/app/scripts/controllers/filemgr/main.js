@@ -41,13 +41,13 @@
             $scope.viewTemplate = name;
         };
 
-        $scope.changeLanguage = function (locale) {
-            if (locale) {
-                $storage.setItem('language', locale);
-                return locale;
-            }
-            $storage.getItem('language') || fileManagerConfig.defaultLang;
-        };
+//        $scope.changeLanguage = function (locale) {
+//            if (locale) {
+//                $storage.setItem('language', locale);
+//                return locale;
+//            }
+//            $storage.getItem('language') || fileManagerConfig.defaultLang;
+//        };
 
         $scope.isSelected = function(item) {
             return $scope.temps.indexOf(item) !== -1;
@@ -357,7 +357,7 @@
             return found[0] && found[0].split('=')[1] || undefined;
         };
 
-        $scope.changeLanguage(getQueryParam('lang'));
+//        $scope.changeLanguage(getQueryParam('lang'));
         $scope.isWindows = getQueryParam('server') === 'Windows';
         $scope.fileNavigator.refresh();
 
