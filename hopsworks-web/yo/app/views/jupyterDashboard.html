@@ -81,7 +81,7 @@
 
             <div class="col-sm-2 col-md-2 col-lg-2" style="margin-top:-20px;" ng-if="jupyterCtrl.ui === ''">
               <button class="btn btn-success active" ng-click="jupyterCtrl.start()" type="button" id="newNotebook">
-                Start Jupyter
+                Start
               </button>
             </div>
             <div class="col-sm-2 col-md-2 col-lg-2 " style="margin-top:-17px; margin-left: 15px;"  ng-if="jupyterCtrl.ui === ''">
@@ -719,7 +719,7 @@
         ></virtual-step>
         <virtual-step
                       class="ng-scope"
-                      tourtip="Distributed Training using CollectiveAllReduceStrategy, ParameterServerStrategy and MirroredStrategy is configured here."
+                      tourtip="Distributed Training using CollectiveAllReduceStrategy and ParameterServerStrategy is configured here."
                       tourtip-step="2"
                       tourtip-element="#distributedTraining"
                       tourtip-placement="bottom"
@@ -728,7 +728,7 @@
               ></virtual-step>
         <virtual-step
                 class="ng-scope"
-                tourtip="If you intend to run Spark MLlib or any other Spark-only code with static executors, use this configuration."
+                tourtip="If you want to run Spark with static executors, use this configuration."
                 tourtip-step="3"
                 tourtip-element="#sparkStaticLabel"
                 tourtip-placement="bottom"
@@ -737,7 +737,7 @@
         ></virtual-step>
         <virtual-step
                 class="ng-scope"
-                tourtip="Or if you would like a dynamic number of executors pick this option."
+                tourtip="Or if you would like a dynamic number of executors pick this mode."
                 tourtip-step="4"
                 tourtip-element="#sparkDynamicLabel"
                 tourtip-placement="bottom"
@@ -746,7 +746,7 @@
         ></virtual-step>
         <virtual-step
                       class="ng-scope"
-                      tourtip="For each mode there are several configuration options which are important to understand, see the tooltip for each configuration option. A common adjustment is that the configured memory for the AppMaster or the Executors needs to be increased. If an application uses more memory than configured it will be killed."
+                      tourtip="These configuration options are important to understand as they define the behaviour of the application, for example setting the application memory."
                       tourtip-step="5"
                       tourtip-element="#configOptions"
                       tourtip-placement="left"
@@ -756,11 +756,11 @@
               ></virtual-step>
         <virtual-step
                       class="ng-scope"
-                      tourtip="Click 'Start Jupyter' to start a personal Jupyter Notebook server for your user in this project for the given configuration. To change the configuration you need to restart the Jupyter notebook server."
+                      tourtip="Click 'Start' to start a Jupyter Notebook server for your user in this project for the given configuration. To change the configuration you need to restart the Jupyter notebook server."
                       tourtip-step="6"
                       tourtip-element="#newNotebook"
                       tourtip-placement="bottom"
-                      tourtip-next-label="Start Jupyter"
+                      tourtip-next-label="Start"
                       on-proceed="jupyterCtrl.start();"
               ></virtual-step>
         <virtual-step
@@ -781,11 +781,11 @@
               ></virtual-step>
         <virtual-step
                 class="ng-scope"
-                tourtip="To shutdown Jupyter click this icon. Note that any running jobs that were started in Jupyter will be killed along with it."
+                tourtip="To shutdown Jupyter click this stop icon. Note that any running jobs that were started in Jupyter will be killed along with it."
                 tourtip-step="9"
                 tourtip-element="#shutdownNotebook"
                 tourtip-placement="left"
-                tourtip-next-label="I understand"
+                tourtip-next-label="Ok"
                 on-proceed=""
                 tourtip-offset-vertical="-30"
         ></virtual-step>
