@@ -102,7 +102,7 @@ public class CertificateMaterializerAdmin {
   public Response getMaterializerState(@Context SecurityContext sc, @Context HttpServletRequest request) {
   
     CertificateMaterializer.MaterializerState<Map<String, Map<String, Integer>>, Map<String, Map<String, Integer>>,
-        Map<String, Set<String>>> materializerState = certificateMaterializer.getState();
+        Map<String, Set<String>>, Map<String, Boolean>> materializerState = certificateMaterializer.getState();
     
     List<MaterializerStateResponse.CryptoMaterial> localStateResponse = createMaterializerResponse(materializerState
         .getLocalMaterial());
@@ -120,7 +120,7 @@ public class CertificateMaterializerAdmin {
     }
     
     MaterializerStateResponse responseState = new MaterializerStateResponse(localStateResponse, remoteStateResponse,
-        fileRemovalsResponse);
+        fileRemovalsResponse, materializerState.getMaterialKeyLocks());
     
     GenericEntity<MaterializerStateResponse> response = new GenericEntity<MaterializerStateResponse>(responseState){};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(response).build();
