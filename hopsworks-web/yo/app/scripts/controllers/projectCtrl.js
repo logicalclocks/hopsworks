@@ -813,8 +813,8 @@ angular.module('hopsWorksApp')
             self.restartAirflow = function () {
               AirflowService.restartAirflow(self.projectId).then(
                       function (success) {
-                        growl.success("Restarted Airflow webserver. Refreshed Airflow dags in webserver.", 
-                        {title: 'Success', ttl: 2000});
+                        growl.success("Restarted the Airflow webserver.", 
+                        {title: 'Success', ttl: 3000});
 
                       }, function (error) {
                 growl.error("Problem restarting Airflow webserver", 

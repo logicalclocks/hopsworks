@@ -336,7 +336,7 @@ div#filemgr .main {
   div#filemgr .container-fluid1 {
     height: -webkit-calc(100% - 58px);
     height: -moz-calc(100% - 58px);
-    height: calc(88px);
+    height: calc(58px);
   }
   
   div#filemgr .container-fluid {
