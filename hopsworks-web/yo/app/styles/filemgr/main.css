@@ -329,10 +329,10 @@ div#filemgr .main {
   }
 
   /* The view should fill all available vertical space */
-  div#filemgr .div,.row,.main,.sidebar {
+  div#filemgr .div,.main,.sidebar {
     height: 100%;
   }
-
+/*.row,*/
   div#filemgr .container-fluid1 {
     height: -webkit-calc(100% - 58px);
     height: -moz-calc(100% - 58px);
