@@ -12,7 +12,7 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  *
- * Original license is MIT license Copyright with (c) 2013 joni2back. 
+ * Original license is MIT license Copyright with (c) 2013 joni2back.
  * Author Paolo Biavati https://github.com/paolobiavati
  * https://github.com/joni2back/angular-filemanager/blob/master/LICENSE
  *
@@ -70,6 +70,7 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpStatus;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -148,8 +149,8 @@ public class AngularFileManagerServlet extends HttpServlet {
   }
 
   private String REPOSITORY_BASE_PATH = "/tmp";
-  // private String DATE_FORMAT = "yyyy-MM-dd hh:mm:ss"; // (2001-07-04 12:08:56)
-  private String DATE_FORMAT = "EEE, d MMM yyyy HH:mm:ss z"; // (Wed, 4 Jul 2001 12:08:56)
+  private String DATE_FORMAT = "yyyy-MM-dd hh:mm:ss"; // (2001-07-04 12:08:56)
+//  private String DATE_FORMAT = "EEE, d MMM yyyy HH:mm:ss z"; // (Wed, 4 Jul 2001 12:08:56)
 
   @Override
   public void init() throws ServletException {
@@ -421,7 +422,13 @@ public class AngularFileManagerServlet extends HttpServlet {
 
   private JSONObject list(JSONObject params) throws ServletException {
     try {
-      boolean onlyFolders = "true".equalsIgnoreCase((String) params.get("onlyFolders"));
+      boolean onlyFolders = false;
+      try {
+        Object of = params.get("onlyFolders");
+        onlyFolders = "true".equalsIgnoreCase((String) of);
+      } catch (JSONException ex) {
+        // onlyFolders attr not found
+      }
       String path = (String) params.get("path");
       LOG.debug("list path: Paths.get('{}', '{}'), onlyFolders: {}", REPOSITORY_BASE_PATH, path, onlyFolders);
 

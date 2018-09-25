@@ -260,27 +260,7 @@
     <servlet-name>AirflowProxyServlet</servlet-name>
     <url-pattern>/airflow</url-pattern>
   </servlet-mapping>
-  <servlet>
-    <servlet-name>AngularFileManagerServlet</servlet-name>
-    <servlet-class>com.monosand.drinkout.web.servlet.AngularFileManagerServlet</servlet-class>
-    <init-param>
-      <param-name>repository.base.path</param-name>
-      <param-value>/srv/hops/airflow/plugins</param-value>
-    </init-param>
-    <init-param>
-      <param-name>date.format</param-name>
-      <param-value>yyyy-MM-dd hh:mm:ss</param-value>
-    </init-param>
-    <init-param>
-      <param-name>enabled.action</param-name>
-      <param-value>rename,move,remove,edit,createFolder,changePermissions,compress,extract,copy,upload</param-value>
-    </init-param>
-    <load-on-startup>1</load-on-startup>
-  </servlet>
-  <servlet-mapping>
-    <servlet-name>AngularFileManagerServlet</servlet-name>
-    <url-pattern>/filemanager</url-pattern>
-  </servlet-mapping>
+  
 
 
   <!-- Other servlets -->

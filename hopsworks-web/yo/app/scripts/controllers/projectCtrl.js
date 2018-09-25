@@ -810,6 +810,18 @@ angular.module('hopsWorksApp')
               });
             };
 
+            self.restartAirflow = function () {
+              AirflowService.restartAirflow(self.projectId).then(
+                      function (success) {
+                        growl.success("Restarted Airflow webserver. Refreshed Airflow dags in webserver.", 
+                        {title: 'Success', ttl: 2000});
+
+                      }, function (error) {
+                growl.error("Problem restarting Airflow webserver", 
+                {title: 'Error', ttl: 5000});
+
+              });
+            };
 
 
 

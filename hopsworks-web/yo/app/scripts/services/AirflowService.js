@@ -26,6 +26,9 @@ angular.module('hopsWorksApp')
               purgeAirflowDagsLocal: function (projectId) {
                 return $http.get('/api/project/' + projectId + '/airflow/purgeAirflowDagsLocal');
               },
+              restartAirflow: function (projectId) {
+                return $http.get('/api/project/' + projectId + '/airflow/restartWebserver');
+              },
               copyFromHdfsToAirflow: function (projectId) {
                 return $http.get('/api/project/' + projectId + '/airflow/copyFromHdfsToAirflow');
               },
