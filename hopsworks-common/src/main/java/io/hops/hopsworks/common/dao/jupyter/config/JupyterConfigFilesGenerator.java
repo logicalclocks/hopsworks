@@ -413,7 +413,7 @@ public class JupyterConfigFilesGenerator {
 
       boolean isExperiment = js.getMode().compareToIgnoreCase("experiment") == 0;
       boolean isParallelExperiment = js.getMode().compareToIgnoreCase("parallelexperiments") == 0;
-      boolean isDistributedTraining = js.getMode().compareToIgnoreCase("distributedTraining") == 0;
+      boolean isDistributedTraining = js.getMode().compareToIgnoreCase("distributedtraining") == 0;
       boolean isSparkDynamic = js.getMode().compareToIgnoreCase("sparkdynamic") == 0;
       boolean isSparkStatic = js.getMode().compareToIgnoreCase("sparkstatic") == 0;
       String extraJavaOptions = "-D" + Settings.LOGSTASH_JOB_INFO + "=" + project.getName().toLowerCase()
@@ -705,13 +705,13 @@ public class JupyterConfigFilesGenerator {
 
       sparkMagicParams.put("spark.task.maxFailures", new ConfigProperty(
               "spark_task_max_failures", HopsUtils.OVERWRITE,
-              (isParallelExperiment && js.getFaultTolerant()) ? "3" :
-                      ((isDistributedTraining || isExperiment || isParallelExperiment) ? "1" : "4")));
+              (isParallelExperiment || isExperiment && js.getFaultTolerant()) ? "3" :
+                      ((isDistributedTraining) ? "1" : "4")));
 
       // Always kill the blacklisted executors (further failures could be results of local files from the failed task)
       sparkMagicParams.put("spark.blacklist.killBlacklistedExecutors", new ConfigProperty(
               "spark_kill_blacklisted_executors", HopsUtils.OVERWRITE,
-              (isParallelExperiment) ? "true": "false"));
+              (isExperiment || isParallelExperiment) ? "true": "false"));
 
       // Merge system and user defined properties
       Map<String, String> sparkParamsAfterMerge = HopsUtils.mergeHopsworksAndUserParams(sparkMagicParams,
