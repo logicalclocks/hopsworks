@@ -414,6 +414,8 @@ public class JupyterConfigFilesGenerator {
       boolean isExperiment = js.getMode().compareToIgnoreCase("experiment") == 0;
       boolean isParallelExperiment = js.getMode().compareToIgnoreCase("parallelexperiments") == 0;
       boolean isDistributedTraining = js.getMode().compareToIgnoreCase("distributedtraining") == 0;
+      boolean isMirroredStrategy = js.getDistributionStrategy().compareToIgnoreCase("mirroredstrategy") == 0
+          && isDistributedTraining;
       boolean isSparkDynamic = js.getMode().compareToIgnoreCase("sparkdynamic") == 0;
       boolean isSparkStatic = js.getMode().compareToIgnoreCase("sparkstatic") == 0;
       String extraJavaOptions = "-D" + Settings.LOGSTASH_JOB_INFO + "=" + project.getName().toLowerCase()
@@ -652,7 +654,7 @@ public class JupyterConfigFilesGenerator {
 
       sparkMagicParams.put("spark.dynamicAllocation.initialExecutors", new ConfigProperty(
           "spark_dynamicAllocation_initialExecutors", HopsUtils.OVERWRITE,
-          (isExperiment || isParallelExperiment) ? "0" :
+          (isExperiment || isParallelExperiment || isMirroredStrategy) ? "0" :
                   (isDistributedTraining) ? Integer.toString(js.getNumExecutors() + js.getNumTfPs()) :
                   Integer.toString(js.getDynamicMinExecutors())));
 
@@ -663,7 +665,7 @@ public class JupyterConfigFilesGenerator {
 
       sparkMagicParams.put("spark.dynamicAllocation.maxExecutors", new ConfigProperty(
           "spark_dynamicAllocation_maxExecutors", HopsUtils.OVERWRITE,
-          (isExperiment) ? "1":
+          (isExperiment || isMirroredStrategy) ? "1":
           (isParallelExperiment) ? Integer.toString(js.getNumExecutors()) :
                   (isDistributedTraining) ? Integer.toString(js.getNumExecutors() + js.getNumTfPs()) :
                   Integer.toString(js.getDynamicMaxExecutors())));
@@ -707,7 +709,7 @@ public class JupyterConfigFilesGenerator {
 
       sparkMagicParams.put("spark.task.maxFailures", new ConfigProperty(
               "spark_task_max_failures", HopsUtils.OVERWRITE,
-              (isParallelExperiment || isExperiment && js.getFaultTolerant()) ? "3" :
+              ((isParallelExperiment || isExperiment) && js.getFaultTolerant()) ? "3" :
                       ((isDistributedTraining) ? "1" : "4")));
 
       // Always kill the blacklisted executors (further failures could be results of local files from the failed task)

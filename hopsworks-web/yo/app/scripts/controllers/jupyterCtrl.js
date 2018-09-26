@@ -98,9 +98,12 @@ angular.module('hopsWorksApp')
 
             self.distribution_strategies = [{
                 id: 1,
-                name: 'CollectiveAllReduceStrategy'
+                name: 'MirroredStrategy'
             }, {
                 id: 2,
+                name: 'CollectiveAllReduceStrategy'
+            }, {
+                id: 3,
                 name: 'ParameterServerStrategy'
             }];
 
@@ -562,7 +565,8 @@ angular.module('hopsWorksApp')
                             self.logLevelSelected = self.log_levels[2];
                         }
 
-                        self.distributionStrategySelected = self.distribution_strategies[0]
+                        self.distributionStrategySelected = self.distribution_strategies[0];
+                        self.val.distributionStrategy = self.distributionStrategySelected.name;
 
                         if (self.val.shutdownLevel <= "1") {
                             self.shutdownLevelSelected = self.shutdown_levels[0];

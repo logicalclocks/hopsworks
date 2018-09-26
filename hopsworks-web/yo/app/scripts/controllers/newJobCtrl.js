@@ -158,19 +158,6 @@ angular.module('hopsWorksApp')
             self.runConfig; //Will hold the job configuration
             self.sliderVisible = false;
 
-            self.sliderOptions = {
-              min: 1,
-              max: 10,
-              options: {
-                floor: 0,
-                ceil: 1500
-              },
-              getPointerColor: function (value) {
-                return '#4b91ea';
-              }
-
-            };
-
             self.refreshSlider = function () {
               $timeout(function () {
                 $scope.$broadcast('rzSliderForceRender');
@@ -194,6 +181,23 @@ angular.module('hopsWorksApp')
                         parseInt(self.sliderOptions.max);
               }
               self.runConfig.numberOfGpusPerExecutor = 0;
+            };
+
+            self.dynExecChangeListener = function() {
+                self.setInitExecs();
+            };
+
+            self.sliderOptions = {
+              min: 1,
+              max: 10,
+              options: {
+                floor: 0,
+                ceil: 1500,
+                onChange: self.dynExecChangeListener
+              },
+              getPointerColor: function (value) {
+                return '#4b91ea';
+              }
             };
 
             self.sparkState = {//Will hold spark-specific state
