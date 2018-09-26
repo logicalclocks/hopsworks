@@ -124,6 +124,7 @@ public class AirflowService {
   public boolean airflowOperation(AirflowOp op, String projectUsername) {
 
     try {
+      Logger.getLogger(AirflowService.class.getName()).log(Level.INFO, "Attempting to restart airflow webserver");
       String script = settings.getHopsworksDomainDir() + "/bin/airflowOps.sh";
       String copyCommand = op.toString();
       
@@ -140,8 +141,9 @@ public class AirflowService {
       }
       pr.waitFor();
       in.close();
+      Logger.getLogger(AirflowService.class.getName()).log(Level.INFO, "Successfully restarted airflow webserver");
     } catch (Exception ex) {
-      Logger.getLogger(AirflowService.class.getName()).log(Level.SEVERE, null, ex);
+      Logger.getLogger(AirflowService.class.getName()).log(Level.SEVERE, "Problem restarting airflow webserver", ex);
     }
     return true;
   }
