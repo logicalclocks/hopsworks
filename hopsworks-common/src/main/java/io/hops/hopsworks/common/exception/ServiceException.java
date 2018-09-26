@@ -32,4 +32,8 @@ public class ServiceException extends RESTException  {
   public ServiceException(RESTCodes.ServiceErrorCode code, String usrMsg, String devMsg) {
     super(code, usrMsg, devMsg);
   }
+  
+  public ServiceException(RESTCodes.ServiceErrorCode code, String usrMsg, String devMsg, Throwable throwable) {
+    super(code, usrMsg, devMsg, throwable);
+  }
 }

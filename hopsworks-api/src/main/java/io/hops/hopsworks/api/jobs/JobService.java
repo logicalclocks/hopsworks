@@ -1316,10 +1316,9 @@ public class JobService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response deleteJob(@PathParam("jobId") int jobId,
       @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws JobException {
+      @Context HttpServletRequest req) {
     LOGGER.log(Level.INFO, "Request to delete job");
     String loggedinemail = sc.getUserPrincipal().getName();
-    Users user = userFacade.findByEmail(loggedinemail);
     Jobs job = jobFacade.findById(jobId);
     if (job == null) {
       return noCacheResponse.

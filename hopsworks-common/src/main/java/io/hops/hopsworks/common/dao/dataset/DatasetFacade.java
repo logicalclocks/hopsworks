@@ -161,11 +161,14 @@ public class DatasetFacade extends AbstractFacade<Dataset> {
    * @return
    */
   public Dataset findByProjectAndInode(Project project, Inode inode) {
+    if(project == null || inode == null){
+      throw new IllegalArgumentException("Project and/or inode were not provided.");
+    }
     try {
       return em.createNamedQuery("Dataset.findByProjectAndInode", Dataset.class)
         .setParameter("projectId", project).setParameter(
           "inode", inode).getSingleResult();
-    } catch (Exception e) {
+    } catch (NoResultException e) {
       return null;
     }
   }

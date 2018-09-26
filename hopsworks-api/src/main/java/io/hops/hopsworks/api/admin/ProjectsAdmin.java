@@ -51,9 +51,11 @@ import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.exception.DatasetException;
 import io.hops.hopsworks.common.exception.GenericException;
+import io.hops.hopsworks.common.exception.HopsSecurityException;
 import io.hops.hopsworks.common.exception.KafkaException;
 import io.hops.hopsworks.common.exception.ProjectException;
 import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.exception.UserException;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.project.ProjectDTO;
@@ -91,7 +93,7 @@ import java.util.logging.Logger;
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ProjectsAdmin {
-  private final Logger LOGGER = Logger.getLogger(ProjectsAdmin.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(ProjectsAdmin.class.getName());
   
   @EJB
   private ProjectFacade projectFacade;
@@ -130,12 +132,13 @@ public class ProjectsAdmin {
   @Path("/projects/createas")
   public Response createProjectAsUser(@Context SecurityContext sc, @Context HttpServletRequest request,
       ProjectDTO projectDTO)
-    throws DatasetException, GenericException, KafkaException, ProjectException, UserException {
+    throws DatasetException, GenericException, KafkaException, ProjectException, UserException, ServiceException,
+    HopsSecurityException {
     String userEmail = sc.getUserPrincipal().getName();
     Users user = userFacade.findByEmail(userEmail);
     if (user == null || !user.getEmail().equals(Settings.SITE_EMAIL)) {
       LOGGER.log(Level.WARNING, "");
-      throw new UserException(RESTCodes.SecurityErrorCode.AUTHORIZATION_FAILURE,
+      throw new UserException(RESTCodes.UserErrorCode.AUTHORIZATION_FAILURE,
         "Unauthorized or unknown user tried to create a Project as another user");
     }
 
@@ -148,7 +151,7 @@ public class ProjectsAdmin {
     Users owner = userFacade.findByEmail(ownerEmail);
     if (owner == null) {
       LOGGER.log(Level.WARNING, "Owner is not in the database");
-      throw new UserException(RESTCodes.SecurityErrorCode.USER_DOES_NOT_EXIST, "user:" + ownerEmail);
+      throw new UserException(RESTCodes.UserErrorCode.USER_DOES_NOT_EXIST, "user:" + ownerEmail);
     }
 
     List<String> failedMembers = null;
@@ -221,7 +224,7 @@ public class ProjectsAdmin {
   @Consumes(MediaType.APPLICATION_JSON)
   @Path("/projects")
   public Response setProjectAdminInfo (@Context SecurityContext sc, @Context HttpServletRequest req,
-                                       ProjectAdminInfoDTO projectAdminInfoDTO) throws AppException {
+                                       ProjectAdminInfoDTO projectAdminInfoDTO) throws AppException, ProjectException {
     // for changes in space quotas we need to check that both space and ns options are not null
     QuotasDTO quotasDTO = projectAdminInfoDTO.getProjectQuotas();
     if (quotasDTO != null &&
@@ -246,7 +249,7 @@ public class ProjectsAdmin {
   @Path("/projects/{name}/force")
   @Produces(MediaType.APPLICATION_JSON)
   public Response forceDeleteProject(@Context SecurityContext sc, @Context HttpServletRequest request,
-      @PathParam("name") String projectName) throws ProjectException {
+      @PathParam("name") String projectName) {
     String userEmail = sc.getUserPrincipal().getName();
     String[] logs = projectController.forceCleanup(projectName, userEmail, request.getSession().getId());
     ProjectDeletionLog deletionLog = new ProjectDeletionLog(logs[0], logs[1]);

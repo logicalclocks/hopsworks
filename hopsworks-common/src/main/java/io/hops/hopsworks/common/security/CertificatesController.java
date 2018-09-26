@@ -43,7 +43,8 @@ import io.hops.hopsworks.common.dao.certificates.UserCerts;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.exception.HopsSecurityException;
+import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.security.HopsUtil;
@@ -57,7 +58,6 @@ import javax.ejb.TransactionAttributeType;
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
-import javax.ws.rs.core.Response;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -213,13 +213,13 @@ public class CertificatesController {
   
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public String extractCNFromCertificate(byte[] rawKeyStore, char[]
-      keyStorePwd) throws AppException {
+      keyStorePwd) throws HopsSecurityException {
     return extractCNFromCertificate(rawKeyStore, keyStorePwd, null);
   }
   
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public String extractCNFromCertificate(byte[] rawKeyStore,
-      char[] keystorePwd, String certificateAlias) throws AppException {
+      char[] keystorePwd, String certificateAlias) throws HopsSecurityException {
     try {
       
       X509Certificate certificate = getCertificateFromKeyStore(rawKeyStore, keystorePwd, certificateAlias);
@@ -235,8 +235,8 @@ public class CertificatesController {
       return cn;
     } catch (GeneralSecurityException | IOException ex) {
       LOG.log(Level.SEVERE, "Error while extracting CN from certificate", ex);
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR
-          .getStatusCode(), ex.getMessage());
+      throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_CN_EXTRACT_ERROR,
+        "certificateAlias: " + certificateAlias, ex.getMessage(), ex);
     }
   }
   

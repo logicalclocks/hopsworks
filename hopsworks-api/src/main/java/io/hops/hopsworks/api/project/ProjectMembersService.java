@@ -45,7 +45,6 @@ import io.hops.hopsworks.api.util.JsonResponse;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
-import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.exception.KafkaException;
 import io.hops.hopsworks.common.exception.ProjectException;
 import io.hops.hopsworks.common.exception.RESTCodes;
@@ -164,7 +163,7 @@ public class ProjectMembersService {
           @PathParam("email") String email,
           @FormParam("role") String role,
           @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws ProjectException, AppException {
+          @Context HttpServletRequest req) throws ProjectException, UserException {
 
     Project project = projectController.findProjectById(this.projectId);
     JsonResponse json = new JsonResponse();

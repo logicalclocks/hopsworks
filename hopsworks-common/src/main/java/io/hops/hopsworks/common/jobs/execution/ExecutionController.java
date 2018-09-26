@@ -96,7 +96,7 @@ public class ExecutionController {
   @EJB
   private ExecutionFacade execFacade;
 
-  private final static Logger LOGGER = Logger.getLogger(ExecutionController.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(ExecutionController.class.getName());
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   public Execution start(Jobs job, Users user) throws GenericException, JobException {

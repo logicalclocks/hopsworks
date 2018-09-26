@@ -21,6 +21,7 @@
 package io.hops.hopsworks.api.exception.mapper;
 
 import io.hops.hopsworks.common.exception.GenericException;
+import io.hops.hopsworks.common.exception.HopsSecurityException;
 import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.exception.RESTException;
 import io.hops.hopsworks.common.exception.ServiceException;
@@ -102,7 +103,7 @@ public class ThrowableExceptionMapper implements ExceptionMapper<Throwable> {
   
   private Response handleLoginException(LoginException ex) {
     LOGGER.log(Level.WARNING, "ThrowableExceptionMapper: " + ex.getClass(), ex);
-    return handleRESTException(new UserException(RESTCodes.SecurityErrorCode.AUTHORIZATION_FAILURE, null,
+    return handleRESTException(new UserException(RESTCodes.UserErrorCode.AUTHORIZATION_FAILURE, null,
       ex.getMessage()));
   }
   
@@ -124,8 +125,8 @@ public class ThrowableExceptionMapper implements ExceptionMapper<Throwable> {
   
   private Response handleAccessControlException(AccessControlException ex) {
     LOGGER.log(Level.WARNING, "ThrowableExceptionMapper: " + ex.getClass(), ex);
-    return handleRESTException(new UserException(RESTCodes.SecurityErrorCode.HDFS_ACCESS_CONTROL, null,
-      ex.getMessage()));
+    return handleRESTException(new HopsSecurityException(RESTCodes.SecurityErrorCode.HDFS_ACCESS_CONTROL, null,
+      ex.getMessage(), ex));
   }
   
   private Response handleRESTException(RESTException ex) {
@@ -144,7 +145,8 @@ public class ThrowableExceptionMapper implements ExceptionMapper<Throwable> {
   
   private Response handleAccessLocalException(AccessLocalException ex) {
     LOGGER.log(Level.WARNING, "ThrowableExceptionMapper: " + ex.getClass(), ex);
-    return handleRESTException(new UserException(RESTCodes.SecurityErrorCode.EJB_ACCESS_LOCAL, null, ex.getMessage()));
+    return handleRESTException(new HopsSecurityException(RESTCodes.SecurityErrorCode.EJB_ACCESS_LOCAL, null,
+      ex.getMessage()));
   }
   
 }

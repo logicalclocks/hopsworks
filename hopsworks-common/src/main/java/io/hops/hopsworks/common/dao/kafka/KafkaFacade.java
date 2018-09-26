@@ -99,7 +99,7 @@ import java.util.logging.Logger;
 @Stateless
 public class KafkaFacade {
 
-  private final static Logger LOGGER = Logger.getLogger(KafkaFacade.class.getName());
+  private static final  Logger LOGGER = Logger.getLogger(KafkaFacade.class.getName());
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
@@ -559,7 +559,7 @@ public class KafkaFacade {
       Users user = userFacade.findByEmail(userEmail);
 
       if (user == null) {
-        throw new UserException(RESTCodes.SecurityErrorCode.USER_WAS_NOT_FOUND, "user: " + userEmail);
+        throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, "user: " + userEmail);
       }
 
       String principalName = selectedProjectName + PROJECT_DELIMITER + user.getUsername();

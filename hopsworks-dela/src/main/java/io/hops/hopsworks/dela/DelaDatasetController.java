@@ -48,7 +48,7 @@ import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.FilePreviewDTO;
 import io.hops.hopsworks.common.exception.DatasetException;
-import io.hops.hopsworks.common.exception.GenericException;
+import io.hops.hopsworks.common.exception.HopsSecurityException;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.util.Settings;
@@ -69,7 +69,7 @@ import java.util.logging.Logger;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class DelaDatasetController {
 
-  private Logger logger = Logger.getLogger(DelaDatasetController.class.getName());
+  private Logger LOGGER = Logger.getLogger(DelaDatasetController.class.getName());
 
   @EJB
   private DatasetController datasetCtrl;
@@ -103,7 +103,7 @@ public class DelaDatasetController {
     Dataset dataset;
     try {
       dataset = createDataset(user, project, name, "");
-    } catch (IOException | GenericException | DatasetException e) {
+    } catch (DatasetException | HopsSecurityException e) {
       throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), e.getMessage(),
         ThirdPartyException.Source.LOCAL, "");
     }
@@ -143,7 +143,7 @@ public class DelaDatasetController {
   }
 
   public Dataset createDataset(Users user, Project project, String name, String description)
-    throws IOException, DatasetException, GenericException {
+    throws DatasetException, HopsSecurityException {
     int templateId = -1;
     boolean defaultDataset = false;
     boolean searchable = true;

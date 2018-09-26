@@ -47,9 +47,10 @@ import io.hops.hopsworks.common.dao.jupyter.JupyterSettings;
 import io.hops.hopsworks.common.dao.jupyter.JupyterSettingsFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.util.Settings;
 import java.io.BufferedReader;
@@ -96,7 +97,7 @@ import javax.ws.rs.core.Response;
 @DependsOn("Settings")
 public class JupyterProcessMgr {
 
-  private static final Logger logger = Logger.getLogger(JupyterProcessMgr.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(JupyterProcessMgr.class.getName());
 
   @EJB
   private Settings settings;
@@ -112,8 +113,6 @@ public class JupyterProcessMgr {
   private ProjectFacade projectFacade;
   @EJB
   private JupyterSettingsFacade jupyterSettingsFacade;
-  @EJB
-  private UserFacade userFacade;
 
   private String hadoopClasspath = null;
 
@@ -182,7 +181,7 @@ public class JupyterProcessMgr {
           String user = hdfsUser.getUsername();
           try {
             killServerJupyterUser(user, "", jp.getPid(), 1);
-          } catch (AppException ex) {
+          } catch (ServiceException ex) {
             Logger.getLogger(JupyterProcessMgr.class.getName()).log(Level.SEVERE, null, ex);
           }
         }
@@ -234,7 +233,7 @@ public class JupyterProcessMgr {
             settings.getAnacondaProjectDir(project.getName()), port.
             toString(),
             hdfsUser + "-" + port + ".log", secretDir, jc.getCertificatesDir()};
-      logger.log(Level.INFO, Arrays.toString(command));
+      LOGGER.log(Level.INFO, Arrays.toString(command));
       ProcessBuilder pb = new ProcessBuilder(command);
       String pidfile = jc.getRunDirPath() + "/jupyter.pid";
       try {
@@ -249,7 +248,7 @@ public class JupyterProcessMgr {
             // Wait until the launcher bash script has finished
             process.waitFor(20l, TimeUnit.SECONDS);
           } catch (InterruptedException ex) {
-            logger.log(Level.SEVERE,
+            LOGGER.log(Level.SEVERE,
                 "Woken while waiting for the jupyter server to start: {0}",
                 ex.getMessage());
           }
@@ -267,7 +266,7 @@ public class JupyterProcessMgr {
         int linesRead = 0;
         while (((line = br.readLine()) != null) && !foundToken && linesRead
             < 10000) {
-          logger.info(line);
+          LOGGER.info(line);
           linesRead++;
           Matcher m = r.matcher(line);
           if (m.find()) {
@@ -284,7 +283,7 @@ public class JupyterProcessMgr {
         pid = Long.parseLong(pidContents);
 
       } catch (Exception ex) {
-        logger.log(Level.SEVERE, "Problem starting a jupyter server: {0}", ex.
+        LOGGER.log(Level.SEVERE, "Problem starting a jupyter server: {0}", ex.
             toString());
         if (process != null) {
           process.destroyForcibly();
@@ -305,18 +304,13 @@ public class JupyterProcessMgr {
   }
 
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-  public String getJupyterHome(String hdfsUser, JupyterProject jp) throws
-      AppException {
+  public String getJupyterHome(String hdfsUser, JupyterProject jp) throws ServiceException {
     if (jp == null) {
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-          getStatusCode(),
-          "Couldn't resolve JUPYTER_HOME using DB.");
+      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_HOME_ERROR, "user: " + hdfsUser);
     }
-    String projectPath = settings.getJupyterDir() + File.separator
+    return settings.getJupyterDir() + File.separator
         + Settings.DIR_ROOT + File.separator + jp.getProjectId().getName()
         + File.separator + hdfsUser + File.separator + jp.getSecret();
-
-    return projectPath;
   }
 
   /**
@@ -340,7 +334,7 @@ public class JupyterProcessMgr {
 //    int exitValue;
 //    Integer id = 1;
 //    String[] command = {"/usr/bin/sudo", prog, "stop", hdfsUser};
-//    logger.log(Level.INFO, Arrays.toString(command));
+//    LOGGER.log(Level.INFO, Arrays.toString(command));
 //    ProcessBuilder pb = new ProcessBuilder(command);
 //    try {
 //      Process process = pb.start();
@@ -349,12 +343,12 @@ public class JupyterProcessMgr {
 //          process.getInputStream(), Charset.forName("UTF8")));
 //      String line;
 //      while ((line = br.readLine()) != null) {
-//        logger.info(line);
+//        LOGGER.info(line);
 //      }
 //      process.waitFor(10l, TimeUnit.SECONDS);
 //      exitValue = process.exitValue();
 //    } catch (IOException | InterruptedException ex) {
-//      logger.log(Level.SEVERE, "Problem starting a backup: {0}", ex.
+//      LOGGER.log(Level.SEVERE, "Problem starting a backup: {0}", ex.
 //          toString());
 //      exitValue = -2;
 //    }
@@ -378,12 +372,12 @@ public class JupyterProcessMgr {
 //          process.getInputStream(), Charset.forName("UTF8")));
 //      String line;
 //      while ((line = br.readLine()) != null) {
-//        logger.info(line);
+//        LOGGER.info(line);
 //      }
 //      process.waitFor(10l, TimeUnit.SECONDS);
 //      exitValue = process.exitValue();
 //    } catch (IOException | InterruptedException ex) {
-//      logger.log(Level.SEVERE, "Problem starting a backup: {0}", ex.
+//      LOGGER.log(Level.SEVERE, "Problem starting a backup: {0}", ex.
 //          toString());
 //      exitValue = -2;
 //    }
@@ -391,17 +385,15 @@ public class JupyterProcessMgr {
 //  }
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public void killServerJupyterUser(String hdfsUsername, String jupyterHomePath, Long pid, Integer port)
-      throws AppException {
+    throws ServiceException {
     if (jupyterHomePath == null || pid == null || port == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.
-          getStatusCode(),
-          "Invalid arguments when stopping the Jupyter Server.");
+      throw new IllegalArgumentException("Invalid arguments when stopping the Jupyter Server.");
     }
     // 1. Remove jupyter settings from the DB for this notebook first. If this fails, keep going to kill the notebook
     try {
       jupyterFacade.removeNotebookServer(hdfsUsername);
     } catch (Exception e) {
-      logger.severe("Problem when removing jupyter notebook entry from jupyter_project table: " + jupyterHomePath);
+      LOGGER.severe("Problem when removing jupyter notebook entry from jupyter_project table: " + jupyterHomePath);
     }
 
     // 2. Then kill the jupyter notebook server. If this step isn't 
@@ -409,11 +401,11 @@ public class JupyterProcessMgr {
     if (jupyterHomePath.isEmpty()) {
       jupyterHomePath = " ";
     }
-    int exitValue;
+    int exitValue = 0;
     Integer id = 1;
     String[] command = {"/usr/bin/sudo", prog, "kill", jupyterHomePath,
       pid.toString(), port.toString()};
-    logger.log(Level.INFO, Arrays.toString(command));
+    LOGGER.log(Level.INFO, Arrays.toString(command));
     ProcessBuilder pb = new ProcessBuilder(command);
     try {
       Process process = pb.start();
@@ -422,25 +414,24 @@ public class JupyterProcessMgr {
           process.getInputStream(), Charset.forName("UTF8")));
       String line;
       while ((line = br.readLine()) != null) {
-        logger.info(line);
+        LOGGER.info(line);
       }
       
       process.waitFor(10l, TimeUnit.SECONDS);
       exitValue = process.exitValue();
     } catch (IOException | InterruptedException ex) {
-      logger.log(Level.SEVERE, "Problem starting a backup: {0}", ex.
-          toString());
-      exitValue = -2;
+      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_STOP_ERROR, "exitValue: " + exitValue,
+        ex.getMessage(), ex);
     }
 
     if (exitValue != 0) {
-      throw new AppException(Response.Status.REQUEST_TIMEOUT.getStatusCode(),
-          "Couldn't stop Jupyter Notebook Server.");
+      LOGGER.log(Level.SEVERE, RESTCodes.ServiceErrorCode.JUPYTER_STOP_ERROR + ", exitValue: " + exitValue);
+      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_STOP_ERROR, "exitValue: " + exitValue);
     }
 
   }
 
-  public void stopCleanly(String hdfsUser) throws AppException {
+  public void stopCleanly(String hdfsUser) throws ServiceException {
     // We need to stop the jupyter notebook server with the PID
     // If we can't stop the server, delete the Entity bean anyway
     JupyterProject jp = jupyterFacade.findByUser(hdfsUser);
@@ -454,17 +445,12 @@ public class JupyterProcessMgr {
   }
 
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-  public void stopProject(Project project)
-  {
+  public void stopProject(Project project) throws ServiceException {
     String jupyterHomePath = "";
     for (JupyterProject jp : project.getJupyterProjectCollection()) {
       HdfsUsers hdfsUser = hdfsUsersFacade.find(jp.getHdfsUserId());
       String hdfsUsername = (hdfsUser == null) ? "" : hdfsUser.getName();
-      try {
-        killServerJupyterUser(hdfsUsername, jupyterHomePath, jp.getPid(), jp.getPort());
-      } catch (AppException ex) {
-        logger.warning("When removing a project, could not shutdown the jupyter notebook server.");
-      }
+      killServerJupyterUser(hdfsUsername, jupyterHomePath, jp.getPid(), jp.getPort());
 
     }
     projectCleanup(project);
@@ -483,18 +469,18 @@ public class JupyterProcessMgr {
           process.getInputStream(), Charset.forName("UTF8")));
       String line;
       while ((line = br.readLine()) != null) {
-        logger.info(line);
+        LOGGER.info(line);
       }
       process.waitFor(2l, TimeUnit.SECONDS);
       exitValue = process.exitValue();
     } catch (IOException | InterruptedException ex) {
-      logger.log(Level.SEVERE, "Problem cleaning up project: "
+      LOGGER.log(Level.SEVERE, "Problem cleaning up project: "
           + project.getName() + ": {0}", ex.toString());
       exitValue = -2;
     }
 
     if (exitValue != 0) {
-      logger.log(Level.WARNING, "Problem remove project's jupyter folder: "
+      LOGGER.log(Level.WARNING, "Problem remove project's jupyter folder: "
           + project.getName());
     }
   }
@@ -570,7 +556,7 @@ public class JupyterProcessMgr {
         pidsRunning.add(Long.parseLong(line));
       }
     } catch (FileNotFoundException e) {
-      logger.warning("Invalid pids in file: " + Settings.JUPYTER_PIDS);
+      LOGGER.warning("Invalid pids in file: " + Settings.JUPYTER_PIDS);
     }
 
     List<Long> pidsOrphaned = new ArrayList<>();
@@ -612,7 +598,7 @@ public class JupyterProcessMgr {
     command.add("/usr/bin/sudo");
     command.add(prog);
     command.addAll(java.util.Arrays.asList(args));
-    logger.log(Level.INFO, Arrays.toString(command.toArray()));
+    LOGGER.log(Level.INFO, Arrays.toString(command.toArray()));
     ProcessBuilder pb = new ProcessBuilder(command);
     try {
       Process process = pb.start();
@@ -620,15 +606,14 @@ public class JupyterProcessMgr {
           process.getInputStream(), Charset.forName("UTF8")));
       String line;
       while ((line = br.readLine()) != null) {
-        logger.info(line);
+        LOGGER.info(line);
       }
 
       process.waitFor(10l, TimeUnit.SECONDS);
       exitValue = process.exitValue();
     } catch (IOException | InterruptedException ex) {
-      logger.log(Level.SEVERE,
-          "Problem checking if Jupyter Notebook server is running: {0}", ex.
-              toString());
+      LOGGER.log(Level.SEVERE,
+          "Problem checking if Jupyter Notebook server is running: {0}", ex);
       exitValue = -2;
     }
     return exitValue;

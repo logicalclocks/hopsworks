@@ -40,7 +40,6 @@
 package io.hops.hopsworks.common.project;
 
 import io.hops.hopsworks.common.constants.auth.AllowedRoles;
-import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.certificates.CertsFacade;
 import io.hops.hopsworks.common.dao.certificates.ProjectGenericUserCerts;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
@@ -83,9 +82,9 @@ import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.FolderNameValidator;
 import io.hops.hopsworks.common.elastic.ElasticController;
-import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.exception.DatasetException;
 import io.hops.hopsworks.common.exception.GenericException;
+import io.hops.hopsworks.common.exception.HopsSecurityException;
 import io.hops.hopsworks.common.exception.KafkaException;
 import io.hops.hopsworks.common.exception.ProjectException;
 import io.hops.hopsworks.common.exception.ProjectInternalFoldersFailedException;
@@ -174,7 +173,7 @@ import java.util.logging.Logger;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ProjectController {
 
-  private final static Logger LOGGER = Logger.getLogger(ProjectController.class.
+  private static final Logger LOGGER = Logger.getLogger(ProjectController.class.
       getName());
   @EJB
   private ProjectFacade projectFacade;
@@ -266,7 +265,8 @@ public class ProjectController {
    */
   public Project createProject(ProjectDTO projectDTO, Users owner,
       List<String> failedMembers, String sessionId)
-    throws DatasetException, GenericException, KafkaException, ProjectException, UserException {
+    throws DatasetException, GenericException, KafkaException, ProjectException, UserException, HopsSecurityException,
+    ServiceException {
 
     Long startTime = System.currentTimeMillis();
     
@@ -277,8 +277,8 @@ public class ProjectController {
     List<ProjectServiceEnum> projectServices = new ArrayList<>();
     if (projectDTO.getServices() != null) {
       for (String s : projectDTO.getServices()) {
-          ProjectServiceEnum se = ProjectServiceEnum.valueOf(s.toUpperCase());
-          projectServices.add(se);
+        ProjectServiceEnum se = ProjectServiceEnum.valueOf(s.toUpperCase());
+        projectServices.add(se);
       }
     }
     LOGGER.log(Level.FINE, () -> "PROJECT CREATION TIME. Step 1: " + (System.currentTimeMillis() - startTime));
@@ -295,18 +295,18 @@ public class ProjectController {
        * with the same name
        * until this project is removed from the database
        */
+      try {
+        project = createProject(projectName, owner, projectDTO.getDescription(), dfso);
+      } catch (EJBException ex) {
+        LOGGER.log(Level.WARNING, null, ex);
+        Path dummy = new Path("/tmp/" + projectName);
         try {
-          project = createProject(projectName, owner, projectDTO.getDescription(), dfso);
-        } catch (EJBException ex) {
-          LOGGER.log(Level.WARNING, null, ex);
-          Path dummy = new Path("/tmp/" + projectName);
-          try {
-            dfso.rm(dummy, true);
-          } catch (IOException e) {
-            LOGGER.log(Level.SEVERE, null, e);
-          }
-          throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NAME_EXISTS, "project: " + projectName);
+          dfso.rm(dummy, true);
+        } catch (IOException e) {
+          LOGGER.log(Level.SEVERE, null, e);
         }
+        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NAME_EXISTS, "project: " + projectName);
+      }
       LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 2 (hdfs): {0}", System.currentTimeMillis() - startTime);
 
       verifyProject(project, dfso, sessionId);
@@ -333,14 +333,15 @@ public class ProjectController {
         certsGenerationFuture = certificatesController.generateCertificates(project, owner, true);
       } catch (Exception ex) {
         cleanup(project, sessionId, certsGenerationFuture);
-        throw new UserException(RESTCodes.SecurityErrorCode.CERT_CREATION_ERROR, "project: " + project.getName() +
-          "owner: " + owner.getUsername(), ex.getMessage(), ex);
+        throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_CREATION_ERROR,
+          "project: " + project.getName() +
+            "owner: " + owner.getUsername(), ex.getMessage(), ex);
       }
 
       String username = hdfsUsersBean.getHdfsUserName(project, owner);
       if (username == null || username.isEmpty()) {
         cleanup(project, sessionId, certsGenerationFuture);
-        throw new UserException(RESTCodes.SecurityErrorCode.USER_WAS_NOT_FOUND, "project: " + project.getName() +
+        throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, "project: " + project.getName() +
           "owner: " + owner.getUsername());
       }
 
@@ -393,12 +394,9 @@ public class ProjectController {
       for (ProjectServiceEnum service : projectServices) {
         try {
           addService(project, service, owner, dfso);
-        } catch (AppException ae) {
+        } catch (ServiceException ex) {
           cleanup(project, sessionId, certsGenerationFuture);
-          LOGGER.log(Level.SEVERE, "Error while enabling service " + service.toString() +
-                  " for project " + projectName, ae);
-          throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-              getStatusCode(), "Error while enabling the service " + service.toString());
+          throw ex;
         }
       }
 
@@ -481,6 +479,9 @@ public class ProjectController {
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   private Project createProject(String projectName, Users user,
       String projectDescription, DistributedFileSystemOps dfso) throws ProjectException {
+    if(user == null){
+      throw new IllegalArgumentException("User was not provided.");
+    }
     if (projectFacade.numProjectsLimitReached(user)) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.NUM_PROJECTS_LIMIT_REACHED, "user: " + user.getUsername());
     } else if (projectFacade.projectExists(projectName)) {
@@ -620,7 +621,7 @@ public class ProjectController {
    * @throws java.io.IOException
    */
   public void createProjectLogResources(Users user, Project project,
-      DistributedFileSystemOps dfso) throws IOException, DatasetException {
+      DistributedFileSystemOps dfso) throws IOException, DatasetException, HopsSecurityException {
 
     for (Settings.BaseDataset ds : Settings.BaseDataset.values()) {
       datasetController.createDataset(user, project, ds.getName(), ds.
@@ -662,11 +663,10 @@ public class ProjectController {
    * @param dfso
    * @param udfso
    * @throws ProjectInternalFoldersFailedException
-   * @throws AppException
    */
   public void copySparkStreamingResources(String username, Project project,
       DistributedFileSystemOps dfso, DistributedFileSystemOps udfso) throws
-      ProjectInternalFoldersFailedException, AppException {
+      ProjectInternalFoldersFailedException {
     try {
       udfso.copyInHdfs(new Path(settings.getSparkLog4JPath()), new Path(
           "/Projects/" + project.getName()
@@ -697,13 +697,15 @@ public class ProjectController {
 
   // Used only during project creation
   private boolean addService(Project project, ProjectServiceEnum service,
-      Users user, DistributedFileSystemOps dfso) throws AppException {
+      Users user, DistributedFileSystemOps dfso)
+    throws ProjectException, ServiceException, DatasetException, HopsSecurityException {
     return addService(project, service, user, dfso, dfso);
   }
 
   public boolean addService(Project project, ProjectServiceEnum service,
       Users user, DistributedFileSystemOps dfso,
-      DistributedFileSystemOps udfso) throws AppException {
+      DistributedFileSystemOps udfso) throws ProjectException, ServiceException, DatasetException,
+    HopsSecurityException {
     if (projectServicesFacade.isServiceEnabledForProject(project, service)) {
       // Service already enabled fro the current project. Nothing to do
       return false;
@@ -749,7 +751,7 @@ public class ProjectController {
 
   private void addServiceDataset(Project project, Users user,
       Settings.ServiceDataset ds, DistributedFileSystemOps dfso,
-      DistributedFileSystemOps udfso) throws AppException {
+      DistributedFileSystemOps udfso) throws DatasetException, HopsSecurityException, ProjectException {
     try {
       datasetController.createDataset(user, project, ds.getName(), ds.
           getDescription(), -1, false, true, dfso);
@@ -771,21 +773,19 @@ public class ProjectController {
         Path readmePath = new Path(dsPath, Settings.README_FILE);
         dfso.setOwner(readmePath, fstatus.getOwner(), fstatus.getGroup());
       }
-    } catch (IOException | DatasetException ex) {
+    } catch (IOException ex) {
       LOGGER.log(Level.SEVERE, "Could not create dir: " + ds.getName(), ex);
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
-          ResponseMessages.PROJECT_SERVICE_ADD_FAILURE);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_SERVICE_ADD_FAILURE, "service: " + ds.toString(),
+        ex.getMessage(), ex);
     }
   }
 
-  private void addServiceHive(Project project, Users user,
-      DistributedFileSystemOps dfso) throws AppException {
+  private void addServiceHive(Project project, Users user, DistributedFileSystemOps dfso) throws ProjectException {
     try {
       hiveController.createDatabase(project, user, dfso);
     } catch (SQLException | IOException ex) {
-      LOGGER.log(Level.SEVERE, "Could not create Hive db:", ex);
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
-          ResponseMessages.PROJECT_SERVICE_ADD_FAILURE);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_HIVEDB_CREATE_ERROR,
+        "project: " + project.getName(), ex.getMessage(), ex);
     }
   }
 
@@ -819,7 +819,6 @@ public class ProjectController {
    * @param projectRetention the retention period
    * @param user the user making the change
    * @return
-   * @throws io.hops.hopsworks.common.exception.AppException
    */
   public boolean updateProjectRetention(Project project, Date projectRetention,
       Users user) {
@@ -1380,7 +1379,7 @@ public class ProjectController {
     }
   }
   
-  private void killZeppelin(Integer projectId, String sessionId) throws AppException {
+  private void killZeppelin(Integer projectId, String sessionId) throws ServiceException {
     Client client;
     Response resp;
     try (FileInputStream trustStoreIS = new FileInputStream(settings.getGlassfishTrustStore())) {
@@ -1400,10 +1399,7 @@ public class ProjectController {
           .method("GET");
       LOGGER.log(Level.FINE, "Zeppelin check resp:{0}", resp.getStatus());
     } catch (CertificateException | NoSuchAlgorithmException | IOException | KeyStoreException e) {
-      LOGGER.log(Level.WARNING, "Could not close zeppelin interpreters, please wait 60 seconds to retry", e);
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-          getStatusCode(),
-          "Could not close zeppelin interpreters, please wait 60 seconds to retry");
+      throw new ServiceException(RESTCodes.ServiceErrorCode.ZEPPELIN_KILL_ERROR);
     }
     if (resp.getStatus() == 200) {
       resp = client
@@ -1413,9 +1409,7 @@ public class ProjectController {
           .method("GET");
       LOGGER.log(Level.FINE, "Zeppelin restart resp:{0}", resp.getStatus());
       if (resp.getStatus() != 200) {
-        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-            getStatusCode(),
-            "Could not close zeppelin interpreters, please wait 60 seconds to retry");
+        throw new ServiceException(RESTCodes.ServiceErrorCode.ZEPPELIN_KILL_ERROR);
       }
     }
   }
@@ -1505,7 +1499,7 @@ public class ProjectController {
       List<HdfsGroups> groupsToClean, Future<CertificatesController.CertsResult> certsGenerationFuture,
       boolean decreaseCreatedProj)
     throws IOException, InterruptedException, ExecutionException,
-    AppException, CAException, ServiceException, ProjectException {
+    CAException, ServiceException, ProjectException {
     DistributedFileSystemOps dfso = null;
     try {
       dfso = dfs.getDfsOps();
@@ -1700,7 +1694,6 @@ public class ProjectController {
    * @param projectTeams
    * @return a list of user names that could not be added to the project team
    * list.
-   * @throws io.hops.hopsworks.common.exception.AppException
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public List<String> addMembers(Project project, String ownerEmail,
@@ -1816,20 +1809,19 @@ public class ProjectController {
    *
    * @param projectID of the project
    * @return project DTO that contains team members and services
-   * @throws io.hops.hopsworks.common.exception.AppException
    */
-  public ProjectDTO getProjectByID(Integer projectID) throws AppException {
+  public ProjectDTO getProjectByID(Integer projectID) throws ProjectException {
     Project project = projectFacade.find(projectID);
+    if (project == null) {
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, "projectId: " + projectID);
+    }
     String name = project.getName();
 
     //find the project as an inode from hops database
     Inode inode = inodes.getInodeAtPath(File.separator + Settings.DIR_ROOT
         + File.separator + name);
 
-    if (project == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.PROJECT_NOT_FOUND);
-    }
+   
     List<ProjectTeam> projectTeam = projectTeamFacade.findMembersByProject(
         project);
     List<ProjectServiceEnum> projectServices = projectServicesFacade.
@@ -1923,7 +1915,6 @@ public class ProjectController {
    *
    * @param projectId
    * @return
-   * @throws AppException
    */
   public QuotasDTO getQuotas(Integer projectId) {
     Project project = projectFacade.find(projectId);
@@ -1986,21 +1977,18 @@ public class ProjectController {
    * @param project
    * @param email
    * @param toRemoveEmail
-   * @throws AppException
    */
   public void removeMemberFromTeam(Project project, String email,
-      String toRemoveEmail) throws Exception {
+      String toRemoveEmail) throws UserException, ProjectException, ServiceException, IOException, CAException {
     Users userToBeRemoved = userFacade.findByEmail(toRemoveEmail);
     if (userToBeRemoved == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.USER_DOES_NOT_EXIST);
-      //user not found
+      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, "user: " + email);
     }
     ProjectTeam projectTeam = projectTeamFacade.findProjectTeam(project,
         userToBeRemoved);
     if (projectTeam == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.TEAM_MEMBER_NOT_FOUND);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.TEAM_MEMBER_NOT_FOUND,
+        "project: " + project + ", user: " + email);
     }
     projectTeamFacade.removeProjectTeam(project, userToBeRemoved);
     Users user = userFacade.findByEmail(email);
@@ -2066,18 +2054,14 @@ public class ProjectController {
           logAggregationState = appReport.getLogAggregationStatus();
         }
       }
+    } catch (YarnException | IOException | InterruptedException e) {
+      throw new ProjectException(RESTCodes.ProjectErrorCode.KILL_MEMBER_JOBS,
+        "project: " + project + ", user: " + userToBeRemoved, e.getMessage(), e);
     } finally {
       ycs.closeYarnClient(yarnClientWrapper);
     }
 
-    try {
-      kafkaController.removeProjectMemberFromTopics(project, userToBeRemoved);
-    } catch (Exception ex) {
-      String errorMsg = "Error while removing Kafka ACL for user " + userToBeRemoved.getUsername() + " from project "
-          + project.getName();
-      LOGGER.log(Level.SEVERE, errorMsg, ex);
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), errorMsg);
-    }
+    kafkaController.removeProjectMemberFromTopics(project, userToBeRemoved);
 
     logActivity(ActivityFacade.REMOVED_MEMBER + toRemoveEmail,
         ActivityFacade.FLAG_PROJECT, user, project);
@@ -2093,28 +2077,25 @@ public class ProjectController {
    * @param owner that is performing the update
    * @param toUpdateEmail
    * @param newRole
-   * @throws AppException
    */
   @TransactionAttribute(
       TransactionAttributeType.REQUIRES_NEW)
   public void updateMemberRole(Project project, String owner,
-      String toUpdateEmail, String newRole) throws AppException {
+      String toUpdateEmail, String newRole) throws UserException, ProjectException {
     Users projOwner = project.getOwner();
     Users opsOwner = userFacade.findByEmail(owner);
     Users user = userFacade.findByEmail(toUpdateEmail);
     if (projOwner.equals(user)) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          "Can not change the role of a project owner.");
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_OWNER_ROLE_NOT_ALLOWED,
+        "project: " + project.getName());
     }
     if (user == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.USER_DOES_NOT_EXIST);
-      //user not found
+      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, "user: " + toUpdateEmail);
     }
     ProjectTeam projectTeam = projectTeamFacade.findProjectTeam(project, user);
     if (projectTeam == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.TEAM_MEMBER_NOT_FOUND);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.TEAM_MEMBER_NOT_FOUND, "project: " + project.getName() +
+        ", user: " + user.getUsername());
       //member not found
     }
     if (!projectTeam.getTeamRole().equals(newRole)) {
@@ -2219,19 +2200,11 @@ public class ProjectController {
 
   public void addTourFilesToProject(String username, Project project,
       DistributedFileSystemOps dfso, DistributedFileSystemOps udfso,
-      TourProjectType projectType) throws
-    AppException, DatasetException, GenericException {
-
+      TourProjectType projectType) throws DatasetException, HopsSecurityException, ProjectException {
+  
     Users user = userFacade.findByEmail(username);
-    try {
-      datasetController.createDataset(user, project, Settings.HOPS_TOUR_DATASET,
-          "files for guide projects", -1, false, true, dfso);
-    } catch (IOException ex) {
-      LOGGER.log(Level.SEVERE, null, ex);
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-          getStatusCode(),
-          "Something went wrong when adding the tour files to the project");
-    }
+    datasetController.createDataset(user, project, Settings.HOPS_TOUR_DATASET,
+      "files for guide projects", -1, false, true, dfso);
 
     if (null != projectType) {
       switch (projectType) {
@@ -2261,10 +2234,8 @@ public class ProjectController {
                 + "/spark-examples.jar"), userHdfsName, datasetGroup);
 
           } catch (IOException ex) {
-            LOGGER.log(Level.SEVERE, "Something went wrong when adding the tour files to the project", ex);
-            throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-                getStatusCode(),
-                "Something went wrong when adding the tour files to the project");
+            throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_TOUR_FILES_ERROR,
+              "project: " + project.getName(), ex.getMessage(), ex);
           }
           break;
         case KAFKA:
@@ -2281,10 +2252,8 @@ public class ProjectController {
             udfso.setOwner(new Path(kafkaExampleDst), userHdfsName, datasetGroup);
 
           } catch (IOException ex) {
-            LOGGER.log(Level.SEVERE, "Something went wrong when adding the tour files to the project", ex);
-            throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-                getStatusCode(),
-                "Something went wrong when adding the tour files to the project");
+            throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_TOUR_FILES_ERROR,
+              "project: " + project.getName(), ex.getMessage(), ex);
           }
           break;
         case TENSORFLOW:
@@ -2329,9 +2298,8 @@ public class ProjectController {
               udfso.rm(new Path(tensorflowNotebooksSrc), true);
             }
           } catch (IOException ex) {
-            LOGGER.log(Level.SEVERE, "Something went wrong when adding the tour files to the project", ex);
-            throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-                getStatusCode(), "Something went wrong when adding the tour files to the project");
+            throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_TOUR_FILES_ERROR,
+              "project: " + project.getName(), ex.getMessage(), ex);
           }
           break;
         default:
@@ -2356,18 +2324,12 @@ public class ProjectController {
   }
 
   @TransactionAttribute(TransactionAttributeType.NEVER)
-  public void createAnacondaEnv(Project project) throws AppException {
-    pythonDepsFacade.getPreInstalledLibs(project);
-
-  }
-
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   public void removeAnacondaEnv(Project project) throws ServiceException {
     pythonDepsFacade.removeProject(project);
   }
 
   @TransactionAttribute(TransactionAttributeType.NEVER)
-  public void removeJupyter(Project project) {
+  public void removeJupyter(Project project) throws ServiceException {
     jupyterProcessFacade.stopProject(project);
   }
 
@@ -2385,11 +2347,10 @@ public class ProjectController {
    * Handles Kibana related indices and templates for projects.
    *
    * @param project
-   * @param serviceEnum
    * @return
    */
 
-  public void addElasticsearch(Project project) throws AppException {
+  public void addElasticsearch(Project project) throws ProjectException, ServiceException {
             
     String projectName = project.getName().toLowerCase();
     Map<String, String> params = new HashMap<>();
@@ -2402,8 +2363,7 @@ public class ProjectController {
     
     if (!(resp.has("updated_at") || (resp.has("statusCode") && resp.get("statusCode").toString().equals("409")))) {
       LOGGER.log(Level.SEVERE, "Could not create logs index for project {0}", projectName);
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
-          ResponseMessages.PROJECT_SERVICE_ADD_FAILURE);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_SERVICE_ADD_FAILURE, "service: elasticsearch");
     }
 
     params.clear();
@@ -2411,12 +2371,7 @@ public class ProjectController {
     String indexName = project.getName().toLowerCase() + "_" + Settings.ELASTIC_EXPERIMENTS_INDEX;
 
     if(!elasticController.indexExists(indexName)) {
-      boolean acknowledged = elasticController.createIndex(indexName);
-      if (!acknowledged) {
-        LOGGER.log(Level.SEVERE, "Could not create elastic index " + indexName);
-        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
-            ResponseMessages.PROJECT_SERVICE_ADD_FAILURE);
-      }
+      elasticController.createIndex(indexName);
     }
 
     params.clear();
@@ -2425,10 +2380,10 @@ public class ProjectController {
     resp = elasticController.sendKibanaReq(params, "index-pattern", indexName, true);
 
     if (!(resp.has("updated_at") || (resp.has("statusCode") && resp.get("statusCode").toString().equals("409")))) {
-      LOGGER.log(Level.SEVERE, "Could not create kibana index-pattern for project " +
-          project + "\n " + resp.toString(2));
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
-          ResponseMessages.PROJECT_SERVICE_ADD_FAILURE);
+      LOGGER.log(Level.SEVERE, RESTCodes.ProjectErrorCode.PROJECT_KIBANA_CREATE_INDEX_ERROR.toString() + ", " +
+        "project: " + projectName + ", " + "resp: " + resp.toString(2));
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_KIBANA_CREATE_INDEX_ERROR,
+        "project: " + projectName + ", resp: " + resp.toString(2));
     }
 
     String savedSummarySearch =
@@ -2446,10 +2401,10 @@ public class ProjectController {
     resp = elasticController.sendKibanaReq(params, "search", indexName + "_summary-search", true);
 
     if (!(resp.has("updated_at") || (resp.has("statusCode") && resp.get("statusCode").toString().equals("409")))) {
-      LOGGER.log(Level.SEVERE, ("Could not create kibana search for project " + project)
-          + "\n " + resp.toString(2));
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
-          ResponseMessages.PROJECT_SERVICE_ADD_FAILURE);
+      LOGGER.log(Level.SEVERE, RESTCodes.ProjectErrorCode.PROJECT_KIBANA_CREATE_SEARCH_ERROR.toString() + ", " +
+        "project: " + projectName + ", resp: " + resp.toString(2));
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_KIBANA_CREATE_SEARCH_ERROR,
+        "project: " + projectName + ", resp: " + resp.toString(2));
     }
 
     String savedSummaryDashboard =
@@ -2468,17 +2423,16 @@ public class ProjectController {
     params.put("op", "POST");
     params.put("data", savedSummaryDashboard);
     resp = elasticController.sendKibanaReq(params, "dashboard", indexName + "_summary-dashboard", true);
-
+  
     if (!(resp.has("updated_at") || (resp.has("statusCode") && resp.get("statusCode").toString().equals("409")))) {
-      LOGGER.log(Level.SEVERE, ("Could not create kibana dashboard for project " +
-          project + "\n " + resp.toString(2)));
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
-          ResponseMessages.PROJECT_SERVICE_ADD_FAILURE);
+      LOGGER.log(Level.SEVERE, RESTCodes.ProjectErrorCode.PROJECT_KIBANA_CREATE_DASHBOARD_ERROR.toString() + ", " +
+        "project: " + projectName + ", resp: " + resp.toString(2));
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_KIBANA_CREATE_DASHBOARD_ERROR,
+        "project: " + projectName + ", resp: " + resp.toString(2));
     }
-    return;
   }
 
-  public void removeElasticsearch(Project project) throws AppException {
+  public void removeElasticsearch(Project project) throws ServiceException {
     Map<String, String> params = new HashMap<>();
 
     List<ProjectServiceEnum> projectServices = projectServicesFacade.
@@ -2487,14 +2441,13 @@ public class ProjectController {
     String projectName = project.getName().toLowerCase();
 
     for(ProjectServiceEnum service: projectServices) {
-      boolean removedElastic = false;
-      if(!removedElastic && (service.equals(ProjectServiceEnum.JOBS) || service.equals(ProjectServiceEnum.JUPYTER))) {
+      if(service.equals(ProjectServiceEnum.JOBS) || service.equals(ProjectServiceEnum.JUPYTER)) {
         
         //1. Delete visualizations, saved searches, dashboards
         List<String> projectNames = new ArrayList<>();
         projectNames.add(project.getName());
-        LOGGER.log(Level.INFO, "removeElasticsearch-2:{0}", projectNames.toString());
-        elasticController.deleteProjectSavedObjects(projectNames, true);
+        LOGGER.log(Level.INFO, "removeElasticsearch-2:{0}", projectNames);
+        elasticController.deleteProjectSavedObjects(projectNames);
         
         //2. Delete Kibana Index
         params.clear();
@@ -2514,16 +2467,14 @@ public class ProjectController {
 
         params.clear();
         params.put("op", "DELETE");
-        resp = elasticController.sendKibanaReq(params, "index-pattern", experimentsIndex, false);
+        elasticController.sendKibanaReq(params, "index-pattern", experimentsIndex, false);
         params.clear();
         params.put("op", "DELETE");
-        resp = elasticController.sendKibanaReq(params, "search", experimentsIndex + "_summary-search", false);
+        elasticController.sendKibanaReq(params, "search", experimentsIndex + "_summary-search", false);
         params.clear();
         params.put("op", "DELETE");
-        resp = elasticController.sendKibanaReq(params, "dashboard",
-            experimentsIndex + "_summary-dashboard", false);
-        LOGGER.log(Level.INFO, "removeElasticsearch-1:" +service);
-        removedElastic = true;
+        elasticController.sendKibanaReq(params, "dashboard", experimentsIndex + "_summary-dashboard", false);
+        LOGGER.log(Level.INFO, () -> "removeElasticsearch-1:" +service);
       }
     }
   }
@@ -2571,15 +2522,13 @@ public class ProjectController {
    * @param keyStore
    * @param keyStorePwd
    * @return
-   * @throws AppException
    */
   public void validateCert(byte[] keyStore, char[] keyStorePwd, String projectUser, boolean isProjectSpecific)
-      throws AppException {
+    throws UserException, HopsSecurityException {
     String commonName = certificatesController.extractCNFromCertificate(keyStore, keyStorePwd, projectUser);
 
     if (!projectUser.equals(commonName)) {
-      throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
-          "Certificate CN does not match the username provided");
+      throw new UserException(RESTCodes.UserErrorCode.CERT_AUTHORIZATION_ERROR, "projectUser:" + projectUser);
     }
 
     byte[] userKey;
@@ -2594,15 +2543,14 @@ public class ProjectController {
       ProjectGenericUserCerts projectGenericUserCerts = userCertsFacade
           .findProjectGenericUserCerts(projectUser);
       if (projectGenericUserCerts == null) {
-        throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
-            "Could not find exactly one certificate for " + projectUser);
+        throw new UserException(RESTCodes.UserErrorCode.PROJECT_USER_CERT_NOT_FOUND,
+          "Could not find exactly one certificate for " + projectUser);
       }
       userKey = projectGenericUserCerts.getKey();
     }
 
     if (!Arrays.equals(userKey, keyStore)) {
-      throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
-          "Certificate error!");
+      throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_ERROR, "projectUser:" + projectUser);
     }
   }
 
@@ -2656,9 +2604,8 @@ public class ProjectController {
    * @param newProjectState
    * @param quotas
    * @throws IOException
-   * @throws AppException
    */
-  public void adminProjectUpdate(Project newProjectState, QuotasDTO quotas) throws AppException {
+  public void adminProjectUpdate(Project newProjectState, QuotasDTO quotas) throws ProjectException {
     Project currentProject = projectFacade.findByName(newProjectState.getName());
 
     // Set (un)archived status only if changed
@@ -2705,9 +2652,8 @@ public class ProjectController {
           quotaChanged = true;
         }
       } catch (IOException e) {
-        LOGGER.log(Level.SEVERE, "Couldn't update quotas for project: " + currentProject.getName(), e);
-        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
-            ResponseMessages.QUOTA_ERROR);
+        throw new ProjectException(RESTCodes.ProjectErrorCode.QUOTA_ERROR, "project: " + currentProject.getName(),
+          e.getMessage(), e);
       } finally {
         if (dfso != null) {
           dfso.close();

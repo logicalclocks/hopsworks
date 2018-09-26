@@ -102,7 +102,7 @@ import java.util.logging.Logger;
     description = "Application Service")
 public class ApplicationService {
 
-  final static Logger LOGGER = Logger.getLogger(ApplicationService.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(ApplicationService.class.getName());
 
   @EJB
   private NoCacheResponse noCacheResponse;
@@ -277,7 +277,6 @@ public class ApplicationService {
    * @param keyStore project-user keystore
    * @param keyStorePwd project-user password
    * @return CN of certificate
-   * @throws AppException When user is not authorized to access project.
    */
   private String checkAndGetProjectUser(byte[] keyStore, char[] keyStorePwd) throws UserException {
     
@@ -313,7 +312,7 @@ public class ApplicationService {
       return commonName;
     } catch (Exception ex) {
       LOGGER.log(Level.WARNING, "Could not authenticate user", ex);
-      throw new UserException(RESTCodes.SecurityErrorCode.AUTHENTICATION_FAILURE, null, ex.getMessage());
+      throw new UserException(RESTCodes.UserErrorCode.AUTHENTICATION_FAILURE, null, ex.getMessage());
     }
   }
 
@@ -321,7 +320,7 @@ public class ApplicationService {
     String username = hdfsUserBean.getUserName(projectUser);
     Users user = userFacade.findByUsername(username);
     if (!usersController.isUserInRole(user, "HOPS_ADMIN")) {
-      throw new UserException(RESTCodes.SecurityErrorCode.AUTHORIZATION_FAILURE,
+      throw new UserException(RESTCodes.UserErrorCode.AUTHORIZATION_FAILURE,
         "Method can be only be invoked by an admin");
     }
   }

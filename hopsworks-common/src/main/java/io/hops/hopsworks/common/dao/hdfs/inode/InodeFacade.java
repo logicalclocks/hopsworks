@@ -61,7 +61,7 @@ import io.hops.hopsworks.common.dao.AbstractFacade;
 @Stateless
 public class InodeFacade extends AbstractFacade<Inode> {
 
-  private final static Logger logger = Logger.getLogger(InodeFacade.class.
+  private static final Logger logger = Logger.getLogger(InodeFacade.class.
           getName());
 
   @PersistenceContext(unitName = "kthfsPU")
@@ -92,7 +92,6 @@ public class InodeFacade extends AbstractFacade<Inode> {
   /**
    * Find all the Inodes that have <i>userId</i> as userId.
    * <p/>
-   * @param userId
    * @return
    */
   public List<Inode> findByHdfsUser(HdfsUsers hdfsUser) {
@@ -186,6 +185,9 @@ public class InodeFacade extends AbstractFacade<Inode> {
    */
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   public Inode findParent(Inode i) {
+    if(i == null){
+      throw new IllegalArgumentException("Inode must be provided.");
+    }
     int id = i.getInodePK().getParentId();
     TypedQuery<Inode> q = em.createNamedQuery("Inode.findById", Inode.class);
     q.setParameter("id", id);
@@ -418,6 +420,9 @@ public class InodeFacade extends AbstractFacade<Inode> {
    */
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public String getPath(Inode i) {
+    if(i == null) {
+      throw new IllegalArgumentException("Inode was not provided.");
+    }
     List<String> pathComponents = new ArrayList<>();
     Inode parent = i;
     while (parent.getId() != 1) {
@@ -479,7 +484,6 @@ public class InodeFacade extends AbstractFacade<Inode> {
    * Find all the Inodes that have <i>userId</i> as userId and correspond to an
    * history file.
    * <p/>
-   * @param userId
    * @return
    */
   public List<Inode> findHistoryFileByHdfsUser(HdfsUsers hdfsUser) {

@@ -30,16 +30,17 @@ import javax.xml.bind.annotation.XmlRootElement;
  * 5. Job error codes start  with "13".
  * 6. Request error codes start  with "14".
  * 7. Project error codes start  with "15".
- * 8. Security error codes start  with "16".
- * 9. Dela error codes start with "17"
- * 10. Template error codes start with "18"
- * 11. Kafka error codes start with "19"
+ * 8. Dela error codes start with "17"
+ * 9. Template error codes start with "18"
+ * 10. Kafka error codes start with "19"
+ * 11. User error codes start with "20"
+ * 12. Security error codes start  with "20".
  */
 @XmlRootElement
 public class RESTCodes {
   
   public interface RESTErrorCode {
-  
+    
     Response.Status getRespStatus();
     
     Integer getCode();
@@ -109,7 +110,7 @@ public class RESTCodes {
     MEMBER_ROLE_UPDATED(150040, "Role updated successfully.", Response.Status.OK),
     MEMBER_REMOVED_FROM_TEAM(150041, "Member removed from team.", Response.Status.OK),
     PROJECT_INODE_CREATION_ERROR(150042, "Could not create dummy Inode", Response.Status.INTERNAL_SERVER_ERROR),
-    PROJECT_FOLDER_EXISTS(150043,  "A folder with same name as the project already exists in the system.",
+    PROJECT_FOLDER_EXISTS(150043, "A folder with same name as the project already exists in the system.",
       Response.Status.CONFLICT),
     PROJECT_USER_EXISTS(150044, "Filesystem user(s) already exists in the system.", Response.Status.CONFLICT),
     PROJECT_GROUP_EXISTS(150045, "Filesystem group(s) already exists in the system.", Response.Status.CONFLICT),
@@ -130,12 +131,26 @@ public class RESTCodes {
     PROJECT_HANDLER_PREDELETE_ERROR(150053, "Error occurred during project predelete handler.",
       Response.Status.INTERNAL_SERVER_ERROR),
     PROJECT_HANDLER_POSTDELETE_ERROR(150054, "Error occurred during project postdelete handler.",
-      Response.Status.INTERNAL_SERVER_ERROR);
+      Response.Status.INTERNAL_SERVER_ERROR),
+    PROJECT_TOUR_FILES_ERROR(150055, "Error while adding tour files to project.",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    PROJECT_KIBANA_CREATE_INDEX_ERROR(150056, "Could not create kibana index-pattern for project",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    PROJECT_KIBANA_CREATE_SEARCH_ERROR(150057, "Could not create kibana search for project",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    PROJECT_KIBANA_CREATE_DASHBOARD_ERROR(150057, "Could not create kibana dashboard for project",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    PROJECT_HIVEDB_CREATE_ERROR(150058, "Could not create Hive DB for project", Response.Status.INTERNAL_SERVER_ERROR),
+    PROJECT_CONDA_LIBS_NOT_FOUND(150059, "No preinstalled anaconda libs found.",
+      Response.Status.NOT_FOUND),
+    KILL_MEMBER_JOBS(150060, "Could not kill user's yarn applications", Response.Status.INTERNAL_SERVER_ERROR),
+    JUPYTER_SERVER_NOT_FOUND(150060, "Could not find Jupyter entry for user in this project.",
+      Response.Status.NOT_FOUND);
     
     private Integer code;
     private String message;
     private Response.Status respStatus;
-  
+    
     ProjectErrorCode(Integer code, String message, Response.Status respStatus) {
       this.code = code;
       this.message = message;
@@ -188,7 +203,7 @@ public class RESTCodes {
     DOWNLOAD_ERROR(110021, "You cannot download from a non public shared dataset", Response.Status.BAD_REQUEST),
     DOWNLOAD_PERMISSION_ERROR(110022, "Your role does not allow to download this file", Response.Status.BAD_REQUEST),
     DATASET_PERMISSION_ERROR(110023, "Could not update dataset permissions", Response.Status.INTERNAL_SERVER_ERROR),
-    COMPRESSION_ERROR(110024, "Error while performing a (un)compression operation",
+    COMPRESSION_ERROR(110024, "Error while performing a (un)compress operation",
       Response.Status.INTERNAL_SERVER_ERROR),
     DATASET_OWNER_ERROR(110025, "You cannot perform this action on a dataset you are not the owner",
       Response.Status.BAD_REQUEST),
@@ -196,13 +211,19 @@ public class RESTCodes {
     DATASET_NAME_INVALID(110028, "Name of dir is invalid", Response.Status.BAD_REQUEST),
     IMAGE_SIZE_INVALID(110029, "Image is too big to display please download it by double-clicking it instead",
       Response.Status.BAD_REQUEST),
-    FILE_PREVIEW_ERROR(110030, "Error while retrieving file content for preview", Response.Status.BAD_REQUEST),
+    FILE_PREVIEW_ERROR(110030,
+      Settings.README_FILE + " must be smaller than " + Settings.FILE_PREVIEW_TXT_SIZE_BYTES / 1024
+        + " KB to be previewed", Response.Status.BAD_REQUEST),
     DATASET_PARAMETERS_INVALID(110031, "Invalid parameters for requested dataset operation",
       Response.Status.BAD_REQUEST),
     EMPTY_PATH(110032, "Empty path requested", Response.Status.BAD_REQUEST),
     
     UPLOAD_PATH_NOT_SPECIFIED(110035, "The path to upload the template was not specified",
-      Response.Status.BAD_REQUEST);
+      Response.Status.BAD_REQUEST),
+    README_NOT_ACCESSIBLE(110036, "Readme not accessible.", Response.Status.FORBIDDEN),
+    COMPRESSION_SIZE_ERROR(110037, "Not enough free space on the local scratch directory to download and unzip this " +
+      "file. Talk to your admin to increase disk space at the path: hopsworks/staging_dir",
+      Response.Status.PRECONDITION_FAILED);
     
     
     private Integer code;
@@ -246,7 +267,7 @@ public class RESTCodes {
     private Integer code;
     private String message;
     private Response.Status respStatus;
-  
+    
     MetadataErrorCode(Integer code, String message, Response.Status respStatus) {
       this.code = code;
       this.message = message;
@@ -292,7 +313,7 @@ public class RESTCodes {
     ELASTIC_TYPE_NOT_FOUND(130015, "Elasticsearch type does not exist", Response.Status.BAD_REQUEST),
     
     TENSORBOARD_ERROR(130016, "Error getting the Tensorboard(s) for this application", Response.Status.NO_CONTENT),
-  
+    
     APPLICATIONID_NOT_FOUND(130017, "Error while deleting job.", Response.Status.BAD_REQUEST),
     JOB_ACCESS_ERROR(130018, "Cannot access job", Response.Status.FORBIDDEN),
     LOG_AGGREGATION_NOT_ENABLED(130019, "YARN log aggregation is not enabled", Response.Status.SERVICE_UNAVAILABLE),
@@ -388,12 +409,27 @@ public class RESTCodes {
     //Database
     DATABASE_UNAVAILABLE(100008, "The database is temporarily unavailable. Please try again later",
       Response.Status.SERVICE_UNAVAILABLE),
-    
     TENSORBOARD_CLEANUP_ERROR(100009, "Could not delete tensorboard", Response.Status.INTERNAL_SERVER_ERROR),
     ZOOKEEPER_SERVICE_UNAVAILABLE(100010, "ZooKeeper service unavailable", Response.Status.SERVICE_UNAVAILABLE),
-    
     ANACONDA_NODES_UNAVAILABLE(100011, "No conda machine is enabled. Contact the administrator.",
-      Response.Status.SERVICE_UNAVAILABLE);
+      Response.Status.SERVICE_UNAVAILABLE),
+    ELASTIC_INDEX_CREATION_ERROR(100012, "Error while creating index in elastic",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    ANACONDA_LIST_LIB_FORMAT_ERROR(100013,
+      "Problem listing libraries. Did conda get upgraded and change its output format?",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    ANACONDA_LIST_LIB_ERROR(100014, "Problem listing libraries. Please contact the Administrator",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    ZEPPELIN_KILL_ERROR(100015, "Could not close zeppelin interpreters, please wait 60 seconds to retry",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    JUPYTER_HOME_ERROR(100016, "Couldn't resolve JUPYTER_HOME using DB.", Response.Status.INTERNAL_SERVER_ERROR),
+    JUPYTER_STOP_ERROR(100017, "Couldn't stop Jupyter Notebook Server.", Response.Status.INTERNAL_SERVER_ERROR),
+    INVALID_YML(100018, "Invalid .yml file", Response.Status.BAD_REQUEST),
+    INVALID_YML_SIZE(100019, ".yml file too large. Maximum size is 10000 bytes",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    ANACONDA_FROM_YML_ERROR(100020, "Failed to create Anaconda environment from .yml file.",
+      Response.Status.INTERNAL_SERVER_ERROR);
+    
     private Integer code;
     private String message;
     private Response.Status respStatus;
@@ -448,7 +484,7 @@ public class RESTCodes {
     private Integer code;
     private String message;
     private Response.Status respStatus;
-  
+    
     KafkaErrorCode(Integer code, String message, Response.Status respStatus) {
       this.code = code;
       this.message = message;
@@ -515,10 +551,45 @@ public class RESTCodes {
   
   public enum SecurityErrorCode implements RESTErrorCode {
     
-    //response for validation error
-    INTERNAL_SERVER_ERROR(160000, "Internal Server Error. Please report a bug.", Response.Status.BAD_REQUEST),
+    MASTER_ENCRYPTION_PASSWORD_CHANGE(200001,
+      "Master password change procedure started. Check your inbox for final status", Response.Status.BAD_REQUEST),
+    HDFS_ACCESS_CONTROL(200002, "Access error while trying to access hdfs resource", Response.Status.FORBIDDEN),
+    EJB_ACCESS_LOCAL(200003, "EJB access local error", Response.Status.UNAUTHORIZED),
+    CERT_CREATION_ERROR(200004, "Error while generating certificates.", Response.Status.INTERNAL_SERVER_ERROR),
+    CERT_CN_EXTRACT_ERROR(200005, "Error while extracting CN from certificate.", Response.Status.INTERNAL_SERVER_ERROR),
+    CERT_ERROR(200006, "Certificate could not be validated.", Response.Status.UNAUTHORIZED),
+    CERT_ACCESS_DENIED(200007, "Certificate access denied.", Response.Status.FORBIDDEN);
+    
+    private Integer code;
+    private String message;
+    private Response.Status respStatus;
+    
+    SecurityErrorCode(Integer code, String message, Response.Status respStatus) {
+      this.code = code;
+      this.message = message;
+      this.respStatus = respStatus;
+    }
+    
+    @Override
+    public Integer getCode() {
+      return code;
+    }
+    
+    @Override
+    public String getMessage() {
+      return message;
+    }
+    
+    public Response.Status getRespStatus() {
+      return respStatus;
+    }
+    
+  }
+  
+  public enum UserErrorCode implements RESTErrorCode {
+    
     USER_DOES_NOT_EXIST(160001, "User does not exist.", Response.Status.BAD_REQUEST),
-    USER_WAS_NOT_FOUND(160002, "Ops! The operation failed. User not found", Response.Status.NOT_FOUND),
+    USER_WAS_NOT_FOUND(160002, "User not found", Response.Status.NOT_FOUND),
     USER_EXISTS(160003, "There is an existing account associated with this email", Response.Status.BAD_REQUEST),
     ACCOUNT_REQUEST(160004, "Your account has not yet been approved.", Response.Status.BAD_REQUEST),
     ACCOUNT_DEACTIVATED(160005, "This account have been deactivated.", Response.Status.BAD_REQUEST),
@@ -556,23 +627,18 @@ public class RESTCodes {
     PROFILE_UPDATED(160027, "Your profile was updated successfully.", Response.Status.BAD_REQUEST),
     SSH_KEY_REMOVED(160028, "Your ssh key was deleted successfully.", Response.Status.BAD_REQUEST),
     NOTHING_TO_UPDATE(160029, "Nothing to update", Response.Status.BAD_REQUEST),
-    MASTER_ENCRYPTION_PASSWORD_CHANGE(160030,
-      "Master password change procedure started. Check your inbox for final status", Response.Status.BAD_REQUEST),
-    HDFS_ACCESS_CONTROL(160031, "Access error while trying to access hdfs resource", Response.Status.FORBIDDEN),
-    EJB_ACCESS_LOCAL(160032, "EJB access local error", Response.Status.UNAUTHORIZED),
     AUTHORIZATION_FAILURE(160033, "Authorization failed", Response.Status.UNAUTHORIZED),
     CREATE_USER_ERROR(160034, "Error while creating user", Response.Status.INTERNAL_SERVER_ERROR),
-    CERT_CREATION_ERROR(160035, "Error while generating certificates", Response.Status.INTERNAL_SERVER_ERROR);
-  
-  
+    CERT_AUTHORIZATION_ERROR(160035, "Certificate CN does not match the username provided.",
+      Response.Status.UNAUTHORIZED),
+    PROJECT_USER_CERT_NOT_FOUND(160036, "Could not find exactly one certificate for user in project.",
+      Response.Status.UNAUTHORIZED);
+    
     private Integer code;
     private String message;
     private Response.Status respStatus;
     
-    SecurityErrorCode() {
-    }
-    
-    SecurityErrorCode(Integer code, String message, Response.Status respStatus) {
+    UserErrorCode(Integer code, String message, Response.Status respStatus) {
       this.code = code;
       this.message = message;
       this.respStatus = respStatus;
@@ -603,9 +669,6 @@ public class RESTCodes {
     private Integer code;
     private String message;
     private Response.Status respStatus;
-    
-    DelaErrorCode() {
-    }
     
     DelaErrorCode(Integer code, String message, Response.Status respStatus) {
       this.code = code;

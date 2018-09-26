@@ -38,39 +38,34 @@
  */
 package io.hops.hopsworks.api.pythonDeps;
 
-import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
+import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.project.util.DsPath;
 import io.hops.hopsworks.api.project.util.PathValidator;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
+import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.pythonDeps.EnvironmentYmlJson;
-import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade;
-import io.hops.hopsworks.common.dao.pythonDeps.PythonDepJson;
-import io.hops.hopsworks.common.dao.pythonDeps.PythonDep;
 import io.hops.hopsworks.common.dao.pythonDeps.LibVersions;
 import io.hops.hopsworks.common.dao.pythonDeps.OpStatus;
+import io.hops.hopsworks.common.dao.pythonDeps.PythonDep;
+import io.hops.hopsworks.common.dao.pythonDeps.PythonDepJson;
+import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade;
 import io.hops.hopsworks.common.dao.pythonDeps.Version;
-import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.exception.DatasetException;
+import io.hops.hopsworks.common.exception.ProjectException;
+import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
 import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.hadoop.fs.FSDataInputStream;
-
-import java.util.ArrayList;
-
-import java.io.IOException;
-import java.io.DataInputStream;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.File;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -78,31 +73,37 @@ import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.json.Json;
 import javax.json.JsonObjectBuilder;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
+import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.SecurityContext;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class PythonDepsService {
 
-  private final static Logger logger = Logger.getLogger(PythonDepsService.class.
+  private static final Logger logger = Logger.getLogger(PythonDepsService.class.
       getName());
 
   @EJB
@@ -139,7 +140,7 @@ public class PythonDepsService {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response index() throws AppException {
+  public Response index() {
 
     Collection<PythonDep> pythonDeps = project.getPythonDepCollection();
 
@@ -153,20 +154,17 @@ public class PythonDepsService {
         deps).build();
   }
 
-  private String getHdfsUser(SecurityContext sc) throws AppException {
+  private String getHdfsUser(SecurityContext sc) {
     String loggedinemail = sc.getUserPrincipal().getName();
     Users user = userFacade.findByEmail(loggedinemail);
-    if (user == null) {
-      throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
-          "You are not authorized for this invocation.");
-    }
     return hdfsUsersController.getHdfsUserName(project, user);
   }
 
   @GET
   @Path("/destroyAnaconda")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response removeAnacondaEnv(@Context SecurityContext sc, @Context HttpServletRequest req) throws AppException {
+  public Response removeAnacondaEnv(@Context SecurityContext sc, @Context HttpServletRequest req)
+    throws ServiceException {
 
     pythonDepsFacade.removeProject(project);
 
@@ -179,8 +177,8 @@ public class PythonDepsService {
   public Response enable(@PathParam("version") String version,
       @PathParam("pythonKernelEnable") String pythonKernelEnable,
       @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException {
-    Map<String, String> deps = pythonDepsFacade.getPreInstalledLibs(project);
+      @Context HttpServletRequest req) throws AppException, ServiceException, ProjectException {
+    Map<String, String> deps = pythonDepsFacade.getPreInstalledLibs();
     Boolean enablePythonKernel = Boolean.parseBoolean(pythonKernelEnable);
     if (!enablePythonKernel) {
       // 'X' indicates that the python kernel should not be enabled in Conda
@@ -200,7 +198,8 @@ public class PythonDepsService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @Consumes(MediaType.APPLICATION_JSON)
   public Response enableYml(@Context SecurityContext sc,
-      @Context HttpServletRequest req, EnvironmentYmlJson environmentYmlJson) throws AppException {
+      @Context HttpServletRequest req, EnvironmentYmlJson environmentYmlJson)
+    throws ServiceException, DatasetException, ProjectException, AppException {
 
     Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
     String username = hdfsUsersController.getHdfsUserName(project, user);
@@ -217,9 +216,7 @@ public class PythonDepsService {
 
     if (allYmlPath != null && !allYmlPath.isEmpty()) {
       if (!allYmlPath.substring(allYmlPath.length() - 4, allYmlPath.length()).equals(".yml")) {
-        throw new AppException(Response.Status.BAD_REQUEST.
-            getStatusCode(),
-            "Can only create Anaconda environment from a valid .yml file");
+        throw new ServiceException(RESTCodes.ServiceErrorCode.INVALID_YML);
       }
       String allYml = getYmlFromPath(allYmlPath, username);
       pythonDepsFacade.createProjectInDb(project, null, version, enablePythonKernel,
@@ -228,9 +225,7 @@ public class PythonDepsService {
 
       if (!cpuYmlPath.substring(cpuYmlPath.length() - 4, cpuYmlPath.length()).equals(".yml") || !gpuYmlPath.substring(
           gpuYmlPath.length() - 4, gpuYmlPath.length()).equals(".yml")) {
-        throw new AppException(Response.Status.BAD_REQUEST.
-            getStatusCode(),
-            "Can only create Anaconda environment from valid .yml files");
+        throw new ServiceException(RESTCodes.ServiceErrorCode.INVALID_YML);
       }
 
       String cpuYml = getYmlFromPath(cpuYmlPath, username);
@@ -242,9 +237,7 @@ public class PythonDepsService {
           PythonDepsFacade.MachineType.GPU, gpuYml);
 
     } else {
-      throw new AppException(Response.Status.BAD_REQUEST.
-          getStatusCode(),
-          "Could not create Anaconda environment due to invalid .yml files");
+      throw new ServiceException(RESTCodes.ServiceErrorCode.INVALID_YML);
     }
 
     project.setPythonVersion(version);
@@ -257,7 +250,7 @@ public class PythonDepsService {
   @Path("/installed")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @Produces(MediaType.TEXT_PLAIN)
-  public Response installed() throws AppException {
+  public Response installed() {
     String defaultRepo = settings.getCondaDefaultRepo();
     if (settings.isAnacondaEnabled()) {
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK)
@@ -303,7 +296,7 @@ public class PythonDepsService {
   @Path("/enabled")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @Produces(MediaType.TEXT_PLAIN)
-  public Response enabled() throws AppException {
+  public Response enabled() {
     boolean enabled = project.getConda();
     if (enabled) {
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(project.getPythonVersion()).build();
@@ -334,7 +327,7 @@ public class PythonDepsService {
   @Produces(MediaType.APPLICATION_JSON)
   @Path("/clearCondaOps")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response clearCondaOps(PythonDepJson library) throws AppException {
+  public Response clearCondaOps(PythonDepJson library) {
 
     pythonDepsFacade.clearCondaOps(project,
         library.getChannelUrl(),
@@ -392,34 +385,7 @@ public class PythonDepsService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 
-
-  /*
-   * Disable UPGRADE for now
-   *
-   * @POST
-   * @Produces(MediaType.APPLICATION_JSON)
-   * @Path("/upgrade")
-   * @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-   * public Response upgrade(PythonDepJson library) throws AppException {
-   *
-   * if(preInstalledLibraryNames.contains(library.getLib())) {
-   * throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-   * getStatusCode(),
-   * "Could not upgrade " + library.getLib());
-   * }
-   *
-   * logger.log(Level.SEVERE,"INSTALL TYPE " + library.getInstallType());
-   * logger.log(Level.SEVERE,"MACHINE TYPE " + library.getMachineType());
-   *
-   *
-   * pythonDepsFacade.upgradeLibrary(project, PythonDepsFacade.CondaInstallType.valueOf(library.getInstallType()),
-   * PythonDepsFacade.MachineType.valueOf(library.getMachineType()),
-   * library.getChannelUrl(), library.getLib(), library.getVersion());
-   *
-   * return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
-   * }
-   *
-   */
+  
   @GET
   @Path("/clone/{projectName}")
   @Produces(MediaType.APPLICATION_JSON)
@@ -427,7 +393,7 @@ public class PythonDepsService {
   public Response doClone(
       @PathParam("projectName") String srcProject,
       @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException {
+      @Context HttpServletRequest req) {
 
 //    pythonDepsFacade.cloneProject(srcProject, project);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
@@ -437,9 +403,10 @@ public class PythonDepsService {
   @Path("/createenv")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response createEnv(@Context SecurityContext sc, @Context HttpServletRequest req) throws AppException {
+  public Response createEnv(@Context SecurityContext sc, @Context HttpServletRequest req)
+    throws ServiceException, ProjectException {
 
-    pythonDepsFacade.getPreInstalledLibs(project);
+    pythonDepsFacade.getPreInstalledLibs();
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
@@ -448,7 +415,7 @@ public class PythonDepsService {
   @Path("/removeenv")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response removeEnv(@Context SecurityContext sc, @Context HttpServletRequest req) throws AppException {
+  public Response removeEnv(@Context SecurityContext sc, @Context HttpServletRequest req) throws ServiceException {
 
     pythonDepsFacade.removeProject(project);
 
@@ -481,7 +448,7 @@ public class PythonDepsService {
   @Produces(MediaType.APPLICATION_JSON)
   @Path("/status")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response status() throws AppException {
+  public Response status() {
 
     List<OpStatus> response = pythonDepsFacade.opStatus(project);
 
@@ -747,40 +714,33 @@ public class PythonDepsService {
     }
   }
 
-  private String getYmlFromPath(String path, String username) throws AppException {
+  private String getYmlFromPath(String path, String username)
+    throws DatasetException, ProjectException, ServiceException {
 
     DsPath ymlPath = pathValidator.validatePath(this.project, path);
     ymlPath.validatePathExists(inodes, false);
     org.apache.hadoop.fs.Path fullPath = ymlPath.getFullPath();
-    String ymlFileName = fullPath.getName();
-
     DistributedFileSystemOps udfso = null;
-    FSDataInputStream is = null;
-
     try {
       udfso = dfs.getDfsOps(username);
       //tests if the user have permission to access this path
-      is = udfso.open(fullPath);
 
       long fileSize = udfso.getFileStatus(fullPath).getLen();
       byte[] ymlFileInBytes = new byte[(int) fileSize];
 
       if (fileSize < 10000) {
-        try (DataInputStream dis = new DataInputStream(is)) {
+        try (DataInputStream dis = new DataInputStream(udfso.open(fullPath))) {
           dis.readFully(ymlFileInBytes, 0, (int) fileSize);
           String ymlFileContents = new String(ymlFileInBytes);
           return ymlFileContents;
         }
       } else {
-        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-            getStatusCode(),
-            ".yml file too large. Maximum size is 10000 bytes.");
+        throw new ServiceException(RESTCodes.ServiceErrorCode.INVALID_YML_SIZE);
       }
 
-    } catch (IOException ioe) {
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-          getStatusCode(),
-          "Failed to create Anaconda environment from .yml file.");
+    } catch (IOException ex) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_FROM_YML_ERROR, "path: " + path, ex.getMessage()
+        , ex);
     } finally {
       if (udfso != null) {
         dfs.closeDfsClient(udfso);

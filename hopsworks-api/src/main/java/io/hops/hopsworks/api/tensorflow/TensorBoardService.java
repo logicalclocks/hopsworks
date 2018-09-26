@@ -28,9 +28,10 @@ import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.elastic.ElasticController;
 import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.exception.DatasetException;
+import io.hops.hopsworks.common.exception.ProjectException;
 import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.experiments.TensorBoardController;
-import io.hops.hopsworks.common.util.Settings;
 import io.swagger.annotations.ApiOperation;
 
 import javax.ejb.EJB;
@@ -38,15 +39,13 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.persistence.PersistenceException;
-
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.NotFoundException;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.Path;
-import javax.ws.rs.NotFoundException;
-
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
@@ -63,8 +62,6 @@ public class TensorBoardService {
 
   @EJB
   private ProjectFacade projectFacade;
-  @EJB
-  private Settings settings;
   @EJB
   private UserFacade userFacade;
   @EJB
@@ -120,7 +117,8 @@ public class TensorBoardService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response startTensorBoard(@PathParam("elasticId") String elasticId,
-                                            @Context SecurityContext sc) throws AppException, ServiceException {
+                                            @Context SecurityContext sc)
+    throws AppException, ServiceException, DatasetException, ProjectException {
 
     String loggedinemail = sc.getUserPrincipal().getName();
     Users user = userFacade.findByEmail(loggedinemail);
@@ -136,15 +134,8 @@ public class TensorBoardService {
           "Unable to retrieve location of experiment logdir from elastic, contact a system administrator.");
     }
 
-    try {
-      DsPath tbPath = pathValidator.validatePath(this.project, hdfsLogdir);
-      tbPath.validatePathExists(inodesFacade, true);
-    } catch(AppException e) {
-      LOGGER.log(Level.SEVERE, "Exception validating path in hdfs for experiment ", e);
-      throw new AppException(Response.Status.BAD_REQUEST.
-          getStatusCode(),
-          "Experiment directory is missing, check in your project if it was deleted.");
-    }
+    DsPath tbPath = pathValidator.validatePath(this.project, hdfsLogdir);
+    tbPath.validatePathExists(inodesFacade, true);
 
     TensorBoardDTO tensorBoardDTO = null;
     tensorBoardDTO = tensorBoardController.startTensorBoard(elasticId, this.project, user, hdfsLogdir);

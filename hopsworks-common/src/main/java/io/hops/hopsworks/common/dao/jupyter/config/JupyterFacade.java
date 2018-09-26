@@ -160,9 +160,7 @@ public class JupyterFacade {
     query.setParameter("name", hdfsUser);
     try {
       res = query.getSingleResult();
-    } catch (EntityNotFoundException | NoResultException e) {
-      Logger.getLogger(JupyterFacade.class.getName()).log(Level.FINE, null,
-          e);
+    } catch (NoResultException e) {
       return null;
     }
     JupyterProject res2 = null;
@@ -171,7 +169,7 @@ public class JupyterFacade {
     query2.setParameter("hdfsUserId", res.getId());
     try {
       res2 = query2.getSingleResult();
-    } catch (EntityNotFoundException | NoResultException e) {
+    } catch (NoResultException e) {
       Logger.getLogger(JupyterFacade.class.getName()).log(Level.FINE, null,
           e);
     }

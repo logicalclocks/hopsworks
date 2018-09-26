@@ -207,7 +207,7 @@ public class DistributedFsService {
    */
   public DistributedFileSystemOps getDfsOps(String username) {
     if (username == null || username.isEmpty()) {
-      throw new NullPointerException("username not set.");
+      throw new IllegalArgumentException("username not provided.");
     }
     UserGroupInformation ugi;
     try {

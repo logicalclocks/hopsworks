@@ -47,6 +47,8 @@ import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Ip;
 import io.hops.hopsworks.common.util.Settings;
@@ -135,8 +137,9 @@ public class ElasticController {
   private void initClient() {
     try {
       getClient();
-    } catch (AppException ex) {
+    } catch (ServiceException ex) {
       LOG.log(Level.SEVERE, null, ex);
+  
     }
   }
 
@@ -145,7 +148,7 @@ public class ElasticController {
     shutdownClient();
   }
 
-  public List<ElasticHit> globalSearch(String searchTerm) throws AppException {
+  public List<ElasticHit> globalSearch(String searchTerm) throws AppException, ServiceException {
     //some necessary client settings
     Client client = getClient();
 
@@ -163,7 +166,7 @@ public class ElasticController {
     srb = srb.setTypes(Settings.META_DEFAULT_TYPE);
     srb = srb.setQuery(this.globalSearchQuery(searchTerm.toLowerCase()));
     srb = srb.highlighter(new HighlightBuilder().field("name"));
-    LOG.log(Level.INFO, "Global search Elastic query is: {0}", srb.toString());
+    LOG.log(Level.INFO, "Global search Elastic query is: {0}", srb);
     ActionFuture<SearchResponse> futureResponse = srb.execute();
     SearchResponse response = futureResponse.actionGet();
 
@@ -196,7 +199,7 @@ public class ElasticController {
     }
   }
 
-  public String findExperiment(String index, String app_id) throws AppException {
+  public String findExperiment(String index, String app_id) throws ServiceException {
 
     Client client = getClient();
 
@@ -213,12 +216,11 @@ public class ElasticController {
     return searchResponse.toString();
   }
 
-  public void updateExperiment(String index, String id, JSONObject source) throws
-      AppException, IndexOutOfBoundsException, IOException {
+  public void updateExperiment(String index, String id, JSONObject source) throws IOException, ServiceException {
 
     Client client = getClient();
 
-    Map<String, Object> map = new HashMap<>();
+    Map<String, Object> map;
 
     ObjectMapper mapper = new ObjectMapper();
     map = mapper.readValue(source.toString(),
@@ -237,7 +239,7 @@ public class ElasticController {
 
   }
 
-  public List<ElasticHit> projectSearch(Integer projectId, String searchTerm) throws AppException {
+  public List<ElasticHit> projectSearch(Integer projectId, String searchTerm) throws AppException, ServiceException {
     Client client = getClient();
     //check if the index are up and running
     if (!this.indexExists(client, Settings.META_INDEX)) {
@@ -281,7 +283,8 @@ public class ElasticController {
         getStatusCode(), ResponseMessages.ELASTIC_SERVER_NOT_FOUND);
   }
 
-  public List<ElasticHit> datasetSearch(Integer projectId, String datasetName, String searchTerm) throws AppException {
+  public List<ElasticHit> datasetSearch(Integer projectId, String datasetName, String searchTerm)
+    throws AppException, ServiceException {
     Client client = getClient();
     //check if the indices are up and running
     if (!this.indexExists(client, Settings.META_INDEX)) {
@@ -337,7 +340,7 @@ public class ElasticController {
         getStatusCode(), ResponseMessages.ELASTIC_SERVER_NOT_FOUND);
   }
 
-  public boolean deleteIndex(String index) throws AppException {
+  public boolean deleteIndex(String index) throws ServiceException {
     boolean acked = getClient().admin().indices().delete(new DeleteIndexRequest(index)).actionGet().isAcknowledged();
     if (acked) {
       LOG.log(Level.INFO, "Acknowledged deletion of elastic index:{0}", index);
@@ -347,7 +350,7 @@ public class ElasticController {
     return acked;
   }
 
-  public boolean indexExists(String index) throws AppException {
+  public boolean indexExists(String index) throws ServiceException {
 
     boolean exists = getClient().admin().indices().exists(new IndicesExistsRequest(index)).actionGet().isExists();
     if (exists) {
@@ -358,18 +361,16 @@ public class ElasticController {
     return exists;
   }
 
-  public boolean createIndex(String index) throws AppException {
+  public void createIndex(String index) throws ServiceException {
 
     boolean acked = getClient().admin().indices().create(new CreateIndexRequest(index)).actionGet().isAcknowledged();
-    if (acked) {
-      LOG.log(Level.INFO, "Acknowledged creation of elastic index:{0}", index);
-    } else {
+    if (!acked) {
       LOG.log(Level.SEVERE, "Elastic index:{0} creation could not be acknowledged", index);
+      throw new ServiceException(RESTCodes.ServiceErrorCode.ELASTIC_INDEX_CREATION_ERROR, "index: " + index);
     }
-    return acked;
   }
 
-  public void deleteProjectIndices(Project project) throws AppException {
+  public void deleteProjectIndices(Project project) throws ServiceException {
     //Get all project indices
     Map<String, IndexMetaData> indices = getIndices(project.getName() + "_logs-\\d{4}.\\d{2}.\\d{2}");
     for (String index : indices.keySet()) {
@@ -383,10 +384,9 @@ public class ElasticController {
    * Deletes visualizations, saved searches and dashboards for a project.
    *
    * @param projects
-   * @param contains
    * @throws AppException
    */
-  public void deleteProjectSavedObjects(List<String> projects, boolean contains) throws AppException {
+  public void deleteProjectSavedObjects(List<String> projects) {
     //Loop through all objects and
 
     Map<String, String> params = new HashMap<>();
@@ -414,11 +414,11 @@ public class ElasticController {
 
   }
 
-  public Result deleteDocument(String index, String type, String id) throws AppException {
+  public Result deleteDocument(String index, String type, String id) throws ServiceException {
     return getClient().prepareDelete(index, type, id).get().getResult();
   }
 
-  public Map<String,IndexMetaData> getIndices() throws AppException{
+  public Map<String,IndexMetaData> getIndices() throws ServiceException {
     return getIndices(null);
   }
 
@@ -428,7 +428,7 @@ public class ElasticController {
    * @return
    * @throws AppException
    */
-  public Map<String, IndexMetaData> getIndices(String regex) throws AppException {
+  public Map<String, IndexMetaData> getIndices(String regex) throws ServiceException {
     ImmutableOpenMap<String, IndexMetaData> indices = getClient().admin().cluster().prepareState().get().getState()
         .getMetaData().getIndices();
 
@@ -450,7 +450,7 @@ public class ElasticController {
     return indicesMap;
   }
 
-  private Client getClient() throws AppException {
+  private Client getClient() throws ServiceException {
     if (elasticClient == null) {
       final org.elasticsearch.common.settings.Settings settings
           = org.elasticsearch.common.settings.Settings.builder()
@@ -744,17 +744,15 @@ public class ElasticController {
         Settings.META_INDEX));
   }
 
-  private String getElasticIpAsString() throws AppException {
+  private String getElasticIpAsString() throws ServiceException {
     String addr = settings.getElasticIp();
 
     // Validate the ip address pulled from the variables
-    if (Ip.validIp(addr) == false) {
+    if (!Ip.validIp(addr)) {
       try {
         InetAddress.getByName(addr);
       } catch (UnknownHostException ex) {
-        LOG.log(Level.SEVERE, ResponseMessages.ELASTIC_SERVER_NOT_AVAILABLE, ex);
-        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-            getStatusCode(), ResponseMessages.ELASTIC_SERVER_NOT_AVAILABLE);
+        throw new ServiceException(RESTCodes.ServiceErrorCode.ELASTIC_SERVER_NOT_AVAILABLE, null, ex.getMessage(), ex);
 
       }
     }

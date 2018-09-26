@@ -46,13 +46,13 @@ import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
 import io.hops.hopsworks.common.dao.jupyter.JupyterSettings;
 import io.hops.hopsworks.common.dao.jupyter.JupyterSettingsFacade;
-import io.hops.hopsworks.common.dao.jupyter.config.JupyterProcessMgr;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
+import io.hops.hopsworks.common.dao.jupyter.config.JupyterProcessMgr;
 import io.hops.hopsworks.common.dao.project.service.ProjectServiceEnum;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.elastic.ElasticController;
-import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -63,26 +63,22 @@ import io.hops.hopsworks.common.util.Settings;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.io.IOException;
-import java.nio.file.Paths;
-import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Schedule;
 import javax.ejb.Singleton;
 import javax.ejb.Timer;
+import java.io.IOException;
+import java.nio.file.Paths;
 import java.sql.Date;
 import java.util.List;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Singleton
 public class JupyterNotebookCleaner {
 
-  private final static Logger LOGGER = Logger.getLogger(
+  private static final  Logger LOGGER = Logger.getLogger(
       JupyterNotebookCleaner.class.getName());
-
-  public final int connectionTimeout = 90 * 1000;// 30 seconds
-
-  public int sessionTimeoutMs = 30 * 1000;//30 seconds
 
   @EJB
   private LivyController livyService;
@@ -162,8 +158,8 @@ public class JupyterNotebookCleaner {
             // This method also removes the corresponding row for the Notebook process in the JupyterProject table.
             jupyterProcessFacade.killServerJupyterUser(hdfsUser.getName(), jupyterHomePath, jp.getPid(), jp.
                 getPort());
-          } catch(AppException ae) {
-            Logger.getLogger(JupyterNotebookCleaner.class.getName()).log(Level.SEVERE, null, ae);
+          } catch(ServiceException ex) {
+            Logger.getLogger(JupyterNotebookCleaner.class.getName()).log(Level.SEVERE, null, ex);
           }
 
           String[] project_user = hdfsUser.getName().split(HdfsUsersController.USER_NAME_DELIMITER);

@@ -44,6 +44,7 @@ import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.common.elastic.ElasticController;
 import io.hops.hopsworks.common.elastic.ElasticHit;
 import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.exception.ServiceException;
 import io.swagger.annotations.Api;
 import java.util.List;
 import java.util.logging.Level;
@@ -72,7 +73,7 @@ import javax.ws.rs.core.SecurityContext;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ElasticService {
 
-  private final static Logger logger = Logger.getLogger(ElasticService.class.
+  private static final Logger logger = Logger.getLogger(ElasticService.class.
           getName());
   @EJB
   private NoCacheResponse noCacheResponse;
@@ -96,7 +97,7 @@ public class ElasticService {
   public Response globalSearch(
           @PathParam("searchTerm") String searchTerm,
           @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+          @Context HttpServletRequest req) throws AppException, ServiceException {
 
     if (searchTerm == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "Incomplete request!");
@@ -126,7 +127,7 @@ public class ElasticService {
       @PathParam("projectId") Integer projectId,
       @PathParam("searchTerm") String searchTerm,
       @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException {
+      @Context HttpServletRequest req) throws AppException, ServiceException {
     if (projectId == null || searchTerm == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "Incomplete request!");
     }
@@ -156,7 +157,7 @@ public class ElasticService {
       @PathParam("datasetName") String datasetName,
       @PathParam("searchTerm") String searchTerm,
       @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException {
+      @Context HttpServletRequest req) throws AppException, ServiceException {
 
     if (datasetName == null || searchTerm == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),"Incomplete request!");

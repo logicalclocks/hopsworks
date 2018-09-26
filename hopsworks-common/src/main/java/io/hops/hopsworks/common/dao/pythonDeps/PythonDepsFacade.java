@@ -43,19 +43,23 @@ import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.exception.ProjectException;
 import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.exception.ServiceException;
-import io.hops.hopsworks.common.util.HopsUtils;
-
-import java.util.List;
-import java.util.logging.Logger;
-import javax.ejb.EJB;
-import javax.ejb.Stateless;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.util.WebCommunication;
 
+import javax.annotation.Resource;
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import javax.enterprise.concurrent.ManagedExecutorService;
+import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
+import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
+import javax.ws.rs.core.Response;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -64,6 +68,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -71,13 +76,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
-import javax.annotation.Resource;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-import javax.enterprise.concurrent.ManagedExecutorService;
-import javax.persistence.NoResultException;
-import javax.persistence.TypedQuery;
-import javax.ws.rs.core.Response;
+import java.util.logging.Logger;
 
 @Stateless
 public class PythonDepsFacade {
@@ -100,8 +99,8 @@ public class PythonDepsFacade {
   ManagedExecutorService kagentExecutorService;
 
   public boolean isEnvironmentReady(Project project) {
-    CondaOp operation = null;
-    CondaStatus status = null;
+    CondaOp operation;
+    CondaStatus status;
     List<CondaCommands> ops = getCommandsForProject(project);
     for (CondaCommands condaCommand : ops) {
       operation = condaCommand.getOp();
@@ -393,13 +392,11 @@ public class PythonDepsFacade {
 
   /**
    *
-   * @param proj
    * @return
    * @throws AppException
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
-  public Map<String, String> getPreInstalledLibs(Project proj) throws
-      AppException {
+  public Map<String, String> getPreInstalledLibs() throws ServiceException, ProjectException {
 
     // First list the libraries already installed and put them in the 
     Map<String, String> depVers = new HashMap<>();
@@ -415,10 +412,7 @@ public class PythonDepsFacade {
         // returns key,value  pairs
         String[] libVersion = line.split(",");
         if (libVersion.length != 2) {
-          throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-              getStatusCode(),
-              "Problem listing libraries. Did conda get upgraded and change "
-              + "its output format?");
+          throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_FORMAT_ERROR);
         }
         // Format is:
         // mkl,2017.0.1
@@ -431,21 +425,14 @@ public class PythonDepsFacade {
       }
       int errCode = process.waitFor();
       if (errCode == 2) {
-        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-            getStatusCode(),
-            "Problem listing libraries with conda - report a bug.");
+        throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_ERROR, "errCode: " + errCode);
       } else if (errCode == 1) {
-        throw new AppException(Response.Status.NO_CONTENT.
-            getStatusCode(),
-            "No results found.");
+        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_CONDA_LIBS_NOT_FOUND, "errCode: " + errCode);
       }
 
     } catch (IOException | InterruptedException ex) {
-      Logger.getLogger(HopsUtils.class
-          .getName()).log(Level.SEVERE, null, ex);
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-          getStatusCode(),
-          "Problem listing libraries, conda interrupted on this webserver.");
+      throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_ERROR,
+        "Could not get pre-installed conda libraries", ex.getMessage(), ex);
 
     }
 

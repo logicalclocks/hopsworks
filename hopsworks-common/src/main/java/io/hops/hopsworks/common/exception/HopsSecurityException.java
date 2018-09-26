@@ -13,30 +13,26 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-
 package io.hops.hopsworks.common.exception;
 
-
-public class UserException extends RESTException {
+public class HopsSecurityException extends RESTException {
   
-  public UserException() {
+  public HopsSecurityException() {
   }
   
-  public UserException(RESTCodes.UserErrorCode code) {
+  public HopsSecurityException(RESTCodes.SecurityErrorCode code) {
     super(code);
   }
   
-  public UserException(RESTCodes.UserErrorCode code, String usrMsg) {
+  public HopsSecurityException(RESTCodes.SecurityErrorCode code, String usrMsg) {
     super(code, usrMsg);
   }
   
-  public UserException(RESTCodes.UserErrorCode code, String usrMsg, String devMsg) {
+  public HopsSecurityException(RESTCodes.SecurityErrorCode code, String usrMsg, String devMsg) {
     super(code, usrMsg, devMsg);
   }
   
-  public UserException(RESTCodes.UserErrorCode code, String usrMsg, String devMsg, Throwable throwable) {
-    super(code, usrMsg, devMsg, throwable);
+  public HopsSecurityException(RESTCodes.SecurityErrorCode code, String usrMsg, String devMsg, Throwable throwable) {
+    super(code, usrMsg, devMsg);
   }
-  
-  
 }
