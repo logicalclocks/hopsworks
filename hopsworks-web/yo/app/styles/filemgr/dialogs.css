@@ -72,20 +72,20 @@ div#filemgr .modal .modal-content {
 
 div#filemgr .modal .modal-header {
     border-radius: 4px 4px 0 0;
-    background: #2196F3;
+    background: #34383f;
     padding: 1.3em;
 }
 
 div#filemgr .modal .modal-header .modal-title {
     font-size: 20px;
     line-height: 100%;
-    color: #D4E5F5;
+    color: #fff;
     margin: 0;
 }
 
 div#filemgr .modal .modal-header .close {
     opacity: 1;
-    color: #D4E5F5;
+    color: #fff;
 }
 
 div#filemgr .modal .modal-header .close.fullscreen {
