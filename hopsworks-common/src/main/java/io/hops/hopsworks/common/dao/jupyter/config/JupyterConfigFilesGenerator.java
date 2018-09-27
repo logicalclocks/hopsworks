@@ -678,7 +678,7 @@ public class JupyterConfigFilesGenerator {
 
       sparkMagicParams.put("spark.dynamicAllocation.executorIdleTimeout", new ConfigProperty(
           "spark_dynamicAllocation_executorIdleTimeout", HopsUtils.OVERWRITE,
-          (isDistributedTraining) ? Integer.toString(((js.getNumExecutors() + js.getNumTfPs()) * 15) + 60 ) + "s" :
+          (isParameterServerStrategy) ? Integer.toString(((js.getNumExecutors() + js.getNumTfPs()) * 15) + 60 ) + "s" :
               "60s"));
 
       // Blacklisting behaviour for TensorFlow on Spark (e.g. Hyperparameter search) to make it robust
