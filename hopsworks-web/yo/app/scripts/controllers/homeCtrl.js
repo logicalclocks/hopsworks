@@ -65,9 +65,9 @@ angular.module('hopsWorksApp')
             self.sortBy='-project.created';
             self.getTours = function () {
               self.tours = [
+                {'name': 'Deep Learning', 'tip': 'Take a tour by creating a project and running a Deep Learning notebook!'},
                 {'name': 'Spark', 'tip': 'Take a tour of Hopsworks by creating a project and running a Spark job!'},
-                {'name': 'Kafka', 'tip': 'Take a tour of Hopsworks by creating a project and running a Kafka job!'},
-                {'name': 'Deep Learning', 'tip': 'Take a tour by creating a project and running a Deep Learning notebook!'}
+                {'name': 'Kafka', 'tip': 'Take a tour of Hopsworks by creating a project and running a Kafka job!'}
               ];
             };
 
@@ -312,11 +312,11 @@ angular.module('hopsWorksApp')
 
             self.createExampleProject = function (tourName) {
 
-              $scope.creating[tourName] = true;
-
               if(tourName === 'Deep Learning') {
                 tourName = 'Deep_Learning'
               };
+
+              $scope.creating[tourName] = true;
 
               if (self.showTourTips === false) {
                 self.toggleTourTips();

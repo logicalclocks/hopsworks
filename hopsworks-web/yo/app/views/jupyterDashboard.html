@@ -220,7 +220,7 @@
                           </div>
                           <div class="col-md-2 jupyter-left">
                               <ui-select ng-model="jupyterCtrl.distributionStrategySelected" theme="bootstrap"
-                                         on-select="jupyterCtrl.changeDistributionStrategy()">
+                                         on-select="jupyterCtrl.changeDistributionStrategy()" style="z-index:2;">
                                   <ui-select-match >
                                       <span ng-bind="jupyterCtrl.distributionStrategySelected.name"></span>
                                   </ui-select-match>
@@ -389,7 +389,7 @@
                   </div>
                   <div class="col-md-2 jupyter-left">
                     <ui-select ng-model="jupyterCtrl.shutdownLevelSelected" theme="bootstrap"
-                               on-select="jupyterCtrl.changeShutdownLevel()">
+                               on-select="jupyterCtrl.changeShutdownLevel()" style="z-index:1";>
                       <ui-select-match >
                         <span ng-bind="jupyterCtrl.shutdownLevelSelected.name"></span>
                       </ui-select-match>

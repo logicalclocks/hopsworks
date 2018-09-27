@@ -122,13 +122,13 @@ angular.module('hopsWorksApp')
                 id: 4,
                 name: '24'
             }, {
-                id: 4,
+                id: 5,
                 name: '72'
             }, {
-                id: 5,
+                id: 6,
                 name: '168'
             }, {
-                id: 5,
+                id: 7,
                 name: '1000'
             }];
             self.shutdownLevelSelected;
