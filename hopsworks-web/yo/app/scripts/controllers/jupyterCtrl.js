@@ -48,7 +48,7 @@ angular.module('hopsWorksApp')
             var self = this;
             self.connectedStatus = false;
             self.loading = false;
-            self.advanced = false;
+            self.advanced = true;
             self.details = true;
             self.loadingText = "";
             self.jupyterServer;
