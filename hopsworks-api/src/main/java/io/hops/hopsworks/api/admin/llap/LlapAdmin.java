@@ -43,8 +43,9 @@ import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.common.admin.llap.LlapClusterFacade;
 import io.hops.hopsworks.common.admin.llap.LlapClusterLifecycle;
 import io.hops.hopsworks.common.admin.llap.LlapClusterStatus;
-import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.exception.ServiceException;
 import io.swagger.annotations.Api;
 
 import javax.annotation.security.RolesAllowed;
@@ -83,7 +84,7 @@ public class LlapAdmin {
    */
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  public Response clusterStatus() throws AppException {
+  public Response clusterStatus() {
     LlapClusterStatus status = llapClusterFacade.getClusterStatus();
     GenericEntity<LlapClusterStatus> statusEntity =
         new GenericEntity<LlapClusterStatus>(status) {};
@@ -95,19 +96,17 @@ public class LlapAdmin {
    * Update the state of the cluster based on the ingested JSON
    * @param llapClusterRequest
    * @return
-   * @throws AppException
    */
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
-  public Response changeClusterStatus(LlapClusterStatus llapClusterRequest) throws AppException {
+  public Response changeClusterStatus(LlapClusterStatus llapClusterRequest) throws ServiceException {
     LlapClusterStatus oldClusterStatus = llapClusterFacade.getClusterStatus();
     LlapClusterStatus.Status desiredStatus = llapClusterRequest.getClusterStatus();
 
     switch (desiredStatus) {
       case UP:
         if (oldClusterStatus.getClusterStatus() == desiredStatus) {
-          throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              ResponseMessages.LLAP_CLUSTER_ALREADY_UP);
+          throw new ServiceException(RESTCodes.ServiceErrorCode.LLAP_CLUSTER_ALREADY_UP);
         }
         llapClusterLifecycle.startCluster(llapClusterRequest.getInstanceNumber(),
             llapClusterRequest.getExecutorsMemory(),
@@ -117,14 +116,12 @@ public class LlapAdmin {
         break;
       case DOWN:
         if (oldClusterStatus.getClusterStatus() == desiredStatus) {
-          throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              ResponseMessages.LLAP_CLUSTER_ALREADY_DOWN);
+          throw new ServiceException(RESTCodes.ServiceErrorCode.LLAP_CLUSTER_ALREADY_DOWN);
         }
         llapClusterLifecycle.stopCluster();
         break;
       default:
-        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-            ResponseMessages.LLAP_STATUS_INVALID);
+        throw new ServiceException(RESTCodes.ServiceErrorCode.LLAP_STATUS_INVALID, "status: " + desiredStatus);
     }
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).build();

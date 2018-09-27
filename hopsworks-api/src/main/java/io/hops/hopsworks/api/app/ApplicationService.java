@@ -57,7 +57,6 @@ import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.exception.GenericException;
 import io.hops.hopsworks.common.exception.JobException;
 import io.hops.hopsworks.common.exception.RESTCodes;
@@ -165,7 +164,7 @@ public class ApplicationService {
   @Path("schema")
   @Produces(MediaType.APPLICATION_JSON)
   public Response getSchemaForTopics(@Context SecurityContext sc,
-      @Context HttpServletRequest req, TopicJsonDTO topicInfo) throws UserException, GenericException {
+      @Context HttpServletRequest req, TopicJsonDTO topicInfo) throws UserException {
     String projectUser = checkAndGetProjectUser(topicInfo.getKeyStoreBytes(),
         topicInfo.getKeyStorePwd().toCharArray());
 
@@ -294,9 +293,7 @@ public class ApplicationService {
       String username = hdfsUserBean.getUserName(commonName);
       Users user = userFacade.findByUsername(username);
       if (user == null) {
-        String errorMsg = "Could not find user " + commonName;
-        LOGGER.log(Level.WARNING, errorMsg);
-        throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(), errorMsg);
+        throw new UserException(RESTCodes.UserErrorCode.AUTHORIZATION_FAILURE, "user: " + commonName);
       }
       
       String decryptedPassword = HopsUtils.decrypt(user.getPassword(), userCert.getUserKeyPwd(),
@@ -305,8 +302,7 @@ public class ApplicationService {
       String storedCN = certificatesController.extractCNFromCertificate(userCert.getUserKey(),
           decryptedPassword.toCharArray(), commonName);
       if (!storedCN.equals(commonName)) {
-        throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(), "Could not authenticate user " +
-            commonName);
+        throw new UserException(RESTCodes.UserErrorCode.AUTHORIZATION_FAILURE, "user: " + commonName);
       }
       
       return commonName;

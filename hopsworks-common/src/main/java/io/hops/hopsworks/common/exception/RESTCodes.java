@@ -51,13 +51,12 @@ public class RESTCodes {
   public enum ProjectErrorCode implements RESTErrorCode {
     //project error response
     NO_ROLE_FOUND(150000, "No valid role found for this user", Response.Status.BAD_REQUEST),
-    PROJECT_EXISTS(150001, "Project with the same name already exists.", Response.Status.BAD_REQUEST),
+    PROJECT_EXISTS(150001, "Project with the same name already exists.", Response.Status.CONFLICT),
     NUM_PROJECTS_LIMIT_REACHED(150002, "You have reached the maximum number of projects you could create."
       + " Contact an administrator to increase your limit.", Response.Status.BAD_REQUEST),
     INVALID_PROJECT_NAME(150003, "Invalid project name, valid characters: [a-z,0-9].", Response.Status.BAD_REQUEST),
     PROJECT_NOT_FOUND(150004, "Project wasn't found.", Response.Status.BAD_REQUEST),
     PROJECT_NOT_REMOVED(150005, "Project wasn't removed.", Response.Status.BAD_REQUEST),
-    PROJECT_NAME_EXISTS(150006, "A Project with the same name already exists.", Response.Status.CONFLICT),
     PROJECT_FOLDER_NOT_CREATED(150007, "Project folder could not be created in HDFS.",
       Response.Status.INTERNAL_SERVER_ERROR),
     STARTER_PROJECT_BAD_REQUEST(150008, "Type of starter project is not valid", Response.Status.BAD_REQUEST),
@@ -145,7 +144,14 @@ public class RESTCodes {
       Response.Status.NOT_FOUND),
     KILL_MEMBER_JOBS(150060, "Could not kill user's yarn applications", Response.Status.INTERNAL_SERVER_ERROR),
     JUPYTER_SERVER_NOT_FOUND(150060, "Could not find Jupyter entry for user in this project.",
-      Response.Status.NOT_FOUND);
+      Response.Status.NOT_FOUND),
+    PYTHON_LIB_ALREADY_INSTALLED(150061, "This python library is already installed on this project",
+      Response.Status.NOT_MODIFIED),
+    PYTHON_LIB_NOT_INSTALLED(150062, "This python library is not installed for this project. Cannot remove/upgrade " +
+      "op", Response.Status.NOT_MODIFIED),
+    PROJECT_QUOTA_INSUFFICIENT(150063, "This project is out of credits", Response.Status.PRECONDITION_FAILED),
+    ANACONDA_NOT_ENABLED(150064, "First enable Anaconda. Click on 'Python' -> Pick a version",
+      Response.Status.PRECONDITION_FAILED);
     
     private Integer code;
     private String message;
@@ -223,7 +229,15 @@ public class RESTCodes {
     README_NOT_ACCESSIBLE(110036, "Readme not accessible.", Response.Status.FORBIDDEN),
     COMPRESSION_SIZE_ERROR(110037, "Not enough free space on the local scratch directory to download and unzip this " +
       "file. Talk to your admin to increase disk space at the path: hopsworks/staging_dir",
-      Response.Status.PRECONDITION_FAILED);
+      Response.Status.PRECONDITION_FAILED),
+    INVALID_PATH_FILE(110038, "The requested path does not resolve to a valid file", Response.Status.BAD_REQUEST),
+    INVALID_PATH_DIR(110038, "The requested path does not resolve to a valid directory", Response.Status.BAD_REQUEST),
+    UPLOAD_DIR_CREATE_ERROR(110039, "Uploads directory could not be created in the file system",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    UPLOAD_CONCURRENT_ERROR(110040, "A file with the same name is being uploaded", Response.Status.PRECONDITION_FAILED),
+    UPLOAD_RESUMABLEINFO_INVALID(110041, "ResumableInfo is invalid", Response.Status.BAD_REQUEST),
+    UPLOAD_ERROR(110042, "Error occurred while uploading file",
+      Response.Status.INTERNAL_SERVER_ERROR);
     
     
     private Integer code;
@@ -428,7 +442,32 @@ public class RESTCodes {
     INVALID_YML_SIZE(100019, ".yml file too large. Maximum size is 10000 bytes",
       Response.Status.INTERNAL_SERVER_ERROR),
     ANACONDA_FROM_YML_ERROR(100020, "Failed to create Anaconda environment from .yml file.",
-      Response.Status.INTERNAL_SERVER_ERROR);
+      Response.Status.INTERNAL_SERVER_ERROR),
+    PYTHON_INVALID_VERSION(100021, "Invalid version of python (valid: '2.7', and '3.5', and '3.6'",
+      Response.Status.BAD_REQUEST),
+    ANACONDA_REPO_ERROR(100022, "Problem adding the repo.", Response.Status.INTERNAL_SERVER_ERROR),
+    ANACONDA_OP_IN_PROGRESS(100023, "A conda environment operation is currently executing (create/remove/list). Wait " +
+      "for it to finish or clear it first.", Response.Status.PRECONDITION_FAILED),
+    HOST_TYPE_NOT_FOUND(100024, "No hosts with the desired capability.", Response.Status.PRECONDITION_FAILED),
+    HOST_NOT_FOUND(100025, "No hosts with the desired capability.", Response.Status.BAD_REQUEST),
+    HOST_NOT_REGISTERED(100026, "No hosts with the desired capability.", Response.Status.PRECONDITION_FAILED),
+    ANACONDA_DEP_REMOVE_FORBIDDEN(100027, "Could not uninstall library, it is a mandatory dependency",
+      Response.Status.BAD_REQUEST),
+    ANACONDA_DEP_INSTALL_FORBIDDEN(100028, "Library is already installed", Response.Status.BAD_REQUEST),
+    ANACONDA_EXPORT_ERROR(100029, "Failed to export Anaconda environment as .yml",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    ANACONDA_LIST_LIB_NOT_FOUND(100030, "No results found", Response.Status.NO_CONTENT),
+    ELASTIC_INDEX_NOT_FOUND(100031, "Elastic index was not found in elasticsearch", Response.Status.NOT_FOUND),
+    ELASTIC_INDEX_TYPE_NOT_FOUND(100032, "Elastic index type was not found in elasticsearch",
+      Response.Status.NOT_FOUND),
+    JUPYTER_SERVERS_NOT_FOUND(100033, "Could not find any Jupyter notebook servers for this project.",
+      Response.Status.NOT_FOUND),
+    JUPYTER_SERVERS_NOT_RUNNING(100034, "Could not find any Jupyter notebook servers for this project.",
+      Response.Status.PRECONDITION_FAILED),
+    JUPYTER_START_ERROR(100035, "Jupyter server could not start.", Response.Status.INTERNAL_SERVER_ERROR),
+    JUPYTER_SAVE_SETTINGS_ERROR(100036, "Could not save Jupyter Settings.", Response.Status.INTERNAL_SERVER_ERROR),
+    IPYTHON_CONVERT_ERROR(100037, "Problem converting ipython notebook to python program",
+      Response.Status.EXPECTATION_FAILED);
     
     private Integer code;
     private String message;
@@ -558,7 +597,12 @@ public class RESTCodes {
     CERT_CREATION_ERROR(200004, "Error while generating certificates.", Response.Status.INTERNAL_SERVER_ERROR),
     CERT_CN_EXTRACT_ERROR(200005, "Error while extracting CN from certificate.", Response.Status.INTERNAL_SERVER_ERROR),
     CERT_ERROR(200006, "Certificate could not be validated.", Response.Status.UNAUTHORIZED),
-    CERT_ACCESS_DENIED(200007, "Certificate access denied.", Response.Status.FORBIDDEN);
+    CERT_ACCESS_DENIED(200007, "Certificate access denied.", Response.Status.FORBIDDEN),
+    CSR_ERROR(200008, "Error while signing CSR.", Response.Status.INTERNAL_SERVER_ERROR),
+    CERT_APP_REVOKE_ERROR(200009, "Error while revoking application certificate, check the logs",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    CERT_LOCATION_UNDEFINED(200010, "Could not identify local directory to clean certificates. Manual cleanup " +
+      "required.", Response.Status.INTERNAL_SERVER_ERROR);
     
     private Integer code;
     private String message;
@@ -590,12 +634,12 @@ public class RESTCodes {
     
     USER_DOES_NOT_EXIST(160001, "User does not exist.", Response.Status.BAD_REQUEST),
     USER_WAS_NOT_FOUND(160002, "User not found", Response.Status.NOT_FOUND),
-    USER_EXISTS(160003, "There is an existing account associated with this email", Response.Status.BAD_REQUEST),
-    ACCOUNT_REQUEST(160004, "Your account has not yet been approved.", Response.Status.BAD_REQUEST),
-    ACCOUNT_DEACTIVATED(160005, "This account have been deactivated.", Response.Status.BAD_REQUEST),
+    USER_EXISTS(160003, "There is an existing account associated with this email", Response.Status.CONFLICT),
+    ACCOUNT_REQUEST(160004, "Your account has not yet been approved.", Response.Status.FORBIDDEN),
+    ACCOUNT_DEACTIVATED(160005, "This account have been deactivated.", Response.Status.UNAUTHORIZED),
     ACCOUNT_VERIFICATION(160006, "You need to verify your account.", Response.Status.BAD_REQUEST),
-    ACCOUNT_BLOCKED(160007, "Your account hsd been blocked. Contact the administrator.", Response.Status.BAD_REQUEST),
-    AUTHENTICATION_FAILURE(160008, "Authentication failed", Response.Status.BAD_REQUEST),
+    ACCOUNT_BLOCKED(160007, "Your account hsd been blocked. Contact the administrator.", Response.Status.UNAUTHORIZED),
+    AUTHENTICATION_FAILURE(160008, "Authentication failed", Response.Status.UNAUTHORIZED),
     LOGOUT_FAILURE(160009, "Logout failed on backend.", Response.Status.BAD_REQUEST),
     
     SEC_Q_EMPTY(160010, "Security Question cannot be empty.", Response.Status.BAD_REQUEST),
@@ -608,7 +652,7 @@ public class RESTCodes {
     PASSWORD_INCORRECT(160016, "Password incorrect", Response.Status.BAD_REQUEST),
     PASSWORD_PATTERN_NOT_CORRECT(160017, "Password should include one uppercase letter\n"
       + "one special character and/or alphanumeric characters.", Response.Status.BAD_REQUEST),
-    INCORRECT_PASSWORD(160018, "The password is incorrect. Please try again", Response.Status.BAD_REQUEST),
+    INCORRECT_PASSWORD(160018, "The password is incorrect. Please try again", Response.Status.FORBIDDEN),
     PASSWORD_MISS_MATCH(160019, "Passwords do not match - typo?", Response.Status.BAD_REQUEST),
     TOS_NOT_AGREED(160020, "You must agree to our terms of use.", Response.Status.BAD_REQUEST),
     CERT_DOWNLOAD_DENIED(160021, "Admin is not allowed to download certificates", Response.Status.BAD_REQUEST),
@@ -632,7 +676,20 @@ public class RESTCodes {
     CERT_AUTHORIZATION_ERROR(160035, "Certificate CN does not match the username provided.",
       Response.Status.UNAUTHORIZED),
     PROJECT_USER_CERT_NOT_FOUND(160036, "Could not find exactly one certificate for user in project.",
-      Response.Status.UNAUTHORIZED);
+      Response.Status.UNAUTHORIZED),
+    ACCOUNT_INACTIVE(160037, "This account has not been activated", Response.Status.UNAUTHORIZED),
+    ACCOUNT_LOST_DEVICE(160038, "This account has registered a lost device.", Response.Status.UNAUTHORIZED),
+    ACCOUNT_NOT_APPROVED(160039, "This account has not yet been approved", Response.Status.UNAUTHORIZED),
+    INVALID_EMAIL(160040, "Invalid email format.", Response.Status.BAD_REQUEST),
+    INCORRECT_DEACTIVATION_LENGTH(160041, "The message should have a length between 5 and 500 characters",
+      Response.Status.BAD_REQUEST),
+    TMP_CODE_INVALID(160042, "The temporary code was wrong.", Response.Status.FORBIDDEN),
+    INCORRECT_CREDENTIALS(160043, "Incorrect email or password.", Response.Status.FORBIDDEN),
+    INCORRECT_VALIDATION_KEY(160044, "Incorrect validation key", Response.Status.FORBIDDEN),
+    ACCOUNT_ALREADY_VERIFIED(160045, "User is already verified", Response.Status.BAD_REQUEST),
+    TWO_FA_ENABLE_ERROR(160046, "Cannot enable 2-factor authentication.", Response.Status.INTERNAL_SERVER_ERROR),
+    ACCOUNT_REGISTRATION_ERROR(160047, "Cannot enable 2-factor authentication.", Response.Status.INTERNAL_SERVER_ERROR),
+    TWO_FA_DISABLED(160046, "2FA is not enabled.", Response.Status.PRECONDITION_FAILED);
     
     private Integer code;
     private String message;

@@ -39,11 +39,24 @@
 
 package io.hops.hopsworks.api.user;
 
+import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import io.hops.hopsworks.api.util.JsonResponse;
+import io.hops.hopsworks.common.constants.message.ResponseMessages;
+import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
+import io.hops.hopsworks.common.dao.user.UserCardDTO;
+import io.hops.hopsworks.common.dao.user.UserDTO;
+import io.hops.hopsworks.common.dao.user.UserFacade;
+import io.hops.hopsworks.common.dao.user.UserProjectDTO;
+import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.dao.user.sshkey.SshKeyDTO;
+import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.exception.UserException;
+import io.hops.hopsworks.common.project.ProjectController;
+import io.hops.hopsworks.common.user.UsersController;
+import io.swagger.annotations.Api;
+import org.apache.commons.codec.binary.Base64;
+
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -61,22 +74,10 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import org.apache.commons.codec.binary.Base64;
-import io.hops.hopsworks.api.filter.AllowedProjectRoles;
-import io.hops.hopsworks.api.util.JsonResponse;
-import io.hops.hopsworks.common.constants.message.ResponseMessages;
-import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
-import io.hops.hopsworks.common.dao.user.UserCardDTO;
-import io.hops.hopsworks.common.dao.user.UserDTO;
-import io.hops.hopsworks.common.dao.user.UserFacade;
-import io.hops.hopsworks.common.dao.user.UserProjectDTO;
-import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.sshkey.SshKeyDTO;
-import io.hops.hopsworks.common.exception.AppException;
-import io.hops.hopsworks.common.project.ProjectController;
-import io.hops.hopsworks.common.user.UsersController;
-import io.swagger.annotations.Api;
-import javax.mail.MessagingException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Path("/user")
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
@@ -120,13 +121,11 @@ public class UserService {
   @GET
   @Path("profile")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getUserProfile(@Context SecurityContext sc) throws
-          AppException {
+  public Response getUserProfile(@Context SecurityContext sc) throws UserException {
     Users user = userBean.findByEmail(sc.getUserPrincipal().getName());
 
     if (user == null) {
-      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-              ResponseMessages.USER_WAS_NOT_FOUND);
+      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND);
     }
 
     UserDTO userDTO = new UserDTO(user);
@@ -142,7 +141,7 @@ public class UserService {
           @FormParam("lastName") String lastName,
           @FormParam("telephoneNum") String telephoneNum,
           @FormParam("toursState") Integer toursState,
-          @Context HttpServletRequest req) throws AppException {
+          @Context HttpServletRequest req) throws UserException {
     JsonResponse json = new JsonResponse();
     
     Users user = userController.updateProfile(req.getRemoteUser(), firstName, lastName, telephoneNum, toursState, req);
@@ -163,7 +162,7 @@ public class UserService {
           @FormParam("oldPassword") String oldPassword,
           @FormParam("newPassword") String newPassword,
           @FormParam("confirmedPassword") String confirmedPassword,
-          @Context HttpServletRequest req) throws AppException, MessagingException {
+          @Context HttpServletRequest req) throws UserException {
     JsonResponse json = new JsonResponse();
 
     userController.changePassword(req.getRemoteUser(), oldPassword, newPassword, confirmedPassword, req);
@@ -181,7 +180,7 @@ public class UserService {
   public Response changeSecurityQA(@FormParam("oldPassword") String oldPassword,
           @FormParam("securityQuestion") String securityQuestion,
           @FormParam("securityAnswer") String securityAnswer,
-          @Context HttpServletRequest req) throws AppException, MessagingException {
+          @Context HttpServletRequest req) throws UserException {
     JsonResponse json = new JsonResponse();
     userController.changeSecQA(req.getRemoteUser(), oldPassword, securityQuestion, securityAnswer, req);
 
@@ -197,7 +196,7 @@ public class UserService {
   @Produces(MediaType.APPLICATION_JSON)
   public Response changeTwoFactor(@FormParam("password") String password,
           @FormParam("twoFactor") boolean twoFactor,
-          @Context HttpServletRequest req) throws AppException {
+          @Context HttpServletRequest req) throws UserException {
     Users user = userBean.findByEmail(req.getRemoteUser());
 
     byte[] qrCode;
@@ -224,13 +223,13 @@ public class UserService {
   @Path("getQRCode")
   @Produces(MediaType.APPLICATION_JSON)
   public Response getQRCode(@FormParam("password") String password, @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException {
+      @Context HttpServletRequest req) throws UserException {
     Users user = userBean.findByEmail(sc.getUserPrincipal().getName());
     if (user == null) {
-      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(), ResponseMessages.USER_WAS_NOT_FOUND);
+      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND);
     }
     if (password == null || password.isEmpty()) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "Password requierd.");
+      throw new IllegalArgumentException("Password was not provided.");
     }
     byte[] qrCode;
     JsonResponse json = new JsonResponse();
@@ -238,7 +237,7 @@ public class UserService {
     if (qrCode != null) {
       json.setQRCode(new String(Base64.encodeBase64(qrCode)));
     } else {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "Two factor disabled.");
+      throw new UserException(RESTCodes.UserErrorCode.TWO_FA_DISABLED);
     }
     json.setStatus("OK");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
@@ -251,7 +250,7 @@ public class UserService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response addSshkey(SshKeyDTO sshkey,
           @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+          @Context HttpServletRequest req) {
     Users user = userBean.findByEmail(sc.getUserPrincipal().getName());
     int id = user.getUid();
     SshKeyDTO dto = userController.addSshKey(id, sshkey.getName(), sshkey.
@@ -266,7 +265,7 @@ public class UserService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response removeSshkey(@FormParam("name") String name,
           @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+          @Context HttpServletRequest req) {
     JsonResponse json = new JsonResponse();
     Users user = userBean.findByEmail(sc.getUserPrincipal().getName());
     int id = user.getUid();
@@ -282,7 +281,7 @@ public class UserService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response getSshkeys(@Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+          @Context HttpServletRequest req) {
     Users user = userBean.findByEmail(sc.getUserPrincipal().getName());
     int id = user.getUid();
     List<SshKeyDTO> sshKeys = userController.getSshKeys(id);
@@ -299,7 +298,7 @@ public class UserService {
   @Produces(MediaType.APPLICATION_JSON)
   public Response getRole(@FormParam("projectId") int projectId,
           @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+          @Context HttpServletRequest req) {
     String email = sc.getUserPrincipal().getName();
 
     UserProjectDTO userDTO = new UserProjectDTO();

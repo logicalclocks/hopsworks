@@ -39,10 +39,10 @@
 
 package io.hops.hopsworks.api.admin;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.api.admin.dto.MaterializerStateResponse;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.util.JsonResponse;
-import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.swagger.annotations.Api;
@@ -67,7 +67,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -85,7 +84,7 @@ public class CertificateMaterializerAdmin {
   
   private final Pattern projectSpecificPattern = Pattern.compile("(\\w*)" + HdfsUsersController.USER_NAME_DELIMITER +
       "(\\w*)");
-  private final Logger LOG = Logger.getLogger(CertificateMaterializerAdmin.class.getName());
+  private final Logger LOGGER = Logger.getLogger(CertificateMaterializerAdmin.class.getName());
   
   @EJB
   private NoCacheResponse noCacheResponse;
@@ -98,11 +97,9 @@ public class CertificateMaterializerAdmin {
    * @param sc
    * @param request
    * @return
-   * @throws AppException
    */
   @GET
-  public Response getMaterializerState(@Context SecurityContext sc, @Context HttpServletRequest request)
-    throws AppException {
+  public Response getMaterializerState(@Context SecurityContext sc, @Context HttpServletRequest request) {
   
     CertificateMaterializer.MaterializerState<Map<String, Map<String, Integer>>, Map<String, Map<String, Integer>>,
         Map<String, Set<String>>> materializerState = certificateMaterializer.getState();
@@ -152,15 +149,13 @@ public class CertificateMaterializerAdmin {
    * @param materialName Name of the materialized crypto
    * @param directory Local directory of the crypto material
    * @return
-   * @throws AppException
    */
   @DELETE
   @Path("/local/{name}/{directory}")
   public Response removeLocalMaterializedCrypto(@Context SecurityContext sc, @Context HttpServletRequest request,
-      @PathParam("name") String materialName, @PathParam("directory") String directory) throws AppException {
-    if (materialName == null || materialName.isEmpty()) {
-      LOG.log(Level.WARNING, "Request to remove crypto material but the material name is either null or empty");
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "Material name is null or empty");
+      @PathParam("name") String materialName, @PathParam("directory") String directory) {
+    if (Strings.isNullOrEmpty(materialName)) {
+      throw new IllegalArgumentException("materialName was not provided or was empty");
     }
     
     JsonResponse response;
@@ -200,15 +195,13 @@ public class CertificateMaterializerAdmin {
    * @param materialName Name of the materialized crypto
    * @param directory Remote directory of the crypto material
    * @return
-   * @throws AppException
    */
   @DELETE
   @Path("/remote/{name}/{directory}")
   public Response removeRemoteMaterializedCrypto(@Context SecurityContext sc, @Context HttpServletRequest request,
-      @PathParam("name") String materialName, @PathParam("directory") String directory) throws AppException {
-    if (materialName == null || materialName.isEmpty()) {
-      LOG.log(Level.WARNING, "Request to remove crypto material but the material name is either null or empty");
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "Material name is null or empty");
+      @PathParam("name") String materialName, @PathParam("directory") String directory) {
+    if (Strings.isNullOrEmpty(materialName)) {
+      throw new IllegalArgumentException("materialName was not provided or was empty");
     }
     
     JsonResponse response;

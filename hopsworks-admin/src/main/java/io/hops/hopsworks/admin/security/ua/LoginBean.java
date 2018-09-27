@@ -41,12 +41,9 @@ package io.hops.hopsworks.admin.security.ua;
 
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.exception.UserException;
 import io.hops.hopsworks.common.user.AuthController;
-import java.io.IOException;
-import java.io.Serializable;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.ejb.EJBException;
@@ -58,12 +55,16 @@ import javax.faces.context.FacesContext;
 import javax.inject.Inject;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @ManagedBean
 @SessionScoped
 public class LoginBean implements Serializable {
 
-  private final static Logger LOGGER = Logger.getLogger(LoginBean.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(LoginBean.class.getName());
   @EJB
   private UserFacade userFacade;
   @EJB
@@ -115,7 +116,7 @@ public class LoginBean implements Serializable {
     try {
       passwordWithSaltPlusOtp = authController.preCustomRealmLoginCheck(user, this.credentials.getPassword(),
           this.credentials.getOtp(), request);
-    } catch (AppException ex) {
+    } catch (UserException ex) {
       LOGGER.log(Level.SEVERE, null, ex);
       context.addMessage(null, new FacesMessage("Login failed."));
       return "";

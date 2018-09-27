@@ -42,14 +42,14 @@ package io.hops.hopsworks.common.dao.jupyter.config;
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.jupyter.JupyterSettings;
 import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
 import io.hops.hopsworks.common.util.ConfigFileGenerator;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.util.templates.ConfigProperty;
 
-import javax.ws.rs.core.Response;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -105,8 +105,7 @@ public class JupyterConfigFilesGenerator {
 
   JupyterConfigFilesGenerator(Project project, String secretConfig, String hdfsUser, String realName,
       String nameNodeEndpoint, Settings settings, int port, String token,
-      JupyterSettings js)
-      throws AppException {
+      JupyterSettings js) throws ServiceException {
     this.project = project;
     this.hdfsUser = hdfsUser;
     this.realName = realName;
@@ -136,13 +135,7 @@ public class JupyterConfigFilesGenerator {
       LOGGER.log(Level.SEVERE,
           "Error in initializing JupyterConfig for project: {0}. {1}",
           new Object[]{this.project.getName(), e});
-      if (e instanceof IllegalArgumentException) {
-        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
-            "Could not configure Jupyter, " + e.getMessage());
-      }
-      throw new AppException(
-          Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
-          "Could not configure Jupyter. Report a bug.");
+      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_ADD_FAILURE, null, e.getMessage(), e);
     }
   }
 

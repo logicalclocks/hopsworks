@@ -40,11 +40,21 @@
 package io.hops.hopsworks.admin.user.account;
 
 import io.hops.hopsworks.admin.maintenance.MessagesController;
-import io.hops.hopsworks.common.constants.auth.AccountStatusErrorMessages;
 import io.hops.hopsworks.common.dao.user.UserFacade;
+import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
+import io.hops.hopsworks.common.dao.user.security.audit.AccountsAuditActions;
+import io.hops.hopsworks.common.dao.user.security.audit.UserAuditActions;
+import io.hops.hopsworks.common.dao.user.security.ua.SecurityQuestion;
+import io.hops.hopsworks.common.dao.user.security.ua.SecurityUtils;
+import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
+import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
+import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.exception.UserException;
+import io.hops.hopsworks.common.user.AuthController;
+import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.EmailBean;
-import java.io.Serializable;
-import java.util.logging.Logger;
+
 import javax.annotation.Resource;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
@@ -52,6 +62,7 @@ import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
 import javax.mail.Message.RecipientType;
 import javax.mail.MessagingException;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import javax.transaction.HeuristicMixedException;
@@ -60,21 +71,10 @@ import javax.transaction.NotSupportedException;
 import javax.transaction.RollbackException;
 import javax.transaction.SystemException;
 import javax.transaction.UserTransaction;
-
-import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.security.audit.AccountsAuditActions;
-import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
-import io.hops.hopsworks.common.dao.user.security.audit.UserAuditActions;
-import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
-import io.hops.hopsworks.common.dao.user.security.ua.SecurityQuestion;
-import io.hops.hopsworks.common.dao.user.security.ua.SecurityUtils;
-import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
-import io.hops.hopsworks.common.exception.AppException;
-import io.hops.hopsworks.common.user.AuthController;
-import io.hops.hopsworks.common.user.UsersController;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.logging.Level;
-import javax.servlet.ServletException;
+import java.util.logging.Logger;
 
 @ManagedBean
 @SessionScoped
@@ -306,7 +306,7 @@ public class ResetPassword implements Serializable {
           AccountsAuditActions.FAILED.name(), "", people, req);
       return ("welcome");
     }
-    if (this.answer.isEmpty() || this.answer == null || this.current == null || this.current.isEmpty()) {
+    if (this.answer == null || this.answer.isEmpty() || this.current == null || this.current.isEmpty()) {
       MessagesController.addSecurityErrorMessage("No valid answer!");
       auditManager.registerAccountChange(people, AccountsAuditActions.SECQUESTION.name(),
           AccountsAuditActions.FAILED.name(), "", people, req);
@@ -323,7 +323,7 @@ public class ResetPassword implements Serializable {
             UserAccountsEmailMessages.ACCOUNT_PROFILE_UPDATE, message);
         return ("sec_question_changed");
       } else {
-        MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.INCORRECT_CREDENTIALS);
+        MessagesController.addSecurityErrorMessage(RESTCodes.UserErrorCode.INCORRECT_CREDENTIALS.getMessage());
         auditManager.registerAccountChange(people, AccountsAuditActions.SECQUESTION.name(),
             AccountsAuditActions.FAILED.name(), "", people, req);
         return "";
@@ -331,7 +331,7 @@ public class ResetPassword implements Serializable {
     } catch (MessagingException e) {
       MessagesController.addSecurityErrorMessage("Technical Error!");
       return ("");
-    } catch (AppException ex) {
+    } catch (UserException ex) {
       MessagesController.addSecurityErrorMessage(ex.getMessage());
       return ("");
     }
@@ -376,7 +376,7 @@ public class ResetPassword implements Serializable {
 
       // check the deactivation reason length
       if (this.notes.length() < 5 || this.notes.length() > 500) {
-        MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.INCORRECT_DEACTIVATION_LENGTH);
+        MessagesController.addSecurityErrorMessage(RESTCodes.UserErrorCode.INCORRECT_DEACTIVATION_LENGTH.getMessage());
 
         auditManager.registerAccountChange(people, UserAccountStatus.DEACTIVATED_ACCOUNT.name(),
             UserAuditActions.FAILED.name(), "", people, req);
@@ -395,7 +395,7 @@ public class ResetPassword implements Serializable {
         auditManager.registerAccountChange(people, UserAccountStatus.DEACTIVATED_ACCOUNT.name(),
             UserAuditActions.FAILED.name(), "", people, req);
       } else {
-        MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.INCORRECT_PASSWORD);
+        MessagesController.addSecurityErrorMessage(RESTCodes.UserErrorCode.INCORRECT_PASSWORD.getMessage());
 
         auditManager.registerAccountChange(people, UserAccountStatus.DEACTIVATED_ACCOUNT.name(),
             UserAuditActions.FAILED.name(), "", people, req);
@@ -404,7 +404,7 @@ public class ResetPassword implements Serializable {
     } catch (MessagingException e) {
       auditManager.registerAccountChange(people, UserAccountStatus.DEACTIVATED_ACCOUNT.name(),
           UserAuditActions.FAILED.name(), "", people, req);
-    } catch (AppException ex) {
+    } catch (UserException ex) {
       logger.log(Level.SEVERE, null, ex);
     }
     return logout();
@@ -430,14 +430,14 @@ public class ResetPassword implements Serializable {
 
     // Check the status to see if user is not blocked or deactivate
     if (people.getStatus() == UserAccountStatus.BLOCKED_ACCOUNT) {
-      MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.BLOCKED_ACCOUNT);
+      MessagesController.addSecurityErrorMessage(RESTCodes.UserErrorCode.ACCOUNT_BLOCKED.getMessage());
       auditManager.registerAccountChange(people, AccountsAuditActions.PASSWORD.name(),
           AccountsAuditActions.FAILED.name(), "", people, req);
       return "";
     }
 
     if (people.getStatus() == UserAccountStatus.DEACTIVATED_ACCOUNT) {
-      MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.DEACTIVATED_ACCOUNT);
+      MessagesController.addSecurityErrorMessage(RESTCodes.UserErrorCode.ACCOUNT_DEACTIVATED.getMessage());
       auditManager.registerAccountChange(people, AccountsAuditActions.PASSWORD.name(),
           AccountsAuditActions.FAILED.name(), "", people, req);
       return "";
@@ -464,7 +464,7 @@ public class ResetPassword implements Serializable {
             AccountsAuditActions.SUCCESS.name(), "", people, req);
         return ("profile_password_changed");
       } else {
-        MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.INCORRECT_CREDENTIALS);
+        MessagesController.addSecurityErrorMessage(RESTCodes.UserErrorCode.INCORRECT_CREDENTIALS.getMessage());
         auditManager.registerAccountChange(people, AccountsAuditActions.PASSWORD.name(),
             AccountsAuditActions.FAILED.name(), "", people, req);
         return "";

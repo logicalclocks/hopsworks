@@ -34,8 +34,9 @@ import io.hops.hopsworks.common.dao.pythonDeps.CondaCommands;
 import io.hops.hopsworks.common.dao.pythonDeps.PythonDep;
 import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
-import io.hops.hopsworks.common.exception.AppException;
-import io.hops.hopsworks.common.security.CertificatesMgmService;
+import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.exception.RequestException;
+import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.util.EmailBean;
 import io.hops.hopsworks.common.util.Settings;
 
@@ -44,7 +45,6 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.mail.MessagingException;
-import javax.ws.rs.core.Response;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -78,8 +78,6 @@ public class AgentController {
   @EJB
   private SystemCommandFacade systemCommandFacade;
   @EJB
-  private CertificatesMgmService certificatesMgmService;
-  @EJB
   private AlertEJB alertFacade;
   
   public String register(String hostId, String password) {
@@ -93,18 +91,13 @@ public class AgentController {
     return settings.getHadoopVersionedDir();
   }
   
-  public HeartbeatReplyDTO heartbeat(AgentHeartbeatDTO heartbeat) throws AppException {
+  public HeartbeatReplyDTO heartbeat(AgentHeartbeatDTO heartbeat) throws ServiceException, RequestException {
     Hosts host = hostsFacade.findByHostname(heartbeat.hostId);
-    String errorMsg;
     if (host == null) {
-      errorMsg = "Host with id " +  heartbeat.hostId + " not found.";
-      LOG.log(Level.WARNING, errorMsg);
-      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(), errorMsg);
+      throw new ServiceException(RESTCodes.ServiceErrorCode.HOST_NOT_FOUND, "hostId: " + heartbeat.hostId);
     }
     if (!host.isRegistered()) {
-      errorMsg = "Host with id " + heartbeat.hostId + " is not registered";
-      LOG.log(Level.WARNING, errorMsg);
-      throw new AppException(Response.Status.NOT_ACCEPTABLE, errorMsg);
+      throw new ServiceException(RESTCodes.ServiceErrorCode.HOST_NOT_REGISTERED, "hostId: " + heartbeat.hostId);
     }
     
     updateHostMetrics(host, heartbeat);
@@ -114,7 +107,7 @@ public class AgentController {
     return constructResponse(host);
   }
   
-  public void alert(Alert alert, String hostId) throws Exception {
+  public void alert(Alert alert, String hostId) throws RequestException {
     Hosts host = hostsFacade.findByHostname(hostId);
     alert.setHost(host);
     alertFacade.persistAlert(alert);
@@ -146,7 +139,7 @@ public class AgentController {
     return new HeartbeatReplyDTO(newSystemCommands, newCondaCommands);
   }
   
-  private void updateHostMetrics(final Hosts host, final AgentHeartbeatDTO heartbeat) {
+  private void updateHostMetrics(final Hosts host, final AgentHeartbeatDTO heartbeat) throws RequestException {
     host.setLastHeartbeat(new Date().getTime());
     host.setLoad1(heartbeat.load1);
     host.setLoad5(heartbeat.load5);
@@ -170,13 +163,14 @@ public class AgentController {
     hostsFacade.storeHost(host);
   }
   
-  private void updateServices(AgentHeartbeatDTO heartbeat) throws AppException {
+  private void updateServices(AgentHeartbeatDTO heartbeat) throws ServiceException, RequestException {
     List<HostServices> updatedHostServices = hostServicesFacade.updateHostServices(heartbeat);
-    updatedHostServices.stream()
-        .forEach(this::notifyHostServiceHealth);
+    for (HostServices updatedHostService : updatedHostServices) {
+      notifyHostServiceHealth(updatedHostService);
+    }
   }
   
-  private void notifyHostServiceHealth(HostServices hostService) {
+  private void notifyHostServiceHealth(HostServices hostService) throws RequestException {
     final Health previousHealthReport = hostService.getHealth();
     if (!hostService.getHealth().equals(previousHealthReport)
         && hostService.getHealth().equals(Health.Bad)) {
@@ -188,7 +182,7 @@ public class AgentController {
     }
   }
   
-  private void processCondaCommands(AgentHeartbeatDTO heartbeatDTO) throws AppException {
+  private void processCondaCommands(AgentHeartbeatDTO heartbeatDTO) throws ServiceException {
     if (heartbeatDTO.condaCommands == null) {
       return;
     }
@@ -215,18 +209,16 @@ public class AgentController {
       if (command == null) {
         continue;
       }
-      
-      if (command.getOp().equals(PythonDepsFacade.CondaOp.CREATE)
-          || command.getOp().equals(PythonDepsFacade.CondaOp.YML)) {
-        // Sync only on Hopsworks server
-        if (settings.getHopsworksIp().equals(command.getHostId().getHostIp())) {
-          final Project projectId = command.getProjectId();
-          final String envStr = listCondaEnvironment(projectName);
-          final Collection<PythonDep> pythonDeps = synchronizeDependencies(
-              projectId, envStr, projectId.getPythonDepCollection());
-          // Insert all deps in current listing
-          pythonDepsFacade.addPythonDepsForProject(projectId, pythonDeps);
-        }
+  
+      // Sync only on Hopsworks server
+      if ((command.getOp().equals(PythonDepsFacade.CondaOp.CREATE)
+        || command.getOp().equals(PythonDepsFacade.CondaOp.YML) &&
+        settings.getHopsworksIp().equals(command.getHostId().getHostIp()))) {
+        final Project projectId = command.getProjectId();
+        final String envStr = listCondaEnvironment(projectName);
+        final Collection<PythonDep> pythonDeps = synchronizeDependencies(envStr, projectId.getPythonDepCollection());
+        // Insert all deps in current listing
+        pythonDepsFacade.addPythonDepsForProject(projectId, pythonDeps);
       }
       
       // An upgrade results in an unknown version installed, query local conda
@@ -309,14 +301,12 @@ public class AgentController {
    * if it is listed as a preinstalled or provided library. A preinstalled libary can't be modified once it has been
    * installed, whereas a provided can.
    *
-   * @param project
    * @param condaListStr
    * @param currentlyInstalledPyDeps
    * @return
-   * @throws AppException
    */
-  private Collection<PythonDep> synchronizeDependencies(Project project, String condaListStr,
-      Collection<PythonDep> currentlyInstalledPyDeps) throws AppException {
+  private Collection<PythonDep> synchronizeDependencies(String condaListStr,
+      Collection<PythonDep> currentlyInstalledPyDeps) throws ServiceException {
     
     Collection<PythonDep> deps = new ArrayList();
     
@@ -332,7 +322,7 @@ public class AgentController {
       String version = split[1];
       
       if (settings.getPreinstalledPythonLibraryNames().contains(libraryName)) {
-        AnacondaRepo repo = pythonDepsFacade.getRepo(project, "PyPi", true);
+        AnacondaRepo repo = pythonDepsFacade.getRepo("PyPi", true);
         
         //Special case for tensorflow
         if (libraryName.equals("tensorflow")) {
@@ -355,7 +345,7 @@ public class AgentController {
       }
       
       if (settings.getProvidedPythonLibraryNames().contains(libraryName)) {
-        AnacondaRepo repo = pythonDepsFacade.getRepo(project, "PyPi", true);
+        AnacondaRepo repo = pythonDepsFacade.getRepo("PyPi", true);
         PythonDep pyDep = pythonDepsFacade.getDep(repo, PythonDepsFacade.MachineType.ALL,
             PythonDepsFacade.CondaInstallType.PIP, libraryName, version, true, false);
         pyDep.setStatus(PythonDepsFacade.CondaStatus.SUCCESS);
@@ -399,7 +389,7 @@ public class AgentController {
     return currentVersion;
   }
   
-  private void processSystemCommands(AgentHeartbeatDTO heartbeat) throws AppException {
+  private void processSystemCommands(AgentHeartbeatDTO heartbeat) {
     if (heartbeat.systemCommands == null) {
       return;
     }
@@ -409,8 +399,7 @@ public class AgentController {
       final SystemCommandFacade.STATUS status = sc.getStatus();
       final SystemCommand systemCommand = systemCommandFacade.findById(id);
       if (systemCommand == null) {
-        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR,
-            "System command with ID: " + id + " is not in the system");
+        throw new IllegalArgumentException("System command with ID: " + id + " is not in the system");
       }
       if (op.equals(SystemCommandFacade.OP.SERVICE_KEY_ROTATION)) {
         processServiceKeyRotationCommand(systemCommand, status);
@@ -427,11 +416,11 @@ public class AgentController {
     }
   }
   
-  private void emailAlert(String subject, String body) {
+  private void emailAlert(String subject, String body) throws RequestException {
     try {
       emailBean.sendEmails(settings.getAlertEmailAddrs(), subject, body);
-    } catch (MessagingException ex) {
-      LOG.log(Level.SEVERE, ex.getMessage());
+    } catch (MessagingException e) {
+      throw new RequestException(RESTCodes.RequestErrorCode.EMAIL_SENDING_FAILURE, null, e.getMessage(), e);
     }
   }
   

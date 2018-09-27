@@ -139,10 +139,6 @@ public class MessageService {
     String eamil = sc.getUserPrincipal().getName();
     Users user = userFacade.findByEmail(eamil);
     Message msg = msgFacade.find(msgId);
-    if (msg == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Message not found.");
-    }
     //Delete Dataset request from the database
     if (!Strings.isNullOrEmpty(msg.getSubject())) {
       DatasetRequest dsReq = dsReqFacade.findByMessageId(msg);

@@ -139,8 +139,6 @@ public class MetadataService {
   @EJB
   private TemplateFacade templatefacade;
   @EJB
-  private InodeFacade inodefacade;
-  @EJB
   private MetadataProtocol protocol;
   @EJB
   private MetadataController metadataController;
@@ -162,7 +160,7 @@ public class MetadataService {
    */
   @Path("upload")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public UploadService upload() throws AppException {
+  public UploadService upload() throws DatasetException {
     this.uploader.confUploadTemplate();
     return this.uploader;
   }
@@ -174,7 +172,6 @@ public class MetadataService {
    * @param sc
    * @param req
    * @return
-   * @throws AppException
    */
   @GET
   @Path("{inodepid}")
@@ -193,7 +190,7 @@ public class MetadataService {
     ObjectNode templates, tables, fields;
     ArrayNode values;
 
-    Inode inode = this.inodefacade.findById(inodePid);
+    Inode inode = inodeFacade.findById(inodePid);
     HashSet<Integer> tuples = new HashSet<>();
     for (TupleToFile tuple : ttf.getTuplesByInodeId(inode.getInodePK().
       getParentId(), inode.getInodePK().getName())) {
@@ -323,7 +320,7 @@ public class MetadataService {
               "Incomplete request!");
     }
 
-    Inode inode = this.inodefacade.findById(inodeid);
+    Inode inode = this.inodeFacade.findById(inodeid);
     List<Template> templates = new LinkedList<>(inode.getTemplates());
     List<TemplateView> tViews = new LinkedList<>();
 
@@ -361,7 +358,7 @@ public class MetadataService {
               "Incomplete request!");
     }
 
-    Inode inode = this.inodefacade.findById(inodeid);
+    Inode inode = inodeFacade.findById(inodeid);
     List<Template> nodeTemplates = new LinkedList<>(inode.getTemplates());
     List<Template> allTemplates = this.templatefacade.findAll();
     List<TemplateView> toreturn = new LinkedList<>();
@@ -411,7 +408,7 @@ public class MetadataService {
       throw new IllegalArgumentException("Either inodeid or templateId were not provided");
     }
 
-    Inode inode = this.inodefacade.findById(inodeid);
+    Inode inode = inodeFacade.findById(inodeid);
     List<Template> templates = new LinkedList<>(inode.getTemplates());
 
     if (templates.isEmpty()) {

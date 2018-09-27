@@ -39,15 +39,38 @@
 
 package io.hops.hopsworks.api.util;
 
+import com.google.api.client.repackaged.com.google.common.base.Strings;
+import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.RandomAccessFile;
-import java.io.StringReader;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import io.hops.hopsworks.api.metadata.wscomm.ResponseBuilder;
+import io.hops.hopsworks.api.metadata.wscomm.message.UploadedTemplateMessage;
+import io.hops.hopsworks.api.project.util.DsPath;
+import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
+import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
+import io.hops.hopsworks.common.dao.metadata.InodeBasicMetadata;
+import io.hops.hopsworks.common.dao.metadata.Template;
+import io.hops.hopsworks.common.dao.metadata.db.InodeBasicMetadataFacade;
+import io.hops.hopsworks.common.dao.metadata.db.TemplateFacade;
+import io.hops.hopsworks.common.dataset.DatasetController;
+import io.hops.hopsworks.common.dataset.FolderNameValidator;
+import io.hops.hopsworks.common.exception.DatasetException;
+import io.hops.hopsworks.common.exception.GenericException;
+import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.exception.TemplateException;
+import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
+import io.hops.hopsworks.common.hdfs.DistributedFsService;
+import io.hops.hopsworks.common.hdfs.Utils;
+import io.hops.hopsworks.common.upload.HttpUtils;
+import io.hops.hopsworks.common.upload.ResumableInfo;
+import io.hops.hopsworks.common.upload.ResumableInfoStorage;
+import io.hops.hopsworks.common.upload.StagingManager;
+import io.hops.hopsworks.common.util.HopsUtils;
+import io.hops.hopsworks.common.util.Settings;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.security.AccessControlException;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataParam;
+
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -62,45 +85,20 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
-import io.hops.hopsworks.common.exception.DatasetException;
-import io.hops.hopsworks.common.exception.GenericException;
-import io.hops.hopsworks.common.exception.TemplateException;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.security.AccessControlException;
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
-import org.glassfish.jersey.media.multipart.FormDataParam;
-import io.hops.hopsworks.api.filter.AllowedProjectRoles;
-import io.hops.hopsworks.api.metadata.wscomm.ResponseBuilder;
-import io.hops.hopsworks.api.metadata.wscomm.message.UploadedTemplateMessage;
-import io.hops.hopsworks.api.project.util.DsPath;
-import io.hops.hopsworks.common.dataset.DatasetController;
-import io.hops.hopsworks.common.constants.message.ResponseMessages;
-import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
-import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
-import io.hops.hopsworks.common.dao.metadata.InodeBasicMetadata;
-import io.hops.hopsworks.common.dao.metadata.Template;
-import io.hops.hopsworks.common.dao.metadata.db.InodeBasicMetadataFacade;
-import io.hops.hopsworks.common.dao.metadata.db.TemplateFacade;
-import io.hops.hopsworks.common.dataset.FolderNameValidator;
-import io.hops.hopsworks.common.exception.AppException;
-import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
-import io.hops.hopsworks.common.hdfs.DistributedFsService;
-import io.hops.hopsworks.common.hdfs.Utils;
-import io.hops.hopsworks.common.upload.HttpUtils;
-import io.hops.hopsworks.common.upload.ResumableInfo;
-import io.hops.hopsworks.common.upload.ResumableInfoStorage;
-import io.hops.hopsworks.common.upload.StagingManager;
-import io.hops.hopsworks.common.util.Settings;
-import io.hops.hopsworks.common.util.HopsUtils;
-import com.google.api.client.repackaged.com.google.common.base.Strings;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.RandomAccessFile;
+import java.io.StringReader;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class UploadService {
 
-  private final static Logger logger = Logger.getLogger(UploadService.class.
-          getName());
+  private static final Logger logger = Logger.getLogger(UploadService.class.getName());
 
   @EJB
   private NoCacheResponse noCacheResponse;
@@ -136,7 +134,6 @@ public class UploadService {
    * @param username the username of the user uploading the file
    * @param templateId the template to associate the the uploaded file
    * @param role
-   * @throws AppException if new directories need to be created and the name
    * is not valid
    */
   public void confFileUpload(DsPath dsPath, String username,
@@ -187,9 +184,8 @@ public class UploadService {
    * Configure the uploader to upload a metadata Template.
    * All the templates are uploaded to /Projects/Uploads
    * <p/>
-   * @throws AppException
    */
-  public void confUploadTemplate() throws AppException {
+  public void confUploadTemplate() throws DatasetException {
     DistributedFileSystemOps dfso = null;
     try {
       dfso = dfs.getDfsOps();
@@ -197,8 +193,7 @@ public class UploadService {
         dfso.mkdir(Settings.DIR_META_TEMPLATES);
       }
     } catch (IOException e) {
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
-              "Uploads directory could not be created in the file system");
+      throw new DatasetException(RESTCodes.DatasetErrorCode.UPLOAD_DIR_CREATE_ERROR, null, e.getMessage(), e);
     } finally {
       if (dfso != null) {
         dfso.close();
@@ -214,8 +209,7 @@ public class UploadService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response testMethod(
-          @Context HttpServletRequest request)
-          throws AppException, IOException, AccessControlException {
+          @Context HttpServletRequest request) throws IOException, DatasetException {
     String fileName = request.getParameter("flowFilename");
     Inode parent;
     JsonResponse json = new JsonResponse();
@@ -228,8 +222,7 @@ public class UploadService {
                         fileName, pathLen);
         parent = inodes.findByInodePK(this.fileParent, fileName, partitionId);
         if (parent != null) {
-          throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                  ResponseMessages.FILE_NAME_EXIST);
+          throw new DatasetException(RESTCodes.DatasetErrorCode.DESTINATION_EXISTS, "filename: " + fileName);
         }
       }
       //test if the user have permission to create a file in the path.
@@ -283,7 +276,7 @@ public class UploadService {
           @FormDataParam("flowRelativePath") String flowRelativePath,
           @FormDataParam("flowTotalChunks") String flowTotalChunks,
           @FormDataParam("flowTotalSize") String flowTotalSize)
-    throws AppException, IOException, GenericException, TemplateException {
+    throws IOException, GenericException, TemplateException, DatasetException {
 
     JsonResponse json = new JsonResponse();
 
@@ -436,17 +429,16 @@ public class UploadService {
   }
 
   private ResumableInfo getResumableInfo(HttpServletRequest request,
-          String hdfsPath, int templateId) throws
-          AppException {
+          String hdfsPath, int templateId) throws DatasetException {
     //this will give us a tmp folder
-    String base_dir = stagingManager.getStagingPath();
+    String baseDir = stagingManager.getStagingPath();
     //this will create a folder if it does not exist inside the tmp folder 
     //specific to where the file is being uploaded
-    File userTmpDir = new File(base_dir + hdfsPath);
+    File userTmpDir = new File(baseDir + hdfsPath);
     if (!userTmpDir.exists()) {
       userTmpDir.mkdirs();
     }
-    base_dir = userTmpDir.getAbsolutePath();
+    baseDir = userTmpDir.getAbsolutePath();
 
     int resumableChunkSize = HttpUtils.toInt(request.getParameter(
             "flowChunkSize"), -1);
@@ -456,16 +448,16 @@ public class UploadService {
     String resumableFilename = request.getParameter("flowFilename");
     String resumableRelativePath = request.getParameter("flowRelativePath");
 
-    File file = new File(base_dir, resumableFilename);
+    File file = new File(baseDir, resumableFilename);
     //check if the file alrady exists in the staging dir.
     if (file.exists() && file.canRead()) {
       //file.exists returns true after deleting a file 
       //so make sure the file exists by trying to read from it.
       try (FileReader fileReader = new FileReader(file.getAbsolutePath())) {
         fileReader.read();
-        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                "A file with the same name is being uploaded.");
-      } catch (Exception e) {
+        throw new DatasetException(RESTCodes.DatasetErrorCode.UPLOAD_CONCURRENT_ERROR);
+      } catch (IOException ex) {
+        throw new DatasetException(RESTCodes.DatasetErrorCode.UPLOAD_ERROR, null, ex.getMessage(), ex);
       }
     }
 
@@ -479,8 +471,7 @@ public class UploadService {
             resumableFilePath, templateId);
     if (!info.valid()) {
       storage.remove(info);
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Invalid request params.");
+      throw new DatasetException(RESTCodes.DatasetErrorCode.UPLOAD_RESUMABLEINFO_INVALID);
     }
     return info;
   }
@@ -491,7 +482,7 @@ public class UploadService {
           String flowRelativePath,
           String flowTotalSize,
           String hdfsPath,
-          int templateId) throws AppException {
+          int templateId) throws DatasetException {
     //this will give us a tmp folder
     String base_dir = stagingManager.getStagingPath();
     //this will create a folder if it does not exist inside the tmp folder 
@@ -515,9 +506,9 @@ public class UploadService {
       //so make sure the file exists by trying to read from it.
       try (FileReader fileReader = new FileReader(file.getAbsolutePath())) {
         fileReader.read();
-        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                "A file with the same name is being uploaded.");
-      } catch (Exception e) {
+        throw new DatasetException(RESTCodes.DatasetErrorCode.UPLOAD_CONCURRENT_ERROR);
+      } catch (IOException ex) {
+        throw new DatasetException(RESTCodes.DatasetErrorCode.UPLOAD_ERROR, null, ex.getMessage(), ex);
       }
     }
 
@@ -531,8 +522,7 @@ public class UploadService {
             resumableFilePath, templateId);
     if (!info.valid()) {
       storage.remove(info);
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Invalid request params.");
+      throw new DatasetException(RESTCodes.DatasetErrorCode.UPLOAD_RESUMABLEINFO_INVALID);
     }
     return info;
   }

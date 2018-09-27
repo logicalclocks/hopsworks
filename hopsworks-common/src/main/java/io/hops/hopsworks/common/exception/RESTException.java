@@ -25,8 +25,6 @@ public abstract class RESTException extends Exception {
   private final String devMsg;
   private final RESTCodes.RESTErrorCode errorCode;
   
-  //TODO(Theofilos): Check that error code belongs to resource.
-  
   RESTException() {
     this(null, null, null);
   }

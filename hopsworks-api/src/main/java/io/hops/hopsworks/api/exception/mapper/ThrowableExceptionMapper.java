@@ -69,10 +69,10 @@ public class ThrowableExceptionMapper implements ExceptionMapper<Throwable> {
       return handleRollbackException((RollbackException) ex);
     } else {
       if (ex instanceof WebApplicationException) {
-        LOGGER.log(Level.SEVERE, "ThrowableExceptionMapper: " + ex.getClass(), ex);
+        LOGGER.log(Level.SEVERE, ex.getClass().getName(), ex);
         return handleRESTException(
           Response.Status.fromStatusCode(((WebApplicationException) ex).getResponse().getStatus()),
-          new GenericException(RESTCodes.GenericErrorCode.WEBAPPLICATION, null, ex.getMessage()));
+          new GenericException(RESTCodes.GenericErrorCode.WEBAPPLICATION, null, ex.getMessage(), ex));
       } else if (ex instanceof PersistenceException) {
         Throwable e = ex;
         //get to the bottom of this
@@ -81,70 +81,73 @@ public class ThrowableExceptionMapper implements ExceptionMapper<Throwable> {
         }
         if (e.getMessage().contains("Connection refused") || e.getMessage().contains("Cluster Failure")) {
           return handleRESTException(new ServiceException(RESTCodes.ServiceErrorCode.DATABASE_UNAVAILABLE, null,
-            e.getMessage()));
+            e.getMessage(), e));
         } else {
           return handleRESTException(new GenericException(RESTCodes.GenericErrorCode.PERSISTENCE_ERROR, null,
-            e.getMessage()));
+            e.getMessage(), e));
         }
       } else if (ex instanceof IOException &&
         ex.getMessage().contains("Requested storage index 0 isn't initialized, repository count is 0")) {
         return handleRESTException(new ServiceException(RESTCodes.ServiceErrorCode.ZEPPELIN_ADD_FAILURE, null,
-          ex.getMessage()));
+          ex.getMessage(), ex));
       }
     }
-    LOGGER.log(Level.SEVERE, "ThrowableExceptionMapper: " + ex.getClass(), ex);
-    return handleRESTException(new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR, ex.getMessage()));
+    LOGGER.log(Level.SEVERE, ex.getClass().getName(), ex);
+    return handleRESTException(new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR, null, ex.getMessage(),
+      ex));
   }
   
   private Response handleIllegalArgumentException(IllegalArgumentException ex) {
-    LOGGER.log(Level.WARNING, "ThrowableExceptionMapper: " + ex.getClass(), ex);
-    return handleRESTException(new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_ARGUMENT, ex.getMessage()));
+    LOGGER.log(Level.WARNING, ex.getClass().getName(), ex);
+    return handleRESTException(new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_ARGUMENT, null, ex.getMessage(),
+      ex));
   }
   
   private Response handleLoginException(LoginException ex) {
-    LOGGER.log(Level.WARNING, "ThrowableExceptionMapper: " + ex.getClass(), ex);
+    LOGGER.log(Level.WARNING, ex.getClass().getName(), ex);
     return handleRESTException(new UserException(RESTCodes.UserErrorCode.AUTHORIZATION_FAILURE, null,
-      ex.getMessage()));
+      ex.getMessage(), ex));
   }
   
   private Response handleIllegalStateException(IllegalStateException ex) {
-    LOGGER.log(Level.WARNING, "ThrowableExceptionMapper: " + ex.getClass(), ex);
-    return handleRESTException(new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_STATE, null, ex.getMessage()));
+    LOGGER.log(Level.WARNING, ex.getClass().getName(), ex);
+    return handleRESTException(new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_STATE, null, ex.getMessage(),
+      ex));
   }
   
   private Response handleSecurityException(SecurityException ex) {
-    LOGGER.log(Level.WARNING, "ThrowableExceptionMapper: " + ex.getClass(), ex);
+    LOGGER.log(Level.WARNING, ex.getClass().getName(), ex);
     return handleRESTException(
       new GenericException(RESTCodes.GenericErrorCode.SECURITY_EXCEPTION, null, ex.getMessage()));
   }
   
   private Response handleRollbackException(RollbackException ex) {
-    LOGGER.log(Level.WARNING, "ThrowableExceptionMapper: " + ex.getClass(), ex);
+    LOGGER.log(Level.WARNING, ex.getClass().getName(), ex);
     return handleRESTException(new GenericException(RESTCodes.GenericErrorCode.ROLLBACK, null, ex.getMessage()));
   }
   
   private Response handleAccessControlException(AccessControlException ex) {
-    LOGGER.log(Level.WARNING, "ThrowableExceptionMapper: " + ex.getClass(), ex);
+    LOGGER.log(Level.WARNING, ex.getClass().getName(), ex);
     return handleRESTException(new HopsSecurityException(RESTCodes.SecurityErrorCode.HDFS_ACCESS_CONTROL, null,
       ex.getMessage(), ex));
   }
   
   private Response handleRESTException(RESTException ex) {
-    LOGGER.log(Level.FINE, "ThrowableExceptionMapper: " + ex.getClass(), ex);
+    LOGGER.log(Level.FINE, ex.getClass().getName(), ex);
     return handleRESTException(ex.getErrorCode().getRespStatus(), ex);
   }
   
   private Response handleRESTException(Response.Status status, RESTException ex) {
     if(ex.getCause() != null){
-      LOGGER.log(Level.SEVERE, "ThrowableExceptionMapper: " + ex.getClass(), ex);
+      LOGGER.log(Level.SEVERE, ex.getClass().getName(), ex);
     } else {
-      LOGGER.log(Level.FINE, "ThrowableExceptionMapper: " + ex.getClass(), ex);
+      LOGGER.log(Level.FINE, ex.getClass().getName(), ex);
     }
     return Response.status(status).entity(ex.getJson().toString()).type(MediaType.APPLICATION_JSON).build();
   }
   
   private Response handleAccessLocalException(AccessLocalException ex) {
-    LOGGER.log(Level.WARNING, "ThrowableExceptionMapper: " + ex.getClass(), ex);
+    LOGGER.log(Level.WARNING, ex.getClass().getName(), ex);
     return handleRESTException(new HopsSecurityException(RESTCodes.SecurityErrorCode.EJB_ACCESS_LOCAL, null,
       ex.getMessage()));
   }

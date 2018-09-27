@@ -41,39 +41,15 @@ package io.hops.hopsworks.common.elastic;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Ip;
 import io.hops.hopsworks.common.util.Settings;
-
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.regex.Pattern;
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import javax.ejb.EJB;
-import javax.ejb.Stateless;
-import javax.ws.rs.NotFoundException;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.Response;
 import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.action.ActionFuture;
 import org.elasticsearch.action.DocWriteResponse.Result;
@@ -97,23 +73,44 @@ import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.collect.ImmutableOpenMap;
 import org.elasticsearch.common.transport.TransportAddress;
 import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
+import org.elasticsearch.transport.client.PreBuiltTransportClient;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
+import javax.ws.rs.NotFoundException;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.regex.Pattern;
+
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
+import static org.elasticsearch.index.query.QueryBuilders.fuzzyQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchPhraseQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
 import static org.elasticsearch.index.query.QueryBuilders.nestedQuery;
 import static org.elasticsearch.index.query.QueryBuilders.prefixQuery;
 import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
-import static org.elasticsearch.index.query.QueryBuilders.wildcardQuery;
-
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.search.SearchHit;
-import org.json.JSONObject;
-import static org.elasticsearch.index.query.QueryBuilders.fuzzyQuery;
 import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
-import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
-import org.elasticsearch.transport.client.PreBuiltTransportClient;
-import org.json.JSONArray;
+import static org.elasticsearch.index.query.QueryBuilders.wildcardQuery;
 
 /**
  *
@@ -148,15 +145,13 @@ public class ElasticController {
     shutdownClient();
   }
 
-  public List<ElasticHit> globalSearch(String searchTerm) throws AppException, ServiceException {
+  public List<ElasticHit> globalSearch(String searchTerm) throws ServiceException {
     //some necessary client settings
     Client client = getClient();
 
     //check if the index are up and running
     if (!this.indexExists(client, Settings.META_INDEX)) {
-      LOG.log(Level.INFO, ResponseMessages.ELASTIC_INDEX_NOT_FOUND);
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-          getStatusCode(), ResponseMessages.ELASTIC_INDEX_NOT_FOUND);
+      throw new ServiceException(RESTCodes.ServiceErrorCode.ELASTIC_INDEX_NOT_FOUND, "index: " + Settings.META_INDEX);
     }
 
     LOG.log(Level.INFO, "Found elastic index, now executing the query.");
@@ -194,8 +189,7 @@ public class ElasticController {
       LOG.log(Level.WARNING, "Elasticsearch error code: {0}", response.status().getStatus());
       //something went wrong so throw an exception
       shutdownClient();
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-          getStatusCode(), ResponseMessages.ELASTIC_SERVER_NOT_FOUND);
+      throw new ServiceException(RESTCodes.ServiceErrorCode.ELASTIC_SERVER_NOT_FOUND);
     }
   }
 
@@ -239,16 +233,15 @@ public class ElasticController {
 
   }
 
-  public List<ElasticHit> projectSearch(Integer projectId, String searchTerm) throws AppException, ServiceException {
+  public List<ElasticHit> projectSearch(Integer projectId, String searchTerm) throws ServiceException {
     Client client = getClient();
     //check if the index are up and running
     if (!this.indexExists(client, Settings.META_INDEX)) {
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-          getStatusCode(), ResponseMessages.ELASTIC_INDEX_NOT_FOUND);
+      throw new ServiceException(RESTCodes.ServiceErrorCode.ELASTIC_INDEX_NOT_FOUND, "index: " + Settings.META_INDEX);
     } else if (!this.typeExists(client, Settings.META_INDEX,
         Settings.META_DEFAULT_TYPE)) {
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-          getStatusCode(), ResponseMessages.ELASTIC_TYPE_NOT_FOUND);
+      throw new ServiceException(RESTCodes.ServiceErrorCode.ELASTIC_INDEX_TYPE_NOT_FOUND,
+        "type: " + Settings.META_DEFAULT_TYPE);
     }
 
     SearchRequestBuilder srb = client.prepareSearch(Settings.META_INDEX);
@@ -279,23 +272,19 @@ public class ElasticController {
     }
 
     shutdownClient();
-    throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-        getStatusCode(), ResponseMessages.ELASTIC_SERVER_NOT_FOUND);
+    throw new ServiceException(RESTCodes.ServiceErrorCode.ELASTIC_SERVER_NOT_FOUND);
   }
 
   public List<ElasticHit> datasetSearch(Integer projectId, String datasetName, String searchTerm)
-    throws AppException, ServiceException {
+    throws ServiceException {
     Client client = getClient();
     //check if the indices are up and running
     if (!this.indexExists(client, Settings.META_INDEX)) {
-
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-          getStatusCode(), ResponseMessages.ELASTIC_INDEX_NOT_FOUND);
+      throw new ServiceException(RESTCodes.ServiceErrorCode.ELASTIC_INDEX_NOT_FOUND, "index: " + Settings.META_INDEX);
     } else if (!this.typeExists(client, Settings.META_INDEX,
         Settings.META_DEFAULT_TYPE)) {
-
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-          getStatusCode(), ResponseMessages.ELASTIC_TYPE_NOT_FOUND);
+      throw new ServiceException(RESTCodes.ServiceErrorCode.ELASTIC_INDEX_TYPE_NOT_FOUND,
+        "type: " + Settings.META_DEFAULT_TYPE);
     }
 
     String dsName = datasetName;
@@ -336,8 +325,7 @@ public class ElasticController {
     }
 
     shutdownClient();
-    throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-        getStatusCode(), ResponseMessages.ELASTIC_SERVER_NOT_FOUND);
+    throw new ServiceException(RESTCodes.ServiceErrorCode.ELASTIC_SERVER_NOT_FOUND);
   }
 
   public boolean deleteIndex(String index) throws ServiceException {
@@ -384,7 +372,6 @@ public class ElasticController {
    * Deletes visualizations, saved searches and dashboards for a project.
    *
    * @param projects
-   * @throws AppException
    */
   public void deleteProjectSavedObjects(List<String> projects) {
     //Loop through all objects and
@@ -426,7 +413,6 @@ public class ElasticController {
    * Get all indices. If pattern parameter is provided, only indices matching the pattern will be returned.
    * @param regex
    * @return
-   * @throws AppException
    */
   public Map<String, IndexMetaData> getIndices(String regex) throws ServiceException {
     ImmutableOpenMap<String, IndexMetaData> indices = getClient().admin().cluster().prepareState().get().getState()

@@ -53,6 +53,16 @@ import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.util.Settings;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import javax.ejb.ConcurrencyManagement;
+import javax.ejb.ConcurrencyManagementType;
+import javax.ejb.DependsOn;
+import javax.ejb.EJB;
+import javax.ejb.Singleton;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -74,16 +84,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import javax.ejb.ConcurrencyManagement;
-import javax.ejb.ConcurrencyManagementType;
-import javax.ejb.DependsOn;
-import javax.ejb.EJB;
-import javax.ejb.Singleton;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-import javax.ws.rs.core.Response;
 
 /**
  * *
@@ -192,7 +192,7 @@ public class JupyterProcessMgr {
 
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public JupyterDTO startServerAsJupyterUser(Project project, String secretConfig, String hdfsUser, String realName,
-      JupyterSettings js) throws AppException, IOException, InterruptedException {
+      JupyterSettings js) throws ServiceException {
 
     String prog = settings.getHopsworksDomainDir() + "/bin/jupyter.sh";
 
@@ -200,11 +200,6 @@ public class JupyterProcessMgr {
     String token = null;
     Long pid = 0l;
 
-    HdfsUsers user = hdfsUsersFacade.findByName(hdfsUser);
-    if (user == null) {
-      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-          "Could not find hdfs user. Not starting Jupyter.");
-    }
     // The Jupyter Notebook is running at: http://localhost:8888/?token=c8de56fa4deed24899803e93c227592aef6538f93025fe01
     boolean foundToken = false;
     int maxTries = 5;
@@ -283,8 +278,7 @@ public class JupyterProcessMgr {
         pid = Long.parseLong(pidContents);
 
       } catch (Exception ex) {
-        LOGGER.log(Level.SEVERE, "Problem starting a jupyter server: {0}", ex.
-            toString());
+        LOGGER.log(Level.SEVERE, "Problem starting a jupyter server: {0}", ex);
         if (process != null) {
           process.destroyForcibly();
         }
@@ -293,7 +287,6 @@ public class JupyterProcessMgr {
     }
 
     if (!foundToken) {
-//      hdfsuserConfCache.remove(hdfsUser);
       return null;
     } else {
       jc.setPid(pid);

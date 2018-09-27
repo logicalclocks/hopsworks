@@ -43,13 +43,12 @@ import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.util.JsonResponse;
 import io.hops.hopsworks.common.dao.host.Hosts;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
-import io.hops.hopsworks.common.dao.kagent.ServiceStatusDTO;
 import io.hops.hopsworks.common.dao.kagent.HostServices;
 import io.hops.hopsworks.common.dao.kagent.HostServicesFacade;
-import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.dao.kagent.ServiceStatusDTO;
+import io.hops.hopsworks.common.exception.GenericException;
 import io.swagger.annotations.Api;
-import java.util.ArrayList;
-import java.util.List;
+
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -67,6 +66,8 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import java.util.ArrayList;
+import java.util.List;
 
 @Path("/kmon")
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
@@ -164,7 +165,7 @@ public class Monitor {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   public Response serviceOp(@PathParam("groupName") String groupName, @Context SecurityContext sc,
-      @Context HttpServletRequest req, ServicesActionDTO action) throws AppException {
+      @Context HttpServletRequest req, ServicesActionDTO action) throws GenericException {
     String result = hostServicesFacade.serviceOp(groupName, action.getAction());
     JsonResponse json = new JsonResponse();
     json.setSuccessMessage(result);
@@ -177,7 +178,7 @@ public class Monitor {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   public Response serviceOp(@PathParam("groupName") String groupName, @PathParam("serviceName") String serviceName,
-      @Context SecurityContext sc, @Context HttpServletRequest req, ServicesActionDTO action) throws AppException {
+      @Context SecurityContext sc, @Context HttpServletRequest req, ServicesActionDTO action) throws GenericException {
     JsonResponse json = new JsonResponse();
     json.setSuccessMessage(hostServicesFacade.serviceOp(groupName, serviceName, action.getAction()));
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
@@ -191,7 +192,7 @@ public class Monitor {
   public Response serviceOnHostOp(@PathParam("groupName") String groupName,
       @PathParam("serviceName") String serviceName,
       @PathParam("hostId") String hostId, @Context SecurityContext sc, @Context HttpServletRequest req,
-      ServicesActionDTO action) throws AppException {
+      ServicesActionDTO action) throws GenericException {
     JsonResponse json = new JsonResponse();
     json.setSuccessMessage(hostServicesFacade.serviceOnHostOp(groupName, serviceName, hostId, action.getAction()));
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();

@@ -54,27 +54,21 @@ import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountsAuditActions;
 import io.hops.hopsworks.common.dao.user.security.audit.RolesAuditAction;
 import io.hops.hopsworks.common.dao.user.security.audit.UserAuditActions;
-import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
-import io.hops.hopsworks.common.dao.user.security.ua.UserAccountType;
 import io.hops.hopsworks.common.dao.user.security.ua.SecurityQuestion;
 import io.hops.hopsworks.common.dao.user.security.ua.SecurityUtils;
+import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
+import io.hops.hopsworks.common.dao.user.security.ua.UserAccountType;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
-import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.exception.RequestException;
+import io.hops.hopsworks.common.exception.UserException;
 import io.hops.hopsworks.common.security.CertificatesMgmService;
 import io.hops.hopsworks.common.user.ldap.LdapRealm;
 import io.hops.hopsworks.common.util.EmailBean;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
-import java.io.UnsupportedEncodingException;
-import java.security.SecureRandom;
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.Date;
-import java.util.List;
-import java.util.Random;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.apache.commons.codec.digest.DigestUtils;
+
 import javax.ejb.EJB;
 import javax.ejb.EJBException;
 import javax.ejb.Stateless;
@@ -85,8 +79,16 @@ import javax.mail.MessagingException;
 import javax.naming.NamingException;
 import javax.security.auth.login.LoginException;
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.Response;
-import org.apache.commons.codec.digest.DigestUtils;
+import java.io.UnsupportedEncodingException;
+import java.security.SecureRandom;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.Date;
+import java.util.List;
+import java.util.Random;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -128,10 +130,9 @@ public class AuthController {
    * @param otp
    * @param req
    * @return
-   * @throws AppException
    */
   public String preCustomRealmLoginCheck(Users user, String password, String otp, HttpServletRequest req)
-      throws AppException {
+    throws UserException {
     if (user == null) {
       throw new IllegalArgumentException("User not set.");
     }
@@ -159,15 +160,14 @@ public class AuthController {
     return newPassword;
   }
 
-  public String preLdapLoginCheck(Users user, String password, HttpServletRequest req) {
+  public String preLdapLoginCheck(Users user, String password) {
     if (user == null) {
       throw new IllegalArgumentException("User not set.");
     }
     if (!user.getMode().equals(UserAccountType.LDAP_ACCOUNT_TYPE)) {
       throw new IllegalArgumentException("User is not registerd as ldap user.");
     }
-    String newPassword = getPasswordPlusSalt(password, user.getSalt()) + Settings.MOBILE_OTP_PADDING;
-    return newPassword;
+    return getPasswordPlusSalt(password, user.getSalt()) + Settings.MOBILE_OTP_PADDING;
   }
 
   /**
@@ -270,9 +270,8 @@ public class AuthController {
    * @param password
    * @param req
    * @return
-   * @throws AppException
    */
-  public boolean checkPasswordAndStatus(Users user, String password, HttpServletRequest req) throws AppException {
+  public boolean checkPasswordAndStatus(Users user, String password, HttpServletRequest req) throws UserException {
     if (user == null) {
       throw new IllegalArgumentException("User not set.");
     }
@@ -287,36 +286,35 @@ public class AuthController {
    *
    * @param key
    * @param req
-   * @throws AppException
    */
-  public void validateKey(String key, HttpServletRequest req) throws AppException {
+  public void validateKey(String key, HttpServletRequest req) throws UserException {
     if (key == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "the validation key should not be null");
+      throw new IllegalArgumentException("the validation key should not be null");
     }
     if (key.length() <= Settings.USERNAME_LENGTH) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "The validation key is invalid");
+      throw new IllegalArgumentException(
+        "The validation key is invalid. Minimum length is: " + Settings.USERNAME_LENGTH);
     }
     String userName = key.substring(0, Settings.USERNAME_LENGTH);
     // get the 8 char username
     String secret = key.substring(Settings.USERNAME_LENGTH);
     Users user = userFacade.findByUsername(userName);
     if (user == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "The user does not exist");
+      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND);
     }
     if (!secret.equals(user.getValidationKey())) {
       registerFalseKeyValidation(user, req);
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "Wrong validation key");
+      throw new UserException(RESTCodes.UserErrorCode.INCORRECT_VALIDATION_KEY, "user: " + user.getUsername());
     }
 
     if (!user.getStatus().equals(UserAccountStatus.NEW_MOBILE_ACCOUNT)) {
       switch (user.getStatus()) {
         case VERIFIED_ACCOUNT:
-          throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "This user is already verified, but still need to be activated by the administrator");
+          throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_INACTIVE);
         case ACTIVATED_ACCOUNT:
-          throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "This user is already verified");
+          throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_ALREADY_VERIFIED);
         default:
-          throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "This user has been blocked");
+          throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_BLOCKED);
       }
     }
 
@@ -350,11 +348,10 @@ public class AuthController {
    *
    * @param user
    * @param req
-   * @throws AppException
    * @throws MessagingException
    * @throws Exception
    */
-  public void resetPassword(Users user, HttpServletRequest req) throws AppException, MessagingException, Exception {
+  public void resetPassword(Users user, HttpServletRequest req) throws RequestException {
     if (user == null) {
       throw new IllegalArgumentException("User not set.");
     }
@@ -363,8 +360,13 @@ public class AuthController {
     }
     String randomPassword = SecurityUtils.getRandomPassword(UserValidator.PASSWORD_MIN_LENGTH);
     String message = UserAccountsEmailMessages.buildTempResetMessage(randomPassword);
-    emailBean.sendEmail(user.getEmail(), Message.RecipientType.TO, UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET,
+    try {
+      emailBean.sendEmail(user.getEmail(), Message.RecipientType.TO, UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET,
         message);
+    } catch (MessagingException ex){
+      throw new RequestException(RESTCodes.RequestErrorCode.EMAIL_SENDING_FAILURE, "user: " + user.getUsername(),
+        ex.getMessage(), ex);
+    }
     changePassword(user, randomPassword, req);
     resetFalseLogin(user);
     accountAuditFacade.registerAccountChange(user, AccountsAuditActions.RECOVERY.name(), UserAuditActions.SUCCESS.
@@ -440,7 +442,7 @@ public class AuthController {
    * @throws Exception
    */
   @TransactionAttribute(TransactionAttributeType.REQUIRED)
-  public void changePassword(Users user, String password, HttpServletRequest req) throws Exception {
+  public void changePassword(Users user, String password, HttpServletRequest req) {
     String salt = generateSalt();
     String passwordWithSalt = getPasswordHash(password, salt);
     String oldPassword = user.getPassword();
@@ -478,7 +480,7 @@ public class AuthController {
     return password + salt;
   }
 
-  private void resetProjectCertPassword(Users p, String oldPass) throws Exception {
+  private void resetProjectCertPassword(Users p, String oldPass) {
     //For every project, change the certificate secret in the database
     //Get cert password by decrypting it with old password
     List<Project> projects = projectFacade.findAllMemberStudies(p);

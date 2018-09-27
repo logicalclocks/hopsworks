@@ -305,7 +305,7 @@ public class ProjectController {
         } catch (IOException e) {
           LOGGER.log(Level.SEVERE, null, e);
         }
-        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NAME_EXISTS, "project: " + projectName);
+        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_EXISTS, "project: " + projectName);
       }
       LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 2 (hdfs): {0}", System.currentTimeMillis() - startTime);
 
@@ -485,7 +485,7 @@ public class ProjectController {
     if (projectFacade.numProjectsLimitReached(user)) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.NUM_PROJECTS_LIMIT_REACHED, "user: " + user.getUsername());
     } else if (projectFacade.projectExists(projectName)) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_EXISTS, projectName);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_EXISTS, "project: " + projectName);
     }
     //Create a new project object
     Date now = new Date();
@@ -505,9 +505,8 @@ public class ProjectController {
       dfso.touchz(dummy);
       project.setInode(inodes.getInodeAtPath(dummy.toString()));
     } catch (IOException ex) {
-      LOGGER.log(Level.SEVERE, "Couldn't get the dummy Inode at: /tmp/" + projectName, ex);
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_INODE_CREATION_ERROR,
-        "Couldn't get the dummy Inode at: /tmp/" + projectName, ex.getMessage());
+        "Couldn't get the dummy Inode at: /tmp/" + projectName, ex.getMessage(), ex);
     }
 
     //Persist project object
@@ -1399,7 +1398,7 @@ public class ProjectController {
           .method("GET");
       LOGGER.log(Level.FINE, "Zeppelin check resp:{0}", resp.getStatus());
     } catch (CertificateException | NoSuchAlgorithmException | IOException | KeyStoreException e) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.ZEPPELIN_KILL_ERROR);
+      throw new ServiceException(RESTCodes.ServiceErrorCode.ZEPPELIN_KILL_ERROR, null, e.getMessage(), e);
     }
     if (resp.getStatus() == 200) {
       resp = client
@@ -1434,9 +1433,7 @@ public class ProjectController {
       return;
     }
     int nbTry = 0;
-    while (nbTry < 3) {
-      nbTry++;
-
+    while (nbTry < 2) {
       YarnClientWrapper yarnClientWrapper = ycs.getYarnClientSuper(settings
           .getConfiguration());
       YarnClient client = yarnClientWrapper.getYarnClient();
@@ -1468,7 +1465,7 @@ public class ProjectController {
 
         // try and close all the jupyter jobs
         jupyterProcessFacade.stopProject(project);
-
+  
         removeAnacondaEnv(project);
 
         //kill jobs
@@ -1479,7 +1476,9 @@ public class ProjectController {
         List<HdfsUsers> usersToClean = getUsersToClean(project);
         List<HdfsGroups> groupsToClean = getGroupsToClean(project);
         removeProjectInt(project, usersToClean, groupsToClean, certsGenerationFuture, decreaseCreatedProj);
+        break;
       } catch (Exception ex) {
+        nbTry++;
         if (nbTry < 3) {
           try {
             Thread.sleep(nbTry * 1000);
@@ -1487,7 +1486,7 @@ public class ProjectController {
             LOGGER.log(Level.SEVERE, null, ex1);
           }
         } else {
-          throw new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR, ex.getMessage());
+          throw new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR, null, ex.getMessage(), ex);
         }
       } finally {
         ycs.closeYarnClient(yarnClientWrapper);
