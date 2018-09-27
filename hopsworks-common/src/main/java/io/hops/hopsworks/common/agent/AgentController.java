@@ -212,7 +212,8 @@ public class AgentController {
     }
   }
   
-  private void processCondaCommands(AgentHeartbeatDTO heartbeatDTO) throws AppException {
+  private void processCondaCommands(AgentHeartbeatDTO heartbeatDTO)
+    throws AppException {
     if (heartbeatDTO.condaCommands == null) {
       return;
     }
@@ -226,56 +227,55 @@ public class AgentController {
       final PythonDepsFacade.CondaStatus status = cc.getStatus();
       Integer commandId = cc.getId();
       
+      CondaCommands command = pythonDepsFacade.findCondaCommand(commandId);
       // If the command object does not exist, then the project
       // has probably been removed. We needed to send a compensating action if
       // this action was successful.
-      
+  
       // Command would be null when we are deleting a Project and kagent reports that the
       // REMOVE operation has changed state from ONGOING to SUCCESS
-      
-      CondaCommands command = pythonDepsFacade.updateCondaCommandStatus(commandId, status,
-          args, projectName, opType, lib, version, channelUrl);
-      
-      if (command == null) {
-        continue;
-      }
-      
-      if (command.getOp().equals(PythonDepsFacade.CondaOp.CREATE)
-          || command.getOp().equals(PythonDepsFacade.CondaOp.YML)) {
-        // Sync only on Hopsworks server
-        if (settings.getHopsworksIp().equals(command.getHostId().getHostIp())) {
-          final Project projectId = command.getProjectId();
-          final String envStr = listCondaEnvironment(projectName);
-          final Collection<PythonDep> pythonDeps = synchronizeDependencies(
-              projectId, envStr, projectId.getPythonDepCollection());
-          // Insert all deps in current listing
-          pythonDepsFacade.addPythonDepsForProject(projectId, pythonDeps);
+      if (command != null) {
+        pythonDepsFacade.updateCondaCommandStatus(
+            commandId, status, command.getInstallType(), command.getMachineType(),
+            args, projectName, opType, lib, version, channelUrl);
+        
+        if (command.getOp().equals(PythonDepsFacade.CondaOp.CREATE)
+            || command.getOp().equals(PythonDepsFacade.CondaOp.YML)) {
+          // Sync only on Hopsworks server
+          if (settings.getHopsworksIp().equals(command.getHostId().getHostIp())) {
+            final Project projectId = command.getProjectId();
+            final String envStr = listCondaEnvironment(projectName);
+            final Collection<PythonDep> pythonDeps = synchronizeDependencies(
+                projectId, envStr, projectId.getPythonDepCollection());
+            // Insert all deps in current listing
+            pythonDepsFacade.addPythonDepsForProject(projectId, pythonDeps);
+          }
         }
-      }
-      
-      // An upgrade results in an unknown version installed, query local conda
-      // env to figure it out
-      if (command.getOp().equals(PythonDepsFacade.CondaOp.UPGRADE)) {
-        command.setVersion(getLocalLibraryVersion(command.getLib(),
-            command.getVersion(), projectName));
-        if (settings.getHopsworksIp().equals(command.getHostId().getHostIp())) {
-          final Project projectId = command.getProjectId();
-          for (final PythonDep pythonDep : projectId.getPythonDepCollection()) {
-            if (pythonDep.getDependency().equals(command.getLib())
-                && pythonDep.getVersion().equals(command.getVersion())) {
-              final String localVersion = getLocalLibraryVersion(command.getLib(),
-                  command.getVersion(), projectName);
-              if (!localVersion.equals(command.getVersion())) {
-                final Collection<PythonDep> deps = projectId.getPythonDepCollection();
-                
-                for (final PythonDep dep : deps) {
-                  if (dep.getDependency().equals(command.getLib())) {
-                    PythonDep newDep = pythonDepsFacade.getDep(dep.getRepoUrl(), dep.getMachineType(),
-                        command.getInstallType(), command.getLib(), localVersion, true, false);
-                    deps.remove(dep);
-                    deps.add(newDep);
-                    projectFacade.update(projectId);
-                    break;
+        
+        // An upgrade results in an unknown version installed, query local conda
+        // env to figure it out
+        if (command.getOp().equals(PythonDepsFacade.CondaOp.UPGRADE)) {
+          command.setVersion(getLocalLibraryVersion(command.getLib(),
+              command.getVersion(), projectName));
+          if (settings.getHopsworksIp().equals(command.getHostId().getHostIp())) {
+            final Project projectId = command.getProjectId();
+            for (final PythonDep pythonDep : projectId.getPythonDepCollection()) {
+              if (pythonDep.getDependency().equals(command.getLib())
+                  && pythonDep.getVersion().equals(command.getVersion())) {
+                final String localVersion = getLocalLibraryVersion(command.getLib(),
+                    command.getVersion(), projectName);
+                if (!localVersion.equals(command.getVersion())) {
+                  final Collection<PythonDep> deps = projectId.getPythonDepCollection();
+                  
+                  for (final PythonDep dep : deps) {
+                    if (dep.getDependency().equals(command.getLib())) {
+                      PythonDep newDep = pythonDepsFacade.getDep(dep.getRepoUrl(), dep.getMachineType(),
+                          command.getInstallType(), command.getLib(), localVersion, true, false);
+                      deps.remove(dep);
+                      deps.add(newDep);
+                      projectFacade.update(projectId);
+                      break;
+                    }
                   }
                 }
               }
