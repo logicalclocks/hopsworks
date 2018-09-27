@@ -416,6 +416,10 @@ public class JupyterConfigFilesGenerator {
       boolean isDistributedTraining = js.getMode().compareToIgnoreCase("distributedtraining") == 0;
       boolean isMirroredStrategy = js.getDistributionStrategy().compareToIgnoreCase("mirroredstrategy") == 0
           && isDistributedTraining;
+      boolean isParameterServerStrategy = js.getDistributionStrategy().compareToIgnoreCase
+          ("parameterserverstrategy") == 0;
+      boolean isCollectiveAllReduceStrategy = js.getDistributionStrategy().compareToIgnoreCase
+          ("collectiveallreducestrategy") == 0;
       boolean isSparkDynamic = js.getMode().compareToIgnoreCase("sparkdynamic") == 0;
       boolean isSparkStatic = js.getMode().compareToIgnoreCase("sparkstatic") == 0;
       String extraJavaOptions = "-D" + Settings.LOGSTASH_JOB_INFO + "=" + project.getName().toLowerCase()
@@ -442,8 +446,8 @@ public class JupyterConfigFilesGenerator {
       sparkMagicParams.put("driverMemory", new ConfigProperty("driver_memory", HopsUtils.IGNORE,
           Integer.toString(js.getAppmasterMemory()) + "m"));
       sparkMagicParams.put("numExecutors", new ConfigProperty("num_executors", HopsUtils.IGNORE,
-          (isExperiment)? "1":
-              (isDistributedTraining) ? Integer.toString(js.getNumExecutors() + js.getNumTfPs()):
+          (isExperiment || isMirroredStrategy)? "1":
+              (isParameterServerStrategy) ? Integer.toString(js.getNumExecutors() + js.getNumTfPs()):
                   (isSparkDynamic) ? Integer.toString(js.getDynamicMinExecutors()):
                       Integer.toString(js.getNumExecutors())));
       sparkMagicParams.put("executorCores", new ConfigProperty("executor_cores", HopsUtils.IGNORE,
@@ -641,7 +645,7 @@ public class JupyterConfigFilesGenerator {
 
       sparkMagicParams.put("spark.tensorflow.num.ps", new ConfigProperty(
           "spark_tensorflow_num_ps", HopsUtils.IGNORE,
-          (isDistributedTraining) ? Integer.toString(js.getNumTfPs()) : "0"));
+          (isParameterServerStrategy) ? Integer.toString(js.getNumTfPs()) : "0"));
 
       sparkMagicParams.put("spark.executor.gpus", new ConfigProperty(
           "spark_executor_gpus", HopsUtils.IGNORE,
@@ -655,7 +659,8 @@ public class JupyterConfigFilesGenerator {
       sparkMagicParams.put("spark.dynamicAllocation.initialExecutors", new ConfigProperty(
           "spark_dynamicAllocation_initialExecutors", HopsUtils.OVERWRITE,
           (isExperiment || isParallelExperiment || isMirroredStrategy) ? "0" :
-                  (isDistributedTraining) ? Integer.toString(js.getNumExecutors() + js.getNumTfPs()) :
+              (isParameterServerStrategy) ? Integer.toString(js.getNumExecutors() + js.getNumTfPs()) :
+                  (isCollectiveAllReduceStrategy) ? Integer.toString(js.getNumExecutors()) :
                   Integer.toString(js.getDynamicMinExecutors())));
 
       sparkMagicParams.put("spark.dynamicAllocation.minExecutors", new ConfigProperty(
@@ -667,7 +672,8 @@ public class JupyterConfigFilesGenerator {
           "spark_dynamicAllocation_maxExecutors", HopsUtils.OVERWRITE,
           (isExperiment || isMirroredStrategy) ? "1":
           (isParallelExperiment) ? Integer.toString(js.getNumExecutors()) :
-                  (isDistributedTraining) ? Integer.toString(js.getNumExecutors() + js.getNumTfPs()) :
+                  (isParameterServerStrategy) ? Integer.toString(js.getNumExecutors() + js.getNumTfPs()) :
+                      (isCollectiveAllReduceStrategy) ? Integer.toString(js.getNumExecutors()) :
                   Integer.toString(js.getDynamicMaxExecutors())));
 
       sparkMagicParams.put("spark.dynamicAllocation.executorIdleTimeout", new ConfigProperty(
@@ -709,8 +715,8 @@ public class JupyterConfigFilesGenerator {
 
       sparkMagicParams.put("spark.task.maxFailures", new ConfigProperty(
               "spark_task_max_failures", HopsUtils.OVERWRITE,
-              ((isParallelExperiment || isExperiment) && js.getFaultTolerant()) ? "3" :
-                      ((isDistributedTraining) ? "1" : "4")));
+              (isParallelExperiment || isExperiment) && js.getFaultTolerant() ? "3" :
+              (isParallelExperiment || isExperiment || isDistributedTraining) ? "1" : "4"));
 
       // Always kill the blacklisted executors (further failures could be results of local files from the failed task)
       sparkMagicParams.put("spark.blacklist.killBlacklistedExecutors", new ConfigProperty(
