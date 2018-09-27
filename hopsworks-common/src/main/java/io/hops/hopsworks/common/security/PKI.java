@@ -39,6 +39,12 @@
 
 package io.hops.hopsworks.common.security;
 
+import io.hops.hopsworks.common.util.Settings;
+import org.apache.commons.io.FileUtils;
+import org.javatuples.Pair;
+
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -47,13 +53,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
-
-import io.hops.hopsworks.common.util.Settings;
-import org.apache.commons.io.FileUtils;
-import org.javatuples.Pair;
-
-import javax.ejb.EJB;
-import javax.ejb.Stateless;
 
 import static io.hops.hopsworks.common.security.PKI.CAType.ROOT;
 
@@ -224,7 +223,7 @@ public class PKI {
   }
 
   public Path getCertPath(CAType caType, String certFileName) {
-    return Paths.get(getCACertsDir(caType).toString(), certFileName + ".cert.pem");
+    return Paths.get(getCACertsDir(caType).toString(), certFileName);
   }
 
   public Path getKeyPath(CAType caType, String keyFileName) {
