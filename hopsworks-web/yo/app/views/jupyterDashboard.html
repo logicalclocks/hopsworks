@@ -235,7 +235,7 @@
                 <div class="row" ng-show="jupyterCtrl.val.mode === 'distributedTraining' && jupyterCtrl.val.distributionStrategy === 'ParameterServerStrategy'">
                   <div class="row clusterparams">
                     <div class="text-right col-md-4">Parameter servers <i class="fa fa-info-circle"
-                                                                          uib-tooltip="Number of parameter servers in Distributed TensorFlow."
+                                                                          uib-tooltip="Number of parameter servers in ParameterServerStrategy."
                                                                           style="margin-left: 10px"></i>
                     </div>
                     <div class="col-md-2 jupyter-left">
@@ -272,7 +272,7 @@
 
                   <div class="row top-buffer">
                     <div class="text-right col-md-4">Initial number of executors <i class="fa fa-info-circle"
-                                                                                    uib-tooltip="The initial number of executors that should be requested. Must be greater than the minimum and smaller than the maximum number of executors." style="margin-left: 10px"></i></div>
+                                                                                    uib-tooltip="The initial number of Spark executors that should be requested. Must be greater than the minimum and smaller than the maximum number of executors." style="margin-left: 10px"></i></div>
 
                     <div class="col-md-2 jupyter-left"><input type="number"
                                                               ng-change="jupyterCtrl.setInitExecs()" min="0" ng-model="jupyterCtrl.val.dynamicMinExecutors"
@@ -286,7 +286,7 @@
                         && jupyterCtrl.val.mode !== 'distributedTraining'">
                   <div class="row clusterparams">
                     <div class="text-right col-md-4">Number of executors <i class="fa fa-info-circle"
-                                                                            uib-tooltip="The number of executors that should be requested for this job." style="margin-left: 10px"></i>
+                                                                            uib-tooltip="The number of Spark executors that should be requested for this job." style="margin-left: 10px"></i>
                     </div>
                     <div class="col-md-2 jupyter-left"><input type="number" ng-model="jupyterCtrl.val.numExecutors" ng-init="1" min="1" value="1" class="form-control"></div>
                   </div>
@@ -295,7 +295,7 @@
                 <div class="row" ng-if="jupyterCtrl.val.mode === 'distributedTraining' && jupyterCtrl.val.distributionStrategy !== 'MirroredStrategy'">
                   <div class="row clusterparams">
                     <div class="text-right col-md-4"> Workers <i class="fa fa-info-circle"
-                                                                 uib-tooltip="The number of workers that should be requested for this job." style="margin-left: 10px"></i>
+                                                                 uib-tooltip="The number of DistributionStrategy workers." style="margin-left: 10px"></i>
                     </div>
                     <div class="col-md-2 jupyter-left"><input type="number" ng-model="jupyterCtrl.val.numExecutors" ng-init="1" min="1" value="1" class="form-control"></div>
                   </div>
@@ -303,7 +303,7 @@
 
                 <div class="row" ng-if="jupyterCtrl.val.mode === 'parallelexperiments'">
                   <div class="row clusterparams">
-                    <div class="text-right col-md-4">Max parallel experiments <i class="fa fa-info-circle" uib-tooltip="The maximum number of experiments to run in parallel." style="margin-left: 10px"></i>
+                    <div class="text-right col-md-4">Max parallel experiments <i class="fa fa-info-circle" uib-tooltip="The maximum number of experiments to run in parallel. This translates to the number of Spark executors that are requested." style="margin-left: 10px"></i>
                     </div>
                     <div class="col-md-2 jupyter-left"><input type="number" ng-model="jupyterCtrl.val.numExecutors" ng-init="1" min="1" value="1" class="form-control"></div>
                   </div>
@@ -325,7 +325,7 @@
                 <div class="row" ng-if="jupyterCtrl.val.mode === 'parallelexperiments'" >
                   <div class="row clusterparams" ng-if="clusterUtilCtrl.allocatedGPUs !== 0 || clusterUtilCtrl.availableGPUs !== 0">
                     <div class="text-right col-md-4">Number GPUs per Executor<i class="fa fa-info-circle"
-                                                                     uib-tooltip="The number of GPUs allocated for each Spark driver/executor in this job. Parallel Experiments allocates GPUs in Executors."
+                                                                     uib-tooltip="The number of GPUs allocated for each Spark executors."
                                                                      style="margin-left: 10px"></i>
                     </div>
                     <div class="col-md-2 jupyter-left"><input type="number" ng-init="0"  ng-model="jupyterCtrl.val.numExecutorGpus" min="0" class="form-control"></div>
@@ -334,7 +334,7 @@
                 <div class="row" ng-if="jupyterCtrl.val.mode === 'experiment' || (jupyterCtrl.val.mode == 'distributedTraining' && jupyterCtrl.val.distributionStrategy == 'MirroredStrategy')" >
                   <div class="row clusterparams" ng-if="clusterUtilCtrl.allocatedGPUs !== 0 || clusterUtilCtrl.availableGPUs !== 0">
                     <div class="text-right col-md-4">Number of GPUs<i class="fa fa-info-circle"
-                                                                                uib-tooltip="The number of GPUs allocated for each Spark driver/executor in this job. Parallel Experiments allocates GPUs in Executors."
+                                                                                uib-tooltip="The number of GPUs allocated for each Spark executor."
                                                                                 style="margin-left: 10px"></i>
                     </div>
                     <div class="col-md-2 jupyter-left"><input type="number" ng-init="0"  ng-model="jupyterCtrl.val.numExecutorGpus" min="0" class="form-control"></div>
@@ -702,7 +702,7 @@
               !(self.ui !=='' && (self.tourService.currentStep_TourEight >= 0 ||  self.tourService.currentStep_TourEight <= 10))">
         <virtual-step
                       class="ng-scope"
-                      tourtip="Before starting Jupyter you need to select an appropriate mode depending on what type of job you intend to run. The 'Experiment' option should be selected as this tour will explain how to run plain non-distributed TensorFlow code."
+                      tourtip="Before starting Jupyter you need to select an appropriate mode depending on what type of job you intend to run. The 'Experiment' mode should be selected for this tour."
                       tourtip-step="0"
                       tourtip-element="#experimentLabel"
                       tourtip-placement="bottom"
