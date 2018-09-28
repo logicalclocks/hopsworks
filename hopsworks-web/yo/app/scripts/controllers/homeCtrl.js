@@ -310,29 +310,32 @@ angular.module('hopsWorksApp')
               });
             };
 
-            self.createExampleProject = function (tourName) {
+            self.createExampleProject = function (uiTourName) {
 
-              if(tourName === 'Deep Learning') {
-                tourName = 'Deep_Learning'
+              $scope.creating[uiTourName] = true;
+
+              var internalTourName = '';
+              if(uiTourName === 'Deep Learning') {
+                internalTourName = 'Deep_Learning';
+              } else {
+                internalTourName = uiTourName;
               };
-
-              $scope.creating[tourName] = true;
 
               if (self.showTourTips === false) {
                 self.toggleTourTips();
               }
 
-              ProjectService.example({type: tourName}).$promise.then(
+              ProjectService.example({type: internalTourName}).$promise.then(
                       function (success) {
-                        $scope.creating[tourName] = false;
-                        self.tourService.setActiveTour(tourName);
+                        $scope.creating[uiTourName] = false;
+                        self.tourService.setActiveTour(internalTourName);
                         growl.success("Created Tour Project", {title: 'Success', ttl: 5000});
                         self.exampleProjectID = success.id;
                         updateUIAfterChange(true);
                         // To make sure the new project is refreshed
 //                        self.showTours = false;
                         if (success.errorMsg) {
-                          $scope.creating[tourName] = false;
+                          $scope.creating[uiTourName] = false;
                           growl.warning("some problem", {title: 'Error', ttl: 10000});
                         }
                       },
