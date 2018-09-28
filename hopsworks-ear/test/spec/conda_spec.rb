@@ -78,6 +78,40 @@ describe "On #{ENV['OS']}" do
           dropbox = json_body.detect { |library| library[:lib] == "dropbox" }
           expect(dropbox[:versions].count).to be >= 1
         end
+        
+        it 'GC stale Conda env' do
+          if not conda_exists
+            skip "Anaconda is not installed in the machine or test is run locally"
+          end
+        
+          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/enable/2.7/true"
+          expect_status(200)
+          
+          wait_for do
+            CondaCommands.find_by(proj: @project[:projectname]).nil?
+          end
+          expect(check_if_env_exists_locally(@project[:projectname])).to be true
+
+          # Create a second project with Anaconda enabled
+          project2 = create_project
+          get "#{ENV['HOPSWORKS_API']}/project/#{project2[:id]}/pythonDeps/enable/2.7/true"
+          expect_status(200)
+          
+          wait_for do
+            CondaCommands.find_by(proj: project2[:projectname]).nil?
+          end
+          expect(check_if_env_exists_locally(project2[:projectname])).to be true
+
+          # Disable Anaconda for project2 directly in the database
+          # so it does not send a command to kagent
+          tmp_proj = Project.find_by(id: project2[:id])
+          tmp_proj.conda = 0
+          tmp_proj.save
+
+          trigger_conda_gc
+          sleep(15)
+          expect(check_if_env_exists_locally(project2[:projectname])).to be false
+        end
 
         it 'install libraries' do
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/install",

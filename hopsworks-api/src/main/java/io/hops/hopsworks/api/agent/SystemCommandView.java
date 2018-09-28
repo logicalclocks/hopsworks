@@ -106,7 +106,7 @@ public class SystemCommandView {
     sc.setOp(op);
     sc.setStatus(status);
     sc.setId(id);
-    sc.setArguments(arguments);
+    sc.setCommandArgumentsAsString(arguments);
     sc.setPriority(priority);
     sc.setExecUser(execUser);
     
