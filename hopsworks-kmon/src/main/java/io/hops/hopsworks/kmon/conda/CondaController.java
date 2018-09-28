@@ -160,8 +160,8 @@ public class CondaController implements Serializable {
 
             this.output = "SUCCESS. \r\n" + sb.toString();
             try {
-              pythonDepsFacade.updateCondaCommandStatus(command.getId(), CondaStatus.SUCCESS,
-                  command.getArg(), command.getProj(), command.getOp(), command.getLib(),
+              pythonDepsFacade.updateCondaCommandStatus(command.getId(), CondaStatus.SUCCESS, command.getInstallType(),
+                  command.getMachineType(), command.getArg(), command.getProj(), command.getOp(), command.getLib(),
                   command.getVersion(), command.getChannelUrl());
             } catch (AppException ex) {
               Logger.getLogger(CondaController.class.getName()).log(Level.SEVERE, null, ex);
@@ -203,8 +203,8 @@ public class CondaController implements Serializable {
             pythonDepsFacade.removeCondaCommand(command.getId());
             this.output = "SUCCESS. \r\n" + sb.toString();
             try {
-              pythonDepsFacade.updateCondaCommandStatus(command.getId(), CondaStatus.SUCCESS,
-                  command.getArg(), command.getProj(), command.getOp(), command.getLib(),
+              pythonDepsFacade.updateCondaCommandStatus(command.getId(), CondaStatus.SUCCESS, command.getInstallType(),
+                  command.getMachineType(), command.getArg(), command.getProj(), command.getOp(), command.getLib(),
                   command.getVersion(), command.getChannelUrl());
             } catch (AppException ex) {
               Logger.getLogger(CondaController.class.getName()).log(Level.SEVERE, null, ex);
