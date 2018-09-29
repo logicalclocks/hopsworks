@@ -135,7 +135,7 @@ public class AgentResource {
   @Path("/alert")
   @Consumes(MediaType.APPLICATION_JSON)
   public Response alert(
-      @ApiParam(value = "Alert sent by agent", required = true) AlertView alertView) throws RequestException {
+      @ApiParam(value = "Alert sent by agent", required = true) AlertView alertView) throws ServiceException {
   
     agentController.alert(alertView.toAlert(), alertView.getHostId());
     return Response.ok().build();

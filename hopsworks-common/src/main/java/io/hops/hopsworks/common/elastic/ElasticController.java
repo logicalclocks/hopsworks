@@ -45,6 +45,7 @@ import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
+import io.hops.hopsworks.common.exception.ProjectException;
 import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.util.HopsUtils;
@@ -968,7 +969,7 @@ public class ElasticController {
     return objectId;
   }
 
-  public String getLogdirFromElastic(Project project, String elasticId) throws NotFoundException {
+  public String getLogdirFromElastic(Project project, String elasticId) throws ProjectException {
     Map<String, String> params = new HashMap<>();
     params.put("op", "GET");
 
@@ -982,16 +983,14 @@ public class ElasticController {
     try {
       resp = sendELKReq(templateUrl, params, false);
       foundEntry = (boolean) resp.get("found");
-    } catch (Exception e) {
-      LOG.log(Level.SEVERE, "Could not find elastic index " + elasticId +
-          " for TensorBoard for project " + project.getName());
-      throw new NotFoundException("Could not find elastic index " + elasticId, e);
+    } catch (Exception ex) {
+      throw new ProjectException(RESTCodes.ProjectErrorCode.TENSORBOARD_ELASTIC_INDEX_NOT_FOUND,
+        "project:" + project.getName()+ ", index: " + elasticId, ex.getMessage(), ex);
     }
 
     if(!foundEntry) {
-      LOG.log(Level.SEVERE, "Could not find elastic index " + elasticId +
-          " for TensorBoard for project " + project.getName());
-      throw new NotFoundException("Could not find elastic index " + elasticId);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.TENSORBOARD_ELASTIC_INDEX_NOT_FOUND,
+        "project:" + project.getName()+ ", index: " + elasticId);
     }
 
     JSONObject source = resp.getJSONObject("_source");

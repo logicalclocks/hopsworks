@@ -39,11 +39,9 @@
 package io.hops.hopsworks.api.util;
 
 import io.hops.hopsworks.api.filter.NoCacheResponse;
-import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.util.Settings;
 import io.swagger.annotations.Api;
-import java.util.Collections;
-import java.util.List;
+
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -55,6 +53,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.Collections;
+import java.util.List;
 
 @Path("/variables")
 @Stateless
@@ -71,7 +71,7 @@ public class VariablesService {
   @GET
   @Path("{id}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getVar(@PathParam("id") String id) throws AppException {
+  public Response getVar(@PathParam("id") String id) {
     JsonResponse json = new JsonResponse();
     json.setSuccessMessage(settings.findById(id).getValue());
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
@@ -80,7 +80,7 @@ public class VariablesService {
   @GET
   @Path("twofactor")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getTwofactor() throws AppException {
+  public Response getTwofactor() {
     JsonResponse json = new JsonResponse();
     json.setSuccessMessage(settings.getTwoFactorAuth());
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
@@ -89,7 +89,7 @@ public class VariablesService {
   @GET
   @Path("ldap")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getLDAPAuthStatus() throws AppException {
+  public Response getLDAPAuthStatus() {
     JsonResponse json = new JsonResponse();
     json.setSuccessMessage(settings.getLDAPAuthStatus());
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
@@ -98,7 +98,7 @@ public class VariablesService {
   @GET
   @Path("authStatus")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getAuthStatus() throws AppException {
+  public Response getAuthStatus(){
     AuthStatus authStatus = new AuthStatus(settings.getTwoFactorAuth(), settings.getLDAPAuthStatus());
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(authStatus).build();
   }
@@ -106,7 +106,7 @@ public class VariablesService {
   @GET
   @Path("versions")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getVersions() throws AppException {
+  public Response getVersions(){
     VersionsDTO dto = new VersionsDTO(settings);
     List<VersionsDTO.Version> list = dto.getVersions();
     Collections.sort(list);

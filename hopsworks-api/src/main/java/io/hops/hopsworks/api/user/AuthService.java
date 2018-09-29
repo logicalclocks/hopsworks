@@ -52,6 +52,7 @@ import io.hops.hopsworks.common.dao.user.security.audit.UserAuditActions;
 import io.hops.hopsworks.common.exception.ProjectException;
 import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.exception.RequestException;
+import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.exception.UserException;
 import io.hops.hopsworks.common.user.AuthController;
 import io.hops.hopsworks.common.user.UserStatusValidator;
@@ -239,7 +240,7 @@ public class AuthService {
       @FormParam("securityQuestion") String securityQuestion,
       @FormParam("securityAnswer") String securityAnswer,
       @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws RequestException, UserException {
+      @Context HttpServletRequest req) throws UserException, ServiceException {
     JsonResponse json = new JsonResponse();
     userController.recoverPassword(email, securityQuestion, securityAnswer, req);
     json.setStatus("OK");

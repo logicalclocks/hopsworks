@@ -27,9 +27,9 @@ import io.hops.hopsworks.common.dao.tensorflow.config.TensorBoardDTO;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.elastic.ElasticController;
-import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.exception.DatasetException;
 import io.hops.hopsworks.common.exception.ProjectException;
+import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.experiments.TensorBoardController;
 import io.swagger.annotations.ApiOperation;
@@ -41,7 +41,6 @@ import javax.enterprise.context.RequestScoped;
 import javax.persistence.PersistenceException;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
-import javax.ws.rs.NotFoundException;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -94,7 +93,7 @@ public class TensorBoardService {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response getTensorBoard(@Context SecurityContext sc) throws AppException {
+  public Response getTensorBoard(@Context SecurityContext sc) throws ServiceException {
 
     try {
       Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
@@ -104,10 +103,7 @@ public class TensorBoardService {
       }
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(tbDTO).build();
     } catch (PersistenceException pe) {
-      LOGGER.log(Level.SEVERE, "Failed to fetch TensorBoard from database", pe);
-      throw new AppException(Response.Status.BAD_REQUEST.
-          getStatusCode(),
-          "Could not get the running TensorBoard.");
+      throw new ServiceException(RESTCodes.ServiceErrorCode.TENSORBOARD_FETCH_ERROR, null, pe.getMessage(), pe);
     }
   }
 
@@ -117,22 +113,15 @@ public class TensorBoardService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response startTensorBoard(@PathParam("elasticId") String elasticId,
-                                            @Context SecurityContext sc)
-    throws AppException, ServiceException, DatasetException, ProjectException {
+                                            @Context SecurityContext sc) throws ServiceException, DatasetException,
+    ProjectException {
 
     String loggedinemail = sc.getUserPrincipal().getName();
     Users user = userFacade.findByEmail(loggedinemail);
 
     String hdfsLogdir = null;
-    try {
-      hdfsLogdir = elasticController.getLogdirFromElastic(project, elasticId);
-      hdfsLogdir = tensorBoardController.replaceNN(hdfsLogdir);
-    } catch (NotFoundException nfe) {
-      LOGGER.log(Level.SEVERE, "Could not locate logdir from elastic ", nfe);
-      throw new AppException(Response.Status.NOT_FOUND.
-          getStatusCode(),
-          "Unable to retrieve location of experiment logdir from elastic, contact a system administrator.");
-    }
+    hdfsLogdir = elasticController.getLogdirFromElastic(project, elasticId);
+    hdfsLogdir = tensorBoardController.replaceNN(hdfsLogdir);
 
     DsPath tbPath = pathValidator.validatePath(this.project, hdfsLogdir);
     tbPath.validatePathExists(inodesFacade, true);

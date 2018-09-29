@@ -61,6 +61,7 @@ import io.hops.hopsworks.common.dao.user.security.ua.UserAccountType;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
 import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.exception.RequestException;
+import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.exception.UserException;
 import io.hops.hopsworks.common.security.CertificatesMgmService;
 import io.hops.hopsworks.common.user.ldap.LdapRealm;
@@ -351,7 +352,7 @@ public class AuthController {
    * @throws MessagingException
    * @throws Exception
    */
-  public void resetPassword(Users user, HttpServletRequest req) throws RequestException {
+  public void resetPassword(Users user, HttpServletRequest req) throws ServiceException {
     if (user == null) {
       throw new IllegalArgumentException("User not set.");
     }
@@ -364,7 +365,7 @@ public class AuthController {
       emailBean.sendEmail(user.getEmail(), Message.RecipientType.TO, UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET,
         message);
     } catch (MessagingException ex){
-      throw new RequestException(RESTCodes.RequestErrorCode.EMAIL_SENDING_FAILURE, "user: " + user.getUsername(),
+      throw new ServiceException(RESTCodes.ServiceErrorCode.EMAIL_SENDING_FAILURE, "user: " + user.getUsername(),
         ex.getMessage(), ex);
     }
     changePassword(user, randomPassword, req);

@@ -151,7 +151,10 @@ public class RESTCodes {
       "op", Response.Status.NOT_MODIFIED),
     PROJECT_QUOTA_INSUFFICIENT(150063, "This project is out of credits", Response.Status.PRECONDITION_FAILED),
     ANACONDA_NOT_ENABLED(150064, "First enable Anaconda. Click on 'Python' -> Pick a version",
-      Response.Status.PRECONDITION_FAILED);
+      Response.Status.PRECONDITION_FAILED),
+    TENSORBOARD_ELASTIC_INDEX_NOT_FOUND(150065, "Could not find elastic index for TensorBoard.",
+      Response.Status.NOT_FOUND);
+    
     
     private Integer code;
     private String message;
@@ -366,12 +369,10 @@ public class RESTCodes {
   
   public enum RequestErrorCode implements RESTErrorCode {
     
-    // JOBS Error Messages
     EMAIL_EMPTY(140001, "Email cannot be empty.", Response.Status.BAD_REQUEST),
     EMAIL_INVALID(140002, "Not a valid email address.", Response.Status.BAD_REQUEST),
-    EMAIL_SENDING_FAILURE(140003, "Could not send email", Response.Status.BAD_REQUEST),
-    DATASET_REQUEST_ERROR(140004, "Error while submitting dataset request", Response.Status.BAD_REQUEST),
-    REQUEST_UNKNOWN_ACTION(140005, "Unknown request action", Response.Status.BAD_REQUEST);
+    DATASET_REQUEST_ERROR(140003, "Error while submitting dataset request", Response.Status.BAD_REQUEST),
+    REQUEST_UNKNOWN_ACTION(140004, "Unknown request action", Response.Status.BAD_REQUEST);
     
     
     private Integer code;
@@ -449,8 +450,8 @@ public class RESTCodes {
     ANACONDA_OP_IN_PROGRESS(100023, "A conda environment operation is currently executing (create/remove/list). Wait " +
       "for it to finish or clear it first.", Response.Status.PRECONDITION_FAILED),
     HOST_TYPE_NOT_FOUND(100024, "No hosts with the desired capability.", Response.Status.PRECONDITION_FAILED),
-    HOST_NOT_FOUND(100025, "No hosts with the desired capability.", Response.Status.BAD_REQUEST),
-    HOST_NOT_REGISTERED(100026, "No hosts with the desired capability.", Response.Status.PRECONDITION_FAILED),
+    HOST_NOT_FOUND(100025, "Hosts was not found.", Response.Status.BAD_REQUEST),
+    HOST_NOT_REGISTERED(100026, "Host has not registered.", Response.Status.PRECONDITION_FAILED),
     ANACONDA_DEP_REMOVE_FORBIDDEN(100027, "Could not uninstall library, it is a mandatory dependency",
       Response.Status.BAD_REQUEST),
     ANACONDA_DEP_INSTALL_FORBIDDEN(100028, "Library is already installed", Response.Status.BAD_REQUEST),
@@ -467,8 +468,12 @@ public class RESTCodes {
     JUPYTER_START_ERROR(100035, "Jupyter server could not start.", Response.Status.INTERNAL_SERVER_ERROR),
     JUPYTER_SAVE_SETTINGS_ERROR(100036, "Could not save Jupyter Settings.", Response.Status.INTERNAL_SERVER_ERROR),
     IPYTHON_CONVERT_ERROR(100037, "Problem converting ipython notebook to python program",
-      Response.Status.EXPECTATION_FAILED);
-    
+      Response.Status.EXPECTATION_FAILED),
+    TENSORBOARD_FETCH_ERROR(100038, "Error while fetching TensorBoard from database",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    EMAIL_SENDING_FAILURE(140003, "Could not send email", Response.Status.EXPECTATION_FAILED);
+  
+  
     private Integer code;
     private String message;
     private Response.Status respStatus;
@@ -689,7 +694,9 @@ public class RESTCodes {
     ACCOUNT_ALREADY_VERIFIED(160045, "User is already verified", Response.Status.BAD_REQUEST),
     TWO_FA_ENABLE_ERROR(160046, "Cannot enable 2-factor authentication.", Response.Status.INTERNAL_SERVER_ERROR),
     ACCOUNT_REGISTRATION_ERROR(160047, "Cannot enable 2-factor authentication.", Response.Status.INTERNAL_SERVER_ERROR),
-    TWO_FA_DISABLED(160046, "2FA is not enabled.", Response.Status.PRECONDITION_FAILED);
+    TWO_FA_DISABLED(160048, "2FA is not enabled.", Response.Status.PRECONDITION_FAILED),
+    TRANSITION_STATUS_ERROR(160049, "The user can't transition from current status to requested status",
+      Response.Status.BAD_REQUEST);
     
     private Integer code;
     private String message;

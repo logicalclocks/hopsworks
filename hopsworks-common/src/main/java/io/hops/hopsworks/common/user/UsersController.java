@@ -65,6 +65,7 @@ import io.hops.hopsworks.common.dao.user.sshkey.SshKeysPK;
 import io.hops.hopsworks.common.dao.user.sshkey.SshkeysFacade;
 import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.exception.RequestException;
+import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.exception.UserException;
 import io.hops.hopsworks.common.util.EmailBean;
 import io.hops.hopsworks.common.util.FormatUtils;
@@ -289,7 +290,7 @@ public class UsersController {
   }
 
   public void recoverPassword(String email, String securityQuestion, String securityAnswer, HttpServletRequest req)
-    throws UserException, RequestException {
+    throws UserException, ServiceException {
     if (userValidator.isValidEmail(email) && userValidator.isValidsecurityQA(securityQuestion, securityAnswer)) {
       Users user = userFacade.findByEmail(email);
       if (user == null) {

@@ -35,7 +35,6 @@ import io.hops.hopsworks.common.dao.pythonDeps.PythonDep;
 import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
 import io.hops.hopsworks.common.exception.RESTCodes;
-import io.hops.hopsworks.common.exception.RequestException;
 import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.util.EmailBean;
 import io.hops.hopsworks.common.util.Settings;
@@ -91,7 +90,7 @@ public class AgentController {
     return settings.getHadoopVersionedDir();
   }
   
-  public HeartbeatReplyDTO heartbeat(AgentHeartbeatDTO heartbeat) throws ServiceException, RequestException {
+  public HeartbeatReplyDTO heartbeat(AgentHeartbeatDTO heartbeat) throws ServiceException {
     Hosts host = hostsFacade.findByHostname(heartbeat.hostId);
     if (host == null) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.HOST_NOT_FOUND, "hostId: " + heartbeat.hostId);
@@ -107,7 +106,7 @@ public class AgentController {
     return constructResponse(host);
   }
   
-  public void alert(Alert alert, String hostId) throws RequestException {
+  public void alert(Alert alert, String hostId) throws ServiceException {
     Hosts host = hostsFacade.findByHostname(hostId);
     alert.setHost(host);
     alertFacade.persistAlert(alert);
@@ -139,7 +138,7 @@ public class AgentController {
     return new HeartbeatReplyDTO(newSystemCommands, newCondaCommands);
   }
   
-  private void updateHostMetrics(final Hosts host, final AgentHeartbeatDTO heartbeat) throws RequestException {
+  private void updateHostMetrics(final Hosts host, final AgentHeartbeatDTO heartbeat) throws ServiceException {
     host.setLastHeartbeat(new Date().getTime());
     host.setLoad1(heartbeat.load1);
     host.setLoad5(heartbeat.load5);
@@ -163,14 +162,14 @@ public class AgentController {
     hostsFacade.storeHost(host);
   }
   
-  private void updateServices(AgentHeartbeatDTO heartbeat) throws ServiceException, RequestException {
+  private void updateServices(AgentHeartbeatDTO heartbeat) throws ServiceException {
     List<HostServices> updatedHostServices = hostServicesFacade.updateHostServices(heartbeat);
     for (HostServices updatedHostService : updatedHostServices) {
       notifyHostServiceHealth(updatedHostService);
     }
   }
   
-  private void notifyHostServiceHealth(HostServices hostService) throws RequestException {
+  private void notifyHostServiceHealth(HostServices hostService) throws ServiceException {
     final Health previousHealthReport = hostService.getHealth();
     if (!hostService.getHealth().equals(previousHealthReport)
         && hostService.getHealth().equals(Health.Bad)) {
@@ -416,11 +415,11 @@ public class AgentController {
     }
   }
   
-  private void emailAlert(String subject, String body) throws RequestException {
+  private void emailAlert(String subject, String body) throws ServiceException {
     try {
       emailBean.sendEmails(settings.getAlertEmailAddrs(), subject, body);
     } catch (MessagingException e) {
-      throw new RequestException(RESTCodes.RequestErrorCode.EMAIL_SENDING_FAILURE, null, e.getMessage(), e);
+      throw new ServiceException(RESTCodes.ServiceErrorCode.EMAIL_SENDING_FAILURE, null, e.getMessage(), e);
     }
   }
   
