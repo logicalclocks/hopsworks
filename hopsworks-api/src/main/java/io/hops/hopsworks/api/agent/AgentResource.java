@@ -149,7 +149,7 @@ public class AgentResource {
           .setOp(sc.getOp())
           .setStatus(sc.getStatus())
           .setCommandId(sc.getId())
-          .setArguments(sc.getArguments())
+          .setArguments(sc.getCommandArgumentsAsString())
           .setPriority(sc.getPriority())
           .setUser(sc.getExecUser())
           .build());

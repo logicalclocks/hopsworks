@@ -2255,19 +2255,18 @@ public class ProjectController {
               "project: " + project.getName(), ex.getMessage(), ex);
           }
           break;
-        case TENSORFLOW:
-        case DISTRIBUTED_TENSORFLOW:
+        case DEEP_LEARNING:
           // Get the mnist.py and tfr records from /user/<super user>/tensorflow_demo
           //Depending on tour type, copy files
-          String tensorflowDataSrc = "/user/" + settings.getHdfsSuperUser() + "/" + Settings.HOPS_TENSORFLOW_TOUR_DATA
+          String DLDataSrc = "/user/" + settings.getHdfsSuperUser() + "/" + Settings.HOPS_DEEP_LEARNING_TOUR_DATA
               + "/*";
-          String tensorflowDataDst = "/" + Settings.DIR_ROOT + "/" + project.getName() + "/"
+          String DLDataDst = "/" + Settings.DIR_ROOT + "/" + project.getName() + "/"
               + Settings.HOPS_TOUR_DATASET;
           try {
-            udfso.copyInHdfs(new Path(tensorflowDataSrc), new Path(tensorflowDataDst));
+            udfso.copyInHdfs(new Path(DLDataSrc), new Path(DLDataDst));
             String datasetGroup = hdfsUsersBean.getHdfsGroupName(project, Settings.HOPS_TOUR_DATASET);
             String userHdfsName = hdfsUsersBean.getHdfsUserName(project, user);
-            Inode parent = inodes.getInodeAtPath(tensorflowDataDst);
+            Inode parent = inodes.getInodeAtPath(DLDataDst);
             List<Inode> children = new ArrayList<>();
             inodes.getAllChildren(parent, children);
             for (Inode child : children) {
@@ -2278,13 +2277,13 @@ public class ProjectController {
               }
             }
             //Move notebooks to Jupyter Dataset
-            if (projectType == TourProjectType.TENSORFLOW) {
-              String tensorflowNotebooksSrc = tensorflowDataDst + "/notebooks";
-              String tensorflowNotebooksDst = "/" + Settings.DIR_ROOT + "/" + project.getName() + "/"
+            if (projectType == TourProjectType.DEEP_LEARNING) {
+              String DLNotebooksSrc = DLDataDst + "/notebooks";
+              String DLNotebooksDst = "/" + Settings.DIR_ROOT + "/" + project.getName() + "/"
                   + Settings.HOPS_TOUR_DATASET_JUPYTER;
-              udfso.copyInHdfs(new Path(tensorflowNotebooksSrc + "/*"), new Path(tensorflowNotebooksDst));
+              udfso.copyInHdfs(new Path(DLNotebooksSrc + "/*"), new Path(DLNotebooksDst));
               datasetGroup = hdfsUsersBean.getHdfsGroupName(project, Settings.HOPS_TOUR_DATASET_JUPYTER);
-              Inode parentJupyterDs = inodes.getInodeAtPath(tensorflowNotebooksDst);
+              Inode parentJupyterDs = inodes.getInodeAtPath(DLNotebooksDst);
               List<Inode> childrenJupyterDs = new ArrayList<>();
               inodes.getAllChildren(parentJupyterDs, childrenJupyterDs);
               for (Inode child : childrenJupyterDs) {
@@ -2294,7 +2293,7 @@ public class ProjectController {
                   udfso.setOwner(path, userHdfsName, datasetGroup);
                 }
               }
-              udfso.rm(new Path(tensorflowNotebooksSrc), true);
+              udfso.rm(new Path(DLNotebooksSrc), true);
             }
           } catch (IOException ex) {
             throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_TOUR_FILES_ERROR,
@@ -2348,8 +2347,7 @@ public class ProjectController {
    * @param project
    * @return
    */
-
-  public void addElasticsearch(Project project) throws ProjectException, ServiceException {
+  public void addElasticsearch(Project project) throws AppException {
             
     String projectName = project.getName().toLowerCase();
     Map<String, String> params = new HashMap<>();

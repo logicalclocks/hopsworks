@@ -48,12 +48,15 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import java.util.List;
+import java.util.logging.Logger;
 
 @Stateless
 public class SystemCommandFacade {
- 
+  private static final Logger LOGGER = Logger.getLogger(SystemCommandFacade.class.getName());
+  
   public enum OP {
-   SERVICE_KEY_ROTATION
+    SERVICE_KEY_ROTATION,
+    CONDA_GC
   }
   
   public enum STATUS {

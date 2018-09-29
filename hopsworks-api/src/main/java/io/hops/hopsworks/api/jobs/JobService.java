@@ -430,30 +430,29 @@ public class JobService {
     DistributedFileSystemOps client = null;
 
     try {
-      if(!Strings.isNullOrEmpty(hdfsUser)) {
-        client = dfs.getDfsOps(hdfsUser);
-        FileStatus[] statuses = client.getFilesystem().globStatus(new org.apache.hadoop.fs.Path("/Projects/" + project.
-          getName() + "/Logs/TensorFlow/" + appId + "/TensorBoard.*"));
-        DistributedFileSystem fs = client.getFilesystem();
-        for (FileStatus status : statuses) {
-          //LOGGER.log(Level.INFO, "Reading tensorboard for: {0}", status.getPath());
-          FSDataInputStream in = null;
-          try {
-            in = fs.open(new org.apache.hadoop.fs.Path(status.getPath().toString()));
-            String url = IOUtils.toString(in, "UTF-8");
-            int prefix = url.indexOf("http://");
-            if (prefix != -1) {
-              url = url.substring("http://".length());
-            }
-            String name = status.getPath().getName();
-            urls.add(new YarnAppUrlsDTO(name, url));
-          } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Problem reading file with tensorboard address from HDFS: " + e.getMessage());
-          } finally {
-            org.apache.hadoop.io.IOUtils.closeStream(in);
+      client = dfs.getDfsOps(hdfsUser);
+      FileStatus[] statuses = client.getFilesystem().globStatus(new org.apache.hadoop.fs.Path("/Projects/" + project.
+          getName() + "/Experiments/" + appId + "/TensorBoard.*"));
+      LOGGER.log(Level.INFO, "Found " + statuses.length + " tbs");
+      DistributedFileSystem fs = client.getFilesystem();
+      for (FileStatus status : statuses) {
+        LOGGER.log(Level.INFO, "Reading tensorboard for: {0}", status.getPath());
+        FSDataInputStream in = null;
+        try {
+          in = fs.open(new org.apache.hadoop.fs.Path(status.getPath().toString()));
+          String url = IOUtils.toString(in, "UTF-8");
+          int prefix = url.indexOf("http://");
+          if (prefix != -1) {
+            url = url.substring("http://".length());
           }
-    
+          String name = status.getPath().getName();
+          urls.add(new YarnAppUrlsDTO(name, url));
+        } catch (Exception e) {
+          LOGGER.log(Level.WARNING, "Problem reading file with tensorboard address from HDFS: " + e.getMessage());
+        } finally {
+          org.apache.hadoop.io.IOUtils.closeStream(in);
         }
+
       }
     } catch (Exception e) {
       throw new JobException(RESTCodes.JobErrorCode.TENSORBOARD_ERROR, null, e.getMessage(), e);
@@ -499,17 +498,43 @@ public class JobService {
             + appId + "/prox/" + trackingUrl;
         urls.add(new YarnAppUrlsDTO("spark", trackingUrl));
       }
-
-      if (isLivy.compareToIgnoreCase("true") == 0) {
-        YarnApplicationstate appStates;
-        appStates = appStateBean.findByAppId(appId);
-        if (appStates != null && appStates.getAppname().toUpperCase().contains("TENSORFLOW")) {
-          urls.addAll(getTensorBoardUrls(hdfsUser, appId));
-        }
-      }
-
     } catch (Exception e) {
       LOGGER.log(Level.SEVERE, "exception while geting job ui " + e.
+          getLocalizedMessage(), e);
+    }
+
+    GenericEntity<List<YarnAppUrlsDTO>> listUrls = new GenericEntity<List<YarnAppUrlsDTO>>(urls) { };
+
+    return noCacheResponse.getNoCacheResponseBuilder(response)
+        .entity(listUrls).build();
+  }
+
+  /**
+   * Get the Job UI url for the specified job
+   * <p>
+   * @param appId
+   * @param sc
+   * @return url
+   * @throws AppException
+   */
+  @GET
+  @Path("/{appId}/tensorboard")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  public Response getTensorBoardUrls(@PathParam("appId") String appId,
+                                     @Context SecurityContext sc) throws AppException {
+    Response noAccess = checkAccessRight(appId);
+    if (noAccess != null) {
+      return noAccess;
+    }
+    Response.Status response = Response.Status.OK;
+    List<YarnAppUrlsDTO> urls = new ArrayList<>();
+    String hdfsUser = getHdfsUser(sc);
+
+    try {
+      urls.addAll(getTensorBoardUrls(hdfsUser, appId));
+    } catch (Exception e) {
+      LOGGER.log(Level.SEVERE, "Exception while getting TensorBoard endpoints" + e.
           getLocalizedMessage(), e);
     }
 
