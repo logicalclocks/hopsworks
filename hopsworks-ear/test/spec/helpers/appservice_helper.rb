@@ -22,8 +22,8 @@ module AppserviceHelper
     user.username
   end
 
-  def download_user_cert
-    download_cert_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/downloadCert"
+  def download_user_cert(project_id)
+    download_cert_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/downloadCert"
     data = 'password=Pass123'
     headers = {"Content-Type" => 'application/x-www-form-urlencoded'}
     post download_cert_endpoint, data, headers # this POST request will trigger a materialization of keystore and pwd to /srv/hops/certs-dir/transient/

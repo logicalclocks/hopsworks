@@ -46,7 +46,7 @@ describe "On #{ENV['OS']}" do
         it "should be authenticated for getting the Kafka schema with keystore and pwd" do
           project = get_project
           username = get_current_username
-          download_cert # need to download the certs to /srv/hops/certs-dir/transient because the .key file is encrypted in NDB
+          download_user_cert(project.id) # need to download the certs to /srv/hops/certs-dir/transient because the .key file is encrypted in NDB
           user_key_path = get_user_key_path(project.projectname, username)
           expect(File.exist?(user_key_path)).to be true
           key_pwd = File.read(user_key_path)
