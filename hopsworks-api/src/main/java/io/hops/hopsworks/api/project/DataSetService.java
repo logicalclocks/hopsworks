@@ -722,8 +722,6 @@ public class DataSetService {
    * @param fileName
    * @param sc
    * @return
-   * @throws DatasetException
-   * @throws ProjectException
    */
   @DELETE
   @Path("corrupted/{fileName: .+}")

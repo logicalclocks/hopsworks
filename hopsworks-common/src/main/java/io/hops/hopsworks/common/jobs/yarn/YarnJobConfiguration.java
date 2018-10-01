@@ -149,4 +149,10 @@ public class YarnJobConfiguration extends JobConfiguration {
   public JobType getJobType() {
     return JobType.YARN;
   }
+  
+  @Override
+  @XmlElement(name="jobTypeName")
+  public String getJobTypeName() {
+    return JobType.YARN.getName();
+  }
 }

@@ -54,6 +54,10 @@
   <packaging>ear</packaging>
 
   <name>hopsworks-ear:1.0.0-SNAPSHOT</name>
+
+  <properties>
+    <maven.deploy.skip>true</maven.deploy.skip>
+  </properties>
   
   <build>
     <plugins>

@@ -47,6 +47,7 @@ import javax.xml.bind.annotation.XmlSeeAlso;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import io.hops.hopsworks.common.jobs.beam.BeamFlinkJobConfiguration;
 import io.hops.hopsworks.common.jobs.erasureCode.ErasureCodeJobConfiguration;
 import io.hops.hopsworks.common.jobs.flink.FlinkJobConfiguration;
 import io.hops.hopsworks.common.jobs.spark.SparkJobConfiguration;
@@ -71,8 +72,6 @@ public abstract class JobConfiguration {
 
   protected ScheduleDTO schedule;
 
-  protected KafkaDTO kafka;
-
   protected JobConfiguration() {
     //Needed for JAXB
   }
@@ -87,6 +86,8 @@ public abstract class JobConfiguration {
    * @return
    */
   public abstract JobType getJobType();
+  
+  public abstract String getJobTypeName();
 
   public String getAppName() {
     return appName;
@@ -102,14 +103,6 @@ public abstract class JobConfiguration {
 
   public void setSchedule(ScheduleDTO schedule) {
     this.schedule = schedule;
-  }
-
-  public KafkaDTO getKafka() {
-    return kafka;
-  }
-
-  public void setKafka(KafkaDTO kafka) {
-    this.kafka = kafka;
   }
 
   @Override
@@ -140,12 +133,15 @@ public abstract class JobConfiguration {
         case FLINK:
           conf = new FlinkJobConfiguration();
           break;
+        case BEAM_FLINK:
+          conf = new BeamFlinkJobConfiguration();
+          break;
         case ERASURE_CODING:
           conf = new ErasureCodeJobConfiguration();
           break;
         default:
           throw new UnsupportedOperationException(
-                  "The given JobType is not recognized by this factory.");
+                  "The given job type is not supported yet.");
       }
       return conf;
     }

@@ -74,38 +74,8 @@ public abstract class YarnJob extends HopsJob {
   protected Map<String, String> jobSystemProperties;
 
   protected final String jobUser;
-  protected String sessionId = null;
-  protected Settings settings = null;
-
-  /**
-   * Constructor for job interacting with the Kafka service.
-   *
-   * @param job
-   * @param user
-   * @param services
-   * @param jobUser
-   * @param hadoopDir
-   * @param jobsMonitor
-   * @param settings
-   * @param sessionId
-   * @throws IllegalArgumentException If the Jobs does not contain a
- YarnJobConfiguration object.
-   */
-  public YarnJob(Jobs job, AsynchronousJobExecutor services,
-      Users user, String jobUser, String hadoopDir, YarnJobsMonitor jobsMonitor, Settings settings, String sessionId) {
-    super(job, services, user, hadoopDir, jobsMonitor);
-    if (!(job.getJobConfig() instanceof YarnJobConfiguration)) {
-      throw new IllegalArgumentException(
-          "Job must be a YarnJobConfiguration object. Received class: "
-          + job.getJobConfig().getClass());
-    }
-    LOG.log(Level.INFO, "Instantiating Yarn job as user: {0}", hdfsUser);
-    this.jobSystemProperties = new HashMap<>();
-    this.projectLocalResources = new ArrayList<>();
-    this.jobUser = jobUser;
-    this.settings = settings;
-    this.sessionId = sessionId;
-  }
+  protected Settings settings;
+  
 
   /**
    * Constructor for job interacting with the Kafka service.
@@ -166,9 +136,7 @@ public abstract class YarnJob extends HopsJob {
           "The YarnRunner has not been initialized yet.");
     }
     try {
-      ApplicationId appId = runner.startAppMaster(services.getYarnClientService(),
-          hdfsUser.getUserName(), jobs.getProject(), dfso,
-          user.getUsername());
+      ApplicationId appId = runner.startAppMaster(jobs.getProject(), dfso,user.getUsername());
       execution = services.getExecutionFacade().updateFilesToRemove(execution, runner.getFilesToRemove());
       execution = services.getExecutionFacade().updateAppId(execution, appId.toString());
       return true;
