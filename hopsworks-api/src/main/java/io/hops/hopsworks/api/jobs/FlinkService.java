@@ -48,7 +48,6 @@ import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
-import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.exception.GenericException;
 import io.hops.hopsworks.common.exception.JobException;
 import io.hops.hopsworks.common.exception.RESTCodes;
@@ -174,7 +173,6 @@ public class FlinkService {
    * @param sc
    * @param req
    * @return
-   * @throws AppException
    */
   @POST
   @Produces(MediaType.APPLICATION_JSON)

@@ -41,10 +41,11 @@ package io.hops.hopsworks.dela;
 import com.google.gson.Gson;
 import io.hops.hopsworks.common.dao.dela.certs.ClusterCertificateFacade;
 import io.hops.hopsworks.common.dela.AddressJSON;
+import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.security.CertificatesMgmService;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.dela.dto.hopssite.ClusterServiceDTO;
-import io.hops.hopsworks.dela.exception.ThirdPartyException;
+import io.hops.hopsworks.common.exception.DelaException;
 import io.hops.hopsworks.dela.hopssite.HopssiteController;
 import io.hops.hopsworks.util.CertificateHelper;
 import io.hops.hopsworks.util.SettingsHelper;
@@ -75,7 +76,7 @@ import org.javatuples.Triplet;
 @Singleton
 public class DelaSetupWorker {
 
-  private final static Logger LOG = Logger.getLogger(DelaSetupWorker.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(DelaSetupWorker.class.getName());
 
   @Resource
   TimerService timerService;
@@ -107,7 +108,7 @@ public class DelaSetupWorker {
     if (delaStateCtrl.delaEnabled()) {
       state = State.SETUP;
       timerService.createTimer(0, settings.getHOPSSITE_HEARTBEAT_RETRY(), "Timer for dela settings check.");
-      LOG.log(Level.INFO, "{0} - state:{1}", new Object[]{ThirdPartyException.Source.HOPS_SITE, state});
+      LOGGER.log(Level.INFO, "{0} - state:{1}", new Object[]{DelaException.Source.HOPS_SITE, state});
     }
   }
 
@@ -126,8 +127,8 @@ public class DelaSetupWorker {
   @Timeout
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   private void timeout(Timer timer) {
-    LOG.log(Level.INFO, "{0} - state:{1} timeout:{2}",
-      new Object[]{ThirdPartyException.Source.HOPS_SITE, state, timer.getInfo().toString()});
+    LOGGER.log(Level.INFO, "{0} - state:{1} timeout:{2}",
+      new Object[]{DelaException.Source.HOPS_SITE, state, timer.getInfo().toString()});
     switch (state) {
       case SETUP:
         setup(timer);
@@ -178,8 +179,8 @@ public class DelaSetupWorker {
     if (keystoreAux.isPresent()) {
       setupComplete(keystoreAux.get(), timer);
     } else {
-      LOG.log(Level.WARNING, "{0} - dela setup not ready - certificates not ready",
-        new Object[]{ThirdPartyException.Source.HOPS_SITE});
+      LOGGER.log(Level.WARNING, "{0} - dela setup not ready - certificates not ready",
+        new Object[]{DelaException.Source.HOPS_SITE});
     }
   }
 
@@ -195,34 +196,34 @@ public class DelaSetupWorker {
   private String delaVersion;
 
   private void delaVersion(Timer timer) {
-    LOG.log(Level.INFO, "{0} - retrieving hops-site dela_version", new Object[]{ThirdPartyException.Source.HOPS_SITE});
+    LOGGER.log(Level.INFO, "{0} - retrieving hops-site dela_version", new Object[]{DelaException.Source.HOPS_SITE});
     try {
       delaVersion = hopsSiteProxy.delaVersion();
       delaStateCtrl.hopssiteContacted();
       timer = resetToDelaContact(timer);
       delaContact(timer);
-    } catch (ThirdPartyException tpe) {
-      LOG.log(Level.WARNING, "{0} - source:<{1}:{2}>:{3}",
-        new Object[]{ThirdPartyException.Source.HOPS_SITE, tpe.getSource(), tpe.getSourceDetails(), tpe.getMessage()});
+    } catch (DelaException tpe) {
+      LOGGER.log(Level.WARNING, "{0} - source:<{1}>:{2}",
+        new Object[]{DelaException.Source.HOPS_SITE, tpe.getSource(), tpe.getMessage()});
       timer = tryAgainLater(timer);
     }
   }
 
   private void delaContact(Timer timer) {
-    LOG.log(Level.INFO, "{0} - state:{1}", new Object[]{ThirdPartyException.Source.HOPS_SITE, state});
+    LOGGER.log(Level.INFO, "{0} - state:{1}", new Object[]{DelaException.Source.HOPS_SITE, state});
     AddressJSON delaTransferEndpoint;
     try {
       delaTransferEndpoint = SettingsHelper.delaTransferEndpoint(settings);
-    } catch (ThirdPartyException tpe) {
+    } catch (DelaException tpe) {
       try {
         delaTransferEndpoint = getDelaTransferEndpoint(delaVersion);
         delaStateCtrl.transferDelaContacted();
         settings.setDELA_PUBLIC_ENDPOINT(delaTransferEndpoint);
         timer = resetToRegister(timer);
         hopsSiteRegister(timer, delaTransferEndpoint);
-      } catch (ThirdPartyException tpe2) {
-        LOG.log(Level.WARNING, "{0} - source:<{1}:{2}>:{3}", new Object[]{ThirdPartyException.Source.HOPS_SITE,
-          tpe2.getSource(), tpe2.getSourceDetails(), tpe2.getMessage()});
+      } catch (DelaException tpe2) {
+        LOGGER.log(Level.WARNING, "{0} - source:<{1}>:{2}", new Object[]{DelaException.Source.HOPS_SITE,
+          tpe2.getSource(), tpe2.getMessage()});
         timer = tryAgainLater(timer);
       }
     }
@@ -230,30 +231,30 @@ public class DelaSetupWorker {
   }
 
   private void hopsSiteRegister(Timer timer) {
-    LOG.log(Level.INFO, "{0} - state:{1}", new Object[]{ThirdPartyException.Source.HOPS_SITE, state});
+    LOGGER.log(Level.INFO, "{0} - state:{1}", new Object[]{DelaException.Source.HOPS_SITE, state});
     AddressJSON delaTransferEndpoint;
     try {
       delaTransferEndpoint = SettingsHelper.delaTransferEndpoint(settings);
-    } catch (ThirdPartyException ex) {
+    } catch (DelaException ex) {
       timer = resetToDelaContact(timer);
       return;
     }
     try {
       hopsSiteRegister(timer, delaTransferEndpoint);
-    } catch (ThirdPartyException tpe) {
-      LOG.log(Level.WARNING, "{0} - source:<{1}:{2}>:{3}",
-        new Object[]{ThirdPartyException.Source.HOPS_SITE, tpe.getSource(), tpe.getSourceDetails(), tpe.getMessage()});
+    } catch (DelaException tpe) {
+      LOGGER.log(Level.WARNING, "{0} - source:<{1}>:{2}",
+        new Object[]{DelaException.Source.HOPS_SITE, tpe.getSource(), tpe.getMessage()});
       timer = tryAgainLater(timer);
     }
   }
 
-  private void hopsSiteRegister(Timer timer, AddressJSON delaTransferEndpoint) throws ThirdPartyException {
+  private void hopsSiteRegister(Timer timer, AddressJSON delaTransferEndpoint) throws DelaException {
     String delaHttpEndpoint = SettingsHelper.delaHttpEndpoint(settings);
     hopsSiteRegister(timer, delaHttpEndpoint, delaTransferEndpoint);
   }
 
   private void hopsSiteRegister(Timer timer, String delaClusterAddress, AddressJSON delaTransferAddress)
-    throws ThirdPartyException {
+    throws DelaException {
     String publicCId = hopsSiteProxy.registerCluster(delaClusterAddress, new Gson().toJson(delaTransferAddress));
     settings.setDELA_CLUSTER_ID(publicCId);
     timer = resetToHeavyPing(timer);
@@ -261,14 +262,14 @@ public class DelaSetupWorker {
   }
 
   private void heavyPing(Timer timer) {
-    LOG.log(Level.INFO, "{0} - state:{1}", new Object[]{ThirdPartyException.Source.HOPS_SITE, state});
+    LOGGER.log(Level.INFO, "{0} - state:{1}", new Object[]{DelaException.Source.HOPS_SITE, state});
     Pair<List<String>, List<String>> datasets;
     try {
       datasets = delaCtrl.getContents();
-    } catch (ThirdPartyException tpe) {
-      LOG.log(Level.WARNING, "{0} - source:<{1}:{2}>:{3}",
-        new Object[]{ThirdPartyException.Source.HOPS_SITE, tpe.getSource(), tpe.getSourceDetails(), tpe.getMessage()});
-      if (ThirdPartyException.Source.SETTINGS.equals(tpe.getSource())) {
+    } catch (DelaException tpe) {
+      LOGGER.log(Level.WARNING, "{0} - source:<{1}>:{2}",
+        new Object[]{DelaException.Source.HOPS_SITE, tpe.getSource(), tpe.getMessage()});
+      if (DelaException.Source.SETTINGS.equals(tpe.getSource())) {
         timer = resetToDelaContact(timer);
       } else {
         timer = tryAgainLater(timer);
@@ -279,12 +280,12 @@ public class DelaSetupWorker {
       hopsSiteProxy.heavyPing(datasets.getValue0(), datasets.getValue1());
       timer = resetToPing(timer);
       ping(timer);
-    } catch (ThirdPartyException tpe) {
-      LOG.log(Level.WARNING, "{0} - source:<{1}:{2}>:{2}",
-        new Object[]{ThirdPartyException.Source.HOPS_SITE, tpe.getSource(), tpe.getSourceDetails(), tpe.getMessage()});
-      if (ThirdPartyException.Error.CLUSTER_NOT_REGISTERED.is(tpe.getMessage())) {
+    } catch (DelaException tpe) {
+      LOGGER.log(Level.WARNING, "{0} - source:<{1}>:{2}",
+        new Object[]{DelaException.Source.HOPS_SITE, tpe.getSource(), tpe.getMessage()});
+      if (RESTCodes.DelaErrorCode.CLUSTER_NOT_REGISTERED.getMessage().equals(tpe.getMessage())) {
         timer = resetToRegister(timer);
-      } else if (ThirdPartyException.Source.SETTINGS.equals(tpe.getSource())) {
+      } else if (DelaException.Source.SETTINGS.equals(tpe.getSource())) {
         timer = resetToRegister(timer);
       } else {
         timer = tryAgainLater(timer);
@@ -293,14 +294,14 @@ public class DelaSetupWorker {
   }
 
   private void ping(Timer timer) {
-    LOG.log(Level.INFO, "{0} - state:{1}", new Object[]{ThirdPartyException.Source.HOPS_SITE, state});
+    LOGGER.log(Level.INFO, "{0} - state:{1}", new Object[]{DelaException.Source.HOPS_SITE, state});
     Pair<List<String>, List<String>> datasets;
     try {
       datasets = delaCtrl.getContents();
-    } catch (ThirdPartyException tpe) {
-      LOG.log(Level.WARNING, "{0} - source:<{1}:{2}>:{3}",
-        new Object[]{ThirdPartyException.Source.HOPS_SITE, tpe.getSource(), tpe.getSourceDetails(), tpe.getMessage()});
-      if (ThirdPartyException.Source.SETTINGS.equals(tpe.getSource())) {
+    } catch (DelaException tpe) {
+      LOGGER.log(Level.WARNING, "{0} - source:<{1}>:{2}",
+        new Object[]{DelaException.Source.HOPS_SITE, tpe.getSource(), tpe.getMessage()});
+      if (DelaException.Source.SETTINGS.equals(tpe.getSource())) {
         timer = resetToDelaContact(timer);
       } else {
         timer = tryAgainLater(timer);
@@ -312,14 +313,14 @@ public class DelaSetupWorker {
       if (!healthy) {
         timer = healthyPing(timer);
       }
-    } catch (ThirdPartyException tpe) {
-      LOG.log(Level.WARNING, "{0} - source:<{1}:{2}>:{3}",
-        new Object[]{ThirdPartyException.Source.HOPS_SITE, tpe.getSource(), tpe.getSourceDetails(), tpe.getMessage()});
-      if (ThirdPartyException.Error.CLUSTER_NOT_REGISTERED.is(tpe.getMessage())) {
+    } catch (DelaException tpe) {
+      LOGGER.log(Level.WARNING, "{0} - source:<{1}>:{2}",
+        new Object[]{DelaException.Source.HOPS_SITE, tpe.getSource(), tpe.getMessage()});
+      if (RESTCodes.DelaErrorCode.CLUSTER_NOT_REGISTERED.getMessage().equals(tpe.getMessage())) {
         timer = resetToRegister(timer);
-      } else if (ThirdPartyException.Error.HEAVY_PING.is(tpe.getMessage())) {
+      } else if (RESTCodes.DelaErrorCode.HEAVY_PING.getMessage().equals(tpe.getMessage())) {
         timer = resetToHeavyPing(timer);
-      } else if (ThirdPartyException.Source.SETTINGS.equals(tpe.getSource())) {
+      } else if (DelaException.Source.SETTINGS.equals(tpe.getSource())) {
         timer = resetToDelaContact(timer);
       } else {
         timer = tryAgainLater(timer);
@@ -355,36 +356,36 @@ public class DelaSetupWorker {
   }
 
   private Timer resetToDelaVersion(Timer timer) {
-    LOG.log(Level.WARNING, "{0} - reset from:{1} to {2}", 
-      new Object[]{ThirdPartyException.Source.HOPS_SITE, state, State.DELA_VERSION});
+    LOGGER.log(Level.WARNING, "{0} - reset from:{1} to {2}",
+      new Object[]{DelaException.Source.HOPS_SITE, state, State.DELA_VERSION});
     state = State.DELA_VERSION;
     return tryTimer(timer, false);
   }
 
   private Timer resetToDelaContact(Timer timer) {
-    LOG.log(Level.WARNING, "{0} - reset from:{1} to {2}", 
-      new Object[]{ThirdPartyException.Source.HOPS_SITE, state, State.DELA_CONTACT});
+    LOGGER.log(Level.WARNING, "{0} - reset from:{1} to {2}",
+      new Object[]{DelaException.Source.HOPS_SITE, state, State.DELA_CONTACT});
     state = State.DELA_CONTACT;
     return tryTimer(timer, false);
   }
 
   private Timer resetToRegister(Timer timer) {
-    LOG.log(Level.WARNING, "{0} - reset from:{1} to {2}", 
-      new Object[]{ThirdPartyException.Source.HOPS_SITE, state, State.REGISTER});
+    LOGGER.log(Level.WARNING, "{0} - reset from:{1} to {2}",
+      new Object[]{DelaException.Source.HOPS_SITE, state, State.REGISTER});
     state = State.REGISTER;
     return tryTimer(timer, false);
   }
 
   private Timer resetToHeavyPing(Timer timer) {
-    LOG.log(Level.WARNING, "{0} - reset from:{1} to {2}", 
-      new Object[]{ThirdPartyException.Source.HOPS_SITE, state, State.HEAVY_PING});
+    LOGGER.log(Level.WARNING, "{0} - reset from:{1} to {2}",
+      new Object[]{DelaException.Source.HOPS_SITE, state, State.HEAVY_PING});
     state = State.HEAVY_PING;
     return tryTimer(timer, false);
   }
 
   private Timer resetToPing(Timer timer) {
-    LOG.log(Level.WARNING, "{0} - reset from:{1} to {2}", 
-      new Object[]{ThirdPartyException.Source.HOPS_SITE, state, State.PING});
+    LOGGER.log(Level.WARNING, "{0} - reset from:{1} to {2}",
+      new Object[]{DelaException.Source.HOPS_SITE, state, State.PING});
     state = State.PING;
     return tryTimer(timer, false);
   }
@@ -401,25 +402,25 @@ public class DelaSetupWorker {
       u.toURI();
       // validate url syntax
       if (u.getHost().isEmpty() || u.getPort() == -1) {
-        LOG.log(Level.WARNING, "{0} - malformed dela url. {1} - reset in database", 
-          new Object[]{ThirdPartyException.Source.HOPS_SITE, delaHttpEndpoint});
+        LOGGER.log(Level.WARNING, "{0} - malformed dela url. {1} - reset in database",
+          new Object[]{DelaException.Source.HOPS_SITE, delaHttpEndpoint});
         throw new HeartbeatException("DELA_TRANSFER_HTTP");
       }
       return delaHttpEndpoint;
     } catch (MalformedURLException | URISyntaxException ex) {
-      LOG.log(Level.SEVERE, "{1} - malformed dela url. {1} - reset in database", 
-        new Object[]{ThirdPartyException.Source.HOPS_SITE, delaHttpEndpoint});
+      LOGGER.log(Level.SEVERE, "{1} - malformed dela url. {1} - reset in database",
+        new Object[]{DelaException.Source.HOPS_SITE, delaHttpEndpoint});
       throw new HeartbeatException("DELA_TRANSFER_HTTP");
     }
   }
 
-  private AddressJSON getDelaTransferEndpoint(String delaVersion) throws ThirdPartyException {
+  private AddressJSON getDelaTransferEndpoint(String delaVersion) throws DelaException {
     String delaTransferHttpEndpoint = SettingsHelper.delaTransferHttpEndpoint(settings);
-    LOG.log(Level.INFO, "{0} - dela http endpoint: {1}", 
-      new Object[]{ThirdPartyException.Source.HOPS_SITE, delaTransferHttpEndpoint});
+    LOGGER.log(Level.INFO, "{0} - dela http endpoint: {1}",
+      new Object[]{DelaException.Source.HOPS_SITE, delaTransferHttpEndpoint});
     AddressJSON delaTransferEndpoint = delaCtrl.getDelaPublicEndpoint(delaVersion);
-    LOG.log(Level.INFO, "{0} - dela transfer endpoint: {1}", 
-      new Object[]{ThirdPartyException.Source.HOPS_SITE, delaTransferEndpoint.toString()});
+    LOGGER.log(Level.INFO, "{0} - dela transfer endpoint: {1}",
+      new Object[]{DelaException.Source.HOPS_SITE, delaTransferEndpoint.toString()});
     return delaTransferEndpoint;
 
   }

@@ -52,12 +52,7 @@ angular.module('hopsWorksApp')
               responseError: function (responseRejection) {
                 console.log('Error in response: ', responseRejection);
 
-                if (responseRejection.status === 403) {
-                  // Access forbidden, authenticating will make no difference
-
-                  console.log('Error in response: ', responseRejection + 'Access forbidden.');
-
-                } else if (responseRejection.status === 401) {
+                if (responseRejection.status === 401) {
                   // Authorization issue, unauthorized, login required
 
                   console.log('Error in response ', responseRejection + 'Login required.');
@@ -69,9 +64,6 @@ angular.module('hopsWorksApp')
                     $location.replace();
                   }
 
-                } else if (responseRejection.status === 500) {
-                  growl.error(responseRejection.data.errorMsg, {title: 'Error', ttl: 5000}); 
-                  console.log('Unhandled error: ', responseRejection);
                 }
                 return $q.reject(responseRejection);
               }

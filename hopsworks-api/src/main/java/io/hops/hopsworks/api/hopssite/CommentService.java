@@ -47,7 +47,7 @@ import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.dela.dto.hopssite.CommentDTO;
 import io.hops.hopsworks.dela.dto.hopssite.CommentIssueDTO;
-import io.hops.hopsworks.dela.exception.ThirdPartyException;
+import io.hops.hopsworks.common.exception.DelaException;
 import io.hops.hopsworks.dela.hopssite.HopsSite;
 import io.hops.hopsworks.dela.hopssite.HopssiteController;
 import io.hops.hopsworks.util.SettingsHelper;
@@ -95,7 +95,7 @@ public class CommentService {
   }
 
   @GET
-  public Response getAllComments() throws ThirdPartyException {
+  public Response getAllComments() throws DelaException {
     LOG.log(Settings.DELA_DEBUG, "hops-site:comment:get:all {0}", publicDSId);
     List<CommentDTO.RetrieveComment> comments = hopsSite.getDatasetAllComments(publicDSId);
     GenericEntity<List<CommentDTO.RetrieveComment>> commentsJson
@@ -106,14 +106,14 @@ public class CommentService {
   }
 
   @POST
-  public Response addComment(@Context SecurityContext sc, String content) throws ThirdPartyException {
+  public Response addComment(@Context SecurityContext sc, String content) throws DelaException {
     LOG.log(Settings.DELA_DEBUG, "hops-site:comment:add {0}", publicDSId);
     String publicCId = SettingsHelper.clusterId(settings);
     Users user = SettingsHelper.getUser(userFacade, sc.getUserPrincipal().getName());
     CommentDTO.Publish comment = new CommentDTO.Publish(user.getEmail(), content);
     hopsSite.performAsUser(user, new HopsSite.UserFunc<String>() {
       @Override
-      public String perform() throws ThirdPartyException {
+      public String perform() throws DelaException {
         hopsSite.addComment(publicCId, publicDSId, comment);
         return "ok";
       }
@@ -125,14 +125,14 @@ public class CommentService {
   @PUT
   @Path("{commentId}")
   public Response updateComment(@Context SecurityContext sc, @PathParam("commentId") Integer commentId, String content)
-    throws ThirdPartyException {
+    throws DelaException {
     LOG.log(Settings.DELA_DEBUG, "hops-site:comment:update {0}", publicDSId);
     String publicCId = SettingsHelper.clusterId(settings);
     Users user = SettingsHelper.getUser(userFacade, sc.getUserPrincipal().getName());
     CommentDTO.Publish comment = new CommentDTO.Publish(user.getEmail(), content);
     hopsSite.performAsUser(user, new HopsSite.UserFunc<String>() {
       @Override
-      public String perform() throws ThirdPartyException {
+      public String perform() throws DelaException {
         hopsSite.updateComment(publicCId, publicDSId, commentId, comment);
         return "ok";
       }
@@ -144,13 +144,13 @@ public class CommentService {
   @DELETE
   @Path("{commentId}")
   public Response deleteComment(@Context SecurityContext sc, @PathParam("commentId") Integer commentId)
-    throws ThirdPartyException, ThirdPartyException, ThirdPartyException {
+    throws DelaException, DelaException, DelaException {
     LOG.log(Settings.DELA_DEBUG, "hops-site:comment:delete {0}", publicDSId);
     String publicCId = SettingsHelper.clusterId(settings);
     Users user = SettingsHelper.getUser(userFacade, sc.getUserPrincipal().getName());
     hopsSite.performAsUser(user, new HopsSite.UserFunc<String>() {
       @Override
-      public String perform() throws ThirdPartyException {
+      public String perform() throws DelaException {
         hopsSite.removeComment(publicCId, publicDSId, commentId, user.getEmail());
         return "ok";
       }
@@ -163,7 +163,7 @@ public class CommentService {
   @Consumes(MediaType.APPLICATION_JSON)
   @Path("{commentId}/report")
   public Response reportAbuse(@Context SecurityContext sc, @PathParam("commentId") Integer commentId,
-    CommentIssueReqDTO commentReqIssue) throws ThirdPartyException {
+    CommentIssueReqDTO commentReqIssue) throws DelaException {
     LOG.log(Settings.DELA_DEBUG, "hops-site:comment:report {0}", publicDSId);
     String publicCId = SettingsHelper.clusterId(settings);
     Users user = SettingsHelper.getUser(userFacade, sc.getUserPrincipal().getName());
@@ -173,7 +173,7 @@ public class CommentService {
     CommentIssueDTO commentIssue = new CommentIssueDTO("default-type", "default-issue", user.getEmail());
     hopsSite.performAsUser(user, new HopsSite.UserFunc<String>() {
       @Override
-      public String perform() throws ThirdPartyException {
+      public String perform() throws DelaException {
         hopsSite.reportComment(publicCId, publicDSId, commentId, commentIssue);
         return "ok";
       }

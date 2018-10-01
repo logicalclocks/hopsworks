@@ -721,8 +721,9 @@ public class PythonDepsFacade {
   }
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  public void updateCondaCommandStatus(int commandId, CondaStatus condaStatus, String arg, String proj, CondaOp opType, String lib, String version,
-      String channel) {
+  public void updateCondaCommandStatus(int commandId, CondaStatus condaStatus, CondaInstallType installType,
+    MachineType machineType, String arg, String proj, CondaOp opType, String lib, String version,
+    String channel) {
     CondaCommands cc = findCondaCommand(commandId);
     if (cc != null) {
       if (condaStatus == CondaStatus.SUCCESS) {

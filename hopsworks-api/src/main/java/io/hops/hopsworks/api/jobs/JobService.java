@@ -489,7 +489,6 @@ public class JobService {
     }
     Response.Status response = Response.Status.OK;
     List<YarnAppUrlsDTO> urls = new ArrayList<>();
-    String hdfsUser = getHdfsUser(sc);
 
     try {
       String trackingUrl = appAttemptStateFacade.findTrackingUrlByAppId(appId);
@@ -515,14 +514,13 @@ public class JobService {
    * @param appId
    * @param sc
    * @return url
-   * @throws AppException
    */
   @GET
   @Path("/{appId}/tensorboard")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response getTensorBoardUrls(@PathParam("appId") String appId,
-                                     @Context SecurityContext sc) throws AppException {
+                                     @Context SecurityContext sc)  {
     Response noAccess = checkAccessRight(appId);
     if (noAccess != null) {
       return noAccess;

@@ -48,7 +48,6 @@ import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.exception.DatasetException;
 import io.hops.hopsworks.common.exception.GenericException;
 import io.hops.hopsworks.common.exception.HopsSecurityException;
@@ -199,7 +198,6 @@ public class ProjectsAdmin {
    * @param req
    * @param projectId
    * @return
-   * @throws AppException
    */
   @GET
   @Produces(MediaType.APPLICATION_JSON)
@@ -224,14 +222,13 @@ public class ProjectsAdmin {
   @Consumes(MediaType.APPLICATION_JSON)
   @Path("/projects")
   public Response setProjectAdminInfo (@Context SecurityContext sc, @Context HttpServletRequest req,
-                                       ProjectAdminInfoDTO projectAdminInfoDTO) throws AppException, ProjectException {
+                                       ProjectAdminInfoDTO projectAdminInfoDTO) throws ProjectException {
     // for changes in space quotas we need to check that both space and ns options are not null
     QuotasDTO quotasDTO = projectAdminInfoDTO.getProjectQuotas();
     if (quotasDTO != null &&
         (((quotasDTO.getHdfsQuotaInBytes() == null) != (quotasDTO.getHdfsNsQuota() == null)) ||
         ((quotasDTO.getHiveHdfsQuotaInBytes() == null) != (quotasDTO.getHiveHdfsNsQuota() == null)))) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.QUOTA_REQUEST_NOT_COMPLETE);
+      throw new IllegalArgumentException("projectAdminInfoDTO did not provide quotasDTO or the latter was incomplete.");
     }
 
     // Build the new project state as Project object

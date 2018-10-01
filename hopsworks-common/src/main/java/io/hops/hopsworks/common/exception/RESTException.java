@@ -25,25 +25,21 @@ public abstract class RESTException extends Exception {
   private final String devMsg;
   private final RESTCodes.RESTErrorCode errorCode;
   
-  RESTException() {
-    this(null, null, null);
-  }
-  
-  RESTException(RESTCodes.RESTErrorCode errorCode) {
+  protected RESTException(RESTCodes.RESTErrorCode errorCode) {
     this(errorCode, null, null);
   }
   
-  RESTException(RESTCodes.RESTErrorCode errorCode, String usrMsg) {
+  protected RESTException(RESTCodes.RESTErrorCode errorCode, String usrMsg) {
     this(errorCode, usrMsg, null);
   }
   
-  RESTException(RESTCodes.RESTErrorCode errorCode, String usrMsg, String devMsg) {
+  protected RESTException(RESTCodes.RESTErrorCode errorCode, String usrMsg, String devMsg) {
     this.errorCode = errorCode;
     this.usrMsg = usrMsg;
     this.devMsg = devMsg;
   }
   
-  RESTException(RESTCodes.RESTErrorCode errorCode, String usrMsg, String devMsg, Throwable throwable) {
+  protected RESTException(RESTCodes.RESTErrorCode errorCode, String usrMsg, String devMsg, Throwable throwable) {
     super(throwable);
     this.errorCode = errorCode;
     this.usrMsg = usrMsg;

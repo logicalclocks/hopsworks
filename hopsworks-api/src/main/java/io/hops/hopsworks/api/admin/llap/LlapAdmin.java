@@ -43,7 +43,6 @@ import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.common.admin.llap.LlapClusterFacade;
 import io.hops.hopsworks.common.admin.llap.LlapClusterLifecycle;
 import io.hops.hopsworks.common.admin.llap.LlapClusterStatus;
-import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.exception.ServiceException;
 import io.swagger.annotations.Api;
@@ -80,7 +79,6 @@ public class LlapAdmin {
    * Return the state of the llap cluster and other information
    * such as the appId and the hosts on which the cluster is running
    * @return
-   * @throws AppException
    */
   @GET
   @Produces(MediaType.APPLICATION_JSON)

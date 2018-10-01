@@ -17,9 +17,6 @@ package io.hops.hopsworks.common.exception;
 
 public class RequestException extends RESTException {
   
-  public RequestException() {
-  }
-  
   public RequestException(RESTCodes.RequestErrorCode code) {
     super(code);
   }

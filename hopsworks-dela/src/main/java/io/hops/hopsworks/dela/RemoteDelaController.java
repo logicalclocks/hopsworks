@@ -40,46 +40,46 @@
 package io.hops.hopsworks.dela;
 
 import io.hops.hopsworks.common.dataset.FilePreviewDTO;
+import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.util.ClientWrapper;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.dela.dto.common.ClusterAddressDTO;
-import io.hops.hopsworks.dela.exception.ThirdPartyException;
+import io.hops.hopsworks.common.exception.DelaException;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
-import javax.ws.rs.core.Response;
 
 @Stateless
 public class RemoteDelaController {
 
-  private final static Logger LOG = Logger.getLogger(RemoteDelaController.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(RemoteDelaController.class.getName());
 
   @EJB
   private Settings settings;
   @EJB
   private DelaStateController delaStateCtrl;
 
-  private void checkReady() throws ThirdPartyException {
+  private void checkReady() throws DelaException {
     delaStateCtrl.checkHopsworksDelaSetup();
   }
 
   //********************************************************************************************************************
-  public FilePreviewDTO readme(String publicDSId, ClusterAddressDTO source) throws ThirdPartyException {
+  public FilePreviewDTO readme(String publicDSId, ClusterAddressDTO source) throws DelaException {
     checkReady();
     try {
       ClientWrapper client = getClient(source.getDelaClusterAddress(), Path.readme(publicDSId), FilePreviewDTO.class);
-      LOG.log(Settings.DELA_DEBUG, "dela:cross:readme {0}", client.getFullPath());
+      LOGGER.log(Settings.DELA_DEBUG, "dela:cross:readme {0}", client.getFullPath());
       FilePreviewDTO result = (FilePreviewDTO) client.doGet();
-      LOG.log(Settings.DELA_DEBUG, "dela:cross:readme:done {0}", client.getFullPath());
+      LOGGER.log(Settings.DELA_DEBUG, "dela:cross:readme:done {0}", client.getFullPath());
       return result;
     } catch (IllegalStateException ex) {
-      throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), "communication fail",
-        ThirdPartyException.Source.REMOTE_DELA, source.toString());
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE,
+        DelaException.Source.REMOTE_DELA, null, ex.getMessage(), ex);
     }
   }
 
   private ClientWrapper getClient(String delaClusterAddress, String path, Class resultClass)
-    throws ThirdPartyException {
+    throws DelaException {
     return ClientWrapper.httpsInstance(resultClass).setTarget(delaClusterAddress).setPath(path);
   }
 

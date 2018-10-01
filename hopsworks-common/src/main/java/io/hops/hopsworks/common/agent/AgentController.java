@@ -56,6 +56,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -227,8 +228,8 @@ public class AgentController {
       // REMOVE operation has changed state from ONGOING to SUCCESS
       if (command != null) {
         pythonDepsFacade.updateCondaCommandStatus(
-            commandId, status, command.getInstallType(), command.getMachineType(),
-            args, projectName, opType, lib, version, channelUrl);
+          commandId, status, command.getInstallType(), command.getMachineType(),
+          args, projectName, opType, lib, version, channelUrl);
         
         if (command.getOp().equals(PythonDepsFacade.CondaOp.CREATE)
             || command.getOp().equals(PythonDepsFacade.CondaOp.YML)) {
@@ -236,8 +237,8 @@ public class AgentController {
           if (settings.getHopsworksIp().equals(command.getHostId().getHostIp())) {
             final Project projectId = command.getProjectId();
             final String envStr = listCondaEnvironment(projectName);
-            final Collection<PythonDep> pythonDeps = synchronizeDependencies(
-                projectId, envStr, projectId.getPythonDepCollection());
+            final Collection<PythonDep> pythonDeps = synchronizeDependencies(envStr,
+              projectId.getPythonDepCollection());
             // Insert all deps in current listing
             pythonDepsFacade.addPythonDepsForProject(projectId, pythonDeps);
           }

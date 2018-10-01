@@ -17,10 +17,6 @@ package io.hops.hopsworks.common.exception;
 
 public class DatasetException extends RESTException {
   
-  
-  public DatasetException() {
-  }
-  
   public DatasetException(RESTCodes.DatasetErrorCode code) {
     super(code);
   }

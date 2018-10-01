@@ -18,9 +18,6 @@ package io.hops.hopsworks.common.exception;
 
 public class ServiceException extends RESTException  {
   
-  public ServiceException() {
-  }
-  
   public ServiceException(RESTCodes.ServiceErrorCode code) {
     super(code);
   }

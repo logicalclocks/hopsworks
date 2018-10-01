@@ -2347,7 +2347,7 @@ public class ProjectController {
    * @param project
    * @return
    */
-  public void addElasticsearch(Project project) throws AppException {
+  public void addElasticsearch(Project project) throws ProjectException, ServiceException {
             
     String projectName = project.getName().toLowerCase();
     Map<String, String> params = new HashMap<>();

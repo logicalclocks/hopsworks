@@ -18,9 +18,6 @@ package io.hops.hopsworks.common.exception;
 
 public class ProjectException extends RESTException {
   
-  public ProjectException() {
-  }
-  
   public ProjectException(RESTCodes.ProjectErrorCode code) {
     super(code);
   }

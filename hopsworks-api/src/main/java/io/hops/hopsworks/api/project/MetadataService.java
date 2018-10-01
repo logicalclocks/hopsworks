@@ -69,7 +69,6 @@ import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.exception.DatasetException;
 import io.hops.hopsworks.common.exception.GenericException;
 import io.hops.hopsworks.common.exception.RESTCodes;
@@ -156,7 +155,6 @@ public class MetadataService {
    * to the database as well
    * <p/>
    * @return
-   * @throws AppException
    */
   @Path("upload")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
@@ -230,7 +228,6 @@ public class MetadataService {
    * @param sc
    * @param req
    * @return
-   * @throws AppException
    */
   @GET
   @Path("fetchmetadata/{inodepid}/{inodename}/{tableid}")
@@ -241,11 +238,10 @@ public class MetadataService {
           @PathParam("inodename") String inodeName,
           @PathParam("tableid") Integer tableid,
           @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+          @Context HttpServletRequest req) {
 
     if (inodePid == null || inodeName == null || tableid == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Incomplete request!");
+      throw new IllegalArgumentException("Incomplete request.");
     }
 
     //metadata associated to a specific table and inode
@@ -304,7 +300,6 @@ public class MetadataService {
    * @param sc
    * @param req
    * @return
-   * @throws AppException
    */
   @GET
   @Path("fetchtemplatesforinode/{inodeid}")
@@ -313,11 +308,10 @@ public class MetadataService {
   public Response fetchTemplatesforInode(
           @PathParam("inodeid") Integer inodeid,
           @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+          @Context HttpServletRequest req) {
 
     if (inodeid == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Incomplete request!");
+      throw new IllegalArgumentException("inodeid was not provided.");
     }
 
     Inode inode = this.inodeFacade.findById(inodeid);
@@ -342,7 +336,6 @@ public class MetadataService {
    * @param sc
    * @param req
    * @return
-   * @throws AppException
    */
   @GET
   @Path("fetchavailabletemplatesforinode/{inodeid}")
@@ -351,11 +344,10 @@ public class MetadataService {
   public Response fetchAvailableTemplatesForInode(
           @PathParam("inodeid") Integer inodeid,
           @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
-
+          @Context HttpServletRequest req) {
+  
     if (inodeid == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Incomplete request!");
+      throw new IllegalArgumentException("inodeid was not provided.");
     }
 
     Inode inode = inodeFacade.findById(inodeid);
@@ -392,7 +384,6 @@ public class MetadataService {
    * @param sc
    * @param req
    * @return
-   * @throws AppException
    */
   @GET
   @Path("detachtemplate/{inodeid}/{templateid}")
@@ -468,7 +459,6 @@ public class MetadataService {
    * @param sc
    * @param req
    * @return
-   * @throws AppException
    */
   @GET
   @Path("fetchtemplate/{templateid}/{sender}")

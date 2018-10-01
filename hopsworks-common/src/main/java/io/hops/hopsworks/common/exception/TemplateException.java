@@ -17,9 +17,6 @@ package io.hops.hopsworks.common.exception;
 
 public class TemplateException extends RESTException {
   
-  public TemplateException() {
-  }
-  
   public TemplateException(RESTCodes.MetadataErrorCode code) {
     super(code);
   }

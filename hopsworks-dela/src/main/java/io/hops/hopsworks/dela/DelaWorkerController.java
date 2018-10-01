@@ -43,10 +43,11 @@ import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dataset.DatasetController;
+import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.dela.dto.hopsworks.HopsworksTransferDTO;
-import io.hops.hopsworks.dela.exception.ThirdPartyException;
+import io.hops.hopsworks.common.exception.DelaException;
 import io.hops.hopsworks.dela.hopssite.HopsSite;
 import io.hops.hopsworks.dela.hopssite.HopssiteController;
 import io.hops.hopsworks.dela.old_dto.ExtendedDetails;
@@ -69,7 +70,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.ws.rs.core.Response;
+
 import org.apache.hadoop.fs.Path;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -78,7 +79,7 @@ import org.json.JSONObject;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class DelaWorkerController {
 
-  private Logger LOG = Logger.getLogger(DelaWorkerController.class.getName());
+  private final Logger LOGGER = Logger.getLogger(DelaWorkerController.class.getName());
 
   @EJB
   private DatasetController datasetCtrl;
@@ -97,14 +98,13 @@ public class DelaWorkerController {
   @EJB
   private HdfsUsersController hdfsUsersBean;
 
-  public String shareDatasetWithHops(Project project, Dataset dataset, Users user) throws ThirdPartyException {
+  public String shareDatasetWithHops(Project project, Dataset dataset, Users user) throws DelaException {
 
     if (dataset.isPublicDs()) {
       return dataset.getPublicDsId();
     }
     if (dataset.isShared()) {
-      throw new ThirdPartyException(Response.Status.BAD_REQUEST.getStatusCode(),
-        "dataset shared - only owner can publish", ThirdPartyException.Source.LOCAL, "bad request");
+      throw new DelaException(RESTCodes.DelaErrorCode.DATASET_PUBLISH_PERMISSION_ERROR, DelaException.Source.LOCAL);
     }
     delaStateCtrl.checkDelaAvailable();
     delaHdfsCtrl.writeManifest(project, dataset, user);
@@ -114,27 +114,27 @@ public class DelaWorkerController {
     try {
       publicDSId = hopsSiteCtrl.performAsUser(user, new HopsSite.UserFunc<String>() {
         @Override
-        public String perform() throws ThirdPartyException {
+        public String perform() throws DelaException {
           return hopsSiteCtrl.publish(dataset.getName(), dataset.getDescription(), getCategories(), 
             datasetSize, user.getEmail());
           
         }
       });
       delaCtrlUpload(project, dataset, user, publicDSId);
-    } catch (ThirdPartyException tpe) {
-      if (ThirdPartyException.Source.HOPS_SITE.equals(tpe.getSource())
-        && ThirdPartyException.Error.DATASET_EXISTS.is(tpe.getMessage())) {
+    } catch (DelaException tpe) {
+      if (DelaException.Source.HOPS_SITE.equals(tpe.getSource())
+        && RESTCodes.DelaErrorCode.DATASET_EXISTS.equals(tpe.getMessage())) {
         //TODO ask dela to checksum it;
       }
       throw tpe;
     }
     delaDatasetCtrl.uploadToHops(dataset, publicDSId);
-    LOG.log(Level.INFO, "{0} shared with hops", publicDSId);
+    LOGGER.log(Level.INFO, "{0} shared with hops", publicDSId);
     return publicDSId;
   }
 
   private void delaCtrlUpload(Project project, Dataset dataset, Users user, String publicDSId)
-    throws ThirdPartyException {
+    throws DelaException {
     Path datasetPath = datasetCtrl.getDatasetPath(dataset);
     HDFSResource resource = new HDFSResource(datasetPath.toString(), Settings.MANIFEST_FILE);
     String hdfsUser = hdfsUsersBean.getHdfsUserName(project, user);
@@ -143,7 +143,7 @@ public class DelaWorkerController {
     delaCtrl.upload(publicDSId, details, resource, endpoint);
   }
 
-  public void unshareFromHops(Project project, Dataset dataset, Users user) throws ThirdPartyException {
+  public void unshareFromHops(Project project, Dataset dataset, Users user) throws DelaException {
     if (!dataset.isPublicDs()) {
       return;
     }
@@ -154,19 +154,19 @@ public class DelaWorkerController {
     delaDatasetCtrl.unshareFromHops(dataset);
   }
 
-  public void unshareFromHopsAndClean(Project project, Dataset dataset, Users user) throws ThirdPartyException {
+  public void unshareFromHopsAndClean(Project project, Dataset dataset, Users user) throws DelaException {
     unshareFromHops(project, dataset, user);
     delaDatasetCtrl.delete(project, dataset);
   }
   
   public ManifestJSON startDownload(Project project, Users user, HopsworksTransferDTO.Download downloadDTO)
-    throws ThirdPartyException {
+    throws DelaException {
     delaStateCtrl.checkDelaAvailable();
     Dataset dataset = delaDatasetCtrl.download(project, user, downloadDTO.getPublicDSId(), downloadDTO.getName());
 
     try {
       delaCtrlStartDownload(project, dataset, user, downloadDTO);
-    } catch (ThirdPartyException tpe) {
+    } catch (DelaException tpe) {
       delaDatasetCtrl.delete(project, dataset);
       throw tpe;
     }
@@ -177,7 +177,7 @@ public class DelaWorkerController {
   }
 
   private void delaCtrlStartDownload(Project project, Dataset dataset, Users user,
-    HopsworksTransferDTO.Download downloadDTO) throws ThirdPartyException {
+    HopsworksTransferDTO.Download downloadDTO) throws DelaException {
     Path datasetPath = datasetCtrl.getDatasetPath(dataset);
     HDFSResource resource = new HDFSResource(datasetPath.toString(), Settings.MANIFEST_FILE);
     String hdfsUser = hdfsUsersBean.getHdfsUserName(project, user);
@@ -187,7 +187,7 @@ public class DelaWorkerController {
   }
 
   public void advanceDownload(Project project, Dataset dataset, Users user, HopsworksTransferDTO.Download downloadDTO,
-    String sessionId, KafkaEndpoint kafkaEndpoint) throws ThirdPartyException {
+    String sessionId, KafkaEndpoint kafkaEndpoint) throws DelaException {
 
     delaStateCtrl.checkDelaAvailable();
     delaCtrlAdvanceDownload(project, dataset, user, downloadDTO, sessionId, kafkaEndpoint);
@@ -196,7 +196,7 @@ public class DelaWorkerController {
 
   private void delaCtrlAdvanceDownload(Project project, Dataset dataset, Users user,
     HopsworksTransferDTO.Download downloadDTO, String sessionId, KafkaEndpoint kafkaEndpoint)
-    throws ThirdPartyException {
+    throws DelaException {
     Path datasetPath = datasetCtrl.getDatasetPath(dataset);
     JSONObject fileTopics = new JSONObject(downloadDTO.getTopics());
     LinkedList<HdfsDetails> hdfsResources = new LinkedList<>();

@@ -43,9 +43,10 @@ import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
 import io.hops.hopsworks.common.dataset.FilePreviewDTO;
+import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.dela.DelaHdfsController;
-import io.hops.hopsworks.dela.exception.ThirdPartyException;
+import io.hops.hopsworks.common.exception.DelaException;
 import io.swagger.annotations.Api;
 import java.util.Optional;
 import java.util.logging.Logger;
@@ -70,7 +71,7 @@ import javax.ws.rs.core.Response;
   description = "Cross Dela Service")
 public class RemoteDelaService {
 
-  private final static Logger LOG = Logger.getLogger(RemoteDelaService.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(RemoteDelaService.class.getName());
   @EJB
   private NoCacheResponse noCacheResponse;
   @EJB
@@ -81,16 +82,15 @@ public class RemoteDelaService {
   @GET
   @Path("/datasets/{publicDSId}/readme")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response readme(@PathParam("publicDSId") String publicDSId) throws ThirdPartyException {
-    LOG.log(Settings.DELA_DEBUG, "remote:dela:readme {0}", publicDSId);
+  public Response readme(@PathParam("publicDSId") String publicDSId) throws DelaException {
+    LOGGER.log(Settings.DELA_DEBUG, "remote:dela:readme {0}", publicDSId);
     Optional<Dataset> dataset = datasetFacade.findByPublicDsId(publicDSId);
     if (!dataset.isPresent() || !dataset.get().isPublicDs()) {
-      throw new ThirdPartyException(Response.Status.BAD_REQUEST.getStatusCode(),
-        ThirdPartyException.Error.DATASET_DOES_NOT_EXIST.toString(), ThirdPartyException.Source.REMOTE_DELA,
-        "bad request");
+      throw new DelaException(RESTCodes.DelaErrorCode.DATASET_DOES_NOT_EXIST,
+        DelaException.Source.REMOTE_DELA);
     }
     FilePreviewDTO result = hdfsDelaCtrl.getPublicReadme(dataset.get());
-    LOG.log(Settings.DELA_DEBUG, "remote:dela:readme - done {0}", publicDSId);
+    LOGGER.log(Settings.DELA_DEBUG, "remote:dela:readme - done {0}", publicDSId);
     return success(result);
   }
 

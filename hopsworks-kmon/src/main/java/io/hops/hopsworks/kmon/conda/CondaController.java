@@ -147,9 +147,9 @@ public class CondaController implements Serializable {
             pythonDepsFacade.removeCondaCommand(command.getId());
   
             this.output = "SUCCESS. \r\n" + sb.toString();
-              pythonDepsFacade.updateCondaCommandStatus(command.getId(), CondaStatus.SUCCESS, command.getInstallType(),
-                  command.getMachineType(), command.getArg(), command.getProj(), command.getOp(), command.getLib(),
-                  command.getVersion(), command.getChannelUrl());
+            pythonDepsFacade.updateCondaCommandStatus(command.getId(), CondaStatus.SUCCESS, command.getInstallType(),
+              command.getMachineType(), command.getArg(), command.getProj(), command.getOp(), command.getLib(),
+              command.getVersion(), command.getChannelUrl());
 
           } else {
             this.output = "FAILED. \r\n" + sb.toString();
@@ -182,9 +182,9 @@ public class CondaController implements Serializable {
             command.setStatus(CondaStatus.SUCCESS);
             pythonDepsFacade.removeCondaCommand(command.getId());
             this.output = "SUCCESS. \r\n" + sb.toString();
-              pythonDepsFacade.updateCondaCommandStatus(command.getId(), CondaStatus.SUCCESS, command.getInstallType(),
-                  command.getMachineType(), command.getArg(), command.getProj(), command.getOp(), command.getLib(),
-                  command.getVersion(), command.getChannelUrl());
+            pythonDepsFacade.updateCondaCommandStatus(command.getId(), CondaStatus.SUCCESS, command.getInstallType(),
+              command.getMachineType(), command.getArg(), command.getProj(), command.getOp(), command.getLib(),
+              command.getVersion(), command.getChannelUrl());
             loadCommands();
           } else {
             this.output = "FAILED. \r\n" + sb.toString();

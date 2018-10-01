@@ -39,8 +39,9 @@
 
 package io.hops.hopsworks.dela;
 
+import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.util.Settings;
-import io.hops.hopsworks.dela.exception.ThirdPartyException;
+import io.hops.hopsworks.common.exception.DelaException;
 import java.security.KeyStore;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -48,13 +49,12 @@ import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
-import javax.ws.rs.core.Response;
 
 @Startup
 @Singleton
 public class DelaStateController {
 
-  private final static Logger LOG = Logger.getLogger(DelaStateController.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(DelaStateController.class.getName());
 
   @EJB
   private Settings settings;
@@ -72,9 +72,9 @@ public class DelaStateController {
   private void init() {
     if (settings.isDelaEnabled()) {
       delaEnabled = settings.isDelaEnabled();
-      LOG.log(Level.INFO, "dela enabled");
+      LOGGER.log(Level.INFO, "dela enabled");
     } else {
-      LOG.log(Level.INFO, "dela disabled");
+      LOGGER.log(Level.INFO, "dela disabled");
     }
   }
 
@@ -86,10 +86,9 @@ public class DelaStateController {
     return hopsworksDelaSetup() && transferDelaAvailable && hopssiteAvailable;
   }
 
-  public void checkDelaAvailable() throws ThirdPartyException {
+  public void checkDelaAvailable() throws DelaException {
     if (!delaAvailable()) {
-      throw new ThirdPartyException(Response.Status.BAD_REQUEST.getStatusCode(), "dela not available",
-        ThirdPartyException.Source.LOCAL, "bad request");
+      throw new DelaException(RESTCodes.DelaErrorCode.DELA_NOT_AVAILABLE, DelaException.Source.LOCAL);
     }
   }
 
@@ -101,10 +100,9 @@ public class DelaStateController {
     return hopsworksDelaSetup() && hopssiteAvailable;
   }
   
-  public void checkHopssiteAvailable() throws ThirdPartyException {
+  public void checkHopssiteAvailable() throws DelaException {
     if (!hopssiteAvailable()) {
-      throw new ThirdPartyException(Response.Status.BAD_REQUEST.getStatusCode(), "hopssite not available", 
-        ThirdPartyException.Source.LOCAL, "bad request");
+      throw new DelaException(RESTCodes.DelaErrorCode.HOPSSITE_NOT_AVAILABLE, DelaException.Source.LOCAL);
     }
   }
 
@@ -112,10 +110,9 @@ public class DelaStateController {
     return delaEnabled && delaCertsAvailable;
   }
 
-  public void checkHopsworksDelaSetup() throws ThirdPartyException {
+  public void checkHopsworksDelaSetup() throws DelaException {
     if (!hopsworksDelaSetup()) {
-      throw new ThirdPartyException(Response.Status.BAD_REQUEST.getStatusCode(), "remote dela not available",
-        ThirdPartyException.Source.LOCAL, "bad request");
+      throw new DelaException(RESTCodes.DelaErrorCode.REMOTE_DELA_NOT_AVAILABLE, DelaException.Source.LOCAL);
     }
   }
 

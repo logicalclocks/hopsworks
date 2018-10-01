@@ -17,9 +17,6 @@ package io.hops.hopsworks.common.exception;
 
 public class GenericException extends RESTException {
   
-  public GenericException() {
-  }
-  
   public GenericException(RESTCodes.GenericErrorCode code) {
     super(code);
   }

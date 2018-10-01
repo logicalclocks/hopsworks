@@ -48,7 +48,6 @@ import io.hops.hopsworks.common.dao.jupyter.JupyterSettingsFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -305,77 +304,7 @@ public class JupyterProcessMgr {
         + Settings.DIR_ROOT + File.separator + jp.getProjectId().getName()
         + File.separator + hdfsUser + File.separator + jp.getSecret();
   }
-
-  /**
-   * This method both stops any jupyter server for a proj_user
-   *
-   * @param hdfsUsername
-   * @param jupyterHomePath
-   * @param pid
-   * @param port
-   * @throws AppException
-   */
-//  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-//  public void stopServerJupyterUser(String hdfsUser)
-//      throws AppException {
-//    if (hdfsUser == null) {
-//      throw new AppException(Response.Status.BAD_REQUEST.
-//          getStatusCode(),
-//          "Null hdfsUsername when stopping the Jupyter Server.");
-//    }
-//    String prog = settings.getHopsworksDomainDir() + "/bin/jupyter.sh";
-//    int exitValue;
-//    Integer id = 1;
-//    String[] command = {"/usr/bin/sudo", prog, "stop", hdfsUser};
-//    LOGGER.log(Level.INFO, Arrays.toString(command));
-//    ProcessBuilder pb = new ProcessBuilder(command);
-//    try {
-//      Process process = pb.start();
-//
-//      BufferedReader br = new BufferedReader(new InputStreamReader(
-//          process.getInputStream(), Charset.forName("UTF8")));
-//      String line;
-//      while ((line = br.readLine()) != null) {
-//        LOGGER.info(line);
-//      }
-//      process.waitFor(10l, TimeUnit.SECONDS);
-//      exitValue = process.exitValue();
-//    } catch (IOException | InterruptedException ex) {
-//      LOGGER.log(Level.SEVERE, "Problem starting a backup: {0}", ex.
-//          toString());
-//      exitValue = -2;
-//    }
-//
-//    if (exitValue != 0) {
-//      throw new AppException(Response.Status.REQUEST_TIMEOUT.getStatusCode(),
-//          "Couldn't stop Jupyter Notebook Server.");
-//    }
-//
-//  }
-//  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-//  public int killOrphanedWithPid(Long pid) {
-//    String prog = settings.getHopsworksDomainDir() + "/bin/jupyter.sh";
-//    int exitValue;
-//    Integer id = 1;
-//    String[] command = {"/usr/bin/sudo", prog, "killhard", pid.toString()};
-//    ProcessBuilder pb = new ProcessBuilder(command);
-//    try {
-//      Process process = pb.start();
-//      BufferedReader br = new BufferedReader(new InputStreamReader(
-//          process.getInputStream(), Charset.forName("UTF8")));
-//      String line;
-//      while ((line = br.readLine()) != null) {
-//        LOGGER.info(line);
-//      }
-//      process.waitFor(10l, TimeUnit.SECONDS);
-//      exitValue = process.exitValue();
-//    } catch (IOException | InterruptedException ex) {
-//      LOGGER.log(Level.SEVERE, "Problem starting a backup: {0}", ex.
-//          toString());
-//      exitValue = -2;
-//    }
-//    return exitValue;
-//  }
+  
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public void killServerJupyterUser(String hdfsUsername, String jupyterHomePath, Long pid, Integer port)
     throws ServiceException {

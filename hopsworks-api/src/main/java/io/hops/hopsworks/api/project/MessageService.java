@@ -47,7 +47,8 @@ import io.hops.hopsworks.common.dao.message.Message;
 import io.hops.hopsworks.common.dao.message.MessageFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.exception.RequestException;
 import io.hops.hopsworks.common.message.MessageController;
 import io.swagger.annotations.Api;
 import java.util.List;
@@ -79,7 +80,7 @@ import org.elasticsearch.common.Strings;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class MessageService {
 
-  private final static Logger logger = Logger.getLogger(MessageService.class.
+  private static final Logger LOGGER = Logger.getLogger(MessageService.class.
           getName());
   @EJB
   private MessageController msgController;
@@ -135,7 +136,7 @@ public class MessageService {
   @Path("markAsRead/{msgId}")
   @Produces(MediaType.APPLICATION_JSON)
   public Response markAsRead(@PathParam("msgId") Integer msgId,
-          @Context SecurityContext sc) throws AppException {
+          @Context SecurityContext sc) throws RequestException {
     String eamil = sc.getUserPrincipal().getName();
     Users user = userFacade.findByEmail(eamil);
     Message msg = msgFacade.find(msgId);
@@ -156,13 +157,12 @@ public class MessageService {
   @Path("moveToTrash/{msgId}")
   @Produces(MediaType.APPLICATION_JSON)
   public Response moveToTrash(@PathParam("msgId") Integer msgId,
-          @Context SecurityContext sc) throws AppException {
+          @Context SecurityContext sc) throws RequestException {
     String eamil = sc.getUserPrincipal().getName();
     Users user = userFacade.findByEmail(eamil);
     Message msg = msgFacade.find(msgId);
     if (msg == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Message not found.");
+      throw new RequestException(RESTCodes.RequestErrorCode.MESSAGE_NOT_FOUND);
     }
     //Delete Dataset request from the database
     if (!Strings.isNullOrEmpty(msg.getSubject())) {
@@ -181,13 +181,12 @@ public class MessageService {
   @Path("restoreFromTrash/{msgId}")
   @Produces(MediaType.APPLICATION_JSON)
   public Response restoreFromTrash(@PathParam("msgId") Integer msgId,
-          @Context SecurityContext sc) throws AppException {
+          @Context SecurityContext sc) throws RequestException {
     String eamil = sc.getUserPrincipal().getName();
     Users user = userFacade.findByEmail(eamil);
     Message msg = msgFacade.find(msgId);
     if (msg == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Message not found.");
+      throw new RequestException(RESTCodes.RequestErrorCode.MESSAGE_NOT_FOUND);
     }
     checkMsgUser(msg, user);//check if the user is the owner of the message
     msg.setDeleted(false);
@@ -199,13 +198,12 @@ public class MessageService {
   @Path("{msgId}")
   @Produces(MediaType.APPLICATION_JSON)
   public Response deleteMessage(@PathParam("msgId") Integer msgId,
-          @Context SecurityContext sc) throws AppException {
+          @Context SecurityContext sc) throws RequestException {
     String eamil = sc.getUserPrincipal().getName();
     Users user = userFacade.findByEmail(eamil);
     Message msg = msgFacade.find(msgId);
     if (msg == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Message not found.");
+      throw new RequestException(RESTCodes.RequestErrorCode.MESSAGE_NOT_FOUND);
     }
     checkMsgUser(msg, user);//check if the user is the owner of the message
     msgFacade.remove(msg);
@@ -215,7 +213,7 @@ public class MessageService {
   @DELETE
   @Path("empty")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response emptyTrash(@Context SecurityContext sc) throws AppException {
+  public Response emptyTrash(@Context SecurityContext sc) {
     JsonResponse json = new JsonResponse();
     String eamil = sc.getUserPrincipal().getName();
     Users user = userFacade.findByEmail(eamil);
@@ -231,33 +229,25 @@ public class MessageService {
   @Consumes(MediaType.TEXT_PLAIN)
   public Response reply(@PathParam("msgId") Integer msgId,
           String content,
-          @Context SecurityContext sc) throws AppException {
+          @Context SecurityContext sc) throws RequestException {
     String eamil = sc.getUserPrincipal().getName();
     Users user = userFacade.findByEmail(eamil);
     Message msg = msgFacade.find(msgId);
     if (msg == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Message not found.");
+      throw new RequestException(RESTCodes.RequestErrorCode.MESSAGE_NOT_FOUND);
     }
     if (content == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "No content.");
+      throw new IllegalArgumentException("content was not provided.");
     }
     checkMsgUser(msg, user);//check if the user is the owner of the message
-    try {
-      msgController.reply(user, msg, content);
-    } catch (IllegalArgumentException e) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              e.getMessage());
-    }
+    msgController.reply(user, msg, content);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             msg).build();
   }
 
-  private void checkMsgUser(Message msg, Users user) throws AppException {
+  private void checkMsgUser(Message msg, Users user) throws RequestException {
     if (!msg.getTo().equals(user)) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Can not perform the rquested action.");
+      throw new RequestException(RESTCodes.RequestErrorCode.MESSAGE_ACCESS_NOT_ALLOWED);
     }
   }
 }

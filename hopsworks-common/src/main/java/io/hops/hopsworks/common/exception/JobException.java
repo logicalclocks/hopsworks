@@ -18,9 +18,6 @@ package io.hops.hopsworks.common.exception;
 
 public class JobException extends RESTException {
   
-  public JobException() {
-  }
-  
   public JobException(RESTCodes.JobErrorCode code) {
     super(code);
   }

@@ -46,7 +46,6 @@ import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
-import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.exception.DatasetException;
 import io.hops.hopsworks.common.exception.ProjectException;
 import io.hops.hopsworks.common.exception.RESTCodes;
@@ -85,7 +84,6 @@ public class PathValidator {
    * @return A DsPath object containing a reference to the dataset, the full path
    * of the file/dir involved in the operation and the dsRelativePath (the path of the
    * file/directory) starting from the dataset path
-   * @throws AppException - in case of bad request or the dataset cannot be found
    */
 
   public DsPath validatePath(Project project, String path) throws DatasetException, ProjectException {

@@ -42,71 +42,70 @@ package io.hops.hopsworks.util;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dela.AddressJSON;
+import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.util.Settings;
-import io.hops.hopsworks.dela.exception.ThirdPartyException;
-import javax.ws.rs.core.Response;
+import io.hops.hopsworks.common.exception.DelaException;
 
 public class SettingsHelper {
 
-  public static AddressJSON delaTransferEndpoint(Settings settings) throws ThirdPartyException {
+  public static AddressJSON delaTransferEndpoint(Settings settings) throws DelaException {
     AddressJSON delaTransferEndpoint = settings.getDELA_PUBLIC_ENDPOINT();
     if (delaTransferEndpoint == null) {
-      throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), "DELA_TRANSFER_ENDPOINT",
-        ThirdPartyException.Source.SETTINGS, "misconfigured");
+      throw new DelaException(RESTCodes.DelaErrorCode.MISCONFIGURED, DelaException.Source.SETTINGS,
+        "DELA_TRANSFER_ENDPOINT");
     }
     return delaTransferEndpoint;
   }
 
-  public static String delaTransferHttpEndpoint(Settings settings) throws ThirdPartyException {
+  public static String delaTransferHttpEndpoint(Settings settings) throws DelaException {
     String delaTransferHttpEndpoint = settings.getDELA_TRANSFER_HTTP_ENDPOINT();
     if (delaTransferHttpEndpoint == null) {
-      throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), "DELA_TRANSFER_HTTP_ENDPOINT",
-        ThirdPartyException.Source.SETTINGS, "misconfigured");
+      throw new DelaException(RESTCodes.DelaErrorCode.MISCONFIGURED, DelaException.Source.SETTINGS,
+        "DELA_TRANSFER_HTTP_ENDPOINT");
     }
     return delaTransferHttpEndpoint;
   }
 
-  public static String delaHttpEndpoint(Settings settings) throws ThirdPartyException {
+  public static String delaHttpEndpoint(Settings settings) throws DelaException {
     String delaHttpEndpoint = settings.getDELA_SEARCH_ENDPOINT();
     if (delaHttpEndpoint == null) {
-      throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), "DELA_HTTP_ENDPOINT",
-        ThirdPartyException.Source.SETTINGS, "misconfigured");
+      throw new DelaException(RESTCodes.DelaErrorCode.MISCONFIGURED, DelaException.Source.SETTINGS,
+        "DELA_HTTP_ENDPOINT");
     }
     return delaHttpEndpoint;
   }
 
-  public static String clusterId(Settings settings) throws ThirdPartyException {
+  public static String clusterId(Settings settings) throws DelaException {
     String clusterId = settings.getDELA_CLUSTER_ID();
     if (clusterId == null) {
-      throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), "DELA_CLUSTER_ID",
-        ThirdPartyException.Source.SETTINGS, "misconfigured");
+      throw new DelaException(RESTCodes.DelaErrorCode.MISCONFIGURED, DelaException.Source.SETTINGS,
+        "DELA_CLUSTER_ID");
     }
     return clusterId;
   }
 
-  public static String hopsSite(Settings settings) throws ThirdPartyException {
+  public static String hopsSite(Settings settings) throws DelaException {
     String hopsSite = settings.getHOPSSITE();
     if (hopsSite == null) {
-      throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), "DELA_HOPS_SITE",
-        ThirdPartyException.Source.SETTINGS, "misconfigured");
+      throw new DelaException(RESTCodes.DelaErrorCode.MISCONFIGURED, DelaException.Source.SETTINGS,
+        "DELA_HOPS_SITE");
     }
     return hopsSite;
   }
 
-  public static String hopsSiteHost(Settings settings) throws ThirdPartyException {
+  public static String hopsSiteHost(Settings settings) throws DelaException {
     String hopsSiteHost = settings.getHOPSSITE_HOST();
     if (hopsSiteHost == null) {
-      throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), "DELA_HOPS_SITE_HOST",
-        ThirdPartyException.Source.SETTINGS, "misconfigured");
+      throw new DelaException(RESTCodes.DelaErrorCode.MISCONFIGURED, DelaException.Source.SETTINGS,
+        "DELA_HOPS_SITE_HOST");
     }
     return hopsSiteHost;
   }
   
-  public static Users getUser(UserFacade userFacade, String email) throws ThirdPartyException {
+  public static Users getUser(UserFacade userFacade, String email) throws DelaException {
     Users user = userFacade.findByEmail(email);
     if (user == null) {
-      throw new ThirdPartyException(Response.Status.FORBIDDEN.getStatusCode(), "user not found",
-        ThirdPartyException.Source.LOCAL, "exception");
+      throw new DelaException(RESTCodes.DelaErrorCode.USER_NOT_FOUND, DelaException.Source.LOCAL);
     }
     return user;
   }

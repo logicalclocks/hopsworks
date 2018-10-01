@@ -37,66 +37,46 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package io.hops.hopsworks.dela.exception;
+package io.hops.hopsworks.common.exception;
 
-import io.hops.hopsworks.common.exception.AppException;
-
-public class ThirdPartyException extends AppException {
-
-  private Source source;
-  private String sourceDetails;
+public class DelaException extends RESTException {
   
-  public ThirdPartyException(int status, String msg, Source source, String sourceDetails) {
-    super(status, msg);
+  private final Source source;
+  
+  public DelaException(RESTCodes.DelaErrorCode code, Source source) {
+    super(code);
     this.source = source;
-    this.sourceDetails = sourceDetails;
   }
-
+  
+  public DelaException(RESTCodes.DelaErrorCode code, Source source, String usrMsg) {
+    super(code, usrMsg);
+    this.source = source;
+  }
+  
+  public DelaException(RESTCodes.DelaErrorCode code, Source source, String usrMsg, String devMsg) {
+    super(code, usrMsg, devMsg);
+    this.source = source;
+  }
+  
+  public DelaException(RESTCodes.DelaErrorCode code, Source source, String usrMsg, String devMsg,
+    Throwable throwable) {
+    super(code, usrMsg, devMsg, throwable);
+    this.source = source;
+  }
+  
   public Source getSource() {
     return source;
   }
-
-  public void setSource(Source source) {
-    this.source = source;
-  }
-
-  public String getSourceDetails() {
-    return sourceDetails;
-  }
-
-  public void setSourceDetails(String sourceDetails) {
-    this.sourceDetails = sourceDetails;
+  
+  public enum Source {
+    LOCAL,
+    SETTINGS,
+    MYSQL,
+    HDFS,
+    KAFKA,
+    DELA,
+    REMOTE_DELA,
+    HOPS_SITE
   }
   
-  public static enum Source {
-    LOCAL, SETTINGS, MYSQL, HDFS, KAFKA, DELA, REMOTE_DELA, HOPS_SITE
-  }
-  
-  public static ThirdPartyException from(AppException ex, Source source, String sourceDetails) {
-    return new ThirdPartyException(ex.getStatus(), ex.getMessage(), source, sourceDetails);
-  }
-  
-  public static enum Error {
-    CLUSTER_NOT_REGISTERED("cluster not registered"),
-    HEAVY_PING("heavy ping required"),
-    USER_NOT_REGISTERED("user not registered"), 
-    DATASET_EXISTS("dataset exists"),
-    DATASET_DOES_NOT_EXIST("dataset does not exist");
-    
-    
-    private final String msg;
-    
-    Error(String msg) {
-      this.msg = msg;
-    }
-    
-    public boolean is(String msg) {
-      return this.msg.equals(msg);
-    }
-
-    @Override
-    public String toString() {
-      return msg;
-    }
-  }
 }

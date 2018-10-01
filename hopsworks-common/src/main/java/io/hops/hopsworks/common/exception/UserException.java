@@ -19,9 +19,6 @@ package io.hops.hopsworks.common.exception;
 
 public class UserException extends RESTException {
   
-  public UserException() {
-  }
-  
   public UserException(RESTCodes.UserErrorCode code) {
     super(code);
   }

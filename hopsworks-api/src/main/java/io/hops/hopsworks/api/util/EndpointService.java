@@ -43,7 +43,6 @@ import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.common.dao.hdfs.HdfsLeDescriptors;
 import io.hops.hopsworks.common.dao.hdfs.HdfsLeDescriptorsFacade;
-import io.hops.hopsworks.common.exception.AppException;
 import io.swagger.annotations.Api;
 
 import javax.ejb.EJB;
@@ -79,7 +78,7 @@ public class EndpointService {
   @AllowedProjectRoles({AllowedProjectRoles.ANYONE})
   public Response findEndpoint(
           @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+          @Context HttpServletRequest req) {
     JsonResponse json = new JsonResponse();
     HdfsLeDescriptors hdfsLeDescriptors = hdfsLeDescriptorsFacade.findEndpoint();
 

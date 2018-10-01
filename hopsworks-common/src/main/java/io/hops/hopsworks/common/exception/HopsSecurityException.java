@@ -17,9 +17,6 @@ package io.hops.hopsworks.common.exception;
 
 public class HopsSecurityException extends RESTException {
   
-  public HopsSecurityException() {
-  }
-  
   public HopsSecurityException(RESTCodes.SecurityErrorCode code) {
     super(code);
   }

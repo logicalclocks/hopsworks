@@ -23,7 +23,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * Hopsworks error codes categorized by resource. Convention for code values is the following:
- * 1. All error codes must be a total of 6 digits, first two indicate error type and last 2 indicate error id.
+ * 1. All error codes must be a total of 6 digits, first 2 indicate error type and last 4 indicate error id.
  * 2. Service error codes start  with "10".
  * 3. Dataset error codes start  with "11".
  * 4. Generic error codes start  with "12".
@@ -229,7 +229,7 @@ public class RESTCodes {
     
     UPLOAD_PATH_NOT_SPECIFIED(110035, "The path to upload the template was not specified",
       Response.Status.BAD_REQUEST),
-    README_NOT_ACCESSIBLE(110036, "Readme not accessible.", Response.Status.FORBIDDEN),
+    README_NOT_ACCESSIBLE(110036, "Readme not accessible.", Response.Status.UNAUTHORIZED),
     COMPRESSION_SIZE_ERROR(110037, "Not enough free space on the local scratch directory to download and unzip this " +
       "file. Talk to your admin to increase disk space at the path: hopsworks/staging_dir",
       Response.Status.PRECONDITION_FAILED),
@@ -240,7 +240,9 @@ public class RESTCodes {
     UPLOAD_CONCURRENT_ERROR(110040, "A file with the same name is being uploaded", Response.Status.PRECONDITION_FAILED),
     UPLOAD_RESUMABLEINFO_INVALID(110041, "ResumableInfo is invalid", Response.Status.BAD_REQUEST),
     UPLOAD_ERROR(110042, "Error occurred while uploading file",
-      Response.Status.INTERNAL_SERVER_ERROR);
+      Response.Status.INTERNAL_SERVER_ERROR),
+    DATASET_REQUEST_EXISTS(110043, "Request for this dataset from this project already exists.",
+      Response.Status.CONFLICT);
     
     
     private Integer code;
@@ -372,7 +374,9 @@ public class RESTCodes {
     EMAIL_EMPTY(140001, "Email cannot be empty.", Response.Status.BAD_REQUEST),
     EMAIL_INVALID(140002, "Not a valid email address.", Response.Status.BAD_REQUEST),
     DATASET_REQUEST_ERROR(140003, "Error while submitting dataset request", Response.Status.BAD_REQUEST),
-    REQUEST_UNKNOWN_ACTION(140004, "Unknown request action", Response.Status.BAD_REQUEST);
+    REQUEST_UNKNOWN_ACTION(140004, "Unknown request action", Response.Status.BAD_REQUEST),
+    MESSAGE_NOT_FOUND(140005, "Message was not found", Response.Status.NOT_FOUND),
+    MESSAGE_ACCESS_NOT_ALLOWED(140006, "Message not allowed.", Response.Status.FORBIDDEN);
     
     
     private Integer code;
@@ -471,7 +475,8 @@ public class RESTCodes {
       Response.Status.EXPECTATION_FAILED),
     TENSORBOARD_FETCH_ERROR(100038, "Error while fetching TensorBoard from database",
       Response.Status.INTERNAL_SERVER_ERROR),
-    EMAIL_SENDING_FAILURE(140003, "Could not send email", Response.Status.EXPECTATION_FAILED);
+    EMAIL_SENDING_FAILURE(100039, "Could not send email", Response.Status.EXPECTATION_FAILED),
+    HOST_EXISTS(100040, "Host exists", Response.Status.CONFLICT);
   
   
     private Integer code;
@@ -598,7 +603,7 @@ public class RESTCodes {
     MASTER_ENCRYPTION_PASSWORD_CHANGE(200001,
       "Master password change procedure started. Check your inbox for final status", Response.Status.BAD_REQUEST),
     HDFS_ACCESS_CONTROL(200002, "Access error while trying to access hdfs resource", Response.Status.FORBIDDEN),
-    EJB_ACCESS_LOCAL(200003, "EJB access local error", Response.Status.UNAUTHORIZED),
+    EJB_ACCESS_LOCAL(200003, "EJB access local error", Response.Status.FORBIDDEN),
     CERT_CREATION_ERROR(200004, "Error while generating certificates.", Response.Status.INTERNAL_SERVER_ERROR),
     CERT_CN_EXTRACT_ERROR(200005, "Error while extracting CN from certificate.", Response.Status.INTERNAL_SERVER_ERROR),
     CERT_ERROR(200006, "Certificate could not be validated.", Response.Status.UNAUTHORIZED),
@@ -607,7 +612,9 @@ public class RESTCodes {
     CERT_APP_REVOKE_ERROR(200009, "Error while revoking application certificate, check the logs",
       Response.Status.INTERNAL_SERVER_ERROR),
     CERT_LOCATION_UNDEFINED(200010, "Could not identify local directory to clean certificates. Manual cleanup " +
-      "required.", Response.Status.INTERNAL_SERVER_ERROR);
+      "required.", Response.Status.INTERNAL_SERVER_ERROR),
+    MASTER_ENCRYPTION_PASSWORD_ACCESS_ERROR(200011, "Could not read master encryption password.",
+      Response.Status.INTERNAL_SERVER_ERROR);
     
     private Integer code;
     private String message;
@@ -640,10 +647,10 @@ public class RESTCodes {
     USER_DOES_NOT_EXIST(160001, "User does not exist.", Response.Status.BAD_REQUEST),
     USER_WAS_NOT_FOUND(160002, "User not found", Response.Status.NOT_FOUND),
     USER_EXISTS(160003, "There is an existing account associated with this email", Response.Status.CONFLICT),
-    ACCOUNT_REQUEST(160004, "Your account has not yet been approved.", Response.Status.FORBIDDEN),
-    ACCOUNT_DEACTIVATED(160005, "This account have been deactivated.", Response.Status.UNAUTHORIZED),
+    ACCOUNT_REQUEST(160004, "Your account has not yet been approved.", Response.Status.UNAUTHORIZED),
+    ACCOUNT_DEACTIVATED(160005, "This account has been deactivated.", Response.Status.UNAUTHORIZED),
     ACCOUNT_VERIFICATION(160006, "You need to verify your account.", Response.Status.BAD_REQUEST),
-    ACCOUNT_BLOCKED(160007, "Your account hsd been blocked. Contact the administrator.", Response.Status.UNAUTHORIZED),
+    ACCOUNT_BLOCKED(160007, "Your account has been blocked. Contact the administrator.", Response.Status.UNAUTHORIZED),
     AUTHENTICATION_FAILURE(160008, "Authentication failed", Response.Status.UNAUTHORIZED),
     LOGOUT_FAILURE(160009, "Logout failed on backend.", Response.Status.BAD_REQUEST),
     
@@ -655,7 +662,7 @@ public class RESTCodes {
     PASSWORD_TOO_SHORT(160014, "Password too short.", Response.Status.BAD_REQUEST),
     PASSWORD_TOO_LONG(160015, "Password too long.", Response.Status.BAD_REQUEST),
     PASSWORD_INCORRECT(160016, "Password incorrect", Response.Status.BAD_REQUEST),
-    PASSWORD_PATTERN_NOT_CORRECT(160017, "Password should include one uppercase letter\n"
+    PASSWORD_PATTERN_NOT_CORRECT(160017, "Password should include one uppercase letter, "
       + "one special character and/or alphanumeric characters.", Response.Status.BAD_REQUEST),
     INCORRECT_PASSWORD(160018, "The password is incorrect. Please try again", Response.Status.FORBIDDEN),
     PASSWORD_MISS_MATCH(160019, "Passwords do not match - typo?", Response.Status.BAD_REQUEST),
@@ -681,7 +688,7 @@ public class RESTCodes {
     CERT_AUTHORIZATION_ERROR(160035, "Certificate CN does not match the username provided.",
       Response.Status.UNAUTHORIZED),
     PROJECT_USER_CERT_NOT_FOUND(160036, "Could not find exactly one certificate for user in project.",
-      Response.Status.UNAUTHORIZED),
+      Response.Status.FORBIDDEN),
     ACCOUNT_INACTIVE(160037, "This account has not been activated", Response.Status.UNAUTHORIZED),
     ACCOUNT_LOST_DEVICE(160038, "This account has registered a lost device.", Response.Status.UNAUTHORIZED),
     ACCOUNT_NOT_APPROVED(160039, "This account has not yet been approved", Response.Status.UNAUTHORIZED),
@@ -727,8 +734,30 @@ public class RESTCodes {
   public enum DelaErrorCode implements RESTErrorCode {
     
     //response for validation error
-    THIRD_PARTY_ERROR(170000, null, Response.Status.EXPECTATION_FAILED);
-    
+    THIRD_PARTY_ERROR(170000, "Generic third party error.", Response.Status.EXPECTATION_FAILED),
+    CLUSTER_NOT_REGISTERED(170001, "Cluster not registered.", Response.Status.UNAUTHORIZED),
+    HEAVY_PING(170002, "Heavy ping required.", Response.Status.BAD_REQUEST),
+    USER_NOT_REGISTERED(170003, "User not registered.", Response.Status.UNAUTHORIZED),
+    DATASET_EXISTS(170004, "Dataset exists.", Response.Status.CONFLICT),
+    DATASET_DOES_NOT_EXIST(170005, "Dataset does not exist.", Response.Status.NOT_FOUND),
+    DATASET_PUBLISH_PERMISSION_ERROR(17006, "Dataset shared - only owner can publish.", Response.Status.FORBIDDEN),
+    ILLEGAL_ARGUMENT(170007, "Illegal Argument.", Response.Status.BAD_REQUEST),
+    README_RETRIEVAL_FAILED(170008, "Readme retrieval failed.", Response.Status.EXPECTATION_FAILED),
+    README_ACCESS_PROBLEM(170009, "Readme access problem.", Response.Status.BAD_REQUEST),
+    COMMUNICATION_FAILURE(170010, "Communication failure.", Response.Status.EXPECTATION_FAILED),
+    DATASET_EMPTY(170011, "Dataset empty.", Response.Status.BAD_REQUEST),
+    SUBDIRS_NOT_SUPPORTED(170012, "Subdirectories not supported.", Response.Status.BAD_REQUEST),
+    ACCESS_ERROR(170013, "Access error.", Response.Status.BAD_REQUEST),
+    MISCONFIGURED(170014, "misconfigured", Response.Status.EXPECTATION_FAILED),
+    USER_NOT_FOUND(170015, "user not found.", Response.Status.FORBIDDEN),
+    DATASET_DELETE_ERROR(170016, "Delete dataset error.", Response.Status.EXPECTATION_FAILED),
+    DELA_NOT_AVAILABLE(170017, "Dela not available.", Response.Status.BAD_REQUEST),
+    HOPSSITE_NOT_AVAILABLE(170018, "hopssite not available", Response.Status.BAD_REQUEST),
+    REMOTE_DELA_NOT_AVAILABLE(170019, "Remote dela not available.", Response.Status.BAD_REQUEST),
+    DELA_TRANSFER_NOT_AVAILABLE(170020, "Dela transfer not available.", Response.Status.BAD_REQUEST),
+    MANIFEST_ENCODING_ERROR(170021, "Manifest cannot be read as UTF", Response.Status.BAD_REQUEST),
+    DATASET_NOT_PUBLIC(170022, "dataset not public - no manifest", Response.Status.BAD_REQUEST),
+    INODE_NOT_FOUND(170023, "Inode not found.", Response.Status.BAD_REQUEST);
     
     private Integer code;
     private String message;
