@@ -223,7 +223,7 @@ public class PKI {
   }
 
   public Path getCertPath(CAType caType, String certFileName) {
-    return Paths.get(getCACertsDir(caType).toString(), certFileName);
+    return Paths.get(getCACertsDir(caType).toString(), certFileName + ".cert.pem");
   }
 
   public Path getKeyPath(CAType caType, String keyFileName) {
@@ -253,11 +253,11 @@ public class PKI {
   public Path getChainOfTrustFilePath(CAType caType) {
     switch (caType) {
       case ROOT:
-        return getCertPath(caType,"ca.cert.pem");
+        return getCertPath(caType,"ca");
       case INTERMEDIATE:
-        return getCertPath(caType, "ca-chain.cert.pem");
+        return getCertPath(caType, "ca-chain");
       case KUBECA:
-        return getCertPath(caType, "ca-chain.cert.pem");
+        return getCertPath(caType, "ca-chain");
       default:
         throw new IllegalArgumentException("CA type not recognized");
     }
