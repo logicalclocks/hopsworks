@@ -113,14 +113,14 @@
         </a>
       </li>
       
-      <li ng-click="projectCtrl.goToTfServing()" ng-show="projectCtrl.showTfServing()">
-        <a class="left-right" id="servingTab">
+      <li ng-click="projectCtrl.goToTfServing()" ng-show="projectCtrl.showTfServing()" id="servingTab">
+        <a class="left-right">
           Model Serving
           <img class="pull-right" style="margin-right:10px" height="25" src="images/tf-175x200_bw.png"/>
         </a>
       </li>
 
-      <li ng-click="projectCtrl.goToExperiments()" ng-show="projectCtrl.showExperiments()">
+      <li ng-click="projectCtrl.goToExperiments()" ng-show="projectCtrl.showExperiments()" id="experimentsTab">
         <a>
           Experiments<img class="pull-right" style="margin-right:8px" height="27" src="images/experiments.png"/>
         </a>
@@ -137,7 +137,7 @@
       </li>
 
       
-      <li ng-click="projectCtrl.goToDatasets()" style="margin-top:40px;" ng-show="projectCtrl.cloak">
+      <li ng-click="projectCtrl.goToDatasets()" style="margin-top:40px;" ng-show="projectCtrl.cloak" id="datasetsTab">
         <a>
           Data Sets <span class="sub_icon fa fa-folder-open fa-lg pull-right"></span>
           <i class=" pull-left fa " 
@@ -153,7 +153,7 @@
         </a>
       </li>
 
-      <li ng-click="projectCtrl.goToPython()" ng-show="projectCtrl.cloak">
+      <li ng-click="projectCtrl.goToPython()" ng-show="projectCtrl.cloak" id="pythonTab">
         <a>
           Python<img class="pull-right" style="margin-right:13px" height="23" src="images/python_logo.png"/>
         </a>
@@ -212,7 +212,7 @@
 
 <tour class="ng-scope" step="projectCtrl.tourService.currentStep_TourTwo"
       post-tour="closeTour()"
-      ng-if="projectCtrl.showJobs() && projectCtrl.loadedView
+      ng-if="projectCtrl.loadedView
                   && (projectCtrl.tourService.informAndTips
                           || projectCtrl.tourService.tipsOnly)">
   <virtual-step
@@ -228,7 +228,6 @@
     tourtip-offset-vertical="-18"
     tourtip-offset-horizontal="-13"
     ></virtual-step>
-
   <virtual-step
     ng-if="projectCtrl.tourService.activeTour === 'kafka'"
     id="TourTwo"
@@ -241,32 +240,17 @@
     on-proceed="projectCtrl.goToKafka()"
     tourtip-offset-vertical="-15"
     ></virtual-step>
-
   <virtual-step
-    ng-if="projectCtrl.tourService.activeTour === 'tensorflow'"
+    ng-if="projectCtrl.tourService.activeTour === 'deep_learning'"
     id="TourTwo"
     class="ng-scope"
-    tourtip="Click Next to navigate to Jupyter and start your TensorFlow coding!"
+    tourtip="Click Next to navigate to Jupyter and follow the Deep Learning tour!"
     tourtip-step="0"
     tourtip-element="#jupyterTab"
     tourtip-placement="right"
-    tourtip-next-label="Done"
+    tourtip-next-label="Next"
     on-proceed="projectCtrl.goToJupyter()"
     tourtip-offset-vertical="-18"
     tourtip-offset-horizontal="-13"
     ></virtual-step>
-  <virtual-step
-    ng-if="projectCtrl.tourService.activeTour === 'distributed tensorflow'"
-    id="TourTwo"
-    class="ng-scope"
-    tourtip="Click Next, OR click on the Jobs tab to continue"
-    tourtip-step="0"
-    tourtip-element="#jobsTab"
-    tourtip-placement="right"
-    tourtip-next-label="Next"
-    on-proceed="projectCtrl.goToJobs()"
-    tourtip-offset-vertical="-18"
-    tourtip-offset-horizontal="-13"
-    ></virtual-step>
-
 </tour>

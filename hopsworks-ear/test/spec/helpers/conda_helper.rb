@@ -36,6 +36,11 @@
  DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 =end
+
+require 'open3'
+require 'json'
+require 'tmpdir'
+
 module CondaHelper
 
   def wait_for
@@ -49,5 +54,36 @@ module CondaHelper
       sleep(1)
       x = yield
     end
+  end
+
+  def conda_exists
+    conda_var = Variables.find_by(id: "anaconda_dir")
+    if not conda_var
+      return false
+    end
+    @conda_bin = File.join(conda_var.value, 'bin', 'conda')
+    File.exists?(@conda_bin)
+  end
+
+  def get_conda_envs_locally
+    cmd = "#{@conda_bin} env list --json"
+    Open3.popen3(cmd) do |_, stdout, _, _|
+      JSON.parse(stdout.read)
+    end
+  end
+
+  def check_if_env_exists_locally(env_name)
+    local_envs = get_conda_envs_locally
+    result = local_envs['envs'].select{|x| x.include? env_name}
+    not result.empty?
+  end
+
+  def trigger_conda_gc
+    tmp = Dir.tmpdir()
+    trigger_file = File.join(tmp, 'trigger_conda_gc')
+    open(trigger_file, 'w') do |fd|
+      fd.puts "1"
+    end
+    File.chmod(0777, trigger_file)
   end
 end
