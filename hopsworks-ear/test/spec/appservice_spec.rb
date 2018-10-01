@@ -25,7 +25,7 @@ describe "On #{ENV['OS']}" do
           with_valid_project
         end
 
-        it "should fail to get Kafka schema" do
+        it "should fail to get Kafka schema without keystore and pwd" do
           post "#{ENV['HOPSWORKS_API']}/appservice/schema",
                {
                    keyStorePwd: "-",
@@ -43,20 +43,17 @@ describe "On #{ENV['OS']}" do
           with_valid_project
         end
 
-        it "should be authenticated for getting the Kafka schema" do
+        it "should be authenticated for getting the Kafka schema with keystore and pwd" do
           project = get_project
-          download_cert_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/downloadCert"
-          data = 'password=Pass123'
-          headers = {"Content-Type" => 'application/x-www-form-urlencoded'}
-          post download_cert_endpoint, data, headers # this POST request will trigger a materialization of keystore and pwd to /srv/hops/certs-dir/transient/
-          key_pwd_file_pattern = "/srv/hops/certs-dir/transient/*.key"
-          expect(!Dir.glob(key_pwd_file_pattern).empty?)
-          key_pwd_file = Dir.glob(key_pwd_file_pattern)[0]
-          key_pwd = File.read(key_pwd_file)
-          user_key_cert_pwd= UserCerts.find_by(projectname:project.projectname)
+          username = get_current_username
+          download_cert # need to download the certs to /srv/hops/certs-dir/transient because the .key file is encrypted in NDB
+          user_key_path = get_user_key_path(project.projectname, username)
+          expect(File.exist?(user_key_path)).to be true
+          key_pwd = File.read(user_key_path)
+          key_store = get_user_keystore(project.projectname)
           json_data = {
               keyStorePwd: key_pwd,
-              keyStore: Base64.encode64(user_key_cert_pwd.user_key),
+              keyStore: key_store,
               topicName: "test",
               version: 1
           }
