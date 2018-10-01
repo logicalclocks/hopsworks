@@ -30,7 +30,7 @@ public class DatasetException extends RESTException {
   }
   
   public DatasetException(RESTCodes.DatasetErrorCode code, String usrMsg, String devMsg, Throwable throwable) {
-    super(code, usrMsg, devMsg);
+    super(code, usrMsg, devMsg, throwable);
   }
   
 }

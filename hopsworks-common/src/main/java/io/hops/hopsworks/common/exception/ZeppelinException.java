@@ -15,21 +15,21 @@
  */
 package io.hops.hopsworks.common.exception;
 
-public class TemplateException extends RESTException {
+public class ZeppelinException extends RESTException {
   
-  public TemplateException(RESTCodes.MetadataErrorCode code) {
-    super(code);
+  public ZeppelinException(RESTCodes.ZeppelinErrorCode errorCode) {
+    super(errorCode);
   }
   
-  public TemplateException(RESTCodes.MetadataErrorCode code, String usrMsg) {
-    super(code, usrMsg);
+  public ZeppelinException(RESTCodes.ZeppelinErrorCode errorCode, String usrMsg) {
+    super(errorCode, usrMsg);
   }
   
-  public TemplateException(RESTCodes.MetadataErrorCode code, String usrMsg, String devMsg) {
-    super(code, usrMsg, devMsg);
+  public ZeppelinException(RESTCodes.ZeppelinErrorCode errorCode, String usrMsg, String devMsg) {
+    super(errorCode, usrMsg, devMsg);
   }
   
-  public TemplateException(RESTCodes.MetadataErrorCode code, String usrMsg, String devMsg, Throwable throwable) {
-    super(code, usrMsg, devMsg, throwable);
+  public ZeppelinException(RESTCodes.ZeppelinErrorCode errorCode, String usrMsg, String devMsg, Throwable throwable) {
+    super(errorCode, usrMsg, devMsg, throwable);
   }
 }

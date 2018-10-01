@@ -45,13 +45,11 @@ import io.hops.hopsworks.api.hopssite.dto.LocalDatasetDTO;
 import io.hops.hopsworks.api.hopssite.dto.LocalDatasetHelper;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dataset.DatasetController;
-import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.dela.cluster.ClusterDatasetController;
 import io.swagger.annotations.Api;
-import java.util.List;
-import java.util.logging.Logger;
+
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -67,6 +65,8 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import java.util.List;
+import java.util.logging.Logger;
 
 @Path("/delacluster")
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
@@ -78,7 +78,7 @@ import javax.ws.rs.core.SecurityContext;
   description = "Dela Cluster Service")
 public class DelaClusterService {
 
-  private final static Logger LOG = Logger.getLogger(DelaClusterService.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(DelaClusterService.class.getName());
   @EJB
   private NoCacheResponse noCacheResponse;
   @EJB
@@ -92,7 +92,7 @@ public class DelaClusterService {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.ANYONE})
-  public Response getPublicDatasets(@Context SecurityContext sc, @Context HttpServletRequest req) throws AppException {
+  public Response getPublicDatasets(@Context SecurityContext sc, @Context HttpServletRequest req) {
     List<Dataset> clusterDatasets = clusterDatasetCtrl.getPublicDatasets();
     DistributedFileSystemOps dfso = dfs.getDfsOps();
     List<LocalDatasetDTO> localDS;

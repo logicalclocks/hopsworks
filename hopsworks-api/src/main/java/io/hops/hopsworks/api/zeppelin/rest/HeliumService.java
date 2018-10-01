@@ -46,8 +46,12 @@ import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.exception.ZeppelinException;
 import io.swagger.annotations.Api;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.inject.Inject;
@@ -56,9 +60,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Response;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Path("/zeppelin/{projectID}/helium")
 @Produces("application/json")
@@ -83,28 +84,23 @@ public class HeliumService {
   @Path("/")
   @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
   public HeliumRestApi interpreter(@PathParam("projectID") String projectID,
-          @Context HttpServletRequest httpReq) throws
-          AppException {
+          @Context HttpServletRequest httpReq) throws ZeppelinException {
     Project project = zeppelinResource.getProject(projectID);
     if (project == null) {
-      throw new AppException(Response.Status.FORBIDDEN.getStatusCode(),
-              "Could not find project. Make sure cookies are enabled.");
+      throw new ZeppelinException(RESTCodes.ZeppelinErrorCode.PROJECT_NOT_FOUND);
     }
     Users user = userBean.findByEmail(httpReq.getRemoteUser());
     if (user == null) {
-      throw new AppException(Response.Status.FORBIDDEN.getStatusCode(),
-              "Could not find remote user.");
+      throw new ZeppelinException(RESTCodes.ZeppelinErrorCode.USER_NOT_FOUND);
     }
     String userRole = projectTeamBean.findCurrentRole(project, user);
     if (userRole == null) {
-      throw new AppException(Response.Status.FORBIDDEN.getStatusCode(),
-              "You curently have no role in this project!");
+      throw new ZeppelinException(RESTCodes.ZeppelinErrorCode.ROLE_NOT_FOUND);
     }
 
     ZeppelinConfig zeppelinConf = zeppelinConfFactory.getProjectConf(project.getName());
     if (zeppelinConf == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Could not connect to web socket.");
+      throw new ZeppelinException(RESTCodes.ZeppelinErrorCode.WEB_SOCKET_ERROR);
     }
     heliumRestApi.setParms(zeppelinConf);
     return heliumRestApi;

@@ -17,13 +17,37 @@
 package io.hops.hopsworks.api.zeppelin.socket;
 
 import com.github.eirslett.maven.plugins.frontend.lib.TaskRunnerException;
-import java.io.IOException;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.HashSet;
-import javax.websocket.server.PathParam;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
+import io.hops.hopsworks.api.zeppelin.socket.Message.OP;
+import io.hops.hopsworks.api.zeppelin.util.TicketContainer;
+import io.hops.hopsworks.api.zeppelin.util.ZeppelinResource;
+import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuota;
+import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuotaFacade;
+import io.hops.hopsworks.common.dao.project.PaymentType;
+import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.common.dao.project.ProjectFacade;
+import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
+import io.hops.hopsworks.common.dao.user.UserFacade;
+import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.exception.GenericException;
+import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.hdfs.DistributedFsService;
+import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.security.CertificateMaterializer;
+import io.hops.hopsworks.common.util.Settings;
+import org.apache.commons.lang.StringUtils;
+import org.apache.zeppelin.display.Input;
+import org.apache.zeppelin.notebook.Notebook;
+import org.apache.zeppelin.notebook.NotebookImportDeserializer;
+import org.apache.zeppelin.user.AuthenticationInfo;
+import org.apache.zeppelin.util.WatcherSecurityKey;
+import org.sonatype.aether.RepositoryException;
+
+import javax.ejb.ConcurrencyManagement;
+import javax.ejb.ConcurrencyManagementType;
+import javax.ejb.EJB;
 import javax.websocket.CloseReason;
 import javax.websocket.EndpointConfig;
 import javax.websocket.OnClose;
@@ -31,41 +55,15 @@ import javax.websocket.OnError;
 import javax.websocket.OnMessage;
 import javax.websocket.OnOpen;
 import javax.websocket.Session;
+import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
-import javax.ejb.ConcurrencyManagement;
-import javax.ejb.ConcurrencyManagementType;
-import javax.ejb.EJB;
-
-import io.hops.hopsworks.common.security.CertificateMaterializer;
-import org.apache.zeppelin.notebook.Notebook;
-import org.apache.zeppelin.user.AuthenticationInfo;
-import org.apache.commons.lang.StringUtils;
-import org.apache.zeppelin.util.WatcherSecurityKey;
-
-import io.hops.hopsworks.api.zeppelin.socket.Message.OP;
-import io.hops.hopsworks.api.zeppelin.util.TicketContainer;
-import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
-import io.hops.hopsworks.common.dao.user.UserFacade;
-import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.hdfs.HdfsUsersController;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
-import io.hops.hopsworks.api.zeppelin.util.ZeppelinResource;
-import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuota;
-import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuotaFacade;
-import io.hops.hopsworks.common.dao.project.PaymentType;
-import io.hops.hopsworks.common.exception.AppException;
-import io.hops.hopsworks.common.hdfs.DistributedFsService;
-import io.hops.hopsworks.common.util.Settings;
+import java.io.IOException;
 import java.util.Date;
-import javax.ws.rs.core.Response;
-import org.apache.zeppelin.display.Input;
-import org.apache.zeppelin.notebook.NotebookImportDeserializer;
-import org.sonatype.aether.RepositoryException;
+import java.util.HashSet;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Zeppelin websocket service.
@@ -129,7 +127,8 @@ public class NotebookServer {
   }
 
   @OnOpen
-  public void open(Session conn, EndpointConfig config, @PathParam("projectID") String projectId) throws AppException {
+  public void open(Session conn, EndpointConfig config, @PathParam("projectID") String projectId)
+    throws GenericException {
     try {
       this.session = conn;
       this.sender = (String) config.getUserProperties().get("user");
@@ -160,7 +159,7 @@ public class NotebookServer {
       this.session.getUserProperties().put(WatcherSecurityKey.HTTP_HEADER, httpHeader);
       impl.unicast(new Message(OP.CREATED_SOCKET), conn);
     } catch (IOException | RepositoryException | TaskRunnerException ex) {
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), ex.getMessage());
+      throw new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR, null, ex.getMessage(), ex);
     }
   }
 

@@ -249,9 +249,6 @@ public class TensorBoardProcessMgr {
     try {
       HopsUtils.cleanupCertificatesForUserCustomDir(user.getUsername(), project.getName(),
           settings.getHdfsTmpCertDir(), certificateMaterializer, certsPath, settings);
-    } catch (IOException ioe) {
-      LOGGER.log(Level.SEVERE, "Failed in dematerializing certificates for " +
-          hdfsUser + " in directory " + certsPath, ioe);
     } finally {
       if (dfso != null) {
         dfsService.closeDfsClient(dfso);
@@ -331,8 +328,6 @@ public class TensorBoardProcessMgr {
     try {
       HopsUtils.cleanupCertificatesForUserCustomDir(tb.getUsers().getUsername(), tb.getProject().getName(),
         settings.getHdfsTmpCertDir(), certificateMaterializer, certsPath, settings);
-    } catch (IOException e) {
-      LOGGER.log(Level.SEVERE, "Could not cleanup certificates for " + hdfsUser + " in directory " + certsPath, e);
     } finally {
       if (dfso != null) {
         dfsService.closeDfsClient(dfso);

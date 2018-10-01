@@ -237,10 +237,9 @@ public class HopsUtils {
    * @param projectName
    * @param remoteFSDir
    * @param certificateMaterializer
-   * @throws IOException
    */
   public static void cleanupCertificatesForProject(String projectName,
-      String remoteFSDir, CertificateMaterializer certificateMaterializer, Settings settings) throws IOException {
+      String remoteFSDir, CertificateMaterializer certificateMaterializer, Settings settings) {
     
     certificateMaterializer.removeCertificatesLocal(projectName);
     
@@ -257,11 +256,10 @@ public class HopsUtils {
    * @param username
    * @param remoteFSDir
    * @param certificateMaterializer
-   * @throws IOException
    */
   public static void cleanupCertificatesForUserCustomDir(String username,
       String projectName, String remoteFSDir, CertificateMaterializer certificateMaterializer, String directory,
-      Settings settings) throws IOException {
+      Settings settings) {
 
     certificateMaterializer.removeCertificatesLocalCustomDir(username, projectName, directory);
     String projectSpecificUsername = projectName + HdfsUsersController

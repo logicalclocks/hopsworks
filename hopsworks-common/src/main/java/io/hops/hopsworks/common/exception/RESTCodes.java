@@ -35,6 +35,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * 10. Kafka error codes start with "19"
  * 11. User error codes start with "20"
  * 12. Security error codes start  with "20".
+ * 13. Zeppelin error codes start with "21".
  */
 @XmlRootElement
 public class RESTCodes {
@@ -779,6 +780,49 @@ public class RESTCodes {
       return message;
     }
     
+    public Response.Status getRespStatus() {
+      return respStatus;
+    }
+    
+  }
+  
+  
+  public enum ZeppelinErrorCode implements RESTErrorCode {
+    
+    // Zeppelin
+    PROJECT_NOT_FOUND(210000, "Could not find project. Make sure cookies are enabled.", Response.Status.FORBIDDEN),
+    ROLE_NOT_FOUND(210001, "No role in this project.", Response.Status.FORBIDDEN),
+    WEB_SOCKET_ERROR(210002, "Could not connect to websocket", Response.Status.BAD_REQUEST),
+    USER_NOT_FOUND(210003, "Could not find remote user", Response.Status.FORBIDDEN),
+    INTERPRETER_CLOSE_ERROR(210004, "Could not close interpreter. Make sure it is not running.",
+      Response.Status.BAD_REQUEST),
+    RESTART_ERROR(210005, "This service has been restarted recently. Please wait a few minutes before trying again.",
+      Response.Status.BAD_REQUEST),
+    STOP_SESSIONS_ERROR(210006, "You can't stop sessions in another project.", Response.Status.BAD_REQUEST),
+    CREATE_NOTEBOOK_ERROR(210007, "Could not create notebook.", Response.Status.BAD_REQUEST);
+    
+    
+    private Integer code;
+    private String message;
+    private Response.Status respStatus;
+  
+    ZeppelinErrorCode(Integer code, String message, Response.Status respStatus) {
+      this.code = code;
+      this.message = message;
+      this.respStatus = respStatus;
+    }
+    
+    @Override
+    public Integer getCode() {
+      return code;
+    }
+    
+    @Override
+    public String getMessage() {
+      return message;
+    }
+    
+    @Override
     public Response.Status getRespStatus() {
       return respStatus;
     }

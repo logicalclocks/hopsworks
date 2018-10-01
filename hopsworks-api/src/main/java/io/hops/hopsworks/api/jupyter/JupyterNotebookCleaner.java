@@ -67,7 +67,6 @@ import javax.ejb.EJB;
 import javax.ejb.Schedule;
 import javax.ejb.Singleton;
 import javax.ejb.Timer;
-import java.io.IOException;
 import java.nio.file.Paths;
 import java.sql.Date;
 import java.util.List;
@@ -168,10 +167,8 @@ public class JupyterNotebookCleaner {
           try {
             String certificatesDir = Paths.get(jupyterHomePath, "certificates").toString();
             HopsUtils.cleanupCertificatesForUserCustomDir(project_user[1], jp.getProjectId()
-                .getName(), settings.getHdfsTmpCertDir(), certificateMaterializer, certificatesDir, settings);
+              .getName(), settings.getHdfsTmpCertDir(), certificateMaterializer, certificatesDir, settings);
             certificateMaterializer.removeCertificatesLocal(project_user[1], jp.getProjectId().getName());
-          } catch (IOException e) {
-            LOGGER.log(Level.SEVERE, "Could not cleanup certificates for " + hdfsUser);
           } finally {
             if (dfso != null) {
               dfsService.closeDfsClient(dfso);

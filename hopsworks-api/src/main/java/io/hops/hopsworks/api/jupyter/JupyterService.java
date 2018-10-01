@@ -308,17 +308,13 @@ public class JupyterService {
         certificateMaterializer.materializeCertificatesLocal(user.getUsername(), project.getName());
       } catch (IOException | ServiceException ex) {
         LOGGER.log(Level.SEVERE, null, ex);
-        try {
-          certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());
-          if (dto != null) {
-            HopsUtils.cleanupCertificatesForUserCustomDir(user.getUsername(), project.getName(),
-                settings.getHdfsTmpCertDir(),
-                certificateMaterializer, dto.getCertificatesDir(), settings);
-          } else {
-            throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_LOCATION_UNDEFINED);
-          }
-        } catch (IOException e) {
-          LOGGER.log(Level.SEVERE, "Could not cleanup certificates for " + hdfsUser);
+        certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());
+        if (dto != null) {
+          HopsUtils.cleanupCertificatesForUserCustomDir(user.getUsername(), project.getName(),
+            settings.getHdfsTmpCertDir(),
+            certificateMaterializer, dto.getCertificatesDir(), settings);
+        } else {
+          throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_LOCATION_UNDEFINED);
         }
         throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_START_ERROR);
       } finally {
@@ -403,10 +399,8 @@ public class JupyterService {
     try {
       String certificatesDir = Paths.get(jupyterHomePath, "certificates").toString();
       HopsUtils.cleanupCertificatesForUserCustomDir(project_user[1], project
-          .getName(), settings.getHdfsTmpCertDir(), certificateMaterializer, certificatesDir, settings);
+        .getName(), settings.getHdfsTmpCertDir(), certificateMaterializer, certificatesDir, settings);
       certificateMaterializer.removeCertificatesLocal(project_user[1], project.getName());
-    } catch (IOException e) {
-      LOGGER.log(Level.SEVERE, "Could not cleanup certificates for " + hdfsUser);
     } finally {
       if (dfso != null) {
         dfsService.closeDfsClient(dfso);

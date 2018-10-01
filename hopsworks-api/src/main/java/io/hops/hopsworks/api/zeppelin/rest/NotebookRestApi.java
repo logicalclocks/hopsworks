@@ -59,6 +59,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.enterprise.context.RequestScoped;
 
+import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.exception.ZeppelinException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -91,7 +93,6 @@ import io.hops.hopsworks.api.zeppelin.util.InterpreterBindingUtils;
 import io.hops.hopsworks.api.zeppelin.util.SecurityUtils;
 import io.hops.hopsworks.api.zeppelin.util.ZeppelinResource;
 import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.exception.AppException;
 import java.util.LinkedList;
 import org.apache.zeppelin.interpreter.InterpreterResult;
 import org.apache.zeppelin.notebook.NoteInfo;
@@ -1060,13 +1061,12 @@ public class NotebookRestApi {
    * <p/>
    * @param newNote
    * @return note info if successful.
-   * @throws AppException
    */
   @POST
   @Path("/new")
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.ANYONE})
-  public Response createNew(NewNotebookRequest newNote) throws AppException {
+  public Response createNew(NewNotebookRequest newNote) throws ZeppelinException {
     Note note;
     NoteInfo noteInfo;
     AuthenticationInfo subject = new AuthenticationInfo(this.hdfsUserName);
@@ -1103,8 +1103,7 @@ public class NotebookRestApi {
       noteInfo = new NoteInfo(note);
       zeppelinResource.persistToDB(this.project);
     } catch (IOException ex) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Could not create notebook. " + ex.getMessage());
+      throw new ZeppelinException(RESTCodes.ZeppelinErrorCode.CREATE_NOTEBOOK_ERROR, null, ex.getMessage(),ex);
     }
     notebookServer.broadcastNote(note);
     notebookServer.broadcastNoteList(subject, SecurityUtils.getRoles());

@@ -87,7 +87,6 @@ import io.hops.hopsworks.common.exception.GenericException;
 import io.hops.hopsworks.common.exception.HopsSecurityException;
 import io.hops.hopsworks.common.exception.KafkaException;
 import io.hops.hopsworks.common.exception.ProjectException;
-import io.hops.hopsworks.common.exception.ProjectInternalFoldersFailedException;
 import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.exception.UserException;
@@ -652,30 +651,6 @@ public class ProjectController {
           ds.getDescription(), project.getName());
       Path readmePath = new Path(dsPath, Settings.README_FILE);
       dfso.setOwner(readmePath, fstatus.getOwner(), fstatus.getGroup());
-    }
-  }
-
-  /**
-   *
-   * @param username
-   * @param project
-   * @param dfso
-   * @param udfso
-   * @throws ProjectInternalFoldersFailedException
-   */
-  public void copySparkStreamingResources(String username, Project project,
-      DistributedFileSystemOps dfso, DistributedFileSystemOps udfso) throws
-      ProjectInternalFoldersFailedException {
-    try {
-      udfso.copyInHdfs(new Path(settings.getSparkLog4JPath()), new Path(
-          "/Projects/" + project.getName()
-          + "/" + Settings.BaseDataset.RESOURCES));
-      udfso.copyInHdfs(new Path(settings.getSparkMetricsPath()), new Path(
-          "/Projects/" + project.getName()
-          + "/" + Settings.BaseDataset.RESOURCES));
-    } catch (IOException e) {
-      throw new ProjectInternalFoldersFailedException(
-          "Could not create project resources ", e);
     }
   }
 

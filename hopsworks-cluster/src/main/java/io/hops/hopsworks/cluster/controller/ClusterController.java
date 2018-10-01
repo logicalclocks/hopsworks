@@ -51,7 +51,7 @@ import io.hops.hopsworks.common.dao.user.security.audit.AccountsAuditActions;
 import io.hops.hopsworks.common.dao.user.security.ua.SecurityUtils;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
-import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.exception.UserException;
 import io.hops.hopsworks.common.security.CAException;
 import io.hops.hopsworks.common.security.CertificateType;
 import io.hops.hopsworks.common.security.OpensslOperations;
@@ -60,7 +60,14 @@ import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.EmailBean;
 import io.hops.hopsworks.common.util.FormatUtils;
 import io.hops.hopsworks.common.util.Settings;
-import java.io.FileNotFoundException;
+
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -69,14 +76,6 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.ejb.EJB;
-import javax.ejb.Stateless;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-import javax.mail.Message;
-import javax.mail.MessagingException;
-import javax.security.cert.CertificateException;
-import javax.servlet.http.HttpServletRequest;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -111,8 +110,8 @@ public class ClusterController {
   @EJB
   private OpensslOperations opensslOperations;
 
-  public void registerClusterNewUser(ClusterDTO cluster, HttpServletRequest req, boolean autoValidate) 
-    throws MessagingException, AppException {
+  public void registerClusterNewUser(ClusterDTO cluster, HttpServletRequest req, boolean autoValidate)
+    throws MessagingException, UserException {
     isValidNewCluster(cluster);
     Users clusterAgent = createClusterAgent(cluster, req);
     ClusterCert clusterCert = createClusterCert(cluster, clusterAgent);
@@ -129,7 +128,7 @@ public class ClusterController {
   }
 
   public void registerClusterWithUser(ClusterDTO cluster, HttpServletRequest req, boolean autoValidate)
-    throws MessagingException, AppException {
+    throws MessagingException, UserException {
     isValidCluster(cluster);
     Optional<Users> clusterAgent = verifyClusterAgent(cluster, req);
     if (!clusterAgent.isPresent()) {
@@ -146,7 +145,7 @@ public class ClusterController {
       new Object[]{clusterAgent.get().getEmail(), clusterAgent.get().getUsername()});
   }
 
-  private Optional<Users> verifyClusterAgent(ClusterDTO cluster, HttpServletRequest req) throws AppException {
+  private Optional<Users> verifyClusterAgent(ClusterDTO cluster, HttpServletRequest req) throws UserException {
     Users clusterAgent = userBean.findByEmail(cluster.getEmail());
     if (clusterAgent == null) {
       return Optional.empty();
@@ -155,7 +154,7 @@ public class ClusterController {
     return Optional.of(clusterAgent);
   }
 
-  private Users createClusterAgent(ClusterDTO cluster, HttpServletRequest req) throws AppException {
+  private Users createClusterAgent(ClusterDTO cluster, HttpServletRequest req) throws UserException {
     Optional<Users> clusterAgentAux = verifyClusterAgent(cluster, req);
     if (clusterAgentAux.isPresent()) {
       return clusterAgentAux.get();
@@ -219,7 +218,7 @@ public class ClusterController {
     clusterCertFacade.update(clusterCert);
   }
 
-  public void unregister(ClusterDTO cluster, HttpServletRequest req) throws MessagingException, AppException {
+  public void unregister(ClusterDTO cluster, HttpServletRequest req) throws MessagingException, UserException {
     isValidCluster(cluster);
     Users clusterAgent = userBean.findByEmail(cluster.getEmail());
     if (clusterAgent == null) {
@@ -249,8 +248,7 @@ public class ClusterController {
     LOGGER.log(Level.INFO, "Unregistering cluster with email: {0}", clusterAgent.getEmail());
   }
 
-  public void validateRequest(String key, HttpServletRequest req, OP_TYPE type) throws IOException,
-    FileNotFoundException, InterruptedException, CertificateException {
+  public void validateRequest(String key, HttpServletRequest req, OP_TYPE type) throws IOException {
     Integer clusterCertId = extractClusterCertId(key);
     ClusterCert clusterCert = clusterCertFacade.find(clusterCertId);
     if (clusterCert == null) {
@@ -310,8 +308,7 @@ public class ClusterController {
     }
   }
 
-  public List<ClusterCert> getAllClusters(ClusterDTO cluster, HttpServletRequest req) throws MessagingException,
-    AppException {
+  public List<ClusterCert> getAllClusters(ClusterDTO cluster, HttpServletRequest req) throws UserException {
     if (cluster == null) {
       throw new NullPointerException("Cluster not assigned.");
     }
@@ -329,8 +326,7 @@ public class ClusterController {
     return clusterCertFacade.getByAgent(clusterAgent);
   }
 
-  public List<ClusterYmlDTO> getAllClusterYml(ClusterDTO cluster, HttpServletRequest req) throws MessagingException,
-    AppException {
+  public List<ClusterYmlDTO> getAllClusterYml(ClusterDTO cluster, HttpServletRequest req) throws UserException {
     if (cluster == null) {
       throw new NullPointerException("Cluster not assigned.");
     }
@@ -359,7 +355,7 @@ public class ClusterController {
     return clusterYmlDTOs;
   }
 
-  public ClusterCert getCluster(ClusterDTO cluster, HttpServletRequest req) throws MessagingException, AppException {
+  public ClusterCert getCluster(ClusterDTO cluster, HttpServletRequest req) throws UserException {
 
     isValidCluster(cluster);
     Users clusterAgent = userBean.findByEmail(cluster.getEmail());
@@ -376,7 +372,7 @@ public class ClusterController {
   }
 
   private void checkUserPasswordAndStatus(ClusterDTO cluster, Users clusterAgent, HttpServletRequest req)
-    throws AppException {
+    throws UserException {
     authController.checkPasswordAndStatus(clusterAgent, cluster.getChosenPassword(), req);
     BbcGroup group = groupFacade.findByGroupName(CLUSTER_GROUP);
     if (!clusterAgent.getBbcGroupCollection().contains(group)) {
