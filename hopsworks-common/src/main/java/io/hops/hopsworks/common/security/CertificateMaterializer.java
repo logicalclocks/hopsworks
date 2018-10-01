@@ -904,7 +904,7 @@ public class CertificateMaterializer {
             
             Path trustStore = new Path(remoteDirectory + Path.SEPARATOR + key.getExtendedUsername()
                 + TRUSTSTORE_SUFFIX);
-            writeToHDFS(dfso, trustStore, material.getKeyStore().array());
+            writeToHDFS(dfso, trustStore, material.getTrustStore().array());
             dfso.setOwner(trustStore, ownerName, groupName);
             dfso.setPermission(trustStore, permissions);
   
