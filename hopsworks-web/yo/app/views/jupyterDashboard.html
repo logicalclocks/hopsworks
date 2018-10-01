@@ -123,7 +123,7 @@
                              data-ng-model="jupyterCtrl.val.mode" id="experiment">
                       Experiment
                       <i class="fa fa-info-circle"
-                         uib-tooltip="Used to run a single Python Experiment. Use the hops python library experiment module to start your experiment. The Experiment is run in a PySpark Driver."
+                         uib-tooltip="Used to run a single Python Experiment on a PySpark Executor. Use the hops python library experiment module to start your experiment."
                           tooltip-placement="bottom" style="margin-left: 10px">
                       </i>
                     </label>
@@ -131,7 +131,7 @@
                       <input type="radio" value="parallelexperiments" ng-click="jupyterCtrl.setMultiExecutor();" data-ng-model="jupyterCtrl.val.mode" id="parallelexperiments">
                       Parallel Experiments
                       <i class="fa fa-info-circle" 
-                         uib-tooltip="Used for for parallel hyperparameter optimization. Use the hops python library to run grid search or differential evolution on PySpark Executors, each with 1 CPU and up to N GPUs per Executor."
+                         uib-tooltip="Used for for parallel hyperparameter optimization. Use the hops python library to run grid search or differential evolution on PySpark Executors."
                           tooltip-placement="left" style="margin-left: 10px">
                       </i>
                     </label>
@@ -140,7 +140,7 @@
                              id="distributedTraining">
                       Distributed Training
                       <i class="fa fa-info-circle" 
-                         uib-tooltip="Distributed Training using CollectiveAllReduceStrategy, ParameterServerStrategy and MirroredStrategy is configured here."
+                         uib-tooltip="Distributed Training using CollectiveAllReduceStrategy, ParameterServerStrategy and MirroredStrategy is configured here. Use the hops python library to setup the cluster."
                           tooltip-placement="right" style="margin-left: 10px">
                       </i>
                     </label>
@@ -215,7 +215,7 @@
                   <div class="row" ng-if="jupyterCtrl.val.mode === 'distributedTraining'">
                       <div class="row clusterparams">
                           <div class="text-right col-md-4">DistributionStrategy <i class="fa fa-info-circle"
-                                                                                   uib-tooltip="Pick your DistributionStrategy"
+                                                                                   uib-tooltip="The DistributionStrategy you want to use."
                                                                                    style="margin-left: 10px"></i>
                           </div>
                           <div class="col-md-2 jupyter-left">
@@ -286,7 +286,7 @@
                         && jupyterCtrl.val.mode !== 'distributedTraining'">
                   <div class="row clusterparams">
                     <div class="text-right col-md-4">Number of executors <i class="fa fa-info-circle"
-                                                                            uib-tooltip="The number of Spark executors that should be requested for this job." style="margin-left: 10px"></i>
+                                                                            uib-tooltip="The number of Spark Executors that should be requested for this job." style="margin-left: 10px"></i>
                     </div>
                     <div class="col-md-2 jupyter-left"><input type="number" ng-model="jupyterCtrl.val.numExecutors" ng-init="1" min="1" value="1" class="form-control"></div>
                   </div>
@@ -310,7 +310,7 @@
                 </div>
                 <div class="row">
                   <div class="row clusterparams">
-                    <div class="text-right col-md-4"> Executor memory (MB) <i class="fa fa-info-circle" uib-tooltip="The amount of memory, in MB, that should be requested for each Spark executor in this job." style="margin-left: 10px"></i></div>
+                    <div class="text-right col-md-4"> Executor memory (MB) <i class="fa fa-info-circle" uib-tooltip="The amount of memory, in MB, that should be requested for each Spark Executor in this job." style="margin-left: 10px"></i></div>
                     <div class="col-md-2 jupyter-left"><input type="number" step="1" min="1024" 
                                                               ng-model="jupyterCtrl.val.executorMemory" class="form-control"></div>
                   </div>
@@ -318,14 +318,14 @@
                 <div class="row" ng-if="jupyterCtrl.val.mode === 'sparkstatic' || jupyterCtrl.val.mode === 'sparkdynamic'">
                   <div class="row clusterparams">
                     <div class="text-right col-md-4"> Executor virtual cores <i class="fa fa-info-circle"
-                                                                                uib-tooltip="The number of cores that should be requested for each Spark executor in this job." style="margin-left: 10px"></i></div>
+                                                                                uib-tooltip="The number of cores that should be requested for each Spark Executor in this job." style="margin-left: 10px"></i></div>
                     <div class="col-md-2 jupyter-left"><input type="number" min="1" step="1" ng-model="jupyterCtrl.val.numExecutorCores" class="form-control"></div>
                   </div>
                 </div>
                 <div class="row" ng-if="jupyterCtrl.val.mode === 'parallelexperiments'" >
                   <div class="row clusterparams" ng-if="clusterUtilCtrl.allocatedGPUs !== 0 || clusterUtilCtrl.availableGPUs !== 0">
                     <div class="text-right col-md-4">Number GPUs per Executor<i class="fa fa-info-circle"
-                                                                     uib-tooltip="The number of GPUs allocated for each Spark executors."
+                                                                     uib-tooltip="The number of GPUs allocated for each PySpark Executor."
                                                                      style="margin-left: 10px"></i>
                     </div>
                     <div class="col-md-2 jupyter-left"><input type="number" ng-init="0"  ng-model="jupyterCtrl.val.numExecutorGpus" min="0" class="form-control"></div>
@@ -334,7 +334,7 @@
                 <div class="row" ng-if="jupyterCtrl.val.mode === 'experiment' || (jupyterCtrl.val.mode == 'distributedTraining' && jupyterCtrl.val.distributionStrategy == 'MirroredStrategy')" >
                   <div class="row clusterparams" ng-if="clusterUtilCtrl.allocatedGPUs !== 0 || clusterUtilCtrl.availableGPUs !== 0">
                     <div class="text-right col-md-4">Number of GPUs<i class="fa fa-info-circle"
-                                                                                uib-tooltip="The number of GPUs allocated for each Spark executor."
+                                                                                uib-tooltip="The number of GPUs allocated for each PySpark Executor."
                                                                                 style="margin-left: 10px"></i>
                     </div>
                     <div class="col-md-2 jupyter-left"><input type="number" ng-init="0"  ng-model="jupyterCtrl.val.numExecutorGpus" min="0" class="form-control"></div>

@@ -95,9 +95,9 @@
                 </span>
                 <span ng-if="jobUICtrl.tbUrls.length === 1" class="field-info"  ng-repeat="tf in jobUICtrl.tbUrls" uib-tooltip="Show TensorBoard"
                       style="padding-top: 5px;padding-left:3px">
-                  <button ng-if="$index > 0" style="" ng-click="jobUICtrl.tfUI(tf); $event.stopPropagation();"
+                  <button ng-if="$index === 0" style="" ng-click="jobUICtrl.tfUI(tf); $event.stopPropagation();"
                           class="btn btn-primary btn-md fa fa-line-chart">
-                    {{tf.name}}
+                    TensorBoard
                   </button>
                 </span>
                 <span ng-if="jobUICtrl.tbUrls.length > 1" class="field-info" style="padding-top: 5px;padding-left:5px; padding-right: 5px;">
