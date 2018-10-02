@@ -171,7 +171,7 @@ angular.module('hopsWorksApp')
                         $uibModalInstance.close($scope.newProject);
                       }, function (error) {
                           self.working = false;
-                          growl.error(error.data.message, {title: 'Error', ttl: 5000, referenceId: 1});
+                          growl.error(error.data.usrMsg, {title: error.data.message, ttl: 5000, referenceId: 1});
               });
             };
 

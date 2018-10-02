@@ -51,7 +51,7 @@ describe "On #{ENV['OS']}" do
 
       it "should not perform any action when action is not specified" do
         post @agent_resource, {}
-        expect_json(errorMsg: "Action on AgentResource not specified")
+        expect_json(code: 120001)
         expect_status(400)
       end
 

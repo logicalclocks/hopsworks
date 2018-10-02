@@ -121,7 +121,7 @@ public abstract class ThrowableMapper implements ExceptionMapper<Throwable> {
   public Response handleAccessLocalException(AccessLocalException ex) {
     logger.log(Level.WARNING, ex.getClass().getName(), ex);
     return handleRESTException(new HopsSecurityException(RESTCodes.SecurityErrorCode.EJB_ACCESS_LOCAL, null,
-      ex.getMessage()));
+      ex.getMessage(), ex));
   }
   
   /**

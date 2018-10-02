@@ -43,7 +43,6 @@ import io.hops.hopsworks.common.agent.AgentController;
 import io.hops.hopsworks.common.dao.command.HeartbeatReplyDTO;
 import io.hops.hopsworks.common.dao.command.SystemCommand;
 import io.hops.hopsworks.common.dao.pythonDeps.CondaCommands;
-import io.hops.hopsworks.common.exception.RequestException;
 import io.hops.hopsworks.common.exception.ServiceException;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -101,7 +100,7 @@ public class AgentResource {
       @ApiParam(value = "Agent request", required = true) AgentView request,
       @ApiParam(value = "Action to be performed on agent resource", required = true)
       @QueryParam("action")
-      @DefaultValue("NONE") AgentAction action) throws ServiceException, RequestException {
+      @DefaultValue("NONE") AgentAction action) throws ServiceException {
 
     switch (action) {
       case PING:
@@ -183,7 +182,7 @@ public class AgentResource {
     logger.log(Level.FINE, "Handling ping");
   }
   
-  private HeartbeatReplyDTO handleHeartbeat(AgentView request) throws ServiceException, RequestException {
+  private HeartbeatReplyDTO handleHeartbeat(AgentView request) throws ServiceException {
     if (request == null) {
       throw new IllegalArgumentException("Heartbeat is null");
     }

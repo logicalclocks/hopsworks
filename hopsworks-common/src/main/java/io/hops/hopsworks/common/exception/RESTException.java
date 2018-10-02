@@ -20,7 +20,9 @@ import io.hops.hopsworks.common.util.Settings;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.json.JSONObject;
 
-public abstract class RESTException extends Exception {
+import java.io.Serializable;
+
+public abstract class RESTException extends Exception implements Serializable {
   //Optional messages
   private final String usrMsg;
   private final String devMsg;
@@ -60,7 +62,9 @@ public abstract class RESTException extends Exception {
   }
   
   public JSONObject getJson(Settings.LOG_LEVEL logLevel) {
-    JSONObject json = new JSONObject().put("code", errorCode.getCode());
+    JSONObject json = new JSONObject()
+      .put("code", errorCode.getCode())
+      .put("message", errorCode.getMessage());
     
     if (logLevel.getLevel() <= Settings.LOG_LEVEL.PROD.getLevel()) {
       json.put("usrMsg", usrMsg);

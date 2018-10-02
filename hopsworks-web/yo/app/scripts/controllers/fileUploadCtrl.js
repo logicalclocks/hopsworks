@@ -86,7 +86,7 @@ angular.module('hopsWorksApp')
 
             self.errorHandler = function (file, message, flow) {
               var msg = JSON.parse(message);
-              growl.error(msg.errorMsg, {title: 'Error', ttl: 5000, referenceId: 1});
+              growl.error(msg.usrMsg, {title: 'Error - ' + msg.message, ttl: 5000, referenceId: 1});
             };
 
             self.fileAddedHandler = function (file, flow) {

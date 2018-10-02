@@ -976,13 +976,11 @@ public class DataSetService {
 
     if (!datasetController.getOwningProject(sourceDataset).equals(
         destDataset.getProject())) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OPERATION_ERROR,
-          "Cannot copy file/folder from another project.");
+      throw new DatasetException(RESTCodes.DatasetErrorCode.COPY_FROM_PROJECT);
     }
 
     if (destDataset.isPublicDs()) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OPERATION_ERROR,
-          "Can not copy to a public dataset.");
+      throw new DatasetException(RESTCodes.DatasetErrorCode.COPY_TO_PUBLIC_DS);
     }
 
     org.apache.hadoop.fs.Path sourcePath = sourceDsPath.getFullPath();

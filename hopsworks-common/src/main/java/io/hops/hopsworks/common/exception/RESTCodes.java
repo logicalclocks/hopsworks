@@ -245,7 +245,9 @@ public class RESTCodes {
     UPLOAD_ERROR(110042, "Error occurred while uploading file",
       Response.Status.INTERNAL_SERVER_ERROR),
     DATASET_REQUEST_EXISTS(110043, "Request for this dataset from this project already exists.",
-      Response.Status.CONFLICT);
+      Response.Status.CONFLICT),
+    COPY_FROM_PROJECT(110044, "Cannot copy file/folder from another project", Response.Status.FORBIDDEN),
+    COPY_TO_PUBLIC_DS(110045, "Can not copy to a public dataset.", Response.Status.FORBIDDEN);
     
     
     private Integer code;
@@ -457,7 +459,7 @@ public class RESTCodes {
     ANACONDA_OP_IN_PROGRESS(100023, "A conda environment operation is currently executing (create/remove/list). Wait " +
       "for it to finish or clear it first.", Response.Status.PRECONDITION_FAILED),
     HOST_TYPE_NOT_FOUND(100024, "No hosts with the desired capability.", Response.Status.PRECONDITION_FAILED),
-    HOST_NOT_FOUND(100025, "Hosts was not found.", Response.Status.BAD_REQUEST),
+    HOST_NOT_FOUND(100025, "Hosts was not found.", Response.Status.NOT_FOUND),
     HOST_NOT_REGISTERED(100026, "Host has not registered.", Response.Status.PRECONDITION_FAILED),
     ANACONDA_DEP_REMOVE_FORBIDDEN(100027, "Could not uninstall library, it is a mandatory dependency",
       Response.Status.BAD_REQUEST),
@@ -563,7 +565,7 @@ public class RESTCodes {
   public enum GenericErrorCode implements RESTErrorCode {
     
     UNKNOWN_ERROR(120000, "A generic error occured.", Response.Status.INTERNAL_SERVER_ERROR),
-    ILLEGAL_ARGUMENT(120001, "A wrong argument was provided.", Response.Status.BAD_REQUEST),
+    ILLEGAL_ARGUMENT(120001, "An argument was not provided or it was malformed.", Response.Status.BAD_REQUEST),
     ILLEGAL_STATE(120002, "A runtime error occurred.", Response.Status.BAD_REQUEST),
     ROLLBACK(120003, "The last transaction did not complete as expected", Response.Status.INTERNAL_SERVER_ERROR),
     WEBAPPLICATION(120004, "Web application exception occurred", null),
@@ -606,7 +608,7 @@ public class RESTCodes {
     MASTER_ENCRYPTION_PASSWORD_CHANGE(200001,
       "Master password change procedure started. Check your inbox for final status", Response.Status.BAD_REQUEST),
     HDFS_ACCESS_CONTROL(200002, "Access error while trying to access hdfs resource", Response.Status.FORBIDDEN),
-    EJB_ACCESS_LOCAL(200003, "EJB access local error", Response.Status.FORBIDDEN),
+    EJB_ACCESS_LOCAL(200003, "EJB access local error", Response.Status.UNAUTHORIZED),
     CERT_CREATION_ERROR(200004, "Error while generating certificates.", Response.Status.INTERNAL_SERVER_ERROR),
     CERT_CN_EXTRACT_ERROR(200005, "Error while extracting CN from certificate.", Response.Status.INTERNAL_SERVER_ERROR),
     CERT_ERROR(200006, "Certificate could not be validated.", Response.Status.UNAUTHORIZED),
@@ -667,7 +669,7 @@ public class RESTCodes {
     PASSWORD_INCORRECT(160016, "Password incorrect", Response.Status.BAD_REQUEST),
     PASSWORD_PATTERN_NOT_CORRECT(160017, "Password should include one uppercase letter, "
       + "one special character and/or alphanumeric characters.", Response.Status.BAD_REQUEST),
-    INCORRECT_PASSWORD(160018, "The password is incorrect. Please try again", Response.Status.FORBIDDEN),
+    INCORRECT_PASSWORD(160018, "The password is incorrect. Please try again", Response.Status.UNAUTHORIZED),
     PASSWORD_MISS_MATCH(160019, "Passwords do not match - typo?", Response.Status.BAD_REQUEST),
     TOS_NOT_AGREED(160020, "You must agree to our terms of use.", Response.Status.BAD_REQUEST),
     CERT_DOWNLOAD_DENIED(160021, "Admin is not allowed to download certificates", Response.Status.BAD_REQUEST),
@@ -698,9 +700,9 @@ public class RESTCodes {
     INVALID_EMAIL(160040, "Invalid email format.", Response.Status.BAD_REQUEST),
     INCORRECT_DEACTIVATION_LENGTH(160041, "The message should have a length between 5 and 500 characters",
       Response.Status.BAD_REQUEST),
-    TMP_CODE_INVALID(160042, "The temporary code was wrong.", Response.Status.FORBIDDEN),
-    INCORRECT_CREDENTIALS(160043, "Incorrect email or password.", Response.Status.FORBIDDEN),
-    INCORRECT_VALIDATION_KEY(160044, "Incorrect validation key", Response.Status.FORBIDDEN),
+    TMP_CODE_INVALID(160042, "The temporary code was wrong.", Response.Status.UNAUTHORIZED),
+    INCORRECT_CREDENTIALS(160043, "Incorrect email or password.", Response.Status.UNAUTHORIZED),
+    INCORRECT_VALIDATION_KEY(160044, "Incorrect validation key", Response.Status.UNAUTHORIZED),
     ACCOUNT_ALREADY_VERIFIED(160045, "User is already verified", Response.Status.BAD_REQUEST),
     TWO_FA_ENABLE_ERROR(160046, "Cannot enable 2-factor authentication.", Response.Status.INTERNAL_SERVER_ERROR),
     ACCOUNT_REGISTRATION_ERROR(160047, "Cannot enable 2-factor authentication.", Response.Status.INTERNAL_SERVER_ERROR),

@@ -46,7 +46,7 @@ import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
 @Provider
-public class ThrowableExceptionMapper implements ExceptionMapper<Throwable> {
+public class KmonThrowableMapper implements ExceptionMapper<Throwable> {
 
   private static final Response RESPONSE;
   private static final JsonResponse JSON = new JsonResponse("ERROR");
