@@ -371,6 +371,7 @@ public class ApplicationService {
       return commonName;
     } catch (Exception ex) {
       LOGGER.log(Level.WARNING, "Could not authenticate user");
+      LOGGER.log(Level.WARNING, ex.getMessage(), ex);
       throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(), "Could not authenticate user");
     }
   }
