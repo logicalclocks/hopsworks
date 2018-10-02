@@ -20,9 +20,19 @@
 
 package io.hops.hopsworks.api.exception.mapper;
 
+import io.hops.hopsworks.common.util.Settings;
+
+import javax.ejb.EJB;
 import javax.ws.rs.ext.Provider;
 
 @Provider
-public class ThrowableExceptionMapper extends io.hops.hopsworks.common.exception.ThrowableExceptionMapper {
+public class RESTApiThrowableMapper extends io.hops.hopsworks.common.exception.ThrowableMapper {
   
+  @EJB
+  Settings settings;
+  
+  @Override
+  public Settings.LOG_LEVEL getRESTLogLevel() {
+    return settings.getHopsworksRESTLogLevel();
+  }
 }

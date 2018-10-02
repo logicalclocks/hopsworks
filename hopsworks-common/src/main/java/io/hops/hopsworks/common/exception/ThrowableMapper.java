@@ -3,7 +3,6 @@ import io.hops.hopsworks.common.util.Settings;
 import org.apache.hadoop.security.AccessControlException;
 
 import javax.ejb.AccessLocalException;
-import javax.ejb.EJB;
 import javax.persistence.PersistenceException;
 import javax.security.auth.login.LoginException;
 import javax.transaction.RollbackException;
@@ -12,18 +11,14 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
-import javax.ws.rs.ext.Provider;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-@Provider
-public abstract class ThrowableExceptionMapper implements ExceptionMapper<Throwable> {
+
+public abstract class ThrowableMapper implements ExceptionMapper<Throwable> {
   
   private final Logger logger = Logger.getLogger(this.getClass().getName());
-  
-  @EJB
-  private Settings settings;
   
   @Override
   @Produces(MediaType.APPLICATION_JSON)
@@ -119,7 +114,7 @@ public abstract class ThrowableExceptionMapper implements ExceptionMapper<Throwa
     } else {
       logger.log(Level.FINE, ex.getClass().getName(), ex);
     }
-    return Response.status(status).entity(ex.getJson(settings.getHopsworksRESTLogLevel()).toString())
+    return Response.status(status).entity(ex.getJson(getRESTLogLevel()).toString())
       .type(MediaType.APPLICATION_JSON).build();
   }
   
@@ -141,4 +136,7 @@ public abstract class ThrowableExceptionMapper implements ExceptionMapper<Throwa
     return handleRESTException(new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR, null, ex.getMessage(),
       ex));
   }
+  
+  public abstract Settings.LOG_LEVEL getRESTLogLevel();
+  
 }

@@ -144,7 +144,7 @@ angular.module('hopsWorksApp')
                         error.data.errorMsg !== null) {
                   self.errorMessage = error.data.errorMsg;
                 }
-                growl.error(error.data.errorMsg, {title: 'Cannot Login at this moment. Does your Internet work?', ttl: 4000});
+                growl.error(error.data.message, {title: 'Cannot Login at this moment. Does your Internet work?', ttl: 4000});
               });
             };
 

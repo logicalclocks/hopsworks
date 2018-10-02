@@ -16,12 +16,20 @@
 
 package io.hops.hopsworks.ca.apiV2.exception.mapper;
 
-import io.hops.hopsworks.common.exception.ThrowableExceptionMapper;
+import io.hops.hopsworks.common.exception.ThrowableMapper;
+import io.hops.hopsworks.common.util.Settings;
 
+import javax.ejb.EJB;
 import javax.ws.rs.ext.Provider;
 
 @Provider
-public class CAThrowableExceptionMapper extends ThrowableExceptionMapper {
-
-
+public class CAThrowableMapper extends ThrowableMapper {
+  
+  @EJB
+  Settings settings;
+  
+  @Override
+  public Settings.LOG_LEVEL getRESTLogLevel() {
+    return settings.getHopsworksRESTLogLevel();
+  }
 }

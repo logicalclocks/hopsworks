@@ -62,10 +62,10 @@ public abstract class RESTException extends Exception {
   public JSONObject getJson(Settings.LOG_LEVEL logLevel) {
     JSONObject json = new JSONObject().put("code", errorCode.getCode());
     
-    if (logLevel.getLevel() <= Settings.LOG_LEVEL.PRODUCTION.getLevel()) {
+    if (logLevel.getLevel() <= Settings.LOG_LEVEL.PROD.getLevel()) {
       json.put("usrMsg", usrMsg);
     }
-    if (logLevel.getLevel() <= Settings.LOG_LEVEL.TESTING.getLevel()) {
+    if (logLevel.getLevel() <= Settings.LOG_LEVEL.TEST.getLevel()) {
       json.put("devMsg", devMsg);
     }
     if (logLevel.getLevel() <= Settings.LOG_LEVEL.DEV.getLevel()) {

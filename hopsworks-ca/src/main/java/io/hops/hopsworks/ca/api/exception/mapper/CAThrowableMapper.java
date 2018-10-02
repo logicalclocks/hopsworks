@@ -36,33 +36,22 @@
  * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package io.hops.hopsworks.ca.api.exception.mapper;
 
-package io.hops.hopsworks.ca.api;
+import io.hops.hopsworks.common.exception.ThrowableMapper;
+import io.hops.hopsworks.common.util.Settings;
 
-import io.hops.hopsworks.ca.api.exception.mapper.CAThrowableMapper;
-import io.swagger.annotations.Api;
-import org.glassfish.jersey.server.ResourceConfig;
+import javax.ejb.EJB;
+import javax.ws.rs.ext.Provider;
 
-@Api
-@javax.ws.rs.ApplicationPath("ca")
-public class ApplicationConfig extends ResourceConfig {
-
-  /**
-   * adding manually all the restful services of the application.
-   */
-  public ApplicationConfig() {
-    register(io.hops.hopsworks.ca.api.certs.CertSigningService.class);
-    
-    register(org.glassfish.jersey.media.multipart.MultiPartFeature.class);
-    
-    //response filters
-    register(io.hops.hopsworks.ca.api.filter.CORSFilter.class);
-    
-    //Exception mappers
-    register(CAThrowableMapper.class);
- 
-    //swagger
-    register(io.swagger.jaxrs.listing.ApiListingResource.class);
-    register(io.swagger.jaxrs.listing.SwaggerSerializers.class);
+@Provider
+public class CAThrowableMapper extends ThrowableMapper {
+  
+  @EJB
+  Settings settings;
+  
+  @Override
+  public Settings.LOG_LEVEL getRESTLogLevel() {
+    return settings.getHopsworksRESTLogLevel();
   }
 }

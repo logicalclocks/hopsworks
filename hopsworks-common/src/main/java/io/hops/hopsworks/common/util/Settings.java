@@ -1552,7 +1552,7 @@ public class Settings implements Serializable {
     return "https://" + HOPSWORKS_REST_ENDPOINT;
   }
   
-  private LOG_LEVEL HOPSWORKS_REST_LOG_LEVEL = LOG_LEVEL.PRODUCTION;
+  private LOG_LEVEL HOPSWORKS_REST_LOG_LEVEL = LOG_LEVEL.PROD;
   
   public synchronized LOG_LEVEL getHopsworksRESTLogLevel() {
     checkCache();
@@ -3002,8 +3002,8 @@ public class Settings implements Serializable {
   
   public enum LOG_LEVEL {
     DEV(0, "User and Dev messages as well as stack trace are returned to client to client."),
-    TESTING(1, "User and Dev messages are returned to client to client."),
-    PRODUCTION(2, "User message is returned to client to client.");
+    TEST(1, "User and Dev messages are returned to client to client."),
+    PROD(2, "User message is returned to client to client.");
     
     private final int level;
     private final String description;
