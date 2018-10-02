@@ -36,6 +36,8 @@ import javax.xml.bind.annotation.XmlRootElement;
  * 11. User error codes start with "20"
  * 12. Security error codes start  with "20".
  * 13. Zeppelin error codes start with "21".
+ * 14. CA error codes start with "22".
+ * 15. DelaCSR error codes start with "23".
  */
 @XmlRootElement
 public class RESTCodes {
@@ -478,8 +480,8 @@ public class RESTCodes {
       Response.Status.INTERNAL_SERVER_ERROR),
     EMAIL_SENDING_FAILURE(100039, "Could not send email", Response.Status.EXPECTATION_FAILED),
     HOST_EXISTS(100040, "Host exists", Response.Status.CONFLICT);
-  
-  
+    
+    
     private Integer code;
     private String message;
     private Response.Status respStatus;
@@ -805,7 +807,7 @@ public class RESTCodes {
     private Integer code;
     private String message;
     private Response.Status respStatus;
-  
+    
     ZeppelinErrorCode(Integer code, String message, Response.Status respStatus) {
       this.code = code;
       this.message = message;
@@ -823,6 +825,77 @@ public class RESTCodes {
     }
     
     @Override
+    public Response.Status getRespStatus() {
+      return respStatus;
+    }
+    
+  }
+  
+  public enum CAErrorCode implements RESTErrorCode {
+    
+    BADSIGNREQUEST(220000, "No CSR provided", Response.Status.BAD_REQUEST),
+    BADREVOKATIONREQUEST(220001, "No certificate identifier provided", Response.Status.BAD_REQUEST),
+    CERTNOTFOUND(220002, "Certificate file not found", Response.Status.NO_CONTENT);
+    
+    private Integer code;
+    private String message;
+    private Response.Status respStatus;
+    
+    CAErrorCode(Integer code, String message, Response.Status respStatus) {
+      this.code = code;
+      this.message = message;
+      this.respStatus = respStatus;
+    }
+    
+    @Override
+    public Integer getCode() {
+      return code;
+    }
+    
+    @Override
+    public String getMessage() {
+      return message;
+    }
+    
+    public Response.Status getRespStatus() {
+      return respStatus;
+    }
+    
+  }
+  
+  public enum DelaCSRErrorCode implements RESTErrorCode {
+  
+    BADREQUEST(220001, "User or CS not set", Response.Status.BAD_REQUEST),
+    EMAIL(220002, "CSR email not set or does not match user", Response.Status.UNAUTHORIZED),
+    CN(220003, "CSR common name not set", Response.Status.BAD_REQUEST),
+    O(220004, "CSR organization name not set", Response.Status.BAD_REQUEST),
+    OU(220005, "CSR organization unit name not set", Response.Status.BAD_REQUEST),
+    NOTFOUND(220006, "No cluster registered with the given organization name and organizational unit",
+      Response.Status.BAD_REQUEST),
+    SERIALNUMBER(220007, "Cluster has already a signed certificate", Response.Status.BAD_REQUEST),
+    CNNOTFOUND(220008, "No cluster registered with the CSR common name", Response.Status.BAD_REQUEST),
+    AGENTIDNOTFOUND(220009, "No cluster registered for the user", Response.Status.UNAUTHORIZED);
+  
+    private Integer code;
+    private String message;
+    private Response.Status respStatus;
+  
+    DelaCSRErrorCode(Integer code, String message, Response.Status respStatus) {
+      this.code = code;
+      this.message = message;
+      this.respStatus = respStatus;
+    }
+    
+    @Override
+    public Integer getCode() {
+      return code;
+    }
+    
+    @Override
+    public String getMessage() {
+      return message;
+    }
+    
     public Response.Status getRespStatus() {
       return respStatus;
     }

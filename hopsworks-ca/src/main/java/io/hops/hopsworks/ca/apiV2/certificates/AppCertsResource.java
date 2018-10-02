@@ -39,7 +39,9 @@
 
 package io.hops.hopsworks.ca.apiV2.certificates;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.ca.api.certs.NoCacheResponse;
+import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.security.CAException;
 import io.hops.hopsworks.common.security.OpensslOperations;
 import io.hops.hopsworks.common.security.PKI;
@@ -61,9 +63,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 
-import static io.hops.hopsworks.common.security.CAException.CAExceptionErrors.BADREVOKATIONREQUEST;
-import static io.hops.hopsworks.common.security.CAException.CAExceptionErrors.BADSIGNREQUEST;
 import static io.hops.hopsworks.common.security.CertificateType.APP;
+
 
 @Stateless
 @RolesAllowed({"AGENT"})
@@ -82,8 +83,8 @@ public class AppCertsResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   public Response signCSR(CSRView csrView) throws IOException, CAException {
-    if (csrView == null || csrView.getCsr() == null || csrView.getCsr().isEmpty()) {
-      throw new CAException(BADSIGNREQUEST, APP);
+    if (csrView == null || Strings.isNullOrEmpty(csrView.getCsr())) {
+      throw new CAException(RESTCodes.CAErrorCode.BADSIGNREQUEST, APP);
     }
 
     String signedCert = opensslOperations.signCertificateRequest(csrView.getCsr(), APP);
@@ -98,10 +99,10 @@ public class AppCertsResource {
   @DELETE
   public Response revokeCertificate(
       @ApiParam(value = "Identifier of the Certificate to revoke", required = true) @QueryParam("certId") String certId)
-      throws CAException, IOException {
+    throws IOException, CAException {
 
-    if (certId == null || certId.isEmpty()) {
-      throw new CAException(BADREVOKATIONREQUEST, APP);
+    if (Strings.isNullOrEmpty(certId)) {
+      throw new CAException(RESTCodes.CAErrorCode.BADREVOKATIONREQUEST, APP);
     }
 
     opensslOperations.revokeCertificate(certId, APP, true, true);

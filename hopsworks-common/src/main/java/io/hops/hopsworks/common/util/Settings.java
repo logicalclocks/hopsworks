@@ -270,6 +270,9 @@ public class Settings implements Serializable {
   private static final String VARIABLE_CUDA_VERSION = "cuda_version";
   private static final String VARIABLE_HOPSWORKS_VERSION = "hopsworks_version";
   
+  //Used by RESTException to include devMsg or not in response
+  private static final String VARIABLE_HOPSWORKS_REST_LOG_LEVEL = "hopsworks_rest_log_level";
+  
   /* -------------------- TfServing  --------------- */
   private static final String VARIABLE_TF_SERVING_MONITOR_INT = "tf_serving_monitor_int";
 
@@ -388,6 +391,17 @@ public class Settings implements Serializable {
           + " should be an integer. Value was " + defaultValue);
     }
 
+    return defaultValue;
+  }
+  
+  private LOG_LEVEL setLogLevelVar(String varName, LOG_LEVEL defaultValue) {
+    Variables var = findById(varName);
+    if (var != null && var.getValue() != null) {
+      String val = var.getValue();
+      if (val != null && !val.isEmpty()) {
+        return LOG_LEVEL.valueOf(val);
+      }
+    }
     return defaultValue;
   }
 
@@ -542,6 +556,8 @@ public class Settings implements Serializable {
       TENSORFLOW_VERSION = setStrVar(VARIABLE_TENSORFLOW_VERSION, TENSORFLOW_VERSION);
       CUDA_VERSION = setStrVar(VARIABLE_CUDA_VERSION, CUDA_VERSION);
       HOPSWORKS_VERSION = setStrVar(VARIABLE_HOPSWORKS_VERSION, HOPSWORKS_VERSION);
+      HOPSWORKS_REST_LOG_LEVEL = setLogLevelVar(VARIABLE_HOPSWORKS_REST_LOG_LEVEL, HOPSWORKS_REST_LOG_LEVEL);
+      
       PROVIDED_PYTHON_LIBRARY_NAMES = toSetFromCsv(
           setStrVar(VARIABLE_PROVIDED_PYTHON_LIBRARY_NAMES, DEFAULT_PROVIDED_PYTHON_LIBRARY_NAMES),",");
       PREINSTALLED_PYTHON_LIBRARY_NAMES = toSetFromCsv(
@@ -1534,6 +1550,13 @@ public class Settings implements Serializable {
   public synchronized String getRestEndpoint() {
     checkCache();
     return "https://" + HOPSWORKS_REST_ENDPOINT;
+  }
+  
+  private LOG_LEVEL HOPSWORKS_REST_LOG_LEVEL = LOG_LEVEL.PRODUCTION;
+  
+  public synchronized LOG_LEVEL getHopsworksRESTLogLevel() {
+    checkCache();
+    return HOPSWORKS_REST_LOG_LEVEL;
   }
 
   private String SUPPORT_EMAIL_ADDR = "support@hops.io";
@@ -2975,5 +2998,27 @@ public class Settings implements Serializable {
   public synchronized String getTFServingMonitorInt() {
     checkCache();
     return TF_SERVING_MONITOR_INT;
+  }
+  
+  public enum LOG_LEVEL {
+    DEV(0, "User and Dev messages as well as stack trace are returned to client to client."),
+    TESTING(1, "User and Dev messages are returned to client to client."),
+    PRODUCTION(2, "User message is returned to client to client.");
+    
+    private final int level;
+    private final String description;
+    
+    LOG_LEVEL(int level, String description) {
+      this.level = level;
+      this.description = description;
+    }
+    
+    public int getLevel() {
+      return level;
+    }
+    
+    public String getDescription() {
+      return description;
+    }
   }
 }

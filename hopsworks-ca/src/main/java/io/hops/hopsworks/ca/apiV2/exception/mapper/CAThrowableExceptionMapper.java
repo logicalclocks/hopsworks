@@ -13,23 +13,15 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.common.exception;
 
-public class HopsSecurityException extends RESTException {
-  
-  public HopsSecurityException(RESTCodes.SecurityErrorCode code) {
-    super(code);
-  }
-  
-  public HopsSecurityException(RESTCodes.SecurityErrorCode code, String usrMsg) {
-    super(code, usrMsg);
-  }
-  
-  public HopsSecurityException(RESTCodes.SecurityErrorCode code, String usrMsg, String devMsg) {
-    super(code, usrMsg, devMsg);
-  }
-  
-  public HopsSecurityException(RESTCodes.SecurityErrorCode code, String usrMsg, String devMsg, Throwable throwable) {
-    super(code, usrMsg, devMsg, throwable);
-  }
+package io.hops.hopsworks.ca.apiV2.exception.mapper;
+
+import io.hops.hopsworks.common.exception.ThrowableExceptionMapper;
+
+import javax.ws.rs.ext.Provider;
+
+@Provider
+public class CAThrowableExceptionMapper extends ThrowableExceptionMapper {
+
+
 }

@@ -74,7 +74,7 @@ public class RequestAuthFilter implements ContainerRequestFilter {
   @Context
   private ResourceInfo resourceInfo;
 
-  private final static Logger log = Logger.getLogger(RequestAuthFilter.class.
+  private static final Logger LOGGER = Logger.getLogger(RequestAuthFilter.class.
           getName());
 
   @Override
@@ -83,10 +83,10 @@ public class RequestAuthFilter implements ContainerRequestFilter {
     String path = requestContext.getUriInfo().getPath();
     Method method = resourceInfo.getResourceMethod();
     String[] pathParts = path.split("/");
-    log.log(Level.FINEST, "Rest call to {0}, from {1}.", new Object[]{path,
+    LOGGER.log(Level.FINEST, "Rest call to {0}, from {1}.", new Object[]{path,
       requestContext.getSecurityContext().getUserPrincipal()});
-    log.log(Level.FINEST, "Filtering request path: {0}", pathParts[0]);
-    log.log(Level.FINEST, "Method called: {0}", method.getName());
+    LOGGER.log(Level.FINEST, "Filtering request path: {0}", pathParts[0]);
+    LOGGER.log(Level.FINEST, "Method called: {0}", method.getName());
     //intercepted method must be a project operations on a specific project
     //with an id (/project/projectId/... or /activity/projectId/...). 
     if (pathParts.length > 1 && (pathParts[0].equalsIgnoreCase("project")
@@ -101,7 +101,7 @@ public class RequestAuthFilter implements ContainerRequestFilter {
         projectId = Integer.valueOf(pathParts[1]);
       } catch (NumberFormatException ne) {
         //if the second pathparam is not a project id return.
-        log.log(Level.INFO,
+        LOGGER.log(Level.INFO,
                 "Call to {0} has no project id, leaving interceptor.",
                 path);
         return;
@@ -113,7 +113,7 @@ public class RequestAuthFilter implements ContainerRequestFilter {
                 status(Response.Status.NOT_FOUND).build());
         return;
       }
-      log.log(Level.FINEST, "Filtering project request path: {0}", project.
+      LOGGER.log(Level.FINEST, "Filtering project request path: {0}", project.
               getName());
 
       if (!method.isAnnotationPresent(AllowedProjectRoles.class)) {
@@ -128,7 +128,7 @@ public class RequestAuthFilter implements ContainerRequestFilter {
 
       //If the resource is allowed for all roles continue with the request. 
       if (rolesSet.contains(AllowedProjectRoles.ANYONE)) {
-        log.log(Level.FINEST, "Accessing resource that is allowed for all");
+        LOGGER.log(Level.FINEST, "Accessing resource that is allowed for all");
         return;
       }
 
@@ -145,7 +145,7 @@ public class RequestAuthFilter implements ContainerRequestFilter {
       userRole = projectTeamBean.findCurrentRole(project, userEmail);
 
       if (userRole == null || userRole.isEmpty()) {
-        log.log(Level.INFO,
+        LOGGER.log(Level.INFO,
                 "Trying to access resource, but you dont have any role in this project");
         json.setStatusCode(Response.Status.FORBIDDEN.getStatusCode());
         json.setErrorMsg("You do not have access to this project.");
@@ -154,7 +154,7 @@ public class RequestAuthFilter implements ContainerRequestFilter {
                 .entity(json)
                 .build());
       } else if (!rolesSet.contains(userRole)) {
-        log.log(Level.INFO,
+        LOGGER.log(Level.INFO,
                 "Trying to access resource that is only allowed for: {0}, But you are a: {1}",
                 new Object[]{rolesSet, userRole});
         json.setStatusCode(Response.Status.FORBIDDEN.getStatusCode());

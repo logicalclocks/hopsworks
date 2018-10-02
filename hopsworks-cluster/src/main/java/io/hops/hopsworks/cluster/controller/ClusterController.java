@@ -51,6 +51,7 @@ import io.hops.hopsworks.common.dao.user.security.audit.AccountsAuditActions;
 import io.hops.hopsworks.common.dao.user.security.ua.SecurityUtils;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
+import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.exception.UserException;
 import io.hops.hopsworks.common.security.CAException;
 import io.hops.hopsworks.common.security.CertificateType;
@@ -81,14 +82,14 @@ import java.util.logging.Logger;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ClusterController {
 
-  private final static Logger LOGGER = Logger.getLogger(ClusterController.class.getName());
-  private final static String CLUSTER_NAME_PREFIX = "Agent";
-  private final static String CLUSTER_GROUP = "CLUSTER_AGENT";
-  public final static long VALIDATION_KEY_EXPIRY_DATE = 48l;//hours to validate request
-  public final static long VALIDATION_KEY_EXPIRY_DATE_MS = 48l * 36l * 100000l;//milisecond to validate request
-  private final static int VALIDATION_KEY_LEN = 64;
+  private static final Logger LOGGER = Logger.getLogger(ClusterController.class.getName());
+  private static final String CLUSTER_NAME_PREFIX = "Agent";
+  private static final String CLUSTER_GROUP = "CLUSTER_AGENT";
+  public static final long VALIDATION_KEY_EXPIRY_DATE = 48l;//hours to validate request
+  static final long VALIDATION_KEY_EXPIRY_DATE_MS = 48l * 36l * 100000l;//millisecond to validate request
+  private static final int VALIDATION_KEY_LEN = 64;
 
-  public static enum OP_TYPE {
+  public enum OP_TYPE {
 
     REGISTER,
     UNREGISTER
@@ -511,7 +512,7 @@ public class ClusterController {
       opensslOperations.revokeCertificate(clusterCert.getCommonName(), CertificateType.DELA,
           true, true);
     } catch (CAException cae){
-      if (cae.getError() == CAException.CAExceptionErrors.CERTNOTFOUND) {
+      if (cae.getErrorCode() == RESTCodes.CAErrorCode.CERTNOTFOUND) {
         LOGGER.log(Level.WARNING, "Could not find certificate with CN: " +
             clusterCert.getCommonName() + " to be revoked");
       }

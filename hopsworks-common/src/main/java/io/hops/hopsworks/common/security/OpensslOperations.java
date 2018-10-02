@@ -38,6 +38,7 @@
  */
 package io.hops.hopsworks.common.security;
 
+import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.util.SystemCommandExecutor;
@@ -68,7 +69,6 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static io.hops.hopsworks.common.security.CAException.CAExceptionErrors.CERTNOTFOUND;
 import static io.hops.hopsworks.common.security.CertificatesMgmService.CERTIFICATE_SUFFIX;
 
 //TODO: Can we make concurrent modifications on different CAs?
@@ -197,7 +197,7 @@ public class OpensslOperations {
     Path certificatePath = Paths.get(certsDir, certificateIdentifier + fileSuffix);
     File certificateFile = certificatePath.toFile();
     if (!certificateFile.exists()) {
-      throw new CAException(CERTNOTFOUND, certType);
+      throw new CAException(RESTCodes.CAErrorCode.CERTNOTFOUND, certType);
     }
 
     List<String> commands = new ArrayList<>();

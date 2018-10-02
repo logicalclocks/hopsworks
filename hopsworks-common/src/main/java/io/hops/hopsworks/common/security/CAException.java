@@ -39,91 +39,37 @@
 
 package io.hops.hopsworks.common.security;
 
-import javax.ws.rs.core.Response;
+import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.exception.RESTException;
+import io.hops.hopsworks.common.util.Settings;
+import org.json.JSONObject;
 
-public class CAException extends Exception {
 
-  public enum CAExceptionErrors{
-    BADSIGNREQUEST(50, "No CSR provided", Response.Status.BAD_REQUEST),
-    BADREVOKATIONREQUEST(51, "No certificate identifier provided", Response.Status.BAD_REQUEST),
-    CERTNOTFOUND(52, "Certificate file not found", Response.Status.NO_CONTENT);
-
-    private final int errorCode;
-    private final String message;
-    private final Response.Status httpStatusCode;
-
-    CAExceptionErrors(int errorCode, String message, Response.Status httpStatusCode) {
-      this.errorCode = errorCode;
-      this.message = message;
-      this.httpStatusCode = httpStatusCode;
-    }
-
-    public int getErrorCode() {
-      return errorCode;
-    }
-
-    public Response.Status getHttpStatusCode() {
-      return httpStatusCode;
-    }
-
-    public String getMessage() {
-      return message;
-    }
+public class CAException extends RESTException {
+  
+  private final CertificateType certType;
+  
+  public CAException(RESTCodes.CAErrorCode code, CertificateType certType) {
+    this(code, certType, null);
   }
-
-  private CAExceptionErrors error;
-  private String userMsg;
-  private String devMsg;
-
-  private CertificateType certType;
-
-  public CAException(CAExceptionErrors error, CertificateType certType) {
-    this.error = error;
+  
+  public CAException(RESTCodes.CAErrorCode code, CertificateType certType, String usrMsg) {
+    this(code, certType, usrMsg, null);
+  }
+  
+  public CAException(RESTCodes.CAErrorCode code, CertificateType certType, String usrMsg, String devMsg) {
+    this(code, certType, usrMsg, devMsg, null);
+  }
+  
+  public CAException(RESTCodes.CAErrorCode code, CertificateType certType, String usrMsg, String devMsg,
+    Throwable throwable) {
+    super(code, usrMsg, devMsg, throwable);
     this.certType = certType;
   }
-
-  public CAException(CAExceptionErrors error, CertificateType certType, String userMsg) {
-    this.error = error;
-    this.certType = certType;
-    this.userMsg = userMsg;
-  }
-
-  public CAException(CAExceptionErrors error, CertificateType certType, String userMsg, String devMsg) {
-    this.error = error;
-    this.certType = certType;
-    this.userMsg = userMsg;
-    this.devMsg = devMsg;
-  }
-
-  public CAExceptionErrors getError() {
-    return error;
-  }
-
-  public void setError(CAExceptionErrors error) {
-    this.error = error;
-  }
-
-  public String getUserMsg() {
-    return userMsg;
-  }
-
-  public void setUserMsg(String userMsg) {
-    this.userMsg = userMsg;
-  }
-
-  public String getDevMsg() {
-    return devMsg;
-  }
-
-  public void setDevMsg(String devMsg) {
-    this.devMsg = devMsg;
-  }
-
-  public CertificateType getCertType() {
-    return certType;
-  }
-
-  public void setCertType(CertificateType certType) {
-    this.certType = certType;
+  
+  
+  @Override
+  public JSONObject getJson(Settings.LOG_LEVEL logLevel) {
+    return super.getJson(logLevel).put("certType", certType);
   }
 }

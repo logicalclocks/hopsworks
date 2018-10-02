@@ -176,7 +176,7 @@ public class CertSigningService {
     try {
       opensslOperations.revokeCertificate(certificateID, APP, true, true);
     } catch (CAException cae) {
-      if (cae.getError() == CAException.CAExceptionErrors.CERTNOTFOUND) {
+      if (cae.getErrorCode() == RESTCodes.CAErrorCode.CERTNOTFOUND) {
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NO_CONTENT).entity("Certificate " +
           certificateID + " does not exist").build();
       }

@@ -49,15 +49,15 @@ import javax.ejb.Stateless;
 import java.io.IOException;
 import java.util.HashMap;
 
-import static io.hops.hopsworks.common.security.DelaCSRCheckException.DelaCSRCheckErrors.AGENTIDNOTFOUND;
-import static io.hops.hopsworks.common.security.DelaCSRCheckException.DelaCSRCheckErrors.BADREQUEST;
-import static io.hops.hopsworks.common.security.DelaCSRCheckException.DelaCSRCheckErrors.CN;
-import static io.hops.hopsworks.common.security.DelaCSRCheckException.DelaCSRCheckErrors.CNNOTFOUND;
-import static io.hops.hopsworks.common.security.DelaCSRCheckException.DelaCSRCheckErrors.EMAIL;
-import static io.hops.hopsworks.common.security.DelaCSRCheckException.DelaCSRCheckErrors.NOTFOUND;
-import static io.hops.hopsworks.common.security.DelaCSRCheckException.DelaCSRCheckErrors.O;
-import static io.hops.hopsworks.common.security.DelaCSRCheckException.DelaCSRCheckErrors.OU;
-import static io.hops.hopsworks.common.security.DelaCSRCheckException.DelaCSRCheckErrors.SERIALNUMBER;
+import static io.hops.hopsworks.common.exception.RESTCodes.DelaCSRErrorCode.AGENTIDNOTFOUND;
+import static io.hops.hopsworks.common.exception.RESTCodes.DelaCSRErrorCode.BADREQUEST;
+import static io.hops.hopsworks.common.exception.RESTCodes.DelaCSRErrorCode.CN;
+import static io.hops.hopsworks.common.exception.RESTCodes.DelaCSRErrorCode.CNNOTFOUND;
+import static io.hops.hopsworks.common.exception.RESTCodes.DelaCSRErrorCode.EMAIL;
+import static io.hops.hopsworks.common.exception.RESTCodes.DelaCSRErrorCode.NOTFOUND;
+import static io.hops.hopsworks.common.exception.RESTCodes.DelaCSRErrorCode.O;
+import static io.hops.hopsworks.common.exception.RESTCodes.DelaCSRErrorCode.OU;
+import static io.hops.hopsworks.common.exception.RESTCodes.DelaCSRErrorCode.SERIALNUMBER;
 
 
 @Stateless

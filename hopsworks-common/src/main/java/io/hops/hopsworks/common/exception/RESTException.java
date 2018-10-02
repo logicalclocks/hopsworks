@@ -16,10 +16,11 @@
 
 package io.hops.hopsworks.common.exception;
 
+import io.hops.hopsworks.common.util.Settings;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.json.JSONObject;
 
 public abstract class RESTException extends Exception {
-  
   //Optional messages
   private final String usrMsg;
   private final String devMsg;
@@ -58,11 +59,18 @@ public abstract class RESTException extends Exception {
     return errorCode;
   }
   
-  public JSONObject getJson() {
-    return new JSONObject()
-      .put("code", errorCode.getCode())
-      .put("message", errorCode.getMessage())
-      .put("usrMsg", usrMsg)
-      .put("devMsg", devMsg);
+  public JSONObject getJson(Settings.LOG_LEVEL logLevel) {
+    JSONObject json = new JSONObject().put("code", errorCode.getCode());
+    
+    if (logLevel.getLevel() <= Settings.LOG_LEVEL.PRODUCTION.getLevel()) {
+      json.put("usrMsg", usrMsg);
+    }
+    if (logLevel.getLevel() <= Settings.LOG_LEVEL.TESTING.getLevel()) {
+      json.put("devMsg", devMsg);
+    }
+    if (logLevel.getLevel() <= Settings.LOG_LEVEL.DEV.getLevel()) {
+      json.put("trace", ExceptionUtils.getStackTrace(this));
+    }
+    return json;
   }
 }

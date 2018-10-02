@@ -1013,7 +1013,7 @@ public class ProjectController {
           certificatesController.deleteProjectCertificates(project);
           cleanupLogger.logSuccess("Removed certificates");
         } catch (CAException ex) {
-          if (ex.getError() != CAException.CAExceptionErrors.CERTNOTFOUND) {
+          if (ex.getErrorCode() != RESTCodes.CAErrorCode.CERTNOTFOUND) {
             cleanupLogger.logError("Error when removing certificates during project cleanup");
           }
         } catch (IOException ex) {
@@ -1513,7 +1513,7 @@ public class ProjectController {
       try {
         certificatesController.deleteProjectCertificates(project);
       } catch (CAException ex) {
-        if (ex.getError() != CAException.CAExceptionErrors.CERTNOTFOUND) {
+        if (ex.getErrorCode() != RESTCodes.CAErrorCode.CERTNOTFOUND) {
           LOGGER.log(Level.SEVERE, "Could not delete certificates during cleanup for project " + project.getName()
               + ". Manual cleanup is needed!!!", ex);
           throw ex;
