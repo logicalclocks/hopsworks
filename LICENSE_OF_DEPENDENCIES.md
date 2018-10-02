@@ -76,6 +76,8 @@ Frontend dependencies
 * github.com/sindresorhus/load-grunt-tasks [MIT](https://github.com/sindresorhus/load-grunt-tasks/blob/master/license)
 * github.com/sindresorhus/time-grunt [MIT](https://github.com/sindresorhus/time-grunt/blob/master/license)
 * github.com/FortAwesome/Font-Awesome [MIT, SIL OLF, and CC BY licenses](https://github.com/FortAwesome/Font-Awesome/blob/master/LICENSE.txt)
+* github.com/alferov/angular-file-saver [MIT](https://github.com/alferov/angular-file-saver/blob/master/license.md)
+* github.com/danialfarid/ng-file-upload [MIT](https://github.com/danialfarid/ng-file-upload/blob/master/README.md)
 
 
 Backend Dependecies
