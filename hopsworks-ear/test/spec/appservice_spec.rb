@@ -25,7 +25,7 @@ describe "On #{ENV['OS']}" do
           with_valid_project
         end
 
-        it "should fail to get Kafka schema without keystore and pwd" do
+        it "should fail to get Kafka schema" do
           post "#{ENV['HOPSWORKS_API']}/appservice/schema",
                {
                    keyStorePwd: "-",
@@ -43,10 +43,14 @@ describe "On #{ENV['OS']}" do
           with_valid_project
         end
 
-        it "should be authenticated for getting the Kafka schema with keystore and pwd" do
+        it "should be authenticated for getting the Kafka schema" do
           project = get_project
           username = get_current_username
           download_user_cert(project.id) # need to download the certs to /srv/hops/certs-dir/transient because the .key file is encrypted in NDB
+          kafka_schema_name = add_schema(project.id) # need to have a schema for the topic, create one with random name in case no-one exists
+          byebug
+          kafka_topic_name = add_topic(project.id, kafka_schema_name)
+          byebug
           user_key_path = get_user_key_path(project.projectname, username)
           expect(File.exist?(user_key_path)).to be true
           key_pwd = File.read(user_key_path)
@@ -54,7 +58,7 @@ describe "On #{ENV['OS']}" do
           json_data = {
               keyStorePwd: key_pwd,
               keyStore: key_store,
-              topicName: "test",
+              topicName: kafka_topic_name,
               version: 1
           }
           json_data = json_data.to_json

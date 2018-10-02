@@ -19,6 +19,7 @@ module AppserviceHelper
   def get_current_username
     user_info = get "#{ENV['HOPSWORKS_API']}" + "/user/profile"
     user = User.find_by(email: JSON.parse(user_info)["email"])
+    expect_status(200)
     user.username
   end
 
@@ -27,6 +28,7 @@ module AppserviceHelper
     data = 'password=Pass123'
     headers = {"Content-Type" => 'application/x-www-form-urlencoded'}
     post download_cert_endpoint, data, headers # this POST request will trigger a materialization of keystore and pwd to /srv/hops/certs-dir/transient/
+    expect_status(200)
   end
 
   def get_user_key_path(projectname, username)
@@ -39,6 +41,5 @@ module AppserviceHelper
     user_key_cert_pwd = UserCerts.find_by(projectname:projectname)
     Base64.encode64(user_key_cert_pwd.user_key)
   end
-
 
 end
