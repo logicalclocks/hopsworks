@@ -20,10 +20,27 @@ module KafkaHelper
     @topic ||= create_topic(project_id)
   end
 
+  def with_kafka_schema(project_id)
+    @schema ||= create_schema(project_id)
+  end
+
+  def get_topic
+    @topic
+  end
+
+  def get_schema
+    @schema
+  end
+
   def create_topic(project_id)
     schema_name = add_schema(project_id)
     topic_name = add_topic(project_id, schema_name)
     ProjectTopics.find_by(project_id:project_id, topic_name:topic_name)
+  end
+
+  def create_schema(project_id)
+    schema_name = add_schema(project_id)
+    SchemaTopics.find_by(name:schema_name, version: 1)
   end
 
   def add_schema(project_id)
@@ -35,8 +52,8 @@ module KafkaHelper
         versions: []
     }
     json_data = json_data.to_json
-    post add_schema_endpoint, json_data
-    kafka_schema_name
+    json_result = post add_schema_endpoint, json_data
+    return json_result, kafka_schema_name
   end
 
   def add_topic(project_id, schema_name)
@@ -50,9 +67,8 @@ module KafkaHelper
         schemaVersion: 1
     }
     json_data = json_data.to_json
-    post add_topic_endpoint, json_data
-    expect_status(200)
-    kafka_topic_name
+    json_result = post add_topic_endpoint, json_data
+    return json_result, kafka_topic_name
   end
   
 end

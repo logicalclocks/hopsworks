@@ -16,6 +16,36 @@
 
 module AppserviceHelper
 
+  def with_keystore(project)
+    @keystore ||= create_keystore(project)
+  end
+
+  def with_keystore_pwd(project)
+    @keystore_pwd ||= create_keystore_pwd(project)
+  end
+
+  def get_keystore
+    @keystore
+  end
+
+  def get_keystore_pwd
+    @keystore_pwd
+  end
+
+  def create_keystore(project)
+    key_store = get_user_keystore(project.projectname)
+    key_store
+  end
+
+  def create_keystore_pwd(project)
+    username = get_current_username
+    download_user_cert(project.id) # need to download the certs to /srv/hops/certs-dir/transient because the .key file is encrypted in NDB
+    user_key_path = get_user_key_path(project.projectname, username)
+    expect(File.exist?(user_key_path)).to be true
+    key_pwd = File.read(user_key_path)
+    key_pwd
+  end
+
   def get_current_username
     user_info = get "#{ENV['HOPSWORKS_API']}" + "/user/profile"
     user = User.find_by(email: JSON.parse(user_info)["email"])

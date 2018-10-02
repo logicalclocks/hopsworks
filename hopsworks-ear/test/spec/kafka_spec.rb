@@ -18,7 +18,7 @@ describe "On #{ENV['OS']}" do
   describe 'kafka' do
     after (:all) {clean_projects}
 
-    describe "#create" do
+    describe "kafka create topics and schemas" do
 
       context 'with valid project and kafka service enabled' do
         before :all do
@@ -26,11 +26,29 @@ describe "On #{ENV['OS']}" do
         end
 
         it "should be able to create a kafka schema" do
-          add_schema(project.project.id)
-          #expect_json(errorMsg: "Could not authenticate user")
+          project = get_project
+          json_result, schema_name = add_schema(project.id)
+          expect_json(successMessage: "Schema for Topic created/updated successfuly")
           expect_status(200)
         end
       end
     end
+
+    context 'with valid project, kafka service enabled, and a kafka schema' do
+      before :all do
+        with_valid_project
+        project = get_project
+        with_kafka_schema(project.id)
+      end
+
+      it "should be able to create a kafka topic using the schema" do
+        project = get_project
+        schema = get_schema
+        json_result, schema_name = add_topic(project.id, schema.name)
+        expect_json(successMessage: "The Topic has been created.")
+        expect_status(200)
+      end
+    end
+
   end
 end

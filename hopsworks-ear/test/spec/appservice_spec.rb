@@ -18,14 +18,14 @@ describe "On #{ENV['OS']}" do
   describe 'appservice' do
     after (:all) {clean_projects}
 
-    describe "#create" do
+    describe "get kafka schema from job service/jupyter authenticated with keystore/pwd" do
 
-      context 'without valid keystore and password' do
+      context 'with valid project but without kafka topic and without valid keystore/pwd' do
         before :all do
           with_valid_project
         end
 
-        it "should fail to get Kafka schema" do
+        it "should fail to get Kafka schema due to not authenticated" do
           post "#{ENV['HOPSWORKS_API']}/appservice/schema",
                {
                    keyStorePwd: "-",
@@ -38,31 +38,54 @@ describe "On #{ENV['OS']}" do
         end
       end
 
-      context 'with keystore and password' do
+      context 'project, keystore and password but without kafka topic' do
         before :all do
           with_valid_project
+          project = get_project
+          with_keystore(project)
+          with_keystore_pwd(project)
         end
 
-        it "should be authenticated for getting the Kafka schema" do
-          project = get_project
-          username = get_current_username
-          download_user_cert(project.id) # need to download the certs to /srv/hops/certs-dir/transient because the .key file is encrypted in NDB
-          kafka_schema_name = add_schema(project.id) # need to have a schema for the topic, create one with random name in case no-one exists
-          byebug
-          kafka_topic_name = add_topic(project.id, kafka_schema_name)
-          byebug
-          user_key_path = get_user_key_path(project.projectname, username)
-          expect(File.exist?(user_key_path)).to be true
-          key_pwd = File.read(user_key_path)
-          key_store = get_user_keystore(project.projectname)
+        it "should be authenticated but should fail since topic don't exists" do
+          keystore = get_keystore
+          keystore_pwd = get_keystore_pwd
           json_data = {
-              keyStorePwd: key_pwd,
-              keyStore: key_store,
-              topicName: kafka_topic_name,
+              keyStorePwd: keystore_pwd,
+              keyStore: keystore,
+              topicName: "kafka_topic_#{random_id}",
               version: 1
           }
           json_data = json_data.to_json
           post "#{ENV['HOPSWORKS_API']}/appservice/schema", json_data # This post request authenticates with keystore and pwd to get schema
+          expect_json(errorMsg: "Oops! something went wrong :(")
+          expect_status(500)
+        end
+      end
+
+      context 'project, keystore, password and kafka topic' do
+        before :all do
+          with_valid_project
+          project = get_project
+          with_kafka_topic(project.id)
+          with_keystore(project)
+          with_keystore_pwd(project)
+        end
+
+        it "should be authenticated and request to get topic schema should succeed" do
+          topic = get_topic
+          keystore = get_keystore
+          keystore_pwd = get_keystore_pwd
+          json_data = {
+              keyStorePwd: keystore_pwd,
+              keyStore: keystore,
+              topicName: topic.topic_name,
+              version: 1
+          }
+          json_data = json_data.to_json
+          json = post "#{ENV['HOPSWORKS_API']}/appservice/schema", json_data # This post request authenticates with keystore and pwd to get schema
+          parsed_json = JSON.parse(response.body)
+          expect(parsed_json.key?("contents")).to be true
+          expect(parsed_json.key?("version")).to be true
           expect_status(200)
         end
       end

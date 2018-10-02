@@ -13,7 +13,7 @@
  You should have received a copy of the GNU Affero General Public License along with this program.
  If not, see <https://www.gnu.org/licenses/>.
 =end
-class ProjectTopics < ActiveRecord::Base
+class SchemaTopics < ActiveRecord::Base
   def self.table_name
     "schema_topics"
   end
