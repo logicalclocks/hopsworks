@@ -47,6 +47,7 @@
     "angularjs-slider": "^5.5.1",
     "angular-nvd3": "^1.0.9",
     "angular-bootstrap-toggle": "^0.1.2",
+    "ng-file-upload": "^12.0.1",
     "angular-file-saver": "^1.1.3"
   },
   "overrides": {

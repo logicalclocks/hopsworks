@@ -61,6 +61,42 @@
   </login-config>
   
   
+  <servlet>
+    <servlet-name>AngularFileManagerServlet</servlet-name>
+    <servlet-class>io.hops.hopsworks.api.airflow.AngularFileManagerServlet</servlet-class>
+    <init-param>
+      <param-name>repository.base.path</param-name>
+      <param-value>/srv/hops/airflow/dags</param-value>
+    </init-param>
+    <init-param>
+      <param-name>date.format</param-name>
+      <param-value>yyyy-MM-dd hh:mm:ss</param-value>
+    </init-param>
+    <init-param>
+      <param-name>enabled.action</param-name>
+      <param-value>rename,move,remove,edit,createFolder,changePermissions,compress,extract,copy,upload</param-value>
+    </init-param>
+    <load-on-startup>1</load-on-startup>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>AngularFileManagerServlet</servlet-name>
+    <url-pattern>/filemanager</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>AngularFileManagerServlet</servlet-name>
+    <url-pattern>/filemanager/*</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>AngularFileManagerServlet</servlet-name>
+    <url-pattern>/app/filemanager</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>AngularFileManagerServlet</servlet-name>
+    <url-pattern>/app/filemanager/*</url-pattern>
+  </servlet-mapping>
+  
+  
+  
   <session-config>
     <session-timeout>600</session-timeout>
     <cookie-config>

@@ -38,6 +38,7 @@
  */
 package io.hops.hopsworks.api.project;
 
+import io.hops.hopsworks.api.airflow.AirflowService;
 import io.hops.hopsworks.api.dela.DelaClusterProjectService;
 import io.hops.hopsworks.api.dela.DelaProjectService;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
@@ -137,6 +138,8 @@ public class ProjectService {
   @Inject
   private JupyterService jupyter;
   @Inject
+  private AirflowService airflow;
+  @Inject
   private TensorBoardService tensorboard;
   @Inject
   private TfServingService tfServingService;
@@ -212,7 +215,8 @@ public class ProjectService {
       @Context HttpServletRequest req) {
 
     List<Project> list = projectFacade.findAll();
-    GenericEntity<List<Project>> projects = new GenericEntity<List<Project>>(list) { };
+    GenericEntity<List<Project>> projects = new GenericEntity<List<Project>>(list) {
+    };
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
         projects).build();
@@ -789,7 +793,8 @@ public class ProjectService {
     List<YarnPriceMultiplicator> multiplicatorsList = projectController.getYarnMultiplicators();
 
     GenericEntity<List<YarnPriceMultiplicator>> multiplicators = new GenericEntity<List<YarnPriceMultiplicator>>(
-        multiplicatorsList) { };
+        multiplicatorsList) {
+    };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(multiplicators).build();
   }
 
@@ -917,6 +922,20 @@ public class ProjectService {
     return this.jupyter;
   }
 
+  @Path("{id}/airflow")
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  public AirflowService airflow(
+      @PathParam("id") Integer id) throws AppException {
+    Project project = projectController.findProjectById(id);
+    if (project == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+          ResponseMessages.PROJECT_NOT_FOUND);
+    }
+    this.airflow.setProjectId(id);
+
+    return this.airflow;
+  }
+
   @Path("{id}/tensorboard")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public TensorBoardService tensorboard(
@@ -1017,7 +1036,8 @@ public class ProjectService {
           ResponseMessages.PROJECT_NOT_FOUND);
     }
     Pia pia = piaFacade.findByProject(projectId);
-    GenericEntity<Pia> genericPia = new GenericEntity<Pia>(pia) { };
+    GenericEntity<Pia> genericPia = new GenericEntity<Pia>(pia) {
+    };
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(genericPia).build();
   }

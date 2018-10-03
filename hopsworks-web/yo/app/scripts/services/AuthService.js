@@ -83,7 +83,7 @@ angular.module('hopsWorksApp')
 
 
                 return $http(regReq);
-              }
+              }              
             };
             return service;
           }]);
