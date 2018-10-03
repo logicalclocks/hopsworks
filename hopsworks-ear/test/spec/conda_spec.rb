@@ -52,7 +52,7 @@ describe "On #{ENV['OS']}" do
         end
         it "not authenticated" do
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/enable/2.7/true"
-          expect_json(errorMsg: "Client not authorized for this invocation")
+          expect_json(code: 200003)
           expect_status(401)
         end
       end
@@ -216,7 +216,7 @@ describe "On #{ENV['OS']}" do
 
           create_session(@user[:email], "Pass123")
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/enable/2.7/true"
-          expect_status(500)
+          expect_status(503)
         end
 
         it 'should not have created any conda_commands in the db - single vm' do
@@ -307,8 +307,8 @@ describe "On #{ENV['OS']}" do
                {lib: "imageio", version: "2.2.0", channelUrl: "#{conda_channel}", installType: "CONDA", machineType: "CPU"}
 
           if num_hosts == 1
-            #  If single VM there are no hosts on which to install the library. Hopsworks returns 404
-            expect_status(404)
+            #  If single VM there are no hosts on which to install the library. Hopsworks returns 412
+            expect_status(412)
           else
             # If it is a multi vm there are hosts to install the library.
             expect_status(200)

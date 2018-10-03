@@ -174,7 +174,7 @@ public class PythonDepsService {
   public Response enable(@PathParam("version") String version,
       @PathParam("pythonKernelEnable") String pythonKernelEnable,
       @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws ServiceException, ProjectException {
+      @Context HttpServletRequest req) throws ServiceException {
     Boolean enablePythonKernel = Boolean.parseBoolean(pythonKernelEnable);
     if (!enablePythonKernel) {
       // 'X' indicates that the python kernel should not be enabled in Conda

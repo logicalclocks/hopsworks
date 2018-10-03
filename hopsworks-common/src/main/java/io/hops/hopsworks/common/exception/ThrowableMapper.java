@@ -108,14 +108,14 @@ public abstract class ThrowableMapper implements ExceptionMapper<Throwable> {
     return handleRESTException(ex.getErrorCode().getRespStatus(), ex);
   }
   
-  public Response handleRESTException(Response.Status status, RESTException ex) {
+  public Response handleRESTException(Response.StatusType status, RESTException ex) {
     if (ex.getCause() != null) {
       logger.log(Level.SEVERE, ex.getClass().getName(), ex);
     } else {
       logger.log(Level.FINE, ex.getClass().getName(), ex);
     }
-    return Response.status(status).entity(ex.getJson(getRESTLogLevel()).toString())
-      .type(MediaType.APPLICATION_JSON).build();
+    return Response.status(status).entity(ex.getJson(getRESTLogLevel()).toString()).type(MediaType.APPLICATION_JSON)
+      .build();
   }
   
   public Response handleAccessLocalException(AccessLocalException ex) {

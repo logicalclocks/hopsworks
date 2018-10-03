@@ -401,8 +401,8 @@ public class ProjectController {
 
       //add members of the project   
       try {
-        failedMembers = addMembers(project, owner.getEmail(), projectDTO.
-            getProjectTeam());
+        failedMembers = new ArrayList<>();
+        failedMembers.addAll(addMembers(project, owner.getEmail(), projectDTO.getProjectTeam()));
       } catch (KafkaException | UserException | ProjectException | EJBException ex) {
         cleanup(project, sessionId, certsGenerationFuture);
         throw ex;

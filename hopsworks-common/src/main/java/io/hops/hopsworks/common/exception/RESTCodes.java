@@ -21,6 +21,7 @@ import io.hops.hopsworks.common.util.Settings;
 import javax.ws.rs.core.Response;
 import javax.xml.bind.annotation.XmlRootElement;
 
+
 /**
  * Hopsworks error codes categorized by resource. Convention for code values is the following:
  * 1. All error codes must be a total of 6 digits, first 2 indicate error type and last 4 indicate error id.
@@ -44,7 +45,7 @@ public class RESTCodes {
   
   public interface RESTErrorCode {
     
-    Response.Status getRespStatus();
+    Response.StatusType getRespStatus();
     
     Integer getCode();
     
@@ -52,6 +53,7 @@ public class RESTCodes {
   }
   
   public enum ProjectErrorCode implements RESTErrorCode {
+    
     //project error response
     NO_ROLE_FOUND(150000, "No valid role found for this user", Response.Status.BAD_REQUEST),
     PROJECT_EXISTS(150001, "Project with the same name already exists.", Response.Status.CONFLICT),
@@ -64,10 +66,10 @@ public class RESTCodes {
       Response.Status.INTERNAL_SERVER_ERROR),
     STARTER_PROJECT_BAD_REQUEST(150008, "Type of starter project is not valid", Response.Status.BAD_REQUEST),
     PROJECT_FOLDER_NOT_REMOVED(150009, "Project folder could not be removed from HDFS.", Response.Status.BAD_REQUEST),
-    PROJECT_REMOVAL_NOT_ALLOWED(150010, "Project can only be deleted by its owner.", Response.Status.BAD_REQUEST),
+    PROJECT_REMOVAL_NOT_ALLOWED(150010, "Project can only be deleted by its owner.", Response.Status.FORBIDDEN),
     PROJECT_MEMBER_NOT_REMOVED(150011, "Failed to remove team member.", Response.Status.INTERNAL_SERVER_ERROR),
     MEMBER_REMOVAL_NOT_ALLOWED(150012, "Your project role does not allow to remove other members of this project.",
-      Response.Status.BAD_REQUEST),
+      Response.Status.FORBIDDEN),
     PROJECT_OWNER_NOT_ALLOWED(150013, "Removing the project owner is not allowed.", Response.Status.BAD_REQUEST),
     PROJECT_OWNER_ROLE_NOT_ALLOWED(150014, "Changing the role of the project owner is not allowed.",
       Response.Status.BAD_REQUEST),
@@ -161,9 +163,9 @@ public class RESTCodes {
     
     private Integer code;
     private String message;
-    private Response.Status respStatus;
+    private Response.StatusType respStatus;
     
-    ProjectErrorCode(Integer code, String message, Response.Status respStatus) {
+    ProjectErrorCode(Integer code, String message, Response.StatusType respStatus) {
       this.code = code;
       this.message = message;
       this.respStatus = respStatus;
@@ -180,7 +182,7 @@ public class RESTCodes {
     }
     
     @Override
-    public Response.Status getRespStatus() {
+    public Response.StatusType getRespStatus() {
       return respStatus;
     }
     
@@ -252,9 +254,9 @@ public class RESTCodes {
     
     private Integer code;
     private String message;
-    private Response.Status respStatus;
+    private Response.StatusType respStatus;
     
-    DatasetErrorCode(Integer code, String message, Response.Status respStatus) {
+    DatasetErrorCode(Integer code, String message, Response.StatusType respStatus) {
       this.code = code;
       this.message = message;
       this.respStatus = respStatus;
@@ -271,7 +273,7 @@ public class RESTCodes {
     }
     
     @Override
-    public Response.Status getRespStatus() {
+    public Response.StatusType getRespStatus() {
       return respStatus;
     }
     
@@ -290,9 +292,9 @@ public class RESTCodes {
     
     private Integer code;
     private String message;
-    private Response.Status respStatus;
+    private Response.StatusType respStatus;
     
-    MetadataErrorCode(Integer code, String message, Response.Status respStatus) {
+    MetadataErrorCode(Integer code, String message, Response.StatusType respStatus) {
       this.code = code;
       this.message = message;
       this.respStatus = respStatus;
@@ -309,7 +311,7 @@ public class RESTCodes {
     }
     
     @Override
-    public Response.Status getRespStatus() {
+    public Response.StatusType getRespStatus() {
       return respStatus;
     }
     
@@ -349,9 +351,9 @@ public class RESTCodes {
     
     private Integer code;
     private String message;
-    private Response.Status respStatus;
+    private Response.StatusType respStatus;
     
-    JobErrorCode(Integer code, String message, Response.Status respStatus) {
+    JobErrorCode(Integer code, String message, Response.StatusType respStatus) {
       this.code = code;
       this.message = message;
       this.respStatus = respStatus;
@@ -368,7 +370,7 @@ public class RESTCodes {
     }
     
     @Override
-    public Response.Status getRespStatus() {
+    public Response.StatusType getRespStatus() {
       return respStatus;
     }
     
@@ -386,9 +388,9 @@ public class RESTCodes {
     
     private Integer code;
     private String message;
-    private Response.Status respStatus;
+    private Response.StatusType respStatus;
     
-    RequestErrorCode(Integer code, String message, Response.Status respStatus) {
+    RequestErrorCode(Integer code, String message, Response.StatusType respStatus) {
       this.code = code;
       this.message = message;
       this.respStatus = respStatus;
@@ -405,7 +407,7 @@ public class RESTCodes {
     }
     
     @Override
-    public Response.Status getRespStatus() {
+    public Response.StatusType getRespStatus() {
       return respStatus;
     }
     
@@ -460,10 +462,10 @@ public class RESTCodes {
       "for it to finish or clear it first.", Response.Status.PRECONDITION_FAILED),
     HOST_TYPE_NOT_FOUND(100024, "No hosts with the desired capability.", Response.Status.PRECONDITION_FAILED),
     HOST_NOT_FOUND(100025, "Hosts was not found.", Response.Status.NOT_FOUND),
-    HOST_NOT_REGISTERED(100026, "Host has not registered.", Response.Status.PRECONDITION_FAILED),
+    HOST_NOT_REGISTERED(100026, "Host has not registered.", Response.Status.NOT_FOUND),
     ANACONDA_DEP_REMOVE_FORBIDDEN(100027, "Could not uninstall library, it is a mandatory dependency",
       Response.Status.BAD_REQUEST),
-    ANACONDA_DEP_INSTALL_FORBIDDEN(100028, "Library is already installed", Response.Status.BAD_REQUEST),
+    ANACONDA_DEP_INSTALL_FORBIDDEN(100028, "Library is already installed", Response.Status.CONFLICT),
     ANACONDA_EXPORT_ERROR(100029, "Failed to export Anaconda environment as .yml",
       Response.Status.INTERNAL_SERVER_ERROR),
     ANACONDA_LIST_LIB_NOT_FOUND(100030, "No results found", Response.Status.NO_CONTENT),
@@ -486,9 +488,9 @@ public class RESTCodes {
     
     private Integer code;
     private String message;
-    private Response.Status respStatus;
+    private Response.StatusType respStatus;
     
-    ServiceErrorCode(Integer code, String message, Response.Status respStatus) {
+    ServiceErrorCode(Integer code, String message, Response.StatusType respStatus) {
       this.code = code;
       this.message = message;
       this.respStatus = respStatus;
@@ -505,7 +507,7 @@ public class RESTCodes {
     }
     
     @Override
-    public Response.Status getRespStatus() {
+    public Response.StatusType getRespStatus() {
       return respStatus;
     }
     
@@ -537,9 +539,9 @@ public class RESTCodes {
     
     private Integer code;
     private String message;
-    private Response.Status respStatus;
+    private Response.StatusType respStatus;
     
-    KafkaErrorCode(Integer code, String message, Response.Status respStatus) {
+    KafkaErrorCode(Integer code, String message, Response.StatusType respStatus) {
       this.code = code;
       this.message = message;
       this.respStatus = respStatus;
@@ -556,7 +558,7 @@ public class RESTCodes {
     }
     
     @Override
-    public Response.Status getRespStatus() {
+    public Response.StatusType getRespStatus() {
       return respStatus;
     }
     
@@ -564,8 +566,8 @@ public class RESTCodes {
   
   public enum GenericErrorCode implements RESTErrorCode {
     
-    UNKNOWN_ERROR(120000, "A generic error occured.", Response.Status.INTERNAL_SERVER_ERROR),
-    ILLEGAL_ARGUMENT(120001, "An argument was not provided or it was malformed.", Response.Status.BAD_REQUEST),
+    UNKNOWN_ERROR(120000, "A generic error occurred.", Response.Status.INTERNAL_SERVER_ERROR),
+    ILLEGAL_ARGUMENT(120001, "An argument was not provided or it was malformed.", Status.UNPROCESSABLE_ENTITY),
     ILLEGAL_STATE(120002, "A runtime error occurred.", Response.Status.BAD_REQUEST),
     ROLLBACK(120003, "The last transaction did not complete as expected", Response.Status.INTERNAL_SERVER_ERROR),
     WEBAPPLICATION(120004, "Web application exception occurred", null),
@@ -577,9 +579,9 @@ public class RESTCodes {
     
     private Integer code;
     private String message;
-    private Response.Status respStatus;
+    private Response.StatusType respStatus;
     
-    GenericErrorCode(Integer code, String message, Response.Status respStatus) {
+    GenericErrorCode(Integer code, String message, Response.StatusType respStatus) {
       this.code = code;
       this.message = message;
       this.respStatus = respStatus;
@@ -596,7 +598,7 @@ public class RESTCodes {
     }
     
     @Override
-    public Response.Status getRespStatus() {
+    public Response.StatusType getRespStatus() {
       return respStatus;
     }
     
@@ -623,9 +625,9 @@ public class RESTCodes {
     
     private Integer code;
     private String message;
-    private Response.Status respStatus;
+    private Response.StatusType respStatus;
     
-    SecurityErrorCode(Integer code, String message, Response.Status respStatus) {
+    SecurityErrorCode(Integer code, String message, Response.StatusType respStatus) {
       this.code = code;
       this.message = message;
       this.respStatus = respStatus;
@@ -641,7 +643,7 @@ public class RESTCodes {
       return message;
     }
     
-    public Response.Status getRespStatus() {
+    public Response.StatusType getRespStatus() {
       return respStatus;
     }
     
@@ -712,9 +714,9 @@ public class RESTCodes {
     
     private Integer code;
     private String message;
-    private Response.Status respStatus;
+    private Response.StatusType respStatus;
     
-    UserErrorCode(Integer code, String message, Response.Status respStatus) {
+    UserErrorCode(Integer code, String message, Response.StatusType respStatus) {
       this.code = code;
       this.message = message;
       this.respStatus = respStatus;
@@ -730,7 +732,7 @@ public class RESTCodes {
       return message;
     }
     
-    public Response.Status getRespStatus() {
+    public Response.StatusType getRespStatus() {
       return respStatus;
     }
     
@@ -766,9 +768,9 @@ public class RESTCodes {
     
     private Integer code;
     private String message;
-    private Response.Status respStatus;
+    private Response.StatusType respStatus;
     
-    DelaErrorCode(Integer code, String message, Response.Status respStatus) {
+    DelaErrorCode(Integer code, String message, Response.StatusType respStatus) {
       this.code = code;
       this.message = message;
       this.respStatus = respStatus;
@@ -784,7 +786,7 @@ public class RESTCodes {
       return message;
     }
     
-    public Response.Status getRespStatus() {
+    public Response.StatusType getRespStatus() {
       return respStatus;
     }
     
@@ -808,9 +810,9 @@ public class RESTCodes {
     
     private Integer code;
     private String message;
-    private Response.Status respStatus;
+    private Response.StatusType respStatus;
     
-    ZeppelinErrorCode(Integer code, String message, Response.Status respStatus) {
+    ZeppelinErrorCode(Integer code, String message, Response.StatusType respStatus) {
       this.code = code;
       this.message = message;
       this.respStatus = respStatus;
@@ -827,7 +829,7 @@ public class RESTCodes {
     }
     
     @Override
-    public Response.Status getRespStatus() {
+    public Response.StatusType getRespStatus() {
       return respStatus;
     }
     
@@ -841,9 +843,9 @@ public class RESTCodes {
     
     private Integer code;
     private String message;
-    private Response.Status respStatus;
+    private Response.StatusType respStatus;
     
-    CAErrorCode(Integer code, String message, Response.Status respStatus) {
+    CAErrorCode(Integer code, String message, Response.StatusType respStatus) {
       this.code = code;
       this.message = message;
       this.respStatus = respStatus;
@@ -859,7 +861,7 @@ public class RESTCodes {
       return message;
     }
     
-    public Response.Status getRespStatus() {
+    public Response.StatusType getRespStatus() {
       return respStatus;
     }
     
@@ -880,9 +882,9 @@ public class RESTCodes {
   
     private Integer code;
     private String message;
-    private Response.Status respStatus;
+    private Response.StatusType respStatus;
   
-    DelaCSRErrorCode(Integer code, String message, Response.Status respStatus) {
+    DelaCSRErrorCode(Integer code, String message, Response.StatusType respStatus) {
       this.code = code;
       this.message = message;
       this.respStatus = respStatus;
@@ -898,10 +900,56 @@ public class RESTCodes {
       return message;
     }
     
-    public Response.Status getRespStatus() {
+    public Response.StatusType getRespStatus() {
       return respStatus;
     }
     
+  }
+  
+  /**
+   * Provides http status codes not available in Response.StatusType.
+   */
+  public enum Status implements Response.StatusType {
+    UNPROCESSABLE_ENTITY(422, "UNPROCESSABLE_ENTITY");
+    
+    private final int code;
+    private final String reason;
+    private final Response.Status.Family family;
+    
+    Status(int statusCode, String reasonPhrase) {
+      this.code = statusCode;
+      this.reason = reasonPhrase;
+      this.family = Response.Status.Family.familyOf(statusCode);
+    }
+    
+    public static Status fromStatus(final int statusCode) {
+      for (Status status : Status.values()) {
+        if (status.getStatusCode() == statusCode) {
+          return status;
+        }
+      }
+      return null;
+    }
+    
+    @Override
+    public int getStatusCode() {
+      return this.code;
+    }
+    
+    @Override
+    public Response.Status.Family getFamily() {
+      return this.family;
+    }
+    
+    @Override
+    public String getReasonPhrase() {
+      return this.toString();
+    }
+  
+    @Override
+    public String toString() {
+      return this.reason;
+    }
   }
   
 }
