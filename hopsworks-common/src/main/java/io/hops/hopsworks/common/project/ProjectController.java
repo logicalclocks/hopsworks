@@ -807,7 +807,10 @@ public class ProjectController {
     switch (service) {
       case JUPYTER:
         addServiceDataset(project, user, Settings.ServiceDataset.JUPYTER, dfso, udfso);
-        addElasticsearch(project, ProjectServiceEnum.JUPYTER);
+        addElasticsearch(project);
+        if (!projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.JOBS)) {
+          addServiceDataset(project, user, Settings.ServiceDataset.EXPERIMENTS, dfso, udfso);
+        }
         break;
       case HIVE:
         addServiceHive(project, user, dfso);
@@ -818,10 +821,10 @@ public class ProjectController {
         addServiceDataset(project, user, Settings.ServiceDataset.SERVING, dfso, udfso);
         break;
       case JOBS:
-        addElasticsearch(project, ProjectServiceEnum.JOBS);
-        break;
-      case EXPERIMENTS:
-        addElasticsearch(project, ProjectServiceEnum.EXPERIMENTS);
+        addElasticsearch(project);
+        if (!projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.JUPYTER)) {
+          addServiceDataset(project, user, Settings.ServiceDataset.EXPERIMENTS, dfso, udfso);
+        }
         break;
       default:
         break;
@@ -2395,19 +2398,18 @@ public class ProjectController {
                 "Something went wrong when adding the tour files to the project");
           }
           break;
-        case TENSORFLOW:
-        case DISTRIBUTED_TENSORFLOW:
+        case DEEP_LEARNING:
           // Get the mnist.py and tfr records from /user/<super user>/tensorflow_demo
           //Depending on tour type, copy files
-          String tensorflowDataSrc = "/user/" + settings.getHdfsSuperUser() + "/" + Settings.HOPS_TENSORFLOW_TOUR_DATA
+          String DLDataSrc = "/user/" + settings.getHdfsSuperUser() + "/" + Settings.HOPS_DEEP_LEARNING_TOUR_DATA
               + "/*";
-          String tensorflowDataDst = "/" + Settings.DIR_ROOT + "/" + project.getName() + "/"
+          String DLDataDst = "/" + Settings.DIR_ROOT + "/" + project.getName() + "/"
               + Settings.HOPS_TOUR_DATASET;
           try {
-            udfso.copyInHdfs(new Path(tensorflowDataSrc), new Path(tensorflowDataDst));
+            udfso.copyInHdfs(new Path(DLDataSrc), new Path(DLDataDst));
             String datasetGroup = hdfsUsersBean.getHdfsGroupName(project, Settings.HOPS_TOUR_DATASET);
             String userHdfsName = hdfsUsersBean.getHdfsUserName(project, user);
-            Inode parent = inodes.getInodeAtPath(tensorflowDataDst);
+            Inode parent = inodes.getInodeAtPath(DLDataDst);
             List<Inode> children = new ArrayList<>();
             inodes.getAllChildren(parent, children);
             for (Inode child : children) {
@@ -2418,13 +2420,13 @@ public class ProjectController {
               }
             }
             //Move notebooks to Jupyter Dataset
-            if (projectType == TourProjectType.TENSORFLOW) {
-              String tensorflowNotebooksSrc = tensorflowDataDst + "/notebooks";
-              String tensorflowNotebooksDst = "/" + Settings.DIR_ROOT + "/" + project.getName() + "/"
+            if (projectType == TourProjectType.DEEP_LEARNING) {
+              String DLNotebooksSrc = DLDataDst + "/notebooks";
+              String DLNotebooksDst = "/" + Settings.DIR_ROOT + "/" + project.getName() + "/"
                   + Settings.HOPS_TOUR_DATASET_JUPYTER;
-              udfso.copyInHdfs(new Path(tensorflowNotebooksSrc + "/*"), new Path(tensorflowNotebooksDst));
+              udfso.copyInHdfs(new Path(DLNotebooksSrc + "/*"), new Path(DLNotebooksDst));
               datasetGroup = hdfsUsersBean.getHdfsGroupName(project, Settings.HOPS_TOUR_DATASET_JUPYTER);
-              Inode parentJupyterDs = inodes.getInodeAtPath(tensorflowNotebooksDst);
+              Inode parentJupyterDs = inodes.getInodeAtPath(DLNotebooksDst);
               List<Inode> childrenJupyterDs = new ArrayList<>();
               inodes.getAllChildren(parentJupyterDs, childrenJupyterDs);
               for (Inode child : childrenJupyterDs) {
@@ -2434,7 +2436,7 @@ public class ProjectController {
                   udfso.setOwner(path, userHdfsName, datasetGroup);
                 }
               }
-              udfso.rm(new Path(tensorflowNotebooksSrc), true);
+              udfso.rm(new Path(DLNotebooksSrc), true);
             }
           } catch (IOException ex) {
             LOGGER.log(Level.SEVERE, "Something went wrong when adding the tour files to the project", ex);
@@ -2494,104 +2496,95 @@ public class ProjectController {
    * Handles Kibana related indices and templates for projects.
    *
    * @param project
-   * @param serviceEnum
    * @return
    */
-
-  public void addElasticsearch(Project project, ProjectServiceEnum serviceEnum) throws AppException {
-
-    if(serviceEnum.equals(ProjectServiceEnum.JOBS) || serviceEnum.equals(ProjectServiceEnum.JUPYTER) ) {
+  public void addElasticsearch(Project project) throws AppException {
             
-      String projectName = project.getName().toLowerCase();
-      Map<String, String> params = new HashMap<>();
-      params.put("op", "POST");
-      params.put("project", projectName + "_logs");
-      params.put("resource", "");
-      params.put("data", "{\"attributes\": {\"title\": \"" + projectName + "_logs-*"  + "\"}}");
+    String projectName = project.getName().toLowerCase();
+    Map<String, String> params = new HashMap<>();
+    params.put("op", "POST");
+    params.put("project", projectName + "_logs");
+    params.put("resource", "");
+    params.put("data", "{\"attributes\": {\"title\": \"" + projectName + "_logs-*"  + "\"}}");
   
-      JSONObject resp = elasticController.sendKibanaReq(params, "index-pattern", projectName + "_logs-*");
-      
-      boolean kibanaPatternCreated = false;
-      if (!(resp.has("updated_at") || (resp.has("statusCode") && resp.get("statusCode").toString().equals("409")))) {
-        LOGGER.log(Level.SEVERE, "Could not create logs index for project {0}", projectName);
-        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
-            ResponseMessages.PROJECT_SERVICE_ADD_FAILURE);
-      }
+    JSONObject resp = elasticController.sendKibanaReq(params, "index-pattern", projectName + "_logs-*");
+    
+    if (!(resp.has("updated_at") || (resp.has("statusCode") && resp.get("statusCode").toString().equals("409")))) {
+      LOGGER.log(Level.SEVERE, "Could not create logs index for project {0}", projectName);
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+          ResponseMessages.PROJECT_SERVICE_ADD_FAILURE);
+    }
 
-      return;
-    } else if(serviceEnum.equals(ProjectServiceEnum.EXPERIMENTS)) {
+    params.clear();
 
-      Map<String, String> params = new HashMap<>();
+    String indexName = project.getName().toLowerCase() + "_" + Settings.ELASTIC_EXPERIMENTS_INDEX;
 
-      String indexName = project.getName().toLowerCase() + "_" + Settings.ELASTIC_EXPERIMENTS_INDEX;
-
+    if(!elasticController.indexExists(indexName)) {
       boolean acknowledged = elasticController.createIndex(indexName);
       if (!acknowledged) {
         LOGGER.log(Level.SEVERE, "Could not create elastic index " + indexName);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
             ResponseMessages.PROJECT_SERVICE_ADD_FAILURE);
       }
-
-      params.clear();
-      params.put("op", "POST");
-      params.put("data", "{\"attributes\": {\"title\": \"" + indexName  + "\"}}");
-
-      JSONObject resp = elasticController.sendKibanaReq(params, "index-pattern", indexName, true);
-
-      if (!(resp.has("updated_at"))) {
-        LOGGER.log(Level.SEVERE, "Could not create kibana index-pattern for project " +
-            project + "\n " + resp.toString(2));
-        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
-            ResponseMessages.PROJECT_SERVICE_ADD_FAILURE);
-      }
-
-      String savedSummarySearch =
-              "{\"attributes\":{\"title\":\"Experiments summary\",\"description\":\"\",\"hits\":0,\"columns\"" +
-                      ":[\"_id\",\"user\",\"name\",\"start\",\"finished\",\"status\",\"module\",\"function\"" +
-                      ",\"hyperparameter\"" +
-                      ",\"metric\"],\"sort\":[\"start\"" +
-                      ",\"desc\"],\"version\":1,\"kibanaSavedObjectMeta\":{\"searchSourceJSON\":\"" +
-                      "{\\\"index\\\":\\\"" + indexName + "\\\",\\\"highlightAll\\\":true,\\\"version\\\":true" +
-                      ",\\\"query\\\":{\\\"language\\\":\\\"lucene\\\",\\\"query\\\":\\\"\\\"},\\\"filter\\\":" +
-                      "[]}\"}}}";
-
-      params.clear();
-      params.put("op", "POST");
-      params.put("data", savedSummarySearch);
-      resp = elasticController.sendKibanaReq(params, "search", indexName + "_summary-search", true);
-
-      if (!(resp.has("updated_at"))) {
-        LOGGER.log(Level.SEVERE, ("Could not create kibana search for project " + project)
-            + "\n " + resp.toString(2));
-        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
-            ResponseMessages.PROJECT_SERVICE_ADD_FAILURE);
-      }
-
-      String savedSummaryDashboard =
-              "{\"attributes\":{\"title\":\"Experiments summary dashboard\",\"hits\":0,\"description\":\"" +
-                      "A summary of all experiments run in this project\",\"panelsJSON\":\"[{\\\"gridData\\\"" +
-                      ":{\\\"h\\\":9,\\\"i\\\":\\\"1\\\",\\\"w\\\":12,\\\"x\\\":0,\\\"y\\\":0},\\\"id\\\"" +
-                      ":\\\"" + indexName + "_summary-search" + "\\\",\\\"panelIndex\\\":\\\"1\\\"" +
-                      ",\\\"type\\\":\\\"search\\\"" +
-                      ",\\\"version\\\":\\\"6.2.3\\\"}]\",\"optionsJSON\":\"{\\\"darkTheme\\\":false" +
-                      ",\\\"hidePanelTitles\\\":false,\\\"useMargins\\\":true}\",\"version\":1,\"timeRestore\":" +
-                      "false" +
-                      ",\"kibanaSavedObjectMeta\":{\"searchSourceJSON\":\"{\\\"query\\\":{\\\"language\\\"" +
-                      ":\\\"lucene\\\",\\\"query\\\":\\\"\\\"},\\\"filter\\\":[],\\\"highlightAll\\\":" +
-                      "true,\\\"version\\\":true}\"}}}";
-      params.clear();
-      params.put("op", "POST");
-      params.put("data", savedSummaryDashboard);
-      resp = elasticController.sendKibanaReq(params, "dashboard", indexName + "_summary-dashboard", true);
-
-      if (!(resp.has("updated_at"))) {
-        LOGGER.log(Level.SEVERE, ("Could not create kibana dashboard for project " +
-            project + "\n " + resp.toString(2)));
-        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
-            ResponseMessages.PROJECT_SERVICE_ADD_FAILURE);
-      }
-      return;
     }
+
+    params.clear();
+    params.put("op", "POST");
+    params.put("data", "{\"attributes\": {\"title\": \"" + indexName  + "\"}}");
+    resp = elasticController.sendKibanaReq(params, "index-pattern", indexName, true);
+
+    if (!(resp.has("updated_at") || (resp.has("statusCode") && resp.get("statusCode").toString().equals("409")))) {
+      LOGGER.log(Level.SEVERE, "Could not create kibana index-pattern for project " +
+          project + "\n " + resp.toString(2));
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+          ResponseMessages.PROJECT_SERVICE_ADD_FAILURE);
+    }
+
+    String savedSummarySearch =
+            "{\"attributes\":{\"title\":\"Experiments summary\",\"description\":\"\",\"hits\":0,\"columns\"" +
+                    ":[\"_id\",\"user\",\"name\",\"start\",\"finished\",\"status\",\"module\",\"function\"" +
+                    ",\"hyperparameter\"" +
+                    ",\"metric\"],\"sort\":[\"start\"" +
+                    ",\"desc\"],\"version\":1,\"kibanaSavedObjectMeta\":{\"searchSourceJSON\":\"" +
+                    "{\\\"index\\\":\\\"" + indexName + "\\\",\\\"highlightAll\\\":true,\\\"version\\\":true" +
+                    ",\\\"query\\\":{\\\"language\\\":\\\"lucene\\\",\\\"query\\\":\\\"\\\"},\\\"filter\\\":" +
+                    "[]}\"}}}";
+    params.clear();
+    params.put("op", "POST");
+    params.put("data", savedSummarySearch);
+    resp = elasticController.sendKibanaReq(params, "search", indexName + "_summary-search", true);
+
+    if (!(resp.has("updated_at") || (resp.has("statusCode") && resp.get("statusCode").toString().equals("409")))) {
+      LOGGER.log(Level.SEVERE, ("Could not create kibana search for project " + project)
+          + "\n " + resp.toString(2));
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+          ResponseMessages.PROJECT_SERVICE_ADD_FAILURE);
+    }
+
+    String savedSummaryDashboard =
+            "{\"attributes\":{\"title\":\"Experiments summary dashboard\",\"hits\":0,\"description\":\"" +
+                    "A summary of all experiments run in this project\",\"panelsJSON\":\"[{\\\"gridData\\\"" +
+                    ":{\\\"h\\\":9,\\\"i\\\":\\\"1\\\",\\\"w\\\":12,\\\"x\\\":0,\\\"y\\\":0},\\\"id\\\"" +
+                    ":\\\"" + indexName + "_summary-search" + "\\\",\\\"panelIndex\\\":\\\"1\\\"" +
+                    ",\\\"type\\\":\\\"search\\\"" +
+                    ",\\\"version\\\":\\\"6.2.3\\\"}]\",\"optionsJSON\":\"{\\\"darkTheme\\\":false" +
+                    ",\\\"hidePanelTitles\\\":false,\\\"useMargins\\\":true}\",\"version\":1,\"timeRestore\":" +
+                    "false" +
+                    ",\"kibanaSavedObjectMeta\":{\"searchSourceJSON\":\"{\\\"query\\\":{\\\"language\\\"" +
+                    ":\\\"lucene\\\",\\\"query\\\":\\\"\\\"},\\\"filter\\\":[],\\\"highlightAll\\\":" +
+                    "true,\\\"version\\\":true}\"}}}";
+    params.clear();
+    params.put("op", "POST");
+    params.put("data", savedSummaryDashboard);
+    resp = elasticController.sendKibanaReq(params, "dashboard", indexName + "_summary-dashboard", true);
+
+    if (!(resp.has("updated_at") || (resp.has("statusCode") && resp.get("statusCode").toString().equals("409")))) {
+      LOGGER.log(Level.SEVERE, ("Could not create kibana dashboard for project " +
+          project + "\n " + resp.toString(2)));
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+          ResponseMessages.PROJECT_SERVICE_ADD_FAILURE);
+    }
+    return;
   }
 
   public void removeElasticsearch(Project project) throws AppException {
@@ -2618,23 +2611,19 @@ public class ProjectController {
         params.put("resource", "");
         JSONObject resp = elasticController.sendKibanaReq(params, "index-pattern", projectName + "_logs-*");
         LOGGER.log(Level.FINE, resp.toString(4));
-        
-        LOGGER.log(Level.INFO, "removeElasticsearch-1:"+service);
+
         //3. Delete Elasticsearch Index
         elasticController.deleteProjectIndices(project);
-        removedElastic = true;
-      }
-    }
 
-    for(ProjectServiceEnum service: projectServices) {
-      if(service.equals(ProjectServiceEnum.EXPERIMENTS)) {
         String experimentsIndex = project.getName().toLowerCase() + "_" + Settings.ELASTIC_EXPERIMENTS_INDEX;
 
-        elasticController.deleteIndex(experimentsIndex);
+        if(elasticController.indexExists(experimentsIndex)) {
+          elasticController.deleteIndex(experimentsIndex);
+        }
 
         params.clear();
         params.put("op", "DELETE");
-        JSONObject resp = elasticController.sendKibanaReq(params, "index-pattern", experimentsIndex, false);
+        resp = elasticController.sendKibanaReq(params, "index-pattern", experimentsIndex, false);
         params.clear();
         params.put("op", "DELETE");
         resp = elasticController.sendKibanaReq(params, "search", experimentsIndex + "_summary-search", false);
@@ -2642,7 +2631,8 @@ public class ProjectController {
         params.put("op", "DELETE");
         resp = elasticController.sendKibanaReq(params, "dashboard",
             experimentsIndex + "_summary-dashboard", false);
-
+        LOGGER.log(Level.INFO, "removeElasticsearch-1:" +service);
+        removedElastic = true;
       }
     }
   }

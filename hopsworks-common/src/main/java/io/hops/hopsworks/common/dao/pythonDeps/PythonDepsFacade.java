@@ -471,7 +471,6 @@ public class PythonDepsFacade {
   }
 
   private void removePythonForProject(Project proj) {
-    Collection<PythonDep> deps = proj.getPythonDepCollection();
     proj.setPythonDepCollection(new ArrayList<PythonDep>());
     proj.setPythonVersion("");
     proj.setConda(false);

@@ -63,6 +63,8 @@ public class AgentView {
   private List<SystemCommandView> systemCommands;
   @XmlElement(name = "conda-commands")
   private List<CondaCommandView> condaCommands;
+  @XmlElement(name = "conda-report")
+  private List<String> condaReport;
   
   public AgentView() {
   }
@@ -222,6 +224,15 @@ public class AgentView {
     this.condaCommands = condaCommands;
   }
   
+  @ApiModelProperty(value = "List of Anaconda environments to check for garbage collection")
+  public List<String> getCondaReport() {
+    return condaReport;
+  }
+  
+  public void setCondaReport(List<String> condaReport) {
+    this.condaReport = condaReport;
+  }
+  
   public AgentController.AgentHeartbeatDTO toAgentHeartbeatDTO() {
     final List<AgentController.AgentServiceDTO> services = new ArrayList<>();
     if (this.services != null) {
@@ -245,7 +256,8 @@ public class AgentView {
     }
     
     return new AgentController.AgentHeartbeatDTO(hostId, agentTime, load1, load5, load15, numGpus, diskUsed,
-        diskCapacity, memoryUsed, memoryCapacity, cores, privateIp, services, systemCommands, condaCommands);
+        diskCapacity, memoryUsed, memoryCapacity, cores, privateIp, services, systemCommands, condaCommands,
+        condaReport);
   }
   
   @Override

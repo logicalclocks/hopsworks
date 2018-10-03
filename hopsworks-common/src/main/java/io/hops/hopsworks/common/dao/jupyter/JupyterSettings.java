@@ -289,7 +289,7 @@ public class JupyterSettings implements Serializable {
   private String baseDir = "/Jupyter/";
 
   @Transient
-  private int numDriverGpus = 0;
+  private String distributionStrategy;
 
   public JupyterSettings() {
   }
@@ -582,12 +582,11 @@ public class JupyterSettings implements Serializable {
     this.faultTolerant = faultTolerant;
   }
 
-  public int getNumDriverGpus() {
-    return numDriverGpus;
+  public String getDistributionStrategy() {
+    return distributionStrategy;
   }
 
-  public void setNumDriverGpus(int numDriverGpus) {
-    this.numDriverGpus = numDriverGpus;
+  public void setDistributionStrategy(String distributionStrategy) {
+    this.distributionStrategy = distributionStrategy;
   }
-
 }

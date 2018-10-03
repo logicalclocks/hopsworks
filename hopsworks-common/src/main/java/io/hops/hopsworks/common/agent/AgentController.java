@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.common.agent;
 
+import com.google.gson.Gson;
 import io.hops.hopsworks.common.dao.alert.Alert;
 import io.hops.hopsworks.common.dao.alert.AlertEJB;
 import io.hops.hopsworks.common.dao.command.HeartbeatReplyDTO;
@@ -41,6 +42,8 @@ import io.hops.hopsworks.common.util.Settings;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.mail.MessagingException;
 import javax.ws.rs.core.Response;
 import java.io.BufferedReader;
@@ -54,8 +57,10 @@ import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @Stateless
+@TransactionAttribute(TransactionAttributeType.NEVER)
 public class AgentController {
   private static final Logger LOG = Logger.getLogger(AgentController.class.getName());
   private static final Comparator ASC_COMPARATOR = new CommandsComparator();
@@ -105,10 +110,31 @@ public class AgentController {
     }
     
     updateHostMetrics(host, heartbeat);
-    updateServices(host, heartbeat);
+    updateServices(heartbeat);
     processCondaCommands(heartbeat);
     processSystemCommands(heartbeat);
-    return constructResponse(host);
+    if (heartbeat.condaReport != null && !heartbeat.condaReport.isEmpty()) {
+      issueCondaEnvsGCCommand(host, heartbeat.condaReport);
+    }
+    
+    final HeartbeatReplyDTO response = new HeartbeatReplyDTO();
+    addNewCommandsToResponse(host, response);
+    return response;
+  }
+  
+  private void issueCondaEnvsGCCommand(final Hosts host, final List<String> envsToCheck) {
+    List<String> envsToDelete = envsToCheck.stream()
+        .filter(p -> {
+          Project project = projectFacade.findByName(p);
+          return project == null || !project.getConda();
+        }).collect(Collectors.toList());
+    
+    String projectNamesStr = new Gson().toJson(envsToDelete);
+    SystemCommand gcCommand = new SystemCommand(host, SystemCommandFacade.OP.CONDA_GC);
+    gcCommand.setPriority(Integer.MIN_VALUE);
+    gcCommand.setExecUser(settings.getAnacondaUser());
+    gcCommand.setCommandArgumentsAsString(projectNamesStr);
+    systemCommandFacade.persist(gcCommand);
   }
   
   public void alert(Alert alert, String hostId) throws Exception {
@@ -120,7 +146,7 @@ public class AgentController {
     }
   }
   
-  private HeartbeatReplyDTO constructResponse(final Hosts host) {
+  private void addNewCommandsToResponse(final Hosts host, final HeartbeatReplyDTO response) {
     final List<CondaCommands> newCondaCommands = new ArrayList<>();
     final List<CondaCommands> allCondaCommands = pythonDepsFacade.findByHost(host);
     for (final CondaCommands cc : allCondaCommands) {
@@ -140,7 +166,8 @@ public class AgentController {
   
     newCondaCommands.sort(ASC_COMPARATOR);
     newSystemCommands.sort(ASC_COMPARATOR);
-    return new HeartbeatReplyDTO(newSystemCommands, newCondaCommands);
+    response.setCondaCommands(newCondaCommands);
+    response.setSystemCommands(newSystemCommands);
   }
   
   private void updateHostMetrics(final Hosts host, final AgentHeartbeatDTO heartbeat) {
@@ -167,62 +194,21 @@ public class AgentController {
     hostsFacade.storeHost(host);
   }
   
-  private void updateServices(Hosts host, AgentHeartbeatDTO heartbeat) {
-    final String hostname = heartbeat.hostId;
-    for (final AgentServiceDTO service : heartbeat.services) {
-      final String cluster = service.cluster;
-      final String name = service.service;
-      final String group = service.group;
-      HostServices hostService = null;
-      try {
-        hostService = hostServicesFacade.find(hostname, cluster, group, name);
-      } catch (Exception ex) {
-        LOG.log(Level.FINE, "Could not find service for " + hostname + "/"
-          + cluster + "/" + group + "/" + name);
-        continue;
-      }
-      if (hostService == null) {
-        hostService = new HostServices();
-        hostService.setHost(host);
-        hostService.setCluster(cluster);
-        hostService.setGroup(group);
-        hostService.setService(name);
-        hostService.setStartTime(heartbeat.agentTime);
-      }
-      
-      final Integer pid = service.pid != null ? service.pid : -1;
-      hostService.setPid(pid);
-      if (service.status != null) {
-        if ((hostService.getStatus() == null || !hostService.getStatus().equals(Status.Started))
-            && service.status.equals(Status.Started)) {
-          hostService.setStartTime(heartbeat.agentTime);
-        }
-        hostService.setStatus(service.status);
-      } else {
-        hostService.setStatus(Status.None);
-      }
-      
-      if (service.status.equals(Status.Started)) {
-        hostService.setStopTime(heartbeat.agentTime);
-      }
-      final Long startTime = hostService.getStartTime();
-      final Long stopTime = hostService.getStopTime();
-      if (startTime != null && stopTime != null) {
-        hostService.setUptime(stopTime - startTime);
-      } else {
-        hostService.setUptime(0L);
-      }
-      hostServicesFacade.store(hostService);
+  private void updateServices(AgentHeartbeatDTO heartbeat) throws AppException {
+    List<HostServices> updatedHostServices = hostServicesFacade.updateHostServices(heartbeat);
+    updatedHostServices.stream()
+        .forEach(this::notifyHostServiceHealth);
+  }
   
-      final Health previousHealthReport = hostService.getHealth();
-      if (!hostService.getHealth().equals(previousHealthReport)
-          && hostService.getHealth().equals(Health.Bad)) {
-        final String subject = "alert: " + hostService.getGroup() + "." + hostService.getService() + "@" + hostService.
-            getHost().getHostname();
-        final String body = hostService.getGroup() + "." + hostService.getService() + "@" + hostService.getHost().
-            getHostname() + " transitioned from state " + previousHealthReport + " to " + hostService.getHealth();
-        emailAlert(subject, body);
-      }
+  private void notifyHostServiceHealth(HostServices hostService) {
+    final Health previousHealthReport = hostService.getHealth();
+    if (!hostService.getHealth().equals(previousHealthReport)
+        && hostService.getHealth().equals(Health.Bad)) {
+      final String subject = "alert: " + hostService.getGroup() + "." + hostService.getService() + "@" + hostService.
+          getHost().getHostname();
+      final String body = hostService.getGroup() + "." + hostService.getService() + "@" + hostService.getHost().
+          getHostname() + " transitioned from state " + previousHealthReport + " to " + hostService.getHealth();
+      emailAlert(subject, body);
     }
   }
   
@@ -261,8 +247,6 @@ public class AgentController {
             final String envStr = listCondaEnvironment(projectName);
             final Collection<PythonDep> pythonDeps = synchronizeDependencies(
                 projectId, envStr, projectId.getPythonDepCollection());
-            // Remove existing deps
-            pythonDepsFacade.removePythonDepsForProject(projectId);
             // Insert all deps in current listing
             pythonDepsFacade.addPythonDepsForProject(projectId, pythonDeps);
           }
@@ -452,13 +436,11 @@ public class AgentController {
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR,
             "System command with ID: " + id + " is not in the system");
       }
-      if (op.equals(SystemCommandFacade.OP.SERVICE_KEY_ROTATION)) {
-        processServiceKeyRotationCommand(systemCommand, status);
-      }
+      genericProcessSystemCommand(systemCommand, status);
     }
   }
   
-  private void processServiceKeyRotationCommand(final SystemCommand command, final SystemCommandFacade.STATUS status) {
+  private void genericProcessSystemCommand(final SystemCommand command, final SystemCommandFacade.STATUS status) {
     if (status.equals(SystemCommandFacade.STATUS.FINISHED)) {
       systemCommandFacade.delete(command);
     } else {
@@ -491,12 +473,13 @@ public class AgentController {
     private final List<AgentServiceDTO> services;
     private final List<SystemCommand> systemCommands;
     private final List<CondaCommands> condaCommands;
+    private final List<String> condaReport;
     
     public AgentHeartbeatDTO(final String hostId, final Long agentTime, final Double load1, final Double load5,
         final Double load15, final Integer numGpus, final Long diskUsed, final Long diskCapacity,
         final Long memoryUsed, final Long memoryCapacity, final Integer cores, final String privateIp,
         final List<AgentServiceDTO> services, final List<SystemCommand> systemCommands,
-        final List<CondaCommands> condaCommands) {
+        final List<CondaCommands> condaCommands, final List<String> condaReport) {
       this.hostId = hostId;
       this.agentTime = agentTime;
       this.load1 = load1;
@@ -512,6 +495,67 @@ public class AgentController {
       this.services = services;
       this.systemCommands = systemCommands;
       this.condaCommands = condaCommands;
+      this.condaReport = condaReport;
+    }
+  
+    public String getHostId() {
+      return hostId;
+    }
+  
+    public Long getAgentTime() {
+      return agentTime;
+    }
+  
+    public Double getLoad1() {
+      return load1;
+    }
+  
+    public Double getLoad5() {
+      return load5;
+    }
+  
+    public Double getLoad15() {
+      return load15;
+    }
+  
+    public Integer getNumGpus() {
+      return numGpus;
+    }
+  
+    public Long getDiskUsed() {
+      return diskUsed;
+    }
+  
+    public Long getDiskCapacity() {
+      return diskCapacity;
+    }
+  
+    public Long getMemoryUsed() {
+      return memoryUsed;
+    }
+  
+    public Long getMemoryCapacity() {
+      return memoryCapacity;
+    }
+  
+    public Integer getCores() {
+      return cores;
+    }
+  
+    public String getPrivateIp() {
+      return privateIp;
+    }
+  
+    public List<AgentServiceDTO> getServices() {
+      return services;
+    }
+  
+    public List<SystemCommand> getSystemCommands() {
+      return systemCommands;
+    }
+  
+    public List<CondaCommands> getCondaCommands() {
+      return condaCommands;
     }
   }
   
@@ -531,6 +575,30 @@ public class AgentController {
       this.webPort = webPort;
       this.pid = pid;
       this.status = status;
+    }
+  
+    public String getCluster() {
+      return cluster;
+    }
+  
+    public String getService() {
+      return service;
+    }
+  
+    public String getGroup() {
+      return group;
+    }
+  
+    public String getWebPort() {
+      return webPort;
+    }
+  
+    public Integer getPid() {
+      return pid;
+    }
+  
+    public Status getStatus() {
+      return status;
     }
   }
   
