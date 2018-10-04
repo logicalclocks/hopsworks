@@ -61,7 +61,6 @@ module DatasetHelper
     with_valid_project
     dsname = "dataset_#{short_random_id}"
     post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/createTopLevelDataSet", {name: dsname, description: "test dataset", searchable: true, generateReadme: true}
-    expect_json(errorMsg: ->(value){ expect(value).to be_empty})
     expect_json(successMessage: "The Dataset was created successfully.")
     expect_status(200)
     get_dataset_by_name(dsname) 
@@ -69,7 +68,6 @@ module DatasetHelper
   
   def create_dataset_by_name(project, dsname)
     post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/createTopLevelDataSet", {name: dsname, description: "test dataset", searchable: true, generateReadme: true}
-    expect_json(errorMsg: ->(value){ expect(value).to be_empty})
     expect_json(successMessage: "The Dataset was created successfully.")
     expect_status(200)
     get_dataset(project, dsname) 

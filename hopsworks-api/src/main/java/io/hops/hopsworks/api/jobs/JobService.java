@@ -41,7 +41,7 @@ package io.hops.hopsworks.api.jobs;
 
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
-import io.hops.hopsworks.api.util.JsonResponse;
+import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.common.dao.jobhistory.Execution;
 import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationAttemptStateFacade;
@@ -1317,7 +1317,7 @@ public class JobService {
         dfs.closeDfsClient(udfso);
       }
     }
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     json.setSuccessMessage("Log retrieved successfuly.");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
         json).build();
@@ -1358,7 +1358,7 @@ public class JobService {
       jobFacade.removeJob(job);
       LOGGER.log(Level.INFO, "Deleted job name ={0} job id ={1}",
         new Object[]{job.getName(), job.getId()});
-      JsonResponse json = new JsonResponse();
+      RESTApiJsonResponse json = new RESTApiJsonResponse();
       json.setSuccessMessage("Deleted job " + job.getName() + " successfully");
       activityFacade.persistActivity(ActivityFacade.DELETED_JOB + job.
         getName(), project, sc.getUserPrincipal().getName());
@@ -1414,7 +1414,7 @@ public class JobService {
       if (isScheduleUpdated) {
         boolean status = jobController.scheduleJob(jobId);
         if (status) {
-          JsonResponse json = new JsonResponse();
+          RESTApiJsonResponse json = new RESTApiJsonResponse();
           json.setSuccessMessage("Scheduled job " + job.getName()
             + " successfully");
           activityFacade.persistActivity(ActivityFacade.SCHEDULED_JOB + job.

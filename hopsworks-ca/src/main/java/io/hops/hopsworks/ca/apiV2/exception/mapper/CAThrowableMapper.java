@@ -16,10 +16,13 @@
 
 package io.hops.hopsworks.ca.apiV2.exception.mapper;
 
+import io.hops.hopsworks.common.exception.RESTException;
 import io.hops.hopsworks.common.exception.ThrowableMapper;
 import io.hops.hopsworks.common.util.Settings;
 
 import javax.ejb.EJB;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
 
 @Provider
@@ -27,6 +30,14 @@ public class CAThrowableMapper extends ThrowableMapper {
   
   @EJB
   Settings settings;
+  
+  @Override
+  public Response handleRESTException(Response.StatusType status, RESTException ex) {
+    return Response.status(status)
+      .entity(ex.getJsonResponse(new CAJsonResponse(), getRESTLogLevel()))
+      .type(MediaType.APPLICATION_JSON)
+      .build();
+  }
   
   @Override
   public Settings.LOG_LEVEL getRESTLogLevel() {

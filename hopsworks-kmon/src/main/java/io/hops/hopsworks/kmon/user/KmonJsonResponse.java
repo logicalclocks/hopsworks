@@ -36,61 +36,38 @@
  * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package io.hops.hopsworks.ca.api.exception.mapper;
 
-import javax.xml.bind.annotation.XmlElement;
+package io.hops.hopsworks.kmon.user;
+
+import io.hops.hopsworks.common.util.JsonResponse;
+
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.Map;
 
-@XmlRootElement
-public class JsonResponse {
+@XmlRootElement //we don't need this thanks to Jackson
+//@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)  
+public class KmonJsonResponse extends JsonResponse {
 
-  private String status;
-  private Integer statusCode;
-  private String errorMsg;
-  private String successMessage;
+  private Map<String, Object> fieldErrors;
+  private Object data;
 
-  public JsonResponse() {
+  public KmonJsonResponse() {
   }
 
-  public JsonResponse(String status) {
-    this.status = status;
+  public Map<String, Object> getFieldErrors() {
+    return fieldErrors;
   }
 
-  public JsonResponse(Integer statusCode) {
-    this.statusCode = statusCode;
+  public void setFieldErrors(Map<String, Object> fieldErrors) {
+    this.fieldErrors = fieldErrors;
   }
 
-  public Integer getStatusCode() {
-    return statusCode;
+  public Object getData() {
+    return data;
   }
 
-  public void setStatusCode(Integer statusCode) {
-    this.statusCode = statusCode;
-  }
-
-  public String getStatus() {
-    return status;
-  }
-
-  public void setStatus(String status) {
-    this.status = status;
-  }
-
-  @XmlElement
-  public String getErrorMsg() {
-    return errorMsg;
-  }
-
-  public void setErrorMsg(String errorMsg) {
-    this.errorMsg = errorMsg;
-  }
-
-  public String getSuccessMessage() {
-    return successMessage;
-  }
-
-  public void setSuccessMessage(String successMessage) {
-    this.successMessage = successMessage;
+  public void setData(Object data) {
+    this.data = data;
   }
 
 }

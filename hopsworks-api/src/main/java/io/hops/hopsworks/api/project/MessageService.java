@@ -40,7 +40,7 @@
 package io.hops.hopsworks.api.project;
 
 import io.hops.hopsworks.api.filter.NoCacheResponse;
-import io.hops.hopsworks.api.util.JsonResponse;
+import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.common.dao.dataset.DatasetRequest;
 import io.hops.hopsworks.common.dao.dataset.DatasetRequestFacade;
 import io.hops.hopsworks.common.dao.message.Message;
@@ -123,7 +123,7 @@ public class MessageService {
   @Path("countUnread")
   @Produces(MediaType.APPLICATION_JSON)
   public Response countUnreadMessagesByUser(@Context SecurityContext sc) {
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     String eamil = sc.getUserPrincipal().getName();
     Users user = userFacade.findByEmail(eamil);
     Long unread = msgFacade.countUnreadMessagesTo(user);
@@ -214,7 +214,7 @@ public class MessageService {
   @Path("empty")
   @Produces(MediaType.APPLICATION_JSON)
   public Response emptyTrash(@Context SecurityContext sc) {
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     String eamil = sc.getUserPrincipal().getName();
     Users user = userFacade.findByEmail(eamil);
     int rowsAffected = msgFacade.emptyTrash(user);

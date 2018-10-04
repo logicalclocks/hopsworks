@@ -41,7 +41,7 @@ package io.hops.hopsworks.api.project;
 
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
-import io.hops.hopsworks.api.util.JsonResponse;
+import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
 import io.hops.hopsworks.common.dao.dataset.DatasetRequest;
@@ -119,7 +119,7 @@ public class RequestService {
   public Response requestAccess(RequestDTO requestDTO,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws DatasetException {
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     if (requestDTO == null || requestDTO.getInodeId() == null
             || requestDTO.getProjectId() == null) {
       throw new IllegalArgumentException("requestDTO was not provided or was incomplete!");
@@ -222,7 +222,7 @@ public class RequestService {
   public Response requestJoin(RequestDTO requestDTO,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws ProjectException {
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     if (requestDTO == null || requestDTO.getProjectId() == null) {
       throw new IllegalArgumentException("requestDTO wast not provided or was incomplete.");
     }

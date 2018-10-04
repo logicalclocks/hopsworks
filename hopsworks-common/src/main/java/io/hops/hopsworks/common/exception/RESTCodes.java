@@ -55,7 +55,7 @@ public class RESTCodes {
   public enum ProjectErrorCode implements RESTErrorCode {
     
     //project error response
-    NO_ROLE_FOUND(150000, "No valid role found for this user", Response.Status.BAD_REQUEST),
+    NO_ROLE_FOUND(150000, "No valid role found for this user", Response.Status.FORBIDDEN),
     PROJECT_EXISTS(150001, "Project with the same name already exists.", Response.Status.CONFLICT),
     NUM_PROJECTS_LIMIT_REACHED(150002, "You have reached the maximum number of projects you could create."
       + " Contact an administrator to increase your limit.", Response.Status.BAD_REQUEST),
@@ -68,7 +68,7 @@ public class RESTCodes {
     PROJECT_FOLDER_NOT_REMOVED(150009, "Project folder could not be removed from HDFS.", Response.Status.BAD_REQUEST),
     PROJECT_REMOVAL_NOT_ALLOWED(150010, "Project can only be deleted by its owner.", Response.Status.FORBIDDEN),
     PROJECT_MEMBER_NOT_REMOVED(150011, "Failed to remove team member.", Response.Status.INTERNAL_SERVER_ERROR),
-    MEMBER_REMOVAL_NOT_ALLOWED(150012, "Your project role does not allow to remove other members of this project.",
+    MEMBER_REMOVAL_NOT_ALLOWED(150012, "Your project role does not allow to remove other members from this project.",
       Response.Status.FORBIDDEN),
     PROJECT_OWNER_NOT_ALLOWED(150013, "Removing the project owner is not allowed.", Response.Status.BAD_REQUEST),
     PROJECT_OWNER_ROLE_NOT_ALLOWED(150014, "Changing the role of the project owner is not allowed.",
@@ -158,7 +158,9 @@ public class RESTCodes {
     ANACONDA_NOT_ENABLED(150064, "First enable Anaconda. Click on 'Python' -> Pick a version",
       Response.Status.PRECONDITION_FAILED),
     TENSORBOARD_ELASTIC_INDEX_NOT_FOUND(150065, "Could not find elastic index for TensorBoard.",
-      Response.Status.NOT_FOUND);
+      Response.Status.NOT_FOUND),
+    PROJECT_ROLE_FORBIDDEN(150066, "Your project role does not allow to perform this action.",
+      Response.Status.FORBIDDEN);
     
     
     private Integer code;
@@ -485,7 +487,6 @@ public class RESTCodes {
     EMAIL_SENDING_FAILURE(100039, "Could not send email", Response.Status.EXPECTATION_FAILED),
     HOST_EXISTS(100040, "Host exists", Response.Status.CONFLICT);
     
-    
     private Integer code;
     private String message;
     private Response.StatusType respStatus;
@@ -575,7 +576,9 @@ public class RESTCodes {
     UNKNOWN_ACTION(120006, "This action can not be applied on this resource.", Response.Status.BAD_REQUEST),
     INCOMPLETE_REQUEST(120007, "Some parameters were not provided or were not in the required format.",
       Response.Status.BAD_REQUEST),
-    SECURITY_EXCEPTION(120008, "A Java security error occurred.", Response.Status.INTERNAL_SERVER_ERROR);
+    SECURITY_EXCEPTION(120008, "A Java security error occurred.", Response.Status.INTERNAL_SERVER_ERROR),
+    ENDPOINT_ANNOTATION_MISSING(120009, "The requested endpoint did not have any project role annotation",
+      Response.Status.SERVICE_UNAVAILABLE);
     
     private Integer code;
     private String message;
@@ -610,7 +613,7 @@ public class RESTCodes {
     MASTER_ENCRYPTION_PASSWORD_CHANGE(200001,
       "Master password change procedure started. Check your inbox for final status", Response.Status.BAD_REQUEST),
     HDFS_ACCESS_CONTROL(200002, "Access error while trying to access hdfs resource", Response.Status.FORBIDDEN),
-    EJB_ACCESS_LOCAL(200003, "EJB access local error", Response.Status.UNAUTHORIZED),
+    EJB_ACCESS_LOCAL(200003, "Client not authorized for this invocation", Response.Status.UNAUTHORIZED),
     CERT_CREATION_ERROR(200004, "Error while generating certificates.", Response.Status.INTERNAL_SERVER_ERROR),
     CERT_CN_EXTRACT_ERROR(200005, "Error while extracting CN from certificate.", Response.Status.INTERNAL_SERVER_ERROR),
     CERT_ERROR(200006, "Certificate could not be validated.", Response.Status.UNAUTHORIZED),

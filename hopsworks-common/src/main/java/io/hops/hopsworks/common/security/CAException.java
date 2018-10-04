@@ -41,8 +41,8 @@ package io.hops.hopsworks.common.security;
 
 import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.exception.RESTException;
+import io.hops.hopsworks.common.util.JsonResponse;
 import io.hops.hopsworks.common.util.Settings;
-import org.json.JSONObject;
 
 
 public class CAException extends RESTException {
@@ -69,7 +69,8 @@ public class CAException extends RESTException {
   
   
   @Override
-  public JSONObject getJson(Settings.LOG_LEVEL logLevel) {
-    return super.getJson(logLevel).put("certType", certType);
+  public JsonResponse getJsonResponse(JsonResponse jsonResponse, Settings.LOG_LEVEL logLevel) {
+    jsonResponse.setCertificateType(certType);
+    return super.getJsonResponse(jsonResponse, logLevel);
   }
 }

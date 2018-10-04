@@ -49,7 +49,7 @@ import javax.ws.rs.ext.Provider;
 public class KmonThrowableMapper implements ExceptionMapper<Throwable> {
 
   private static final Response RESPONSE;
-  private static final JsonResponse JSON = new JsonResponse("ERROR");
+  private static final KmonJsonResponse JSON = new KmonJsonResponse();
 
   static {
     RESPONSE = Response.status(500).entity(JSON).build();

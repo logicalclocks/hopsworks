@@ -72,7 +72,7 @@ public class VariablesService {
   @Path("{id}")
   @Produces(MediaType.APPLICATION_JSON)
   public Response getVar(@PathParam("id") String id) {
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     json.setSuccessMessage(settings.findById(id).getValue());
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }
@@ -81,7 +81,7 @@ public class VariablesService {
   @Path("twofactor")
   @Produces(MediaType.APPLICATION_JSON)
   public Response getTwofactor() {
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     json.setSuccessMessage(settings.getTwoFactorAuth());
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }
@@ -90,7 +90,7 @@ public class VariablesService {
   @Path("ldap")
   @Produces(MediaType.APPLICATION_JSON)
   public Response getLDAPAuthStatus() {
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     json.setSuccessMessage(settings.getLDAPAuthStatus());
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }

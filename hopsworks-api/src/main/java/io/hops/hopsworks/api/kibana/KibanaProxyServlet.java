@@ -113,7 +113,7 @@ public class KibanaProxyServlet extends ProxyServlet {
   protected void service(HttpServletRequest servletRequest,
                          HttpServletResponse servletResponse) throws ServletException, IOException {
     if (servletRequest.getUserPrincipal() == null) {
-      servletResponse.sendError(403, "User is not logged in");
+      servletResponse.sendError(401, "User is not logged in");
       return;
     }
     String email = servletRequest.getUserPrincipal().getName();

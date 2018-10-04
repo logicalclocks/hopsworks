@@ -48,7 +48,7 @@ import io.hops.hopsworks.api.jupyter.JupyterService;
 import io.hops.hopsworks.api.pythonDeps.PythonDepsService;
 import io.hops.hopsworks.api.serving.TfServingService;
 import io.hops.hopsworks.api.tensorflow.TensorBoardService;
-import io.hops.hopsworks.api.util.JsonResponse;
+import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.api.util.LocalFsService;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.dataset.DataSetDTO;
@@ -451,7 +451,7 @@ public class ProjectService {
       @Context HttpServletRequest req)
     throws ProjectException, DatasetException, HopsSecurityException, ServiceException {
 
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     String userEmail = sc.getUserPrincipal().getName();
     Users user = userFacade.findByEmail(userEmail);
     Project project = projectController.findProjectById(id);
@@ -601,8 +601,7 @@ public class ProjectService {
     List<String> failedMembers = null;
     projectController.createProject(projectDTO, user, failedMembers, req.getSession().getId());
 
-    JsonResponse json = new JsonResponse();
-    json.setStatus("201");// Created
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     StringBuilder message = new StringBuilder();
     message.append(ResponseMessages.PROJECT_CREATED);
     message.append("<br>You have ").append(user.getMaxNumProjects() - user.getNumCreatedProjects()).
@@ -626,7 +625,7 @@ public class ProjectService {
       @Context HttpServletRequest req) throws ProjectException, GenericException {
 
     String userMail = sc.getUserPrincipal().getName();
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
 
     projectController.removeProject(userMail, id, req.getSession().getId());
 

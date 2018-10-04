@@ -1,4 +1,5 @@
 package io.hops.hopsworks.common.exception;
+
 import io.hops.hopsworks.common.util.Settings;
 import org.apache.hadoop.security.AccessControlException;
 
@@ -23,6 +24,7 @@ public abstract class ThrowableMapper implements ExceptionMapper<Throwable> {
   @Override
   @Produces(MediaType.APPLICATION_JSON)
   public Response toResponse(Throwable ex) {
+    
     //Order is important, check children first
     if (ex instanceof IllegalArgumentException) {
       return handleIllegalArgumentException((IllegalArgumentException) ex);
@@ -65,7 +67,6 @@ public abstract class ThrowableMapper implements ExceptionMapper<Throwable> {
     } else {
       return handleUnknownException(ex);
     }
-    
   }
   
   public Response handleIllegalArgumentException(IllegalArgumentException ex) {
@@ -104,19 +105,15 @@ public abstract class ThrowableMapper implements ExceptionMapper<Throwable> {
   }
   
   public Response handleRESTException(RESTException ex) {
-    logger.log(Level.FINE, ex.getClass().getName(), ex);
-    return handleRESTException(ex.getErrorCode().getRespStatus(), ex);
-  }
-  
-  public Response handleRESTException(Response.StatusType status, RESTException ex) {
     if (ex.getCause() != null) {
       logger.log(Level.SEVERE, ex.getClass().getName(), ex);
     } else {
       logger.log(Level.FINE, ex.getClass().getName(), ex);
     }
-    return Response.status(status).entity(ex.getJson(getRESTLogLevel()).toString()).type(MediaType.APPLICATION_JSON)
-      .build();
+    return handleRESTException(ex.getErrorCode().getRespStatus(), ex);
   }
+  
+  public abstract Response handleRESTException(Response.StatusType status, RESTException ex);
   
   public Response handleAccessLocalException(AccessLocalException ex) {
     logger.log(Level.WARNING, ex.getClass().getName(), ex);
@@ -131,7 +128,7 @@ public abstract class ThrowableMapper implements ExceptionMapper<Throwable> {
    * @param ex
    * @return
    */
-  public Response handleUnknownException(Throwable ex){
+  public Response handleUnknownException(Throwable ex) {
     logger.log(Level.SEVERE, ex.getClass().getName(), ex);
     return handleRESTException(new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR, null, ex.getMessage(),
       ex));

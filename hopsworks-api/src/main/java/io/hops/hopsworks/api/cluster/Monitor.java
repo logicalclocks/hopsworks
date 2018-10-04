@@ -40,7 +40,7 @@
 package io.hops.hopsworks.api.cluster;
 
 import io.hops.hopsworks.api.filter.NoCacheResponse;
-import io.hops.hopsworks.api.util.JsonResponse;
+import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.common.dao.host.Hosts;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.dao.kagent.HostServices;
@@ -167,7 +167,7 @@ public class Monitor {
   public Response serviceOp(@PathParam("groupName") String groupName, @Context SecurityContext sc,
       @Context HttpServletRequest req, ServicesActionDTO action) throws GenericException {
     String result = hostServicesFacade.serviceOp(groupName, action.getAction());
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     json.setSuccessMessage(result);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }
@@ -179,7 +179,7 @@ public class Monitor {
   @Produces(MediaType.APPLICATION_JSON)
   public Response serviceOp(@PathParam("groupName") String groupName, @PathParam("serviceName") String serviceName,
       @Context SecurityContext sc, @Context HttpServletRequest req, ServicesActionDTO action) throws GenericException {
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     json.setSuccessMessage(hostServicesFacade.serviceOp(groupName, serviceName, action.getAction()));
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }
@@ -193,7 +193,7 @@ public class Monitor {
       @PathParam("serviceName") String serviceName,
       @PathParam("hostId") String hostId, @Context SecurityContext sc, @Context HttpServletRequest req,
       ServicesActionDTO action) throws GenericException {
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     json.setSuccessMessage(hostServicesFacade.serviceOnHostOp(groupName, serviceName, hostId, action.getAction()));
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }

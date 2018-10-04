@@ -94,7 +94,7 @@ public class BannerService {
   @AllowedProjectRoles({AllowedProjectRoles.ANYONE})
   public Response findUserBanner(@Context HttpServletRequest req) {
     Users user = userFacade.findByEmail(req.getRemoteUser());
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     json.setSuccessMessage("");
     if (user != null && (user.getSalt() == null || user.getSalt().isEmpty())) {
       json.setSuccessMessage("For security purposes, we highly recommend you change your password.");

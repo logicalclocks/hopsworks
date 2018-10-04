@@ -42,7 +42,7 @@ package io.hops.hopsworks.api.dela;
 import io.hops.hopsworks.api.dela.dto.InodeIdDTO;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
-import io.hops.hopsworks.api.util.JsonResponse;
+import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
@@ -163,7 +163,7 @@ public class DelaProjectService {
     Dataset dataset = getDatasetByInode(inode);
     Users user = getUser(sc.getUserPrincipal().getName());
     delaWorkerCtrl.shareDatasetWithHops(project, dataset, user);
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     json.setSuccessMessage("Dataset transfer is started - published");
     return successResponse(json);
   }
@@ -194,7 +194,7 @@ public class DelaProjectService {
     } else {
       delaWorkerCtrl.unshareFromHops(project, dataset, user);
     }
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     json.setSuccessMessage("Dataset is now private");
     return successResponse(json);
   }

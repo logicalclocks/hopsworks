@@ -79,10 +79,9 @@ public class EndpointService {
   public Response findEndpoint(
           @Context SecurityContext sc,
           @Context HttpServletRequest req) {
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     HdfsLeDescriptors hdfsLeDescriptors = hdfsLeDescriptorsFacade.findEndpoint();
 
-    json.setStatus("SUCCESS");
     json.setData(hdfsLeDescriptors.getHostname());
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(

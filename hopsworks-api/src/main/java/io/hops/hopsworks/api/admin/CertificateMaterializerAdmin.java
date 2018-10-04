@@ -42,7 +42,7 @@ package io.hops.hopsworks.api.admin;
 import com.google.common.base.Strings;
 import io.hops.hopsworks.api.admin.dto.MaterializerStateResponse;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
-import io.hops.hopsworks.api.util.JsonResponse;
+import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.swagger.annotations.Api;
@@ -158,7 +158,7 @@ public class CertificateMaterializerAdmin {
       throw new IllegalArgumentException("materialName was not provided or was empty");
     }
     
-    JsonResponse response;
+    RESTApiJsonResponse response;
     Matcher psuMatcher = projectSpecificPattern.matcher(materialName);
     if (psuMatcher.matches()) {
       String projectName = psuMatcher.group(1);
@@ -204,7 +204,7 @@ public class CertificateMaterializerAdmin {
       throw new IllegalArgumentException("materialName was not provided or was empty");
     }
     
-    JsonResponse response;
+    RESTApiJsonResponse response;
     Matcher psuMatcher = projectSpecificPattern.matcher(materialName);
     if (psuMatcher.matches()) {
       String projectName = psuMatcher.group(1);

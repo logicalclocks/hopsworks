@@ -41,7 +41,7 @@ package io.hops.hopsworks.api.project;
 
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
-import io.hops.hopsworks.api.util.JsonResponse;
+import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
@@ -123,7 +123,7 @@ public class ProjectMembersService {
           @Context HttpServletRequest req) throws KafkaException, ProjectException, UserException {
 
     Project project = projectController.findProjectById(this.projectId);
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     List<String> failedMembers = null;
     String owner = sc.getUserPrincipal().getName();
 
@@ -159,6 +159,7 @@ public class ProjectMembersService {
   @POST
   @Path("/{email}")
   @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response updateRoleByEmail(
           @PathParam("email") String email,
           @FormParam("role") String role,
@@ -166,7 +167,7 @@ public class ProjectMembersService {
           @Context HttpServletRequest req) throws ProjectException, UserException {
 
     Project project = projectController.findProjectById(this.projectId);
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     String owner = sc.getUserPrincipal().getName();
     if (email == null) {
       throw new IllegalArgumentException("Email was not provided.");
@@ -195,7 +196,7 @@ public class ProjectMembersService {
           @Context HttpServletRequest req) throws ProjectException {
 
     Project project = projectController.findProjectById(this.projectId);
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     String owner = sc.getUserPrincipal().getName();
     if (email == null) {
       throw new IllegalArgumentException("Email was not provided");

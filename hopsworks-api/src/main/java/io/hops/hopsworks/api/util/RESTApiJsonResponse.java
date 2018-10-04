@@ -36,61 +36,58 @@
  * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package io.hops.hopsworks.cluster;
+
+package io.hops.hopsworks.api.util;
+
+import io.hops.hopsworks.common.util.JsonResponse;
+
+import java.util.List;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
-public class JsonResponse {
-
-  private String status;
-  private Integer statusCode;
-  private String errorMsg;
-  private String successMessage;
-
-  public JsonResponse() {
+public class RESTApiJsonResponse extends JsonResponse {
+  
+  private String QRCode;
+  private List<String> fieldErrors;
+  private Object data;
+  private String sessionID;
+  
+  public RESTApiJsonResponse() {
   }
-
-  public JsonResponse(String status) {
-    this.status = status;
+  
+  
+  public List<String> getFieldErrors() {
+    return fieldErrors;
   }
-
-  public JsonResponse(Integer statusCode) {
-    this.statusCode = statusCode;
+  
+  public void setFieldErrors(List<String> fieldErrors) {
+    this.fieldErrors = fieldErrors;
   }
-
-  public Integer getStatusCode() {
-    return statusCode;
+  
+  public Object getData() {
+    return data;
   }
-
-  public void setStatusCode(Integer statusCode) {
-    this.statusCode = statusCode;
+  
+  public void setData(Object data) {
+    this.data = data;
   }
-
-  public String getStatus() {
-    return status;
-  }
-
-  public void setStatus(String status) {
-    this.status = status;
-  }
-
+  
   @XmlElement
-  public String getErrorMsg() {
-    return errorMsg;
+  public String getSessionID() {
+    return sessionID;
   }
-
-  public void setErrorMsg(String errorMsg) {
-    this.errorMsg = errorMsg;
+  
+  public void setSessionID(String sessionID) {
+    this.sessionID = sessionID;
   }
-
-  public String getSuccessMessage() {
-    return successMessage;
+  
+  public String getQRCode() {
+    return QRCode;
   }
-
-  public void setSuccessMessage(String successMessage) {
-    this.successMessage = successMessage;
+  
+  public void setQRCode(String QRCode) {
+    this.QRCode = QRCode;
   }
-
+  
 }
-

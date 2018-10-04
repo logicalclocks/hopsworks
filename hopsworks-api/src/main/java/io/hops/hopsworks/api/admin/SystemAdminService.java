@@ -42,7 +42,7 @@ package io.hops.hopsworks.api.admin;
 import com.google.common.base.Strings;
 import io.hops.hopsworks.api.admin.dto.VariablesRequest;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
-import io.hops.hopsworks.api.util.JsonResponse;
+import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.host.Hosts;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
@@ -122,7 +122,7 @@ public class SystemAdminService {
       certificatesMgmService.checkPassword(oldPassword, userEmail);
       certificatesMgmService.resetMasterEncryptionPassword(newPassword, userEmail);
   
-      JsonResponse response = noCacheResponse.buildJsonResponse(Response.Status.NO_CONTENT, ResponseMessages
+      RESTApiJsonResponse response = noCacheResponse.buildJsonResponse(Response.Status.NO_CONTENT, ResponseMessages
           .MASTER_ENCRYPTION_PASSWORD_CHANGE);
   
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(response).build();
@@ -140,7 +140,7 @@ public class SystemAdminService {
     LOGGER.log(Level.FINE, "Requested refreshing variables");
     settings.refreshCache();
     
-    JsonResponse response = noCacheResponse.buildJsonResponse(Response.Status.NO_CONTENT, "Variables refreshed");
+    RESTApiJsonResponse response = noCacheResponse.buildJsonResponse(Response.Status.NO_CONTENT, "Variables refreshed");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(response).build();
   }
   
@@ -163,7 +163,7 @@ public class SystemAdminService {
     
     settings.updateVariables(updateVariablesMap);
     
-    JsonResponse response = noCacheResponse.buildJsonResponse(Response.Status.NO_CONTENT, "Variables updated");
+    RESTApiJsonResponse response = noCacheResponse.buildJsonResponse(Response.Status.NO_CONTENT, "Variables updated");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(response).build();
   }
   
@@ -218,7 +218,7 @@ public class SystemAdminService {
       }
 
       hostsFacade.storeHost(storedNode);
-      JsonResponse response = noCacheResponse.buildJsonResponse(Response.Status.NO_CONTENT, "Node updated");
+      RESTApiJsonResponse response = noCacheResponse.buildJsonResponse(Response.Status.NO_CONTENT, "Node updated");
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NO_CONTENT).entity(response).build();
     }
   }
@@ -231,7 +231,7 @@ public class SystemAdminService {
       throw new IllegalArgumentException("hostId was not provided.");
     }
     boolean deleted = hostsFacade.removeByHostname(hostId);
-    JsonResponse response;
+    RESTApiJsonResponse response;
     if (deleted) {
       response = noCacheResponse.buildJsonResponse(Response.Status.OK, "Node with ID " + hostId + " deleted");
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(response).build();
@@ -274,7 +274,8 @@ public class SystemAdminService {
   @Path("/rotate")
   public Response serviceKeyRotate(@Context SecurityContext sc, @Context HttpServletRequest request) {
     certificatesMgmService.issueServiceKeyRotationCommand();
-    JsonResponse response = noCacheResponse.buildJsonResponse(Response.Status.NO_CONTENT, "Key rotation commands " +
+    RESTApiJsonResponse
+      response = noCacheResponse.buildJsonResponse(Response.Status.NO_CONTENT, "Key rotation commands " +
         "issued");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NO_CONTENT).entity(response).build();
   }

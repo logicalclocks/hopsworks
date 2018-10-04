@@ -16,9 +16,9 @@
 
 package io.hops.hopsworks.common.exception;
 
+import io.hops.hopsworks.common.util.JsonResponse;
 import io.hops.hopsworks.common.util.Settings;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.json.JSONObject;
 
 import java.io.Serializable;
 
@@ -61,20 +61,23 @@ public abstract class RESTException extends Exception implements Serializable {
     return errorCode;
   }
   
-  public JSONObject getJson(Settings.LOG_LEVEL logLevel) {
-    JSONObject json = new JSONObject()
-      .put("code", errorCode.getCode())
-      .put("message", errorCode.getMessage());
+  public JsonResponse getJsonResponse(JsonResponse jsonResponse, Settings.LOG_LEVEL logLevel) {
+  
+    if(jsonResponse == null){
+      throw new IllegalArgumentException("jsonResponse was not provided.");
+    }
+    jsonResponse.setErrorMsg(errorCode.getMessage());
+    jsonResponse.setErrorCode(errorCode.getCode());
     
     if (logLevel.getLevel() <= Settings.LOG_LEVEL.PROD.getLevel()) {
-      json.put("usrMsg", usrMsg);
+      jsonResponse.setUsrMsg(usrMsg);
     }
     if (logLevel.getLevel() <= Settings.LOG_LEVEL.TEST.getLevel()) {
-      json.put("devMsg", devMsg);
+      jsonResponse.setDevMsg(devMsg);
     }
     if (logLevel.getLevel() <= Settings.LOG_LEVEL.DEV.getLevel()) {
-      json.put("trace", ExceptionUtils.getStackTrace(this));
+      jsonResponse.setTrace(ExceptionUtils.getStackTrace(this));
     }
-    return json;
+    return jsonResponse;
   }
 }

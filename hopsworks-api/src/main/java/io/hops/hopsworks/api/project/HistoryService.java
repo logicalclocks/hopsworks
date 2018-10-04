@@ -41,7 +41,7 @@ package io.hops.hopsworks.api.project;
 
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
-import io.hops.hopsworks.api.util.JsonResponse;
+import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.jobhistory.YarnAppHeuristicResultDetailsFacade;
 import io.hops.hopsworks.common.dao.jobhistory.YarnAppHeuristicResultFacade;
@@ -185,7 +185,7 @@ public class HistoryService {
           @Context HttpServletRequest req,
           @HeaderParam("Access-Control-Request-Headers") String requestH) {
 
-    JsonResponse json = getJobDetailsFromDrElephant(jobId);
+    RESTApiJsonResponse json = getJobDetailsFromDrElephant(jobId);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();
   }
@@ -244,12 +244,12 @@ public class HistoryService {
 
     while (jobIt.hasNext()) {
       String appId = jobIt.next();
-      JsonResponse json = getJobDetailsFromDrElephant(appId);
+      RESTApiJsonResponse json = getJobDetailsFromDrElephant(appId);
       JobsHistory jobsHistory = jobsHistoryFacade.findByAppId(appId);
 
       // Check if Dr.Elephant can find the Heuristic details for this application.
       // If the status is FAILED then continue to the next iteration.
-      if (json.getStatus() == "FAILED") {
+      if (json.getErrorCode() != null) {
         continue;
       }
 
@@ -333,17 +333,16 @@ public class HistoryService {
    * @param jobId
    * @return
    */
-  private JsonResponse getJobDetailsFromDrElephant(String jobId) {
+  private RESTApiJsonResponse getJobDetailsFromDrElephant(String jobId) {
 
     try {
-      JsonResponse json = new JsonResponse();
+      RESTApiJsonResponse json = new RESTApiJsonResponse();
       URL url = new URL(settings.getDrElephantUrl() + "/rest/job?id=" + jobId);
       HttpURLConnection conn = (HttpURLConnection) url.openConnection();
       conn.setRequestMethod("GET");
       conn.setRequestProperty("Accept", "application/json");
 
       if (conn.getResponseCode() != 200) {
-        json.setStatus("FAILED");
         json.setData("Failed : HTTP error code : " + conn.getResponseCode());
         json.setSuccessMessage(ResponseMessages.JOB_DETAILS);
         conn.disconnect();
@@ -360,7 +359,6 @@ public class HistoryService {
       }
 
       json.setData(outputBuilder);
-      json.setStatus("OK");
       json.setSuccessMessage(ResponseMessages.JOB_DETAILS);
       conn.disconnect();
       return json;

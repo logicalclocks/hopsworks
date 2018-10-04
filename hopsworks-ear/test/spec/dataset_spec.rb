@@ -60,7 +60,6 @@ describe "On #{ENV['OS']}" do
         it 'should work with valid params' do
           dsname = "dataset_#{short_random_id}"
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/createTopLevelDataSet", {name: dsname, description: "test dataset", searchable: true, generateReadme: true}
-          expect_json(errorMsg: ->(value){ expect(value).to be_empty})
           expect_json(successMessage: "The Dataset was created successfully.")
           expect_status(200)
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent"
@@ -77,7 +76,6 @@ describe "On #{ENV['OS']}" do
         it 'should work with valid params and no README.md' do
           dsname = "dataset_#{short_random_id}"
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/createTopLevelDataSet", {name: dsname, description: "test dataset", searchable: true, generateReadme: false}
-          expect_json(errorMsg: ->(value){ expect(value).to be_empty})
           expect_json(successMessage: "The Dataset was created successfully.")
           expect_status(200)
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent"
@@ -191,7 +189,6 @@ describe "On #{ENV['OS']}" do
           projectname = "project_#{short_random_id}"
           project = create_project_by_name(projectname)
           post "#{ENV['HOPSWORKS_API']}/request/access", {inodeId: @dataset[:inode_id], projectId: project[:id]}
-          expect_json(errorMsg: "")
           expect_json(successMessage: "Request sent successfully.")
           expect_status(200)
           create_session(@project[:username],"Pass123") # be the user of the project that owns the dataset

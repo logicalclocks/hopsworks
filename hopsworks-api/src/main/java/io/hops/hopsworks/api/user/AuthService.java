@@ -40,7 +40,7 @@
 package io.hops.hopsworks.api.user;
 
 import io.hops.hopsworks.api.filter.NoCacheResponse;
-import io.hops.hopsworks.api.util.JsonResponse;
+import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.api.zeppelin.util.TicketContainer;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.user.UserDTO;
@@ -113,9 +113,8 @@ public class AuthService {
   @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
   @Produces(MediaType.APPLICATION_JSON)
   public Response session(@Context SecurityContext sc, @Context HttpServletRequest req) throws UserException {
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     try {
-      json.setStatus("SUCCESS");
       json.setData(sc.getUserPrincipal().getName());
     } catch (Exception e) {
       throw new UserException(RESTCodes.UserErrorCode.AUTHENTICATION_FAILURE, null, e.getMessage(), e);
@@ -129,7 +128,7 @@ public class AuthService {
   public Response login(@FormParam("email") String email, @FormParam("password") String password,
       @FormParam("otp") String otp, @Context HttpServletRequest req) throws UserException, ProjectException {
     logUserLogin(req);
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     if (email == null || email.isEmpty()) {
       throw new IllegalArgumentException("Email was not provided");
     }
@@ -149,7 +148,6 @@ public class AuthService {
     }
 
     //read the user data from db and return to caller
-    json.setStatus("SUCCESS");
     json.setSessionID(req.getSession().getId());
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
@@ -161,7 +159,7 @@ public class AuthService {
   public Response ldapLogin(@FormParam("username") String username, @FormParam("password") String password,
       @FormParam("chosenEmail") String chosenEmail, @FormParam("consent") boolean consent,
       @Context HttpServletRequest req) throws LoginException, UserException, ProjectException {
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     if (username == null || username.isEmpty()) {
       throw new IllegalArgumentException("Username can not be empty.");
     }
@@ -189,7 +187,6 @@ public class AuthService {
       req.getServletContext().log("Skip logged because already logged in: " + username);
     }
     //read the user data from db and return to caller
-    json.setStatus("SUCCESS");
     json.setSessionID(req.getSession().getId());
     json.setData(user.getEmail());
     return Response.status(Response.Status.OK).entity(json).build();
@@ -199,7 +196,7 @@ public class AuthService {
   @Path("logout")
   @Produces(MediaType.APPLICATION_JSON)
   public Response logout(@Context HttpServletRequest req) throws UserException {
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     logoutAndInvalidateSession(req);
     return Response.ok().entity(json).build();
   }
@@ -221,7 +218,7 @@ public class AuthService {
   public Response register(UserDTO newUser, @Context HttpServletRequest req) throws NoSuchAlgorithmException,
     UserException {
     byte[] qrCode;
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     qrCode = userController.registerUser(newUser, req);
     if (authController.isTwoFactorEnabled() && newUser.isTwoFactor()) {
       json.setQRCode(new String(Base64.encodeBase64(qrCode)));
@@ -240,9 +237,8 @@ public class AuthService {
       @FormParam("securityAnswer") String securityAnswer,
       @Context SecurityContext sc,
       @Context HttpServletRequest req) throws UserException, ServiceException {
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     userController.recoverPassword(email, securityQuestion, securityAnswer, req);
-    json.setStatus("OK");
     json.setSuccessMessage(ResponseMessages.PASSWORD_RESET_SUCCESSFUL);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }

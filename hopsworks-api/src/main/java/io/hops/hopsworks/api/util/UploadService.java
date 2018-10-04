@@ -212,7 +212,7 @@ public class UploadService {
           @Context HttpServletRequest request) throws IOException, DatasetException {
     String fileName = request.getParameter("flowFilename");
     Inode parent;
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     int resumableChunkNumber = getResumableChunkNumber(request);
     if (resumableChunkNumber == 1) {//check if file exist, permission only on the first chunk
       if (this.fileParent != null) {
@@ -278,7 +278,7 @@ public class UploadService {
           @FormDataParam("flowTotalSize") String flowTotalSize)
     throws IOException, GenericException, TemplateException, DatasetException {
 
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
 
     int resumableChunkNumber = HttpUtils.toInt(flowChunkNumber, -1);
     ResumableInfo info = getResumableInfo(flowChunkSize, flowFilename,

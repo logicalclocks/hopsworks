@@ -36,107 +36,13 @@
  * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package io.hops.hopsworks.ca.apiV2.exception.mapper;
 
-package io.hops.hopsworks.api.util;
+import io.hops.hopsworks.common.util.JsonResponse;
 
-import java.util.List;
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
-public class JsonResponse {
-
-  private static final float version = 1.0f;
-
-  private String status;
-  private Integer statusCode;
-  private String errorMsg = "";
-  private String successMessage;
-  private String QRCode;
-  private List<String> fieldErrors;
-  private Object data;
-  private String sessionID;
-
-  public JsonResponse() {
-  }
-
-  public JsonResponse(String status) {
-    this.status = status;
-  }
-
-  public JsonResponse(Integer statusCode) {
-    this.statusCode = statusCode;
-  }
-
-  public Integer getStatusCode() {
-    return statusCode;
-  }
-
-  public void setStatusCode(Integer statusCode) {
-    this.statusCode = statusCode;
-  }
-
-  @XmlElement
-  public float getVersion() {
-    return JsonResponse.version;
-  }
-
-  public String getStatus() {
-    return status;
-  }
-
-  public void setStatus(String status) {
-    this.status = status;
-  }
-
-  @XmlElement
-  public String getErrorMsg() {
-    return errorMsg;
-  }
-
-  public void setErrorMsg(String errorMsg) {
-    this.errorMsg = errorMsg;
-  }
-
-  public String getSuccessMessage() {
-    return successMessage;
-  }
-
-  public void setSuccessMessage(String successMessage) {
-    this.successMessage = successMessage;
-  }
-
-  public List<String> getFieldErrors() {
-    return fieldErrors;
-  }
-
-  public void setFieldErrors(List<String> fieldErrors) {
-    this.fieldErrors = fieldErrors;
-  }
-
-  public Object getData() {
-    return data;
-  }
-
-  public void setData(Object data) {
-    this.data = data;
-  }
-
-  @XmlElement
-  public String getSessionID() {
-    return sessionID;
-  }
-
-  public void setSessionID(String sessionID) {
-    this.sessionID = sessionID;
-  }
-
-  public String getQRCode() {
-    return QRCode;
-  }
-
-  public void setQRCode(String QRCode) {
-    this.QRCode = QRCode;
-  }
+public class CAJsonResponse extends JsonResponse {
 
 }

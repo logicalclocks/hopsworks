@@ -81,8 +81,7 @@ public class Cluster {
     LOGGER.log(Level.INFO, "Registering : {0}", cluster.getEmail());
     boolean autoValidate = clusterState.bypassActivationLink();
     clusterController.registerClusterNewUser(cluster, req, autoValidate);
-    JsonResponse res = new JsonResponse();
-    res.setStatusCode(Response.Status.OK.getStatusCode());
+    ClusterJsonResponse res = new ClusterJsonResponse();
     res.setSuccessMessage("Cluster registerd. Please validate your email within "
         + ClusterController.VALIDATION_KEY_EXPIRY_DATE + " hours before installing your new cluster.");
     return Response.ok().entity(res).build();
@@ -96,8 +95,7 @@ public class Cluster {
     LOGGER.log(Level.INFO, "Registering : {0}", cluster.getEmail());
     boolean autoValidate = clusterState.bypassActivationLink();
     clusterController.registerClusterWithUser(cluster, req, autoValidate);
-    JsonResponse res = new JsonResponse();
-    res.setStatusCode(Response.Status.OK.getStatusCode());
+    ClusterJsonResponse res = new ClusterJsonResponse();
     res.setSuccessMessage("Cluster registerd. Please validate your email within "
         + ClusterController.VALIDATION_KEY_EXPIRY_DATE + " hours before installing your new cluster.");
     return Response.ok().entity(res).build();
@@ -109,8 +107,7 @@ public class Cluster {
   public Response unregister(ClusterDTO cluster, @Context HttpServletRequest req) throws MessagingException, UserException {
     LOGGER.log(Level.INFO, "Unregistering : {0}", cluster.getEmail());
     clusterController.unregister(cluster, req);
-    JsonResponse res = new JsonResponse();
-    res.setStatusCode(Response.Status.OK.getStatusCode());
+    ClusterJsonResponse res = new ClusterJsonResponse();
     res.setSuccessMessage("Cluster unregisterd. Please validate your email within "
         + ClusterController.VALIDATION_KEY_EXPIRY_DATE + " hours to complite the unregistration.");
     return Response.ok().entity(res).build();
@@ -119,16 +116,14 @@ public class Cluster {
   @GET
   @Path("register/confirm/{validationKey}")
   public Response confirmRegister(@PathParam("validationKey") String validationKey, @Context HttpServletRequest req) {
-    JsonResponse res = new JsonResponse();
+    ClusterJsonResponse res = new ClusterJsonResponse();
     try {
       clusterController.validateRequest(validationKey, req, ClusterController.OP_TYPE.REGISTER);
     } catch (IOException  ex) {
       LOGGER.log(Level.SEVERE, null, ex);
-      res.setStatusCode(Response.Status.BAD_REQUEST.getStatusCode());
       res.setSuccessMessage("Could not validate registration.");
       return Response.ok().entity(res).build();
     }
-    res.setStatusCode(Response.Status.OK.getStatusCode());
     res.setSuccessMessage("Cluster registration validated.");
     return Response.ok().entity(res).build();
   }
@@ -136,16 +131,14 @@ public class Cluster {
   @GET
   @Path("unregister/confirm/{validationKey}")
   public Response confirmUnregister(@PathParam("validationKey") String validationKey, @Context HttpServletRequest req) {
-    JsonResponse res = new JsonResponse();
+    ClusterJsonResponse res = new ClusterJsonResponse();
     try {
       clusterController.validateRequest(validationKey, req, ClusterController.OP_TYPE.UNREGISTER);
     } catch (IOException  ex) {
       LOGGER.log(Level.SEVERE, null, ex);
-      res.setStatusCode(Response.Status.BAD_REQUEST.getStatusCode());
       res.setSuccessMessage("Could not validate unregistration.");
       return Response.ok().entity(res).build();
     }
-    res.setStatusCode(Response.Status.OK.getStatusCode());
     res.setSuccessMessage("Cluster unregistration validated.");
     return Response.ok().entity(res).build();
   }

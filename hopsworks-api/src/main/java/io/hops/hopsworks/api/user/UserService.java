@@ -41,7 +41,7 @@ package io.hops.hopsworks.api.user;
 
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
-import io.hops.hopsworks.api.util.JsonResponse;
+import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.user.UserCardDTO;
@@ -142,12 +142,11 @@ public class UserService {
           @FormParam("telephoneNum") String telephoneNum,
           @FormParam("toursState") Integer toursState,
           @Context HttpServletRequest req) throws UserException {
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     
     Users user = userController.updateProfile(req.getRemoteUser(), firstName, lastName, telephoneNum, toursState, req);
     UserDTO userDTO = new UserDTO(user);
     
-    json.setStatus("OK");
     json.setSuccessMessage(ResponseMessages.PROFILE_UPDATED);
     json.setData(userDTO);
 
@@ -163,11 +162,10 @@ public class UserService {
           @FormParam("newPassword") String newPassword,
           @FormParam("confirmedPassword") String confirmedPassword,
           @Context HttpServletRequest req) throws UserException {
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
 
     userController.changePassword(req.getRemoteUser(), oldPassword, newPassword, confirmedPassword, req);
 
-    json.setStatus("OK");
     json.setSuccessMessage(ResponseMessages.PASSWORD_CHANGED);
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
@@ -181,10 +179,9 @@ public class UserService {
           @FormParam("securityQuestion") String securityQuestion,
           @FormParam("securityAnswer") String securityAnswer,
           @Context HttpServletRequest req) throws UserException {
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     userController.changeSecQA(req.getRemoteUser(), oldPassword, securityQuestion, securityAnswer, req);
 
-    json.setStatus("OK");
     json.setSuccessMessage(ResponseMessages.SEC_QA_CHANGED);
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
@@ -200,10 +197,9 @@ public class UserService {
     Users user = userBean.findByEmail(req.getRemoteUser());
 
     byte[] qrCode;
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     if (user.getTwoFactor() == twoFactor) {
       json.setSuccessMessage("No change made.");
-      json.setStatus("OK");
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
               entity(json).build();
     }
@@ -214,7 +210,6 @@ public class UserService {
     } else {
       json.setSuccessMessage("Tow factor authentication disabled.");
     }
-    json.setStatus("OK");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
             entity(json).build();
   }
@@ -232,14 +227,13 @@ public class UserService {
       throw new IllegalArgumentException("Password was not provided.");
     }
     byte[] qrCode;
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     qrCode = userController.getQRCode(user, password, req);
     if (qrCode != null) {
       json.setQRCode(new String(Base64.encodeBase64(qrCode)));
     } else {
       throw new UserException(RESTCodes.UserErrorCode.TWO_FA_DISABLED);
     }
-    json.setStatus("OK");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }
 
@@ -266,11 +260,10 @@ public class UserService {
   public Response removeSshkey(@FormParam("name") String name,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) {
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     Users user = userBean.findByEmail(sc.getUserPrincipal().getName());
     int id = user.getUid();
     userController.removeSshKey(id, name);
-    json.setStatus("OK");
     json.setSuccessMessage(ResponseMessages.SSH_KEY_REMOVED);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();

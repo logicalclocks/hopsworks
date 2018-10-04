@@ -121,7 +121,7 @@ public class LocalFsService {
           String path,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) {
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     File f = new File(path);
     if (f.exists()) {
       json.setErrorMsg("File already exists: " + path);
@@ -150,7 +150,7 @@ public class LocalFsService {
           @PathParam("fileName") String fileName,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) {
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     if (fileName == null || fileName.isEmpty()) {
       throw new IllegalArgumentException("fileName was not provided.");
     }
@@ -179,7 +179,7 @@ public class LocalFsService {
     boolean exists = f.exists();
 
     String message = "";
-    JsonResponse response = new JsonResponse();
+    RESTApiJsonResponse response = new RESTApiJsonResponse();
 
     //if it exists and it's not a dir, it must be a file
     if (exists) {
@@ -206,7 +206,7 @@ public class LocalFsService {
     boolean isDir = f.isDirectory();
 
     String message = "";
-    JsonResponse response = new JsonResponse();
+    RESTApiJsonResponse response = new RESTApiJsonResponse();
 
     //if it exists and it's not a dir, it must be a file
     if (exists && !isDir) {

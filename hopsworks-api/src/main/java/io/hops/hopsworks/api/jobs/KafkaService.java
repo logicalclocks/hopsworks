@@ -41,7 +41,7 @@ package io.hops.hopsworks.api.jobs;
 
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
-import io.hops.hopsworks.api.util.JsonResponse;
+import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.common.dao.kafka.AclDTO;
 import io.hops.hopsworks.common.dao.kafka.AclUserDTO;
 import io.hops.hopsworks.common.dao.kafka.KafkaFacade;
@@ -171,7 +171,7 @@ public class KafkaService {
   public Response createTopic(TopicDTO topicDto,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws Exception {
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     //create the topic in the database and the Kafka cluster
     kafkaFacade.createTopicInProject(projectId, topicDto);
     //By default, all members of the project are granted full permissions 
@@ -193,7 +193,7 @@ public class KafkaService {
   public Response removeTopic(@PathParam("topic") String topicName,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws KafkaException, ServiceException {
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     //remove the topic from the database and Kafka cluster
     kafkaFacade.removeTopicFromProject(this.project, topicName);
 
@@ -249,7 +249,7 @@ public class KafkaService {
           @PathParam("projId") int projectId,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws KafkaException, ProjectException, UserException {
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     kafkaFacade.shareTopic(this.projectId, topicName, projectId);
     //By default, all members of the project are granted full permissions on the topic
     Project projectShared = projectFacade.find(projectId);
@@ -275,7 +275,7 @@ public class KafkaService {
           @PathParam("projectId") int projectId,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws KafkaException {
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
 
     kafkaFacade.unShareTopic(topicName, projectId);
     json.setSuccessMessage("Topic has been removed from shared.");
@@ -290,7 +290,7 @@ public class KafkaService {
           @PathParam("topic") String topicName,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws KafkaException {
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
 
     kafkaFacade.unShareTopic(topicName, this.projectId);
     json.setSuccessMessage("Topic has been removed from shared.");
@@ -341,7 +341,7 @@ public class KafkaService {
           AclDTO aclDto,
           @Context SecurityContext sc, @Context HttpServletRequest req) throws KafkaException, ProjectException,
     UserException {
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     kafkaFacade.addAclsToTopic(topicName, projectId, aclDto);
     json.setSuccessMessage("ACL has been added to the topic.");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
@@ -355,7 +355,7 @@ public class KafkaService {
           @PathParam("aclId") int aclId,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws KafkaException {
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     kafkaFacade.removeAclFromTopic(topicName, aclId);
     json.setSuccessMessage("Topic acls has been removed.");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
@@ -386,7 +386,7 @@ public class KafkaService {
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws KafkaException, ProjectException, UserException {
     kafkaFacade.updateTopicAcl(project, topicName, Integer.parseInt(aclId), aclDto);
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     json.setSuccessMessage("TopicAcl updated successfully");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();
@@ -400,7 +400,7 @@ public class KafkaService {
   public Response ValidateSchemaForTopics(SchemaDTO schemaData,
           @Context SecurityContext sc,
           @Context HttpServletRequest req)  {
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
 
     switch (kafkaFacade.schemaBackwardCompatibility(schemaData)) {
       case INVALID:
@@ -428,7 +428,7 @@ public class KafkaService {
   public Response addTopicSchema(SchemaDTO schemaData,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) {
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
 
     //String schemaContent = schemaData.getContents();
     switch (kafkaFacade.schemaBackwardCompatibility(schemaData)) {
@@ -492,7 +492,7 @@ public class KafkaService {
           @PathParam("version") Integer version,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws KafkaException {
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     kafkaFacade.deleteSchema(schemaName, version);
     json.setSuccessMessage("Schema version for topic removed successfuly");
 

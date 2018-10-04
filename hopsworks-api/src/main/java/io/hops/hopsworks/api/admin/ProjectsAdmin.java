@@ -42,7 +42,7 @@ package io.hops.hopsworks.api.admin;
 import io.hops.hopsworks.api.admin.dto.ProjectDeletionLog;
 import io.hops.hopsworks.api.admin.dto.ProjectAdminInfoDTO;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
-import io.hops.hopsworks.api.util.JsonResponse;
+import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
@@ -119,8 +119,7 @@ public class ProjectsAdmin {
     projectController.removeProject(project.getOwner().getEmail(), id, sessionId);
     LOGGER.log(Level.INFO, "Deleted project with id: " + id);
   
-    JsonResponse response = new JsonResponse();
-    response.setStatus(Response.Status.OK.toString());
+    RESTApiJsonResponse response = new RESTApiJsonResponse();
     response.setSuccessMessage("Project with id " + id + " has been successfully deleted");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(response).build();
   }
@@ -156,8 +155,7 @@ public class ProjectsAdmin {
     List<String> failedMembers = null;
     projectController.createProject(projectDTO, owner, failedMembers, request.getSession().getId());
 
-    JsonResponse response = new JsonResponse();
-    response.setStatus("201");
+    RESTApiJsonResponse response = new RESTApiJsonResponse();
     response.setSuccessMessage(ResponseMessages.PROJECT_CREATED);
 
     if (failedMembers != null && !failedMembers.isEmpty()) {

@@ -46,7 +46,7 @@ import io.hops.hopsworks.api.project.util.DsPath;
 import io.hops.hopsworks.api.project.util.PathValidator;
 import io.hops.hopsworks.api.util.DownloadService;
 import io.hops.hopsworks.api.util.FilePreviewImageTypes;
-import io.hops.hopsworks.api.util.JsonResponse;
+import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.api.util.UploadService;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.dataset.DataSetDTO;
@@ -401,7 +401,7 @@ public class DataSetService {
 
     Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
     Dataset ds = dtoValidator.validateDTO(this.project, dataSet, false);
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
 
     // Check target project
     Project proj = projectFacade.find(dataSet.getProjectId());
@@ -449,7 +449,7 @@ public class DataSetService {
           @Context HttpServletRequest req) throws DatasetException {
 
     Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
 
     Dataset ds = dtoValidator.validateDTO(this.project, dataSet, true);
 
@@ -501,7 +501,7 @@ public class DataSetService {
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws DatasetException {
     Dataset ds = dtoValidator.validateDTO(this.project, dataSet, false);
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     DistributedFileSystemOps dfso = null;
     try {
       dfso = dfs.getDfsOps();
@@ -547,7 +547,7 @@ public class DataSetService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response acceptRequest(@PathParam("inodeId") Integer inodeId,
           @Context SecurityContext sc) {
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     if (inodeId == null) {
       throw new IllegalArgumentException("inodeId was not provided");
     }
@@ -568,7 +568,7 @@ public class DataSetService {
   public Response rejectRequest(@PathParam("inodeId") Integer inodeId,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) {
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     if (inodeId == null) {
       throw new IllegalArgumentException("inodeId was not provided.");
     }
@@ -615,7 +615,7 @@ public class DataSetService {
       }
     }
 
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     json.setSuccessMessage("The Dataset was created successfully.");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();
@@ -629,7 +629,7 @@ public class DataSetService {
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws DatasetException, HopsSecurityException, ProjectException {
 
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
 
     DsPath dsPath = pathValidator.validatePath(this.project, dataSetName.getName());
@@ -676,7 +676,7 @@ public class DataSetService {
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws DatasetException, ProjectException {
     boolean success = false;
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
 
     DsPath dsPath = pathValidator.validatePath(this.project, fileName);
     Dataset ds = dsPath.getDs();
@@ -748,7 +748,7 @@ public class DataSetService {
   public Response removeCorrupted(
       @PathParam("fileName") String fileName,
       @Context SecurityContext sc) throws DatasetException, ProjectException {
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
 
     DsPath dsPath = pathValidator.validatePath(this.project, fileName);
@@ -808,7 +808,7 @@ public class DataSetService {
           @PathParam("fileName") String fileName,
           @Context SecurityContext sc) throws DatasetException, ProjectException {
     boolean success = false;
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
 
     DsPath dsPath = pathValidator.validatePath(this.project, fileName);
@@ -926,7 +926,7 @@ public class DataSetService {
       datasetController.recChangeOwnershipAndPermission(destPath, permission,
           owner, group, dfso, udfso);
 
-      JsonResponse response = new JsonResponse();
+      RESTApiJsonResponse response = new RESTApiJsonResponse();
       response.setSuccessMessage("Moved");
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
               entity(response).build();
@@ -1002,7 +1002,7 @@ public class DataSetService {
       datasetController.recChangeOwnershipAndPermission(destPath, permission,
           null, null, null, udfso);
 
-      JsonResponse response = new JsonResponse();
+      RESTApiJsonResponse response = new RESTApiJsonResponse();
       response.setSuccessMessage("Copied");
 
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
@@ -1071,7 +1071,7 @@ public class DataSetService {
         toString())) {
       return checkFileExists(path, sc);
     }
-    JsonResponse response = new JsonResponse();
+    RESTApiJsonResponse response = new RESTApiJsonResponse();
     response.setErrorMsg(ResponseMessages.DOWNLOAD_PERMISSION_ERROR);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.FORBIDDEN).entity(response).build();
   }
@@ -1094,7 +1094,7 @@ public class DataSetService {
     DistributedFileSystemOps udfso = null;
     FSDataInputStream is = null;
 
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     try {
       udfso = dfs.getDfsOps(username);
 
@@ -1173,7 +1173,7 @@ public class DataSetService {
     DsPath dsPath = pathValidator.validatePath(this.project, path);
     Inode inode = dsPath.validatePathExists(inodes, null);
 
-    JsonResponse response = new JsonResponse();
+    RESTApiJsonResponse response = new RESTApiJsonResponse();
     if (inode.isDir()) {
       response.setSuccessMessage("DIR");
     } else {
@@ -1249,7 +1249,7 @@ public class DataSetService {
     this.async.startExecution(encodeJob);
 
     String response = "File compression runs in background";
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     json.setSuccessMessage(response);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();
@@ -1314,7 +1314,7 @@ public class DataSetService {
     //persist the relationship
     this.template.updateTemplatesInodesMxN(temp);
 
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     json.setSuccessMessage("The template was attached to file "
             + inode.getId());
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(

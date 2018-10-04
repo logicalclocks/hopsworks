@@ -46,7 +46,7 @@ import io.hops.hopsworks.api.metadata.wscomm.MetadataProtocol;
 import io.hops.hopsworks.api.metadata.wscomm.message.ContentMessage;
 import io.hops.hopsworks.api.metadata.wscomm.message.Message;
 import io.hops.hopsworks.api.metadata.wscomm.message.TemplateMessage;
-import io.hops.hopsworks.api.util.JsonResponse;
+import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.api.util.UploadService;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
@@ -444,7 +444,7 @@ public class MetadataService {
       }
     }
 
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     json.setSuccessMessage("The template was successfully removed from inode "
             + inode.getInodePK().getName());
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
@@ -485,7 +485,7 @@ public class MetadataService {
 
     Message message = this.protocol.GFR(templateMessage);
 
-    JsonResponse response = new JsonResponse();
+    RESTApiJsonResponse response = new RESTApiJsonResponse();
     //message contains all template content
     response.setSuccessMessage(message.getMessage());
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
@@ -555,7 +555,7 @@ public class MetadataService {
 
     Users user = userFacade.findByEmail(email);
 
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     Response.Status status = Response.Status.FORBIDDEN;
     String userRole = projectTeamFacade.findCurrentRole(project, user);
 
