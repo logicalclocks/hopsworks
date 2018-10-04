@@ -68,12 +68,10 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.lang.reflect.Field;
 import java.nio.charset.Charset;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Scanner;
@@ -109,11 +107,10 @@ public class JupyterProcessMgr {
   @EJB
   private JupyterFacade jupyterFacade;
   @EJB
-  private ProjectFacade projectFacade;
-  @EJB
   private JupyterSettingsFacade jupyterSettingsFacade;
+  @EJB
+  private JupyterConfigFilesGenerator jupyterConfigFilesGenerator;
 
-  private String hadoopClasspath = null;
 
   @PostConstruct
   public void init() {
@@ -124,78 +121,13 @@ public class JupyterProcessMgr {
 
   }
 
-  /**
-   * This only works on Linux systems. From Java 9, you can just call
-   * p.getPid();
-   * http://stackoverflow.com/questions/4750470/how-to-get-pid-of-process-ive-just-started-within-java-program
-   *
-   * @param p
-   * @return
-   */
-  public static synchronized long getPidOfProcess(Process p) {
-    long pid = 0;
-
-    try {
-      if (p.getClass().getName().equals("java.lang.UNIXProcess")) {
-        Field f = p.getClass().getDeclaredField("pid");
-        f.setAccessible(true);
-        pid = f.getLong(p);
-        f.setAccessible(false);
-      }
-    } catch (Exception e) {
-      pid = 0;
-    }
-    return pid;
-  }
-
-  public String getHadoopClasspath() throws IOException,
-      InterruptedException {
-    if (this.hadoopClasspath == null) {
-      ProcessBuilder ps = new ProcessBuilder(settings.getHadoopSymbolicLinkDir()
-          + "/bin/hadoop", "classpath", "--glob");
-      ps.redirectErrorStream(true);
-      Process pr = ps.start();
-      BufferedReader in = new BufferedReader(new InputStreamReader(pr.
-          getInputStream()));
-      StringBuilder sb = new StringBuilder();
-      String line;
-      while ((line = in.readLine()) != null) {
-        sb.append(line);
-      }
-      pr.waitFor();
-      in.close();
-      this.hadoopClasspath = sb.toString();
-    }
-    return this.hadoopClasspath;
-  }
-
-  public void removeProject(Project project) {
-    // Find any active jupyter servers
-
-    Collection<JupyterProject> instances = project.getJupyterProjectCollection();
-    if (instances != null) {
-      for (JupyterProject jp : instances) {
-        HdfsUsers hdfsUser = hdfsUsersFacade.find(jp.getHdfsUserId());
-        if (hdfsUser != null) {
-          String user = hdfsUser.getUsername();
-          try {
-            killServerJupyterUser(user, "", jp.getPid(), 1);
-          } catch (ServiceException ex) {
-            Logger.getLogger(JupyterProcessMgr.class.getName()).log(Level.SEVERE, null, ex);
-          }
-        }
-      }
-    }
-    // when the project is removed all of the SQL entries will be cleaned up automatically  
-  }
-
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public JupyterDTO startServerAsJupyterUser(Project project, String secretConfig, String hdfsUser, String realName,
       JupyterSettings js) throws ServiceException {
 
     String prog = settings.getHopsworksDomainDir() + "/bin/jupyter.sh";
 
-    JupyterProject jp = null;
+    JupyterPaths jp = null;
     String token = null;
     Long pid = 0l;
 
@@ -204,48 +136,45 @@ public class JupyterProcessMgr {
     int maxTries = 5;
     Process process = null;
     Integer port = 0;
-    JupyterConfigFilesGenerator jc = null;
 
     // kill any running servers for this user, clear cached entries
     while (!foundToken && maxTries > 0) {
       // use pidfile to kill any running servers
       port = ThreadLocalRandom.current().nextInt(40000, 59999);
 
-      jc = new JupyterConfigFilesGenerator(project, secretConfig, hdfsUser, realName,
-          hdfsLeFacade.getSingleEndpoint(), settings, port, token, js);
+      jp = jupyterConfigFilesGenerator.generateConfiguration(project, secretConfig, hdfsUser, realName,
+          hdfsLeFacade.getSingleEndpoint(), js, port);
 
       String secretDir = settings.getStagingDir() + Settings.PRIVATE_DIRS + js.getSecret();
 
       if (settings.isPythonKernelEnabled()) {
-        createPythonKernelForProjectUser(jc.getNotebookPath(), hdfsUser);
+        createPythonKernelForProjectUser(jp.getNotebookPath(), hdfsUser);
       }
 
-      String logfile = jc.getLogDirPath() + "/" + hdfsUser + "-" + port + ".log";
+      String logfile = jp.getLogDirPath() + "/" + hdfsUser + "-" + port + ".log";
       String[] command
-          = {"/usr/bin/sudo", prog, "start", jc.getNotebookPath(),
-            jc.getSettings().getHadoopSymbolicLinkDir() + "-" + settings.getHadoopVersion(), settings.getJavaHome(),
+          = {"/usr/bin/sudo", prog, "start", jp.getNotebookPath(),
+            settings.getHadoopSymbolicLinkDir() + "-" + settings.getHadoopVersion(), settings.getJavaHome(),
             settings.getAnacondaProjectDir(project.getName()), port.
             toString(),
-            hdfsUser + "-" + port + ".log", secretDir, jc.getCertificatesDir()};
+            hdfsUser + "-" + port + ".log", secretDir, jp.getCertificatesDir()};
       LOGGER.log(Level.INFO, Arrays.toString(command));
       ProcessBuilder pb = new ProcessBuilder(command);
-      String pidfile = jc.getRunDirPath() + "/jupyter.pid";
+      String pidfile = jp.getRunDirPath() + "/jupyter.pid";
       try {
         // Send both stdout and stderr to the same stream
         pb.redirectErrorStream(true);
-        pb.directory(new File(jc.getNotebookPath()));
+        pb.directory(new File(jp.getNotebookPath()));
 
         process = pb.start();
 
-        synchronized (pb) {
-          try {
-            // Wait until the launcher bash script has finished
-            process.waitFor(20l, TimeUnit.SECONDS);
-          } catch (InterruptedException ex) {
-            LOGGER.log(Level.SEVERE,
-                "Woken while waiting for the jupyter server to start: {0}",
-                ex.getMessage());
-          }
+        try {
+          // Wait until the launcher bash script has finished
+          process.waitFor(20l, TimeUnit.SECONDS);
+        } catch (InterruptedException ex) {
+          LOGGER.log(Level.SEVERE,
+              "Woken while waiting for the jupyter server to start: {0}",
+              ex.getMessage());
         }
 
         // The logfile should now contain the token we need to read and save.
@@ -272,8 +201,7 @@ public class JupyterProcessMgr {
 
         // Read the pid for Jupyter Notebook
         String pidContents = com.google.common.io.Files.readFirstLine(
-            new File(
-                pidfile), Charset.defaultCharset());
+            new File(pidfile), Charset.defaultCharset());
         pid = Long.parseLong(pidContents);
 
       } catch (Exception ex) {
@@ -287,12 +215,9 @@ public class JupyterProcessMgr {
 
     if (!foundToken) {
       return null;
-    } else {
-      jc.setPid(pid);
-      jc.setToken(token);
     }
 
-    return new JupyterDTO(jc.getPort(), jc.getToken(), jc.getPid(), secretConfig, jc.getCertificatesDir());
+    return new JupyterDTO(port, token, pid, secretConfig, jp.getCertificatesDir());
   }
 
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
@@ -411,29 +336,6 @@ public class JupyterProcessMgr {
   public boolean pingServerJupyterUser(Long pid) {
     int exitValue = executeJupyterCommand("ping", pid.toString());
     return exitValue == 0;
-  }
-
-  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-  public int createPythonKernelForProjectUser(String hdfsUser) {
-    String secretPath = "";
-    String projectName = hdfsUsersController.getProjectName(hdfsUser);
-    Project project = projectFacade.findByName(projectName);
-    boolean notFound = true;
-    for (JupyterSettings js : project.getJupyterSettingsCollection()) {
-      if (js.getPrivateDir().contains(hdfsUser)) {
-        secretPath = js.getPrivateDir();
-        notFound = false;
-        break;
-      }
-    }
-    if (notFound) {
-      return -11;
-    }
-    String privateDir = this.settings.getJupyterDir()
-        + Settings.DIR_ROOT + File.separator + project.getName()
-        + File.separator + hdfsUser + File.separator + secretPath;
-
-    return createPythonKernelForProjectUser(privateDir, hdfsUser);
   }
 
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
