@@ -202,9 +202,9 @@ describe "On #{ENV['OS']}" do
           with_admin_session
           if num_hosts > 1
             # In case we have multi vms disable the one on which Hopsworks is not running
-            put "#{ENV['HOPSWORKS_API']}/admin/hosts", {hostname: "hopsworks1", condaEnabled: "false"}
+            put "#{ENV['HOPSWORKS_API']}/admin/hosts", {hostname: "hopsworks1.logicalclocks.com", condaEnabled: "false"}
           else
-            put "#{ENV['HOPSWORKS_API']}/admin/hosts", {hostname: "hopsworks0", condaEnabled: "false"}
+            put "#{ENV['HOPSWORKS_API']}/admin/hosts", {hostname: "hopsworks0.logicalclocks.com", condaEnabled: "false"}
           end
           expect_status(204)
         end
@@ -257,9 +257,9 @@ describe "On #{ENV['OS']}" do
           with_admin_session
           if num_hosts > 1
             # In case we have multi vms disable the one on which Hopsworks is not running
-            put "#{ENV['HOPSWORKS_API']}/admin/hosts", {hostname: "hopsworks1", condaEnabled: "true"}
+            put "#{ENV['HOPSWORKS_API']}/admin/hosts", {hostname: "hopsworks1.logicalclocks.com", condaEnabled: "true"}
           else
-            put "#{ENV['HOPSWORKS_API']}/admin/hosts", {hostname: "hopsworks0", condaEnabled: "true"}
+            put "#{ENV['HOPSWORKS_API']}/admin/hosts", {hostname: "hopsworks0.logicalclocks.com", condaEnabled: "true"}
           end
           expect_status(204)
         end
@@ -294,9 +294,9 @@ describe "On #{ENV['OS']}" do
           with_admin_session
           if num_hosts > 1
             # In case we have multi vms disable the one on which Hopsworks is not running
-            put "#{ENV['HOPSWORKS_API']}/admin/hosts", {hostname: "hopsworks1", condaEnabled: "false"}
+            put "#{ENV['HOPSWORKS_API']}/admin/hosts", {hostname: "hopsworks1.logicalclocks.com", condaEnabled: "false"}
           else
-            put "#{ENV['HOPSWORKS_API']}/admin/hosts", {hostname: "hopsworks0", condaEnabled: "false"}
+            put "#{ENV['HOPSWORKS_API']}/admin/hosts", {hostname: "hopsworks0.logicalclocks.com", condaEnabled: "false"}
           end
           expect_status(204)
         end
@@ -329,9 +329,9 @@ describe "On #{ENV['OS']}" do
           with_admin_session
           if num_hosts > 1
             # In case we have multi vms disable the one on which Hopsworks is not running
-            put "#{ENV['HOPSWORKS_API']}/admin/hosts", {hostname: "hopsworks1", condaEnabled: "true"}
+            put "#{ENV['HOPSWORKS_API']}/admin/hosts", {hostname: "hopsworks1.logicalclocks.com", condaEnabled: "true"}
           else
-            put "#{ENV['HOPSWORKS_API']}/admin/hosts", {hostname: "hopsworks0", condaEnabled: "true"}
+            put "#{ENV['HOPSWORKS_API']}/admin/hosts", {hostname: "hopsworks0.logicalclocks.com", condaEnabled: "true"}
           end
           expect_status(204)
         end
