@@ -14,12 +14,15 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.apiV2.serving.inference;
+package io.hops.hopsworks.api.serving.inference;
 
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.serving.inference.InferenceController;
 import io.hops.hopsworks.common.serving.inference.InferenceException;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -35,6 +38,7 @@ import javax.ws.rs.core.Response;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
+@Api(value = "Model inference service", description = "Handles inference requests for ML models")
 public class InferenceResource {
 
   @EJB
@@ -50,10 +54,11 @@ public class InferenceResource {
   @Path("/models/{modelName: [a-zA-Z0-9]+}{version:(/versions/[0-9]+)?}{verb:((:predict|:classify|:regress))?}")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
+  @ApiOperation(value = "Make inference")
   public Response infer(
-      @PathParam("modelName") String modelName,
-      @PathParam("version") String modelVersion,
-      @PathParam("verb") String verb,
+      @ApiParam(value = "Name of the model to query", required = true) @PathParam("modelName") String modelName,
+      @ApiParam(value = "Version fo the model to query", required = false) @PathParam("version") String modelVersion,
+      @ApiParam(value = "Type of query", required = false) @PathParam("verb") String verb,
       String inferenceRequestJson) throws InferenceException {
 
     Integer version = null;

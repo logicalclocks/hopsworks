@@ -46,6 +46,8 @@ import io.hops.hopsworks.api.jobs.JobService;
 import io.hops.hopsworks.api.jobs.KafkaService;
 import io.hops.hopsworks.api.jupyter.JupyterService;
 import io.hops.hopsworks.api.pythonDeps.PythonDepsService;
+import io.hops.hopsworks.api.serving.inference.InferenceResource;
+import io.hops.hopsworks.api.tensorflow.TensorBoardService;
 import io.hops.hopsworks.api.serving.TfServingService;
 import io.hops.hopsworks.api.tensorflow.TensorBoardService;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
@@ -92,6 +94,7 @@ import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.EmailBean;
 import io.hops.hopsworks.common.util.Settings;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import org.apache.commons.net.util.Base64;
 
 import javax.annotation.security.RolesAllowed;
@@ -189,6 +192,8 @@ public class ProjectService {
   private DelaProjectService delaService;
   @Inject
   private DelaClusterProjectService delaclusterService;
+  @Inject
+  private InferenceResource inference;
 
   private final static Logger LOGGER = Logger.getLogger(ProjectService.class.
       getName());
@@ -941,6 +946,19 @@ public class ProjectService {
     GenericEntity<Pia> genericPia = new GenericEntity<Pia>(pia) {};
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(genericPia).build();
+  }
+
+  @ApiOperation(value = "Model inference sub-resource", tags = {"Inference"})
+  @Path("/{projectId}/inference")
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  public InferenceResource infer(@PathParam("projectId") Integer projectId, @Context SecurityContext sc)
+      throws ProjectException {
+    Project project = projectFacade.find(projectId);
+    if (project == null){
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId);
+    }
+    inference.setProject(project);
+    return inference;
   }
 
 }
