@@ -172,7 +172,7 @@ div#filemgr .table-files .selected,
 div#filemgr .iconset .thumbnail.selected,
 .table-files .selected td,
 .table-files .selected td a {
-  color:#fff;
+  color:#aaa;
 }
 
 div#filemgr .iconset .thumbnail .item-icon {
