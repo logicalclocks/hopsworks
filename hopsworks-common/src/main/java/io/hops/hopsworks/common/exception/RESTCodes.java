@@ -956,4 +956,44 @@ public class RESTCodes {
     }
   }
   
+  public enum TfServingErrorCode implements RESTErrorCode {
+    
+    INSTANCENOTFOUND(230000, "TFServing instance not found", Response.Status.NOT_FOUND),
+    DELETIONERROR(230001, "TFServing instance could not be deleted", Response.Status.INTERNAL_SERVER_ERROR),
+    UPDATEERROR(230002, "TFServing instance could not be updated", Response.Status.INTERNAL_SERVER_ERROR),
+    LIFECYCLEERROR(230003, "TFServing instance could not be started/stopped", Response.Status.BAD_REQUEST),
+    LIFECYCLEERRORINT(230004, "TFServing instance could not be started/stopped", Response.Status.INTERNAL_SERVER_ERROR),
+    STATUSERROR(230005, "Error getting TFServing instance status", Response.Status.INTERNAL_SERVER_ERROR),
+    PATHNOTFOUND(230006, "Model Path not found", Response.Status.BAD_REQUEST),
+    COMMANDNOTRECOGNIZED(230007, "Command not recognized", Response.Status.BAD_REQUEST),
+    COMMANDNOTPROVIDED(230008, "Command not provided", Response.Status.BAD_REQUEST),
+    SPECNOTPROVIDED(230008, "TFServing spec not provided", Response.Status.BAD_REQUEST);
+    
+    private Integer code;
+    private String message;
+    private Response.StatusType respStatus;
+    
+    TfServingErrorCode(Integer code, String message, Response.StatusType respStatus) {
+      this.code = code;
+      this.message = message;
+      this.respStatus = respStatus;
+    }
+    
+    @Override
+    public Integer getCode() {
+      return code;
+    }
+    
+    @Override
+    public String getMessage() {
+      return message;
+    }
+    
+    public Response.StatusType getRespStatus() {
+      return respStatus;
+    }
+    
+  }
+  
+  
 }

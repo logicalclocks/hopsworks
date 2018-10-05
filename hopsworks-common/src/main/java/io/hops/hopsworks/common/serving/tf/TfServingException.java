@@ -16,86 +16,24 @@
 
 package io.hops.hopsworks.common.serving.tf;
 
-import javax.ws.rs.core.Response;
+import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.exception.RESTException;
 
-public class TfServingException extends Exception {
-
-  public enum TfServingExceptionErrors {
-    INSTANCENOTFOUND(70, "TFServing instance not found", Response.Status.NOT_FOUND),
-    DELETIONERROR(71, "TFServing instance could not be deleted", Response.Status.INTERNAL_SERVER_ERROR),
-    UPDATEERROR(72, "TFServing instance could not be updated", Response.Status.INTERNAL_SERVER_ERROR),
-    LIFECYCLEERROR(73, "TFServing instance could not be started/stopped", Response.Status.BAD_REQUEST),
-    LIFECYCLEERRORINT(74, "TFServing instance could not be started/stopped", Response.Status.INTERNAL_SERVER_ERROR),
-    STATUSERROR(75, "Error getting TFServing instance status", Response.Status.INTERNAL_SERVER_ERROR),
-    PATHNOTFOUND(76, "Model Path not found", Response.Status.BAD_REQUEST),
-    COMMANDNOTRECOGNIZED(77, "Command not recognized", Response.Status.BAD_REQUEST),
-    COMMANDNOTPROVIDED(78, "Command not provided", Response.Status.BAD_REQUEST),
-    SPECNOTPROVIDED(78, "TFServing spec not provided", Response.Status.BAD_REQUEST);
-
-
-    private final int errorCode;
-    private final String message;
-    private final Response.Status httpStatusCode;
-
-    TfServingExceptionErrors(int errorCode, String message, Response.Status httpStatusCode) {
-      this.errorCode = errorCode;
-      this.message = message;
-      this.httpStatusCode = httpStatusCode;
-    }
-
-    public int getErrorCode() {
-      return errorCode;
-    }
-
-    public String getMessage() {
-      return message;
-    }
-
-    public Response.Status getHttpStatusCode() {
-      return httpStatusCode;
-    }
+public class TfServingException extends RESTException {
+  
+  public TfServingException(RESTCodes.TfServingErrorCode code) {
+    super(code);
   }
-
-  private TfServingExceptionErrors error;
-  private String userMsg;
-  private String devMsg;
-
-  public TfServingException(TfServingExceptionErrors error) {
-    this.error = error;
+  
+  public TfServingException(RESTCodes.TfServingErrorCode code, String usrMsg) {
+    super(code, usrMsg);
   }
-
-  public TfServingException(TfServingExceptionErrors error, String userMsg) {
-    this.error = error;
-    this.userMsg = userMsg;
+  
+  public TfServingException(RESTCodes.TfServingErrorCode code, String usrMsg, String devMsg) {
+    super(code, usrMsg, devMsg);
   }
-
-  public TfServingException(TfServingExceptionErrors error, String userMsg, String devMsg) {
-    this.error = error;
-    this.userMsg = userMsg;
-    this.devMsg = devMsg;
-  }
-
-  public TfServingExceptionErrors getError() {
-    return error;
-  }
-
-  public void setError(TfServingExceptionErrors error) {
-    this.error = error;
-  }
-
-  public String getUserMsg() {
-    return userMsg;
-  }
-
-  public void setUserMsg(String userMsg) {
-    this.userMsg = userMsg;
-  }
-
-  public String getDevMsg() {
-    return devMsg;
-  }
-
-  public void setDevMsg(String devMsg) {
-    this.devMsg = devMsg;
+  
+  public TfServingException(RESTCodes.TfServingErrorCode code, String usrMsg, String devMsg, Throwable throwable) {
+    super(code, usrMsg, devMsg, throwable);
   }
 }
