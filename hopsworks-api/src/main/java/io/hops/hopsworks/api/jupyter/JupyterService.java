@@ -341,7 +341,7 @@ public class JupyterService {
         // We materialize them twice but most probably other operations will need them too, so it is OK
         // Remember to remove both when stopping Jupyter server or an exception is thrown
         certificateMaterializer.materializeCertificatesLocal(user.getUsername(), project.getName());
-      } catch (InterruptedException | IOException ex) {
+      } catch (IOException ex) {
         LOGGER.log(Level.SEVERE, null, ex);
         try {
           certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());
@@ -364,11 +364,6 @@ public class JupyterService {
         if (dfso != null) {
           dfsService.closeDfsClient(dfso);
         }
-      }
-
-      if (dto == null) {
-        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-            "Incomplete request!");
       }
 
       String externalIp = Ip.getHost(req.getRequestURL().toString());

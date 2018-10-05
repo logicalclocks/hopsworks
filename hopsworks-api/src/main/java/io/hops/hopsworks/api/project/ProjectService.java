@@ -112,7 +112,6 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import javax.xml.rpc.ServiceException;
 import org.apache.commons.net.util.Base64;
 import org.apache.hadoop.security.AccessControlException;
 
@@ -503,7 +502,7 @@ public class ProjectService {
               ResponseMessages.PROJECT_SERVICE_NOT_FOUND);
           json.setErrorMsg(s + ResponseMessages.PROJECT_SERVICE_NOT_FOUND + "\n "
               + json.getErrorMsg());
-        } catch (ServiceException sex) {
+        } catch (AppException ae) {
           // Error enabling the service
           String error = null;
           switch (se) {
@@ -518,9 +517,6 @@ public class ProjectService {
               break;
             case JOBS:
               error = ResponseMessages.JOBS_ADD_FAILURE;
-              break;
-            case EXPERIMENTS:
-              error = ResponseMessages.EXPERIMENTS_ADD_FAILURE;
               break;
             default:
               error = ResponseMessages.PROJECT_SERVICE_ADD_FAILURE;
@@ -592,18 +588,12 @@ public class ProjectService {
       projectDTO.setProjectName("demo_" + TourProjectType.KAFKA.getTourName() + "_" + username);
       populateActiveServices(projectServices, TourProjectType.KAFKA);
       readMeMessage = "jar file to demonstrate Kafka streaming";
-    } else if (TourProjectType.DISTRIBUTED_TENSORFLOW.getTourName().replace("_", " ").equalsIgnoreCase(type)) {
-      // It's a Distributed TensorFlow guide
-      demoType = TourProjectType.DISTRIBUTED_TENSORFLOW;
-      projectDTO.setProjectName("demo_" + TourProjectType.DISTRIBUTED_TENSORFLOW.getTourName() + "_" + username);
-      populateActiveServices(projectServices, TourProjectType.DISTRIBUTED_TENSORFLOW);
-      readMeMessage = "Mnist data to demonstrate the creation of a distributed TensorFlow job";
-    } else if (TourProjectType.TENSORFLOW.getTourName().equalsIgnoreCase(type)) {
+    }  else if (TourProjectType.DEEP_LEARNING.getTourName().equalsIgnoreCase(type)) {
       // It's a TensorFlow guide
-      demoType = TourProjectType.TENSORFLOW;
-      projectDTO.setProjectName("demo_" + TourProjectType.TENSORFLOW.getTourName() + "_" + username);
-      populateActiveServices(projectServices, TourProjectType.TENSORFLOW);
-      readMeMessage = "Mnist data and python files to demonstrate running TensorFlow noteooks";
+      demoType = TourProjectType.DEEP_LEARNING;
+      projectDTO.setProjectName("demo_" + TourProjectType.DEEP_LEARNING.getTourName() + "_" + username);
+      populateActiveServices(projectServices, TourProjectType.DEEP_LEARNING);
+      readMeMessage = "Jupyter notebooks and training data for demonstrating how to run Deep Learning";
     } else {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
           ResponseMessages.STARTER_PROJECT_BAD_REQUEST);

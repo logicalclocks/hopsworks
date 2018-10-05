@@ -42,10 +42,12 @@ package io.hops.hopsworks.common.dao.command;
 import io.hops.hopsworks.common.dao.host.Hosts;
 
 import javax.persistence.Basic;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -53,9 +55,12 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "system_commands",
@@ -88,9 +93,6 @@ public class SystemCommand implements Serializable {
   @Enumerated(EnumType.STRING)
   private SystemCommandFacade.OP op;
   
-  @Column(name = "arguments")
-  private String arguments;
-  
   @Column(name = "status",
           nullable = false,
           length = 20)
@@ -106,6 +108,9 @@ public class SystemCommand implements Serializable {
   @Column(name = "exec_user",
           length = 50)
   private String execUser;
+  
+  @OneToMany(cascade = CascadeType.ALL, mappedBy = "command", fetch = FetchType.LAZY)
+  private List<SystemCommandArguments> commandArguments;
   
   public SystemCommand(Hosts host, SystemCommandFacade.OP op) {
     this.status = SystemCommandFacade.STATUS.NEW;
@@ -143,14 +148,6 @@ public class SystemCommand implements Serializable {
     this.op = op;
   }
   
-  public String getArguments() {
-    return arguments;
-  }
-  
-  public void setArguments(String arguments) {
-    this.arguments = arguments;
-  }
-  
   public SystemCommandFacade.STATUS getStatus() {
     return status;
   }
@@ -173,6 +170,54 @@ public class SystemCommand implements Serializable {
   
   public void setExecUser(String execUser) {
     this.execUser = execUser;
+  }
+  
+  public List<SystemCommandArguments> getCommandArguments() {
+    return commandArguments;
+  }
+  
+  public void setCommandArguments(List<SystemCommandArguments> commandArguments) {
+    this.commandArguments = commandArguments;
+  }
+  
+  public void setCommandArgumentsAsString(String commandArguments) {
+    if (commandArguments != null) {
+      String[] tokens = getSplitArguments(commandArguments, SystemCommandArguments.ARGUMENT_COLUMN_LENGTH);
+      List<SystemCommandArguments> args = new ArrayList<>(tokens.length);
+      for (String arg : tokens) {
+        SystemCommandArguments sca = new SystemCommandArguments(arg);
+        sca.setCommand(this);
+        args.add(sca);
+      }
+      setCommandArguments(args);
+    }
+  }
+  
+  public String getCommandArgumentsAsString() {
+    StringBuilder sb = new StringBuilder();
+    if (commandArguments != null) {
+      for (SystemCommandArguments sca : commandArguments) {
+        sb.append(sca.getArguments());
+      }
+    }
+    return sb.toString();
+  }
+  
+  private String[] getSplitArguments(String arguments, int columnSize) {
+    int buckets = arguments.length() / columnSize;
+    if (arguments.length() % columnSize != 0) {
+      buckets++;
+    }
+    
+    String[] tokens = new String[buckets];
+    int head = 0;
+    int tail = arguments.length() > columnSize ? columnSize : arguments.length();
+    for (int i = 0; i < buckets; i++) {
+      tokens[i] = arguments.substring(head, tail);
+      head = tail;
+      tail = tail + columnSize < arguments.length() ? tail + columnSize : arguments.length();
+    }
+    return tokens;
   }
   
   @Override

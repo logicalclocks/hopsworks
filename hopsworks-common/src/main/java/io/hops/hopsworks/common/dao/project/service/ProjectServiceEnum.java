@@ -49,8 +49,7 @@ public enum ProjectServiceEnum {
   HIVE("Hive"),
   SERVING("Serving"),
   RSTUDIO("RStudio"),
-  PYTHON("Python"),
-  EXPERIMENTS("Experiments");
+  PYTHON("Python");
 
   private final String readable;
 
