@@ -217,7 +217,13 @@ angular.module('hopsWorksApp')
                         console.log("timeSinceLast " + timeSinceLastAccess);
                         console.log("currentTimeMs " + currentTimeMs);
                         console.log("shutdownLevel " + self.val.shutdownLevel);
-                        self.timeLeftInMinutes = (((self.val.shutdownLevel * 60 * 60 * 1000) - timeSinceLastAccess) / (60 * 1000)).toFixed(1);
+                        var timeLeft = (((self.val.shutdownLevel * 60 * 60 * 1000) - timeSinceLastAccess) / (60 * 1000)).toFixed(1);
+                        if(timeLeft < 0) {
+                            //Assuming the JupyterNotebookCleaner is configured to run every 1 hr
+                            self.timeLeftInMinutes = "less than 1 hour"
+                        } else {
+                            self.timeLeftInMinutes = timeLeft + ' minutes'
+                        }
                     }
                 }
             };
@@ -648,9 +654,25 @@ angular.module('hopsWorksApp')
                         self.ui = "";
                         stopLoading();
                         self.mode = "dynamicSpark";
+                        $scope.sessions = null;
                     },
                     function(error) {
                         growl.error("Could not stop the Jupyter Notebook Server.");
+                        stopLoading();
+                    }
+                );
+
+            };
+
+            self.stopLivySession = function(session, index) {
+                startLoading("Stopping Application...");
+                JupyterService.stopLivySession(self.projectId, session.appId).then(
+                    function(success) {
+                        self.livySessions(self.projectId);
+                        stopLoading();
+                    },
+                    function(error) {
+                        growl.error("Could not stop the Application.");
                         stopLoading();
                     }
                 );
