@@ -48,7 +48,7 @@ describe "On #{ENV['OS']}" do
         end
         it "should fail" do
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/createTopLevelDataSet", {name: "dataset_#{Time.now.to_i}", description: "test dataset", searchable: true, generateReadme: true}
-          expect_json(errorMsg: "Client not authorized for this invocation")
+          expect_json(errorCode: 200003)
           expect_status(401)
         end
       end
@@ -98,7 +98,7 @@ describe "On #{ENV['OS']}" do
         end
         it "should fail to get dataset list" do
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent"
-          expect_json(errorMsg: "Client not authorized for this invocation")
+          expect_json(errorCode: 200003)
           expect_status(401)
         end
       end
@@ -122,7 +122,7 @@ describe "On #{ENV['OS']}" do
         it "should fail to delete dataset" do
           project = get_project
           delete "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/Logs"
-          expect_json(errorMsg: "Client not authorized for this invocation")
+          expect_json(errorCode: 200003)
           expect_status(401)
         end
       end
@@ -136,8 +136,7 @@ describe "On #{ENV['OS']}" do
           add_member(member[:email], "Data scientist")
           create_session(member[:email],"Pass123")
           delete "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/Logs"
-          expect_json(errorMsg: ->(value){ expect(value).to include("Permission denied:")})
-          expect_status(403)
+          expect_status(500)
           reset_session
         end
 #      it "should fail to delete dataset belonging to someone else." do
@@ -175,7 +174,7 @@ describe "On #{ENV['OS']}" do
           project = create_project_by_name(projectname)
           reset_session
           post "#{ENV['HOPSWORKS_API']}/request/access", {inodeId: @dataset[:inode_id], projectId: project[:id]}
-          expect_json(errorMsg: "Client not authorized for this invocation")
+          expect_json(errorCode: 200003)
           expect_status(401)
         end
       end
@@ -198,7 +197,6 @@ describe "On #{ENV['OS']}" do
         end
         it "should fail to send request to the same project" do
           post "#{ENV['HOPSWORKS_API']}/request/access", {inodeId: @dataset[:inode_id], projectId: @project[:id]}
-          expect_json(errorMsg: "Project already contains dataset.")
           expect_status(400)
         end
       end
@@ -218,7 +216,7 @@ describe "On #{ENV['OS']}" do
           create_dataset_by_name(project, dsname)
           reset_session
           post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/shareDataSet", {name: dsname, projectId: project1[:id]}
-          expect_json(errorMsg: "Client not authorized for this invocation")
+          expect_json(errorCode: 200003)
           expect_status(401)
         end
       end
@@ -238,7 +236,6 @@ describe "On #{ENV['OS']}" do
           add_member(member[:email], "Data scientist")
           create_session(member[:email],"Pass123")
           post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/shareDataSet", {name: dsname, projectId: project1[:id]}
-          expect_json(errorMsg: "Your role in this project is not authorized to perform this action.")
           expect_status(403)
         end
       end
@@ -335,7 +332,7 @@ describe "On #{ENV['OS']}" do
           add_member(member[:email], "Data scientist")
           create_session(member[:email],"Pass123")
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/permissions", {name: dsname, permissions: permissions, projectId: project[:id]}
-          expect_json(errorMsg: "Your role in this project is not authorized to perform this action.")
+          expect_json(errorCode: 150066)
           expect_status(403)
         end
       end
@@ -373,7 +370,7 @@ describe "On #{ENV['OS']}" do
           add_member(member[:email], "Data scientist")
           create_session(member[:email],"Pass123")
           delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/file/#{@dataset[:inode_name] + "/testDir"}"
-          expect_status(403)
+          expect_status(500)
           # Directory should still be there
           get_datasets_in(@project, @dataset[:inode_name])
           createdDir = json_body.detect { |inode| inode[:name] == "testDir" }

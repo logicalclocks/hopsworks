@@ -77,8 +77,8 @@ public abstract class ThrowableMapper implements ExceptionMapper<Throwable> {
   
   public Response handleLoginException(LoginException ex) {
     logger.log(Level.WARNING, ex.getClass().getName(), ex);
-    return handleRESTException(new UserException(RESTCodes.UserErrorCode.AUTHORIZATION_FAILURE, null,
-      ex.getMessage(), ex));
+    return handleRESTException(new UserException(RESTCodes.UserErrorCode.AUTHENTICATION_FAILURE, null,ex.getMessage(),
+      ex));
   }
   
   public Response handleIllegalStateException(IllegalStateException ex) {

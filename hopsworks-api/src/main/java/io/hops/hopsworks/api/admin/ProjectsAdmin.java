@@ -136,7 +136,7 @@ public class ProjectsAdmin {
     Users user = userFacade.findByEmail(userEmail);
     if (user == null || !user.getEmail().equals(Settings.SITE_EMAIL)) {
       LOGGER.log(Level.WARNING, "");
-      throw new UserException(RESTCodes.UserErrorCode.AUTHORIZATION_FAILURE,
+      throw new UserException(RESTCodes.UserErrorCode.AUTHENTICATION_FAILURE,
         "Unauthorized or unknown user tried to create a Project as another user");
     }
 

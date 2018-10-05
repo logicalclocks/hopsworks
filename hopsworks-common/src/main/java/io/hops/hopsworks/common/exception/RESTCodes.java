@@ -55,7 +55,6 @@ public class RESTCodes {
   public enum ProjectErrorCode implements RESTErrorCode {
     
     //project error response
-    NO_ROLE_FOUND(150000, "No valid role found for this user", Response.Status.FORBIDDEN),
     PROJECT_EXISTS(150001, "Project with the same name already exists.", Response.Status.CONFLICT),
     NUM_PROJECTS_LIMIT_REACHED(150002, "You have reached the maximum number of projects you could create."
       + " Contact an administrator to increase your limit.", Response.Status.BAD_REQUEST),
@@ -86,8 +85,8 @@ public class RESTCodes {
     PROJECT_SERVICE_NOT_FOUND(150020, "service was not found.", Response.Status.BAD_REQUEST),
     NO_MEMBER_TO_ADD(150021, " No member to add.", Response.Status.BAD_REQUEST),
     NO_MEMBER_ADD(150022, " No member added.", Response.Status.BAD_REQUEST),
-    TEAM_MEMBER_NOT_FOUND(150023, " The selected user is not a team member in this project.",
-      Response.Status.BAD_REQUEST),
+    TEAM_MEMBER_NOT_FOUND(150023, "The selected user is not a team member in this project.",
+      Response.Status.NOT_FOUND),
     TEAM_MEMBER_ALREADY_EXISTS(150024, " The selected user is already a team member of this project.",
       Response.Status.BAD_REQUEST),
     ROLE_NOT_SET(150025, "Role cannot be empty.", Response.Status.BAD_REQUEST),
@@ -481,11 +480,13 @@ public class RESTCodes {
     JUPYTER_START_ERROR(100035, "Jupyter server could not start.", Response.Status.INTERNAL_SERVER_ERROR),
     JUPYTER_SAVE_SETTINGS_ERROR(100036, "Could not save Jupyter Settings.", Response.Status.INTERNAL_SERVER_ERROR),
     IPYTHON_CONVERT_ERROR(100037, "Problem converting ipython notebook to python program",
-      Response.Status.EXPECTATION_FAILED),
+      Response.Status.INTERNAL_SERVER_ERROR),
     TENSORBOARD_FETCH_ERROR(100038, "Error while fetching TensorBoard from database",
       Response.Status.INTERNAL_SERVER_ERROR),
-    EMAIL_SENDING_FAILURE(100039, "Could not send email", Response.Status.EXPECTATION_FAILED),
-    HOST_EXISTS(100040, "Host exists", Response.Status.CONFLICT);
+    EMAIL_SENDING_FAILURE(100039, "Could not send email", Response.Status.INTERNAL_SERVER_ERROR),
+    HOST_EXISTS(100040, "Host exists", Response.Status.CONFLICT),
+    TENSORFLOW_VERSION_NOT_SUPPORTED(100041, "We currently do not support this version of TensorFlow. Update to a " +
+      "newer version or contact an admin", Response.Status.BAD_REQUEST);
     
     private Integer code;
     private String message;
@@ -613,7 +614,7 @@ public class RESTCodes {
     MASTER_ENCRYPTION_PASSWORD_CHANGE(200001,
       "Master password change procedure started. Check your inbox for final status", Response.Status.BAD_REQUEST),
     HDFS_ACCESS_CONTROL(200002, "Access error while trying to access hdfs resource", Response.Status.FORBIDDEN),
-    EJB_ACCESS_LOCAL(200003, "Client not authorized for this invocation", Response.Status.UNAUTHORIZED),
+    EJB_ACCESS_LOCAL(200003, "Unauthorized invocation",Response.Status.UNAUTHORIZED),
     CERT_CREATION_ERROR(200004, "Error while generating certificates.", Response.Status.INTERNAL_SERVER_ERROR),
     CERT_CN_EXTRACT_ERROR(200005, "Error while extracting CN from certificate.", Response.Status.INTERNAL_SERVER_ERROR),
     CERT_ERROR(200006, "Certificate could not be validated.", Response.Status.UNAUTHORIZED),
@@ -654,6 +655,7 @@ public class RESTCodes {
   
   public enum UserErrorCode implements RESTErrorCode {
     
+    NO_ROLE_FOUND(160000, "No valid role found for this user", Response.Status.UNAUTHORIZED),
     USER_DOES_NOT_EXIST(160001, "User does not exist.", Response.Status.BAD_REQUEST),
     USER_WAS_NOT_FOUND(160002, "User not found", Response.Status.NOT_FOUND),
     USER_EXISTS(160003, "There is an existing account associated with this email", Response.Status.CONFLICT),
@@ -661,7 +663,7 @@ public class RESTCodes {
     ACCOUNT_DEACTIVATED(160005, "This account has been deactivated.", Response.Status.UNAUTHORIZED),
     ACCOUNT_VERIFICATION(160006, "You need to verify your account.", Response.Status.BAD_REQUEST),
     ACCOUNT_BLOCKED(160007, "Your account has been blocked. Contact the administrator.", Response.Status.UNAUTHORIZED),
-    AUTHENTICATION_FAILURE(160008, "Authentication failed", Response.Status.UNAUTHORIZED),
+    AUTHENTICATION_FAILURE(160008, "Authentication failed, invalid credentials", Response.Status.UNAUTHORIZED),
     LOGOUT_FAILURE(160009, "Logout failed on backend.", Response.Status.BAD_REQUEST),
     
     SEC_Q_EMPTY(160010, "Security Question cannot be empty.", Response.Status.BAD_REQUEST),
@@ -693,7 +695,6 @@ public class RESTCodes {
     PROFILE_UPDATED(160027, "Your profile was updated successfully.", Response.Status.BAD_REQUEST),
     SSH_KEY_REMOVED(160028, "Your ssh key was deleted successfully.", Response.Status.BAD_REQUEST),
     NOTHING_TO_UPDATE(160029, "Nothing to update", Response.Status.BAD_REQUEST),
-    AUTHORIZATION_FAILURE(160033, "Authorization failed", Response.Status.UNAUTHORIZED),
     CREATE_USER_ERROR(160034, "Error while creating user", Response.Status.INTERNAL_SERVER_ERROR),
     CERT_AUTHORIZATION_ERROR(160035, "Certificate CN does not match the username provided.",
       Response.Status.UNAUTHORIZED),
@@ -708,10 +709,10 @@ public class RESTCodes {
     TMP_CODE_INVALID(160042, "The temporary code was wrong.", Response.Status.UNAUTHORIZED),
     INCORRECT_CREDENTIALS(160043, "Incorrect email or password.", Response.Status.UNAUTHORIZED),
     INCORRECT_VALIDATION_KEY(160044, "Incorrect validation key", Response.Status.UNAUTHORIZED),
-    ACCOUNT_ALREADY_VERIFIED(160045, "User is already verified", Response.Status.BAD_REQUEST),
+    ACCOUNT_ALREADY_VERIFIED(160045, "User is already verified", Response.Status.CONFLICT),
     TWO_FA_ENABLE_ERROR(160046, "Cannot enable 2-factor authentication.", Response.Status.INTERNAL_SERVER_ERROR),
-    ACCOUNT_REGISTRATION_ERROR(160047, "Cannot enable 2-factor authentication.", Response.Status.INTERNAL_SERVER_ERROR),
-    TWO_FA_DISABLED(160048, "2FA is not enabled.", Response.Status.PRECONDITION_FAILED),
+    ACCOUNT_REGISTRATION_ERROR(160047, "Account registration error.", Response.Status.INTERNAL_SERVER_ERROR),
+    TWO_FA_DISABLED(160048, "2-factor authentication is disabled.", Response.Status.PRECONDITION_FAILED),
     TRANSITION_STATUS_ERROR(160049, "The user can't transition from current status to requested status",
       Response.Status.BAD_REQUEST);
     
@@ -744,7 +745,7 @@ public class RESTCodes {
   public enum DelaErrorCode implements RESTErrorCode {
     
     //response for validation error
-    THIRD_PARTY_ERROR(170000, "Generic third party error.", Response.Status.EXPECTATION_FAILED),
+    THIRD_PARTY_ERROR(170000, "Generic third party error.", Response.Status.INTERNAL_SERVER_ERROR),
     CLUSTER_NOT_REGISTERED(170001, "Cluster not registered.", Response.Status.UNAUTHORIZED),
     HEAVY_PING(170002, "Heavy ping required.", Response.Status.BAD_REQUEST),
     USER_NOT_REGISTERED(170003, "User not registered.", Response.Status.UNAUTHORIZED),

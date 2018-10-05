@@ -33,7 +33,7 @@ describe "On #{ENV['OS']}" do
                    topicName: "test",
                    version: 1
                }
-          expect_json(errorMsg: "Could not authenticate user")
+          expect_json(errorCode: 160008)
           expect_status(401)
         end
       end
@@ -57,7 +57,7 @@ describe "On #{ENV['OS']}" do
           }
           json_data = json_data.to_json
           post "#{ENV['HOPSWORKS_API']}/appservice/schema", json_data # This post request authenticates with keystore and pwd to get schema
-          expect_json(errorMsg: "Oops! something went wrong :(")
+          expect_json(errorCode: "Oops! something went wrong :(")
           expect_status(500)
         end
       end

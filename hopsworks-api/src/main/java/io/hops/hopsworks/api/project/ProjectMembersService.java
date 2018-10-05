@@ -48,9 +48,11 @@ import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.exception.KafkaException;
 import io.hops.hopsworks.common.exception.ProjectException;
 import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.exception.UserException;
 import io.hops.hopsworks.common.project.MembersDTO;
 import io.hops.hopsworks.common.project.ProjectController;
+import io.hops.hopsworks.common.security.CAException;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -69,8 +71,8 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import java.io.IOException;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @RequestScoped
@@ -193,7 +195,8 @@ public class ProjectMembersService {
   public Response removeMembersByID(
           @PathParam("email") String email,
           @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws ProjectException {
+          @Context HttpServletRequest req)
+    throws ProjectException, ServiceException, CAException, UserException, IOException {
 
     Project project = projectController.findProjectById(this.projectId);
     RESTApiJsonResponse json = new RESTApiJsonResponse();
@@ -208,13 +211,7 @@ public class ProjectMembersService {
     if (project.getOwner().getEmail().equals(email)) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_OWNER_NOT_ALLOWED);
     }
-    try {
-      projectController.removeMemberFromTeam(project, owner, email);
-    } catch (Exception ex) {
-      //TODO: take an action?
-      logger.log(Level.WARNING,
-              "Error while trying to delete a member from team", ex);
-    }
+    projectController.removeMemberFromTeam(project, owner, email);
 
     json.setSuccessMessage(ResponseMessages.MEMBER_REMOVED_FROM_TEAM);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(

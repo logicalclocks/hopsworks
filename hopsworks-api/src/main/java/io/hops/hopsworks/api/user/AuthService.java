@@ -49,7 +49,6 @@ import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.ldap.LdapUser;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
 import io.hops.hopsworks.common.dao.user.security.audit.UserAuditActions;
-import io.hops.hopsworks.common.exception.ProjectException;
 import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.exception.UserException;
@@ -112,13 +111,9 @@ public class AuthService {
   @Path("session")
   @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
   @Produces(MediaType.APPLICATION_JSON)
-  public Response session(@Context SecurityContext sc, @Context HttpServletRequest req) throws UserException {
+  public Response session(@Context SecurityContext sc, @Context HttpServletRequest req) {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
-    try {
-      json.setData(sc.getUserPrincipal().getName());
-    } catch (Exception e) {
-      throw new UserException(RESTCodes.UserErrorCode.AUTHENTICATION_FAILURE, null, e.getMessage(), e);
-    }
+    json.setData(sc.getUserPrincipal().getName());
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }
 
@@ -126,7 +121,7 @@ public class AuthService {
   @Path("login")
   @Produces(MediaType.APPLICATION_JSON)
   public Response login(@FormParam("email") String email, @FormParam("password") String password,
-      @FormParam("otp") String otp, @Context HttpServletRequest req) throws UserException, ProjectException {
+      @FormParam("otp") String otp, @Context HttpServletRequest req) throws UserException {
     logUserLogin(req);
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     if (email == null || email.isEmpty()) {
@@ -158,7 +153,7 @@ public class AuthService {
   @Produces(MediaType.APPLICATION_JSON)
   public Response ldapLogin(@FormParam("username") String username, @FormParam("password") String password,
       @FormParam("chosenEmail") String chosenEmail, @FormParam("consent") boolean consent,
-      @Context HttpServletRequest req) throws LoginException, UserException, ProjectException {
+      @Context HttpServletRequest req) throws LoginException, UserException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     if (username == null || username.isEmpty()) {
       throw new IllegalArgumentException("Username can not be empty.");
@@ -290,13 +285,12 @@ public class AuthService {
     }
   }
 
-  private void login(Users user, String email, String password, HttpServletRequest req)
-    throws ProjectException, UserException {
+  private void login(Users user, String email, String password, HttpServletRequest req) throws UserException {
     if (user == null) {
       throw new IllegalArgumentException("User not set.");
     }
     if (user.getBbcGroupCollection() == null || user.getBbcGroupCollection().isEmpty()) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.NO_ROLE_FOUND);
+      throw new UserException(RESTCodes.UserErrorCode.NO_ROLE_FOUND);
     }
     if (statusValidator.checkStatus(user.getStatus())) {
       try {

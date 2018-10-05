@@ -89,7 +89,7 @@ import java.util.logging.Logger;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class KafkaService {
 
-  private final static Logger LOGGER = Logger.getLogger(KafkaService.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(KafkaService.class.getName());
 
   @EJB
   private ProjectFacade projectFacade;
@@ -168,9 +168,10 @@ public class KafkaService {
   @Path("/topic/add")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response createTopic(TopicDTO topicDto,
           @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws Exception {
+          @Context HttpServletRequest req) throws KafkaException, ProjectException, ServiceException, UserException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     //create the topic in the database and the Kafka cluster
     kafkaFacade.createTopicInProject(projectId, topicDto);
@@ -190,6 +191,7 @@ public class KafkaService {
   @DELETE
   @Path("/topic/{topic}/remove")
   @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response removeTopic(@PathParam("topic") String topicName,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws KafkaException, ServiceException {
@@ -244,6 +246,7 @@ public class KafkaService {
   @GET
   @Path("/topic/{topic}/share/{projId}")
   @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response shareTopic(
           @PathParam("topic") String topicName,
           @PathParam("projId") int projectId,
@@ -270,6 +273,7 @@ public class KafkaService {
   @DELETE
   @Path("/topic/{topic}/unshare/{projectId}")
   @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response unShareTopic(
           @PathParam("topic") String topicName,
           @PathParam("projectId") int projectId,
@@ -286,6 +290,7 @@ public class KafkaService {
   @DELETE
   @Path("/topic/{topic}/unshare")
   @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response unShareTopicFromProject(
           @PathParam("topic") String topicName,
           @Context SecurityContext sc,
@@ -337,6 +342,7 @@ public class KafkaService {
   @Path("/topic/{topic}/addAcl")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response addAclsToTopic(@PathParam("topic") String topicName,
           AclDTO aclDto,
           @Context SecurityContext sc, @Context HttpServletRequest req) throws KafkaException, ProjectException,
@@ -351,6 +357,7 @@ public class KafkaService {
   @DELETE
   @Path("/topic/{topic}/removeAcl/{aclId}")
   @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response removeAclsFromTopic(@PathParam("topic") String topicName,
           @PathParam("aclId") int aclId,
           @Context SecurityContext sc,
@@ -381,6 +388,7 @@ public class KafkaService {
   @PUT
   @Path("/topic/{topic}/updateAcl/{aclId}")
   @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response updateTopicAcls(@PathParam("topic") String topicName,
           @PathParam("aclId") String aclId, AclDTO aclDto,
           @Context SecurityContext sc,
@@ -425,6 +433,7 @@ public class KafkaService {
   @Path("/schema/add")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response addTopicSchema(SchemaDTO schemaData,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) {
@@ -488,6 +497,7 @@ public class KafkaService {
   @DELETE
   @Path("/removeSchema/{schemaName}/{version}")
   @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response deleteSchema(@PathParam("schemaName") String schemaName,
           @PathParam("version") Integer version,
           @Context SecurityContext sc,

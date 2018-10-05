@@ -293,7 +293,7 @@ public class ApplicationService {
       String username = hdfsUserBean.getUserName(commonName);
       Users user = userFacade.findByUsername(username);
       if (user == null) {
-        throw new UserException(RESTCodes.UserErrorCode.AUTHORIZATION_FAILURE, "user: " + commonName);
+        throw new UserException(RESTCodes.UserErrorCode.AUTHENTICATION_FAILURE, "user: " + commonName);
       }
       
       String decryptedPassword = HopsUtils.decrypt(user.getPassword(), userCert.getUserKeyPwd(),
@@ -302,12 +302,11 @@ public class ApplicationService {
       String storedCN = certificatesController.extractCNFromCertificate(userCert.getUserKey(),
           decryptedPassword.toCharArray(), commonName);
       if (!storedCN.equals(commonName)) {
-        throw new UserException(RESTCodes.UserErrorCode.AUTHORIZATION_FAILURE, "user: " + commonName);
+        throw new UserException(RESTCodes.UserErrorCode.AUTHENTICATION_FAILURE, "user: " + commonName);
       }
       
       return commonName;
     } catch (Exception ex) {
-      LOGGER.log(Level.WARNING, "Could not authenticate user", ex);
       throw new UserException(RESTCodes.UserErrorCode.AUTHENTICATION_FAILURE, null, ex.getMessage());
     }
   }
@@ -316,7 +315,7 @@ public class ApplicationService {
     String username = hdfsUserBean.getUserName(projectUser);
     Users user = userFacade.findByUsername(username);
     if (!usersController.isUserInRole(user, "HOPS_ADMIN")) {
-      throw new UserException(RESTCodes.UserErrorCode.AUTHORIZATION_FAILURE,
+      throw new UserException(RESTCodes.UserErrorCode.AUTHENTICATION_FAILURE,
         "Method can be only be invoked by an admin");
     }
   }

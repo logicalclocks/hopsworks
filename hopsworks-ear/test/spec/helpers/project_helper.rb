@@ -91,6 +91,7 @@ module ProjectHelper
   
   def check_project_limit(limit=0)
     get "#{ENV['HOPSWORKS_API']}/user/profile"
+    puts response
     max_num_projects = json_body[:maxNumProjects]
     num_created_projects = json_body[:numCreatedProjects]
     if (max_num_projects - num_created_projects) <= limit

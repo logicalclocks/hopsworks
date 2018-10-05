@@ -49,7 +49,7 @@ describe "On #{ENV['OS']}" do
       it 'should work with valid params' do
         user = create_user
         post "#{ENV['HOPSWORKS_API']}/auth/login", URI.encode_www_form({ email: user.email, password: "Pass123"}), { content_type: 'application/x-www-form-urlencoded'}
-        expect_json_types(sessionID: :string, status: :string)
+        expect_json_types(sessionID: :string)
         expect_status(200)
       end
 
@@ -65,7 +65,7 @@ describe "On #{ENV['OS']}" do
       it 'should fail with invalid params' do
         user = create_user
         post "#{ENV['HOPSWORKS_API']}/auth/login", URI.encode_www_form({ email: user.email, password: "not_pass"}), { content_type: 'application/x-www-form-urlencoded'}
-        expect_json_types(errorMsg: :string)
+        expect_json(errorCode: 160008)
         expect_status(401)
       end
 
@@ -74,7 +74,7 @@ describe "On #{ENV['OS']}" do
         create_blocked_user(email: email)
         create_session(email, "Pass123")
         expect_json(successMessage: ->(value){ expect(value).to be_nil})
-        expect_json(errorMsg: "This account has been blocked.")
+        expect_json(errorCode: 160007)
         expect_status(401)
       end
 
@@ -83,7 +83,7 @@ describe "On #{ENV['OS']}" do
         create_deactivated_user(email: email)
         create_session(email, "Pass123")
         expect_json(successMessage: ->(value){ expect(value).to be_nil})
-        expect_json(errorMsg: "This account has been deactivated.")
+        expect_json(errorCode: 160005)
         expect_status(401)
       end
 
@@ -102,8 +102,8 @@ describe "On #{ENV['OS']}" do
         create_2factor_user(email: email)
         create_session(email, "Pass123")
         expect_json(successMessage: ->(value){ expect(value).to be_nil})
-        expect_json(errorMsg: "Second factor required.")
-        expect_status(417)
+        expect_json(errorCode: 120002)
+        expect_status(400)
       end
 
     end
@@ -115,7 +115,7 @@ describe "On #{ENV['OS']}" do
         last_name = "last"
         password = "Pass123"
         post "#{ENV['HOPSWORKS_API']}/auth/register", {email: email, chosenPassword: password, repeatedPassword: password, firstName: first_name, lastName: last_name, securityQuestion: "Name of your first pet?", securityAnswer: "example_answer", ToS: true, authType: "Mobile", twoFactor: false, testUser: true}
-        expect_json(errorMsg: ->(value){ expect(value).to be_empty})
+        expect_json(errorMsg: ->(value){ expect(value).to be_nil})
         expect_json(successMessage: ->(value){ expect(value).to include("We registered your account request")})
         expect_status(200)
       end
@@ -128,8 +128,8 @@ describe "On #{ENV['OS']}" do
         register_user(email: email)
         post "#{ENV['HOPSWORKS_API']}/auth/register", {email: email, chosenPassword: password, repeatedPassword: password, firstName: first_name, lastName: last_name, securityQuestion: "Name of your first pet?", securityAnswer: "example_answer", ToS: true, authType: "Mobile", testUser: true}
         expect_json(successMessage: ->(value){ expect(value).to be_nil})
-        expect_json(errorMsg: ->(value){ expect(value).to include("There is an existing account")})
-        expect_status(400)
+        expect_json(errorCode: 160003)
+        expect_status(409)
       end
 
       it "should validate an exisiting unvalidated user" do
@@ -141,12 +141,12 @@ describe "On #{ENV['OS']}" do
         expect_status(200)
       end
 
-      it "should fail to signin if not confirmed and no role" do
+      it "should fail to sign in if not confirmed and no role" do
         email = "#{random_id}@email.com"
         create_unapproved_user(email: email)
         create_session(email, "Pass123")
         expect_json(successMessage: ->(value){ expect(value).to be_nil})
-        expect_json(errorMsg: ->(value){ expect(value).to include("This account has not yet been approved.")})
+        expect_json(errorCode:160039)
         expect_status(401)
       end
 
@@ -156,7 +156,7 @@ describe "On #{ENV['OS']}" do
         create_role(User.find_by(email: email))
         create_session(email, "Pass123")
         expect_json(successMessage: ->(value){ expect(value).to be_nil})
-        expect_json(errorMsg: "This account has not been activated.")
+        expect_json(errorCode: 160037)
         expect_status(401)
       end
 
@@ -165,7 +165,7 @@ describe "On #{ENV['OS']}" do
         create_user_without_role(email: email)
         create_session(email, "Pass123")
         expect_json(successMessage: ->(value){ expect(value).to be_nil})
-        expect_json(errorMsg: ->(value){ expect(value).to include("No valid role found for this user")})
+        expect_json(errorCode: 160000)
         expect_status(401)
       end
     end

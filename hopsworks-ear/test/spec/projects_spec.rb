@@ -251,9 +251,8 @@ describe "On #{ENV['OS']}" do
           add_member(new_member, "Data owner")
           project = get_project
           create_session(member[:email],"Pass123")
-          byebug
           post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/projectMembers/#{new_member}", URI.encode_www_form({ role: "Data scientist"}), { content_type: 'application/x-www-form-urlencoded'}
-          expect_json(errorCode: 150012)
+          expect_json(errorCode: 150066)
           expect_status(403)
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers"
           memb = json_body.detect { |e| e[:user][:email] == new_member }
@@ -286,8 +285,8 @@ describe "On #{ENV['OS']}" do
         it "should fail to remove a non-existing team member" do
           new_member = create_user[:email]
           delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers/#{new_member}"
-          expect_json(errorCode: 150000)
-          expect_status(400)
+          expect_json(errorCode: 150023)
+          expect_status(404)
         end
         it "should add new member with default role (Data scientist)" do
           new_member = create_user[:email]
@@ -301,8 +300,8 @@ describe "On #{ENV['OS']}" do
         it "should fail to change non-existing user role" do
           new_member = "none_existing_user@email.com"
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers/#{new_member}", URI.encode_www_form({ role: "Data scientist"}), { content_type: 'application/x-www-form-urlencoded'}
-          expect_json(errorCode: 150000)
-          expect_status(400)
+          expect_json(errorCode: 160002)
+          expect_status(404)
         end
         it "should fail to change non-existing member role" do
           new_member = create_user[:email]
@@ -353,7 +352,6 @@ describe "On #{ENV['OS']}" do
         it "should not add non-existing user" do
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers", {projectTeam: [{projectTeamPK: {projectId: @project[:id],teamMember: "none_existing_user@email.com"},teamRole: "Data scientist"}]}
           expect_json(successMessage: " No member added.")
-          expect_json(errorMsg: "")
           expect_status(200)
           field_errors = json_body[:fieldErrors]
           expect(field_errors).to include("none_existing_user@email.com was not found in the system.")
@@ -362,7 +360,6 @@ describe "On #{ENV['OS']}" do
           new_member = create_user[:email]
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers", {projectTeam: [{projectTeamPK: {projectId: @project[:id],teamMember: "none_existing_user@email.com"},teamRole: "Data scientist"},{projectTeamPK: {projectId: @project[:id],teamMember: new_member},teamRole: "Data scientist"}]}
           expect_json(successMessage: "One member added successfully")
-          expect_json(errorMsg: "")
           expect_status(200)
           field_errors = json_body[:fieldErrors]
           expect(field_errors).to include("none_existing_user@email.com was not found in the system.")
@@ -370,7 +367,6 @@ describe "On #{ENV['OS']}" do
         it "should not add existing member" do
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers", {projectTeam: [{projectTeamPK: {projectId: @project[:id], teamMember: "#{@project[:username]}"},teamRole: "Data scientist"}]}
           expect_json(successMessage: " No member added.")
-          expect_json(errorMsg: "")
           expect_status(200)
           field_errors = json_body[:fieldErrors]
           expect(field_errors).to include("#{@project[:username]} is already a member in this project.")
@@ -379,7 +375,6 @@ describe "On #{ENV['OS']}" do
           new_member = create_user[:email]
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers", {projectTeam: [{projectTeamPK: {projectId: @project[:id], teamMember: "#{@project[:username]}"},teamRole: "Data scientist"},{projectTeamPK: {projectId: @project[:id],teamMember: new_member},teamRole: "Data scientist"}]}
           expect_json(successMessage: "One member added successfully")
-          expect_json(errorMsg: "")
           expect_status(200)
           field_errors = json_body[:fieldErrors]
           expect(field_errors).to include("#{@project[:username]} is already a member in this project.")
@@ -392,7 +387,6 @@ describe "On #{ENV['OS']}" do
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers", {projectTeam: [{projectTeamPK: {projectId: @project[:id], teamMember: new_member},teamRole: "Data scientist"}]}
           expect_status(200)
           expect_json(successMessage: "One member added successfully")
-          expect_json(errorMsg: "")
         end
       end
     end

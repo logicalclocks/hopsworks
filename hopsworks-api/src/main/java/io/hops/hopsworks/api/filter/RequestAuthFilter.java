@@ -152,8 +152,8 @@ public class RequestAuthFilter implements ContainerRequestFilter {
       if (userRole == null || userRole.isEmpty()) {
         LOGGER.log(Level.INFO,
           "Trying to access resource, but you dont have any role in this project");
-        jsonResponse.setErrorCode(RESTCodes.ProjectErrorCode.NO_ROLE_FOUND.getCode());
-        jsonResponse.setErrorMsg(RESTCodes.ProjectErrorCode.NO_ROLE_FOUND.getMessage());
+        jsonResponse.setErrorCode(RESTCodes.UserErrorCode.NO_ROLE_FOUND.getCode());
+        jsonResponse.setErrorMsg(RESTCodes.UserErrorCode.NO_ROLE_FOUND.getMessage());
         requestContext.abortWith(Response
           .status(Response.Status.FORBIDDEN)
           .entity(jsonResponse)
