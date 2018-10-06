@@ -39,6 +39,7 @@
 
 package io.hops.hopsworks.api.jobs;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
@@ -74,7 +75,6 @@ import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.yarn.YarnClientService;
 import io.hops.hopsworks.common.yarn.YarnClientWrapper;
 import org.apache.commons.httpclient.Header;
-import org.apache.commons.httpclient.HostConfiguration;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.cookie.CookiePolicy;
@@ -87,7 +87,6 @@ import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.util.ConverterUtils;
-import org.elasticsearch.common.Strings;
 import org.influxdb.InfluxDB;
 import org.influxdb.InfluxDBFactory;
 import org.influxdb.dto.Query;
@@ -124,7 +123,6 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
-import java.net.InetAddress;
 import java.net.URLEncoder;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -772,9 +770,6 @@ public class JobService {
       params.setBooleanParameter(HttpClientParams.ALLOW_CIRCULAR_REDIRECTS,
           true);
       HttpClient client = new HttpClient(params);
-      HostConfiguration config = new HostConfiguration();
-      InetAddress localAddress = InetAddress.getLocalHost();
-      config.setLocalAddress(localAddress);
 
       final HttpMethod method = new GetMethod(uri.getEscapedURI());
       Enumeration<String> names = req.getHeaderNames();
@@ -797,7 +792,7 @@ public class JobService {
             + URLEncoder.encode(user, "ASCII"));
       }
 
-      client.executeMethod(config, method);
+      client.executeMethod(method);
       Response.ResponseBuilder responseBuilder = noCacheResponse.
           getNoCacheResponseBuilder(Response.Status.OK);
       for (Header header : method.getResponseHeaders()) {

@@ -38,8 +38,30 @@
  */
 package io.hops.hopsworks.api.jupyter;
 
-import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
+
+import java.nio.file.Paths;
+import java.util.logging.Logger;
+import javax.ejb.EJB;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import javax.enterprise.context.RequestScoped;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.GET;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.POST;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.Path;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
+import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.util.LivyController;
 import io.hops.hopsworks.api.zeppelin.util.LivyMsg;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
@@ -76,36 +98,16 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import javax.annotation.security.RolesAllowed;
-import javax.ejb.EJB;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-import javax.enterprise.context.RequestScoped;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -132,7 +134,7 @@ public class JupyterService {
   @EJB
   private Settings settings;
   @EJB
-  private LivyController livyService;
+  private LivyController livyController;
   @EJB
   private CertificateMaterializer certificateMaterializer;
   @EJB
@@ -195,11 +197,21 @@ public class JupyterService {
       @Context HttpServletRequest req) {
     String loggedinemail = sc.getUserPrincipal().getName();
     Users user = userFacade.findByEmail(loggedinemail);
-    List<LivyMsg.Session> sessions = livyService.getLivySessionsForProjectUser(this.project, user,
+    List<LivyMsg.Session> sessions = livyController.getLivySessionsForProjectUser(this.project, user,
         ProjectServiceEnum.JUPYTER);
     GenericEntity<List<LivyMsg.Session>> livyActive
         = new GenericEntity<List<LivyMsg.Session>>(sessions) { };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(livyActive).build();
+  }
+
+  @DELETE
+  @Path("/livy/sessions/{appId}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  public Response stopLivySession(@PathParam("appId") String appId, @Context SecurityContext sc) {
+    String hdfsUsername = getHdfsUser(sc);
+    stopSession(hdfsUsername, sc.getUserPrincipal().getName(), appId);
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 
   /**
@@ -348,17 +360,28 @@ public class JupyterService {
   }
 
   @GET
+  @Path("/stopDataOwner")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
+  public Response stopDataOwner(@PathParam("hdfsUsername") String hdfsUsername,
+      @Context SecurityContext sc,
+      @Context HttpServletRequest req) throws ServiceException, ProjectException {
+    stopAllSessions(hdfsUsername, sc.getUserPrincipal().getName());
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
+  }
+
+  @GET
   @Path("/stop")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response stopNotebookServer(@Context SecurityContext sc,
       @Context HttpServletRequest req) throws ProjectException, ServiceException {
     String hdfsUsername = getHdfsUser(sc);
-    stop(hdfsUsername, sc.getUserPrincipal().getName());
+    stopAllSessions(hdfsUsername, sc.getUserPrincipal().getName());
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 
-  private void stop(String hdfsUser, String loggedinemail) throws ProjectException, ServiceException {
+  private void stopAllSessions(String hdfsUser, String loggedinemail) throws ServiceException, ProjectException {
     // We need to stop the jupyter notebook server with the PID
     // If we can't stop the server, delete the Entity bean anyway
     JupyterProject jp = jupyterFacade.findByUser(hdfsUser);
@@ -368,17 +391,17 @@ public class JupyterService {
 
     Users user = userFacade.findByEmail(loggedinemail);
 
-    List<LivyMsg.Session> sessions = livyService.
+    List<LivyMsg.Session> sessions = livyController.
         getLivySessionsForProjectUser(project, user, ProjectServiceEnum.JUPYTER);
 
-    livyService.deleteAllLivySessions(hdfsUser, ProjectServiceEnum.JUPYTER);
+    livyController.deleteAllLivySessions(hdfsUser, ProjectServiceEnum.JUPYTER);
 
     int retries = 3;
     while(retries > 0 &&
-        livyService.getLivySessionsForProjectUser(project, user, ProjectServiceEnum.JUPYTER).size() > 0) {
+        livyController.getLivySessionsForProjectUser(project, user, ProjectServiceEnum.JUPYTER).size() > 0) {
       LOGGER.log(Level.SEVERE, "Failed previous attempt to delete livy sessions for project " + project.getName() +
             " user " + hdfsUser + ", retrying...");
-      livyService.deleteAllLivySessions(hdfsUser, ProjectServiceEnum.JUPYTER);
+      livyController.deleteAllLivySessions(hdfsUser, ProjectServiceEnum.JUPYTER);
 
       try {
         Thread.sleep(1000);
@@ -406,28 +429,47 @@ public class JupyterService {
         dfsService.closeDfsClient(dfso);
       }
     }
+    for(LivyMsg.Session session: sessions) {
+      updateRunningExperimentAsKilled(session);
+    }
+  }
 
+  private void stopSession(String hdfsUser, String loggedinemail, String appId) {
+    Users user = userFacade.findByEmail(loggedinemail);
+
+    List<LivyMsg.Session> sessions = livyController.getLivySessionsForProjectUser(project, user,
+      ProjectServiceEnum.JUPYTER);
+
+    for(LivyMsg.Session session: sessions) {
+      if(session.getAppId().equalsIgnoreCase(appId)) {
+        livyController.deleteLivySession(session.getId());
+        updateRunningExperimentAsKilled(session);
+        break;
+      }
+    }
+  }
+
+  private void updateRunningExperimentAsKilled(LivyMsg.Session session) {
     try {
       String experimentsIndex = this.project.getName().toLowerCase()
           + "_" + Settings.ELASTIC_EXPERIMENTS_INDEX;
       // when jupyter is shutdown the experiment status should be updated accordingly as KILLED
-      for (LivyMsg.Session session : sessions) {
-        String sessionAppId = session.getAppId();
 
-        String experiment = elasticController.findExperiment(experimentsIndex, sessionAppId);
+      String sessionAppId = session.getAppId();
 
-        JSONObject json = new JSONObject(experiment);
-        json = json.getJSONObject("hits");
-        JSONArray hits = json.getJSONArray("hits");
-        for(int i = 0; i < hits.length(); i++) {
-          JSONObject obj = (JSONObject)hits.get(i);
-          JSONObject source = obj.getJSONObject("_source");
-          String status = source.getString("status");
+      String experiment = elasticController.findExperiment(experimentsIndex, sessionAppId);
 
-          if(status.equalsIgnoreCase(JobState.RUNNING.name())) {
-            source.put("status", "KILLED");
-            elasticController.updateExperiment(experimentsIndex, obj.getString("_id"), source);
-          }
+      JSONObject json = new JSONObject(experiment);
+      json = json.getJSONObject("hits");
+      JSONArray hits = json.getJSONArray("hits");
+      for(int i = 0; i < hits.length(); i++) {
+        JSONObject obj = (JSONObject)hits.get(i);
+        JSONObject source = obj.getJSONObject("_source");
+        String status = source.getString("status");
+
+        if(status.equalsIgnoreCase(JobState.RUNNING.name())) {
+          source.put("status", "KILLED");
+          elasticController.updateExperiment(experimentsIndex, obj.getString("_id"), source);
         }
       }
     } catch(Exception e) {
