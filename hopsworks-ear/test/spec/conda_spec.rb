@@ -52,7 +52,7 @@ describe "On #{ENV['OS']}" do
         end
         it "not authenticated" do
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/enable/2.7/true"
-          expect_json(code: 200003)
+          expect_json(errorCode: 200003)
           expect_status(401)
         end
       end

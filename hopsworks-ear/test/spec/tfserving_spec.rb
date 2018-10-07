@@ -53,7 +53,7 @@ describe "On #{ENV['OS']}" do
               {modelName: "testModel",
                modelPath: "hdfs:///Projects/#{@project[:projectname]}/Models/mnist/",
                modelVersion: 1}
-          expect_json(code: 200003)
+          expect_json(errorCode: 200003)
           expect_status(401)
         end
       end

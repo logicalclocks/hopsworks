@@ -307,7 +307,7 @@ describe "On #{ENV['OS']}" do
           new_member = create_user[:email]
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers/#{new_member}", URI.encode_www_form({ role: "Data scientist"}), { content_type: 'application/x-www-form-urlencoded'}
           expect_json(errorCode: 150023)
-          expect_status(400)
+          expect_status(404)
         end
         it "should change member role to Data scientist" do
           new_member = create_user[:email]
