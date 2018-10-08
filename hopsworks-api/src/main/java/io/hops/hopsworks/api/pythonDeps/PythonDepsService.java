@@ -277,7 +277,7 @@ public class PythonDepsService {
     }
 
     if (cpuHost == null && gpuHost == null) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.HOST_NOT_FOUND, Level.FINE,
+      throw new ServiceException(RESTCodes.ServiceErrorCode.HOST_NOT_FOUND, Level.WARNING,
         "Could not find any CPU or GPU host");
     }
 

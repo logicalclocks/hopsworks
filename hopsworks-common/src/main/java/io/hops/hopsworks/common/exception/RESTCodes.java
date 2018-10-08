@@ -530,7 +530,7 @@ public class RESTCodes {
         "for it to finish or clear it first.", Response.Status.PRECONDITION_FAILED),
     HOST_TYPE_NOT_FOUND(24, "No hosts with the desired capability.",
       Response.Status.PRECONDITION_FAILED),
-    HOST_NOT_FOUND(25, "Hosts was not found.", Response.Status.NOT_FOUND),
+    HOST_NOT_FOUND(25, "Host was not found.", Response.Status.NOT_FOUND),
     HOST_NOT_REGISTERED(26, "Host has not registered.", Response.Status.NOT_FOUND),
     ANACONDA_DEP_REMOVE_FORBIDDEN(27, "Could not uninstall library, it is a mandatory dependency",
       Response.Status.BAD_REQUEST),
