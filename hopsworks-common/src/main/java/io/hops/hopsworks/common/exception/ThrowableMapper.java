@@ -117,7 +117,7 @@ public abstract class ThrowableMapper implements ExceptionMapper<Throwable> {
   }
   
   public Response handleRESTException(RESTException ex) {
-    logger.log(ex.getLevel(), ex.getClass().getName(), ex);
+    logger.log(ex.getLevel(), ex.toString() , ex);
     return handleRESTException(ex.getErrorCode().getRespStatus(), ex);
   }
   

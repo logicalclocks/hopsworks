@@ -307,7 +307,7 @@ public class ApplicationService {
       
       return commonName;
     } catch (Exception ex) {
-      throw new UserException(RESTCodes.UserErrorCode.AUTHENTICATION_FAILURE, null, ex.getMessage());
+      throw new UserException(RESTCodes.UserErrorCode.AUTHENTICATION_FAILURE, Level.SEVERE, null, ex.getMessage());
     }
   }
 

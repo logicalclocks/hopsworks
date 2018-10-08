@@ -46,7 +46,6 @@ describe "On #{ENV['OS']}" do
       it 'should fail if ldap disabled' do
         set_ldap_enabled("false")
         post "#{ENV['HOPSWORKS_API']}/auth/ldapLogin", URI.encode_www_form({ username: "ldapuser", password: "Pass123"}), { content_type: 'application/x-www-form-urlencoded'}
-        puts response
         expect_json(errorCode: 160008)
         expect_status(401)
       end

@@ -78,4 +78,11 @@ public class DelaException extends RESTException {
     HOPS_SITE
   }
   
+  @Override
+  public String toString() {
+    return "{" +
+      "source=" + source +
+      super.toString() +
+      '}';
+  }
 }

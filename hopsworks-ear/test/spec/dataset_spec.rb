@@ -332,7 +332,7 @@ describe "On #{ENV['OS']}" do
           add_member(member[:email], "Data scientist")
           create_session(member[:email],"Pass123")
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/permissions", {name: dsname, permissions: permissions, projectId: project[:id]}
-          expect_json(errorCode: 150066)
+          expect_json(errorCode: 150068)
           expect_status(403)
         end
       end

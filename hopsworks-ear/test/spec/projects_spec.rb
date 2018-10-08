@@ -186,7 +186,7 @@ describe "On #{ENV['OS']}" do
           project = get_project
           create_session(member[:email],"Pass123")
           post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/delete"
-          expect_json(errorCode: 150066)
+          expect_json(errorCode: 150068)
           expect_status(403)
         end
       end
@@ -227,7 +227,7 @@ describe "On #{ENV['OS']}" do
           project = get_project
           create_session(member[:email],"Pass123")
           post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/projectMembers", {projectTeam: [{projectTeamPK: {projectId: project[:id], teamMember: new_member},teamRole: "Data scientist"}]}
-          expect_json(errorCode: 150066)
+          expect_json(errorCode: 150068)
           expect_status(403)
         end
         it "should fail to remove a team member" do
@@ -238,7 +238,7 @@ describe "On #{ENV['OS']}" do
           project = get_project
           create_session(member[:email],"Pass123")
           delete "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/projectMembers/#{new_member}"
-          expect_json(errorCode: 150066)
+          expect_json(errorCode: 150068)
           expect_status(403)
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers"
           memb = json_body.detect { |e| e[:user][:email] == new_member }
@@ -252,7 +252,7 @@ describe "On #{ENV['OS']}" do
           project = get_project
           create_session(member[:email],"Pass123")
           post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/projectMembers/#{new_member}", URI.encode_www_form({ role: "Data scientist"}), { content_type: 'application/x-www-form-urlencoded'}
-          expect_json(errorCode: 150066)
+          expect_json(errorCode: 150068)
           expect_status(403)
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers"
           memb = json_body.detect { |e| e[:user][:email] == new_member }

@@ -94,4 +94,12 @@ public abstract class RESTException extends Exception implements Serializable {
     }
     return jsonResponse;
   }
+  
+  @Override
+  public String toString() {
+    return "{" +
+      "errorCode='" + errorCode.getCode() + '\'' +
+      ", usrMsg=" + usrMsg +
+      '}';
+  }
 }

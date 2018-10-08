@@ -75,4 +75,12 @@ public class CAException extends RESTException {
     jsonResponse.setCertificateType(certType);
     return super.getJsonResponse(jsonResponse, logLevel);
   }
+  
+  @Override
+  public String toString() {
+    return "{" +
+      "certType=" + certType +
+      super.toString() +
+      '}';
+  }
 }
