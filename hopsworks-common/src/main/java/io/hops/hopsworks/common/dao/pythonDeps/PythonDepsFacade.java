@@ -502,7 +502,7 @@ public class PythonDepsFacade {
       String arg, MachineType machineType, String environmentYml) throws ServiceException {
     List<Hosts> hosts = hostsFacade.getCondaHosts(machineType);
     if (hosts.isEmpty()) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_NODES_UNAVAILABLE, Level.INFO);
+      throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_NODES_UNAVAILABLE, Level.WARNING);
     }
 
     for (Hosts h : hosts) {
