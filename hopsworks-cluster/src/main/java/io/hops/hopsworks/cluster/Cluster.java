@@ -104,7 +104,8 @@ public class Cluster {
   @POST
   @Path("unregister")
   @Consumes(MediaType.APPLICATION_JSON)
-  public Response unregister(ClusterDTO cluster, @Context HttpServletRequest req) throws MessagingException, UserException {
+  public Response unregister(ClusterDTO cluster, @Context HttpServletRequest req) 
+    throws MessagingException, UserException {
     LOGGER.log(Level.INFO, "Unregistering : {0}", cluster.getEmail());
     clusterController.unregister(cluster, req);
     ClusterJsonResponse res = new ClusterJsonResponse();
