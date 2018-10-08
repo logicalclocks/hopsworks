@@ -162,7 +162,8 @@ public class TensorBoardProcessMgr {
       port = ThreadLocalRandom.current().nextInt(40000, 59999);
 
       String[] command = new String[]{"/usr/bin/sudo", prog, "start", hdfsUser.getName(), hdfsLogdir,
-        tbPath, port.toString(), anacondaEnvironmentPath, settings.getHadoopVersion(), certsPath};
+        tbPath, port.toString(), anacondaEnvironmentPath, settings.getHadoopVersion(), certsPath,
+      settings.getJavaHome()};
 
       LOGGER.log(Level.INFO, Arrays.toString(command));
       ProcessBuilder pb = new ProcessBuilder(command);
