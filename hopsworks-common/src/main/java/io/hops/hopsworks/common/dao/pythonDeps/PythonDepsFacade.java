@@ -239,7 +239,8 @@ public class PythonDepsFacade {
     if (environmentYml == null && pythonVersion.compareToIgnoreCase("2.7") != 0 && pythonVersion.
         compareToIgnoreCase("3.5") != 0 && pythonVersion.
         compareToIgnoreCase("3.6") != 0 && !pythonVersion.contains("X")) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.PYTHON_INVALID_VERSION, "pythonVersion: " + pythonVersion);
+      throw new ServiceException(RESTCodes.ServiceErrorCode.PYTHON_INVALID_VERSION,
+        Level.INFO, "pythonVersion: " + pythonVersion);
     }
 
     if (environmentYml == null) {
@@ -294,7 +295,7 @@ public class PythonDepsFacade {
 
     }
     if (repo == null) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_REPO_ERROR);
+      throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_REPO_ERROR, Level.SEVERE);
     }
     return repo;
   }
@@ -325,7 +326,7 @@ public class PythonDepsFacade {
       }
     }
     if (dep == null) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_REPO_ERROR);
+      throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_REPO_ERROR, Level.SEVERE);
     }
     return dep;
   }
@@ -403,7 +404,7 @@ public class PythonDepsFacade {
         // returns key,value  pairs
         String[] libVersion = line.split(",");
         if (libVersion.length != 2) {
-          throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_FORMAT_ERROR);
+          throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_FORMAT_ERROR, Level.WARNING);
         }
         // Format is:
         // mkl,2017.0.1
@@ -416,13 +417,15 @@ public class PythonDepsFacade {
       }
       int errCode = process.waitFor();
       if (errCode == 2) {
-        throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_ERROR, "errCode: " + errCode);
+        throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_ERROR, Level.SEVERE,
+          "errCode: " + errCode);
       } else if (errCode == 1) {
-        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_CONDA_LIBS_NOT_FOUND, "errCode: " + errCode);
+        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_CONDA_LIBS_NOT_FOUND, Level.SEVERE,
+          "errCode: " + errCode);
       }
 
     } catch (IOException | InterruptedException ex) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_ERROR,
+      throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_ERROR, Level.SEVERE,
         "Could not get pre-installed conda libraries", ex.getMessage(), ex);
 
     }
@@ -499,7 +502,7 @@ public class PythonDepsFacade {
       String arg, MachineType machineType, String environmentYml) throws ServiceException {
     List<Hosts> hosts = hostsFacade.getCondaHosts(machineType);
     if (hosts.isEmpty()) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_NODES_UNAVAILABLE);
+      throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_NODES_UNAVAILABLE, Level.INFO);
     }
 
     for (Hosts h : hosts) {
@@ -596,7 +599,7 @@ public class PythonDepsFacade {
     List<OpStatus> ongoingOps = opStatus(proj);
     for (OpStatus os : ongoingOps) {
       if (CondaOp.isEnvOp(CondaOp.valueOf(os.getOp().toUpperCase()))) {
-        throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_OP_IN_PROGRESS);
+        throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_OP_IN_PROGRESS, Level.INFO);
       }
     }
   }
@@ -636,7 +639,8 @@ public class PythonDepsFacade {
     
     List<Hosts> hosts = hostsFacade.getCondaHosts(machineType);
     if (hosts.isEmpty()) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.HOST_TYPE_NOT_FOUND, "capability:" + machineType.name());
+      throw new ServiceException(RESTCodes.ServiceErrorCode.HOST_TYPE_NOT_FOUND, Level.INFO,
+        "capability:" + machineType.name());
     }
     
     // 1. test if anacondaRepoUrl exists. If not, add it.
@@ -648,12 +652,12 @@ public class PythonDepsFacade {
     Collection<PythonDep> depsInProj = proj.getPythonDepCollection();
     if (depsInProj.contains(dep)) {
       if (op == CondaOp.INSTALL) {
-        throw new ProjectException(RESTCodes.ProjectErrorCode.PYTHON_LIB_ALREADY_INSTALLED,
+        throw new ProjectException(RESTCodes.ProjectErrorCode.PYTHON_LIB_ALREADY_INSTALLED, Level.INFO,
           "dep: " + dep.getDependency());
       }
       depsInProj.remove(dep);
     } else if (op == CondaOp.UNINSTALL || op == CondaOp.UPGRADE) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PYTHON_LIB_NOT_INSTALLED, "op: " + op);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PYTHON_LIB_NOT_INSTALLED, Level.INFO, "op: " + op);
     }
     if (op == CondaOp.INSTALL || op == CondaOp.UPGRADE) {
       depsInProj.add(dep);

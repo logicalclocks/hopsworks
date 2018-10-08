@@ -300,21 +300,22 @@ public class AuthController {
     String secret = key.substring(Settings.USERNAME_LENGTH);
     Users user = userFacade.findByUsername(userName);
     if (user == null) {
-      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND);
+      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
     }
     if (!secret.equals(user.getValidationKey())) {
       registerFalseKeyValidation(user, req);
-      throw new UserException(RESTCodes.UserErrorCode.INCORRECT_VALIDATION_KEY, "user: " + user.getUsername());
+      throw new UserException(RESTCodes.UserErrorCode.INCORRECT_VALIDATION_KEY, Level.FINE,
+        "user: " + user.getUsername());
     }
 
     if (!user.getStatus().equals(UserAccountStatus.NEW_MOBILE_ACCOUNT)) {
       switch (user.getStatus()) {
         case VERIFIED_ACCOUNT:
-          throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_INACTIVE);
+          throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_INACTIVE, Level.FINE);
         case ACTIVATED_ACCOUNT:
-          throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_ALREADY_VERIFIED);
+          throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_ALREADY_VERIFIED, Level.FINE);
         default:
-          throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_BLOCKED);
+          throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_BLOCKED, Level.FINE);
       }
     }
 
@@ -364,8 +365,8 @@ public class AuthController {
       emailBean.sendEmail(user.getEmail(), Message.RecipientType.TO, UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET,
         message);
     } catch (MessagingException ex){
-      throw new ServiceException(RESTCodes.ServiceErrorCode.EMAIL_SENDING_FAILURE, "user: " + user.getUsername(),
-        ex.getMessage(), ex);
+      throw new ServiceException(RESTCodes.ServiceErrorCode.EMAIL_SENDING_FAILURE,
+        Level.SEVERE, "user: " + user.getUsername(), ex.getMessage(), ex);
     }
     changePassword(user, randomPassword, req);
     resetFalseLogin(user);

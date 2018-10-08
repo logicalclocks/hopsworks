@@ -79,6 +79,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -194,7 +195,7 @@ public class FlinkService {
       if (Strings.isNullOrEmpty(config.getAppName())) {
         config.setAppName("Untitled Flink job");
       } else if (!HopsUtils.jobNameValidator(config.getAppName(), Settings.FILENAME_DISALLOWED_CHARS)) {
-        throw new JobException(RESTCodes.JobErrorCode.JOB_NAME_INVALID, "Job name:" + config.getAppName());
+        throw new JobException(RESTCodes.JobErrorCode.JOB_NAME_INVALID, Level.FINE, "Job name:" + config.getAppName());
       }
       Jobs created = jobController.createJob(user, project, config);
       activityFacade.persistActivity(ActivityFacade.CREATED_JOB, project, email);

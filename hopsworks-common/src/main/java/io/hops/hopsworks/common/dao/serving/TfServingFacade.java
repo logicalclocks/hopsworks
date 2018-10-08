@@ -39,7 +39,7 @@ import java.util.logging.Logger;
 public class TfServingFacade {
   private static final Logger LOGGER = Logger.getLogger(TfServingFacade.class.getName());
 
-  private final static long LOCK_TIMEOUT = 300000L; // 5 minutes
+  private static final long LOCK_TIMEOUT = 300000L; // 5 minutes
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
@@ -139,8 +139,7 @@ public class TfServingFacade {
     int retries = 5;
 
     if (nodeIP == null) {
-      LOGGER.log(Level.SEVERE, "nodeIP is null, cannot acquire lock");
-      throw new TfServingException(RESTCodes.TfServingErrorCode.LIFECYCLEERRORINT);
+      throw new TfServingException(RESTCodes.TfServingErrorCode.LIFECYCLEERRORINT, Level.SEVERE);
     }
 
     // Acquire DB read lock on the row
@@ -153,7 +152,7 @@ public class TfServingFacade {
             .getSingleResult();
 
         if (tfServing == null) {
-          throw new TfServingException(RESTCodes.TfServingErrorCode.INSTANCENOTFOUND);
+          throw new TfServingException(RESTCodes.TfServingErrorCode.INSTANCENOTFOUND, Level.WARNING);
         }
 
         if (tfServing.getLockIP() != null &&
@@ -173,8 +172,7 @@ public class TfServingFacade {
       }
     }
 
-    LOGGER.log(Level.FINE, "Could not acquire lock for instance: " + id.toString());
-    throw new TfServingException(RESTCodes.TfServingErrorCode.LIFECYCLEERRORINT);
+    throw new TfServingException(RESTCodes.TfServingErrorCode.LIFECYCLEERRORINT, Level.FINE);
   }
 
 
@@ -201,8 +199,7 @@ public class TfServingFacade {
     }
 
     // Lock will be claimed
-    LOGGER.log(Level.FINE, "Could not release lock for instance: " + id.toString());
-    throw new TfServingException(RESTCodes.TfServingErrorCode.LIFECYCLEERRORINT);
+    throw new TfServingException(RESTCodes.TfServingErrorCode.LIFECYCLEERRORINT, Level.FINE);
   }
 
   public List<TfServing> getLocalhostRunning() {

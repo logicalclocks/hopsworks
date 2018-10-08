@@ -188,7 +188,7 @@ public class LocalFsService {
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
               entity(response).build();
     }
-    throw new DatasetException(RESTCodes.DatasetErrorCode.INVALID_PATH_FILE, "path: " + path);
+    throw new DatasetException(RESTCodes.DatasetErrorCode.INVALID_PATH_FILE, Level.FINE, "path: " + path);
   }
 
   @GET
@@ -221,7 +221,7 @@ public class LocalFsService {
               entity(response).build();
     }
   
-    throw new DatasetException(RESTCodes.DatasetErrorCode.INVALID_PATH_DIR, "path: " + path);
+    throw new DatasetException(RESTCodes.DatasetErrorCode.INVALID_PATH_DIR, Level.FINE, "path: " + path);
   }
 
 }

@@ -74,6 +74,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 
 /**
  * Interpreter Rest API
@@ -301,7 +302,7 @@ public class InterpreterRestApi {
     String projName = hdfsUsersController.getProjectName(session.getProxyUser());
 
     if (!this.project.getName().equals(projName)) {
-      throw new ZeppelinException(RESTCodes.ZeppelinErrorCode.STOP_SESSIONS_ERROR);
+      throw new ZeppelinException(RESTCodes.ZeppelinErrorCode.STOP_SESSIONS_FORBIDDEN, Level.FINE);
     }
 
     List<YarnApplicationstate> appStates = appStateBean.findByAppname("livy-session-" + sessionId);
@@ -351,7 +352,7 @@ public class InterpreterRestApi {
     }
     String projName = hdfsUsersController.getProjectName(session.getProxyUser());
     if (!this.project.getName().equals(projName)) {
-      throw new ZeppelinException(RESTCodes.ZeppelinErrorCode.STOP_SESSIONS_ERROR);
+      throw new ZeppelinException(RESTCodes.ZeppelinErrorCode.STOP_SESSIONS_FORBIDDEN, Level.FINE);
     }
     List<LivyMsg.Session> sessions = livyService.getLivySessionsForProjectUser(this.project, this.user,
         ProjectServiceEnum.ZEPPELIN);
@@ -364,8 +365,7 @@ public class InterpreterRestApi {
         }
       }
     } catch (InterpreterException e) {
-      logger.warn("Could not close interpreter.", e);
-      throw new ZeppelinException(RESTCodes.ZeppelinErrorCode.INTERPRETER_CLOSE_ERROR);
+      throw new ZeppelinException(RESTCodes.ZeppelinErrorCode.INTERPRETER_CLOSE_ERROR, Level.SEVERE);
     }
 
     int timeout = zeppelinConf.getConf().getInt(ZeppelinConfiguration.ConfVars.ZEPPELIN_INTERPRETER_CONNECT_TIMEOUT);
@@ -518,7 +518,7 @@ public class InterpreterRestApi {
     if (lastRestartTime != null) {
       timeSinceLastRestart = System.currentTimeMillis() - lastRestartTime;
       if (timeSinceLastRestart < 60000 * 1) {
-        throw new ZeppelinException(RESTCodes.ZeppelinErrorCode.RESTART_ERROR);
+        throw new ZeppelinException(RESTCodes.ZeppelinErrorCode.RESTART_ERROR, Level.FINE);
       }
     }
     Map<String, InterpreterDTO> interpreterDTOMap = interpreters(this.project);

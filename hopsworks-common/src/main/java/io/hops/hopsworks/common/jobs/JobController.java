@@ -41,6 +41,8 @@ package io.hops.hopsworks.common.jobs;
 
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
+
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -63,7 +65,7 @@ public class JobController {
   public Jobs createJob(Users user, Project project, JobConfiguration config) throws JobException {
     //Check if job with same name exists and throw error is so
     if(jobFacade.jobNameExists(project, config.getAppName())){
-      throw new JobException(RESTCodes.JobErrorCode.JOB_NAME_EXISTS,
+      throw new JobException(RESTCodes.JobErrorCode.JOB_NAME_EXISTS, Level.FINE,
         "Job with name:" + config.getAppName() + " for " + "project:" + project.getName() + " already exists");
     }
     

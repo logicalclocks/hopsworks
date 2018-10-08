@@ -44,26 +44,28 @@ import io.hops.hopsworks.common.exception.RESTException;
 import io.hops.hopsworks.common.util.JsonResponse;
 import io.hops.hopsworks.common.util.Settings;
 
+import java.util.logging.Level;
+
 
 public class CAException extends RESTException {
   
   private final CertificateType certType;
   
-  public CAException(RESTCodes.CAErrorCode code, CertificateType certType) {
-    this(code, certType, null);
+  public CAException(RESTCodes.CAErrorCode code, Level level, CertificateType certType) {
+    this(code, level, certType, null);
   }
   
-  public CAException(RESTCodes.CAErrorCode code, CertificateType certType, String usrMsg) {
-    this(code, certType, usrMsg, null);
+  public CAException(RESTCodes.CAErrorCode code, Level level, CertificateType certType, String usrMsg) {
+    this(code, level, certType, usrMsg, null);
   }
   
-  public CAException(RESTCodes.CAErrorCode code, CertificateType certType, String usrMsg, String devMsg) {
-    this(code, certType, usrMsg, devMsg, null);
+  public CAException(RESTCodes.CAErrorCode code, Level level, CertificateType certType, String usrMsg, String devMsg) {
+    this(code, level, certType, usrMsg, devMsg, null);
   }
   
-  public CAException(RESTCodes.CAErrorCode code, CertificateType certType, String usrMsg, String devMsg,
+  public CAException(RESTCodes.CAErrorCode code, Level level, CertificateType certType, String usrMsg, String devMsg,
     Throwable throwable) {
-    super(code, usrMsg, devMsg, throwable);
+    super(code, level, usrMsg, devMsg, throwable);
     this.certType = certType;
   }
   

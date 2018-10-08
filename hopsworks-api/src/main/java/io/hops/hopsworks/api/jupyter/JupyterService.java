@@ -177,7 +177,7 @@ public class JupyterService {
     Collection<JupyterProject> servers = project.getJupyterProjectCollection();
 
     if (servers == null) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_SERVERS_NOT_FOUND);
+      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_SERVERS_NOT_FOUND, Level.FINE);
     }
 
     List<JupyterProject> listServers = new ArrayList<>();
@@ -250,7 +250,7 @@ public class JupyterService {
     String hdfsUser = getHdfsUser(sc);
     JupyterProject jp = jupyterFacade.findByUser(hdfsUser);
     if (jp == null) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_SERVERS_NOT_FOUND);
+      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_SERVERS_NOT_FOUND, Level.FINE);
     }
     // Check to make sure the jupyter notebook server is running
     boolean running = jupyterProcessFacade.pingServerJupyterUser(jp.getPid());
@@ -258,7 +258,7 @@ public class JupyterService {
     // we should remove the DB entry (and restart the notebook server).
     if (!running) {
       jupyterFacade.removeNotebookServer(hdfsUser);
-      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_SERVERS_NOT_RUNNING);
+      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_SERVERS_NOT_RUNNING, Level.FINE);
     }
     String externalIp = Ip.getHost(req.getRequestURL().toString());
     settings.setHopsworksExternalIp(externalIp);
@@ -290,13 +290,13 @@ public class JupyterService {
     if (project.getPaymentType().equals(PaymentType.PREPAID)) {
       YarnProjectsQuota projectQuota = yarnProjectsQuotaFacade.findByProjectName(project.getName());
       if (projectQuota == null || projectQuota.getQuotaRemaining() < 0) {
-        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_QUOTA_INSUFFICIENT);
+        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_QUOTA_INSUFFICIENT, Level.FINE);
       }
     }
 
     boolean enabled = project.getConda();
     if (!enabled) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.ANACONDA_NOT_ENABLED);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.ANACONDA_NOT_ENABLED, Level.FINE);
     }
 
     JupyterProject jp = jupyterFacade.findByUser(hdfsUser);
@@ -326,9 +326,9 @@ public class JupyterService {
             settings.getHdfsTmpCertDir(),
             certificateMaterializer, dto.getCertificatesDir(), settings);
         } else {
-          throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_LOCATION_UNDEFINED);
+          throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_LOCATION_UNDEFINED, Level.SEVERE);
         }
-        throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_START_ERROR);
+        throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_START_ERROR, Level.SEVERE);
       } finally {
         if (dfso != null) {
           dfsService.closeDfsClient(dfso);
@@ -341,7 +341,7 @@ public class JupyterService {
           dto.getPort(), user.getId(), dto.getToken(), dto.getPid());
 
       if (jp == null) {
-        throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_SAVE_SETTINGS_ERROR);
+        throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_SAVE_SETTINGS_ERROR, Level.SEVERE);
       }
     }
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
@@ -386,7 +386,8 @@ public class JupyterService {
     // If we can't stop the server, delete the Entity bean anyway
     JupyterProject jp = jupyterFacade.findByUser(hdfsUser);
     if (jp == null) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.JUPYTER_SERVER_NOT_FOUND, "hdfsUser: " + hdfsUser);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.JUPYTER_SERVER_NOT_FOUND, Level.FINE,
+        "hdfsUser: " + hdfsUser);
     }
 
     Users user = userFacade.findByEmail(loggedinemail);
@@ -499,10 +500,12 @@ public class JupyterService {
       }
       int errCode = process.waitFor();
       if (errCode != 0) {
-        throw new ServiceException(RESTCodes.ServiceErrorCode.IPYTHON_CONVERT_ERROR, "error code: " + errCode);
+        throw new ServiceException(RESTCodes.ServiceErrorCode.IPYTHON_CONVERT_ERROR,  Level.SEVERE,
+          "error code: " + errCode);
       }
     } catch (IOException | InterruptedException ex) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.IPYTHON_CONVERT_ERROR, null, ex.getMessage(), ex);
+      throw new ServiceException(RESTCodes.ServiceErrorCode.IPYTHON_CONVERT_ERROR, Level.SEVERE, null, ex.getMessage(),
+        ex);
 
     }
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();

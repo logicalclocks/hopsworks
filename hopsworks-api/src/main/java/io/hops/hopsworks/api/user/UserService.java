@@ -125,7 +125,7 @@ public class UserService {
     Users user = userBean.findByEmail(sc.getUserPrincipal().getName());
 
     if (user == null) {
-      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND);
+      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
     }
 
     UserDTO userDTO = new UserDTO(user);
@@ -221,7 +221,7 @@ public class UserService {
       @Context HttpServletRequest req) throws UserException {
     Users user = userBean.findByEmail(sc.getUserPrincipal().getName());
     if (user == null) {
-      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND);
+      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
     }
     if (password == null || password.isEmpty()) {
       throw new IllegalArgumentException("Password was not provided.");
@@ -232,7 +232,7 @@ public class UserService {
     if (qrCode != null) {
       json.setQRCode(new String(Base64.encodeBase64(qrCode)));
     } else {
-      throw new UserException(RESTCodes.UserErrorCode.TWO_FA_DISABLED);
+      throw new UserException(RESTCodes.UserErrorCode.TWO_FA_DISABLED, Level.FINE);
     }
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }

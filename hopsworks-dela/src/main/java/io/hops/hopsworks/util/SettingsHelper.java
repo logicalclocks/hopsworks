@@ -46,12 +46,14 @@ import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.exception.DelaException;
 
+import java.util.logging.Level;
+
 public class SettingsHelper {
 
   public static AddressJSON delaTransferEndpoint(Settings settings) throws DelaException {
     AddressJSON delaTransferEndpoint = settings.getDELA_PUBLIC_ENDPOINT();
     if (delaTransferEndpoint == null) {
-      throw new DelaException(RESTCodes.DelaErrorCode.MISCONFIGURED, DelaException.Source.SETTINGS,
+      throw new DelaException(RESTCodes.DelaErrorCode.MISCONFIGURED, Level.FINE, DelaException.Source.SETTINGS,
         "DELA_TRANSFER_ENDPOINT");
     }
     return delaTransferEndpoint;
@@ -60,7 +62,7 @@ public class SettingsHelper {
   public static String delaTransferHttpEndpoint(Settings settings) throws DelaException {
     String delaTransferHttpEndpoint = settings.getDELA_TRANSFER_HTTP_ENDPOINT();
     if (delaTransferHttpEndpoint == null) {
-      throw new DelaException(RESTCodes.DelaErrorCode.MISCONFIGURED, DelaException.Source.SETTINGS,
+      throw new DelaException(RESTCodes.DelaErrorCode.MISCONFIGURED, Level.FINE, DelaException.Source.SETTINGS,
         "DELA_TRANSFER_HTTP_ENDPOINT");
     }
     return delaTransferHttpEndpoint;
@@ -69,7 +71,7 @@ public class SettingsHelper {
   public static String delaHttpEndpoint(Settings settings) throws DelaException {
     String delaHttpEndpoint = settings.getDELA_SEARCH_ENDPOINT();
     if (delaHttpEndpoint == null) {
-      throw new DelaException(RESTCodes.DelaErrorCode.MISCONFIGURED, DelaException.Source.SETTINGS,
+      throw new DelaException(RESTCodes.DelaErrorCode.MISCONFIGURED, Level.FINE, DelaException.Source.SETTINGS,
         "DELA_HTTP_ENDPOINT");
     }
     return delaHttpEndpoint;
@@ -78,7 +80,7 @@ public class SettingsHelper {
   public static String clusterId(Settings settings) throws DelaException {
     String clusterId = settings.getDELA_CLUSTER_ID();
     if (clusterId == null) {
-      throw new DelaException(RESTCodes.DelaErrorCode.MISCONFIGURED, DelaException.Source.SETTINGS,
+      throw new DelaException(RESTCodes.DelaErrorCode.MISCONFIGURED, Level.FINE, DelaException.Source.SETTINGS,
         "DELA_CLUSTER_ID");
     }
     return clusterId;
@@ -87,7 +89,7 @@ public class SettingsHelper {
   public static String hopsSite(Settings settings) throws DelaException {
     String hopsSite = settings.getHOPSSITE();
     if (hopsSite == null) {
-      throw new DelaException(RESTCodes.DelaErrorCode.MISCONFIGURED, DelaException.Source.SETTINGS,
+      throw new DelaException(RESTCodes.DelaErrorCode.MISCONFIGURED, Level.FINE, DelaException.Source.SETTINGS,
         "DELA_HOPS_SITE");
     }
     return hopsSite;
@@ -96,7 +98,7 @@ public class SettingsHelper {
   public static String hopsSiteHost(Settings settings) throws DelaException {
     String hopsSiteHost = settings.getHOPSSITE_HOST();
     if (hopsSiteHost == null) {
-      throw new DelaException(RESTCodes.DelaErrorCode.MISCONFIGURED, DelaException.Source.SETTINGS,
+      throw new DelaException(RESTCodes.DelaErrorCode.MISCONFIGURED, Level.FINE, DelaException.Source.SETTINGS,
         "DELA_HOPS_SITE_HOST");
     }
     return hopsSiteHost;
@@ -105,7 +107,7 @@ public class SettingsHelper {
   public static Users getUser(UserFacade userFacade, String email) throws DelaException {
     Users user = userFacade.findByEmail(email);
     if (user == null) {
-      throw new DelaException(RESTCodes.DelaErrorCode.USER_NOT_FOUND, DelaException.Source.LOCAL);
+      throw new DelaException(RESTCodes.DelaErrorCode.USER_NOT_FOUND, Level.FINE, DelaException.Source.LOCAL);
     }
     return user;
   }

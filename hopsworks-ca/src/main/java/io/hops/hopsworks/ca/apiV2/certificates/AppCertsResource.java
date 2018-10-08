@@ -62,6 +62,7 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.util.logging.Level;
 
 import static io.hops.hopsworks.common.security.CertificateType.APP;
 
@@ -84,7 +85,7 @@ public class AppCertsResource {
   @Produces(MediaType.APPLICATION_JSON)
   public Response signCSR(CSRView csrView) throws IOException, CAException {
     if (csrView == null || Strings.isNullOrEmpty(csrView.getCsr())) {
-      throw new CAException(RESTCodes.CAErrorCode.BADSIGNREQUEST, APP);
+      throw new CAException(RESTCodes.CAErrorCode.BADSIGNREQUEST, Level.FINE, APP);
     }
 
     String signedCert = opensslOperations.signCertificateRequest(csrView.getCsr(), APP);
@@ -102,7 +103,7 @@ public class AppCertsResource {
     throws IOException, CAException {
 
     if (Strings.isNullOrEmpty(certId)) {
-      throw new CAException(RESTCodes.CAErrorCode.BADREVOKATIONREQUEST, APP);
+      throw new CAException(RESTCodes.CAErrorCode.BADREVOKATIONREQUEST, Level.FINE, APP);
     }
 
     opensslOperations.revokeCertificate(certId, APP, true, true);

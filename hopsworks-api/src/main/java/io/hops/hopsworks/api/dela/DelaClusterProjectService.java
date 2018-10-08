@@ -69,6 +69,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
@@ -123,7 +124,7 @@ public class DelaClusterProjectService {
   
   private Inode getInode(Integer inodeId) throws DelaException {
     if (inodeId == null) {
-      throw new DelaException(RESTCodes.DelaErrorCode.ILLEGAL_ARGUMENT, DelaException.Source.LOCAL,
+      throw new DelaException(RESTCodes.DelaErrorCode.ILLEGAL_ARGUMENT, Level.FINE, DelaException.Source.LOCAL,
         "inodeId was not provided.");
     }
     return inodeFacade.findById(inodeId);
@@ -132,7 +133,7 @@ public class DelaClusterProjectService {
   private Dataset getDatasetByInode(Inode inode) throws DelaException {
     Dataset dataset = datasetFacade.findByProjectAndInode(this.project, inode);
     if (dataset == null) {
-      throw new DelaException(RESTCodes.DelaErrorCode.DATASET_DOES_NOT_EXIST, DelaException.Source.LOCAL);
+      throw new DelaException(RESTCodes.DelaErrorCode.DATASET_DOES_NOT_EXIST, Level.FINE, DelaException.Source.LOCAL);
     }
     return dataset;
   }

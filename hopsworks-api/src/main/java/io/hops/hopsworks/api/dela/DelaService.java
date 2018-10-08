@@ -77,6 +77,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
@@ -159,7 +160,7 @@ public class DelaService {
     throws DelaException {
     LOGGER.log(Settings.DELA_DEBUG, "dela:search");
     if (Strings.isNullOrEmpty(query)) {
-      throw new DelaException(RESTCodes.DelaErrorCode.ILLEGAL_ARGUMENT, DelaException.Source.LOCAL,
+      throw new DelaException(RESTCodes.DelaErrorCode.ILLEGAL_ARGUMENT, Level.FINE, DelaException.Source.LOCAL,
         "query param was not provided.");
     }
     SearchServiceDTO.SearchResult searchResult = hopsSite.search(query);
@@ -199,7 +200,7 @@ public class DelaService {
   public Response getContentsForUser(@Context SecurityContext sc, 
     @QueryParam("filter") TransfersFilter filter) throws DelaException {
     if(!filter.equals(TransfersFilter.USER)) {
-      throw new DelaException(RESTCodes.DelaErrorCode.ILLEGAL_ARGUMENT, DelaException.Source.LOCAL,
+      throw new DelaException(RESTCodes.DelaErrorCode.ILLEGAL_ARGUMENT, Level.FINE, DelaException.Source.LOCAL,
         "not handling filter value:" + filter);
     }
     String email = sc.getUserPrincipal().getName();
@@ -233,7 +234,7 @@ public class DelaService {
       readme = tryReadmeRemotely(publicDSId, peersJSON);
     }
     if (!readme.isPresent()) {
-      throw new DelaException(RESTCodes.DelaErrorCode.README_RETRIEVAL_FAILED,
+      throw new DelaException(RESTCodes.DelaErrorCode.README_RETRIEVAL_FAILED, Level.FINE,
         DelaException.Source.REMOTE_DELA, "no local or remote version of readme found");
     }
     return success(readme.get());
@@ -246,7 +247,7 @@ public class DelaService {
         FilePreviewDTO readme = delaDatasetCtrl.getLocalReadmeForPublicDataset(dataset.get());
         return Optional.of(readme);
       } catch (IOException | IllegalAccessException ex) {
-        throw new DelaException(RESTCodes.DelaErrorCode.ILLEGAL_ARGUMENT,
+        throw new DelaException(RESTCodes.DelaErrorCode.ILLEGAL_ARGUMENT, Level.SEVERE,
           DelaException.Source.HDFS, null, ex.getMessage(), ex);
       }
     }

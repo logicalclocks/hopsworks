@@ -51,7 +51,7 @@ import io.hops.hopsworks.common.dao.metadata.InodeTableComposite;
 import io.hops.hopsworks.common.dao.metadata.MTable;
 import io.hops.hopsworks.common.dao.metadata.Metadata;
 import io.hops.hopsworks.common.exception.GenericException;
-import io.hops.hopsworks.common.exception.TemplateException;
+import io.hops.hopsworks.common.exception.MetadataException;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -87,7 +87,7 @@ public class MetadataProtocol {
    * @param message the incoming message
    * @return a new response message or an error message
    */
-  public Message GFR(Message message) throws GenericException, TemplateException {
+  public Message GFR(Message message) throws GenericException, MetadataException {
     return this.processMessage(message);
   }
 
@@ -101,7 +101,7 @@ public class MetadataProtocol {
    * @param message The incoming message
    * @return Message
    */
-  private Message processMessage(Message message) throws GenericException, TemplateException {
+  private Message processMessage(Message message) throws GenericException, MetadataException {
 
     Command action = Command.valueOf(message.getAction().toUpperCase());
 
@@ -203,7 +203,7 @@ public class MetadataProtocol {
    * @param message The incoming message
    * @return Message
    */
-  private Message processMessageNm(Message message) throws TemplateException, GenericException {
+  private Message processMessageNm(Message message) throws MetadataException, GenericException {
 
     Command action = Command.valueOf(message.getAction().toUpperCase());
 

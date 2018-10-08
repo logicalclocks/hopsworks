@@ -103,7 +103,8 @@ public class TensorBoardService {
       }
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(tbDTO).build();
     } catch (PersistenceException pe) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.TENSORBOARD_FETCH_ERROR, null, pe.getMessage(), pe);
+      throw new ServiceException(RESTCodes.ServiceErrorCode.TENSORBOARD_FETCH_ERROR, Level.SEVERE, null,
+        pe.getMessage(), pe);
     }
   }
 

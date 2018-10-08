@@ -247,7 +247,8 @@ public class LocalhostTfServingController implements TfServingController {
       try {
         certificateMaterializer.materializeCertificatesLocal(user.getUsername(), project.getName());
       } catch (IOException e) {
-        throw new TfServingException(RESTCodes.TfServingErrorCode.LIFECYCLEERRORINT, null, e.getMessage(), e);
+        throw new TfServingException(RESTCodes.TfServingErrorCode.LIFECYCLEERRORINT, Level.SEVERE, null,
+          e.getMessage(), e);
       } finally {
         tfServingFacade.releaseLock(project, tfServing.getId());
       }
@@ -257,8 +258,8 @@ public class LocalhostTfServingController implements TfServingController {
       Process process = pb.start();
       process.waitFor();
     } catch (IOException | InterruptedException ex) {
-      throw new TfServingException(RESTCodes.TfServingErrorCode.UPDATEERROR, "tfServing id: " + tfServing.getId(),
-        ex.getMessage(), ex);
+      throw new TfServingException(RESTCodes.TfServingErrorCode.UPDATEERROR, Level.SEVERE,
+        "tfServing id: " + tfServing.getId(), ex.getMessage(), ex);
     } finally {
       if (settings.getHopsRpcTls()) {
         certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());
@@ -284,8 +285,8 @@ public class LocalhostTfServingController implements TfServingController {
       Process process = pb.start();
       process.waitFor();
     } catch (IOException | InterruptedException ex) {
-      throw new TfServingException(RESTCodes.TfServingErrorCode.LIFECYCLEERROR, "tfServing id: " + tfServing.getId(),
-        ex.getMessage(), ex);
+      throw new TfServingException(RESTCodes.TfServingErrorCode.LIFECYCLEERROR, Level.SEVERE,
+        "tfServing id: " + tfServing.getId(), ex.getMessage(), ex);
     }
 
     tfServing.setLocalPid(PID_STOPPED);
@@ -324,7 +325,8 @@ public class LocalhostTfServingController implements TfServingController {
       try {
         certificateMaterializer.materializeCertificatesLocal(user.getUsername(), project.getName());
       } catch (IOException e) {
-        throw new TfServingException(RESTCodes.TfServingErrorCode.LIFECYCLEERRORINT, null, e.getMessage(), e);
+        throw new TfServingException(RESTCodes.TfServingErrorCode.LIFECYCLEERRORINT, Level.SEVERE, null,e.getMessage(),
+          e);
       } finally {
         // Release lock on the tfServing entry
         tfServingFacade.releaseLock(project, tfServing.getId());
@@ -345,7 +347,7 @@ public class LocalhostTfServingController implements TfServingController {
         // Startup process failed for some reason
         tfServing.setLocalPid(PID_STOPPED);
         tfServingFacade.updateDbObject(tfServing, project);
-        throw new TfServingException(RESTCodes.TfServingErrorCode.LIFECYCLEERRORINT);
+        throw new TfServingException(RESTCodes.TfServingErrorCode.LIFECYCLEERRORINT, Level.INFO);
       }
 
       // Read the pid for TensorFlow Serving server
@@ -364,7 +366,8 @@ public class LocalhostTfServingController implements TfServingController {
       // Startup process failed for some reason
       tfServing.setLocalPid(PID_STOPPED);
       tfServingFacade.updateDbObject(tfServing, project);
-      throw new TfServingException(RESTCodes.TfServingErrorCode.LIFECYCLEERRORINT, null, ex.getMessage(), ex);
+      throw new TfServingException(RESTCodes.TfServingErrorCode.LIFECYCLEERRORINT, Level.SEVERE, null, ex.getMessage(),
+        ex);
     } finally {
       if (settings.getHopsRpcTls()) {
         certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());

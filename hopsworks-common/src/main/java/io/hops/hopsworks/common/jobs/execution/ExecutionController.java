@@ -137,7 +137,7 @@ public class ExecutionController {
         }
         break;
       default:
-        throw new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ACTION, "Unsupported job type: "
+        throw new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ACTION, Level.FINE, "Unsupported job type: "
           + job.getJobType());
     }
 

@@ -225,14 +225,14 @@ public class DataSetService {
       stdout = commandExecutor.getStandardOutputFromCommand();
       stderr = commandExecutor.getStandardErrorFromCommand();
       if (result == 2) {
-        throw new DatasetException(RESTCodes.DatasetErrorCode.COMPRESSION_SIZE_ERROR);
+        throw new DatasetException(RESTCodes.DatasetErrorCode.COMPRESSION_SIZE_ERROR, Level.WARNING);
       }
       if (result != 0) {
-        throw new DatasetException(RESTCodes.DatasetErrorCode.COMPRESSION_ERROR,
+        throw new DatasetException(RESTCodes.DatasetErrorCode.COMPRESSION_ERROR, Level.WARNING,
           "path: " + fullPath + ", result: " + result);
       }
     } catch (InterruptedException  | IOException ex) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.COMPRESSION_ERROR,
+      throw new DatasetException(RESTCodes.DatasetErrorCode.COMPRESSION_ERROR, Level.SEVERE,
         "path: " + fullPath, ex.getMessage(), ex);
     }
 
@@ -275,14 +275,14 @@ public class DataSetService {
       stdout = commandExecutor.getStandardOutputFromCommand();
       stderr = commandExecutor.getStandardErrorFromCommand();
       if (result == 2) {
-        throw new DatasetException(RESTCodes.DatasetErrorCode.COMPRESSION_SIZE_ERROR);
+        throw new DatasetException(RESTCodes.DatasetErrorCode.COMPRESSION_SIZE_ERROR, Level.WARNING);
       }
       if (result != 0) {
-        throw new DatasetException(RESTCodes.DatasetErrorCode.COMPRESSION_ERROR,
+        throw new DatasetException(RESTCodes.DatasetErrorCode.COMPRESSION_ERROR, Level.WARNING,
           "path: " + fullPath + ", result: " + result);
       }
     } catch (InterruptedException | IOException ex) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.COMPRESSION_ERROR,
+      throw new DatasetException(RESTCodes.DatasetErrorCode.COMPRESSION_ERROR, Level.SEVERE,
         "path: " + fullPath, ex.getMessage(), ex);
     }
 
@@ -408,7 +408,8 @@ public class DataSetService {
 
     Dataset dst = datasetFacade.findByProjectAndInode(proj, ds.getInode());
     if (dst != null) {//proj already have the dataset.
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DESTINATION_EXISTS, "Dataset already in " + proj.getName());
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DESTINATION_EXISTS,
+        Level.FINE, "Dataset already in " + proj.getName());
     }
 
     // Create the new Dataset entry
@@ -457,7 +458,7 @@ public class DataSetService {
       Project proj = projectFacade.find(id);
       Dataset dst = datasetFacade.findByProjectAndInode(proj, ds.getInode());
       if (dst == null) {
-        throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_SHARED_WITH_PROJECT,
+        throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_SHARED_WITH_PROJECT, Level.FINE,
           "project: " + proj.getName());
       }
 
@@ -529,8 +530,8 @@ public class DataSetService {
         datasetController.changePermissions(ds);
       }
     } catch (IOException e) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_PERMISSION_ERROR, "dataset: " + ds.getId(),
-        e.getMessage(), e);
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_PERMISSION_ERROR, Level.WARNING,
+        "dataset: " + ds.getId(), e.getMessage(), e);
     } finally {
       if (dfso != null) {
         dfso.close();
@@ -709,7 +710,8 @@ public class DataSetService {
       success = datasetController.
               deleteDatasetDir(ds, fullPath, dfso);
     } catch (IOException ex) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.INODE_DELETION_ERROR, "path: " + fullPath.toString(),
+      throw new DatasetException(RESTCodes.DatasetErrorCode.INODE_DELETION_ERROR, Level.SEVERE,
+        "path: " + fullPath.toString(),
         ex.getMessage(), ex);
     }  finally {
       if (dfso != null) {
@@ -718,7 +720,8 @@ public class DataSetService {
     }
 
     if (!success) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.INODE_DELETION_ERROR, "path: " + fullPath.toString());
+      throw new DatasetException(RESTCodes.DatasetErrorCode.INODE_DELETION_ERROR, Level.FINE,
+        "path: " + fullPath.toString());
     }
 
     //remove the group associated with this dataset as it is a toplevel ds
@@ -780,15 +783,16 @@ public class DataSetService {
         }
       }
     } catch (IOException ex) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.INODE_DELETION_ERROR, "path: " + fullPath.toString(),
-        ex.getMessage(), ex);
+      throw new DatasetException(RESTCodes.DatasetErrorCode.INODE_DELETION_ERROR, Level.SEVERE,
+        "path: " + fullPath.toString(), ex.getMessage(), ex);
     } finally {
       if (dfso != null) {
         dfs.closeDfsClient(dfso);
       }
     }
   
-    throw new DatasetException(RESTCodes.DatasetErrorCode.INODE_DELETION_ERROR, "path: " + fullPath.toString());
+    throw new DatasetException(RESTCodes.DatasetErrorCode.INODE_DELETION_ERROR, Level.FINE,
+      "path: " + fullPath.toString());
 
   }
 
@@ -836,15 +840,16 @@ public class DataSetService {
       }
       success = dfso.rm(fullPath, true);
     } catch (IOException ex) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.INODE_DELETION_ERROR, "path: " + fullPath.toString(),
-        ex.getMessage(), ex);
+      throw new DatasetException(RESTCodes.DatasetErrorCode.INODE_DELETION_ERROR, Level.SEVERE,
+        "path: " + fullPath.toString(), ex.getMessage(), ex);
     } finally {
       if (dfso != null) {
         dfs.closeDfsClient(dfso);
       }
     }
     if (!success) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.INODE_DELETION_ERROR, "path: " + fullPath.toString());
+      throw new DatasetException(RESTCodes.DatasetErrorCode.INODE_DELETION_ERROR, Level.FINE,
+        "path: " + fullPath.toString());
     }
     json.setSuccessMessage(ResponseMessages.DATASET_REMOVED_FROM_HDFS);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
@@ -883,13 +888,13 @@ public class DataSetService {
 
     if (!datasetController.getOwningProject(sourceDataset).equals(
         destDataset.getProject())) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OPERATION_FORBIDDEN, "Cannot copy file/folder " +
-        "from another project.");
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OPERATION_FORBIDDEN, Level.FINE,
+        "Cannot copy file/folder from another project.");
     }
 
     if (destDataset.isPublicDs()) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OPERATION_FORBIDDEN, "Can not move to a public " +
-        "dataset.");
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OPERATION_FORBIDDEN, Level.FINE,
+        "Can not move to a public dataset.");
     }
 
     org.apache.hadoop.fs.Path sourcePath = sourceDsPath.getFullPath();
@@ -911,7 +916,7 @@ public class DataSetService {
       }
       dfso = dfs.getDfsOps();
       if (udfso.exists(destPath.toString())) {
-        throw new DatasetException(RESTCodes.DatasetErrorCode.DESTINATION_EXISTS,
+        throw new DatasetException(RESTCodes.DatasetErrorCode.DESTINATION_EXISTS, Level.FINE,
           "destination: " + destPath.toString());
       }
 
@@ -932,8 +937,8 @@ public class DataSetService {
               entity(response).build();
 
     } catch (IOException ex) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OPERATION_ERROR, "move operation failed for: " +
-        sourcePathStr, ex.getMessage(), ex);
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OPERATION_ERROR, Level.SEVERE,
+        "move operation failed for: " + sourcePathStr, ex.getMessage(), ex);
     } finally {
       if (udfso != null) {
         dfs.closeDfsClient(udfso);
@@ -976,11 +981,11 @@ public class DataSetService {
 
     if (!datasetController.getOwningProject(sourceDataset).equals(
         destDataset.getProject())) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.COPY_FROM_PROJECT);
+      throw new DatasetException(RESTCodes.DatasetErrorCode.COPY_FROM_PROJECT, Level.FINE);
     }
 
     if (destDataset.isPublicDs()) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.COPY_TO_PUBLIC_DS);
+      throw new DatasetException(RESTCodes.DatasetErrorCode.COPY_TO_PUBLIC_DS, Level.FINE);
     }
 
     org.apache.hadoop.fs.Path sourcePath = sourceDsPath.getFullPath();
@@ -991,7 +996,7 @@ public class DataSetService {
       udfso = dfs.getDfsOps(username);
 
       if (udfso.exists(destPath.toString())){
-        throw new DatasetException(RESTCodes.DatasetErrorCode.DESTINATION_EXISTS);
+        throw new DatasetException(RESTCodes.DatasetErrorCode.DESTINATION_EXISTS, Level.FINE);
       }
 
       //Get destination folder permissions
@@ -1009,8 +1014,8 @@ public class DataSetService {
               entity(response).build();
 
     } catch (IOException ex) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OPERATION_ERROR, "move operation failed for: " +
-        sourcePathStr, ex.getMessage(), ex);
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OPERATION_ERROR, Level.SEVERE, "move operation " +
+        "failed for: " + sourcePathStr, ex.getMessage(), ex);
     } finally {
       if (udfso != null) {
         dfs.closeDfsClient(udfso);
@@ -1039,7 +1044,8 @@ public class DataSetService {
       //tests if the user have permission to access this path
       is = udfso.open(filePath);
     } catch (IOException ex) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.INODE_NOT_FOUND, "path: " + path, ex.getMessage(), ex);
+      throw new DatasetException(RESTCodes.DatasetErrorCode.INODE_NOT_FOUND, Level.WARNING, "path: " + path,
+        ex.getMessage(), ex);
     } finally {
       if (is != null) {
         try {
@@ -1122,7 +1128,7 @@ public class DataSetService {
           filePreviewDTO = new FilePreviewDTO(Settings.FILE_PREVIEW_IMAGE_TYPE,
               fileExtension.toLowerCase(), base64Image);
         } else {
-          throw new DatasetException(RESTCodes.DatasetErrorCode.IMAGE_SIZE_INVALID);
+          throw new DatasetException(RESTCodes.DatasetErrorCode.IMAGE_SIZE_INVALID, Level.FINE);
         }
       } else {
         try (DataInputStream dis = new DataInputStream(is)) {
@@ -1131,7 +1137,7 @@ public class DataSetService {
               && mode.equals(Settings.FILE_PREVIEW_MODE_TAIL)) {
             dis.skipBytes((int) (fileSize - sizeThreshold));
           } else if (fileName.endsWith(Settings.README_FILE) && fileSize > Settings.FILE_PREVIEW_TXT_SIZE_BYTES) {
-            throw new DatasetException(RESTCodes.DatasetErrorCode.FILE_PREVIEW_ERROR);
+            throw new DatasetException(RESTCodes.DatasetErrorCode.FILE_PREVIEW_ERROR, Level.FINE);
           } else if ((int) fileSize < sizeThreshold) {
             sizeThreshold = (int) fileSize;
           }
@@ -1145,8 +1151,8 @@ public class DataSetService {
 
       json.setData(filePreviewDTO);
     } catch (IOException ex) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OPERATION_ERROR, "path: " + path, ex.getMessage()
-        , ex);
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OPERATION_ERROR, Level.SEVERE, "path: " + path,
+        ex.getMessage(), ex);
     } finally {
       if (is != null) {
         try {
@@ -1202,8 +1208,8 @@ public class DataSetService {
               entity(blocks).build();
 
     } catch (IOException ex) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OPERATION_ERROR, "path: " + path, ex.getMessage()
-        , ex);
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OPERATION_ERROR, Level.SEVERE, "path: " + path,
+        ex.getMessage(), ex);
     } finally {
       if (dfso != null) {
         dfso.close();
@@ -1230,7 +1236,7 @@ public class DataSetService {
     org.apache.hadoop.fs.Path fullPath = dsPath.getFullPath();
     Dataset ds = dsPath.getDs();
     if (ds.isShared() && ds.getEditable() == DatasetPermissions.OWNER_ONLY && !ds.isPublicDs()) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.COMPRESSION_ERROR);
+      throw new DatasetException(RESTCodes.DatasetErrorCode.COMPRESSION_ERROR, Level.FINE);
     }
 
     ErasureCodeJobConfiguration ecConfig = (ErasureCodeJobConfiguration) JobConfiguration.JobConfigurationFactory.
@@ -1285,7 +1291,7 @@ public class DataSetService {
     if (dsPath.getDs().getEditable() == DatasetPermissions.OWNER_ONLY 
         && ((role != null && project.equals(owning) && !role.equals(AllowedProjectRoles.DATA_OWNER)) 
         || !project.equals(owning))) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_EDITABLE,
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_EDITABLE, Level.FINE,
         "dataset: " + dsPath.getDs().getName(), "datasetId: " + dsPath.getDs().getId());
     }
      

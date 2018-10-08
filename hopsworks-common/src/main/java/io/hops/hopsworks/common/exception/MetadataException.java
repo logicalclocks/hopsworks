@@ -15,21 +15,24 @@
  */
 package io.hops.hopsworks.common.exception;
 
-public class TemplateException extends RESTException {
+import java.util.logging.Level;
+
+public class MetadataException extends RESTException {
   
-  public TemplateException(RESTCodes.MetadataErrorCode code) {
-    super(code);
+  public MetadataException(RESTCodes.MetadataErrorCode code, Level level) {
+    super(code, level);
   }
   
-  public TemplateException(RESTCodes.MetadataErrorCode code, String usrMsg) {
-    super(code, usrMsg);
+  public MetadataException(RESTCodes.MetadataErrorCode code, Level level, String usrMsg) {
+    super(code, level, usrMsg);
   }
   
-  public TemplateException(RESTCodes.MetadataErrorCode code, String usrMsg, String devMsg) {
-    super(code, usrMsg, devMsg);
+  public MetadataException(RESTCodes.MetadataErrorCode code, Level level, String usrMsg, String devMsg) {
+    super(code, level, usrMsg, devMsg);
   }
   
-  public TemplateException(RESTCodes.MetadataErrorCode code, String usrMsg, String devMsg, Throwable throwable) {
-    super(code, usrMsg, devMsg, throwable);
+  public MetadataException(RESTCodes.MetadataErrorCode code, Level level, String usrMsg, String devMsg,
+    Throwable throwable) {
+    super(code, level, usrMsg, devMsg, throwable);
   }
 }

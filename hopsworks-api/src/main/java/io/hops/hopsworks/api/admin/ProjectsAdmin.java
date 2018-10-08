@@ -112,7 +112,7 @@ public class ProjectsAdmin {
       @PathParam("id") Integer id) throws ProjectException, GenericException {
     Project project = projectFacade.find(id);
     if (project == null) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, "projectId: " + id);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + id);
     }
     
     String sessionId = req.getSession().getId();
@@ -135,8 +135,7 @@ public class ProjectsAdmin {
     String userEmail = sc.getUserPrincipal().getName();
     Users user = userFacade.findByEmail(userEmail);
     if (user == null || !user.getEmail().equals(Settings.SITE_EMAIL)) {
-      LOGGER.log(Level.WARNING, "");
-      throw new UserException(RESTCodes.UserErrorCode.AUTHENTICATION_FAILURE,
+      throw new UserException(RESTCodes.UserErrorCode.AUTHENTICATION_FAILURE, Level.WARNING,
         "Unauthorized or unknown user tried to create a Project as another user");
     }
 
@@ -148,8 +147,7 @@ public class ProjectsAdmin {
 
     Users owner = userFacade.findByEmail(ownerEmail);
     if (owner == null) {
-      LOGGER.log(Level.WARNING, "Owner is not in the database");
-      throw new UserException(RESTCodes.UserErrorCode.USER_DOES_NOT_EXIST, "user:" + ownerEmail);
+      throw new UserException(RESTCodes.UserErrorCode.USER_DOES_NOT_EXIST, Level.FINE, "user:" + ownerEmail);
     }
 
     List<String> failedMembers = null;
@@ -204,7 +202,7 @@ public class ProjectsAdmin {
                                       @PathParam("id") Integer projectId) throws ProjectException {
     Project project = projectFacade.find(projectId);
     if (project == null) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, "projectId: " + projectId);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId);
     }
     ProjectAdminInfoDTO projectAdminInfoDTO = new ProjectAdminInfoDTO(project,
         projectController.getQuotasInternal(project));

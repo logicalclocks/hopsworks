@@ -197,7 +197,7 @@ public class OpensslOperations {
     Path certificatePath = Paths.get(certsDir, certificateIdentifier + fileSuffix);
     File certificateFile = certificatePath.toFile();
     if (!certificateFile.exists()) {
-      throw new CAException(RESTCodes.CAErrorCode.CERTNOTFOUND, certType);
+      throw new CAException(RESTCodes.CAErrorCode.CERTNOTFOUND, Level.WARNING, certType);
     }
 
     List<String> commands = new ArrayList<>();

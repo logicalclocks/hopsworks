@@ -15,22 +15,25 @@
  */
 package io.hops.hopsworks.common.exception;
 
+import java.util.logging.Level;
+
 public class DatasetException extends RESTException {
   
-  public DatasetException(RESTCodes.DatasetErrorCode code) {
-    super(code);
+  public DatasetException(RESTCodes.DatasetErrorCode code, Level level) {
+    super(code, level);
   }
   
-  public DatasetException(RESTCodes.DatasetErrorCode code, String usrMsg) {
-    super(code, usrMsg);
+  public DatasetException(RESTCodes.DatasetErrorCode code, Level level, String usrMsg) {
+    super(code, level, usrMsg);
   }
   
-  public DatasetException(RESTCodes.DatasetErrorCode code, String usrMsg, String devMsg) {
-    super(code, usrMsg, devMsg);
+  public DatasetException(RESTCodes.DatasetErrorCode code, Level level, String usrMsg, String devMsg) {
+    super(code, level, usrMsg, devMsg);
   }
   
-  public DatasetException(RESTCodes.DatasetErrorCode code, String usrMsg, String devMsg, Throwable throwable) {
-    super(code, usrMsg, devMsg, throwable);
+  public DatasetException(RESTCodes.DatasetErrorCode code, Level level, String usrMsg, String devMsg,
+    Throwable throwable) {
+    super(code, level, usrMsg, devMsg, throwable);
   }
   
 }

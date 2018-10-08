@@ -68,6 +68,7 @@ import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.StreamingOutput;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @RequestScoped
@@ -106,7 +107,7 @@ public class DownloadService {
     String fullPath = dsPath.getFullPath().toString();
     Dataset ds = dsPath.getDs();
     if (ds.isShared() && ds.getEditable()==DatasetPermissions.OWNER_ONLY && !ds.isPublicDs()) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DOWNLOAD_ERROR);
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DOWNLOAD_ERROR, Level.FINE);
     }
 
     FSDataInputStream stream;
@@ -119,11 +120,12 @@ public class DownloadService {
         response.header("Content-disposition", "attachment;");
         return response.build();
       } else {
-        throw new DatasetException(RESTCodes.DatasetErrorCode.DOWNLOAD_ERROR);
+        throw new DatasetException(RESTCodes.DatasetErrorCode.DOWNLOAD_ERROR, Level.WARNING);
       }
 
     } catch (IOException ex) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DOWNLOAD_ERROR, "path: " + fullPath, ex.getMessage(), ex);
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DOWNLOAD_ERROR, Level.SEVERE, "path: " + fullPath,
+        ex.getMessage(), ex);
     }
   }
 

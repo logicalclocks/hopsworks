@@ -46,6 +46,7 @@ import io.hops.hopsworks.common.exception.DelaException;
 import io.hops.hopsworks.dela.old_dto.ManifestJSON;
 
 import java.io.UnsupportedEncodingException;
+import java.util.logging.Level;
 
 public class ManifestHelper {
   public static byte[] marshall(ManifestJSON manifest) throws DelaException {
@@ -55,7 +56,7 @@ public class ManifestHelper {
     try {
       jsonByte = jsonString.getBytes("UTF-8");
     } catch (UnsupportedEncodingException ex) {
-      throw new DelaException(RESTCodes.DelaErrorCode.MANIFEST_ENCODING_ERROR, DelaException.Source.LOCAL,
+      throw new DelaException(RESTCodes.DelaErrorCode.MANIFEST_ENCODING_ERROR, Level.SEVERE, DelaException.Source.LOCAL,
         null, ex.getMessage(), ex);
     }
     return jsonByte;
@@ -66,7 +67,7 @@ public class ManifestHelper {
     try {
       jsonString = new String(jsonByte, "UTF-8");
     } catch (UnsupportedEncodingException ex) {
-      throw new DelaException(RESTCodes.DelaErrorCode.MANIFEST_ENCODING_ERROR, DelaException.Source.LOCAL,
+      throw new DelaException(RESTCodes.DelaErrorCode.MANIFEST_ENCODING_ERROR, Level.SEVERE, DelaException.Source.LOCAL,
         null, ex.getMessage(), ex);
     }
     ManifestJSON manifest = new Gson().fromJson(jsonString, ManifestJSON.class);

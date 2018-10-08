@@ -43,6 +43,7 @@ import io.hops.hopsworks.api.filter.NoCacheResponse;
 import com.google.common.base.Strings;
 
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -193,7 +194,7 @@ public class SparkService {
       if (Strings.isNullOrEmpty(config.getAppName())) {
         throw new IllegalArgumentException("Job name was not provided.");
       } else if (!HopsUtils.jobNameValidator(config.getAppName(), Settings.FILENAME_DISALLOWED_CHARS)) {
-        throw new JobException(RESTCodes.JobErrorCode.JOB_NAME_INVALID, "job name: " +config.getAppName());
+        throw new JobException(RESTCodes.JobErrorCode.JOB_NAME_INVALID, Level.FINE, "job name: " +config.getAppName());
       }
       if (Strings.isNullOrEmpty(config.getAnacondaDir())) {
         config.setAnacondaDir(settings.getAnacondaProjectDir(project.getName()));

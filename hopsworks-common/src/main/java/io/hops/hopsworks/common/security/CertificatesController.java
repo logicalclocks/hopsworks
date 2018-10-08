@@ -74,8 +74,7 @@ import java.util.logging.Logger;
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class CertificatesController {
-  private final static Logger LOG = Logger.getLogger
-      (CertificatesController.class.getName());
+  private static final  Logger LOG = Logger.getLogger(CertificatesController.class.getName());
   
   @EJB
   private CertsFacade certsFacade;
@@ -234,8 +233,7 @@ public class CertificatesController {
       }
       return cn;
     } catch (GeneralSecurityException | IOException ex) {
-      LOG.log(Level.SEVERE, "Error while extracting CN from certificate", ex);
-      throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_CN_EXTRACT_ERROR,
+      throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_CN_EXTRACT_ERROR, Level.SEVERE,
         "certificateAlias: " + certificateAlias, ex.getMessage(), ex);
     }
   }

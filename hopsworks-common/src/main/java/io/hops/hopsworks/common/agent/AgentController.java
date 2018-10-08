@@ -95,10 +95,12 @@ public class AgentController {
   public HeartbeatReplyDTO heartbeat(AgentHeartbeatDTO heartbeat) throws ServiceException {
     Hosts host = hostsFacade.findByHostname(heartbeat.hostId);
     if (host == null) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.HOST_NOT_FOUND, "hostId: " + heartbeat.hostId);
+      throw new ServiceException(RESTCodes.ServiceErrorCode.HOST_NOT_FOUND, Level.WARNING,
+        "hostId: " + heartbeat.hostId);
     }
     if (!host.isRegistered()) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.HOST_NOT_REGISTERED, "hostId: " + heartbeat.hostId);
+      throw new ServiceException(RESTCodes.ServiceErrorCode.HOST_NOT_REGISTERED, Level.WARNING,
+        "hostId: " + heartbeat.hostId);
     }
     
     updateHostMetrics(host, heartbeat);
@@ -442,7 +444,8 @@ public class AgentController {
     try {
       emailBean.sendEmails(settings.getAlertEmailAddrs(), subject, body);
     } catch (MessagingException e) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.EMAIL_SENDING_FAILURE, null, e.getMessage(), e);
+      throw new ServiceException(RESTCodes.ServiceErrorCode.EMAIL_SENDING_FAILURE, Level.SEVERE, null, e.getMessage(),
+        e);
     }
   }
   

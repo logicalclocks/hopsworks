@@ -60,6 +60,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.logging.Level;
 
 @Path("/admin/llap")
 @RolesAllowed({"HOPS_ADMIN"})
@@ -104,7 +105,7 @@ public class LlapAdmin {
     switch (desiredStatus) {
       case UP:
         if (oldClusterStatus.getClusterStatus() == desiredStatus) {
-          throw new ServiceException(RESTCodes.ServiceErrorCode.LLAP_CLUSTER_ALREADY_UP);
+          throw new ServiceException(RESTCodes.ServiceErrorCode.LLAP_CLUSTER_ALREADY_UP, Level.WARNING);
         }
         llapClusterLifecycle.startCluster(llapClusterRequest.getInstanceNumber(),
             llapClusterRequest.getExecutorsMemory(),
@@ -114,12 +115,13 @@ public class LlapAdmin {
         break;
       case DOWN:
         if (oldClusterStatus.getClusterStatus() == desiredStatus) {
-          throw new ServiceException(RESTCodes.ServiceErrorCode.LLAP_CLUSTER_ALREADY_DOWN);
+          throw new ServiceException(RESTCodes.ServiceErrorCode.LLAP_CLUSTER_ALREADY_DOWN, Level.WARNING);
         }
         llapClusterLifecycle.stopCluster();
         break;
       default:
-        throw new ServiceException(RESTCodes.ServiceErrorCode.LLAP_STATUS_INVALID, "status: " + desiredStatus);
+        throw new ServiceException(RESTCodes.ServiceErrorCode.LLAP_STATUS_INVALID, Level.WARNING,
+          "status: " + desiredStatus);
     }
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).build();

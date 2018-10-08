@@ -62,6 +62,7 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.util.logging.Level;
 
 import static io.hops.hopsworks.common.security.CertificateType.KUBE;
 
@@ -83,7 +84,7 @@ public class KubeCertsResource{
   @Produces(MediaType.APPLICATION_JSON)
   public Response signCSR(CSRView csrView) throws IOException, CAException {
     if (csrView == null || csrView.getCsr() == null || csrView.getCsr().isEmpty()) {
-      throw new CAException(RESTCodes.CAErrorCode.BADSIGNREQUEST, KUBE);
+      throw new CAException(RESTCodes.CAErrorCode.BADSIGNREQUEST, Level.FINE, KUBE);
     }
 
     String signedCert = opensslOperations.signCertificateRequest(csrView.getCsr(), KUBE);
@@ -99,7 +100,7 @@ public class KubeCertsResource{
       @ApiParam(value = "Identifier of the Certificate to revoke", required = true) @QueryParam("certId") String certId)
       throws IOException, CAException {
     if (certId == null || certId.isEmpty()) {
-      throw new CAException(RESTCodes.CAErrorCode.BADREVOKATIONREQUEST, KUBE);
+      throw new CAException(RESTCodes.CAErrorCode.BADREVOKATIONREQUEST, Level.FINE, KUBE);
     }
 
     opensslOperations.revokeCertificate(certId, KUBE, true, true);

@@ -61,7 +61,7 @@ import io.hops.hopsworks.common.dao.metadata.db.MTableFacade;
 import io.hops.hopsworks.common.dao.metadata.db.TemplateFacade;
 import io.hops.hopsworks.common.dao.metadata.db.TupleToFileFacade;
 import io.hops.hopsworks.common.exception.GenericException;
-import io.hops.hopsworks.common.exception.TemplateException;
+import io.hops.hopsworks.common.exception.MetadataException;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -106,7 +106,7 @@ public class ResponseBuilder {
    * @param message
    * @return
    */
-  public Message addNewTemplate(Message message) throws TemplateException, GenericException {
+  public Message addNewTemplate(Message message) throws MetadataException, GenericException {
     ContentMessage cmsg = (ContentMessage) message;
 
     Template template = cmsg.getTemplate();
@@ -136,7 +136,7 @@ public class ResponseBuilder {
    * @param message
    * @return
    */
-  public Message updateTemplateName(Message message) throws TemplateException, GenericException {
+  public Message updateTemplateName(Message message) throws MetadataException, GenericException {
     ContentMessage cmsg = (ContentMessage) message;
 
     Template template = cmsg.getTemplate();
@@ -402,7 +402,7 @@ public class ResponseBuilder {
    * <p/>
    * @param message
    */
-  public void persistUploadedTemplate(UploadedTemplateMessage message) throws GenericException, TemplateException {
+  public void persistUploadedTemplate(UploadedTemplateMessage message) throws GenericException, MetadataException {
 
     //compile the message
     message.parseSchema();

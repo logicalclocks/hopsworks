@@ -141,7 +141,7 @@ public class TemplateMessage extends ContentMessage {
           "templateName"));
         break;
       default:
-        throw new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ACTION, "Action:" + this.action);
+        throw new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ACTION, Level.FINE, "Action:" + this.action);
     }
   
     return temp;

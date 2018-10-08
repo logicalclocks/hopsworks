@@ -281,7 +281,7 @@ public class AuthService {
       }
     } catch (ServletException e) {
       accountAuditFacade.registerLoginInfo(user, UserAuditActions.LOGOUT.name(), UserAuditActions.FAILED.name(), req);
-      throw new UserException(RESTCodes.UserErrorCode.LOGOUT_FAILURE, null, e.getMessage(), e);
+      throw new UserException(RESTCodes.UserErrorCode.LOGOUT_FAILURE, Level.SEVERE, null, e.getMessage(), e);
     }
   }
 
@@ -290,7 +290,7 @@ public class AuthService {
       throw new IllegalArgumentException("User not set.");
     }
     if (user.getBbcGroupCollection() == null || user.getBbcGroupCollection().isEmpty()) {
-      throw new UserException(RESTCodes.UserErrorCode.NO_ROLE_FOUND);
+      throw new UserException(RESTCodes.UserErrorCode.NO_ROLE_FOUND, Level.FINE);
     }
     if (statusValidator.checkStatus(user.getStatus())) {
       try {
@@ -299,10 +299,10 @@ public class AuthService {
       } catch (ServletException e) {
         LOGGER.log(Level.WARNING, e.getMessage());
         authController.registerAuthenticationFailure(user, req);
-        throw new UserException(RESTCodes.UserErrorCode.AUTHENTICATION_FAILURE, null, e.getMessage(), e);
+        throw new UserException(RESTCodes.UserErrorCode.AUTHENTICATION_FAILURE, Level.SEVERE, null, e.getMessage(), e);
       }
     } else { // if user == null
-      throw new UserException(RESTCodes.UserErrorCode.AUTHENTICATION_FAILURE);
+      throw new UserException(RESTCodes.UserErrorCode.AUTHENTICATION_FAILURE, Level.INFO);
     }
   }
 

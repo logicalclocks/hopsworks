@@ -15,21 +15,24 @@
  */
 package io.hops.hopsworks.common.exception;
 
+import java.util.logging.Level;
+
 public class ZeppelinException extends RESTException {
   
-  public ZeppelinException(RESTCodes.ZeppelinErrorCode errorCode) {
-    super(errorCode);
+  public ZeppelinException(RESTCodes.ZeppelinErrorCode code, Level level) {
+    super(code, level);
   }
   
-  public ZeppelinException(RESTCodes.ZeppelinErrorCode errorCode, String usrMsg) {
-    super(errorCode, usrMsg);
+  public ZeppelinException(RESTCodes.ZeppelinErrorCode code, Level level, String usrMsg) {
+    super(code, level, usrMsg);
   }
   
-  public ZeppelinException(RESTCodes.ZeppelinErrorCode errorCode, String usrMsg, String devMsg) {
-    super(errorCode, usrMsg, devMsg);
+  public ZeppelinException(RESTCodes.ZeppelinErrorCode code, Level level, String usrMsg, String devMsg) {
+    super(code, level, usrMsg, devMsg);
   }
   
-  public ZeppelinException(RESTCodes.ZeppelinErrorCode errorCode, String usrMsg, String devMsg, Throwable throwable) {
-    super(errorCode, usrMsg, devMsg, throwable);
+  public ZeppelinException(RESTCodes.ZeppelinErrorCode code, Level level, String usrMsg, String devMsg,
+    Throwable throwable) {
+    super(code, level, usrMsg, devMsg, throwable);
   }
 }

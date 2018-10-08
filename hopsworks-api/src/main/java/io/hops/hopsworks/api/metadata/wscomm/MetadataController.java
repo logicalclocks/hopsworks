@@ -71,7 +71,7 @@ import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.exception.DatasetException;
 import io.hops.hopsworks.common.exception.RESTCodes;
-import io.hops.hopsworks.common.exception.TemplateException;
+import io.hops.hopsworks.common.exception.MetadataException;
 import io.hops.hopsworks.common.util.HopsUtils;
 import java.util.LinkedList;
 import java.util.List;
@@ -122,13 +122,13 @@ public class MetadataController {
    * @param template
    * @return
    */
-  public int addNewTemplate(Template template) throws TemplateException {
+  public int addNewTemplate(Template template) throws MetadataException {
   
     if (!this.templateFacade.isTemplateAvailable(template.getName().
       toLowerCase())) {
       return this.templateFacade.addTemplate(template);
     } else {
-      throw new TemplateException(RESTCodes.MetadataErrorCode.TEMPLATE_ALREADY_AVAILABLE,
+      throw new MetadataException(RESTCodes.MetadataErrorCode.TEMPLATE_ALREADY_AVAILABLE, Level.FINE,
         "Template name " + template.getName() + " already available");
     }
   }
@@ -140,7 +140,7 @@ public class MetadataController {
    * @param template
    * @return
    */
-  public int updateTemplateName(Template template) throws TemplateException {
+  public int updateTemplateName(Template template) throws MetadataException {
     return this.addNewTemplate(template);
   }
 
@@ -327,7 +327,6 @@ public class MetadataController {
       Metadata metadata = (Metadata) entity;
       metadata.getMetadataPK().setTupleid(tupleid);
     
-      //LOGGER.log(Level.INFO, metadata.toString());
       this.metadataFacade.addMetadata(metadata);
       logMetadataOperation(metadata, OperationType.Add);
     }
@@ -336,7 +335,8 @@ public class MetadataController {
   public void addSchemaLessMetadata(String inodePath, String metadataJson) throws DatasetException {
     Inode inode = inodeFacade.getInodeAtPath(inodePath);
     if (inode == null) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.INODE_NOT_FOUND, "file " + inodePath + " doesn't exist");
+      throw new DatasetException(RESTCodes.DatasetErrorCode.INODE_NOT_FOUND, Level.FINE,
+        "file " + inodePath + "doesn't exist");
     }
 
     boolean update = true;
@@ -352,15 +352,16 @@ public class MetadataController {
             : OperationType.Add);
   }
 
-  public void removeSchemaLessMetadata(String inodePath) throws TemplateException, DatasetException {
+  public void removeSchemaLessMetadata(String inodePath) throws MetadataException, DatasetException {
     Inode inode = inodeFacade.getInodeAtPath(inodePath);
     if (inode == null) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.INODE_NOT_FOUND, "file " + inodePath + " doesn't exist");
+      throw new DatasetException(RESTCodes.DatasetErrorCode.INODE_NOT_FOUND, Level.FINE,
+        "file " + inodePath + " doesn't exist");
     }
     SchemalessMetadata metadata = schemalessMetadataFacade.findByInode(inode);
     if (metadata == null) {
-      throw new TemplateException(
-        RESTCodes.MetadataErrorCode.NO_METADATA_EXISTS, "No metadata attached with " + inodePath);
+      throw new MetadataException(
+        RESTCodes.MetadataErrorCode.NO_METADATA_EXISTS, Level.FINE, "No metadata attached with " + inodePath);
     }
     MetaLog removeOpLog = new MetaLog(metadata, OperationType.Delete);
     schemalessMetadataFacade.remove(metadata);

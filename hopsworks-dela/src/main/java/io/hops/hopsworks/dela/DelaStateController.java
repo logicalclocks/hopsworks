@@ -88,7 +88,7 @@ public class DelaStateController {
 
   public void checkDelaAvailable() throws DelaException {
     if (!delaAvailable()) {
-      throw new DelaException(RESTCodes.DelaErrorCode.DELA_NOT_AVAILABLE, DelaException.Source.LOCAL);
+      throw new DelaException(RESTCodes.DelaErrorCode.DELA_NOT_AVAILABLE, Level.SEVERE, DelaException.Source.LOCAL);
     }
   }
 
@@ -102,7 +102,7 @@ public class DelaStateController {
   
   public void checkHopssiteAvailable() throws DelaException {
     if (!hopssiteAvailable()) {
-      throw new DelaException(RESTCodes.DelaErrorCode.HOPSSITE_NOT_AVAILABLE, DelaException.Source.LOCAL);
+      throw new DelaException(RESTCodes.DelaErrorCode.HOPSSITE_NOT_AVAILABLE, Level.SEVERE, DelaException.Source.LOCAL);
     }
   }
 
@@ -112,7 +112,8 @@ public class DelaStateController {
 
   public void checkHopsworksDelaSetup() throws DelaException {
     if (!hopsworksDelaSetup()) {
-      throw new DelaException(RESTCodes.DelaErrorCode.REMOTE_DELA_NOT_AVAILABLE, DelaException.Source.LOCAL);
+      throw new DelaException(RESTCodes.DelaErrorCode.REMOTE_DELA_NOT_AVAILABLE, Level.SEVERE,
+        DelaException.Source.LOCAL);
     }
   }
 

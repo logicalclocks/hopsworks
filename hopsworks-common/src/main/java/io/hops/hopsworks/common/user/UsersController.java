@@ -148,8 +148,8 @@ public class UsersController {
       accountAuditFacade.registerAccountChange(user, AccountsAuditActions.QRCODE.name(),
           AccountsAuditActions.FAILED.name(), "", user, req);
 
-      throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_REGISTRATION_ERROR, "user: " + newUser.getUsername(),
-        ex.getMessage(), ex);
+      throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_REGISTRATION_ERROR, Level.SEVERE,
+        "user: " + newUser.getUsername(), ex.getMessage(), ex);
     }
     return qrCode;
   }
@@ -293,10 +293,10 @@ public class UsersController {
     if (userValidator.isValidEmail(email) && userValidator.isValidsecurityQA(securityQuestion, securityAnswer)) {
       Users user = userFacade.findByEmail(email);
       if (user == null) {
-        throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND);
+        throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
       }
       if (!authController.validateSecurityQA(user, securityQuestion, securityAnswer, req)) {
-        throw new UserException(RESTCodes.UserErrorCode.SEC_QA_INCORRECT);
+        throw new UserException(RESTCodes.UserErrorCode.SEC_QA_INCORRECT, Level.FINE);
       }
       authController.resetPassword(user, req);
     }
@@ -307,14 +307,14 @@ public class UsersController {
     Users user = userFacade.findByEmail(email);
 
     if (!authController.validatePassword(user, oldPassword, req)) {
-      throw new UserException(RESTCodes.UserErrorCode.PASSWORD_INCORRECT);
+      throw new UserException(RESTCodes.UserErrorCode.PASSWORD_INCORRECT, Level.FINE);
     }
     if (userValidator.isValidPassword(newPassword, confirmedPassword)) {
       try {
         authController.changePassword(user, newPassword, req);
       } catch (Exception ex) {
-        throw new UserException(RESTCodes.UserErrorCode.PASSWORD_RESET_UNSUCCESSFUL, null, ex.getMessage(),
-          ex);
+        throw new UserException(RESTCodes.UserErrorCode.PASSWORD_RESET_UNSUCCESSFUL, Level.SEVERE, null,
+          ex.getMessage(), ex);
       }
       accountAuditFacade.registerAccountChange(user, AccountsAuditActions.PASSWORDCHANGE.name(),
           AccountsAuditActions.SUCCESS.name(), "Changed password.", user, req);
@@ -329,7 +329,7 @@ public class UsersController {
       HttpServletRequest req) throws UserException {
     Users user = userFacade.findByEmail(email);
     if (!authController.validatePassword(user, oldPassword, req)) {
-      throw new UserException(RESTCodes.UserErrorCode.PASSWORD_INCORRECT);
+      throw new UserException(RESTCodes.UserErrorCode.PASSWORD_INCORRECT, Level.FINE);
     }
 
     if (userValidator.isValidsecurityQA(securityQuestion, securityAnswer)) {
@@ -342,7 +342,7 @@ public class UsersController {
     Users user = userFacade.findByEmail(email);
 
     if (user == null) {
-      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND);
+      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
     }
 
     if (firstName != null) {
@@ -445,7 +445,7 @@ public class UsersController {
       accountAuditFacade.registerAccountChange(user, AccountsAuditActions.TWO_FACTOR.name(),
           AccountsAuditActions.FAILED.name(), "Incorrect password", user,
           req);
-      throw new UserException(RESTCodes.UserErrorCode.PASSWORD_INCORRECT);
+      throw new UserException(RESTCodes.UserErrorCode.PASSWORD_INCORRECT, Level.FINE);
     }
     byte[] qr_code = null;
     if (user.getTwoFactor()) {
@@ -474,8 +474,8 @@ public class UsersController {
         accountAuditFacade.registerAccountChange(user, AccountsAuditActions.QRCODE.name(),
             AccountsAuditActions.FAILED.name(), "Enabled 2-factor", user,
             req);
-        throw new UserException(RESTCodes.UserErrorCode.TWO_FA_ENABLE_ERROR, "user: " + user.getUsername(),
-          ex.getMessage(), ex);
+        throw new UserException(RESTCodes.UserErrorCode.TWO_FA_ENABLE_ERROR, Level.SEVERE,
+          "user: " + user.getUsername(), ex.getMessage(), ex);
       }
     }
     return qr_code;
@@ -494,7 +494,7 @@ public class UsersController {
       throw new IllegalArgumentException("User was not provided");
     }
     if (!authController.validatePassword(user, password, req)) {
-      throw new UserException(RESTCodes.UserErrorCode.PASSWORD_INCORRECT);
+      throw new UserException(RESTCodes.UserErrorCode.PASSWORD_INCORRECT, Level.FINE);
     }
     byte[] qr_code = null;
     if (user.getTwoFactor()) {

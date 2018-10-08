@@ -91,7 +91,7 @@ import java.util.logging.Logger;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class SystemAdminService {
   
-  private final Logger LOGGER = Logger.getLogger(SystemAdminService.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(SystemAdminService.class.getName());
   
   @EJB
   private CertificatesMgmService certificatesMgmService;
@@ -127,10 +127,11 @@ public class SystemAdminService {
   
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(response).build();
     } catch (EncryptionMasterPasswordException ex) {
-      throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_ACCESS_DENIED, null, ex.getMessage(), ex);
-    } catch (IOException ex) {
-      throw new HopsSecurityException(RESTCodes.SecurityErrorCode.MASTER_ENCRYPTION_PASSWORD_ACCESS_ERROR, null,
+      throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_ACCESS_DENIED, Level.SEVERE, null,
         ex.getMessage(), ex);
+    } catch (IOException ex) {
+      throw new HopsSecurityException(RESTCodes.SecurityErrorCode.MASTER_ENCRYPTION_PASSWORD_ACCESS_ERROR,
+        Level.SEVERE, null, ex.getMessage(), ex);
     }
   }
   
@@ -194,8 +195,7 @@ public class SystemAdminService {
   
     Hosts storedNode = hostsFacade.findByHostname(nodeToUpdate.getHostname());
     if (storedNode == null) {
-      LOGGER.log(Level.WARNING, "Tried to update node that does not exist");
-      throw new ServiceException(RESTCodes.ServiceErrorCode.HOST_NOT_FOUND);
+      throw new ServiceException(RESTCodes.ServiceErrorCode.HOST_NOT_FOUND, Level.WARNING);
     } else {
       if (nodeToUpdate.getHostIp() != null && !nodeToUpdate.getHostIp().isEmpty()) {
         storedNode.setHostIp(nodeToUpdate.getHostIp());
@@ -255,9 +255,8 @@ public class SystemAdminService {
     
     Hosts existingNode = hostsFacade.findByHostname(newNode.getHostname());
     if (existingNode != null) {
-      LOGGER.log(Level.WARNING, "Tried to add Host with ID " + newNode.getHostname() +
-        " but a host already exist with the same ID");
-      throw new ServiceException(RESTCodes.ServiceErrorCode.HOST_EXISTS, "Host with the same ID already exist");
+      throw new ServiceException(RESTCodes.ServiceErrorCode.HOST_EXISTS,  Level.WARNING, "Host with the same ID " +
+        "already exist");
     }
     
     // Make sure we store what we want in the DB and not what the user wants to

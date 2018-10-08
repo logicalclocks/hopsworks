@@ -45,6 +45,8 @@ import io.hops.hopsworks.common.util.ClientWrapper;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.dela.dto.common.ClusterAddressDTO;
 import io.hops.hopsworks.common.exception.DelaException;
+
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -73,7 +75,7 @@ public class RemoteDelaController {
       LOGGER.log(Settings.DELA_DEBUG, "dela:cross:readme:done {0}", client.getFullPath());
       return result;
     } catch (IllegalStateException ex) {
-      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE,
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
         DelaException.Source.REMOTE_DELA, null, ex.getMessage(), ex);
     }
   }

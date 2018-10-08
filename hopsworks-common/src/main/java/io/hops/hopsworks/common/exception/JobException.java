@@ -16,22 +16,25 @@
 
 package io.hops.hopsworks.common.exception;
 
+import java.util.logging.Level;
+
 public class JobException extends RESTException {
   
-  public JobException(RESTCodes.JobErrorCode code) {
-    super(code);
+  public JobException(RESTCodes.JobErrorCode code, Level level) {
+    super(code, level);
   }
   
-  public JobException(RESTCodes.JobErrorCode code, String usrMsg) {
-    super(code, usrMsg);
+  public JobException(RESTCodes.JobErrorCode code, Level level, String usrMsg) {
+    super(code, level, usrMsg);
   }
   
-  public JobException(RESTCodes.JobErrorCode code, String usrMsg, String devMsg) {
-    super(code, usrMsg, devMsg);
+  public JobException(RESTCodes.JobErrorCode code, Level level, String usrMsg, String devMsg) {
+    super(code, level, usrMsg, devMsg);
   }
   
-  public JobException(RESTCodes.JobErrorCode code, String usrMsg, String devMsg, Throwable throwable) {
-    super(code, usrMsg, devMsg, throwable);
+  public JobException(RESTCodes.JobErrorCode code, Level level, String usrMsg, String devMsg,
+    Throwable throwable) {
+    super(code, level, usrMsg, devMsg, throwable);
   }
   
 }

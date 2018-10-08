@@ -52,6 +52,8 @@ import io.hops.hopsworks.dela.hopssite.HopsSite;
 import io.hops.hopsworks.dela.hopssite.HopssiteController;
 import io.hops.hopsworks.util.SettingsHelper;
 import io.swagger.annotations.ApiParam;
+
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -102,7 +104,7 @@ public class RatingService {
       case USER:
         return getDatasetUserRating(sc);
       default:
-        throw new DelaException(RESTCodes.DelaErrorCode.ILLEGAL_ARGUMENT, DelaException.Source.HOPS_SITE,
+        throw new DelaException(RESTCodes.DelaErrorCode.ILLEGAL_ARGUMENT, Level.FINE, DelaException.Source.HOPS_SITE,
           "unknown filter value:" + filter + " - accepted dataset/user");
     }
   }

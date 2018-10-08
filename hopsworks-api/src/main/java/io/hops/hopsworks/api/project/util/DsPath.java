@@ -46,6 +46,8 @@ import io.hops.hopsworks.common.exception.DatasetException;
 import io.hops.hopsworks.common.exception.RESTCodes;
 import org.apache.hadoop.fs.Path;
 
+import java.util.logging.Level;
+
 /**
  * This class is returned from the PathValidator which parses the PATHs
  * received from the DatasetService.java
@@ -87,15 +89,17 @@ public class DsPath {
                                   Boolean dir) throws DatasetException {
     Inode inode = ifacade.getInodeAtPath(fullPath.toString());
     if (inode == null) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.PATH_NOT_FOUND, "path: " + fullPath.toString());
+      throw new DatasetException(RESTCodes.DatasetErrorCode.PATH_NOT_FOUND, Level.FINE, "path: " + fullPath.toString());
     }
 
     if (dir != null && dir && !inode.isDir()){
-      throw new DatasetException(RESTCodes.DatasetErrorCode.PATH_NOT_DIRECTORY, "path: " + fullPath.toString());
+      throw new DatasetException(RESTCodes.DatasetErrorCode.PATH_NOT_DIRECTORY,  Level.FINE,
+        "path: " + fullPath.toString());
     }
 
     if (dir != null && !dir && inode.isDir()){
-      throw new DatasetException(RESTCodes.DatasetErrorCode.PATH_IS_DIRECTORY, "path: " + fullPath.toString());
+      throw new DatasetException(RESTCodes.DatasetErrorCode.PATH_IS_DIRECTORY, Level.FINE,
+        "path: " + fullPath.toString());
     }
 
     return inode;

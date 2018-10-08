@@ -45,25 +45,26 @@ import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.exception.UserException;
 
 import javax.ejb.Stateless;
+import java.util.logging.Level;
 
 @Stateless
 public class UserStatusValidator {
 
   public boolean checkStatus(UserAccountStatus status) throws UserException {
     if (status.equals(UserAccountStatus.NEW_MOBILE_ACCOUNT)) {
-      throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_INACTIVE);
+      throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_INACTIVE, Level.INFO);
     }
     if (status.equals(UserAccountStatus.BLOCKED_ACCOUNT)) {
-      throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_BLOCKED);
+      throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_BLOCKED, Level.INFO);
     }
     if (status.equals(UserAccountStatus.DEACTIVATED_ACCOUNT)) {
-      throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_DEACTIVATED);
+      throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_DEACTIVATED, Level.INFO);
     }
     if (status.equals(UserAccountStatus.LOST_MOBILE)) {
-      throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_LOST_DEVICE);
+      throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_LOST_DEVICE, Level.INFO);
     }
     if (status.equals(UserAccountStatus.VERIFIED_ACCOUNT)) {
-      throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_NOT_APPROVED);
+      throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_NOT_APPROVED, Level.INFO);
     }
     return true;
   }

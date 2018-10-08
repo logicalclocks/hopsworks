@@ -72,6 +72,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Stateless
@@ -107,7 +108,7 @@ public class DelaHdfsController {
 
   public ManifestJSON writeManifest(Project project, Dataset dataset, Users user) throws DelaException {
     if (inodeFacade.getChildren(dataset.getInode()).isEmpty()) {
-      throw new DelaException(RESTCodes.DelaErrorCode.DATASET_EMPTY, DelaException.Source.LOCAL);
+      throw new DelaException(RESTCodes.DelaErrorCode.DATASET_EMPTY, Level.WARNING, DelaException.Source.LOCAL);
     }
     LOGGER.log(Settings.DELA_DEBUG, "{0} - writing manifest", dataset.getPublicDsId());
     ManifestJSON manifest = createManifest(project, dataset, user);
@@ -156,7 +157,7 @@ public class DelaHdfsController {
     Map<String, Inode> avroFiles = new HashMap<>();
     for (Inode i : inodeFacade.getChildren(dataset.getInode())) {
       if (i.isDir()) {
-        throw new DelaException(RESTCodes.DelaErrorCode.SUBDIRS_NOT_SUPPORTED, DelaException.Source.LOCAL);
+        throw new DelaException(RESTCodes.DelaErrorCode.SUBDIRS_NOT_SUPPORTED, Level.FINE, DelaException.Source.LOCAL);
       }
       if (isAvro(i.getInodePK().getName())) {
         avroFiles.put(i.getInodePK().getName(), i);
@@ -174,7 +175,7 @@ public class DelaHdfsController {
       try {
         fileInfo.setLength(dfso.getLength(filePath));
       } catch (IOException ex) {
-        throw new DelaException(RESTCodes.DelaErrorCode.ACCESS_ERROR, DelaException.Source.HDFS, null,
+        throw new DelaException(RESTCodes.DelaErrorCode.ACCESS_ERROR, Level.SEVERE, DelaException.Source.HDFS, null,
           ex.getMessage(), ex);
       }
       if (avroFiles.containsKey(fileName + ".avro")) {
@@ -212,11 +213,11 @@ public class DelaHdfsController {
     DistributedFileSystemOps dfso = dfs.getDfsOps(hdfsUser);
     try {
       if (dfso.exists(filePath)) {
-        throw new DelaException(RESTCodes.DelaErrorCode.ACCESS_ERROR, DelaException.Source.HDFS,
+        throw new DelaException(RESTCodes.DelaErrorCode.ACCESS_ERROR, Level.FINE, DelaException.Source.HDFS,
           "file exists");
       }
     } catch (IOException ex) {
-      throw new DelaException(RESTCodes.DelaErrorCode.ACCESS_ERROR, DelaException.Source.HDFS,
+      throw new DelaException(RESTCodes.DelaErrorCode.ACCESS_ERROR, Level.SEVERE, DelaException.Source.HDFS,
         "cannot read", ex.getMessage(), ex);
     }
 
@@ -226,14 +227,14 @@ public class DelaHdfsController {
       out.write(fileContent);
       out.flush();
     } catch (IOException ex) {
-      throw new DelaException(RESTCodes.DelaErrorCode.ACCESS_ERROR, DelaException.Source.HDFS,
+      throw new DelaException(RESTCodes.DelaErrorCode.ACCESS_ERROR, Level.SEVERE, DelaException.Source.HDFS,
         "cannot write", ex.getMessage(), ex);
     } finally {
       if (out != null) {
         try {
           out.close();
         } catch (IOException ex) {
-          throw new DelaException(RESTCodes.DelaErrorCode.ACCESS_ERROR, DelaException.Source.HDFS,
+          throw new DelaException(RESTCodes.DelaErrorCode.ACCESS_ERROR, Level.SEVERE, DelaException.Source.HDFS,
             "cannot close", ex.getMessage(), ex);
         }
       }
@@ -250,11 +251,11 @@ public class DelaHdfsController {
   public byte[] read(DistributedFileSystemOps dfso, Path filePath) throws DelaException {
     try {
       if (!dfso.exists(filePath)) {
-        throw new DelaException(RESTCodes.DelaErrorCode.ACCESS_ERROR, DelaException.Source.HDFS,
+        throw new DelaException(RESTCodes.DelaErrorCode.ACCESS_ERROR, Level.FINE, DelaException.Source.HDFS,
           "file does not exist");
       }
     } catch (IOException ex) {
-      throw new DelaException(RESTCodes.DelaErrorCode.ACCESS_ERROR, DelaException.Source.HDFS,
+      throw new DelaException(RESTCodes.DelaErrorCode.ACCESS_ERROR, Level.SEVERE, DelaException.Source.HDFS,
         "cannot read", ex.getMessage(), ex);
     }
 
@@ -266,14 +267,14 @@ public class DelaHdfsController {
       fdi.readFully(fileContent);
       return fileContent;
     } catch (IOException ex) {
-      throw new DelaException(RESTCodes.DelaErrorCode.ACCESS_ERROR, DelaException.Source.HDFS,
+      throw new DelaException(RESTCodes.DelaErrorCode.ACCESS_ERROR, Level.SEVERE, DelaException.Source.HDFS,
         "cannot read", ex.getMessage(), ex);
     } finally {
       if (fdi != null) {
         try {
           fdi.close();
         } catch (IOException ex) {
-          throw new DelaException(RESTCodes.DelaErrorCode.ACCESS_ERROR, DelaException.Source.HDFS,
+          throw new DelaException(RESTCodes.DelaErrorCode.ACCESS_ERROR, Level.SEVERE, DelaException.Source.HDFS,
             "cannot close", ex.getMessage(), ex);
         }
       }
@@ -290,7 +291,7 @@ public class DelaHdfsController {
       }
       dfso.rm(filePath, true);
     } catch (IOException ex) {
-      throw new DelaException(RESTCodes.DelaErrorCode.ACCESS_ERROR, DelaException.Source.HDFS,
+      throw new DelaException(RESTCodes.DelaErrorCode.ACCESS_ERROR, Level.SEVERE, DelaException.Source.HDFS,
         "cannot delete", ex.getMessage(), ex);
     }
   }
@@ -300,11 +301,11 @@ public class DelaHdfsController {
     DistributedFileSystemOps dfso = dfs.getDfsOps(hdfsUser);
     try {
       if (!dfso.exists(filePath)) {
-        throw new DelaException(RESTCodes.DelaErrorCode.ACCESS_ERROR, DelaException.Source.HDFS,
+        throw new DelaException(RESTCodes.DelaErrorCode.ACCESS_ERROR, Level.FINE, DelaException.Source.HDFS,
           "dataset does not exist");
       }
     } catch (IOException ex) {
-      throw new DelaException(RESTCodes.DelaErrorCode.ACCESS_ERROR, DelaException.Source.HDFS,
+      throw new DelaException(RESTCodes.DelaErrorCode.ACCESS_ERROR, Level.SEVERE, DelaException.Source.HDFS,
         "cannot read", ex.getMessage(), ex);
     }
 
@@ -312,7 +313,7 @@ public class DelaHdfsController {
       long fileLength = dfso.getDatasetSize(filePath);
       return fileLength;
     } catch (IOException ex) {
-      throw new DelaException(RESTCodes.DelaErrorCode.ACCESS_ERROR, DelaException.Source.HDFS,
+      throw new DelaException(RESTCodes.DelaErrorCode.ACCESS_ERROR, Level.SEVERE, DelaException.Source.HDFS,
         "cannot read dataset", ex.getMessage(), ex);
     }
   }

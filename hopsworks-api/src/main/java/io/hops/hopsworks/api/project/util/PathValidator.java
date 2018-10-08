@@ -56,6 +56,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import java.io.File;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -134,7 +135,7 @@ public class PathValidator {
       //we can split the string and get the project name
       String[] shardDS = pathComponents[0].split(Settings.SHARED_FILE_SEPARATOR);
       if (shardDS.length != 2) {
-        throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_FOUND);
+        throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_FOUND, Level.FINE);
       }
       dsName = shardDS[1];
       shared = true;
@@ -142,12 +143,12 @@ public class PathValidator {
 
     Dataset ds = datasetFacade.findByNameAndProjectId(project, dsName);
     if (ds == null) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_FOUND);
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_FOUND, Level.FINE);
     }
 
     // If the dataset is shared, make sure that the user can access it
     if (shared && (ds.getStatus() == Dataset.PENDING)) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_PENDING, "datasetId: " + ds.getId());
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_PENDING, Level.FINE, "datasetId: " + ds.getId());
     }
     dsPath.setDs(ds);
 
@@ -168,11 +169,11 @@ public class PathValidator {
     // Start by 1 as the first component is ""
     Project project = projectFacade.findByName(pathComponents[2]);
     if (project == null) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE);
     }
     Dataset ds = datasetFacade.findByNameAndProjectId(project, pathComponents[3]);
     if (ds == null) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_FOUND);
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_FOUND, Level.FINE);
     }
     dsPath.setDs(ds);
 
@@ -190,12 +191,12 @@ public class PathValidator {
     Inode dsInode = inodeFacade.getInodeAtPath(dsPathStr);
 
     if (dsInode == null) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.INODE_NOT_FOUND);
+      throw new DatasetException(RESTCodes.DatasetErrorCode.INODE_NOT_FOUND, Level.FINE);
     }
 
     List<Dataset> dss = datasetFacade.findByInode(dsInode);
     if (dss == null || dss.isEmpty()) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_FOUND);
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_FOUND, Level.FINE);
     }
 
     Project owningProject = datasetContoller.getOwningProject(dss.get(0));

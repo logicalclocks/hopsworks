@@ -155,7 +155,8 @@ public class DatasetController {
         HopsUtils.dataSetPartitionId(parent, dataSetName));
 
     if (ds != null) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DESTINATION_EXISTS, "Dataset name: " + dataSetName);
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DESTINATION_EXISTS, Level.FINE,
+        "Dataset name: " + dataSetName);
     }
     //Permission 770
     FsAction global = FsAction.NONE;
@@ -191,16 +192,17 @@ public class DatasetController {
           dfso.rm(new Path(dsPath), true);//if dataset persist fails rm ds folder.
         } catch (IOException ex) {
           if (e.getCause() instanceof NonUniqueResultException) {
-            throw new DatasetException(RESTCodes.DatasetErrorCode.DESTINATION_EXISTS, "path: " + dataSetName,
+            throw new DatasetException(RESTCodes.DatasetErrorCode.DESTINATION_EXISTS, Level.SEVERE,
+              "path: " + dataSetName,
               ex.getMessage(), ex);
           }
-          throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OPERATION_ERROR,
+          throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OPERATION_ERROR, Level.SEVERE,
             "Could not cleanup failed dataset create operation at path: " + dataSetName,
             ex.getMessage(), ex);
         }
       }
     } else {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OPERATION_ERROR,
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OPERATION_ERROR, Level.INFO,
         "Could not create dataset: " + dataSetName);
     }
   }
@@ -390,7 +392,7 @@ public class DatasetController {
         }
       }
     } catch (IOException  ex) {
-      throw new HopsSecurityException(RESTCodes.SecurityErrorCode.HDFS_ACCESS_CONTROL, "path: " + path,
+      throw new HopsSecurityException(RESTCodes.SecurityErrorCode.HDFS_ACCESS_CONTROL, Level.WARNING, "path: " + path,
         ex.getMessage(), ex);
     }
     return success;

@@ -65,6 +65,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import java.io.IOException;
+import java.util.logging.Level;
 
 import static io.hops.hopsworks.common.security.CertificateType.DELA;
 
@@ -90,7 +91,7 @@ public class DelaTrackerCertsResource {
       throws IOException, CAException, DelaCSRCheckException {
 
     if (csrView == null || csrView.getCsr() == null || csrView.getCsr().isEmpty()) {
-      throw new CAException(RESTCodes.CAErrorCode.BADSIGNREQUEST, DELA);
+      throw new CAException(RESTCodes.CAErrorCode.BADSIGNREQUEST, Level.FINE, DELA);
     }
 
     String signedCert = delaTrackerCertController.signCsr(sc.getUserPrincipal().getName(), csrView.getCsr());
@@ -106,7 +107,7 @@ public class DelaTrackerCertsResource {
       @ApiParam(value = "Identifier of the certificate to revoke", required = true) @QueryParam("certId") String certId)
       throws IOException, CAException {
     if (certId == null || certId.isEmpty()) {
-      throw new CAException(RESTCodes.CAErrorCode.BADREVOKATIONREQUEST, DELA);
+      throw new CAException(RESTCodes.CAErrorCode.BADREVOKATIONREQUEST, Level.FINE, DELA);
     }
 
     opensslOperations.revokeCertificate(certId, DELA, true, true);

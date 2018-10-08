@@ -211,7 +211,7 @@ public class PythonDepsService {
 
     if (allYmlPath != null && !allYmlPath.isEmpty()) {
       if (!allYmlPath.substring(allYmlPath.length() - 4, allYmlPath.length()).equals(".yml")) {
-        throw new ServiceException(RESTCodes.ServiceErrorCode.INVALID_YML);
+        throw new ServiceException(RESTCodes.ServiceErrorCode.INVALID_YML, Level.FINE, "wrong allYmlPath length");
       }
       String allYml = getYmlFromPath(allYmlPath, username);
       pythonDepsFacade.createProjectInDb(project, version, PythonDepsFacade.MachineType.ALL, allYml);
@@ -219,7 +219,8 @@ public class PythonDepsService {
 
       if (!cpuYmlPath.substring(cpuYmlPath.length() - 4, cpuYmlPath.length()).equals(".yml") || !gpuYmlPath.substring(
           gpuYmlPath.length() - 4, gpuYmlPath.length()).equals(".yml")) {
-        throw new ServiceException(RESTCodes.ServiceErrorCode.INVALID_YML);
+        throw new ServiceException(RESTCodes.ServiceErrorCode.INVALID_YML, Level.FINE, "misconfigured cpu/gpu " +
+          "information");
       }
 
       String cpuYml = getYmlFromPath(cpuYmlPath, username);
@@ -229,7 +230,7 @@ public class PythonDepsService {
       pythonDepsFacade.createProjectInDb(project, version, PythonDepsFacade.MachineType.GPU, gpuYml);
 
     } else {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.INVALID_YML);
+      throw new ServiceException(RESTCodes.ServiceErrorCode.INVALID_YML, Level.FINE);
     }
 
     project.setPythonVersion(version);
@@ -276,7 +277,8 @@ public class PythonDepsService {
     }
 
     if (cpuHost == null && gpuHost == null) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.HOST_NOT_FOUND, "Could not find any CPU or GPU host");
+      throw new ServiceException(RESTCodes.ServiceErrorCode.HOST_NOT_FOUND, Level.FINE,
+        "Could not find any CPU or GPU host");
     }
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(response.build()).build();
@@ -302,7 +304,7 @@ public class PythonDepsService {
   public Response remove(PythonDepJson library) throws ServiceException, ProjectException {
   
     if (settings.getPreinstalledPythonLibraryNames().contains(library.getLib())) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_DEP_REMOVE_FORBIDDEN,
+      throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_DEP_REMOVE_FORBIDDEN, Level.INFO,
         "library: " + library.getLib());
     }
 
@@ -330,7 +332,7 @@ public class PythonDepsService {
   public Response install(PythonDepJson library) throws ServiceException, ProjectException {
 
     if(settings.getPreinstalledPythonLibraryNames().contains(library.getLib())) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_DEP_INSTALL_FORBIDDEN,
+      throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_DEP_INSTALL_FORBIDDEN, Level.INFO,
         "library: " + library.getLib());
 
     }
@@ -541,7 +543,7 @@ public class PythonDepsService {
         // returns key,value  pairs
         String[] libVersion = line.split(",");
         if (libVersion.length != 2) {
-          throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_FORMAT_ERROR);
+          throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_FORMAT_ERROR, Level.WARNING);
         }
         String key = libVersion[0];
         String value = libVersion[1];
@@ -591,14 +593,17 @@ public class PythonDepsService {
       }
       int errCode = process.waitFor();
       if (errCode == 2) {
-        throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_ERROR, "errCode: " + errCode);
+        throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_ERROR, Level.SEVERE,
+          "errCode: " + errCode);
       } else if (errCode == 1) {
-        throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_NOT_FOUND, "errCode: " + errCode);
+        throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_NOT_FOUND, Level.SEVERE,
+          "errCode: " + errCode);
       }
       return all;
 
     } catch (IOException | InterruptedException ex) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_ERROR, "lib: " + lib.getLib(),
+      throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_ERROR, Level.SEVERE,
+        "lib: " + lib.getLib(),
         ex.getMessage(), ex);
     }
   }
@@ -658,15 +663,17 @@ public class PythonDepsService {
       }
       int errCode = process.waitFor();
       if (errCode == 2) {
-        throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_ERROR, "errCode: " + errCode);
+        throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_ERROR, Level.SEVERE,
+          "errCode: " + errCode);
       } else if (errCode == 1) {
-        throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_NOT_FOUND, "errCode: " + 1);
+        throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_NOT_FOUND, Level.SEVERE,
+          "errCode: " + 1);
       }
       return all;
 
     } catch (IOException | InterruptedException ex) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_ERROR, "lib: " + lib.getLib(),
-        ex.getMessage(), ex);
+      throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_ERROR, Level.SEVERE,
+        "lib: " + lib.getLib(), ex.getMessage(), ex);
     }
   }
 
@@ -691,12 +698,12 @@ public class PythonDepsService {
           return ymlFileContents;
         }
       } else {
-        throw new ServiceException(RESTCodes.ServiceErrorCode.INVALID_YML_SIZE);
+        throw new ServiceException(RESTCodes.ServiceErrorCode.INVALID_YML_SIZE, Level.WARNING);
       }
 
     } catch (IOException ex) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_FROM_YML_ERROR, "path: " + path, ex.getMessage()
-        , ex);
+      throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_FROM_YML_ERROR, Level.SEVERE, "path: " + path,
+        ex.getMessage(), ex);
     } finally {
       if (udfso != null) {
         dfs.closeDfsClient(udfso);
@@ -723,8 +730,8 @@ public class PythonDepsService {
         throw new IOException("A problem occurred when exporting the environment. ");
       }
     } catch (IOException | InterruptedException ex) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_EXPORT_ERROR, "host: " + host + ", " +
-        "environmentFile: " + environmentFile + ", " + "hdfsUser: " + hdfsUser, ex.getMessage(), ex);
+      throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_EXPORT_ERROR, Level.SEVERE, "host: " + host + "," +
+        " environmentFile: " + environmentFile + ", " + "hdfsUser: " + hdfsUser, ex.getMessage(), ex);
     }
   }
 }

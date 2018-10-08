@@ -72,7 +72,7 @@ import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.DatasetException;
 import io.hops.hopsworks.common.exception.GenericException;
 import io.hops.hopsworks.common.exception.RESTCodes;
-import io.hops.hopsworks.common.exception.TemplateException;
+import io.hops.hopsworks.common.exception.MetadataException;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.JsonUtil;
 import io.swagger.annotations.Api;
@@ -108,6 +108,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Path("/metadata")
@@ -393,7 +394,7 @@ public class MetadataService {
           @PathParam("inodeid") Integer inodeid,
           @PathParam("templateid") Integer templateid,
           @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws TemplateException {
+          @Context HttpServletRequest req) throws MetadataException {
 
     if (inodeid == null || templateid == null) {
       throw new IllegalArgumentException("Either inodeid or templateId were not provided");
@@ -403,8 +404,8 @@ public class MetadataService {
     List<Template> templates = new LinkedList<>(inode.getTemplates());
 
     if (templates.isEmpty()) {
-      throw new TemplateException(RESTCodes.MetadataErrorCode.TEMPLATE_NOT_ATTACHED, "inodeid:"+inodeid + ", " +
-        "templatedId:"+templateid);
+      throw new MetadataException(RESTCodes.MetadataErrorCode.TEMPLATE_NOT_ATTACHED, Level.FINE, "inodeid:" + inodeid +
+        ", templatedId:"+templateid);
     }
 
     Template toremove = null;
@@ -468,7 +469,7 @@ public class MetadataService {
           @PathParam("templateid") Integer templateid,
           @PathParam("sender") String sender,
           @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws GenericException, TemplateException {
+          @Context HttpServletRequest req) throws GenericException, MetadataException {
 
     if (templateid == null || sender == null) {
       throw new IllegalArgumentException("templateId or sender were not provided");
@@ -498,7 +499,7 @@ public class MetadataService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response addMetadataWithSchema(
           @Context SecurityContext sc, @Context HttpServletRequest req,
-          String metaObj) throws TemplateException, GenericException {
+          String metaObj) throws MetadataException, GenericException {
     String email = sc.getUserPrincipal().getName();
     return mutateMetadata(email, metaObj, MetadataOp.ADD);
   }
@@ -509,7 +510,7 @@ public class MetadataService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response updateMetadataWithSchema(
           @Context SecurityContext sc, @Context HttpServletRequest req,
-          String metaObj) throws TemplateException, GenericException {
+          String metaObj) throws MetadataException, GenericException {
 
     String email = sc.getUserPrincipal().getName();
     return mutateMetadata(email, metaObj, MetadataOp.UPDATE);
@@ -521,13 +522,13 @@ public class MetadataService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response removeMetadataWithSchema(
           @Context SecurityContext sc, @Context HttpServletRequest req,
-          String metaObj) throws TemplateException, GenericException {
+          String metaObj) throws MetadataException, GenericException {
     String email = sc.getUserPrincipal().getName();
     return mutateMetadata(email, metaObj, MetadataOp.REMOVE);
   }
 
   private Response mutateMetadata(String email, String metaObj, MetadataOp op)
-    throws TemplateException, GenericException {
+    throws MetadataException, GenericException {
     if (op == null || email == null || metaObj == null) {
       throw new IllegalArgumentException("MetadataOp  or email or metaObj were not provided.");
     }
@@ -540,13 +541,13 @@ public class MetadataService {
     }
     Inode parent = inodeFacade.findById(itc.getInodePid());
     if (parent == null) {
-      throw new GenericException(RESTCodes.GenericErrorCode.INCOMPLETE_REQUEST,
+      throw new GenericException(RESTCodes.GenericErrorCode.INCOMPLETE_REQUEST, Level.FINE,
         "Incorrect json message/Missing or incorrect parent inodeId");
     }
     Inode inode = inodeFacade.findByInodePK(parent, itc.getInodeName(),
             HopsUtils.calculatePartitionId(parent.getId(), itc.getInodeName(), 3));
     if (inode == null) {
-      throw new GenericException(RESTCodes.GenericErrorCode.INCOMPLETE_REQUEST,
+      throw new GenericException(RESTCodes.GenericErrorCode.INCOMPLETE_REQUEST, Level.FINE,
         "Incorrect json message/Missing or incorrect inode name");
     }
     Inode projectInode = inodeFacade.getProjectRootForInode(inode);
@@ -572,7 +573,7 @@ public class MetadataService {
           metaId = obj.getInt("metaid");
           JsonString metaObjPayload = obj.getJsonString("metadata");
           if (metaObjPayload == null) {
-            throw new TemplateException(RESTCodes.MetadataErrorCode.NO_METADATA_EXISTS);
+            throw new MetadataException(RESTCodes.MetadataErrorCode.NO_METADATA_EXISTS, Level.FINE);
           }
           this.metadataController.removeMetadata(composite, metaId,
             metaObjPayload.getString());
@@ -581,11 +582,11 @@ public class MetadataService {
           metaId = obj.getInt("metaid");
           JsonObject updatedObj = obj.getJsonObject("metadata");
           if (updatedObj == null) {
-            throw new TemplateException(RESTCodes.MetadataErrorCode.NO_METADATA_EXISTS);
+            throw new MetadataException(RESTCodes.MetadataErrorCode.NO_METADATA_EXISTS, Level.FINE);
           }
           JsonString metaObjValue = updatedObj.getJsonString("data");
           if (metaObjValue == null) {
-            throw new TemplateException(RESTCodes.MetadataErrorCode.NO_METADATA_EXISTS,
+            throw new MetadataException(RESTCodes.MetadataErrorCode.NO_METADATA_EXISTS, Level.FINE,
               "data entity in json not found");
           }
           this.metadataController.updateMetadata(composite, metaId,
@@ -616,7 +617,7 @@ public class MetadataService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response attachSchemalessMetadata(
           @Context SecurityContext sc, @Context HttpServletRequest req,
-          String metaObj) throws DatasetException, TemplateException {
+          String metaObj) throws DatasetException, MetadataException {
 
     processSchemalessMetadata(metaObj, false);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.ACCEPTED).
@@ -629,7 +630,7 @@ public class MetadataService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response detachSchemalessMetadata(
           @Context SecurityContext sc, @Context HttpServletRequest req,
-          String metaObj) throws DatasetException, TemplateException {
+          String metaObj) throws DatasetException, MetadataException {
 
     processSchemalessMetadata(metaObj, true);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.ACCEPTED).
@@ -637,7 +638,7 @@ public class MetadataService {
   }
 
   private void processSchemalessMetadata(String metaObj, boolean detach)
-    throws DatasetException, TemplateException {
+    throws DatasetException, MetadataException {
     JsonObject jsonObj = Json.createReader(new StringReader(metaObj)).
       readObject();
     if (!jsonObj.containsKey("path")) {
@@ -659,7 +660,7 @@ public class MetadataService {
     Json.createWriter(writer).writeObject(metadata);
     String metadataJsonString = writer.toString();
     if (metadataJsonString.length() > 12000) {
-      throw new TemplateException(RESTCodes.MetadataErrorCode.METADATA_MAX_SIZE_EXCEEDED);
+      throw new MetadataException(RESTCodes.MetadataErrorCode.METADATA_MAX_SIZE_EXCEEDED, Level.FINE);
     }
     metadataController.addSchemaLessMetadata(inodePath, metadataJsonString);
   }

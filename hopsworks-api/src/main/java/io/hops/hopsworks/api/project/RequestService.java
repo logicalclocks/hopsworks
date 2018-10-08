@@ -118,7 +118,7 @@ public class RequestService {
   @AllowedProjectRoles({AllowedProjectRoles.ANYONE})
   public Response requestAccess(RequestDTO requestDTO,
           @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws DatasetException {
+          @Context HttpServletRequest req) throws DatasetException, ProjectException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     if (requestDTO == null || requestDTO.getInodeId() == null
             || requestDTO.getProjectId() == null) {
@@ -136,13 +136,13 @@ public class RequestService {
     Dataset dsInRequesting = datasetFacade.findByProjectAndInode(project, inode);
 
     if (dsInRequesting != null) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DESTINATION_EXISTS);
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DESTINATION_EXISTS, Level.INFO);
     }
 
     ProjectTeam projectTeam = projectTeamFacade.findByPrimaryKey(project, user);
     ProjectTeam projTeam = projectTeamFacade.findByPrimaryKey(proj, user);
     if (projTeam != null && proj.equals(project)) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DESTINATION_EXISTS);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.TEAM_MEMBER_ALREADY_EXISTS, Level.FINE);
     }
     DatasetRequest dsRequest = datasetRequest.findByProjectAndDataset(
             project, ds);
@@ -163,7 +163,7 @@ public class RequestService {
     if (dsRequest != null && (dsRequest.getProjectTeam().getTeamRole().equals(
             projectTeam.getTeamRole()) || dsRequest.getProjectTeam().
             getTeamRole().equals(AllowedProjectRoles.DATA_OWNER))) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_REQUEST_EXISTS);
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_REQUEST_EXISTS, Level.FINE);
     } else if (dsRequest != null && projectTeam.getTeamRole().equals(
             AllowedProjectRoles.DATA_OWNER)) {
       dsRequest.setProjectTeam(projectTeam);
@@ -230,12 +230,12 @@ public class RequestService {
     Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
     Project project = projectFacade.find(requestDTO.getProjectId());
     if(project == null){
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE);
     }
     ProjectTeam projectTeam = projectTeamFacade.findByPrimaryKey(project, user);
 
     if (projectTeam != null) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.TEAM_MEMBER_ALREADY_EXISTS);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.TEAM_MEMBER_ALREADY_EXISTS, Level.FINE);
     }
     //email body
     String msg = "Hi " + project.getOwner().getFname() + " " + project.

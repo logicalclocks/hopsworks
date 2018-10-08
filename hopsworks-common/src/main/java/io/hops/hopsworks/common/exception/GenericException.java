@@ -15,22 +15,25 @@
  */
 package io.hops.hopsworks.common.exception;
 
+import java.util.logging.Level;
+
 public class GenericException extends RESTException {
   
-  public GenericException(RESTCodes.GenericErrorCode code) {
-    super(code);
+  public GenericException(RESTCodes.GenericErrorCode code, Level level) {
+    super(code, level);
   }
   
-  public GenericException(RESTCodes.GenericErrorCode code, String usrMsg) {
-    super(code, usrMsg);
+  public GenericException(RESTCodes.GenericErrorCode code, Level level, String usrMsg) {
+    super(code, level, usrMsg);
   }
   
-  public GenericException(RESTCodes.GenericErrorCode code, String usrMsg, String devMsg) {
-    super(code, usrMsg, devMsg);
+  public GenericException(RESTCodes.GenericErrorCode code, Level level, String usrMsg, String devMsg) {
+    super(code, level, usrMsg, devMsg);
   }
   
-  public GenericException(RESTCodes.GenericErrorCode code, String usrMsg, String devMsg, Throwable throwable) {
-    super(code, usrMsg, devMsg, throwable);
+  public GenericException(RESTCodes.GenericErrorCode code, Level level, String usrMsg, String devMsg,
+    Throwable throwable) {
+    super(code, level, usrMsg, devMsg, throwable);
   }
   
 }

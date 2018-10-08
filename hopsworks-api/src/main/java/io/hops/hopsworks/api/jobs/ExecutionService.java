@@ -71,6 +71,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @RequestScoped
@@ -134,7 +135,7 @@ public class ExecutionService {
     if(job.getProject().getPaymentType().equals(PaymentType.PREPAID)){
       YarnProjectsQuota projectQuota = yarnProjectsQuotaFacade.findByProjectName(job.getProject().getName());
       if(projectQuota==null || projectQuota.getQuotaRemaining() < 0){
-        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_QUOTA_ERROR);
+        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_QUOTA_ERROR, Level.FINE);
       }
     }
     Execution exec = executionController.start(job, user);
@@ -176,8 +177,8 @@ public class ExecutionService {
       return Response.status(Response.Status.NOT_FOUND).build();
     } else if (!execution.getJob().equals(job)) {
       //The user is requesting an execution that is not under the given job. May be a malicious user!
-      throw new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_NOT_FOUND, "Trying to access an execution of " +
-        "another job");
+      throw new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_NOT_FOUND, Level.FINE,
+        "Trying to access an execution of another job");
     } else {
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
           entity(execution).build();

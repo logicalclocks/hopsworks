@@ -322,7 +322,7 @@ public class HostServicesFacade {
       result += "\n";
     }
     if (!success) {
-      throw new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR,
+      throw new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR, Level.SEVERE,
         "webOp error, exception: " + exception + ", " + "result: " + result);
     }
     return result;
@@ -336,7 +336,8 @@ public class HostServicesFacade {
   public List<HostServices> updateHostServices(AgentController.AgentHeartbeatDTO heartbeat) throws ServiceException {
     Hosts host = hostEJB.findByHostname(heartbeat.getHostId());
     if (host == null) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.HOST_NOT_FOUND, "hostId: " + heartbeat.getHostId());
+      throw new ServiceException(RESTCodes.ServiceErrorCode.HOST_NOT_FOUND, Level.WARNING,
+        "hostId: " + heartbeat.getHostId());
     }
     final List<HostServices> hostServices = new ArrayList<>(heartbeat.getServices().size());
     for (final AgentController.AgentServiceDTO service : heartbeat.getServices()) {

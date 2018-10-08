@@ -104,7 +104,8 @@ public class DelaWorkerController {
       return dataset.getPublicDsId();
     }
     if (dataset.isShared()) {
-      throw new DelaException(RESTCodes.DelaErrorCode.DATASET_PUBLISH_PERMISSION_ERROR, DelaException.Source.LOCAL);
+      throw new DelaException(RESTCodes.DelaErrorCode.DATASET_PUBLISH_PERMISSION_ERROR, Level.WARNING,
+        DelaException.Source.LOCAL);
     }
     delaStateCtrl.checkDelaAvailable();
     delaHdfsCtrl.writeManifest(project, dataset, user);

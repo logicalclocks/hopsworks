@@ -56,7 +56,7 @@ import io.hops.hopsworks.common.dataset.FolderNameValidator;
 import io.hops.hopsworks.common.exception.DatasetException;
 import io.hops.hopsworks.common.exception.GenericException;
 import io.hops.hopsworks.common.exception.RESTCodes;
-import io.hops.hopsworks.common.exception.TemplateException;
+import io.hops.hopsworks.common.exception.MetadataException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.Utils;
@@ -193,7 +193,8 @@ public class UploadService {
         dfso.mkdir(Settings.DIR_META_TEMPLATES);
       }
     } catch (IOException e) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.UPLOAD_DIR_CREATE_ERROR, null, e.getMessage(), e);
+      throw new DatasetException(RESTCodes.DatasetErrorCode.UPLOAD_DIR_CREATE_ERROR, Level.SEVERE, null,
+        e.getMessage(), e);
     } finally {
       if (dfso != null) {
         dfso.close();
@@ -222,7 +223,8 @@ public class UploadService {
                         fileName, pathLen);
         parent = inodes.findByInodePK(this.fileParent, fileName, partitionId);
         if (parent != null) {
-          throw new DatasetException(RESTCodes.DatasetErrorCode.DESTINATION_EXISTS, "filename: " + fileName);
+          throw new DatasetException(RESTCodes.DatasetErrorCode.DESTINATION_EXISTS, Level.FINE,
+            "filename: " + fileName);
         }
       }
       //test if the user have permission to create a file in the path.
@@ -276,7 +278,7 @@ public class UploadService {
           @FormDataParam("flowRelativePath") String flowRelativePath,
           @FormDataParam("flowTotalChunks") String flowTotalChunks,
           @FormDataParam("flowTotalSize") String flowTotalSize)
-    throws IOException, GenericException, TemplateException, DatasetException {
+    throws IOException, GenericException, MetadataException, DatasetException {
 
     RESTApiJsonResponse json = new RESTApiJsonResponse();
 
@@ -416,7 +418,7 @@ public class UploadService {
    * Persist a template to the database after it has been uploaded to hopsfs
    * <p/>
    */
-  private void persistUploadedTemplate(String fileContent) throws GenericException, TemplateException {
+  private void persistUploadedTemplate(String fileContent) throws GenericException, MetadataException {
     //the file content has to be wrapped in a TemplateMessage message
     UploadedTemplateMessage message = new UploadedTemplateMessage();
     message.setMessage(fileContent);
@@ -455,9 +457,9 @@ public class UploadService {
       //so make sure the file exists by trying to read from it.
       try (FileReader fileReader = new FileReader(file.getAbsolutePath())) {
         fileReader.read();
-        throw new DatasetException(RESTCodes.DatasetErrorCode.UPLOAD_CONCURRENT_ERROR);
+        throw new DatasetException(RESTCodes.DatasetErrorCode.UPLOAD_CONCURRENT_ERROR, Level.WARNING);
       } catch (IOException ex) {
-        throw new DatasetException(RESTCodes.DatasetErrorCode.UPLOAD_ERROR, null, ex.getMessage(), ex);
+        throw new DatasetException(RESTCodes.DatasetErrorCode.UPLOAD_ERROR, Level.SEVERE, null, ex.getMessage(), ex);
       }
     }
 
@@ -471,7 +473,7 @@ public class UploadService {
             resumableFilePath, templateId);
     if (!info.valid()) {
       storage.remove(info);
-      throw new DatasetException(RESTCodes.DatasetErrorCode.UPLOAD_RESUMABLEINFO_INVALID);
+      throw new DatasetException(RESTCodes.DatasetErrorCode.UPLOAD_RESUMABLEINFO_INVALID, Level.WARNING);
     }
     return info;
   }
@@ -506,9 +508,9 @@ public class UploadService {
       //so make sure the file exists by trying to read from it.
       try (FileReader fileReader = new FileReader(file.getAbsolutePath())) {
         fileReader.read();
-        throw new DatasetException(RESTCodes.DatasetErrorCode.UPLOAD_CONCURRENT_ERROR);
+        throw new DatasetException(RESTCodes.DatasetErrorCode.UPLOAD_CONCURRENT_ERROR, Level.WARNING);
       } catch (IOException ex) {
-        throw new DatasetException(RESTCodes.DatasetErrorCode.UPLOAD_ERROR, null, ex.getMessage(), ex);
+        throw new DatasetException(RESTCodes.DatasetErrorCode.UPLOAD_ERROR, Level.SEVERE, null, ex.getMessage(), ex);
       }
     }
 
@@ -522,7 +524,7 @@ public class UploadService {
             resumableFilePath, templateId);
     if (!info.valid()) {
       storage.remove(info);
-      throw new DatasetException(RESTCodes.DatasetErrorCode.UPLOAD_RESUMABLEINFO_INVALID);
+      throw new DatasetException(RESTCodes.DatasetErrorCode.UPLOAD_RESUMABLEINFO_INVALID, Level.WARNING);
     }
     return info;
   }

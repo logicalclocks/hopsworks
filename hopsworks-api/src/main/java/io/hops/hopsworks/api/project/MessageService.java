@@ -52,6 +52,7 @@ import io.hops.hopsworks.common.exception.RequestException;
 import io.hops.hopsworks.common.message.MessageController;
 import io.swagger.annotations.Api;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
@@ -162,7 +163,7 @@ public class MessageService {
     Users user = userFacade.findByEmail(eamil);
     Message msg = msgFacade.find(msgId);
     if (msg == null) {
-      throw new RequestException(RESTCodes.RequestErrorCode.MESSAGE_NOT_FOUND);
+      throw new RequestException(RESTCodes.RequestErrorCode.MESSAGE_NOT_FOUND, Level.FINE);
     }
     //Delete Dataset request from the database
     if (!Strings.isNullOrEmpty(msg.getSubject())) {
@@ -186,7 +187,7 @@ public class MessageService {
     Users user = userFacade.findByEmail(eamil);
     Message msg = msgFacade.find(msgId);
     if (msg == null) {
-      throw new RequestException(RESTCodes.RequestErrorCode.MESSAGE_NOT_FOUND);
+      throw new RequestException(RESTCodes.RequestErrorCode.MESSAGE_NOT_FOUND, Level.FINE);
     }
     checkMsgUser(msg, user);//check if the user is the owner of the message
     msg.setDeleted(false);
@@ -203,7 +204,7 @@ public class MessageService {
     Users user = userFacade.findByEmail(eamil);
     Message msg = msgFacade.find(msgId);
     if (msg == null) {
-      throw new RequestException(RESTCodes.RequestErrorCode.MESSAGE_NOT_FOUND);
+      throw new RequestException(RESTCodes.RequestErrorCode.MESSAGE_NOT_FOUND, Level.FINE);
     }
     checkMsgUser(msg, user);//check if the user is the owner of the message
     msgFacade.remove(msg);
@@ -234,7 +235,7 @@ public class MessageService {
     Users user = userFacade.findByEmail(eamil);
     Message msg = msgFacade.find(msgId);
     if (msg == null) {
-      throw new RequestException(RESTCodes.RequestErrorCode.MESSAGE_NOT_FOUND);
+      throw new RequestException(RESTCodes.RequestErrorCode.MESSAGE_NOT_FOUND, Level.FINE);
     }
     if (content == null) {
       throw new IllegalArgumentException("content was not provided.");
@@ -247,7 +248,7 @@ public class MessageService {
 
   private void checkMsgUser(Message msg, Users user) throws RequestException {
     if (!msg.getTo().equals(user)) {
-      throw new RequestException(RESTCodes.RequestErrorCode.MESSAGE_ACCESS_NOT_ALLOWED);
+      throw new RequestException(RESTCodes.RequestErrorCode.MESSAGE_ACCESS_NOT_ALLOWED, Level.FINE);
     }
   }
 }

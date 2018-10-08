@@ -60,6 +60,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
+import java.util.logging.Level;
 
 @Path("/zeppelin/{projectID}/helium")
 @Produces("application/json")
@@ -87,20 +88,20 @@ public class HeliumService {
           @Context HttpServletRequest httpReq) throws ZeppelinException {
     Project project = zeppelinResource.getProject(projectID);
     if (project == null) {
-      throw new ZeppelinException(RESTCodes.ZeppelinErrorCode.PROJECT_NOT_FOUND);
+      throw new ZeppelinException(RESTCodes.ZeppelinErrorCode.PROJECT_NOT_FOUND, Level.FINE);
     }
     Users user = userBean.findByEmail(httpReq.getRemoteUser());
     if (user == null) {
-      throw new ZeppelinException(RESTCodes.ZeppelinErrorCode.USER_NOT_FOUND);
+      throw new ZeppelinException(RESTCodes.ZeppelinErrorCode.USER_NOT_FOUND, Level.FINE);
     }
     String userRole = projectTeamBean.findCurrentRole(project, user);
     if (userRole == null) {
-      throw new ZeppelinException(RESTCodes.ZeppelinErrorCode.ROLE_NOT_FOUND);
+      throw new ZeppelinException(RESTCodes.ZeppelinErrorCode.ROLE_NOT_FOUND, Level.FINE);
     }
 
     ZeppelinConfig zeppelinConf = zeppelinConfFactory.getProjectConf(project.getName());
     if (zeppelinConf == null) {
-      throw new ZeppelinException(RESTCodes.ZeppelinErrorCode.WEB_SOCKET_ERROR);
+      throw new ZeppelinException(RESTCodes.ZeppelinErrorCode.WEB_SOCKET_ERROR, Level.FINE);
     }
     heliumRestApi.setParms(zeppelinConf);
     return heliumRestApi;

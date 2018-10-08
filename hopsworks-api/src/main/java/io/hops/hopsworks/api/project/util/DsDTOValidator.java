@@ -49,6 +49,7 @@ import io.hops.hopsworks.common.exception.RESTCodes;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import java.util.logging.Level;
 
 @Stateless
 public class DsDTOValidator {
@@ -89,10 +90,10 @@ public class DsDTOValidator {
     Dataset ds = datasetFacade.findByNameAndProjectId(project, dto.getName());
 
     if (ds == null) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_FOUND);
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_FOUND, Level.FINE);
     } else if (ds.isShared() ||
         (ds.isPublicDs() && (!datasetController.getOwningProject(ds).equals(project)))) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OWNER_ERROR);
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OWNER_ERROR, Level.FINE);
     }
 
     return ds;

@@ -42,6 +42,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import java.util.Map;
+import java.util.logging.Level;
 
 /**
  * Configurations Rest API Endpoint
@@ -78,18 +79,18 @@ public class ConfigurationsRestApi {
           @Context HttpServletRequest httpReq) throws ZeppelinException {
     Project project = zeppelinResource.getProject(projectID);
     if (project == null) {
-      throw new ZeppelinException(RESTCodes.ZeppelinErrorCode.PROJECT_NOT_FOUND);
+      throw new ZeppelinException(RESTCodes.ZeppelinErrorCode.PROJECT_NOT_FOUND, Level.FINE);
     }
     Users user = userBean.findByEmail(httpReq.getRemoteUser());
 
     String userRole = projectTeamBean.findCurrentRole(project, user);
 
     if (userRole == null) {
-      throw new ZeppelinException(RESTCodes.ZeppelinErrorCode.ROLE_NOT_FOUND);
+      throw new ZeppelinException(RESTCodes.ZeppelinErrorCode.ROLE_NOT_FOUND, Level.FINE);
     }
     ZeppelinConfig zeppelinConf = zeppelinConfFactory.getProjectConf(project.getName());
     if (zeppelinConf == null) {
-      throw new ZeppelinException(RESTCodes.ZeppelinErrorCode.WEB_SOCKET_ERROR);
+      throw new ZeppelinException(RESTCodes.ZeppelinErrorCode.WEB_SOCKET_ERROR, Level.WARNING);
     }
     ZeppelinConfiguration conf = zeppelinConf.getNotebook().getConf();
 
@@ -111,18 +112,18 @@ public class ConfigurationsRestApi {
           @Context HttpServletRequest httpReq) throws ZeppelinException {
     Project project = zeppelinResource.getProjectNameFromCookies(httpReq);
     if (project == null) {
-      throw new ZeppelinException(RESTCodes.ZeppelinErrorCode.PROJECT_NOT_FOUND);
+      throw new ZeppelinException(RESTCodes.ZeppelinErrorCode.PROJECT_NOT_FOUND, Level.FINE);
     }
     Users user = userBean.findByEmail(httpReq.getRemoteUser());
 
     String userRole = projectTeamBean.findCurrentRole(project, user);
 
     if (userRole == null) {
-      throw new ZeppelinException(RESTCodes.ZeppelinErrorCode.WEB_SOCKET_ERROR);
+      throw new ZeppelinException(RESTCodes.ZeppelinErrorCode.ROLE_NOT_FOUND, Level.FINE);
     }
     ZeppelinConfig zeppelinConf = zeppelinConfFactory.getProjectConf(project.getName());
     if (zeppelinConf == null) {
-      throw new ZeppelinException(RESTCodes.ZeppelinErrorCode.WEB_SOCKET_ERROR);
+      throw new ZeppelinException(RESTCodes.ZeppelinErrorCode.WEB_SOCKET_ERROR, Level.WARNING);
     }
     ZeppelinConfiguration conf = zeppelinConf.getNotebook().getConf();
 

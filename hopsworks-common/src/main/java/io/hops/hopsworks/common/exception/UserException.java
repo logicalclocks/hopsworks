@@ -17,23 +17,25 @@
 package io.hops.hopsworks.common.exception;
 
 
+import java.util.logging.Level;
+
 public class UserException extends RESTException {
   
-  public UserException(RESTCodes.UserErrorCode code) {
-    super(code);
+  public UserException(RESTCodes.UserErrorCode code, Level level) {
+    super(code, level);
   }
   
-  public UserException(RESTCodes.UserErrorCode code, String usrMsg) {
-    super(code, usrMsg);
+  public UserException(RESTCodes.UserErrorCode code, Level level, String usrMsg) {
+    super(code, level, usrMsg);
   }
   
-  public UserException(RESTCodes.UserErrorCode code, String usrMsg, String devMsg) {
-    super(code, usrMsg, devMsg);
+  public UserException(RESTCodes.UserErrorCode code, Level level, String usrMsg, String devMsg) {
+    super(code, level, usrMsg, devMsg);
   }
   
-  public UserException(RESTCodes.UserErrorCode code, String usrMsg, String devMsg, Throwable throwable) {
-    super(code, usrMsg, devMsg, throwable);
+  public UserException(RESTCodes.UserErrorCode code, Level level, String usrMsg, String devMsg,
+    Throwable throwable) {
+    super(code, level, usrMsg, devMsg, throwable);
   }
-  
   
 }

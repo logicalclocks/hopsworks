@@ -120,11 +120,11 @@ public class SparkController {
       }
     
     } catch (IOException ex) {
-      throw new JobException(RESTCodes.JobErrorCode.PROXY_ERROR,
+      throw new JobException(RESTCodes.JobErrorCode.PROXY_ERROR, Level.SEVERE,
         "job: " + job.getId() + ", user:" + user.getUsername(), ex.getMessage(), ex);
     }
     if (sparkjob == null) {
-      throw new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR,
+      throw new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR, Level.WARNING,
         "Could not instantiate job with name: " + job.getName() + " and id: " + job.getId(),
         "sparkjob object was null");
     }
@@ -173,7 +173,7 @@ public class SparkController {
           }
         }
       } catch (IOException ex) {
-        throw new JobException(RESTCodes.JobErrorCode.JAR_INSEPCTION_ERROR,
+        throw new JobException(RESTCodes.JobErrorCode.JAR_INSEPCTION_ERROR, Level.SEVERE,
           "Failed to inspect jar at:" + path, ex.getMessage(), ex);
       }
     } else {

@@ -79,6 +79,7 @@ import javax.ws.rs.core.SecurityContext;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.logging.Level;
 
 @Path("/admin")
 @RolesAllowed({"HOPS_ADMIN"})
@@ -128,7 +129,7 @@ public class UsersAdmin {
       @PathParam("email") String email) throws UserException {
     Users u = userFacade.findByEmail(email);
     if (u == null) {
-      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND);
+      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
     }
     GenericEntity<Users> result = new GenericEntity<Users>(u) {
     };
@@ -171,7 +172,7 @@ public class UsersAdmin {
 
       }
     } else {
-      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND);
+      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
     }
     GenericEntity<Users> result = new GenericEntity<Users>(u) {
     };
@@ -208,11 +209,11 @@ public class UsersAdmin {
             AccountsAuditActions.SUCCESS.name(), "", u, req);
         sendConfirmationMail(u);
       } else {
-        throw new UserException(RESTCodes.UserErrorCode.TRANSITION_STATUS_ERROR, "status: "+ u.getStatus().name() +
-           " to status " + UserAccountStatus.ACTIVATED_ACCOUNT.name());
+        throw new UserException(RESTCodes.UserErrorCode.TRANSITION_STATUS_ERROR, Level.WARNING,
+          "status: "+ u.getStatus().name() + " to status " + UserAccountStatus.ACTIVATED_ACCOUNT.name());
       }
     } else {
-      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND);
+      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
     }
 
     GenericEntity<Users> result = new GenericEntity<Users>(u) {
@@ -236,7 +237,7 @@ public class UsersAdmin {
           AccountsAuditActions.SUCCESS.name(), "", u, req);
       sendRejectionEmail(u);
     } else {
-      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND);
+      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
     }
 
     GenericEntity<Users> result = new GenericEntity<Users>(u) {
@@ -254,11 +255,11 @@ public class UsersAdmin {
       if (u.getStatus().equals(UserAccountStatus.NEW_MOBILE_ACCOUNT)) {
         u = resendAccountVerificationEmail(u);
       } else {
-        throw new UserException(RESTCodes.UserErrorCode.TRANSITION_STATUS_ERROR, "status: "+ u.getStatus().name() +
-          ", to pending status");
+        throw new UserException(RESTCodes.UserErrorCode.TRANSITION_STATUS_ERROR, Level.WARNING,
+          "status: "+ u.getStatus().name() + ", to pending status");
       }
     } else {
-      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND);
+      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
     }
 
     GenericEntity<Users> result = new GenericEntity<Users>(u) {
@@ -284,7 +285,8 @@ public class UsersAdmin {
           UserAccountsEmailMessages.
           accountActivatedMessage(user.getEmail()));
     } catch (MessagingException e) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.EMAIL_SENDING_FAILURE, null, e.getMessage(), e);
+      throw new ServiceException(RESTCodes.ServiceErrorCode.EMAIL_SENDING_FAILURE, Level.SEVERE, null, e.getMessage(),
+        e);
     }
   }
 
@@ -298,7 +300,8 @@ public class UsersAdmin {
       user.setValidationKey(activationKey);
       return userFacade.update(user);
     } catch (MessagingException e) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.EMAIL_SENDING_FAILURE, null, e.getMessage(), e);
+      throw new ServiceException(RESTCodes.ServiceErrorCode.EMAIL_SENDING_FAILURE, Level.SEVERE, null, e.getMessage(),
+        e);
     }
   }
 
@@ -309,7 +312,8 @@ public class UsersAdmin {
           UserAccountsEmailMessages.ACCOUNT_REJECT,
           UserAccountsEmailMessages.accountRejectedMessage());
     } catch (MessagingException e) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.EMAIL_SENDING_FAILURE, null, e.getMessage(), e);
+      throw new ServiceException(RESTCodes.ServiceErrorCode.EMAIL_SENDING_FAILURE, Level.SEVERE, null, e.getMessage(),
+        e);
     }
   }
 

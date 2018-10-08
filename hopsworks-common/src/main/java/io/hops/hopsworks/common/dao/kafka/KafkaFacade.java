@@ -190,8 +190,8 @@ public class KafkaFacade {
     try {
       return InetAddress.getByName(ip);
     } catch (UnknownHostException ex) {
-      LOGGER.log(Level.SEVERE, RESTCodes.ServiceErrorCode.ZOOKEEPER_SERVICE_UNAVAILABLE.toString(), ex);
-      throw new ServiceException(RESTCodes.ServiceErrorCode.ZOOKEEPER_SERVICE_UNAVAILABLE, ex.getMessage());
+      throw new ServiceException(RESTCodes.ServiceErrorCode.ZOOKEEPER_SERVICE_UNAVAILABLE, Level.SEVERE,
+        ex.getMessage());
     }
   }
 
@@ -224,7 +224,7 @@ public class KafkaFacade {
     
     Project project = em.find(Project.class, projectId);
     if (project == null) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, "projectId:" + projectId);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId:" + projectId);
     }
 
     String topicName = topicDto.getName();
@@ -235,7 +235,7 @@ public class KafkaFacade {
     List<ProjectTopics> res = query.getResultList();
 
     if (!res.isEmpty()) {
-      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_ALREADY_EXISTS, "topic name: " + topicName);
+      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_ALREADY_EXISTS, Level.FINE, "topic name: " + topicName);
     }
 
     TypedQuery<ProjectTopics> projQuery = em.createNamedQuery(
@@ -244,7 +244,7 @@ public class KafkaFacade {
     List<ProjectTopics> topicsInProject = projQuery.getResultList();
 
     if (topicsInProject != null && (topicsInProject.size() >= project.getKafkaMaxNumTopics())) {
-      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_LIMIT_REACHED,
+      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_LIMIT_REACHED, Level.FINE,
         "topic name: " + topicName + ", project: " +project.getName());
     }
 
@@ -253,12 +253,12 @@ public class KafkaFacade {
     try {
       Set<String> brokerEndpoints = settings.getBrokerEndpoints();
       if (brokerEndpoints.size() < topicDto.getNumOfReplicas()) {
-        throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_REPLICATION_ERROR,
+        throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_REPLICATION_ERROR, Level.FINE,
           "maximum: " + brokerEndpoints.size());
       }
     } catch (InterruptedException | IOException | KeeperException ex) {
-      throw new KafkaException(RESTCodes.KafkaErrorCode.KAFKA_GENERIC_ERROR, "project: " + project.getName(),
-        ex.getMessage(), ex);
+      throw new KafkaException(RESTCodes.KafkaErrorCode.KAFKA_GENERIC_ERROR, Level.SEVERE,
+        "project: " + project.getName(), ex.getMessage(), ex);
     }
     
 
@@ -277,8 +277,7 @@ public class KafkaFacade {
             new Properties(), RackAwareMode.Enforced$.MODULE$);
       }
     } catch (TopicExistsException ex) {
-      LOGGER.log(Level.FINE, null, ex);
-      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_ALREADY_EXISTS_IN_ZOOKEEPER,
+      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_ALREADY_EXISTS_IN_ZOOKEEPER, Level.INFO,
         "topic name: " + topicName, ex.getMessage());
     } finally {
       zkClient.close();
@@ -294,7 +293,7 @@ public class KafkaFacade {
             topicDto.getSchemaVersion()));
   
     if (schema == null) {
-      throw new KafkaException(RESTCodes.KafkaErrorCode.SCHEMA_NOT_FOUND, "topic: " + topicName);
+      throw new KafkaException(RESTCodes.KafkaErrorCode.SCHEMA_NOT_FOUND, Level.FINE, "topic: " + topicName);
     }
 
     /*
@@ -326,7 +325,7 @@ public class KafkaFacade {
         new ProjectTopicsPK(topicName, project.getId()));
 
     if (pt == null) {
-      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, "topic: " + topicName);
+      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, Level.FINE, "topic: " + topicName);
     }
 
     //remove from database
@@ -424,20 +423,20 @@ public class KafkaFacade {
   public void shareTopic(Integer owningProjectId, String topicName,
       Integer projectId) throws KafkaException {
     if (owningProjectId.equals(projectId)) {
-      throw new KafkaException(RESTCodes.KafkaErrorCode.DESTINATION_PROJECT_IS_TOPIC_OWNER,
+      throw new KafkaException(RESTCodes.KafkaErrorCode.DESTINATION_PROJECT_IS_TOPIC_OWNER, Level.FINE,
         "owningProjectId:"+owningProjectId + ", projectId: " + projectId);
     }
 
     ProjectTopics pt = em.find(ProjectTopics.class,
         new ProjectTopicsPK(topicName, owningProjectId));
     if (pt == null) {
-      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, "topic: " + topicName);
+      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, Level.FINE, "topic: " + topicName);
     }
 
     SharedTopics sharedTopics = em.find(SharedTopics.class,
         new SharedTopicsPK(topicName, projectId));
     if (sharedTopics != null) {
-      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_ALREADY_SHARED,
+      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_ALREADY_SHARED, Level.FINE,
         "topic: " + topicName + ", projectId: " +projectId);
     }
     //persist shared topic to database
@@ -449,7 +448,7 @@ public class KafkaFacade {
   public void unShareTopic(String topicName, Integer ownerProjectId) throws KafkaException {
     SharedTopics pt = em.find(SharedTopics.class, new SharedTopicsPK(topicName, ownerProjectId));
     if (pt == null) {
-      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_SHARED,
+      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_SHARED, Level.FINE,
         "topic: " + topicName + "ownerProjectId: " + ownerProjectId);
     }
     em.remove(pt);
@@ -542,7 +541,8 @@ public class KafkaFacade {
     if (!project.getName().equals(selectedProjectName)) {
       project = projectsFacade.findByName(selectedProjectName);
       if (project == null) {
-        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, "The specified project for the topic" +
+        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "The specified project " +
+          "for the topic" +
           topicName + " was not found");
       }
     }
@@ -550,7 +550,7 @@ public class KafkaFacade {
     ProjectTopics pt = em.find(ProjectTopics.class,
         new ProjectTopicsPK(topicName, projectId));
     if (pt == null) {
-      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, "Topic: " + topicName);
+      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, Level.FINE, "Topic: " + topicName);
     }
 
     //if acl definition applies only for a specific user
@@ -559,7 +559,7 @@ public class KafkaFacade {
       Users user = userFacade.findByEmail(userEmail);
 
       if (user == null) {
-        throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, "user: " + userEmail);
+        throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE, "user: " + userEmail);
       }
 
       String principalName = selectedProjectName + PROJECT_DELIMITER + user.getUsername();
@@ -572,7 +572,8 @@ public class KafkaFacade {
             && topicAcl.getOperationType().equalsIgnoreCase(operation_type)
             && topicAcl.getPermissionType().equalsIgnoreCase(permission_type)
             && topicAcl.getRole().equalsIgnoreCase(role)) {
-          throw new KafkaException(RESTCodes.KafkaErrorCode.ACL_ALREADY_EXISTS, "topicAcl:" + topicAcl.toString());
+          throw new KafkaException(RESTCodes.KafkaErrorCode.ACL_ALREADY_EXISTS, Level.FINE,
+            "topicAcl:" + topicAcl.toString());
         }
       }
       TopicAcls ta = new TopicAcls(pt, user, permission_type, operation_type, host, role, principalName);
@@ -600,12 +601,12 @@ public class KafkaFacade {
     ProjectTopics pt = em.find(ProjectTopics.class,
         new ProjectTopicsPK(topicName, project.getId()));
     if (pt == null) {
-      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, topicName);
+      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, Level.FINE, topicName);
     }
 
     TopicAcls ta = em.find(TopicAcls.class, aclId);
     if (ta == null) {
-      throw new KafkaException(RESTCodes.KafkaErrorCode.ACL_NOT_FOUND, "topic: " +topicName);
+      throw new KafkaException(RESTCodes.KafkaErrorCode.ACL_NOT_FOUND, Level.FINE,  "topic: " +topicName);
     }
     //remove previous acl
     em.remove(ta);
@@ -617,11 +618,11 @@ public class KafkaFacade {
   public void removeAclFromTopic(String topicName, Integer aclId) throws KafkaException {
     TopicAcls ta = em.find(TopicAcls.class, aclId);
     if (ta == null) {
-      throw new KafkaException(RESTCodes.KafkaErrorCode.ACL_NOT_FOUND, "topic: " +topicName);
+      throw new KafkaException(RESTCodes.KafkaErrorCode.ACL_NOT_FOUND, Level.FINE, "topic: " +topicName);
     }
 
     if (!ta.getProjectTopics().getProjectTopicsPK().getTopicName().equals(topicName)) {
-      throw new KafkaException(RESTCodes.KafkaErrorCode.ACL_NOT_FOR_TOPIC, "topic: " + topicName);
+      throw new KafkaException(RESTCodes.KafkaErrorCode.ACL_NOT_FOR_TOPIC, Level.FINE, "topic: " + topicName);
     }
 
     em.remove(ta);
@@ -647,7 +648,7 @@ public class KafkaFacade {
   public List<AclDTO> getTopicAcls(String topicName, Integer projectId) throws KafkaException {
     ProjectTopics pt = em.find(ProjectTopics.class, new ProjectTopicsPK(topicName, projectId));
     if (pt == null) {
-      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, "topic: " + topicName);
+      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, Level.FINE,  "topic: " + topicName);
     }
     
     TypedQuery<TopicAcls> query = em.createNamedQuery(
@@ -776,7 +777,7 @@ public class KafkaFacade {
     SchemaTopics schemaTopic = em.find(SchemaTopics.class,
         new SchemaTopicsPK(schemaName, schemaVersion));
     if (schemaTopic == null) {
-      throw new KafkaException(RESTCodes.KafkaErrorCode.SCHEMA_NOT_FOUND, "Schema: " + schemaName);
+      throw new KafkaException(RESTCodes.KafkaErrorCode.SCHEMA_NOT_FOUND, Level.FINE, "Schema: " + schemaName);
     }
     return new SchemaDTO(schemaTopic.getContents());
   }
@@ -790,7 +791,7 @@ public class KafkaFacade {
       .getResultList();
     if (topics != null && !topics.isEmpty()) {
       //Create a list of topic names to display to user
-      throw new KafkaException(RESTCodes.KafkaErrorCode.SCHEMA_IN_USE);
+      throw new KafkaException(RESTCodes.KafkaErrorCode.SCHEMA_IN_USE, Level.FINE);
     } else {
       //get the bean and remove it
       SchemaTopics schema = em.find(SchemaTopics.class, new SchemaTopicsPK(schemaName, version));
@@ -864,7 +865,8 @@ public class KafkaFacade {
           partitionDetails.add(new PartitionDetailsDTO(id, leaders.get(id), replicas.get(id), replicas.get(id)));
         }
       } catch (Exception ex) {
-        throw new KafkaException(RESTCodes.KafkaErrorCode.BROKER_METADATA_ERROR, "Broker: " + brokerAddress,
+        throw new KafkaException(RESTCodes.KafkaErrorCode.BROKER_METADATA_ERROR, Level.SEVERE,
+          "Broker: " + brokerAddress,
           ex.getMessage(), ex);
       }
     } finally {

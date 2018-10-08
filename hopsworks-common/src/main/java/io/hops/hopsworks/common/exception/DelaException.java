@@ -39,28 +39,27 @@
 
 package io.hops.hopsworks.common.exception;
 
+import java.util.logging.Level;
+
 public class DelaException extends RESTException {
   
   private final Source source;
   
-  public DelaException(RESTCodes.DelaErrorCode code, Source source) {
-    super(code);
-    this.source = source;
+  public DelaException(RESTCodes.DelaErrorCode code, Level level, Source source) {
+    this(code, level, source, null);
   }
   
-  public DelaException(RESTCodes.DelaErrorCode code, Source source, String usrMsg) {
-    super(code, usrMsg);
-    this.source = source;
+  public DelaException(RESTCodes.DelaErrorCode code, Level level, Source source, String usrMsg) {
+    this(code, level, source, usrMsg, null);
   }
   
-  public DelaException(RESTCodes.DelaErrorCode code, Source source, String usrMsg, String devMsg) {
-    super(code, usrMsg, devMsg);
-    this.source = source;
+  public DelaException(RESTCodes.DelaErrorCode code, Level level, Source source, String usrMsg, String devMsg) {
+    this(code, level, source, usrMsg, devMsg, null);
   }
   
-  public DelaException(RESTCodes.DelaErrorCode code, Source source, String usrMsg, String devMsg,
+  public DelaException(RESTCodes.DelaErrorCode code, Level level, Source source, String usrMsg, String devMsg,
     Throwable throwable) {
-    super(code, usrMsg, devMsg, throwable);
+    super(code, level, usrMsg, devMsg, throwable);
     this.source = source;
   }
   

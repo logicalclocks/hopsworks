@@ -250,7 +250,7 @@ public class ProjectService {
             errorMsg = "Project with id <" + id
                 + "> could not be found";
             LOGGER.log(Level.WARNING, errorMsg);
-            throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, "projectId: " + id);
+            throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + id);
           }
           info = new MoreInfoDTO(proj);
           break;
@@ -260,7 +260,7 @@ public class ProjectService {
             errorMsg = "Dataset with id <" + id
                 + "> could not be found";
             LOGGER.log(Level.WARNING, errorMsg);
-            throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_FOUND, "datasetId: " + id);
+            throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_FOUND, Level.FINE, "datasetId: " + id);
           }
           break;
       }
@@ -285,7 +285,7 @@ public class ProjectService {
             errorMsg = "Project with id <" + id
                 + "> could not be found";
             LOGGER.log(Level.WARNING, errorMsg);
-            throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, "projectId: " + id);
+            throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + id);
           }
           info = new MoreInfoDTO(proj);
           break;
@@ -296,7 +296,7 @@ public class ProjectService {
             errorMsg = "Dataset/INode with id <" + id
                 + "> could not be found";
             LOGGER.log(Level.WARNING, errorMsg);
-            throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_FOUND, "datasetId: " + id);
+            throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_FOUND, Level.FINE, "datasetId: " + id);
           }
           break;
       }
@@ -317,7 +317,7 @@ public class ProjectService {
     Project proj = projectFacade.findByName(parent.getInodePK().getName());
     Dataset ds = datasetFacade.findByProjectAndInode(proj, inode);
     if (ds != null && !ds.isSearchable()) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.README_NOT_ACCESSIBLE);
+      throw new DatasetException(RESTCodes.DatasetErrorCode.README_NOT_ACCESSIBLE, Level.FINE);
     }
     DistributedFileSystemOps dfso = dfs.getDfsOps();
     FilePreviewDTO filePreviewDTO;
@@ -384,7 +384,7 @@ public class ProjectService {
     Dataset ds = datasetFacade.findByProjectAndInode(proj, inode);
 
     if (ds == null) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_FOUND, "inodeId: " + inodeId);
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_FOUND, Level.FINE, "inodeId: " + inodeId);
     }
 
     List<Dataset> projectsContainingInode = datasetFacade.findByInode(inode);
@@ -410,11 +410,11 @@ public class ProjectService {
       @Context HttpServletRequest req) throws ProjectException, DatasetException {
     Inode inode = inodes.findById(inodeId);
     if (inode == null) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.INODE_NOT_FOUND, "inodeId: " + inodeId);
+      throw new DatasetException(RESTCodes.DatasetErrorCode.INODE_NOT_FOUND, Level.FINE, "inodeId: " + inodeId);
     }
     Project project = projectFacade.find(projectId);
     if(project == null){
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, "projectId: " + projectId);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId);
     }
 
     DataSetDTO dataset = new DataSetDTO(inode.getInodePK().getName(), inodeId, project);
@@ -650,7 +650,7 @@ public class ProjectService {
       @PathParam("id") Integer id) throws ProjectException {
     Project project = projectController.findProjectById(id);
     if (project == null) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, "projectId: " + id);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + id);
     }
     this.dataSet.setProjectId(id);
 
@@ -671,7 +671,7 @@ public class ProjectService {
   public JobService jobs(@PathParam("projectId") Integer projectId) throws ProjectException {
     Project project = projectController.findProjectById(projectId);
     if (project == null) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, "projectId: " + projectId);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId);
     }
     return this.jobs.setProject(project);
   }
@@ -681,7 +681,7 @@ public class ProjectService {
   public CertService certs(@PathParam("projectId") Integer projectId) throws ProjectException {
     Project project = projectController.findProjectById(projectId);
     if (project == null) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, "projectId: " + projectId);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId);
     }
     return this.certs.setProject(project);
   }
@@ -700,7 +700,7 @@ public class ProjectService {
     // If YARN quota or HDFS quota for project directory is null, something is wrong with the project
     // throw a ProjectException
     if (quotas.getHdfsQuotaInBytes() == null || quotas.getYarnQuotaInSecs() == null) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.QUOTA_NOT_FOUND, "projectId: " + id);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.QUOTA_NOT_FOUND, Level.FINE, "projectId: " + id);
     }
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
@@ -739,12 +739,12 @@ public class ProjectService {
     Inode inode = inodes.findById(dsId);
     Dataset ds = datasetFacade.findByProjectAndInode(dsProject, inode);
     if (ds == null) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_FOUND, "project: " + projectName
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_FOUND, Level.FINE, "project: " + projectName
         + ", inodeId:" + dsId);
     }
 
     if (ds.isPublicDs() == false) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_PUBLIC, "datasetId: " + ds.getId());
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_PUBLIC, Level.FINE, "datasetId: " + ds.getId());
     }
 
     Dataset newDS = new Dataset(inode, destProj);
@@ -777,7 +777,7 @@ public class ProjectService {
     Users user = userFacade.findByEmail(req.getRemoteUser());
     if (user.getEmail().equals(Settings.AGENT_EMAIL) ||
         !authController.validatePwd(user, password, req)) {
-      throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_ACCESS_DENIED);
+      throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_ACCESS_DENIED, Level.FINE);
     }
     Project project = projectController.findProjectById(id);
     String keyStore = "";
@@ -798,7 +798,8 @@ public class ProjectService {
           "The password for keystore and truststore is:" + certPwd);
     } catch (Exception ex) {
       LOGGER.log(Level.SEVERE, null, ex);
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DOWNLOAD_ERROR, "projectId: " + id,  ex.getMessage(), ex);
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DOWNLOAD_ERROR, Level.SEVERE, "projectId: " + id,
+        ex.getMessage(), ex);
     } finally {
       certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());
     }
@@ -812,7 +813,7 @@ public class ProjectService {
       @PathParam("id") Integer id) throws ProjectException {
     Project project = projectController.findProjectById(id);
     if (project == null) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, "projectId: " + id);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + id);
     }
     this.kafka.setProjectId(id);
 
@@ -825,7 +826,7 @@ public class ProjectService {
       @PathParam("id") Integer id) throws ProjectException {
     Project project = projectController.findProjectById(id);
     if (project == null) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, "projectId: " + id);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + id);
     }
     this.jupyter.setProjectId(id);
 
@@ -838,7 +839,7 @@ public class ProjectService {
           @PathParam("id") Integer id) throws ProjectException {
     Project project = projectController.findProjectById(id);
     if (project == null) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, "projectId: " + id);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + id);
     }
     this.tensorboard.setProjectId(id);
 
@@ -852,7 +853,7 @@ public class ProjectService {
       @Context SecurityContext sc) throws ProjectException {
     Project project = projectController.findProjectById(id);
     if (project == null) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, "projectId: " + id);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + id);
     }
     Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
     this.tfServingService.setProject(project);
@@ -866,7 +867,7 @@ public class ProjectService {
   public PythonDepsService pysparkDeps(@PathParam("id") Integer id) throws ProjectException {
     Project project = projectController.findProjectById(id);
     if (project == null) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, "projectId: " + id);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + id);
     }
     this.pysparkService.setProject(project);
     return pysparkService;
@@ -877,7 +878,7 @@ public class ProjectService {
   public DelaProjectService dela(@PathParam("id") Integer id) throws ProjectException {
     Project project = projectController.findProjectById(id);
     if (project == null) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, "projectId: " + id);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + id);
     }
     this.delaService.setProjectId(id);
 
@@ -889,7 +890,7 @@ public class ProjectService {
   public DelaClusterProjectService delacluster(@PathParam("id") Integer id) throws ProjectException {
     Project project = projectController.findProjectById(id);
     if (project == null) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, "projectId: " + id);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND,  Level.FINE, "projectId: " + id);
     }
     this.delaclusterService.setProjectId(id);
 
@@ -920,7 +921,7 @@ public class ProjectService {
     
     Project project = projectController.findProjectById(projectId);
     if (project == null) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, "projectId: " + projectId);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId);
     }
     Pia pia = piaFacade.findByProject(projectId);
     GenericEntity<Pia> genericPia = new GenericEntity<Pia>(pia) {};

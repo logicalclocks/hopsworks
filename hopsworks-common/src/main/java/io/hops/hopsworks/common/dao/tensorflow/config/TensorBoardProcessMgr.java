@@ -341,7 +341,7 @@ public class TensorBoardProcessMgr {
         FileUtils.deleteDirectory(tbDir);
       } catch (IOException e) {
         LOGGER.log(Level.SEVERE, "Could not delete TensorBoard directory: " + tbDir);
-        throw new ServiceException(RESTCodes.ServiceErrorCode.TENSORBOARD_CLEANUP_ERROR,
+        throw new ServiceException(RESTCodes.ServiceErrorCode.TENSORBOARD_CLEANUP_ERROR, Level.SEVERE,
           "TensorBoard directory:"+tbDir, e.getMessage());
       }
     }

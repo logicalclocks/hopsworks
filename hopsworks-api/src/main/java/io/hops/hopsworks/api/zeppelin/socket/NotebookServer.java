@@ -159,7 +159,7 @@ public class NotebookServer {
       this.session.getUserProperties().put(WatcherSecurityKey.HTTP_HEADER, httpHeader);
       impl.unicast(new Message(OP.CREATED_SOCKET), conn);
     } catch (IOException | RepositoryException | TaskRunnerException ex) {
-      throw new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR, null, ex.getMessage(), ex);
+      throw new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR, Level.SEVERE, null, ex.getMessage(), ex);
     }
   }
 

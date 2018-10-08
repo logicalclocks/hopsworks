@@ -71,6 +71,7 @@ import io.swagger.annotations.ApiParam;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
@@ -259,7 +260,7 @@ public class DelaProjectService {
     Dataset dataset = getDatasetByPublicId(publicDSId);
     Users user = getUser(sc.getUserPrincipal().getName());
     if (!dataset.isPublicDs()) {
-      throw new DelaException(RESTCodes.DelaErrorCode.DATASET_NOT_PUBLIC, DelaException.Source.LOCAL);
+      throw new DelaException(RESTCodes.DelaErrorCode.DATASET_NOT_PUBLIC, Level.FINE, DelaException.Source.LOCAL);
     }
 
     ManifestJSON manifestJSON = delaHdfsCtrl.readManifest(project, dataset, user);
@@ -269,7 +270,7 @@ public class DelaProjectService {
   private Users getUser(String email) throws DelaException {
     Users user = userFacade.findByEmail(email);
     if (user == null) {
-      throw new DelaException(RESTCodes.DelaErrorCode.USER_NOT_FOUND, DelaException.Source.LOCAL);
+      throw new DelaException(RESTCodes.DelaErrorCode.USER_NOT_FOUND, Level.FINE, DelaException.Source.LOCAL);
     }
     return user;
   }
@@ -277,7 +278,7 @@ public class DelaProjectService {
   private Dataset getDatasetByPublicId(String publicDSId) throws DelaException {
     Optional<Dataset> d = datasetFacade.findByPublicDsIdProject(publicDSId, project);
     if (!d.isPresent()) {
-      throw new DelaException(RESTCodes.DelaErrorCode.DATASET_DOES_NOT_EXIST, DelaException.Source.MYSQL);
+      throw new DelaException(RESTCodes.DelaErrorCode.DATASET_DOES_NOT_EXIST, Level.FINE, DelaException.Source.MYSQL);
     }
     return d.get();
   }
@@ -285,19 +286,19 @@ public class DelaProjectService {
   private Dataset getDatasetByInode(Inode inode) throws DelaException {
     Dataset dataset = datasetFacade.findByProjectAndInode(this.project, inode);
     if (dataset == null) {
-      throw new DelaException(RESTCodes.DelaErrorCode.DATASET_DOES_NOT_EXIST, DelaException.Source.LOCAL);
+      throw new DelaException(RESTCodes.DelaErrorCode.DATASET_DOES_NOT_EXIST, Level.FINE, DelaException.Source.LOCAL);
     }
     return dataset;
   }
 
   private Inode getInode(Integer inodeId) throws DelaException {
     if (inodeId == null) {
-      throw new DelaException(RESTCodes.DelaErrorCode.ILLEGAL_ARGUMENT, DelaException.Source.LOCAL,
+      throw new DelaException(RESTCodes.DelaErrorCode.ILLEGAL_ARGUMENT,  Level.FINE, DelaException.Source.LOCAL,
         "inodeId was not provided.");
     }
     Inode inode = inodeFacade.findById(inodeId);
     if (inode == null) {
-      throw new DelaException(RESTCodes.DelaErrorCode.INODE_NOT_FOUND, DelaException.Source.LOCAL);
+      throw new DelaException(RESTCodes.DelaErrorCode.INODE_NOT_FOUND, Level.FINE, DelaException.Source.LOCAL);
     }
     return inode;
   }

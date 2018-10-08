@@ -16,21 +16,24 @@
 
 package io.hops.hopsworks.common.exception;
 
+import java.util.logging.Level;
+
 public class ServiceException extends RESTException  {
   
-  public ServiceException(RESTCodes.ServiceErrorCode code) {
-    super(code);
+  public ServiceException(RESTCodes.ServiceErrorCode code, Level level) {
+    super(code, level);
   }
   
-  public ServiceException(RESTCodes.ServiceErrorCode code, String usrMsg) {
-    super(code, usrMsg);
+  public ServiceException(RESTCodes.ServiceErrorCode code, Level level, String usrMsg) {
+    super(code, level, usrMsg);
   }
   
-  public ServiceException(RESTCodes.ServiceErrorCode code, String usrMsg, String devMsg) {
-    super(code, usrMsg, devMsg);
+  public ServiceException(RESTCodes.ServiceErrorCode code, Level level, String usrMsg, String devMsg) {
+    super(code, level, usrMsg, devMsg);
   }
   
-  public ServiceException(RESTCodes.ServiceErrorCode code, String usrMsg, String devMsg, Throwable throwable) {
-    super(code, usrMsg, devMsg, throwable);
+  public ServiceException(RESTCodes.ServiceErrorCode code, Level level, String usrMsg, String devMsg,
+    Throwable throwable) {
+    super(code, level, usrMsg, devMsg, throwable);
   }
 }

@@ -222,7 +222,7 @@ public class JupyterProcessMgr {
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public String getJupyterHome(String hdfsUser, JupyterProject jp) throws ServiceException {
     if (jp == null) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_HOME_ERROR, "user: " + hdfsUser);
+      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_HOME_ERROR, Level.WARNING, "user: " + hdfsUser);
     }
     return settings.getJupyterDir() + File.separator
         + Settings.DIR_ROOT + File.separator + jp.getProjectId().getName()
@@ -266,13 +266,13 @@ public class JupyterProcessMgr {
       process.waitFor(10l, TimeUnit.SECONDS);
       exitValue = process.exitValue();
     } catch (IOException | InterruptedException ex) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_STOP_ERROR, "exitValue: " + exitValue,
+      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_STOP_ERROR, Level.SEVERE, "exitValue: " + exitValue,
         ex.getMessage(), ex);
     }
 
     if (exitValue != 0) {
-      LOGGER.log(Level.SEVERE, RESTCodes.ServiceErrorCode.JUPYTER_STOP_ERROR + ", exitValue: " + exitValue);
-      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_STOP_ERROR, "exitValue: " + exitValue);
+      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_STOP_ERROR, Level.SEVERE,
+        "exitValue: " + exitValue);
     }
 
   }

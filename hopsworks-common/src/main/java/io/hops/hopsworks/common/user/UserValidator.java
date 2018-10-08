@@ -48,6 +48,7 @@ import io.hops.hopsworks.common.exception.UserException;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -71,7 +72,7 @@ public class UserValidator {
       throw new IllegalArgumentException("Email was not provided");
     }
     if (!isValid(email, EMAIL_PATTERN)) {
-      throw new UserException(RESTCodes.UserErrorCode.INVALID_EMAIL);
+      throw new UserException(RESTCodes.UserErrorCode.INVALID_EMAIL, Level.FINE);
     }
 
     return true;
@@ -79,19 +80,19 @@ public class UserValidator {
 
   public boolean isValidPassword(String password, String confirmedPassword) throws UserException {
     if (password.length() == 0) {
-      throw new UserException(RESTCodes.UserErrorCode.PASSWORD_EMPTY);
+      throw new UserException(RESTCodes.UserErrorCode.PASSWORD_EMPTY, Level.FINE);
     }
     if (password.length() < PASSWORD_MIN_LENGTH) {
-      throw new UserException(RESTCodes.UserErrorCode.PASSWORD_TOO_SHORT);
+      throw new UserException(RESTCodes.UserErrorCode.PASSWORD_TOO_SHORT, Level.FINE);
     }
     if (password.length() > PASSWORD_MAX_LENGTH) {
-      throw new UserException(RESTCodes.UserErrorCode.PASSWORD_TOO_LONG);
+      throw new UserException(RESTCodes.UserErrorCode.PASSWORD_TOO_LONG, Level.FINE);
     }
     if (!isValid(password, PASSWORD_PATTERN)) {
-      throw new UserException(RESTCodes.UserErrorCode.PASSWORD_PATTERN_NOT_CORRECT);
+      throw new UserException(RESTCodes.UserErrorCode.PASSWORD_PATTERN_NOT_CORRECT, Level.FINE);
     }
     if (!password.equals(confirmedPassword)) {
-      throw new UserException(RESTCodes.UserErrorCode.PASSWORD_MISS_MATCH);
+      throw new UserException(RESTCodes.UserErrorCode.PASSWORD_MISS_MATCH, Level.FINE);
     }
 
     return true;
@@ -102,7 +103,7 @@ public class UserValidator {
     if (question == null || question.isEmpty()) {
       throw new IllegalArgumentException(RESTCodes.UserErrorCode.SEC_Q_EMPTY.getMessage());
     } else if (SecurityQuestion.getQuestion(question) == null) {
-      throw new UserException(RESTCodes.UserErrorCode.SEC_Q_NOT_IN_LIST);
+      throw new UserException(RESTCodes.UserErrorCode.SEC_Q_NOT_IN_LIST, Level.FINE);
     }
     if (answer == null || answer.isEmpty()) {
       throw new IllegalArgumentException(RESTCodes.UserErrorCode.SEC_A_EMPTY.getMessage());
@@ -116,10 +117,10 @@ public class UserValidator {
     isValidPassword(newUser.getChosenPassword(), newUser.getRepeatedPassword());
     isValidsecurityQA(newUser.getSecurityQuestion(), newUser.getSecurityAnswer());
     if (newUser.getToS()) {
-      throw new UserException(RESTCodes.UserErrorCode.TOS_NOT_AGREED);
+      throw new UserException(RESTCodes.UserErrorCode.TOS_NOT_AGREED, Level.FINE);
     }
     if (userBean.findByEmail(newUser.getEmail()) != null) {
-      throw new UserException(RESTCodes.UserErrorCode.USER_EXISTS);
+      throw new UserException(RESTCodes.UserErrorCode.USER_EXISTS, Level.FINE);
     }
     return true;
   }

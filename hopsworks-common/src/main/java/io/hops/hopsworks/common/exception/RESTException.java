@@ -21,6 +21,7 @@ import io.hops.hopsworks.common.util.Settings;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.Serializable;
+import java.util.logging.Level;
 
 public abstract class RESTException extends Exception implements Serializable {
   //Optional messages
@@ -28,25 +29,31 @@ public abstract class RESTException extends Exception implements Serializable {
   private final String devMsg;
   private final RESTCodes.RESTErrorCode errorCode;
   
-  protected RESTException(RESTCodes.RESTErrorCode errorCode) {
-    this(errorCode, null, null);
+  //Logging level for app server
+  private final Level level;
+  
+  protected RESTException(RESTCodes.RESTErrorCode errorCode, Level level) {
+    this(errorCode, level, null, null);
   }
   
-  protected RESTException(RESTCodes.RESTErrorCode errorCode, String usrMsg) {
-    this(errorCode, usrMsg, null);
+  protected RESTException(RESTCodes.RESTErrorCode errorCode, Level level, String usrMsg) {
+    this(errorCode, level, usrMsg, null);
   }
   
-  protected RESTException(RESTCodes.RESTErrorCode errorCode, String usrMsg, String devMsg) {
+  protected RESTException(RESTCodes.RESTErrorCode errorCode, Level level, String usrMsg, String devMsg) {
     this.errorCode = errorCode;
     this.usrMsg = usrMsg;
     this.devMsg = devMsg;
+    this.level = level;
   }
   
-  protected RESTException(RESTCodes.RESTErrorCode errorCode, String usrMsg, String devMsg, Throwable throwable) {
+  protected RESTException(RESTCodes.RESTErrorCode errorCode, Level level, String usrMsg, String devMsg,
+    Throwable throwable) {
     super(throwable);
     this.errorCode = errorCode;
     this.usrMsg = usrMsg;
     this.devMsg = devMsg;
+    this.level = level;
   }
   
   public String getUsrMsg() {
@@ -61,9 +68,16 @@ public abstract class RESTException extends Exception implements Serializable {
     return errorCode;
   }
   
-  public JsonResponse getJsonResponse(JsonResponse jsonResponse, Settings.LOG_LEVEL logLevel) {
+  /**
+   * @return Logging level for application server.
+   */
+  public Level getLevel() {
+    return level;
+  }
   
-    if(jsonResponse == null){
+  public JsonResponse getJsonResponse(JsonResponse jsonResponse, Settings.LOG_LEVEL logLevel) {
+    
+    if (jsonResponse == null) {
       throw new IllegalArgumentException("jsonResponse was not provided.");
     }
     jsonResponse.setErrorMsg(errorCode.getMessage());

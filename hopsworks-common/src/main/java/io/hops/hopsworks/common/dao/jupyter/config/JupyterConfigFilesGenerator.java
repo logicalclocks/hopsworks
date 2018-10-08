@@ -106,7 +106,7 @@ public class JupyterConfigFilesGenerator {
           "Error in initializing JupyterConfig for project: {0}. {1}",
           new Object[]{project.getName(), e});
       
-      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_ADD_FAILURE, null, e.getMessage(), e);
+      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_ADD_FAILURE, Level.SEVERE, null, e.getMessage(), e);
     }
 
     return jP;
@@ -300,7 +300,7 @@ public class JupyterConfigFilesGenerator {
       TfLibMapping tfLibMapping = tfLibMappingFacade.findTfMappingForProject(project);
       if (tfLibMapping == null) {
         // We are not supporting this version.
-        throw new ServiceException(RESTCodes.ServiceErrorCode.TENSORFLOW_VERSION_NOT_SUPPORTED);
+        throw new ServiceException(RESTCodes.ServiceErrorCode.TENSORFLOW_VERSION_NOT_SUPPORTED, Level.INFO);
       }
       String tfLdLibraryPath = tfLibMappingUtil.buildTfLdLibraryPath(tfLibMapping);
 

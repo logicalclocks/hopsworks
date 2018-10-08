@@ -274,12 +274,13 @@ public class WebCommunication {
       if (res == Response.Status.Family.SUCCESSFUL) {
         content = response.readEntity(String.class);
       } else {
-        throw new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR, "response status: " + response.getStatus(),
+        throw new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR,
+          Level.SEVERE, "response status: " + response.getStatus(),
           response + ", reason: " + response.getStatusInfo().getReasonPhrase());
       }
     } catch (KeyManagementException | NoSuchAlgorithmException e) {
       logger.log(Level.SEVERE, null, e);
-      throw new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR, null, e.getMessage(), e);
+      throw new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR, Level.SEVERE, null, e.getMessage(), e);
     }
     return content;
   }

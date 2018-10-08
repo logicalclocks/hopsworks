@@ -304,7 +304,8 @@ public class ProjectController {
         } catch (IOException e) {
           LOGGER.log(Level.SEVERE, null, e);
         }
-        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_EXISTS, "project: " + projectName);
+        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_EXISTS, Level.SEVERE, "project: " + projectName,
+          ex.getMessage(), ex);
       }
       LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 2 (hdfs): {0}", System.currentTimeMillis() - startTime);
 
@@ -318,7 +319,7 @@ public class ProjectController {
         try {
           projectHandler.preCreate(project);
         } catch (Exception e) {
-          throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_HANDLER_PRECREATE_ERROR,
+          throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_HANDLER_PRECREATE_ERROR, Level.SEVERE,
             "project: " + project.getName() + ", handler: " + projectHandler.getClassName(), e.getMessage(), e);
         }
       }
@@ -332,7 +333,7 @@ public class ProjectController {
         certsGenerationFuture = certificatesController.generateCertificates(project, owner, true);
       } catch (Exception ex) {
         cleanup(project, sessionId, certsGenerationFuture);
-        throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_CREATION_ERROR,
+        throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_CREATION_ERROR, Level.SEVERE,
           "project: " + project.getName() +
             "owner: " + owner.getUsername(), ex.getMessage(), ex);
       }
@@ -340,8 +341,8 @@ public class ProjectController {
       String username = hdfsUsersBean.getHdfsUserName(project, owner);
       if (username == null || username.isEmpty()) {
         cleanup(project, sessionId, certsGenerationFuture);
-        throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, "project: " + project.getName() +
-          "owner: " + owner.getUsername());
+        throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.SEVERE,
+          "project: " + project.getName() + "owner: " + owner.getUsername());
       }
 
       LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 4 (certs): {0}", System.currentTimeMillis() - startTime);
@@ -352,8 +353,8 @@ public class ProjectController {
         mkProjectDIR(projectName, dfso);
       } catch (IOException | EJBException ex) {
         cleanup(project, sessionId, certsGenerationFuture);
-        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_FOLDER_NOT_CREATED, "project: " + projectName,
-          ex.getMessage(), ex);
+        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_FOLDER_NOT_CREATED, Level.SEVERE,
+          "project: " + projectName, ex.getMessage(), ex);
       }
       LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 5 (folders): {0}", System.currentTimeMillis() - startTime);
       //update the project with the project folder inode
@@ -361,8 +362,8 @@ public class ProjectController {
         setProjectInode(project, dfso);
       } catch (IOException | EJBException ex) {
         cleanup(project, sessionId, certsGenerationFuture);
-        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_INODE_CREATION_ERROR, "project: " + projectName,
-          ex.getMessage(), ex);
+        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_INODE_CREATION_ERROR,
+          Level.SEVERE, "project: " + projectName, ex.getMessage(), ex);
       }
       LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 6 (inodes): {0}", System.currentTimeMillis() - startTime);
 
@@ -372,8 +373,8 @@ public class ProjectController {
             dfso, owner);
       } catch (IOException | EJBException ex) {
         cleanup(project, sessionId, certsGenerationFuture);
-        throw new ProjectException(RESTCodes.ProjectErrorCode.QUOTA_ERROR, "project: " + project.getName(),
-          ex.getMessage(), ex);
+        throw new ProjectException(RESTCodes.ProjectErrorCode.QUOTA_ERROR, Level.SEVERE,
+          "project: " + project.getName(), ex.getMessage(), ex);
       }
       LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 7 (quotas): {0}", System.currentTimeMillis() - startTime);
 
@@ -382,7 +383,7 @@ public class ProjectController {
         createProjectLogResources(owner, project, dfso);
       } catch (IOException | EJBException ex) {
         cleanup(project, sessionId, certsGenerationFuture);
-        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_SET_PERMISSIONS_ERROR,
+        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_SET_PERMISSIONS_ERROR, Level.SEVERE,
           "project: " + projectName, ex.getMessage(), ex);
       }
       LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 8 (logs): {0}", System.currentTimeMillis() - startTime);
@@ -425,7 +426,7 @@ public class ProjectController {
           projectHandler.postCreate(project);
         } catch (Exception e) {
           cleanup(project, sessionId, certsGenerationFuture);
-          throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_HANDLER_POSTCREATE_ERROR,
+          throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_HANDLER_POSTCREATE_ERROR, Level.SEVERE,
             "project: " + projectName, e.getMessage(), e);
         }
       }
@@ -454,24 +455,29 @@ public class ProjectController {
     final String severity = "Possible inconsistency,  Please contact the administrator.";
     try {
       if (existingProjectFolder(project)) {
-        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_FOLDER_EXISTS, severity, project.getName());
+        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_FOLDER_EXISTS, Level.INFO, severity,
+          project.getName());
       } else if (!noExistingUser(project.getName())) {
-        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_USER_EXISTS, severity, project.getName());
+        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_USER_EXISTS, Level.INFO, severity,
+          project.getName());
       } else if (!noExistingGroup(project.getName())) {
-        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_GROUP_EXISTS, severity, project.getName());
+        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_GROUP_EXISTS, Level.INFO, severity,
+          project.getName());
       } else if (!noExistingCertificates(project.getName())) {
-        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_CERTIFICATES_EXISTS, severity, project.getName());
+        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_CERTIFICATES_EXISTS, Level.INFO, severity,
+          project.getName());
       } else if (!verifyQuota(project.getName())) {
         cleanup(project, sessionId, true);
-        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_QUOTA_EXISTS, project.getName());
+        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_QUOTA_EXISTS, Level.INFO, project.getName());
       } else if (!verifyLogs(dfso, project.getName())) {
         cleanup(project, sessionId, true);
-        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_LOGS_EXIST, severity, project.getName());
+        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_LOGS_EXIST, Level.INFO, severity,
+          project.getName());
       }
     } catch (IOException | EJBException ex) {
       LOGGER.log(Level.SEVERE, RESTCodes.ProjectErrorCode.PROJECT_VERIFICATIONS_FAILED.toString(), ex);
       cleanup(project, sessionId, true);
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_VERIFICATIONS_FAILED);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_VERIFICATIONS_FAILED, Level.SEVERE);
     }
   }
 
@@ -482,9 +488,10 @@ public class ProjectController {
       throw new IllegalArgumentException("User was not provided.");
     }
     if (projectFacade.numProjectsLimitReached(user)) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.NUM_PROJECTS_LIMIT_REACHED, "user: " + user.getUsername());
+      throw new ProjectException(RESTCodes.ProjectErrorCode.NUM_PROJECTS_LIMIT_REACHED,
+        Level.FINE, "user: " + user.getUsername());
     } else if (projectFacade.projectExists(projectName)) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_EXISTS, "project: " + projectName);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_EXISTS, Level.FINE, "project: " + projectName);
     }
     //Create a new project object
     Date now = new Date();
@@ -504,7 +511,7 @@ public class ProjectController {
       dfso.touchz(dummy);
       project.setInode(inodes.getInodeAtPath(dummy.toString()));
     } catch (IOException ex) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_INODE_CREATION_ERROR,
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_INODE_CREATION_ERROR, Level.SEVERE,
         "Couldn't get the dummy Inode at: /tmp/" + projectName, ex.getMessage(), ex);
     }
 
@@ -664,7 +671,7 @@ public class ProjectController {
   public Project findProjectById(Integer id) throws ProjectException {
     Project project = projectFacade.find(id);
     if (project == null) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, "projectId: " + id);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + id);
     }
     return project;
   }
@@ -749,8 +756,8 @@ public class ProjectController {
       }
     } catch (IOException ex) {
       LOGGER.log(Level.SEVERE, "Could not create dir: " + ds.getName(), ex);
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_SERVICE_ADD_FAILURE, "service: " + ds.toString(),
-        ex.getMessage(), ex);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_SERVICE_ADD_FAILURE,
+        Level.SEVERE, "service: " + ds.toString(), ex.getMessage(), ex);
     }
   }
 
@@ -758,7 +765,7 @@ public class ProjectController {
     try {
       hiveController.createDatabase(project, user, dfso);
     } catch (SQLException | IOException ex) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_HIVEDB_CREATE_ERROR,
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_HIVEDB_CREATE_ERROR, Level.SEVERE,
         "project: " + project.getName(), ex.getMessage(), ex);
     }
   }
@@ -867,12 +874,12 @@ public class ProjectController {
 
     Project project = projectFacade.find(projectId);
     if (project == null) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, "projectId: " + projectId);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId);
     }
     //Only project owner is able to delete a project
     Users user = userFacade.findByEmail(userMail);
     if (!project.getOwner().equals(user)) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_REMOVAL_NOT_ALLOWED);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_REMOVAL_NOT_ALLOWED, Level.FINE);
     }
     
     cleanup(project, sessionId);
@@ -1373,7 +1380,7 @@ public class ProjectController {
           .method("GET");
       LOGGER.log(Level.FINE, "Zeppelin check resp:{0}", resp.getStatus());
     } catch (CertificateException | NoSuchAlgorithmException | IOException | KeyStoreException e) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.ZEPPELIN_KILL_ERROR, null, e.getMessage(), e);
+      throw new ServiceException(RESTCodes.ServiceErrorCode.ZEPPELIN_KILL_ERROR, Level.SEVERE, null, e.getMessage(), e);
     }
     if (resp.getStatus() == 200) {
       resp = client
@@ -1383,7 +1390,7 @@ public class ProjectController {
           .method("GET");
       LOGGER.log(Level.FINE, "Zeppelin restart resp:{0}", resp.getStatus());
       if (resp.getStatus() != 200) {
-        throw new ServiceException(RESTCodes.ServiceErrorCode.ZEPPELIN_KILL_ERROR);
+        throw new ServiceException(RESTCodes.ServiceErrorCode.ZEPPELIN_KILL_ERROR, Level.SEVERE);
       }
     }
   }
@@ -1461,7 +1468,7 @@ public class ProjectController {
             LOGGER.log(Level.SEVERE, null, ex1);
           }
         } else {
-          throw new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR, null, ex.getMessage(), ex);
+          throw new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR, Level.SEVERE, null, ex.getMessage(), ex);
         }
       } finally {
         ycs.closeYarnClient(yarnClientWrapper);
@@ -1483,7 +1490,7 @@ public class ProjectController {
         try {
           projectHandler.preDelete(project);
         } catch (Exception e) {
-          throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_HANDLER_PREDELETE_ERROR,
+          throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_HANDLER_PREDELETE_ERROR, Level.SEVERE,
             "project: " + project.getName() + ", handler: " + projectHandler.getClassName(), e.getMessage(), e);
         }
       }
@@ -1571,7 +1578,7 @@ public class ProjectController {
         try {
           projectHandler.postDelete(project);
         } catch (Exception e) {
-          throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_HANDLER_POSTDELETE_ERROR,
+          throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_HANDLER_POSTDELETE_ERROR, Level.SEVERE,
             "project: " + project.getName() + ", handler: " + projectHandler.getClassName(), e.getMessage(), e);
         }
       }
@@ -1739,8 +1746,8 @@ public class ProjectController {
                 hdfsUsersBean.removeProjectMember(newMember, project);
               } catch (IOException ex1) {
                 LOGGER.log(Level.SEVERE, null, ex1);
-                throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_MEMBER_NOT_REMOVED, "user: " +  newMember,
-                  " project: " + project.getName());
+                throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_MEMBER_NOT_REMOVED,
+                  Level.SEVERE, "user: " +  newMember, " project: " + project.getName());
               }
 
               throw new EJBException("Could not create certificates for user");
@@ -1787,7 +1794,7 @@ public class ProjectController {
   public ProjectDTO getProjectByID(Integer projectID) throws ProjectException {
     Project project = projectFacade.find(projectID);
     if (project == null) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, "projectId: " + projectID);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectID);
     }
     String name = project.getName();
 
@@ -1821,7 +1828,7 @@ public class ProjectController {
     //find the project entity from hopsworks database
     Project project = projectFacade.findByName(name);
     if (project == null) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, "project: " + name);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "project: " + name);
     }
     //find the project as an inode from hops database
     String path = File.separator + Settings.DIR_ROOT + File.separator + name;
@@ -1956,12 +1963,12 @@ public class ProjectController {
       String toRemoveEmail) throws UserException, ProjectException, ServiceException, IOException, CAException {
     Users userToBeRemoved = userFacade.findByEmail(toRemoveEmail);
     if (userToBeRemoved == null) {
-      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, "user: " + email);
+      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE, "user: " + email);
     }
     ProjectTeam projectTeam = projectTeamFacade.findProjectTeam(project,
         userToBeRemoved);
     if (projectTeam == null) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.TEAM_MEMBER_NOT_FOUND,
+      throw new ProjectException(RESTCodes.ProjectErrorCode.TEAM_MEMBER_NOT_FOUND, Level.FINE,
         "project: " + project + ", user: " + email);
     }
     projectTeamFacade.removeProjectTeam(project, userToBeRemoved);
@@ -2029,7 +2036,7 @@ public class ProjectController {
         }
       }
     } catch (YarnException | IOException | InterruptedException e) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.KILL_MEMBER_JOBS,
+      throw new ProjectException(RESTCodes.ProjectErrorCode.KILL_MEMBER_JOBS, Level.SEVERE,
         "project: " + project + ", user: " + userToBeRemoved, e.getMessage(), e);
     } finally {
       ycs.closeYarnClient(yarnClientWrapper);
@@ -2060,16 +2067,16 @@ public class ProjectController {
     Users opsOwner = userFacade.findByEmail(owner);
     Users user = userFacade.findByEmail(toUpdateEmail);
     if (projOwner.equals(user)) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_OWNER_ROLE_NOT_ALLOWED,
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_OWNER_ROLE_NOT_ALLOWED, Level.FINE,
         "project: " + project.getName());
     }
     if (user == null) {
-      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, "user: " + toUpdateEmail);
+      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE, "user: " + toUpdateEmail);
     }
     ProjectTeam projectTeam = projectTeamFacade.findProjectTeam(project, user);
     if (projectTeam == null) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.TEAM_MEMBER_NOT_FOUND, "project: " + project.getName() +
-        ", user: " + user.getUsername());
+      throw new ProjectException(RESTCodes.ProjectErrorCode.TEAM_MEMBER_NOT_FOUND, Level.FINE,
+        "project: " + project.getName() + ", user: " + user.getUsername());
       //member not found
     }
     if (!projectTeam.getTeamRole().equals(newRole)) {
@@ -2208,7 +2215,7 @@ public class ProjectController {
                 + "/spark-examples.jar"), userHdfsName, datasetGroup);
 
           } catch (IOException ex) {
-            throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_TOUR_FILES_ERROR,
+            throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_TOUR_FILES_ERROR, Level.SEVERE,
               "project: " + project.getName(), ex.getMessage(), ex);
           }
           break;
@@ -2226,7 +2233,7 @@ public class ProjectController {
             udfso.setOwner(new Path(kafkaExampleDst), userHdfsName, datasetGroup);
 
           } catch (IOException ex) {
-            throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_TOUR_FILES_ERROR,
+            throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_TOUR_FILES_ERROR, Level.SEVERE,
               "project: " + project.getName(), ex.getMessage(), ex);
           }
           break;
@@ -2271,7 +2278,7 @@ public class ProjectController {
               udfso.rm(new Path(DLNotebooksSrc), true);
             }
           } catch (IOException ex) {
-            throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_TOUR_FILES_ERROR,
+            throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_TOUR_FILES_ERROR, Level.SEVERE,
               "project: " + project.getName(), ex.getMessage(), ex);
           }
           break;
@@ -2332,10 +2339,10 @@ public class ProjectController {
     params.put("data", "{\"attributes\": {\"title\": \"" + projectName + "_logs-*"  + "\"}}");
   
     JSONObject resp = elasticController.sendKibanaReq(params, "index-pattern", projectName + "_logs-*");
-    
+  
     if (!(resp.has("updated_at") || (resp.has("statusCode") && resp.get("statusCode").toString().equals("409")))) {
-      LOGGER.log(Level.SEVERE, "Could not create logs index for project {0}", projectName);
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_SERVICE_ADD_FAILURE, "service: elasticsearch");
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_SERVICE_ADD_FAILURE, Level.SEVERE, "Could not " +
+        "create logs index for project: " + projectName);
     }
 
     params.clear();
@@ -2350,11 +2357,9 @@ public class ProjectController {
     params.put("op", "POST");
     params.put("data", "{\"attributes\": {\"title\": \"" + indexName  + "\"}}");
     resp = elasticController.sendKibanaReq(params, "index-pattern", indexName, true);
-
+  
     if (!(resp.has("updated_at") || (resp.has("statusCode") && resp.get("statusCode").toString().equals("409")))) {
-      LOGGER.log(Level.SEVERE, RESTCodes.ProjectErrorCode.PROJECT_KIBANA_CREATE_INDEX_ERROR.toString() + ", " +
-        "project: " + projectName + ", " + "resp: " + resp.toString(2));
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_KIBANA_CREATE_INDEX_ERROR,
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_KIBANA_CREATE_INDEX_ERROR, Level.SEVERE,
         "project: " + projectName + ", resp: " + resp.toString(2));
     }
 
@@ -2373,9 +2378,7 @@ public class ProjectController {
     resp = elasticController.sendKibanaReq(params, "search", indexName + "_summary-search", true);
 
     if (!(resp.has("updated_at") || (resp.has("statusCode") && resp.get("statusCode").toString().equals("409")))) {
-      LOGGER.log(Level.SEVERE, RESTCodes.ProjectErrorCode.PROJECT_KIBANA_CREATE_SEARCH_ERROR.toString() + ", " +
-        "project: " + projectName + ", resp: " + resp.toString(2));
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_KIBANA_CREATE_SEARCH_ERROR,
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_KIBANA_CREATE_SEARCH_ERROR, Level.SEVERE,
         "project: " + projectName + ", resp: " + resp.toString(2));
     }
 
@@ -2397,9 +2400,7 @@ public class ProjectController {
     resp = elasticController.sendKibanaReq(params, "dashboard", indexName + "_summary-dashboard", true);
   
     if (!(resp.has("updated_at") || (resp.has("statusCode") && resp.get("statusCode").toString().equals("409")))) {
-      LOGGER.log(Level.SEVERE, RESTCodes.ProjectErrorCode.PROJECT_KIBANA_CREATE_DASHBOARD_ERROR.toString() + ", " +
-        "project: " + projectName + ", resp: " + resp.toString(2));
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_KIBANA_CREATE_DASHBOARD_ERROR,
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_KIBANA_CREATE_DASHBOARD_ERROR, Level.SEVERE,
         "project: " + projectName + ", resp: " + resp.toString(2));
     }
   }
@@ -2500,7 +2501,8 @@ public class ProjectController {
     String commonName = certificatesController.extractCNFromCertificate(keyStore, keyStorePwd, projectUser);
 
     if (!projectUser.equals(commonName)) {
-      throw new UserException(RESTCodes.UserErrorCode.CERT_AUTHORIZATION_ERROR, "projectUser:" + projectUser);
+      throw new UserException(RESTCodes.UserErrorCode.CERT_AUTHORIZATION_ERROR, Level.WARNING,
+        "projectUser:" + projectUser);
     }
 
     byte[] userKey;
@@ -2515,14 +2517,15 @@ public class ProjectController {
       ProjectGenericUserCerts projectGenericUserCerts = userCertsFacade
           .findProjectGenericUserCerts(projectUser);
       if (projectGenericUserCerts == null) {
-        throw new UserException(RESTCodes.UserErrorCode.PROJECT_USER_CERT_NOT_FOUND,
+        throw new UserException(RESTCodes.UserErrorCode.PROJECT_USER_CERT_NOT_FOUND, Level.SEVERE,
           "Could not find exactly one certificate for " + projectUser);
       }
       userKey = projectGenericUserCerts.getKey();
     }
 
     if (!Arrays.equals(userKey, keyStore)) {
-      throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_ERROR, "projectUser:" + projectUser);
+      throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_ERROR, Level.SEVERE,
+        "projectUser:" + projectUser);
     }
   }
 
@@ -2624,8 +2627,8 @@ public class ProjectController {
           quotaChanged = true;
         }
       } catch (IOException e) {
-        throw new ProjectException(RESTCodes.ProjectErrorCode.QUOTA_ERROR, "project: " + currentProject.getName(),
-          e.getMessage(), e);
+        throw new ProjectException(RESTCodes.ProjectErrorCode.QUOTA_ERROR,
+          Level.SEVERE, "project: " + currentProject.getName(), e.getMessage(), e);
       } finally {
         if (dfso != null) {
           dfso.close();

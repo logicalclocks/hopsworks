@@ -146,7 +146,7 @@ describe "On #{ENV['OS']}" do
         create_unapproved_user(email: email)
         create_session(email, "Pass123")
         expect_json(successMessage: ->(value){ expect(value).to be_nil})
-        expect_json(errorCode:160039)
+        expect_json(errorCode:160036)
         expect_status(401)
       end
 
@@ -156,7 +156,7 @@ describe "On #{ENV['OS']}" do
         create_role(User.find_by(email: email))
         create_session(email, "Pass123")
         expect_json(successMessage: ->(value){ expect(value).to be_nil})
-        expect_json(errorCode: 160037)
+        expect_json(errorCode: 160034)
         expect_status(401)
       end
 

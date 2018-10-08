@@ -68,6 +68,7 @@ import javax.net.ssl.SSLSession;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Stateless
@@ -91,7 +92,7 @@ public class HopssiteController {
   }
   //********************************************************************************************************************
 
-  private ClientWrapper getClient(String path, Class resultClass) throws DelaException {
+  private ClientWrapper getClient(String path, Class resultClass) {
     String hopsSite = settings.getHOPSSITE();
     return ClientWrapper.httpsInstance(delaStateCtrl.getKeystore(), delaStateCtrl.getTruststore(), 
       delaStateCtrl.getKeystorePassword(), new HopsSiteHostnameVerifier(settings), resultClass)
@@ -108,8 +109,8 @@ public class HopssiteController {
       LOG.log(Settings.DELA_DEBUG, "hops-site:cluster - done {0}", client.getFullPath());
       return result;
     } catch (IllegalStateException ise) {
-      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, DelaException.Source.HOPS_SITE,
-        null, ise.getMessage(), ise);
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
@@ -125,8 +126,8 @@ public class HopssiteController {
       LOG.log(Settings.DELA_DEBUG, "hops-site:cluster - done {0}", client.getFullPath());
       return result;
     } catch (IllegalStateException ise) {
-      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, DelaException.Source.HOPS_SITE,
-        null, ise.getMessage(), ise);
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE,
+        Level.SEVERE, DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
@@ -141,8 +142,8 @@ public class HopssiteController {
       String result = (String) client.doPut();
       LOG.log(Settings.DELA_DEBUG, "hops-site:cluster - done {0}", client.getFullPath());
     } catch (IllegalStateException ise) {
-      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, DelaException.Source.HOPS_SITE,
-        null, ise.getMessage(), ise);
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
@@ -156,8 +157,8 @@ public class HopssiteController {
       String result = (String) client.doPut();
       LOG.log(Settings.DELA_DEBUG, "hops-site:cluster -done {0}", client.getFullPath());
     } catch (IllegalStateException ise) {
-      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, DelaException.Source.HOPS_SITE,
-        null, ise.getMessage(), ise);
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
@@ -174,8 +175,8 @@ public class HopssiteController {
       LOG.log(Settings.DELA_DEBUG, "hops-site:user - done {0}", client.getFullPath());
       return result;
     } catch (IllegalStateException ise) {
-      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, DelaException.Source.HOPS_SITE,
-        null, ise.getMessage(), ise);
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
@@ -189,8 +190,8 @@ public class HopssiteController {
       LOG.log(Settings.DELA_DEBUG, "hops-site:user - done {0}", client.getFullPath());
       return result;
     } catch (IllegalStateException ise) {
-      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, DelaException.Source.HOPS_SITE,
-        null, ise.getMessage(), ise);
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
@@ -204,8 +205,8 @@ public class HopssiteController {
       LOG.log(Settings.DELA_DEBUG, "hops-site:user - done {0}", client.getFullPath());
       return result.getUserId();
     } catch (IllegalStateException ise) {
-      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, DelaException.Source.HOPS_SITE,
-        null, ise.getMessage(), ise);
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
@@ -247,8 +248,8 @@ public class HopssiteController {
       String result = (String) client.doPost();
       return result;
     } catch (IllegalStateException ise) {
-      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, DelaException.Source.HOPS_SITE,
-        null, ise.getMessage(), ise);
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
@@ -262,8 +263,8 @@ public class HopssiteController {
       client.doPost();
       LOG.log(Settings.DELA_DEBUG, "hops-site:dataset - done {0}", client.getFullPath());
     } catch (IllegalStateException ise) {
-      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, DelaException.Source.HOPS_SITE,
-        null, ise.getMessage(), ise);
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
@@ -278,8 +279,8 @@ public class HopssiteController {
       client.doPost();
       LOG.log(Settings.DELA_DEBUG, "hops-site:dataset - done {0}", client.getFullPath());
     } catch (IllegalStateException ise) {
-      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, DelaException.Source.HOPS_SITE,
-        null, ise.getMessage(), ise);
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
@@ -294,8 +295,8 @@ public class HopssiteController {
       client.doPost();
       LOG.log(Settings.DELA_DEBUG, "hops-site:dataset - done {0}", client.getFullPath());
     } catch (IllegalStateException ise) {
-      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, DelaException.Source.HOPS_SITE,
-        null, ise.getMessage(), ise);
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
@@ -311,8 +312,8 @@ public class HopssiteController {
       LOG.log(Settings.DELA_DEBUG, "hops-site:dataset:done -  {0}", client.getFullPath());
       return result;
     } catch (IllegalStateException ise) {
-      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, DelaException.Source.HOPS_SITE,
-        null, ise.getMessage(), ise);
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
@@ -327,8 +328,8 @@ public class HopssiteController {
       LOG.log(Settings.DELA_DEBUG, "hops-site:dataset:done - {0}", client.getFullPath());
       return result;
     } catch (IllegalStateException ise) {
-      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, DelaException.Source.HOPS_SITE,
-        null, ise.getMessage(), ise);
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
@@ -342,8 +343,8 @@ public class HopssiteController {
       LOG.log(Settings.DELA_DEBUG, "hops-site:dataset:done - {0}", client.getFullPath());
       return result;
     } catch (IllegalStateException ise) {
-      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, DelaException.Source.HOPS_SITE,
-        null, ise.getMessage(), ise);
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
@@ -356,8 +357,8 @@ public class HopssiteController {
       String res = (String) client.doPut();
       return "OK".equals(res);
     } catch (IllegalStateException ise) {
-      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, DelaException.Source.HOPS_SITE,
-        null, ise.getMessage(), ise);
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
@@ -368,8 +369,8 @@ public class HopssiteController {
       String res = (String) client.doDelete();
       return "OK".equals(res);
     } catch (IllegalStateException ise) {
-      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, DelaException.Source.HOPS_SITE,
-        null, ise.getMessage(), ise);
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
@@ -384,8 +385,8 @@ public class HopssiteController {
       LOG.log(Settings.DELA_DEBUG, "hops-site:comment:get:all - done {0}", client.getFullPath());
       return Arrays.asList(result);
     } catch (IllegalStateException ise) {
-      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, DelaException.Source.HOPS_SITE,
-        null, ise.getMessage(), ise);
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
@@ -398,8 +399,8 @@ public class HopssiteController {
       client.doPost();
       LOG.log(Settings.DELA_DEBUG, "hops-site:comment:add - done {0}", client.getFullPath());
     } catch (IllegalStateException ise) {
-      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, DelaException.Source.HOPS_SITE,
-        null, ise.getMessage(), ise);
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE,
+        Level.SEVERE, DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
@@ -414,8 +415,8 @@ public class HopssiteController {
       client.doPut();
       LOG.log(Settings.DELA_DEBUG, "hops-site:comment:udpate - done {0}", client.getFullPath());
     } catch (IllegalStateException ise) {
-      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, DelaException.Source.HOPS_SITE,
-        null, ise.getMessage(), ise);
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
@@ -430,8 +431,8 @@ public class HopssiteController {
       client.doPost();
       LOG.log(Settings.DELA_DEBUG, "hops-site:comment:remove - done {0}", client.getFullPath());
     } catch (IllegalStateException ise) {
-      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, DelaException.Source.HOPS_SITE,
-        null, ise.getMessage(), ise);
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
@@ -446,8 +447,8 @@ public class HopssiteController {
       client.doPost();
       LOG.log(Settings.DELA_DEBUG, "hops-site:comment:report - done {0}", client.getFullPath());
     } catch (IllegalStateException ise) {
-      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, DelaException.Source.HOPS_SITE,
-        null, ise.getMessage(), ise);
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
@@ -461,8 +462,8 @@ public class HopssiteController {
       LOG.log(Settings.DELA_DEBUG, "hops-site:rating:get:all - done {0}", client.getFullPath());
       return result;
     } catch (IllegalStateException ise) {
-      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, DelaException.Source.HOPS_SITE,
-        null, ise.getMessage(), ise);
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
@@ -478,8 +479,8 @@ public class HopssiteController {
       LOG.log(Settings.DELA_DEBUG, "hops-site:rating:get:user - done {0}", client.getFullPath());
       return result;
     } catch (IllegalStateException ise) {
-      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, DelaException.Source.HOPS_SITE,
-        null, ise.getMessage(), ise);
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
@@ -493,8 +494,8 @@ public class HopssiteController {
       LOG.log(Settings.DELA_DEBUG, "hops-site:rating:add - done {0}", client.getFullPath());
       return true;
     } catch (IllegalStateException ise) {
-      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, DelaException.Source.HOPS_SITE,
-        null, ise.getMessage(), ise);
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
@@ -506,8 +507,8 @@ public class HopssiteController {
         = getClient(HopsSite.RatingService.getDatasetAllByPublicId() + "/" + publicId, RateDTO.class);
       return (List<RateDTO>) client.doGetGenericType();
     } catch (IllegalStateException ise) {
-      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, DelaException.Source.HOPS_SITE,
-        null, ise.getMessage(), ise);
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
@@ -519,8 +520,8 @@ public class HopssiteController {
       String res = (String) client.doPut();
       return "OK".equals(res);
     } catch (IllegalStateException ise) {
-      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, DelaException.Source.HOPS_SITE,
-        null, ise.getMessage(), ise);
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
@@ -531,8 +532,8 @@ public class HopssiteController {
       String res = (String) client.doDelete();
       return "OK".equals(res);
     } catch (IllegalStateException ise) {
-      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, DelaException.Source.HOPS_SITE,
-        null, ise.getMessage(), ise);
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
@@ -546,8 +547,8 @@ public class HopssiteController {
       LOG.log(Settings.DELA_DEBUG, "hops-site:dataset - done {0}", client.getFullPath());
       return result;
     } catch (IllegalStateException ise) {
-      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, DelaException.Source.HOPS_SITE,
-        null, ise.getMessage(), ise);
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
@@ -558,8 +559,8 @@ public class HopssiteController {
         DatasetDTO.Complete.class);
       return (DatasetDTO.Complete) client.doGet();
     } catch (IllegalStateException ise) {
-      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, DelaException.Source.HOPS_SITE,
-        null, ise.getMessage(), ise);
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
@@ -570,8 +571,8 @@ public class HopssiteController {
         SearchServiceDTO.ItemDetails.class);
       return (SearchServiceDTO.ItemDetails) client.doGet();
     } catch (IllegalStateException ise) {
-      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, DelaException.Source.HOPS_SITE,
-        null, ise.getMessage(), ise);
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
@@ -583,8 +584,8 @@ public class HopssiteController {
       String res = (String) client.doPost();
       return "OK".equals(res);
     } catch (IllegalStateException ise) {
-      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, DelaException.Source.HOPS_SITE,
-        null, ise.getMessage(), ise);
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
@@ -596,8 +597,8 @@ public class HopssiteController {
       String res = (String) client.doPost();
       return "OK".equals(res);
     } catch (IllegalStateException ise) {
-      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, DelaException.Source.HOPS_SITE,
-        null, ise.getMessage(), ise);
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
@@ -607,8 +608,8 @@ public class HopssiteController {
       ClientWrapper client = getClient(HopsSite.DatasetService.datasetPopular(), PopularDatasetJSON.class);
       return (List<PopularDatasetJSON>) client.doGetGenericType();
     } catch (IllegalStateException ise) {
-      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, DelaException.Source.HOPS_SITE,
-        null, ise.getMessage(), ise);
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
@@ -620,8 +621,8 @@ public class HopssiteController {
       String res = (String) client.doPost();
       return "OK".equals(res);
     } catch (IllegalStateException ise) {
-      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, DelaException.Source.HOPS_SITE,
-        null, ise.getMessage(), ise);
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 

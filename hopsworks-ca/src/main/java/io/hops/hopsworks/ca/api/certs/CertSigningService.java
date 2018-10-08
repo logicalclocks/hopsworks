@@ -160,7 +160,8 @@ public class CertSigningService {
       String caCert = Files.toString(caCertFile, Charset.defaultCharset());
       return new CsrDTO(caCert, agentCert, settings.getHadoopVersionedDir());
     } catch (IOException ex) {
-      throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CSR_ERROR, "host: " + hostId, ex.getMessage(), ex);
+      throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CSR_ERROR, Level.SEVERE, "host: " + hostId,
+        ex.getMessage(), ex);
     }
   }
   
@@ -180,9 +181,9 @@ public class CertSigningService {
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NO_CONTENT).entity("Certificate " +
           certificateID + " does not exist").build();
       }
-      throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CSR_ERROR);
+      throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CSR_ERROR, Level.SEVERE);
     } catch (IOException e) {
-      throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CSR_ERROR, null, e.getMessage(), e);
+      throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CSR_ERROR, Level.SEVERE, null, e.getMessage(), e);
     }
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity("Certificate " + certificateID +
@@ -211,7 +212,7 @@ public class CertSigningService {
             new File(settings.getIntermediateCaDir() + "/certs/intermediate.cert.pem"), Charsets.UTF_8);
 
       } catch (IOException | DelaCSRCheckException ex) {
-        throw new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR, null, ex.getMessage(), ex);
+        throw new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR, Level.SEVERE, null, ex.getMessage(), ex);
       }
     }
     

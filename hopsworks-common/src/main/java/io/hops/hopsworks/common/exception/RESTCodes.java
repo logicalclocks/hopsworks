@@ -927,7 +927,7 @@ public class RESTCodes {
     RESTART_ERROR(5,
       "This service has been restarted recently. Please wait a few minutes before trying again.",
       Response.Status.BAD_REQUEST),
-    STOP_SESSIONS_ERROR(6, "You can't stop sessions in another project.", Response.Status.BAD_REQUEST),
+    STOP_SESSIONS_FORBIDDEN(6, "You can't stop sessions in another project.", Response.Status.BAD_REQUEST),
     CREATE_NOTEBOOK_ERROR(7, "Could not create notebook.", Response.Status.BAD_REQUEST);
     
     

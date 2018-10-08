@@ -94,6 +94,8 @@ import io.hops.hopsworks.api.zeppelin.util.SecurityUtils;
 import io.hops.hopsworks.api.zeppelin.util.ZeppelinResource;
 import io.hops.hopsworks.common.dao.project.Project;
 import java.util.LinkedList;
+import java.util.logging.Level;
+
 import org.apache.zeppelin.interpreter.InterpreterResult;
 import org.apache.zeppelin.notebook.NoteInfo;
 import org.apache.zeppelin.notebook.Notebook;
@@ -1103,7 +1105,8 @@ public class NotebookRestApi {
       noteInfo = new NoteInfo(note);
       zeppelinResource.persistToDB(this.project);
     } catch (IOException ex) {
-      throw new ZeppelinException(RESTCodes.ZeppelinErrorCode.CREATE_NOTEBOOK_ERROR, null, ex.getMessage(),ex);
+      throw new ZeppelinException(RESTCodes.ZeppelinErrorCode.CREATE_NOTEBOOK_ERROR, Level.SEVERE, null,
+        ex.getMessage(),ex);
     }
     notebookServer.broadcastNote(note);
     notebookServer.broadcastNoteList(subject, SecurityUtils.getRoles());

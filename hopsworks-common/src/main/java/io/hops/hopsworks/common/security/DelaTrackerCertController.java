@@ -48,6 +48,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.logging.Level;
 
 import static io.hops.hopsworks.common.exception.RESTCodes.DelaCSRErrorCode.AGENTIDNOTFOUND;
 import static io.hops.hopsworks.common.exception.RESTCodes.DelaCSRErrorCode.BADREQUEST;
@@ -85,7 +86,7 @@ public class DelaTrackerCertController {
   private ClusterCert checkCSR(String userEmail, String csr) throws IOException, DelaCSRCheckException{
     Users user = userFacade.findByEmail(userEmail);
     if (user == null || user.getEmail() == null || csr == null || csr.isEmpty()) {
-      throw new DelaCSRCheckException(BADREQUEST);
+      throw new DelaCSRCheckException(BADREQUEST, Level.FINE);
     }
 
     //subject=/C=se/CN=bbc.sics.se/ST=stockholm/L=kista/O=hopsworks/OU=hs/emailAddress=dela1@kth.se
@@ -96,30 +97,30 @@ public class DelaTrackerCertController {
     String organizationName = keyVal.get("O");
     String organizationalUnitName = keyVal.get("OU");
     if (email == null || email.isEmpty() || !email.equals(user.getEmail())) {
-      throw new DelaCSRCheckException(EMAIL);
+      throw new DelaCSRCheckException(EMAIL, Level.FINE);
     }
     if (commonName == null || commonName.isEmpty()) {
-      throw new DelaCSRCheckException(CN);
+      throw new DelaCSRCheckException(CN, Level.FINE);
     }
     if (organizationName == null || organizationName.isEmpty()) {
-      throw new DelaCSRCheckException(O);
+      throw new DelaCSRCheckException(O, Level.FINE);
     }
     if (organizationalUnitName == null || organizationalUnitName.isEmpty()) {
-      throw new DelaCSRCheckException(OU);
+      throw new DelaCSRCheckException(OU, Level.FINE);
     }
 
     ClusterCert clusterCert = clusterCertFacade.getByOrgUnitNameAndOrgName(organizationName, organizationalUnitName);
     if (clusterCert == null) {
-      throw new DelaCSRCheckException(NOTFOUND);
+      throw new DelaCSRCheckException(NOTFOUND, Level.FINE);
     }
     if (clusterCert.getSerialNumber() != null && !clusterCert.getSerialNumber().isEmpty()) {
-      throw new DelaCSRCheckException(SERIALNUMBER);
+      throw new DelaCSRCheckException(SERIALNUMBER, Level.FINE);
     }
     if (!clusterCert.getCommonName().equals(commonName)) {
-      throw new DelaCSRCheckException(CNNOTFOUND);
+      throw new DelaCSRCheckException(CNNOTFOUND, Level.FINE);
     }
     if (!clusterCert.getAgentId().equals(user)) {
-      throw new DelaCSRCheckException(AGENTIDNOTFOUND);
+      throw new DelaCSRCheckException(AGENTIDNOTFOUND, Level.FINE);
     }
     return clusterCert;
   }

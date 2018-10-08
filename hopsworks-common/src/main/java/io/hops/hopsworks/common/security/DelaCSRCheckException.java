@@ -42,20 +42,23 @@ package io.hops.hopsworks.common.security;
 import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.exception.RESTException;
 
+import java.util.logging.Level;
+
 public class DelaCSRCheckException extends RESTException {
-  public DelaCSRCheckException(RESTCodes.DelaCSRErrorCode code) {
-    super(code);
+  public DelaCSRCheckException(RESTCodes.DelaCSRErrorCode code, Level level) {
+    super(code, level);
   }
   
-  public DelaCSRCheckException(RESTCodes.DelaCSRErrorCode code, String usrMsg) {
-    super(code, usrMsg);
+  public DelaCSRCheckException(RESTCodes.DelaCSRErrorCode code, Level level, String usrMsg) {
+    super(code, level, usrMsg);
   }
   
-  public DelaCSRCheckException(RESTCodes.DelaCSRErrorCode code, String usrMsg, String devMsg) {
-    super(code, usrMsg, devMsg);
+  public DelaCSRCheckException(RESTCodes.DelaCSRErrorCode code, Level level, String usrMsg, String devMsg) {
+    super(code, level, usrMsg, devMsg);
   }
   
-  public DelaCSRCheckException(RESTCodes.DelaCSRErrorCode code, String usrMsg, String devMsg, Throwable throwable) {
-    super(code, usrMsg, devMsg, throwable);
+  public DelaCSRCheckException(RESTCodes.DelaCSRErrorCode code, Level level, String usrMsg, String devMsg,
+    Throwable throwable) {
+    super(code, level, usrMsg, devMsg, throwable);
   }
 }

@@ -96,7 +96,7 @@ public class TransferDelaController {
       return result;
     } catch (IllegalStateException ise) {
       logger.log(Level.WARNING, "dela:contact - communication fail{0}", ise.getMessage());
-      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE,
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
         DelaException.Source.DELA, null, ise.getMessage(), ise);
     }
   }
@@ -104,7 +104,7 @@ public class TransferDelaController {
   public void upload(String publicDSId, HopsDatasetDetailsDTO datasetDetails, HDFSResource resource,
     HDFSEndpoint endpoint) throws DelaException {
     if(!delaStateController.transferDelaAvailable()) {
-      throw new DelaException(RESTCodes.DelaErrorCode.DELA_TRANSFER_NOT_AVAILABLE,
+      throw new DelaException(RESTCodes.DelaErrorCode.DELA_TRANSFER_NOT_AVAILABLE, Level.SEVERE,
         DelaException.Source.LOCAL);
     }
     logger.log(Settings.DELA_DEBUG, "{0} upload - transfer");
@@ -119,7 +119,7 @@ public class TransferDelaController {
       SuccessJSON result = rc.doPost();
     } catch (IllegalStateException ise) {
       logger.log(Level.WARNING, "dela communication fail:{0}", ise.getMessage());
-      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE,
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
         DelaException.Source.DELA, null, ise.getMessage(), ise);
     }
   }
@@ -129,7 +129,7 @@ public class TransferDelaController {
     throws DelaException {
 
     if(!delaStateController.transferDelaAvailable()) {
-      throw new DelaException(RESTCodes.DelaErrorCode.DELA_TRANSFER_NOT_AVAILABLE,
+      throw new DelaException(RESTCodes.DelaErrorCode.DELA_TRANSFER_NOT_AVAILABLE, Level.SEVERE,
         DelaException.Source.LOCAL);
     }
     List<AddressJSON> bootstrapAdr = new LinkedList<>();
@@ -148,7 +148,7 @@ public class TransferDelaController {
       SuccessJSON result = rc.doPost();
     } catch (IllegalStateException ise) {
       logger.log(Level.WARNING, "dela communication fail:{0}", ise.getMessage());
-      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE,
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
         DelaException.Source.DELA, null, ise.getMessage(), ise);
     }
   }
@@ -158,7 +158,7 @@ public class TransferDelaController {
     throws DelaException {
 
     if(!delaStateController.transferDelaAvailable()) {
-      throw new DelaException(RESTCodes.DelaErrorCode.DELA_TRANSFER_NOT_AVAILABLE,
+      throw new DelaException(RESTCodes.DelaErrorCode.DELA_TRANSFER_NOT_AVAILABLE, Level.SEVERE,
         DelaException.Source.LOCAL);
     }
     
@@ -173,14 +173,14 @@ public class TransferDelaController {
       SuccessJSON result = rc.doPost();
     } catch (IllegalStateException ise) {
       logger.log(Level.WARNING, "dela communication fail:{0}", ise.getMessage());
-      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE,
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
         DelaException.Source.DELA, null, ise.getMessage(), ise);
     }
   }
 
   public void cancel(String publicDSId) throws DelaException {
     if(!delaStateController.transferDelaAvailable()) {
-      throw new DelaException(RESTCodes.DelaErrorCode.DELA_TRANSFER_NOT_AVAILABLE,
+      throw new DelaException(RESTCodes.DelaErrorCode.DELA_TRANSFER_NOT_AVAILABLE, Level.SEVERE,
         DelaException.Source.LOCAL);
     }
     
@@ -192,15 +192,14 @@ public class TransferDelaController {
         .setPayload(new TorrentId(publicDSId));
       SuccessJSON result = rc.doPost();
     } catch (IllegalStateException ise) {
-      logger.log(Level.WARNING, "dela communication fail:{0}", ise.getMessage());
-      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE,
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
         DelaException.Source.DELA, null, ise.getMessage(), ise);
     }
   }
 
   public HopsContentsSummaryJSON.Contents getContents(List<Integer> projectIds) throws DelaException {
     if(!delaStateController.transferDelaAvailable()) {
-      throw new DelaException(RESTCodes.DelaErrorCode.DELA_TRANSFER_NOT_AVAILABLE,
+      throw new DelaException(RESTCodes.DelaErrorCode.DELA_TRANSFER_NOT_AVAILABLE, Level.WARNING,
         DelaException.Source.LOCAL);
     }
     HopsContentsReqJSON reqContent = new HopsContentsReqJSON(projectIds);
@@ -213,15 +212,14 @@ public class TransferDelaController {
       HopsContentsSummaryJSON.Contents result = rc.doPost().resolve();
       return result;
     } catch (IllegalStateException ise) {
-      logger.log(Level.WARNING, "dela communication fail:{0}", ise.getMessage());
-      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE,
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
         DelaException.Source.DELA, null, ise.getMessage(), ise);
     }
   }
 
   public TorrentExtendedStatusJSON details(TorrentId torrentId) throws DelaException {
     if(!delaStateController.transferDelaAvailable()) {
-      throw new DelaException(RESTCodes.DelaErrorCode.DELA_TRANSFER_NOT_AVAILABLE,
+      throw new DelaException(RESTCodes.DelaErrorCode.DELA_TRANSFER_NOT_AVAILABLE, Level.SEVERE,
         DelaException.Source.LOCAL);
     }
     try {
@@ -233,8 +231,7 @@ public class TransferDelaController {
       TorrentExtendedStatusJSON result = rc.doPost();
       return result;
     } catch (IllegalStateException ise) {
-      logger.log(Level.WARNING, "dela communication fail:{0}", ise.getMessage());
-      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE,
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
         DelaException.Source.DELA, null, ise.getMessage(), ise);
     }
   }
@@ -244,7 +241,7 @@ public class TransferDelaController {
    */
   public Pair<List<String>, List<String>> getContents() throws DelaException {
     if(!delaStateController.transferDelaAvailable()) {
-      throw new DelaException(RESTCodes.DelaErrorCode.DELA_TRANSFER_NOT_AVAILABLE,
+      throw new DelaException(RESTCodes.DelaErrorCode.DELA_TRANSFER_NOT_AVAILABLE, Level.SEVERE,
         DelaException.Source.LOCAL);
     }
     HopsContentsSummaryJSON.Contents contents = TransferDelaController.this.getContents(new LinkedList<>());

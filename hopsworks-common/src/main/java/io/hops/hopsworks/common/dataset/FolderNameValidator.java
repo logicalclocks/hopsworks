@@ -44,6 +44,8 @@ import io.hops.hopsworks.common.exception.DatasetException;
 import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.util.Settings;
 
+import java.util.logging.Level;
+
 /**
  * Validator for folder names. A folder name is valid if:
  * <ul>
@@ -94,7 +96,7 @@ public class FolderNameValidator {
       }
     }
     if (!valid) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NAME_INVALID, reason);
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NAME_INVALID, Level.FINE, reason);
     }
   }
   
@@ -128,7 +130,7 @@ public class FolderNameValidator {
       }
     }
     if (!valid) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NAME_INVALID, reason);
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NAME_INVALID, Level.FINE, reason);
     }
   }
 }

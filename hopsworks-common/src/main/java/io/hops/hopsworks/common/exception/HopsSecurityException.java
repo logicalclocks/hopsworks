@@ -15,21 +15,24 @@
  */
 package io.hops.hopsworks.common.exception;
 
+import java.util.logging.Level;
+
 public class HopsSecurityException extends RESTException {
   
-  public HopsSecurityException(RESTCodes.SecurityErrorCode code) {
-    super(code);
+  public HopsSecurityException(RESTCodes.SecurityErrorCode code, Level level) {
+    super(code, level);
   }
   
-  public HopsSecurityException(RESTCodes.SecurityErrorCode code, String usrMsg) {
-    super(code, usrMsg);
+  public HopsSecurityException(RESTCodes.SecurityErrorCode code, Level level, String usrMsg) {
+    super(code, level, usrMsg);
   }
   
-  public HopsSecurityException(RESTCodes.SecurityErrorCode code, String usrMsg, String devMsg) {
-    super(code, usrMsg, devMsg);
+  public HopsSecurityException(RESTCodes.SecurityErrorCode code, Level level, String usrMsg, String devMsg) {
+    super(code, level, usrMsg, devMsg);
   }
   
-  public HopsSecurityException(RESTCodes.SecurityErrorCode code, String usrMsg, String devMsg, Throwable throwable) {
-    super(code, usrMsg, devMsg, throwable);
+  public HopsSecurityException(RESTCodes.SecurityErrorCode code, Level level, String usrMsg, String devMsg,
+    Throwable throwable) {
+    super(code, level, usrMsg, devMsg, throwable);
   }
 }

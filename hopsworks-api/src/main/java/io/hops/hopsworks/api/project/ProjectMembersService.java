@@ -73,6 +73,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import java.io.IOException;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @RequestScoped
@@ -178,7 +179,7 @@ public class ProjectMembersService {
       throw new IllegalArgumentException("Role was not provided.");
     }
     if (project.getOwner().getEmail().equals(email)) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_OWNER_ROLE_NOT_ALLOWED);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_OWNER_ROLE_NOT_ALLOWED, Level.FINE);
     }
     projectController.updateMemberRole(project, owner, email, role);
 
@@ -206,10 +207,10 @@ public class ProjectMembersService {
     }
     //Data Scientists are only allowed to remove themselves
     if (sc.isUserInRole(AllowedProjectRoles.DATA_SCIENTIST) && !owner.equals(email)) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.MEMBER_REMOVAL_NOT_ALLOWED);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.MEMBER_REMOVAL_NOT_ALLOWED, Level.FINE);
     }
     if (project.getOwner().getEmail().equals(email)) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_OWNER_NOT_ALLOWED);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_OWNER_NOT_ALLOWED, Level.FINE);
     }
     projectController.removeMemberFromTeam(project, owner, email);
 

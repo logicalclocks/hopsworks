@@ -63,6 +63,7 @@ import javax.ejb.TransactionAttributeType;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Stateless
@@ -104,7 +105,7 @@ public class DelaDatasetController {
     try {
       dataset = createDataset(user, project, name, "");
     } catch (DatasetException | HopsSecurityException e) {
-      throw new DelaException(RESTCodes.DelaErrorCode.THIRD_PARTY_ERROR, DelaException.Source.LOCAL, null,
+      throw new DelaException(RESTCodes.DelaErrorCode.THIRD_PARTY_ERROR, Level.SEVERE, DelaException.Source.LOCAL, null,
         e.getMessage(), e);
     }
     dataset.setPublicDsState(Dataset.SharedState.HOPS);
@@ -133,10 +134,10 @@ public class DelaDatasetController {
       Path path = datasetCtrl.getDatasetPath(dataset);
       boolean result = datasetCtrl.deleteDatasetDir(dataset, path, dfs.getDfsOps());
       if (!result) {
-        throw new DelaException(RESTCodes.DelaErrorCode.DATASET_DELETE_ERROR, DelaException.Source.LOCAL);
+        throw new DelaException(RESTCodes.DelaErrorCode.DATASET_DELETE_ERROR, Level.SEVERE, DelaException.Source.LOCAL);
       }
     } catch (IOException ex) {
-      throw new DelaException(RESTCodes.DelaErrorCode.DATASET_DELETE_ERROR, DelaException.Source.LOCAL,
+      throw new DelaException(RESTCodes.DelaErrorCode.DATASET_DELETE_ERROR, Level.SEVERE, DelaException.Source.LOCAL,
         null, ex.getMessage(), ex);
     }
   }

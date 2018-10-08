@@ -49,6 +49,7 @@ import io.hops.hopsworks.dela.DelaHdfsController;
 import io.hops.hopsworks.common.exception.DelaException;
 import io.swagger.annotations.Api;
 import java.util.Optional;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -86,7 +87,7 @@ public class RemoteDelaService {
     LOGGER.log(Settings.DELA_DEBUG, "remote:dela:readme {0}", publicDSId);
     Optional<Dataset> dataset = datasetFacade.findByPublicDsId(publicDSId);
     if (!dataset.isPresent() || !dataset.get().isPublicDs()) {
-      throw new DelaException(RESTCodes.DelaErrorCode.DATASET_DOES_NOT_EXIST,
+      throw new DelaException(RESTCodes.DelaErrorCode.DATASET_DOES_NOT_EXIST, Level.FINE,
         DelaException.Source.REMOTE_DELA);
     }
     FilePreviewDTO result = hdfsDelaCtrl.getPublicReadme(dataset.get());

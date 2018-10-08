@@ -19,21 +19,24 @@ package io.hops.hopsworks.common.serving.tf;
 import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.exception.RESTException;
 
+import java.util.logging.Level;
+
 public class TfServingException extends RESTException {
   
-  public TfServingException(RESTCodes.TfServingErrorCode code) {
-    super(code);
+  public TfServingException(RESTCodes.TfServingErrorCode code, Level level) {
+    super(code, level);
   }
   
-  public TfServingException(RESTCodes.TfServingErrorCode code, String usrMsg) {
-    super(code, usrMsg);
+  public TfServingException(RESTCodes.TfServingErrorCode code, Level level, String usrMsg) {
+    super(code, level, usrMsg);
   }
   
-  public TfServingException(RESTCodes.TfServingErrorCode code, String usrMsg, String devMsg) {
-    super(code, usrMsg, devMsg);
+  public TfServingException(RESTCodes.TfServingErrorCode code, Level level, String usrMsg, String devMsg) {
+    super(code, level, usrMsg, devMsg);
   }
   
-  public TfServingException(RESTCodes.TfServingErrorCode code, String usrMsg, String devMsg, Throwable throwable) {
-    super(code, usrMsg, devMsg, throwable);
+  public TfServingException(RESTCodes.TfServingErrorCode code, Level level, String usrMsg, String devMsg,
+    Throwable throwable) {
+    super(code, level, usrMsg, devMsg, throwable);
   }
 }

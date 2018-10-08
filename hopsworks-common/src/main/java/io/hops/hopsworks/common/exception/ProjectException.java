@@ -16,22 +16,25 @@
 
 package io.hops.hopsworks.common.exception;
 
+import java.util.logging.Level;
+
 public class ProjectException extends RESTException {
   
-  public ProjectException(RESTCodes.ProjectErrorCode code) {
-    super(code);
+  public ProjectException(RESTCodes.ProjectErrorCode code, Level level) {
+    super(code, level);
   }
   
-  public ProjectException(RESTCodes.ProjectErrorCode code, String usrMsg) {
-    super(code, usrMsg);
+  public ProjectException(RESTCodes.ProjectErrorCode code, Level level, String usrMsg) {
+    super(code, level, usrMsg);
   }
   
-  public ProjectException(RESTCodes.ProjectErrorCode code, String usrMsg, String devMsg) {
-    super(code, usrMsg, devMsg);
+  public ProjectException(RESTCodes.ProjectErrorCode code, Level level, String usrMsg, String devMsg) {
+    super(code, level, usrMsg, devMsg);
   }
   
-  public ProjectException(RESTCodes.ProjectErrorCode code, String usrMsg, String devMsg, Throwable throwable) {
-    super(code, usrMsg, devMsg, throwable);
+  public ProjectException(RESTCodes.ProjectErrorCode code, Level level, String usrMsg, String devMsg,
+    Throwable throwable) {
+    super(code, level, usrMsg, devMsg, throwable);
   }
   
 }

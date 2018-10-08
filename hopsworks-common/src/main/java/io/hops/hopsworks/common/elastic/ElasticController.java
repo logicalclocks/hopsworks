@@ -151,7 +151,8 @@ public class ElasticController {
 
     //check if the index are up and running
     if (!this.indexExists(client, Settings.META_INDEX)) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.ELASTIC_INDEX_NOT_FOUND, "index: " + Settings.META_INDEX);
+      throw new ServiceException(RESTCodes.ServiceErrorCode.ELASTIC_INDEX_NOT_FOUND,
+        Level.SEVERE, "index: " + Settings.META_INDEX);
     }
 
     LOG.log(Level.INFO, "Found elastic index, now executing the query.");
@@ -186,10 +187,10 @@ public class ElasticController {
 
       return elasticHits;
     } else {
-      LOG.log(Level.WARNING, "Elasticsearch error code: {0}", response.status().getStatus());
       //something went wrong so throw an exception
       shutdownClient();
-      throw new ServiceException(RESTCodes.ServiceErrorCode.ELASTIC_SERVER_NOT_FOUND);
+      throw new ServiceException(RESTCodes.ServiceErrorCode.ELASTIC_SERVER_NOT_FOUND, Level.WARNING, "Elasticsearch " +
+        "error code: " + response.status().getStatus());
     }
   }
 
@@ -237,10 +238,11 @@ public class ElasticController {
     Client client = getClient();
     //check if the index are up and running
     if (!this.indexExists(client, Settings.META_INDEX)) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.ELASTIC_INDEX_NOT_FOUND, "index: " + Settings.META_INDEX);
+      throw new ServiceException(RESTCodes.ServiceErrorCode.ELASTIC_INDEX_NOT_FOUND,
+        Level.SEVERE, "index: " + Settings.META_INDEX);
     } else if (!this.typeExists(client, Settings.META_INDEX,
         Settings.META_DEFAULT_TYPE)) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.ELASTIC_INDEX_TYPE_NOT_FOUND,
+      throw new ServiceException(RESTCodes.ServiceErrorCode.ELASTIC_INDEX_TYPE_NOT_FOUND, Level.SEVERE,
         "type: " + Settings.META_DEFAULT_TYPE);
     }
 
@@ -272,7 +274,7 @@ public class ElasticController {
     }
 
     shutdownClient();
-    throw new ServiceException(RESTCodes.ServiceErrorCode.ELASTIC_SERVER_NOT_FOUND);
+    throw new ServiceException(RESTCodes.ServiceErrorCode.ELASTIC_SERVER_NOT_FOUND, Level.SEVERE);
   }
 
   public List<ElasticHit> datasetSearch(Integer projectId, String datasetName, String searchTerm)
@@ -280,10 +282,11 @@ public class ElasticController {
     Client client = getClient();
     //check if the indices are up and running
     if (!this.indexExists(client, Settings.META_INDEX)) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.ELASTIC_INDEX_NOT_FOUND, "index: " + Settings.META_INDEX);
+      throw new ServiceException(RESTCodes.ServiceErrorCode.ELASTIC_INDEX_NOT_FOUND,
+        Level.SEVERE, "index: " + Settings.META_INDEX);
     } else if (!this.typeExists(client, Settings.META_INDEX,
         Settings.META_DEFAULT_TYPE)) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.ELASTIC_INDEX_TYPE_NOT_FOUND,
+      throw new ServiceException(RESTCodes.ServiceErrorCode.ELASTIC_INDEX_TYPE_NOT_FOUND, Level.SEVERE,
         "type: " + Settings.META_DEFAULT_TYPE);
     }
 
@@ -325,7 +328,7 @@ public class ElasticController {
     }
 
     shutdownClient();
-    throw new ServiceException(RESTCodes.ServiceErrorCode.ELASTIC_SERVER_NOT_FOUND);
+    throw new ServiceException(RESTCodes.ServiceErrorCode.ELASTIC_SERVER_NOT_FOUND, Level.SEVERE);
   }
 
   public boolean deleteIndex(String index) throws ServiceException {
@@ -353,8 +356,8 @@ public class ElasticController {
 
     boolean acked = getClient().admin().indices().create(new CreateIndexRequest(index)).actionGet().isAcknowledged();
     if (!acked) {
-      LOG.log(Level.SEVERE, "Elastic index:{0} creation could not be acknowledged", index);
-      throw new ServiceException(RESTCodes.ServiceErrorCode.ELASTIC_INDEX_CREATION_ERROR, "index: " + index);
+      throw new ServiceException(RESTCodes.ServiceErrorCode.ELASTIC_INDEX_CREATION_ERROR,  Level.SEVERE,
+        "Elastic index:{0} creation could not be acknowledged. index: " + index);
     }
   }
 
@@ -738,7 +741,9 @@ public class ElasticController {
       try {
         InetAddress.getByName(addr);
       } catch (UnknownHostException ex) {
-        throw new ServiceException(RESTCodes.ServiceErrorCode.ELASTIC_SERVER_NOT_AVAILABLE, null, ex.getMessage(), ex);
+        throw new ServiceException(RESTCodes.ServiceErrorCode.ELASTIC_SERVER_NOT_AVAILABLE, Level.SEVERE, null,
+          ex.getMessage(),
+          ex);
 
       }
     }
@@ -983,12 +988,12 @@ public class ElasticController {
       resp = sendELKReq(templateUrl, params, false);
       foundEntry = (boolean) resp.get("found");
     } catch (Exception ex) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.TENSORBOARD_ELASTIC_INDEX_NOT_FOUND,
+      throw new ProjectException(RESTCodes.ProjectErrorCode.TENSORBOARD_ELASTIC_INDEX_NOT_FOUND, Level.SEVERE,
         "project:" + project.getName()+ ", index: " + elasticId, ex.getMessage(), ex);
     }
 
     if(!foundEntry) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.TENSORBOARD_ELASTIC_INDEX_NOT_FOUND,
+      throw new ProjectException(RESTCodes.ProjectErrorCode.TENSORBOARD_ELASTIC_INDEX_NOT_FOUND, Level.WARNING,
         "project:" + project.getName()+ ", index: " + elasticId);
     }
 

@@ -453,7 +453,7 @@ public class JobService {
 
       }
     } catch (Exception e) {
-      throw new JobException(RESTCodes.JobErrorCode.TENSORBOARD_ERROR, null, e.getMessage(), e);
+      throw new JobException(RESTCodes.JobErrorCode.TENSORBOARD_ERROR, Level.SEVERE, null, e.getMessage(), e);
     } finally {
       if (client != null) {
         dfs.closeDfsClient(client);
@@ -1131,13 +1131,13 @@ public class JobService {
     }
     Execution execution = exeFacade.findByAppId(appId);
     if (execution == null) {
-      throw new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_NOT_FOUND, "AppId: " + appId);
+      throw new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_NOT_FOUND, Level.FINE, "AppId: " + appId);
     }
     if (!execution.getState().isFinalState()) {
-      throw new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_INVALID_STATE, "Job still running.");
+      throw new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_INVALID_STATE, Level.FINE, "Job still running.");
     }
     if (!execution.getJob().getProject().equals(this.project)) {
-      throw new JobException(RESTCodes.JobErrorCode.JOB_ACCESS_ERROR,
+      throw new JobException(RESTCodes.JobErrorCode.JOB_ACCESS_ERROR, Level.FINE,
         "Requested execution does not belong to a job of project: " + project.getName());
     }
 
@@ -1174,25 +1174,25 @@ public class JobService {
     }
     Jobs job = jobFacade.find(jobId);
     if (job == null) {
-      throw new JobException(RESTCodes.JobErrorCode.JOB_NOT_FOUND, "JobId:" + jobId);
+      throw new JobException(RESTCodes.JobErrorCode.JOB_NOT_FOUND, Level.FINE, "JobId:" + jobId);
     }
     SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd HH:mm:ss Z yyyy");
     Date date;
     try {
       date = sdf.parse(submissionTime);
     } catch (ParseException ex) {
-      throw new GenericException(RESTCodes.GenericErrorCode.INCOMPLETE_REQUEST, "Cannot get log. Incorrect submission" +
-        " time. Error offset:"+ex.getErrorOffset(), ex.getMessage(), ex);
+      throw new GenericException(RESTCodes.GenericErrorCode.INCOMPLETE_REQUEST, Level.WARNING,
+        "Cannot get log. Incorrect submission time. Error offset:"+ex.getErrorOffset(), ex.getMessage(), ex);
     }
     Execution execution = exeFacade.findByJobIdAndSubmissionTime(date, job);
     if (execution == null) {
-      throw new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_NOT_FOUND, "JobId " + jobId);
+      throw new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_NOT_FOUND, Level.FINE, "JobId " + jobId);
     }
     if (!execution.getState().isFinalState()) {
-      throw new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_INVALID_STATE, "Job still running.");
+      throw new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_INVALID_STATE, Level.FINE, "Job still running.");
     }
     if (!execution.getJob().getProject().equals(this.project)) {
-      throw new JobException(RESTCodes.JobErrorCode.JOB_ACCESS_ERROR,
+      throw new JobException(RESTCodes.JobErrorCode.JOB_ACCESS_ERROR, Level.FINE,
         "Requested execution does not belong to a job of project: " + project.getName());
     }
 
@@ -1217,19 +1217,19 @@ public class JobService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response retryLogAggregation(@PathParam("appId") String appId,
       @PathParam("type") String type,
-      @Context HttpServletRequest req) throws GenericException, JobException {
+      @Context HttpServletRequest req) throws JobException {
     if (appId == null || appId.isEmpty()) {
       throw new IllegalArgumentException("get log. No ApplicationId.");
     }
     Execution execution = exeFacade.findByAppId(appId);
     if (execution == null) {
-      throw new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_NOT_FOUND, "AppId " + appId);
+      throw new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_NOT_FOUND, Level.FINE, "AppId " + appId);
     }
     if (!execution.getState().isFinalState()) {
-      throw new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_INVALID_STATE, "Job still running.");
+      throw new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_INVALID_STATE, Level.FINE, "Job still running.");
     }
     if (!execution.getJob().getProject().equals(this.project)) {
-      throw new JobException(RESTCodes.JobErrorCode.JOB_ACCESS_ERROR,
+      throw new JobException(RESTCodes.JobErrorCode.JOB_ACCESS_ERROR, Level.FINE,
         "Requested execution does not belong to a job of project: " + project.getName());
     }
 
@@ -1239,13 +1239,13 @@ public class JobService {
     String hdfsUser = hdfsUsersBean.getHdfsUserName(project, user);
     String aggregatedLogPath = settings.getAggregatedLogPath(hdfsUser, appId);
     if (aggregatedLogPath == null) {
-      throw new JobException(RESTCodes.JobErrorCode.LOG_AGGREGATION_NOT_ENABLED);
+      throw new JobException(RESTCodes.JobErrorCode.LOG_AGGREGATION_NOT_ENABLED, Level.WARNING);
     }
     try {
       dfso = dfs.getDfsOps();
       udfso = dfs.getDfsOps(hdfsUser);
       if (!dfso.exists(aggregatedLogPath)) {
-        throw new JobException(RESTCodes.JobErrorCode.LOG_RETRIEVAL_ERROR,
+        throw new JobException(RESTCodes.JobErrorCode.LOG_RETRIEVAL_ERROR, Level.WARNING,
           "This could be caused by the retention policy");
       }
       if (type.equals("out")) {
@@ -1254,7 +1254,7 @@ public class JobService {
             isEmpty()) {
           if (dfso.exists(hdfsLogPath) && dfso.getFileStatus(
               new org.apache.hadoop.fs.Path(hdfsLogPath)).getLen() > 0) {
-            throw new JobException(RESTCodes.JobErrorCode.LOG_RETRIEVAL_ERROR,
+            throw new JobException(RESTCodes.JobErrorCode.LOG_RETRIEVAL_ERROR, Level.WARNING,
               "Destination file is not empty:" + hdfsLogPath);
           } else {
             String[] desiredLogTypes = {"out"};
@@ -1268,8 +1268,8 @@ public class JobService {
               YarnLogUtil.copyAggregatedYarnLogs(udfso, aggregatedLogPath,
                   hdfsLogPath, desiredLogTypes, monitor);
             } catch (IOException | InterruptedException | YarnException ex) {
-              throw new JobException(RESTCodes.JobErrorCode.LOG_RETRIEVAL_ERROR, "Something went wrong during the " +
-                "log aggregation", ex.getMessage(), ex);
+              throw new JobException(RESTCodes.JobErrorCode.LOG_RETRIEVAL_ERROR, Level.SEVERE,
+                "Something went wrong during the log aggregation", ex.getMessage(), ex);
             } finally {
               monitor.close();
             }
@@ -1281,7 +1281,7 @@ public class JobService {
             isEmpty()) {
           if (dfso.exists(hdfsErrPath) && dfso.getFileStatus(
               new org.apache.hadoop.fs.Path(hdfsErrPath)).getLen() > 0) {
-            throw new JobException(RESTCodes.JobErrorCode.LOG_RETRIEVAL_ERROR,
+            throw new JobException(RESTCodes.JobErrorCode.LOG_RETRIEVAL_ERROR, Level.WARNING,
               "Destination file is not empty:" + hdfsErrPath);
           } else {
             String[] desiredLogTypes = {"err", ".log"};
@@ -1294,8 +1294,8 @@ public class JobService {
               YarnLogUtil.copyAggregatedYarnLogs(udfso, aggregatedLogPath,
                   hdfsErrPath, desiredLogTypes, monitor);
             } catch (IOException | InterruptedException | YarnException ex) {
-              throw new JobException(RESTCodes.JobErrorCode.LOG_RETRIEVAL_ERROR, "Something went wrong during the " +
-              "log aggregation", ex.getMessage(), ex);
+              throw new JobException(RESTCodes.JobErrorCode.LOG_RETRIEVAL_ERROR, Level.SEVERE,
+                "Something went wrong during the log aggregation", ex.getMessage(), ex);
             } finally {
               monitor.close();
             }

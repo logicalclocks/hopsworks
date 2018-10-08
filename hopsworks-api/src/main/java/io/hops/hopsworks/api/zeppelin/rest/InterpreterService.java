@@ -67,6 +67,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
+import java.util.logging.Level;
 
 @Path("/zeppelin/{projectID}/interpreter")
 @Stateless
@@ -98,24 +99,24 @@ public class InterpreterService {
     Project project = zeppelinResource.getProject(projectID);
     if (project == null) {
       logger.error("Could not find project in cookies.");
-      throw new ZeppelinException(RESTCodes.ZeppelinErrorCode.PROJECT_NOT_FOUND);
+      throw new ZeppelinException(RESTCodes.ZeppelinErrorCode.PROJECT_NOT_FOUND, Level.FINE);
     }
     Users user = userBean.findByEmail(httpReq.getRemoteUser());
     if (user == null) {
       logger.error("Could not find remote user in request.");
-      throw new ZeppelinException(RESTCodes.ZeppelinErrorCode.USER_NOT_FOUND);
+      throw new ZeppelinException(RESTCodes.ZeppelinErrorCode.USER_NOT_FOUND, Level.FINE);
     }
     if (!httpReq.isUserInRole("HOPS_ADMIN")) {
       String userRole = projectTeamBean.findCurrentRole(project, user);
       if (userRole == null) {
         logger.error("User with no role in this project.");
-        throw new ZeppelinException(RESTCodes.ZeppelinErrorCode.ROLE_NOT_FOUND);
+        throw new ZeppelinException(RESTCodes.ZeppelinErrorCode.ROLE_NOT_FOUND, Level.FINE);
       }
     }
     ZeppelinConfig zeppelinConf = zeppelinConfFactory.getProjectConf(project.getName());
     if (zeppelinConf == null) {
       logger.error("Could not connect to web socket.");
-      throw new ZeppelinException(RESTCodes.ZeppelinErrorCode.WEB_SOCKET_ERROR);
+      throw new ZeppelinException(RESTCodes.ZeppelinErrorCode.WEB_SOCKET_ERROR, Level.FINE);
     }
     interpreterRestApi.setParms(project, user, zeppelinConf);
     return interpreterRestApi;
