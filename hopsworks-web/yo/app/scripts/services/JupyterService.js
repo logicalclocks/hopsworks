@@ -76,6 +76,9 @@ angular.module('hopsWorksApp')
               livySessions: function (projectId) {
                 return $http.get('/api/project/' + projectId + '/jupyter/livy/sessions');
               },
+              stopLivySession: function (projectId, appId) {
+                return $http.delete('/api/project/' + projectId + '/jupyter/livy/sessions/' + appId);
+              },
               stopAdmin: function (projectId, hdfsUsername) {
                 return $http.get('/api/project/' + projectId + '/jupyter/stopAdmin/' + hdfsUsername);
               },
