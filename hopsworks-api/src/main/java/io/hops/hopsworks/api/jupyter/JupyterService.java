@@ -48,7 +48,12 @@ import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.POST;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.Path;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
@@ -96,10 +101,6 @@ import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Level;
 import javax.annotation.security.RolesAllowed;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.core.GenericEntity;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.json.JSONArray;
@@ -208,6 +209,16 @@ public class JupyterService {
     GenericEntity<List<LivyMsg.Session>> livyActive
         = new GenericEntity<List<LivyMsg.Session>>(sessions) { };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(livyActive).build();
+  }
+
+  @DELETE
+  @Path("/livy/sessions/{appId}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  public Response stopLivySession(@PathParam("appId") String appId, @Context SecurityContext sc) throws AppException {
+    String hdfsUsername = getHdfsUser(sc);
+    stopSession(hdfsUsername, sc.getUserPrincipal().getName(), appId);
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 
   /**
@@ -341,7 +352,7 @@ public class JupyterService {
         // We materialize them twice but most probably other operations will need them too, so it is OK
         // Remember to remove both when stopping Jupyter server or an exception is thrown
         certificateMaterializer.materializeCertificatesLocal(user.getUsername(), project.getName());
-      } catch (InterruptedException | IOException ex) {
+      } catch (IOException ex) {
         LOGGER.log(Level.SEVERE, null, ex);
         try {
           certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());
@@ -364,11 +375,6 @@ public class JupyterService {
         if (dfso != null) {
           dfsService.closeDfsClient(dfso);
         }
-      }
-
-      if (dto == null) {
-        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-            "Incomplete request!");
       }
 
       String externalIp = Ip.getHost(req.getRequestURL().toString());
@@ -404,7 +410,7 @@ public class JupyterService {
   public Response stopDataOwner(@PathParam("hdfsUsername") String hdfsUsername,
       @Context SecurityContext sc,
       @Context HttpServletRequest req) throws AppException {
-    stop(hdfsUsername, sc.getUserPrincipal().getName());
+    stopAllSessions(hdfsUsername, sc.getUserPrincipal().getName());
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 
@@ -415,11 +421,11 @@ public class JupyterService {
   public Response stopNotebookServer(@Context SecurityContext sc,
       @Context HttpServletRequest req) throws AppException {
     String hdfsUsername = getHdfsUser(sc);
-    stop(hdfsUsername, sc.getUserPrincipal().getName());
+    stopAllSessions(hdfsUsername, sc.getUserPrincipal().getName());
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 
-  private void stop(String hdfsUser, String loggedinemail) throws AppException {
+  private void stopAllSessions(String hdfsUser, String loggedinemail) throws AppException {
     if (projectId == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
           "Incomplete request!");
@@ -474,28 +480,59 @@ public class JupyterService {
         dfsService.closeDfsClient(dfso);
       }
     }
+    for(LivyMsg.Session session: sessions) {
+      updateRunningExperimentAsKilled(session);
+    }
+  }
 
+  private void stopSession(String hdfsUser, String loggedinemail, String appId) throws AppException {
+    if (projectId == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+          "Incomplete request!");
+    }
+    // We need to stop the jupyter notebook server with the PID
+    // If we can't stop the server, delete the Entity bean anyway
+    JupyterProject jp = jupyterFacade.findByUser(hdfsUser);
+    if (jp == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+          "Could not find Jupyter entry for user: " + hdfsUser);
+    }
+
+    Users user = userFacade.findByEmail(loggedinemail);
+
+    List<LivyMsg.Session> sessions = livyService.
+        getLivySessionsForProjectUser(project, user, ProjectServiceEnum.JUPYTER);
+
+    for(LivyMsg.Session session: sessions) {
+      if(session.getAppId().equalsIgnoreCase(appId)) {
+        livyService.deleteLivySession(session.getId());
+        updateRunningExperimentAsKilled(session);
+        break;
+      }
+    }
+  }
+
+  private void updateRunningExperimentAsKilled(LivyMsg.Session session) {
     try {
       String experimentsIndex = this.project.getName().toLowerCase()
           + "_" + Settings.ELASTIC_EXPERIMENTS_INDEX;
       // when jupyter is shutdown the experiment status should be updated accordingly as KILLED
-      for (LivyMsg.Session session : sessions) {
-        String sessionAppId = session.getAppId();
 
-        String experiment = elasticController.findExperiment(experimentsIndex, sessionAppId);
+      String sessionAppId = session.getAppId();
 
-        JSONObject json = new JSONObject(experiment);
-        json = json.getJSONObject("hits");
-        JSONArray hits = json.getJSONArray("hits");
-        for(int i = 0; i < hits.length(); i++) {
-          JSONObject obj = (JSONObject)hits.get(i);
-          JSONObject source = obj.getJSONObject("_source");
-          String status = source.getString("status");
+      String experiment = elasticController.findExperiment(experimentsIndex, sessionAppId);
 
-          if(status.equalsIgnoreCase(JobState.RUNNING.name())) {
-            source.put("status", "KILLED");
-            elasticController.updateExperiment(experimentsIndex, obj.getString("_id"), source);
-          }
+      JSONObject json = new JSONObject(experiment);
+      json = json.getJSONObject("hits");
+      JSONArray hits = json.getJSONArray("hits");
+      for(int i = 0; i < hits.length(); i++) {
+        JSONObject obj = (JSONObject)hits.get(i);
+        JSONObject source = obj.getJSONObject("_source");
+        String status = source.getString("status");
+
+        if(status.equalsIgnoreCase(JobState.RUNNING.name())) {
+          source.put("status", "KILLED");
+          elasticController.updateExperiment(experimentsIndex, obj.getString("_id"), source);
         }
       }
     } catch(Exception e) {

@@ -591,11 +591,17 @@
                     <span style="margin-left: 10px;">{{jupyterCtrl.val.privateDir}}</span>
                   </div>
                 </div>
+                <div>
+                  <br>
+                  <div>
+                    <span style="margin-left: 10px;">Find the Id of your application from your SparkSession object (i.e spark.sparkContext.applicationId) </span>
+                  </div>
+                </div>
 
 
                 <br/>
                 <div class="row" style="margin-left: 0px">
-                  Automatic Notebook Shutdown in <span style="font-weight: bold;">{{jupyterCtrl.timeLeftInMinutes}} minutes. </span>
+                  Automatic Notebook Shutdown in <span style="font-weight: bold;">{{jupyterCtrl.timeLeftInMinutes}}. </span>
                 </div>
                 <div class="row">  
                   <div class="col-md-2">
@@ -647,30 +653,6 @@
                               </td>
                               <td style="text-align: right">Open Jupyter in a new Tab</td>
                             </tr>
-                            <tr ng-repeat="session in sessions">
-                              <td>                                      
-                                <button
-                                  uib-tooltip="Open the Spark UI for a Livy Session" 
-                                  tooltip-placement="auto right"
-                                  ng-click="jupyterCtrl.showLivyUI(session.appId)"
-                                  type="button" class="btn btn-info btn-sm" >
-                                  <span class="glyphicon glyphicon-eye-open" ></span>
-                                </button>
-                              </td>
-                              <td style="text-align: right">Open UI for {{session.appId}}</td>
-                            </tr>
-                            <!--                        <tr  ng-if="interpreter.interpreter.group === 'tensorflow' && !interpreter.interpreter.notRunning">
-                                                      <td><span>Open TensorBoard UI</span></td>
-                                                      <td style="text-align: right">                                      
-                                                        <button
-                                                                uib-tooltip="Open the TensorBoard UI for an existing TFoS Livy Session" 
-                                                                ng-click="jupyterCtrl.showTensorboardUI()"
-                                                                type="button" class="btn btn-info btn-sm" 
-                                                                ng-disabled="interpreter.interpreter.notRunning">
-                                                          <span class="glyphicon glyphicon-eye-open" ></span>
-                                                        </button>
-                                                      </td>
-                                                    </tr>-->
                             <tr>
                               <td>                                      			  
                                 <button id="shutdownNotebook" tooltip-placement="auto right"
@@ -683,6 +665,41 @@
                               <td style="text-align: right">Shutdown Notebook Server</td>
                             </tr>
                           </tbody>                     
+                        </table>
+                      </md-content>
+                    </md-tab>
+                   </md-tabs>
+                   <md-tabs>
+                    <md-tab label="Active Applications">
+                      <md-content>
+                        <table class="table table-hover ds-sidenav-table" style="width: 100%">
+                          <tbody>
+                          <tr ng-repeat="session in sessions">
+                            <td style="text-align: left">{{session.appId}}</td>
+                            <td>
+                              <button
+                                      uib-tooltip="Open ApplicationUI"
+                                      tooltip-placement="auto right"
+                                      ng-click="jupyterCtrl.showLivyUI(session.appId)"
+                                      type="button" class="btn btn-info btn-sm" >
+                                <span class="glyphicon glyphicon-eye-open" ></span>
+                              </button>
+
+                            <button
+                                    uib-tooltip="Shutdown Application"
+                                    tooltip-placement="auto right"
+                                    ng-click="jupyterCtrl.stopLivySession(session, $index)"
+                                    type="button" class="btn btn-danger btn-sm" >
+                              <span class="glyphicon glyphicon-off" ></span>
+                            </button>
+                            </td>
+                          </tr>
+                          <tr ng-if="sessions == null || sessions.length == 0">
+                            <td>
+                              No running applications
+                            </td>
+                          </tr>
+                          </tbody>
                         </table>
                       </md-content>
                     </md-tab>
