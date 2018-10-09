@@ -36,12 +36,16 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.NoResultException;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Stateless
 public class KafkaServingHelper {
 
   private final static String SCHEMANAME = "inferenceschema";
   private final static int SCHEMAVERSION = 1;
+
+  private final static Logger LOGGER = Logger.getLogger(KafkaServingHelper.class.toString());
 
   @EJB
   private KafkaFacade kafkaFacade;
@@ -104,6 +108,7 @@ public class KafkaServingHelper {
       topicPartitionsDetails = kafkaFacade.getTopicDetailsfromKafkaCluster(serving.getProject(), user,
           serving.getKafkaTopic().getTopicName());
     } catch (Exception e) {
+      LOGGER.log(Level.SEVERE, "Could not retrieve the TopicDTO", e);
       throw new TfServingException(TfServingException.TfServingExceptionErrors.KAFKAGETINFOERROR);
     }
 

@@ -31,7 +31,9 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.inject.Alternative;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -43,6 +45,7 @@ import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import static io.hops.hopsworks.common.hdfs.HdfsUsersController.USER_NAME_DELIMITER;
 
@@ -158,7 +161,7 @@ public class LocalhostTfServingController implements TfServingController {
             oldDbTfServing.getVersion() > dbTfServing.getVersion()) {
           // To update the name and/or the model path we need to restart the server and/or the version as been
           // reduced. We need to restart the server
-          restartTfServingInstance(project, user, oldDbTfServing, serving);
+          restartTfServingInstance(project, user, oldDbTfServing, dbTfServing);
         } else {
           // To update the version call the script and download the new version in the directory
           // the server polls for new versions and it will pick it up.
@@ -350,10 +353,14 @@ public class LocalhostTfServingController implements TfServingController {
 
     ProcessBuilder pb = new ProcessBuilder(shCommnad);
     Process process = null;
+    String processOutput = "";
     try {
       // Send both stdout and stderr to the same stream
       pb.redirectErrorStream(true);
       process = pb.start();
+
+      BufferedReader procOutputReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+      processOutput = procOutputReader.lines().collect(Collectors.joining());
 
       // Wait until the launcher bash script has finished
       process.waitFor();
@@ -381,8 +388,9 @@ public class LocalhostTfServingController implements TfServingController {
       // Startup process failed for some reason
       tfServing.setLocalPid(PID_STOPPED);
       tfServingFacade.updateDbObject(tfServing, project);
-      throw new TfServingException(RESTCodes.TfServingErrorCode.LIFECYCLEERRORINT, Level.SEVERE, null, ex.getMessage(),
+      throw new TfServingException(RESTCodes.TfServingErrorCode.LIFECYCLEERRORINT, Level.SEVERE, null, processOutput,
         ex);
+
     } finally {
       if (settings.getHopsRpcTls()) {
         certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());

@@ -43,7 +43,7 @@ describe "On #{ENV['OS']}" do
       it "should be able to create a kafka topic using the schema" do
         project = get_project
         schema = get_schema
-        json_result, schema_name = add_topic(project.id, schema.name)
+        json_result, schema_name = add_topic(project.id, schema.name, 1)
         expect_status(200)
       end
     end

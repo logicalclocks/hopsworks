@@ -492,9 +492,8 @@ public class ProjectService {
             try {
               f.get();
             } catch (InterruptedException | ExecutionException e) {
-              LOGGER.log(Level.SEVERE, "Error waiting for the futures to enable service: " + s, e);
               throw new ServiceException(RESTCodes.ServiceErrorCode.SERVICE_GENERIC_ERROR,
-                  Level.SEVERE, "service: " + s);
+                  Level.SEVERE, "service: " + s, e.getMessage(), e);
             }
           }
 

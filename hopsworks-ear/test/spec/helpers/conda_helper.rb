@@ -44,7 +44,7 @@ require 'tmpdir'
 module CondaHelper
 
   def wait_for
-    timeout = 600
+    timeout = 30
     start = Time.now
     x = yield
     until x

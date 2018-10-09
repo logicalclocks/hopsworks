@@ -4,6 +4,7 @@ source "https://rubygems.org"
 
 gem "rspec", "3.4.0"
 gem 'airborne', '0.2.5'
+gem 'safe_attributes'
 gem 'activerecord', '4.2.6'
 gem 'mysql2', '0.4.4'
 gem 'net-ssh', '~> 2.1.0'

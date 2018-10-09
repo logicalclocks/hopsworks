@@ -45,7 +45,7 @@ module DatasetHelper
   end
 
   def wait_for
-    timeout = 600
+    timeout = 30
     start = Time.now
     x = yield
     until x

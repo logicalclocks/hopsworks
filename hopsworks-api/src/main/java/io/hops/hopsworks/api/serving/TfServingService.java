@@ -48,6 +48,7 @@ import io.hops.hopsworks.common.serving.tf.TfServingWrapper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import org.elasticsearch.common.Strings;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -161,6 +162,18 @@ public class TfServingService {
       throws TfServingException {
     if (tfServing == null) {
       throw new IllegalArgumentException("tfServing was not provided");
+    }
+
+    if (Strings.isNullOrEmpty(tfServing.getModelName())) {
+      throw new IllegalArgumentException("Model name not provided");
+    }
+
+    if (Strings.isNullOrEmpty(tfServing.getModelPath())) {
+      throw new IllegalArgumentException("Model path not provided");
+    }
+
+    if (tfServing.getModelVersion() == null) {
+      throw new IllegalArgumentException("Model version not provided");
     }
 
     tfServingController.createOrUpdate(project, user, tfServing.getTfServingWrapper());
