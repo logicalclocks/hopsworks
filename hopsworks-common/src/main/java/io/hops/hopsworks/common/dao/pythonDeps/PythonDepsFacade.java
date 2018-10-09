@@ -315,7 +315,7 @@ public class PythonDepsFacade {
   }
 
   public PythonDep getDep(AnacondaRepo repo, MachineType machineType, CondaInstallType installType, String dependency,
-      String version, boolean create, boolean preinstalled) throws AppException {
+      String version, boolean create, boolean preinstalled, CondaStatus status) throws AppException {
     TypedQuery<PythonDep> deps = em.createNamedQuery(
         "PythonDep.findUniqueDependency", PythonDep.class);
     deps.setParameter("dependency", dependency);
@@ -323,6 +323,7 @@ public class PythonDepsFacade {
     deps.setParameter("installType", installType);
     deps.setParameter("repoUrl", repo);
     deps.setParameter("machineType", machineType);
+    deps.setParameter("status", status);
     PythonDep dep = null;
     try {
       dep = deps.getSingleResult();
@@ -335,6 +336,7 @@ public class PythonDepsFacade {
         dep.setPreinstalled(preinstalled);
         dep.setInstallType(installType);
         dep.setMachineType(machineType);
+        dep.setStatus(status);
         em.persist(dep);
         em.flush();
       }
@@ -686,7 +688,7 @@ public class PythonDepsFacade {
       // 1. test if anacondaRepoUrl exists. If not, add it.
       AnacondaRepo repo = getRepo(proj, channelUrl, true);
       // 2. Test if pythonDep exists. If not, add it.
-      PythonDep dep = getDep(repo, machineType, installType, lib, version, true, false);
+      PythonDep dep = getDep(repo, machineType, installType, lib, version, true, false, CondaStatus.SUCCESS);
 
       // 3. Add the python library to the join table for the project
       Collection<PythonDep> depsInProj = proj.getPythonDepCollection();
@@ -728,7 +730,7 @@ public class PythonDepsFacade {
     Hosts host = em.find(Hosts.class, hostId);
 
     AnacondaRepo repo = getRepo(proj, channelUrl, false);
-    PythonDep dep = getDep(repo, machineType, condaInstallType, lib, version, false, false);
+    PythonDep dep = getDep(repo, machineType, condaInstallType, lib, version, false, false, CondaStatus.SUCCESS);
     Future<?> f = kagentExecutorService.submit(new PythonDepsFacade.CondaTask(
         this.web, proj, host, op, dep));
     try {
