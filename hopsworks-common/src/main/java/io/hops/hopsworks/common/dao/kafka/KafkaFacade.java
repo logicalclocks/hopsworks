@@ -141,7 +141,7 @@ public class KafkaFacade {
         ProjectTopics.class);
     query.setParameter("projectId", projectId);
     List<ProjectTopics> res = query.getResultList();
-    List<TopicDTO> topics = null;
+    List<TopicDTO> topics = new ArrayList<>();
     if(res != null && !res.isEmpty()) {
       topics = new ArrayList<>();
       for (ProjectTopics pt : res) {
@@ -168,16 +168,16 @@ public class KafkaFacade {
   public List<PartitionDetailsDTO> getTopicDetails(Project project, Users user,
     String topicName) throws Exception {
     List<TopicDTO> topics = findTopicsByProject(project.getId());
+    List<PartitionDetailsDTO> topicDetailDTO = new ArrayList<>();
     if (topics != null && !topics.isEmpty()) {
-      List<PartitionDetailsDTO> topicDetailDTO;
       for (TopicDTO topic : topics) {
         if (topic.getName().equalsIgnoreCase(topicName)) {
-          topicDetailDTO = getTopicDetailsfromKafkaCluster(project, user, topicName);
+          topicDetailDTO.addAll(getTopicDetailsfromKafkaCluster(project, user, topicName));
           return topicDetailDTO;
         }
       }
     }
-    return null;
+    return topicDetailDTO;
   }
 
   private int getPort(String zkIp) {
@@ -202,9 +202,8 @@ public class KafkaFacade {
     query.setParameter("topicName", topicName);
 
     List<ProjectTopics> resp = query.getResultList();
-    List<Project> projects = null;
+    List<Project> projects =  new ArrayList<>();;
     if (resp != null && !resp.isEmpty()) {
-      projects = new ArrayList<>();
       for (ProjectTopics pt : resp) {
         Project p = em.find(Project.class, pt.getProjectTopicsPK().getProjectId());
         if (p != null) {

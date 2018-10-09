@@ -522,7 +522,7 @@ public class ProjectService {
       @Context HttpServletRequest req)
     throws DatasetException, GenericException, KafkaException, ProjectException, UserException,
     ServiceException, HopsSecurityException {
-    if (Arrays.asList(TourProjectType.values()).contains(TourProjectType.valueOf(type.toUpperCase()))) {
+    if (!Arrays.asList(TourProjectType.values()).contains(TourProjectType.valueOf(type.toUpperCase()))) {
       throw new IllegalArgumentException("Type must be one of: " + Arrays.toString(TourProjectType.values()));
     }
     

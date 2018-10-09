@@ -328,7 +328,8 @@ public class JupyterService {
         } else {
           throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_LOCATION_UNDEFINED, Level.SEVERE);
         }
-        throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_START_ERROR, Level.SEVERE);
+        throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_START_ERROR, Level.SEVERE, ex.getMessage(),
+          null, ex);
       } finally {
         if (dfso != null) {
           dfsService.closeDfsClient(dfso);
