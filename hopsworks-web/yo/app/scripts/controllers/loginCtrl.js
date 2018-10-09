@@ -76,7 +76,7 @@ angular.module('hopsWorksApp')
                         console.log(success);
                         self.otp = success.data.otp;
                         if (success.data.status === 1) {
-                          self.announcement = success.data.message;
+                          self.announcement = success.data.errorMsg;
                         }
                       }, function (error) {
                 self.announcement = '';
@@ -136,7 +136,7 @@ angular.module('hopsWorksApp')
                         error.data.errorMsg !== null) {
                   self.errorMessage = error.data.errorMsg;
                 }
-                growl.error(error.data.message, {title: 'Cannot Login at this moment. Does your Internet work?', ttl: 4000});
+                growl.error(error.data.errorMsg, {title: 'Cannot Login at this moment. Does your Internet work?', ttl: 4000});
               });
             };
 

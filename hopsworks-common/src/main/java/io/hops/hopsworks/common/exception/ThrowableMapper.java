@@ -15,10 +15,12 @@
  */
 package io.hops.hopsworks.common.exception;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.common.util.Settings;
 import org.apache.hadoop.security.AccessControlException;
 
 import javax.ejb.AccessLocalException;
+import javax.ejb.EJBException;
 import javax.persistence.PersistenceException;
 import javax.security.auth.login.LoginException;
 import javax.transaction.RollbackException;
@@ -117,7 +119,16 @@ public abstract class ThrowableMapper implements ExceptionMapper<Throwable> {
   }
   
   public Response handleRESTException(RESTException ex) {
-    logger.log(ex.getLevel(), ex.toString() , ex);
+    if (!(ex.getCause() != null && ex.getCause() instanceof EJBException &&
+      ex.getCause().getMessage() != null && ex.getCause().getMessage().contains("Client not authorized for this " +
+      "invocation"))) {
+      StringBuilder sb = new StringBuilder();
+      sb.append("errorCode=").append(ex.getErrorCode().getCode());
+      if (!Strings.isNullOrEmpty(ex.getUsrMsg())) {
+        sb.append(", usrMsg=").append(ex.getUsrMsg());
+      }
+      logger.log(ex.getLevel(), sb.toString(), ex);
+    }
     return handleRESTException(ex.getErrorCode().getRespStatus(), ex);
   }
   

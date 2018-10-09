@@ -237,7 +237,11 @@ angular.module('hopsWorksApp')
                 } else if (error.data.errorMsg.indexOf("Path not found :") > -1) {
                   self.routeParamArray = [];
                   //$route.updateParams({fileName:''});
-                  growl.error(error.data.usrMsg, {title: error.data.message, ttl: 5000, referenceId: 4});
+                if (typeof error.data.usrMsg !== 'undefined') {
+                    growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 4});
+                } else {
+                    growl.error("Error", {title: error.data.errorMsg, ttl: 5000, referenceId: 4});
+                }
                   getDirContents();
                 }
                 self.working = false;
@@ -260,7 +264,7 @@ angular.module('hopsWorksApp')
                         self.select(self.highlighted.name, self.highlighted, undefined);
                         $scope.search = self.highlighted.name;
                       }, function (error) {
-                growl.error(error.data.userMsg, {title: error.data.message, ttl: 5000, referenceId: 4});
+                growl.error(error.data.userMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 4});
               });
             };
 
@@ -319,7 +323,7 @@ angular.module('hopsWorksApp')
                         growl.success(success.data.successMessage, {title: 'Success', ttl: 1000});
                         getDirContents();
                       }, function (error) {
-                growl.error(error.data.usrMsg, {title: error.data.message, ttl: 5000});
+                growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
               });
             };
 
@@ -387,7 +391,7 @@ angular.module('hopsWorksApp')
                       getDirContents();
                     }, function (error) {
                       self.sharingDataset[id] = false;
-                      growl.error(error.data.usrMsg, {title: error.data.message, ttl: 5000});
+                      growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
                   });
                 }
               );
@@ -410,7 +414,7 @@ angular.module('hopsWorksApp')
                         getDirContents();
                       }, function (error) {
                         self.sharingDataset[id] = false;
-                        growl.error(error.data.usrMsg, {title: error.data.message, ttl: 5000});
+                        growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
                     });
                   }
               );
@@ -434,7 +438,7 @@ angular.module('hopsWorksApp')
                                   growl.success(success.data.successMessage, {title: 'The DataSet is not Public(internet) anymore.', ttl: 1500});
                                   getDirContents();
                                 }, function (error) {
-                          growl.error(error.data.usrMsg, {title: error.data.message, ttl: 5000, referenceId: 4});
+                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 4});
                         });
 
                       }
@@ -450,7 +454,7 @@ angular.module('hopsWorksApp')
                                   growl.success(success.data.successMessage, {title: 'The DataSet is not Public(cluster) anymore.', ttl: 1500});
                                   getDirContents();
                                 }, function (error) {
-                          growl.error(error.data.usrMsg, {title: error.data.message, ttl: 5000, referenceId: 4});
+                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 4});
                         });
 
                       }
@@ -477,7 +481,7 @@ angular.module('hopsWorksApp')
                         growl.success("Refresh your browser when finished",
                                 {title: 'Unzipping in Background', ttl: 5000, referenceId: 4});
                       }, function (error) {
-                growl.error(error.data.usrMsg, {title: error.data.message, ttl: 5000, referenceId: 4});
+                growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 4});
               });
             };
 
@@ -494,7 +498,7 @@ angular.module('hopsWorksApp')
                         growl.success("Refresh your browser when finished",
                                 {title: 'Zipping in Background', ttl: 5000, referenceId: 4});
                       }, function (error) {
-                growl.error(error.data.usrMsg, {title: error.data.message, ttl: 5000, referenceId: 4});
+                growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 4});
               });
             };
 
@@ -544,7 +548,7 @@ angular.module('hopsWorksApp')
                                 {title: 'Converting in Background', ttl: 3000, referenceId: 4});
                         getDirContents();
                       }, function (error) {
-                growl.error(error.data.usrMsg, {title: error.data.message, ttl: 5000, referenceId: 4});
+                growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 4});
               });
             };
            
@@ -601,7 +605,7 @@ angular.module('hopsWorksApp')
                           $scope.readme = conv.makeHtml(content);
                         }, function (error) {
                   //To hide README from UI
-                  growl.error(error.data.usrMsg, {title: error.data.message, ttl: 5000, referenceId: 4});
+                  growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 4});
                   $scope.readme = null;
                 });
               } else {
@@ -627,7 +631,7 @@ angular.module('hopsWorksApp')
                           getDirContents();
                           growl.success('', {title: 'Copied ' + name + ' successfully', ttl: 5000, referenceId: 4});
                         }, function (error) {
-                  growl.error(error.data.usrMsg, {title: error.data.message, ttl: 5000, referenceId: 4});
+                  growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 4});
                 });
               }, function (error) {
               });
@@ -670,7 +674,7 @@ angular.module('hopsWorksApp')
                                       }
                                       //growl.success('',{title: 'Copied successfully', ttl: 5000, referenceId: 4});
                                     }, function (error) {                                      
-                                       growl.error(error.data.usrMsg, {title: error.data.message, ttl: 5000});
+                                       growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
                                        errorCode = error.data.code;
                             });
                             if (errorCode === 110045) {

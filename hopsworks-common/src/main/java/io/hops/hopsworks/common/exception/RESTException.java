@@ -41,10 +41,7 @@ public abstract class RESTException extends Exception implements Serializable {
   }
   
   protected RESTException(RESTCodes.RESTErrorCode errorCode, Level level, String usrMsg, String devMsg) {
-    this.errorCode = errorCode;
-    this.usrMsg = usrMsg;
-    this.devMsg = devMsg;
-    this.level = level;
+    this(errorCode, level, usrMsg, devMsg, null);
   }
   
   protected RESTException(RESTCodes.RESTErrorCode errorCode, Level level, String usrMsg, String devMsg,
@@ -95,11 +92,4 @@ public abstract class RESTException extends Exception implements Serializable {
     return jsonResponse;
   }
   
-  @Override
-  public String toString() {
-    return "{" +
-      "errorCode='" + errorCode.getCode() + '\'' +
-      ", usrMsg=" + usrMsg +
-      '}';
-  }
 }

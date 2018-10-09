@@ -88,6 +88,7 @@ import io.hops.hopsworks.common.exception.HopsSecurityException;
 import io.hops.hopsworks.common.exception.KafkaException;
 import io.hops.hopsworks.common.exception.ProjectException;
 import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.exception.RESTException;
 import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.exception.UserException;
 import io.hops.hopsworks.common.experiments.TensorBoardController;
@@ -394,7 +395,7 @@ public class ProjectController {
       for (ProjectServiceEnum service : projectServices) {
         try {
           addService(project, service, owner, dfso);
-        } catch (ServiceException ex) {
+        } catch (RESTException ex) {
           cleanup(project, sessionId, certsGenerationFuture);
           throw ex;
         }
