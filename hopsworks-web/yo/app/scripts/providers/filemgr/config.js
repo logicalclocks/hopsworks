@@ -24,7 +24,7 @@
             basePath: '/hopsworks',
 
             searchForm: true,
-            sidebar: false,
+            sidebar: true,
             breadcrumb: true,
             allowedActions: {
                 upload: true,
@@ -41,8 +41,8 @@
                 preview: true,
                 remove: true,
                 createFolder: true,
-                pickFiles: false,
-                pickFolders: false
+                pickFiles: true,
+                pickFolders: true
             },
 
             multipleDownloadFileName: 'hopsworks-airflow-dags.zip',
