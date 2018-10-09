@@ -87,20 +87,18 @@ public abstract class ThrowableMapper implements ExceptionMapper<Throwable> {
   }
   
   public Response handleIllegalArgumentException(IllegalArgumentException ex) {
-    return handleRESTException(new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_ARGUMENT, Level.INFO, null,
+    return handleRESTException(new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_ARGUMENT, Level.FINE, null,
       ex.getMessage(), ex));
   }
   
   public Response handleLoginException(LoginException ex) {
     return handleRESTException(new UserException(RESTCodes.UserErrorCode.AUTHENTICATION_FAILURE, Level.SEVERE, null,
-      ex.getMessage(),
-      ex));
+      ex.getMessage(), ex));
   }
   
   public Response handleIllegalStateException(IllegalStateException ex) {
     return handleRESTException(new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_STATE, Level.SEVERE, null,
-      ex.getMessage(),
-      ex));
+      ex.getMessage(), ex));
   }
   
   public Response handleSecurityException(SecurityException ex) {

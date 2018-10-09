@@ -176,7 +176,7 @@ angular.module('hopsWorksApp')
                       } else {
                           growl.error("", {title: error.data.errorMsg, ttl: 5000, referenceId: 1});
 
-                  }
+                      }
               });
             };
 
