@@ -75,6 +75,9 @@ describe "On #{ENV['OS']}" do
       context 'with authentication' do
         before :all do
           with_valid_project
+
+          mkdir("/Projects/#{@project[:projectname]}/Models/mnist/", @user[:username], "#{@project[:projectname]}__Models", 750)
+          copy(TOUR_FILE_LOCATION, "/Projects/#{@project[:projectname]}/Models/mnist/", @user[:username], "#{@project[:projectname]}__Models", 750)
         end
         it "should create the serving without Kafka topic" do
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
@@ -163,7 +166,15 @@ describe "On #{ENV['OS']}" do
               {modelName: "testModel5",
                modelPath: "/Projects/#{@project[:projectname]}/DOESNTEXISTS",
                modelVersion: 1}
-          expect_status(404)
+          expect_status(417)
+        end
+
+        it "should fail to create a serving with a non-standard path - too deep" do
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+              {modelName: "testModel6",
+               modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/1",
+               modelVersion: 1}
+          expect_status(417)
         end
       end
 

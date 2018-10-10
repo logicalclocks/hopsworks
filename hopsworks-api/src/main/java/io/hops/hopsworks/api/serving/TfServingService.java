@@ -44,6 +44,7 @@ import io.hops.hopsworks.common.serving.tf.TfServingCommands;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.serving.tf.TfServingController;
 import io.hops.hopsworks.common.serving.tf.TfServingException;
+import io.hops.hopsworks.common.serving.tf.TfServingModelPathValidator;
 import io.hops.hopsworks.common.serving.tf.TfServingWrapper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -63,6 +64,9 @@ public class TfServingService {
 
   @EJB
   private NoCacheResponse noCacheResponse;
+
+  @EJB
+  private TfServingModelPathValidator tfServingModelPathValidator;
 
   /*
     @POST
@@ -164,16 +168,21 @@ public class TfServingService {
       throw new IllegalArgumentException("tfServing was not provided");
     }
 
+    // Check that the modelName is present
     if (Strings.isNullOrEmpty(tfServing.getModelName())) {
       throw new IllegalArgumentException("Model name not provided");
     }
 
-    if (Strings.isNullOrEmpty(tfServing.getModelPath())) {
-      throw new IllegalArgumentException("Model path not provided");
-    }
-
     if (tfServing.getModelVersion() == null) {
       throw new IllegalArgumentException("Model version not provided");
+    }
+
+    // Check that the modelPath is present
+    if (Strings.isNullOrEmpty(tfServing.getModelPath())) {
+      throw new IllegalArgumentException("Model path not provided");
+    } else {
+      // Check that the modelPath respects the TensorFlow standard
+      tfServingModelPathValidator.validateModelPath(tfServing.getModelPath(), tfServing.getModelVersion());
     }
 
     tfServingController.createOrUpdate(project, user, tfServing.getTfServingWrapper());

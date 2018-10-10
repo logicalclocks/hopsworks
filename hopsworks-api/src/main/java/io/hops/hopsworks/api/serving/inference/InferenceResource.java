@@ -57,8 +57,8 @@ public class InferenceResource {
   @ApiOperation(value = "Make inference")
   public Response infer(
       @ApiParam(value = "Name of the model to query", required = true) @PathParam("modelName") String modelName,
-      @ApiParam(value = "Version fo the model to query", required = false) @PathParam("version") String modelVersion,
-      @ApiParam(value = "Type of query", required = false) @PathParam("verb") String verb,
+      @ApiParam(value = "Version fo the model to query") @PathParam("version") String modelVersion,
+      @ApiParam(value = "Type of query") @PathParam("verb") String verb,
       String inferenceRequestJson) throws InferenceException {
 
     Integer version = null;
