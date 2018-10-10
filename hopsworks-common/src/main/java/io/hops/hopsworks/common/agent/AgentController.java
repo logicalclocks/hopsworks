@@ -239,14 +239,16 @@ public class AgentController {
             commandId, status, command.getInstallType(), command.getMachineType(),
             args, projectName, opType, lib, version, channelUrl);
         
-        if (command.getOp().equals(PythonDepsFacade.CondaOp.CREATE)
-            || command.getOp().equals(PythonDepsFacade.CondaOp.YML)) {
+        if ((command.getOp().equals(PythonDepsFacade.CondaOp.CREATE)
+              || command.getOp().equals(PythonDepsFacade.CondaOp.YML))
+            && (status.equals(PythonDepsFacade.CondaStatus.SUCCESS)
+              || status.equals(PythonDepsFacade.CondaStatus.FAILED))) {
           // Sync only on Hopsworks server
           if (settings.getHopsworksIp().equals(command.getHostId().getHostIp())) {
             final Project projectId = command.getProjectId();
             final String envStr = listCondaEnvironment(projectName);
             final Collection<PythonDep> pythonDeps = synchronizeDependencies(
-                projectId, envStr, projectId.getPythonDepCollection());
+                projectId, envStr, projectId.getPythonDepCollection(), status);
             // Insert all deps in current listing
             pythonDepsFacade.addPythonDepsForProject(projectId, pythonDeps);
           }
@@ -270,7 +272,8 @@ public class AgentController {
                   for (final PythonDep dep : deps) {
                     if (dep.getDependency().equals(command.getLib())) {
                       PythonDep newDep = pythonDepsFacade.getDep(dep.getRepoUrl(), dep.getMachineType(),
-                          command.getInstallType(), command.getLib(), localVersion, true, false);
+                          command.getInstallType(), command.getLib(), localVersion, true, false,
+                          PythonDepsFacade.CondaStatus.FAILED);
                       deps.remove(dep);
                       deps.add(newDep);
                       projectFacade.update(projectId);
@@ -340,7 +343,7 @@ public class AgentController {
    * @throws AppException
    */
   private Collection<PythonDep> synchronizeDependencies(Project project, String condaListStr,
-      Collection<PythonDep> currentlyInstalledPyDeps) throws AppException {
+      Collection<PythonDep> currentlyInstalledPyDeps, PythonDepsFacade.CondaStatus status) throws AppException {
     
     Collection<PythonDep> deps = new ArrayList();
     
@@ -361,19 +364,16 @@ public class AgentController {
         //Special case for tensorflow
         if (libraryName.equals("tensorflow")) {
           PythonDep tensorflowCPU = pythonDepsFacade.getDep(repo, PythonDepsFacade.MachineType.CPU,
-              PythonDepsFacade.CondaInstallType.PIP, libraryName, version, true, true);
-          tensorflowCPU.setStatus(PythonDepsFacade.CondaStatus.SUCCESS);
+              PythonDepsFacade.CondaInstallType.PIP, libraryName, version, true, true, status);
           deps.add(tensorflowCPU);
           PythonDep tensorflowGPU = pythonDepsFacade.getDep(repo, PythonDepsFacade.MachineType.GPU,
-              PythonDepsFacade.CondaInstallType.PIP, libraryName + "-gpu", version, true, true);
-          tensorflowGPU.setStatus(PythonDepsFacade.CondaStatus.SUCCESS);
+              PythonDepsFacade.CondaInstallType.PIP, libraryName + "-gpu", version, true, true, status);
           deps.add(tensorflowGPU);
           continue;
         }
         
         PythonDep pyDep = pythonDepsFacade.getDep(repo, PythonDepsFacade.MachineType.ALL,
-            PythonDepsFacade.CondaInstallType.PIP, libraryName, version, true, true);
-        pyDep.setStatus(PythonDepsFacade.CondaStatus.SUCCESS);
+            PythonDepsFacade.CondaInstallType.PIP, libraryName, version, true, true, status);
         deps.add(pyDep);
         continue;
       }
@@ -381,8 +381,7 @@ public class AgentController {
       if (settings.getProvidedPythonLibraryNames().contains(libraryName)) {
         AnacondaRepo repo = pythonDepsFacade.getRepo(project, "PyPi", true);
         PythonDep pyDep = pythonDepsFacade.getDep(repo, PythonDepsFacade.MachineType.ALL,
-            PythonDepsFacade.CondaInstallType.PIP, libraryName, version, true, false);
-        pyDep.setStatus(PythonDepsFacade.CondaStatus.SUCCESS);
+            PythonDepsFacade.CondaInstallType.PIP, libraryName, version, true, false, status);
         deps.add(pyDep);
       } else {
         for (PythonDep pyDep : currentlyInstalledPyDeps) {
