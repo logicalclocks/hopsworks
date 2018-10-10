@@ -73,9 +73,9 @@ angular.module('hopsWorksApp')
             // We could instead implement a service to get all the available types but this will do it for now
             if ($rootScope.isDelaEnabled) {
               // , 'RSTUDIO'
-              self.projectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'DELA', 'SERVING', 'EXPERIMENTS'];
+              self.projectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'DELA', 'SERVING'];
             } else {
-              self.projectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'SERVING', 'EXPERIMENTS'];
+              self.projectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'SERVING'];
             }
             $scope.activeService = "home";
 
