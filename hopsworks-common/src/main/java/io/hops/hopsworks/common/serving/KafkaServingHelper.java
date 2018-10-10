@@ -25,16 +25,22 @@ import io.hops.hopsworks.common.dao.kafka.TopicDTO;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.serving.TfServing;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.exception.CryptoPasswordNotFoundException;
+import io.hops.hopsworks.common.exception.KafkaException;
+import io.hops.hopsworks.common.exception.ProjectException;
+import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.exception.ServiceException;
+import io.hops.hopsworks.common.exception.UserException;
 import io.hops.hopsworks.common.serving.tf.TfServingException;
 import io.hops.hopsworks.common.serving.tf.TfServingWrapper;
 import io.hops.hopsworks.common.util.Settings;
 import org.apache.commons.lang.RandomStringUtils;
+import org.apache.zookeeper.KeeperException;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
-import javax.persistence.NoResultException;
+import java.io.IOException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -60,7 +66,8 @@ public class KafkaServingHelper {
   }
 
   public void setupKafkaServingTopic(Project project, TfServingWrapper servingWrapper,
-                                     TfServing newDbServing, TfServing oldDbServing) throws TfServingException {
+                                     TfServing newDbServing, TfServing oldDbServing)
+      throws KafkaException, ProjectException, UserException, ServiceException, TfServingException {
 
     if (servingWrapper.getKafkaTopicDTO() != null &&
         servingWrapper.getKafkaTopicDTO().getName() != null &&
@@ -98,19 +105,15 @@ public class KafkaServingHelper {
     return;
   }
 
-  public TopicDTO buildTopicDTO(TfServing serving, Users user) throws TfServingException {
+  public TopicDTO buildTopicDTO(TfServing serving, Users user) throws KafkaException,
+      CryptoPasswordNotFoundException {
     if (serving.getKafkaTopic() == null) {
       return null;
     }
 
     List<PartitionDetailsDTO> topicPartitionsDetails;
-    try {
-      topicPartitionsDetails = kafkaFacade.getTopicDetailsfromKafkaCluster(serving.getProject(), user,
-          serving.getKafkaTopic().getTopicName());
-    } catch (Exception e) {
-      LOGGER.log(Level.SEVERE, "Could not retrieve the TopicDTO", e);
-      throw new TfServingException(TfServingException.TfServingExceptionErrors.KAFKAGETINFOERROR);
-    }
+    topicPartitionsDetails = kafkaFacade.getTopicDetailsfromKafkaCluster(serving.getProject(), user,
+        serving.getKafkaTopic().getTopicName());
 
     return new TopicDTO(serving.getKafkaTopic().getTopicName(),
         topicPartitionsDetails.get(0).getReplicas().size(),
@@ -119,33 +122,36 @@ public class KafkaServingHelper {
         serving.getKafkaTopic().getSchemaTopics().getSchemaTopicsPK().getVersion());
   }
 
-  private ProjectTopics setupKafkaTopic(Project project, TfServingWrapper servingWrapper) throws TfServingException {
+  private ProjectTopics setupKafkaTopic(Project project, TfServingWrapper servingWrapper) throws KafkaException,
+      ServiceException, UserException, ProjectException {
 
     try {
       // Check that the user is not trying to create a topic with  more replicas than brokers.
       if (servingWrapper.getKafkaTopicDTO().getNumOfReplicas() != null &&
           (servingWrapper.getKafkaTopicDTO().getNumOfReplicas() <= 0 ||
               servingWrapper.getKafkaTopicDTO().getNumOfReplicas() > settings.getBrokerEndpoints().size())) {
-        throw new TfServingException(TfServingException.TfServingExceptionErrors.KAFKAERROR);
+        throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_REPLICATION_ERROR, Level.FINE);
 
       } else if (servingWrapper.getKafkaTopicDTO().getNumOfReplicas() == null) {
         // set default value
         servingWrapper.getKafkaTopicDTO().setNumOfReplicas(settings.getKafkaDefaultNumReplicas());
       }
 
-    } catch (AppException a) {
-      throw new TfServingException(TfServingException.TfServingExceptionErrors.KAFKAERROR);
+    } catch (IOException | KeeperException | InterruptedException e) {
+      throw new KafkaException(RESTCodes.KafkaErrorCode.BROKER_METADATA_ERROR, Level.SEVERE,
+          "", e.getMessage(), e);
     }
 
     // Check that the user is not trying to create a topic with negative partitions
     if (servingWrapper.getKafkaTopicDTO().getNumOfPartitions() != null
         && servingWrapper.getKafkaTopicDTO().getNumOfPartitions() <= 0) {
-      throw new TfServingException(TfServingException.TfServingExceptionErrors.KAFKAERROR);
+
+      throw new KafkaException(RESTCodes.KafkaErrorCode.BAD_NUM_PARTITION, Level.SEVERE, "less than 0");
+
     } else if (servingWrapper.getKafkaTopicDTO().getNumOfPartitions() == null) {
       // set default value
       servingWrapper.getKafkaTopicDTO().setNumOfPartitions(settings.getKafkaDefaultNumPartitions());
     }
-
 
     String servingTopicName = getServingTopicName(servingWrapper);
 
@@ -153,37 +159,33 @@ public class KafkaServingHelper {
         servingWrapper.getKafkaTopicDTO().getNumOfPartitions(), SCHEMANAME, SCHEMAVERSION);
 
     ProjectTopics pt = null;
-    try {
-      pt = kafkaFacade.createTopicInProject(project, topicDTO);
+    pt = kafkaFacade.createTopicInProject(project, topicDTO);
 
-      // Add the ACLs for this topic. By default all users should be able to do everything
-      AclDTO aclDto = new AclDTO(project.getName(),
-            Settings.KAFKA_ACL_WILDCARD,
-            "allow", Settings.KAFKA_ACL_WILDCARD, Settings.KAFKA_ACL_WILDCARD,
-            Settings.KAFKA_ACL_WILDCARD);
+    // Add the ACLs for this topic. By default all users should be able to do everything
+    AclDTO aclDto = new AclDTO(project.getName(),
+        Settings.KAFKA_ACL_WILDCARD,
+        "allow", Settings.KAFKA_ACL_WILDCARD, Settings.KAFKA_ACL_WILDCARD,
+        Settings.KAFKA_ACL_WILDCARD);
 
-      kafkaFacade.addAclsToTopic(topicDTO.getName(), project.getId(), aclDto);
-    } catch (AppException ae) {
-      throw new TfServingException(TfServingException.TfServingExceptionErrors.KAFKAERROR);
-    }
+    kafkaFacade.addAclsToTopic(topicDTO.getName(), project.getId(), aclDto);
 
     return pt;
   }
 
   private ProjectTopics checkSchemaRequirements(Project project, TfServingWrapper servingWrapper)
-      throws TfServingException {
-    ProjectTopics topic = null;
-    try {
-      topic = kafkaFacade.findTopicByNameAndProject(project, servingWrapper.getKafkaTopicDTO().getName());
-    } catch (NoResultException e) {
-      // The requested topic does not exists.
-      throw new TfServingException(TfServingException.TfServingExceptionErrors.KAFKAERROR);
+      throws KafkaException, TfServingException {
+    ProjectTopics topic = kafkaFacade.findTopicByNameAndProject(project, servingWrapper.getKafkaTopicDTO().getName());
+
+    if (topic == null) {
+       // The requested topic does not exists.
+      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, Level.FINE,
+          "name: " + servingWrapper.getKafkaTopicDTO().getName());
     }
 
     if (!(topic.getSchemaTopics().getSchemaTopicsPK().getName().equalsIgnoreCase(SCHEMANAME) &&
         topic.getSchemaTopics().getSchemaTopicsPK().getVersion() == SCHEMAVERSION)) {
 
-      throw new TfServingException(TfServingException.TfServingExceptionErrors.KAFKAERROR,
+      throw new TfServingException(RESTCodes.TfServingErrorCode.BAD_TOPIC, Level.INFO,
           SCHEMANAME + " required. Version: " + String.valueOf(SCHEMAVERSION));
     }
 

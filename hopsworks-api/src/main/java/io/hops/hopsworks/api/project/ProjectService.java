@@ -49,7 +49,6 @@ import io.hops.hopsworks.api.pythonDeps.PythonDepsService;
 import io.hops.hopsworks.api.serving.inference.InferenceResource;
 import io.hops.hopsworks.api.tensorflow.TensorBoardService;
 import io.hops.hopsworks.api.serving.TfServingService;
-import io.hops.hopsworks.api.tensorflow.TensorBoardService;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.api.util.LocalFsService;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;

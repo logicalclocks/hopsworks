@@ -133,7 +133,7 @@ public class KafkaController {
     }
   }
   
-  public void removeProjectMemberFromTopics(Project project, Users user) {
+  public void removeProjectMemberFromTopics(Project project, Users user) throws ProjectException {
     //Get all topics (shared with project as well)
     List<SharedTopics> sharedTopics = kafkaFacade.findSharedTopicsByProject(project.getId());
     //For every topic that has been shared with the current project, add the new member to its ACLs
@@ -145,8 +145,8 @@ public class KafkaController {
     }
 
     if (!projectSharedTopics.isEmpty()) {
-      for (Integer sharedProjectTopic: projectSharedTopics) {
-        kafkaFacade.removeAclsForUser(user, sharedProjectTopic);
+      for (Integer projectSharedTopic : projectSharedTopics) {
+        kafkaFacade.removeAclsForUser(user, projectSharedTopic);
       }
     }
 

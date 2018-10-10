@@ -20,6 +20,7 @@ import com.twitter.bijection.Injection;
 import com.twitter.bijection.avro.GenericAvroCodecs;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.serving.TfServing;
+import io.hops.hopsworks.common.exception.CryptoPasswordNotFoundException;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
@@ -40,6 +41,7 @@ import javax.ejb.Asynchronous;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import java.io.File;
+import java.io.IOException;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -82,8 +84,7 @@ public class KafkaInferenceLogger implements InferenceLogger {
   @Override
   @Asynchronous
   public void logInferenceRequest(TfServing serving, String inferenceRequest,
-                                  Integer responseHttpCode, String inferenceResponse)
-      throws Exception {
+                                  Integer responseHttpCode, String inferenceResponse) {
 
     if (serving.getKafkaTopic() == null) {
       // nothing to log
@@ -91,7 +92,13 @@ public class KafkaInferenceLogger implements InferenceLogger {
     }
 
     // Setup the producer for the given project
-    setupProducer(serving.getProject());
+    try {
+      setupProducer(serving.getProject());
+    } catch (IOException | CryptoPasswordNotFoundException e) {
+      LOGGER.log(Level.FINE, "Failed to setup the produce for the project: "
+          + serving.getProject().getName() , e);
+      // We didn't manage to write the log to Kafka, nothing we can do.
+    }
 
     // Create and populate the GenericRecord
     GenericData.Record inferenceRecord = new GenericData.Record(schema);
@@ -121,7 +128,7 @@ public class KafkaInferenceLogger implements InferenceLogger {
   }
 
 
-  private void setupProducer(Project project) throws Exception {
+  private void setupProducer(Project project) throws IOException, CryptoPasswordNotFoundException {
     certificateMaterializer.materializeCertificatesLocal(SERVING_MANAGER_USERNAME, project.getName());
     CertificateMaterializer.CryptoMaterial cryptoMaterial =
         certificateMaterializer.getUserMaterial(SERVING_MANAGER_USERNAME, project.getName());

@@ -558,7 +558,7 @@ public class RESTCodes {
     TENSORFLOW_VERSION_NOT_SUPPORTED(41,
       "We currently do not support this version of TensorFlow. Update to a " +
         "newer version or contact an admin", Response.Status.BAD_REQUEST),
-    SERVICE_GENERIC_ERROR(41, "Generic error while enabling the service",
+    SERVICE_GENERIC_ERROR(42, "Generic error while enabling the service",
         Response.Status.INTERNAL_SERVER_ERROR);
     
     private Integer code;
@@ -598,7 +598,7 @@ public class RESTCodes {
     
     // Zeppelin
     TOPIC_NOT_FOUND(0, "No topics found", Response.Status.NOT_FOUND),
-    BROKER_METADATA_ERROR(1, "An error occured while retrieving topic metadata from broker",
+    BROKER_METADATA_ERROR(1, "An error occurred while retrieving topic metadata from broker",
       Response.Status.INTERNAL_SERVER_ERROR),
     TOPIC_ALREADY_EXISTS(2, "Kafka topic already exists in database. Pick a different topic name",
       Response.Status.CONFLICT),
@@ -610,7 +610,7 @@ public class RESTCodes {
         "that can be created for this project.", Response.Status.PRECONDITION_FAILED),
     TOPIC_REPLICATION_ERROR(5, "Maximum topic replication factor exceeded", Response.Status.BAD_REQUEST),
     SCHEMA_NOT_FOUND(6, "Topic has not schema attached to it.", Response.Status.NOT_FOUND),
-    KAFKA_GENERIC_ERROR(7, "An error occured while retrieving information from Kafka service",
+    KAFKA_GENERIC_ERROR(7, "An error occurred while retrieving information from Kafka service",
       Response.Status.INTERNAL_SERVER_ERROR),
     DESTINATION_PROJECT_IS_TOPIC_OWNER(8, "Destination projet is topic owner",
       Response.Status.BAD_REQUEST),
@@ -619,7 +619,9 @@ public class RESTCodes {
     ACL_ALREADY_EXISTS(11, "ACL already exists.", Response.Status.CONFLICT),
     ACL_NOT_FOUND(12, "ACL not found.", Response.Status.NOT_FOUND),
     ACL_NOT_FOR_TOPIC(13, "ACL does not belong to the specified topic", Response.Status.BAD_REQUEST),
-    SCHEMA_IN_USE(14, "Schema is currently used by topics. topic", Response.Status.PRECONDITION_FAILED);
+    SCHEMA_IN_USE(14, "Schema is currently used by topics. topic", Response.Status.PRECONDITION_FAILED),
+    BAD_NUM_PARTITION(15, "Invalid number of partitions", Response.Status.BAD_REQUEST);
+
     
     private Integer code;
     private String message;
@@ -1061,7 +1063,9 @@ public class RESTCodes {
     PATHNOTFOUND(6, "Model Path not found", Response.Status.BAD_REQUEST),
     COMMANDNOTRECOGNIZED(7, "Command not recognized", Response.Status.BAD_REQUEST),
     COMMANDNOTPROVIDED(8, "Command not provided", Response.Status.BAD_REQUEST),
-    SPECNOTPROVIDED(9, "TFServing spec not provided", Response.Status.BAD_REQUEST);
+    SPECNOTPROVIDED(9, "TFServing spec not provided", Response.Status.BAD_REQUEST),
+    BAD_TOPIC(10, "Topic provided cannot be used for Serving logging", Response.Status.BAD_REQUEST);
+
     
     private Integer code;
     private String message;

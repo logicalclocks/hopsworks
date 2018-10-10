@@ -408,7 +408,7 @@ public class ProjectController {
         failedMembers = new ArrayList<>();
         failedMembers.addAll(addMembers(project, owner.getEmail(), projectDTO.getProjectTeam()));
       } catch (KafkaException | UserException | ProjectException | EJBException ex) {
-        cleanup(project, sessionId, projectCreationFuturesj);
+        cleanup(project, sessionId, projectCreationFutures);
         throw ex;
       }
       LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 9 (members): {0}", System.currentTimeMillis() - startTime);
@@ -782,7 +782,7 @@ public class ProjectController {
    * Add to the project the serving manager. The user responsible of writing the inference logs to kafka
    * @param project
    */
-  private Future<CertificatesController.CertsResult> addServingManager(Project project) throws Exception {
+  private Future<CertificatesController.CertsResult> addServingManager(Project project) throws HopsSecurityException {
     // Add the Serving Manager user to the project team
     Users servingManagerUser = userFacade.findByUsername(KafkaInferenceLogger.SERVING_MANAGER_USERNAME);
     ProjectTeamPK stp = new ProjectTeamPK(project.getId(), servingManagerUser.getEmail());
@@ -791,7 +791,15 @@ public class ProjectController {
     st.setTimestamp(new Date());
     projectTeamFacade.persistProjectTeam(st);
     // Create the certificate for this project user
-    return certificatesController.generateCertificates(project, servingManagerUser, false);
+    Future<CertificatesController.CertsResult> certsResultFuture = null;
+    try {
+      certsResultFuture = certificatesController.generateCertificates(project, servingManagerUser, false);
+    } catch (Exception e) {
+      throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_CREATION_ERROR, Level.SEVERE,
+          "project: " + project.getName() + "owner: servingmanager" , e.getMessage(), e);
+    }
+
+    return certsResultFuture;
   }
 
   /**

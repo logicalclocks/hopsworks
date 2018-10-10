@@ -18,20 +18,28 @@ package io.hops.hopsworks.common.serving.tf;
 
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.exception.CryptoPasswordNotFoundException;
+import io.hops.hopsworks.common.exception.KafkaException;
+import io.hops.hopsworks.common.exception.ProjectException;
+import io.hops.hopsworks.common.exception.ServiceException;
+import io.hops.hopsworks.common.exception.UserException;
 
 import java.util.List;
 
 public interface TfServingController {
 
-  List<TfServingWrapper> getTfServings(Project project, Users user) throws TfServingException;
+  List<TfServingWrapper> getTfServings(Project project, Users user)
+      throws TfServingException, KafkaException, CryptoPasswordNotFoundException;
 
-  TfServingWrapper getTfServing(Project project, Integer id, Users user) throws TfServingException;
+  TfServingWrapper getTfServing(Project project, Integer id, Users user)
+      throws TfServingException, KafkaException, CryptoPasswordNotFoundException;
 
   void deleteTfServing(Project project, Integer id) throws TfServingException;
 
   void deleteTfServings(Project project) throws TfServingException;
 
-  void createOrUpdate(Project project, Users user, TfServingWrapper newTfServing) throws TfServingException;
+  void createOrUpdate(Project project, Users user, TfServingWrapper newTfServing)
+      throws KafkaException, UserException, ProjectException, ServiceException, TfServingException;
 
   void startOrStop(Project project, Users user, Integer tfServingId, TfServingCommands command)
       throws TfServingException;

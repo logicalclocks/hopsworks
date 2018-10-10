@@ -120,7 +120,7 @@ public class KafkaFacade {
 
   private static final String COLON_SEPARATOR = ":";
   public static final String SLASH_SEPARATOR = "//";
-  private static final String KAFKA_SECURITY_PROTOCOL = "SSL";
+  public static final String KAFKA_SECURITY_PROTOCOL = "SSL";
   private static final String KAFKA_BROKER_EXTERNAL_PROTOCOL = "EXTERNAL";
   private static final String PROJECT_DELIMITER = "__";
   public static final String DLIMITER = "[\"]";
@@ -157,10 +157,14 @@ public class KafkaFacade {
   }
 
   public ProjectTopics findTopicByNameAndProject(Project project, String topicName) {
-    return em.createNamedQuery("ProjectTopics.findByProjectAndTopicName", ProjectTopics.class)
-        .setParameter("project", project)
-        .setParameter("topicName", topicName)
-        .getSingleResult();
+    try {
+      return em.createNamedQuery("ProjectTopics.findByProjectAndTopicName", ProjectTopics.class)
+          .setParameter("project", project)
+          .setParameter("topicName", topicName)
+          .getSingleResult();
+    } catch (NoResultException e) {
+      return null;
+    }
   }
 
   /**
@@ -845,7 +849,7 @@ public class KafkaFacade {
     }
   }
 
-  private List<PartitionDetailsDTO> getTopicDetailsfromKafkaCluster(
+  public List<PartitionDetailsDTO> getTopicDetailsfromKafkaCluster(
       Project project, Users user, String topicName) throws KafkaException, CryptoPasswordNotFoundException {
   
     Set<String> brokers = settings.getKafkaBrokers();
