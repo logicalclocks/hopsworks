@@ -42,6 +42,7 @@ import io.hops.hopsworks.common.dao.host.Hosts;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
+import io.hops.hopsworks.common.exception.GenericException;
 import io.hops.hopsworks.common.exception.ProjectException;
 import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.exception.ServiceException;
@@ -58,6 +59,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
+import javax.ws.rs.core.Response;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -277,10 +279,11 @@ public class PythonDepsFacade {
     }
     return null;
   }
-
-  public AnacondaRepo getRepo(String channelUrl, boolean create) throws ServiceException {
+  
+  public AnacondaRepo getRepo(Project proj, String channelUrl, boolean create)
+    throws ServiceException {
     TypedQuery<AnacondaRepo> query = em.createNamedQuery(
-        "AnacondaRepo.findByUrl", AnacondaRepo.class);
+      "AnacondaRepo.findByUrl", AnacondaRepo.class);
     query.setParameter("url", channelUrl);
     AnacondaRepo repo = null;
     try {
@@ -292,16 +295,16 @@ public class PythonDepsFacade {
         em.persist(repo);
         em.flush();
       }
-
+      
     }
     if (repo == null) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_REPO_ERROR, Level.SEVERE);
     }
     return repo;
   }
-
+  
   public PythonDep getDep(AnacondaRepo repo, MachineType machineType, CondaInstallType installType, String dependency,
-      String version, boolean create, boolean preinstalled) throws ServiceException {
+      String version, boolean create, boolean preinstalled, CondaStatus status) throws ServiceException {
     TypedQuery<PythonDep> deps = em.createNamedQuery(
         "PythonDep.findUniqueDependency", PythonDep.class);
     deps.setParameter("dependency", dependency);
@@ -309,6 +312,7 @@ public class PythonDepsFacade {
     deps.setParameter("installType", installType);
     deps.setParameter("repoUrl", repo);
     deps.setParameter("machineType", machineType);
+    deps.setParameter("status", status);
     PythonDep dep = null;
     try {
       dep = deps.getSingleResult();
@@ -321,6 +325,7 @@ public class PythonDepsFacade {
         dep.setPreinstalled(preinstalled);
         dep.setInstallType(installType);
         dep.setMachineType(machineType);
+        dep.setStatus(status);
         em.persist(dep);
         em.flush();
       }
@@ -605,14 +610,14 @@ public class PythonDepsFacade {
   }
 
   public void addLibrary(Project proj, CondaInstallType installType, MachineType machineType,
-      String channelUrl, String dependency, String version) throws ServiceException, ProjectException {
+      String channelUrl, String dependency, String version) throws ServiceException, GenericException {
     checkForOngoingEnvOp(proj);
     condaOp(CondaOp.INSTALL, installType, machineType, proj, channelUrl, dependency, version);
   }
 
   public void upgradeLibrary(Project proj, CondaInstallType installType, MachineType machineType, String channelUrl,
       String dependency,
-      String version) throws ServiceException, ProjectException {
+      String version) throws ServiceException, GenericException {
     checkForOngoingEnvOp(proj);
     condaOp(CondaOp.UPGRADE, installType, machineType, proj, channelUrl, dependency, version);
   }
@@ -629,59 +634,65 @@ public class PythonDepsFacade {
 
   public void uninstallLibrary(Project proj, CondaInstallType installType, MachineType machineType, String channelUrl,
       String dependency,
-      String version) throws ServiceException, ProjectException {
+      String version) throws ServiceException, GenericException {
     checkForOngoingEnvOp(proj);
     condaOp(CondaOp.UNINSTALL, installType, machineType, proj, channelUrl, dependency, version);
   }
   
   private void condaOp(CondaOp op, CondaInstallType installType, MachineType machineType, Project proj,
-    String channelUrl, String lib, String version) throws ServiceException, ProjectException {
+    String channelUrl, String lib, String version) throws ServiceException, GenericException {
     
     List<Hosts> hosts = hostsFacade.getCondaHosts(machineType);
-    if (hosts.isEmpty()) {
+    if (hosts.size() == 0) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.HOST_TYPE_NOT_FOUND, Level.INFO,
         "capability:" + machineType.name());
     }
     
-    // 1. test if anacondaRepoUrl exists. If not, add it.
-    AnacondaRepo repo = getRepo(channelUrl, true);
-    // 2. Test if pythonDep exists. If not, add it.
-    PythonDep dep = getDep(repo, machineType, installType, lib, version, true, false);
-    
-    // 3. Add the python library to the join table for the project
-    Collection<PythonDep> depsInProj = proj.getPythonDepCollection();
-    if (depsInProj.contains(dep)) {
-      if (op == CondaOp.INSTALL) {
-        throw new ProjectException(RESTCodes.ProjectErrorCode.PYTHON_LIB_ALREADY_INSTALLED, Level.INFO,
-          "dep: " + dep.getDependency());
+    try {
+      // 1. test if anacondaRepoUrl exists. If not, add it.
+      AnacondaRepo repo = getRepo(proj, channelUrl, true);
+      // 2. Test if pythonDep exists. If not, add it.
+      PythonDep dep = getDep(repo, machineType, installType, lib, version, true, false, CondaStatus.SUCCESS);
+      
+      // 3. Add the python library to the join table for the project
+      Collection<PythonDep> depsInProj = proj.getPythonDepCollection();
+      if (depsInProj.contains(dep)) {
+        if (op == CondaOp.INSTALL) {
+          throw new ProjectException(RESTCodes.ProjectErrorCode.PYTHON_LIB_ALREADY_INSTALLED, Level.FINE,
+            "dep: " + dep.getDependency());
+        }
+        depsInProj.remove(dep);
+      } else if (op == CondaOp.UNINSTALL || op == CondaOp.UPGRADE) {
+        throw new ProjectException(RESTCodes.ProjectErrorCode.PYTHON_LIB_NOT_INSTALLED, Level.INFO, "op: " + op);
       }
-      depsInProj.remove(dep);
-    } else if (op == CondaOp.UNINSTALL || op == CondaOp.UPGRADE) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PYTHON_LIB_NOT_INSTALLED, Level.INFO, "op: " + op);
-    }
-    if (op == CondaOp.INSTALL || op == CondaOp.UPGRADE) {
-      depsInProj.add(dep);
-    }
-    proj.setPythonDepCollection(depsInProj);
-    em.merge(proj);
-    // This flush keeps the transaction state alive - don't want it to timeout
-    em.flush();
-    
-    for (Hosts h : hosts) {
-      CondaCommands cc = new CondaCommands(h, settings.getAnacondaUser(),
-        op, CondaStatus.NEW, installType, machineType, proj, lib,
-        version, channelUrl, new Date(), "", null);
-      em.persist(cc);
+      if (op == CondaOp.INSTALL || op == CondaOp.UPGRADE) {
+        depsInProj.add(dep);
+      }
+      proj.setPythonDepCollection(depsInProj);
+      em.merge(proj);
+      // This flush keeps the transaction state alive - don't want it to timeout
+      em.flush();
+      
+      for (Hosts h : hosts) {
+        CondaCommands cc = new CondaCommands(h, settings.getAnacondaUser(),
+          op, CondaStatus.NEW, installType, machineType, proj, lib,
+          version, channelUrl, new Date(), "", null);
+        em.persist(cc);
+      }
+      //      kagentCalls(hosts, op, proj, dep);
+    } catch (Exception ex) {
+      throw new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR, Level.SEVERE, "condaOp failed",
+        ex.getMessage(), ex);
     }
   }
-
+  
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public void blockingCondaOp(int hostId, CondaOp op, CondaInstallType condaInstallType,
       MachineType machineType, Project proj, String channelUrl, String lib, String version) throws ServiceException {
     Hosts host = em.find(Hosts.class, hostId);
 
-    AnacondaRepo repo = getRepo(channelUrl, false);
-    PythonDep dep = getDep(repo, machineType, condaInstallType, lib, version, false, false);
+    AnacondaRepo repo = getRepo(proj, channelUrl, false);
+    PythonDep dep = getDep(repo, machineType, condaInstallType, lib, version, false, false, CondaStatus.SUCCESS);
     Future<?> f = kagentExecutorService.submit(new PythonDepsFacade.CondaTask(
         this.web, proj, host, op, dep));
     try {
