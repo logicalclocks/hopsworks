@@ -91,11 +91,13 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -696,6 +698,11 @@ public class PythonDepsService {
         try (DataInputStream dis = new DataInputStream(udfso.open(fullPath))) {
           dis.readFully(ymlFileInBytes, 0, (int) fileSize);
           String ymlFileContents = new String(ymlFileInBytes);
+
+          ymlFileContents = Arrays.stream(ymlFileContents.split(System.lineSeparator()))
+              .filter(line -> !line.contains("mmlspark=="))
+              .collect(Collectors.joining(System.lineSeparator()));
+
           return ymlFileContents;
         }
       } else {
