@@ -56,6 +56,7 @@ import io.hops.hopsworks.common.dao.pythonDeps.Version;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.DatasetException;
+import io.hops.hopsworks.common.exception.GenericException;
 import io.hops.hopsworks.common.exception.ProjectException;
 import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.exception.ServiceException;
@@ -301,7 +302,7 @@ public class PythonDepsService {
   @Produces(MediaType.APPLICATION_JSON)
   @Path("/remove")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response remove(PythonDepJson library) throws ServiceException, ProjectException {
+  public Response remove(PythonDepJson library) throws ServiceException, GenericException {
   
     if (settings.getPreinstalledPythonLibraryNames().contains(library.getLib())) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_DEP_REMOVE_FORBIDDEN, Level.INFO,
@@ -329,7 +330,7 @@ public class PythonDepsService {
   @Path("/install")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @TransactionAttribute(TransactionAttributeType.REQUIRED)
-  public Response install(PythonDepJson library) throws ServiceException, ProjectException {
+  public Response install(PythonDepJson library) throws ServiceException, GenericException {
 
     if(settings.getPreinstalledPythonLibraryNames().contains(library.getLib())) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_DEP_INSTALL_FORBIDDEN, Level.INFO,

@@ -59,7 +59,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
-import javax.ws.rs.core.Response;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -280,7 +279,7 @@ public class PythonDepsFacade {
     return null;
   }
   
-  public AnacondaRepo getRepo(Project proj, String channelUrl, boolean create)
+  public AnacondaRepo getRepo(String channelUrl, boolean create)
     throws ServiceException {
     TypedQuery<AnacondaRepo> query = em.createNamedQuery(
       "AnacondaRepo.findByUrl", AnacondaRepo.class);
@@ -650,7 +649,7 @@ public class PythonDepsFacade {
     
     try {
       // 1. test if anacondaRepoUrl exists. If not, add it.
-      AnacondaRepo repo = getRepo(proj, channelUrl, true);
+      AnacondaRepo repo = getRepo(channelUrl, true);
       // 2. Test if pythonDep exists. If not, add it.
       PythonDep dep = getDep(repo, machineType, installType, lib, version, true, false, CondaStatus.SUCCESS);
       
@@ -691,7 +690,7 @@ public class PythonDepsFacade {
       MachineType machineType, Project proj, String channelUrl, String lib, String version) throws ServiceException {
     Hosts host = em.find(Hosts.class, hostId);
 
-    AnacondaRepo repo = getRepo(proj, channelUrl, false);
+    AnacondaRepo repo = getRepo(channelUrl, false);
     PythonDep dep = getDep(repo, machineType, condaInstallType, lib, version, false, false, CondaStatus.SUCCESS);
     Future<?> f = kagentExecutorService.submit(new PythonDepsFacade.CondaTask(
         this.web, proj, host, op, dep));
