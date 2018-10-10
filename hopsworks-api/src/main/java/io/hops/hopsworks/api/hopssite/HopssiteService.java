@@ -52,7 +52,7 @@ import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.dela.dto.common.UserDTO;
 import io.hops.hopsworks.dela.dto.hopssite.DatasetDTO;
 import io.hops.hopsworks.dela.dto.hopssite.HopsSiteDatasetDTO;
-import io.hops.hopsworks.dela.exception.ThirdPartyException;
+import io.hops.hopsworks.common.exception.DelaException;
 import io.hops.hopsworks.dela.hopssite.HopssiteController;
 import io.hops.hopsworks.dela.old_hopssite_dto.DatasetIssueDTO;
 import io.swagger.annotations.Api;
@@ -125,7 +125,7 @@ public class HopssiteService {
   @GET
   @Path("clusterId")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getClusterId() throws ThirdPartyException {
+  public Response getClusterId() throws DelaException {
     String clusterId = settings.getDELA_CLUSTER_ID();
     LOGGER.log(Level.INFO, "Cluster id on hops-site: {0}", clusterId);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(clusterId).build();
@@ -133,7 +133,7 @@ public class HopssiteService {
 
   @GET
   @Path("userId")
-  public Response getUserId(@Context SecurityContext sc) throws ThirdPartyException {
+  public Response getUserId(@Context SecurityContext sc) throws DelaException {
     String id = String.valueOf(hopsSite.getUserId(sc.getUserPrincipal().getName()));
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(id).build();
   }
@@ -147,7 +147,7 @@ public class HopssiteService {
   @Path("datasets")
   public Response getAllDatasets(
     @ApiParam(required = true) @QueryParam("filter") CategoriesFilter filter) 
-    throws ThirdPartyException {
+    throws DelaException {
     List<HopsSiteDatasetDTO> datasets;
     switch(filter) {
       case ALL : datasets = hopsSite.getAll(); break;
@@ -165,7 +165,7 @@ public class HopssiteService {
 
   @GET
   @Path("datasets/{publicDSId}")
-  public Response getDataset(@PathParam("publicDSId") String publicDSId) throws ThirdPartyException {
+  public Response getDataset(@PathParam("publicDSId") String publicDSId) throws DelaException {
     DatasetDTO.Complete datasets = hopsSite.getDataset(publicDSId);
     LOGGER.log(Settings.DELA_DEBUG, "Get a dataset");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(datasets).build();
@@ -202,7 +202,7 @@ public class HopssiteService {
   @POST
   @Path("datasets/{publicDSId}/issue")
   public Response addDatasetIssue(@PathParam("publicDSId") String publicDSId, DatasetIssueReqDTO datasetIssueReq,
-          @Context SecurityContext sc) throws ThirdPartyException {
+          @Context SecurityContext sc) throws DelaException {
     if (datasetIssueReq == null) {
       throw new IllegalArgumentException("Dataset issue not set.");
     }

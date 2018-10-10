@@ -84,8 +84,8 @@ angular.module('hopsWorksApp')
           var processMessage = function (data) {
 
             try {
-              var response = {status: data.status, board: data.message};
-              //console.log('sender: ' + data.sender + ' message: ' + data.message);
+              var response = {status: data.status, board: data.errorMsg};
+              //console.log('sender: ' + data.sender + ' message: ' + data.errorMsg);
 
               /*
                * Whenever a message arrives resolve the defer, so the client gets back their promise.

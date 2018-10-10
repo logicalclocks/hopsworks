@@ -41,15 +41,23 @@ package io.hops.hopsworks.admin.user.account;
 
 import com.google.zxing.WriterException;
 import io.hops.hopsworks.admin.maintenance.MessagesController;
-import io.hops.hopsworks.common.constants.auth.AccountStatusErrorMessages;
 import io.hops.hopsworks.common.dao.user.UserFacade;
+import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
+import io.hops.hopsworks.common.dao.user.security.audit.AccountsAuditActions;
+import io.hops.hopsworks.common.dao.user.security.ua.SecurityUtils;
+import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
+import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
+import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.exception.UserException;
+import io.hops.hopsworks.common.user.AuthController;
+import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.EmailBean;
-import java.io.IOException;
-import java.io.Serializable;
-import java.net.SocketException;
-import java.security.NoSuchAlgorithmException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import io.hops.hopsworks.common.util.QRCodeGenerator;
+import io.hops.hopsworks.common.util.Settings;
+import org.primefaces.model.DefaultStreamedContent;
+import org.primefaces.model.StreamedContent;
+
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
@@ -58,27 +66,22 @@ import javax.mail.Message.RecipientType;
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
-
-import io.hops.hopsworks.common.util.Settings;
-import org.primefaces.model.StreamedContent;
-import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.security.audit.AccountsAuditActions;
-import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
-import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
-import io.hops.hopsworks.common.dao.user.security.ua.SecurityUtils;
-import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
-import io.hops.hopsworks.common.exception.AppException;
-import io.hops.hopsworks.common.user.AuthController;
-import io.hops.hopsworks.common.user.UsersController;
-import io.hops.hopsworks.common.util.QRCodeGenerator;
-import org.primefaces.model.DefaultStreamedContent;
+import java.io.IOException;
+import java.io.Serializable;
+import java.net.SocketException;
+import java.security.NoSuchAlgorithmException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @ManagedBean
 @SessionScoped
 public class RecoverySelector implements Serializable {
 
   private static final long serialVersionUID = 1L;
-
+  
+  private static final Logger LOGGER = Logger.getLogger(RecoverySelector.class.getName());
+  
+  
   @EJB
   protected UsersController usersController;
   @EJB
@@ -184,7 +187,7 @@ public class RecoverySelector implements Serializable {
    * @return
    * @throws SocketException
    */
-  public String sendQrCode() throws SocketException {
+  public String sendQrCode() {
 
     people = userFacade.findByEmail(this.uname);
     HttpServletRequest httpServletRequest = (HttpServletRequest) FacesContext.
@@ -202,7 +205,7 @@ public class RecoverySelector implements Serializable {
 
         return "validate_code";
       } else {
-        MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.INCORRECT_CREDENTIALS);
+        MessagesController.addSecurityErrorMessage(RESTCodes.UserErrorCode.INCORRECT_CREDENTIALS.getMessage());
         if (people != null) {
           am.registerAccountChange(people, AccountsAuditActions.RECOVERY.name(), AccountsAuditActions.FAILED.name(),
               "", people, httpServletRequest);
@@ -213,11 +216,11 @@ public class RecoverySelector implements Serializable {
       am.registerAccountChange(people, AccountsAuditActions.RECOVERY.name(), AccountsAuditActions.FAILED.name(),
           "", people, httpServletRequest);
 
-    } catch (AppException ex) {
+    } catch (UserException ex) {
       Logger.getLogger(RecoverySelector.class.getName()).log(Level.SEVERE, null, ex);
     }
 
-    MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.INTERNAL_ERROR);
+    MessagesController.addSecurityErrorMessage(RESTCodes.GenericErrorCode.UNKNOWN_ERROR.getMessage());
     return "";
   }
 
@@ -232,20 +235,20 @@ public class RecoverySelector implements Serializable {
 
     if (people == null) {
       MessagesController.addSecurityErrorMessage(
-              AccountStatusErrorMessages.USER_NOT_FOUND);
+        RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND.getMessage());
       return "";
     }
 
     // Check the status to see if user is not blocked or deactivate
     if (people.getStatus().equals(UserAccountStatus.BLOCKED_ACCOUNT)) {
       MessagesController.addSecurityErrorMessage(
-              AccountStatusErrorMessages.BLOCKED_ACCOUNT);
+              RESTCodes.UserErrorCode.ACCOUNT_BLOCKED.getMessage());
       return "";
     }
 
     if (people.getStatus().equals(UserAccountStatus.DEACTIVATED_ACCOUNT)) {
       MessagesController.addSecurityErrorMessage(
-              AccountStatusErrorMessages.DEACTIVATED_ACCOUNT);
+              RESTCodes.UserErrorCode.ACCOUNT_DEACTIVATED.getMessage());
       return "";
     }
 
@@ -285,11 +288,11 @@ public class RecoverySelector implements Serializable {
                   UserAccountsEmailMessages.ACCOUNT_BLOCKED__SUBJECT,
                   UserAccountsEmailMessages.accountBlockedMessage());
         } catch (MessagingException ex1) {
-
+          LOGGER.log(Level.SEVERE, null, ex1);
         }
       }
 
-      MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.INCORRECT_TMP_PIN);
+      MessagesController.addSecurityErrorMessage(RESTCodes.UserErrorCode.TMP_CODE_INVALID.getMessage());
 
       return "";
     }

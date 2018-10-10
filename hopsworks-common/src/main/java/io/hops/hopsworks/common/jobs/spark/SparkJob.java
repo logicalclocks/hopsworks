@@ -143,7 +143,7 @@ public class SparkJob extends YarnJob {
       }
       if(lastName != null && !lastName.isEmpty()) {
         usersFullName += " " + lastName;
-        usersFullName.trim();
+        usersFullName = usersFullName.trim();
       }
 
       runner = runnerbuilder.

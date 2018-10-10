@@ -42,13 +42,20 @@ package io.hops.hopsworks.api.admin;
 import io.hops.hopsworks.api.admin.dto.ProjectDeletionLog;
 import io.hops.hopsworks.api.admin.dto.ProjectAdminInfoDTO;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
-import io.hops.hopsworks.api.util.JsonResponse;
+import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.exception.DatasetException;
+import io.hops.hopsworks.common.exception.GenericException;
+import io.hops.hopsworks.common.exception.HopsSecurityException;
+import io.hops.hopsworks.common.exception.KafkaException;
+import io.hops.hopsworks.common.exception.ProjectException;
+import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.exception.ServiceException;
+import io.hops.hopsworks.common.exception.UserException;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.project.ProjectDTO;
 import io.hops.hopsworks.common.util.Settings;
@@ -85,7 +92,7 @@ import java.util.logging.Logger;
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ProjectsAdmin {
-  private final Logger LOG = Logger.getLogger(ProjectsAdmin.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(ProjectsAdmin.class.getName());
   
   @EJB
   private ProjectFacade projectFacade;
@@ -102,19 +109,17 @@ public class ProjectsAdmin {
   @Produces(MediaType.APPLICATION_JSON)
   @Path("/projects/{id}")
   public Response deleteProject(@Context SecurityContext sc, @Context HttpServletRequest req,
-      @PathParam("id") Integer id) throws AppException {
+      @PathParam("id") Integer id) throws ProjectException, GenericException {
     Project project = projectFacade.find(id);
     if (project == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.PROJECT_NOT_FOUND);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + id);
     }
     
     String sessionId = req.getSession().getId();
     projectController.removeProject(project.getOwner().getEmail(), id, sessionId);
-    LOG.log(Level.INFO, "Deleted project with id: " + id);
+    LOGGER.log(Level.INFO, "Deleted project with id: " + id);
   
-    JsonResponse response = new JsonResponse();
-    response.setStatus(Response.Status.OK.toString());
+    RESTApiJsonResponse response = new RESTApiJsonResponse();
     response.setSuccessMessage("Project with id " + id + " has been successfully deleted");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(response).build();
   }
@@ -124,32 +129,31 @@ public class ProjectsAdmin {
   @Produces(MediaType.APPLICATION_JSON)
   @Path("/projects/createas")
   public Response createProjectAsUser(@Context SecurityContext sc, @Context HttpServletRequest request,
-      ProjectDTO projectDTO) throws AppException {
+      ProjectDTO projectDTO)
+    throws DatasetException, GenericException, KafkaException, ProjectException, UserException, ServiceException,
+    HopsSecurityException {
     String userEmail = sc.getUserPrincipal().getName();
     Users user = userFacade.findByEmail(userEmail);
     if (user == null || !user.getEmail().equals(Settings.SITE_EMAIL)) {
-      LOG.log(Level.WARNING, "Unauthorized or unknown user tried to create a Project as another user");
-      throw new AppException(Response.Status.FORBIDDEN.getStatusCode(),
-          ResponseMessages.AUTHENTICATION_FAILURE);
+      throw new UserException(RESTCodes.UserErrorCode.AUTHENTICATION_FAILURE, Level.WARNING,
+        "Unauthorized or unknown user tried to create a Project as another user");
     }
 
     String ownerEmail = projectDTO.getOwner();
     if (ownerEmail == null) {
-      LOG.log(Level.WARNING, "Owner username is null");
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "Owner email cannot be null");
+      LOGGER.log(Level.WARNING, "Owner username is null");
+      throw new IllegalArgumentException("Owner email cannot be null");
     }
 
     Users owner = userFacade.findByEmail(ownerEmail);
     if (owner == null) {
-      LOG.log(Level.WARNING, "Owner is not in the database");
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "Unknown owner user " + ownerEmail);
+      throw new UserException(RESTCodes.UserErrorCode.USER_DOES_NOT_EXIST, Level.FINE, "user:" + ownerEmail);
     }
 
     List<String> failedMembers = null;
     projectController.createProject(projectDTO, owner, failedMembers, request.getSession().getId());
 
-    JsonResponse response = new JsonResponse();
-    response.setStatus("201");
+    RESTApiJsonResponse response = new RESTApiJsonResponse();
     response.setSuccessMessage(ResponseMessages.PROJECT_CREATED);
 
     if (failedMembers != null && !failedMembers.isEmpty()) {
@@ -190,17 +194,15 @@ public class ProjectsAdmin {
    * @param req
    * @param projectId
    * @return
-   * @throws AppException
    */
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @Path("/projects/{id}")
   public Response getProjectAdminInfo(@Context SecurityContext sc, @Context HttpServletRequest req,
-                                      @PathParam("id") Integer projectId) throws AppException {
+                                      @PathParam("id") Integer projectId) throws ProjectException {
     Project project = projectFacade.find(projectId);
     if (project == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.PROJECT_NOT_FOUND);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId);
     }
     ProjectAdminInfoDTO projectAdminInfoDTO = new ProjectAdminInfoDTO(project,
         projectController.getQuotasInternal(project));
@@ -216,14 +218,13 @@ public class ProjectsAdmin {
   @Consumes(MediaType.APPLICATION_JSON)
   @Path("/projects")
   public Response setProjectAdminInfo (@Context SecurityContext sc, @Context HttpServletRequest req,
-                                       ProjectAdminInfoDTO projectAdminInfoDTO) throws AppException {
+                                       ProjectAdminInfoDTO projectAdminInfoDTO) throws ProjectException {
     // for changes in space quotas we need to check that both space and ns options are not null
     QuotasDTO quotasDTO = projectAdminInfoDTO.getProjectQuotas();
     if (quotasDTO != null &&
         (((quotasDTO.getHdfsQuotaInBytes() == null) != (quotasDTO.getHdfsNsQuota() == null)) ||
         ((quotasDTO.getHiveHdfsQuotaInBytes() == null) != (quotasDTO.getHiveHdfsNsQuota() == null)))) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.QUOTA_REQUEST_NOT_COMPLETE);
+      throw new IllegalArgumentException("projectAdminInfoDTO did not provide quotasDTO or the latter was incomplete.");
     }
 
     // Build the new project state as Project object
@@ -241,7 +242,7 @@ public class ProjectsAdmin {
   @Path("/projects/{name}/force")
   @Produces(MediaType.APPLICATION_JSON)
   public Response forceDeleteProject(@Context SecurityContext sc, @Context HttpServletRequest request,
-      @PathParam("name") String projectName) throws AppException {
+      @PathParam("name") String projectName) {
     String userEmail = sc.getUserPrincipal().getName();
     String[] logs = projectController.forceCleanup(projectName, userEmail, request.getSession().getId());
     ProjectDeletionLog deletionLog = new ProjectDeletionLog(logs[0], logs[1]);

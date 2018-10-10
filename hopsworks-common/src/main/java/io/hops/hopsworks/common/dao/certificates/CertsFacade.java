@@ -81,7 +81,7 @@ public class CertsFacade {
     try {
       UserCerts res = query.getSingleResult();
       return res;
-    } catch (EntityNotFoundException e) {
+    } catch (NoResultException e) {
       Logger.getLogger(CertsFacade.class.getName()).log(Level.SEVERE, null,
           e);
     }
@@ -154,13 +154,9 @@ public class CertsFacade {
 
     try {
       return query.getSingleResult();
-    } catch (EntityNotFoundException e) {
-      Logger.getLogger(CertsFacade.class.getName()).log(Level.SEVERE, null,
-          e);
     } catch ( NoResultException e ) {
-      // Safe to ignore
+      return null;
     }
-    return null;
   }
 
   public List<ProjectGenericUserCerts> findAllProjectGenericUserCerts() {

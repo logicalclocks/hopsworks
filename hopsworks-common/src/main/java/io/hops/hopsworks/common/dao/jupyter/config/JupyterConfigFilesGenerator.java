@@ -44,7 +44,8 @@ import io.hops.hopsworks.common.dao.jupyter.JupyterSettings;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.tensorflow.TfLibMapping;
 import io.hops.hopsworks.common.dao.tensorflow.TfLibMappingFacade;
-import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
 import io.hops.hopsworks.common.tensorflow.TfLibMappingUtil;
 import io.hops.hopsworks.common.util.ConfigFileGenerator;
@@ -55,7 +56,6 @@ import org.apache.commons.io.FileUtils;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
-import javax.ws.rs.core.Response;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -89,8 +89,8 @@ public class JupyterConfigFilesGenerator {
   private TfLibMappingUtil tfLibMappingUtil;
 
   public JupyterPaths generateConfiguration(Project project, String secretConfig, String hdfsUser, String realName,
-                                            String nameNodeEndpoint, JupyterSettings js, Integer port)
-      throws AppException {
+    String nameNodeEndpoint, JupyterSettings js, Integer port)
+    throws ServiceException {
     boolean newDir = false;
 
     JupyterPaths jP = new JupyterPaths(settings.getJupyterDir(), project.getName(), hdfsUser, secretConfig);
@@ -105,13 +105,8 @@ public class JupyterConfigFilesGenerator {
       LOGGER.log(Level.SEVERE,
           "Error in initializing JupyterConfig for project: {0}. {1}",
           new Object[]{project.getName(), e});
-      if (e instanceof IllegalArgumentException) {
-        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
-            "Could not configure Jupyter, " + e.getMessage());
-      }
-      throw new AppException(
-          Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
-          "Could not configure Jupyter. Report a bug.");
+      
+      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_ADD_FAILURE, Level.SEVERE, null, e.getMessage(), e);
     }
 
     return jP;
@@ -157,7 +152,7 @@ public class JupyterConfigFilesGenerator {
   // returns true if one of the conf files were created anew 
   private boolean createConfigFiles(String confDirPath, String hdfsUser, String realName, Project project,
                                     String nameNodeEndpoint, Integer port, JupyterSettings js)
-      throws IOException, AppException {
+    throws IOException, ServiceException {
     File jupyter_config_file = new File(confDirPath + JUPYTER_NOTEBOOK_CONFIG);
     File jupyter_kernel_file = new File(confDirPath + JUPYTER_CUSTOM_KERNEL);
     File sparkmagic_config_file = new File(confDirPath + SPARKMAGIC_CONFIG);
@@ -291,7 +286,6 @@ public class JupyterConfigFilesGenerator {
       boolean isCollectiveAllReduceStrategy = js.getDistributionStrategy().compareToIgnoreCase
           ("collectiveallreducestrategy") == 0;
       boolean isSparkDynamic = js.getMode().compareToIgnoreCase("sparkdynamic") == 0;
-      boolean isSparkStatic = js.getMode().compareToIgnoreCase("sparkstatic") == 0;
       String extraJavaOptions = "-D" + Settings.LOGSTASH_JOB_INFO + "=" + project.getName().toLowerCase()
           + ",jupyter,notebook,?"
           + " -D" + Settings.HOPSWORKS_JOBTYPE_PROPERTY + "=" + JobType.SPARK
@@ -306,8 +300,7 @@ public class JupyterConfigFilesGenerator {
       TfLibMapping tfLibMapping = tfLibMappingFacade.findTfMappingForProject(project);
       if (tfLibMapping == null) {
         // We are not supporting this version.
-        throw new AppException(Response.Status.BAD_REQUEST,
-            "Wecurrently do not support this version of TensorFlow. Update to a newer version or contact an admin");
+        throw new ServiceException(RESTCodes.ServiceErrorCode.TENSORFLOW_VERSION_NOT_SUPPORTED, Level.INFO);
       }
       String tfLdLibraryPath = tfLibMappingUtil.buildTfLdLibraryPath(tfLibMapping);
 

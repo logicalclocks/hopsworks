@@ -1,0 +1,1143 @@
+/*
+ * This file is part of Hopsworks
+ * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ *
+ * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU Affero General Public License as published by the Free Software Foundation,
+ * either version 3 of the License, or (at your option) any later version.
+ *
+ * Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ */
+
+package io.hops.hopsworks.common.exception;
+
+import io.hops.hopsworks.common.util.Settings;
+
+import javax.ws.rs.core.Response;
+import javax.xml.bind.annotation.XmlRootElement;
+
+
+/**
+ * Hopsworks error codes categorized by resource. Convention for code values is the following:
+ * 1. All error codes must be a total of 6 digits, first 2 indicate error type and last 4 indicate error id.
+ * 2. Service error codes start  with "10".
+ * 3. Dataset error codes start  with "11".
+ * 4. Generic error codes start  with "12".
+ * 5. Job error codes start  with "13".
+ * 6. Request error codes start  with "14".
+ * 7. Project error codes start  with "15".
+ * 8. Dela error codes start with "17"
+ * 9. Metadata error codes start with "18"
+ * 10. Kafka error codes start with "19"
+ * 11. User error codes start with "20"
+ * 12. Security error codes start  with "20".
+ * 13. Zeppelin error codes start with "21".
+ * 14. CA error codes start with "22".
+ * 15. DelaCSR error codes start with "23".
+ */
+@XmlRootElement
+public class RESTCodes {
+  
+  
+  public interface RESTErrorCode {
+    
+    Response.StatusType getRespStatus();
+    
+    Integer getCode();
+    
+    String getMessage();
+    
+    int getRange();
+    
+  }
+  
+  public enum ProjectErrorCode implements RESTErrorCode {
+    
+    //project error response
+    PROJECT_EXISTS(1, "Project with the same name already exists.", Response.Status.CONFLICT),
+    NUM_PROJECTS_LIMIT_REACHED(2, "You have reached the maximum number of projects you could create."
+      + " Contact an administrator to increase your limit.", Response.Status.BAD_REQUEST),
+    INVALID_PROJECT_NAME(3, "Invalid project name, valid characters: [a-z,0-9].",
+      Response.Status.BAD_REQUEST),
+    PROJECT_NOT_FOUND(4, "Project wasn't found.", Response.Status.BAD_REQUEST),
+    PROJECT_NOT_REMOVED(5, "Project wasn't removed.", Response.Status.BAD_REQUEST),
+    PROJECT_FOLDER_NOT_CREATED(7, "Project folder could not be created in HDFS.",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    STARTER_PROJECT_BAD_REQUEST(8, "Type of starter project is not valid", Response.Status.BAD_REQUEST),
+    PROJECT_FOLDER_NOT_REMOVED(9, "Project folder could not be removed from HDFS.",
+      Response.Status.BAD_REQUEST),
+    PROJECT_REMOVAL_NOT_ALLOWED(10, "Project can only be deleted by its owner.",
+      Response.Status.FORBIDDEN),
+    PROJECT_MEMBER_NOT_REMOVED(11, "Failed to remove team member.",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    MEMBER_REMOVAL_NOT_ALLOWED(12,
+      "Your project role does not allow to remove other members from this project.",
+      Response.Status.FORBIDDEN),
+    PROJECT_OWNER_NOT_ALLOWED(13, "Removing the project owner is not allowed.",
+      Response.Status.BAD_REQUEST),
+    PROJECT_OWNER_ROLE_NOT_ALLOWED(14, "Changing the role of the project owner is not allowed.",
+      Response.Status.BAD_REQUEST),
+    FOLDER_INODE_NOT_CREATED(15, "Folder Inode could not be created in DB.",
+      Response.Status.BAD_REQUEST),
+    FOLDER_NAME_NOT_SET(16, "Name cannot be empty.", Response.Status.BAD_REQUEST),
+    FOLDER_NAME_TOO_LONG(17, "Name cannot be longer than 88 characters.", Response.Status.BAD_REQUEST),
+    FOLDER_NAME_CONTAIN_DISALLOWED_CHARS(18, "Name cannot contain any of the characters ",
+      Response.Status.BAD_REQUEST),
+    
+    FILE_NAME_EXIST(19, "File with the same name already exists.", Response.Status.BAD_REQUEST),
+    FILE_NOT_FOUND(20, "File not found.", Response.Status.BAD_REQUEST),
+    NO_MEMBER_TO_ADD(21, " No member to add.", Response.Status.BAD_REQUEST),
+    NO_MEMBER_ADD(22, " No member added.", Response.Status.BAD_REQUEST),
+    TEAM_MEMBER_NOT_FOUND(23, "The selected user is not a team member in this project.",
+      Response.Status.NOT_FOUND),
+    TEAM_MEMBER_ALREADY_EXISTS(24, " The selected user is already a team member of this project.",
+      Response.Status.BAD_REQUEST),
+    ROLE_NOT_SET(25, "Role cannot be empty.", Response.Status.BAD_REQUEST),
+    PROJECT_NOT_SELECTED(26, "No project selected", Response.Status.BAD_REQUEST),
+    QUOTA_NOT_FOUND(27, "Quota information not found.", Response.Status.BAD_REQUEST),
+    QUOTA_ERROR(28, "Quota update error.", Response.Status.BAD_REQUEST),
+    PROJECT_QUOTA_ERROR(29, "This project is out of credits.", Response.Status.PRECONDITION_FAILED),
+    
+    //project success messages
+    PROJECT_CREATED(30, "Project created successfully.", Response.Status.CREATED),
+    PROJECT_DESCRIPTION_CHANGED(31, "Project description changed.", Response.Status.OK),
+    PROJECT_RETENTON_CHANGED(32, "Project retention period changed.", Response.Status.OK),
+    
+    PROJECT_SERVICE_ADDED(33, "Project service added", Response.Status.OK),
+    PROJECT_SERVICE_ADD_FAILURE(34, "Failure adding service", Response.Status.INTERNAL_SERVER_ERROR),
+    PROJECT_REMOVED(35, "The project and all related files were removed successfully.",
+      Response.Status.OK),
+    PROJECT_REMOVED_NOT_FOLDER(36,
+      "The project was removed successfully. But its datasets have not been deleted.",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    PROJECT_MEMBER_REMOVED(37, "Member removed successfully", Response.Status.OK),
+    PROJECT_MEMBERS_ADDED(38, "Members added successfully", Response.Status.OK),
+    PROJECT_MEMBER_ADDED(39, "One member added successfully", Response.Status.OK),
+    MEMBER_ROLE_UPDATED(40, "Role updated successfully.", Response.Status.OK),
+    MEMBER_REMOVED_FROM_TEAM(41, "Member removed from team.", Response.Status.OK),
+    PROJECT_INODE_CREATION_ERROR(42, "Could not create dummy Inode",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    PROJECT_FOLDER_EXISTS(43, "A folder with same name as the project already exists in the system.",
+      Response.Status.CONFLICT),
+    PROJECT_USER_EXISTS(44, "Filesystem user(s) already exists in the system.",
+      Response.Status.CONFLICT),
+    PROJECT_GROUP_EXISTS(45, "Filesystem group(s) already exists in the system.",
+      Response.Status.CONFLICT),
+    PROJECT_CERTIFICATES_EXISTS(46, "Certificates for this project already exist in the system.",
+      Response.Status.CONFLICT),
+    PROJECT_QUOTA_EXISTS(47, "Quotas corresponding to this project already exist in the system.",
+      Response.Status.CONFLICT),
+    PROJECT_LOGS_EXIST(48, "Logs corresponding to this project already exist in the system.",
+      Response.Status.CONFLICT),
+    PROJECT_VERIFICATIONS_FAILED(49, "Error occurred while running verifications",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    PROJECT_SET_PERMISSIONS_ERROR(50, "Error occurred while setting permissions for project folders.",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    PROJECT_HANDLER_PRECREATE_ERROR(51, "Error occurred during project precreate handler.",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    PROJECT_HANDLER_POSTCREATE_ERROR(52, "Error occurred during project postcreate handler.",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    PROJECT_HANDLER_PREDELETE_ERROR(53, "Error occurred during project predelete handler.",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    PROJECT_HANDLER_POSTDELETE_ERROR(54, "Error occurred during project postdelete handler.",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    PROJECT_TOUR_FILES_ERROR(55, "Error while adding tour files to project.",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    PROJECT_KIBANA_CREATE_INDEX_ERROR(56, "Could not create kibana index-pattern for project",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    PROJECT_KIBANA_CREATE_SEARCH_ERROR(57, "Could not create kibana search for project",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    PROJECT_KIBANA_CREATE_DASHBOARD_ERROR(58, "Could not create kibana dashboard for project",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    PROJECT_HIVEDB_CREATE_ERROR(59, "Could not create Hive DB for project",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    PROJECT_CONDA_LIBS_NOT_FOUND(60, "No preinstalled anaconda libs found.",
+      Response.Status.NOT_FOUND),
+    KILL_MEMBER_JOBS(61, "Could not kill user's yarn applications",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    JUPYTER_SERVER_NOT_FOUND(62, "Could not find Jupyter entry for user in this project.",
+      Response.Status.NOT_FOUND),
+    PYTHON_LIB_ALREADY_INSTALLED(63, "This python library is already installed on this project",
+      Response.Status.NOT_MODIFIED),
+    PYTHON_LIB_NOT_INSTALLED(64,
+      "This python library is not installed for this project. Cannot remove/upgrade " +
+        "op", Response.Status.NOT_MODIFIED),
+    PROJECT_QUOTA_INSUFFICIENT(65, "This project is out of credits",
+      Response.Status.PRECONDITION_FAILED),
+    ANACONDA_NOT_ENABLED(66, "First enable Anaconda. Click on 'Python' -> Pick a version",
+      Response.Status.PRECONDITION_FAILED),
+    TENSORBOARD_ELASTIC_INDEX_NOT_FOUND(67, "Could not find elastic index for TensorBoard.",
+      Response.Status.NOT_FOUND),
+    PROJECT_ROLE_FORBIDDEN(68, "Your project role does not allow to perform this action.",
+      Response.Status.FORBIDDEN),
+    FOLDER_NAME_ENDS_WITH_DOT(69, "Name cannot end in a period.", Response.Status.BAD_REQUEST),
+    FOLDER_NAME_EXISTS(70, "A directory with the same name already exists. "
+      + "If you want to replace it delete it first then try recreating.", Response.Status.BAD_REQUEST),
+    PROJECT_SERVICE_NOT_FOUND(71, "service was not found.", Response.Status.BAD_REQUEST),
+    QUOTA_REQUEST_NOT_COMPLETE(72, "Please specify both " + "namespace and space quota.", Response.Status.BAD_REQUEST);
+  
+  
+  
+  
+    private Integer code;
+    private String message;
+    private Response.StatusType respStatus;
+    private final int range = 150000;
+  
+    ProjectErrorCode(Integer code, String message, Response.StatusType respStatus) {
+      this.code = range + code;
+      this.message = message;
+      this.respStatus = respStatus;
+    }
+    
+    @Override
+    public Integer getCode() {
+      return code;
+    }
+    
+    @Override
+    public String getMessage() {
+      return message;
+    }
+  
+    @Override
+    public int getRange() {
+      return range;
+    }
+  
+    @Override
+    public Response.StatusType getRespStatus() {
+      return respStatus;
+    }
+    
+  }
+  
+  public enum DatasetErrorCode implements RESTErrorCode {
+    
+    //DataSet
+    DATASET_OPERATION_FORBIDDEN(0, "Dataset/content operation forbidden", Response.Status.FORBIDDEN),
+    DATASET_OPERATION_INVALID(1, "Operation cannot be performed.", Response.Status.BAD_REQUEST),
+    DATASET_OPERATION_ERROR(2, "Dataset operation failed.", Response.Status.INTERNAL_SERVER_ERROR),
+    DATASET_ALREADY_SHARED_WITH_PROJECT(3, "Dataset already shared with project",
+      Response.Status.BAD_REQUEST),
+    DATASET_NOT_SHARED_WITH_PROJECT(4, "Dataset is not shared with project.",
+      Response.Status.BAD_REQUEST),
+    DATASET_NAME_EMPTY(5, "DataSet name cannot be empty.", Response.Status.BAD_REQUEST),
+    FILE_CORRUPTED_REMOVED_FROM_HDFS(6, "Corrupted file removed from hdfs.",
+      Response.Status.BAD_REQUEST),
+    INODE_DELETION_ERROR(7, "File/Dir could not be deleted.", Response.Status.INTERNAL_SERVER_ERROR),
+    INODE_NOT_FOUND(8, "Inode was not found.", Response.Status.NOT_FOUND),
+    DATASET_REMOVED_FROM_HDFS(9, "DataSet removed from hdfs.", Response.Status.BAD_REQUEST),
+    SHARED_DATASET_REMOVED(10, "The shared dataset has been removed from this project.",
+      Response.Status.BAD_REQUEST),
+    DATASET_NOT_FOUND(11, "DataSet not found.", Response.Status.BAD_REQUEST),
+    DESTINATION_EXISTS(12, "Destination already exists.", Response.Status.BAD_REQUEST),
+    DATASET_ALREADY_PUBLIC(13, "Dataset is already in project.", Response.Status.CONFLICT),
+    DATASET_ALREADY_IN_PROJECT(14, "Dataset is already public.", Response.Status.BAD_REQUEST),
+    DATASET_NOT_PUBLIC(15, "DataSet is not public.", Response.Status.BAD_REQUEST),
+    DATASET_NOT_EDITABLE(16, "DataSet is not editable.", Response.Status.BAD_REQUEST),
+    DATASET_PENDING(17, "DataSet is not yet accessible. Accept the share request to access it.",
+      Response.Status.BAD_REQUEST),
+    PATH_NOT_FOUND(18, "Path not found", Response.Status.BAD_REQUEST),
+    PATH_NOT_DIRECTORY(19, "Requested path is not a directory", Response.Status.BAD_REQUEST),
+    PATH_IS_DIRECTORY(20, "Requested path is a directory", Response.Status.BAD_REQUEST),
+    DOWNLOAD_ERROR(21, "You cannot download from a non public shared dataset",
+      Response.Status.BAD_REQUEST),
+    DOWNLOAD_PERMISSION_ERROR(22, "Your role does not allow to download this file",
+      Response.Status.BAD_REQUEST),
+    DATASET_PERMISSION_ERROR(23, "Could not update dataset permissions",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    COMPRESSION_ERROR(24, "Error while performing a (un)compress operation",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    DATASET_OWNER_ERROR(25, "You cannot perform this action on a dataset you are not the owner",
+      Response.Status.BAD_REQUEST),
+    DATASET_PUBLIC_IMMUTABLE(26, "Public datasets are immutable.", Response.Status.BAD_REQUEST),
+    DATASET_NAME_INVALID(28, "Name of dir is invalid", Response.Status.BAD_REQUEST),
+    IMAGE_SIZE_INVALID(29,
+      "Image is too big to display please download it by double-clicking it instead",
+      Response.Status.BAD_REQUEST),
+    FILE_PREVIEW_ERROR(30,
+      Settings.README_FILE + " must be smaller than " + Settings.FILE_PREVIEW_TXT_SIZE_BYTES / 1024
+        + " KB to be previewed", Response.Status.BAD_REQUEST),
+    DATASET_PARAMETERS_INVALID(31, "Invalid parameters for requested dataset operation",
+      Response.Status.BAD_REQUEST),
+    EMPTY_PATH(32, "Empty path requested", Response.Status.BAD_REQUEST),
+    
+    UPLOAD_PATH_NOT_SPECIFIED(35, "The path to upload the template was not specified",
+      Response.Status.BAD_REQUEST),
+    README_NOT_ACCESSIBLE(36, "Readme not accessible.", Response.Status.UNAUTHORIZED),
+    COMPRESSION_SIZE_ERROR(37,
+      "Not enough free space on the local scratch directory to download and unzip this " +
+        "file. Talk to your admin to increase disk space at the path: hopsworks/staging_dir",
+      Response.Status.PRECONDITION_FAILED),
+    INVALID_PATH_FILE(38, "The requested path does not resolve to a valid file",
+      Response.Status.BAD_REQUEST),
+    INVALID_PATH_DIR(39, "The requested path does not resolve to a valid directory",
+      Response.Status.BAD_REQUEST),
+    UPLOAD_DIR_CREATE_ERROR(40, "Uploads directory could not be created in the file system",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    UPLOAD_CONCURRENT_ERROR(41, "A file with the same name is being uploaded",
+      Response.Status.PRECONDITION_FAILED),
+    UPLOAD_RESUMABLEINFO_INVALID(42, "ResumableInfo is invalid", Response.Status.BAD_REQUEST),
+    UPLOAD_ERROR(43, "Error occurred while uploading file",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    DATASET_REQUEST_EXISTS(44, "Request for this dataset from this project already exists.",
+      Response.Status.CONFLICT),
+    COPY_FROM_PROJECT(45, "Cannot copy file/folder from another project", Response.Status.FORBIDDEN),
+    COPY_TO_PUBLIC_DS(46, "Can not copy to a public dataset.", Response.Status.FORBIDDEN);
+    
+    
+    private Integer code;
+    private String message;
+    private Response.StatusType respStatus;
+    private final int range = 110000;
+  
+  
+    DatasetErrorCode(Integer code, String message, Response.StatusType respStatus) {
+      this.code = range + code;
+      this.message = message;
+      this.respStatus = respStatus;
+    }
+    
+    @Override
+    public Integer getCode() {
+      return code;
+    }
+    
+    @Override
+    public String getMessage() {
+      return message;
+    }
+    
+    @Override
+    public Response.StatusType getRespStatus() {
+      return respStatus;
+    }
+  
+    @Override
+    public int getRange() {
+      return range;
+    }
+  }
+  
+  public enum MetadataErrorCode implements RESTErrorCode {
+    
+    TEMPLATE_ALREADY_AVAILABLE(0, "The template is already available", Response.Status.BAD_REQUEST),
+    TEMPLATE_INODEID_EMPTY(1, "The template id is empty", Response.Status.BAD_REQUEST),
+    TEMPLATE_NOT_ATTACHED(2, "The template could not be attached to a file", Response.Status.BAD_REQUEST),
+    DATASET_TEMPLATE_INFO_MISSING(3, "Template info is missing. Please provide InodeDTO path and templateId.",
+      Response.Status.BAD_REQUEST),
+    NO_METADATA_EXISTS(4, "No metadata found", Response.Status.BAD_REQUEST),
+    METADATA_MAX_SIZE_EXCEEDED(5, "Metadata is too long. 12000 characters is the maximum size",
+      Response.Status.BAD_REQUEST);
+    
+    private Integer code;
+    private String message;
+    private Response.StatusType respStatus;
+    private final int range = 180000;
+  
+    MetadataErrorCode(Integer code, String message, Response.StatusType respStatus) {
+      this.code = range + code;
+      this.message = message;
+      this.respStatus = respStatus;
+    }
+    
+    @Override
+    public Integer getCode() {
+      return code;
+    }
+    
+    @Override
+    public String getMessage() {
+      return message;
+    }
+    
+    @Override
+    public Response.StatusType getRespStatus() {
+      return respStatus;
+    }
+  
+    @Override
+    public int getRange() {
+      return range;
+    }
+  }
+  
+  public enum JobErrorCode implements RESTErrorCode {
+    
+    // JOBS Error Messages
+    JOB_START_FAILED(0, "An error occurred while trying to start this job.", Response.Status.BAD_REQUEST),
+    JOB_STOP_FAILED(1, "An error occurred while trying to stop this job.", Response.Status.BAD_REQUEST),
+    JOB_TYPE_UNSUPPORTED(2, "Unsupported job type.", Response.Status.BAD_REQUEST),
+    JOB_ACTION_UNSUPPORTED(3, "Unsupported action type.", Response.Status.BAD_REQUEST),
+    JOB_NAME_EXISTS(4, "Job with same name already exists.", Response.Status.CONFLICT),
+    JOB_NAME_EMPTY(5, "Job name is not set.", Response.Status.BAD_REQUEST),
+    JOB_NAME_INVALID(6, "Job name is invalid. Invalid charater(s) in job name, the following characters "
+      + "(including space) are now allowed:" + Settings.FILENAME_DISALLOWED_CHARS, Response.Status.BAD_REQUEST),
+    JOB_EXECUTION_NOT_FOUND(7, "Execution not found.", Response.Status.NOT_FOUND),
+    JOB_EXECUTION_TRACKING_URL_NOT_FOUND(8, "Tracking url not found.", Response.Status.BAD_REQUEST),
+    JOB_NOT_FOUND(9, "Job not found.", Response.Status.NOT_FOUND),
+    JOB_EXECUTION_INVALID_STATE(10, "Execution state is invalid.", Response.Status.BAD_REQUEST),
+    JOB_LOG(11, "Job log error.", Response.Status.BAD_REQUEST),
+    JOB_DELETION_ERROR(12, "Error while deleting job.", Response.Status.BAD_REQUEST),
+    JOB_CREATION_ERROR(13, "Error while creating job.", Response.Status.BAD_REQUEST),
+    ELASTIC_INDEX_NOT_FOUND(14, "Elasticsearch indices do not exist", Response.Status.BAD_REQUEST),
+    ELASTIC_TYPE_NOT_FOUND(15, "Elasticsearch type does not exist", Response.Status.BAD_REQUEST),
+    
+    TENSORBOARD_ERROR(16, "Error getting the Tensorboard(s) for this application",
+      Response.Status.NO_CONTENT),
+    
+    APPLICATIONID_NOT_FOUND(17, "Error while deleting job.", Response.Status.BAD_REQUEST),
+    JOB_ACCESS_ERROR(18, "Cannot access job", Response.Status.FORBIDDEN),
+    LOG_AGGREGATION_NOT_ENABLED(19, "YARN log aggregation is not enabled",
+      Response.Status.SERVICE_UNAVAILABLE),
+    LOG_RETRIEVAL_ERROR(20, "Error while retrieving YARN logs", Response.Status.INTERNAL_SERVER_ERROR),
+    
+    JOB_SCHEDULE_UPDATE(21, "Could not update schedule.", Response.Status.INTERNAL_SERVER_ERROR),
+    JAR_INSEPCTION_ERROR(22, "Could not inspect jar file.", Response.Status.INTERNAL_SERVER_ERROR),
+    PROXY_ERROR(23, "Could not get proxy user.", Response.Status.INTERNAL_SERVER_ERROR);
+    
+    private Integer code;
+    private String message;
+    private Response.StatusType respStatus;
+    private final int range = 130000;
+  
+  
+    JobErrorCode(Integer code, String message, Response.StatusType respStatus) {
+      this.code = range + code;
+      this.message = message;
+      this.respStatus = respStatus;
+    }
+    
+    @Override
+    public Integer getCode() {
+      return code;
+    }
+    
+    @Override
+    public String getMessage() {
+      return message;
+    }
+    
+    @Override
+    public Response.StatusType getRespStatus() {
+      return respStatus;
+    }
+  
+    @Override
+    public int getRange() {
+      return range;
+    }
+  }
+  
+  public enum RequestErrorCode implements RESTErrorCode {
+    
+    MESSAGE_ACCESS_NOT_ALLOWED(0, "Message not allowed.", Response.Status.FORBIDDEN),
+    EMAIL_EMPTY(1, "Email cannot be empty.", Response.Status.BAD_REQUEST),
+    EMAIL_INVALID(2, "Not a valid email address.", Response.Status.BAD_REQUEST),
+    DATASET_REQUEST_ERROR(3, "Error while submitting dataset request", Response.Status.BAD_REQUEST),
+    REQUEST_UNKNOWN_ACTION(4, "Unknown request action", Response.Status.BAD_REQUEST),
+    MESSAGE_NOT_FOUND(5, "Message was not found", Response.Status.NOT_FOUND);
+    
+    
+    private Integer code;
+    private String message;
+    private Response.StatusType respStatus;
+    private final int range = 140000;
+  
+    RequestErrorCode(Integer code, String message, Response.StatusType respStatus) {
+      this.code = range + code;
+      this.message = message;
+      this.respStatus = respStatus;
+    }
+    
+    @Override
+    public Integer getCode() {
+      return code;
+    }
+    
+    @Override
+    public String getMessage() {
+      return message;
+    }
+    
+    @Override
+    public Response.StatusType getRespStatus() {
+      return respStatus;
+    }
+  
+    @Override
+    public int getRange() {
+      return range;
+    }
+  }
+  
+  public enum ServiceErrorCode implements RESTErrorCode {
+    
+    // Zeppelin
+    ZEPPELIN_ADD_FAILURE(0, "Failed to create Zeppelin notebook dir. Zeppelin will not work properly. "
+      + "Try recreating the following dir manually:", Response.Status.SERVICE_UNAVAILABLE),
+    JUPYTER_ADD_FAILURE(1, "Failed to create Jupyter notebook dir. Jupyter will not work properly. "
+      + "Try recreating the following dir manually.", Response.Status.BAD_REQUEST),
+    ELASTIC_SERVER_NOT_AVAILABLE(2, "The Elasticsearch Server is either down or misconfigured.",
+      Response.Status.BAD_REQUEST),
+    ELASTIC_SERVER_NOT_FOUND(3, "Problem when reaching the Elasticsearch server",
+      Response.Status.SERVICE_UNAVAILABLE),
+    
+    //Hive
+    HIVE_ADD_FAILURE(4, "Failed to create the Hive database", Response.Status.BAD_REQUEST),
+    // LLAP
+    LLAP_STATUS_INVALID(5, "Unrecognized new LLAP status", Response.Status.BAD_REQUEST),
+    LLAP_CLUSTER_ALREADY_UP(6, "LLAP cluster already up", Response.Status.BAD_REQUEST),
+    LLAP_CLUSTER_ALREADY_DOWN(7, "LLAP cluster already down", Response.Status.BAD_REQUEST),
+    
+    //Database
+    DATABASE_UNAVAILABLE(8, "The database is temporarily unavailable. Please try again later",
+      Response.Status.SERVICE_UNAVAILABLE),
+    TENSORBOARD_CLEANUP_ERROR(9, "Could not delete tensorboard", Response.Status.INTERNAL_SERVER_ERROR),
+    ZOOKEEPER_SERVICE_UNAVAILABLE(10, "ZooKeeper service unavailable",
+      Response.Status.SERVICE_UNAVAILABLE),
+    ANACONDA_NODES_UNAVAILABLE(11, "No conda machine is enabled. Contact the administrator.",
+      Response.Status.SERVICE_UNAVAILABLE),
+    ELASTIC_INDEX_CREATION_ERROR(12, "Error while creating index in elastic",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    ANACONDA_LIST_LIB_FORMAT_ERROR(13,
+      "Problem listing libraries. Did conda get upgraded and change its output format?",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    ANACONDA_LIST_LIB_ERROR(14, "Problem listing libraries. Please contact the Administrator",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    ZEPPELIN_KILL_ERROR(15, "Could not close zeppelin interpreters, please wait 60 seconds to retry",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    JUPYTER_HOME_ERROR(16, "Couldn't resolve JUPYTER_HOME using DB.",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    JUPYTER_STOP_ERROR(17, "Couldn't stop Jupyter Notebook Server.",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    INVALID_YML(18, "Invalid .yml file", Response.Status.BAD_REQUEST),
+    INVALID_YML_SIZE(19, ".yml file too large. Maximum size is 0 bytes",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    ANACONDA_FROM_YML_ERROR(20, "Failed to create Anaconda environment from .yml file.",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    PYTHON_INVALID_VERSION(21, "Invalid version of python (valid: '2.7', and '3.5', and '3.6'",
+      Response.Status.BAD_REQUEST),
+    ANACONDA_REPO_ERROR(22, "Problem adding the repo.", Response.Status.INTERNAL_SERVER_ERROR),
+    ANACONDA_OP_IN_PROGRESS(23,
+      "A conda environment operation is currently executing (create/remove/list). Wait " +
+        "for it to finish or clear it first.", Response.Status.PRECONDITION_FAILED),
+    HOST_TYPE_NOT_FOUND(24, "No hosts with the desired capability.",
+      Response.Status.PRECONDITION_FAILED),
+    HOST_NOT_FOUND(25, "Host was not found.", Response.Status.NOT_FOUND),
+    HOST_NOT_REGISTERED(26, "Host has not registered.", Response.Status.NOT_FOUND),
+    ANACONDA_DEP_REMOVE_FORBIDDEN(27, "Could not uninstall library, it is a mandatory dependency",
+      Response.Status.BAD_REQUEST),
+    ANACONDA_DEP_INSTALL_FORBIDDEN(28, "Library is already installed", Response.Status.CONFLICT),
+    ANACONDA_EXPORT_ERROR(29, "Failed to export Anaconda environment as .yml",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    ANACONDA_LIST_LIB_NOT_FOUND(30, "No results found", Response.Status.NO_CONTENT),
+    ELASTIC_INDEX_NOT_FOUND(31, "Elastic index was not found in elasticsearch",
+      Response.Status.NOT_FOUND),
+    ELASTIC_INDEX_TYPE_NOT_FOUND(32, "Elastic index type was not found in elasticsearch",
+      Response.Status.NOT_FOUND),
+    JUPYTER_SERVERS_NOT_FOUND(33, "Could not find any Jupyter notebook servers for this project.",
+      Response.Status.NOT_FOUND),
+    JUPYTER_SERVERS_NOT_RUNNING(34, "Could not find any Jupyter notebook servers for this project.",
+      Response.Status.PRECONDITION_FAILED),
+    JUPYTER_START_ERROR(35, "Jupyter server could not start.", Response.Status.INTERNAL_SERVER_ERROR),
+    JUPYTER_SAVE_SETTINGS_ERROR(36, "Could not save Jupyter Settings.",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    IPYTHON_CONVERT_ERROR(37, "Problem converting ipython notebook to python program",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    TENSORBOARD_FETCH_ERROR(38, "Error while fetching TensorBoard from database",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    EMAIL_SENDING_FAILURE(39, "Could not send email", Response.Status.INTERNAL_SERVER_ERROR),
+    HOST_EXISTS(40, "Host exists", Response.Status.CONFLICT),
+    TENSORFLOW_VERSION_NOT_SUPPORTED(41,
+      "We currently do not support this version of TensorFlow. Update to a " +
+        "newer version or contact an admin", Response.Status.BAD_REQUEST);
+    
+    private Integer code;
+    private String message;
+    private Response.StatusType respStatus;
+    private final int range = 100000;
+  
+    ServiceErrorCode(Integer code, String message, Response.StatusType respStatus) {
+      this.code = range + code;
+      this.message = message;
+      this.respStatus = respStatus;
+    }
+    
+    @Override
+    public Integer getCode() {
+      return code;
+    }
+    
+    @Override
+    public String getMessage() {
+      return message;
+    }
+    
+    @Override
+    public Response.StatusType getRespStatus() {
+      return respStatus;
+    }
+    
+    @Override
+    public int getRange(){
+      return range;
+    }
+    
+  }
+  
+  public enum KafkaErrorCode implements RESTErrorCode {
+    
+    // Zeppelin
+    TOPIC_NOT_FOUND(0, "No topics found", Response.Status.NOT_FOUND),
+    BROKER_METADATA_ERROR(1, "An error occured while retrieving topic metadata from broker",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    TOPIC_ALREADY_EXISTS(2, "Kafka topic already exists in database. Pick a different topic name",
+      Response.Status.CONFLICT),
+    TOPIC_ALREADY_EXISTS_IN_ZOOKEEPER(3,
+      "Kafka topic already exists in ZooKeeper. Pick a different topic name",
+      Response.Status.CONFLICT),
+    TOPIC_LIMIT_REACHED(4,
+      "Topic limit reached. Contact your administrator to increase the number of topics " +
+        "that can be created for this project.", Response.Status.PRECONDITION_FAILED),
+    TOPIC_REPLICATION_ERROR(5, "Maximum topic replication factor exceeded", Response.Status.BAD_REQUEST),
+    SCHEMA_NOT_FOUND(6, "Topic has not schema attached to it.", Response.Status.NOT_FOUND),
+    KAFKA_GENERIC_ERROR(7, "An error occured while retrieving information from Kafka service",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    DESTINATION_PROJECT_IS_TOPIC_OWNER(8, "Destination projet is topic owner",
+      Response.Status.BAD_REQUEST),
+    TOPIC_ALREADY_SHARED(9, "Topic is already shared", Response.Status.BAD_REQUEST),
+    TOPIC_NOT_SHARED(10, "Topic is not shared with project", Response.Status.NOT_FOUND),
+    ACL_ALREADY_EXISTS(11, "ACL already exists.", Response.Status.CONFLICT),
+    ACL_NOT_FOUND(12, "ACL not found.", Response.Status.NOT_FOUND),
+    ACL_NOT_FOR_TOPIC(13, "ACL does not belong to the specified topic", Response.Status.BAD_REQUEST),
+    SCHEMA_IN_USE(14, "Schema is currently used by topics. topic", Response.Status.PRECONDITION_FAILED);
+    
+    private Integer code;
+    private String message;
+    private Response.StatusType respStatus;
+    private final int range = 190000;
+  
+  
+    KafkaErrorCode(Integer code, String message, Response.StatusType respStatus) {
+      this.code = range + code;
+      this.message = message;
+      this.respStatus = respStatus;
+    }
+    
+    @Override
+    public Integer getCode() {
+      return code;
+    }
+    
+    @Override
+    public String getMessage() {
+      return message;
+    }
+    
+    @Override
+    public Response.StatusType getRespStatus() {
+      return respStatus;
+    }
+  
+    @Override
+    public int getRange() {
+      return range;
+    }
+  }
+  
+  public enum GenericErrorCode implements RESTErrorCode {
+    
+    UNKNOWN_ERROR(0, "A generic error occurred.", Response.Status.INTERNAL_SERVER_ERROR),
+    ILLEGAL_ARGUMENT(1, "An argument was not provided or it was malformed.",
+      Status.UNPROCESSABLE_ENTITY),
+    ILLEGAL_STATE(2, "A runtime error occurred.", Response.Status.BAD_REQUEST),
+    ROLLBACK(3, "The last transaction did not complete as expected",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    WEBAPPLICATION(4, "Web application exception occurred", null),
+    PERSISTENCE_ERROR(5, "Persistence error occured", Response.Status.INTERNAL_SERVER_ERROR),
+    UNKNOWN_ACTION(6, "This action can not be applied on this resource.", Response.Status.BAD_REQUEST),
+    INCOMPLETE_REQUEST(7, "Some parameters were not provided or were not in the required format.",
+      Response.Status.BAD_REQUEST),
+    SECURITY_EXCEPTION(8, "A Java security error occurred.", Response.Status.INTERNAL_SERVER_ERROR),
+    ENDPOINT_ANNOTATION_MISSING(9, "The requested endpoint did not have any project role annotation",
+      Response.Status.SERVICE_UNAVAILABLE);
+    
+    private Integer code;
+    private String message;
+    private Response.StatusType respStatus;
+    private final int range = 120000;
+  
+    GenericErrorCode(Integer code, String message, Response.StatusType respStatus) {
+      this.code = range + code;
+      this.message = message;
+      this.respStatus = respStatus;
+    }
+    
+    @Override
+    public Integer getCode() {
+      return code;
+    }
+    
+    @Override
+    public String getMessage() {
+      return message;
+    }
+    
+    @Override
+    public Response.StatusType getRespStatus() {
+      return respStatus;
+    }
+    
+    @Override
+    public int getRange(){
+      return range;
+    }
+    
+  }
+  
+  
+  public enum SecurityErrorCode implements RESTErrorCode {
+    
+    MASTER_ENCRYPTION_PASSWORD_CHANGE(1,
+      "Master password change procedure started. Check your inbox for final status", Response.Status.BAD_REQUEST),
+    HDFS_ACCESS_CONTROL(2, "Access error while trying to access hdfs resource", Response.Status.FORBIDDEN),
+    EJB_ACCESS_LOCAL(3, "Unauthorized invocation", Response.Status.UNAUTHORIZED), 
+    CERT_CREATION_ERROR(4, "Error while generating certificates.", Response.Status.INTERNAL_SERVER_ERROR),
+    CERT_CN_EXTRACT_ERROR(5, "Error while extracting CN from certificate.", Response.Status.INTERNAL_SERVER_ERROR),
+    CERT_ERROR(6, "Certificate could not be validated.", Response.Status.UNAUTHORIZED),
+    CERT_ACCESS_DENIED(7, "Certificate access denied.", Response.Status.FORBIDDEN),
+    CSR_ERROR(8, "Error while signing CSR.", Response.Status.INTERNAL_SERVER_ERROR),
+    CERT_APP_REVOKE_ERROR(9, "Error while revoking application certificate, check the logs",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    CERT_LOCATION_UNDEFINED(10, 
+      "Could not identify local directory to clean certificates. Manual cleanup required.", 
+      Response.Status.INTERNAL_SERVER_ERROR),
+    MASTER_ENCRYPTION_PASSWORD_ACCESS_ERROR(11, "Could not read master encryption password.",
+      Response.Status.INTERNAL_SERVER_ERROR);
+    
+    private Integer code;
+    private String message;
+    private Response.StatusType respStatus;
+    private final int range = 200000;
+  
+  
+    SecurityErrorCode(Integer code, String message, Response.StatusType respStatus) {
+      this.code = range + code;
+      this.message = message;
+      this.respStatus = respStatus;
+    }
+    
+    @Override
+    public Integer getCode() {
+      return code;
+    }
+    
+    @Override
+    public String getMessage() {
+      return message;
+    }
+    
+    public Response.StatusType getRespStatus() {
+      return respStatus;
+    }
+  
+    @Override
+    public int getRange() {
+      return range;
+    }
+  }
+  
+  public enum UserErrorCode implements RESTErrorCode {
+    
+    NO_ROLE_FOUND(0, "No valid role found for this user", Response.Status.UNAUTHORIZED),
+    USER_DOES_NOT_EXIST(1, "User does not exist.", Response.Status.BAD_REQUEST),
+    USER_WAS_NOT_FOUND(2, "User not found", Response.Status.NOT_FOUND),
+    USER_EXISTS(3, "There is an existing account associated with this email", Response.Status.CONFLICT),
+    ACCOUNT_REQUEST(4, "Your account has not yet been approved.", Response.Status.UNAUTHORIZED),
+    ACCOUNT_DEACTIVATED(5, "This account has been deactivated.", Response.Status.UNAUTHORIZED),
+    ACCOUNT_VERIFICATION(6, "You need to verify your account.", Response.Status.BAD_REQUEST),
+    ACCOUNT_BLOCKED(7, "Your account has been blocked. Contact the administrator.",
+      Response.Status.UNAUTHORIZED),
+    AUTHENTICATION_FAILURE(8, "Authentication failed, invalid credentials", Response.Status.UNAUTHORIZED),
+    LOGOUT_FAILURE(9, "Logout failed on backend.", Response.Status.BAD_REQUEST),
+    
+    SEC_Q_EMPTY(10, "Security Question cannot be empty.", Response.Status.BAD_REQUEST),
+    SEC_A_EMPTY(11, "Security Answer cannot be empty.", Response.Status.BAD_REQUEST),
+    SEC_Q_NOT_IN_LIST(12, "Choose a Security Question from the list.", Response.Status.BAD_REQUEST),
+    SEC_QA_INCORRECT(13, "Security question or answer did not match", Response.Status.BAD_REQUEST),
+    PASSWORD_EMPTY(14, "Password cannot be empty.", Response.Status.BAD_REQUEST),
+    PASSWORD_TOO_SHORT(15, "Password too short.", Response.Status.BAD_REQUEST),
+    PASSWORD_TOO_LONG(16, "Password too long.", Response.Status.BAD_REQUEST),
+    PASSWORD_INCORRECT(17, "Password incorrect", Response.Status.BAD_REQUEST),
+    PASSWORD_PATTERN_NOT_CORRECT(18, "Password should include one uppercase letter, "
+      + "one special character and/or alphanumeric characters.", Response.Status.BAD_REQUEST),
+    INCORRECT_PASSWORD(19, "The password is incorrect. Please try again", Response.Status.UNAUTHORIZED),
+    PASSWORD_MISS_MATCH(20, "Passwords do not match - typo?", Response.Status.BAD_REQUEST),
+    TOS_NOT_AGREED(21, "You must agree to our terms of use.", Response.Status.BAD_REQUEST),
+    CERT_DOWNLOAD_DENIED(22, "Admin is not allowed to download certificates", Response.Status.BAD_REQUEST),
+    
+    //success response
+    CREATED_ACCOUNT(23, "You have successfully created an account\n"
+      + "but you might need to wait until your account has been approved \n"
+      + "before you can login.", Response.Status.BAD_REQUEST),
+    PASSWORD_RESET_SUCCESSFUL(24,
+      "Your password was successfully reset your new password have been sent to your email." ,
+      Response.Status.BAD_REQUEST),
+    PASSWORD_RESET_UNSUCCESSFUL(25,
+      "Your password could not be reset. Please try again later or contact support.",
+      Response.Status.BAD_REQUEST),
+    PASSWORD_CHANGED(26, "Your password was successfully changed.", Response.Status.BAD_REQUEST),
+    SEC_QA_CHANGED(27, "Your have successfully changed your security questions and answer.",
+      Response.Status.BAD_REQUEST),
+    PROFILE_UPDATED(28, "Your profile was updated successfully.", Response.Status.BAD_REQUEST),
+    SSH_KEY_REMOVED(29, "Your ssh key was deleted successfully.", Response.Status.BAD_REQUEST),
+    NOTHING_TO_UPDATE(30, "Nothing to update", Response.Status.BAD_REQUEST),
+    CREATE_USER_ERROR(31, "Error while creating user", Response.Status.INTERNAL_SERVER_ERROR),
+    CERT_AUTHORIZATION_ERROR(32, "Certificate CN does not match the username provided.",
+      Response.Status.UNAUTHORIZED),
+    PROJECT_USER_CERT_NOT_FOUND(33, "Could not find exactly one certificate for user in project.",
+      Response.Status.FORBIDDEN),
+    ACCOUNT_INACTIVE(34, "This account has not been activated", Response.Status.UNAUTHORIZED),
+    ACCOUNT_LOST_DEVICE(35, "This account has registered a lost device.", Response.Status.UNAUTHORIZED),
+    ACCOUNT_NOT_APPROVED(36, "This account has not yet been approved", Response.Status.UNAUTHORIZED),
+    INVALID_EMAIL(37, "Invalid email format.", Response.Status.BAD_REQUEST),
+    INCORRECT_DEACTIVATION_LENGTH(38, "The message should have a length between 5 and 500 characters",
+      Response.Status.BAD_REQUEST),
+    TMP_CODE_INVALID(39, "The temporary code was wrong.", Response.Status.UNAUTHORIZED),
+    INCORRECT_CREDENTIALS(40, "Incorrect email or password.", Response.Status.UNAUTHORIZED),
+    INCORRECT_VALIDATION_KEY(41, "Incorrect validation key", Response.Status.UNAUTHORIZED),
+    ACCOUNT_ALREADY_VERIFIED(42, "User is already verified", Response.Status.CONFLICT),
+    TWO_FA_ENABLE_ERROR(43, "Cannot enable 2-factor authentication.",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    ACCOUNT_REGISTRATION_ERROR(44, "Account registration error.", Response.Status.INTERNAL_SERVER_ERROR),
+    TWO_FA_DISABLED(45, "2-factor authentication is disabled.", Response.Status.PRECONDITION_FAILED),
+    TRANSITION_STATUS_ERROR(46, "The user can't transition from current status to requested status",
+      Response.Status.BAD_REQUEST);
+    
+    private Integer code;
+    private String message;
+    private Response.StatusType respStatus;
+    private final int range = 160000;
+  
+  
+    UserErrorCode(Integer code, String message, Response.StatusType respStatus) {
+      this.code = range + code;
+      this.message = message;
+      this.respStatus = respStatus;
+    }
+    
+    @Override
+    public Integer getCode() {
+      return code;
+    }
+    
+    @Override
+    public String getMessage() {
+      return message;
+    }
+    
+    public Response.StatusType getRespStatus() {
+      return respStatus;
+    }
+  
+    @Override
+    public int getRange() {
+      return range;
+    }
+  }
+  
+  public enum DelaErrorCode implements RESTErrorCode {
+    
+    //response for validation error
+    THIRD_PARTY_ERROR(0, "Generic third party error.", Response.Status.INTERNAL_SERVER_ERROR),
+    CLUSTER_NOT_REGISTERED(1, "Cluster not registered.", Response.Status.UNAUTHORIZED),
+    HEAVY_PING(2, "Heavy ping required.", Response.Status.BAD_REQUEST),
+    USER_NOT_REGISTERED(3, "User not registered.", Response.Status.UNAUTHORIZED),
+    DATASET_EXISTS(4, "Dataset exists.", Response.Status.CONFLICT),
+    DATASET_DOES_NOT_EXIST(5, "Dataset does not exist.", Response.Status.NOT_FOUND),
+    DATASET_PUBLISH_PERMISSION_ERROR(6, "Dataset shared - only owner can publish.",
+      Response.Status.FORBIDDEN),
+    ILLEGAL_ARGUMENT(7, "Illegal Argument.", Response.Status.BAD_REQUEST),
+    README_RETRIEVAL_FAILED(8, "Readme retrieval failed.", Response.Status.EXPECTATION_FAILED),
+    README_ACCESS_PROBLEM(9, "Readme access problem.", Response.Status.BAD_REQUEST),
+    COMMUNICATION_FAILURE(10, "Communication failure.", Response.Status.EXPECTATION_FAILED),
+    DATASET_EMPTY(11, "Dataset empty.", Response.Status.BAD_REQUEST),
+    SUBDIRS_NOT_SUPPORTED(12, "Subdirectories not supported.", Response.Status.BAD_REQUEST),
+    ACCESS_ERROR(13, "Access error.", Response.Status.BAD_REQUEST),
+    MISCONFIGURED(14, "misconfigured", Response.Status.EXPECTATION_FAILED),
+    USER_NOT_FOUND(15, "user not found.", Response.Status.FORBIDDEN),
+    DATASET_DELETE_ERROR(16, "Delete dataset error.", Response.Status.EXPECTATION_FAILED),
+    DELA_NOT_AVAILABLE(17, "Dela not available.", Response.Status.BAD_REQUEST),
+    HOPSSITE_NOT_AVAILABLE(18, "hopssite not available", Response.Status.BAD_REQUEST),
+    REMOTE_DELA_NOT_AVAILABLE(19, "Remote dela not available.", Response.Status.BAD_REQUEST),
+    DELA_TRANSFER_NOT_AVAILABLE(20, "Dela transfer not available.", Response.Status.BAD_REQUEST),
+    MANIFEST_ENCODING_ERROR(21, "Manifest cannot be read as UTF", Response.Status.BAD_REQUEST),
+    DATASET_NOT_PUBLIC(22, "dataset not public - no manifest", Response.Status.BAD_REQUEST),
+    INODE_NOT_FOUND(23, "Inode not found.", Response.Status.BAD_REQUEST);
+    
+    private Integer code;
+    private String message;
+    private Response.StatusType respStatus;
+    public final int range = 170000;
+  
+  
+    DelaErrorCode(Integer code, String message, Response.StatusType respStatus) {
+      this.code = range + code;
+      this.message = message;
+      this.respStatus = respStatus;
+    }
+    
+    @Override
+    public Integer getCode() {
+      return code;
+    }
+    
+    @Override
+    public String getMessage() {
+      return message;
+    }
+    
+    public Response.StatusType getRespStatus() {
+      return respStatus;
+    }
+  
+    @Override
+    public int getRange() {
+      return range;
+    }
+  }
+  
+  
+  public enum ZeppelinErrorCode implements RESTErrorCode {
+    
+    // Zeppelin
+    PROJECT_NOT_FOUND(0, "Could not find project. Make sure cookies are enabled.", Response.Status.FORBIDDEN),
+    ROLE_NOT_FOUND(1, "No role in this project.", Response.Status.FORBIDDEN),
+    WEB_SOCKET_ERROR(2, "Could not connect to websocket", Response.Status.BAD_REQUEST),
+    USER_NOT_FOUND(3, "Could not find remote user", Response.Status.FORBIDDEN),
+    INTERPRETER_CLOSE_ERROR(4, "Could not close interpreter. Make sure it is not running.",
+      Response.Status.BAD_REQUEST),
+    RESTART_ERROR(5,
+      "This service has been restarted recently. Please wait a few minutes before trying again.",
+      Response.Status.BAD_REQUEST),
+    STOP_SESSIONS_FORBIDDEN(6, "You can't stop sessions in another project.", Response.Status.BAD_REQUEST),
+    CREATE_NOTEBOOK_ERROR(7, "Could not create notebook.", Response.Status.BAD_REQUEST);
+    
+    
+    private Integer code;
+    private String message;
+    private Response.StatusType respStatus;
+    public final int range = 210000;
+  
+  
+    ZeppelinErrorCode(Integer code, String message, Response.StatusType respStatus) {
+      this.code = range + code;
+      this.message = message;
+      this.respStatus = respStatus;
+    }
+    
+    @Override
+    public Integer getCode() {
+      return code;
+    }
+    
+    @Override
+    public String getMessage() {
+      return message;
+    }
+    
+    @Override
+    public Response.StatusType getRespStatus() {
+      return respStatus;
+    }
+  
+    @Override
+    public int getRange() {
+      return range;
+    }
+  }
+  
+  public enum CAErrorCode implements RESTErrorCode {
+    
+    BADSIGNREQUEST(0, "No CSR provided", Response.Status.BAD_REQUEST),
+    BADREVOKATIONREQUEST(1, "No certificate identifier provided", Response.Status.BAD_REQUEST),
+    CERTNOTFOUND(2, "Certificate file not found", Response.Status.NO_CONTENT);
+    
+    private Integer code;
+    private String message;
+    private Response.StatusType respStatus;
+    private final int range = 220000;
+  
+    CAErrorCode(Integer code, String message, Response.StatusType respStatus) {
+      this.code = range + code;
+      this.message = message;
+      this.respStatus = respStatus;
+    }
+    
+    @Override
+    public Integer getCode() {
+      return code;
+    }
+    
+    @Override
+    public String getMessage() {
+      return message;
+    }
+    
+    public Response.StatusType getRespStatus() {
+      return respStatus;
+    }
+  
+    @Override
+    public int getRange() {
+      return range;
+    }
+  }
+  
+  public enum DelaCSRErrorCode implements RESTErrorCode {
+    
+    BADREQUEST(0, "User or CS not set", Response.Status.BAD_REQUEST),
+    EMAIL(1, "CSR email not set or does not match user", Response.Status.UNAUTHORIZED),
+    CN(3, "CSR common name not set", Response.Status.BAD_REQUEST),
+    O(4, "CSR organization name not set", Response.Status.BAD_REQUEST),
+    OU(5, "CSR organization unit name not set", Response.Status.BAD_REQUEST),
+    NOTFOUND(6, "No cluster registered with the given organization name and organizational unit",
+      Response.Status.BAD_REQUEST),
+    SERIALNUMBER(7, "Cluster has already a signed certificate", Response.Status.BAD_REQUEST),
+    CNNOTFOUND(8, "No cluster registered with the CSR common name", Response.Status.BAD_REQUEST),
+    AGENTIDNOTFOUND(9, "No cluster registered for the user", Response.Status.UNAUTHORIZED);
+    
+    private Integer code;
+    private String message;
+    private Response.StatusType respStatus;
+    public final int range = 230000;
+  
+  
+    DelaCSRErrorCode(Integer code, String message, Response.StatusType respStatus) {
+      this.code = range + code;
+      this.message = message;
+      this.respStatus = respStatus;
+    }
+    
+    @Override
+    public Integer getCode() {
+      return code;
+    }
+    
+    @Override
+    public String getMessage() {
+      return message;
+    }
+    
+    public Response.StatusType getRespStatus() {
+      return respStatus;
+    }
+  
+    @Override
+    public int getRange() {
+      return range;
+    }
+  }
+  
+  public enum TfServingErrorCode implements RESTErrorCode {
+    
+    INSTANCENOTFOUND(0, "TFServing instance not found", Response.Status.NOT_FOUND),
+    DELETIONERROR(1, "TFServing instance could not be deleted",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    UPDATEERROR(2, "TFServing instance could not be updated", Response.Status.INTERNAL_SERVER_ERROR),
+    LIFECYCLEERROR(3, "TFServing instance could not be started/stopped", Response.Status.BAD_REQUEST),
+    LIFECYCLEERRORINT(4, "TFServing instance could not be started/stopped",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    STATUSERROR(5, "Error getting TFServing instance status", Response.Status.INTERNAL_SERVER_ERROR),
+    PATHNOTFOUND(6, "Model Path not found", Response.Status.BAD_REQUEST),
+    COMMANDNOTRECOGNIZED(7, "Command not recognized", Response.Status.BAD_REQUEST),
+    COMMANDNOTPROVIDED(8, "Command not provided", Response.Status.BAD_REQUEST),
+    SPECNOTPROVIDED(9, "TFServing spec not provided", Response.Status.BAD_REQUEST);
+    
+    private Integer code;
+    private String message;
+    private Response.StatusType respStatus;
+    public final int range = 240000;
+  
+  
+    TfServingErrorCode(Integer code, String message, Response.StatusType respStatus) {
+      this.code = range + code;
+      this.message = message;
+      this.respStatus = respStatus;
+    }
+    
+    @Override
+    public Integer getCode() {
+      return code;
+    }
+    
+    @Override
+    public String getMessage() {
+      return message;
+    }
+    
+    public Response.StatusType getRespStatus() {
+      return respStatus;
+    }
+  
+    @Override
+    public int getRange() {
+      return range;
+    }
+  }
+  
+  /**
+   * Provides http status codes not available in Response.StatusType.
+   */
+  public enum Status implements Response.StatusType {
+    UNPROCESSABLE_ENTITY(422, "UNPROCESSABLE_ENTITY");
+    
+    private final int code;
+    private final String reason;
+    private final Response.Status.Family family;
+    
+    Status(int statusCode, String reasonPhrase) {
+      this.code = statusCode;
+      this.reason = reasonPhrase;
+      this.family = Response.Status.Family.familyOf(statusCode);
+    }
+    
+    public static Status fromStatus(final int statusCode) {
+      for (Status status : Status.values()) {
+        if (status.getStatusCode() == statusCode) {
+          return status;
+        }
+      }
+      return null;
+    }
+    
+    @Override
+    public int getStatusCode() {
+      return this.code;
+    }
+    
+    @Override
+    public Response.Status.Family getFamily() {
+      return this.family;
+    }
+    
+    @Override
+    public String getReasonPhrase() {
+      return this.toString();
+    }
+    
+    @Override
+    public String toString() {
+      return this.reason;
+    }
+  }
+  
+  
+}

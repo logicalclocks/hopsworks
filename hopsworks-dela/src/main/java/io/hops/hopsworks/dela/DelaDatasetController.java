@@ -47,27 +47,30 @@ import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.FilePreviewDTO;
-import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.exception.DatasetException;
+import io.hops.hopsworks.common.exception.HopsSecurityException;
+import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.util.Settings;
-import io.hops.hopsworks.dela.exception.ThirdPartyException;
-import java.io.IOException;
-import java.util.List;
-import java.util.Optional;
-import java.util.logging.Logger;
+import io.hops.hopsworks.common.exception.DelaException;
+import org.apache.hadoop.fs.Path;
+
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.ws.rs.core.Response;
-import org.apache.hadoop.fs.Path;
+import java.io.IOException;
+import java.util.List;
+import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class DelaDatasetController {
 
-  private Logger logger = Logger.getLogger(DelaDatasetController.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(DelaDatasetController.class.getName());
 
   @EJB
   private DatasetController datasetCtrl;
@@ -97,13 +100,13 @@ public class DelaDatasetController {
   }
   
   public Dataset download(Project project, Users user, String publicDSId, String name)
-    throws ThirdPartyException {
+    throws DelaException {
     Dataset dataset;
     try {
       dataset = createDataset(user, project, name, "");
-    } catch (IOException | AppException e) {
-      throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), e.getMessage(),
-        ThirdPartyException.Source.LOCAL, "");
+    } catch (DatasetException | HopsSecurityException e) {
+      throw new DelaException(RESTCodes.DelaErrorCode.THIRD_PARTY_ERROR, Level.SEVERE, DelaException.Source.LOCAL, null,
+        e.getMessage(), e);
     }
     dataset.setPublicDsState(Dataset.SharedState.HOPS);
     dataset.setPublicDsId(publicDSId);
@@ -120,7 +123,7 @@ public class DelaDatasetController {
     return dataset;
   }
 
-  public void delete(Project project, Dataset dataset) throws ThirdPartyException {
+  public void delete(Project project, Dataset dataset) throws DelaException {
     if (dataset.isShared()) {
       //remove the entry in the table that represents shared ds
       //but leave the dataset in hdfs b/c the user does not have the right to delete it.
@@ -131,17 +134,16 @@ public class DelaDatasetController {
       Path path = datasetCtrl.getDatasetPath(dataset);
       boolean result = datasetCtrl.deleteDatasetDir(dataset, path, dfs.getDfsOps());
       if (!result) {
-        throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), "dataset delete",
-          ThirdPartyException.Source.LOCAL, "exception");
+        throw new DelaException(RESTCodes.DelaErrorCode.DATASET_DELETE_ERROR, Level.SEVERE, DelaException.Source.LOCAL);
       }
     } catch (IOException ex) {
-      throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), "dataset delete",
-        ThirdPartyException.Source.LOCAL, "exception");
+      throw new DelaException(RESTCodes.DelaErrorCode.DATASET_DELETE_ERROR, Level.SEVERE, DelaException.Source.LOCAL,
+        null, ex.getMessage(), ex);
     }
   }
 
   public Dataset createDataset(Users user, Project project, String name, String description)
-    throws IOException, AppException {
+    throws DatasetException, HopsSecurityException {
     int templateId = -1;
     boolean defaultDataset = false;
     boolean searchable = true;

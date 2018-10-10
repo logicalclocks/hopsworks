@@ -108,12 +108,6 @@
       <version>0.6.0-SNAPSHOT</version>
       <type>war</type>
     </dependency>
-    <dependency>
-      <groupId>io.hops.hopsworks</groupId>
-      <artifactId>hopsworks-api-v2</artifactId>
-      <version>0.6.0-SNAPSHOT</version>
-      <type>war</type>
-    </dependency>
   </dependencies>
   <profiles>
     <profile>

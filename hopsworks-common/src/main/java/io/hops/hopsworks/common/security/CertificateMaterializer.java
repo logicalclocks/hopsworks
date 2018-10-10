@@ -220,8 +220,8 @@ public class CertificateMaterializer {
     }
     transientDir = tmpDir.getAbsolutePath();
     String delayRaw = settings.getCertificateMaterializerDelay();
-    DELAY_VALUE = Settings.getConfTimeValue(delayRaw);
-    DELAY_TIMEUNIT = Settings.getConfTimeTimeUnit(delayRaw);
+    DELAY_VALUE = settings.getConfTimeValue(delayRaw);
+    DELAY_TIMEUNIT = settings.getConfTimeTimeUnit(delayRaw);
     
     try {
       String hostAddress = InetAddress.getLocalHost().getHostAddress();

@@ -40,16 +40,32 @@ package io.hops.hopsworks.common.util;
 
 import com.google.common.base.Splitter;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
-import static io.hops.hopsworks.common.dao.kafka.KafkaFacade.DLIMITER;
-import static io.hops.hopsworks.common.dao.kafka.KafkaFacade.SLASH_SEPARATOR;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
 import io.hops.hopsworks.common.dao.util.Variables;
 import io.hops.hopsworks.common.dela.AddressJSON;
 import io.hops.hopsworks.common.dela.DelaClientType;
-import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.yarn.conf.YarnConfiguration;
+import org.apache.zookeeper.KeeperException;
+import org.apache.zookeeper.WatchedEvent;
+import org.apache.zookeeper.Watcher;
+import org.apache.zookeeper.ZooKeeper;
+
+import javax.annotation.PostConstruct;
+import javax.ejb.ConcurrencyManagement;
+import javax.ejb.ConcurrencyManagementType;
+import javax.ejb.EJB;
+import javax.ejb.Singleton;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityNotFoundException;
+import javax.persistence.NoResultException;
+import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
@@ -72,31 +88,15 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.annotation.PostConstruct;
-import javax.ejb.ConcurrencyManagement;
-import javax.ejb.ConcurrencyManagementType;
-import javax.ejb.EJB;
-import javax.ejb.Singleton;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityNotFoundException;
-import javax.persistence.NoResultException;
-import javax.persistence.PersistenceContext;
-import javax.persistence.TypedQuery;
-import javax.ws.rs.core.Response;
-import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.yarn.conf.YarnConfiguration;
-import org.apache.zookeeper.KeeperException;
-import org.apache.zookeeper.WatchedEvent;
-import org.apache.zookeeper.Watcher;
-import org.apache.zookeeper.ZooKeeper;
+
+import static io.hops.hopsworks.common.dao.kafka.KafkaFacade.DLIMITER;
+import static io.hops.hopsworks.common.dao.kafka.KafkaFacade.SLASH_SEPARATOR;
 
 @Singleton
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class Settings implements Serializable {
 
-  private static final Logger logger = Logger.getLogger(Settings.class.
+  private static final Logger LOGGER = Logger.getLogger(Settings.class.
       getName());
 
   @EJB
@@ -121,8 +121,8 @@ public class Settings implements Serializable {
   private void init() {
     try {
       setKafkaBrokers(getBrokerEndpoints());
-    } catch (AppException ex) {
-      logger.log(Level.SEVERE, null, ex);
+    } catch (IOException | KeeperException | InterruptedException ex) {
+      LOGGER.log(Level.SEVERE, null, ex);
     }
   }
 
@@ -270,6 +270,9 @@ public class Settings implements Serializable {
   private static final String VARIABLE_CUDA_VERSION = "cuda_version";
   private static final String VARIABLE_HOPSWORKS_VERSION = "hopsworks_version";
   
+  //Used by RESTException to include devMsg or not in response
+  private static final String VARIABLE_HOPSWORKS_REST_LOG_LEVEL = "hopsworks_rest_log_level";
+  
   /* -------------------- TfServing  --------------- */
   private static final String VARIABLE_TF_SERVING_MONITOR_INT = "tf_serving_monitor_int";
 
@@ -368,7 +371,7 @@ public class Settings implements Serializable {
         }
       }
     } catch (NumberFormatException ex) {
-      logger.info("Error - not an integer! " + varName
+      LOGGER.info("Error - not an integer! " + varName
           + " should be an integer. Value was " + defaultValue);
     }
     return defaultValue;
@@ -384,10 +387,21 @@ public class Settings implements Serializable {
         }
       }
     } catch (NumberFormatException ex) {
-      logger.info("Error - not a long! " + varName
+      LOGGER.info("Error - not a long! " + varName
           + " should be an integer. Value was " + defaultValue);
     }
 
+    return defaultValue;
+  }
+  
+  private LOG_LEVEL setLogLevelVar(String varName, LOG_LEVEL defaultValue) {
+    Variables var = findById(varName);
+    if (var != null && var.getValue() != null) {
+      String val = var.getValue();
+      if (val != null && !val.isEmpty()) {
+        return LOG_LEVEL.valueOf(val);
+      }
+    }
     return defaultValue;
   }
 
@@ -542,6 +556,8 @@ public class Settings implements Serializable {
       TENSORFLOW_VERSION = setStrVar(VARIABLE_TENSORFLOW_VERSION, TENSORFLOW_VERSION);
       CUDA_VERSION = setStrVar(VARIABLE_CUDA_VERSION, CUDA_VERSION);
       HOPSWORKS_VERSION = setStrVar(VARIABLE_HOPSWORKS_VERSION, HOPSWORKS_VERSION);
+      HOPSWORKS_REST_LOG_LEVEL = setLogLevelVar(VARIABLE_HOPSWORKS_REST_LOG_LEVEL, HOPSWORKS_REST_LOG_LEVEL);
+      
       PROVIDED_PYTHON_LIBRARY_NAMES = toSetFromCsv(
           setStrVar(VARIABLE_PROVIDED_PYTHON_LIBRARY_NAMES, DEFAULT_PROVIDED_PYTHON_LIBRARY_NAMES),",");
       PREINSTALLED_PYTHON_LIBRARY_NAMES = toSetFromCsv(
@@ -1535,6 +1551,13 @@ public class Settings implements Serializable {
     checkCache();
     return "https://" + HOPSWORKS_REST_ENDPOINT;
   }
+  
+  private LOG_LEVEL HOPSWORKS_REST_LOG_LEVEL = LOG_LEVEL.PROD;
+  
+  public synchronized LOG_LEVEL getHopsworksRESTLogLevel() {
+    checkCache();
+    return HOPSWORKS_REST_LOG_LEVEL;
+  }
 
   private String SUPPORT_EMAIL_ADDR = "support@hops.io";
 
@@ -1894,7 +1917,7 @@ public class Settings implements Serializable {
     try {
       return query.getResultList();
     } catch (EntityNotFoundException ex) {
-      logger.log(Level.SEVERE, ex.getMessage(), ex);
+      LOGGER.log(Level.SEVERE, ex.getMessage(), ex);
     } catch (NoResultException ex) {
     }
     return new ArrayList<>();
@@ -2477,19 +2500,17 @@ public class Settings implements Serializable {
     this.kafkaBrokers.clear();
     this.kafkaBrokers.addAll(kafkaBrokers);
   }
-
-  public Set<String> getBrokerEndpoints() throws AppException {
-
+  
+  public Set<String> getBrokerEndpoints() throws IOException, KeeperException, InterruptedException {
     Set<String> brokerList = new HashSet<>();
-    ZooKeeper zk = null;
+    ZooKeeper zk;
+    zk = new ZooKeeper(getZkConnectStr(),
+      Settings.ZOOKEEPER_SESSION_TIMEOUT_MS, new ZookeeperWatcher());
     try {
-      zk = new ZooKeeper(getZkConnectStr(),
-          Settings.ZOOKEEPER_SESSION_TIMEOUT_MS, new ZookeeperWatcher());
-
       List<String> ids = zk.getChildren("/brokers/ids", false);
       for (String id : ids) {
         String brokerInfo = new String(zk.getData("/brokers/ids/" + id,
-            false, null));
+          false, null));
         String[] tokens = brokerInfo.split(DLIMITER);
         for (String str : tokens) {
           if (str.contains(SLASH_SEPARATOR) && str.startsWith(KAFKA_BROKER_PROTOCOL)) {
@@ -2497,22 +2518,9 @@ public class Settings implements Serializable {
           }
         }
       }
-    } catch (IOException ex) {
-      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-          "Unable to find the zookeeper server: " + ex);
-    } catch (KeeperException | InterruptedException ex) {
-      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-          "Unable to retrieve seed brokers from the kafka cluster: " + ex);
     } finally {
-      if (zk != null) {
-        try {
-          zk.close();
-        } catch (InterruptedException ex) {
-          logger.log(Level.SEVERE, null, ex.getMessage());
-        }
-      }
+      zk.close();
     }
-
     return brokerList;
   }
 
@@ -2687,7 +2695,7 @@ public class Settings implements Serializable {
     return sparkUILogsOffset;
   }
 
-  public static Long getConfTimeValue(String configurationTime) {
+  public Long getConfTimeValue(String configurationTime) {
     Matcher matcher = TIME_CONF_PATTERN.matcher(configurationTime.toLowerCase());
     if (!matcher.matches()) {
       throw new IllegalArgumentException("Invalid time in configuration: " + configurationTime);
@@ -2695,7 +2703,7 @@ public class Settings implements Serializable {
     return Long.parseLong(matcher.group(1));
   }
 
-  public static TimeUnit getConfTimeTimeUnit(String configurationTime) {
+  public TimeUnit getConfTimeTimeUnit(String configurationTime) {
     Matcher matcher = TIME_CONF_PATTERN.matcher(configurationTime.toLowerCase());
     if (!matcher.matches()) {
       throw new IllegalArgumentException("Invalid time in configuration: " + configurationTime);
@@ -2990,5 +2998,27 @@ public class Settings implements Serializable {
   public synchronized String getTFServingMonitorInt() {
     checkCache();
     return TF_SERVING_MONITOR_INT;
+  }
+  
+  public enum LOG_LEVEL {
+    DEV(0, "User and Dev messages as well as stack trace are returned to client to client."),
+    TEST(1, "User and Dev messages are returned to client to client."),
+    PROD(2, "User message is returned to client to client.");
+    
+    private final int level;
+    private final String description;
+    
+    LOG_LEVEL(int level, String description) {
+      this.level = level;
+      this.description = description;
+    }
+    
+    public int getLevel() {
+      return level;
+    }
+    
+    public String getDescription() {
+      return description;
+    }
   }
 }

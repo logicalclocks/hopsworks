@@ -39,7 +39,7 @@
 
 package io.hops.hopsworks.api.filter;
 
-import io.hops.hopsworks.api.util.JsonResponse;
+import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 
 import javax.ejb.Stateless;
 import javax.ws.rs.core.CacheControl;
@@ -69,9 +69,8 @@ public class NoCacheResponse {
             .cacheControl(cc);
   }
   
-  public JsonResponse buildJsonResponse(Response.Status status, String message) {
-    JsonResponse response = new JsonResponse();
-    response.setStatus(String.valueOf(status));
+  public RESTApiJsonResponse buildJsonResponse(Response.Status status, String message) {
+    RESTApiJsonResponse response = new RESTApiJsonResponse();
     response.setSuccessMessage(message);
     
     return response;

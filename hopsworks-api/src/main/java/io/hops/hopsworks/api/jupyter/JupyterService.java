@@ -71,18 +71,20 @@ import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuotaFacade;
 import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
 import io.hops.hopsworks.common.dao.jupyter.JupyterSettings;
 import io.hops.hopsworks.common.dao.jupyter.JupyterSettingsFacade;
-import io.hops.hopsworks.common.dao.jupyter.config.JupyterProcessMgr;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterDTO;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
+import io.hops.hopsworks.common.dao.jupyter.config.JupyterProcessMgr;
 import io.hops.hopsworks.common.dao.project.PaymentType;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.service.ProjectServiceEnum;
-import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.elastic.ElasticController;
-import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.exception.HopsSecurityException;
+import io.hops.hopsworks.common.exception.ProjectException;
+import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -91,6 +93,12 @@ import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Ip;
 import io.hops.hopsworks.common.util.Settings;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import javax.annotation.security.RolesAllowed;
+import javax.ws.rs.core.GenericEntity;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -100,17 +108,12 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Level;
-import javax.annotation.security.RolesAllowed;
-import javax.ws.rs.core.GenericEntity;
-import org.apache.commons.codec.digest.DigestUtils;
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class JupyterService {
 
-  private final static Logger LOGGER = Logger.getLogger(JupyterService.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(JupyterService.class.getName());
 
   @EJB
   private ProjectFacade projectFacade;
@@ -123,8 +126,6 @@ public class JupyterService {
   @EJB
   private JupyterFacade jupyterFacade;
   @EJB
-  private PythonDepsFacade pythonDepsFacade;
-  @EJB
   private JupyterSettingsFacade jupyterSettingsFacade;
   @EJB
   private HdfsUsersController hdfsUsersController;
@@ -133,7 +134,7 @@ public class JupyterService {
   @EJB
   private Settings settings;
   @EJB
-  private LivyController livyService;
+  private LivyController livyController;
   @EJB
   private CertificateMaterializer certificateMaterializer;
   @EJB
@@ -165,26 +166,18 @@ public class JupyterService {
    * @param sc
    * @param req
    * @return
-   * @throws AppException
    */
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response getAllNotebookServersInProject(
       @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException {
-
-    if (projectId == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          "Incomplete request!");
-    }
+      @Context HttpServletRequest req) throws ServiceException {
 
     Collection<JupyterProject> servers = project.getJupyterProjectCollection();
 
     if (servers == null) {
-      throw new AppException(
-          Response.Status.NOT_FOUND.getStatusCode(),
-          "Could not find any Jupyter notebook servers for this project.");
+      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_SERVERS_NOT_FOUND, Level.FINE);
     }
 
     List<JupyterProject> listServers = new ArrayList<>();
@@ -201,10 +194,10 @@ public class JupyterService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response livySessions(@Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException {
+      @Context HttpServletRequest req) {
     String loggedinemail = sc.getUserPrincipal().getName();
     Users user = userFacade.findByEmail(loggedinemail);
-    List<LivyMsg.Session> sessions = livyService.getLivySessionsForProjectUser(this.project, user,
+    List<LivyMsg.Session> sessions = livyController.getLivySessionsForProjectUser(this.project, user,
         ProjectServiceEnum.JUPYTER);
     GenericEntity<List<LivyMsg.Session>> livyActive
         = new GenericEntity<List<LivyMsg.Session>>(sessions) { };
@@ -215,7 +208,7 @@ public class JupyterService {
   @Path("/livy/sessions/{appId}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response stopLivySession(@PathParam("appId") String appId, @Context SecurityContext sc) throws AppException {
+  public Response stopLivySession(@PathParam("appId") String appId, @Context SecurityContext sc) {
     String hdfsUsername = getHdfsUser(sc);
     stopSession(hdfsUsername, sc.getUserPrincipal().getName(), appId);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
@@ -225,14 +218,13 @@ public class JupyterService {
    * Get livy session Yarn AppId
    *
    * @return
-   * @throws AppException
    */
   @GET
   @Path("/settings")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response settings(@Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException {
+      @Context HttpServletRequest req) {
 
     String loggedinemail = sc.getUserPrincipal().getName();
     JupyterSettings js = jupyterSettingsFacade.findByProjectUser(projectId,
@@ -253,18 +245,12 @@ public class JupyterService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response isRunning(@Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException {
+      @Context HttpServletRequest req) throws ServiceException {
 
-    if (projectId == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          "Incomplete request!");
-    }
     String hdfsUser = getHdfsUser(sc);
     JupyterProject jp = jupyterFacade.findByUser(hdfsUser);
     if (jp == null) {
-      throw new AppException(
-          Response.Status.NOT_FOUND.getStatusCode(),
-          "Could not find any Jupyter notebook server for this project.");
+      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_SERVERS_NOT_FOUND, Level.FINE);
     }
     // Check to make sure the jupyter notebook server is running
     boolean running = jupyterProcessFacade.pingServerJupyterUser(jp.getPid());
@@ -272,9 +258,7 @@ public class JupyterService {
     // we should remove the DB entry (and restart the notebook server).
     if (!running) {
       jupyterFacade.removeNotebookServer(hdfsUser);
-      throw new AppException(
-          Response.Status.NOT_FOUND.getStatusCode(),
-          "Found Jupyter notebook server for you, but it wasn't running.");
+      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_SERVERS_NOT_RUNNING, Level.FINE);
     }
     String externalIp = Ip.getHost(req.getRequestURL().toString());
     settings.setHopsworksExternalIp(externalIp);
@@ -296,37 +280,23 @@ public class JupyterService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response startNotebookServer(JupyterSettings jupyterSettings,
       @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException {
+      @Context HttpServletRequest req) throws ProjectException, HopsSecurityException, ServiceException {
 
-    if (projectId == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          "Incomplete request!");
-    }
     String hdfsUser = getHdfsUser(sc);
-    if (hdfsUser == null) {
-      throw new AppException(
-          Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
-          "Could not find your username. Report a bug.");
-    }
     String loggedinemail = sc.getUserPrincipal().getName();
     Users hopsworksUser = userFacade.findByEmail(loggedinemail);
-    if (hopsworksUser == null) {
-      throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
-              "You are not authorized for this invocation.");
-    }
     String realName = hopsworksUser.getFname() + " " + hopsworksUser.getLname();
 
     if (project.getPaymentType().equals(PaymentType.PREPAID)) {
       YarnProjectsQuota projectQuota = yarnProjectsQuotaFacade.findByProjectName(project.getName());
       if (projectQuota == null || projectQuota.getQuotaRemaining() < 0) {
-        throw new AppException(Response.Status.FORBIDDEN.getStatusCode(), "This project is out of credits.");
+        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_QUOTA_INSUFFICIENT, Level.FINE);
       }
     }
 
     boolean enabled = project.getConda();
     if (!enabled) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          "First enable Anaconda. Click on 'Python' -> Pick a version'");
+      throw new ProjectException(RESTCodes.ProjectErrorCode.ANACONDA_NOT_ENABLED, Level.FINE);
     }
 
     JupyterProject jp = jupyterFacade.findByUser(hdfsUser);
@@ -341,10 +311,6 @@ public class JupyterService {
       try {
         jupyterSettingsFacade.update(jupyterSettings);
         dto = jupyterProcessFacade.startServerAsJupyterUser(project, configSecret, hdfsUser, realName, jupyterSettings);
-        if (dto == null) {
-          throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Incomplete request!");
-        }
         HopsUtils.materializeCertificatesForUserCustomDir(project.getName(), user.getUsername(), settings
             .getHdfsTmpCertDir(),
             dfso, certificateMaterializer, settings, dto.getCertificatesDir());
@@ -352,25 +318,18 @@ public class JupyterService {
         // We materialize them twice but most probably other operations will need them too, so it is OK
         // Remember to remove both when stopping Jupyter server or an exception is thrown
         certificateMaterializer.materializeCertificatesLocal(user.getUsername(), project.getName());
-      } catch (IOException ex) {
+      } catch (IOException | ServiceException ex) {
         LOGGER.log(Level.SEVERE, null, ex);
-        try {
-          certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());
-          if (dto != null) {
-            HopsUtils.cleanupCertificatesForUserCustomDir(user.getUsername(), project.getName(),
-                settings.getHdfsTmpCertDir(),
-                certificateMaterializer, dto.getCertificatesDir(), settings);
-          } else {
-            LOGGER.log(Level.SEVERE, "Could not identify local directory to clean certificates. Manual cleanup "
-                + "needed");
-            throw new IOException("Could not identify local directory to clean certificates");
-          }
-        } catch (IOException e) {
-          LOGGER.log(Level.SEVERE, "Could not cleanup certificates for " + hdfsUser);
+        certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());
+        if (dto != null) {
+          HopsUtils.cleanupCertificatesForUserCustomDir(user.getUsername(), project.getName(),
+            settings.getHdfsTmpCertDir(),
+            certificateMaterializer, dto.getCertificatesDir(), settings);
+        } else {
+          throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_LOCATION_UNDEFINED, Level.SEVERE);
         }
-        throw new AppException(
-            Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
-            "Problem starting a Jupyter notebook server.");
+        throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_START_ERROR, Level.SEVERE, ex.getMessage(),
+          null, ex);
       } finally {
         if (dfso != null) {
           dfsService.closeDfsClient(dfso);
@@ -383,9 +342,7 @@ public class JupyterService {
           dto.getPort(), user.getId(), dto.getToken(), dto.getPid());
 
       if (jp == null) {
-        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-            getStatusCode(),
-            "Could not save Jupyter Settings.");
+        throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_SAVE_SETTINGS_ERROR, Level.SEVERE);
       }
     }
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
@@ -397,7 +354,7 @@ public class JupyterService {
   @Produces(MediaType.APPLICATION_JSON)
   @RolesAllowed({"HOPS_ADMIN"})
   public Response stopAll(@Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException {
+      @Context HttpServletRequest req) throws ServiceException {
 
     jupyterProcessFacade.stopProject(project);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
@@ -409,7 +366,7 @@ public class JupyterService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response stopDataOwner(@PathParam("hdfsUsername") String hdfsUsername,
       @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException {
+      @Context HttpServletRequest req) throws ServiceException, ProjectException {
     stopAllSessions(hdfsUsername, sc.getUserPrincipal().getName());
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
@@ -419,38 +376,34 @@ public class JupyterService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response stopNotebookServer(@Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException {
+      @Context HttpServletRequest req) throws ProjectException, ServiceException {
     String hdfsUsername = getHdfsUser(sc);
     stopAllSessions(hdfsUsername, sc.getUserPrincipal().getName());
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 
-  private void stopAllSessions(String hdfsUser, String loggedinemail) throws AppException {
-    if (projectId == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          "Incomplete request!");
-    }
+  private void stopAllSessions(String hdfsUser, String loggedinemail) throws ServiceException, ProjectException {
     // We need to stop the jupyter notebook server with the PID
     // If we can't stop the server, delete the Entity bean anyway
     JupyterProject jp = jupyterFacade.findByUser(hdfsUser);
     if (jp == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          "Could not find Jupyter entry for user: " + hdfsUser);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.JUPYTER_SERVER_NOT_FOUND, Level.FINE,
+        "hdfsUser: " + hdfsUser);
     }
 
     Users user = userFacade.findByEmail(loggedinemail);
 
-    List<LivyMsg.Session> sessions = livyService.
+    List<LivyMsg.Session> sessions = livyController.
         getLivySessionsForProjectUser(project, user, ProjectServiceEnum.JUPYTER);
 
-    livyService.deleteAllLivySessions(hdfsUser, ProjectServiceEnum.JUPYTER);
+    livyController.deleteAllLivySessions(hdfsUser, ProjectServiceEnum.JUPYTER);
 
     int retries = 3;
     while(retries > 0 &&
-        livyService.getLivySessionsForProjectUser(project, user, ProjectServiceEnum.JUPYTER).size() > 0) {
+        livyController.getLivySessionsForProjectUser(project, user, ProjectServiceEnum.JUPYTER).size() > 0) {
       LOGGER.log(Level.SEVERE, "Failed previous attempt to delete livy sessions for project " + project.getName() +
             " user " + hdfsUser + ", retrying...");
-      livyService.deleteAllLivySessions(hdfsUser, ProjectServiceEnum.JUPYTER);
+      livyController.deleteAllLivySessions(hdfsUser, ProjectServiceEnum.JUPYTER);
 
       try {
         Thread.sleep(1000);
@@ -471,10 +424,8 @@ public class JupyterService {
     try {
       String certificatesDir = Paths.get(jupyterHomePath, "certificates").toString();
       HopsUtils.cleanupCertificatesForUserCustomDir(project_user[1], project
-          .getName(), settings.getHdfsTmpCertDir(), certificateMaterializer, certificatesDir, settings);
+        .getName(), settings.getHdfsTmpCertDir(), certificateMaterializer, certificatesDir, settings);
       certificateMaterializer.removeCertificatesLocal(project_user[1], project.getName());
-    } catch (IOException e) {
-      LOGGER.log(Level.SEVERE, "Could not cleanup certificates for " + hdfsUser);
     } finally {
       if (dfso != null) {
         dfsService.closeDfsClient(dfso);
@@ -485,27 +436,15 @@ public class JupyterService {
     }
   }
 
-  private void stopSession(String hdfsUser, String loggedinemail, String appId) throws AppException {
-    if (projectId == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          "Incomplete request!");
-    }
-    // We need to stop the jupyter notebook server with the PID
-    // If we can't stop the server, delete the Entity bean anyway
-    JupyterProject jp = jupyterFacade.findByUser(hdfsUser);
-    if (jp == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          "Could not find Jupyter entry for user: " + hdfsUser);
-    }
-
+  private void stopSession(String hdfsUser, String loggedinemail, String appId) {
     Users user = userFacade.findByEmail(loggedinemail);
 
-    List<LivyMsg.Session> sessions = livyService.
-        getLivySessionsForProjectUser(project, user, ProjectServiceEnum.JUPYTER);
+    List<LivyMsg.Session> sessions = livyController.getLivySessionsForProjectUser(project, user,
+      ProjectServiceEnum.JUPYTER);
 
     for(LivyMsg.Session session: sessions) {
       if(session.getAppId().equalsIgnoreCase(appId)) {
-        livyService.deleteLivySession(session.getId());
+        livyController.deleteLivySession(session.getId());
         updateRunningExperimentAsKilled(session);
         break;
       }
@@ -544,7 +483,7 @@ public class JupyterService {
   @Path("/convertIPythonNotebook/{path: .+}")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response convertIPythonNotebook(@PathParam("path") String path,
-      @Context SecurityContext sc) throws AppException {
+      @Context SecurityContext sc) throws ServiceException {
     String hdfsUsername = getHdfsUser(sc);
     String hdfsFilename = "/Projects/" + this.project.getName() + "/" + path;
 
@@ -554,7 +493,6 @@ public class JupyterService {
     ProcessBuilder pb = new ProcessBuilder(command);
     try {
       Process process = pb.start();
-      StringBuilder sb = new StringBuilder();
       BufferedReader br = new BufferedReader(new InputStreamReader(process.
           getInputStream()));
       String line;
@@ -563,34 +501,21 @@ public class JupyterService {
       }
       int errCode = process.waitFor();
       if (errCode != 0) {
-        throw new AppException(Response.Status.EXPECTATION_FAILED.getStatusCode(),
-            "Problem converting ipython notebook to python program. " + line);
+        throw new ServiceException(RESTCodes.ServiceErrorCode.IPYTHON_CONVERT_ERROR,  Level.SEVERE,
+          "error code: " + errCode);
       }
     } catch (IOException | InterruptedException ex) {
-      Logger.getLogger(HopsUtils.class
-          .getName()).log(Level.SEVERE, null, ex);
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-          getStatusCode(),
-          "Problem converting ipython notebook to python program.");
+      throw new ServiceException(RESTCodes.ServiceErrorCode.IPYTHON_CONVERT_ERROR, Level.SEVERE, null, ex.getMessage(),
+        ex);
 
     }
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 
-  private String getHdfsUser(SecurityContext sc) throws AppException {
-    if (projectId == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          "Incomplete request!");
-    }
+  private String getHdfsUser(SecurityContext sc) {
     String loggedinemail = sc.getUserPrincipal().getName();
     Users user = userFacade.findByEmail(loggedinemail);
-    if (user == null) {
-      throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
-          "You are not authorized for this invocation.");
-    }
-    String hdfsUsername = hdfsUsersController.getHdfsUserName(project, user);
-
-    return hdfsUsername;
+    return  hdfsUsersController.getHdfsUserName(project, user);
   }
 
   @POST
@@ -600,19 +525,9 @@ public class JupyterService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response updateNotebookServer(JupyterSettings jupyterSettings,
       @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException {
-
-    if (projectId == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          "Incomplete request!");
-    }
+      @Context HttpServletRequest req) {
     JupyterSettings js = jupyterSettingsFacade.findByProjectUser(projectId, sc.getUserPrincipal().getName());
 
-    if (js == null) {
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-          getStatusCode(),
-          "Could not find Jupyter Settings.");
-    }
     js.setShutdownLevel(jupyterSettings.getShutdownLevel());
     jupyterSettingsFacade.update(js);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(js).build();

@@ -18,36 +18,29 @@
 
 package io.hops.hopsworks.kmon.conda;
 
-import io.hops.hopsworks.common.dao.host.Hosts;
-import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.pythonDeps.CondaCommands;
 import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade;
 import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade.CondaStatus;
-import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.LocalhostServices;
 import io.hops.hopsworks.common.util.Settings;
-import io.hops.hopsworks.common.util.WebCommunication;
+
+import javax.annotation.PostConstruct;
+import javax.ejb.EJB;
+import javax.faces.application.FacesMessage;
+import javax.faces.bean.ManagedBean;
+import javax.faces.bean.RequestScoped;
+import javax.faces.context.FacesContext;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
-import javax.ejb.EJB;
-import javax.enterprise.concurrent.ManagedExecutorService;
-import javax.faces.application.FacesMessage;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.RequestScoped;
-import javax.faces.context.FacesContext;
 
 @ManagedBean
 @RequestScoped
@@ -57,10 +50,6 @@ public class CondaController implements Serializable {
   private PythonDepsFacade pythonDepsFacade;
   @EJB
   private Settings settings;
-  @EJB
-  private WebCommunication web;
-  @Resource(lookup = "concurrent/kagentExecutorService")
-  ManagedExecutorService kagentExecutorService;
 
   private List<CondaCommands> failedCommands;
   private List<CondaCommands> ongoingCommands;
@@ -113,7 +102,6 @@ public class CondaController implements Serializable {
   public void execCommand(CondaCommands command) {
     // ssh to the host, run the command, print out the results to the terminal.
 
-    Map<String, String> depVers = new HashMap<>();
     try {
       if (command.getStatus() != CondaStatus.FAILED) {
         FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_INFO,
@@ -157,27 +145,19 @@ public class CondaController implements Serializable {
             // delete from conda_commands tables
             command.setStatus(CondaStatus.SUCCESS);
             pythonDepsFacade.removeCondaCommand(command.getId());
-
+  
             this.output = "SUCCESS. \r\n" + sb.toString();
-            try {
-              pythonDepsFacade.updateCondaCommandStatus(command.getId(), CondaStatus.SUCCESS, command.getInstallType(),
-                  command.getMachineType(), command.getArg(), command.getProj(), command.getOp(), command.getLib(),
-                  command.getVersion(), command.getChannelUrl());
-            } catch (AppException ex) {
-              Logger.getLogger(CondaController.class.getName()).log(Level.SEVERE, null, ex);
-            }
-            loadCommands();
+            pythonDepsFacade.updateCondaCommandStatus(command.getId(), CondaStatus.SUCCESS, command.getInstallType(),
+              command.getMachineType(), command.getArg(), command.getProj(), command.getOp(), command.getLib(),
+              command.getVersion(), command.getChannelUrl());
 
           } else {
             this.output = "FAILED. \r\n" + sb.toString();
           }
         } else { // Conda operation
-          Hosts host = command.getHostId();
-          Project proj = command.getProjectId();
           String prog = settings.getHopsworksDomainDir() + "/bin/conda-command-ssh.sh";
           String hostname = command.getHostId().getHostIp();
           String projectName = command.getProj();
-          String arg = command.getArg();
           String channelUrl = command.getChannelUrl();
           String[] scriptCommand = {prog, hostname, op.toString(), projectName, channelUrl, command.getInstallType().
             toString(), command.getLib(), command.getVersion()};
@@ -193,7 +173,7 @@ public class CondaController implements Serializable {
             sb.append(line).append("\r\n");
           }
           boolean status = process.waitFor(600, TimeUnit.SECONDS);
-          if (status == false) {
+          if (!status) {
             this.output = "COMMAND TIMED OUT: \r\n" + sb.toString();
             return;
           }
@@ -202,13 +182,9 @@ public class CondaController implements Serializable {
             command.setStatus(CondaStatus.SUCCESS);
             pythonDepsFacade.removeCondaCommand(command.getId());
             this.output = "SUCCESS. \r\n" + sb.toString();
-            try {
-              pythonDepsFacade.updateCondaCommandStatus(command.getId(), CondaStatus.SUCCESS, command.getInstallType(),
-                  command.getMachineType(), command.getArg(), command.getProj(), command.getOp(), command.getLib(),
-                  command.getVersion(), command.getChannelUrl());
-            } catch (AppException ex) {
-              Logger.getLogger(CondaController.class.getName()).log(Level.SEVERE, null, ex);
-            }
+            pythonDepsFacade.updateCondaCommandStatus(command.getId(), CondaStatus.SUCCESS, command.getInstallType(),
+              command.getMachineType(), command.getArg(), command.getProj(), command.getOp(), command.getLib(),
+              command.getVersion(), command.getChannelUrl());
             loadCommands();
           } else {
             this.output = "FAILED. \r\n" + sb.toString();

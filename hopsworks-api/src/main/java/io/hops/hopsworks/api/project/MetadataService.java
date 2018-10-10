@@ -39,49 +39,14 @@
 
 package io.hops.hopsworks.api.project;
 
-import io.hops.hopsworks.api.filter.NoCacheResponse;
-import java.util.HashSet;
-import java.io.StringReader;
-import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Objects;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.annotation.security.RolesAllowed;
-import javax.ejb.EJB;
-import javax.ejb.Stateless;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-import javax.inject.Inject;
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.JsonString;
-import javax.json.stream.JsonParsingException;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.GenericEntity;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.node.ArrayNode;
-import org.codehaus.jackson.node.ObjectNode;
-import org.apache.hadoop.security.AccessControlException;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
+import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.metadata.wscomm.MetadataController;
 import io.hops.hopsworks.api.metadata.wscomm.MetadataProtocol;
 import io.hops.hopsworks.api.metadata.wscomm.message.ContentMessage;
 import io.hops.hopsworks.api.metadata.wscomm.message.Message;
 import io.hops.hopsworks.api.metadata.wscomm.message.TemplateMessage;
-import io.hops.hopsworks.api.util.JsonResponse;
+import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.api.util.UploadService;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
@@ -104,12 +69,47 @@ import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.exception.AppException;
-import io.hops.hopsworks.common.metadata.exception.ApplicationException;
-import io.hops.hopsworks.common.metadata.exception.DatabaseException;
+import io.hops.hopsworks.common.exception.DatasetException;
+import io.hops.hopsworks.common.exception.GenericException;
+import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.exception.MetadataException;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.JsonUtil;
 import io.swagger.annotations.Api;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.node.ArrayNode;
+import org.codehaus.jackson.node.ObjectNode;
+
+import javax.annotation.security.RolesAllowed;
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import javax.inject.Inject;
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonString;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.GenericEntity;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Objects;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Path("/metadata")
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
@@ -119,14 +119,14 @@ import io.swagger.annotations.Api;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class MetadataService {
 
-  private final static Logger logger = Logger.getLogger(MetadataService.class.
+  private final static Logger LOGGER = Logger.getLogger(MetadataService.class.
           getName());
 
   private enum MetadataOp {
     ADD,
     UPDATE,
     REMOVE
-  };
+  }
 
   @Inject
   private UploadService uploader;
@@ -138,8 +138,6 @@ public class MetadataService {
   private MTableFacade mtf;
   @EJB
   private TemplateFacade templatefacade;
-  @EJB
-  private InodeFacade inodefacade;
   @EJB
   private MetadataProtocol protocol;
   @EJB
@@ -158,11 +156,10 @@ public class MetadataService {
    * to the database as well
    * <p/>
    * @return
-   * @throws AppException
    */
   @Path("upload")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public UploadService upload() throws AppException {
+  public UploadService upload() throws DatasetException {
     this.uploader.confUploadTemplate();
     return this.uploader;
   }
@@ -174,7 +171,6 @@ public class MetadataService {
    * @param sc
    * @param req
    * @return
-   * @throws AppException
    */
   @GET
   @Path("{inodepid}")
@@ -183,29 +179,21 @@ public class MetadataService {
   public Response fetchMetadataCompact(
           @PathParam("inodepid") Integer inodePid,
           @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
-
+          @Context HttpServletRequest req) {
+  
     if (inodePid == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Incomplete request!");
+      throw new IllegalArgumentException("inodepid was not provided.");
     }
 
     ObjectMapper mapper = new ObjectMapper();
     ObjectNode templates, tables, fields;
     ArrayNode values;
 
-    Inode inode = this.inodefacade.findById(inodePid);
+    Inode inode = inodeFacade.findById(inodePid);
     HashSet<Integer> tuples = new HashSet<>();
-    try {
-      for (TupleToFile tuple : ttf.getTuplesByInodeId(inode.getInodePK().
-              getParentId(), inode.getInodePK().getName())) {
-        tuples.add(tuple.getId());
-      }
-    } catch (DatabaseException e) {
-      logger.log(Level.WARNING, "Trying to fetch metadata.", e);
-      throw new AppException(Response.Status.NO_CONTENT.getStatusCode(),
-              "Could not fetch the metadata for the file " + inode.getInodePK().
-                      getName() + ".");
+    for (TupleToFile tuple : ttf.getTuplesByInodeId(inode.getInodePK().
+      getParentId(), inode.getInodePK().getName())) {
+      tuples.add(tuple.getId());
     }
     templates = mapper.createObjectNode();
     for (Template template : inode.getTemplates()) {
@@ -241,7 +229,6 @@ public class MetadataService {
    * @param sc
    * @param req
    * @return
-   * @throws AppException
    */
   @GET
   @Path("fetchmetadata/{inodepid}/{inodename}/{tableid}")
@@ -252,68 +239,59 @@ public class MetadataService {
           @PathParam("inodename") String inodeName,
           @PathParam("tableid") Integer tableid,
           @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+          @Context HttpServletRequest req) {
 
     if (inodePid == null || inodeName == null || tableid == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Incomplete request!");
+      throw new IllegalArgumentException("Incomplete request.");
     }
 
     //metadata associated to a specific table and inode
     List<MetadataView> metadata = new LinkedList<>();
-
-    try {
-      Inode inode = this.inodefacade.findById(inodePid);
-      List<Template> nodeTemplates = new LinkedList<>(inode.getTemplates());
-
-      List<TupleToFile> tuples = ttf.getTuplesByInodeId(inodePid, inodeName);
-      MTable table = mtf.getTable(tableid);
-
-      List<Field> fields = table.getFields();
-
-      //groups metadata per table
-      MetadataView metatopView = new MetadataView(table.getName());
-
-      for (Field field : fields) {
-        //groups metadata per field
-        MetadataView metainnerView = new MetadataView(field.getName());
-
-        /*
-         * Load raw data based on the field id. Keep only data related to
-         * a specific inode
-         */
-        List<RawData> rawList = field.getRawData();
-
-        for (RawData raw : rawList) {
-          for (TupleToFile tuple : tuples) {
-
-            //filter out irrelevant metadata
-            if (raw.getRawdataPK().getTupleid() == tuple.getId()) {
-              List<Metadata> meta = new LinkedList<>(raw.getMetadata());
-
-              for (Metadata mt : meta) {
-                //all metadata for an inode a field carries
-                metainnerView.getMetadataView().add(new MetadataView(mt.
-                        getMetadataPK().getId(), mt.getData()));
-              }
+  
+    List<TupleToFile> tuples = ttf.getTuplesByInodeId(inodePid, inodeName);
+    MTable table = mtf.getTable(tableid);
+  
+    List<Field> fields = table.getFields();
+  
+    //groups metadata per table
+    MetadataView metatopView = new MetadataView(table.getName());
+  
+    for (Field field : fields) {
+      //groups metadata per field
+      MetadataView metainnerView = new MetadataView(field.getName());
+    
+      /*
+       * Load raw data based on the field id. Keep only data related to
+       * a specific inode
+       */
+      List<RawData> rawList = field.getRawData();
+    
+      for (RawData raw : rawList) {
+        for (TupleToFile tuple : tuples) {
+        
+          //filter out irrelevant metadata
+          if (raw.getRawdataPK().getTupleid() == tuple.getId()) {
+            List<Metadata> meta = new LinkedList<>(raw.getMetadata());
+          
+            for (Metadata mt : meta) {
+              //all metadata for an inode a field carries
+              metainnerView.getMetadataView().add(new MetadataView(mt.
+                getMetadataPK().getId(), mt.getData()));
             }
           }
         }
-        metatopView.getMetadataView().add(metainnerView);
       }
-
-      metadata.add(metatopView);
-      GenericEntity<List<MetadataView>> response
-              = new GenericEntity<List<MetadataView>>(metadata) {};
-
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-              entity(response).build();
-
-    } catch (DatabaseException ex) {
-      logger.log(Level.WARNING, "Trying to fetch metadata.", ex);
-      throw new AppException(Response.Status.NO_CONTENT.getStatusCode(),
-              "Could not fetch the metadata for the file " + inodeName + ".");
+      metatopView.getMetadataView().add(metainnerView);
     }
+  
+    metadata.add(metatopView);
+    GenericEntity<List<MetadataView>> response
+      = new GenericEntity<List<MetadataView>>(metadata) {
+      };
+  
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+      entity(response).build();
+
   }
 
   /**
@@ -323,7 +301,6 @@ public class MetadataService {
    * @param sc
    * @param req
    * @return
-   * @throws AppException
    */
   @GET
   @Path("fetchtemplatesforinode/{inodeid}")
@@ -332,14 +309,13 @@ public class MetadataService {
   public Response fetchTemplatesforInode(
           @PathParam("inodeid") Integer inodeid,
           @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+          @Context HttpServletRequest req) {
 
     if (inodeid == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Incomplete request!");
+      throw new IllegalArgumentException("inodeid was not provided.");
     }
 
-    Inode inode = this.inodefacade.findById(inodeid);
+    Inode inode = this.inodeFacade.findById(inodeid);
     List<Template> templates = new LinkedList<>(inode.getTemplates());
     List<TemplateView> tViews = new LinkedList<>();
 
@@ -361,7 +337,6 @@ public class MetadataService {
    * @param sc
    * @param req
    * @return
-   * @throws AppException
    */
   @GET
   @Path("fetchavailabletemplatesforinode/{inodeid}")
@@ -370,19 +345,18 @@ public class MetadataService {
   public Response fetchAvailableTemplatesForInode(
           @PathParam("inodeid") Integer inodeid,
           @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
-
+          @Context HttpServletRequest req) {
+  
     if (inodeid == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Incomplete request!");
+      throw new IllegalArgumentException("inodeid was not provided.");
     }
 
-    Inode inode = this.inodefacade.findById(inodeid);
+    Inode inode = inodeFacade.findById(inodeid);
     List<Template> nodeTemplates = new LinkedList<>(inode.getTemplates());
     List<Template> allTemplates = this.templatefacade.findAll();
     List<TemplateView> toreturn = new LinkedList<>();
 
-    boolean found = false;
+    boolean found;
     for (Template template : allTemplates) {
       found = false;
 
@@ -411,7 +385,6 @@ public class MetadataService {
    * @param sc
    * @param req
    * @return
-   * @throws AppException
    */
   @GET
   @Path("detachtemplate/{inodeid}/{templateid}")
@@ -421,20 +394,18 @@ public class MetadataService {
           @PathParam("inodeid") Integer inodeid,
           @PathParam("templateid") Integer templateid,
           @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+          @Context HttpServletRequest req) throws MetadataException {
 
     if (inodeid == null || templateid == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Incomplete request!");
+      throw new IllegalArgumentException("Either inodeid or templateId were not provided");
     }
 
-    Inode inode = this.inodefacade.findById(inodeid);
+    Inode inode = inodeFacade.findById(inodeid);
     List<Template> templates = new LinkedList<>(inode.getTemplates());
 
     if (templates.isEmpty()) {
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-              getStatusCode(),
-              "The inode does not have any templates attached to it");
+      throw new MetadataException(RESTCodes.MetadataErrorCode.TEMPLATE_NOT_ATTACHED, Level.FINE, "inodeid:" + inodeid +
+        ", templatedId:"+templateid);
     }
 
     Template toremove = null;
@@ -446,43 +417,35 @@ public class MetadataService {
         toremove = template;
       }
     }
-
-    try {
-
-      //remove the inode-template association
-      this.templatefacade.updateTemplatesInodesMxN(toremove);
-
-      metadataController.logTemplateOperation(toremove, inode,
-              OperationType.Delete);
-
-      //remove any associated metadata
-      List<TupleToFile> tuples = ttf.getTuplesByInodeId(inode.getInodePK().
-              getParentId(), inode.getInodePK().getName());
-
-      if (toremove != null) {
-        //scan all tables and fields this template carries
-        for (MTable table : toremove.getMTables()) {
-          for (Field field : table.getFields()) {
-
-            //apply the filter
-            for (RawData raw : field.getRawData()) {
-              for (TupleToFile tuple : tuples) {
-                if (raw.getRawdataPK().getTupleid() == tuple.getId()) {
-                  this.ttf.deleteTTF(tuple);
-                }
+  
+    //remove the inode-template association
+    this.templatefacade.updateTemplatesInodesMxN(toremove);
+  
+    metadataController.logTemplateOperation(toremove, inode,
+      OperationType.Delete);
+  
+    //remove any associated metadata
+    List<TupleToFile> tuples = ttf.getTuplesByInodeId(inode.getInodePK().
+      getParentId(), inode.getInodePK().getName());
+  
+    if (toremove != null) {
+      //scan all tables and fields this template carries
+      for (MTable table : toremove.getMTables()) {
+        for (Field field : table.getFields()) {
+        
+          //apply the filter
+          for (RawData raw : field.getRawData()) {
+            for (TupleToFile tuple : tuples) {
+              if (raw.getRawdataPK().getTupleid() == tuple.getId()) {
+                this.ttf.deleteTTF(tuple);
               }
             }
           }
         }
       }
-
-    } catch (DatabaseException e) {
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-              getStatusCode(),
-              "Failed to remove template from inode " + inodeid);
     }
 
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     json.setSuccessMessage("The template was successfully removed from inode "
             + inode.getInodePK().getName());
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
@@ -497,7 +460,6 @@ public class MetadataService {
    * @param sc
    * @param req
    * @return
-   * @throws AppException
    */
   @GET
   @Path("fetchtemplate/{templateid}/{sender}")
@@ -507,11 +469,10 @@ public class MetadataService {
           @PathParam("templateid") Integer templateid,
           @PathParam("sender") String sender,
           @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+          @Context HttpServletRequest req) throws GenericException, MetadataException {
 
     if (templateid == null || sender == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Incomplete request!");
+      throw new IllegalArgumentException("templateId or sender were not provided");
     }
 
     String json = "{\"message\": \"{\"tempid\": " + templateid + "}\"}";
@@ -525,7 +486,7 @@ public class MetadataService {
 
     Message message = this.protocol.GFR(templateMessage);
 
-    JsonResponse response = new JsonResponse();
+    RESTApiJsonResponse response = new RESTApiJsonResponse();
     //message contains all template content
     response.setSuccessMessage(message.getMessage());
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
@@ -538,8 +499,7 @@ public class MetadataService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response addMetadataWithSchema(
           @Context SecurityContext sc, @Context HttpServletRequest req,
-          String metaObj) throws
-          AppException, AccessControlException {
+          String metaObj) throws MetadataException, GenericException {
     String email = sc.getUserPrincipal().getName();
     return mutateMetadata(email, metaObj, MetadataOp.ADD);
   }
@@ -550,8 +510,7 @@ public class MetadataService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response updateMetadataWithSchema(
           @Context SecurityContext sc, @Context HttpServletRequest req,
-          String metaObj) throws
-          AppException, AccessControlException {
+          String metaObj) throws MetadataException, GenericException {
 
     String email = sc.getUserPrincipal().getName();
     return mutateMetadata(email, metaObj, MetadataOp.UPDATE);
@@ -563,39 +522,33 @@ public class MetadataService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response removeMetadataWithSchema(
           @Context SecurityContext sc, @Context HttpServletRequest req,
-          String metaObj) throws
-          AppException, AccessControlException {
+          String metaObj) throws MetadataException, GenericException {
     String email = sc.getUserPrincipal().getName();
     return mutateMetadata(email, metaObj, MetadataOp.REMOVE);
   }
 
   private Response mutateMetadata(String email, String metaObj, MetadataOp op)
-          throws AppException {
+    throws MetadataException, GenericException {
     if (op == null || email == null || metaObj == null) {
-      throw new NullPointerException("MetadataOp  or email or metaObj was null");
+      throw new IllegalArgumentException("MetadataOp  or email or metaObj were not provided.");
     }
     // Get Inode. Get project for the inode. Check if the user has DATA OWNER 
     //role for that project (privileges to add metadata)
     InodeTableComposite itc = JsonUtil.parseSchemaHeader(metaObj);
     //variables not set in the json message
     if (itc == null) {
-      Logger.getLogger(MetadataService.class.getName()).log(Level.SEVERE,
-              "Badly formatted json message/Missing values",
-              new NullPointerException());
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Badly formatted json message/Missing values");
+      throw new IllegalArgumentException("Badly formatted json message/Missing values");
     }
     Inode parent = inodeFacade.findById(itc.getInodePid());
     if (parent == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Incorrect json message/Missing or incorrect parent inodeId");
+      throw new GenericException(RESTCodes.GenericErrorCode.INCOMPLETE_REQUEST, Level.FINE,
+        "Incorrect json message/Missing or incorrect parent inodeId");
     }
     Inode inode = inodeFacade.findByInodePK(parent, itc.getInodeName(),
-            HopsUtils.
-                    calculatePartitionId(parent.getId(), itc.getInodeName(), 3));
+            HopsUtils.calculatePartitionId(parent.getId(), itc.getInodeName(), 3));
     if (inode == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Incorrect json message/Missing or incorrect inode name");
+      throw new GenericException(RESTCodes.GenericErrorCode.INCOMPLETE_REQUEST, Level.FINE,
+        "Incorrect json message/Missing or incorrect inode name");
     }
     Inode projectInode = inodeFacade.getProjectRootForInode(inode);
     Project project = projectFacade.findByInodeId(projectInode.getInodePK().
@@ -603,59 +556,52 @@ public class MetadataService {
 
     Users user = userFacade.findByEmail(email);
 
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     Response.Status status = Response.Status.FORBIDDEN;
     String userRole = projectTeamFacade.findCurrentRole(project, user);
 
-    if (userRole != null && userRole.isEmpty() == false && userRole.
+    if (userRole != null && !userRole.isEmpty() && userRole.
             compareToIgnoreCase(AllowedProjectRoles.DATA_OWNER) == 0) {
       List<EntityIntf> composite = new ArrayList<>();
       composite.add(itc);
-      try {
-        JsonObject obj = Json.createReader(new StringReader(metaObj)).
-                readObject();
-
-        int metaId = 0;
-        switch (op) {
-          case REMOVE:
-            metaId = obj.getInt("metaid");
-            JsonString metaObjPayload = obj.getJsonString("metadata");
-            if (metaObjPayload == null) {
-              throw new ApplicationException("removed metadata was null");
-            }
-            this.metadataController.removeMetadata(composite, metaId,
-                    metaObjPayload.getString());
-            break;
-          case UPDATE:
-            metaId = obj.getInt("metaid");
-            JsonObject updatedObj = obj.getJsonObject("metadata");
-            if (updatedObj == null) {
-              throw new ApplicationException("updated metadata was null");
-            }
-            JsonString metaObjValue = updatedObj.getJsonString("data");
-            if (metaObjValue == null) {
-              throw new ApplicationException("updated metadata value was null");
-            }
-            this.metadataController.updateMetadata(composite, metaId,
-                    metaObjValue.getString());
-            break;
-          case ADD:
-            List<EntityIntf> rawData = JsonUtil.parseSchemaPayload(metaObj);
-            //Persist metadata
-            this.metadataController.storeRawData(composite, rawData);
-            break;
-          default:
-            throw new IllegalStateException("Invalid metadata operation: " + op);
-        }
-        json.setSuccessMessage("Metadata deleted");
-        status = Response.Status.OK;
-      } catch (ApplicationException | NullPointerException | ClassCastException ex) {
-        Logger.getLogger(MetadataService.class.getName()).
-                log(Level.SEVERE, null, ex);
-        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                "Incorrect json message/Missing raw values");
+      JsonObject obj = Json.createReader(new StringReader(metaObj)).
+        readObject();
+  
+      int metaId = 0;
+      switch (op) {
+        case REMOVE:
+          metaId = obj.getInt("metaid");
+          JsonString metaObjPayload = obj.getJsonString("metadata");
+          if (metaObjPayload == null) {
+            throw new MetadataException(RESTCodes.MetadataErrorCode.NO_METADATA_EXISTS, Level.FINE);
+          }
+          this.metadataController.removeMetadata(composite, metaId,
+            metaObjPayload.getString());
+          break;
+        case UPDATE:
+          metaId = obj.getInt("metaid");
+          JsonObject updatedObj = obj.getJsonObject("metadata");
+          if (updatedObj == null) {
+            throw new MetadataException(RESTCodes.MetadataErrorCode.NO_METADATA_EXISTS, Level.FINE);
+          }
+          JsonString metaObjValue = updatedObj.getJsonString("data");
+          if (metaObjValue == null) {
+            throw new MetadataException(RESTCodes.MetadataErrorCode.NO_METADATA_EXISTS, Level.FINE,
+              "data entity in json not found");
+          }
+          this.metadataController.updateMetadata(composite, metaId,
+            metaObjValue.getString());
+          break;
+        case ADD:
+          List<EntityIntf> rawData = JsonUtil.parseSchemaPayload(metaObj);
+          //Persist metadata
+          this.metadataController.storeRawData(composite, rawData);
+          break;
+        default:
+          throw new IllegalStateException("Invalid metadata operation: " + op);
       }
-
+      json.setSuccessMessage("Metadata deleted");
+      status = Response.Status.OK;
     } else {
       json.setErrorMsg(
               "You do not have permission to modify metadata in this project.");
@@ -671,8 +617,7 @@ public class MetadataService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response attachSchemalessMetadata(
           @Context SecurityContext sc, @Context HttpServletRequest req,
-          String metaObj) throws
-          AppException, AccessControlException {
+          String metaObj) throws DatasetException, MetadataException {
 
     processSchemalessMetadata(metaObj, false);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.ACCEPTED).
@@ -685,53 +630,38 @@ public class MetadataService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response detachSchemalessMetadata(
           @Context SecurityContext sc, @Context HttpServletRequest req,
-          String metaObj) throws
-          AppException, AccessControlException {
+          String metaObj) throws DatasetException, MetadataException {
 
     processSchemalessMetadata(metaObj, true);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.ACCEPTED).
             build();
   }
 
-  private void processSchemalessMetadata(String metaObj, boolean detach) throws
-          AppException {
-    try {
-      JsonObject jsonObj = Json.createReader(new StringReader(metaObj)).
-              readObject();
-      if (!jsonObj.containsKey("path")) {
-        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                "missing path field");
-      }
-
-      String inodePath = jsonObj.getString("path");
-      if (detach) {
-        metadataController.removeSchemaLessMetadata(inodePath);
-        return;
-      }
-
-      if (!jsonObj.containsKey("metadata")) {
-        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                "missing metadata field");
-      }
-
-      JsonObject metadata = jsonObj.getJsonObject("metadata");
-      StringWriter writer = new StringWriter();
-      Json.createWriter(writer).writeObject(metadata);
-      String metadataJsonString = writer.toString();
-      if (metadataJsonString.length() > 12000) {
-        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                "metadata is too long. 12000 is the max size");
-      }
-
-      metadataController.addSchemaLessMetadata(inodePath, metadataJsonString);
-    } catch (JsonParsingException | NullPointerException | ClassCastException ex) {
-      Logger.getLogger(MetadataService.class.getName()).log(Level.SEVERE, null,
-              ex);
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Incorrect json message/Missing path/metadata fields");
-    } catch (ApplicationException ex) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), ex.
-              getMessage());
+  private void processSchemalessMetadata(String metaObj, boolean detach)
+    throws DatasetException, MetadataException {
+    JsonObject jsonObj = Json.createReader(new StringReader(metaObj)).
+      readObject();
+    if (!jsonObj.containsKey("path")) {
+      throw new IllegalArgumentException("missing path field in metaObj");
     }
+  
+    String inodePath = jsonObj.getString("path");
+    if (detach) {
+      metadataController.removeSchemaLessMetadata(inodePath);
+      return;
+    }
+  
+    if (!jsonObj.containsKey("metadata")) {
+      throw new IllegalArgumentException("missing metadata field in metaObj");
+    }
+  
+    JsonObject metadata = jsonObj.getJsonObject("metadata");
+    StringWriter writer = new StringWriter();
+    Json.createWriter(writer).writeObject(metadata);
+    String metadataJsonString = writer.toString();
+    if (metadataJsonString.length() > 12000) {
+      throw new MetadataException(RESTCodes.MetadataErrorCode.METADATA_MAX_SIZE_EXCEEDED, Level.FINE);
+    }
+    metadataController.addSchemaLessMetadata(inodePath, metadataJsonString);
   }
 }

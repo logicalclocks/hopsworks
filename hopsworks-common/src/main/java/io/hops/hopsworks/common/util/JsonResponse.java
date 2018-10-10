@@ -39,42 +39,26 @@
 
 package io.hops.hopsworks.common.util;
 
+import io.hops.hopsworks.common.security.CertificateType;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
-public class JsonResponse {
+public abstract class JsonResponse {
 
-  private String status;
-  private Integer statusCode;
   private String errorMsg;
   private String successMessage;
-
+  //Hopsworks error code
+  private Integer errorCode;
+  private String usrMsg;
+  private String devMsg;
+  private String trace;
+  
+  private CertificateType certificateType;
+  
+  
   public JsonResponse() {
-  }
-
-  public JsonResponse(String status) {
-    this.status = status;
-  }
-
-  public JsonResponse(Integer statusCode) {
-    this.statusCode = statusCode;
-  }
-
-  public Integer getStatusCode() {
-    return statusCode;
-  }
-
-  public void setStatusCode(Integer statusCode) {
-    this.statusCode = statusCode;
-  }
-
-  public String getStatus() {
-    return status;
-  }
-
-  public void setStatus(String status) {
-    this.status = status;
   }
 
   @XmlElement
@@ -93,5 +77,44 @@ public class JsonResponse {
   public void setSuccessMessage(String successMessage) {
     this.successMessage = successMessage;
   }
-
+  
+  public Integer getErrorCode() {
+    return errorCode;
+  }
+  
+  public void setErrorCode(Integer errorCode) {
+    this.errorCode = errorCode;
+  }
+  
+  public String getUsrMsg() {
+    return usrMsg;
+  }
+  
+  public void setUsrMsg(String usrMsg) {
+    this.usrMsg = usrMsg;
+  }
+  
+  public String getDevMsg() {
+    return devMsg;
+  }
+  
+  public void setDevMsg(String devMsg) {
+    this.devMsg = devMsg;
+  }
+  
+  public String getTrace() {
+    return trace;
+  }
+  
+  public void setTrace(String trace) {
+    this.trace = trace;
+  }
+  
+  public CertificateType getCertificateType() {
+    return certificateType;
+  }
+  
+  public void setCertificateType(CertificateType certificateType) {
+    this.certificateType = certificateType;
+  }
 }

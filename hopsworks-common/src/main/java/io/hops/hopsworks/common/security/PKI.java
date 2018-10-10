@@ -106,8 +106,8 @@ public class PKI {
   }
 
   private long getCertificateValidityInDays(String rawConfigurationProperty) {
-    Long timeValue = Settings.getConfTimeValue(rawConfigurationProperty);
-    TimeUnit unitValue = Settings.getConfTimeTimeUnit(rawConfigurationProperty);
+    Long timeValue = settings.getConfTimeValue(rawConfigurationProperty);
+    TimeUnit unitValue = settings.getConfTimeTimeUnit(rawConfigurationProperty);
     return TimeUnit.DAYS.convert(timeValue, unitValue);
   }
 

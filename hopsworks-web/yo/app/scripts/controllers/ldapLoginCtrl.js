@@ -52,7 +52,7 @@ angular.module('hopsWorksApp')
         BannerService.findBanner().then(
           function (success) {
             if (success.data.status === 1) {
-              self.announcement = success.data.message;
+              self.announcement = success.data.errorMsg;
             }
           }, function (error) {
             self.announcement = '';

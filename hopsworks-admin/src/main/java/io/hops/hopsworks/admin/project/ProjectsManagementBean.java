@@ -42,7 +42,8 @@ import io.hops.hopsworks.admin.maintenance.MessagesController;
 import io.hops.hopsworks.common.dao.project.PaymentType;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.exception.GenericException;
+import io.hops.hopsworks.common.exception.ProjectException;
 import io.hops.hopsworks.common.project.ProjectController;
 import org.primefaces.component.datatable.DataTable;
 import org.primefaces.context.RequestContext;
@@ -129,7 +130,7 @@ public class ProjectsManagementBean implements Serializable {
     ProjectQuotas pQuotas = (ProjectQuotas) event.getObject();
     try {
       projectController.adminProjectUpdate(pQuotas.getProject(), pQuotas.getNormalizedQuotas());
-    } catch (AppException e) {
+    } catch (ProjectException e) {
       logger.log(Level.SEVERE, "Error updating the quota for the project: " + pQuotas.getName(),
           e);
       MessagesController.addErrorMessage("Error updating the project, " +
@@ -165,7 +166,7 @@ public class ProjectsManagementBean implements Serializable {
       projectsQuotas.remove(projectQuotasSelected);
       projectQuotasSelected = null;
       MessagesController.addInfoMessage("Project deleted!");
-    } catch (AppException ex) {
+    } catch (ProjectException | GenericException ex) {
       logger.log(Level.SEVERE, "Failed to delete project " + projectQuotasSelected.getName(), ex);
       MessagesController.addErrorMessage("Deletion failed", "Failed deleting project "
           + projectQuotasSelected.getName());

@@ -115,14 +115,7 @@ angular.module('hopsWorksApp')
                   stopLoading();
                 }, function (error) {
                   self.notesRefreshing = false;
-                  if (error.data.errorMsg &&
-                          error.data.errorMsg.includes('Zepplin notebook dir not found')) {
-                    growl.warning(error.data.errorMsg + " Try creating it, then restart zepplin.",
-                            {title: 'Error', referenceId: 10});
-                  } else {
-                    growl.warning(error.data.errorMsg + " Try reloading the page.",
-                            {title: 'Error', ttl: 5000, referenceId: 10});
-                  }
+                  growl.warning(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 10});
                   stopLoading();
                 });
               } else {
