@@ -170,9 +170,7 @@ public class LocalhostTfServingController implements TfServingController {
       // Update the object in the database
       TfServing dbTfServing = tfServingFacade.updateDbObject(serving, project);
 
-      if (status == TfServingStatusEnum.RUNNING ||
-          status == TfServingStatusEnum.STARTING ||
-          status == TfServingStatusEnum.UPDATING) {
+      if (status == TfServingStatusEnum.RUNNING || status == TfServingStatusEnum.UPDATING) {
         if (!oldDbTfServing.getModelName().equals(dbTfServing.getModelName()) ||
             !oldDbTfServing.getModelPath().equals(dbTfServing.getModelPath()) ||
             oldDbTfServing.getVersion() > dbTfServing.getVersion()) {
