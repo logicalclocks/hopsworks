@@ -39,22 +39,33 @@
 
 package io.hops.hopsworks.api.project;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
+import io.hops.hopsworks.api.filter.AllowedProjectRoles;
+import io.hops.hopsworks.api.filter.NoCacheResponse;
+import io.hops.hopsworks.api.util.RESTApiJsonResponse;
+import io.hops.hopsworks.common.constants.message.ResponseMessages;
+import io.hops.hopsworks.common.dao.jobhistory.YarnAppHeuristicResultDetailsFacade;
+import io.hops.hopsworks.common.dao.jobhistory.YarnAppHeuristicResultFacade;
+import io.hops.hopsworks.common.dao.jobhistory.YarnAppResult;
+import io.hops.hopsworks.common.dao.jobhistory.YarnAppResultDTO;
+import io.hops.hopsworks.common.dao.jobhistory.YarnAppResultFacade;
+import io.hops.hopsworks.common.dao.jobs.JobsHistory;
+import io.hops.hopsworks.common.dao.jobs.JobsHistoryFacade;
+import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.common.dao.project.ProjectFacade;
+import io.hops.hopsworks.common.jobs.jobhistory.ConfigDetailsDTO;
+import io.hops.hopsworks.common.jobs.jobhistory.JobDetailDTO;
+import io.hops.hopsworks.common.jobs.jobhistory.JobHeuristicDTO;
+import io.hops.hopsworks.common.jobs.jobhistory.JobHeuristicDetailsComparator;
+import io.hops.hopsworks.common.jobs.jobhistory.JobHeuristicDetailsDTO;
+import io.hops.hopsworks.common.jobs.jobhistory.JobProposedConfigurationDTO;
+import io.hops.hopsworks.common.util.Settings;
+import io.swagger.annotations.Api;
+import org.json.JSONObject;
+
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -68,32 +79,17 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import org.json.JSONObject;
-import io.hops.hopsworks.common.dao.jobs.JobsHistory;
-import io.hops.hopsworks.common.dao.jobs.JobsHistoryFacade;
-import io.hops.hopsworks.common.dao.jobhistory.YarnAppHeuristicResultDetailsFacade;
-import io.hops.hopsworks.common.dao.jobhistory.YarnAppHeuristicResultFacade;
-import io.hops.hopsworks.common.dao.jobhistory.YarnAppResult;
-import io.hops.hopsworks.common.dao.jobhistory.YarnAppResultDTO;
-import io.hops.hopsworks.common.dao.jobhistory.YarnAppResultFacade;
-import io.hops.hopsworks.api.filter.AllowedProjectRoles;
-import io.hops.hopsworks.api.jobs.JobService;
-import io.hops.hopsworks.api.util.JsonResponse;
-import io.hops.hopsworks.api.filter.NoCacheResponse;
-import io.hops.hopsworks.common.constants.message.ResponseMessages;
-import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
-import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.common.exception.AppException;
-import io.hops.hopsworks.common.hdfs.HdfsUsersController;
-import io.hops.hopsworks.common.jobs.jobhistory.ConfigDetailsDTO;
-import io.hops.hopsworks.common.jobs.jobhistory.JobDetailDTO;
-import io.hops.hopsworks.common.jobs.jobhistory.JobHeuristicDTO;
-import io.hops.hopsworks.common.jobs.jobhistory.JobHeuristicDetailsComparator;
-import io.hops.hopsworks.common.jobs.jobhistory.JobHeuristicDetailsDTO;
-import io.hops.hopsworks.common.jobs.jobhistory.JobProposedConfigurationDTO;
-import io.hops.hopsworks.common.util.Settings;
-import io.swagger.annotations.Api;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Path("history")
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
@@ -138,10 +134,6 @@ public class HistoryService {
   private YarnAppResultFacade yarnAppResultFacade;
   @EJB
   private ProjectFacade projectFacade;
-  @Inject
-  private JobService jobs;
-  @EJB
-  private JobFacade jobFacade;
   @EJB
   private JobsHistoryFacade jobsHistoryFacade;
   @EJB
@@ -150,8 +142,7 @@ public class HistoryService {
   private YarnAppHeuristicResultDetailsFacade yarnAppHeuristicResultDetailsFacade;
   @EJB
   private Settings settings;
-  @EJB
-  private HdfsUsersController hdfsUsersBean;
+
 
   @GET
   @Path("all/{projectId}")
@@ -159,7 +150,7 @@ public class HistoryService {
   @AllowedProjectRoles({AllowedProjectRoles.ANYONE})
   public Response getAllProjects(@PathParam("projectId") int projectId,
           @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+          @Context HttpServletRequest req) {
 
     Project returnProject = projectFacade.find(projectId);
     List<YarnAppResultDTO> appResultsToReturn = new ArrayList<>();
@@ -192,10 +183,9 @@ public class HistoryService {
   public Response getJob(@PathParam("jobId") String jobId,
           @Context SecurityContext sc,
           @Context HttpServletRequest req,
-          @HeaderParam("Access-Control-Request-Headers") String requestH) throws
-          AppException {
+          @HeaderParam("Access-Control-Request-Headers") String requestH) {
 
-    JsonResponse json = getJobDetailsFromDrElephant(jobId);
+    RESTApiJsonResponse json = getJobDetailsFromDrElephant(jobId);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();
   }
@@ -207,8 +197,7 @@ public class HistoryService {
   public Response getConfig(@PathParam("jobId") String jobId,
           @Context SecurityContext sc,
           @Context HttpServletRequest req,
-          @HeaderParam("Access-Control-Request-Headers") String requestH) throws
-          AppException {
+          @HeaderParam("Access-Control-Request-Headers") String requestH) {
 
     JobsHistory jh = jobsHistoryFacade.findByAppId(jobId);
 
@@ -246,7 +235,7 @@ public class HistoryService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response Heuristics(JobDetailDTO jobDetailDTO,
           @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+          @Context HttpServletRequest req) {
 
     JobHeuristicDTO jobsHistoryResult = jobsHistoryFacade.
             searchHeuristicRusults(jobDetailDTO);
@@ -255,12 +244,12 @@ public class HistoryService {
 
     while (jobIt.hasNext()) {
       String appId = jobIt.next();
-      JsonResponse json = getJobDetailsFromDrElephant(appId);
+      RESTApiJsonResponse json = getJobDetailsFromDrElephant(appId);
       JobsHistory jobsHistory = jobsHistoryFacade.findByAppId(appId);
 
       // Check if Dr.Elephant can find the Heuristic details for this application.
       // If the status is FAILED then continue to the next iteration.
-      if (json.getStatus() == "FAILED") {
+      if (json.getErrorCode() != null) {
         continue;
       }
 
@@ -344,17 +333,16 @@ public class HistoryService {
    * @param jobId
    * @return
    */
-  private JsonResponse getJobDetailsFromDrElephant(String jobId) {
+  private RESTApiJsonResponse getJobDetailsFromDrElephant(String jobId) {
 
     try {
-      JsonResponse json = new JsonResponse();
+      RESTApiJsonResponse json = new RESTApiJsonResponse();
       URL url = new URL(settings.getDrElephantUrl() + "/rest/job?id=" + jobId);
       HttpURLConnection conn = (HttpURLConnection) url.openConnection();
       conn.setRequestMethod("GET");
       conn.setRequestProperty("Accept", "application/json");
 
       if (conn.getResponseCode() != 200) {
-        json.setStatus("FAILED");
         json.setData("Failed : HTTP error code : " + conn.getResponseCode());
         json.setSuccessMessage(ResponseMessages.JOB_DETAILS);
         conn.disconnect();
@@ -371,7 +359,6 @@ public class HistoryService {
       }
 
       json.setData(outputBuilder);
-      json.setStatus("OK");
       json.setSuccessMessage(ResponseMessages.JOB_DETAILS);
       conn.disconnect();
       return json;

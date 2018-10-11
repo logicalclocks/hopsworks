@@ -272,6 +272,7 @@
 
   <build>
     <finalName>hopsworks-common</finalName>
+    <testSourceDirectory>./src/test</testSourceDirectory>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>

@@ -39,6 +39,7 @@
 
 package io.hops.hopsworks.rest.application.config;
 
+import io.hops.hopsworks.api.exception.mapper.RESTApiThrowableMapper;
 import io.swagger.annotations.Api;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -52,12 +53,7 @@ public class ApplicationConfig extends ResourceConfig {
   public ApplicationConfig() {
     register(io.hops.hopsworks.api.agent.AgentResource.class);
     register(io.hops.hopsworks.api.elastic.ElasticService.class);
-    register(io.hops.hopsworks.api.exception.mapper.AccessControlExceptionMapper.class);
-    register(io.hops.hopsworks.api.exception.mapper.AppExceptionMapper.class);
-    register(io.hops.hopsworks.api.exception.mapper.AuthExceptionMapper.class);
-    register(io.hops.hopsworks.api.exception.mapper.LoginExceptionMapper.class);
-    register(io.hops.hopsworks.api.exception.mapper.ThrowableExceptionMapper.class);
-    register(io.hops.hopsworks.api.exception.mapper.TransactionExceptionMapper.class);
+    register(RESTApiThrowableMapper.class);
     register(io.hops.hopsworks.api.filter.RequestAuthFilter.class);
     register(io.hops.hopsworks.api.jobs.ExecutionService.class);
     register(io.hops.hopsworks.api.jobs.FlinkService.class);

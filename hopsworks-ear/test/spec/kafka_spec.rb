@@ -28,7 +28,6 @@ describe "On #{ENV['OS']}" do
         it "should be able to create a kafka schema" do
           project = get_project
           json_result, schema_name = add_schema(project.id)
-          expect_json(successMessage: "Schema for Topic created/updated successfuly")
           expect_status(200)
         end
       end
@@ -45,7 +44,6 @@ describe "On #{ENV['OS']}" do
         project = get_project
         schema = get_schema
         json_result, schema_name = add_topic(project.id, schema.name)
-        expect_json(successMessage: "The Topic has been created.")
         expect_status(200)
       end
     end

@@ -39,14 +39,14 @@
 
 package io.hops.hopsworks.api.project.util;
 
-import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
-import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.exception.DatasetException;
+import io.hops.hopsworks.common.exception.RESTCodes;
 import org.apache.hadoop.fs.Path;
 
-import javax.ws.rs.core.Response;
+import java.util.logging.Level;
 
 /**
  * This class is returned from the PathValidator which parses the PATHs
@@ -86,21 +86,20 @@ public class DsPath {
   }
 
   public Inode validatePathExists(InodeFacade ifacade,
-                                  Boolean dir) throws AppException {
+                                  Boolean dir) throws DatasetException {
     Inode inode = ifacade.getInodeAtPath(fullPath.toString());
     if (inode == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.PATH_NOT_FOUND);
+      throw new DatasetException(RESTCodes.DatasetErrorCode.PATH_NOT_FOUND, Level.FINE, "path: " + fullPath.toString());
     }
 
     if (dir != null && dir && !inode.isDir()){
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.PATH_NOT_DIRECTORY);
+      throw new DatasetException(RESTCodes.DatasetErrorCode.PATH_NOT_DIRECTORY,  Level.FINE,
+        "path: " + fullPath.toString());
     }
 
     if (dir != null && !dir && inode.isDir()){
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.PATH_IS_DIRECTORY);
+      throw new DatasetException(RESTCodes.DatasetErrorCode.PATH_IS_DIRECTORY, Level.FINE,
+        "path: " + fullPath.toString());
     }
 
     return inode;

@@ -41,6 +41,7 @@ package io.hops.hopsworks.dela.hopssite;
 
 import com.google.gson.Gson;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.util.ClientWrapper;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.dela.DelaStateController;
@@ -53,44 +54,45 @@ import io.hops.hopsworks.dela.dto.hopssite.HopsSiteDatasetDTO;
 import io.hops.hopsworks.dela.dto.hopssite.RateDTO;
 import io.hops.hopsworks.dela.dto.hopssite.RatingDTO;
 import io.hops.hopsworks.dela.dto.hopssite.SearchServiceDTO;
-import io.hops.hopsworks.dela.exception.ThirdPartyException;
+import io.hops.hopsworks.common.exception.DelaException;
 import io.hops.hopsworks.dela.old_hopssite_dto.DatasetIssueDTO;
 import io.hops.hopsworks.dela.old_hopssite_dto.PopularDatasetJSON;
 import io.hops.hopsworks.util.SettingsHelper;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.logging.Logger;
+
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSession;
-import javax.ws.rs.core.Response;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class HopssiteController {
 
-  private final static Logger LOG = Logger.getLogger(HopssiteController.class.getName());
+  private static final Logger LOG = Logger.getLogger(HopssiteController.class.getName());
 
   @EJB
   private Settings settings;
   @EJB
   private DelaStateController delaStateCtrl;
 
-  private void checkSetupReady() throws ThirdPartyException {
+  private void checkSetupReady() throws DelaException {
     delaStateCtrl.checkHopsworksDelaSetup();
   }
 
-  private void checkHopssiteReady() throws ThirdPartyException {
+  private void checkHopssiteReady() throws DelaException {
     checkSetupReady();
     delaStateCtrl.checkHopssiteAvailable();
   }
   //********************************************************************************************************************
 
-  private ClientWrapper getClient(String path, Class resultClass) throws ThirdPartyException {
+  private ClientWrapper getClient(String path, Class resultClass) {
     String hopsSite = settings.getHOPSSITE();
     return ClientWrapper.httpsInstance(delaStateCtrl.getKeystore(), delaStateCtrl.getTruststore(), 
       delaStateCtrl.getKeystorePassword(), new HopsSiteHostnameVerifier(settings), resultClass)
@@ -98,7 +100,7 @@ public class HopssiteController {
   }
 
   //*************************************************HEARTBEAT**********************************************************
-  public String delaVersion() throws ThirdPartyException {
+  public String delaVersion() throws DelaException {
     checkSetupReady();
     try {
       ClientWrapper client = getClient(HopsSite.ClusterService.delaVersion(), String.class);
@@ -107,13 +109,13 @@ public class HopssiteController {
       LOG.log(Settings.DELA_DEBUG, "hops-site:cluster - done {0}", client.getFullPath());
       return result;
     } catch (IllegalStateException ise) {
-      throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), ise.getMessage(),
-        ThirdPartyException.Source.HOPS_SITE, "communication failure");
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
   public String registerCluster(String delaClusterAddress, String delaTransferAddress)
-    throws ThirdPartyException {
+    throws DelaException {
     checkHopssiteReady();
     try {
       ClusterServiceDTO.Register req = new ClusterServiceDTO.Register(delaTransferAddress, delaClusterAddress);
@@ -124,12 +126,12 @@ public class HopssiteController {
       LOG.log(Settings.DELA_DEBUG, "hops-site:cluster - done {0}", client.getFullPath());
       return result;
     } catch (IllegalStateException ise) {
-      throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), ise.getMessage(),
-        ThirdPartyException.Source.HOPS_SITE, "communication failure");
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE,
+        Level.SEVERE, DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
-  public void heavyPing(List<String> upldDSIds, List<String> dwnlDSIds) throws ThirdPartyException {
+  public void heavyPing(List<String> upldDSIds, List<String> dwnlDSIds) throws DelaException {
     checkHopssiteReady();
     String publicCId = SettingsHelper.clusterId(settings);
     try {
@@ -139,14 +141,13 @@ public class HopssiteController {
       LOG.log(Settings.DELA_DEBUG, "hops-site:cluster - {0}", client.getFullPath());
       String result = (String) client.doPut();
       LOG.log(Settings.DELA_DEBUG, "hops-site:cluster - done {0}", client.getFullPath());
-      return;
     } catch (IllegalStateException ise) {
-      throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), ise.getMessage(),
-        ThirdPartyException.Source.HOPS_SITE, "communication failure");
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
-  public void ping(ClusterServiceDTO.Ping ping) throws ThirdPartyException {
+  public void ping(ClusterServiceDTO.Ping ping) throws DelaException {
     checkHopssiteReady();
     String publicCId = SettingsHelper.clusterId(settings);
     try {
@@ -155,16 +156,15 @@ public class HopssiteController {
       LOG.log(Settings.DELA_DEBUG, "hops-site:cluster - {0}", client.getFullPath());
       String result = (String) client.doPut();
       LOG.log(Settings.DELA_DEBUG, "hops-site:cluster -done {0}", client.getFullPath());
-      return;
     } catch (IllegalStateException ise) {
-      throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), ise.getMessage(),
-        ThirdPartyException.Source.HOPS_SITE, "communication failure");
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
   //*****************************************************USER***********************************************************
   public int registerUser(String publicCId, String firstname, String lastname, String userEmail)
-    throws ThirdPartyException {
+    throws DelaException {
     checkHopssiteReady();
     try {
       UserDTO.Publish user = new UserDTO.Publish(firstname, lastname, userEmail);
@@ -175,12 +175,12 @@ public class HopssiteController {
       LOG.log(Settings.DELA_DEBUG, "hops-site:user - done {0}", client.getFullPath());
       return result;
     } catch (IllegalStateException ise) {
-      throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), ise.getMessage(),
-        ThirdPartyException.Source.HOPS_SITE, "communication failure");
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
-  public UserDTO.Complete getUser(String email) throws ThirdPartyException {
+  public UserDTO.Complete getUser(String email) throws DelaException {
     checkHopssiteReady();
     String publicCId = SettingsHelper.clusterId(settings);
     try {
@@ -190,12 +190,12 @@ public class HopssiteController {
       LOG.log(Settings.DELA_DEBUG, "hops-site:user - done {0}", client.getFullPath());
       return result;
     } catch (IllegalStateException ise) {
-      throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), ise.getMessage(),
-        ThirdPartyException.Source.HOPS_SITE, "communication failure");
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
-  public Integer getUserId(String email) throws ThirdPartyException {
+  public Integer getUserId(String email) throws DelaException {
     checkHopssiteReady();
     String publicCId = SettingsHelper.clusterId(settings);
     try {
@@ -205,26 +205,26 @@ public class HopssiteController {
       LOG.log(Settings.DELA_DEBUG, "hops-site:user - done {0}", client.getFullPath());
       return result.getUserId();
     } catch (IllegalStateException ise) {
-      throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), ise.getMessage(),
-        ThirdPartyException.Source.HOPS_SITE, "communication failure");
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
-  public <C extends Object> C performAsUser(Users user, HopsSite.UserFunc<C> func) throws ThirdPartyException {
+  public <C extends Object> C performAsUser(Users user, HopsSite.UserFunc<C> func) throws DelaException {
     checkHopssiteReady();
     C result;
     String publicCId = SettingsHelper.clusterId(settings);
     try {
       result = func.perform();
-    } catch (ThirdPartyException tpe) {
-      if (ThirdPartyException.Error.USER_NOT_REGISTERED.is(tpe.getMessage())) {
+    } catch (DelaException tpe) {
+      if (RESTCodes.DelaErrorCode.USER_NOT_REGISTERED.getMessage().equals(tpe.getMessage())) {
         registerUser(publicCId, user.getFname(), user.getLname(), user.getEmail());
         result = func.perform();
       } else {
         throw tpe;
       }
     } catch (IllegalStateException ise) {
-      if (ThirdPartyException.Error.USER_NOT_REGISTERED.is(ise.getMessage())) {
+      if (RESTCodes.DelaErrorCode.USER_NOT_REGISTERED.getMessage().equals(ise.getMessage())) {
         registerUser(publicCId, user.getFname(), user.getLname(), user.getEmail());
         result = func.perform();
       } else {
@@ -236,7 +236,7 @@ public class HopssiteController {
 
   //****************************************************TRACKER********************************************************
   public String publish(String datasetName, String description, Collection<String> categories, 
-    long size, String userEmail) throws ThirdPartyException {
+    long size, String userEmail) throws DelaException {
     checkHopssiteReady();
     String publicCId = SettingsHelper.clusterId(settings);
     try {
@@ -248,27 +248,27 @@ public class HopssiteController {
       String result = (String) client.doPost();
       return result;
     } catch (IllegalStateException ise) {
-      throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), ise.getMessage(),
-        ThirdPartyException.Source.HOPS_SITE, "communication failure");
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
-  public void download(String publicDSId) throws ThirdPartyException {
+  public void download(String publicDSId) throws DelaException {
     checkHopssiteReady();
     String publicCId = SettingsHelper.clusterId(settings);
 
     try {
       ClientWrapper client = getClient(HopsSite.DatasetService.download(publicCId, publicDSId), String.class);
       LOG.log(Settings.DELA_DEBUG, "hops-site:dataset - {0}", client.getFullPath());
-      String result = (String) client.doPost();
+      client.doPost();
       LOG.log(Settings.DELA_DEBUG, "hops-site:dataset - done {0}", client.getFullPath());
     } catch (IllegalStateException ise) {
-      throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), ise.getMessage(),
-        ThirdPartyException.Source.HOPS_SITE, "communication failure");
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
-  public void complete(String publicDSId) throws ThirdPartyException {
+  public void complete(String publicDSId) throws DelaException {
     checkHopssiteReady();
 
     String publicCId = SettingsHelper.clusterId(settings);
@@ -276,15 +276,15 @@ public class HopssiteController {
     try {
       ClientWrapper client = getClient(HopsSite.DatasetService.complete(publicCId, publicDSId), String.class);
       LOG.log(Settings.DELA_DEBUG, "hops-site:dataset - {0}", client.getFullPath());
-      String result = (String) client.doPost();
+      client.doPost();
       LOG.log(Settings.DELA_DEBUG, "hops-site:dataset - done {0}", client.getFullPath());
     } catch (IllegalStateException ise) {
-      throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), ise.getMessage(),
-        ThirdPartyException.Source.HOPS_SITE, "communication failure");
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
-  public void cancel(String publicDSId) throws ThirdPartyException {
+  public void cancel(String publicDSId) throws DelaException {
     checkHopssiteReady();
 
     String publicCId = SettingsHelper.clusterId(settings);
@@ -292,16 +292,16 @@ public class HopssiteController {
     try {
       ClientWrapper client = getClient(HopsSite.DatasetService.remove(publicCId, publicDSId), String.class);
       LOG.log(Settings.DELA_DEBUG, "hops-site:dataset - {0}", client.getFullPath());
-      String result = (String) client.doPost();
+      client.doPost();
       LOG.log(Settings.DELA_DEBUG, "hops-site:dataset - done {0}", client.getFullPath());
     } catch (IllegalStateException ise) {
-      throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), ise.getMessage(),
-        ThirdPartyException.Source.HOPS_SITE, "communication failure");
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
   //*****************************************************SEARCH*********************************************************
-  public SearchServiceDTO.SearchResult search(String searchTerm) throws ThirdPartyException {
+  public SearchServiceDTO.SearchResult search(String searchTerm) throws DelaException {
     checkHopssiteReady();
     try {
       SearchServiceDTO.Params req = new SearchServiceDTO.Params(searchTerm);
@@ -312,12 +312,12 @@ public class HopssiteController {
       LOG.log(Settings.DELA_DEBUG, "hops-site:dataset:done -  {0}", client.getFullPath());
       return result;
     } catch (IllegalStateException ise) {
-      throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), ise.getMessage(),
-        ThirdPartyException.Source.HOPS_SITE, "communication failure");
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
-  public SearchServiceDTO.Item[] page(String sessionId, int startItem, int nrItems) throws ThirdPartyException {
+  public SearchServiceDTO.Item[] page(String sessionId, int startItem, int nrItems) throws DelaException {
     checkHopssiteReady();
     try {
       ClientWrapper client = getClient(HopsSite.DatasetService.searchPage(sessionId, startItem, nrItems),
@@ -328,12 +328,12 @@ public class HopssiteController {
       LOG.log(Settings.DELA_DEBUG, "hops-site:dataset:done - {0}", client.getFullPath());
       return result;
     } catch (IllegalStateException ise) {
-      throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), ise.getMessage(),
-        ThirdPartyException.Source.HOPS_SITE, "communication failure");
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
-  public SearchServiceDTO.ItemDetails details(String publicDSId) throws ThirdPartyException {
+  public SearchServiceDTO.ItemDetails details(String publicDSId) throws DelaException {
     checkHopssiteReady();
     try {
       ClientWrapper client = getClient(HopsSite.DatasetService.details(publicDSId), String.class);
@@ -343,13 +343,13 @@ public class HopssiteController {
       LOG.log(Settings.DELA_DEBUG, "hops-site:dataset:done - {0}", client.getFullPath());
       return result;
     } catch (IllegalStateException ise) {
-      throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), ise.getMessage(),
-        ThirdPartyException.Source.HOPS_SITE, "communication failure");
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
   //*************************************************SETTINGS CHECK*****************************************************
-  public boolean updateUser(UserDTO.Publish userDTO) throws ThirdPartyException {
+  public boolean updateUser(UserDTO.Publish userDTO) throws DelaException {
     checkHopssiteReady();
     try {
       ClientWrapper client = getClient(HopsSite.UserService.user(), String.class);
@@ -357,25 +357,25 @@ public class HopssiteController {
       String res = (String) client.doPut();
       return "OK".equals(res);
     } catch (IllegalStateException ise) {
-      throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), ise.getMessage(),
-        ThirdPartyException.Source.HOPS_SITE, "communication failure");
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
-  public boolean deleteUser(Integer uId) throws ThirdPartyException {
+  public boolean deleteUser(Integer uId) throws DelaException {
     checkHopssiteReady();
     try {
       ClientWrapper client = getClient(HopsSite.UserService.user() + "/" + uId, String.class);
       String res = (String) client.doDelete();
       return "OK".equals(res);
     } catch (IllegalStateException ise) {
-      throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), ise.getMessage(),
-        ThirdPartyException.Source.HOPS_SITE, "communication failure");
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
   //***********************************************COMMENT PUBLIC*******************************************************
-  public List<CommentDTO.RetrieveComment> getDatasetAllComments(String publicDSId) throws ThirdPartyException {
+  public List<CommentDTO.RetrieveComment> getDatasetAllComments(String publicDSId) throws DelaException {
     checkHopssiteReady();
     try {
       ClientWrapper client = getClient(HopsSite.CommentService.getDatasetAllComments(publicDSId), String.class);
@@ -385,75 +385,75 @@ public class HopssiteController {
       LOG.log(Settings.DELA_DEBUG, "hops-site:comment:get:all - done {0}", client.getFullPath());
       return Arrays.asList(result);
     } catch (IllegalStateException ise) {
-      throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), ise.getMessage(),
-        ThirdPartyException.Source.HOPS_SITE, "communication failure");
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
-  public void addComment(String publicCId, String publicDSId, CommentDTO.Publish comment) throws ThirdPartyException {
+  public void addComment(String publicCId, String publicDSId, CommentDTO.Publish comment) throws DelaException {
     checkHopssiteReady();
     try {
       ClientWrapper client = getClient(HopsSite.CommentService.addComment(publicCId, publicDSId), String.class);
       LOG.log(Settings.DELA_DEBUG, "hops-site:comment:add {0}", client.getFullPath());
       client.setPayload(comment);
-      String result = (String) client.doPost();
+      client.doPost();
       LOG.log(Settings.DELA_DEBUG, "hops-site:comment:add - done {0}", client.getFullPath());
     } catch (IllegalStateException ise) {
-      throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), ise.getMessage(),
-        ThirdPartyException.Source.HOPS_SITE, "communication failure");
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE,
+        Level.SEVERE, DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
   public void updateComment(String publicCId, String publicDSId, Integer commentId, CommentDTO.Publish comment)
-    throws ThirdPartyException {
+    throws DelaException {
     checkHopssiteReady();
     try {
       ClientWrapper client = getClient(HopsSite.CommentService.updateComment(publicCId, publicDSId, commentId),
         String.class);
       LOG.log(Settings.DELA_DEBUG, "hops-site:comment:udpate {0}", client.getFullPath());
       client.setPayload(comment);
-      String result = (String) client.doPut();
+      client.doPut();
       LOG.log(Settings.DELA_DEBUG, "hops-site:comment:udpate - done {0}", client.getFullPath());
     } catch (IllegalStateException ise) {
-      throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), ise.getMessage(),
-        ThirdPartyException.Source.HOPS_SITE, "communication failure");
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
   public void removeComment(String publicCId, String publicDSId, Integer commentId, String userEmail)
-    throws ThirdPartyException {
+    throws DelaException {
     checkHopssiteReady();
     try {
       ClientWrapper client = getClient(HopsSite.CommentService.removeComment(publicCId, publicDSId, commentId),
         String.class)
         .setPayload(userEmail);
       LOG.log(Settings.DELA_DEBUG, "hops-site:comment:remove {0}", client.getFullPath());
-      String result = (String) client.doPost();
+      client.doPost();
       LOG.log(Settings.DELA_DEBUG, "hops-site:comment:remove - done {0}", client.getFullPath());
     } catch (IllegalStateException ise) {
-      throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), ise.getMessage(),
-        ThirdPartyException.Source.HOPS_SITE, "communication failure");
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
   public void reportComment(String publicCId, String publicDSId, Integer commentId, CommentIssueDTO commentIssue)
-    throws ThirdPartyException {
+    throws DelaException {
     checkHopssiteReady();
     try {
       ClientWrapper client = getClient(HopsSite.CommentService.reportComment(publicCId, publicDSId, commentId),
         String.class);
       client.setPayload(commentIssue);
       LOG.log(Settings.DELA_DEBUG, "hops-site:comment:report {0}", client.getFullPath());
-      String result = (String) client.doPost();
+      client.doPost();
       LOG.log(Settings.DELA_DEBUG, "hops-site:comment:report - done {0}", client.getFullPath());
     } catch (IllegalStateException ise) {
-      throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), ise.getMessage(),
-        ThirdPartyException.Source.HOPS_SITE, "communication failure");
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
   //**************************************************RATING PUBLIC*****************************************************
-  public RatingDTO getDatasetAllRating(String publicDSId) throws ThirdPartyException {
+  public RatingDTO getDatasetAllRating(String publicDSId) throws DelaException {
     checkHopssiteReady();
     try {
       ClientWrapper client = getClient(HopsSite.RatingService.getDatasetAllRating(publicDSId), RatingDTO.class);
@@ -462,13 +462,13 @@ public class HopssiteController {
       LOG.log(Settings.DELA_DEBUG, "hops-site:rating:get:all - done {0}", client.getFullPath());
       return result;
     } catch (IllegalStateException ise) {
-      throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), ise.getMessage(),
-        ThirdPartyException.Source.HOPS_SITE, "communication failure");
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
   //**************************************************RATING CLUSTER****************************************************
-  public RatingDTO getDatasetUserRating(String publicCId, String publicDSId, String email) throws ThirdPartyException {
+  public RatingDTO getDatasetUserRating(String publicCId, String publicDSId, String email) throws DelaException {
     checkHopssiteReady();
     try {
       ClientWrapper client
@@ -479,40 +479,40 @@ public class HopssiteController {
       LOG.log(Settings.DELA_DEBUG, "hops-site:rating:get:user - done {0}", client.getFullPath());
       return result;
     } catch (IllegalStateException ise) {
-      throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), ise.getMessage(),
-        ThirdPartyException.Source.HOPS_SITE, "communication failure");
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
-  public boolean addRating(String publicCId, String publicDSId, RateDTO datasetRating) throws ThirdPartyException {
+  public boolean addRating(String publicCId, String publicDSId, RateDTO datasetRating) throws DelaException {
     checkHopssiteReady();
     try {
       ClientWrapper client = getClient(HopsSite.RatingService.addRating(publicCId, publicDSId), String.class);
       LOG.log(Settings.DELA_DEBUG, "hops-site:rating:add - {0}", client.getFullPath());
       client.setPayload(datasetRating);
-      String res = (String) client.doPost();
+      client.doPost();
       LOG.log(Settings.DELA_DEBUG, "hops-site:rating:add - done {0}", client.getFullPath());
       return true;
     } catch (IllegalStateException ise) {
-      throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), ise.getMessage(),
-        ThirdPartyException.Source.HOPS_SITE, "communication failure");
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
   //************************************************RATING FUTURE*******************************************************
-  public List<RateDTO> getAllRatingsByPublicId(String publicId) throws ThirdPartyException {
+  public List<RateDTO> getAllRatingsByPublicId(String publicId) throws DelaException {
     checkHopssiteReady();
     try {
       ClientWrapper client
         = getClient(HopsSite.RatingService.getDatasetAllByPublicId() + "/" + publicId, RateDTO.class);
       return (List<RateDTO>) client.doGetGenericType();
     } catch (IllegalStateException ise) {
-      throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), ise.getMessage(),
-        ThirdPartyException.Source.HOPS_SITE, "communication failure");
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
-  public boolean updateRating(RateDTO datasetRating) throws ThirdPartyException {
+  public boolean updateRating(RateDTO datasetRating) throws DelaException {
     checkHopssiteReady();
     try {
       ClientWrapper client = getClient(HopsSite.RatingService.rating(), String.class);
@@ -520,25 +520,25 @@ public class HopssiteController {
       String res = (String) client.doPut();
       return "OK".equals(res);
     } catch (IllegalStateException ise) {
-      throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), ise.getMessage(),
-        ThirdPartyException.Source.HOPS_SITE, "communication failure");
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
-  public boolean deleteRating(Integer ratingId) throws ThirdPartyException {
+  public boolean deleteRating(Integer ratingId) throws DelaException {
     checkHopssiteReady();
     try {
       ClientWrapper client = getClient(HopsSite.RatingService.rating() + "/" + ratingId, String.class);
       String res = (String) client.doDelete();
       return "OK".equals(res);
     } catch (IllegalStateException ise) {
-      throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), ise.getMessage(),
-        ThirdPartyException.Source.HOPS_SITE, "communication failure");
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
   // dataset services
-  public List<HopsSiteDatasetDTO> getAll() throws ThirdPartyException {
+  public List<HopsSiteDatasetDTO> getAll() throws DelaException {
     checkHopssiteReady();
     try {
       ClientWrapper client = getClient(HopsSite.DatasetService.dataset(), HopsSiteDatasetDTO.class);
@@ -547,36 +547,36 @@ public class HopssiteController {
       LOG.log(Settings.DELA_DEBUG, "hops-site:dataset - done {0}", client.getFullPath());
       return result;
     } catch (IllegalStateException ise) {
-      throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), ise.getMessage(),
-        ThirdPartyException.Source.HOPS_SITE, "communication failure");
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
-  public DatasetDTO.Complete getDataset(String publicDSId) throws ThirdPartyException {
+  public DatasetDTO.Complete getDataset(String publicDSId) throws DelaException {
     checkHopssiteReady();
     try {
       ClientWrapper client = getClient(HopsSite.DatasetService.datasetByPublicId() + "/" + publicDSId,
         DatasetDTO.Complete.class);
       return (DatasetDTO.Complete) client.doGet();
     } catch (IllegalStateException ise) {
-      throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), ise.getMessage(),
-        ThirdPartyException.Source.HOPS_SITE, "communication failure");
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
-  public SearchServiceDTO.ItemDetails getDatasetDetails(String publicDSId) throws ThirdPartyException {
+  public SearchServiceDTO.ItemDetails getDatasetDetails(String publicDSId) throws DelaException {
     checkHopssiteReady();
     try {
       ClientWrapper client = getClient(HopsSite.DatasetService.dataset() + "/" + publicDSId + "/details",
         SearchServiceDTO.ItemDetails.class);
       return (SearchServiceDTO.ItemDetails) client.doGet();
     } catch (IllegalStateException ise) {
-      throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), ise.getMessage(),
-        ThirdPartyException.Source.HOPS_SITE, "communication failure");
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
-  public boolean addDatasetIssue(DatasetIssueDTO datasetIssue) throws ThirdPartyException {
+  public boolean addDatasetIssue(DatasetIssueDTO datasetIssue) throws DelaException {
     checkHopssiteReady();
     try {
       ClientWrapper client = getClient(HopsSite.DatasetService.datasetIssue(), String.class);
@@ -584,12 +584,12 @@ public class HopssiteController {
       String res = (String) client.doPost();
       return "OK".equals(res);
     } catch (IllegalStateException ise) {
-      throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), ise.getMessage(),
-        ThirdPartyException.Source.HOPS_SITE, "communication failure");
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
-  public boolean addCategory(DatasetDTO dataset) throws ThirdPartyException {
+  public boolean addCategory(DatasetDTO dataset) throws DelaException {
     checkHopssiteReady();
     try {
       ClientWrapper client = getClient(HopsSite.DatasetService.datasetCategory(), String.class);
@@ -597,23 +597,23 @@ public class HopssiteController {
       String res = (String) client.doPost();
       return "OK".equals(res);
     } catch (IllegalStateException ise) {
-      throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), ise.getMessage(),
-        ThirdPartyException.Source.HOPS_SITE, "communication failure");
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
-  public List<PopularDatasetJSON> getPopularDatasets() throws ThirdPartyException {
+  public List<PopularDatasetJSON> getPopularDatasets() throws DelaException {
     checkHopssiteReady();
     try {
       ClientWrapper client = getClient(HopsSite.DatasetService.datasetPopular(), PopularDatasetJSON.class);
       return (List<PopularDatasetJSON>) client.doGetGenericType();
     } catch (IllegalStateException ise) {
-      throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), ise.getMessage(),
-        ThirdPartyException.Source.HOPS_SITE, "communication failure");
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
-  public boolean addPopularDatasets(PopularDatasetJSON popularDatasetsJson) throws ThirdPartyException {
+  public boolean addPopularDatasets(PopularDatasetJSON popularDatasetsJson) throws DelaException {
     checkHopssiteReady();
     try {
       ClientWrapper client = getClient(HopsSite.DatasetService.datasetPopular(), String.class);
@@ -621,12 +621,12 @@ public class HopssiteController {
       String res = (String) client.doPost();
       return "OK".equals(res);
     } catch (IllegalStateException ise) {
-      throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), ise.getMessage(),
-        ThirdPartyException.Source.HOPS_SITE, "communication failure");
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.HOPS_SITE, null, ise.getMessage(), ise);
     }
   }
 
-  public String hopsSite() throws ThirdPartyException {
+  public String hopsSite() throws DelaException {
     return SettingsHelper.hopsSite(settings);
   }
 

@@ -39,33 +39,32 @@
 
 package io.hops.hopsworks.common.user;
 
-import javax.ejb.Stateless;
-import javax.ws.rs.core.Response;
-import io.hops.hopsworks.common.constants.auth.AccountStatusErrorMessages;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
-import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.exception.UserException;
+
+import javax.ejb.Stateless;
+import java.util.logging.Level;
 
 @Stateless
 public class UserStatusValidator {
 
-  public boolean checkStatus(UserAccountStatus status) throws AppException {
+  public boolean checkStatus(UserAccountStatus status) throws UserException {
     if (status.equals(UserAccountStatus.NEW_MOBILE_ACCOUNT)) {
-      throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(), AccountStatusErrorMessages.INACTIVE_ACCOUNT);
+      throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_INACTIVE, Level.INFO);
     }
     if (status.equals(UserAccountStatus.BLOCKED_ACCOUNT)) {
-      throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(), AccountStatusErrorMessages.BLOCKED_ACCOUNT);
+      throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_BLOCKED, Level.INFO);
     }
     if (status.equals(UserAccountStatus.DEACTIVATED_ACCOUNT)) {
-      throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
-          AccountStatusErrorMessages.DEACTIVATED_ACCOUNT);
+      throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_DEACTIVATED, Level.INFO);
     }
     if (status.equals(UserAccountStatus.LOST_MOBILE)) {
-      throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(), AccountStatusErrorMessages.LOST_DEVICE);
+      throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_LOST_DEVICE, Level.INFO);
     }
     if (status.equals(UserAccountStatus.VERIFIED_ACCOUNT)) {
-      throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(), 
-          AccountStatusErrorMessages.UNAPPROVED_ACCOUNT);
+      throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_NOT_APPROVED, Level.INFO);
     }
     return true;
   }
@@ -74,8 +73,7 @@ public class UserStatusValidator {
     if (user == null) {
       return false;
     }
-    return user.getStatus().equals(UserAccountStatus.NEW_MOBILE_ACCOUNT) || user.getStatus().equals(
-        UserAccountStatus.NEW_MOBILE_ACCOUNT);
+    return user.getStatus().equals(UserAccountStatus.NEW_MOBILE_ACCOUNT);
   }
 
   public boolean isBlockedAccount(Users user) {

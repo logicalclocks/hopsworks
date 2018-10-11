@@ -16,21 +16,17 @@
 
 package io.hops.hopsworks.common.experiments;
 
-import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
-import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.tensorflow.TensorBoard;
 import io.hops.hopsworks.common.dao.tensorflow.TensorBoardFacade;
 import io.hops.hopsworks.common.dao.tensorflow.config.TensorBoardProcessMgr;
-import io.hops.hopsworks.common.exception.TensorBoardCleanupException;
+import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.util.Settings;
 
-import javax.annotation.Resource;
+import javax.ejb.DependsOn;
+import javax.ejb.EJB;
 import javax.ejb.Schedule;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
-import javax.ejb.DependsOn;
-import javax.ejb.TimerService;
-import javax.ejb.EJB;
 import javax.ejb.Timer;
 import java.io.File;
 import java.io.IOException;
@@ -49,16 +45,10 @@ import java.util.logging.Logger;
 public class TensorBoardKillTimer {
   private final static Logger LOG = Logger.getLogger(TensorBoardKillTimer.class.getName());
 
-  @Resource
-  private TimerService timerService;
   @EJB
   private Settings settings;
   @EJB
   private TensorBoardFacade tensorBoardFacade;
-  @EJB
-  private ProjectFacade projectFacade;
-  @EJB
-  private HdfsUsersFacade hdfsUsersFacade;
   @EJB
   private TensorBoardProcessMgr tensorBoardProcessMgr;
   @EJB
@@ -79,8 +69,8 @@ public class TensorBoardKillTimer {
           tensorBoardController.cleanup(tensorBoard);
           LOG.log(Level.INFO, "Killed TensorBoard " + tensorBoard.toString() + " not accessed in the last " +
               settings.getTensorBoardMaxLastAccessed() + " milliseconds");
-        } catch (TensorBoardCleanupException tbce) {
-          LOG.log(Level.SEVERE, "Failed to clean up running TensorBoard", tbce);
+        } catch (ServiceException ex) {
+          LOG.log(Level.SEVERE, "Failed to clean up running TensorBoard", ex);
         }
       }
     }

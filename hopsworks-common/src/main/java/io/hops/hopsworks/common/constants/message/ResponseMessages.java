@@ -144,7 +144,7 @@ public class ResponseMessages {
   public final static String PROJECT_OWNER_NOT_ALLOWED
           = "Removing the project owner is not allowed.";
   public final static String PROJECT_OWNER_ROLE_NOT_ALLOWED
-          = "Chaning the role of the project owner is not allowed.";
+          = "Changing the role of the project owner is not allowed.";
   public final static String FOLDER_INODE_NOT_CREATED
           = "Folder Inode could not be created in DB.";
   public final static String FOLDER_NAME_NOT_SET

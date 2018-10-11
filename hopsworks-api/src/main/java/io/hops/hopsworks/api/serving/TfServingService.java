@@ -39,6 +39,7 @@ import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.serving.tf.TfServingCommands;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.serving.tf.TfServingController;
@@ -122,7 +123,7 @@ public class TfServingService {
       @ApiParam(value = "Id of the TfServing instance", required = true) @PathParam("servingId") Integer servingId)
       throws TfServingException {
     if (servingId == null) {
-      throw new TfServingException(TfServingException.TfServingExceptionErrors.INSTANCENOTFOUND);
+      throw new IllegalArgumentException("servingId was not provided");
     }
     TfServingWrapper tfServingWrapper = tfServingController.getTfServing(project, servingId);
 
@@ -142,7 +143,7 @@ public class TfServingService {
       @ApiParam(value = "Id of the TfServing instance", required = true) @PathParam("servingId") Integer servingId)
       throws TfServingException {
     if (servingId == null) {
-      throw new TfServingException(TfServingException.TfServingExceptionErrors.INSTANCENOTFOUND);
+      throw new IllegalArgumentException("servingId was not provided");
     }
 
     tfServingController.deleteTfServing(project, servingId);
@@ -159,7 +160,7 @@ public class TfServingService {
       @ApiParam(value = "TfServing specification", required = true) TfServingView tfServing)
       throws TfServingException {
     if (tfServing == null) {
-      throw new TfServingException(TfServingException.TfServingExceptionErrors.SPECNOTPROVIDED);
+      throw new IllegalArgumentException("tfServing was not provided");
     }
 
     tfServingController.createOrUpdate(project, user, tfServing.getTfServingDAO());
@@ -177,13 +178,13 @@ public class TfServingService {
       @PathParam("servingId") Integer servingId,
       @ApiParam(value = "Action", required = true) @QueryParam("action") TfServingCommands servingCommand)
       throws TfServingException {
-
+  
     if (servingId == null) {
-      throw new TfServingException(TfServingException.TfServingExceptionErrors.INSTANCENOTFOUND);
+      throw new IllegalArgumentException("servingId was not provided");
     }
-
+  
     if (servingCommand == null) {
-      throw new TfServingException(TfServingException.TfServingExceptionErrors.COMMANDNOTPROVIDED);
+      throw new IllegalArgumentException(RESTCodes.TfServingErrorCode.COMMANDNOTPROVIDED.getMessage());
     }
 
     tfServingController.startOrStop(project, user, servingId, servingCommand);

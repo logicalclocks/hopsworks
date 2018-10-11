@@ -39,13 +39,6 @@
 
 package io.hops.hopsworks.common.dao.user;
 
-import java.util.List;
-import javax.ejb.Stateless;
-import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
-import javax.persistence.PersistenceContext;
-import javax.persistence.Query;
-import javax.persistence.TypedQuery;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.user.security.UserGroup;
 import io.hops.hopsworks.common.dao.user.security.UserGroupPK;
@@ -53,9 +46,17 @@ import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountType;
 import io.hops.hopsworks.common.util.Settings;
 
+import javax.ejb.Stateless;
+import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
+import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
+import javax.persistence.TypedQuery;
+import java.util.List;
+
 @Stateless
 public class UserFacade extends AbstractFacade<Users> {
-
+  
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
@@ -75,13 +76,7 @@ public class UserFacade extends AbstractFacade<Users> {
     return query.getResultList();
   }
 
-  public List<Users> findAllByName() {
-    TypedQuery<Users> query = em.createNamedQuery("Users.findAllByName",
-            Users.class);
-    return query.getResultList();
-  }
-
-  public List<Users> findAllUsers() {
+  public List findAllUsers() {
     Query query = em.createNativeQuery("SELECT * FROM hopsworks.users",
             Users.class);
     return query.getResultList();
@@ -161,9 +156,9 @@ public class UserFacade extends AbstractFacade<Users> {
   public Users findByEmail(String email) {
     try {
       return em.createNamedQuery("Users.findByEmail", Users.class).setParameter(
-              "email", email)
-              .getSingleResult();
-    } catch (Exception e) {
+        "email", email)
+        .getSingleResult();
+    } catch (NoResultException e) {
       return null;
     }
   }

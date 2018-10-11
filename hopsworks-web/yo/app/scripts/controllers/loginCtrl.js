@@ -76,7 +76,7 @@ angular.module('hopsWorksApp')
                         console.log(success);
                         self.otp = success.data.otp;
                         if (success.data.status === 1) {
-                          self.announcement = success.data.message;
+                          self.announcement = success.data.errorMsg;
                         }
                       }, function (error) {
                 self.announcement = '';
@@ -126,18 +126,10 @@ angular.module('hopsWorksApp')
                         $location.path('/');
                       }, function (error) {
                 self.working = false;
-                if (error.data !== undefined && error.data.statusCode === 417 &&
-                        error.data.errorMsg === "Second factor required.") {
+                if (error.data !== undefined && error.data.errorCode === 120002) {
                   self.errorMessage = "";
                   self.emailHash = md5.createHash(self.user.email || '');
                   self.secondFactorRequired = true;
-                } else if (error.data !== undefined && error.data.statusCode === 412 &&
-                        error.data.errorMsg === "First time login") {
-                  self.user.email = "admin@kth.se";
-                  self.user.password = "admin";
-                  self.login();
-                  // self.turnOffFirstTimeLogin()
-                  // Set
                 } else if (error.data !== undefined &&
                         error.data !== null &&
                         error.data.errorMsg !== undefined &&

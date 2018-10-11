@@ -306,7 +306,8 @@ angular.module('hopsWorksApp')
                       function (success) {
                         updateUIAfterChange(false);
                       }, function (error) {
-                growl.info("Closed project without saving.", {title: 'Info', ttl: 5000});
+                growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                // growl.info("Closed project without saving.", {title: 'Info', ttl: 5000});
               });
             };
 
@@ -340,7 +341,7 @@ angular.module('hopsWorksApp')
                         }
                       },
                       function (error) {
-                        $scope.creating[tourName] = false;
+                        $scope.creating[uiTourName] = false;
                         growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
                       }
               );

@@ -40,7 +40,6 @@
 package io.hops.hopsworks.api.tensorflow;
 
 import io.hops.hopsworks.api.kibana.ProxyServlet;
-import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationAttemptStateFacade;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstate;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
@@ -48,10 +47,19 @@ import io.hops.hopsworks.common.dao.tensorflow.TensorBoard;
 import io.hops.hopsworks.common.dao.tensorflow.TensorBoardFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.exception.ProjectException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.project.ProjectDTO;
+import org.apache.hadoop.yarn.api.records.YarnApplicationState;
+import org.apache.http.client.utils.URIUtils;
+
+import javax.ejb.EJB;
+import javax.servlet.ServletException;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.core.Response;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -60,26 +68,15 @@ import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.ejb.EJB;
-import javax.servlet.ServletException;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.core.Response;
-import org.apache.hadoop.yarn.api.records.YarnApplicationState;
-import org.apache.http.client.utils.URIUtils;
 
 public class TensorboardProxyServlet extends ProxyServlet {
 
   @EJB
   private YarnApplicationstateFacade yarnApplicationstateFacade;
-  @EJB
-  private YarnApplicationAttemptStateFacade yarnApplicationAttemptStateFacade;
   @EJB
   private UserFacade userFacade;
   @EJB
@@ -89,8 +86,6 @@ public class TensorboardProxyServlet extends ProxyServlet {
   @EJB
   private TensorBoardFacade tensorBoardFacade;
  
-  private AtomicInteger barrier = new AtomicInteger(1);
-  
   private final static Logger LOGGER = Logger.getLogger(TensorboardProxyServlet.class.getName());
 
   // A request will come in with the format: 
@@ -181,7 +176,7 @@ public class TensorboardProxyServlet extends ProxyServlet {
       ProjectDTO project;
       try {
         project = projectController.getProjectByName(projectName);
-      } catch (AppException ex) {
+      } catch (ProjectException ex) {
         throw new ServletException(ex);
       }
 

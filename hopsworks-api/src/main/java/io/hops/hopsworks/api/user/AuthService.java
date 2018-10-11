@@ -40,7 +40,7 @@
 package io.hops.hopsworks.api.user;
 
 import io.hops.hopsworks.api.filter.NoCacheResponse;
-import io.hops.hopsworks.api.util.JsonResponse;
+import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.api.zeppelin.util.TicketContainer;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.user.UserDTO;
@@ -49,17 +49,17 @@ import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.ldap.LdapUser;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
 import io.hops.hopsworks.common.dao.user.security.audit.UserAuditActions;
-import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.exception.ServiceException;
+import io.hops.hopsworks.common.exception.UserException;
 import io.hops.hopsworks.common.user.AuthController;
 import io.hops.hopsworks.common.user.UserStatusValidator;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.user.ldap.LdapUserController;
 import io.hops.hopsworks.common.user.ldap.LdapUserState;
 import io.swagger.annotations.Api;
-import java.net.SocketException;
-import java.security.NoSuchAlgorithmException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.apache.commons.codec.binary.Base64;
+
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -77,11 +77,12 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import org.apache.commons.codec.binary.Base64;
+import java.security.NoSuchAlgorithmException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Path("/auth")
 @Stateless
@@ -90,7 +91,7 @@ import org.apache.commons.codec.binary.Base64;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class AuthService {
 
-  private final static Logger LOGGER = Logger.getLogger(AuthService.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(AuthService.class.getName());
   @EJB
   private UserFacade userFacade;
   @EJB
@@ -110,14 +111,9 @@ public class AuthService {
   @Path("session")
   @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
   @Produces(MediaType.APPLICATION_JSON)
-  public Response session(@Context SecurityContext sc, @Context HttpServletRequest req) throws AppException {
-    JsonResponse json = new JsonResponse();
-    try {
-      json.setStatus("SUCCESS");
-      json.setData(sc.getUserPrincipal().getName());
-    } catch (Exception e) {
-      throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(), ResponseMessages.AUTHENTICATION_FAILURE);
-    }
+  public Response session(@Context SecurityContext sc, @Context HttpServletRequest req) {
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
+    json.setData(sc.getUserPrincipal().getName());
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }
 
@@ -125,18 +121,14 @@ public class AuthService {
   @Path("login")
   @Produces(MediaType.APPLICATION_JSON)
   public Response login(@FormParam("email") String email, @FormParam("password") String password,
-      @FormParam("otp") String otp, @Context HttpServletRequest req) throws AppException, MessagingException {
+      @FormParam("otp") String otp, @Context HttpServletRequest req) throws UserException {
     logUserLogin(req);
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     if (email == null || email.isEmpty()) {
-      throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(), "Email address field cannot be empty");
+      throw new IllegalArgumentException("Email was not provided");
     }
     Users user = userFacade.findByEmail(email);
-    if (user == null) {
-      throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
-          "Unrecognized email address. Have you registered yet?");
-    }
-    // Do pre cauth realm check 
+    // Do pre cauth realm check
     String passwordWithSaltPlusOtp = authController.preCustomRealmLoginCheck(user, password, otp, req);
 
     // logout any user already loggedin if a new user tries to login 
@@ -151,7 +143,6 @@ public class AuthService {
     }
 
     //read the user data from db and return to caller
-    json.setStatus("SUCCESS");
     json.setSessionID(req.getSession().getId());
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
@@ -162,8 +153,8 @@ public class AuthService {
   @Produces(MediaType.APPLICATION_JSON)
   public Response ldapLogin(@FormParam("username") String username, @FormParam("password") String password,
       @FormParam("chosenEmail") String chosenEmail, @FormParam("consent") boolean consent,
-      @Context HttpServletRequest req) throws LoginException, AppException {
-    JsonResponse json = new JsonResponse();
+      @Context HttpServletRequest req) throws LoginException, UserException {
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     if (username == null || username.isEmpty()) {
       throw new IllegalArgumentException("Username can not be empty.");
     }
@@ -180,7 +171,7 @@ public class AuthService {
     }
     Users user = ladpUser.getUid();
     // Do pre cauth realm check 
-    String passwordWithSalt = authController.preLdapLoginCheck(user, ladpUser.getAuthKey(), req);
+    String passwordWithSalt = authController.preLdapLoginCheck(user, ladpUser.getAuthKey());
     if (req.getRemoteUser() != null && !req.getRemoteUser().equals(user.getEmail())) {
       logoutAndInvalidateSession(req);
     }
@@ -191,7 +182,6 @@ public class AuthService {
       req.getServletContext().log("Skip logged because already logged in: " + username);
     }
     //read the user data from db and return to caller
-    json.setStatus("SUCCESS");
     json.setSessionID(req.getSession().getId());
     json.setData(user.getEmail());
     return Response.status(Response.Status.OK).entity(json).build();
@@ -200,8 +190,8 @@ public class AuthService {
   @GET
   @Path("logout")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response logout(@Context HttpServletRequest req) throws AppException {
-    JsonResponse json = new JsonResponse();
+  public Response logout(@Context HttpServletRequest req) throws UserException {
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     logoutAndInvalidateSession(req);
     return Response.ok().entity(json).build();
   }
@@ -209,8 +199,7 @@ public class AuthService {
   @GET
   @Path("isAdmin")
   @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
-  public Response login(@Context SecurityContext sc, @Context HttpServletRequest req, @Context HttpHeaders httpHeaders)
-      throws AppException, MessagingException {
+  public Response login(@Context SecurityContext sc) {
     if (sc.isUserInRole("HOPS_ADMIN")) {
       return Response.ok(true).build();
     }
@@ -221,10 +210,10 @@ public class AuthService {
   @Path("register")
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
-  public Response register(UserDTO newUser, @Context HttpServletRequest req) throws AppException, SocketException,
-      NoSuchAlgorithmException {
+  public Response register(UserDTO newUser, @Context HttpServletRequest req) throws NoSuchAlgorithmException,
+    UserException {
     byte[] qrCode;
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     qrCode = userController.registerUser(newUser, req);
     if (authController.isTwoFactorEnabled() && newUser.isTwoFactor()) {
       json.setQRCode(new String(Base64.encodeBase64(qrCode)));
@@ -242,10 +231,9 @@ public class AuthService {
       @FormParam("securityQuestion") String securityQuestion,
       @FormParam("securityAnswer") String securityAnswer,
       @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException, Exception {
-    JsonResponse json = new JsonResponse();
+      @Context HttpServletRequest req) throws UserException, ServiceException {
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     userController.recoverPassword(email, securityQuestion, securityAnswer, req);
-    json.setStatus("OK");
     json.setSuccessMessage(ResponseMessages.PASSWORD_RESET_SUCCESSFUL);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }
@@ -253,7 +241,8 @@ public class AuthService {
   @GET
   @Path("/validation/{key}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response validateUserEmail(@Context HttpServletRequest req, @PathParam("key") String key) throws AppException {
+  public Response validateUserEmail(@Context HttpServletRequest req, @PathParam("key") String key)
+    throws UserException {
     authController.validateKey(key, req);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
@@ -261,7 +250,7 @@ public class AuthService {
   @POST
   @Path("/validation/{key}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response validateUserMail(@Context HttpServletRequest req, @PathParam("key") String key) throws AppException {
+  public Response validateUserMail(@Context HttpServletRequest req, @PathParam("key") String key) throws UserException {
     authController.validateKey(key, req);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
@@ -270,7 +259,7 @@ public class AuthService {
   @Path("/recovery")
   @Produces(MediaType.TEXT_PLAIN)
   public Response sendNewValidationKey(@Context SecurityContext sc, @Context HttpServletRequest req,
-      @FormParam("email") String email) throws AppException, MessagingException {
+      @FormParam("email") String email) throws MessagingException {
     Users u = userFacade.findByEmail(email);
     if (u == null || statusValidator.isBlockedAccount(u)) {
       //if account blocked then ignore the request
@@ -280,7 +269,7 @@ public class AuthService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 
-  private void logoutAndInvalidateSession(HttpServletRequest req) throws AppException {
+  private void logoutAndInvalidateSession(HttpServletRequest req) throws UserException {
     Users user = userFacade.findByEmail(req.getRemoteUser());
     try {
       req.getSession().invalidate();
@@ -291,18 +280,17 @@ public class AuthService {
         TicketContainer.instance.invalidate(user.getEmail());
       }
     } catch (ServletException e) {
-      LOGGER.log(Level.WARNING, e.getMessage());
       accountAuditFacade.registerLoginInfo(user, UserAuditActions.LOGOUT.name(), UserAuditActions.FAILED.name(), req);
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), ResponseMessages.LOGOUT_FAILURE);
+      throw new UserException(RESTCodes.UserErrorCode.LOGOUT_FAILURE, Level.SEVERE, null, e.getMessage(), e);
     }
   }
 
-  private void login(Users user, String email, String password, HttpServletRequest req) throws AppException {
+  private void login(Users user, String email, String password, HttpServletRequest req) throws UserException {
     if (user == null) {
       throw new IllegalArgumentException("User not set.");
     }
     if (user.getBbcGroupCollection() == null || user.getBbcGroupCollection().isEmpty()) {
-      throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(), ResponseMessages.NO_ROLE_FOUND);
+      throw new UserException(RESTCodes.UserErrorCode.NO_ROLE_FOUND, Level.FINE);
     }
     if (statusValidator.checkStatus(user.getStatus())) {
       try {
@@ -311,10 +299,10 @@ public class AuthService {
       } catch (ServletException e) {
         LOGGER.log(Level.WARNING, e.getMessage());
         authController.registerAuthenticationFailure(user, req);
-        throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(), ResponseMessages.AUTHENTICATION_FAILURE);
+        throw new UserException(RESTCodes.UserErrorCode.AUTHENTICATION_FAILURE, Level.SEVERE, null, e.getMessage(), e);
       }
     } else { // if user == null
-      throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(), ResponseMessages.AUTHENTICATION_FAILURE);
+      throw new UserException(RESTCodes.UserErrorCode.AUTHENTICATION_FAILURE, Level.INFO);
     }
   }
 

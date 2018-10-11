@@ -42,6 +42,7 @@ package io.hops.hopsworks.common.dao.dataset;
 import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import io.hops.hopsworks.common.dao.project.Project;
@@ -110,7 +111,7 @@ public class DatasetRequestFacade extends AbstractFacade<DatasetRequest> {
               DatasetRequest.class)
               .setParameter("projectTeam", projectTeam).setParameter(
               "dataset", ds).getSingleResult();
-    } catch (Exception e) {
+    } catch (NoResultException e) {
       return null;
     }
   }
@@ -128,7 +129,7 @@ public class DatasetRequestFacade extends AbstractFacade<DatasetRequest> {
               DatasetRequest.class)
               .setParameter("project", project).setParameter(
               "dataset", ds).getSingleResult();
-    } catch (Exception e) {
+    } catch (NoResultException e) {
       return null;
     }
   }

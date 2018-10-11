@@ -24,7 +24,7 @@
             basePath: '/hopsworks',
 
             searchForm: true,
-            sidebar: true,
+            sidebar: false,
             breadcrumb: true,
             allowedActions: {
                 upload: true,

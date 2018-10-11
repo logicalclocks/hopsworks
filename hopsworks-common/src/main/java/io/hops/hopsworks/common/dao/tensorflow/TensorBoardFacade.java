@@ -18,7 +18,6 @@ package io.hops.hopsworks.common.dao.tensorflow;
 
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.metadata.exception.DatabaseException;
 
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -27,10 +26,15 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import javax.validation.ConstraintViolationException;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Stateless
 public class TensorBoardFacade {
-
+  
+  private static final Logger LOGGER = Logger.getLogger(TensorBoardFacade.class.
+    getName());
+  
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
@@ -38,35 +42,38 @@ public class TensorBoardFacade {
     return em;
   }
 
-  public TensorBoardFacade() throws Exception {
+  public TensorBoardFacade() {
 
   }
 
-  public void persist(TensorBoard tensorBoard) throws DatabaseException {
+  public void persist(TensorBoard tensorBoard) {
     try {
       em.persist(tensorBoard);
       em.flush();
-    } catch (ConstraintViolationException cve) {
-      throw new DatabaseException("Could not update TensorBoard", cve);
+    } catch (ConstraintViolationException ex) {
+      LOGGER.log(Level.SEVERE, "Could not update TensorBoard", ex);
+      throw ex;
     }
   }
 
-  public void update(TensorBoard tensorBoard) throws DatabaseException {
+  public void update(TensorBoard tensorBoard) {
     try {
       em.merge(tensorBoard);
       em.flush();
-    } catch (ConstraintViolationException cve) {
-      throw new DatabaseException("Could not update TensorBoard", cve);
+    } catch (ConstraintViolationException ex) {
+      LOGGER.log(Level.SEVERE, "Could not update TensorBoard", ex);
+      throw ex;
     }
   }
 
-  public void remove(TensorBoard tensorBoard) throws DatabaseException {
+  public void remove(TensorBoard tensorBoard) {
     try {
       TensorBoard managedTfServing = em.find(TensorBoard.class, tensorBoard.getTensorBoardPK());
       em.remove(em.merge(managedTfServing));
       em.flush();
     } catch (SecurityException | IllegalStateException ex) {
-      throw new DatabaseException("Could not delete TensorBoard " + tensorBoard.getTensorBoardPK(), ex);
+      LOGGER.log(Level.SEVERE, "Could not update TensorBoard", ex);
+      throw ex;
     }
   }
 

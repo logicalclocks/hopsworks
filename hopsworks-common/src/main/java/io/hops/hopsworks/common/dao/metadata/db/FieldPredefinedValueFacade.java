@@ -39,20 +39,21 @@
 
 package io.hops.hopsworks.common.dao.metadata.db;
 
-import java.util.List;
-import java.util.logging.Logger;
+import io.hops.hopsworks.common.dao.AbstractFacade;
+import io.hops.hopsworks.common.dao.metadata.FieldPredefinedValue;
+
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
-import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.common.dao.metadata.FieldPredefinedValue;
-import io.hops.hopsworks.common.metadata.exception.DatabaseException;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Stateless
 public class FieldPredefinedValueFacade extends AbstractFacade<FieldPredefinedValue> {
 
-  private static final Logger logger = Logger.getLogger(
+  private static final Logger LOGGER = Logger.getLogger(
           FieldPredefinedValueFacade.class.getName());
 
   @PersistenceContext(unitName = "kthfsPU")
@@ -67,13 +68,12 @@ public class FieldPredefinedValueFacade extends AbstractFacade<FieldPredefinedVa
     super(FieldPredefinedValue.class);
   }
 
-  public void addFieldPredefinedValue(FieldPredefinedValue value) throws
-          DatabaseException {
+  public void addFieldPredefinedValue(FieldPredefinedValue value) {
     try {
       this.em.persist(value);
-    } catch (IllegalStateException | SecurityException e) {
-
-      throw new DatabaseException("Could not add predefined value " + value, e);
+    } catch (IllegalStateException | SecurityException ex) {
+      LOGGER.log(Level.SEVERE, "Could not add predefined value ", ex);
+      throw ex;
     }
   }
 
@@ -85,10 +85,9 @@ public class FieldPredefinedValueFacade extends AbstractFacade<FieldPredefinedVa
    * <p/>
    *
    * @param fieldid
-   * @throws se.kth.hopsworks.meta.exception.DatabaseException when an error
    * happens
    */
-  public void deleteFieldPredefinedValues(int fieldid) throws DatabaseException {
+  public void deleteFieldPredefinedValues(int fieldid) {
 
     Query query = this.em.
             createNamedQuery("FieldPredefinedValue.findByFieldid");

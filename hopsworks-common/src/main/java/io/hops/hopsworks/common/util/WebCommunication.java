@@ -40,31 +40,11 @@
 package io.hops.hopsworks.common.util;
 
 import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade;
-import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.exception.GenericException;
+import io.hops.hopsworks.common.exception.RESTCodes;
+import org.apache.commons.lang.StringEscapeUtils;
 
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.security.cert.X509Certificate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.annotation.PreDestroy;
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
-import javax.ws.rs.core.Response;
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.io.Reader;
-import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.Future;
 import javax.ejb.AsyncResult;
 import javax.ejb.Asynchronous;
 import javax.ejb.EJB;
@@ -72,13 +52,34 @@ import javax.ejb.Stateless;
 import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status.Family;
-import org.apache.commons.lang.StringEscapeUtils;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.cert.X509Certificate;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.Future;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Stateless
 public class WebCommunication {
@@ -134,45 +135,45 @@ public class WebCommunication {
    * @return
    */
   public String serviceOp(String operation, String hostAddress,
-      String agentPassword, String cluster, String group, String service) throws AppException {
+      String agentPassword, String cluster, String group, String service) throws GenericException {
     String url = createUrl(operation, hostAddress, cluster, group, service);
     return fetchContent(url, agentPassword);
   }
 
   @Asynchronous
   public Future<String> asyncServiceOp(String operation, String hostAddress,
-      String agentPassword, String cluster, String group, String service) throws AppException {
+      String agentPassword, String cluster, String group, String service) throws GenericException {
     String url = createUrl(operation, hostAddress, cluster, group, service);
-    return new AsyncResult<String>(fetchContent(url, agentPassword));
+    return new AsyncResult<>(fetchContent(url, agentPassword));
   }
   
   public String getConfig(String hostAddress, String agentPassword,
-      String cluster, String group, String service) throws AppException {
+      String cluster, String group, String service) throws GenericException {
     String url = createUrl("config", hostAddress, cluster, group, service);
     return fetchContent(url, agentPassword);
   }
 
   public String getServiceLog(String hostAddress, String agentPassword,
-      String cluster, String group, String service, int lines) throws AppException {
+      String cluster, String group, String service, int lines) throws GenericException {
     String url = createUrl("log", hostAddress, cluster, group, service, String.
             valueOf(lines));
     return fetchLog(url, agentPassword);
   }
 
   public String getGroupLog(String hostAddress, String agentPassword,
-      String cluster, String group, int lines) throws AppException {
+      String cluster, String group, int lines) throws GenericException {
     String url = createUrl("log", hostAddress, cluster, group, String.valueOf(
             lines));
     return fetchLog(url, agentPassword);
   }
 
-  public String getAgentLog(String hostAddress, String agentPassword, int lines) throws AppException {
+  public String getAgentLog(String hostAddress, String agentPassword, int lines) throws GenericException {
     String url = createUrl("agentlog", hostAddress, String.valueOf(lines));
     return fetchLog(url, agentPassword);
   }
 
   public List<NodesTableItem> getNdbinfoNodesTable(String hostAddress,
-      String agentPassword) throws AppException {
+      String agentPassword) throws GenericException {
     List<NodesTableItem> resultList = new ArrayList<NodesTableItem>();
 
     String url = createUrl("mysql", hostAddress, "ndbinfo", "nodes");
@@ -264,7 +265,7 @@ public class WebCommunication {
     return url;
   }
 
-  private String fetchContent(String url, String agentPassword) throws AppException {
+  private String fetchContent(String url, String agentPassword) throws GenericException {
     String content = NOT_AVAILABLE;
     try {
       Response response = getWebResource(url, agentPassword);
@@ -273,18 +274,19 @@ public class WebCommunication {
       if (res == Response.Status.Family.SUCCESSFUL) {
         content = response.readEntity(String.class);
       } else {
-        throw new AppException(response.getStatus(), response.getStatusInfo().getReasonPhrase());
+        throw new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR,
+          Level.SEVERE, "response status: " + response.getStatus(),
+          response + ", reason: " + response.getStatusInfo().getReasonPhrase());
       }
     } catch (KeyManagementException | NoSuchAlgorithmException e) {
       logger.log(Level.SEVERE, null, e);
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), e.getCause().getMessage());
+      throw new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR, Level.SEVERE, null, e.getMessage(), e);
     }
     return content;
   }
 
-  private String fetchLog(String url, String agentPassword) throws AppException {
+  private String fetchLog(String url, String agentPassword) throws GenericException {
     String log = fetchContent(url, agentPassword);
-//        log = log.replaceAll("\n", "<br>");
     log = FormatUtils.stdoutToHtml(log);
     return log;
   }

@@ -38,7 +38,7 @@
  */
 package io.hops.hopsworks.cluster.exception.mapper;
 
-import io.hops.hopsworks.cluster.JsonResponse;
+import io.hops.hopsworks.cluster.ClusterJsonResponse;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJBException;
@@ -53,7 +53,7 @@ import javax.ws.rs.ext.Provider;
 @Provider
 public class EJBExceptionMapper implements ExceptionMapper<EJBException> {
 
-  private final static Logger LOG = Logger.getLogger(EJBExceptionMapper.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(EJBExceptionMapper.class.getName());
 
   @Override
   @Produces(MediaType.APPLICATION_JSON)
@@ -70,62 +70,50 @@ public class EJBExceptionMapper implements ExceptionMapper<EJBException> {
       return handleSecurityException((SecurityException) exception.getCause());
     }
 
-    LOG.log(Level.INFO, "EJBException Caused by: {0}", exception.getCause().toString());
-    LOG.log(Level.INFO, "EJBException: {0}", exception.getCause().getMessage());
-    JsonResponse jsonResponse = new JsonResponse();
-    jsonResponse.setStatus(Response.Status.INTERNAL_SERVER_ERROR.getReasonPhrase());
-    jsonResponse.setStatusCode(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
+    LOGGER.log(Level.INFO, "EJBException Caused by: {0}", exception.getCause().toString());
+    LOGGER.log(Level.INFO, "EJBException: {0}", exception.getCause().getMessage());
+    ClusterJsonResponse jsonResponse = new ClusterJsonResponse();
     jsonResponse.setErrorMsg(exception.getCause().getMessage());
     return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(jsonResponse).build();
   }
 
   private Response handleIllegalArgumentException(IllegalArgumentException iae) {
-    LOG.log(Level.INFO, "IllegalArgumentException: {0}", iae.getMessage());
-    JsonResponse jsonResponse = new JsonResponse();
-    jsonResponse.setStatus(Response.Status.EXPECTATION_FAILED.getReasonPhrase());
-    jsonResponse.setStatusCode(Response.Status.EXPECTATION_FAILED.getStatusCode());
+    LOGGER.log(Level.INFO, "IllegalArgumentException: {0}", iae.getMessage());
+    ClusterJsonResponse jsonResponse = new ClusterJsonResponse();
     jsonResponse.setErrorMsg(iae.getMessage());
     return Response.status(Response.Status.EXPECTATION_FAILED).entity(jsonResponse).build();
   }
 
   private Response handleRollbackException(RollbackException pe) {
-    LOG.log(Level.INFO, "RollbackException: {0}", pe.getMessage());
+    LOGGER.log(Level.INFO, "RollbackException: {0}", pe.getMessage());
     Throwable e = pe;
     //get to the bottom of this
     while (e.getCause() != null) {
       e = e.getCause();
     }
-    LOG.log(Level.INFO, "RollbackException Caused by: {0}", e.getMessage());
-    JsonResponse jsonResponse = new JsonResponse();
-    jsonResponse.setStatus(Response.Status.BAD_REQUEST.getReasonPhrase());
-    jsonResponse.setStatusCode(Response.Status.BAD_REQUEST.getStatusCode());
+    LOGGER.log(Level.INFO, "RollbackException Caused by: {0}", e.getMessage());
+    ClusterJsonResponse jsonResponse = new ClusterJsonResponse();
     jsonResponse.setErrorMsg(e.getMessage());
     return Response.status(Response.Status.BAD_REQUEST).entity(jsonResponse).build();
   }
 
   private Response handleIllegalStateException(IllegalStateException illegalStateException) {
-    LOG.log(Level.INFO, "IllegalStateException: {0}", illegalStateException.getMessage());
-    JsonResponse jsonResponse = new JsonResponse();
-    jsonResponse.setStatus(Response.Status.EXPECTATION_FAILED.getReasonPhrase());
-    jsonResponse.setStatusCode(Response.Status.EXPECTATION_FAILED.getStatusCode());
+    LOGGER.log(Level.INFO, "IllegalStateException: {0}", illegalStateException.getMessage());
+    ClusterJsonResponse jsonResponse = new ClusterJsonResponse();
     jsonResponse.setErrorMsg(illegalStateException.getMessage());
     return Response.status(Response.Status.EXPECTATION_FAILED).entity(jsonResponse).build();
   }
 
   private Response handleMessagingException(MessagingException messagingException) {
-    LOG.log(Level.INFO, "MessagingException: {0}", messagingException.getMessage());
-    JsonResponse jsonResponse = new JsonResponse();
-    jsonResponse.setStatus(Response.Status.EXPECTATION_FAILED.getReasonPhrase());
-    jsonResponse.setStatusCode(Response.Status.EXPECTATION_FAILED.getStatusCode());
+    LOGGER.log(Level.INFO, "MessagingException: {0}", messagingException.getMessage());
+    ClusterJsonResponse jsonResponse = new ClusterJsonResponse();
     jsonResponse.setErrorMsg(messagingException.getMessage());
     return Response.status(Response.Status.EXPECTATION_FAILED).entity(jsonResponse).build();
   }
 
   private Response handleSecurityException(SecurityException securityException) {
-    LOG.log(Level.INFO, "SecurityException: {0}", securityException.getMessage());
-    JsonResponse jsonResponse = new JsonResponse();
-    jsonResponse.setStatus(Response.Status.FORBIDDEN.getReasonPhrase());
-    jsonResponse.setStatusCode(Response.Status.FORBIDDEN.getStatusCode());
+    LOGGER.log(Level.INFO, "SecurityException: {0}", securityException.getMessage());
+    ClusterJsonResponse jsonResponse = new ClusterJsonResponse();
     jsonResponse.setErrorMsg(securityException.getMessage());
     return Response.status(Response.Status.BAD_REQUEST).entity(jsonResponse).build();
   }

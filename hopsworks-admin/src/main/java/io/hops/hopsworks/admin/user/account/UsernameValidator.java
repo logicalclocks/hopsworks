@@ -39,10 +39,9 @@
 
 package io.hops.hopsworks.admin.user.account;
 
-import io.hops.hopsworks.common.constants.auth.AccountStatusErrorMessages;
+import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.user.UsersController;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
 import javax.ejb.EJB;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
@@ -51,6 +50,8 @@ import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 import javax.faces.validator.Validator;
 import javax.faces.validator.ValidatorException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @ManagedBean
 @RequestScoped
@@ -80,15 +81,14 @@ public class UsernameValidator implements Validator {
 
     if (!isValidEmail(uname)) {
 
-      FacesMessage facesMsg = new FacesMessage(
-              AccountStatusErrorMessages.INVALID_EMAIL_FORMAT);
+      FacesMessage facesMsg = new FacesMessage(RESTCodes.UserErrorCode.INVALID_EMAIL.getMessage());
       facesMsg.setSeverity(FacesMessage.SEVERITY_ERROR);
       throw new ValidatorException(facesMsg);
 
     }
 
     if (usersController.isUsernameTaken(uname)) {
-      FacesMessage facesMsg = new FacesMessage(AccountStatusErrorMessages.EMAIL_TAKEN);
+      FacesMessage facesMsg = new FacesMessage(RESTCodes.UserErrorCode.USER_EXISTS.getMessage());
       facesMsg.setSeverity(FacesMessage.SEVERITY_ERROR);
       throw new ValidatorException(facesMsg);
     }

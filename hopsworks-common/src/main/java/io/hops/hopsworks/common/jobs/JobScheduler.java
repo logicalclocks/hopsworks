@@ -39,16 +39,14 @@
 
 package io.hops.hopsworks.common.jobs;
 
-import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
+import io.hops.hopsworks.common.dao.jobs.description.Jobs;
+import io.hops.hopsworks.common.exception.GenericException;
+import io.hops.hopsworks.common.exception.JobException;
 import io.hops.hopsworks.common.jobs.configuration.ScheduleDTO;
 import io.hops.hopsworks.common.jobs.configuration.ScheduleDTO.TimeUnit;
 import io.hops.hopsworks.common.jobs.execution.ExecutionController;
-import java.io.IOException;
-import java.io.Serializable;
-import java.util.Date;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
 import javax.annotation.Resource;
 import javax.ejb.EJB;
 import javax.ejb.ScheduleExpression;
@@ -57,6 +55,10 @@ import javax.ejb.Timeout;
 import javax.ejb.Timer;
 import javax.ejb.TimerConfig;
 import javax.ejb.TimerService;
+import java.io.Serializable;
+import java.util.Date;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Allow jobs to be scheduled and take care of their execution.
@@ -80,7 +82,7 @@ public class JobScheduler {
    * @param timer
    */
   @Timeout
-  public void timeout(Timer timer) {
+  public void timeout(Timer timer) throws GenericException, JobException {
     Serializable jobId = timer.getInfo();
     //Valid id?
     if (!(jobId instanceof Integer)) {
@@ -94,13 +96,8 @@ public class JobScheduler {
       logger.log(Level.WARNING, "Trying to run a job with non-existing id.");
       return;
     }
-    try {
-      //Yes! Now execute!
-      executionController.start(job, job.getCreator());
-    } catch (IOException ex) {
-      logger.log(Level.WARNING, "Exception while starting scheduled job " + job,
-              ex);
-    }
+    //Yes! Now execute!
+    executionController.start(job, job.getCreator());
   }
 
   /**

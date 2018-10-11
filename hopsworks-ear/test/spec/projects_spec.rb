@@ -46,7 +46,7 @@ describe "On #{ENV['OS']}" do
         end
         it "should fail" do
           post "#{ENV['HOPSWORKS_API']}/project", {projectName: "project_#{Time.now.to_i}", description: "", status: 0, services: ["JOBS","HIVE"], projectTeam:[], retentionPeriod: ""}
-          expect_json(errorMsg: "Client not authorized for this invocation")
+          expect_json(errorCode: 200003)
           expect_status(401)
         end
       end
@@ -60,14 +60,12 @@ describe "On #{ENV['OS']}" do
         end
         it 'should work with valid params' do
           post "#{ENV['HOPSWORKS_API']}/project", {projectName: "project_#{Time.now.to_i}", description: "", status: 0, services: ["JOBS","HIVE"], projectTeam:[], retentionPeriod: ""}
-          expect_json(errorMsg: ->(value){ expect(value).to be_empty})
           expect_json(successMessage: regex("Project created successfully.*"))
           expect_status(201)
         end
         it 'should create resources and logs datasets with right permissions and owner' do
           projectname = "project_#{Time.now.to_i}"
           post "#{ENV['HOPSWORKS_API']}/project", {projectName: projectname, description: "", status: 0, services: ["JOBS","HIVE"], projectTeam:[], retentionPeriod: ""}
-          expect_json(errorMsg: ->(value){ expect(value).to be_empty})
           expect_json(successMessage: regex("Project created successfully.*"))
           expect_status(201)
           get "#{ENV['HOPSWORKS_API']}/project/getProjectInfo/#{projectname}"
@@ -86,7 +84,6 @@ describe "On #{ENV['OS']}" do
         it 'should create JUPYTER and ZEPPELIN notebook datasets with right permissions and owner' do
           projectname = "project_#{Time.now.to_i}"
           post "#{ENV['HOPSWORKS_API']}/project", {projectName: projectname, description: "", status: 0, services: ["JOBS","HIVE", "JUPYTER"], projectTeam:[], retentionPeriod: ""}
-          expect_json(errorMsg: ->(value){ expect(value).to be_empty})
           expect_json(successMessage: regex("Project created successfully.*"))
           expect_status(201)
           get "#{ENV['HOPSWORKS_API']}/project/getProjectInfo/#{projectname}"
@@ -106,8 +103,8 @@ describe "On #{ENV['OS']}" do
           with_valid_project
           projectname = "#{@project[:projectname]}"
           post "#{ENV['HOPSWORKS_API']}/project", {projectName: projectname, description: "", status: 0, services: ["JOBS","HIVE"], projectTeam:[], retentionPeriod: ""}
-          expect_json(errorMsg: "Project with the same name already exists.")
-          expect_status(400)
+          expect_json(errorCode: 150001)
+          expect_status(409)
         end
 
         it 'should create a project X containing a dataset Y after deleteing a project X containing a dataset Y (issue #425)' do
@@ -132,14 +129,13 @@ describe "On #{ENV['OS']}" do
 
         it 'should create a project given only name' do
           post "#{ENV['HOPSWORKS_API']}/project", {projectName: "project_#{Time.now.to_i}"}
-          expect_json(errorMsg: "")
           expect_status(201)
         end
 
         it 'Should not let a user create more than the maximum number of allowed projects.' do
           create_max_num_projects
           post "#{ENV['HOPSWORKS_API']}/project", {projectName: "project_#{Time.now.to_i}"}
-          expect_json(errorMsg: "You have reached the maximum number of projects you could create. Contact an administrator to increase your limit.")
+          expect_json(errorCode: 150002)
           expect_status(400)
         end
       end
@@ -151,7 +147,7 @@ describe "On #{ENV['OS']}" do
         end
         it "should fail to get project list" do
           get "#{ENV['HOPSWORKS_API']}/project/getAll"
-          expect_json(errorMsg: "Client not authorized for this invocation")
+          expect_json(errorCode: 200003)
           expect_status(401)
         end
       end
@@ -175,6 +171,7 @@ describe "On #{ENV['OS']}" do
         it "should fail to delete project" do
           project = get_project
           post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/delete"
+          expect_json(errorCode: 200003)
           expect_status(401)
         end
       end
@@ -189,8 +186,8 @@ describe "On #{ENV['OS']}" do
           project = get_project
           create_session(member[:email],"Pass123")
           post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/delete"
+          expect_json(errorCode: 150068)
           expect_status(403)
-          expect_json(errorMsg: "Your role in this project is not authorized to perform this action.")
         end
       end
       context 'with authentication and sufficient privilege' do
@@ -199,7 +196,6 @@ describe "On #{ENV['OS']}" do
         end
         it "should delete project" do
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/delete"
-          expect_json(errorMsg: "")
           expect_json(successMessage: "The project and all related files were removed successfully.")
           expect_status(200)
         end
@@ -215,6 +211,7 @@ describe "On #{ENV['OS']}" do
           project = get_project
           member = create_user[:email]
           post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/projectMembers", {projectTeam: [{projectTeamPK: {projectId: project[:id], teamMember: member},teamRole: "Data scientist"}]}
+          expect_json(errorCode: 200003)
           expect_status(401)
         end
       end
@@ -230,7 +227,7 @@ describe "On #{ENV['OS']}" do
           project = get_project
           create_session(member[:email],"Pass123")
           post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/projectMembers", {projectTeam: [{projectTeamPK: {projectId: project[:id], teamMember: new_member},teamRole: "Data scientist"}]}
-          expect_json(errorMsg: "Your role in this project is not authorized to perform this action.")
+          expect_json(errorCode: 150068)
           expect_status(403)
         end
         it "should fail to remove a team member" do
@@ -241,7 +238,7 @@ describe "On #{ENV['OS']}" do
           project = get_project
           create_session(member[:email],"Pass123")
           delete "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/projectMembers/#{new_member}"
-          expect_json(errorMsg: "Your role in this project is not authorized to perform this action.")
+          expect_json(errorCode: 150068)
           expect_status(403)
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers"
           memb = json_body.detect { |e| e[:user][:email] == new_member }
@@ -255,7 +252,7 @@ describe "On #{ENV['OS']}" do
           project = get_project
           create_session(member[:email],"Pass123")
           post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/projectMembers/#{new_member}", URI.encode_www_form({ role: "Data scientist"}), { content_type: 'application/x-www-form-urlencoded'}
-          expect_json(errorMsg: "Your role in this project is not authorized to perform this action.")
+          expect_json(errorCode: 150068)
           expect_status(403)
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers"
           memb = json_body.detect { |e| e[:user][:email] == new_member }
@@ -270,7 +267,6 @@ describe "On #{ENV['OS']}" do
           new_member = create_user[:email]
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers", {projectTeam: [{projectTeamPK: {projectId: @project[:id],teamMember: new_member},teamRole: "Data scientist"}]}
           expect_json(successMessage: "One member added successfully")
-          expect_json(errorMsg: "")
           expect_status(200)
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers"
           memb = json_body.detect { |e| e[:user][:email] == new_member }
@@ -281,7 +277,6 @@ describe "On #{ENV['OS']}" do
           add_member(new_member, "Data owner")
           delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers/#{new_member}"
           expect_json(successMessage: "Member removed from team.")
-          expect_json(errorMsg: "")
           expect_status(200)
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers"
           memb = json_body.detect { |e| e[:user][:email] == new_member }
@@ -290,14 +285,13 @@ describe "On #{ENV['OS']}" do
         it "should fail to remove a non-existing team member" do
           new_member = create_user[:email]
           delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers/#{new_member}"
-          expect_json(errorMsg: " The selected user is not a team member in this project.")
-          expect_status(400)
+          expect_json(errorCode: 150023)
+          expect_status(404)
         end
         it "should add new member with default role (Data scientist)" do
           new_member = create_user[:email]
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers", {projectTeam: [{projectTeamPK: {projectId: @project[:id],teamMember: new_member},teamRole: ""}]}
           expect_json(successMessage: "One member added successfully")
-          expect_json(errorMsg: "")
           expect_status(200)
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers"
           memb = json_body.detect { |e| e[:user][:email] == new_member }
@@ -306,21 +300,20 @@ describe "On #{ENV['OS']}" do
         it "should fail to change non-existing user role" do
           new_member = "none_existing_user@email.com"
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers/#{new_member}", URI.encode_www_form({ role: "Data scientist"}), { content_type: 'application/x-www-form-urlencoded'}
-          expect_json(errorMsg: "User does not exist.")
-          expect_status(400)
+          expect_json(errorCode: 160002)
+          expect_status(404)
         end
         it "should fail to change non-existing member role" do
           new_member = create_user[:email]
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers/#{new_member}", URI.encode_www_form({ role: "Data scientist"}), { content_type: 'application/x-www-form-urlencoded'}
-          expect_json(errorMsg: " The selected user is not a team member in this project.")
-          expect_status(400)
+          expect_json(errorCode: 150023)
+          expect_status(404)
         end
         it "should change member role to Data scientist" do
           new_member = create_user[:email]
           add_member(new_member, "Data owner")
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers/#{new_member}", URI.encode_www_form({ role: "Data scientist"}), { content_type: 'application/x-www-form-urlencoded'}
           expect_json(successMessage: "Role updated successfully.")
-          expect_json(errorMsg: "")
           expect_status(200)
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers"
           memb = json_body.detect { |e| e[:user][:email] == new_member }
@@ -331,7 +324,6 @@ describe "On #{ENV['OS']}" do
           add_member(new_member, "Data scientist")
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers/#{new_member}", URI.encode_www_form({ role: "Data owner"}), { content_type: 'application/x-www-form-urlencoded'}
           expect_json(successMessage: "Role updated successfully.")
-          expect_json(errorMsg: "")
           expect_status(200)
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers"
           memb = json_body.detect { |e| e[:user][:email] == new_member }
@@ -339,7 +331,7 @@ describe "On #{ENV['OS']}" do
         end
         it "should fail to change the role of the project owner" do
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers/#{@project[:username]}", URI.encode_www_form({ role: "Data scientist"}), { content_type: 'application/x-www-form-urlencoded'}
-          expect_json(errorMsg: "Chaning the role of the project owner is not allowed.")
+          expect_json(errorCode: 150014)
           expect_status(400)
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers"
           memb = json_body.detect { |e| e[:user][:email] == @project[:username] }
@@ -350,7 +342,6 @@ describe "On #{ENV['OS']}" do
           member_2 = create_user[:email]
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers", {projectTeam: [{projectTeamPK: {projectId: @project[:id],teamMember: member_1},teamRole: "Data scientist"},{projectTeamPK: {projectId: @project[:id],teamMember: member_2},teamRole: "Data owner"}]}
           expect_json(successMessage: "Members added successfully")
-          expect_json(errorMsg: "")
           expect_status(200)
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers"
           memb1 = json_body.detect { |e| e[:user][:email] == member_1 }
@@ -361,7 +352,6 @@ describe "On #{ENV['OS']}" do
         it "should not add non-existing user" do
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers", {projectTeam: [{projectTeamPK: {projectId: @project[:id],teamMember: "none_existing_user@email.com"},teamRole: "Data scientist"}]}
           expect_json(successMessage: " No member added.")
-          expect_json(errorMsg: "")
           expect_status(200)
           field_errors = json_body[:fieldErrors]
           expect(field_errors).to include("none_existing_user@email.com was not found in the system.")
@@ -370,7 +360,6 @@ describe "On #{ENV['OS']}" do
           new_member = create_user[:email]
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers", {projectTeam: [{projectTeamPK: {projectId: @project[:id],teamMember: "none_existing_user@email.com"},teamRole: "Data scientist"},{projectTeamPK: {projectId: @project[:id],teamMember: new_member},teamRole: "Data scientist"}]}
           expect_json(successMessage: "One member added successfully")
-          expect_json(errorMsg: "")
           expect_status(200)
           field_errors = json_body[:fieldErrors]
           expect(field_errors).to include("none_existing_user@email.com was not found in the system.")
@@ -378,7 +367,6 @@ describe "On #{ENV['OS']}" do
         it "should not add existing member" do
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers", {projectTeam: [{projectTeamPK: {projectId: @project[:id], teamMember: "#{@project[:username]}"},teamRole: "Data scientist"}]}
           expect_json(successMessage: " No member added.")
-          expect_json(errorMsg: "")
           expect_status(200)
           field_errors = json_body[:fieldErrors]
           expect(field_errors).to include("#{@project[:username]} is already a member in this project.")
@@ -387,7 +375,6 @@ describe "On #{ENV['OS']}" do
           new_member = create_user[:email]
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers", {projectTeam: [{projectTeamPK: {projectId: @project[:id], teamMember: "#{@project[:username]}"},teamRole: "Data scientist"},{projectTeamPK: {projectId: @project[:id],teamMember: new_member},teamRole: "Data scientist"}]}
           expect_json(successMessage: "One member added successfully")
-          expect_json(errorMsg: "")
           expect_status(200)
           field_errors = json_body[:fieldErrors]
           expect(field_errors).to include("#{@project[:username]} is already a member in this project.")
@@ -400,7 +387,6 @@ describe "On #{ENV['OS']}" do
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers", {projectTeam: [{projectTeamPK: {projectId: @project[:id], teamMember: new_member},teamRole: "Data scientist"}]}
           expect_status(200)
           expect_json(successMessage: "One member added successfully")
-          expect_json(errorMsg: "")
         end
       end
     end
