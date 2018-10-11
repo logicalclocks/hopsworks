@@ -20,6 +20,7 @@ import io.hops.common.Pair;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.serving.TfServing;
 import io.hops.hopsworks.common.dao.serving.TfServingFacade;
+import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.serving.inference.logger.InferenceLogger;
 
 import javax.ejb.EJB;
@@ -53,7 +54,7 @@ public class InferenceController {
 
     TfServing tfServing = tfServingFacade.findByProjectModelName(project, modelName);
     if (tfServing == null) {
-      throw new InferenceException(InferenceException.InferenceExceptionErrors.SERVINGNOTFOUND);
+      throw new InferenceException(RESTCodes.InferenceErrorCode.SERVINGNOTFOUND, Level.FINE, "name: " + modelName);
     }
 
     // TODO(Fabio): ATM all the serving are tfServings. so we just redirect everything to the TfInferenceController
@@ -73,9 +74,14 @@ public class InferenceController {
     }
 
     // If the inference server returned something different than 200 then throw an exception to the user
-    if (inferenceResult.getL() != 200) {
+    if (inferenceResult.getL() >= 500) {
       logger.log(Level.FINE, "Request error: " + inferenceResult.getL() + " - " + inferenceResult.getR());
-      throw new InferenceException(InferenceException.InferenceExceptionErrors.REQUESTERROR, inferenceResult.getR());
+      throw new InferenceException(RESTCodes.InferenceErrorCode.SERVINGINSTANCEINTERNAL, Level.FINE,
+          inferenceResult.getR());
+    } else if (inferenceResult.getL() >= 400) {
+      logger.log(Level.FINE, "Request error: " + inferenceResult.getL() + " - " + inferenceResult.getR());
+      throw new InferenceException(RESTCodes.InferenceErrorCode.SERVINGINSTANCEBADREQUEST, Level.FINE,
+          inferenceResult.getR());
     }
 
     return inferenceResult.getR();

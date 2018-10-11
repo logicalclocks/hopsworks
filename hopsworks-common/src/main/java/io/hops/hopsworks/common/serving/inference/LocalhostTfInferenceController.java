@@ -19,6 +19,7 @@ package io.hops.hopsworks.common.serving.inference;
 import com.google.common.base.Strings;
 import io.hops.common.Pair;
 import io.hops.hopsworks.common.dao.serving.TfServing;
+import io.hops.hopsworks.common.exception.RESTCodes;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -30,6 +31,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.inject.Alternative;
 import java.io.IOException;
+import java.util.logging.Level;
 
 import static io.hops.hopsworks.common.serving.tf.LocalhostTfServingController.PID_STOPPED;
 
@@ -44,11 +46,11 @@ public class LocalhostTfInferenceController implements TfInferenceController {
                                      String verb, String inferenceRequestJson) throws InferenceException {
 
     if (tfServing.getLocalPid().equals(PID_STOPPED)) {
-      throw new InferenceException(InferenceException.InferenceExceptionErrors.SERVINGNOTRUNNING);
+      throw new InferenceException(RESTCodes.InferenceErrorCode.SERVINGNOTRUNNING, Level.FINE);
     }
 
     if (Strings.isNullOrEmpty(verb)) {
-      throw new InferenceException(InferenceException.InferenceExceptionErrors.BADREQUEST);
+      throw new InferenceException(RESTCodes.InferenceErrorCode.MISSING_VERB, Level.FINE);
     }
 
     // TODO(Fabio) does Tf model server support TLS?
@@ -75,22 +77,23 @@ public class LocalhostTfInferenceController implements TfInferenceController {
     try {
       response = httpClient.newCall(request).execute();
     } catch (IOException e) {
-      throw new InferenceException(InferenceException.InferenceExceptionErrors.REQUESTERROR);
+      throw new InferenceException(RESTCodes.InferenceErrorCode.REQUESTERROR, Level.INFO, "", e.getMessage(), e);
     }
 
     if (response == null) {
-      throw new InferenceException(InferenceException.InferenceExceptionErrors.REQUESTERROR);
+      throw new InferenceException(RESTCodes.InferenceErrorCode.EMPTYRESPONSE, Level.INFO, "Received null response");
     }
 
     if (response.body() == null) {
-      throw new InferenceException(InferenceException.InferenceExceptionErrors.EMPTYRESPONSE);
+      throw new InferenceException(RESTCodes.InferenceErrorCode.EMPTYRESPONSE, Level.INFO, "Received null response");
     }
 
     try {
       // Return prediction
       return new Pair<>(response.code(), response.body().string());
     } catch (IOException e) {
-      throw new InferenceException(InferenceException.InferenceExceptionErrors.EMPTYRESPONSE);
+      throw new InferenceException(RESTCodes.InferenceErrorCode.ERRORREADINGRESPONSE, Level.INFO,
+          "", e.getMessage(), e);
     } finally {
       response.close();
     }

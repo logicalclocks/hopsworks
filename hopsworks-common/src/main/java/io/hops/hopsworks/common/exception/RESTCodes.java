@@ -39,6 +39,8 @@ import javax.xml.bind.annotation.XmlRootElement;
  * 13. Zeppelin error codes start with "21".
  * 14. CA error codes start with "22".
  * 15. DelaCSR error codes start with "23".
+ * 16. TfServing error codes start with "24".
+ * 17. Inference error codes start with "25".
  */
 @XmlRootElement
 public class RESTCodes {
@@ -1083,16 +1085,60 @@ public class RESTCodes {
     public Integer getCode() {
       return code;
     }
-    
+
     @Override
     public String getMessage() {
       return message;
     }
-    
+
     public Response.StatusType getRespStatus() {
       return respStatus;
     }
-  
+
+    @Override
+    public int getRange() {
+      return range;
+    }
+  }
+
+
+  public enum InferenceErrorCode implements RESTErrorCode {
+
+    SERVINGNOTFOUND(0, "Serving instance not found", Response.Status.NOT_FOUND),
+    SERVINGNOTRUNNING(1, "Serving instance not running", Response.Status.BAD_REQUEST),
+    REQUESTERROR(2, "Error contacting the serving server", Response.Status.INTERNAL_SERVER_ERROR),
+    EMPTYRESPONSE(3, "Empty response from the serving server", Response.Status.INTERNAL_SERVER_ERROR),
+    BADREQUEST(4, "Request malformed", Response.Status.BAD_REQUEST),
+    MISSING_VERB(5, "Verb is missing", Response.Status.BAD_REQUEST),
+    ERRORREADINGRESPONSE(6, "Error while reading the response", Response.Status.INTERNAL_SERVER_ERROR),
+    SERVINGINSTANCEINTERNAL(7, "Serving instance internal error", Response.Status.INTERNAL_SERVER_ERROR),
+    SERVINGINSTANCEBADREQUEST(8, "Serving instance bad request error", Response.Status.BAD_REQUEST);
+
+    private int code;
+    private String message;
+    private Response.Status respStatus;
+    public final int range = 250000;
+
+    InferenceErrorCode(Integer code, String message, Response.Status respStatus) {
+      this.code = range + code;
+      this.message = message;
+      this.respStatus = respStatus;
+    }
+
+    @Override
+    public Integer getCode() {
+      return code;
+    }
+
+    @Override
+    public String getMessage() {
+      return message;
+    }
+
+    public Response.StatusType getRespStatus() {
+      return respStatus;
+    }
+
     @Override
     public int getRange() {
       return range;

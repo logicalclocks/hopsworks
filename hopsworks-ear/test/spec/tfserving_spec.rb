@@ -39,8 +39,6 @@
 
 require 'json'
 
-# TODO(Fabio): check for specific errors.
-
 describe "On #{ENV['OS']}" do
   describe 'tfserving' do
     before (:all) do
@@ -79,6 +77,7 @@ describe "On #{ENV['OS']}" do
           mkdir("/Projects/#{@project[:projectname]}/Models/mnist/", @user[:username], "#{@project[:projectname]}__Models", 750)
           copy(TOUR_FILE_LOCATION, "/Projects/#{@project[:projectname]}/Models/mnist/", @user[:username], "#{@project[:projectname]}__Models", 750)
         end
+
         it "should create the serving without Kafka topic" do
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
               {modelName: "testModel",
@@ -97,9 +96,9 @@ describe "On #{ENV['OS']}" do
                modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
                modelVersion: 1,
                kafkaTopicDTO: {
-                  name: "CREATE",
-                  numOfPartitions: 1,
-                  numOfReplicas: 1
+                   name: "CREATE",
+                   numOfPartitions: 1,
+                   numOfReplicas: 1
                }}
           expect_status(201)
 
@@ -126,7 +125,7 @@ describe "On #{ENV['OS']}" do
                modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
                modelVersion: 1,
                kafkaTopicDTO: {
-                  name: topic_name
+                   name: topic_name
                }}
           expect_status(201)
 
@@ -144,21 +143,21 @@ describe "On #{ENV['OS']}" do
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
               {modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
                modelVersion: 1}
-          expect_json(errorMsg: "Model name not provided")
+          expect_json(usrMsg: "Model name not provided")
         end
 
         it "should fail to create a serving without a path" do
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
               {modelName: "testModel3",
                modelVersion: 1}
-          expect_json(errorMsg: "Model path not provided")
+          expect_json(usrMsg: "Model path not provided")
         end
 
         it "should fail to create a serving without a version" do
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
               {modelName: "testModel4",
                modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/"}
-          expect_json(errorMsg: "Model version not provided")
+          expect_json(usrMsg: "Model version not provided")
         end
 
         it "should fail to create a serving with a non-standard path" do
@@ -166,234 +165,262 @@ describe "On #{ENV['OS']}" do
               {modelName: "testModel5",
                modelPath: "/Projects/#{@project[:projectname]}/DOESNTEXISTS",
                modelVersion: 1}
-          expect_status(417)
+          expect_json(usrMsg: "The model path provided does not exists")
+          expect_status(422)
         end
 
-        it "should fail to create a serving with a non-standard path - too deep" do
+        it "should fail to create a serving with a non-standard path" do
+          rm("/Projects/#{@project[:projectname]}/Models/mnist/1/saved_model.pb")
+
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
               {modelName: "testModel6",
-               modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/1",
+               modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
                modelVersion: 1}
-          expect_status(417)
+          expect_json(usrMsg: "The model path does not respect the TensorFlow standard")
+          expect_status(422)
         end
       end
 
-      describe "#start" do
-        before :all do
-          with_valid_project
-          with_serving(@project[:id], @project[:projectname], @user[:username])
-        end
+    end
 
-        after :all do
-          purge_all_serving_instances
-        end
+    describe "#start" do
+      before :all do
+        with_valid_project
+        with_serving(@project[:id], @project[:projectname], @user[:username])
+      end
 
-        it "should be able to start a serving instance" do
-          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=start"
-          expect_status(200)
+      after :all do
+        purge_all_serving_instances
+      end
 
-          # Check if the process is running on the host
-          wait_for do
-            system "pgrep -f #{@serving[:model_name]} -a"
-            $?.exitstatus == 0
-          end
+      it "should be able to start a serving instance" do
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=start"
+        expect_status(200)
+
+        # Check if the process is running on the host
+        wait_for do
+          system "pgrep -f #{@serving[:model_name]} -a"
+          $?.exitstatus == 0
         end
       end
 
-      describe "#update" do
-          before :all do
-            with_valid_project
-            with_serving(@project[:id], @project[:projectname], @user[:username])
+      it "should fail to start a running instance" do
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=start"
+        expect_status(400)
+        expect_json(errorCode: 240003)
+        expect_json(usrMsg: "Instance is already started")
+      end
+    end
 
-            post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=start"
-            expect_status(200)
+    describe "#update" do
+      before :all do
+        with_valid_project
+        with_serving(@project[:id], @project[:projectname], @user[:username])
 
-            wait_for do
-              system "pgrep -f #{@serving[:model_name]} -a"
-              $?.exitstatus == 0
-            end
-          end
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=start"
+        expect_status(200)
 
-          after :all do
-            purge_all_serving_instances
-          end
+        wait_for do
+          system "pgrep -f #{@serving[:model_name]} -a"
+          $?.exitstatus == 0
+        end
+      end
 
-          after :each do
-            # Check if the process is
-            wait_for do
-              system "pgrep -f testModelChanged -a"
-              $?.exitstatus == 0
-            end
-          end
+      after :all do
+        purge_all_serving_instances
+      end
 
-          it "should be able to update the name" do
-            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-              {id: @serving[:id],
-               modelName: "testModelChanged",
-               modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
-               modelVersion: 1,
-               kafkaTopicDTO: {
-                  name: @topic[:topic_name]
-               }}
-            expect_status(201)
-          end
+      after :each do
+        # Check if the process is
+        wait_for do
+          system "pgrep -f testModelChanged -a"
+          $?.exitstatus == 0
+        end
+      end
 
-          it "should be able to update the version" do
-            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-              {id: @serving[:id],
-               modelName: "testModelChanged",
-               modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
-               modelVersion: 2,
-               kafkaTopicDTO: {
-                  name: @topic[:topic_name]
-               }}
-            expect_status(201)
-          end
+      it "should be able to update the name" do
+        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+            {id: @serving[:id],
+             modelName: "testModelChanged",
+             modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
+             modelVersion: 1,
+             kafkaTopicDTO: {
+                 name: @topic[:topic_name]
+             }}
+        expect_status(201)
+      end
 
-          it "should be able to update the path" do
-            mkdir("/Projects/#{@project[:projectname]}/Models/newMnist/", @user[:username],
-                  "#{@project[:projectname]}__Models", 750)
+      it "should be able to update the version" do
+        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+            {id: @serving[:id],
+             modelName: "testModelChanged",
+             modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
+             modelVersion: 2,
+             kafkaTopicDTO: {
+                 name: @topic[:topic_name]
+             }}
+        expect_status(201)
+      end
 
-            copy("/Projects/#{@project[:projectname]}/Models/mnist/*",
-                 "/Projects/#{@project[:projectname]}/Models/newMnist/",
-                 @user[:username], "#{@project[:projectname]}__Models", 750)
+      it "should be able to update the path" do
+        mkdir("/Projects/#{@project[:projectname]}/Models/newMnist/", @user[:username],
+              "#{@project[:projectname]}__Models", 750)
 
-            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-              {id: @serving[:id],
-               modelName: "testModelChanged",
-               modelPath: "/Projects/#{@project[:projectname]}/Models/newMnist/",
-               modelVersion: 2,
-               kafkaTopicDTO: {
-                  name: @topic[:topic_name]
-               }}
-            expect_status(201)
-          end
+        copy("/Projects/#{@project[:projectname]}/Models/mnist/*",
+             "/Projects/#{@project[:projectname]}/Models/newMnist/",
+             @user[:username], "#{@project[:projectname]}__Models", 750)
 
-          it "should be able to change the kafka topic it's writing to"  do
-            json_result, topic_name = add_topic(@project[:id], INFERENCE_SCHEMA_NAME, INFERENCE_SCHEMA_VERSION)
+        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+            {id: @serving[:id],
+             modelName: "testModelChanged",
+             modelPath: "/Projects/#{@project[:projectname]}/Models/newMnist/",
+             modelVersion: 2,
+             kafkaTopicDTO: {
+                 name: @topic[:topic_name]
+             }}
+        expect_status(201)
+      end
 
-            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-               {id: @serving[:id],
-                modelName: "testModelChanged",
-                modelPath: "/Projects/#{@project[:projectname]}/Models/newMnist/",
-                modelVersion: 2,
-                kafkaTopicDTO: {
-                   name: topic_name
-                }}
-            expect_status(201)
+      it "should be able to change the kafka topic it's writing to"  do
+        json_result, topic_name = add_topic(@project[:id], INFERENCE_SCHEMA_NAME, INFERENCE_SCHEMA_VERSION)
 
-            serving = TfServing.find(@serving[:id])
-            new_topic = ProjectTopics.find_by(topic_name: topic_name, project_id: @project[:id])
-            expect(serving[:kafka_topic_id]).to be new_topic[:id]
-          end
+        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+            {id: @serving[:id],
+             modelName: "testModelChanged",
+             modelPath: "/Projects/#{@project[:projectname]}/Models/newMnist/",
+             modelVersion: 2,
+             kafkaTopicDTO: {
+                 name: topic_name
+             }}
+        expect_status(201)
 
-          it "should be able to stop writing to a kafka topic" do
-            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-             {id: @serving[:id],
-              modelName: "testModelChanged",
-              modelPath: "/Projects/#{@project[:projectname]}/Models/newMnist/",
-              modelVersion: 2,
-              kafkaTopicDTO: {
+        serving = TfServing.find(@serving[:id])
+        new_topic = ProjectTopics.find_by(topic_name: topic_name, project_id: @project[:id])
+        expect(serving[:kafka_topic_id]).to be new_topic[:id]
+      end
+
+      it "should be able to stop writing to a kafka topic" do
+        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+            {id: @serving[:id],
+             modelName: "testModelChanged",
+             modelPath: "/Projects/#{@project[:projectname]}/Models/newMnist/",
+             modelVersion: 2,
+             kafkaTopicDTO: {
                  name: "NONE"
-              }}
-            expect_status(201)
+             }}
+        expect_status(201)
 
-            serving = TfServing.find(@serving[:id])
-            expect(serving[:kafka_topic_id]).to be nil
-          end
+        serving = TfServing.find(@serving[:id])
+        expect(serving[:kafka_topic_id]).to be nil
+      end
+    end
+
+    describe "#kill" do
+      before :all do
+        with_valid_project
+        with_serving(@project[:id], @project[:projectname], @user[:username])
       end
 
-      describe "#kill" do
-          before :all do
-            with_valid_project
-            with_serving(@project[:id], @project[:projectname], @user[:username])
-          end
-
-          before :each do
-            post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=start"
-            expect_status(200)
-          end
-
-          it "should be able to kill a running serving instance" do
-            post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=stop"
-            expect_status(200)
-
-            # Check if the process is running on the host
-            system "pgrep -f tensorflow_model_server"
-            if $?.exitstatus != 1
-              raise "The process is still running"
-            end
-          end
-
-          it "should mark the serving as not running if the process dies" do
-            # Simulate the process dying by its own
-            system "pgrep -f tensorflow_model_server | xargs kill -9"
-
-            # Wait a bit
-            sleep(30)
-
-            # Check that the serving is reported as dead
-            serving_list = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/"
-            serving = JSON.parse(serving_list).select { |serving| serving[:modelName] == @serving[:modelName]}[0]
-            expect(serving['status']).to eql "Stopped"
-          end
+      before :each do
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=start"
+        expect_status(200)
       end
 
-      describe "#delete" do
-          before :all do
-            # Make sure no tensorflow serving instance is running"
-            system "pgrep -f tensorflow_model_server | xargs kill -9"
-            with_valid_project
+      it "should be able to kill a running serving instance" do
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=stop"
+        expect_status(200)
+
+        # check if the process is running on the host
+        system "pgrep -f tensorflow_model_server"
+        if $?.exitstatus != 1
+          raise "the process is still running"
+        end
+      end
+
+      it "should fail to kill a non running instance" do
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=stop"
+        expect_status(200)
+
+        # check if the process is running on the host
+        system "pgrep -f tensorflow_model_server"
+        if $?.exitstatus != 1
+          raise "the process is still running"
+        end
+
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=stop"
+        expect_status(400)
+        expect_json(errorCode: 240003)
+        expect_json(usrMsg: "Instance is already stopped")
+      end
+
+      it "should mark the serving as not running if the process dies" do
+        # Simulate the process dying by its own
+        system "pgrep -f tensorflow_model_server | xargs kill -9"
+
+        # Wait a bit
+        sleep(30)
+
+        # Check that the serving is reported as dead
+        serving_list = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/"
+        serving = JSON.parse(serving_list).select { |serving| serving[:modelName] == @serving[:modelName]}[0]
+        expect(serving['status']).to eql "Stopped"
+      end
+    end
+
+    describe "#delete" do
+      before :all do
+        # Make sure no tensorflow serving instance is running"
+        system "pgrep -f tensorflow_model_server | xargs kill -9"
+        with_valid_project
 
 
-            mkdir("/Projects/#{@project[:projectname]}/Models/mnist/", @user[:username], "#{@project[:projectname]}__Models", 750)
-            copy(TOUR_FILE_LOCATION, "/Projects/#{@project[:projectname]}/Models/mnist/", @user[:username], "#{@project[:projectname]}__Models", 750)
-          end
+        mkdir("/Projects/#{@project[:projectname]}/Models/mnist/", @user[:username], "#{@project[:projectname]}__Models", 750)
+        copy(TOUR_FILE_LOCATION, "/Projects/#{@project[:projectname]}/Models/mnist/", @user[:username], "#{@project[:projectname]}__Models", 750)
+      end
 
-          before :each do
-            @serving = create_serving(@project[:id], @project[:projectname])
-          end
+      before :each do
+        @serving = create_serving(@project[:id], @project[:projectname])
+      end
 
-          it "should be able to delete a serving instance" do
-            delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}"
-            expect_status(200)
-          end
+      it "should be able to delete a serving instance" do
+        delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}"
+        expect_status(200)
+      end
 
-          it "should be able to delete a running instance" do
-            # Start the serving instance
-            post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=start"
-            expect_status(200)
+      it "should be able to delete a running instance" do
+        # Start the serving instance
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=start"
+        expect_status(200)
 
-            # Wait until the service instance is running
-            wait_for do
-              system "pgrep -f tensorflow_model_server"
-              $?.exitstatus == 0
-            end
+        # Wait until the service instance is running
+        wait_for do
+          system "pgrep -f tensorflow_model_server"
+          $?.exitstatus == 0
+        end
 
-            delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}"
-            expect_status(200)
+        delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}"
+        expect_status(200)
 
-            # Check that the process has been killed
-            wait_for do
-              system "pgrep -f tensorflow_model_server"
-              $?.exitstatus == 1
-            end
-          end
+        # Check that the process has been killed
+        wait_for do
+          system "pgrep -f tensorflow_model_server"
+          $?.exitstatus == 1
+        end
+      end
 
-          it "should be able to delete a starting instance" do
-            # Start the serving instance
-            post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=start"
-            expect_status(200)
+      it "should be able to delete a starting instance" do
+        # Start the serving instance
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=start"
+        expect_status(200)
 
-            delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}"
-            expect_status(200)
+        delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}"
+        expect_status(200)
 
-            # Check that the process has been killed
-            wait_for do
-              system "pgrep -f tensorflow_model_server"
-              $?.exitstatus == 1
-            end
-          end
+        # Check that the process has been killed
+        wait_for do
+          system "pgrep -f tensorflow_model_server"
+          $?.exitstatus == 1
+        end
       end
     end
   end

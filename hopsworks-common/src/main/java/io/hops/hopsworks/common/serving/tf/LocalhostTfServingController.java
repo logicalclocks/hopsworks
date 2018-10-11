@@ -197,6 +197,9 @@ public class LocalhostTfServingController implements TfServingController {
     } else if (currentStatus == TfServingStatusEnum.UPDATING
         && command == TfServingCommands.STOP) {
       killTfServingInstance(project, tfServing, true);
+    } else {
+      String userMsg = "Instance is already " + (command == TfServingCommands.START ? "started" : "stopped");
+      throw new TfServingException(RESTCodes.TfServingErrorCode.LIFECYCLEERROR, Level.FINE, userMsg);
     }
   }
 

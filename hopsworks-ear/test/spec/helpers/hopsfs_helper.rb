@@ -54,4 +54,11 @@ module HopsFSHelper
       raise "Failed to chmod directory: #{dest} "
     end
   end
+
+  def rm(path)
+    system "sudo su #{@@hdfs_user} /bin/bash -c \"#{@@hadoop_home}/bin/hdfs dfs -rm #{path}\""
+    if $?.exitstatus > 0
+      raise "Failed to chmod directory: #{path} "
+    end
+  end
 end

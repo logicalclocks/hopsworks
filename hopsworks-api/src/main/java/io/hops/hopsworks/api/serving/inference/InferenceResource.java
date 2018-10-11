@@ -17,6 +17,7 @@
 package io.hops.hopsworks.api.serving.inference;
 
 import com.google.common.base.Strings;
+import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.serving.inference.InferenceController;
 import io.hops.hopsworks.common.serving.inference.InferenceException;
@@ -55,6 +56,7 @@ public class InferenceResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Make inference")
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response infer(
       @ApiParam(value = "Name of the model to query", required = true) @PathParam("modelName") String modelName,
       @ApiParam(value = "Version fo the model to query") @PathParam("version") String modelVersion,

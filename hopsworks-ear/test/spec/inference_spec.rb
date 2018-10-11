@@ -90,7 +90,7 @@ describe "On #{ENV['OS']}" do
 
         it "the inference should fail" do
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:model_name]}:predict"
-          expect_json(errorMsg: "Client not authorized for this invocation")
+          expect_json(errorCode: 200003)
           expect_status(401)
         end
       end
@@ -103,13 +103,14 @@ describe "On #{ENV['OS']}" do
 
         it "should fail to send a request to a non existing model"  do
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/nonexistingmodel:predict"
+          expect_json(errorCode: 250000)
           expect_status(404)
         end
 
         it "should fail to send a request to a non running model" do
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:model_name]}:predict"
-          expect_json(errorMsg: "Model is not running")
-          expect_status(404)
+          expect_json(errorCode: 250001)
+          expect_status(400)
         end
 
         context 'with running model do' do
@@ -119,7 +120,10 @@ describe "On #{ENV['OS']}" do
             expect_status(200)
 
             # Sleep some time while the TfServing server starts
-            sleep(15)
+            wait_for do
+              system "pgrep -f #{@serving[:model_name]} -a"
+              $?.exitstatus == 0
+            end
           end
 
           it "should succeeds to infer from a with kafka logging" do
@@ -163,21 +167,15 @@ describe "On #{ENV['OS']}" do
                 signature_name: 'predict_images',
                 somethingwrong: test_data
             }
+            expect_json(errorCode: 250008)
             expect_status(400)
-            # TODO(check actual answer)
           end
 
           it "should receive an error if the input payload is empty" do
             post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:model_name]}:predict"
+            expect_json(errorCode: 250008)
             expect_status(400)
           end
-
-          it "should be able to send a regress request" do
-            # TODO(Fabio): find a regress model
-          end
-
-          # TODO(Fabio): how to behave in case the user does not provide the action?
-          # Investigate this further while developing the other model providers
         end
       end
     end
