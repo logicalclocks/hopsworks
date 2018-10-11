@@ -41,6 +41,8 @@ public interface TfServingController {
   void createOrUpdate(Project project, Users user, TfServingWrapper newTfServing)
       throws KafkaException, UserException, ProjectException, ServiceException, TfServingException;
 
+  void checkDuplicates(Project project, TfServingWrapper tfServingWrapper) throws TfServingException;
+
   void startOrStop(Project project, Users user, Integer tfServingId, TfServingCommands command)
       throws TfServingException;
 

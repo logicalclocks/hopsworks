@@ -190,6 +190,9 @@ public class TfServingService {
       tfServingModelPathValidator.validateModelPath(tfServing.getModelPath(), tfServing.getModelVersion());
     }
 
+    // Check for duplicated entries
+    tfServingController.checkDuplicates(project, tfServing.getTfServingWrapper());
+
     tfServingController.createOrUpdate(project, user, tfServing.getTfServingWrapper());
 
     return Response.status(Response.Status.CREATED).build();

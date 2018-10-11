@@ -667,7 +667,7 @@ public class RESTCodes {
     ROLLBACK(3, "The last transaction did not complete as expected",
       Response.Status.INTERNAL_SERVER_ERROR),
     WEBAPPLICATION(4, "Web application exception occurred", null),
-    PERSISTENCE_ERROR(5, "Persistence error occured", Response.Status.INTERNAL_SERVER_ERROR),
+    PERSISTENCE_ERROR(5, "Persistence error occurred", Response.Status.INTERNAL_SERVER_ERROR),
     UNKNOWN_ACTION(6, "This action can not be applied on this resource.", Response.Status.BAD_REQUEST),
     INCOMPLETE_REQUEST(7, "Some parameters were not provided or were not in the required format.",
       Response.Status.BAD_REQUEST),
@@ -1066,7 +1066,8 @@ public class RESTCodes {
     COMMANDNOTRECOGNIZED(7, "Command not recognized", Response.Status.BAD_REQUEST),
     COMMANDNOTPROVIDED(8, "Command not provided", Response.Status.BAD_REQUEST),
     SPECNOTPROVIDED(9, "TFServing spec not provided", Response.Status.BAD_REQUEST),
-    BAD_TOPIC(10, "Topic provided cannot be used for Serving logging", Response.Status.BAD_REQUEST);
+    BAD_TOPIC(10, "Topic provided cannot be used for Serving logging", Response.Status.BAD_REQUEST),
+    DUPLICATEDENTRY(11, "An entry with the same name already exists in this project", Response.Status.BAD_REQUEST);
 
     
     private Integer code;

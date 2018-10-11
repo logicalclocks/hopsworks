@@ -129,6 +129,16 @@ public class LocalhostTfServingController implements TfServingController {
   }
 
   @Override
+  public void checkDuplicates(Project project, TfServingWrapper tfServingWrapper) throws TfServingException {
+    TfServing serving = tfServingFacade.findByProjectModelName(project,
+        tfServingWrapper.getTfServing().getModelName());
+    if (serving != null && !serving.getId().equals(tfServingWrapper.getTfServing().getId())) {
+      // There is already an entry for this project
+      throw new TfServingException(RESTCodes.TfServingErrorCode.DUPLICATEDENTRY, Level.FINE);
+    }
+  }
+
+  @Override
   public void createOrUpdate(Project project, Users user, TfServingWrapper newTfServingWrapper)
       throws KafkaException, UserException, ProjectException, ServiceException, TfServingException {
 

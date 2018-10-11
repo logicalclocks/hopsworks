@@ -138,6 +138,20 @@ describe "On #{ENV['OS']}" do
           expect(kafka_topic_name).to eql topic_name
         end
 
+        it "fail to create a serving with the same name" do
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+              {modelName: "testModel1",
+               modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
+               modelVersion: 1,
+               kafkaTopicDTO: {
+                   name: "CREATE",
+                   numOfPartitions: 1,
+                   numOfReplicas: 1
+               }}
+          expect_json(errorMsg: "An entry with the same name already exists in this project")
+          expect_status(400)
+        end
+
         it "should fail to create the serving without a name" do
           # Create serving
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
