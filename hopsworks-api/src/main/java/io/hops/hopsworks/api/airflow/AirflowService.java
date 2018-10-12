@@ -61,8 +61,13 @@ public class AirflowService {
   private Integer projectId;
   // No @EJB annotation for Project, it's injected explicitly in ProjectService.
   private Project project;
-  
-  private static enum AirflowOp { TO_HDFS, FROM_HDFS, PURGE_LOCAL, RESTART_WEBSERVER };
+
+  private static enum AirflowOp {
+    TO_HDFS,
+    FROM_HDFS,
+    PURGE_LOCAL,
+    RESTART_WEBSERVER
+  };
 
   public AirflowService() {
   }
@@ -86,7 +91,7 @@ public class AirflowService {
     airflowOperation(AirflowOp.PURGE_LOCAL, projectUsername);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
-  
+
   @GET
   @Path("restartWebserver")
   @Produces(MediaType.APPLICATION_JSON)
@@ -97,7 +102,7 @@ public class AirflowService {
     airflowOperation(AirflowOp.RESTART_WEBSERVER, projectUsername);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
-  
+
   @GET
   @Path("copyFromAirflowToHdfs")
   @Produces(MediaType.APPLICATION_JSON)
@@ -127,9 +132,16 @@ public class AirflowService {
       Logger.getLogger(AirflowService.class.getName()).log(Level.INFO, "Attempting to restart airflow webserver");
       String script = settings.getHopsworksDomainDir() + "/bin/airflowOps.sh";
       String copyCommand = op.toString();
-      
-      String[] command = {script, copyCommand, project.getName(), projectUsername};
 
+      String[] command;
+      if (op == op.RESTART_WEBSERVER) {
+        String[] c = {"sudo", script, copyCommand, project.getName(), projectUsername};
+        command = c;
+      } else {
+        String[] c = {script, copyCommand, project.getName(), projectUsername};
+        command = c;
+      }
+      Logger.getLogger(AirflowService.class.getName()).log(Level.INFO, "Command: {0}", command);
       ProcessBuilder ps = new ProcessBuilder(command);
       ps.redirectErrorStream(true);
       Process pr = ps.start();
@@ -139,11 +151,16 @@ public class AirflowService {
       while ((line = in.readLine()) != null) {
         sb.append(line);
       }
-      pr.waitFor();
+      Logger.getLogger(AirflowService.class.getName()).log(Level.INFO, sb.toString());
+      int res = pr.waitFor();
       in.close();
-      Logger.getLogger(AirflowService.class.getName()).log(Level.INFO, "Successfully restarted airflow webserver");
+      if (res == 0) {
+        Logger.getLogger(AirflowService.class.getName()).log(Level.INFO, "Successfully ran command: {0}", op);
+      } else {
+        Logger.getLogger(AirflowService.class.getName()).log(Level.WARNING, "Problem running the command: {0}", op);
+      }
     } catch (Exception ex) {
-      Logger.getLogger(AirflowService.class.getName()).log(Level.SEVERE, "Problem restarting airflow webserver", ex);
+      Logger.getLogger(AirflowService.class.getName()).log(Level.SEVERE, "Problem with the command: " + op, ex);
     }
     return true;
   }

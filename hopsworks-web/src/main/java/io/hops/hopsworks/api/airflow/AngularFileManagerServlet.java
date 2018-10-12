@@ -188,9 +188,6 @@ public class AngularFileManagerServlet extends HttpServlet {
 
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-    // Catch download requests
-
-    // [$config.downloadFileUrl]?mode=download&preview=true&path=/public_html/image.jpg
     String action = request.getParameter("action");
     if ("download".equals(action)) {
       String path = request.getParameter("path");
@@ -546,8 +543,10 @@ public class AngularFileManagerServlet extends HttpServlet {
     StringBuilder success = new StringBuilder();
 //    for (Object obj : paths) {
     for (int i = 0; i < paths.length(); i++) {
-      JSONObject obj = paths.getJSONObject(i);
+      String obj = paths.getString(i);
       Path path = Paths.get(REPOSITORY_BASE_PATH, obj.toString());
+//      JSONObject obj = paths.getJSONObject(i);
+//      Path path = Paths.get(REPOSITORY_BASE_PATH, obj.toString());
       if (!FileUtils.deleteQuietly(path.toFile())) {
         error.append(error.length() > 0 ? "\n" : "Can't remove: \n/")
             .append(path.subpath(1, path.getNameCount()).toString());

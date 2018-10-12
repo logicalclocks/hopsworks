@@ -1,4 +1,4 @@
-div#filemgr body {
+#filemgr body {
   font-size: 14px;
   height: 100vh;
 }
@@ -33,19 +33,19 @@ div#filemgr body {
   line-height: 100%;
 }
 
-div#filemgr .btn.btn-default {
+#filemgr .btn.btn-default {
   color: #444;
   background-color: #FAFAFA;
 }
 
-div#filemgr .btn {
+#filemgr .btn {
   box-shadow: 0 2px 5px 0 rgba(0, 0, 0, .26);
   font-weight: 500;
   letter-spacing: .01em;
   border: none;
 }
 
-div#filemgr textarea.code {
+#filemgr textarea.code {
   font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
   font-size: 13px;
   min-height: 250px;
@@ -53,12 +53,12 @@ div#filemgr textarea.code {
   color: #000;
 }
 
-div#filemgr .sub-header {
+#filemgr .sub-header {
   padding-bottom: 10px;
   border-bottom: 1px solid #eee;
 }
 
-div#filemgr .sidebar {
+#filemgr .sidebar {
   display: none;
   background: #fafafa;
   margin-top: 2px;
@@ -68,58 +68,58 @@ div#filemgr .sidebar {
   border-right: 1px solid #eee;
 }
 
-div#filemgr .btn-go-back {
+#filemgr .btn-go-back {
   margin-top: -5px;
 }
 
-div#filemgr .nav-sidebar {
+#filemgr .nav-sidebar {
   margin-right: -21px;
   margin-bottom: 20px;
   margin-left: -20px;
 }
 
 
-div#filemgr .nav-sidebar > li > a {
+#filemgr .nav-sidebar > li > a {
   color: #7a7a7a;
   padding: 7px 0 7px 16px;
 }
 
 
-div#filemgr .nav-sidebar> li > a:hover, 
-div#filemgr .nav-sidebar> li > a:focus {
+#filemgr .nav-sidebar> li > a:hover, 
+#filemgr .nav-sidebar> li > a:focus {
   background: none;
   color: #1378b9;
 }
 
-div#filemgr .nav-sidebar > li.active > a {
+#filemgr .nav-sidebar > li.active > a {
   color: #2196F3;
 }
 
 
-div#filemgr .main {
+#filemgr .main {
   padding: 0;
 }
 
-div#filemgr .main .page-header {
+#filemgr .main .page-header {
   margin-top: 0;
 }
 
-div#filemgr .file-tree ul.nav.nav-sidebar {
+#filemgr .file-tree ul.nav.nav-sidebar {
   margin: 0;
   padding: 0;
   padding-left: 12px;
 }
 
-div#filemgr .file-tree ul.nav.nav-sidebar:first-child {
+#filemgr .file-tree ul.nav.nav-sidebar:first-child {
   padding-left: 0;
 }
 
-div#filemgr .file-tree ul.nav.nav-sidebar.file-tree-root > li {
+#filemgr .file-tree ul.nav.nav-sidebar.file-tree-root > li {
   border-left: none;
   padding-left: 0px;
 }
 
-div#filemgr .table td {
+#filemgr .table td {
   vertical-align: middle;
 }
 
@@ -129,11 +129,11 @@ div#filemgr .table td {
   z-index: 9999;
 }
 
-div#filemgr .iconset {
+#filemgr .iconset {
   padding: 10px;
 }
 
-div#filemgr .col-120 {
+#filemgr .col-120 {
   width: 100px;
   max-height: 100px;
   float: left;
@@ -141,11 +141,11 @@ div#filemgr .col-120 {
   margin-right: 9px;
 }
 
-div#filemgr .col-120:last-child {
+#filemgr .col-120:last-child {
   margin-right: 0;
 }
 
-div#filemgr .noselect {
+#filemgr .noselect {
   -webkit-touch-callout: none; /* iOS Safari */
   -webkit-user-select: none;   /* Chrome/Safari/Opera */
   -khtml-user-select: none;    /* Konqueror */
@@ -154,7 +154,7 @@ div#filemgr .noselect {
   user-select: none;           /* non-prefixed version, currently */
 }
 
-div#filemgr .iconset .thumbnail {
+#filemgr .iconset .thumbnail {
   border-radius: 0;
   overflow: hidden;
   margin: 0;
@@ -164,22 +164,22 @@ div#filemgr .iconset .thumbnail {
   background: none;
 }
 
-div#filemgr .table-files .selected,
+#filemgr .table-files .selected,
 .iconset .thumbnail.selected {
   background: #2196F3;
 }
 
-div#filemgr .iconset .thumbnail.selected,
+#filemgr .iconset .thumbnail.selected,
 .table-files .selected td,
 .table-files .selected td a {
-  color:#aaa;
+  color:#111;
 }
 
-div#filemgr .iconset .thumbnail .item-icon {
+#filemgr .iconset .thumbnail .item-icon {
   font-size: 32px;
 }
 
-div#filemgr .detail-sources {
+#filemgr .detail-sources {
   text-overflow: ellipsis;
   overflow: hidden;
   word-wrap: break-word;
@@ -211,33 +211,33 @@ div#filemgr .detail-sources {
   background-color: #888;
 }
 
-div#filemgr .dropdown-menu {
+#filemgr .dropdown-menu {
   font-size: 14px;
 }
 
-div#filemgr .dropdown-menu > li > a {
+#filemgr .dropdown-menu > li > a {
   padding: 6px 20px;
 }
 
-div#filemgr .dropdown-menu > li > a > i {
+#filemgr .dropdown-menu > li > a > i {
   margin-right: 4px;
 }
 
-div#filemgr .dropdown-menu.dropdown-right-click {
+#filemgr .dropdown-menu.dropdown-right-click {
   display: block;
   position: static;
   margin-bottom: 5px; 
 }
 
-div#filemgr .dropdown-menu.dropdown-right-click .divider {
+#filemgr .dropdown-menu.dropdown-right-click .divider {
   margin: 3px 0;
 }
 
-div#filemgr .upload-dragover .main {
+#filemgr .upload-dragover .main {
   opacity: .4;
 }
 
-div#filemgr .upload-dragover:before {
+#filemgr .upload-dragover:before {
   content: "\e198";
   position: absolute;
   left: 50%;
@@ -249,17 +249,17 @@ div#filemgr .upload-dragover:before {
   font-family: 'Glyphicons Halflings';
 }
 
-div#filemgr .upload-list {
+#filemgr .upload-list {
   margin-top: 20px;
 }
 
-div#filemgr .spinner-wrapper {
+#filemgr .spinner-wrapper {
   margin: 0 auto;
   text-align: center;
   margin-top: 8%;
 }
 
-div#filemgr a:hover,
+#filemgr a:hover,
 a:active,
 a:focus,
 table th > a:hover,
@@ -268,12 +268,12 @@ table th > a:focus {
   text-decoration: none;
 }
 
-div#filemgr .sortorder:after {
+#filemgr .sortorder:after {
   color: #2196f3;
   content: '\25bc';
 }
 
-div#filemgr .sortorder.reverse:after {
+#filemgr .sortorder.reverse:after {
   color: #2196f3;
   content: '\25b2';
 }
@@ -284,77 +284,77 @@ div#filemgr .sortorder.reverse:after {
   display: none !important;
 }
 
-div#filemgr .mr2 {
+#filemgr .mr2 {
   margin-right: 2px;
 }
 
-div#filemgr .mr5 {
+#filemgr .mr5 {
   margin-right: 5px;
 }
 
-div#filemgr .mt10 {
+#filemgr .mt10 {
   margin-top: 10px;
 }
 
-div#filemgr .mb0 {
+#filemgr .mb0 {
   margin-bottom: 0;
 }
 
-div#filemgr .pointer {
+#filemgr .pointer {
   cursor: pointer;
 }
 
-div#filemgr .block {
+#filemgr .block {
   display: block;
 }
 
-div#filemgr .ellipsis {
+#filemgr .ellipsis {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-div#filemgr .bold {
+#filemgr .bold {
   font-weight: bold;
 }
 
-div#filemgr .main {
+#filemgr .main {
   overflow-y: auto;
 }
 
 @media (min-width: 768px) {
-  div#filemgr .main {
+  #filemgr .main {
     padding-right: 0;
     padding-left: 0;
   }
 
   /* The view should fill all available vertical space */
-  div#filemgr .div,.main,.sidebar {
+  #filemgr .div,.main,.sidebar {
     height: 100%;
   }
 /*.row,*/
-  div#filemgr .container-fluid1 {
+  #filemgr .container-fluid1 {
     height: -webkit-calc(100% - 58px);
     height: -moz-calc(100% - 58px);
     height: calc(58px);
   }
   
-  div#filemgr .container-fluid {
+  #filemgr .container-fluid {
     height: -webkit-calc(100% - 58px);
     height: -moz-calc(100% - 58px);
     height: calc(100% - 58px);
   }
 
-  div#filemgr .sidebar {
+  #filemgr .sidebar {
     display: block;
   }
 }
 
-div#filemgr .selected-file-details {
+#filemgr .selected-file-details {
   padding-left: 20px;
 }
 
-div#filemgr .item-extension::after {
+#filemgr .item-extension::after {
   font-family: "Roboto","Helvetica Neue",Helvetica,Arial,sans-serif;
   content: attr(data-ext);
   left: 4px;
@@ -365,20 +365,20 @@ div#filemgr .item-extension::after {
   top: 21px;
 }
 
-div#filemgr .selected .item-extension::after {
+#filemgr .selected .item-extension::after {
   color: #2196F3;
 }
 
-div#filemgr .form-control.search-input {
+#filemgr .form-control.search-input {
   max-width: 20em;
   display: inline;
 }
 
-div#filemgr .like-code {
+#filemgr .like-code {
   display: inline;
 }
 
-div#filemgr .point {
+#filemgr .point {
   margin-right: 8px;
   font-size: 10px;
 }
@@ -408,7 +408,7 @@ div#filemgr .point {
   margin: 12px 0;
 }
 
-div#filemgr .breadcrumb {
+#filemgr .breadcrumb {
   background: none; 
   padding: 0;
   font-size: 17px;
@@ -417,40 +417,40 @@ div#filemgr .breadcrumb {
   max-height: 30px
 }
 
-div#filemgr .breadcrumb>.active,
-div#filemgr .breadcrumb a {
+#filemgr .breadcrumb>.active,
+#filemgr .breadcrumb a {
   color: #fff;
 }
 
-div#filemgr .breadcrumb>li+li:before {
+#filemgr .breadcrumb>li+li:before {
   font-family: 'Glyphicons Halflings';
   content: "\e080";
   font-size: 12px;
   color: #fff;
 }
 
-div#filemgr .scrollable-menu {
+#filemgr .scrollable-menu {
   height: auto;
   max-height: 200px;
   overflow-x: hidden;
 }
 
-div#filemgr .btn.btn-flat {
+#filemgr .btn.btn-flat {
   background: none;
   color: #fff;
 }
 
-div#filemgr .btn-group {
+#filemgr .btn-group {
     display: inline;
 }
 
-div#filemgr .btn-group.open > .btn-flat,
-div#filemgr .btn.btn-flat,
-div#filemgr .btn.btn-flat:active {
+#filemgr .btn-group.open > .btn-flat,
+#filemgr .btn.btn-flat,
+#filemgr .btn.btn-flat:active {
   box-shadow: none;
 }
 
-div#filemgr .btn.btn-flat > i {
+#filemgr .btn.btn-flat > i {
   font-size: 18px;
   width: 18px;
   height: 18px;
