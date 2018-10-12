@@ -526,6 +526,18 @@ public class PythonDepsFacade {
     condaEnvironmentOp(CondaOp.CLONE, "", srcProj, destProj.getName(), MachineType.ALL, null);
   }
 
+  public CondaCommands getOngoingEnvCreation(Project proj) {
+    List<CondaCommands> commands = getCommandsForProject(proj);
+    for (CondaCommands command : commands) {
+      if((command.getOp().equals(CondaOp.YML) || command.getOp().equals(CondaOp.CREATE)) &&
+          (command.getStatus().equals(CondaStatus.NEW) || command.getStatus().equals(CondaStatus.ONGOING))) {
+        return command;
+      }
+    }
+    return null;
+  }
+
+
   /**
    * Launches a thread per kagent (up to the threadpool max-size limit) that
    * send a REST

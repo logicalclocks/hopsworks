@@ -431,10 +431,9 @@ public class JobService {
       client = dfs.getDfsOps(hdfsUser);
       FileStatus[] statuses = client.getFilesystem().globStatus(new org.apache.hadoop.fs.Path("/Projects/" + project.
           getName() + "/Experiments/" + appId + "/TensorBoard.*"));
-      LOGGER.log(Level.INFO, "Found " + statuses.length + " tbs");
       DistributedFileSystem fs = client.getFilesystem();
       for (FileStatus status : statuses) {
-        LOGGER.log(Level.INFO, "Reading tensorboard for: {0}", status.getPath());
+        LOGGER.log(Level.FINE, "Reading tensorboard for: {0}", status.getPath());
         FSDataInputStream in = null;
         try {
           in = fs.open(new org.apache.hadoop.fs.Path(status.getPath().toString()));

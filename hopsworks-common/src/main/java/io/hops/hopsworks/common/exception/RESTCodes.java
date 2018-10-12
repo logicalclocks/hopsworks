@@ -169,7 +169,7 @@ public class RESTCodes {
         "op", Response.Status.NOT_MODIFIED),
     PROJECT_QUOTA_INSUFFICIENT(65, "This project is out of credits",
       Response.Status.PRECONDITION_FAILED),
-    ANACONDA_NOT_ENABLED(66, "First enable Anaconda. Click on 'Python' -> Pick a version",
+    ANACONDA_NOT_ENABLED(66, "First enable Anaconda. Click on 'Python' -> Activate Anaconda",
       Response.Status.PRECONDITION_FAILED),
     TENSORBOARD_ELASTIC_INDEX_NOT_FOUND(67, "Could not find elastic index for TensorBoard.",
       Response.Status.NOT_FOUND),
