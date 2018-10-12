@@ -41,6 +41,7 @@ package io.hops.hopsworks.api.util;
 
 import com.google.api.client.repackaged.com.google.common.base.Strings;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
+import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.metadata.wscomm.ResponseBuilder;
 import io.hops.hopsworks.api.metadata.wscomm.message.UploadedTemplateMessage;
@@ -66,6 +67,7 @@ import io.hops.hopsworks.common.upload.ResumableInfoStorage;
 import io.hops.hopsworks.common.upload.StagingManager;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.AccessControlException;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
@@ -209,8 +211,8 @@ public class UploadService {
   @Consumes(MediaType.MULTIPART_FORM_DATA)
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public Response testMethod(
-          @Context HttpServletRequest request) throws IOException, DatasetException {
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response testMethod(@Context HttpServletRequest request) throws IOException, DatasetException {
     String fileName = request.getParameter("flowFilename");
     Inode parent;
     RESTApiJsonResponse json = new RESTApiJsonResponse();
@@ -267,6 +269,7 @@ public class UploadService {
   @Consumes(MediaType.MULTIPART_FORM_DATA)
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response uploadMethod(
           @FormDataParam("file") InputStream uploadedInputStream,
           @FormDataParam("file") FormDataContentDisposition fileDetail,

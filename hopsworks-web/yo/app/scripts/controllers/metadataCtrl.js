@@ -108,13 +108,13 @@ angular.module('hopsWorksApp')
                     });
 
             //get the current project to get its inodeid
-            ProjectService.get({}, {'id': parseInt($routeParams.projectID)})
-                    .$promise.then(
-                            function (success) {
-                              self.projectInodeid = success.inodeid;
-
-                            }, function (error) {
-                    });
+//            ProjectService.get({}, {'id': parseInt($routeParams.projectID)})
+//                    .$promise.then(
+//                            function (success) {
+//                              self.projectInodeid = success.inodeid;
+//
+//                            }, function (error) {
+//                    });
 
             /**
              * submit form data when the 'save' button is clicked or when the enter key is hit

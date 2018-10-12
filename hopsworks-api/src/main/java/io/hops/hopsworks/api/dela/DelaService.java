@@ -43,12 +43,14 @@ import com.google.common.base.Strings;
 import com.google.gson.Gson;
 import io.hops.hopsworks.api.dela.dto.BootstrapDTO;
 import io.hops.hopsworks.api.dela.dto.DelaClientDTO;
-import io.hops.hopsworks.api.filter.AllowedProjectRoles;
+import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.hopssite.dto.LocalDatasetDTO;
 import io.hops.hopsworks.api.hopssite.dto.LocalDatasetHelper;
+import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
+import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.FilePreviewDTO;
 import io.hops.hopsworks.common.exception.RESTCodes;
@@ -67,6 +69,7 @@ import io.hops.hopsworks.dela.hopssite.HopssiteController;
 import io.hops.hopsworks.dela.old_dto.ElementSummaryJSON;
 import io.hops.hopsworks.dela.old_dto.ErrorDescJSON;
 import io.hops.hopsworks.dela.old_dto.HopsContentsSummaryJSON;
+import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -79,7 +82,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -96,16 +98,15 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
 
 @Path("/dela")
-@RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
+@Stateless
+@JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-@Stateless
-@TransactionAttribute(TransactionAttributeType.NEVER)
 @Api(value = "Dela Service",
   description = "Dela Service")
+@TransactionAttribute(TransactionAttributeType.NEVER)
 public class DelaService {
 
   private static final  Logger LOGGER = Logger.getLogger(DelaService.class.getName());
@@ -128,6 +129,8 @@ public class DelaService {
   private DatasetController datasetCtrl;
   @EJB
   private DistributedFsService dfs;
+  @EJB
+  private JWTHelper jWTHelper;
   
   @GET
   @Path("/client")
@@ -139,8 +142,7 @@ public class DelaService {
   
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.ANYONE})
-  public Response getPublicDatasets(@Context SecurityContext sc, @Context HttpServletRequest req) {
+  public Response getPublicDatasets() {
     List<Dataset> clusterDatasets = delaDatasetCtrl.getLocalPublicDatasets();
     DistributedFileSystemOps dfso = dfs.getDfsOps();
     List<LocalDatasetDTO> localDS;
@@ -197,14 +199,14 @@ public class DelaService {
   @GET
   @Path("/transfers")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getContentsForUser(@Context SecurityContext sc, 
-    @QueryParam("filter") TransfersFilter filter) throws DelaException {
-    if(!filter.equals(TransfersFilter.USER)) {
+  public Response getContentsForUser(@Context HttpServletRequest req, @QueryParam("filter") TransfersFilter filter)
+      throws DelaException {
+    if (!filter.equals(TransfersFilter.USER)) {
       throw new DelaException(RESTCodes.DelaErrorCode.ILLEGAL_ARGUMENT, Level.FINE, DelaException.Source.LOCAL,
         "not handling filter value:" + filter);
     }
-    String email = sc.getUserPrincipal().getName();
-    List<ProjectTeam> teams = projectCtrl.findProjectByUser(email);
+    Users user = jWTHelper.getUserPrincipal(req);
+    List<ProjectTeam> teams = projectCtrl.findProjectByUser(user.getEmail());
     List<Integer> projectIds = new LinkedList<>();
     for (ProjectTeam t : teams) {
       projectIds.add(t.getProject().getId());

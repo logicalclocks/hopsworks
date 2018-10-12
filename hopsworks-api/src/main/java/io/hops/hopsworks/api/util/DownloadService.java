@@ -40,6 +40,7 @@
 package io.hops.hopsworks.api.util;
 
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
+import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.project.util.DsPath;
 import io.hops.hopsworks.api.project.util.PathValidator;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
@@ -50,6 +51,7 @@ import io.hops.hopsworks.common.exception.ProjectException;
 import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
+import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.Path;
 
@@ -61,10 +63,8 @@ import javax.ws.rs.GET;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.StreamingOutput;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -100,7 +100,8 @@ public class DownloadService {
   @javax.ws.rs.Path("/{path: .+}")
   @Produces(MediaType.APPLICATION_OCTET_STREAM)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public Response downloadFromHDFS(@PathParam("path") String path, @Context SecurityContext sc)
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response downloadFromHDFS(@PathParam("path") String path)
     throws DatasetException, ProjectException {
 
     DsPath dsPath = pathValidator.validatePath(this.project, path);

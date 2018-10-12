@@ -38,7 +38,6 @@
 =end
 describe "On #{ENV['OS']}" do
   describe 'projects' do
-    after (:all){clean_projects}
     describe "#create" do
       context 'without authentication' do
         before :all do

@@ -52,7 +52,7 @@
               <div ng-include="'views/search.html'"></div>
             </div>
           </div>
-          <div ng-if="!mainCtrl.showSearchPage" class="content-wrapper" style="background-color: white; overflow: hidden;" ng-controller="ProjectCtrl as projectCtrl">
+          <div ng-if="!mainCtrl.showSearchPage" class="content-wrapper" style="background-color: white; overflow: hidden;" ng-controller="DelaClientCtrl as delaClientCtrl">
             <div growl reference="3" class="pull-right" ></div>
             <h3>
               <div flex="65">
@@ -108,10 +108,10 @@
                                   'notAccepted' : dataset.status === false}">
                           <a>
                              <span class="corner"></span>
-                            <div ng-if="dataset.status === false" data-toggle="tooltip" title="Shared Dataset. Click on this dataset to accept/reject it." class="icon" ng-click="projectCtrl.browseDataset(dataset)">
+                            <div ng-if="dataset.status === false" data-toggle="tooltip" title="Shared Dataset. Click on this dataset to accept/reject it." class="icon" ng-click="datasetsCtrl.browseDataset(dataset)">
                               <i class="glyphicon" ng-class="{'glyphicon-eye-open' : datasetsCtrl.selected !== dataset.name}"></i>
                             </div>
-                            <div ng-if="dataset.status === true" data-toggle="tooltip" title="Click here to enter this dataset" class="icon" ng-click="projectCtrl.browseDataset(dataset)">
+                            <div ng-if="dataset.status === true" data-toggle="tooltip" title="Click here to enter this dataset" class="icon" ng-click="datasetsCtrl.browseDataset(dataset)">
                               <i ng-show="!dataset.downloading" class="glyphicon" ng-class="{'glyphicon-folder-open': datasetsCtrl.selected === dataset.name, 'glyphicon-folder-close' : datasetsCtrl.selected !== dataset.name}"></i>
                               <i ng-show="dataset.downloading"  class="glyphicon glyphicon-cloud-download"></i>
                             </div>
@@ -165,12 +165,12 @@
                             <a class="pointer"
                                role="menuitem"
                                tabindex="0"
-                               ng-click="projectCtrl.browseDataset(dataset)">
+                               ng-click="datasetsCtrl.browseDataset(dataset)">
                               <span><i class="fa fa-files-o"></i>
                                 Browse files</span>
                             </a>
                           </li>
-                          <li ng-show="projectCtrl.role === 'Data owner' && dataset.publicDs === 0">
+                          <li ng-show="datasetsCtrl.role === 'Data owner' && dataset.publicDs === 0">
                             <a class="pointer"
                                role="menuitem"
                                tabindex="1"
@@ -180,7 +180,7 @@
                             </a>
                           </li>
                           <!-- If this is an imported public dataset, allow it to be removed as well -->
-                          <li ng-if="dataset.name.indexOf('::') !== -1" ng-show="projectCtrl.role === 'Data owner' && dataset.publicDs === 1">
+                          <li ng-if="dataset.name.indexOf('::') !== -1" ng-show="datasetsCtrl.role === 'Data owner' && dataset.publicDs === 1">
                             <a class="pointer"
                                role="menuitem"
                                tabindex="1"
@@ -190,7 +190,7 @@
                             </a>
                           </li>
                           
-                          <li class="dropdown-submenu" ng-if="dataset.name.indexOf('::') === -1" ng-show="projectCtrl.role === 'Data owner'">
+                          <li class="dropdown-submenu" ng-if="dataset.name.indexOf('::') === -1" ng-show="datasetsCtrl.role === 'Data owner'">
                             <a tabindex="-1">
                               <span><i class="glyphicon glyphicon-edit"></i>Permissions</span>
                             </a>
@@ -212,8 +212,8 @@
                               </li>
                             </ul>
                           </li>
-                          <li ng-if="dataset.name.indexOf('::') === -1 && projectCtrl.role === 'Data owner'" class="divider"></li>
-                          <li ng-if="dataset.name.indexOf('::') === -1" ng-show="projectCtrl.role === 'Data owner' && dataset.publicDs === 0">
+                          <li ng-if="dataset.name.indexOf('::') === -1 && datasetsCtrl.role === 'Data owner'" class="divider"></li>
+                          <li ng-if="dataset.name.indexOf('::') === -1" ng-show="datasetsCtrl.role === 'Data owner' && dataset.publicDs === 0">
                             <a class="pointer"
                                role="menuitem"
                                tabindex="4"
@@ -222,7 +222,7 @@
                                 Add metadata</span>
                             </a>
                           </li>
-                          <li ng-if="dataset.name.indexOf('::') === -1" ng-show="projectCtrl.role === 'Data owner' && dataset.publicDs === 0">
+                          <li ng-if="dataset.name.indexOf('::') === -1" ng-show="datasetsCtrl.role === 'Data owner' && dataset.publicDs === 0">
                             <a class="pointer"
                                role="menuitem"
                                tabindex="5"
@@ -232,7 +232,7 @@
                             </a>
                           </li>
                           <!--
-                          <li ng-if="dataset.name.indexOf('::') === -1" ng-show="projectCtrl.role === 'Data owner' && dataset.publicDs === 0">
+                          <li ng-if="dataset.name.indexOf('::') === -1" ng-show="datasetsCtrl.role === 'Data owner' && dataset.publicDs === 0">
                             <a class="pointer"
                                role="menuitem"
                                tabindex="5"
@@ -242,7 +242,7 @@
                             </a>
                           </li>
                           -->
-                          <li ng-if="dataset.name.indexOf('::') === -1" ng-show="projectCtrl.role === 'Data owner' && dataset.publicDs === 2">
+                          <li ng-if="dataset.name.indexOf('::') === -1" ng-show="datasetsCtrl.role === 'Data owner' && dataset.publicDs === 2">
                             <a class="pointer"
                                role="menuitem"
                                tabindex="6"
@@ -250,8 +250,8 @@
                               <span>Show Manifest</span>
                             </a>
                           </li>
-                          <li class="divider" ng-if="dataset.name.indexOf('::') === -1 && projectCtrl.role === 'Data owner'  && (dataset.publicDs === 0)"></li>
-                          <li ng-controller="DelaClientCtrl as delaClientCtrl" class="dropdown-submenu" ng-if="dataset.name.indexOf('::') === -1 && projectCtrl.role === 'Data owner' && (dataset.publicDs === 0)">
+                          <li class="divider" ng-if="dataset.name.indexOf('::') === -1 && datasetsCtrl.role === 'Data owner'  && (dataset.publicDs === 0)"></li>
+                          <li class="dropdown-submenu" ng-if="dataset.name.indexOf('::') === -1 && datasetsCtrl.role === 'Data owner' && (dataset.publicDs === 0)">
                             <a tabindex="-1"><span><i class="fa fa-share-alt"></i> Share with</span></a>
                             <ul class="dropdown-menu">
                               <li ng-if="dataset.publicDs === 0">
@@ -271,8 +271,8 @@
                               </li>
                             </ul>
                           </li>
-                          <li class="divider" ng-if="dataset.name.indexOf('::') === -1 && projectCtrl.role === 'Data owner' && (dataset.publicDs !== 0 || dataset.sharedWith > 0)"></li>
-                          <li class="dropdown-submenu" ng-if="dataset.name.indexOf('::') === -1 && projectCtrl.role === 'Data owner' && (dataset.publicDs !== 0 || dataset.sharedWith > 0)">
+                          <li class="divider" ng-if="dataset.name.indexOf('::') === -1 && datasetsCtrl.role === 'Data owner' && (dataset.publicDs !== 0 || dataset.sharedWith > 0)"></li>
+                          <li class="dropdown-submenu" ng-if="dataset.name.indexOf('::') === -1 && datasetsCtrl.role === 'Data owner' && (dataset.publicDs !== 0 || dataset.sharedWith > 0)">
                             <a tabindex="-1"><span><i class="fa fa-undo"></i> UnShare from</span></a>
                             <ul class="dropdown-menu">
                               <li ng-if="dataset.sharedWith > 0">

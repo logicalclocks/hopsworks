@@ -15,7 +15,12 @@
  */
 package io.hops.hopsworks.jwt.dao;
 
+import io.hops.hopsworks.jwt.SignatureAlgorithm;
+import io.hops.hopsworks.jwt.exception.DuplicateSigningKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
 import java.util.List;
+import javax.crypto.KeyGenerator;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -45,6 +50,35 @@ public class JwtSigningKeyFacade {
     } catch (NoResultException e) {
       return null;
     }
+  }
+  
+  public JwtSigningKey getOrCreateSigningKey(String keyName, SignatureAlgorithm alg) throws NoSuchAlgorithmException {
+    JwtSigningKey signingKey = this.findByName(keyName);
+    if (signingKey == null) {
+      signingKey = this.createSigningKey(keyName, alg);
+    }
+    return signingKey;
+  }
+  
+  public JwtSigningKey createNewSigningKey(String keyName, SignatureAlgorithm alg) throws NoSuchAlgorithmException, 
+      DuplicateSigningKeyException {
+    JwtSigningKey signingKey = this.findByName(keyName);
+    if (signingKey != null) {
+      // throwing DuplicateSigningKeyException to catch parent exception (JWTException) and
+      throw new DuplicateSigningKeyException("A signing key with the same name already exists.");
+    }
+    return this.createSigningKey(keyName, alg);
+  }
+  
+  private JwtSigningKey createSigningKey(String keyName, SignatureAlgorithm alg) throws NoSuchAlgorithmException {
+    JwtSigningKey signingKey;
+    KeyGenerator gen = KeyGenerator.getInstance(alg.getJcaName());
+    byte[] keyBytes = gen.generateKey().getEncoded();
+    String base64Encoded = Base64.getEncoder().encodeToString(keyBytes);
+    signingKey = new JwtSigningKey(base64Encoded, keyName);
+    persist(signingKey);
+    signingKey = findByName(keyName);
+    return signingKey;
   }
 
   public void persist(JwtSigningKey invalidJwt) {

@@ -46,7 +46,7 @@ describe "On #{ENV['OS']}" do
           with_keystore_pwd(project)
         end
 
-        it "should be authenticated but should fail since topic doesn't exist" do
+        it "should be authenticated but should fail since topic doesn't exist", vm: true do
           keystore = get_keystore
           keystore_pwd = get_keystore_pwd
           json_data = {
@@ -70,7 +70,7 @@ describe "On #{ENV['OS']}" do
           with_keystore_pwd(project)
         end
 
-        it "should be authenticated and request to get topic schema should succeed" do
+        it "should be authenticated and request to get topic schema should succeed", vm: true do
           topic = get_topic
           keystore = get_keystore
           keystore_pwd = get_keystore_pwd

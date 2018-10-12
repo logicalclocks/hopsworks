@@ -39,7 +39,6 @@
 
 package io.hops.hopsworks.api.util;
 
-import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
@@ -81,7 +80,6 @@ public class BannerService {
 
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.ANYONE})
   public Response findBanner() {
     Maintenance maintenance = maintenanceController.getMaintenance();
     maintenance.setOtp(settings.getTwoFactorAuth());
@@ -91,7 +89,6 @@ public class BannerService {
   @GET
   @Path("user")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.ANYONE})
   public Response findUserBanner(@Context HttpServletRequest req) {
     Users user = userFacade.findByEmail(req.getRemoteUser());
     RESTApiJsonResponse json = new RESTApiJsonResponse();
@@ -115,7 +112,6 @@ public class BannerService {
   @GET
   @Path("firstlogin")
   @Produces(MediaType.TEXT_PLAIN)
-  @AllowedProjectRoles({AllowedProjectRoles.ANYONE})
   public Response firstLogin(@Context HttpServletRequest req) {
     settings.updateVariable("first_time_login", "0");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();

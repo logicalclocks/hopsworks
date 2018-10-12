@@ -39,8 +39,10 @@
 
 package io.hops.hopsworks.api.hopssite;
 
+import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.hopssite.dto.CommentIssueReqDTO;
+import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.user.UsersController;
@@ -50,6 +52,7 @@ import io.hops.hopsworks.dela.dto.hopssite.CommentIssueDTO;
 import io.hops.hopsworks.common.exception.DelaException;
 import io.hops.hopsworks.dela.hopssite.HopsSite;
 import io.hops.hopsworks.dela.hopssite.HopssiteController;
+import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.util.SettingsHelper;
 import java.util.List;
 import java.util.logging.Logger;
@@ -57,6 +60,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -68,7 +72,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -85,6 +88,8 @@ public class CommentService {
   private Settings settings;
   @EJB
   private NoCacheResponse noCacheResponse;
+  @EJB
+  private JWTHelper jWTHelper;
   private String publicDSId;
 
   public CommentService() {
@@ -95,6 +100,7 @@ public class CommentService {
   }
 
   @GET
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response getAllComments() throws DelaException {
     LOG.log(Settings.DELA_DEBUG, "hops-site:comment:get:all {0}", publicDSId);
     List<CommentDTO.RetrieveComment> comments = hopsSite.getDatasetAllComments(publicDSId);
@@ -106,10 +112,11 @@ public class CommentService {
   }
 
   @POST
-  public Response addComment(@Context SecurityContext sc, String content) throws DelaException {
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response addComment(String content, @Context HttpServletRequest req) throws DelaException {
     LOG.log(Settings.DELA_DEBUG, "hops-site:comment:add {0}", publicDSId);
+    Users user = jWTHelper.getUserPrincipal(req);
     String publicCId = SettingsHelper.clusterId(settings);
-    Users user = SettingsHelper.getUser(userFacade, sc.getUserPrincipal().getName());
     CommentDTO.Publish comment = new CommentDTO.Publish(user.getEmail(), content);
     hopsSite.performAsUser(user, new HopsSite.UserFunc<String>() {
       @Override
@@ -124,11 +131,12 @@ public class CommentService {
 
   @PUT
   @Path("{commentId}")
-  public Response updateComment(@Context SecurityContext sc, @PathParam("commentId") Integer commentId, String content)
-    throws DelaException {
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response updateComment(@Context HttpServletRequest req, @PathParam("commentId") Integer commentId,
+      String content) throws DelaException {
     LOG.log(Settings.DELA_DEBUG, "hops-site:comment:update {0}", publicDSId);
+    Users user = jWTHelper.getUserPrincipal(req);
     String publicCId = SettingsHelper.clusterId(settings);
-    Users user = SettingsHelper.getUser(userFacade, sc.getUserPrincipal().getName());
     CommentDTO.Publish comment = new CommentDTO.Publish(user.getEmail(), content);
     hopsSite.performAsUser(user, new HopsSite.UserFunc<String>() {
       @Override
@@ -143,11 +151,12 @@ public class CommentService {
 
   @DELETE
   @Path("{commentId}")
-  public Response deleteComment(@Context SecurityContext sc, @PathParam("commentId") Integer commentId)
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response deleteComment(@Context HttpServletRequest req, @PathParam("commentId") Integer commentId)
     throws DelaException, DelaException, DelaException {
     LOG.log(Settings.DELA_DEBUG, "hops-site:comment:delete {0}", publicDSId);
+    Users user = jWTHelper.getUserPrincipal(req);
     String publicCId = SettingsHelper.clusterId(settings);
-    Users user = SettingsHelper.getUser(userFacade, sc.getUserPrincipal().getName());
     hopsSite.performAsUser(user, new HopsSite.UserFunc<String>() {
       @Override
       public String perform() throws DelaException {
@@ -162,11 +171,12 @@ public class CommentService {
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
   @Path("{commentId}/report")
-  public Response reportAbuse(@Context SecurityContext sc, @PathParam("commentId") Integer commentId,
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response reportAbuse(@Context HttpServletRequest req, @PathParam("commentId") Integer commentId,
     CommentIssueReqDTO commentReqIssue) throws DelaException {
     LOG.log(Settings.DELA_DEBUG, "hops-site:comment:report {0}", publicDSId);
     String publicCId = SettingsHelper.clusterId(settings);
-    Users user = SettingsHelper.getUser(userFacade, sc.getUserPrincipal().getName());
+    Users user = jWTHelper.getUserPrincipal(req);
     LOG.log(Settings.DELA_DEBUG, "hops-site:comment:report issue:{0}", commentReqIssue);
 //    CommentIssueDTO commentIssue
 //      = new CommentIssueDTO(commentReqIssue.getType(), commentReqIssue.getMsg(), user.getEmail());

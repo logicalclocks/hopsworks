@@ -41,28 +41,26 @@ package io.hops.hopsworks.api.admin;
 
 import com.google.common.base.Strings;
 import io.hops.hopsworks.api.admin.dto.MaterializerStateResponse;
+import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
+import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.Api;
 
-import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -75,10 +73,10 @@ import java.util.regex.Pattern;
  * REST API to monitor and control CertificateMaterializer service
  */
 @Path("/admin/materializer")
-@RolesAllowed({"HOPS_ADMIN"})
-@Api(value = "Admin")
-@Produces(MediaType.APPLICATION_JSON)
 @Stateless
+@JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN"})
+@Produces(MediaType.APPLICATION_JSON)
+@Api(value = "Admin")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class CertificateMaterializerAdmin {
   
@@ -94,12 +92,10 @@ public class CertificateMaterializerAdmin {
   /**
    * Gets the name of the materialized crypto along with their number of references and the materials that are
    * scheduled for removal.
-   * @param sc
-   * @param request
    * @return
    */
   @GET
-  public Response getMaterializerState(@Context SecurityContext sc, @Context HttpServletRequest request) {
+  public Response getMaterializerState() {
   
     CertificateMaterializer.MaterializerState<Map<String, Map<String, Integer>>, Map<String, Map<String, Integer>>,
         Map<String, Set<String>>, Map<String, Boolean>> materializerState = certificateMaterializer.getState();
@@ -144,16 +140,14 @@ public class CertificateMaterializerAdmin {
   /**
    * Removes crypto material from the store. It SHOULD be used *wisely*!!!
    *
-   * @param sc
-   * @param request
    * @param materialName Name of the materialized crypto
    * @param directory Local directory of the crypto material
    * @return
    */
   @DELETE
   @Path("/local/{name}/{directory}")
-  public Response removeLocalMaterializedCrypto(@Context SecurityContext sc, @Context HttpServletRequest request,
-      @PathParam("name") String materialName, @PathParam("directory") String directory) {
+  public Response removeLocalMaterializedCrypto(@PathParam("name") String materialName,
+      @PathParam("directory") String directory) {
     if (Strings.isNullOrEmpty(materialName)) {
       throw new IllegalArgumentException("materialName was not provided or was empty");
     }
@@ -190,16 +184,14 @@ public class CertificateMaterializerAdmin {
    * CAUTION: This is a *dangerous* operation as other instances of Hopsworks might be
    * running and using the remote crypto material
    *
-   * @param sc
-   * @param request
    * @param materialName Name of the materialized crypto
    * @param directory Remote directory of the crypto material
    * @return
    */
   @DELETE
   @Path("/remote/{name}/{directory}")
-  public Response removeRemoteMaterializedCrypto(@Context SecurityContext sc, @Context HttpServletRequest request,
-      @PathParam("name") String materialName, @PathParam("directory") String directory) {
+  public Response removeRemoteMaterializedCrypto(@PathParam("name") String materialName,
+      @PathParam("directory") String directory) {
     if (Strings.isNullOrEmpty(materialName)) {
       throw new IllegalArgumentException("materialName was not provided or was empty");
     }

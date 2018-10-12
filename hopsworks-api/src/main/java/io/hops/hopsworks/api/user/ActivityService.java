@@ -41,7 +41,6 @@ package io.hops.hopsworks.api.user;
 
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import java.util.List;
-import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -56,20 +55,20 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
+import io.hops.hopsworks.api.filter.Audience;
+import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.Activity;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
+import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.Api;
 
 @Path("/activity")
-@RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
-@Produces(MediaType.APPLICATION_JSON)
 @Stateless
+@JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
 @Api(value = "Activity", description = "User activity service")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ActivityService {
@@ -77,24 +76,19 @@ public class ActivityService {
   @EJB
   private ActivityFacade activityFacade;
   @EJB
-  private UserFacade userFacade;
-  @EJB
   private ProjectFacade projectFacade;
   @EJB
   private NoCacheResponse noCacheResponse;
+  @EJB
+  private JWTHelper jWTHelper;
 
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  public Response findAllByUser(@Context SecurityContext sc,
-          @Context HttpServletRequest req) {
-    Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
+  public Response findAllByUser(@Context HttpServletRequest req) {
+    Users user = jWTHelper.getUserPrincipal(req);
     List<Activity> activityDetails = activityFacade.getAllActivityByUser(user);
-    GenericEntity<List<Activity>> projectActivities
-            = new GenericEntity<List<Activity>>(activityDetails) {};
-
-    Response r = noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-            entity(
-                    projectActivities).build();
+    GenericEntity<List<Activity>> projectActivities = new GenericEntity<List<Activity>>(activityDetails) {};
+    Response r = noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(projectActivities).build();
     return r;
   }
 
@@ -104,67 +98,46 @@ public class ActivityService {
   public Response findByInode(@QueryParam("inodeId") int inodeId,
           @QueryParam("from") int from,
           @QueryParam("to") int to,
-          @Context SecurityContext sc,
           @Context HttpServletRequest req) {
-    Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
+    Users user = jWTHelper.getUserPrincipal(req);
     List<Activity> activityDetails = activityFacade.getAllActivityByUser(user);
-    GenericEntity<List<Activity>> projectActivities
-            = new GenericEntity<List<Activity>>(activityDetails) {};
-
-    Response r = noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-            entity(
-                    projectActivities).build();
+    GenericEntity<List<Activity>> projectActivities = new GenericEntity<List<Activity>>(activityDetails) {};
+    Response r = noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(projectActivities).build();
     return r;
   }
 
   @GET
   @Path("/query")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response findPaginatedByUser(@QueryParam("from") int from,
-          @QueryParam("to") int to,
-          @Context SecurityContext sc,
+  public Response findPaginatedByUser(@QueryParam("from") int from, @QueryParam("to") int to,
           @Context HttpServletRequest req) {
-    Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
-    List<Activity> activityDetails = activityFacade.
-            getPaginatedActivityByUser(from, to, user);
-    GenericEntity<List<Activity>> projectActivities
-            = new GenericEntity<List<Activity>>(activityDetails) {};
-
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            projectActivities).build();
+    Users user = jWTHelper.getUserPrincipal(req);
+    List<Activity> activityDetails = activityFacade.getPaginatedActivityByUser(from, to, user);
+    GenericEntity<List<Activity>> projectActivities = new GenericEntity<List<Activity>>(activityDetails) {};
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(projectActivities).build();
   }
 
   @GET
-  @Path("{id}")
+  @Path("{projectId}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public Response findAllByProject(@PathParam("id") Integer id,
-          @Context SecurityContext sc, @Context HttpServletRequest req) {
+  public Response findAllByProject(@PathParam("projectId") Integer id) {
     Project project = projectFacade.find(id);
-    List<Activity> activityDetails = activityFacade.
-            getAllActivityOnProject(project);
-    GenericEntity<List<Activity>> projectActivities
-            = new GenericEntity<List<Activity>>(activityDetails) {};
-
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            projectActivities).build();
+    List<Activity> activityDetails = activityFacade.getAllActivityOnProject(project);
+    GenericEntity<List<Activity>> projectActivities = new GenericEntity<List<Activity>>(activityDetails) {};
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(projectActivities).build();
   }
 
   @GET
-  @Path("{id}/query")
+  @Path("{projectId}/query")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public Response findPaginatedByProject(@PathParam("id") Integer id,
+  public Response findPaginatedByProject(@PathParam("projectId") Integer id,
           @QueryParam("from") int from,
-          @QueryParam("to") int to,
-          @Context SecurityContext sc, @Context HttpServletRequest req) {
+          @QueryParam("to") int to) {
     Project project = projectFacade.find(id);
-    List<Activity> activityDetails = activityFacade.
-            getPaginatedActivityForProject(from, to, project);
-    GenericEntity<List<Activity>> projectActivities
-            = new GenericEntity<List<Activity>>(activityDetails) {};
-
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            projectActivities).build();
+    List<Activity> activityDetails = activityFacade.getPaginatedActivityForProject(from, to, project);
+    GenericEntity<List<Activity>> projectActivities = new GenericEntity<List<Activity>>(activityDetails) {};
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(projectActivities).build();
   }
 }

@@ -293,6 +293,12 @@ public class Settings implements Serializable {
   private static final String VARIABLE_KUBE_CA_PASSWORD = "kube_ca_password";
   private static final String VARIABLE_KUBE_REGISTRY = "kube_registry";
   private static final String VARIABLE_KUBE_MAX_SERVING = "kube_max_serving_instances";
+  
+    // JWT Variables
+  private static final String VARIABLE_JWT_SIGNATURE_ALGORITHM = "jwt_signature_algorithm";
+  private static final String VARIABLE_JWT_LIFETIME_MS = "jwt_lifetime_ms";
+  private static final String VARIABLE_JWT_EXP_LEEWAY_SEC = "jwt_exp_leeway_sec";
+  private static final String VARIABLE_JWT_SIGNING_KEY_NAME = "jwt_signing_key_name";
 
 
   private String setVar(String varName, String defaultValue) {
@@ -585,6 +591,10 @@ public class Settings implements Serializable {
       KUBE_REGISTRY = setStrVar(VARIABLE_KUBE_REGISTRY, KUBE_REGISTRY);
       KUBE_MAX_SERVING_INSTANCES = setIntVar(VARIABLE_KUBE_MAX_SERVING, KUBE_MAX_SERVING_INSTANCES);
 
+      JWT_SIGNATURE_ALGORITHM = setStrVar(VARIABLE_JWT_SIGNATURE_ALGORITHM, JWT_SIGNATURE_ALGORITHM);
+      JWT_LIFETIME_MS = setLongVar(VARIABLE_JWT_LIFETIME_MS, JWT_LIFETIME_MS);
+      JWT_EXP_LEEWAY_SEC = setIntVar(VARIABLE_JWT_EXP_LEEWAY_SEC, JWT_EXP_LEEWAY_SEC);
+      JWT_SIGNING_KEY_NAME = setStrVar(VARIABLE_JWT_SIGNING_KEY_NAME, JWT_SIGNING_KEY_NAME);
       cached = true;
     }
   }
@@ -3040,5 +3050,30 @@ public class Settings implements Serializable {
     public String getDescription() {
       return description;
     }
+  }
+  
+  private String JWT_SIGNATURE_ALGORITHM = "HS512";
+  private long JWT_LIFETIME_MS = 1800000l;
+  private int JWT_EXP_LEEWAY_SEC = 900;
+  private String JWT_SIGNING_KEY_NAME = "apiKey";
+
+  public synchronized String getJWTSignatureAlg() {
+    checkCache();
+    return JWT_SIGNATURE_ALGORITHM;
+  }
+  
+  public synchronized long getJWTLifetimeMs() {
+    checkCache();
+    return JWT_LIFETIME_MS;
+  }
+  
+  public synchronized int getJWTExpLeewaySec() {
+    checkCache();
+    return JWT_EXP_LEEWAY_SEC;
+  }
+  
+  public synchronized String getJWTSigningKeyName() {
+    checkCache();
+    return JWT_SIGNING_KEY_NAME;
   }
 }

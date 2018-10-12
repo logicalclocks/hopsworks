@@ -39,7 +39,7 @@
 
 package io.hops.hopsworks.api.dela;
 
-import io.hops.hopsworks.api.filter.AllowedProjectRoles;
+import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.hopssite.dto.LocalDatasetDTO;
 import io.hops.hopsworks.api.hopssite.dto.LocalDatasetHelper;
@@ -48,34 +48,31 @@ import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.dela.cluster.ClusterDatasetController;
+import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.Api;
 
-import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
 import java.util.List;
 import java.util.logging.Logger;
 
 @Path("/delacluster")
-@RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
+@Stateless
+@JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-@Stateless
-@TransactionAttribute(TransactionAttributeType.NEVER)
 @Api(value = "Dela Cluster Service",
   description = "Dela Cluster Service")
+@TransactionAttribute(TransactionAttributeType.NEVER)
 public class DelaClusterService {
 
   private static final Logger LOGGER = Logger.getLogger(DelaClusterService.class.getName());
@@ -91,8 +88,7 @@ public class DelaClusterService {
 
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.ANYONE})
-  public Response getPublicDatasets(@Context SecurityContext sc, @Context HttpServletRequest req) {
+  public Response getPublicDatasets() {
     List<Dataset> clusterDatasets = clusterDatasetCtrl.getPublicDatasets();
     DistributedFileSystemOps dfso = dfs.getDfsOps();
     List<LocalDatasetDTO> localDS;

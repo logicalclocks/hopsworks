@@ -45,21 +45,23 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import javax.ws.rs.NameBinding;
 
 /**
  * Annotations that can be used to restrict users from accessing project methods
  * based on the role they have for that project.
  * For this annotation to work the method annotated should be a web service with
- * a path project/{id}/*.
+ * a path containing projectId or projectName.
  * if no role is specified the default will be OWNER only access
  */
+@NameBinding
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.METHOD})
+@Target({ElementType.TYPE, ElementType.METHOD})
 public @interface AllowedProjectRoles {
 
   /**
-   * Allowed for everyone. This does not mean both roles it means literally
-   * everyone
+   * Allowed for everyone. This mean both roles
+   * 
    */
   String ANYONE = AllowedRoles.ALL;
   /**
