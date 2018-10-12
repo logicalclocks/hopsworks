@@ -319,7 +319,8 @@ angular.module('hopsWorksApp')
                         self.tempEnvs = 0;
                         var i = 0;
                         for (i = 0; i < self.opsStatus.length; i++) {
-                            if (self.opsStatus[i].op === "CREATE" && (self.opsStatus[i].status === "NEW" || self.opsStatus[i].status === "ONGOING")) {
+                            if ((self.opsStatus[i].op === "CREATE" || self.opsStatus[i].op === "YML")
+                            && (self.opsStatus[i].status === "NEW" || self.opsStatus[i].status === "ONGOING")) {
                                 self.tempEnvs += 1;
                                 break;
                             }
@@ -839,7 +840,7 @@ angular.module('hopsWorksApp')
                     },
                     function(error) {
                         if (self.tourService.currentStep_TourEight == 6 || self.tourService.currentStep_TourEight == 7) {
-                            self.tourService.currentStep_TourEight = 8;
+                            self.tourService.currentStep_TourEight = 6;
                         } else {
                             self.tourService.currentStep_TourEight = -1;
                         }
@@ -864,7 +865,7 @@ angular.module('hopsWorksApp')
                                 ttl: 10000
                             });
                         } else {
-                            growl.error("Could not start Jupyter. If this problem persists please contact your system administrator.", {
+                            growl.error(error.data.errorMsg, {
                                 title: 'Error',
                                 ttl: 10000
                             });
