@@ -21,9 +21,13 @@
         $scope.temps = [];
 
         $scope.$watch('temps', function() {
+            console.log("temps");
             if ($scope.singleSelection()) {
+            console.log("Single temps");
                 $scope.temp = $scope.singleSelection();
+            console.log("Selected temp", $scope.temp);
             } else {
+                console.log("Multi temps");
                 $scope.temp = new Item({rights: 644});
                 $scope.temp.multiple = true;
             }
@@ -86,6 +90,7 @@
                 return;
             }
             $scope.temps = [item];
+          console.log("select or unselect. temps is ", $scope.temps.length);
         };
 
         $scope.singleSelection = function() {
@@ -111,6 +116,7 @@
         };
 
         $scope.smartClick = function(item) {
+          console.log("Smart click");
             var pick = $scope.config.allowedActions.pickFiles;
             if (item.isFolder()) {
                 return $scope.fileNavigator.folderClick(item);

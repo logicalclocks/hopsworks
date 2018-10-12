@@ -18,10 +18,10 @@
                             {{fileNavigator.getCurrentFolderName() | strLimit : 12}}
                         </div>
                         <div class="btn-group">
-                            <button class="btn btn-flat btn-sm dropdown-toggle" type="button" id="dropDownMenuSearch" data-toggle="dropdown" aria-expanded="true">
+                            <button uib-dropdown-toggle class="btn btn-flat btn-sm dropdown-toggle" type="button" id="dropDownMenuSearch" data-toggle="dropdown" aria-expanded="true">
                                 <i class="glyphicon glyphicon-search mr2"></i>
                             </button>
-                            <div class="dropdown-menu animated fast fadeIn pull-right" role="menu" aria-labelledby="dropDownMenuLang">
+                            <div uib-dropdown-menu class="dropdown-menu animated fast fadeIn pull-right" role="menu" aria-labelledby="dropDownMenuLang">
                                 <input type="text" class="form-control" ng-show="config.searchForm" placeholder="{{'search'}}..." ng-model="$parent.query">
                             </div>
                         </div>
@@ -36,11 +36,11 @@
 
 
                         <div class="btn-group">
-                            <button class="btn btn-flat btn-sm dropdown-toggle" type="button" id="more" data-toggle="dropdown" aria-expanded="true">
+                            <button uib-dropdown-toggle class="btn btn-flat btn-sm dropdown-toggle" type="button" id="more" data-toggle="dropdown" aria-expanded="true">
                                 <i class="glyphicon glyphicon-option-vertical"></i>
                             </button>
 
-                            <ul class="dropdown-menu scrollable-menu animated fast fadeIn pull-right" role="menu" aria-labelledby="more">
+                            <ul uib-dropdown-menu class="dropdown-menu scrollable-menu animated fast fadeIn pull-right" role="menu" aria-labelledby="more">
                                 <li role="presentation" ng-show="config.allowedActions.createFolder" ng-click="modal('newfolder') && prepareNewFolder()">
                                     <a href="" role="menuitem" tabindex="-1">
                                         <i class="glyphicon glyphicon-plus"></i> {{"new_folder"}}

@@ -42,7 +42,7 @@
 <web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd"
-         version="3.1">
+         version="3.1"> 
   <security-role>
     <role-name>HOPS_ADMIN</role-name>
   </security-role>
@@ -66,7 +66,7 @@
     <servlet-class>io.hops.hopsworks.api.airflow.AngularFileManagerServlet</servlet-class>
     <init-param>
       <param-name>repository.base.path</param-name>
-      <param-value>/srv/hops/airflow/dags/hopsworks</param-value>
+      <param-value>/srv/hops/airflow/dags</param-value>
     </init-param>
     <init-param>
       <param-name>date.format</param-name>
