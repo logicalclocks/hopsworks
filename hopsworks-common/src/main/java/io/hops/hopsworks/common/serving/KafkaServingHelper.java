@@ -18,14 +18,11 @@ package io.hops.hopsworks.common.serving;
 
 import io.hops.hopsworks.common.dao.kafka.AclDTO;
 import io.hops.hopsworks.common.dao.kafka.KafkaFacade;
-import io.hops.hopsworks.common.dao.kafka.PartitionDetailsDTO;
 import io.hops.hopsworks.common.dao.kafka.ProjectTopics;
 import io.hops.hopsworks.common.dao.kafka.SchemaTopics;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.serving.TfServing;
-import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.exception.CryptoPasswordNotFoundException;
 import io.hops.hopsworks.common.exception.KafkaException;
 import io.hops.hopsworks.common.exception.ProjectException;
 import io.hops.hopsworks.common.exception.RESTCodes;
@@ -41,7 +38,6 @@ import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import java.io.IOException;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -93,33 +89,22 @@ public class KafkaServingHelper {
           oldDbServing.getKafkaTopic() != null &&
           oldDbServing.getKafkaTopic().getTopicName()
               .equals(servingWrapper.getKafkaTopicDTO().getName())) {
-        // This is an update and the topic name hasn't changed. skip
-        return;
+        // This is an update and the topic name hasn't changed.
+        newDbServing.setKafkaTopic(oldDbServing.getKafkaTopic());
+      } else {
+        // The user has selected a an already existing Kafka topic. Check that it matches the schema requirements
+        ProjectTopics topic = checkSchemaRequirements(project, servingWrapper);
+        newDbServing.setKafkaTopic(topic);
       }
-
-      // The user has selected a an already existing Kafka topic. Check that it matches the schema requirements
-      ProjectTopics topic = checkSchemaRequirements(project, servingWrapper);
-      newDbServing.setKafkaTopic(topic);
     }
-
-    return;
   }
 
-  public TopicDTO buildTopicDTO(TfServing serving, Users user) throws KafkaException,
-      CryptoPasswordNotFoundException {
+  public TopicDTO buildTopicDTO(TfServing serving) {
     if (serving.getKafkaTopic() == null) {
       return null;
     }
 
-    List<PartitionDetailsDTO> topicPartitionsDetails;
-    topicPartitionsDetails = kafkaFacade.getTopicDetailsfromKafkaCluster(serving.getProject(), user,
-        serving.getKafkaTopic().getTopicName());
-
-    return new TopicDTO(serving.getKafkaTopic().getTopicName(),
-        topicPartitionsDetails.get(0).getReplicas().size(),
-        topicPartitionsDetails.size(),
-        serving.getKafkaTopic().getSchemaTopics().getSchemaTopicsPK().getName(),
-        serving.getKafkaTopic().getSchemaTopics().getSchemaTopicsPK().getVersion());
+    return new TopicDTO(serving.getKafkaTopic().getTopicName());
   }
 
   private ProjectTopics setupKafkaTopic(Project project, TfServingWrapper servingWrapper) throws KafkaException,

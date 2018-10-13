@@ -25,7 +25,7 @@ angular.module('hopsWorksApp')
 
             var self = this;
 
-            // Instance number slider settings
+            // Instance number slider setting
             self.sliderOptions = {
               value: 1,
               options: {
@@ -44,10 +44,18 @@ angular.module('hopsWorksApp')
 
             self.servings = [];
             self.editServing = {};
-            self.editServing.kafkaTopicDTO = {}
-            self.editServing.kafkaTopicDTO.name = "CREATE";
-            self.editServing.kafkaTopicDTO.numOfPartitions = self.kafkaDefaultNumPartitions;
-            self.editServing.kafkaTopicDTO.numOfReplicas = self.kafkaDefaultNumReplicas;
+
+            // Configuration to create a new Kafka topic for the serving
+            self.createKafkaTopicDTO = {};
+            self.createKafkaTopicDTO.name = "CREATE";
+            self.createKafkaTopicDTO.numOfPartitions = self.kafkaDefaultNumPartitions;
+            self.createKafkaTopicDTO.numOfReplicas = self.kafkaDefaultNumReplicas;
+
+            // Configuration to not log incoming inference requests 
+            self.noneKafkaTopicDTO = {};
+            self.noneKafkaTopicDTO.name = "NONE";
+            self.noneKafkaTopicDTO.numOfPartitions = 0;
+            self.noneKafkaTopicDTO.numOfReplicas = 0;
 
             self.activeTab = 'serving';
             self.showCreateNewServingForm = false;
@@ -176,14 +184,20 @@ angular.module('hopsWorksApp')
                 KafkaService.getTopics(self.projectId).then(
                   function(success) {
                     self.projectKafkaTopics = [];
-                    self.projectKafkaTopics.push("CREATE");
-                    self.projectKafkaTopics.push("NONE");
+                    self.projectKafkaTopics.push(self.createKafkaTopicDTO);
+                    self.projectKafkaTopics.push(self.noneKafkaTopicDTO);
 
                     for (var topic in success.data) {
                         if (success.data[topic].schemaName === self.kafkaSchemaName &&
                             success.data[topic].schemaVersion === self.kafkaSchemaVersion) {
-                            self.projectKafkaTopics.push(success.data[topic].name);
+                            self.projectKafkaTopics.push(success.data[topic]);
                         }
+                    }
+
+                    if (self.editServing.kafkaTopicDTO != null) {
+                      topic = self.projectKafkaTopics.filter(topic => topic.name === self.editServing.kafkaTopicDTO.name);
+                      self.editServing.kafkaTopicDTO = topic[0];
+                      self.updateKafkaDetails();
                     }
                   },
                   function (error) {
@@ -192,6 +206,27 @@ angular.module('hopsWorksApp')
                      ttl: 15000
                    });
                  });
+            };
+
+            self.updateKafkaDetails = function() { 
+              if (self.editServing.kafkaTopicDTO.name === 'CREATE' ||
+                  self.editServing.kafkaTopicDTO.name === 'NONE') {
+                    return;
+              }
+
+              KafkaService.getTopicDetails(self.projectId, self.editServing.kafkaTopicDTO.name).then(
+                function(success) {
+                  self.editServing.kafkaTopicDTO.numOfPartitions = success.data.length
+                  if (success.data.length > 0) {
+                    self.editServing.kafkaTopicDTO.numOfReplicas = success.data[0].replicas.length
+                  }
+                },
+                function (error) {
+                   growl.error(error.data.errorMsg, {
+                     title: 'Error',
+                     ttl: 15000
+                    });
+                });
             };
 
             self.containsServingStatus = function (status) {
@@ -243,7 +278,6 @@ angular.module('hopsWorksApp')
               angular.copy(serving, self.editServing);
               self.editServing.modelVersion = self.editServing.modelVersion.toString();
               self.getModelVersions(serving.modelPath);
-              self.sliderOptions.value = self.editServing.requestedInstances;
               self.showCreateServingForm();
             };
 

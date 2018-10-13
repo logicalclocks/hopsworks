@@ -22,7 +22,6 @@ import io.hops.hopsworks.common.util.Settings;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-import javax.ejb.DependsOn;
 import javax.ejb.EJB;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
@@ -50,7 +49,6 @@ import static io.hops.hopsworks.common.serving.tf.LocalhostTfServingController.S
  */
 @Singleton
 @Startup
-@DependsOn("Settings")
 public class LocalhostTfServingMonitor {
 
   private final static Logger LOGGER =
@@ -139,5 +137,4 @@ public class LocalhostTfServingMonitor {
       }
     }
   }
-
 }

@@ -81,17 +81,19 @@
 
                 <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
                   <select class="form-control" style="margin-top: 5px; width: 40%" name="kafkaTopicName"
-                          ng-model="servingCtrl.editServing.kafkaTopicDTO.name"
-                          ng-options="x for x in servingCtrl.projectKafkaTopics"></select>
+                          ng-model="servingCtrl.editServing.kafkaTopicDTO"
+                          ng-options="x.name for x in servingCtrl.projectKafkaTopics"
+                          ng-change="servingCtrl.updateKafkaDetails()"></select>
 
-                  <input style="margin-top: 5px; width: 40%" name="kafkaNumPartitions" class="form-control" type="number"
-                         min="1" ng-model="servingCtrl.editServing.kafkaTopicDTO.numOfPartitions"
-                         value="servingCtrl.editServing.kafkaTopicDTO.numOfPartitions">
+                  <input style="margin-top: 5px; width: 40%" name="kafkaNumPartitions" class="form-control"
+                         type="number" min="1" ng-model="servingCtrl.editServing.kafkaTopicDTO.numOfPartitions"
+                         ng-disabled="servingCtrl.editServing.kafkaTopicDTO.name !== 'CREATE'">
 
                   <input style="margin-top: 5px; width: 40%" name="kafkaReplicationFactor" class="form-control" type="number"
                          max="{{servingCtrl.kafkaMaxNumReplicas}}" min="1"
                          ng-model="servingCtrl.editServing.kafkaTopicDTO.numOfReplicas"
-                         value="servingCtrl.editServing.kafkaTopicDTO.numOfReplicas">
+                         ng-disabled="servingCtrl.editServing.kafkaTopicDTO.name !== 'CREATE'">
+
                   </div>
                 </div>
               <div class="row">

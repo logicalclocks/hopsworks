@@ -39,7 +39,7 @@ import java.util.logging.Logger;
 public class TfServingFacade {
   private static final Logger LOGGER = Logger.getLogger(TfServingFacade.class.getName());
 
-  private static final long LOCK_TIMEOUT = 300000L; // 5 minutes
+  private static final long LOCK_TIMEOUT = 60000L; // 1 minutes
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;

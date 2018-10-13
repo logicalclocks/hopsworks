@@ -108,7 +108,7 @@ public class TfServingService {
       response = TfServingView.class,
       responseContainer = "List")
   public Response getTfServings() throws TfServingException, KafkaException, CryptoPasswordNotFoundException {
-    List<TfServingWrapper> servingDAOList = tfServingController.getTfServings(project, user);
+    List<TfServingWrapper> servingDAOList = tfServingController.getTfServings(project);
 
 
     ArrayList<TfServingView> servingViewList = new ArrayList<>();
@@ -135,7 +135,7 @@ public class TfServingService {
     if (servingId == null) {
       throw new IllegalArgumentException("servingId was not provided");
     }
-    TfServingWrapper tfServingWrapper = tfServingController.getTfServing(project, servingId, user);
+    TfServingWrapper tfServingWrapper = tfServingController.getTfServing(project, servingId);
 
     TfServingView tfServingView = new TfServingView(tfServingWrapper);
     GenericEntity<TfServingView> tfServingEntity = new GenericEntity<TfServingView>(tfServingView){};

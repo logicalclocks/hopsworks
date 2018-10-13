@@ -253,13 +253,14 @@ public class KafkaService {
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws KafkaException, ProjectException, UserException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
-    kafkaFacade.shareTopic(project, topicName, projectId);
     //By default, all members of the project are granted full permissions on the topic
     Project projectShared = projectFacade.find(projectId);
     if (projectShared == null) {
-      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, Level.FINE,
-        "Could not find topic: " + topicName + " for project: " + projectId);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE,
+        "Could not find project: " + projectId);
     }
+    kafkaFacade.shareTopic(project, topicName, projectId);
+
     AclDTO aclDto = new AclDTO(projectShared.getName(),
             Settings.KAFKA_ACL_WILDCARD,
             "allow", Settings.KAFKA_ACL_WILDCARD, Settings.KAFKA_ACL_WILDCARD,

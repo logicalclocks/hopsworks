@@ -28,10 +28,10 @@ import java.util.List;
 
 public interface TfServingController {
 
-  List<TfServingWrapper> getTfServings(Project project, Users user)
+  List<TfServingWrapper> getTfServings(Project project)
       throws TfServingException, KafkaException, CryptoPasswordNotFoundException;
 
-  TfServingWrapper getTfServing(Project project, Integer id, Users user)
+  TfServingWrapper getTfServing(Project project, Integer id)
       throws TfServingException, KafkaException, CryptoPasswordNotFoundException;
 
   void deleteTfServing(Project project, Integer id) throws TfServingException;

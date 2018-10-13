@@ -21,7 +21,6 @@ import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.serving.TfServing;
 import io.hops.hopsworks.common.dao.serving.TfServingFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.exception.CryptoPasswordNotFoundException;
 import io.hops.hopsworks.common.exception.KafkaException;
 import io.hops.hopsworks.common.exception.ProjectException;
 import io.hops.hopsworks.common.exception.RESTCodes;
@@ -74,27 +73,25 @@ public class LocalhostTfServingController implements TfServingController {
   private KafkaServingHelper kafkaServingHelper;
 
   @Override
-  public List<TfServingWrapper> getTfServings(Project project, Users user)
-      throws TfServingException, KafkaException, CryptoPasswordNotFoundException{
+  public List<TfServingWrapper> getTfServings(Project project) throws TfServingException {
     List<TfServing> tfServingList = tfServingFacade.findForProject(project);
 
     List<TfServingWrapper> tfServingWrapperList = new ArrayList<>();
     for (TfServing tfServing : tfServingList) {
-      tfServingWrapperList.add(getTfServingInternal(tfServing, user));
+      tfServingWrapperList.add(getTfServingInternal(tfServing));
     }
 
     return tfServingWrapperList;
   }
 
   @Override
-  public TfServingWrapper getTfServing(Project project, Integer id, Users user)
-      throws TfServingException, KafkaException, CryptoPasswordNotFoundException {
+  public TfServingWrapper getTfServing(Project project, Integer id) throws TfServingException {
     TfServing tfServing = tfServingFacade.findByProjectAndId(project, id);
     if (tfServing == null) {
       return null;
     }
 
-    return getTfServingInternal(tfServing, user);
+    return getTfServingInternal(tfServing);
   }
 
   @Override
@@ -182,6 +179,9 @@ public class LocalhostTfServingController implements TfServingController {
           // the server polls for new versions and it will pick it up.
           updateModelVersion(project, user, dbTfServing);
         }
+      } else {
+        // The instance is not running, nothing else to do. Just release the lock.
+        tfServingFacade.releaseLock(project, serving.getId());
       }
     }
   }
@@ -224,8 +224,7 @@ public class LocalhostTfServingController implements TfServingController {
     return LocalhostTfServingController.class.getName();
   }
 
-  private TfServingWrapper getTfServingInternal(TfServing tfServing, Users user)
-      throws KafkaException, CryptoPasswordNotFoundException {
+  private TfServingWrapper getTfServingInternal(TfServing tfServing) {
     TfServingWrapper tfServingWrapper = new TfServingWrapper(tfServing);
 
     TfServingStatusEnum status = getTfServingStatus(tfServing);
@@ -242,7 +241,7 @@ public class LocalhostTfServingController implements TfServingController {
 
     }
 
-    tfServingWrapper.setKafkaTopicDTO(kafkaServingHelper.buildTopicDTO(tfServing, user));
+    tfServingWrapper.setKafkaTopicDTO(kafkaServingHelper.buildTopicDTO(tfServing));
 
     return tfServingWrapper;
   }
