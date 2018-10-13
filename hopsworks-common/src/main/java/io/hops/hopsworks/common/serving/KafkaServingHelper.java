@@ -44,8 +44,8 @@ import java.util.logging.Logger;
 @Stateless
 public class KafkaServingHelper {
 
-  private final static String SCHEMANAME = "inferenceschema";
-  private final static int SCHEMAVERSION = 1;
+  public final static String SCHEMANAME = "inferenceschema";
+  public final static int SCHEMAVERSION = 1;
 
   private final static Logger LOGGER = Logger.getLogger(KafkaServingHelper.class.toString());
 

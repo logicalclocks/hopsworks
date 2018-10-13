@@ -152,6 +152,20 @@ describe "On #{ENV['OS']}" do
           expect_status(400)
         end
 
+        it "fail to create a serving with bad kafka configuration" do
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+              {modelName: "testModelBadKafka",
+               modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
+               modelVersion: 1,
+               kafkaTopicDTO: {
+                   name: "CREATE",
+                   numOfPartitions: -10,
+                   numOfReplicas: 5
+               }}
+          expect_json(errorMsg: "Maximum topic replication factor exceeded")
+          expect_status(400)
+        end
+
         it "should fail to create the serving without a name" do
           # Create serving
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
@@ -411,21 +425,6 @@ describe "On #{ENV['OS']}" do
           system "pgrep -f tensorflow_model_server"
           $?.exitstatus == 0
         end
-
-        delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}"
-        expect_status(200)
-
-        # Check that the process has been killed
-        wait_for do
-          system "pgrep -f tensorflow_model_server"
-          $?.exitstatus == 1
-        end
-      end
-
-      it "should be able to delete a starting instance" do
-        # Start the serving instance
-        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=start"
-        expect_status(200)
 
         delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}"
         expect_status(200)
