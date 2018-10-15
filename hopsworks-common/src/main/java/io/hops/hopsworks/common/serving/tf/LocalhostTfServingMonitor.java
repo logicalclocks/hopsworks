@@ -87,7 +87,7 @@ public class LocalhostTfServingMonitor {
 
   @Timeout
   public void monitor(Timer timer) {
-    LOGGER.log(Level.FINEST, "Run Localhost TfServing instances monitor");
+    LOGGER.log(Level.FINE, "Run Localhost TfServing instances monitor");
 
     // Get the list of running Localhost TfServing instances
     List<TfServing> tfServingList = tfServingFacade.getLocalhostRunning();
@@ -98,7 +98,7 @@ public class LocalhostTfServingMonitor {
         String[] aliveCommand = new String[]{"/usr/bin/sudo", script, "alive",
             String.valueOf(dbTfServing.getLocalPid()), dbTfServing.getLocalDir()};
 
-        LOGGER.log(Level.INFO, Arrays.toString(aliveCommand));
+        LOGGER.log(Level.FINE, Arrays.toString(aliveCommand));
         ProcessBuilder pb = new ProcessBuilder(aliveCommand);
         try {
           Process process = pb.start();
@@ -113,7 +113,7 @@ public class LocalhostTfServingMonitor {
             String[] killCommand = {"/usr/bin/sudo", script, "kill", String.valueOf(dbTfServing.getLocalPid()),
                 String.valueOf(dbTfServing.getLocalPort()), secretDir.toString()};
 
-            LOGGER.log(Level.INFO, Arrays.toString(killCommand));
+            LOGGER.log(Level.FINE, Arrays.toString(killCommand));
             pb = new ProcessBuilder(killCommand);
 
             process = pb.start();

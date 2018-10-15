@@ -413,16 +413,18 @@ public class ProjectController {
       }
       LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 9 (members): {0}", System.currentTimeMillis() - startTime);
 
-      try {
-        for (Future f : projectCreationFutures) {
-          if (f != null) {
-            f.get();
+      if (projectCreationFutures != null) {
+        try {
+          for (Future f : projectCreationFutures) {
+            if (f != null) {
+              f.get();
+            }
           }
+        } catch (InterruptedException | ExecutionException ex) {
+          LOGGER.log(Level.SEVERE, "Error while waiting for the certificate "
+              + "generation thread to finish. Will try to cleanup...", ex);
+          cleanup(project, sessionId, projectCreationFutures);
         }
-      } catch (InterruptedException | ExecutionException ex) {
-        LOGGER.log(Level.SEVERE, "Error while waiting for the certificate "
-            + "generation thread to finish. Will try to cleanup...", ex);
-        cleanup(project, sessionId, projectCreationFutures);
       }
 
       // Run the handlers.
@@ -1543,11 +1545,14 @@ public class ProjectController {
       //remove kafka topics
       removeKafkaTopics(project);
 
-      //remove user certificate from local node 
-      //(they will be removed from db when the project folder is deleted)
-      for (Future f : projectCreationFutures) {
-        if (f != null) {
-          f.get();
+      // remove user certificate from local node
+      // (they will be removed from db when the project folder is deleted)
+      // projectCreationFutures will be null during project deletion.
+      if (projectCreationFutures != null) {
+        for (Future f : projectCreationFutures) {
+          if (f != null) {
+            f.get();
+          }
         }
       }
 
