@@ -87,9 +87,9 @@ public class FeaturestoreDependencyController {
   /**
    * Converts a list of file names into FeatureStoreDependency entities that can be inserted in the database
    *
-   * @param featuregroup    the featuregroup that the dependencies are linked to
+   * @param featuregroup the featuregroup that the dependencies are linked to
    * @param trainingDataset the training dataset that the dependencies are linked to
-   * @param fileNames       the list of filenames for the dependencies
+   * @param fileNames the list of filenames for the dependencies
    * @return a list of FeaturestoreDependency entities
    */
   private List<FeaturestoreDependency> convertFileNamesToFeaturestoreDependencies(
