@@ -1,0 +1,96 @@
+<!--
+  ~ This file is part of Hopsworks
+  ~ Copyright (C) 2018, Logical Clocks AB. All rights reserved
+  ~
+  ~ Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+  ~ the GNU Affero General Public License as published by the Free Software Foundation,
+  ~ either version 3 of the License, or (at your option) any later version.
+  ~
+  ~ Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+  ~ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+  ~ PURPOSE.  See the GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License along with this program.
+  ~ If not, see <https://www.gnu.org/licenses/>.
+  -->
+
+<div class="modal-header">
+    <button class="close" ng-click="featurestoreStatisticModalCtrl.close()" data-dismiss="modal" aria-hidden="true"
+            type="button">&times;
+    </button>
+    <h2 class="modal-title" ng-if="!featurestoreStatisticModalCtrl.trainingDataset">Statistics for Feature group:
+        {{featurestoreStatisticModalCtrl.featuregroup.name}}</h2>
+    <h2 class="modal-title" ng-if="featurestoreStatisticModalCtrl.trainingDataset">Statistics for Training Dataset:
+        {{featurestoreStatisticModalCtrl.featuregroup.name}}</h2>
+</div>
+
+<div class="modal-body" style="overflow: auto">
+    <div class="row">
+        <div ng-if="featurestoreStatisticModalCtrl.loading" class="loadingwrap" style="z-index: 102">
+            <div class="loading-content">
+                <div class="loader-in-wrap"></div>
+                {{featurestoreStatisticModalCtrl.loadingText}}
+            </div>
+        </div>
+    </div>
+    <div class="row" ng-if="featurestoreStatisticModalCtrl.statisticType === 0">
+        <div class="col-sm-1"></div>
+        <div class="col-sm-10">
+            <p style="font-weight: bold; margin-left: 10px">Descriptive Statistics:</p>
+            <table class="table table-hover" style="margin-left: 10px; overflow: auto">
+                <thead style="border:none;">
+                <th style="width: 20%">Feature</th>
+                <th style="width: 20%">Metric</th>
+                <th style="width: 20%">Value</th>
+                </thead>
+                <tbody>
+                <tr dir-paginate="row in featurestoreStatisticModalCtrl.statisticData| itemsPerPage:featurestoreStatisticModalCtrl.pageSize track by $index">
+                    <td>{{row.feature}}</td>
+                    <td>{{row.metric}}</td>
+                    <td>{{row.value}}</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="col-sm-1"></div>
+    </div>
+
+    <div class="row" ng-if="featurestoreStatisticModalCtrl.statisticType === 1">
+        <div class="col-sm-1"></div>
+        <div class="col-sm-10">
+            <p style="font-weight: bold; margin-left: 10px">Feature Correlations (Numeric Columns Only):
+                <i class="fa fa-info-circle" tooltip-placement="auto left"
+                   uib-tooltip="The value in each grid represents the pearson correlation between the two features listed on the x and y axis"
+                   style="margin-left: 10px"></i>
+            </p>
+            <div id="heatmapchart"></div>
+        </div>
+        <div class="col-sm-1"></div>
+    </div>
+
+    <div class="row" ng-if="featurestoreStatisticModalCtrl.statisticType === 2">
+        <div class="col-sm-1"></div>
+        <div class="col-sm-10">
+            <p style="font-weight: bold; margin-left: 10px">Clustering Analysis (Numeric Columns Only):
+                <i class="fa fa-info-circle" tooltip-placement="auto left"
+                   uib-tooltip="The clusters are computed with K-means on the numeric feature vectors and then reduced to 2D with PCA for visualization"
+                   style="margin-left: 10px"></i>
+            </p>
+            <nvd3 options="featurestoreStatisticModalCtrl.statisticData.plotOptions"
+                  data="featurestoreStatisticModalCtrl.statisticData.plotData"></nvd3>
+        </div>
+        <div class="col-sm-1"></div>
+    </div>
+
+    <div class="row" ng-if="featurestoreStatisticModalCtrl.statisticType === 3">
+        <div class="col-sm-1"></div>
+        <div class="col-sm-10">
+            <p style="font-weight: bold; margin-left: 10px">Feature Histogram:
+            </p>
+            <nvd3 style="margin-left: 10px" options="featurestoreStatisticModalCtrl.statisticData.plotOptions"
+                  data="featurestoreStatisticModalCtrl.statisticData.plotData"></nvd3>
+        </div>
+        <div class="col-sm-1">
+        </div>
+    </div>
+</div>

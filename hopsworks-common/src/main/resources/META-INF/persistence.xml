@@ -120,9 +120,16 @@
     <class>io.hops.hopsworks.common.dao.command.SystemCommand</class>
     <class>io.hops.hopsworks.common.dao.command.SystemCommandArguments</class>
     <class>io.hops.hopsworks.common.dao.project.pia.Pia</class>
+    <class>io.hops.hopsworks.common.dao.featurestore.Featurestore</class>
+    <class>io.hops.hopsworks.common.dao.featurestore.featuregroup.Featuregroup</class>
+    <class>io.hops.hopsworks.common.dao.featurestore.trainingdataset.TrainingDataset</class>
+    <class>io.hops.hopsworks.common.dao.featurestore.stats.FeaturestoreStatistic</class>
+    <class>io.hops.hopsworks.common.dao.featurestore.dependencies.FeaturestoreDependency</class>
+    <class>io.hops.hopsworks.common.dao.featurestore.trainingdataset.feature.TrainingDatasetFeature</class>
     <!-- Converters -->
     <class>io.hops.hopsworks.common.dao.user.cluster.RegistrationStatusConverter</class>
     <class>io.hops.hopsworks.common.jobs.configuration.JobConfigurationConverter</class>
+    <class>io.hops.hopsworks.common.dao.featurestore.stats.FeaturestoreStatisticValueConverter</class>
 
     <class>io.hops.hopsworks.common.dao.rstudio.RStudioProject</class>
     <class>io.hops.hopsworks.common.dao.rstudio.RStudioSettings</class>

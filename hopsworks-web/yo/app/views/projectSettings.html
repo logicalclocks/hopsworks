@@ -133,6 +133,7 @@
                                 </fieldset>
                               </div>
                             </fieldset>
+
                             <fieldset ng-if="projectCtrl.isServiceEnabled('HIVE')">
                               <label class="text-muted">Hive Database</label>
 
@@ -153,8 +154,30 @@
                                   </span>
                                 </fieldset>
                               </div>
-
                             </fieldset>
+
+                            <fieldset ng-if="projectCtrl.isServiceEnabled('FEATURESTORE')">
+                              <label class="text-muted">Feature Store</label>
+
+                              <div class="row" style="margin-left:15px; margin-bottom:0px">
+                                <fieldset ng-if="projectCtrl.featurestoreHdfsQuota() != null">
+                                  <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px">
+                                    {{projectCtrl.featurestoreHdfsUsage()}} of {{projectCtrl.featurestoreHdfsQuota()}} used
+                                  </span>
+                                </fieldset>
+                              </div>
+                              <div class="row" style="margin-top: 10px; margin-left:15px; margin-bottom:0px">
+                                <fieldset ng-if="projectCtrl.featurestoreHdfsNsCount() != null">
+                                  <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px" ng-show="projectCtrl.featurestoreHdfsNsQuota() === -1">
+                                    {{projectCtrl.featurestoreHdfsNsCount()}} files
+                                  </span>
+                                  <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px" ng-show="projectCtrl.featurestoreHdfsNsQuota() !== -1">
+                                    {{projectCtrl.featurestoreHdfsNsCount()}} files of {{projectCtrl.featurestoreHdfsNsQuota()}} used
+                                  </span>
+                                </fieldset>
+                              </div>
+                            </fieldset>
+
                             <fieldset>
                               <label class="text-muted">CPU</label>
                               <div class="row" style="margin-left:15px; margin-bottom:10px">

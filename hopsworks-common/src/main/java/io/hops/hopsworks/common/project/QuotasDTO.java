@@ -55,6 +55,10 @@ public class QuotasDTO implements Serializable {
   private Long hiveHdfsQuotaInBytes = null;
   private Long hiveHdfsNsCount = null;
   private Long hiveHdfsNsQuota = null;
+  private Long featurestoreHdfsUsageInBytes = null;
+  private Long featurestoreHdfsQuotaInBytes = null;
+  private Long featurestoreHdfsNsCount = null;
+  private Long featurestoreHdfsNsQuota = null;
   private Float yarnQuotaInSecs = null;
   private Float yarnUsedQuotaInSecs = null;
   private Integer kafkaMaxNumTopics = null;
@@ -66,7 +70,10 @@ public class QuotasDTO implements Serializable {
                    Long hdfsQuotaInBytes, Long hdfsUsageInBytes,
                    Long hdfsNsQuota, Long hdfsNsCount,
                    Long hiveHdfsQuotaInBytes, Long hiveHdfsUsageInBytes,
-                   Long hiveHdfsNsQuota, Long hiveHdfsNsCount, Integer kafkaMaxNumTopics) {
+                   Long hiveHdfsNsQuota, Long hiveHdfsNsCount,
+                   Long featurestoreHdfsQuotaInBytes, Long featurestoreHdfsUsageInBytes,
+                   Long featurestoreHdfsNsQuota, Long featurestoreHdfsNsCount,
+                   Integer kafkaMaxNumTopics) {
     this.yarnQuotaInSecs = yarnQuotaInSecs;
     this.yarnUsedQuotaInSecs = yarnUsedQuotaInSecs;
     this.hdfsQuotaInBytes = hdfsQuotaInBytes;
@@ -77,15 +84,23 @@ public class QuotasDTO implements Serializable {
     this.hiveHdfsUsageInBytes = hiveHdfsUsageInBytes;
     this.hiveHdfsNsCount = hiveHdfsNsCount;
     this.hiveHdfsNsQuota = hiveHdfsNsQuota;
+    this.featurestoreHdfsQuotaInBytes = featurestoreHdfsQuotaInBytes;
+    this.featurestoreHdfsUsageInBytes = featurestoreHdfsUsageInBytes;
+    this.featurestoreHdfsNsCount = featurestoreHdfsNsCount;
+    this.featurestoreHdfsNsQuota = featurestoreHdfsNsQuota;
     this.kafkaMaxNumTopics = kafkaMaxNumTopics;
   }
 
   public QuotasDTO(Long hdfsQuotaInBytes, Long hdfsNsQuota,
-                   Long hiveHdfsQuotaInBytes, Long hiveHdfsNsQuota, Float yarnQuotaInSecs, Integer numKafkaTopics) {
+                   Long hiveHdfsQuotaInBytes, Long hiveHdfsNsQuota,
+                   Long featurestoreHdfsQuotaInBytes, Long featurestoreHdfsNsQuota,
+                   Float yarnQuotaInSecs, Integer numKafkaTopics) {
     this.hdfsQuotaInBytes = hdfsQuotaInBytes;
     this.hdfsNsQuota = hdfsNsQuota;
     this.hiveHdfsQuotaInBytes = hiveHdfsQuotaInBytes;
     this.hiveHdfsNsQuota = hiveHdfsNsQuota;
+    this.featurestoreHdfsQuotaInBytes = featurestoreHdfsQuotaInBytes;
+    this.featurestoreHdfsNsQuota = featurestoreHdfsNsQuota;
     this.yarnQuotaInSecs = yarnQuotaInSecs;
     this.kafkaMaxNumTopics = numKafkaTopics;
   }
@@ -177,7 +192,39 @@ public class QuotasDTO implements Serializable {
   public void setKafkaMaxNumTopics(Integer kafkaMaxNumTopics) {
     this.kafkaMaxNumTopics = kafkaMaxNumTopics;
   }
-  
+
+  public Long getFeaturestoreHdfsUsageInBytes() {
+    return featurestoreHdfsUsageInBytes;
+  }
+
+  public void setFeaturestoreHdfsUsageInBytes(Long featurestoreHdfsUsageInBytes) {
+    this.featurestoreHdfsUsageInBytes = featurestoreHdfsUsageInBytes;
+  }
+
+  public Long getFeaturestoreHdfsQuotaInBytes() {
+    return featurestoreHdfsQuotaInBytes;
+  }
+
+  public void setFeaturestoreHdfsQuotaInBytes(Long featurestoreHdfsQuotaInBytes) {
+    this.featurestoreHdfsQuotaInBytes = featurestoreHdfsQuotaInBytes;
+  }
+
+  public Long getFeaturestoreHdfsNsCount() {
+    return featurestoreHdfsNsCount;
+  }
+
+  public void setFeaturestoreHdfsNsCount(Long featurestoreHdfsNsCount) {
+    this.featurestoreHdfsNsCount = featurestoreHdfsNsCount;
+  }
+
+  public Long getFeaturestoreHdfsNsQuota() {
+    return featurestoreHdfsNsQuota;
+  }
+
+  public void setFeaturestoreHdfsNsQuota(Long featurestoreHdfsNsQuota) {
+    this.featurestoreHdfsNsQuota = featurestoreHdfsNsQuota;
+  }
+
   @Override
   public String toString() {
     return "QuotasDTO{" +
@@ -189,9 +236,13 @@ public class QuotasDTO implements Serializable {
         ", hiveHdfsQuotaInBytes=" + hiveHdfsQuotaInBytes +
         ", hiveHdfsNsCount=" + hiveHdfsNsCount +
         ", hiveHdfsNsQuota=" + hiveHdfsNsQuota +
+        ", featurestoreHdfsUsageInBytes=" + featurestoreHdfsUsageInBytes +
+        ", featurestoreHdfsQuotaInBytes=" + featurestoreHdfsQuotaInBytes +
+        ", featurestoreHdfsNsCount=" + featurestoreHdfsNsCount +
+        ", featurestoreHdfsNsQuota=" + featurestoreHdfsNsQuota +
         ", yarnQuotaInSecs=" + yarnQuotaInSecs +
-        ", yarnUsedQuotaInSecs =" + yarnUsedQuotaInSecs +
-        ", kafkaMaxNumTopics =" + kafkaMaxNumTopics +
+        ", yarnUsedQuotaInSecs=" + yarnUsedQuotaInSecs +
+        ", kafkaMaxNumTopics=" + kafkaMaxNumTopics +
         '}';
   }
 }

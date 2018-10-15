@@ -48,6 +48,11 @@ import io.hops.hopsworks.common.jobs.yarn.ServiceProperties;
 import io.hops.hopsworks.common.jobs.yarn.YarnRunner;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.common.util.templates.ConfigProperty;
+import org.apache.hadoop.yarn.api.records.LocalResourceType;
+import org.apache.hadoop.yarn.api.records.LocalResourceVisibility;
+import org.apache.hadoop.yarn.client.api.YarnClient;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -62,11 +67,6 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import io.hops.hopsworks.common.util.templates.ConfigProperty;
-import org.apache.hadoop.yarn.api.records.LocalResourceType;
-import org.apache.hadoop.yarn.api.records.LocalResourceVisibility;
-import org.apache.hadoop.yarn.client.api.YarnClient;
 
 /**
  * Builder class for a Spark YarnRunner. Implements the common logic needed
@@ -258,10 +258,19 @@ public class SparkYarnRunnerBuilder {
         LocalResourceVisibility.APPLICATION.toString(),
         LocalResourceType.FILE.toString(), null), false);
 
+    // Add tf-spark-connector for Featurestore
+    builder.addLocalResource(new LocalResourceDTO(
+        settings.getTfSparkConnectorFilename(), settings.getTfSparkConnectorPath(),
+        LocalResourceVisibility.APPLICATION.toString(),
+        LocalResourceType.FILE.toString(), null), false);
+
     builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH,
         settings.getHopsUtilFilename());
+    builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH,
+        settings.getTfSparkConnectorFilename());
     extraClassPathFiles.append(settings.getHopsUtilFilename()).append(File.pathSeparator).
-        append(settings.getHopsLeaderElectionJarPath()).append(File.pathSeparator);
+        append(settings.getHopsLeaderElectionJarPath()).append(File.pathSeparator).
+        append(settings.getTfSparkConnectorFilename()).append(File.pathSeparator);
     builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH,
         "$PWD/" + Settings.SPARK_LOCALIZED_CONF_DIR + File.pathSeparator
         + Settings.SPARK_LOCALIZED_CONF_DIR

@@ -39,10 +39,10 @@
 
 package io.hops.hopsworks.common.dao.dataset;
 
+import io.hops.hopsworks.common.dao.featurestore.Featurestore;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.project.Project;
-import java.io.Serializable;
-import java.util.Collection;
+
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -62,6 +62,8 @@ import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.io.Serializable;
+import java.util.Collection;
 
 @Entity
 @Table(name = "hopsworks.dataset")
@@ -167,6 +169,9 @@ public class Dataset implements Serializable {
   @Enumerated(EnumType.ORDINAL)
   @Column(name = "dstype")
   private DatasetType type = DatasetType.DATASET;
+  @JoinColumn(name = "feature_store_id", referencedColumnName = "id")
+  @ManyToOne(optional = false)
+  private Featurestore featurestore = null;
 
   @OneToMany(cascade = CascadeType.ALL,
           mappedBy = "dataset")
@@ -203,6 +208,7 @@ public class Dataset implements Serializable {
     this.editable = ds.getPermissionsAsInt();
     this.publicDs = ds.getPublicDs();
     this.type = ds.getType();
+    this.featurestore = ds.getFeaturestore();
   }
   
   public String getName() {
@@ -334,6 +340,14 @@ public class Dataset implements Serializable {
   public void setType(DatasetType type) { this.type = type; }
 
   public DatasetType getType() { return this.type; }
+
+  public Featurestore getFeaturestore() {
+    return featurestore;
+  }
+
+  public void setFeaturestore(Featurestore featurestore) {
+    this.featurestore = featurestore;
+  }
 
   public Collection<DatasetRequest> getDatasetRequestCollection() {
     return datasetRequestCollection;

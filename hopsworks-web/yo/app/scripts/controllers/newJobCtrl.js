@@ -753,7 +753,7 @@ angular.module('hopsWorksApp')
              */
             this.selectFile = function (reason, parameter) {
               ModalService.selectFile('lg', self.selectFileRegexes[reason],
-                      self.selectFileErrorMsgs["PYSPARK"]).then(
+                      self.selectFileErrorMsgs["PYSPARK"], false).then(
                       function (success) {
                         self.onFileSelected(reason, "hdfs://" + success);
                       }, function (error) {

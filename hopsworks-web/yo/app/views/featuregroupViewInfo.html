@@ -1,0 +1,74 @@
+<!--
+  ~ This file is part of Hopsworks
+  ~ Copyright (C) 2018, Logical Clocks AB. All rights reserved
+  ~
+  ~ Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+  ~ the GNU Affero General Public License as published by the Free Software Foundation,
+  ~ either version 3 of the License, or (at your option) any later version.
+  ~
+  ~ Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+  ~ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+  ~ PURPOSE.  See the GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License along with this program.
+  ~ If not, see <https://www.gnu.org/licenses/>.
+  -->
+
+<div class="modal-header">
+    <button class="close" ng-click="featuregroupViewInfoCtrl.close()" data-dismiss="modal" aria-hidden="true"
+            type="button">&times;
+    </button>
+    <h2 class="modal-title">Feature group details: {{featuregroupViewInfoCtrl.featuregroup.featuregroupName}}</h2>
+</div>
+<div class="modal-body" style="overflow: auto">
+    <div class="row">
+        <table class="table table-hover" style="margin-left: 10px; overflow: auto">
+            <thead style="border:none;">
+            <th style="width: 10%">Property</th>
+            <th style="width: 20%">Value</th>
+
+            </thead>
+            <tbody>
+            <tr>
+                <td>
+                    <button class="btn btn-primary" id="fetchSchemaBtn"
+                            ng-click="featuregroupViewInfoCtrl.fetchSchema()">
+                        Fetch SQL Schema
+                        <i ng-if="featuregroupViewInfoCtrl.schemaWorking" style="margin-top: 2px"
+                           class="fa fa-spinner fa-spin pull-right"></i>
+                        <i class="fa fa-info-circle" tooltip-placement="auto left"
+                           uib-tooltip="Fetches the SQL statement that was used to create the Hive table"
+                           style="margin-left: 10px"></i>
+                    </button>
+                </td>
+                <td>{{featuregroupViewInfoCtrl.schema}}</td>
+            </tr>
+            <tr>
+                <td>
+                    <button class="btn btn-primary" id="fetchSizeBtn"
+                            ng-click="featuregroupViewInfoCtrl.fetchSize()">
+                        Fetch Size
+                        <i ng-if="featuregroupViewInfoCtrl.sizeWorking" style="margin-top: 2px"
+                           class="fa fa-spinner fa-spin pull-right"></i>
+                        <i class="fa fa-info-circle" tooltip-placement="auto left"
+                           uib-tooltip="Fetches the size of the entire feature group,
+                           if the feature group has a lot of nested files this is an expensive operation"
+                           style="margin-left: 10px"></i>
+                    </button>
+                </td>
+                <td>{{featuregroupViewInfoCtrl.size}}</td>
+            </tr>
+            <tr data-ng-repeat="row in featuregroupViewInfoCtrl.table">
+                <td>{{row.property}}</td>
+                <td ng-if="row.property != 'API Retrieval Code'">{{row.value}}</td>
+                <td ng-if="row.property == 'API Retrieval Code'" style="white-space: pre-wrap">
+<pre>
+<code>{{row.value}}</code>
+</pre>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+</div>

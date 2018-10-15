@@ -47,7 +47,7 @@
     <version>0.8.0-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
-  
+
   <groupId>io.hops.hopsworks</groupId>
   <artifactId>hopsworks-common</artifactId>
   <version>0.8.0-SNAPSHOT</version>
@@ -59,14 +59,14 @@
     <tuples.version>1.2</tuples.version>
     <maven.deploy.skip>false</maven.deploy.skip>
   </properties>
-  
+
   <dependencies>
     <dependency>
       <groupId>org.javatuples</groupId>
       <artifactId>javatuples</artifactId>
       <version>${tuples.version}</version>
     </dependency>
-    
+
     <dependency>
       <groupId>org.eclipse.persistence</groupId>
       <artifactId>eclipselink</artifactId>
@@ -191,7 +191,7 @@
           <artifactId>netty-all</artifactId>
         </exclusion>
       </exclusions>
-    </dependency> 
+    </dependency>
     <dependency>
       <groupId>org.apache.flink</groupId>
       <artifactId>flink-yarn_2.11</artifactId>
@@ -247,10 +247,12 @@
           <groupId>io.hops.hive</groupId>
           <artifactId>hive-metastore</artifactId>
         </exclusion>
+        <!--
+        Need serde for the feature store
         <exclusion>
           <groupId>io.hops.hive</groupId>
           <artifactId>hive-serde</artifactId>
-        </exclusion>
+        </exclusion> -->
         <exclusion>
           <groupId>io.hops.hive</groupId>
           <artifactId>hive-shims</artifactId>

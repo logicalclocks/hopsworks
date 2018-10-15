@@ -278,6 +278,43 @@
                     <h:outputText value="#{ProjectQuotas.hiveUsedHdfsNsQuota}" />
                   </p:column>
 
+                  <p:column id="featurestoreDiskUsedColumn"
+                            headerText="FeaturestoreDB Used"
+                            filterBy="#{ProjectQuotas.featurestoreUsedHdfsQuota}"
+                            filterMatchMode="contains"
+                            style=" font-size: 12px; text-align: left;">
+                    <h:outputText value="#{ProjectQuotas.featurestoreUsedHdfsQuota}" />
+                  </p:column>
+
+                  <p:column id="featurestoreHdfsNsquotaColumn"
+                            headerText="FeaturestoreDB Max # Files"
+                            filterBy="#{ProjectQuotas.featurestoreHdfsNsQuota}"
+                            filterMatchMode="contains"
+                            style=" font-size: 12px; text-align: center;">
+                    <p:cellEditor>
+                      <f:facet name="output">
+                        <h:outputText
+                                value="#{ProjectQuotas.featurestoreHdfsNsQuota}" />
+                      </f:facet>
+                      <f:facet name="input">
+                        <p:inputText
+                                value="#{ProjectQuotas.featurestoreHdfsNsQuota}" style="width:100%">
+                          <f:validateLongRange
+                                  maximum="10000000000"
+                                  minimum="-1" />
+                        </p:inputText>
+                      </f:facet>
+                    </p:cellEditor>
+                  </p:column>
+
+                  <p:column id="featurestoreNoFilesUsedColumn"
+                            headerText="FeaturestoreDB # Files"
+                            filterBy="#{ProjectQuotas.featurestoreUsedHdfsNsQuota}"
+                            filterMatchMode="contains"
+                            style=" font-size: 12px; text-align: left;">
+                    <h:outputText value="#{ProjectQuotas.featurestoreUsedHdfsNsQuota}" />
+                  </p:column>
+
                   <p:column id="useremailColumn"
                             headerText="Owner"
                             filterBy="#{ProjectQuotas.owner}"
