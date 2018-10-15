@@ -127,8 +127,7 @@ public class HdfsUsersController {
    * @param member
    * @throws java.io.IOException
    */
-  public void addNewProjectMember(Project project, ProjectTeam member) throws
-      IOException {
+  public void addNewProjectMember(Project project, ProjectTeam member) {
     HdfsGroups hdfsGroup = hdfsGroupsFacade.findByName(project.getName());
     if (hdfsGroup == null) {
       throw new IllegalArgumentException("No group found for project in HDFS.");

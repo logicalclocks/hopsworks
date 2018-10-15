@@ -197,8 +197,6 @@ public class ProjectController {
   @EJB
   private DatasetFacade datasetFacade;
   @EJB
-  private HdfsUsersController hdfsUsersBean;
-  @EJB
   private Settings settings;
   @EJB
   private CertsFacade userCertsFacade;
@@ -341,7 +339,7 @@ public class ProjectController {
             "owner: " + owner.getUsername(), ex.getMessage(), ex);
       }
 
-      String username = hdfsUsersBean.getHdfsUserName(project, owner);
+      String username = hdfsUsersController.getHdfsUserName(project, owner);
       if (username == null || username.isEmpty()) {
         cleanup(project, sessionId, projectCreationFutures);
         throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.SEVERE,
@@ -382,7 +380,7 @@ public class ProjectController {
       LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 7 (quotas): {0}", System.currentTimeMillis() - startTime);
 
       try {
-        hdfsUsersBean.addProjectFolderOwner(project, dfso);
+        hdfsUsersController.addProjectFolderOwner(project, dfso);
         createProjectLogResources(owner, project, dfso);
       } catch (IOException | EJBException ex) {
         cleanup(project, sessionId, projectCreationFutures);
@@ -551,8 +549,7 @@ public class ProjectController {
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   private boolean noExistingUser(String projectName) {
-    List<HdfsUsers> hdfsUsers = hdfsUsersBean.
-        getAllProjectHdfsUsers(projectName);
+    List<HdfsUsers> hdfsUsers = hdfsUsersController.getAllProjectHdfsUsers(projectName);
     if (hdfsUsers != null && !hdfsUsers.isEmpty()) {
       LOGGER.log(Level.WARNING, "hdfs users exist for project {0}",
           projectName);
@@ -563,8 +560,7 @@ public class ProjectController {
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   private boolean noExistingGroup(String projectName) {
-    List<HdfsGroups> hdfsGroups = hdfsUsersBean.
-        getAllProjectHdfsGroups(projectName);
+    List<HdfsGroups> hdfsGroups = hdfsUsersController.getAllProjectHdfsGroups(projectName);
     if (hdfsGroups != null && !hdfsGroups.isEmpty()) {
       LOGGER.log(Level.WARNING, () -> "hdfs group(s) exist for project: " + projectName + ", group(s): "
           + Arrays.toString(hdfsGroups.toArray()));
@@ -792,6 +788,8 @@ public class ProjectController {
     st.setTeamRole(ProjectRoleTypes.DATA_SCIENTIST.getRole());
     st.setTimestamp(new Date());
     projectTeamFacade.persistProjectTeam(st);
+    // Create the Hdfs user
+    hdfsUsersController.addNewProjectMember(project, st);
     // Create the certificate for this project user
     Future<CertificatesController.CertsResult> certsResultFuture = null;
     try {
@@ -1198,7 +1196,7 @@ public class ProjectController {
         }
 
         // Kill jobs
-        List<HdfsUsers> projectHdfsUsers = hdfsUsersBean.getAllProjectHdfsUsers(projectName);
+        List<HdfsUsers> projectHdfsUsers = hdfsUsersController.getAllProjectHdfsUsers(projectName);
         try {
           Set<String> hdfsUsersStr = new HashSet<>();
           for (HdfsUsers hdfsUser : projectHdfsUsers) {
@@ -1247,7 +1245,7 @@ public class ProjectController {
 
         // Remove HDFS Groups and Users
         try {
-          List<HdfsGroups> projectHdfsGroups = hdfsUsersBean.getAllProjectHdfsGroups(projectName);
+          List<HdfsGroups> projectHdfsGroups = hdfsUsersController.getAllProjectHdfsGroups(projectName);
           removeGroupAndUsers(projectHdfsGroups, projectHdfsUsers);
           cleanupLogger.logSuccess("Removed HDFS Groups and Users");
         } catch (IOException ex) {
@@ -1646,13 +1644,13 @@ public class ProjectController {
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   private List<HdfsUsers> getUsersToClean(Project project) {
-    return hdfsUsersBean.getAllProjectHdfsUsers(project.getName());
+    return hdfsUsersController.getAllProjectHdfsUsers(project.getName());
   }
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   private List<HdfsGroups> getGroupsToClean(Project project) {
 
-    return hdfsUsersBean.getAllProjectHdfsGroups(project.getName());
+    return hdfsUsersController.getAllProjectHdfsGroups(project.getName());
 
   }
 
@@ -1691,8 +1689,8 @@ public class ProjectController {
       TransactionAttributeType.REQUIRES_NEW)
   private void removeGroupAndUsers(List<HdfsGroups> groups,
       List<HdfsUsers> users) throws IOException {
-    hdfsUsersBean.deleteGroups(groups);
-    hdfsUsersBean.deleteUsers(users);
+    hdfsUsersController.deleteGroups(groups);
+    hdfsUsersController.deleteUsers(users);
   }
 
   private void removeProjectFolder(String projectName,
@@ -1746,13 +1744,8 @@ public class ProjectController {
             //first param b/c the securty check was made on the parameter sent as path.
             projectTeam.getProjectTeamPK().setProjectId(project.getId());
             projectTeamFacade.persistProjectTeam(projectTeam);
-            try {
-              hdfsUsersBean.addNewProjectMember(project, projectTeam);
-            } catch (IOException ex) {
-              LOGGER.log(Level.SEVERE,"Could not add member:"+newMember+" to project:"+project+" in HDFS.", ex);
-              projectTeamFacade.removeProjectTeam(project, newMember);
-              throw new EJBException("Could not add member:"+newMember+" to project:"+project+" in HDFS.");
-            }
+            hdfsUsersController.addNewProjectMember(project, projectTeam);
+
             //Add user to kafka topics ACLs by default
             if (projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.KAFKA)) {
               kafkaController.addProjectMemberToTopics(project, newMember.getEmail());
@@ -1782,7 +1775,7 @@ public class ProjectController {
               LOGGER.log(Level.SEVERE, "error while creating certificates, jupyter kernel: " + ex.getMessage(), ex);
               projectTeamFacade.removeProjectTeam(project, newMember);
               try {
-                hdfsUsersBean.removeProjectMember(newMember, project);
+                hdfsUsersController.removeProjectMember(newMember, project);
               } catch (IOException ex1) {
                 LOGGER.log(Level.SEVERE, null, ex1);
                 throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_MEMBER_NOT_REMOVED,
@@ -2124,9 +2117,9 @@ public class ProjectController {
       projectTeamFacade.update(projectTeam);
 
       if (newRole.equals(AllowedRoles.DATA_OWNER)) {
-        hdfsUsersBean.addUserToProjectGroup(project, projectTeam);
+        hdfsUsersController.addUserToProjectGroup(project, projectTeam);
       } else {
-        hdfsUsersBean.modifyProjectMembership(user, project);
+        hdfsUsersController.modifyProjectMembership(user, project);
       }
 
       logActivity(ActivityFacade.CHANGE_ROLE + toUpdateEmail,
@@ -2247,8 +2240,8 @@ public class ProjectController {
             String hdfsJarPath = "/" + Settings.DIR_ROOT + "/" + project.getName() + "/" + Settings.HOPS_TOUR_DATASET
                 + "/spark-examples.jar";
             udfso.copyToHDFSFromLocal(false, file[0].getAbsolutePath(), hdfsJarPath);
-            String datasetGroup = hdfsUsersBean.getHdfsGroupName(project, Settings.HOPS_TOUR_DATASET);
-            String userHdfsName = hdfsUsersBean.getHdfsUserName(project, user);
+            String datasetGroup = hdfsUsersController.getHdfsGroupName(project, Settings.HOPS_TOUR_DATASET);
+            String userHdfsName = hdfsUsersController.getHdfsUserName(project, user);
             udfso.setPermission(new Path(hdfsJarPath), udfso.getParentPermission(new Path(hdfsJarPath)));
             udfso.setOwner(new Path("/" + Settings.DIR_ROOT + "/" + project.getName() + "/" + Settings.HOPS_TOUR_DATASET
                 + "/spark-examples.jar"), userHdfsName, datasetGroup);
@@ -2266,8 +2259,8 @@ public class ProjectController {
               + "/" + Settings.HOPS_TOUR_DATASET + "/" + settings.getHopsExamplesFilename();
           try {
             udfso.copyInHdfs(new Path(kafkaExampleSrc), new Path(kafkaExampleDst));
-            String datasetGroup = hdfsUsersBean.getHdfsGroupName(project, Settings.HOPS_TOUR_DATASET);
-            String userHdfsName = hdfsUsersBean.getHdfsUserName(project, user);
+            String datasetGroup = hdfsUsersController.getHdfsGroupName(project, Settings.HOPS_TOUR_DATASET);
+            String userHdfsName = hdfsUsersController.getHdfsUserName(project, user);
             udfso.setPermission(new Path(kafkaExampleDst), udfso.getParentPermission(new Path(kafkaExampleDst)));
             udfso.setOwner(new Path(kafkaExampleDst), userHdfsName, datasetGroup);
 
@@ -2285,8 +2278,8 @@ public class ProjectController {
               + Settings.HOPS_TOUR_DATASET;
           try {
             udfso.copyInHdfs(new Path(DLDataSrc), new Path(DLDataDst));
-            String datasetGroup = hdfsUsersBean.getHdfsGroupName(project, Settings.HOPS_TOUR_DATASET);
-            String userHdfsName = hdfsUsersBean.getHdfsUserName(project, user);
+            String datasetGroup = hdfsUsersController.getHdfsGroupName(project, Settings.HOPS_TOUR_DATASET);
+            String userHdfsName = hdfsUsersController.getHdfsUserName(project, user);
             Inode parent = inodes.getInodeAtPath(DLDataDst);
             List<Inode> children = new ArrayList<>();
             inodes.getAllChildren(parent, children);
@@ -2303,7 +2296,7 @@ public class ProjectController {
               String DLNotebooksDst = "/" + Settings.DIR_ROOT + "/" + project.getName() + "/"
                   + Settings.HOPS_TOUR_DATASET_JUPYTER;
               udfso.copyInHdfs(new Path(DLNotebooksSrc + "/*"), new Path(DLNotebooksDst));
-              datasetGroup = hdfsUsersBean.getHdfsGroupName(project, Settings.HOPS_TOUR_DATASET_JUPYTER);
+              datasetGroup = hdfsUsersController.getHdfsGroupName(project, Settings.HOPS_TOUR_DATASET_JUPYTER);
               Inode parentJupyterDs = inodes.getInodeAtPath(DLNotebooksDst);
               List<Inode> childrenJupyterDs = new ArrayList<>();
               inodes.getAllChildren(parentJupyterDs, childrenJupyterDs);
@@ -2547,9 +2540,9 @@ public class ProjectController {
     byte[] userKey;
 
     if (isProjectSpecific) {
-      userKey = userCertsFacade.findUserCert(hdfsUsersBean.
+      userKey = userCertsFacade.findUserCert(hdfsUsersController.
           getProjectName(commonName),
-          hdfsUsersBean.getUserName(commonName)).getUserKey();
+          hdfsUsersController.getUserName(commonName)).getUserKey();
     } else {
       // In that case projectUser is the name of the Project, see Spark
       // interpreter in Zeppelin
