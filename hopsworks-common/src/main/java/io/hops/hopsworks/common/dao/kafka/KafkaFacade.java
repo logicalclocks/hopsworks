@@ -559,27 +559,32 @@ public class KafkaFacade {
   private void addAclsToTopic(String topicName, Integer projectId,
       String selectedProjectName, String userEmail, String permission_type,
       String operation_type, String host, String role) throws ProjectException, KafkaException, UserException {
+
     if(Strings.isNullOrEmpty(topicName) || projectId == null || projectId < 0 || userEmail == null){
       throw new IllegalArgumentException("Topic, userEmail and projectId must be provided. ProjectId must be a " +
         "non-negative " +
         "number");
     }
-    //get the project id
-    Project project = projectsFacade.find(projectId);
 
-    if (!project.getName().equals(selectedProjectName)) {
+    //get the project id
+    Project topicOwnerProject = projectsFacade.find(projectId);
+    Project project;
+
+    if (!topicOwnerProject.getName().equals(selectedProjectName)) {
       project = projectsFacade.findByName(selectedProjectName);
       if (project == null) {
         throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "The specified project " +
           "for the topic" +
           topicName + " was not found");
       }
+    } else {
+      project = topicOwnerProject;
     }
 
     ProjectTopics pt = null;
     try {
       pt = em.createNamedQuery("ProjectTopics.findByProjectAndTopicName", ProjectTopics.class)
-          .setParameter("project", project)
+          .setParameter("project", topicOwnerProject)
           .setParameter("topicName", topicName)
           .getSingleResult();
     } catch (NoResultException e) {
