@@ -388,6 +388,7 @@ public class RESTCodes {
     JOB_LOG(11, "Job log error.", Response.Status.BAD_REQUEST),
     JOB_DELETION_ERROR(12, "Error while deleting job.", Response.Status.BAD_REQUEST),
     JOB_CREATION_ERROR(13, "Error while creating job.", Response.Status.BAD_REQUEST),
+
     ELASTIC_INDEX_NOT_FOUND(14, "Elasticsearch indices do not exist", Response.Status.BAD_REQUEST),
     ELASTIC_TYPE_NOT_FOUND(15, "Elasticsearch type does not exist", Response.Status.BAD_REQUEST),
     
@@ -401,8 +402,12 @@ public class RESTCodes {
     LOG_RETRIEVAL_ERROR(20, "Error while retrieving YARN logs", Response.Status.INTERNAL_SERVER_ERROR),
     
     JOB_SCHEDULE_UPDATE(21, "Could not update schedule.", Response.Status.INTERNAL_SERVER_ERROR),
-    JAR_INSEPCTION_ERROR(22, "Could not inspect jar file.", Response.Status.INTERNAL_SERVER_ERROR),
-    PROXY_ERROR(23, "Could not get proxy user.", Response.Status.INTERNAL_SERVER_ERROR);
+    JAR_INSPECTION_ERROR(22, "Could not inspect jar file.", Response.Status.INTERNAL_SERVER_ERROR),
+    PROXY_ERROR(23, "Could not get proxy user.", Response.Status.INTERNAL_SERVER_ERROR),
+
+    JOB_CONFIGURATION_CONVERT_TO_JSON_ERROR(24, "Could not convert JobConfiguration to json",
+        Response.Status.BAD_REQUEST);
+
     
     private Integer code;
     private String message;

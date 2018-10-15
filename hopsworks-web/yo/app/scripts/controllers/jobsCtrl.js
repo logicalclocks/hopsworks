@@ -290,7 +290,7 @@ angular.module('hopsWorksApp')
                                       generalPrice = Math.ceil(parseFloat(multiplicator.multiplicator).toFixed(4) * 100) / 100;
                                     }
                                   }
-                                  if (typeof job.runConfig.numOfGPUs === 'undefined' || job.runConfig.numOfGPUs === 0) {
+                                  if (typeof job.runConfig['spark.executor.gpus'] === 'undefined' || job.runConfig['spark.executor.gpus'] === 0) {
                                     gpuPrice = 0;
                                   }
                                   ModalService.uberPrice('sm', 'Confirm', 'Do you still want to run this job?', generalPrice, gpuPrice).then(

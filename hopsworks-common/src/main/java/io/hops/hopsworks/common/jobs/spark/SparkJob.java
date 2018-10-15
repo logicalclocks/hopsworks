@@ -99,14 +99,13 @@ public class SparkJob extends YarnJob {
     //Set spark runner options
     runnerbuilder.setExecutorCores(jobconfig.getExecutorCores());
     runnerbuilder.setExecutorMemory("" + jobconfig.getExecutorMemory() + "m");
-    runnerbuilder.setNumberOfExecutors(jobconfig.getNumberOfExecutors());
-    runnerbuilder.setNumberOfGpusPerExecutor(jobconfig.getNumberOfGpusPerExecutor());
-    if (jobconfig.isDynamicExecutors()) {
-      runnerbuilder.setDynamicExecutors(jobconfig.isDynamicExecutors());
-      runnerbuilder.setNumberOfExecutorsMin(jobconfig.getSelectedMinExecutors());
-      runnerbuilder.setNumberOfExecutorsMax(jobconfig.getSelectedMaxExecutors());
-      runnerbuilder.setNumberOfExecutorsInit(jobconfig.
-          getNumberOfExecutorsInit());
+    runnerbuilder.setNumberOfExecutors(jobconfig.getExecutorInstances());
+    runnerbuilder.setExecutorGPUs(jobconfig.getExecutorGpus());
+    if (jobconfig.isDynamicAllocationEnabled()) {
+      runnerbuilder.setDynamicExecutors(jobconfig.isDynamicAllocationEnabled());
+      runnerbuilder.setNumberOfExecutorsMin(jobconfig.getDynamicAllocationMinExecutors());
+      runnerbuilder.setNumberOfExecutorsMax(jobconfig.getDynamicAllocationMaxExecutors());
+      runnerbuilder.setNumberOfExecutorsInit(jobconfig.getDynamicAllocationInitialExecutors());
     }
     //Set Yarn running options
     runnerbuilder.setDriverMemoryMB(jobconfig.getAmMemory());
@@ -115,7 +114,9 @@ public class SparkJob extends YarnJob {
 
     //Set Kafka params
     runnerbuilder.setServiceProps(serviceProps);
-    runnerbuilder.addExtraFiles(Arrays.asList(jobconfig.getLocalResources()));
+    if(jobconfig.getLocalResources() != null) {
+      runnerbuilder.addExtraFiles(Arrays.asList(jobconfig.getLocalResources()));
+    }
     //Set project specific resources, i.e. Kafka certificates
     runnerbuilder.addExtraFiles(projectLocalResources);
     if (jobSystemProperties != null && !jobSystemProperties.isEmpty()) {

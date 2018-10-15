@@ -173,14 +173,13 @@ public class SparkController {
           }
         }
       } catch (IOException ex) {
-        throw new JobException(RESTCodes.JobErrorCode.JAR_INSEPCTION_ERROR, Level.SEVERE,
+        throw new JobException(RESTCodes.JobErrorCode.JAR_INSPECTION_ERROR, Level.SEVERE,
           "Failed to inspect jar at:" + path, ex.getMessage(), ex);
       }
     } else {
       config.setMainClass(Settings.SPARK_PY_MAINCLASS);
     }
     config.setAppPath(path);
-    config.setHistoryServerIp(settings.getSparkHistoryServerIp());
     return config;
   }
   
