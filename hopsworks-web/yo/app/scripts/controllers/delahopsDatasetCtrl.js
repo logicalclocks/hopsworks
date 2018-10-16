@@ -381,7 +381,11 @@ angular.module('hopsWorksApp')
                 });
 
               }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Error', ttl: 10000, referenceId: 13});
+                  if (typeof error.data.usrMsg !== 'undefined') {
+                      growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                  } else {
+                      growl.error("", {title: error.data.errorMsg, ttl: 8000,  referenceId: 13});
+                  }
               });
             };
             

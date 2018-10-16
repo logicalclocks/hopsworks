@@ -256,10 +256,11 @@ angular.module('hopsWorksApp')
 
                       },
                       function (error) {
-                        growl.error("Could not get installation status for libs", {
-                          title: 'Error',
-                          ttl: 3000
-                        });
+                          if (typeof error.data.usrMsg !== 'undefined') {
+                              growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
+                          } else {
+                              growl.error("", {title: error.data.errorMsg, ttl: 5000});
+                          }
                       });
             };
 
@@ -312,10 +313,11 @@ angular.module('hopsWorksApp')
                       },
                       function (error) {
                         self.enabling = false;
-                        growl.error("Could not enable Anaconda", {
-                          title: 'Error',
-                          ttl: 5000
-                        });
+                          if (typeof error.data.usrMsg !== 'undefined') {
+                              growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
+                          } else {
+                              growl.error("", {title: error.data.errorMsg, ttl: 5000});
+                          }
                       });
             };
 
@@ -342,10 +344,11 @@ angular.module('hopsWorksApp')
                                 },
                                 function (error) {
                                   self.enabling = false;
-                                  growl.error("Could not remove Anaconda", {
-                                    title: 'Error',
-                                    ttl: 5000
-                                  });
+                                    if (typeof error.data.usrMsg !== 'undefined') {
+                                        growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
+                                    } else {
+                                        growl.error("", {title: error.data.errorMsg, ttl: 5000});
+                                    }
                                 });
                       }, function (error) {
 
@@ -360,10 +363,11 @@ angular.module('hopsWorksApp')
                         console.log(self.installedLibs);
                       },
                       function (error) {
-                        growl.error(error.data.errorMsg, {
-                          title: 'Error',
-                          ttl: 3000
-                        });
+                          if (typeof error.data.usrMsg !== 'undefined') {
+                              growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
+                          } else {
+                              growl.error("", {title: error.data.errorMsg, ttl: 5000});
+                          }
                       });
             };
 
@@ -372,10 +376,11 @@ angular.module('hopsWorksApp')
               var hostsJson = JSON.stringify(opStatus.hosts);
 
               if (hostsJson === '') {
-                growl.error("Cant find any problemtic conda ops on the hosts.", {
-                  title: 'Error',
-                  ttl: 3000
-                });
+                  if (typeof error.data.usrMsg !== 'undefined') {
+                      growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
+                  } else {
+                      growl.error("", {title: error.data.errorMsg, ttl: 5000});
+                  }
               } else {
                 ModalService.viewJson('md', 'Problematic Hosts for Conda Operations',
                         hostsJson)
@@ -397,10 +402,11 @@ angular.module('hopsWorksApp')
                       },
                       function (error) {
                         self.exporting = false;
-                        growl.error(error.data.errorMsg, {
-                          title: 'Error',
-                          ttl: 5000
-                        });
+                          if (typeof error.data.usrMsg !== 'undefined') {
+                              growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
+                          } else {
+                              growl.error("", {title: error.data.errorMsg, ttl: 5000});
+                          }
                       });
             }
 
@@ -432,10 +438,11 @@ angular.module('hopsWorksApp')
                                                             });
                           }, function (error) {
                             self.enabling = false;
-                            growl.error(error.data.errorMsg, {
-                            title: 'Error',
-                            ttl: 5000
-                          });
+                              if (typeof error.data.usrMsg !== 'undefined') {
+                                  growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
+                              } else {
+                                  growl.error("", {title: error.data.errorMsg, ttl: 5000});
+                              }
                       });
 
                       },
@@ -457,10 +464,11 @@ angular.module('hopsWorksApp')
                       },
                       function (error) {
                         self.isRetryingFailedCondaOps = false;
-                        growl.error("Could not retry failed conda ops for this project.", {
-                          title: 'Error',
-                          ttl: 5000
-                        });
+                          if (typeof error.data.usrMsg !== 'undefined') {
+                              growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
+                          } else {
+                              growl.error("", {title: error.data.errorMsg, ttl: 5000});
+                          }
                       });
             };
 
@@ -504,10 +512,11 @@ angular.module('hopsWorksApp')
                             self.pipResultsMsg = "No results found.";
                           } else {
                             self.pipResultsMessageShowing = false;
-                            growl.error(error.data.errorMsg, {
-                              title: 'Error',
-                              ttl: 3000
-                            });
+                              if (typeof error.data.usrMsg !== 'undefined') {
+                                  growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
+                              } else {
+                                  growl.error("", {title: error.data.errorMsg, ttl: 5000});
+                              }
                           }
                         });
               } else if (type === "CONDA") {
@@ -547,10 +556,11 @@ angular.module('hopsWorksApp')
                             self.condaResultsMsg = "No results found.";
                           } else {
                             self.condaResultsMessageShowing = false;
-                            growl.error(error.data.errorMsg, {
-                              title: 'Error',
-                              ttl: 3000
-                            });
+                              if (typeof error.data.usrMsg !== 'undefined') {
+                                  growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
+                              } else {
+                                  growl.error("", {title: error.data.errorMsg, ttl: 5000});
+                              }
                           }
                         });
 
@@ -583,10 +593,11 @@ angular.module('hopsWorksApp')
                         self.installing[host][lib] = false;
                       },
                       function (error) {
-                        growl.error(error.data.errorMsg, {
-                          title: 'Error',
-                          ttl: 3000
-                        });
+                          if (typeof error.data.usrMsg !== 'undefined') {
+                              growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
+                          } else {
+                              growl.error("", {title: error.data.errorMsg, ttl: 5000});
+                          }
                         self.installing[host][lib] = false;
                       });
 
@@ -637,10 +648,11 @@ angular.module('hopsWorksApp')
                       },
                       function (error) {
                         self.installing[lib] = false;
-                        growl.error(error.data.errorMsg, {
-                          title: 'Error',
-                          ttl: 3000
-                        });
+                          if (typeof error.data.usrMsg !== 'undefined') {
+                              growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
+                          } else {
+                              growl.error("", {title: error.data.errorMsg, ttl: 5000});
+                          }
                       });
             };
 
@@ -671,18 +683,20 @@ angular.module('hopsWorksApp')
                                 },
                                 function (error) {
                                   self.uninstalling[lib] = false;
-                                  growl.error(error.data.errorMsg, {
-                                    title: 'Error',
-                                    ttl: 3000
-                                  });
+                                    if (typeof error.data.usrMsg !== 'undefined') {
+                                        growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
+                                    } else {
+                                        growl.error("", {title: error.data.errorMsg, ttl: 5000});
+                                    }
                                 });
                       },
                       function (error) {
                         self.uninstalling[lib] = false;
-                        growl.error(error.data.errorMsg, {
-                          title: 'Error',
-                          ttl: 3000
-                        });
+                          if (typeof error.data.usrMsg !== 'undefined') {
+                              growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
+                          } else {
+                              growl.error("", {title: error.data.errorMsg, ttl: 5000});
+                          }
                       });
             };
 
@@ -711,10 +725,11 @@ angular.module('hopsWorksApp')
                       },
                       function (error) {
                         self.upgrading[lib] = false;
-                        growl.error(error.data.errorMsg, {
-                          title: 'Error',
-                          ttl: 3000
-                        });
+                          if (typeof error.data.usrMsg !== 'undefined') {
+                              growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
+                          } else {
+                              growl.error("", {title: error.data.errorMsg, ttl: 5000});
+                          }
                       });
             };
 
@@ -723,10 +738,11 @@ angular.module('hopsWorksApp')
                         self.environmentTypes = success.data;
                       },
                       function (error) {
-                        growl.error('Could not get the environment types', {
-                          title: 'Error',
-                          ttl: 3000
-                        });
+                          if (typeof error.data.usrMsg !== 'undefined') {
+                              growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
+                          } else {
+                              growl.error("", {title: error.data.errorMsg, ttl: 5000});
+                          }
                       });
           }
         ]);

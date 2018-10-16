@@ -844,31 +844,10 @@ angular.module('hopsWorksApp')
                         } else {
                             self.tourService.currentStep_TourEight = -1;
                         }
-                        if (error.data !== undefined && error.status === 404) {
-                            growl.error("Anaconda not enabled yet - retry starting Jupyter again in a few seconds.", {
-                                title: 'Error',
-                                ttl: 10000
-                            });
-                        } else if (error.data !== undefined && error.status === 400) {
-                            growl.error("Anaconda not enabled yet - retry starting Jupyter again in a few seconds.", {
-                                title: 'Error',
-                                ttl: 10000
-                            });
-                        } else if (error.data !== undefined && error.status === 401) {
-                            growl.error("Cannot start Jupyter - your project has run out of credits. Please contact your system administrator.", {
-                                title: 'Error',
-                                ttl: 10000
-                            });
-                        } else if (error.data !== undefined && error.status === 403) {
-                            growl.error("Cannot start Jupyter - your project has run out of credits. Please contact your system administrator.", {
-                                title: 'Error',
-                                ttl: 10000
-                            });
+                        if (typeof error.data.usrMsg !== 'undefined') {
+                            growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
                         } else {
-                            growl.error(error.data.errorMsg, {
-                                title: 'Error',
-                                ttl: 10000
-                            });
+                            growl.error("", {title: error.data.errorMsg, ttl: 8000});
                         }
                         stopLoading();
                         self.toggleValue = true;

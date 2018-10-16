@@ -150,7 +150,7 @@ public abstract class ThrowableMapper implements ExceptionMapper<Throwable> {
    * @return
    */
   public Response handleUnknownException(Throwable ex) {
-    return handleRESTException(new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR, Level.SEVERE,
+    return handleRESTException(new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR, Level.INFO,
       ex.getMessage(), null, ex));
   }
   

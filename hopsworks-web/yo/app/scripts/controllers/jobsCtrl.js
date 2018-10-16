@@ -89,7 +89,11 @@ angular.module('hopsWorksApp')
                         self.refreshSlider();
                         self.copy();
                       }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Error fetching job configuration.', ttl: 15000});
+                      if (typeof error.data.usrMsg !== 'undefined') {
+                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                      } else {
+                          growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                      }
               });
             };
 
@@ -198,7 +202,11 @@ angular.module('hopsWorksApp')
                           job.showing = false;
                         });
                       }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
+                      if (typeof error.data.usrMsg !== 'undefined') {
+                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                      } else {
+                          growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                      }
               });
             };
 
@@ -233,7 +241,11 @@ angular.module('hopsWorksApp')
                           }
                         });
                       }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
+                      if (typeof error.data.usrMsg !== 'undefined') {
+                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                      } else {
+                          growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                      }
               });
             };
 
@@ -291,14 +303,22 @@ angular.module('hopsWorksApp')
 //                                            self.stopbuttonClickedToggle(job.id, false);
                                                       self.getRunStatus();
                                                     }, function (error) {
-                                              growl.error(error.data.errorMsg, {title: 'Failed to run job', ttl: 10000});
+                                                    if (typeof error.data.usrMsg !== 'undefined') {
+                                                        growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                                                    } else {
+                                                        growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                                                    }
                                             });
 
                                           }
                                   );
 
                                 }, function (error) {
-                          growl.error(error.data.errorMsg, {title: 'Could not get the current YARN price.', ttl: 10000});
+                                if (typeof error.data.usrMsg !== 'undefined') {
+                                    growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                                } else {
+                                    growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                                }
                         });
                       });
             };
@@ -309,8 +329,11 @@ angular.module('hopsWorksApp')
                       function (success) {
                         self.getRunStatus();
                       }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Failed to stop' +
-                          ' job', ttl: 15000});
+                      if (typeof error.data.usrMsg !== 'undefined') {
+                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                      } else {
+                          growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                      }
               });
             };
 
@@ -351,7 +374,11 @@ angular.module('hopsWorksApp')
                   downloadLink.attr('download', success.data.appName + '_config.json');
                   downloadLink[0].click();
                 }, function (error) {
-                  growl.error(error.data.errorMsg, {title: 'Failed to export job', ttl: 5000});
+                      if (typeof error.data.usrMsg !== 'undefined') {
+                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                      } else {
+                          growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                      }
                 });
             };
 
@@ -369,7 +396,11 @@ angular.module('hopsWorksApp')
                     self.fetchingLogs = 0;
                   }, function (error) {
                     self.fetchingLogs = 0;
-                    growl.error(error.data.errorMsg, {title: 'Failed to show logs', ttl: 15000});
+                      if (typeof error.data.usrMsg !== 'undefined') {
+                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                      } else {
+                          growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                      }
               });
             };
 
@@ -396,8 +427,12 @@ angular.module('hopsWorksApp')
                       }
                       self.loadingLog = 0;
                     }, function (error) {
-                      self.loadingLog = 0;
-                      growl.error(error.data.errorMsg, {title: 'Failed to get logs', ttl: 5000});
+                        self.loadingLog = 0;
+                        if (typeof error.data.usrMsg !== 'undefined') {
+                            growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                        } else {
+                            growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                        }
                 });
             } else if(job.jobId !== "") {
               //getLogByJobIdAndSubmissionTime
@@ -419,7 +454,11 @@ angular.module('hopsWorksApp')
                       self.loadingLog = 0;
                     }, function (error) {
                       self.loadingLog = 0;
-                      growl.error(error.data.errorMsg, {title: 'Failed to get logs', ttl: 5000});
+                        if (typeof error.data.usrMsg !== 'undefined') {
+                            growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                        } else {
+                            growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                        }
                 });
             }
 
@@ -434,7 +473,11 @@ angular.module('hopsWorksApp')
                         growl.success(success.data.successMessage, {title: 'Success', ttl: 5000});
                         self.showLogs(self.currentjob.id);
                       }, function (error) {
-                        growl.error(error.data.errorMsg, {title: 'Failed to get logs', ttl: 5000});
+                      if (typeof error.data.usrMsg !== 'undefined') {
+                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                      } else {
+                          growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                      }
               });
             };
 
@@ -450,7 +493,11 @@ angular.module('hopsWorksApp')
                                   StorageService.remove(self.projectId + "_jobui_" + jobName);
                                   growl.success(success.data.successMessage, {title: 'Success', ttl: 5000});
                                 }, function (error) {
-                          growl.error(error.data.errorMsg, {title: 'Failed to delete job', ttl: 15000});
+                                if (typeof error.data.usrMsg !== 'undefined') {
+                                    growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                                } else {
+                                    growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                                }
                         });
                       }, function (cancelled) {
                         growl.info("Delete aborted", {title: 'Info', ttl: 5000});

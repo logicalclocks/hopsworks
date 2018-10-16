@@ -56,7 +56,11 @@ angular.module('hopsWorksApp')
                         growl.success(success.data.successMessage, {title: 'The DataSet is now Private.', ttl: 1500});
                         self.preview = {};
                       }, function (error) {
-                        growl.error(error.data.errorMsg, {title: 'Error', ttl: 1500});
+                            if (typeof error.data.usrMsg !== 'undefined') {
+                                growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 21});
+                            } else {
+                                growl.error("", {title: error.data.errorMsg, ttl: 5000, referenceId: 21});
+                            }
                     });
                   });
               } else {
@@ -65,7 +69,11 @@ angular.module('hopsWorksApp')
                     growl.success("Download cancelled.", {title: 'Success', ttl: 1500});
                     self.preview = {};
                   }, function (error) {
-                    growl.error(error.data.errorMsg, {title: 'Error', ttl: 1500});
+                        if (typeof error.data.usrMsg !== 'undefined') {
+                            growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 21});
+                        } else {
+                            growl.error("", {title: error.data.errorMsg, ttl: 5000, referenceId: 21});
+                        }
                 });
               }
             };
