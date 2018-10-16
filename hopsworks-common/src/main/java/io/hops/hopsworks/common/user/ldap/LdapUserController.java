@@ -95,11 +95,9 @@ public class LdapUserController {
     try {
       userDTO = ldapRealm.findAndBind(username, password);// login user
     } catch (EJBException | NamingException ee) {
-      LOGGER.log(Level.WARNING, "Could not reach LDAP server. {0}", ee.getMessage());
       throw new LoginException("Could not reach LDAP server.");
     }
     if (userDTO == null) {
-      LOGGER.log(Level.WARNING, "User not found, or wrong LDAP configuration.");
       throw new LoginException("User not found.");
     }
     LdapUser ladpUser = ldapUserFacade.findByLdapUid(userDTO.getEntryUUID());
@@ -124,11 +122,9 @@ public class LdapUserController {
   private LdapUser createNewLdapUser(LdapUserDTO userDTO, String chosenEmail) throws LoginException {
     LOGGER.log(Level.INFO, "Creating new ldap user.");
     if (userDTO.getEmail().size() != 1 && (chosenEmail == null || chosenEmail.isEmpty())) {
-      LOGGER.log(Level.WARNING, "Could not register user. Email not chosen.");
       throw new LoginException("Could not register user. Email not chosen.");
     }
     if (!userDTO.getEmail().contains(chosenEmail)) {
-      LOGGER.log(Level.WARNING, "Could not register user. Chosen email not in ldap user email list.");
       throw new LoginException("Could not register user. Chosen email not in ldap user email list.");
     }
     String email = userDTO.getEmail().size() == 1 ? userDTO.getEmail().get(0) : chosenEmail;
@@ -143,7 +139,6 @@ public class LdapUserController {
     try {
       groups = ldapRealm.getUserGroups(userDTO.getUid());
     } catch (NamingException ex) {
-      LOGGER.log(Level.WARNING, "Could not reach LDAP server. {0}", ex.getMessage());
       throw new LoginException("Could not reach LDAP server.");
     }
     BbcGroup group;

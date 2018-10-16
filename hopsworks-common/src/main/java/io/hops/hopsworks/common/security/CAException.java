@@ -71,9 +71,9 @@ public class CAException extends RESTException {
   
   
   @Override
-  public JsonResponse getJsonResponse(JsonResponse jsonResponse, Settings.LOG_LEVEL logLevel) {
+  public JsonResponse buildJsonResponse(JsonResponse jsonResponse, Settings.LOG_LEVEL logLevel) {
     jsonResponse.setCertificateType(certType);
-    return super.getJsonResponse(jsonResponse, logLevel);
+    return super.buildJsonResponse(jsonResponse, logLevel);
   }
   
   @Override
