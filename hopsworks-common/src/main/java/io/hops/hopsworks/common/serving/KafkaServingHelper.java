@@ -131,7 +131,7 @@ public class KafkaServingHelper {
     if (servingWrapper.getKafkaTopicDTO().getNumOfPartitions() != null
         && servingWrapper.getKafkaTopicDTO().getNumOfPartitions() <= 0) {
 
-      throw new KafkaException(RESTCodes.KafkaErrorCode.BAD_NUM_PARTITION, Level.SEVERE, "less than 0");
+      throw new KafkaException(RESTCodes.KafkaErrorCode.BAD_NUM_PARTITION, Level.FINE, "less than 0");
 
     } else if (servingWrapper.getKafkaTopicDTO().getNumOfPartitions() == null) {
       // set default value

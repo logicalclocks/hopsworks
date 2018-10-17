@@ -20,17 +20,23 @@ import com.google.common.base.Strings;
 import io.hops.common.Pair;
 import io.hops.hopsworks.common.dao.serving.TfServing;
 import io.hops.hopsworks.common.exception.RESTCodes;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.util.EntityUtils;
 
+import javax.annotation.PostConstruct;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.inject.Alternative;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.logging.Level;
 
 import static io.hops.hopsworks.common.serving.tf.LocalhostTfServingController.PID_STOPPED;
@@ -40,7 +46,12 @@ import static io.hops.hopsworks.common.serving.tf.LocalhostTfServingController.P
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class LocalhostTfInferenceController implements TfInferenceController {
 
-  private OkHttpClient httpClient = new OkHttpClient();
+  HttpClient httpClient = null;
+
+  @PostConstruct
+  public void init() {
+    httpClient = HttpClientBuilder.create().build();
+  }
 
   public Pair<Integer, String> infer(TfServing tfServing, Integer modelVersion,
                                      String verb, String inferenceRequestJson) throws InferenceException {
@@ -54,48 +65,56 @@ public class LocalhostTfInferenceController implements TfInferenceController {
     }
 
     // TODO(Fabio) does Tf model server support TLS?
-    StringBuilder requestUrlBuilder = new StringBuilder();
-    requestUrlBuilder.append("http://localhost:")
-        .append(tfServing.getLocalPort())
+
+    StringBuilder pathBuilder = new StringBuilder()
         .append("/v1/models/")
         .append(tfServing.getModelName());
 
     // Append the version if the user specified it.
     if (modelVersion != null) {
-      requestUrlBuilder.append("/versions").append(modelVersion);
+      pathBuilder.append("/versions").append(modelVersion);
     }
 
-    requestUrlBuilder.append(verb);
+    pathBuilder.append(verb);
 
-    RequestBody body = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), inferenceRequestJson);
-    Request request = new Request.Builder()
-        .url(requestUrlBuilder.toString())
-        .post(body)
-        .build();
 
-    Response response = null;
+    HttpResponse response = null;
+    // Send request
     try {
-      response = httpClient.newCall(request).execute();
+      URI uri = new URIBuilder()
+          .setScheme("http")
+          .setHost("localhost")
+          .setPort(tfServing.getLocalPort())
+          .setPath(pathBuilder.toString())
+          .build();
+
+      HttpPost request = new HttpPost(uri);
+      request.addHeader("content-type", "application/json; charset=utf-8");
+      request.setEntity(new StringEntity(inferenceRequestJson));
+      response = httpClient.execute(request);
+    } catch (URISyntaxException e) {
+      throw new InferenceException(RESTCodes.InferenceErrorCode.REQUESTERROR, Level.SEVERE, null, e.getMessage(), e);
     } catch (IOException e) {
-      throw new InferenceException(RESTCodes.InferenceErrorCode.REQUESTERROR, Level.INFO, "", e.getMessage(), e);
+      throw new InferenceException(RESTCodes.InferenceErrorCode.REQUESTERROR, Level.INFO, null, e.getMessage(), e);
     }
 
+    // Handle response
     if (response == null) {
       throw new InferenceException(RESTCodes.InferenceErrorCode.EMPTYRESPONSE, Level.INFO, "Received null response");
     }
 
-    if (response.body() == null) {
+    HttpEntity httpEntity = response.getEntity();
+    if (httpEntity == null) {
       throw new InferenceException(RESTCodes.InferenceErrorCode.EMPTYRESPONSE, Level.INFO, "Received null response");
     }
 
     try {
       // Return prediction
-      return new Pair<>(response.code(), response.body().string());
+      String responseStr = EntityUtils.toString(httpEntity);
+      return new Pair<>(response.getStatusLine().getStatusCode(), responseStr);
     } catch (IOException e) {
       throw new InferenceException(RESTCodes.InferenceErrorCode.ERRORREADINGRESPONSE, Level.INFO,
           "", e.getMessage(), e);
-    } finally {
-      response.close();
     }
   }
 }

@@ -132,7 +132,7 @@ public class LocalhostTfServingMonitor {
 
         tfServingFacade.releaseLock(tfServing.getProject(), tfServing.getId());
       } catch (TfServingException e) {
-        LOGGER.log(Level.SEVERE, "Error proecessing TfServing instance with id: "
+        LOGGER.log(Level.INFO, "Error processing TfServing instance with id: "
             + tfServing.getId(), e);
       }
     }
