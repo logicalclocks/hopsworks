@@ -41,6 +41,7 @@ import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.serving.TfServing;
 import io.hops.hopsworks.common.dao.serving.TfServingFacade;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.serving.tf.TfServingCommands;
 import io.hops.hopsworks.common.serving.tf.TfServingController;
 import io.hops.hopsworks.common.serving.tf.TfServingException;
@@ -137,9 +138,8 @@ public class KubeTfServingController implements TfServingController {
       if (serviceInfo != null) {
         kubeClientService.deleteService(project, getServiceMetadata(servingIdStr));
       }
-    } catch (KubernetesClientException ex) {
-      logger.log(Level.SEVERE, "Error deleting objects from Kubernetes", ex);
-      throw new TfServingException(TfServingException.TfServingExceptionErrors.DELETIONERROR);
+    } catch (KubernetesClientException e) {
+      throw new TfServingException(RESTCodes.TfServingErrorCode.DELETIONERROR, Level.SEVERE, null, e.getMessage(), e);
     }
 
     // If the call to Kubernetes succeeded, then Kubernetes is taking care of terminating the pods.
@@ -167,8 +167,7 @@ public class KubeTfServingController implements TfServingController {
               buildTfServingDeployment(project, user, dbTfServing));
         }
       } catch (KubernetesClientException e) {
-        logger.log(Level.SEVERE, "Error updating TfServing deployment with id: " + newTfServing.getId(), e);
-        throw new TfServingException(TfServingException.TfServingExceptionErrors.UPDATEERROR);
+        throw new TfServingException(RESTCodes.TfServingErrorCode.UPDATEERROR, Level.SEVERE, null, e.getMessage(), e);
       } finally {
         tfServingFacade.releaseLock(project, newTfServing.getId());
       }
@@ -211,13 +210,12 @@ public class KubeTfServingController implements TfServingController {
         kubeClientService.createOrReplaceService(project, buildTfServingService(tfServing));
 
       } else {
-        throw new TfServingException(TfServingException.TfServingExceptionErrors.LIFECYCLEERROR,
+        throw new TfServingException(RESTCodes.TfServingErrorCode.LIFECYCLEERROR, Level.FINE,
             "Instance is already: " + status.toString());
       }
     } catch (KubernetesClientException e) {
-      logger.log(Level.SEVERE, "Cannot " + command + " TFServing with id: " + tfServingId +
-          " cause: " + e.getMessage());
-      throw new TfServingException(TfServingException.TfServingExceptionErrors.LIFECYCLEERRORINT);
+      throw new TfServingException(RESTCodes.TfServingErrorCode.LIFECYCLEERRORINT, Level.SEVERE,
+          null, e.getMessage(), e);
     } finally {
       tfServingFacade.releaseLock(project, tfServingId);
     }
@@ -272,8 +270,7 @@ public class KubeTfServingController implements TfServingController {
       labelMap.put("model", servingIdStr);
       podList = kubeClientService.getPodList(project, labelMap);
     } catch (KubernetesClientException ex) {
-      logger.log(Level.SEVERE, "Cannot get Kubernetes status for instance with id: " + tfServing.getId(), ex);
-      throw new TfServingException(TfServingException.TfServingExceptionErrors.STATUSERROR);
+      throw new TfServingException(RESTCodes.TfServingErrorCode.STATUSERROR, Level.SEVERE, null, ex.getMessage(), ex);
     }
 
     TfServingStatusEnum status = getInstanceStatus(tfServing, deploymentStatus,
