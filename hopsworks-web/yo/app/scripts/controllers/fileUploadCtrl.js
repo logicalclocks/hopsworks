@@ -86,11 +86,11 @@ angular.module('hopsWorksApp')
 
             self.errorHandler = function (file, message, flow) {
               var msg = JSON.parse(message);
-              if (typeof msg.usrMsg !== 'undefined') {
-                  growl.error(msg.usrMsg, {title: msg.errorMsg, ttl: 5000, referenceId: 1});
-              } else {
-                  growl.error("", {title: msg.errorMsg, ttl: 5000, referenceId: 1});
-              }
+                if (typeof msg.usrMsg !== 'undefined') {
+                    growl.error(msg.usrMsg, {title: msg.errorMsg, ttl: 8000});
+                } else {
+                    growl.error("", {title: msg.errorMsg, ttl: 8000});
+                }
             };
 
             self.fileAddedHandler = function (file, flow) {

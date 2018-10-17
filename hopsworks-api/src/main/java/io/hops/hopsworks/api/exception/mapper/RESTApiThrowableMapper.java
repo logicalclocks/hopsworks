@@ -58,13 +58,10 @@ public class RESTApiThrowableMapper extends io.hops.hopsworks.common.exception.T
   @Override
   public Response handleRESTException(Response.StatusType status, RESTException ex) {
     return Response.status(status)
-      .entity(ex.getJsonResponse(new RESTApiJsonResponse(), getRESTLogLevel()))
+      .entity(ex.buildJsonResponse(new RESTApiJsonResponse(), settings.getHopsworksRESTLogLevel()))
       .type(MediaType.APPLICATION_JSON)
       .build();
   }
   
-  @Override
-  public Settings.LOG_LEVEL getRESTLogLevel() {
-    return settings.getHopsworksRESTLogLevel();
-  }
+  
 }

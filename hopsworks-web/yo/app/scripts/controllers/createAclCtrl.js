@@ -60,7 +60,11 @@ angular.module('hopsWorksApp')
                       function (success) {
                         self.users = success.data;
                       }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Could not load ACL users', ttl: 5000, referenceId: 21});
+                      if (typeof error.data.usrMsg !== 'undefined') {
+                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 21});
+                      } else {
+                          growl.error("", {title: error.data.errorMsg, ttl: 5000, referenceId: 21});
+                      }
               });
             };
 
@@ -80,7 +84,11 @@ angular.module('hopsWorksApp')
                       function (success) {
                         $uibModalInstance.close(success);
                       }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Could not create ACL', ttl: 5000, referenceId: 21});
+                      if (typeof error.data.usrMsg !== 'undefined') {
+                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 21});
+                      } else {
+                          growl.error("", {title: error.data.errorMsg, ttl: 5000, referenceId: 21});
+                      }
               });
             };
 

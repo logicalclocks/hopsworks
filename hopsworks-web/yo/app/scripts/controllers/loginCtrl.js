@@ -136,7 +136,11 @@ angular.module('hopsWorksApp')
                         error.data.errorMsg !== null) {
                   self.errorMessage = error.data.errorMsg;
                 }
-                growl.error(error.data.errorMsg, {title: 'Cannot Login at this moment. Does your Internet work?', ttl: 4000});
+              if (typeof error.data.usrMsg !== 'undefined') {
+                  growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+              } else {
+                  growl.error("", {title: error.data.errorMsg, ttl: 8000});
+              }
               });
             };
 

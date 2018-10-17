@@ -264,7 +264,11 @@ angular.module('hopsWorksApp')
                         self.select(self.highlighted.name, self.highlighted, undefined);
                         $scope.search = self.highlighted.name;
                       }, function (error) {
-                growl.error(error.data.userMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 4});
+                      if (typeof error.data.usrMsg !== 'undefined') {
+                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 4});
+                      } else {
+                          growl.error("", {title: error.data.errorMsg, ttl: 5000, referenceId: 4});
+                      }
               });
             };
 

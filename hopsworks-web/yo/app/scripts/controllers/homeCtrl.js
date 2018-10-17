@@ -240,7 +240,11 @@ angular.module('hopsWorksApp')
                       self.tourService.setDefaultTourState();
                     }
                   }, function (error) {
-                    growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                      if (typeof error.data.usrMsg !== 'undefined') {
+                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                      } else {
+                          growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                      }
                   });
             };
 
@@ -288,7 +292,11 @@ angular.module('hopsWorksApp')
                 function (success) {
                   fun();
                 }, function (error) {
-                  growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                      if (typeof error.data.usrMsg !== 'undefined') {
+                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                      } else {
+                          growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                      }
                 }
               );
             };
@@ -306,8 +314,11 @@ angular.module('hopsWorksApp')
                       function (success) {
                         updateUIAfterChange(false);
                       }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
-                // growl.info("Closed project without saving.", {title: 'Info', ttl: 5000});
+                      if (typeof error.data.usrMsg !== 'undefined') {
+                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                      } else {
+                          growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                      }
               });
             };
 
@@ -342,7 +353,11 @@ angular.module('hopsWorksApp')
                       },
                       function (error) {
                         $scope.creating[uiTourName] = false;
-                        growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                          if (typeof error.data.usrMsg !== 'undefined') {
+                              growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                          } else {
+                              growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                          }
                       }
               );
             };
@@ -361,7 +376,11 @@ angular.module('hopsWorksApp')
                         }
                         self.working[projectId] = false;
                       },function (error) {
-                        growl.error(error.data.errorMsg, {title: 'Error', ttl: 10000});
+                      if (typeof error.data.usrMsg !== 'undefined') {
+                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                      } else {
+                          growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                      }
                         self.working[projectId] = false;
                       }
               );

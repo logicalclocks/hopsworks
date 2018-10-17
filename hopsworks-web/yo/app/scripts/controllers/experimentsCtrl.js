@@ -53,10 +53,11 @@ angular.module('hopsWorksApp')
                     function(error) {
                         if (error.data !== undefined && error.status !== 404) {
                             self.tb = "";
-                            growl.error(error.data.errorMsg, {
-                                title: 'Error fetching TensorBoard status',
-                                ttl: 15000
-                            });
+                            if (typeof error.data.usrMsg !== 'undefined') {
+                                growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                            } else {
+                                growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                            }
                         }
                     });
             };
@@ -105,10 +106,11 @@ angular.module('hopsWorksApp')
                     },
                     function(error) {
                         stopLoading();
-                        growl.error(error.data.errorMsg, {
-                            title: 'Error starting TensorBoard',
-                            ttl: 15000
-                        });
+                        if (typeof error.data.usrMsg !== 'undefined') {
+                            growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                        } else {
+                            growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                        }
                     });
             };
 
@@ -170,10 +172,11 @@ angular.module('hopsWorksApp')
                         stopLoading();
                     },
                     function(error) {
-                        growl.error(error.data.errorMsg, {
-                            title: 'Error fetching project name',
-                            ttl: 15000
-                        });
+                        if (typeof error.data.usrMsg !== 'undefined') {
+                            growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                        } else {
+                            growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                        }
                         stopLoading();
                     });
             };
@@ -186,10 +189,11 @@ angular.module('hopsWorksApp')
                         $route.reload();
                     },
                     function(error) {
-                        growl.error(error.data.errorMsg, {
-                            title: 'Error stopping TensorBoard',
-                            ttl: 15000
-                        });
+                        if (typeof error.data.usrMsg !== 'undefined') {
+                            growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                        } else {
+                            growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                        }
                     });
             };
 
