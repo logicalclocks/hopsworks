@@ -39,6 +39,7 @@
 
 package io.hops.hopsworks.common.jobs.spark;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.jobhistory.Execution;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import java.io.IOException;
@@ -51,7 +52,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
-import org.apache.hadoop.security.AccessControlException;
+
+import io.hops.hopsworks.common.exception.GenericException;
+import io.hops.hopsworks.common.exception.JobException;
+import io.hops.hopsworks.common.exception.RESTCodes;
 import org.apache.hadoop.security.UserGroupInformation;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
@@ -70,7 +74,7 @@ import io.hops.hopsworks.common.util.Settings;
 @Stateless
 public class SparkController {
 
-  private static final Logger LOG = Logger.getLogger(SparkController.class.
+  private static final Logger LOGGER = Logger.getLogger(SparkController.class.
       getName());
   @EJB
   private YarnJobsMonitor jobsMonitor;
@@ -93,68 +97,48 @@ public class SparkController {
    * @return
    * @throws IllegalStateException If Spark is not set up properly.
    * @throws IOException If starting the job fails.
-   * @throws NullPointerException If job or user is null.
-   * @throws IllegalArgumentException If the given job does not represent a
    * Spark job.
    */
-  public Execution startJob(final Jobs job, final Users user) throws
-      IllegalStateException,
-      IOException, NullPointerException, IllegalArgumentException {
+  public Execution startJob(final Jobs job, final Users user) throws GenericException, JobException {
     //First: some parameter checking.
-    if (job == null) {
-      throw new NullPointerException("Cannot run a null job.");
-    } else if (user == null) {
-      throw new NullPointerException("Cannot run a job as a null user.");
-    } else if (job.getJobType() != JobType.SPARK && job.getJobType() != JobType.PYSPARK) {
-      throw new IllegalArgumentException(
-          "Job configuration is not a Spark job configuration.");
-    }
-
+    sanityCheck(job, user);
     String username = hdfsUsersBean.getHdfsUserName(job.getProject(), user);
-    UserGroupInformation proxyUser = ugiService.getProxyUser(username);
     SparkJob sparkjob = null;
     try {
-      sparkjob = proxyUser.doAs(new PrivilegedExceptionAction<SparkJob>() {
-        @Override
-        public SparkJob run() throws Exception {
-          return new SparkJob(job, submitter, user, settings.getHadoopSymbolicLinkDir(),
+      UserGroupInformation proxyUser = ugiService.getProxyUser(username);
+      try {
+        sparkjob = proxyUser.doAs(new PrivilegedExceptionAction<SparkJob>() {
+          @Override
+          public SparkJob run() {
+            return new SparkJob(job, submitter, user, settings.getHadoopSymbolicLinkDir(),
               job.getProject().getName() + "__"
-              + user.getUsername(), jobsMonitor, settings);
-        }
-      });
-    } catch (InterruptedException ex) {
-      LOG.log(Level.SEVERE, null, ex);
+                + user.getUsername(), jobsMonitor, settings);
+          }
+        });
+      } catch (InterruptedException ex) {
+        LOGGER.log(Level.SEVERE, null, ex);
+      }
+    
+    } catch (IOException ex) {
+      throw new JobException(RESTCodes.JobErrorCode.PROXY_ERROR, Level.SEVERE,
+        "job: " + job.getId() + ", user:" + user.getUsername(), ex.getMessage(), ex);
     }
     if (sparkjob == null) {
-      throw new NullPointerException("Could not instantiate Sparkjob.");
+      throw new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR, Level.WARNING,
+        "Could not instantiate job with name: " + job.getName() + " and id: " + job.getId(),
+        "sparkjob object was null");
     }
     Execution jh = sparkjob.requestExecutionId();
-    if (jh != null) {
-      submitter.startExecution(sparkjob);
-    } else {
-      LOG.log(Level.SEVERE,
-          "Failed to persist JobHistory. Aborting execution.");
-      throw new IOException("Failed to persist JobHistory.");
-    }
+    submitter.startExecution(sparkjob);
     activityFacade.persistActivity(ActivityFacade.RAN_JOB + job.getName(), job.
         getProject(),
         user.asUser());
     return jh;
   }
 
-  public void stopJob(Jobs job, Users user, String appid) throws
-      IllegalStateException,
-      IOException, NullPointerException, IllegalArgumentException {
+  public void stopJob(Jobs job, Users user, String appid) {
     //First: some parameter checking.
-    if (job == null) {
-      throw new NullPointerException("Cannot stop a null job.");
-    } else if (user == null) {
-      throw new NullPointerException("Cannot stop a job as a null user.");
-    } else if (job.getJobType() != JobType.SPARK) {
-      throw new IllegalArgumentException(
-          "Job configuration is not a Spark job configuration.");
-    }
-
+    sanityCheck(job, user);
     SparkJob sparkjob = new SparkJob(job, submitter, user, settings.getHadoopSymbolicLinkDir(),
         hdfsUsersBean.getHdfsUserName(job.getProject(), job.getCreator()), jobsMonitor, settings);
     submitter.stopExecution(sparkjob, appid);
@@ -170,30 +154,27 @@ public class SparkController {
    * @param username the user name in a project (projectName__username)
    * @param dfso
    * @return
-   * @throws org.apache.hadoop.security.AccessControlException
    * @throws IOException
    */
-  public SparkJobConfiguration inspectProgram(String path, String username,
-      DistributedFileSystemOps dfso) throws
-      AccessControlException, IOException,
-      IllegalArgumentException {
-    LOG.log(Level.INFO, "Executing Spark job by {0} at path: {1}",
+  public SparkJobConfiguration inspectProgram(String path, String username, DistributedFileSystemOps dfso)
+    throws JobException {
+    LOGGER.log(Level.INFO, "Executing Spark job by {0} at path: {1}",
         new Object[]{username, path});
-    if (!path.endsWith(".jar") && !path.endsWith(".py")) {
-      throw new IllegalArgumentException("Path does not point to a jar or .py file.");
-    }
-    LOG.log(Level.INFO, "Really executing Spark job by {0} at path: {1}",
-        new Object[]{username, path});
+    
     SparkJobConfiguration config = new SparkJobConfiguration();
     //If the main program is in a jar, try to set main class from it
     if (path.endsWith(".jar")) {
-      JarInputStream jis = new JarInputStream(dfso.open(path));
-      Manifest mf = jis.getManifest();
-      if (mf != null) {
-        Attributes atts = mf.getMainAttributes();
-        if (atts.containsKey(Name.MAIN_CLASS)) {
-          config.setMainClass(atts.getValue(Name.MAIN_CLASS));
+      try (JarInputStream jis = new JarInputStream(dfso.open(path))) {
+        Manifest mf = jis.getManifest();
+        if (mf != null) {
+          Attributes atts = mf.getMainAttributes();
+          if (atts.containsKey(Name.MAIN_CLASS)) {
+            config.setMainClass(atts.getValue(Name.MAIN_CLASS));
+          }
         }
+      } catch (IOException ex) {
+        throw new JobException(RESTCodes.JobErrorCode.JAR_INSEPCTION_ERROR, Level.SEVERE,
+          "Failed to inspect jar at:" + path, ex.getMessage(), ex);
       }
     } else {
       config.setMainClass(Settings.SPARK_PY_MAINCLASS);
@@ -201,6 +182,23 @@ public class SparkController {
     config.setAppPath(path);
     config.setHistoryServerIp(settings.getSparkHistoryServerIp());
     return config;
+  }
+  
+  private void sanityCheck(Jobs job, Users user) {
+    sanityCheck(job, user, null);
+  }
+  
+  private void sanityCheck(Jobs job, Users user, String path) {
+    if (job == null) {
+      throw new IllegalArgumentException("Trying to start job but job is not provided");
+    } else if (user == null) {
+      throw new IllegalArgumentException("Trying to start job but user is not provided");
+    } else if (job.getJobType() != JobType.SPARK && job.getJobType() != JobType.PYSPARK) {
+      throw new IllegalArgumentException(
+        "Job configuration is not a Spark job configuration. Type: " + job.getJobType());
+    } else if (!Strings.isNullOrEmpty(path) && !path.endsWith(".jar") && !path.endsWith(".py")) {
+      throw new IllegalArgumentException("Path does not point to a jar or .py file.");
+    }
   }
 
 }

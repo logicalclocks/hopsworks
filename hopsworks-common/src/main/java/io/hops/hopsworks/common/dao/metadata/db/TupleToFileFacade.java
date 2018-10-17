@@ -47,12 +47,11 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.metadata.TupleToFile;
-import io.hops.hopsworks.common.metadata.exception.DatabaseException;
 
 @Stateless
 public class TupleToFileFacade extends AbstractFacade<TupleToFile> {
 
-  private static final Logger logger = Logger.getLogger(TupleToFileFacade.class.
+  private static final Logger LOGGER = Logger.getLogger(TupleToFileFacade.class.
           getName());
 
   @PersistenceContext(unitName = "kthfsPU")
@@ -67,13 +66,12 @@ public class TupleToFileFacade extends AbstractFacade<TupleToFile> {
     super(TupleToFile.class);
   }
 
-  public TupleToFile getTupletofile(int tupleid) throws DatabaseException {
+  public TupleToFile getTupletofile(int tupleid) {
 
     return this.em.find(TupleToFile.class, tupleid);
   }
 
-  public List<TupleToFile> getTuplesByInodeId(Integer parentId, String inodeName)
-          throws DatabaseException {
+  public List<TupleToFile> getTuplesByInodeId(Integer parentId, String inodeName)  {
 
     String queryString = "TupleToFile.findByInodeid";
 
@@ -83,7 +81,7 @@ public class TupleToFileFacade extends AbstractFacade<TupleToFile> {
     return query.getResultList();
   }
 
-  public int addTupleToFile(TupleToFile ttf) throws DatabaseException {
+  public int addTupleToFile(TupleToFile ttf) {
 
     if (ttf != null && ttf.getId() != -1) {
       this.em.merge(ttf);
@@ -103,9 +101,8 @@ public class TupleToFileFacade extends AbstractFacade<TupleToFile> {
    * <p/>
    *
    * @param ttf
-   * @throws se.kth.hopsworks.meta.exception.DatabaseException
    */
-  public void deleteTTF(TupleToFile ttf) throws DatabaseException {
+  public void deleteTTF(TupleToFile ttf) {
 
     TupleToFile tf = this.contains(ttf) ? ttf : this.getTupletofile(ttf.getId());
 

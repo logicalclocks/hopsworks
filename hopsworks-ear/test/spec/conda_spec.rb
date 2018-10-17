@@ -52,7 +52,7 @@ describe "On #{ENV['OS']}" do
         end
         it "not authenticated" do
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/enable/2.7/true"
-          expect_json(errorMsg: "Client not authorized for this invocation")
+          expect_json(errorCode: 200003)
           expect_status(401)
         end
       end
@@ -77,6 +77,40 @@ describe "On #{ENV['OS']}" do
           expect(json_body.count).to be >= 1
           dropbox = json_body.detect { |library| library[:lib] == "dropbox" }
           expect(dropbox[:versions].count).to be >= 1
+        end
+        
+        it 'GC stale Conda env' do
+          if not conda_exists
+            skip "Anaconda is not installed in the machine or test is run locally"
+          end
+        
+          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/enable/2.7/true"
+          expect_status(200)
+          
+          wait_for do
+            CondaCommands.find_by(proj: @project[:projectname]).nil?
+          end
+          expect(check_if_env_exists_locally(@project[:projectname])).to be true
+
+          # Create a second project with Anaconda enabled
+          project2 = create_project
+          get "#{ENV['HOPSWORKS_API']}/project/#{project2[:id]}/pythonDeps/enable/2.7/true"
+          expect_status(200)
+          
+          wait_for do
+            CondaCommands.find_by(proj: project2[:projectname]).nil?
+          end
+          expect(check_if_env_exists_locally(project2[:projectname])).to be true
+
+          # Disable Anaconda for project2 directly in the database
+          # so it does not send a command to kagent
+          tmp_proj = Project.find_by(id: project2[:id])
+          tmp_proj.conda = 0
+          tmp_proj.save
+
+          trigger_conda_gc
+          sleep(15)
+          expect(check_if_env_exists_locally(project2[:projectname])).to be false
         end
 
         it 'install libraries' do
@@ -168,9 +202,9 @@ describe "On #{ENV['OS']}" do
           with_admin_session
           if num_hosts > 1
             # In case we have multi vms disable the one on which Hopsworks is not running
-            put "#{ENV['HOPSWORKS_API']}/admin/hosts", {hostname: "hopsworks1", condaEnabled: "false"}
+            put "#{ENV['HOPSWORKS_API']}/admin/hosts", {hostname: "hopsworks1.logicalclocks.com", condaEnabled: "false"}
           else
-            put "#{ENV['HOPSWORKS_API']}/admin/hosts", {hostname: "hopsworks0", condaEnabled: "false"}
+            put "#{ENV['HOPSWORKS_API']}/admin/hosts", {hostname: "hopsworks0.logicalclocks.com", condaEnabled: "false"}
           end
           expect_status(204)
         end
@@ -182,7 +216,7 @@ describe "On #{ENV['OS']}" do
 
           create_session(@user[:email], "Pass123")
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/enable/2.7/true"
-          expect_status(500)
+          expect_status(503)
         end
 
         it 'should not have created any conda_commands in the db - single vm' do
@@ -223,9 +257,9 @@ describe "On #{ENV['OS']}" do
           with_admin_session
           if num_hosts > 1
             # In case we have multi vms disable the one on which Hopsworks is not running
-            put "#{ENV['HOPSWORKS_API']}/admin/hosts", {hostname: "hopsworks1", condaEnabled: "true"}
+            put "#{ENV['HOPSWORKS_API']}/admin/hosts", {hostname: "hopsworks1.logicalclocks.com", condaEnabled: "true"}
           else
-            put "#{ENV['HOPSWORKS_API']}/admin/hosts", {hostname: "hopsworks0", condaEnabled: "true"}
+            put "#{ENV['HOPSWORKS_API']}/admin/hosts", {hostname: "hopsworks0.logicalclocks.com", condaEnabled: "true"}
           end
           expect_status(204)
         end
@@ -260,9 +294,9 @@ describe "On #{ENV['OS']}" do
           with_admin_session
           if num_hosts > 1
             # In case we have multi vms disable the one on which Hopsworks is not running
-            put "#{ENV['HOPSWORKS_API']}/admin/hosts", {hostname: "hopsworks1", condaEnabled: "false"}
+            put "#{ENV['HOPSWORKS_API']}/admin/hosts", {hostname: "hopsworks1.logicalclocks.com", condaEnabled: "false"}
           else
-            put "#{ENV['HOPSWORKS_API']}/admin/hosts", {hostname: "hopsworks0", condaEnabled: "false"}
+            put "#{ENV['HOPSWORKS_API']}/admin/hosts", {hostname: "hopsworks0.logicalclocks.com", condaEnabled: "false"}
           end
           expect_status(204)
         end
@@ -273,8 +307,8 @@ describe "On #{ENV['OS']}" do
                {lib: "imageio", version: "2.2.0", channelUrl: "#{conda_channel}", installType: "CONDA", machineType: "CPU"}
 
           if num_hosts == 1
-            #  If single VM there are no hosts on which to install the library. Hopsworks returns 404
-            expect_status(404)
+            #  If single VM there are no hosts on which to install the library. Hopsworks returns 412
+            expect_status(412)
           else
             # If it is a multi vm there are hosts to install the library.
             expect_status(200)
@@ -295,9 +329,9 @@ describe "On #{ENV['OS']}" do
           with_admin_session
           if num_hosts > 1
             # In case we have multi vms disable the one on which Hopsworks is not running
-            put "#{ENV['HOPSWORKS_API']}/admin/hosts", {hostname: "hopsworks1", condaEnabled: "true"}
+            put "#{ENV['HOPSWORKS_API']}/admin/hosts", {hostname: "hopsworks1.logicalclocks.com", condaEnabled: "true"}
           else
-            put "#{ENV['HOPSWORKS_API']}/admin/hosts", {hostname: "hopsworks0", condaEnabled: "true"}
+            put "#{ENV['HOPSWORKS_API']}/admin/hosts", {hostname: "hopsworks0.logicalclocks.com", condaEnabled: "true"}
           end
           expect_status(204)
         end

@@ -237,7 +237,11 @@ angular.module('hopsWorksApp')
                 } else if (error.data.errorMsg.indexOf("Path not found :") > -1) {
                   self.routeParamArray = [];
                   //$route.updateParams({fileName:''});
-                  growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 4});
+                if (typeof error.data.usrMsg !== 'undefined') {
+                    growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 4});
+                } else {
+                    growl.error("", {title: error.data.errorMsg, ttl: 5000, referenceId: 4});
+                }
                   getDirContents();
                 }
                 self.working = false;
@@ -260,7 +264,11 @@ angular.module('hopsWorksApp')
                         self.select(self.highlighted.name, self.highlighted, undefined);
                         $scope.search = self.highlighted.name;
                       }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 4});
+                      if (typeof error.data.usrMsg !== 'undefined') {
+                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 4});
+                      } else {
+                          growl.error("", {title: error.data.errorMsg, ttl: 5000, referenceId: 4});
+                      }
               });
             };
 
@@ -319,7 +327,11 @@ angular.module('hopsWorksApp')
                         growl.success(success.data.successMessage, {title: 'Success', ttl: 1000});
                         getDirContents();
                       }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                      if (typeof error.data.usrMsg !== 'undefined') {
+                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
+                      } else {
+                          growl.error("", {title: error.data.errorMsg, ttl: 5000});
+                      }
               });
             };
 
@@ -387,7 +399,11 @@ angular.module('hopsWorksApp')
                       getDirContents();
                     }, function (error) {
                       self.sharingDataset[id] = false;
-                      growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                      if (typeof error.data.usrMsg !== 'undefined') {
+                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
+                      } else {
+                          growl.error("", {title: error.data.errorMsg, ttl: 5000});
+                      }
                   });
                 }
               );
@@ -410,7 +426,11 @@ angular.module('hopsWorksApp')
                         getDirContents();
                       }, function (error) {
                         self.sharingDataset[id] = false;
-                        growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                        if (typeof error.data.usrMsg !== 'undefined') {
+                            growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
+                        } else {
+                            growl.error("", {title: error.data.errorMsg, ttl: 5000});
+                        }
                     });
                   }
               );
@@ -434,7 +454,11 @@ angular.module('hopsWorksApp')
                                   growl.success(success.data.successMessage, {title: 'The DataSet is not Public(internet) anymore.', ttl: 1500});
                                   getDirContents();
                                 }, function (error) {
-                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 4});
+                                if (typeof error.data.usrMsg !== 'undefined') {
+                                    growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 4 });
+                                } else {
+                                    growl.error("", {title: error.data.errorMsg, ttl: 5000, referenceId: 4 });
+                                }
                         });
 
                       }
@@ -450,7 +474,19 @@ angular.module('hopsWorksApp')
                                   growl.success(success.data.successMessage, {title: 'The DataSet is not Public(cluster) anymore.', ttl: 1500});
                                   getDirContents();
                                 }, function (error) {
-                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 4});
+                                if (typeof error.data.usrMsg !== 'undefined') {
+                                    growl.error(error.data.usrMsg, {
+                                        title: error.data.errorMsg,
+                                        ttl: 5000,
+                                        referenceId: 4
+                                    });
+                                } else {
+                                    growl.error("", {
+                                        title: error.data.errorMsg,
+                                        ttl: 5000,
+                                        referenceId: 4
+                                    });
+                                }
                         });
 
                       }
@@ -477,7 +513,11 @@ angular.module('hopsWorksApp')
                         growl.success("Refresh your browser when finished",
                                 {title: 'Unzipping in Background', ttl: 5000, referenceId: 4});
                       }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Error unzipping file', ttl: 5000, referenceId: 4});
+                      if (typeof error.data.usrMsg !== 'undefined') {
+                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 4});
+                      } else {
+                          growl.error("", {title: error.data.errorMsg, ttl: 5000, referenceId: 4});
+                      }
               });
             };
 
@@ -494,7 +534,11 @@ angular.module('hopsWorksApp')
                         growl.success("Refresh your browser when finished",
                                 {title: 'Zipping in Background', ttl: 5000, referenceId: 4});
                       }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Error zipping file', ttl: 5000, referenceId: 4});
+                      if (typeof error.data.usrMsg !== 'undefined') {
+                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 4});
+                      } else {
+                          growl.error("", {title: error.data.errorMsg, ttl: 5000, referenceId: 4});
+                      }
               });
             };
 
@@ -544,7 +588,11 @@ angular.module('hopsWorksApp')
                                 {title: 'Converting in Background', ttl: 3000, referenceId: 4});
                         getDirContents();
                       }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Error converting notebook', ttl: 5000, referenceId: 4});
+                      if (typeof error.data.usrMsg !== 'undefined') {
+                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 4});
+                      } else {
+                          growl.error("", {title: error.data.errorMsg, ttl: 5000, referenceId: 4});
+                      }
               });
             };
            
@@ -601,7 +649,11 @@ angular.module('hopsWorksApp')
                           $scope.readme = conv.makeHtml(content);
                         }, function (error) {
                   //To hide README from UI
-                  growl.error(error.data.errorMsg, {title: 'Error retrieving README file', ttl: 5000, referenceId: 4});
+                        if (typeof error.data.usrMsg !== 'undefined') {
+                            growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 4});
+                        } else {
+                            growl.error("", {title: error.data.errorMsg, ttl: 5000, referenceId: 4});
+                        }
                   $scope.readme = null;
                 });
               } else {
@@ -627,7 +679,11 @@ angular.module('hopsWorksApp')
                           getDirContents();
                           growl.success('', {title: 'Copied ' + name + ' successfully', ttl: 5000, referenceId: 4});
                         }, function (error) {
-                  growl.error(error.data.errorMsg, {title: name + ' was not copied', ttl: 5000, referenceId: 4});
+                        if (typeof error.data.usrMsg !== 'undefined') {
+                            growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 4});
+                        } else {
+                            growl.error("", {title: error.data.errorMsg, ttl: 5000, referenceId: 4});
+                        }
                 });
               }, function (error) {
               });
@@ -656,7 +712,7 @@ angular.module('hopsWorksApp')
                             names[i] = name;
                             i++;
                           }
-                          var errorMsg = '';
+                          var errorCode = -1;
                           for (var name in self.selectedFiles) {
                             dataSetService.copy(self.selectedFiles[name].id, relPath + "/" + name).then(
                                     function (success) {
@@ -669,11 +725,15 @@ angular.module('hopsWorksApp')
                                         self.all_selected = false;
                                       }
                                       //growl.success('',{title: 'Copied successfully', ttl: 5000, referenceId: 4});
-                                    }, function (error) {                                      
-                                       growl.error(error.data.errorMsg, {title: name + ' was not copied', ttl: 5000});
-                                       errorMsg = error.data.errorMsg;
+                                    }, function (error) {
+                                    if (typeof error.data.usrMsg !== 'undefined') {
+                                        growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
+                                    } else {
+                                        growl.error("", {title: error.data.errorMsg, ttl: 5000});
+                                    }
+                                       errorCode = error.data.code;
                             });
-                            if (errorMsg === 'Can not copy/move to a public dataset.') {
+                            if (errorCode === 110045) {
                               break;
                             }
                           }
@@ -735,7 +795,7 @@ angular.module('hopsWorksApp')
                             i++;
                           }
 
-                          var errorMsg = '';
+                          var errorCode = -1;
                           for (var name in self.selectedFiles) {
                             dataSetService.move(self.selectedFiles[name].id, relPath + "/" + name).then(
                                     function (success) {
@@ -749,9 +809,9 @@ angular.module('hopsWorksApp')
                                       }
                                     }, function (error) {
                                         growl.error(error.data.errorMsg, {title: name + ' was not moved', ttl: 5000});
-                                        errorMsg = error.data.errorMsg;
+                                        errorCode = error.data.code;
                             });
-                            if (errorMsg === 'Can not copy/move to a public dataset.') {
+                            if (errorCode === 110045) {
                               break;
                             }
                           }

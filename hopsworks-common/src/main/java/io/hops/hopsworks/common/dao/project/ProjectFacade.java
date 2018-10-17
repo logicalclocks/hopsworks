@@ -330,5 +330,14 @@ public class ProjectFacade extends AbstractFacade<Project> {
     project.setKafkaMaxNumTopics(numTopics);
     em.merge(project);
   }
-
+  
+  /**
+   * Find all Projects which are Conda enabled
+   *
+   * @return list of Conda enabled projects
+   */
+  public List<Project> findAllCondaEnabled() {
+    TypedQuery<Project> query = em.createNamedQuery("Project.findAllCondaEnabled", Project.class);
+    return query.getResultList();
+  }
 }

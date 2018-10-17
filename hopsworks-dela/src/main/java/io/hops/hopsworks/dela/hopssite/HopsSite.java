@@ -39,7 +39,7 @@
 
 package io.hops.hopsworks.dela.hopssite;
 
-import io.hops.hopsworks.dela.exception.ThirdPartyException;
+import io.hops.hopsworks.common.exception.DelaException;
 
 public class HopsSite {
 
@@ -177,6 +177,6 @@ public class HopsSite {
 
   public static interface UserFunc<C extends Object> {
 
-    public C perform() throws ThirdPartyException;
+    public C perform() throws DelaException;
   }
 }

@@ -42,10 +42,12 @@ import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.common.agent.AgentController;
 import io.hops.hopsworks.common.dao.command.HeartbeatReplyDTO;
 import io.hops.hopsworks.common.dao.command.SystemCommand;
+import io.hops.hopsworks.common.dao.pythonDeps.CondaCommands;
+import io.hops.hopsworks.common.exception.ServiceException;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -53,25 +55,21 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import io.hops.hopsworks.common.dao.pythonDeps.CondaCommands;
-import io.hops.hopsworks.common.exception.AppException;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-
 import java.util.ArrayList;
-import javax.ws.rs.POST;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Path("/agentresource")
 @Stateless
 @RolesAllowed({"HOPS_ADMIN", "AGENT"})
-@Api(value = "Agent Service",
-    description = "Agent Service")
+@Api(value = "Agent Service")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class AgentResource {
   
@@ -102,8 +100,7 @@ public class AgentResource {
       @ApiParam(value = "Agent request", required = true) AgentView request,
       @ApiParam(value = "Action to be performed on agent resource", required = true)
       @QueryParam("action")
-      @DefaultValue("NONE") AgentAction action)
-    throws AppException {
+      @DefaultValue("NONE") AgentAction action) throws ServiceException {
 
     switch (action) {
       case PING:
@@ -126,11 +123,9 @@ public class AgentResource {
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK)
             .entity(agentRegReply).build();
       case NONE:
-        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-            "Action on AgentResource not specified");
+        throw new IllegalArgumentException("Action on AgentResource not specified");
       default:
-        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-            "Unknown action: " + action + " on AgentResource");
+        throw new IllegalArgumentException("Unknown action: " + action + " on AgentResource");
     }
   }
   
@@ -139,16 +134,10 @@ public class AgentResource {
   @Path("/alert")
   @Consumes(MediaType.APPLICATION_JSON)
   public Response alert(
-      @ApiParam(value = "Alert sent by agent", required = true) AlertView alertView)
-      throws AppException {
-    // TODO: Alerts are stored in the database. Later, we should define reactions (Email, SMS, ...).
-    
-    try {
-      agentController.alert(alertView.toAlert(), alertView.getHostId());
-      return Response.ok().build();
-    } catch (Exception ex) {
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), ex.getMessage());
-    }
+      @ApiParam(value = "Alert sent by agent", required = true) AlertView alertView) throws ServiceException {
+  
+    agentController.alert(alertView.toAlert(), alertView.getHostId());
+    return Response.ok().build();
   }
   
   private AgentView heartbeatReplyToAgentView(HeartbeatReplyDTO hbReply) {
@@ -159,7 +148,7 @@ public class AgentResource {
           .setOp(sc.getOp())
           .setStatus(sc.getStatus())
           .setCommandId(sc.getId())
-          .setArguments(sc.getArguments())
+          .setArguments(sc.getCommandArgumentsAsString())
           .setPriority(sc.getPriority())
           .setUser(sc.getExecUser())
           .build());
@@ -193,30 +182,22 @@ public class AgentResource {
     logger.log(Level.FINE, "Handling ping");
   }
   
-  private HeartbeatReplyDTO handleHeartbeat(AgentView request) throws AppException {
+  private HeartbeatReplyDTO handleHeartbeat(AgentView request) throws ServiceException {
     if (request == null) {
-      logger.log(Level.SEVERE, "Heartbeat is NULL");
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "Heartbeat is NULL");
+      throw new IllegalArgumentException("Heartbeat is null");
     }
     return agentController.heartbeat(request.toAgentHeartbeatDTO());
   }
   
-  private String handleRegister(AgentView request) throws AppException {
+  private String handleRegister(AgentView request) {
     logger.log(Level.FINE, "Handling register");
     if (request == null) {
-      logger.log(Level.SEVERE, "Registration request is NULL");
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "Registration request is NULL");
+      throw new IllegalArgumentException("Registration request is null");
     }
     if (request.getHostId() == null || request.getPassword() == null) {
-      logger.log(Level.SEVERE, "Invalid registration request from agent: " + request);
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "Invalid registration request");
+      throw new IllegalArgumentException("Invalid registration request");
     }
     
-    try {
-      return agentController.register(request.getHostId(), request.getPassword());
-    } catch (Exception e) {
-      logger.log(Level.SEVERE, "Error while registering host " + request.getHostId(), e);
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), e.getMessage());
-    }
+    return agentController.register(request.getHostId(), request.getPassword());
   }
 }

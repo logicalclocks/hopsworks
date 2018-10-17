@@ -80,8 +80,8 @@
             </div>
 
             <div class="col-sm-2 col-md-2 col-lg-2" style="margin-top:-20px;" ng-if="jupyterCtrl.ui === ''">
-              <button class="btn btn-success active" ng-click="jupyterCtrl.start()" type="button" id="newNotebook">
-                Start Jupyter
+              <button class="btn btn-success active" ng-click="jupyterCtrl.start()" type="button" id="newNotebook" style="width:90px;">
+                Start
               </button>
             </div>
             <div class="col-sm-2 col-md-2 col-lg-2 " style="margin-top:-17px; margin-left: 15px;"  ng-if="jupyterCtrl.ui === ''">
@@ -118,42 +118,33 @@
                 <div class="col-md-2"></div>
                 <div class="col-md-8" style="margin-left: 10px; margin-top:-10px;">
                   <div class="btn-group blocks" style="padding: 10px;" ng-if="jupyterCtrl.ui === ''">
-                    <label class="btn btn-primary">
-                      <input class="active" type="radio" value="experiment" ng-click="jupyterCtrl.setTfDriver();"
+                    <label class="btn btn-primary" id="experimentLabel">
+                      <input class="active" type="radio" value="experiment" ng-click="jupyterCtrl.setSingleExecutor();"
                              data-ng-model="jupyterCtrl.val.mode" id="experiment">
                       Experiment
                       <i class="fa fa-info-circle"
-                         uib-tooltip="Used to run a single Python Experiment. Use the hops python library experiment module to start your experiment. The Experiment is run in a PySpark Driver."
+                         uib-tooltip="Used to run a single Python Experiment on a PySpark Executor. Use the hops python library experiment module to start your experiment."
                           tooltip-placement="bottom" style="margin-left: 10px">
                       </i>
                     </label>
-                    <label class="btn btn-primary" >
-                      <input type="radio" value="parallelexperiments" ng-click="jupyterCtrl.setTfExecutor();" data-ng-model="jupyterCtrl.val.mode" id="parallelexperiments">
+                    <label class="btn btn-primary" id="parallelExperimentLabel">
+                      <input type="radio" value="parallelexperiments" ng-click="jupyterCtrl.setMultiExecutor();" data-ng-model="jupyterCtrl.val.mode" id="parallelexperiments">
                       Parallel Experiments
                       <i class="fa fa-info-circle" 
-                         uib-tooltip="Used for for parallel hyperparameter optimization. Use the hops python library to run grid search or differential evolution on PySpark Executors, each with 1 CPU and up to N GPUs per Executor."
+                         uib-tooltip="Used for for parallel hyperparameter optimization. Use the hops python library to run grid search or differential evolution on PySpark Executors."
                           tooltip-placement="left" style="margin-left: 10px">
                       </i>
                     </label>
-                    <label class="btn btn-primary" >
-                      <input type="radio" name="tfonspark" value="tfonspark" ng-click="jupyterCtrl.setTfExecutor();" data-ng-model="jupyterCtrl.val.mode"
-                             id="tfonspark"> 
-                      TFOnSpark
+                    <label class="btn btn-primary" id="distributedTrainingLabel">
+                      <input type="radio" name="distributedTraining" value="distributedTraining" ng-click="jupyterCtrl.setMultiExecutor();" data-ng-model="jupyterCtrl.val.mode"
+                             id="distributedTraining">
+                      Distributed Training
                       <i class="fa fa-info-circle" 
-                         uib-tooltip="TfOnSpark app run on PySpark Executors and TF Parameter servers."
+                         uib-tooltip="Distributed Training using CollectiveAllReduceStrategy, ParameterServerStrategy and MirroredStrategy is configured here. Use the hops python library to setup the cluster."
                           tooltip-placement="right" style="margin-left: 10px">
                       </i>
-                    </label>  
-                    <label class="btn btn-primary" ng-if="clusterUtilCtrl.allocatedGPUs !== 0 || clusterUtilCtrl.availableGPUs !== 0">
-                      <input type="radio" name="horovod" value="horovod" id="horovod" ng-click="jupyterCtrl.setTfExecutor();"
-                             data-ng-model="jupyterCtrl.val.mode"> 
-                      Horovod
-                      <i class="fa fa-info-circle" 
-                         uib-tooltip="Horovod app launched with each worker run in a PySpark Executor with 1 GPU per Executor."
-                          tooltip-placement="bottom" style="margin-left: 10px">
-                      </i>
                     </label>
-                    <label class="btn btn-primary">
+                    <label class="btn btn-primary" id="sparkStaticLabel">
                       <input type="radio" name="sparkstatic" value="sparkstatic" ng-click="jupyterCtrl.setNormalSpark();"
                              data-ng-model="jupyterCtrl.val.mode" id="sparkstatic"> 
                       Spark (Static)
@@ -162,7 +153,7 @@
                           tooltip-placement="right" style="margin-left: 10px">
                       </i>
                     </label>
-                    <label class="btn btn-primary">
+                    <label class="btn btn-primary" id="sparkDynamicLabel">
                       <input type="radio" name="sparkdynamic" value="sparkdynamic" id="sparkdynamic" ng-click="jupyterCtrl.setNormalSpark();"
                              data-ng-model="jupyterCtrl.val.mode"> 
                       Spark (Dynamic)
@@ -221,42 +212,30 @@
                     </div>
                   </div>
                 </div>
+                  <div class="row" ng-if="jupyterCtrl.val.mode === 'distributedTraining'">
+                      <div class="row clusterparams">
+                          <div class="text-right col-md-4">DistributionStrategy <i class="fa fa-info-circle"
+                                                                                   uib-tooltip="The DistributionStrategy you want to use."
+                                                                                   style="margin-left: 10px"></i>
+                          </div>
+                          <div class="col-md-2 jupyter-left">
+                              <ui-select ng-model="jupyterCtrl.distributionStrategySelected" theme="bootstrap"
+                                         on-select="jupyterCtrl.changeDistributionStrategy()" style="z-index:2;">
+                                  <ui-select-match >
+                                      <span ng-bind="jupyterCtrl.distributionStrategySelected.name"></span>
+                                  </ui-select-match>
+                                  <ui-select-choices repeat="strategy in (jupyterCtrl.distribution_strategies | filter: $select.search) track by strategy.name">
+                                      <span ng-bind="strategy.name | highlight: $select.search"></span>
+                                  </ui-select-choices>
+                              </ui-select>
+                          </div>
+                      </div>
+                  </div>
 
-                <div class="row"  ng-if="jupyterCtrl.val.mode === 'horovod'">
-                  <div class="row clusterparams">
-                    <div class="text-right col-md-4">Number of hosts <i class="fa fa-info-circle"
-                                                                        uib-tooltip="The number of hosts to run Horovod on. Current support is only 1 host." style="margin-left: 10px"></i>
-                    </div>
-                    <div class="col-md-2 jupyter-left"><input type="number" step="1" ng-readonly="true" ng-init="1" value="1" min="0" max="1" class="form-control"></div>
-                  </div>
-                  <div class="row clusterparams">
-                    <div class="text-right col-md-4"> Memory (MB) per host <i class="fa fa-info-circle" uib-tooltip="The amount of memory, in MB, that should be allocated on each host. The specified amount of memory will be shared by all MPI processes on the machine." style="margin-left: 10px"></i></div>
-                    <div class="col-md-2 jupyter-left"><input type="number" step="1" min="1024" ng-model="jupyterCtrl.val.executorMemory" class="form-control"></div>
-                  </div>
-                  <div class="row clusterparams">
-                    <div class="text-right col-md-4">Number of processes<i class="fa fa-info-circle"
-                                                                           uib-tooltip="The number of Horovod MPI processes (-np) per host."
-                                                                           style="margin-left: 10px"></i>
-                    </div>
-                    <div class="col-md-2 jupyter-left">
-                      <input type="number" ng-init="1"  ng-model="jupyterCtrl.val.numMpiNp" min="1" class="form-control">
-                    </div>
-                  </div>
-                  <div class="row clusterparams" ng-if="clusterUtilCtrl.allocatedGPUs !== 0 || clusterUtilCtrl.availableGPUs !== 0">
-                    <div class="text-right col-md-4">GPUs per process<i class="fa fa-info-circle"
-                                                                        uib-tooltip="The number of GPUs accessible for each process (0 or 1)."
-                                                                        style="margin-left: 10px"></i>
-                    </div>
-                    <div class="col-md-2 jupyter-left">
-                      <input type="number" ng-init="0"  ng-model="jupyterCtrl.val.numExecutorGpus" min="0" max="1" class="form-control">
-                    </div>
-                  </div>
-                </div>
-
-                <div class="row" ng-if="jupyterCtrl.val.mode === 'tfonspark'">
+                <div class="row" ng-show="jupyterCtrl.val.mode === 'distributedTraining' && jupyterCtrl.val.distributionStrategy === 'ParameterServerStrategy'">
                   <div class="row clusterparams">
                     <div class="text-right col-md-4">Parameter servers <i class="fa fa-info-circle"
-                                                                          uib-tooltip="Number of parameter servers in Distributed TensorFlow."
+                                                                          uib-tooltip="Number of parameter servers in ParameterServerStrategy."
                                                                           style="margin-left: 10px"></i>
                     </div>
                     <div class="col-md-2 jupyter-left">
@@ -293,30 +272,30 @@
 
                   <div class="row top-buffer">
                     <div class="text-right col-md-4">Initial number of executors <i class="fa fa-info-circle"
-                                                                                    uib-tooltip="The initial number of executors that should be requested. Must be greater than the minimum and smaller than the maximum number of executors." style="margin-left: 10px"></i></div>
+                                                                                    uib-tooltip="The initial number of Spark executors that should be requested. Must be greater than the minimum and smaller than the maximum number of executors." style="margin-left: 10px"></i></div>
 
-                    <div class="col-md-2 jupyter-left"><input type="number"  
+                    <div class="col-md-2 jupyter-left"><input type="number"
                                                               ng-change="jupyterCtrl.setInitExecs()" min="0" ng-model="jupyterCtrl.val.dynamicMinExecutors"
                                                               class="form-control">
                     </div>
                   </div>
                 </div>
 
-                <div class="row" ng-if="jupyterCtrl.val.mode !== 'sparkdynamic' && jupyterCtrl.val.mode !== 'horovod'
+                <div class="row" ng-if="jupyterCtrl.val.mode !== 'sparkdynamic'
                         && jupyterCtrl.val.mode !== 'experiment' && jupyterCtrl.val.mode !== 'parallelexperiments'
-                        && jupyterCtrl.val.mode !== 'tfonspark'">
+                        && jupyterCtrl.val.mode !== 'distributedTraining'">
                   <div class="row clusterparams">
                     <div class="text-right col-md-4">Number of executors <i class="fa fa-info-circle"
-                                                                            uib-tooltip="The number of executors that should be requested for this job." style="margin-left: 10px"></i>
+                                                                            uib-tooltip="The number of Spark Executors that should be requested for this job." style="margin-left: 10px"></i>
                     </div>
                     <div class="col-md-2 jupyter-left"><input type="number" ng-model="jupyterCtrl.val.numExecutors" ng-init="1" min="1" value="1" class="form-control"></div>
                   </div>
                 </div>
 
-                <div class="row" ng-if="jupyterCtrl.val.mode === 'tfonspark'">
+                <div class="row" ng-if="jupyterCtrl.val.mode === 'distributedTraining' && jupyterCtrl.val.distributionStrategy !== 'MirroredStrategy'">
                   <div class="row clusterparams">
                     <div class="text-right col-md-4"> Workers <i class="fa fa-info-circle"
-                                                                 uib-tooltip="The number of workers that should be requested for this job." style="margin-left: 10px"></i>
+                                                                 uib-tooltip="The number of DistributionStrategy workers." style="margin-left: 10px"></i>
                     </div>
                     <div class="col-md-2 jupyter-left"><input type="number" ng-model="jupyterCtrl.val.numExecutors" ng-init="1" min="1" value="1" class="form-control"></div>
                   </div>
@@ -324,14 +303,14 @@
 
                 <div class="row" ng-if="jupyterCtrl.val.mode === 'parallelexperiments'">
                   <div class="row clusterparams">
-                    <div class="text-right col-md-4">Max parallel executions <i class="fa fa-info-circle" uib-tooltip="The maximum number of parallel tflauncher executions. If this configuration is less than the number of tflauncher jobs, the remaining jobs will be queued and executed once a previous job is finished." style="margin-left: 10px"></i>
+                    <div class="text-right col-md-4">Max parallel experiments <i class="fa fa-info-circle" uib-tooltip="The maximum number of experiments to run in parallel. This translates to the number of Spark executors that are requested." style="margin-left: 10px"></i>
                     </div>
                     <div class="col-md-2 jupyter-left"><input type="number" ng-model="jupyterCtrl.val.numExecutors" ng-init="1" min="1" value="1" class="form-control"></div>
                   </div>
                 </div>
-                <div class="row" ng-if="jupyterCtrl.val.mode !== 'horovod' && jupyterCtrl.val.mode !== 'experiment'">
+                <div class="row">
                   <div class="row clusterparams">
-                    <div class="text-right col-md-4"> Executor memory (MB) <i class="fa fa-info-circle" uib-tooltip="The amount of memory, in MB, that should be requested for each Spark executor in this job." style="margin-left: 10px"></i></div>
+                    <div class="text-right col-md-4"> Executor memory (MB) <i class="fa fa-info-circle" uib-tooltip="The amount of memory, in MB, that should be requested for each Spark Executor in this job." style="margin-left: 10px"></i></div>
                     <div class="col-md-2 jupyter-left"><input type="number" step="1" min="1024" 
                                                               ng-model="jupyterCtrl.val.executorMemory" class="form-control"></div>
                   </div>
@@ -339,29 +318,29 @@
                 <div class="row" ng-if="jupyterCtrl.val.mode === 'sparkstatic' || jupyterCtrl.val.mode === 'sparkdynamic'">
                   <div class="row clusterparams">
                     <div class="text-right col-md-4"> Executor virtual cores <i class="fa fa-info-circle"
-                                                                                uib-tooltip="The number of cores that should be requested for each Spark executor in this job." style="margin-left: 10px"></i></div>
+                                                                                uib-tooltip="The number of cores that should be requested for each Spark Executor in this job." style="margin-left: 10px"></i></div>
                     <div class="col-md-2 jupyter-left"><input type="number" min="1" step="1" ng-model="jupyterCtrl.val.numExecutorCores" class="form-control"></div>
                   </div>
                 </div>
                 <div class="row" ng-if="jupyterCtrl.val.mode === 'parallelexperiments'" >
                   <div class="row clusterparams" ng-if="clusterUtilCtrl.allocatedGPUs !== 0 || clusterUtilCtrl.availableGPUs !== 0">
                     <div class="text-right col-md-4">Number GPUs per Executor<i class="fa fa-info-circle"
-                                                                     uib-tooltip="The number of GPUs allocated for each Spark driver/executor in this job. Parallel Experiments allocates GPUs in Executors. Experiment allocates GPUs in the driver."
+                                                                     uib-tooltip="The number of GPUs allocated for each PySpark Executor."
                                                                      style="margin-left: 10px"></i>
                     </div>
                     <div class="col-md-2 jupyter-left"><input type="number" ng-init="0"  ng-model="jupyterCtrl.val.numExecutorGpus" min="0" class="form-control"></div>
                   </div>
                 </div>
-                <div class="row" ng-if="jupyterCtrl.val.mode === 'experiment'" >
+                <div class="row" ng-if="jupyterCtrl.val.mode === 'experiment' || (jupyterCtrl.val.mode == 'distributedTraining' && jupyterCtrl.val.distributionStrategy == 'MirroredStrategy')" >
                   <div class="row clusterparams" ng-if="clusterUtilCtrl.allocatedGPUs !== 0 || clusterUtilCtrl.availableGPUs !== 0">
                     <div class="text-right col-md-4">Number of GPUs<i class="fa fa-info-circle"
-                                                                                uib-tooltip="The number of GPUs allocated for each Spark driver/executor in this job. Parallel Experiments allocates GPUs in Executors. Experiment allocates GPUs in the driver."
+                                                                                uib-tooltip="The number of GPUs allocated for each PySpark Executor."
                                                                                 style="margin-left: 10px"></i>
                     </div>
-                    <div class="col-md-2 jupyter-left"><input type="number" ng-init="0"  ng-model="jupyterCtrl.val.numDriverGpus" min="0" class="form-control"></div>
+                    <div class="col-md-2 jupyter-left"><input type="number" ng-init="0"  ng-model="jupyterCtrl.val.numExecutorGpus" min="0" class="form-control"></div>
                   </div>
                 </div>
-                <div class="row" ng-if="jupyterCtrl.val.mode === 'parallelexperiments'" >
+                <div class="row" ng-if="jupyterCtrl.val.mode === 'parallelexperiments' || jupyterCtrl.val.mode === 'experiment'" >
                   <div class="row clusterparams">
                     <div class="text-right col-md-4">Fault-tolerant mode<i class="fa fa-info-circle"
                                                                            uib-tooltip="Whether to retry on failure and enable machine/executor blacklisting. This setting should be disabled during development and enabled during training."
@@ -370,18 +349,19 @@
                     <div class="col-md-2 jupyter-left"><input type="checkbox" ng-init="false" ng-model="jupyterCtrl.val.faultTolerant"></div>
                   </div>
                 </div>
-                <div class="row" ng-if="jupyterCtrl.val.mode === 'tfonspark' && (clusterUtilCtrl.allocatedGPUs !== 0 || clusterUtilCtrl.availableGPUs !== 0)">
-                    <div class="text-right col-md-4">GPUs per worker<i class="fa fa-info-circle"
+                <div class="row" ng-show="(jupyterCtrl.val.mode === 'distributedTraining' && jupyterCtrl.val.distributionStrategy !== 'MirroredStrategy') && (clusterUtilCtrl.allocatedGPUs !== 0 || clusterUtilCtrl.availableGPUs !== 0)">
+                  <div class="row clusterparams">
+                    <div class="text-right col-md-4">Number GPUs per worker<i class="fa fa-info-circle"
                                                                        uib-tooltip="The number of GPUs allocated for each worker. Parameter servers do not have access to a GPU."
                                                                        style="margin-left: 10px"></i>
                     </div>
                     <div class="col-md-2 jupyter-left">
                       <input type="number" ng-init="0"  ng-model="jupyterCtrl.val.numExecutorGpus" min="0" class="form-control">
                     </div>
-
+                  </div>
                 </div>
 
-                <div class="row" ng-if="jupyterCtrl.advanced === true">
+                <div class="row" ng-if="jupyterCtrl.advanced === true && (jupyterCtrl.val.mode === 'sparkStatic' || jupyterCtrl.val.mode === 'sparkDynamic')">
                   <div class="row clusterparams">
                   <div class="text-right col-md-4">Log Level <i class="fa fa-info-circle"
                                                                 uib-tooltip="Log4j log level for this job." 
@@ -409,7 +389,7 @@
                   </div>
                   <div class="col-md-2 jupyter-left">
                     <ui-select ng-model="jupyterCtrl.shutdownLevelSelected" theme="bootstrap"
-                               on-select="jupyterCtrl.changeShutdownLevel()">
+                               on-select="jupyterCtrl.changeShutdownLevel()" style="z-index:1";>
                       <ui-select-match >
                         <span ng-bind="jupyterCtrl.shutdownLevelSelected.name"></span>
                       </ui-select-match>
@@ -425,7 +405,7 @@
                 <div class="row">
                   <div class="row clusterparams">
                   <div class="text-right col-md-4">
-                    <label for="archives">
+                    <label for="archives" id="configOptions">
                       <button uib-tooltip='Comma-separated list of .zip or .tgz files, this option corresponds to --archives option in Spark.' id="selectArchiveButton" class="btn btn-default" ng-click="jupyterCtrl.selectFile('archives')">
                         <span>Add archive file</span>
                       </button>  
@@ -589,7 +569,7 @@
           <div class="row top-buffer" ng-if="jupyterCtrl.ui !== ''">
 
             <div class="col-md-2"></div> 
-            <div class="col-md-8 panel panel-default jupyter-left">
+            <div class="col-md-8 panel panel-default jupyter-left" id="midScreen">
               <div class="panel-heading" >
                 <div>
                   <span style="font-weight: bold;">Jupyter Notebook Server Details</span>
@@ -611,11 +591,17 @@
                     <span style="margin-left: 10px;">{{jupyterCtrl.val.privateDir}}</span>
                   </div>
                 </div>
+                <div>
+                  <br>
+                  <div>
+                    <span style="margin-left: 10px;">Find the Id of your application from your SparkSession object (i.e spark.sparkContext.applicationId) </span>
+                  </div>
+                </div>
 
 
                 <br/>
                 <div class="row" style="margin-left: 0px">
-                  Automatic Notebook Shutdown in <span style="font-weight: bold;">{{jupyterCtrl.timeLeftInMinutes}} minutes. </span>
+                  Automatic Notebook Shutdown in <span style="font-weight: bold;">{{jupyterCtrl.timeLeftInMinutes}}. </span>
                 </div>
                 <div class="row">  
                   <div class="col-md-2">
@@ -658,7 +644,7 @@
                           <tbody>
                             <tr>
                               <td>                                      
-                                <button uib-tooltip="Open a new Browser Tab to connect to the running Jupyter Notebook Server" 
+                                <button id="openNotebook" uib-tooltip="Open a new Browser Tab to connect to the running Jupyter Notebook Server"
                                         tooltip-placement="auto right"
                                         ng-click="jupyterCtrl.openWindow()" 
                                         type="button" class="btn btn-info btn-sm">
@@ -667,33 +653,9 @@
                               </td>
                               <td style="text-align: right">Open Jupyter in a new Tab</td>
                             </tr>
-                            <tr ng-repeat="session in sessions">
-                              <td>                                      
-                                <button
-                                  uib-tooltip="Open the Spark UI for a Livy Session" 
-                                  tooltip-placement="auto top"
-                                  ng-click="jupyterCtrl.showLivyUI(session.appId)"
-                                  type="button" class="btn btn-info btn-sm" >
-                                  <span class="glyphicon glyphicon-eye-open" ></span>
-                                </button>
-                              </td>
-                              <td style="text-align: right">Open UI for {{session.appId}}</td>
-                            </tr>
-                            <!--                        <tr  ng-if="interpreter.interpreter.group === 'tensorflow' && !interpreter.interpreter.notRunning">
-                                                      <td><span>Open TensorBoard UI</span></td>
-                                                      <td style="text-align: right">                                      
-                                                        <button
-                                                                uib-tooltip="Open the TensorBoard UI for an existing TFoS Livy Session" 
-                                                                ng-click="jupyterCtrl.showTensorboardUI()"
-                                                                type="button" class="btn btn-info btn-sm" 
-                                                                ng-disabled="interpreter.interpreter.notRunning">
-                                                          <span class="glyphicon glyphicon-eye-open" ></span>
-                                                        </button>
-                                                      </td>
-                                                    </tr>-->
                             <tr>
                               <td>                                      			  
-                                <button tooltip-placement="auto top"
+                                <button id="shutdownNotebook" tooltip-placement="auto right"
                                         uib-tooltip="Shutdown Jupyter Notebook Server and stop applications." 
                                         ng-click="jupyterCtrl.stop()" 
                                         type="button" class="btn btn-danger btn-sm" >
@@ -706,6 +668,41 @@
                         </table>
                       </md-content>
                     </md-tab>
+                   </md-tabs>
+                   <md-tabs>
+                    <md-tab label="Active Applications">
+                      <md-content>
+                        <table class="table table-hover ds-sidenav-table" style="width: 100%">
+                          <tbody>
+                          <tr ng-repeat="session in sessions">
+                            <td style="text-align: left">{{session.appId}}</td>
+                            <td>
+                              <button
+                                      uib-tooltip="Open ApplicationUI"
+                                      tooltip-placement="auto right"
+                                      ng-click="jupyterCtrl.showLivyUI(session.appId)"
+                                      type="button" class="btn btn-info btn-sm" >
+                                <span class="glyphicon glyphicon-eye-open" ></span>
+                              </button>
+
+                            <button
+                                    uib-tooltip="Shutdown Application"
+                                    tooltip-placement="auto right"
+                                    ng-click="jupyterCtrl.stopLivySession(session, $index)"
+                                    type="button" class="btn btn-danger btn-sm" >
+                              <span class="glyphicon glyphicon-off" ></span>
+                            </button>
+                            </td>
+                          </tr>
+                          <tr ng-if="sessions == null || sessions.length == 0">
+                            <td>
+                              No running applications
+                            </td>
+                          </tr>
+                          </tbody>
+                        </table>
+                      </md-content>
+                    </md-tab>
                   </md-tabs>
                 </md-content>
               </div>
@@ -714,5 +711,142 @@
         </div>
       </section>
     </div>
+      <tour class="ng-scope" step="projectCtrl.tourService.currentStep_TourEight"
+                     post-tour="closeTour()"
+                     ng-if="projectCtrl.loadedView && projectCtrl.tourService.activeTour === 'deep_learning'
+          && (projectCtrl.tourService.informAndTips
+              || projectCtrl.tourService.tipsOnly) && !jupyterCtrl.loading &&
+              !(self.ui !=='' && (self.tourService.currentStep_TourEight >= 0 ||  self.tourService.currentStep_TourEight <= 10))">
+        <virtual-step
+                      class="ng-scope"
+                      tourtip="Before starting Jupyter you need to select an appropriate mode depending on what type of job you intend to run. The 'Experiment' mode should be selected for this tour."
+                      tourtip-step="0"
+                      tourtip-element="#experimentLabel"
+                      tourtip-placement="bottom"
+                      tourtip-next-label="Next"
+                      on-proceed=""
+              ></virtual-step>
+        <virtual-step
+                class="ng-scope"
+                tourtip="Parallel Experiments is used for parallel hyperparameter optimization of your Deep Learning model. We provide tools to search for the best hyperparameters automatically."
+                tourtip-step="1"
+                tourtip-element="#parallelExperimentLabel"
+                tourtip-placement="bottom"
+                tourtip-next-label="Next"
+                on-proceed=""
+        ></virtual-step>
+        <virtual-step
+                      class="ng-scope"
+                      tourtip="Distributed Training using CollectiveAllReduceStrategy, ParameterServerStrategy and MirroredStrategy is configured here."
+                      tourtip-step="2"
+                      tourtip-element="#distributedTraining"
+                      tourtip-placement="bottom"
+                      tourtip-next-label="Next"
+                      on-proceed=""
+              ></virtual-step>
+        <virtual-step
+                class="ng-scope"
+                tourtip="If you want to run Spark with static executors, use this mode."
+                tourtip-step="3"
+                tourtip-element="#sparkStaticLabel"
+                tourtip-placement="bottom"
+                tourtip-next-label="Next"
+                on-proceed=""
+        ></virtual-step>
+        <virtual-step
+                class="ng-scope"
+                tourtip="Or if you would like a dynamic number of executors pick this mode."
+                tourtip-step="4"
+                tourtip-element="#sparkDynamicLabel"
+                tourtip-placement="bottom"
+                tourtip-next-label="Next"
+                on-proceed=""
+        ></virtual-step>
+        <virtual-step
+                      class="ng-scope"
+                      tourtip="These configuration options are important to understand as they define the behaviour of the application, for example setting the application memory."
+                      tourtip-step="5"
+                      tourtip-element="#configOptions"
+                      tourtip-placement="left"
+                      tourtip-next-label="Next"
+                      tourtip-offset-horizontal="-25"
+                      on-proceed=""
+              ></virtual-step>
+        <virtual-step
+                      class="ng-scope"
+                      tourtip="Click 'Start' to start a Jupyter Notebook server for your user in this project for the given configuration. To change the configuration you need to restart the Jupyter notebook server."
+                      tourtip-step="6"
+                      tourtip-element="#newNotebook"
+                      tourtip-placement="bottom"
+                      tourtip-next-label="Start"
+                      on-proceed="jupyterCtrl.start();"
+              ></virtual-step>
+        <virtual-step
+                      class="ng-scope"
+                      tourtip="invisible"
+                      tourtip-step="7"
+                      ng-hide="true"
+              ></virtual-step>
+        <virtual-step
+                      class="ng-scope"
+                      tourtip="Click the icon to enter Jupyter. When inside Jupyter, navigate to the Experiment folder in which there are several notebooks you can run. "
+                      tourtip-step="8"
+                      tourtip-element="#openNotebook"
+                      tourtip-placement="left"
+                      tourtip-next-label="Open Jupyter in a new tab"
+                      on-proceed="jupyterCtrl.openWindow();"
+                      tourtip-offset-vertical="-30"
+              ></virtual-step>
+        <virtual-step
+                class="ng-scope"
+                tourtip="To shutdown Jupyter click this stop icon. Note that any running jobs that were started in Jupyter will be killed along with it."
+                tourtip-step="9"
+                tourtip-element="#shutdownNotebook"
+                tourtip-placement="left"
+                tourtip-next-label="Ok"
+                on-proceed=""
+                tourtip-offset-vertical="-30"
+        ></virtual-step>
+        <virtual-step
+                      class="ng-scope"
+                      tourtip="After running one of the notebooks you can monitor the training in TensorBoard and find history about your experiments in the Experiments service. For an experiment to be listed in the service it must be launched using the experiment module in the hops python library."
+                      tourtip-step="10"
+                      tourtip-element="#experimentsTab"
+                      tourtip-placement="right"
+                      tourtip-next-label="Next"
+                      on-proceed=""
+                      tourtip-offset-vertical="-15"
+              ></virtual-step>
+        <virtual-step
+                class="ng-scope"
+                tourtip="Experiments are stored in the Experiments dataset, be sure to check it out after running one of the provided notebooks."
+                tourtip-step="11"
+                tourtip-element="#datasetsTab"
+                tourtip-placement="right"
+                tourtip-next-label="Next"
+                tourtip-offset-vertical="-15"
+                on-proceed=""
+        ></virtual-step>
+        <virtual-step
+                class="ng-scope"
+                tourtip="All project members share an Anaconda environment. Navigate to the Python service to install more libraries using pip or conda package managers."
+                tourtip-step="12"
+                tourtip-element="#pythonTab"
+                tourtip-placement="right"
+                tourtip-next-label="Next"
+                tourtip-offset-vertical="-15"
+                on-proceed=""
+        ></virtual-step>
+        <virtual-step
+                class="ng-scope"
+                tourtip="To serve a model you have trained, navigate to the Model Serving service."
+                tourtip-step="13"
+                tourtip-element="#servingTab"
+                tourtip-placement="right"
+                tourtip-next-label="Finish The Tour"
+                tourtip-offset-vertical="-15"
+                on-proceed=""
+        ></virtual-step>
+      </tour>
   </div>
 </div>

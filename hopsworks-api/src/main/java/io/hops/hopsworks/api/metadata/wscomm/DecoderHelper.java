@@ -40,7 +40,7 @@
 package io.hops.hopsworks.api.metadata.wscomm;
 
 import io.hops.hopsworks.api.metadata.wscomm.message.Message;
-import io.hops.hopsworks.common.metadata.exception.ApplicationException;
+
 import javax.json.JsonObject;
 
 public class DecoderHelper {
@@ -57,22 +57,11 @@ public class DecoderHelper {
    * <p/>
    * @return the initialized Message object
    * <p/>
-   * @throws ApplicationException
    */
-  public Message getMessage() throws ApplicationException {
-
-    Message msg = null;
-    try {
-      String message = this.json.getString("type");
-      Class c = getClass().getClassLoader().loadClass(
-              "io.hops.hopsworks.api.metadata.wscomm.message." + message);
-      msg = (Message) c.newInstance();
-    } catch (ClassNotFoundException | InstantiationException |
-            IllegalAccessException e) {
-      throw new ApplicationException(
-              "Could not find the right class to initialize the message", e);
-    }
-
-    return msg;
+  public Message getMessage() throws IllegalAccessException, InstantiationException, ClassNotFoundException {
+    String message = this.json.getString("type");
+    Class c = getClass().getClassLoader().loadClass(
+      "io.hops.hopsworks.api.metadata.wscomm.message." + message);
+    return (Message) c.newInstance();
   }
 }

@@ -44,17 +44,17 @@ import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
 import io.hops.hopsworks.common.dao.jupyter.JupyterSettingsFacade;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterProcessMgr;
-import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.util.Settings;
 
 import javax.ejb.EJB;
+import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
+import javax.faces.context.FacesContext;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.faces.application.FacesMessage;
-import javax.faces.context.FacesContext;
 
 @ManagedBean(name = "JupyterNotebooks")
 @ViewScoped
@@ -125,7 +125,7 @@ public class JupyterNotebooksBean {
       jupyterProcessFacade.killServerJupyterUser(hdfsUser, jupyterHomePath, notebook.getPid(), notebook.getPort());
       FacesContext context = FacesContext.getCurrentInstance();
       context.addMessage(null, new FacesMessage("Successful", "Successfully killed Jupyter Notebook Server."));
-    } catch (AppException ex) {
+    } catch (ServiceException ex) {
       Logger.getLogger(JupyterNotebooksBean.class.getName()).log(Level.SEVERE, null, ex);
       FacesContext context = FacesContext.getCurrentInstance();
       context.addMessage(null, new FacesMessage("Failure", "Failed to kill Jupyter Notebook Server."));

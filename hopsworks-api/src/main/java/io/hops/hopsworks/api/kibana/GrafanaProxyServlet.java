@@ -44,7 +44,7 @@ import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.exception.ProjectException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.project.ProjectDTO;
@@ -96,7 +96,7 @@ public class GrafanaProxyServlet extends ProxyServlet {
         ProjectDTO project;
         try {
           project = projectController.getProjectByName(projectName);
-        } catch (AppException ex) {
+        } catch (ProjectException ex) {
           throw new ServletException(ex);
         }
         

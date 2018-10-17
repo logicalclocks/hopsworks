@@ -55,7 +55,11 @@ angular.module('hopsWorksApp')
                       function (response) {
                         self.quotas = response;
                       }, function (error) {
-                growl.error(error.errorMsg, {title: 'Error', ttl: 2000});
+                      if (typeof error.data.usrMsg !== 'undefined') {
+                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
+                      } else {
+                          growl.error("", {title: error.data.errorMsg, ttl: 5000});
+                      }
               });
 
             };

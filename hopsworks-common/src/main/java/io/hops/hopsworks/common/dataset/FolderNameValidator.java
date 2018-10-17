@@ -40,8 +40,11 @@
 package io.hops.hopsworks.common.dataset;
 
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
-import javax.validation.ValidationException;
+import io.hops.hopsworks.common.exception.DatasetException;
+import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.util.Settings;
+
+import java.util.logging.Level;
 
 /**
  * Validator for folder names. A folder name is valid if:
@@ -61,10 +64,8 @@ public class FolderNameValidator {
    * <p/>
    * @param name
    * @param subdir Indicates a directory under a top-level dataset
-   * @return
-   * @throws ValidationException If the given String is not a valid folder name.
    */
-  public static boolean isValidName(String name, boolean subdir) {
+  public static void isValidName(String name, boolean subdir) throws DatasetException {
     String reason = "";
     boolean valid = true;
     if (name == null || name.isEmpty()) {
@@ -95,12 +96,11 @@ public class FolderNameValidator {
       }
     }
     if (!valid) {
-      throw new ValidationException(reason);
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NAME_INVALID, Level.FINE, reason);
     }
-    return valid;
   }
   
-  public static boolean isValidProjectName(String name, boolean subdir) {
+  public static void isValidProjectName(String name, boolean subdir) throws DatasetException {
     String reason = "";
     boolean valid = true;
     if (name == null || name.isEmpty()) {
@@ -130,8 +130,7 @@ public class FolderNameValidator {
       }
     }
     if (!valid) {
-      throw new ValidationException(reason);
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NAME_INVALID, Level.FINE, reason);
     }
-    return valid;
   }
 }

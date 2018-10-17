@@ -74,14 +74,22 @@ angular.module('hopsWorksApp')
                     self.num_replicas = success.data.numOfReplicas;
                     self.max_num_replicas = success.data.maxNumOfReplicas;
                 }, function (error) {
-                    growl.error(error.data.errorMsg, {title: 'Could not get defualt topic values', ttl: 5000, referenceId: 21});
+                        if (typeof error.data.usrMsg !== 'undefined') {
+                            growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 21});
+                        } else {
+                            growl.error("", {title: error.data.errorMsg, ttl: 5000, referenceId: 21});
+                        }
                    });
                    
                KafkaService.getSchemasForTopics(self.projectId).then(
                     function (success){
                       self.schemas = success.data;
                     }, function (error) {
-                      growl.error(error.data.errorMsg, {title: 'Could not get schemas for topic', ttl: 5000, referenceId: 21});
+                       if (typeof error.data.usrMsg !== 'undefined') {
+                           growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 21});
+                       } else {
+                           growl.error("", {title: error.data.errorMsg, ttl: 5000, referenceId: 21});
+                       }
                       });
             };
             
@@ -151,7 +159,11 @@ angular.module('hopsWorksApp')
                         self.working = false;
                           $uibModalInstance.close(success);
                       }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Failed to create topic', ttl: 5000});
+                      if (typeof error.data.usrMsg !== 'undefined') {
+                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 21});
+                      } else {
+                          growl.error("", {title: error.data.errorMsg, ttl: 5000, referenceId: 21});
+                      }
                         self.working = false;
               });      
             };

@@ -39,21 +39,20 @@
 
 package io.hops.hopsworks.common.util;
 
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.annotation.Resource;
 import javax.ejb.Asynchronous;
 import javax.ejb.Stateless;
 import javax.mail.Message;
 import javax.mail.MessagingException;
-import javax.mail.SendFailedException;
 import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Stateless
 public class EmailBean {
@@ -66,7 +65,7 @@ public class EmailBean {
   @Asynchronous
   public void sendEmail(String to, Message.RecipientType recipientType,
       String subject, String body) throws
-      MessagingException, SendFailedException {
+      MessagingException {
 
     MimeMessage message = new MimeMessage(mailSession);
     message.setFrom(new InternetAddress(mailSession.getProperty("mail.from")));
@@ -87,7 +86,7 @@ public class EmailBean {
   }
 
   @Asynchronous
-  public void sendEmails(String listAddrs, String subject, String body) throws MessagingException, SendFailedException {
+  public void sendEmails(String listAddrs, String subject, String body) throws MessagingException {
 
     List<String> addrs = Arrays.asList(listAddrs.split("\\s*,\\s*"));
 

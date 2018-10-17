@@ -41,12 +41,15 @@ package io.hops.hopsworks.common.jobs;
 
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
+
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.exception.JobCreationException;
+import io.hops.hopsworks.common.exception.JobException;
+import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.jobs.configuration.JobConfiguration;
 
 @Stateless
@@ -59,11 +62,11 @@ public class JobController {
 
   private static final Logger logger = Logger.getLogger(JobController.class.getName());
 
-  public Jobs createJob(Users user, Project project, JobConfiguration config) throws JobCreationException {
+  public Jobs createJob(Users user, Project project, JobConfiguration config) throws JobException {
     //Check if job with same name exists and throw error is so
     if(jobFacade.jobNameExists(project, config.getAppName())){
-      throw new JobCreationException("Job with name:" + config.getAppName() + " for project:" + project.getName()
-          + " already exists");
+      throw new JobException(RESTCodes.JobErrorCode.JOB_NAME_EXISTS, Level.FINE,
+        "Job with name:" + config.getAppName() + " for " + "project:" + project.getName() + " already exists");
     }
     
     Jobs created = jobFacade.create(user, project, config);

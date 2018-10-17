@@ -42,7 +42,7 @@ module SessionHelper
       reset_and_create_session
     end
     get "#{ENV['HOPSWORKS_API']}/auth/session"
-    if json_body[:status] != "SUCCESS"
+    if response.code != 200
       reset_and_create_session
     end
   end
@@ -68,7 +68,7 @@ module SessionHelper
     user = create_user
     post "#{ENV['HOPSWORKS_API']}/auth/login", URI.encode_www_form({ email: user.email, password: "Pass123"}), { content_type: 'application/x-www-form-urlencoded'}
     expect_json(sessionID: ->(value){ expect(value).not_to be_empty})
-    expect_json(status: "SUCCESS")
+    expect(response.code).to eq(200)
     if !headers["set_cookie"][1].nil?
       cookie = headers["set_cookie"][1].split(';')[0].split('=')
       @cookies = {"SESSIONID"=> json_body[:sessionID], cookie[0] => cookie[1]}

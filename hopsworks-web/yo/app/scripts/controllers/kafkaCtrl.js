@@ -97,7 +97,11 @@ angular.module('hopsWorksApp')
                     function (success) {
                         self.users = success.data;
                 }, function (error) {
-                    growl.error(error.data.errorMsg, {title: 'Could not load ACL users', ttl: 5000, referenceId: 10});
+                      if (typeof error.data.usrMsg !== 'undefined') {
+                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
+                      } else {
+                          growl.error("", {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
+                      }
                    });
               
             };
@@ -114,7 +118,11 @@ angular.module('hopsWorksApp')
                         function(success){
                             self.getAclsForTopic(topicName);
                         }, function(error){
-                            growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                        if (typeof error.data.usrMsg !== 'undefined') {
+                            growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
+                        } else {
+                            growl.error("", {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
+                        }
                             
                         });
             };
@@ -125,7 +133,11 @@ angular.module('hopsWorksApp')
                         self.topics = success.data;
                         self.numTopicsUsed = self.topics.length;
                       }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                      if (typeof error.data.usrMsg !== 'undefined') {
+                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
+                      } else {
+                          growl.error("", {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
+                      }
               });
             };
 
@@ -134,7 +146,11 @@ angular.module('hopsWorksApp')
                       function (success) {
                         self.sharedTopics = success.data;
                       }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                      if (typeof error.data.usrMsg !== 'undefined') {
+                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
+                      } else {
+                          growl.error("", {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
+                      }
               });
             };
 
@@ -180,7 +196,11 @@ angular.module('hopsWorksApp')
                     self.schemaVersions[i] = Math.max.apply(null, self.schemas[i].versions);
                 }
                  }, function (error) {
-                 growl.error(error.data.errorMsg, {title: 'Could not get schemas for topic', ttl: 5000, referenceId: 10});
+                    if (typeof error.data.usrMsg !== 'undefined') {
+                        growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
+                    } else {
+                        growl.error("", {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
+                    }
                  });
             
                 
@@ -199,7 +219,11 @@ angular.module('hopsWorksApp')
                  function (success) {
                      self.listSchemas();
                  }, function (error) {
-                 growl.error(error.data.errorMsg, {title: 'Schema is not removed', ttl: 5000, referenceId: 10});
+                  if (typeof error.data.usrMsg !== 'undefined') {
+                      growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
+                  } else {
+                      growl.error("", {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
+                  }
                  });
                 }, function (error) {
                     growl.info("Delete aborted", {title: 'Info', ttl: 2000});
@@ -251,7 +275,11 @@ angular.module('hopsWorksApp')
                             self.tourService.currentStep_TourThree = 4;
                           }
                       }, function (error) {
-                      growl.error(error.data.errorMsg, {title: 'Failure to create topic', ttl: 5000, referenceId: 10});
+                      if (typeof error.data.usrMsg !== 'undefined') {
+                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
+                      } else {
+                          growl.error("", {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
+                      }
               });
               self.getAllTopics();
 
@@ -262,10 +290,14 @@ angular.module('hopsWorksApp')
                       "Do you really want to delete this topic? This action cannot be undone.")
                       .then(function (success) {
                         KafkaService.removeTopic(self.projectId, topicName).then(
-                                function (success) {
-                                  self.getAllTopics();
-                                }, function (error) {
-                          growl.error(error.data.errorMsg, {title: 'Failed to remove topic', ttl: 5000});
+                            function (success) {
+                              self.getAllTopics();
+                            }, function (error) {
+                            if (typeof error.data.usrMsg !== 'undefined') {
+                                growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
+                            } else {
+                                growl.error("", {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
+                            }
                         });
                       }, function (cancelled) {
                         growl.info("Delete aborted", {title: 'Info', ttl: 2000});
@@ -283,7 +315,11 @@ angular.module('hopsWorksApp')
                           }
                         self.activeId = "";
                       }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Failed to get ACLs for the topic', ttl: 5000});
+                      if (typeof error.data.usrMsg !== 'undefined') {
+                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
+                      } else {
+                          growl.error("", {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
+                      }
               });
             };
 
@@ -303,7 +339,11 @@ angular.module('hopsWorksApp')
                       function (success) {
                         self.getAclsForTopic(topicName);
                       }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Failed to remove topic', ttl: 5000});
+                      if (typeof error.data.usrMsg !== 'undefined') {
+                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
+                      } else {
+                          growl.error("", {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
+                      }
               });
 
             };
@@ -318,7 +358,11 @@ angular.module('hopsWorksApp')
                                   self.topicIsSharedTo(topicName);
                                   growl.success(success.data.successMessage, {title: 'Topic shared successfully with project: ' + destProj.name, ttl: 5000});
                                 }, function (error) {
-                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                                if (typeof error.data.usrMsg !== 'undefined') {
+                                    growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
+                                } else {
+                                    growl.error("", {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
+                                }
                         });
 
                       }, function (error) {
@@ -334,7 +378,11 @@ angular.module('hopsWorksApp')
                                   self.topicIsSharedTo(topicName);
                                   growl.success(success.data.successMessage, {title: 'Topic share removed (unshared) from project: ' + project.name, ttl: 2000});
                                 }, function (error) {
-                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                                if (typeof error.data.usrMsg !== 'undefined') {
+                                    growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
+                                } else {
+                                    growl.error("", {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
+                                }
                         });
             };
             
@@ -345,7 +393,11 @@ angular.module('hopsWorksApp')
                                   self.getAllSharedTopics();
                                   growl.success(success.data.successMessage, {title: 'Topic share removed (unshared) from project:.', ttl: 2000});
                                 }, function (error) {
-                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                                    if (typeof error.data.usrMsg !== 'undefined') {
+                                        growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
+                                    } else {
+                                        growl.error("", {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
+                                    }
                         });
             };
             
@@ -359,7 +411,11 @@ angular.module('hopsWorksApp')
                               }
                           }
                         }, function (error) {
-                    growl.error(error.data.errorMsg, {title: 'Failed to get topic sharing information', ttl: 5000});
+                        if (typeof error.data.usrMsg !== 'undefined') {
+                            growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
+                        } else {
+                            growl.error("", {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
+                        }
                 });
             };
 

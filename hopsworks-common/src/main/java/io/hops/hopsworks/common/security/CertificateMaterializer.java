@@ -220,8 +220,8 @@ public class CertificateMaterializer {
     }
     transientDir = tmpDir.getAbsolutePath();
     String delayRaw = settings.getCertificateMaterializerDelay();
-    DELAY_VALUE = Settings.getConfTimeValue(delayRaw);
-    DELAY_TIMEUNIT = Settings.getConfTimeTimeUnit(delayRaw);
+    DELAY_VALUE = settings.getConfTimeValue(delayRaw);
+    DELAY_TIMEUNIT = settings.getConfTimeTimeUnit(delayRaw);
     
     try {
       String hostAddress = InetAddress.getLocalHost().getHostAddress();
@@ -904,7 +904,7 @@ public class CertificateMaterializer {
             
             Path trustStore = new Path(remoteDirectory + Path.SEPARATOR + key.getExtendedUsername()
                 + TRUSTSTORE_SUFFIX);
-            writeToHDFS(dfso, trustStore, material.getKeyStore().array());
+            writeToHDFS(dfso, trustStore, material.getTrustStore().array());
             dfso.setOwner(trustStore, ownerName, groupName);
             dfso.setPermission(trustStore, permissions);
   
