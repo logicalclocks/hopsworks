@@ -74,7 +74,7 @@ angular.module('hopsWorksApp')
 
       this.selectFile = function () {
 
-        ModalService.selectDir('lg', '*', '').then(
+        ModalService.selectModelServing('lg', '*', '').then(
           function (success) {
             self.onDirSelected(success);
           },
@@ -83,10 +83,13 @@ angular.module('hopsWorksApp')
           });
       };
 
-      self.getModelVersions = function (modelPath) {
+      self.validatePath = function (modelPath, modelName) {
         // /Projects/project_name/RelativePath
         var modelPathSplits = modelPath.split("/");
         var relativePath = modelPathSplits.slice(3).join("/");
+        if (typeof modelName === 'undefined') {
+            modelName = modelPathSplits[modelPathSplits.length - 1];
+        }
 
         datasetService.getContents(relativePath).then(
           function (success) {
@@ -111,6 +114,9 @@ angular.module('hopsWorksApp')
               return;
             }
 
+            // If the validation phase has passed, update the UI
+            self.editServing.modelPath = modelPath;
+            self.editServing.modelName = modelName;
             self.editServing.versions = versions.sort().reverse();
 
             if (self.editServing.modelVersion == null) {
@@ -128,12 +134,7 @@ angular.module('hopsWorksApp')
       // Check that the directory selected follows the required structure.
       // In particular check that the children are integers (version numbers)
       self.onDirSelected = function (modelPath) {
-        var modelPathSplits = modelPath.split("/");
-        var modelName = modelPathSplits[modelPathSplits.length - 1];
-
-        self.getModelVersions(modelPath);
-        self.editServing.modelPath = modelPath;
-        self.editServing.modelName = modelName;
+        self.validatePath(modelPath);
       };
 
 
@@ -280,7 +281,7 @@ angular.module('hopsWorksApp')
         angular.copy(serving, self.editServing);
         self.editServing.modelVersion = self.editServing.modelVersion.toString();
         self.sliderOptions.value = serving.requestedInstances;
-        self.getModelVersions(serving.modelPath);
+        self.validatePath(serving.modelPath, serving.modelName);
         self.showCreateServingForm();
       };
 
