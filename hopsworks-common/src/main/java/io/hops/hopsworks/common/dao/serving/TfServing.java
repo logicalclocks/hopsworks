@@ -94,7 +94,7 @@ public class TfServing implements Serializable {
   @ManyToOne(optional = false)
   private Project project;
   @Column(name = "enable_batching")
-  private boolean batching;
+  private Boolean batchingEnabled;
 
   @Column(name = "lock_ip")
   private String lockIP;
@@ -117,12 +117,14 @@ public class TfServing implements Serializable {
 
   public TfServing() { }
 
-  public TfServing(Integer id, String modelName, String modelPath, Integer version, Integer nInstances) {
+  public TfServing(Integer id, String modelName, String modelPath, Integer version,
+                   Integer nInstances, Boolean batchingEnabled) {
     this.id = id;
     this.modelName = modelName;
     this.modelPath = modelPath;
     this.version = version;
     this.instances = nInstances;
+    this.batchingEnabled = batchingEnabled;
   }
 
   public Integer getId() {
@@ -221,12 +223,12 @@ public class TfServing implements Serializable {
     this.localDir = localDir;
   }
 
-  public boolean isBatching() {
-    return batching;
+  public Boolean isBatchingEnabled() {
+    return batchingEnabled;
   }
 
-  public void setBatching(boolean batching) {
-    this.batching = batching;
+  public void setBatchingEnabled(Boolean batching) {
+    this.batchingEnabled = batching;
   }
 
   public String getLockIP() {
@@ -261,7 +263,7 @@ public class TfServing implements Serializable {
     TfServing tfServing = (TfServing) o;
 
     if (optimized != tfServing.optimized) return false;
-    if (batching != tfServing.batching) return false;
+    if (batchingEnabled != tfServing.batchingEnabled) return false;
     if (id != null ? !id.equals(tfServing.id) : tfServing.id != null) return false;
     if (created != null ? !created.equals(tfServing.created) : tfServing.created != null) return false;
     if (creator != null ? !creator.equals(tfServing.creator) : tfServing.creator != null) return false;
@@ -290,7 +292,7 @@ public class TfServing implements Serializable {
     result = 31 * result + (optimized ? 1 : 0);
     result = 31 * result + (instances != null ? instances.hashCode() : 0);
     result = 31 * result + (project != null ? project.hashCode() : 0);
-    result = 31 * result + (batching ? 1 : 0);
+    result = 31 * result + (batchingEnabled ? 1 : 0);
     result = 31 * result + (lockIP != null ? lockIP.hashCode() : 0);
     result = 31 * result + (lockTimestamp != null ? lockTimestamp.hashCode() : 0);
     result = 31 * result + (kafkaTopic != null ? kafkaTopic.hashCode() : 0);

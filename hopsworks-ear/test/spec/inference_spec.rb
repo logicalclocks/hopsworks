@@ -141,6 +141,7 @@ describe "On #{ENV['OS']}" do
               modelName: @serving[:model_name],
               modelPath: @serving[:model_path],
               modelVersion: @serving[:version],
+              batchingEnabled: false,
               kafkaTopicDTO: {
                  name: "NONE"
               }}
@@ -157,6 +158,7 @@ describe "On #{ENV['OS']}" do
               modelName: @serving[:model_name],
               modelPath: @serving[:model_path],
               modelVersion: @serving[:model_version],
+              batchingEnabled: false,
               kafkaTopicDTO: {
                  name: @topic[:topic_name]
               }}

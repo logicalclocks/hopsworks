@@ -36,6 +36,7 @@ module ServingHelper
               {modelName: serving_name,
                modelPath: "/Projects/#{project_name}/Models/mnist/",
                modelVersion: 1,
+               batchingEnabled: true,
                kafkaTopicDTO: {
                   name: "CREATE",
                   numOfPartitions: 1,

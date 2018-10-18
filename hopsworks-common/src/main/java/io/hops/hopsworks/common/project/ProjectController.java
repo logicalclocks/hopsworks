@@ -1491,6 +1491,7 @@ public class ProjectController {
         List<HdfsUsers> usersToClean = getUsersToClean(project);
         List<HdfsGroups> groupsToClean = getGroupsToClean(project);
         removeProjectInt(project, usersToClean, groupsToClean, projectCreationFutures, decreaseCreatedProj);
+        break;
       } catch (Exception ex) {
         nbTry++;
         if (nbTry < 3) {

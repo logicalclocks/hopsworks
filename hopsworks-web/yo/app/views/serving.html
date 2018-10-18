@@ -74,12 +74,16 @@
               </div>
               <div class="row" ng-if="servingCtrl.showAdvancedForm">
                 <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3" style="text-align: right;">
+                  <div style="margin-top: 10px; heigth: 2em;"><label>Request Batching</label></div>
                   <div style="margin-top: 10px; heigth: 2em;"><label>Kafka Topic</label></div>
                   <div style="margin-top: 10px; heigth: 2em;"><label>Kafka Num Partitions</label></div>
                   <div style="margin-top: 10px; heigth: 2em;"><label>Kafka Replication Factor</label></div>
                 </div>
 
-                <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
+                <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6" style="padding-top: 10px">
+                  <input type="checkbox" name="requestBatching"
+                          ng-model="servingCtrl.editServing.batchingEnabled">
+
                   <select class="form-control" style="margin-top: 5px; width: 40%" name="kafkaTopicName"
                           ng-model="servingCtrl.editServing.kafkaTopicDTO"
                           ng-options="x.name for x in servingCtrl.projectKafkaTopics"
@@ -129,6 +133,7 @@
               <th style="width: 5%">Port</th>
               <th style="width: 10%">Created</th>
               <th style="width: 13%">Topic Name</th>
+              <th style="width: 7%">Batching</th>
               <th style="width: 15%">Creator</th>
               <th style="width: 6%">Status</th>
               <th style="width: 15%">Actions</th>
@@ -177,6 +182,7 @@
                   <td> {{serving.nodePort}} </td>
                   <td> {{serving.created | date:'short'}} </td>
                   <td> {{serving.kafkaTopicDTO.name}} </td>
+                  <td> <span class="glyphicon glyphicon-ok-circle" ng-show="serving.batchingEnabled"/> </td>
                   <td> {{serving.creator}} </td>
                   <td> {{serving.status}} </td>
                   <td>

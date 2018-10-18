@@ -170,6 +170,7 @@ public class LocalhostTfServingController implements TfServingController {
       if (status == TfServingStatusEnum.RUNNING || status == TfServingStatusEnum.UPDATING) {
         if (!oldDbTfServing.getModelName().equals(dbTfServing.getModelName()) ||
             !oldDbTfServing.getModelPath().equals(dbTfServing.getModelPath()) ||
+            oldDbTfServing.isBatchingEnabled() != dbTfServing.isBatchingEnabled() ||
             oldDbTfServing.getVersion() > dbTfServing.getVersion()) {
           // To update the name and/or the model path we need to restart the server and/or the version as been
           // reduced. We need to restart the server
@@ -355,7 +356,8 @@ public class LocalhostTfServingController implements TfServingController {
         String.valueOf(grpcPort),
         String.valueOf(restPort),
         secretDir.toString(),
-        project.getName() + USER_NAME_DELIMITER + user.getUsername()};
+        project.getName() + USER_NAME_DELIMITER + user.getUsername(),
+        tfServing.isBatchingEnabled() ? "1" : "0"};
 
     logger.log(Level.INFO, Arrays.toString(shCommnad));
 

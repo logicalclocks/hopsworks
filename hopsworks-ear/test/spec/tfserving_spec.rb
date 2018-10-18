@@ -64,7 +64,8 @@ describe "On #{ENV['OS']}" do
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
               {modelName: "testModel",
                modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
-               modelVersion: 1}
+               modelVersion: 1,
+               batchingEnabled: false }
           expect_json(errorCode: 200003)
           expect_status(401)
         end
@@ -82,7 +83,8 @@ describe "On #{ENV['OS']}" do
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
               {modelName: "testModel",
                modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
-               modelVersion: 1}
+               modelVersion: 1,
+               batchingEnabled: false}
           expect_status(201)
 
           serving_list = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/"
@@ -90,11 +92,21 @@ describe "On #{ENV['OS']}" do
           expect(kafka_topic).to be nil
         end
 
+        it "should create the serving with batching" do
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+              {modelName: "testModelBatching",
+               modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
+               modelVersion: 1,
+               batchingEnabled: true}
+          expect_status(201)
+        end
+
         it "should create the serving with a new Kafka topic" do
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
               {modelName: "testModel1",
                modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
                modelVersion: 1,
+               batchingEnabled: false,
                kafkaTopicDTO: {
                    name: "CREATE",
                    numOfPartitions: 1,
@@ -124,6 +136,7 @@ describe "On #{ENV['OS']}" do
               {modelName: "testModel2",
                modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
                modelVersion: 1,
+               batchingEnabled: false,
                kafkaTopicDTO: {
                    name: topic_name
                }}
@@ -143,6 +156,7 @@ describe "On #{ENV['OS']}" do
               {modelName: "testModel1",
                modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
                modelVersion: 1,
+               batchingEnabled: false,
                kafkaTopicDTO: {
                    name: "CREATE",
                    numOfPartitions: 1,
@@ -157,6 +171,7 @@ describe "On #{ENV['OS']}" do
               {modelName: "testModelBadKafka",
                modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
                modelVersion: 1,
+               batchingEnabled: false,
                kafkaTopicDTO: {
                    name: "CREATE",
                    numOfPartitions: -10,
@@ -170,13 +185,28 @@ describe "On #{ENV['OS']}" do
           # Create serving
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
               {modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
+               batchingEnabled: false,
                modelVersion: 1}
           expect_json(usrMsg: "Model name not provided")
+        end
+
+        it "fail to create a serving without batching specified" do
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+              {modelName: "nobatchingModels",
+               modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
+               modelVersion: 1,
+               kafkaTopicDTO: {
+                   name: "CREATE",
+                   numOfPartitions: 1,
+                   numOfReplicas: 1
+               }}
+          expect_json(usrMsg: "Batching is null")
         end
 
         it "should fail to create a serving without a path" do
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
               {modelName: "testModel3",
+               batchingEnabled: false,
                modelVersion: 1}
           expect_json(usrMsg: "Model path not provided")
         end
@@ -184,7 +214,8 @@ describe "On #{ENV['OS']}" do
         it "should fail to create a serving without a version" do
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
               {modelName: "testModel4",
-               modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/"}
+               modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
+               batchingEnabled: false}
           expect_json(usrMsg: "Model version not provided")
         end
 
@@ -192,6 +223,7 @@ describe "On #{ENV['OS']}" do
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
               {modelName: "testModel5",
                modelPath: "/Projects/#{@project[:projectname]}/DOESNTEXISTS",
+               batchingEnabled: false,
                modelVersion: 1}
           expect_json(usrMsg: "The model path provided does not exists")
           expect_status(422)
@@ -203,6 +235,7 @@ describe "On #{ENV['OS']}" do
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
               {modelName: "testModel6",
                modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
+               batchingEnabled: false,
                modelVersion: 1}
           expect_json(usrMsg: "The model path does not respect the TensorFlow standard")
           expect_status(422)
@@ -272,6 +305,7 @@ describe "On #{ENV['OS']}" do
              modelName: "testModelChanged",
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
              modelVersion: 1,
+             batchingEnabled: false,
              kafkaTopicDTO: {
                  name: @topic[:topic_name]
              }}
@@ -284,6 +318,20 @@ describe "On #{ENV['OS']}" do
              modelName: "testModelChanged",
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
              modelVersion: 2,
+             batchingEnabled: false,
+             kafkaTopicDTO: {
+                 name: @topic[:topic_name]
+             }}
+        expect_status(201)
+      end
+
+      it "should be able to update the batching" do
+        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+            {id: @serving[:id],
+             modelName: "testModelChanged",
+             modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
+             modelVersion: 2,
+             batchingEnabled: true,
              kafkaTopicDTO: {
                  name: @topic[:topic_name]
              }}
@@ -303,6 +351,7 @@ describe "On #{ENV['OS']}" do
              modelName: "testModelChanged",
              modelPath: "/Projects/#{@project[:projectname]}/Models/newMnist/",
              modelVersion: 2,
+             batchingEnabled: false,
              kafkaTopicDTO: {
                  name: @topic[:topic_name]
              }}
@@ -317,6 +366,7 @@ describe "On #{ENV['OS']}" do
              modelName: "testModelChanged",
              modelPath: "/Projects/#{@project[:projectname]}/Models/newMnist/",
              modelVersion: 2,
+             batchingEnabled: false,
              kafkaTopicDTO: {
                  name: topic_name
              }}
@@ -333,6 +383,7 @@ describe "On #{ENV['OS']}" do
              modelName: "testModelChanged",
              modelPath: "/Projects/#{@project[:projectname]}/Models/newMnist/",
              modelVersion: 2,
+             batchingEnabled: false,
              kafkaTopicDTO: {
                  name: "NONE"
              }}

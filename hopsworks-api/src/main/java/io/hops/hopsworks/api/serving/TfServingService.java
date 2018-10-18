@@ -190,6 +190,11 @@ public class TfServingService {
       tfServingModelPathValidator.validateModelPath(tfServing.getModelPath(), tfServing.getModelVersion());
     }
 
+    // Check that the batching option has been specified
+    if (tfServing.isBatchingEnabled() == null) {
+      throw new IllegalArgumentException("Batching is null");
+    }
+
     // Check for duplicated entries
     tfServingController.checkDuplicates(project, tfServing.getTfServingWrapper());
 

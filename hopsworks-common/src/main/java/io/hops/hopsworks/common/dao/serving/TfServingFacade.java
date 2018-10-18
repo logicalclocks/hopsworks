@@ -113,6 +113,10 @@ public class TfServingFacade {
       dbTfServing.setLocalPort(newTfServing.getLocalPort());
     }
 
+    if (newTfServing.isBatchingEnabled() != null) {
+      dbTfServing.setBatchingEnabled(newTfServing.isBatchingEnabled());
+    }
+
     return merge(dbTfServing);
   }
 
