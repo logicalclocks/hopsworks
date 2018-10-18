@@ -67,7 +67,7 @@ angular.module('hopsWorksApp')
       $scope.sortKey = 'creationTime';
       $scope.reverse = true;
 
-      var datasetService = DataSetService(self.projectId)
+      var datasetService = DataSetService(self.projectId);
 
       self.ignorePoll = false;
       self.createNewServingMode = false;
@@ -136,11 +136,6 @@ angular.module('hopsWorksApp')
         self.editServing.modelName = modelName;
       };
 
-      self.showCreateServingForm = function () {
-        self.showCreateNewServingForm = true;
-        self.createNewServingMode = true;
-        self.updateKafkaTopics();
-      };
 
       self.showAdvanced = function () {
         self.showAdvancedForm = !self.showAdvancedForm;
@@ -176,7 +171,28 @@ angular.module('hopsWorksApp')
       };
 
       self.filterTopics = function(topic) {
-         return topic.name === self.editServing.kafkaTopicDTO.name;
+        return topic.name === self.editServing.kafkaTopicDTO.name;
+      };
+
+      self.updateKafkaDetails = function () {
+        if (self.editServing.kafkaTopicDTO.name === 'CREATE' ||
+          self.editServing.kafkaTopicDTO.name === 'NONE') {
+          return;
+        }
+
+        KafkaService.getTopicDetails(self.projectId, self.editServing.kafkaTopicDTO.name).then(
+          function (success) {
+            self.editServing.kafkaTopicDTO.numOfPartitions = success.data.length;
+            if (success.data.length > 0) {
+              self.editServing.kafkaTopicDTO.numOfReplicas = success.data[0].replicas.length
+            }
+          },
+          function (error) {
+            growl.error(error.data.errorMsg, {
+              title: 'Error',
+              ttl: 15000
+            });
+          });
       };
 
       self.updateKafkaTopics = function () {
@@ -193,10 +209,12 @@ angular.module('hopsWorksApp')
               }
             }
 
-            if (self.editServing.kafkaTopicDTO != null) {
+            if (typeof self.editServing.kafkaTopicDTO !== "undefined") {
               topic = self.projectKafkaTopics.filter(self.filterTopics);
               self.editServing.kafkaTopicDTO = topic[0];
               self.updateKafkaDetails();
+            } else {
+              self.editServing.kafkaTopicDTO = self.projectKafkaTopics[0];
             }
           },
           function (error) {
@@ -207,25 +225,10 @@ angular.module('hopsWorksApp')
           });
       };
 
-      self.updateKafkaDetails = function () {
-        if (self.editServing.kafkaTopicDTO.name === 'CREATE' ||
-          self.editServing.kafkaTopicDTO.name === 'NONE') {
-          return;
-        }
-
-        KafkaService.getTopicDetails(self.projectId, self.editServing.kafkaTopicDTO.name).then(
-          function (success) {
-            self.editServing.kafkaTopicDTO.numOfPartitions = success.data.length
-            if (success.data.length > 0) {
-              self.editServing.kafkaTopicDTO.numOfReplicas = success.data[0].replicas.length
-            }
-          },
-          function (error) {
-            growl.error(error.data.errorMsg, {
-              title: 'Error',
-              ttl: 15000
-            });
-          });
+      self.showCreateServingForm = function () {
+        self.showCreateNewServingForm = true;
+        self.createNewServingMode = true;
+        self.updateKafkaTopics();
       };
 
       self.containsServingStatus = function (status) {
@@ -276,6 +279,7 @@ angular.module('hopsWorksApp')
       self.updateServing = function (serving) {
         angular.copy(serving, self.editServing);
         self.editServing.modelVersion = self.editServing.modelVersion.toString();
+        self.sliderOptions.value = serving.requestedInstances;
         self.getModelVersions(serving.modelPath);
         self.showCreateServingForm();
       };
@@ -330,7 +334,7 @@ angular.module('hopsWorksApp')
           function (success) {
             self.sliderOptions.options.ceil = success.data.maxNumInstances;
             self.kafkaSchemaName = success.data.kafkaTopicSchema;
-            self.kafkaSchemaVersion = success.data.kafakTopicVersion;
+            self.kafkaSchemaVersion = success.data.kafkaTopicVersion;
           },
           function (error) {
             self.ignorePoll = false;
