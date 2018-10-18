@@ -175,6 +175,9 @@ angular.module('hopsWorksApp')
           });
       };
 
+      self.filterTopics = function(topic) {
+         return topic.name === self.editServing.kafkaTopicDTO.name;
+      };
 
       self.updateKafkaTopics = function () {
         KafkaService.getTopics(self.projectId).then(
@@ -191,7 +194,7 @@ angular.module('hopsWorksApp')
             }
 
             if (self.editServing.kafkaTopicDTO != null) {
-              topic = self.projectKafkaTopics.filter(topic => topic.name === self.editServing.kafkaTopicDTO.name);
+              topic = self.projectKafkaTopics.filter(self.filterTopics);
               self.editServing.kafkaTopicDTO = topic[0];
               self.updateKafkaDetails();
             }
