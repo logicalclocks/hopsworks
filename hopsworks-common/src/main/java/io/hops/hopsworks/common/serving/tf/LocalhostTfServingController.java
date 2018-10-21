@@ -357,7 +357,8 @@ public class LocalhostTfServingController implements TfServingController {
         String.valueOf(restPort),
         secretDir.toString(),
         project.getName() + USER_NAME_DELIMITER + user.getUsername(),
-        tfServing.isBatchingEnabled() ? "1" : "0"};
+        tfServing.isBatchingEnabled() ? "1" : "0",
+        project.getName()};
 
     logger.log(Level.INFO, Arrays.toString(shCommnad));
 
@@ -376,17 +377,23 @@ public class LocalhostTfServingController implements TfServingController {
 
     ProcessBuilder pb = new ProcessBuilder(shCommnad);
     Process process = null;
-    String processOutput = "";
+    BufferedReader procOutputReader = null;
+    String processOutput = null;
     try {
       // Send both stdout and stderr to the same stream
       pb.redirectErrorStream(true);
       process = pb.start();
 
-      BufferedReader procOutputReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-      processOutput = procOutputReader.lines().collect(Collectors.joining());
+      // The default size of the buffer is 8192 ~ 100 * 80 lines of text.
+      // Here we are interested in error happening during the startup phase.
+      // The rest of the logging will be done by the ELK stack.
+      procOutputReader =  new BufferedReader(new InputStreamReader(process.getInputStream()));
 
       // Wait until the launcher bash script has finished
       process.waitFor();
+
+      // Read the output.
+      processOutput = procOutputReader.lines().collect(Collectors.joining());
 
       if (process.exitValue() != 0) {
         // Startup process failed for some reason
@@ -411,6 +418,7 @@ public class LocalhostTfServingController implements TfServingController {
       // Startup process failed for some reason
       tfServing.setLocalPid(PID_STOPPED);
       tfServingFacade.updateDbObject(tfServing, project);
+
       throw new TfServingException(RESTCodes.TfServingErrorCode.LIFECYCLEERRORINT, Level.SEVERE, null, processOutput,
         ex);
 
