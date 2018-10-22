@@ -282,9 +282,9 @@ public class JupyterConfigFilesGenerator {
       boolean isMirroredStrategy = js.getDistributionStrategy().compareToIgnoreCase("mirroredstrategy") == 0
           && isDistributedTraining;
       boolean isParameterServerStrategy = js.getDistributionStrategy().compareToIgnoreCase
-          ("parameterserverstrategy") == 0;
+          ("parameterserverstrategy") == 0 && isDistributedTraining;
       boolean isCollectiveAllReduceStrategy = js.getDistributionStrategy().compareToIgnoreCase
-          ("collectiveallreducestrategy") == 0;
+          ("collectiveallreducestrategy") == 0 && isDistributedTraining;
       boolean isSparkDynamic = js.getMode().compareToIgnoreCase("sparkdynamic") == 0;
       String extraJavaOptions = "-D" + Settings.LOGSTASH_JOB_INFO + "=" + project.getName().toLowerCase()
           + ",jupyter,notebook,?"
@@ -519,8 +519,8 @@ public class JupyterConfigFilesGenerator {
 
       sparkMagicParams.put("spark.executor.gpus", new ConfigProperty(
           "spark_executor_gpus", HopsUtils.IGNORE,
-          (isDistributedTraining || isParallelExperiment || isExperiment) ? Integer.toString(js.getNumExecutorGpus()):
-              "0"));
+          (isDistributedTraining || isParallelExperiment || isExperiment) ?
+              Integer.toString(js.getNumExecutorGpus()): "0"));
 
       sparkMagicParams.put("spark.dynamicAllocation.enabled", new ConfigProperty(
           "spark_dynamicAllocation_enabled", HopsUtils.OVERWRITE,
