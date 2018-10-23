@@ -72,7 +72,7 @@ public abstract class RESTException extends Exception implements Serializable {
     return level;
   }
   
-  public JsonResponse getJsonResponse(JsonResponse jsonResponse, Settings.LOG_LEVEL logLevel) {
+  public JsonResponse buildJsonResponse(JsonResponse jsonResponse, Settings.LOG_LEVEL logLevel) {
     
     if (jsonResponse == null) {
       throw new IllegalArgumentException("jsonResponse was not provided.");

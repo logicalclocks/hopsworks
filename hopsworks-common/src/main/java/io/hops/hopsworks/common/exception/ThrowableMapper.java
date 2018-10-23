@@ -16,7 +16,6 @@
 package io.hops.hopsworks.common.exception;
 
 import com.google.common.base.Strings;
-import io.hops.hopsworks.common.util.Settings;
 import org.apache.hadoop.security.AccessControlException;
 
 import javax.ejb.AccessLocalException;
@@ -60,10 +59,17 @@ public abstract class ThrowableMapper implements ExceptionMapper<Throwable> {
     } else if (ex instanceof RollbackException) {
       return handleRollbackException((RollbackException) ex);
     } else if (ex instanceof WebApplicationException) {
-      logger.log(Level.SEVERE, ex.getClass().getName(), ex);
+      Response.Status status = Response.Status.fromStatusCode(((WebApplicationException) ex).getResponse().getStatus());
+      Level logLevel;
+      //If the error is not 5xx, then log it in FINE level to not pollute the log.
+      if(status.getStatusCode() < Response.Status.INTERNAL_SERVER_ERROR.getStatusCode()){
+        logLevel = Level.FINE;
+      } else {
+        logLevel = Level.WARNING;
+      }
       return handleRESTException(
         Response.Status.fromStatusCode(((WebApplicationException) ex).getResponse().getStatus()),
-        new GenericException(RESTCodes.GenericErrorCode.WEBAPPLICATION, Level.SEVERE, null, ex.getMessage(), ex));
+        new GenericException(RESTCodes.GenericErrorCode.WEBAPPLICATION, logLevel, ex.getMessage(), null, ex));
     } else if (ex instanceof PersistenceException) {
       Throwable e = ex;
       //get to the bottom of this
@@ -72,38 +78,38 @@ public abstract class ThrowableMapper implements ExceptionMapper<Throwable> {
       }
       if (e.getMessage().contains("Connection refused") || e.getMessage().contains("Cluster Failure")) {
         return handleRESTException(new ServiceException(RESTCodes.ServiceErrorCode.DATABASE_UNAVAILABLE, Level.SEVERE,
-          null, e.getMessage(), e));
+          e.getMessage(), null, e));
       } else {
         return handleRESTException(new GenericException(RESTCodes.GenericErrorCode.PERSISTENCE_ERROR, Level.SEVERE,
-          null, e.getMessage(), e));
+          e.getMessage(), null, e));
       }
     } else if (ex instanceof IOException
       && ex.getMessage().contains("Requested storage index 0 isn't initialized, repository count is 0")) {
       return handleRESTException(new ServiceException(RESTCodes.ServiceErrorCode.ZEPPELIN_ADD_FAILURE, Level.SEVERE,
-        null, ex.getMessage(), ex));
+        ex.getMessage(), null, ex));
     } else {
       return handleUnknownException(ex);
     }
   }
   
   public Response handleIllegalArgumentException(IllegalArgumentException ex) {
-    return handleRESTException(new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_ARGUMENT, Level.FINE, null,
-      ex.getMessage(), ex));
+    return handleRESTException(new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_ARGUMENT, Level.FINE,
+      ex.getMessage(), null, ex));
   }
   
   public Response handleLoginException(LoginException ex) {
-    return handleRESTException(new UserException(RESTCodes.UserErrorCode.AUTHENTICATION_FAILURE, Level.SEVERE, null,
-      ex.getMessage(), ex));
+    return handleRESTException(new UserException(RESTCodes.UserErrorCode.AUTHENTICATION_FAILURE, Level.WARNING,
+      ex.getMessage(), null, ex));
   }
   
   public Response handleIllegalStateException(IllegalStateException ex) {
-    return handleRESTException(new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_STATE, Level.SEVERE, null,
-      ex.getMessage(), ex));
+    return handleRESTException(new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_STATE, Level.WARNING,
+      ex.getMessage(), null, ex));
   }
   
   public Response handleSecurityException(SecurityException ex) {
     return handleRESTException(
-      new GenericException(RESTCodes.GenericErrorCode.SECURITY_EXCEPTION, Level.SEVERE, null, ex.getMessage()));
+      new GenericException(RESTCodes.GenericErrorCode.SECURITY_EXCEPTION, Level.SEVERE, ex.getMessage(), null));
   }
   
   public Response handleRollbackException(RollbackException ex) {
@@ -113,13 +119,12 @@ public abstract class ThrowableMapper implements ExceptionMapper<Throwable> {
   
   public Response handleAccessControlException(AccessControlException ex) {
     return handleRESTException(new HopsSecurityException(RESTCodes.SecurityErrorCode.HDFS_ACCESS_CONTROL, Level.INFO,
-      null, ex.getMessage(), ex));
+      ex.getMessage(), null, ex));
   }
   
   public Response handleRESTException(RESTException ex) {
-    if (!(ex.getCause() != null && ex.getCause() instanceof EJBException &&
-      ex.getCause().getMessage() != null && ex.getCause().getMessage().contains("Client not authorized for this " +
-      "invocation"))) {
+    if (!(ex.getCause() instanceof EJBException && ex.getCause().getMessage() != null
+      && ex.getCause().getMessage().contains("Client not authorized for this invocation"))) {
       StringBuilder sb = new StringBuilder();
       sb.append("errorCode=").append(ex.getErrorCode().getCode());
       if (!Strings.isNullOrEmpty(ex.getUsrMsg())) {
@@ -133,8 +138,8 @@ public abstract class ThrowableMapper implements ExceptionMapper<Throwable> {
   public abstract Response handleRESTException(Response.StatusType status, RESTException ex);
   
   public Response handleAccessLocalException(AccessLocalException ex) {
-    return handleRESTException(new HopsSecurityException(RESTCodes.SecurityErrorCode.EJB_ACCESS_LOCAL, Level.INFO, null,
-      ex.getMessage(), ex));
+    return handleRESTException(new HopsSecurityException(RESTCodes.SecurityErrorCode.EJB_ACCESS_LOCAL, Level.INFO,
+      ex.getMessage(), null, ex));
   }
   
   /**
@@ -145,10 +150,8 @@ public abstract class ThrowableMapper implements ExceptionMapper<Throwable> {
    * @return
    */
   public Response handleUnknownException(Throwable ex) {
-    return handleRESTException(new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR, Level.SEVERE, null,
-      ex.getMessage(), ex));
+    return handleRESTException(new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR, Level.INFO,
+      ex.getMessage(), null, ex));
   }
-  
-  public abstract Settings.LOG_LEVEL getRESTLogLevel();
   
 }

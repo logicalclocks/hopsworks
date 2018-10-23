@@ -34,13 +34,9 @@ public class CAThrowableMapper extends ThrowableMapper {
   @Override
   public Response handleRESTException(Response.StatusType status, RESTException ex) {
     return Response.status(status)
-      .entity(ex.getJsonResponse(new CAJsonResponse(), getRESTLogLevel()))
+      .entity(ex.buildJsonResponse(new CAJsonResponse(), settings.getHopsworksRESTLogLevel()))
       .type(MediaType.APPLICATION_JSON)
       .build();
   }
   
-  @Override
-  public Settings.LOG_LEVEL getRESTLogLevel() {
-    return settings.getHopsworksRESTLogLevel();
-  }
 }

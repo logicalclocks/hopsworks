@@ -223,7 +223,7 @@ public class KafkaFacade {
     
     Project project = em.find(Project.class, projectId);
     if (project == null) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId:" + projectId);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE);
     }
 
     String topicName = topicDto.getName();
@@ -422,8 +422,7 @@ public class KafkaFacade {
   public void shareTopic(Integer owningProjectId, String topicName,
       Integer projectId) throws KafkaException {
     if (owningProjectId.equals(projectId)) {
-      throw new KafkaException(RESTCodes.KafkaErrorCode.DESTINATION_PROJECT_IS_TOPIC_OWNER, Level.FINE,
-        "owningProjectId:"+owningProjectId + ", projectId: " + projectId);
+      throw new KafkaException(RESTCodes.KafkaErrorCode.DESTINATION_PROJECT_IS_TOPIC_OWNER, Level.FINE);
     }
 
     ProjectTopics pt = em.find(ProjectTopics.class,
@@ -435,8 +434,7 @@ public class KafkaFacade {
     SharedTopics sharedTopics = em.find(SharedTopics.class,
         new SharedTopicsPK(topicName, projectId));
     if (sharedTopics != null) {
-      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_ALREADY_SHARED, Level.FINE,
-        "topic: " + topicName + ", projectId: " +projectId);
+      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_ALREADY_SHARED, Level.FINE, "topic: " + topicName);
     }
     //persist shared topic to database
     SharedTopics st = new SharedTopics(topicName, owningProjectId, projectId);
@@ -447,8 +445,7 @@ public class KafkaFacade {
   public void unShareTopic(String topicName, Integer ownerProjectId) throws KafkaException {
     SharedTopics pt = em.find(SharedTopics.class, new SharedTopicsPK(topicName, ownerProjectId));
     if (pt == null) {
-      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_SHARED, Level.FINE,
-        "topic: " + topicName + "ownerProjectId: " + ownerProjectId);
+      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_SHARED, Level.FINE, "topic: " + topicName);
     }
     em.remove(pt);
   }

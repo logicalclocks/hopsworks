@@ -95,7 +95,11 @@ angular.module('hopsWorksApp')
                                     }
                                   }
                                 }, function (error) {
-                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                                if (typeof error.data.usrMsg !== 'undefined') {
+                                    growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
+                                } else {
+                                    growl.error("", {title: error.data.errorMsg, ttl: 5000});
+                                }
                         });
               }
             };
@@ -368,7 +372,11 @@ angular.module('hopsWorksApp')
                           $location.path('project/' + self.projectId + '/jobs');
                           self.removed = true;
                         }, function (error) {
-                  growl.error(error.data.errorMsg, {title: 'Error parsing job configuration file', ttl: 7000});
+                        if (typeof error.data.usrMsg !== 'undefined') {
+                            growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                        } else {
+                            growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                        }
                 });
               } catch (e) {
                 growl.error("Error parsing JSON file", {title: 'Error parsing job configuration file', ttl: 7000});
@@ -439,7 +447,11 @@ angular.module('hopsWorksApp')
                         StorageService.remove(self.newJobName);
                         self.removed = true;
                       }, function (error) {
-                growl.error(error.data.errorMsg, {ttl: 10000});
+                      if (typeof error.data.usrMsg !== 'undefined') {
+                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                      } else {
+                          growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                      }
               });
             };
 
@@ -693,7 +705,11 @@ angular.module('hopsWorksApp')
                             }
 
                           }, function (error) {
-                    growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
+                          if (typeof error.data.usrMsg !== 'undefined') {
+                              growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                          } else {
+                              growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                          }
                   });
                   break;
                 case "LIBRARY":
@@ -717,7 +733,11 @@ angular.module('hopsWorksApp')
                             self.runConfig = success.data;
                             self.mainFileSelected(filename);
                           }, function (error) {
-                    growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
+                          if (typeof error.data.usrMsg !== 'undefined') {
+                              growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                          } else {
+                              growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                          }
                   });
                   break;
                 default:

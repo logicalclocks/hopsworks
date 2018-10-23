@@ -241,7 +241,11 @@ angular.module('hopsWorksApp')
                 self.totalPages = Math.floor(self.activities.length / self.pageSize);
                 self.totalItems = self.activities.length;
               }, function (error) {
-                growl.error("Error" + error.data.errorMsg, {title: 'Error', ttl: 5000});
+                  if (typeof error.data.usrMsg !== 'undefined') {
+                      growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
+                  } else {
+                      growl.error("", {title: error.data.errorMsg, ttl: 5000});
+                  }
               });
             };
 
@@ -704,7 +708,11 @@ angular.module('hopsWorksApp')
                                   download(atob(certs.kStore), 'keyStore.' + certs.fileExtension);
                                   download(atob(certs.tStore), 'trustStore.' + certs.fileExtension);
                                 }, function (error) {
-                                  growl.error(error.data.errorMsg, {title: 'Failed', ttl: 5000});
+                                    if (typeof error.data.usrMsg !== 'undefined') {
+                                        growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
+                                    } else {
+                                        growl.error("", {title: error.data.errorMsg, ttl: 5000});
+                                    }
                                 });
                       }, function (error) {
 
