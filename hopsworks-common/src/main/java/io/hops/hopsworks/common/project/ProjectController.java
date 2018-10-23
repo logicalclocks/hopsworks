@@ -711,8 +711,7 @@ public class ProjectController {
         addServiceDataset(project, user, Settings.ServiceDataset.ZEPPELIN, dfso, udfso);
         break;
       case SERVING:
-        addServiceDataset(project, user, Settings.ServiceDataset.SERVING, dfso, udfso);
-        futureList.add(addServingManager(project));
+        futureList.add(addServiceServing(project, user, dfso, udfso));
         break;
       case JOBS:
         addElasticsearch(project);
@@ -774,6 +773,19 @@ public class ProjectController {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_HIVEDB_CREATE_ERROR, Level.SEVERE,
         "project: " + project.getName(), ex.getMessage(), ex);
     }
+  }
+
+  private Future<CertificatesController.CertsResult> addServiceServing(Project project, Users user,
+                                 DistributedFileSystemOps dfso, DistributedFileSystemOps udfso)
+      throws ProjectException, DatasetException, HopsSecurityException {
+
+    addServiceDataset(project, user, Settings.ServiceDataset.SERVING, dfso, udfso);
+    elasticController.createIndexPattern(project, project.getName().toLowerCase() + "_serving-*");
+    // If Kafka is not enabled for the project, enabled it
+    if (!projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.KAFKA)) {
+      projectServicesFacade.addServiceForProject(project, ProjectServiceEnum.KAFKA);
+    }
+    return addServingManager(project);
   }
 
   /**
@@ -2365,36 +2377,17 @@ public class ProjectController {
   public void addElasticsearch(Project project) throws ProjectException, ServiceException {
             
     String projectName = project.getName().toLowerCase();
-    Map<String, String> params = new HashMap<>();
-    params.put("op", "POST");
-    params.put("project", projectName + "_logs");
-    params.put("resource", "");
-    params.put("data", "{\"attributes\": {\"title\": \"" + projectName + "_logs-*"  + "\"}}");
-  
-    JSONObject resp = elasticController.sendKibanaReq(params, "index-pattern", projectName + "_logs-*");
-  
-    if (!(resp.has("updated_at") || (resp.has("statusCode") && resp.get("statusCode").toString().equals("409")))) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_SERVICE_ADD_FAILURE, Level.SEVERE, "Could not " +
-        "create logs index for project: " + projectName);
-    }
 
-    params.clear();
+    // Create index pattern for spark logs
+    elasticController.createIndexPattern(project, projectName + "_logs-*");
 
-    String indexName = project.getName().toLowerCase() + "_" + Settings.ELASTIC_EXPERIMENTS_INDEX;
-
+    // Create index and index-pattern for experiment service
+    String indexName = projectName + "_" + Settings.ELASTIC_EXPERIMENTS_INDEX;
     if(!elasticController.indexExists(indexName)) {
       elasticController.createIndex(indexName);
     }
 
-    params.clear();
-    params.put("op", "POST");
-    params.put("data", "{\"attributes\": {\"title\": \"" + indexName  + "\"}}");
-    resp = elasticController.sendKibanaReq(params, "index-pattern", indexName, true);
-  
-    if (!(resp.has("updated_at") || (resp.has("statusCode") && resp.get("statusCode").toString().equals("409")))) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_KIBANA_CREATE_INDEX_ERROR, Level.SEVERE,
-        "project: " + projectName + ", resp: " + resp.toString(2));
-    }
+    elasticController.createIndexPattern(project, indexName);
 
     String savedSummarySearch =
             "{\"attributes\":{\"title\":\"Experiments summary\",\"description\":\"\",\"hits\":0,\"columns\"" +
@@ -2405,10 +2398,11 @@ public class ProjectController {
                     "{\\\"index\\\":\\\"" + indexName + "\\\",\\\"highlightAll\\\":true,\\\"version\\\":true" +
                     ",\\\"query\\\":{\\\"language\\\":\\\"lucene\\\",\\\"query\\\":\\\"\\\"},\\\"filter\\\":" +
                     "[]}\"}}}";
-    params.clear();
+
+    Map<String, String> params = new HashMap<>();
     params.put("op", "POST");
     params.put("data", savedSummarySearch);
-    resp = elasticController.sendKibanaReq(params, "search", indexName + "_summary-search", true);
+    JSONObject resp = elasticController.sendKibanaReq(params, "search", indexName + "_summary-search", true);
 
     if (!(resp.has("updated_at") || (resp.has("statusCode") && resp.get("statusCode").toString().equals("409")))) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_KIBANA_CREATE_SEARCH_ERROR, Level.SEVERE,
@@ -2440,48 +2434,41 @@ public class ProjectController {
 
   public void removeElasticsearch(Project project) throws ServiceException {
     Map<String, String> params = new HashMap<>();
+    params.put("op", "DELETE");
 
     List<ProjectServiceEnum> projectServices = projectServicesFacade.
             findEnabledServicesForProject(project);
 
     String projectName = project.getName().toLowerCase();
 
-    for(ProjectServiceEnum service: projectServices) {
-      if(service.equals(ProjectServiceEnum.JOBS) || service.equals(ProjectServiceEnum.JUPYTER)) {
-        
-        //1. Delete visualizations, saved searches, dashboards
-        List<String> projectNames = new ArrayList<>();
-        projectNames.add(project.getName());
-        LOGGER.log(Level.INFO, "removeElasticsearch-2:{0}", projectNames);
-        elasticController.deleteProjectSavedObjects(projectNames);
-        
-        //2. Delete Kibana Index
-        params.clear();
-        params.put("op", "DELETE");
-        params.put("resource", "");
-        JSONObject resp = elasticController.sendKibanaReq(params, "index-pattern", projectName + "_logs-*");
-        LOGGER.log(Level.FINE, resp.toString(4));
+    if (projectServices.contains(ProjectServiceEnum.JOBS)
+        || projectServices.contains(ProjectServiceEnum.JUPYTER)
+        || projectServices.contains(ProjectServiceEnum.SERVING)) {
+      elasticController.deleteProjectIndices(project);
+    }
 
-        //3. Delete Elasticsearch Index
-        elasticController.deleteProjectIndices(project);
+    if (projectServices.contains(ProjectServiceEnum.JOBS) || projectServices.contains(ProjectServiceEnum.JUPYTER)) {
+      //1. Delete visualizations, saved searches, dashboards
+      List<String> projectNames = new ArrayList<>();
+      projectNames.add(project.getName());
+      LOGGER.log(Level.INFO, "removeElasticsearch-2:{0}", projectNames);
+      elasticController.deleteProjectSavedObjects(projectNames);
 
-        String experimentsIndex = project.getName().toLowerCase() + "_" + Settings.ELASTIC_EXPERIMENTS_INDEX;
+      //2. Delete Kibana Index
+      JSONObject resp = elasticController.sendKibanaReq(params, "index-pattern", projectName + "_logs-*");
+      LOGGER.log(Level.FINE, resp.toString(4));
 
-        if(elasticController.indexExists(experimentsIndex)) {
-          elasticController.deleteIndex(experimentsIndex);
-        }
+      // 3. Cleanup Experiment related Kibana stuff
+      String experimentsIndex = projectName + "_" + Settings.ELASTIC_EXPERIMENTS_INDEX;
+      elasticController.sendKibanaReq(params, "index-pattern", experimentsIndex, false);
+      elasticController.sendKibanaReq(params, "search", experimentsIndex + "_summary-search", false);
+      elasticController.sendKibanaReq(params, "dashboard", experimentsIndex + "_summary-dashboard", false);
+      LOGGER.log(Level.INFO, "removeElasticsearch-1");
+    }
 
-        params.clear();
-        params.put("op", "DELETE");
-        elasticController.sendKibanaReq(params, "index-pattern", experimentsIndex, false);
-        params.clear();
-        params.put("op", "DELETE");
-        elasticController.sendKibanaReq(params, "search", experimentsIndex + "_summary-search", false);
-        params.clear();
-        params.put("op", "DELETE");
-        elasticController.sendKibanaReq(params, "dashboard", experimentsIndex + "_summary-dashboard", false);
-        LOGGER.log(Level.INFO, () -> "removeElasticsearch-1:" +service);
-      }
+    if (projectServices.contains(ProjectServiceEnum.SERVING)) {
+      JSONObject resp = elasticController.sendKibanaReq(params, "index-pattern", projectName + "_serving-*");
+      LOGGER.log(Level.FINE, resp.toString(4));
     }
   }
 

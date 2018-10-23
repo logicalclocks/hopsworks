@@ -95,6 +95,7 @@ public class KibanaProxyServlet extends ProxyServlet {
 
   private final List<String> registeredKibanaSuffix = new ArrayList<String>() {{
       add("_logs");
+      add("_serving");
       add("_experiments");
       add("_experiments_summary-search");
       add("_experiments_summary-dashboard");

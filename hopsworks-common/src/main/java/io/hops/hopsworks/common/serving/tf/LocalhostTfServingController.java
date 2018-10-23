@@ -35,9 +35,7 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.inject.Alternative;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -49,7 +47,6 @@ import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 import static io.hops.hopsworks.common.hdfs.HdfsUsersController.USER_NAME_DELIMITER;
 
@@ -203,8 +200,8 @@ public class LocalhostTfServingController implements TfServingController {
 
       // getTfServingStatus returns UPDATING if the PID is different than -2 and there is a lock.
       // If we reached this point, we just acquired a lock
-    } else if (currentStatus == TfServingStatusEnum.UPDATING
-        && command == TfServingCommands.STOP) {
+    } else if (currentStatus == TfServingStatusEnum.UPDATING &&
+        command == TfServingCommands.STOP) {
       killTfServingInstance(project, tfServing, true);
     } else {
       // Release lock before throwing the exception
@@ -377,23 +374,13 @@ public class LocalhostTfServingController implements TfServingController {
 
     ProcessBuilder pb = new ProcessBuilder(shCommnad);
     Process process = null;
-    BufferedReader procOutputReader = null;
-    String processOutput = null;
     try {
       // Send both stdout and stderr to the same stream
       pb.redirectErrorStream(true);
       process = pb.start();
 
-      // The default size of the buffer is 8192 ~ 100 * 80 lines of text.
-      // Here we are interested in error happening during the startup phase.
-      // The rest of the logging will be done by the ELK stack.
-      procOutputReader =  new BufferedReader(new InputStreamReader(process.getInputStream()));
-
       // Wait until the launcher bash script has finished
       process.waitFor();
-
-      // Read the output.
-      processOutput = procOutputReader.lines().collect(Collectors.joining());
 
       if (process.exitValue() != 0) {
         // Startup process failed for some reason
@@ -419,8 +406,8 @@ public class LocalhostTfServingController implements TfServingController {
       tfServing.setLocalPid(PID_STOPPED);
       tfServingFacade.updateDbObject(tfServing, project);
 
-      throw new TfServingException(RESTCodes.TfServingErrorCode.LIFECYCLEERRORINT, Level.SEVERE, null, processOutput,
-        ex);
+      throw new TfServingException(RESTCodes.TfServingErrorCode.LIFECYCLEERRORINT, Level.SEVERE, null,
+          ex.getMessage(), ex);
 
     } finally {
       if (settings.getHopsRpcTls()) {

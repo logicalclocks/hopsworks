@@ -176,6 +176,8 @@ public class TfServingService {
     // Check that the modelName is present
     if (Strings.isNullOrEmpty(tfServing.getModelName())) {
       throw new IllegalArgumentException("Model name not provided");
+    } else if (tfServing.getModelName().contains(" ")) {
+      throw new IllegalArgumentException("Model name cannot contain spaces");
     }
 
     if (tfServing.getModelVersion() == null) {

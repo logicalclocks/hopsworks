@@ -24,7 +24,7 @@
 
       <div ng-show="servingCtrl.activeTab === 'serving'" layout-align="center center">
 
-        <div class="">
+        <div class="" ng-if="servingCtrl.showLogs === false">
           <!-- Page Content -->
           <div ng-if="servingCtrl.showCreateNewServingForm === true">
             <div class="col-xs-10 col-sm-10 col-md-10 col-lg-10" layout-align="left left" style='margin-top:20px; margin-left: 0px;'>
@@ -131,16 +131,15 @@
               <th style="width: 6%">Version</th>
               <th style="width: 5%">Instances</th>
               <th style="width: 5%">Port</th>
-              <th style="width: 10%">Created</th>
+              <th style="width: 9%">Created</th>
               <th style="width: 13%">Topic Name</th>
-              <th style="width: 7%">Batching</th>
-              <th style="width: 15%">Creator</th>
+              <th style="width: 5%">Batching</th>
+              <th style="width: 9%">Creator</th>
               <th style="width: 6%">Status</th>
               <th style="width: 15%">Actions</th>
-              <!--<th style="width: 6%">Batching</th> -->
               </thead>
               <tbody>
-                <tr dir-paginate="serving in servingCtrl.servings| orderBy :sortKey:reverse| filter:jobsCtrl.jobFilter:false | itemsPerPage:pageSize">
+                <tr dir-paginate="serving in servingCtrl.servings| orderBy :sortKey:reverse| itemsPerPage:pageSize">
                   <td>
                     <!-- Start -->
                     <div class="btn-group" role="group" ng-if="serving.status === 'Stopped'">
@@ -186,8 +185,9 @@
                   <td> {{serving.creator}} </td>
                   <td> {{serving.status}} </td>
                   <td>
-                    <button class="btn btn-info glyphicon glyphicon-edit" uib-tooltip="edit" ng-click="servingCtrl.updateServing(serving); $event.stopPropagation();"></button>
-                    <button class="btn btn-danger glyphicon glyphicon-trash" uib-tooltip="delete" ng-click="servingCtrl.deleteServing(serving); $event.stopPropagation();"></button>
+                    <button class="btn btn-info glyphicon glyphicon-edit" uib-tooltip="Edit" style="margin-right:-3px" ng-click="servingCtrl.updateServing(serving); $event.stopPropagation();"></button>
+                    <button class="btn btn-danger glyphicon glyphicon-trash" uib-tooltip="Delete" style="margin-right: -3px;" ng-click="servingCtrl.deleteServing(serving); $event.stopPropagation();"></button>
+                    <button class="btn btn-warning glyphicon glyphicon-list" uib-tooltip="Show logs" style="margin-right: -3px;" ng-click="servingCtrl.showServingLogs(serving); $event.stopPropagation();"></button>
                   </td>
                 </tr>
               </tbody>
@@ -200,6 +200,13 @@
             </dir-pagination-controls>
           </div>
           <!-- /#wrapper -->
+        </div>
+        <div class="" ng-if="servingCtrl.showLogs === true">
+          <button ng-click="servingCtrl.showMainUI();$event.stopPropagation();"
+                  class="btn btn-primary btn-md fa fa-table" style="font-size:0.9em; padding:7px 10px; margin-bottom: 10px; background-color:#005571;"
+                  onmouseover="this.style.backgroundColor='#004159'"
+                  onmouseout="this.style.backgroundColor='#005571'"> Model Serving Summary</button>
+          <iframe style="overflow-y: auto;" id="ui_iframe"  ng-src="{{servingCtrl.kibanaUI}}" width="99%" height="87%"></iframe>
         </div>
       </div>
     </div>

@@ -20,8 +20,8 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-  .controller('servingCtrl', ['$scope', '$routeParams', 'growl', 'ServingService', '$location', 'ModalService', '$interval', 'StorageService', '$mdSidenav', 'DataSetService', 'KafkaService',
-    function ($scope, $routeParams, growl, ServingService, $location, ModalService, $interval, StorageService, $mdSidenav, DataSetService, KafkaService) {
+  .controller('servingCtrl', ['$scope', '$routeParams', 'growl', 'ServingService', 'UtilsService', '$location', 'ModalService', '$interval', 'StorageService', '$mdSidenav', 'DataSetService', 'KafkaService',
+    function ($scope, $routeParams, growl, ServingService, UtilsService, $location, ModalService, $interval, StorageService, $mdSidenav, DataSetService, KafkaService) {
 
       var self = this;
 
@@ -37,13 +37,18 @@ angular.module('hopsWorksApp')
 
       self.projectId = $routeParams.projectID;
 
+      self.showLogs = false;
+      self.kibanaUI = "";
+
       self.projectKafkaTopics = [];
       self.kafkaDefaultNumPartitions = 1;
       self.kafkaDefaultNumReplicas = 1;
       self.kafkaMaxNumReplicas = 1;
 
       self.servings = [];
+
       self.editServing = {};
+      self.editServing.batchingEnabled = false;
 
       // Configuration to create a new Kafka topic for the serving
       self.createKafkaTopicDTO = {};
@@ -151,6 +156,7 @@ angular.module('hopsWorksApp')
         self.editServing.kafkaTopicDTO.name = "CREATE";
         self.editServing.kafkaTopicDTO.numOfPartitions = self.kafkaDefaultNumPartitions;
         self.editServing.kafkaTopicDTO.numOfReplicas = self.kafkaDefaultNumReplicas;
+        self.editServing.batchingEnabled = false;
         self.versions = [];
         self.sliderOptions.value = 1;
         self.showAdvancedForm = false;
@@ -320,6 +326,19 @@ angular.module('hopsWorksApp')
             });
           });
 
+      };
+
+      self.showServingLogs = function (serving) {
+         var projectName = UtilsService.getProjectName();
+         self.kibanaUI = "/hopsworks-api/kibana/app/kibana?projectId=" + self.projectId +
+             "#/discover?_g=()&_a=(columns:!(modelname,host,log_message,'@timestamp')," +
+             "index:'" + projectName + "_serving-*',interval:auto," +
+             "query:(language:lucene,query:'modelname:" + serving.modelName + "'),sort:!(_score,desc))";
+         self.showLogs = true;
+      };
+
+      self.showMainUI = function() {
+         self.showLogs = false;
       };
 
       $scope.$on('$destroy', function () {
