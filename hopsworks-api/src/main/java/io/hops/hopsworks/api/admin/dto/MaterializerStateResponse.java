@@ -42,6 +42,7 @@ package io.hops.hopsworks.api.admin.dto;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
 
 @XmlRootElement
 public class MaterializerStateResponse implements Serializable {
@@ -50,13 +51,15 @@ public class MaterializerStateResponse implements Serializable {
   private List<CryptoMaterial> localMaterializedState;
   private List<CryptoMaterial> remoteMaterializedState;
   private List<CryptoMaterial> scheduledRemovals;
+  private Map<String, Boolean> materialKeyLocks;
   
   public MaterializerStateResponse(
       List<CryptoMaterial> localMaterializedState, List<CryptoMaterial> remoteMaterializedState,
-      List<CryptoMaterial> scheduledRemovals) {
+      List<CryptoMaterial> scheduledRemovals, Map<String, Boolean> materialKeyLocks) {
     this.localMaterializedState = localMaterializedState;
     this.remoteMaterializedState = remoteMaterializedState;
     this.scheduledRemovals = scheduledRemovals;
+    this.materialKeyLocks = materialKeyLocks;
   }
   
   public MaterializerStateResponse() {
@@ -85,6 +88,14 @@ public class MaterializerStateResponse implements Serializable {
   
   public void setScheduledRemovals(List<CryptoMaterial> scheduledRemovals) {
     this.scheduledRemovals = scheduledRemovals;
+  }
+  
+  public Map<String, Boolean> getMaterialKeyLocks() {
+    return materialKeyLocks;
+  }
+  
+  public void setMaterialKeyLocks(Map<String, Boolean> materialKeyLocks) {
+    this.materialKeyLocks = materialKeyLocks;
   }
   
   public static class CryptoMaterial {
