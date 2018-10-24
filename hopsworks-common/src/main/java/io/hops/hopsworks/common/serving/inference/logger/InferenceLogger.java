@@ -14,16 +14,16 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.common.serving.tf;
+package io.hops.hopsworks.common.serving.inference.logger;
 
-import javax.xml.bind.annotation.XmlEnum;
+import io.hops.hopsworks.common.dao.serving.TfServing;
 
-@XmlEnum
-public enum TfServingCommands {
-  START,
-  STOP;
+public interface InferenceLogger {
 
-  public static TfServingCommands fromString(String command) {
-    return valueOf(command.toUpperCase());
-  }
+  void logInferenceRequest(TfServing tfServing,
+                           String inferenceRequest,
+                           Integer responseHttpCode,
+                           String inferenceResult) throws Exception;
+
+  String getClassName();
 }

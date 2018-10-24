@@ -78,9 +78,9 @@
       <property name="ignoreComments" value="true"/>
     </module>
     <module name="AvoidStarImport"/>
-    <!--module name="IllegalImport">
-      <property name="illegalPkgs" value="java.util.logging"/>
-    </module-->
+    <module name="IllegalThrows">
+      <property name="illegalClassNames" value="AppException"/>
+    </module>
     <module name="RedundantImport"/>
     <module name="UnusedImports"/>
     <module name="Regexp">

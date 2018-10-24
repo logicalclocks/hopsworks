@@ -73,6 +73,9 @@ import org.codehaus.jackson.annotate.JsonIgnore;
   @NamedQuery(name = "SchemaTopics.findByVersion",
           query
           = "SELECT s FROM SchemaTopics s WHERE s.schemaTopicsPK.version = :version"),
+  @NamedQuery(name = "SchemaTopics.findByNameAndVersion",
+      query = "SELECT s FROM SchemaTopics s WHERE s.schemaTopicsPK.name = :name AND " +
+          "s.schemaTopicsPK.version = :version"),
   @NamedQuery(name = "SchemaTopics.findByContents",
           query = "SELECT s FROM SchemaTopics s WHERE s.contents = :contents"),
   @NamedQuery(name = "SchemaTopics.findByCreatedOn",

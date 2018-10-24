@@ -14,16 +14,12 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.common.serving.tf;
+package io.hops.hopsworks.common.serving.inference;
 
-import javax.xml.bind.annotation.XmlEnum;
+import io.hops.common.Pair;
+import io.hops.hopsworks.common.dao.serving.TfServing;
 
-@XmlEnum
-public enum TfServingCommands {
-  START,
-  STOP;
-
-  public static TfServingCommands fromString(String command) {
-    return valueOf(command.toUpperCase());
-  }
+public interface TfInferenceController {
+  Pair<Integer, String> infer(TfServing tfServing, Integer modelVersion,
+                             String verb, String inferenceRequestJson) throws InferenceException;
 }

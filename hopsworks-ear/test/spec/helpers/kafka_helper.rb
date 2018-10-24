@@ -34,7 +34,7 @@ module KafkaHelper
 
   def create_topic(project_id)
     schema_name = add_schema(project_id)
-    topic_name = add_topic(project_id, schema_name)
+    topic_name = add_topic(project_id, schema_name, 1)
     ProjectTopics.find_by(project_id:project_id, topic_name:topic_name)
   end
 
@@ -56,7 +56,7 @@ module KafkaHelper
     return json_result, kafka_schema_name
   end
 
-  def add_topic(project_id, schema_name)
+  def add_topic(project_id, schema_name, schema_version)
     add_topic_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/kafka/topic/add"
     kafka_topic_name = "kafka_topic_#{random_id}"
     json_data = {
@@ -64,11 +64,11 @@ module KafkaHelper
         numOfPartitions: 2,
         numOfReplicas: 1,
         schemaName: schema_name,
-        schemaVersion: 1
+        schemaVersion: schema_version
     }
     json_data = json_data.to_json
     json_result = post add_topic_endpoint, json_data
     return json_result, kafka_topic_name
   end
-  
+
 end

@@ -27,11 +27,34 @@ public class ServingConf {
 
   private Integer maxNumInstances;
 
+  private String kafkaTopicSchema;
+  private Integer kafkaTopicVersion;
+
   public ServingConf() {
   }
 
-  public ServingConf(Integer maxNumInstances) {
+  public ServingConf(Integer maxNumInstances, String kafkaTopicSchema, Integer kafkaTopicVersion) {
     this.maxNumInstances = maxNumInstances;
+    this.kafkaTopicSchema = kafkaTopicSchema;
+    this.kafkaTopicVersion = kafkaTopicVersion;
+  }
+
+  @ApiModelProperty(value = "Schema name for the Kafka topic used for logging", readOnly = true)
+  public String getKafkaTopicSchema() {
+    return kafkaTopicSchema;
+  }
+
+  public void setKafkaTopicSchema(String kafkaTopicSchema) {
+    this.kafkaTopicSchema = kafkaTopicSchema;
+  }
+
+  @ApiModelProperty(value = "Schema version for the Kafka topic used for logging", readOnly = true)
+  public Integer getKafkaTopicVersion() {
+    return kafkaTopicVersion;
+  }
+
+  public void setKafkaTopicVersion(Integer kafkaTopicVersion) {
+    this.kafkaTopicVersion = kafkaTopicVersion;
   }
 
   @ApiModelProperty(value = "Max number of serving instances serving a model", readOnly = true)
