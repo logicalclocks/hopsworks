@@ -190,6 +190,21 @@ describe "On #{ENV['OS']}" do
           expect_json(usrMsg: "Model name not provided")
         end
 
+        it "fail to create a serving with space in the name" do
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+              {modelName: "test Model1",
+               modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
+               modelVersion: 1,
+               batchingEnabled: false,
+               kafkaTopicDTO: {
+                   name: "CREATE",
+                   numOfPartitions: 1,
+                   numOfReplicas: 1
+               }}
+          expect_json(usrMsg: "Model name cannot contain spaces")
+          expect_status(422)
+        end
+
         it "fail to create a serving without batching specified" do
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
               {modelName: "nobatchingModels",
@@ -263,6 +278,23 @@ describe "On #{ENV['OS']}" do
           system "pgrep -f #{@serving[:model_name]} -a"
           $?.exitstatus == 0
         end
+
+        # Sleep a bit to make sure that logs are propagated correctly to the index
+        sleep(30)
+
+        # Check that the logs are written in the elastic index.
+        Airborne.configure do |config|
+          config.base_url = ''
+        end
+
+        index = get "#{ENV['ELASTIC_API']}/#{@project[:projectname]}_serving*/_search?q=modelname:#{@serving[:model_name]}"
+
+        Airborne.configure do |config|
+          config.base_url = "http://#{ENV['WEB_HOST']}:#{ENV['WEB_PORT']}"
+        end
+
+        parsed_index = JSON.parse(index)
+        expect(parsed_index['hits']['total']).to be > 0
       end
 
       it "should fail to start a running instance" do

@@ -72,7 +72,8 @@ public class ElasticCleaner {
     LOGGER.log(Level.INFO, "Cleaning up elastic job lobs, if any");
     //Get all log indices
     try {
-      Map<String, IndexMetaData> indices = elasticContoller.getIndices(Settings.ELASTIC_LOG_INDEX_REGEX);
+      Map<String, IndexMetaData> indices = elasticContoller.getIndices("(" + Settings.ELASTIC_LOG_INDEX_REGEX + ")|("
+          + Settings.ELASTIC_SERVING_INDEX_REGEX + ")");
       for (String index : indices.keySet()) {
         //Get current timestamp
         long currentTime = System.currentTimeMillis();

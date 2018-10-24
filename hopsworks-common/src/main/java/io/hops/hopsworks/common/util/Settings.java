@@ -1753,6 +1753,7 @@ public class Settings implements Serializable {
   
   //Elastic log index pattern
   public static final String ELASTIC_LOG_INDEX_REGEX = ".*_logs-\\d{4}.\\d{2}.\\d{2}";
+  public static final String ELASTIC_SERVING_INDEX_REGEX = ".*_serving-\\d{4}.\\d{2}.\\d{2}";
   public static final String ELASTIC_EXPERIMENTS_INDEX = "experiments";
   public static final String ELASTIC_SAVED_OBJECTS = "saved_objects";
   public static final String ELASTIC_VISUALIZATION = "visualization";
