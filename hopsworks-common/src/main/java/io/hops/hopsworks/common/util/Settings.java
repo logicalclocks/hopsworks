@@ -293,7 +293,6 @@ public class Settings implements Serializable {
   private static final String VARIABLE_KUBE_REGISTRY = "kube_registry";
   private static final String VARIABLE_KUBE_MAX_SERVING = "kube_max_serving_instances";
 
-
   private String setVar(String varName, String defaultValue) {
     Variables userName = findById(varName);
     if (userName != null && userName.getValue() != null && (!userName.getValue().isEmpty())) {
@@ -677,8 +676,6 @@ public class Settings implements Serializable {
    * Default Directory locations
    */
   public static final String PRIVATE_DIRS = "/private_dirs/";
-
-  public static final String SERVING_DIRS = "/serving/";
 
   public static final String TENSORBOARD_DIRS = "/tensorboard/";
 

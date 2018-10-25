@@ -220,6 +220,7 @@
       <scope>provided</scope>
     </dependency>
   </dependencies>
+
   <build>
     <finalName>hopsworks-api</finalName>
     <plugins>
@@ -234,17 +235,85 @@
           </annotationProcessors>-->
         </configuration>
       </plugin>
-      
-      
+
+      <!--
+        ~ With this plugin we are making sure that the clean command is always called.
+        ~ The reason is that we call the war plugin twice. The first time we invoke the exploded
+        ~ goal to copy the web resources in the target directory and the second time to build the war file.
+        ~ In between, if the kube profile is enabled we modify the beans.xml file.
+        ~ To make sure that the war:war goal (the second execution) packages the correct beans.xml we need to make sure
+        ~ that it uses the cache (i.e. the files already present in the target directory).
+        ~
+        ~ To avoid troubles of classes modified in code and cached in the target directory, here we are binding the
+        ~ clean goal during the initialization phase (the first phase). In this way even if someone forgot to invoke
+        ~ the clean target, he/she will find a clean directory.
+      -->
+      <plugin>
+        <artifactId>maven-clean-plugin</artifactId>
+        <version>3.1.0</version>
+        <executions>
+          <execution>
+            <id>auto-clean</id>
+            <phase>initialize</phase>
+            <goals>
+              <goal>clean</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-war-plugin</artifactId>
         <version>3.0.0</version>
         <configuration>
           <failOnMissingWebXml>true</failOnMissingWebXml>
+          <useCache>true</useCache>
         </configuration>
+        <executions>
+          <execution>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>exploded</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
-  
+
+    <profiles>
+    <profile>
+      <id>kube</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>com.google.code.maven-replacer-plugin</groupId>
+            <artifactId>maven-replacer-plugin</artifactId>
+            <version>1.3.7</version>
+            <executions>
+              <execution>
+                <phase>process-resources</phase>
+                <goals>
+                  <goal>replace</goal>
+                </goals>
+              </execution>
+            </executions>
+            <configuration>
+              <file>target/hopsworks-api/WEB-INF/beans.xml</file>
+              <replacements>
+                <replacement>
+                  <token>io.hops.hopsworks.common.serving.tf.LocalhostTfServingController</token>
+                  <value>io.hops.hopsworks.kube.serving.KubeTfServingController</value>
+                </replacement>
+              </replacements>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>

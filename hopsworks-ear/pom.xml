@@ -30,7 +30,7 @@
   ~
   ~ The above copyright notice and this permission notice shall be included in all copies or
   ~ substantial portions of the Software.
-  ~
+  
   ~ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  OR IMPLIED, INCLUDING
   ~ BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
   ~ NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
@@ -71,6 +71,7 @@
     </plugins>
     <finalName>hopsworks-ear</finalName>
   </build>
+
   <dependencies>
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
@@ -109,6 +110,7 @@
       <type>war</type>
     </dependency>
   </dependencies>
+
   <profiles>
     <profile>
       <id>jruby-tests</id>
@@ -295,6 +297,7 @@
         </plugins>
       </build>
     </profile>
+
     <profile>
       <id>hops-site</id>
       <activation>
@@ -309,7 +312,23 @@
         </dependency>
       </dependencies>
     </profile>
+
+    <profile>
+      <id>kube</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <dependencies>
+        <dependency>
+          <groupId>io.hops.hopsworks</groupId>
+          <artifactId>hopsworks-kube</artifactId>
+          <version>0.6.0-SNAPSHOT</version>
+          <type>ejb</type>
+        </dependency>
+      </dependencies>
+    </profile>
   </profiles>
+
   <repositories>
     <repository>
       <id>rubygems-release</id>
