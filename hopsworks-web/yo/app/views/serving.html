@@ -24,18 +24,18 @@
 
       <div ng-show="servingCtrl.activeTab === 'serving'" layout-align="center center">
 
-        <div class="">
+        <div class="" ng-if="servingCtrl.showLogs === false">
           <!-- Page Content -->
           <div ng-if="servingCtrl.showCreateNewServingForm === true">
-            <div class="col-xs-8 col-sm-8 col-md-8 col-lg-8" layout-align="center center" style='margin-top:20px; margin-left: 0px;'>
+            <div class="col-xs-10 col-sm-10 col-md-10 col-lg-10" layout-align="left left" style='margin-top:20px; margin-left: 0px;'>
               <div class="row">
-                <div class="col-xs-8 col-sm-8 col-md-8 col-lg-8">
+                <div class="col-xs-9 col-sm-9 col-md-9 col-lg-8">
                   <button class="close" ng-click="servingCtrl.hideCreateServingForm()" type="button"><span aria-hidden="true">&times;</span></button>
                 </div>
               </div>
 
               <div class="row">
-                <div class="col-xs-2 col-sm-2 col-md-2 col-lg-2" style="text-align: right;">
+                <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3" style="text-align: right;">
                   <div>
                     <label>
                       <button style="margin-top: 5px;" id="selectArchiveButton" class="btn btn-default" ng-click="servingCtrl.selectFile()">
@@ -50,9 +50,14 @@
                   <div style="margin-top: 15px; heigth: 2em;" ng-if="servingCtrl.sliderOptions.options.ceil > 1">
                     <label># Instances</label>
                   </div>
+                  <div style="margin-top: 11px; heigth: 2em;"><label ng-click="servingCtrl.showAdvanced()">
+                    <span class="glyphicon glyphicon-chevron-right" ng-if="!servingCtrl.showAdvancedForm"></span>
+                    <span class="glyphicon glyphicon-chevron-down" ng-if="servingCtrl.showAdvancedForm"></span>
+                    Advanced</label>
+                  </div>
                 </div>
 
-                <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
+                <div class="col-xs-6 col-sm-6 col-md-6 col-lg-5">
                   <input style="margin-top: 5px" type="text" class="form-control" id="archives" ng-model="servingCtrl.editServing.modelPath">
 
                   <input style="margin-top: 5px" name="modelName" class="form-control" type="text" ng-model="servingCtrl.editServing.modelName">
@@ -64,17 +69,51 @@
                        rz-slider-options="servingCtrl.sliderOptions.options">
                   </rzslider>
 
-                  <button type="button" style="float:right;margin-bottom: 10px;" class="btn btn-success" ng-click="servingCtrl.createOrUpdate()">
+                  <hr>
+                </div>
+              </div>
+              <div class="row" ng-if="servingCtrl.showAdvancedForm">
+                <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3" style="text-align: right;">
+                  <div style="margin-top: 10px; heigth: 2em;"><label>Request Batching</label></div>
+                  <div style="margin-top: 10px; heigth: 2em;"><label>Kafka Topic</label></div>
+                  <div style="margin-top: 10px; heigth: 2em;"><label>Kafka Num Partitions</label></div>
+                  <div style="margin-top: 10px; heigth: 2em;"><label>Kafka Replication Factor</label></div>
+                </div>
+
+                <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6" style="padding-top: 10px">
+                  <input type="checkbox" name="requestBatching"
+                          ng-model="servingCtrl.editServing.batchingEnabled">
+
+                  <select class="form-control" style="margin-top: 5px; width: 40%" name="kafkaTopicName"
+                          ng-model="servingCtrl.editServing.kafkaTopicDTO"
+                          ng-options="x.name for x in servingCtrl.projectKafkaTopics"
+                          ng-change="servingCtrl.updateKafkaDetails()"></select>
+
+                  <input style="margin-top: 5px; width: 40%" name="kafkaNumPartitions" class="form-control"
+                         type="number" min="1" ng-model="servingCtrl.editServing.kafkaTopicDTO.numOfPartitions"
+                         ng-disabled="servingCtrl.editServing.kafkaTopicDTO.name !== 'CREATE'">
+
+                  <input style="margin-top: 5px; width: 40%" name="kafkaReplicationFactor" class="form-control" type="number"
+                         max="{{servingCtrl.kafkaMaxNumReplicas}}" min="1"
+                         ng-model="servingCtrl.editServing.kafkaTopicDTO.numOfReplicas"
+                         ng-disabled="servingCtrl.editServing.kafkaTopicDTO.name !== 'CREATE'">
+
+                  </div>
+                </div>
+              <div class="row">
+                <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3" style="text-align: right;">
+                </div>
+
+                <div class="col-xs-6 col-sm-6 col-md-6 col-lg-5">
+                  <button type="button" style="float:right; margin-bottom: 10px; margin-top: 10px;" class="btn btn-success" ng-click="servingCtrl.createOrUpdate()">
                     <span class="fa fa-spinner fa-spin" aria-hidden="true" ng-if="servingCtrl.sendingRequest === true"></span>
                     {{servingCtrl.editServing.id == null ? 'Create Serving' : 'Update Serving'}}
                   </button>
                 </div>
               </div>
-
             </div>
-
-            <hr class="col-xs-12">
           </div>
+          <hr class="col-xs-12 col-sm-12 col-md-12 col-lg-12" ng-if="servingCtrl.showCreateNewServingForm === true" />
 
           <div>
             <div class="row" ng-if="servingCtrl.createNewServingMode === false">
@@ -92,14 +131,15 @@
               <th style="width: 6%">Version</th>
               <th style="width: 5%">Instances</th>
               <th style="width: 5%">Port</th>
-              <th style="width: 15%">Created</th>
-              <th style="width: 15%">Creator</th>
+              <th style="width: 9%">Created</th>
+              <th style="width: 13%">Topic Name</th>
+              <th style="width: 5%">Batching</th>
+              <th style="width: 9%">Creator</th>
               <th style="width: 6%">Status</th>
               <th style="width: 15%">Actions</th>
-              <!--<th style="width: 6%">Batching</th> -->
               </thead>
               <tbody>
-                <tr dir-paginate="serving in servingCtrl.servings| orderBy :sortKey:reverse| filter:jobsCtrl.jobFilter:false | itemsPerPage:pageSize">
+                <tr dir-paginate="serving in servingCtrl.servings| orderBy :sortKey:reverse| itemsPerPage:pageSize">
                   <td>
                     <!-- Start -->
                     <div class="btn-group" role="group" ng-if="serving.status === 'Stopped'">
@@ -140,11 +180,14 @@
                   <td> {{serving.availableInstances}} / {{serving.requestedInstances}} </td>
                   <td> {{serving.nodePort}} </td>
                   <td> {{serving.created | date:'short'}} </td>
+                  <td> {{serving.kafkaTopicDTO.name}} </td>
+                  <td> <span class="glyphicon glyphicon-ok-circle" ng-show="serving.batchingEnabled"/> </td>
                   <td> {{serving.creator}} </td>
                   <td> {{serving.status}} </td>
                   <td>
-                    <button class="btn btn-info glyphicon glyphicon-edit" uib-tooltip="edit" ng-click="servingCtrl.updateServing(serving); $event.stopPropagation();"></button>
-                    <button class="btn btn-danger glyphicon glyphicon-trash" uib-tooltip="delete" ng-click="servingCtrl.deleteServing(serving); $event.stopPropagation();"></button>
+                    <button class="btn btn-info glyphicon glyphicon-edit" uib-tooltip="Edit" style="margin-right:-3px" ng-click="servingCtrl.updateServing(serving); $event.stopPropagation();"></button>
+                    <button class="btn btn-danger glyphicon glyphicon-trash" uib-tooltip="Delete" style="margin-right: -3px;" ng-click="servingCtrl.deleteServing(serving); $event.stopPropagation();"></button>
+                    <button class="btn btn-warning glyphicon glyphicon-list" uib-tooltip="Show logs" style="margin-right: -3px;" ng-click="servingCtrl.showServingLogs(serving); $event.stopPropagation();"></button>
                   </td>
                 </tr>
               </tbody>
@@ -157,6 +200,13 @@
             </dir-pagination-controls>
           </div>
           <!-- /#wrapper -->
+        </div>
+        <div class="" ng-if="servingCtrl.showLogs === true">
+          <button ng-click="servingCtrl.showMainUI();$event.stopPropagation();"
+                  class="btn btn-primary btn-md fa fa-table" style="font-size:0.9em; padding:7px 10px; margin-bottom: 10px; background-color:#005571;"
+                  onmouseover="this.style.backgroundColor='#004159'"
+                  onmouseout="this.style.backgroundColor='#005571'"> Model Serving Summary</button>
+          <iframe style="overflow-y: auto;" id="ui_iframe"  ng-src="{{servingCtrl.kibanaUI}}" width="99%" height="87%"></iframe>
         </div>
       </div>
     </div>

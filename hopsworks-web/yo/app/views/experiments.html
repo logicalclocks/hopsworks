@@ -22,14 +22,14 @@
             <div class="">
                 <section ng-controller="ExperimentsCtrl as experimentsCtrl">
                     <!-- Page Content -->
-                    <div class="content hide-border" style="height:100%; overflow: hidden; margin-left: 2px;">
+                    <div class="content-wrapper hide-border" style="margin-left: 2px;">
                         <div ng-if="experimentsCtrl.loading" class="loadingwrap">
                             <div class="loading-content">
                                 <div class="loader-in-wrap"></div>
                                 {{experimentsCtrl.loadingText}}
                             </div>
                         </div>
-                        <div class="row" style="margin-left: 5px; height: 100%; overflow-y: auto;">
+                        <div class="row" style="margin-left: 5px;">
                             <div class="row" style="padding-bottom:3px">
                                 <div class="col-md-12" ng-if="experimentsCtrl.tb === ''">
                            <span class="col-md-3" style="margin-left:-15px;">
@@ -82,7 +82,7 @@
                                 </div>
                             </div>
                             <div ng-if="experimentsCtrl.ui !== ''">
-                                <iframe style="overflow-y: auto" id="ui_iframe"  ng-src="{{experimentsCtrl.ui}}" width="99%" height ="89%"></iframe>
+                                <iframe style="overflow-y: auto" id="ui_iframe"  ng-src="{{experimentsCtrl.ui}}" width="99%" height ="88%"></iframe>
                             </div>
                         </div>
                     </div>

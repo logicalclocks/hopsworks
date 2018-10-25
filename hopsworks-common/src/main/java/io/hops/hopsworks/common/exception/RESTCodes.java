@@ -39,6 +39,8 @@ import javax.xml.bind.annotation.XmlRootElement;
  * 13. Zeppelin error codes start with "21".
  * 14. CA error codes start with "22".
  * 15. DelaCSR error codes start with "23".
+ * 16. TfServing error codes start with "24".
+ * 17. Inference error codes start with "25".
  */
 @XmlRootElement
 public class RESTCodes {
@@ -557,7 +559,9 @@ public class RESTCodes {
     HOST_EXISTS(40, "Host exists", Response.Status.CONFLICT),
     TENSORFLOW_VERSION_NOT_SUPPORTED(41,
       "We currently do not support this version of TensorFlow. Update to a " +
-        "newer version or contact an admin", Response.Status.BAD_REQUEST);
+        "newer version or contact an admin", Response.Status.BAD_REQUEST),
+    SERVICE_GENERIC_ERROR(42, "Generic error while enabling the service",
+        Response.Status.INTERNAL_SERVER_ERROR);
     
     private Integer code;
     private String message;
@@ -596,7 +600,7 @@ public class RESTCodes {
     
     // Zeppelin
     TOPIC_NOT_FOUND(0, "No topics found", Response.Status.NOT_FOUND),
-    BROKER_METADATA_ERROR(1, "An error occured while retrieving topic metadata from broker",
+    BROKER_METADATA_ERROR(1, "An error occurred while retrieving topic metadata from broker",
       Response.Status.INTERNAL_SERVER_ERROR),
     TOPIC_ALREADY_EXISTS(2, "Kafka topic already exists in database. Pick a different topic name",
       Response.Status.CONFLICT),
@@ -608,7 +612,7 @@ public class RESTCodes {
         "that can be created for this project.", Response.Status.PRECONDITION_FAILED),
     TOPIC_REPLICATION_ERROR(5, "Maximum topic replication factor exceeded", Response.Status.BAD_REQUEST),
     SCHEMA_NOT_FOUND(6, "Topic has not schema attached to it.", Response.Status.NOT_FOUND),
-    KAFKA_GENERIC_ERROR(7, "An error occured while retrieving information from Kafka service",
+    KAFKA_GENERIC_ERROR(7, "An error occurred while retrieving information from Kafka service",
       Response.Status.INTERNAL_SERVER_ERROR),
     DESTINATION_PROJECT_IS_TOPIC_OWNER(8, "Destination projet is topic owner",
       Response.Status.BAD_REQUEST),
@@ -617,7 +621,9 @@ public class RESTCodes {
     ACL_ALREADY_EXISTS(11, "ACL already exists.", Response.Status.CONFLICT),
     ACL_NOT_FOUND(12, "ACL not found.", Response.Status.NOT_FOUND),
     ACL_NOT_FOR_TOPIC(13, "ACL does not belong to the specified topic", Response.Status.BAD_REQUEST),
-    SCHEMA_IN_USE(14, "Schema is currently used by topics. topic", Response.Status.PRECONDITION_FAILED);
+    SCHEMA_IN_USE(14, "Schema is currently used by topics. topic", Response.Status.PRECONDITION_FAILED),
+    BAD_NUM_PARTITION(15, "Invalid number of partitions", Response.Status.BAD_REQUEST);
+
     
     private Integer code;
     private String message;
@@ -661,7 +667,7 @@ public class RESTCodes {
     ROLLBACK(3, "The last transaction did not complete as expected",
       Response.Status.INTERNAL_SERVER_ERROR),
     WEBAPPLICATION(4, "Web application exception occurred", null),
-    PERSISTENCE_ERROR(5, "Persistence error occured", Response.Status.INTERNAL_SERVER_ERROR),
+    PERSISTENCE_ERROR(5, "Persistence error occurred", Response.Status.INTERNAL_SERVER_ERROR),
     UNKNOWN_ACTION(6, "This action can not be applied on this resource.", Response.Status.BAD_REQUEST),
     INCOMPLETE_REQUEST(7, "Some parameters were not provided or were not in the required format.",
       Response.Status.BAD_REQUEST),
@@ -1059,7 +1065,10 @@ public class RESTCodes {
     PATHNOTFOUND(6, "Model Path not found", Response.Status.BAD_REQUEST),
     COMMANDNOTRECOGNIZED(7, "Command not recognized", Response.Status.BAD_REQUEST),
     COMMANDNOTPROVIDED(8, "Command not provided", Response.Status.BAD_REQUEST),
-    SPECNOTPROVIDED(9, "TFServing spec not provided", Response.Status.BAD_REQUEST);
+    SPECNOTPROVIDED(9, "TFServing spec not provided", Response.Status.BAD_REQUEST),
+    BAD_TOPIC(10, "Topic provided cannot be used for Serving logging", Response.Status.BAD_REQUEST),
+    DUPLICATEDENTRY(11, "An entry with the same name already exists in this project", Response.Status.BAD_REQUEST);
+
     
     private Integer code;
     private String message;
@@ -1077,16 +1086,60 @@ public class RESTCodes {
     public Integer getCode() {
       return code;
     }
-    
+
     @Override
     public String getMessage() {
       return message;
     }
-    
+
     public Response.StatusType getRespStatus() {
       return respStatus;
     }
-  
+
+    @Override
+    public int getRange() {
+      return range;
+    }
+  }
+
+
+  public enum InferenceErrorCode implements RESTErrorCode {
+
+    SERVINGNOTFOUND(0, "Serving instance not found", Response.Status.NOT_FOUND),
+    SERVINGNOTRUNNING(1, "Serving instance not running", Response.Status.BAD_REQUEST),
+    REQUESTERROR(2, "Error contacting the serving server", Response.Status.INTERNAL_SERVER_ERROR),
+    EMPTYRESPONSE(3, "Empty response from the serving server", Response.Status.INTERNAL_SERVER_ERROR),
+    BADREQUEST(4, "Request malformed", Response.Status.BAD_REQUEST),
+    MISSING_VERB(5, "Verb is missing", Response.Status.BAD_REQUEST),
+    ERRORREADINGRESPONSE(6, "Error while reading the response", Response.Status.INTERNAL_SERVER_ERROR),
+    SERVINGINSTANCEINTERNAL(7, "Serving instance internal error", Response.Status.INTERNAL_SERVER_ERROR),
+    SERVINGINSTANCEBADREQUEST(8, "Serving instance bad request error", Response.Status.BAD_REQUEST);
+
+    private int code;
+    private String message;
+    private Response.Status respStatus;
+    public final int range = 250000;
+
+    InferenceErrorCode(Integer code, String message, Response.Status respStatus) {
+      this.code = range + code;
+      this.message = message;
+      this.respStatus = respStatus;
+    }
+
+    @Override
+    public Integer getCode() {
+      return code;
+    }
+
+    @Override
+    public String getMessage() {
+      return message;
+    }
+
+    public Response.StatusType getRespStatus() {
+      return respStatus;
+    }
+
     @Override
     public int getRange() {
       return range;

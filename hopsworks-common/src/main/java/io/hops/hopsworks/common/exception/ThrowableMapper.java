@@ -94,7 +94,7 @@ public abstract class ThrowableMapper implements ExceptionMapper<Throwable> {
   
   public Response handleIllegalArgumentException(IllegalArgumentException ex) {
     return handleRESTException(new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_ARGUMENT, Level.FINE,
-      ex.getMessage(), null, ex));
+        ex.getMessage(), null, ex));
   }
   
   public Response handleLoginException(LoginException ex) {

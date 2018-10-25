@@ -145,6 +145,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_RM_PORT = "rm_port";
   private static final String VARIABLE_LOGSTASH_IP = "logstash_ip";
   private static final String VARIABLE_LOGSTASH_PORT = "logstash_port";
+  private static final String VARIABLE_LOGSTASH_PORT_SERVING = "logstash_port_serving";
   private static final String VARIABLE_OOZIE_IP = "oozie_ip";
   private static final String VARIABLE_SPARK_HISTORY_SERVER_IP
       = "spark_history_server_ip";
@@ -457,6 +458,7 @@ public class Settings implements Serializable {
       RM_PORT = setIntVar(VARIABLE_RM_PORT, RM_PORT);
       LOGSTASH_IP = setIpVar(VARIABLE_LOGSTASH_IP, LOGSTASH_IP);
       LOGSTASH_PORT = setIntVar(VARIABLE_LOGSTASH_PORT, LOGSTASH_PORT);
+      LOGSTASH_PORT_SERVING = setIntVar(VARIABLE_LOGSTASH_PORT_SERVING, LOGSTASH_PORT_SERVING);
       JHS_IP = setIpVar(VARIABLE_JHS_IP, JHS_IP);
       LIVY_IP = setIpVar(VARIABLE_LIVY_IP, LIVY_IP);
       LIVY_ZEPPELIN_SESSION_TIMEOUT = setVar(VARIABLE_LIVY_ZEPPELIN_SESSION_TIMEOUT, LIVY_ZEPPELIN_SESSION_TIMEOUT);
@@ -474,9 +476,9 @@ public class Settings implements Serializable {
       KAFKA_MAX_NUM_TOPICS = setIntVar(VARIABLE_KAFKA_MAX_NUM_TOPICS, KAFKA_MAX_NUM_TOPICS);
       KAFKA_USER = setVar(VARIABLE_KAFKA_USER, KAFKA_USER);
       KAFKA_DIR = setDirVar(VARIABLE_KAFKA_DIR, KAFKA_DIR);
-      KAFKA_DEFAULT_NUM_PARTITIONS = setDirVar(VARIABLE_KAFKA_NUM_PARTITIONS,
+      KAFKA_DEFAULT_NUM_PARTITIONS = setIntVar(VARIABLE_KAFKA_NUM_PARTITIONS,
           KAFKA_DEFAULT_NUM_PARTITIONS);
-      KAFKA_DEFAULT_NUM_REPLICAS = setDirVar(VARIABLE_KAFKA_NUM_REPLICAS,
+      KAFKA_DEFAULT_NUM_REPLICAS = setIntVar(VARIABLE_KAFKA_NUM_REPLICAS,
           KAFKA_DEFAULT_NUM_REPLICAS);
       YARN_DEFAULT_QUOTA = setIntVar(VARIABLE_YARN_DEFAULT_QUOTA,
           YARN_DEFAULT_QUOTA);
@@ -1351,10 +1353,15 @@ public class Settings implements Serializable {
 
   // Resource Manager Port 
   private int LOGSTASH_PORT = 8088;
-
   public synchronized Integer getLogstashPort() {
     checkCache();
     return LOGSTASH_PORT;
+  }
+
+  private int LOGSTASH_PORT_SERVING = 5045;
+  public synchronized Integer getLogstashPortServing() {
+    checkCache();
+    return LOGSTASH_PORT_SERVING;
   }
 
   // Livy Server`
@@ -1596,15 +1603,15 @@ public class Settings implements Serializable {
     return HOPSWORKS_DEFAULT_SSL_MASTER_PASSWORD;
   }
 
-  private String KAFKA_DEFAULT_NUM_PARTITIONS = "2";
-  private String KAFKA_DEFAULT_NUM_REPLICAS = "1";
+  private Integer KAFKA_DEFAULT_NUM_PARTITIONS = 2;
+  private Integer KAFKA_DEFAULT_NUM_REPLICAS = 1;
 
-  public synchronized String getKafkaDefaultNumPartitions() {
+  public synchronized Integer getKafkaDefaultNumPartitions() {
     checkCache();
     return KAFKA_DEFAULT_NUM_PARTITIONS;
   }
 
-  public synchronized String getKafkaDefaultNumReplicas() {
+  public synchronized Integer getKafkaDefaultNumReplicas() {
     checkCache();
     return KAFKA_DEFAULT_NUM_REPLICAS;
   }
@@ -1743,6 +1750,7 @@ public class Settings implements Serializable {
   
   //Elastic log index pattern
   public static final String ELASTIC_LOG_INDEX_REGEX = ".*_logs-\\d{4}.\\d{2}.\\d{2}";
+  public static final String ELASTIC_SERVING_INDEX_REGEX = ".*_serving-\\d{4}.\\d{2}.\\d{2}";
   public static final String ELASTIC_EXPERIMENTS_INDEX = "experiments";
   public static final String ELASTIC_SAVED_OBJECTS = "saved_objects";
   public static final String ELASTIC_VISUALIZATION = "visualization";
@@ -2720,7 +2728,7 @@ public class Settings implements Serializable {
   private Set<String> PROVIDED_PYTHON_LIBRARY_NAMES;
   private static final String VARIABLE_PROVIDED_PYTHON_LIBRARY_NAMES = "provided_python_lib_names";
   private static final String DEFAULT_PROVIDED_PYTHON_LIBRARY_NAMES =
-      "hops, tfspark, pandas, tensorflow-serving-api, horovod, hopsfacets, mmlspark, numpy";
+      "hops, pandas, tensorflow-serving-api, hopsfacets, mmlspark, numpy";
   
   public synchronized Set<String> getProvidedPythonLibraryNames() {
     checkCache();
