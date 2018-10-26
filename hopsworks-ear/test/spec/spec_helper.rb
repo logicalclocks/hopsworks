@@ -81,6 +81,8 @@ RSpec.configure do |config|
   config.include HostsHelper
   config.include KafkaHelper
   config.include AppserviceHelper
+  config.include ServingHelper
+  config.include HopsFSHelper
   # uncomment next line if you need to clean hdfs and hopsworks db before test.
   # config.before(:suite) { clean_test_data }
   config.after(:suite) {

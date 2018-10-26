@@ -47,8 +47,9 @@ import io.hops.hopsworks.api.jobs.JobService;
 import io.hops.hopsworks.api.jobs.KafkaService;
 import io.hops.hopsworks.api.jupyter.JupyterService;
 import io.hops.hopsworks.api.pythonDeps.PythonDepsService;
-import io.hops.hopsworks.api.serving.TfServingService;
+import io.hops.hopsworks.api.serving.inference.InferenceResource;
 import io.hops.hopsworks.api.tensorflow.TensorBoardService;
+import io.hops.hopsworks.api.serving.TfServingService;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.api.util.LocalFsService;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
@@ -93,6 +94,7 @@ import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.EmailBean;
 import io.hops.hopsworks.common.util.Settings;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import org.apache.commons.net.util.Base64;
 
 import javax.annotation.security.RolesAllowed;
@@ -120,6 +122,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -190,6 +194,8 @@ public class ProjectService {
   private DelaProjectService delaService;
   @Inject
   private DelaClusterProjectService delaclusterService;
+  @Inject
+  private InferenceResource inference;
 
   private final static Logger LOGGER = Logger.getLogger(ProjectService.class.
       getName());
@@ -478,11 +484,22 @@ public class ProjectService {
       // Create dfso here and pass them to the different controllers
       DistributedFileSystemOps dfso = dfs.getDfsOps();
       DistributedFileSystemOps udfso = dfs.getDfsOps(hdfsUsersBean.getHdfsUserName(project, user));
-  
+
       for (String s : projectDTO.getServices()) {
         ProjectServiceEnum se = null;
         se = ProjectServiceEnum.valueOf(s.toUpperCase());
-        if (projectController.addService(project, se, user, dfso, udfso)) {
+        List<Future<?>> serviceFutureList = projectController.addService(project, se, user, dfso, udfso);
+        if (serviceFutureList != null) {
+          // Wait for the futures
+          for (Future f : serviceFutureList) {
+            try {
+              f.get();
+            } catch (InterruptedException | ExecutionException e) {
+              throw new ServiceException(RESTCodes.ServiceErrorCode.SERVICE_GENERIC_ERROR,
+                  Level.SEVERE, "service: " + s, e.getMessage(), e);
+            }
+          }
+
           // Service successfully enabled
           json.setSuccessMessage(json.getSuccessMessage() + "\n"
             + ResponseMessages.PROJECT_SERVICE_ADDED
@@ -820,7 +837,7 @@ public class ProjectService {
     if (project == null) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + id);
     }
-    this.kafka.setProjectId(id);
+    this.kafka.setProject(project);
 
     return this.kafka;
   }
@@ -944,6 +961,19 @@ public class ProjectService {
     };
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(genericPia).build();
+  }
+
+  @ApiOperation(value = "Model inference sub-resource", tags = {"Inference"})
+  @Path("/{projectId}/inference")
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  public InferenceResource infer(@PathParam("projectId") Integer projectId, @Context SecurityContext sc)
+      throws ProjectException {
+    Project project = projectFacade.find(projectId);
+    if (project == null){
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId);
+    }
+    inference.setProject(project);
+    return inference;
   }
 
 }

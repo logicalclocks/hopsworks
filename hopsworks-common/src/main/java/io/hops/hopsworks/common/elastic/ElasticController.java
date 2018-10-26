@@ -361,9 +361,24 @@ public class ElasticController {
     }
   }
 
+  public void createIndexPattern(Project project, String pattern) throws ProjectException {
+    Map<String, String> params = new HashMap<>();
+    params.put("op", "POST");
+    params.put("data", "{\"attributes\": {\"title\": \"" + pattern + "\"}}");
+
+    JSONObject resp = sendKibanaReq(params, "index-pattern", pattern);
+
+    if (!(resp.has("updated_at") || (resp.has("statusCode") && resp.get("statusCode").toString().equals("409")))) {
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_KIBANA_CREATE_INDEX_ERROR, Level.SEVERE, null,
+        "project: " + project.getName() + ", resp: " + resp.toString(2), null);
+    }
+
+  }
+
   public void deleteProjectIndices(Project project) throws ServiceException {
     //Get all project indices
-    Map<String, IndexMetaData> indices = getIndices(project.getName() + "_logs-\\d{4}.\\d{2}.\\d{2}");
+    Map<String, IndexMetaData> indices = getIndices(project.getName() +
+        "_(((logs|serving)-\\d{4}.\\d{2}.\\d{2})|("+ Settings.ELASTIC_EXPERIMENTS_INDEX + "))");
     for (String index : indices.keySet()) {
       if (!deleteIndex(index)) {
         LOG.log(Level.SEVERE, "Could not delete project index:{0}", index);

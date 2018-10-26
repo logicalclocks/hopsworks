@@ -39,7 +39,7 @@ import java.util.logging.Logger;
 public class TfServingFacade {
   private static final Logger LOGGER = Logger.getLogger(TfServingFacade.class.getName());
 
-  private static final long LOCK_TIMEOUT = 300000L; // 5 minutes
+  private static final long LOCK_TIMEOUT = 60000L; // 1 minutes
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
@@ -65,6 +65,12 @@ public class TfServingFacade {
     return em.createNamedQuery("TfServing.findByProject", TfServing.class)
         .setParameter("project", project)
         .getResultList();
+  }
+
+  public TfServing findById(Integer id) {
+    return em.createNamedQuery("TfServing.findById", TfServing.class)
+        .setParameter("id", id)
+        .getSingleResult();
   }
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
@@ -95,6 +101,8 @@ public class TfServingFacade {
       dbTfServing.setVersion(newTfServing.getVersion());
     }
 
+    dbTfServing.setKafkaTopic(newTfServing.getKafkaTopic());
+
     if (newTfServing.getLocalPid() != null) {
       dbTfServing.setLocalPid(newTfServing.getLocalPid());
     }
@@ -103,6 +111,10 @@ public class TfServingFacade {
     }
     if (newTfServing.getLocalPort() != null) {
       dbTfServing.setLocalPort(newTfServing.getLocalPort());
+    }
+
+    if (newTfServing.isBatchingEnabled() != null) {
+      dbTfServing.setBatchingEnabled(newTfServing.isBatchingEnabled());
     }
 
     return merge(dbTfServing);

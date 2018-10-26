@@ -103,19 +103,17 @@ public class KafkaService {
   @EJB
   private UserFacade userFacade;
 
-  private Integer projectId;
   private Project project;
 
   public KafkaService() {
   }
 
-  public void setProjectId(Integer projectId) {
-    this.projectId = projectId;
-    this.project = this.projectFacade.find(projectId);
+  public void setProject(Project project) {
+    this.project = project;
   }
 
-  public Integer getProjectId() {
-    return projectId;
+  public Project getProject() {
+    return project;
   }
 
   /**
@@ -129,7 +127,7 @@ public class KafkaService {
   public Response getTopics(@Context SecurityContext sc,
           @Context HttpServletRequest req) {
 
-    List<TopicDTO> listTopics = kafkaFacade.findTopicsByProject(projectId);
+    List<TopicDTO> listTopics = kafkaFacade.findTopicsByProject(project);
     GenericEntity<List<TopicDTO>> topics
             = new GenericEntity<List<TopicDTO>>(listTopics) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
@@ -142,7 +140,7 @@ public class KafkaService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response getSharedTopics(@Context SecurityContext sc,
           @Context HttpServletRequest req) {
-    List<TopicDTO> listTopics = kafkaController.findSharedTopicsByProject(projectId);
+    List<TopicDTO> listTopics = kafkaController.findSharedTopicsByProject(project.getId());
     GenericEntity<List<TopicDTO>> topics
             = new GenericEntity<List<TopicDTO>>(listTopics) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
@@ -156,9 +154,9 @@ public class KafkaService {
   public Response getProjectAndSharedTopics(@Context SecurityContext sc,
           @Context HttpServletRequest req) {
 
-    List<TopicDTO> allTopics = kafkaFacade.findTopicsByProject(projectId);
+    List<TopicDTO> allTopics = kafkaFacade.findTopicsByProject(project);
 
-    allTopics.addAll(kafkaController.findSharedTopicsByProject(projectId));
+    allTopics.addAll(kafkaController.findSharedTopicsByProject(project.getId()));
     GenericEntity<List<TopicDTO>> topics
             = new GenericEntity<List<TopicDTO>>(allTopics) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
@@ -174,15 +172,16 @@ public class KafkaService {
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws KafkaException, ProjectException, ServiceException, UserException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
+
     //create the topic in the database and the Kafka cluster
-    kafkaFacade.createTopicInProject(projectId, topicDto);
+    kafkaFacade.createTopicInProject(project.getId(), topicDto);
     //By default, all members of the project are granted full permissions 
     //on the topic
     AclDTO aclDto = new AclDTO(project.getName(),
             Settings.KAFKA_ACL_WILDCARD,
             "allow", Settings.KAFKA_ACL_WILDCARD, Settings.KAFKA_ACL_WILDCARD,
             Settings.KAFKA_ACL_WILDCARD);
-    kafkaFacade.addAclsToTopic(topicDto.getName(), projectId, aclDto);
+    kafkaFacade.addAclsToTopic(topicDto.getName(), project.getId(), aclDto);
 
     json.setSuccessMessage("The Topic has been created.");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
@@ -254,18 +253,19 @@ public class KafkaService {
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws KafkaException, ProjectException, UserException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
-    kafkaFacade.shareTopic(this.projectId, topicName, projectId);
     //By default, all members of the project are granted full permissions on the topic
     Project projectShared = projectFacade.find(projectId);
     if (projectShared == null) {
-      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, Level.FINE,
-        "Could not find topic: " + topicName + " for project: " + projectId);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE,
+        "Could not find project: " + projectId);
     }
+    kafkaFacade.shareTopic(project, topicName, projectId);
+
     AclDTO aclDto = new AclDTO(projectShared.getName(),
             Settings.KAFKA_ACL_WILDCARD,
             "allow", Settings.KAFKA_ACL_WILDCARD, Settings.KAFKA_ACL_WILDCARD,
             Settings.KAFKA_ACL_WILDCARD);
-    kafkaFacade.addAclsToTopic(topicName, this.projectId, aclDto);
+    kafkaFacade.addAclsToTopic(topicName, project.getId(), aclDto);
     json.setSuccessMessage("The topic has been shared.");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();
@@ -282,7 +282,7 @@ public class KafkaService {
           @Context HttpServletRequest req) throws KafkaException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
 
-    kafkaFacade.unShareTopic(topicName, projectId);
+    kafkaFacade.unShareTopic(topicName, project.getId());
     json.setSuccessMessage("Topic has been removed from shared.");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();
@@ -298,7 +298,7 @@ public class KafkaService {
           @Context HttpServletRequest req) throws KafkaException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
 
-    kafkaFacade.unShareTopic(topicName, this.projectId);
+    kafkaFacade.unShareTopic(topicName, project.getId());
     json.setSuccessMessage("Topic has been removed from shared.");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();
@@ -313,7 +313,7 @@ public class KafkaService {
           @Context HttpServletRequest req) {
 
     List<SharedProjectDTO> projectDtoList = kafkaFacade
-            .topicIsSharedTo(topicName, this.projectId);
+            .topicIsSharedTo(topicName, project.getId());
 
     GenericEntity<List<SharedProjectDTO>> projectDtos
             = new GenericEntity<List<SharedProjectDTO>>(projectDtoList) {};
@@ -331,7 +331,8 @@ public class KafkaService {
           @Context HttpServletRequest req) {
 
     List<AclUserDTO> aclUsersDtos
-            = kafkaFacade.aclUsers(projectId, topicName);
+            = kafkaFacade.aclUsers(project.getId(), topicName);
+
     GenericEntity<List<AclUserDTO>> aclUsers
             = new GenericEntity<List<AclUserDTO>>(aclUsersDtos) {};
 
@@ -349,7 +350,7 @@ public class KafkaService {
           @Context SecurityContext sc, @Context HttpServletRequest req) throws KafkaException, ProjectException,
     UserException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
-    kafkaFacade.addAclsToTopic(topicName, projectId, aclDto);
+    kafkaFacade.addAclsToTopic(topicName, project.getId(), aclDto);
     json.setSuccessMessage("ACL has been added to the topic.");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }
@@ -376,7 +377,7 @@ public class KafkaService {
   public Response getTopicAcls(@PathParam("topic") String topicName,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws KafkaException {
-    List<AclDTO> aclDto = kafkaFacade.getTopicAcls(topicName, projectId);
+    List<AclDTO> aclDto = kafkaFacade.getTopicAcls(topicName, project);
 
     GenericEntity<List<AclDTO>> aclDtos
             = new GenericEntity<List<AclDTO>>(aclDto) {};
