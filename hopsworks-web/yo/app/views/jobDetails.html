@@ -51,8 +51,22 @@
     
     <div>
         <div ng-show="jobDetailCtrl.hasJobScheduled">
+          <div class="row">
+            <div class="col-md-6">
             <label>Job runs in every {{jobDetailCtrl.availableschedule.number}} {{jobDetailCtrl.availableschedule.unit}}</label><br>
             <label>Starting from {{jobDetailCtrl.availableschedule.start}}</label>
+            </div>
+            <div class="col-md-6">
+              <button ng-click="jobDetailCtrl.unscheduleJob(jobDetailCtrl.job.id);"
+                      class="btn btn-danger btn-sm"
+                      style="min-width: 64px; float:right; margin-left:10px;">
+                <span class="glyphicon glyphicon-stop" aria-hidden="true"></span>
+                Remove Schedule
+                <span class="fa fa-spinner fa-spin" aria-hidden="true" ng-show="jobDetailCtrl.unscheduling" ></span>
+              </button>
+
+          </div>
+          </div>
         </div>
         <div ng-hide="jobDetailCtrl.hasJobScheduled">
             <div>

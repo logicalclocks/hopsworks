@@ -86,4 +86,12 @@ public class JobController {
     return status;
   }
 
+  public boolean unscheduleJob(Jobs job) {
+    boolean status = false;
+    if (job != null) {
+      status = scheduler.unscheduleJob(job);
+    }
+    return status;
+  }
+
 }

@@ -1005,11 +1005,6 @@ public class JobService {
     for (Jobs desc : running) {
       try {
         Execution execution = exeFacade.findForJob(desc).get(0);
-        Execution updatedExecution = exeFacade.getExecution(execution.getJob().
-            getId());
-        if (updatedExecution != null) {
-          execution = updatedExecution;
-        }
         long executiontime = System.currentTimeMillis() - execution.
             getSubmissionTime().getTime();
         //not given appId (not submited yet)
@@ -1317,6 +1312,55 @@ public class JobService {
         json).build();
   }
 
+
+  /**
+   * Remove scheduling for the job with this jobid. The return value is a
+   * JSON object stating operation successful
+   * or not.
+   * <p>
+   * @param jobId
+   * @param sc
+   * @param req
+   * @return
+   */
+  @DELETE
+  @Path("/{jobId}/unschedule")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  public Response unscheduleJob(@PathParam("jobId") int jobId,
+                            @Context SecurityContext sc,
+                            @Context HttpServletRequest req) {
+    Jobs job = jobFacade.findById(jobId);
+    if (job == null) {
+      return noCacheResponse.
+          getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
+    } else if (!job.getProject().equals(project)) {
+      //In this case, a user is trying to access a job outside its project!!!
+      LOGGER.log(Level.SEVERE,
+          "A user is trying to access a job outside their project!");
+      return noCacheResponse.
+          getNoCacheResponseBuilder(Response.Status.FORBIDDEN).build();
+    } else {
+      if(job.getJobConfig().getSchedule() != null) {
+        boolean status = jobController.unscheduleJob(job);
+        job.getJobConfig().setSchedule(null);
+        jobFacade.updateJobSchedule(jobId, null);
+        if (status) {
+          RESTApiJsonResponse json = new RESTApiJsonResponse();
+          json.setSuccessMessage("Unscheduled job " + job.getName()
+              + " successfully");
+          return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+              entity(json).build();
+        } else {
+          LOGGER.log(Level.WARNING,
+              "Schedule does not exist in the scheduler for jobid {0}",
+              jobId);
+        }
+      }
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
+    }
+  }
+
   /**
    * Delete the job associated to the project and jobid. The return value is a
    * JSON object stating operation successful
@@ -1347,6 +1391,9 @@ public class JobService {
       return noCacheResponse.
           getNoCacheResponseBuilder(Response.Status.FORBIDDEN).build();
     } else {
+      if(job.getJobConfig().getSchedule() != null) {
+        jobController.unscheduleJob(job);
+      }
       LOGGER.log(Level.INFO, "Request to delete job name ={0} job id ={1}",
         new Object[]{job.getName(), job.getId()});
       jobFacade.removeJob(job);
