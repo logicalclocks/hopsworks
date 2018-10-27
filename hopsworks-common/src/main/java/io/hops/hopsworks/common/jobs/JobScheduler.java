@@ -56,6 +56,7 @@ import javax.ejb.Timer;
 import javax.ejb.TimerConfig;
 import javax.ejb.TimerService;
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -93,7 +94,8 @@ public class JobScheduler {
     //Valid job?
     Jobs job = jobFacade.findById((Integer) jobId);
     if (job == null) {
-      logger.log(Level.WARNING, "Trying to run a job with non-existing id.");
+      logger.log(Level.WARNING, "Trying to run a job with non-existing id, canceling timer.");
+      timer.cancel();
       return;
     }
     //Yes! Now execute!
@@ -158,6 +160,22 @@ public class JobScheduler {
     ScheduleDTO schedule = job.getJobConfig().getSchedule();
     timerService.createTimer(new Date(schedule.getStart()), schedule.getNumber()
             * schedule.getUnit().getDuration(), job.getId());
+  }
+  /**
+   * Unschedule the given job.
+   * <p/>
+   * @param job
+   */
+  public boolean unscheduleJob(Jobs job) {
+    Collection<Timer> timers = timerService.getTimers();
+    for(Timer timer: timers) {
+      int jobId = (int)timer.getInfo();
+      if(jobId == job.getId()) {
+        timer.cancel();
+        return true;
+      }
+    }
+    return false;
   }
 
 }
