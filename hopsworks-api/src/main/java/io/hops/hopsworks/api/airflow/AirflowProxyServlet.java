@@ -93,22 +93,7 @@ public class AirflowProxyServlet extends ProxyServlet {
                   "Accept-Charset", "accept-charset"));
 
   protected void initTarget() throws ServletException {
-//    targetUri = settings.getAirflowWebUIAddress();
     super.initTarget();
-//    if (!targetUri.contains("http://")) {
-//      targetUri = "http://" + targetUri;
-//    }
-//    if (targetUri == null) {
-//      throw new ServletException(P_TARGET_URI + " is required.");
-//    }
-//    //test it's valid
-//    try {
-//      targetUriObj = new URI(targetUri);
-//    } catch (Exception e) {
-//      throw new ServletException("Trying to process targetUri init parameter: "
-//          + e, e);
-//    }
-//    targetHost = URIUtils.extractHost(targetUriObj);
   }
 
   /**
@@ -161,125 +146,8 @@ public class AirflowProxyServlet extends ProxyServlet {
       return;
     }
 
-//    ProjectDTO projectDTO = null;
-//    if (servletRequest.getParameterMap().containsKey("projectId")) {
-//      String projectId = servletRequest.getParameterMap().get("projectId")[0];
-//      try {
-//        projectDTO = projectController.getProjectByID(Integer.parseInt(projectId));
-//        currentProjects.put(email, projectDTO.getProjectName());
-//      } catch (Exception ex) {
-//        LOGGER.log(Level.SEVERE, null, ex);
-//        servletResponse.sendError(403,
-//            "Airflow was not accessed from Hopsworks, no current project information is available.");
-//        return;
-//      }
-//    } else {
-//      servletResponse.sendError(403,
-//          "Airflow was not accessed with a projectId, no current project information is available.");
-//      return;
-//    }
-//
-//    if (email.equals(Settings.AGENT_EMAIL)) {
-//      super.service(servletRequest, servletResponse);
-//      return;
-//    }
     Users user = userFacade.findByEmail(email);
 
-//    boolean inTeam = false;
-//    for (ProjectTeam pt : projectDTO.getProjectTeam()) {
-//      if (pt.getUser().equals(user)) {
-//        inTeam = true;
-//        break;
-//      }
-//    }
-//    if (!inTeam) {
-//      LOGGER.log(Level.SEVERE, "Not allowed access airflow - not a member of the project.");
-//      servletResponse.sendError(Response.Status.FORBIDDEN.getStatusCode(),
-//          "You don't have the access right for this application");
-//      return;
-//    }
-
-//    if (servletRequest.getAttribute(ATTR_TARGET_URI) == null) {
-//      servletRequest.setAttribute(ATTR_TARGET_URI, targetUri);
-//    }
-//    if (servletRequest.getAttribute(ATTR_TARGET_HOST) == null) {
-//      servletRequest.setAttribute(ATTR_TARGET_HOST, targetHost);
-//    }
-
-//    String proxyRequestUri = rewriteUrlFromRequest(servletRequest);
-//    try {
-//      // Execute the request
-//
-//      HttpClientParams params = new HttpClientParams();
-//      params.setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
-//      params.setBooleanParameter(HttpClientParams.ALLOW_CIRCULAR_REDIRECTS,
-//          true);
-//      HttpClient client = new HttpClient(params);
-//      HostConfiguration config = new HostConfiguration();
-//      InetAddress localAddress = InetAddress.getLocalHost();
-//      config.setLocalAddress(localAddress);
-//
-//      String method = servletRequest.getMethod();
-//      HttpMethod m;
-//      if (method.equalsIgnoreCase("PUT")) {
-//        m = new PutMethod(proxyRequestUri);
-//        RequestEntity requestEntity = new InputStreamRequestEntity(servletRequest.getInputStream(), servletRequest.
-//            getContentType());
-//        ((PutMethod) m).setRequestEntity(requestEntity);
-//      } else {
-//        m = new GetMethod(proxyRequestUri);
-//      }
-//      Enumeration<String> names = servletRequest.getHeaderNames();
-//      while (names.hasMoreElements()) {
-//        String headerName = names.nextElement();
-//        String value = servletRequest.getHeader(headerName);
-//        if (PASS_THROUGH_HEADERS.contains(headerName)) {
-//          //yarn does not send back the js if encoding is not accepted
-//          //but we don't want to accept encoding for the html because we
-//          //need to be able to parse it
-//          if (headerName.equalsIgnoreCase("accept-encoding") && (servletRequest.getPathInfo() == null
-//              || !servletRequest.getPathInfo().contains(".js"))) {
-//            continue;
-//          } else {
-//            m.setRequestHeader(headerName, value);
-//          }
-//        }
-//      }
-//      String user = servletRequest.getRemoteUser();
-//      if (user != null && !user.isEmpty()) {
-//        m.setRequestHeader("Cookie", "proxy-user" + "="
-//            + URLEncoder.encode(user, "ASCII"));
-//      }
-//client.executeMethod(config, m);
-//
-//      // Process the response
-//      int statusCode = m.getStatusCode();
-//
-//      // Pass the response code. This method with the "reason phrase" is 
-//      //deprecated but it's the only way to pass the reason along too.
-//      //noinspection deprecation
-//      servletResponse.setStatus(statusCode, m.getStatusLine().
-//          getReasonPhrase());
-//
-//      copyResponseHeaders(m, servletRequest, servletResponse);
-//
-//      // Send the content to the client
-//      copyResponseEntity(m, servletResponse);
-//
-//    } catch (Exception e) {
-//      if (e instanceof RuntimeException) {
-//        throw (RuntimeException) e;
-//      }
-//      if (e instanceof ServletException) {
-//        throw (ServletException) e;
-//      }
-//      //noinspection ConstantConditions
-//      if (e instanceof IOException) {
-//        throw (IOException) e;
-//      }
-//      throw new RuntimeException(e);
-//
-//    }
     super.service(servletRequest, servletResponse);
 
   }
