@@ -714,9 +714,9 @@ public class ProjectController {
         futureList.add(addServiceServing(project, user, dfso, udfso));
         break;
       case JOBS:
+        addKibana(project, service);
         if (!projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.JUPYTER)) {
           addServiceDataset(project, user, Settings.ServiceDataset.EXPERIMENTS, dfso, udfso);
-          addKibana(project, service);
         }
         break;
       default:
