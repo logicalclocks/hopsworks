@@ -1752,15 +1752,18 @@ public class Settings implements Serializable {
   public static final String FILE_PREVIEW_MODE_TAIL = "tail";
   
   //Elastic log index pattern
-  public static final String ELASTIC_LOG_INDEX_REGEX = ".*_logs-\\d{4}.\\d{2}.\\d{2}";
-  public static final String ELASTIC_SERVING_INDEX_REGEX = ".*_serving-\\d{4}.\\d{2}.\\d{2}";
+  public static final String ELASTIC_LOGS_INDEX = "logs";
+  public static final String ELASTIC_LOGS_INDEX_PATTERN = "_" +Settings.ELASTIC_LOGS_INDEX+ "-*";
+  public static final String ELASTIC_SERVING_INDEX = "serving";
+  public static final String ELASTIC_SERVING_INDEX_PATTERN = "_" + ELASTIC_SERVING_INDEX + "-*";
   public static final String ELASTIC_EXPERIMENTS_INDEX = "experiments";
   public static final String ELASTIC_SAVED_OBJECTS = "saved_objects";
   public static final String ELASTIC_VISUALIZATION = "visualization";
   public static final String ELASTIC_SAVED_SEARCH = "search";
   public static final String ELASTIC_DASHBOARD = "dashboard";
   public static final String ELASTIC_INDEX_PATTERN = "index-pattern";
-  
+  public static final String ELASTIC_LOG_INDEX_REGEX = ".*_" + ELASTIC_LOGS_INDEX + "-\\d{4}.\\d{2}.\\d{2}";
+  public static final String ELASTIC_SERVING_INDEX_REGEX = ".*_" + ELASTIC_SERVING_INDEX+ "-\\d{4}.\\d{2}.\\d{2}";
   
   public String getHopsworksTmpCertDir() {
     return Paths.get(getCertsDir(), "transient").toString();
