@@ -9,6 +9,8 @@ import io.hops.hopsworks.common.dao.certificates.UserCerts;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.security.CertificateHandler;
+import io.hops.hopsworks.common.security.CertificatesMgmService;
+import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.kube.common.KubeClientService;
 
 import javax.ejb.EJB;
@@ -20,13 +22,19 @@ public class KubeCertificateHandler implements CertificateHandler {
 
   @EJB
   private KubeClientService kubeClientService;
+  @EJB
+  private CertificatesMgmService certificatesMgmService;
 
   @Override
-  public void generate(Project project, Users user, UserCerts userCerts) throws IOException {
+  public void generate(Project project, Users user, UserCerts userCert) throws IOException {
+
     try {
-      kubeClientService.createTLSSecret(project, user, userCerts.getUserKey(),
-          userCerts.getUserCert(), userCerts.getUserKeyPwd());
-    } catch (KubernetesClientException e) {
+      String decryptedPassword = HopsUtils.decrypt(user.getPassword(), userCert.getUserKeyPwd(),
+          certificatesMgmService.getMasterEncryptionPassword());
+
+      kubeClientService.createTLSSecret(project, user, userCert.getUserKey(),
+          userCert.getUserCert(), decryptedPassword);
+    } catch (Exception e) {
       throw new IOException(e);
     }
   }
