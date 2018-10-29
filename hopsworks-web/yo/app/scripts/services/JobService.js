@@ -277,6 +277,15 @@ angular.module('hopsWorksApp')
                */
               deleteJob: function (projectId, jobId) {
                 return $http.delete('/api/project/' + projectId + '/jobs/' + jobId + '/deleteJob');
+              },
+              /**
+               * Unschedule a job
+               * @param {type} projectId
+               * @param {type} jobId
+               * @returns {undefined} true if success, false otheriwse
+               */
+              unscheduleJob: function (projectId, jobId) {
+                return $http.delete('/api/project/' + projectId + '/jobs/' + jobId + '/unschedule');
               }
 
             };

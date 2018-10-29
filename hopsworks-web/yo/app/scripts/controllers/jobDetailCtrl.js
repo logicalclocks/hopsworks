@@ -51,7 +51,8 @@ angular.module('hopsWorksApp')
             this.execFile; //Holds the name of the main execution file
             this.showExecutions = false;
             this.projectId = $routeParams.projectID;
-            
+
+            self.unscheduling=false;
             
             this.availableschedule = {
               "start": "-1",
@@ -134,6 +135,7 @@ angular.module('hopsWorksApp')
                         function (success) {
                           getConfiguration();
                           getExecutions();
+                          self.close()
                           growl.success(success.data.successMessage, {title: 'Success', ttl: 3000});
                         }, function (error) {
                         if (typeof error.data.usrMsg !== 'undefined') {
@@ -145,6 +147,24 @@ angular.module('hopsWorksApp')
               } else {
                 growl.info("Select a date", {title: 'Required', ttl: 3000});
               }
+            };
+
+            this.unscheduleJob = function(jobId) {
+            self.unscheduling=true;
+                        JobService.unscheduleJob(self.projectId, jobId).then(
+                                function (success) {
+                                  self.unscheduling=false;
+                                  getExecutions();
+                                  self.close()
+                                  growl.success(success.data.successMessage, {title: 'Success', ttl: 5000});
+                                }, function (error) {
+                                  self.unscheduling=false;
+                                if (typeof error.data.usrMsg !== 'undefined') {
+                                    growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                                } else {
+                                    growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                                }
+                        });
             };
 
             getConfiguration();
