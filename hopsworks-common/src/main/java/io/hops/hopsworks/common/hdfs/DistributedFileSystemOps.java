@@ -652,37 +652,6 @@ public class DistributedFileSystemOps {
   }
 
   /**
-   * Flush all cache entries related to the specified user.
-   *
-   * @param user
-   * @throws IOException
-   */
-  public void flushCachedUser(String user) throws IOException {
-    dfs.flushCacheUser(user);
-  }
-
-  /**
-   * Flush all cache entries related to the specified group.
-   *
-   * @param group
-   * @throws IOException
-   */
-  public void flushCachedGroup(String group) throws IOException {
-    dfs.flushCacheGroup(group);
-  }
-
-  /**
-   * Flush all cache entries related to the specified user and group.
-   *
-   * @param user
-   * @param group
-   * @throws IOException
-   */
-  public void flushCache(String user, String group) throws IOException {
-    dfs.flushCache(user, group);
-  }
-
-  /**
    * Closes the distributed file system.
    */
   public void close() {
@@ -714,5 +683,30 @@ public class DistributedFileSystemOps {
   public long getLastUpdatedDatasetSize(Path datasetPath) throws IOException {
     LastUpdatedContentSummary cs = dfs.getLastUpdatedContentSummary(datasetPath);
     return cs.getSpaceConsumed();
+  }
+  
+  
+  public void addUser(String userName) throws IOException{
+    dfs.addUser(userName);
+  }
+  
+  public void removeUser(String userName) throws IOException{
+    dfs.removeUser(userName);
+  }
+  
+  public void addGroup(String groupName) throws IOException{
+    dfs.addGroup(groupName);
+  }
+  
+  public void removeGroup(String groupName) throws IOException{
+    dfs.removeGroup(groupName);
+  }
+    
+  public void addUserToGroup(String userName, String groupName) throws IOException{
+    dfs.addUserToGroup(userName, groupName);
+  }
+  
+  public void removeUserFromGroup(String userName, String groupName) throws IOException{
+    dfs.removeUserFromGroup(userName, groupName);
   }
 }

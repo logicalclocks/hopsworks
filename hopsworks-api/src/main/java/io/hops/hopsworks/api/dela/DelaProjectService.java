@@ -53,6 +53,7 @@ import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.exception.DatasetException;
 import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.kafka.KafkaController;
 import io.hops.hopsworks.common.util.Settings;
@@ -188,7 +189,8 @@ public class DelaProjectService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response removePublic(@Context HttpServletRequest req, @PathParam("publicDSId") String publicDSId,
-    @ApiParam(value="delete dataset", required = true) @QueryParam("clean") boolean clean) throws DelaException {
+    @ApiParam(value="delete dataset", required = true) @QueryParam("clean") boolean clean) throws DelaException,
+      DatasetException {
     Dataset dataset = getDatasetByPublicId(publicDSId);
     Users user = jWTHelper.getUserPrincipal(req);
     if (clean) {
@@ -208,7 +210,7 @@ public class DelaProjectService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response startDownload(@Context HttpServletRequest req, @PathParam("publicDSId") String publicDSId,
-    HopsworksTransferDTO.Download downloadDTO) throws DelaException {
+    HopsworksTransferDTO.Download downloadDTO) throws DelaException, DatasetException {
     Users user = jWTHelper.getUserPrincipal(req);
     //dataset not createed yet
 

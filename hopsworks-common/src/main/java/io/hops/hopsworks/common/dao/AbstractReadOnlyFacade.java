@@ -37,65 +37,49 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package io.hops.hopsworks.common.dao.hdfsUser;
+package io.hops.hopsworks.common.dao;
 
-import javax.ejb.Stateless;
-import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
-import javax.persistence.PersistenceContext;
-import io.hops.hopsworks.common.dao.AbstractReadOnlyFacade;
-import java.util.ArrayList;
 import java.util.List;
+import javax.persistence.EntityManager;
 
-@Stateless
-public class HdfsGroupsFacade extends AbstractReadOnlyFacade<HdfsGroups> {
+public abstract class AbstractReadOnlyFacade<T> {
 
-  @PersistenceContext(unitName = "kthfsPU")
-  private EntityManager em;
+  private final Class<T> entityClass;
 
-  public HdfsGroupsFacade() {
-    super(HdfsGroups.class);
+  public AbstractReadOnlyFacade(Class<T> entityClass) {
+    this.entityClass = entityClass;
   }
 
-  @Override
-  protected EntityManager getEntityManager() {
-    return em;
+  protected abstract EntityManager getEntityManager();
+
+  public T find(Object id) {
+    return getEntityManager().find(entityClass, id);
   }
 
-  public HdfsGroups findHdfsGroup(byte[] id) {
-    return em.find(HdfsGroups.class, id);
+  public List<T> findAll() {
+    javax.persistence.criteria.CriteriaQuery cq = getEntityManager().
+            getCriteriaBuilder().createQuery();
+    cq.select(cq.from(entityClass));
+    return getEntityManager().createQuery(cq).getResultList();
   }
 
-  public HdfsGroups findByName(String name) {
-    try {
-      return em.createNamedQuery("HdfsGroups.findByName", HdfsGroups.class).
-              setParameter(
-                      "name", name).getSingleResult();
-    } catch (NoResultException e) {
-      return null;
-    }
+  public List<T> findRange(int[] range) {
+    javax.persistence.criteria.CriteriaQuery cq = getEntityManager().
+            getCriteriaBuilder().createQuery();
+    cq.select(cq.from(entityClass));
+    javax.persistence.Query q = getEntityManager().createQuery(cq);
+    q.setMaxResults(range[1] - range[0]);
+    q.setFirstResult(range[0]);
+    return q.getResultList();
+  }
+
+  public int count() {
+    javax.persistence.criteria.CriteriaQuery cq = getEntityManager().
+            getCriteriaBuilder().createQuery();
+    javax.persistence.criteria.Root<T> rt = cq.from(entityClass);
+    cq.select(getEntityManager().getCriteriaBuilder().count(rt));
+    javax.persistence.Query q = getEntityManager().createQuery(cq);
+    return ((Long) q.getSingleResult()).intValue();
   }
   
-  public List<HdfsGroups> findProjectGroups(String projectName) {
-    List<HdfsGroups> groups = null;
-    try {
-      groups = em.createNamedQuery("HdfsGroups.findProjectGroups", HdfsGroups.class).
-              setParameter("name", projectName).
-              getResultList();
-    } catch (NoResultException e) {
-      return null;
-    }
-    try{
-      HdfsGroups group = em.createNamedQuery("HdfsGroups.findByName", HdfsGroups.class).
-          setParameter("name", projectName).getSingleResult();
-      if(group!=null){
-        if(groups==null){
-          groups = new ArrayList<>();
-        }
-        groups.add(group);
-      }
-    } catch (NoResultException e){ 
-    }
-    return groups;
-  }
 }

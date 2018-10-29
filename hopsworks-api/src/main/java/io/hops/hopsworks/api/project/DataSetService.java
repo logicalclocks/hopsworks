@@ -542,7 +542,7 @@ public class DataSetService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response acceptRequest(@PathParam("inodeId") Integer inodeId) {
+  public Response acceptRequest(@PathParam("inodeId") Integer inodeId) throws DatasetException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     if (inodeId == null) {
       throw new IllegalArgumentException("inodeId was not provided");
