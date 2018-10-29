@@ -21,7 +21,6 @@ import io.hops.hopsworks.jwt.exception.DuplicateSigningKeyException;
 import io.hops.hopsworks.jwt.exception.InvalidationException;
 import io.hops.hopsworks.jwt.exception.NotRenewableException;
 import io.hops.hopsworks.jwt.exception.SigningKeyNotFoundException;
-import io.hops.hopsworks.jwt.exception.VerificationException;
 import io.swagger.annotations.Api;
 import java.security.NoSuchAlgorithmException;
 import java.util.logging.Logger;
@@ -70,7 +69,7 @@ public class JWTResource {
   @POST
   @Path("/renew")
   public Response renewToken(JsonWebTokenDTO jsonWebTokenDTO) throws SigningKeyNotFoundException, NotRenewableException,
-      InvalidationException, VerificationException {
+      InvalidationException {
     JWTResponseDTO jWTResponseDTO = jWTHelper.renewToken(jsonWebTokenDTO);
     return Response.ok().entity(jWTResponseDTO).build();
   }

@@ -16,11 +16,11 @@
 package io.hops.hopsworks.jwt.dao;
 
 import io.hops.hopsworks.jwt.SignatureAlgorithm;
+import io.hops.hopsworks.jwt.SigningKeyGenerator;
 import io.hops.hopsworks.jwt.exception.DuplicateSigningKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Base64;
 import java.util.List;
-import javax.crypto.KeyGenerator;
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -32,6 +32,9 @@ public class JwtSigningKeyFacade {
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
+  
+  @EJB
+  private SigningKeyGenerator signingKeyGenerator;
 
   public JwtSigningKey find(Integer id) {
     return em.find(JwtSigningKey.class, id);
@@ -72,9 +75,7 @@ public class JwtSigningKeyFacade {
   
   private JwtSigningKey createSigningKey(String keyName, SignatureAlgorithm alg) throws NoSuchAlgorithmException {
     JwtSigningKey signingKey;
-    KeyGenerator gen = KeyGenerator.getInstance(alg.getJcaName());
-    byte[] keyBytes = gen.generateKey().getEncoded();
-    String base64Encoded = Base64.getEncoder().encodeToString(keyBytes);
+    String base64Encoded = signingKeyGenerator.getSigningKey(alg.getJcaName());
     signingKey = new JwtSigningKey(base64Encoded, keyName);
     persist(signingKey);
     signingKey = findByName(keyName);

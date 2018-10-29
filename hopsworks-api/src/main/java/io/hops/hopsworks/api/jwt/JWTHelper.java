@@ -31,7 +31,6 @@ import io.hops.hopsworks.jwt.exception.DuplicateSigningKeyException;
 import io.hops.hopsworks.jwt.exception.InvalidationException;
 import io.hops.hopsworks.jwt.exception.NotRenewableException;
 import io.hops.hopsworks.jwt.exception.SigningKeyNotFoundException;
-import io.hops.hopsworks.jwt.exception.VerificationException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 import javax.ejb.EJB;
@@ -212,11 +211,10 @@ public class JWTHelper {
    * @return
    * @throws SigningKeyNotFoundException
    * @throws NotRenewableException
-   * @throws InvalidationException 
-   * @throws VerificationException 
+   * @throws InvalidationException  
    */
   public JWTResponseDTO renewToken(JsonWebTokenDTO jsonWebTokenDTO) throws SigningKeyNotFoundException,
-      NotRenewableException, InvalidationException, VerificationException {
+      NotRenewableException, InvalidationException {
     if (jsonWebTokenDTO == null || jsonWebTokenDTO.getToken() == null || jsonWebTokenDTO.getToken().isEmpty()) {
       throw new IllegalArgumentException("No token provided.");
     }
@@ -258,8 +256,11 @@ public class JWTHelper {
    */
   public void deleteSigningKey(String keyName) {
     //Do not delete api signing key
-    if (keyName == null || keyName.isEmpty() || settings.getJWTSigningKeyName().equals(keyName)) {
+    if (keyName == null || keyName.isEmpty()) {
       return;
+    }
+    if ( settings.getJWTSigningKeyName().equals(keyName)) {
+      return; //TODO maybe throw exception here?
     }
     jwtController.deleteSigningKey(keyName);
   }

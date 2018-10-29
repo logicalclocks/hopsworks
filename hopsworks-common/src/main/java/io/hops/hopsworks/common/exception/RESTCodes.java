@@ -727,7 +727,7 @@ public class RESTCodes {
       Response.Status.INTERNAL_SERVER_ERROR),
     MASTER_ENCRYPTION_PASSWORD_ACCESS_ERROR(11, "Could not read master encryption password.",
       Response.Status.INTERNAL_SERVER_ERROR),
-    NOT_RENEWABLE_TOKEN(12, "Token not renewable.", Response.Status.BAD_REQUEST),
+    NOT_RENEWABLE_TOKEN(12, "Token can not be renewed.", Response.Status.BAD_REQUEST),
     INVALIDATION_ERROR(13, "Error while invalidating token.", Response.Status.EXPECTATION_FAILED),
     REST_ACCESS_CONTROL(14, "Client not authorized for this invocation.", Response.Status.FORBIDDEN),
     DUPLICATE_KEY_ERROR(15, "A signing key with the same name already exists.", Response.Status.CONFLICT);

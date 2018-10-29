@@ -18,7 +18,6 @@ package io.hops.hopsworks.jwt;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
-import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import io.hops.hopsworks.jwt.dao.InvalidJwt;
@@ -234,7 +233,7 @@ public class JWTController {
     jwt = verifyToken(token, issuer, expLeeway, algorithmFactory.getAlgorithm(jwt));
 
     if (isTokenInvalidated(jwt)) {
-      throw new JWTVerificationException("Invalidated token.");
+      throw new VerificationException("Invalidated token.");
     }
     return jwt;
   }
@@ -257,7 +256,7 @@ public class JWTController {
     DecodedJWT djwt = verifyToken(token, issuer, jwt.getExpLeeway(), algorithmFactory.getAlgorithm(jwt));
 
     if (isTokenInvalidated(djwt)) {
-      throw new JWTVerificationException("Invalidated token.");
+      throw new VerificationException("Invalidated token.");
     }
 
     Set<String> rolesSet = new HashSet<>(jwt.getRole());
@@ -326,11 +325,10 @@ public class JWTController {
    * @throws SigningKeyNotFoundException
    * @throws NotRenewableException
    * @throws InvalidationException
-   * @throws VerificationException
    */
   public String autoRenewToken(String token, Date newExp, Date notBefore) throws SigningKeyNotFoundException,
-      NotRenewableException, InvalidationException, VerificationException {
-    DecodedJWT jwt = verifyToken(token, null);
+      NotRenewableException, InvalidationException {
+    DecodedJWT jwt = verifyTokenForRenewal(token);
     boolean isRenewable = getRenewableClaim(jwt);
     if (!isRenewable) {
       throw new NotRenewableException("Token not renewable.");
@@ -358,11 +356,10 @@ public class JWTController {
    * @throws SigningKeyNotFoundException
    * @throws NotRenewableException
    * @throws InvalidationException
-   * @throws VerificationException 
    */
   public String renewToken(String token, Date newExp, Date notBefore) throws SigningKeyNotFoundException,
-      NotRenewableException, InvalidationException, VerificationException {
-    DecodedJWT jwt = verifyToken(token, null);
+      NotRenewableException, InvalidationException {
+    DecodedJWT jwt = verifyTokenForRenewal(token);
     Date currentTime = new Date();
     if (currentTime.before(jwt.getExpiresAt())) {
       throw new NotRenewableException("Token not expired.");
@@ -375,6 +372,16 @@ public class JWTController {
 
     invalidateJWT(jwt.getId(), jwt.getExpiresAt(), _jwt.getExpLeeway());
     return renewedToken;
+  }
+  
+  private DecodedJWT verifyTokenForRenewal(String token) throws SigningKeyNotFoundException, NotRenewableException {
+    DecodedJWT jwt;
+    try {
+      jwt = verifyToken(token, null);
+    } catch (VerificationException ex) {
+      throw new NotRenewableException(ex.getMessage());
+    }
+    return jwt;
   }
 
   private void invalidateJWT(String id, Date exp, int leeway) throws InvalidationException {
