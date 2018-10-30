@@ -172,7 +172,7 @@ public class KubeClientService {
    * For this reason we replace _ with - which is allowed.
    * Hopsworks projects cannot contain -.
    */
-  private String getKubeProjectName(Project project) {
+  public String getKubeProjectName(Project project) {
     return Strings.replace(project.getName(), "_", "-");
   }
 

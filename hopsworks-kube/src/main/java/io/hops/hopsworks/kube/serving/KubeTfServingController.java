@@ -381,7 +381,7 @@ public class KubeTfServingController implements TfServingController {
         settings.getLogstashPortServing()).build());
 
     SecretVolumeSource secretVolume = new SecretVolumeSourceBuilder()
-        .withSecretName(kubeClientService.getKubeProjectUsername(project.getName(), user))
+        .withSecretName(kubeClientService.getKubeProjectUsername(kubeClientService.getKubeProjectName(project), user))
         .build();
 
     Volume secretVol = new VolumeBuilder()
