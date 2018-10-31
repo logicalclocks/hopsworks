@@ -82,13 +82,13 @@ public class HdfsGroupsFacade extends AbstractFacade<HdfsGroups> {
 
   public void persist(HdfsGroups user) {
     Logger.getLogger(HdfsUsersFacade.class.getName()).
-                    log(Level.SEVERE, "persist group " + user.getName());
+                    log(Level.INFO, "persist group " + user.getName());
     em.persist(user);
   }
 
   public void merge(HdfsGroups user) {
     Logger.getLogger(HdfsUsersFacade.class.getName()).
-                    log(Level.SEVERE, "merge group " + user.getName());
+                    log(Level.INFO, "merge group " + user.getName());
     em.merge(user);
     em.flush();
   }
