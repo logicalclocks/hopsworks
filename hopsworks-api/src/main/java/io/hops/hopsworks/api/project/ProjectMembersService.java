@@ -204,6 +204,9 @@ public class ProjectMembersService {
     }
     //Data Scientists are only allowed to remove themselves
     String userProjectRole = projectTeamFacade.findCurrentRole(project, email);
+    if (userProjectRole == null || userProjectRole.isEmpty()) {
+      throw new ProjectException(RESTCodes.ProjectErrorCode.TEAM_MEMBER_NOT_FOUND, Level.FINE);
+    }
     if (userProjectRole.equals(AllowedProjectRoles.DATA_SCIENTIST) && !owner.getEmail().equals(email)) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.MEMBER_REMOVAL_NOT_ALLOWED, Level.FINE);
     }
