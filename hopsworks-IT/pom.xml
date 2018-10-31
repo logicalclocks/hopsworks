@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
+<<<<<<< HEAD
   ~ Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
   ~ are released under the following license:
   ~
@@ -387,7 +388,6 @@
       </build>
     </profile>
   </profiles>
-
   <repositories>
     <repository>
       <id>rubygems-release</id>
