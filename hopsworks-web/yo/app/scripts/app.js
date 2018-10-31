@@ -244,7 +244,7 @@ angular.module('hopsWorksApp', [
                       templateUrl: 'views/recover.html',
                       controller: 'RecoverCtrl as recoverCtrl'
                     })
-                    .when('/qrCode/:QR*', {
+                    .when('/qrCode/:mode/:QR*', {
                       templateUrl: 'views/qrCode.html',
                       controller: 'RegCtrl as regCtrl'
                     })

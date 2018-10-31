@@ -37,7 +37,7 @@
   ~ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
   -->
 
-<div class="wrapper">
+  <div class="wrapper" style="margin-top: 50px;padding: 20px;" >
   <div class="row-fluid">
     <div class="col-md-offset-2 col-md-8">
       <!-- START panel-->
@@ -51,15 +51,17 @@
         </div>
         <div class="panel-body"  >
           <div class="row">
-            <div class="col-md-offset-1 col-md-5">
-              <h1 class="text-center">Four steps, and you're there...</h1>
+            <div class="col-md-offset-1 col-md-5"  style="margin-top: 20px;">
+              <h1 ng-if="regCtrl.mode === 'register'" class="text-center">Four steps, and you're there...</h1>
+              <h1 ng-if="regCtrl.mode === 'profile'" class="text-center">Three steps, and you're there...</h1>
             </div>
             <div class="col-md-4">
               <img alt="QR example" src="images/qrExample.png" style="width: 100%"/>             
             </div>
           </div>
+          <hr>
           <div class="row">
-            <div class="col-md-offset-1 col-md-4">
+            <div ng-if="regCtrl.mode === 'register'" class="col-md-offset-1 col-md-4">
 
               <div class="text-center text-mute row">
                 <div style="font-size: 20px;color: red;">First</div>
@@ -69,10 +71,11 @@
                 Click on the link in the confirmation email has been sent to your email address.
               </div>
             </div>
-            <div class="col-md-offset-1 col-md-6">
+            <div class="col-md-6 {{ regCtrl.mode === 'register'? 'col-md-offset-1' : 'col-md-offset-3' }}" >
 
               <div class="text-center text-mute row">
-                <div style="font-size: 20px;color: red;">Second</div>
+                <div ng-if="regCtrl.mode === 'profile'" style="font-size: 20px;color: red;">First</div>
+                <div ng-if="regCtrl.mode === 'register'" style="font-size: 20px;color: red;">Second</div>
               </div>
               <div class="text-center text-mute row">
                 Install one of the authenticator apps below.
@@ -91,32 +94,37 @@
               </div>
             </div>
           </div>
-
+          <br>
           <div class="row">
-
             <div class="col-md-6">
             <div style="text-align: center">
-              <div class="text-center text-mute row"><div style="font-size: 20px;color: red;">Third</div>Scan the image below!
+              <div class="text-center text-mute row">
+                <div ng-if="regCtrl.mode === 'register'" style="font-size: 20px;color: red;">Third</div>
+                <div ng-if="regCtrl.mode === 'profile'" style="font-size: 20px;color: red;">Second</div>
+                  Scan the image below!
               </div>
               <div class="text-center text-mute row">(with your authenticator app)</div>
               <img alt="QR code" ng-src="data:image/JPEG;base64,{{regCtrl.QR}}" width="200" height="200"/>
             </div>
             </div>
             <div class="col-md-6">
-              <div class="text-center row"><div style="font-size: 20px;color: red;">Fourth</div>
+              <div class="text-center row">
+                <div ng-if="regCtrl.mode === 'register'" style="font-size: 20px;color: red;">Fourth</div>
+                <div ng-if="regCtrl.mode === 'profile'" style="font-size: 20px;color: red;">Third</div>
               </div> 
               <div class="row">
-                <b>Wait until your account has been approved (you will receive an email). </b>
+                <span ng-if="regCtrl.mode === 'register'"><b>Wait until your account has been approved (you will receive an email). </b></span>
                 Then, login with your email, password, and the one time password from your authenticator app.
               </div>
+              <br>
               <div class="row">
-                <img alt="how-to-login-2fa" src="images/login-2fa.png" style="width: 100%"/>
+                <img alt="how-to-login-2fa" src="images/2fa.png" style="width: 100%"/>
               </div>
             </div>
           </div>
           <!-- END panel-->
           <br>
-          <a href="#!/login" class="btn btn-block btn-default">Ok</a>
+          <a href="" ng-click="regCtrl.qrOk()" class="btn btn-block btn-default">Ok</a>
           <div class="p-lg text-center">
           </div>
         </div>
