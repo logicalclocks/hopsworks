@@ -40,8 +40,8 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('RegCtrl', ['AuthService', '$location', '$scope', 'SecurityQuestions', '$routeParams', '$cookies',
-          function (AuthService, $location, $scope, SecurityQuestions, $routeParams, $cookies) {
+        .controller('RegCtrl', ['AuthService', '$location', '$scope', '$window', 'SecurityQuestions', '$routeParams', '$cookies',
+          function (AuthService, $location, $scope, $window, SecurityQuestions, $routeParams, $cookies) {
           
             var self = this;
             self.securityQuestions = SecurityQuestions.getQuestions();
@@ -70,7 +70,11 @@ angular.module('hopsWorksApp')
             
             self.userEmail ='';
             
+            self.mode = $routeParams.mode;
+            self.mode = self.mode === 'register' ? 'register' : 'profile';
+            
             self.QR = $routeParams.QR;
+            
             var empty = angular.copy(self.user);
             self.register = function () {
               self.successMessage = null;
@@ -96,7 +100,7 @@ angular.module('hopsWorksApp')
                             $scope.registerForm.$setPristine();
                             self.successMessage = success.data.successMessage;
                             self.working = false;
-                            $location.path("/qrCode/" + success.data.QRCode);
+                            $location.path("/qrCode/register/" + success.data.QRCode);
                             $location.replace();
                             //$location.path('/login');
                           }, function (error) {
@@ -107,4 +111,12 @@ angular.module('hopsWorksApp')
               };
             };
             self.countries = getAllCountries();
+            
+            self.qrOk = function () {
+              if (self.mode === 'register') {
+                $location.path("/login");
+              } else {
+                $window.history.back();
+              }
+            };
           }]);
