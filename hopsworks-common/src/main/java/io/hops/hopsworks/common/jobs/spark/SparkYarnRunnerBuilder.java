@@ -198,9 +198,9 @@ public class SparkYarnRunnerBuilder {
           LocalResourceType.ARCHIVE.toString(), null), false);
 
       builder.addLocalResource(new LocalResourceDTO(
-          Settings.PYSPARK_PY4J,
+          settings.getPy4JArchive(),
           settings.getPySparkLibsPath() + File.separator
-          + Settings.PYSPARK_PY4J,
+          + settings.getPy4JArchive(),
           LocalResourceVisibility.APPLICATION.toString(),
           LocalResourceType.ARCHIVE.toString(), null), false);
       jobHopsworksProps.put(Settings.SPARK_EXECUTORENV_LD_LIBRARY_PATH,
@@ -217,12 +217,12 @@ public class SparkYarnRunnerBuilder {
       pythonPath
           .append(Settings.SPARK_LOCALIZED_PYTHON_DIR)
           .append(File.pathSeparator).append(Settings.PYSPARK_ZIP)
-          .append(File.pathSeparator).append(Settings.PYSPARK_PY4J);
+          .append(File.pathSeparator).append(settings.getPy4JArchive());
       pythonPathExecs = new StringBuilder();
       pythonPathExecs
           .append(Settings.SPARK_LOCALIZED_PYTHON_DIR)
           .append(File.pathSeparator).append(Settings.PYSPARK_ZIP)
-          .append(File.pathSeparator).append(Settings.PYSPARK_PY4J);
+          .append(File.pathSeparator).append(settings.getPy4JArchive());
       //set app file from path
       appExecName = appPath.substring(appPath.lastIndexOf(File.separator) + 1);
 
