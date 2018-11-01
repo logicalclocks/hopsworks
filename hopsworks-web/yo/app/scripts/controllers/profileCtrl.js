@@ -128,8 +128,7 @@ angular.module('hopsWorksApp')
                           self.twoFactorAuth.password = '';
                           if (success.data.QRCode !== undefined) {
                             self.close();
-                            $location.path("/qrCode/" + success.data.QRCode);
-                            $location.replace();
+                            $location.path("/qrCode/profile/" + success.data.QRCode);
                           } else if (success.data.successMessage !== undefined) { 
                             self.master.twoFactor = false;
                             growl.success(success.data.successMessage, {title: 'Success', ttl: 5000, referenceId: 1});
@@ -156,8 +155,7 @@ angular.module('hopsWorksApp')
                           self.twoFactorAuth.password = '';
                           if (success.data.QRCode !== undefined) {
                             self.close();
-                            $location.path("/qrCode/" + success.data.QRCode);
-                            $location.replace();
+                            $location.path("/qrCode/profile/" + success.data.QRCode);
                           } 
                         }, function (error) {
                           self.twoFactorWorking = false;
