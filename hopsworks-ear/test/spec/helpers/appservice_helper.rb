@@ -33,7 +33,7 @@ module AppserviceHelper
   end
 
   def create_keystore(project)
-    key_store = get_user_keystore(project.projectname)
+    key_store = get_user_keystore(project.projectname, get_current_username)
     key_store
   end
 
@@ -67,8 +67,8 @@ module AppserviceHelper
     key_dir + key_name
   end
 
-  def get_user_keystore(projectname)
-    user_key_cert_pwd = UserCerts.find_by(projectname:projectname)
+  def get_user_keystore(projectname, username)
+    user_key_cert_pwd = UserCerts.find_by(projectname: projectname, username: username)
     Base64.encode64(user_key_cert_pwd.user_key)
   end
 
