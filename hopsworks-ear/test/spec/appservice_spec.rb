@@ -82,10 +82,10 @@ describe "On #{ENV['OS']}" do
           }
           json_data = json_data.to_json
           json = post "#{ENV['HOPSWORKS_API']}/appservice/schema", json_data # This post request authenticates with keystore and pwd to get schema
+          expect_status(200)
           parsed_json = JSON.parse(response.body)
           expect(parsed_json.key?("contents")).to be true
           expect(parsed_json.key?("version")).to be true
-          expect_status(200)
         end
       end
     end
