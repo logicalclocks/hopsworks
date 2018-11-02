@@ -33,8 +33,8 @@ module KafkaHelper
   end
 
   def create_topic(project_id)
-    schema_name = add_schema(project_id)
-    topic_name = add_topic(project_id, schema_name, 1)
+    _, schema_name = add_schema(project_id)
+    _, topic_name = add_topic(project_id, schema_name, 1)
     ProjectTopics.find_by(project_id:project_id, topic_name:topic_name)
   end
 
