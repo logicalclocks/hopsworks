@@ -49,7 +49,7 @@ public class LibVersions {
 
   private String channelUrl;
   private String lib;
-  private List<Version> versions;
+  private List<Version> versions = new ArrayList<>();
   private String status = "Not Installed";
 
   public LibVersions() {

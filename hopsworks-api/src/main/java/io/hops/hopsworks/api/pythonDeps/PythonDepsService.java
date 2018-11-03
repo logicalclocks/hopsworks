@@ -65,6 +65,7 @@ import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.util.Settings;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.json.JSONObject;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -79,6 +80,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.HttpHeaders;
@@ -90,10 +92,11 @@ import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -491,7 +494,7 @@ public class PythonDepsService {
     List<PythonDep> installedDeps = null;
 
     if (lib.getInstallType().equals(PythonDepsFacade.CondaInstallType.PIP.name())) {
-      response = findPipLib(lib);
+      response = findPipLibSearch(lib);
       installedDeps = pythonDepsFacade.listProject(project);
     } else if (lib.getInstallType().equals(PythonDepsFacade.CondaInstallType.CONDA.name())) {
       response = findCondaLib(lib);
@@ -535,7 +538,6 @@ public class PythonDepsService {
     ProcessBuilder pb = new ProcessBuilder(prog, url, library);
     try {
       Process process = pb.start();
-      StringBuilder sb = new StringBuilder();
       BufferedReader br = new BufferedReader(new InputStreamReader(process.
           getInputStream()));
       String line;
@@ -611,10 +613,38 @@ public class PythonDepsService {
     }
   }
 
-  private Collection<LibVersions> findPipLib(PythonDepJson lib) throws ServiceException {
+  private LibVersions findPipLibPyPi(String libName) {
+    Response resp = ClientBuilder.newClient()
+        .target(settings.getPyPiRESTEndpoint().replaceFirst("\\{package}", libName))
+        .request()
+        .header("Content-Type", "application/json").get();
+
+    if(resp.getStatusInfo().getStatusCode() != Response.Status.OK.getStatusCode()) {
+      return null;
+    }
+
+    JSONObject jsonObject = new JSONObject(resp.readEntity(String.class));
+
+    LibVersions libVersions = new LibVersions();
+    libVersions.setLib(libName);
+    if (jsonObject.has("releases")) {
+      JSONObject releases = jsonObject.getJSONObject("releases");
+
+      Set<String> versions = releases.keySet();
+
+      for (String version : versions) {
+        libVersions.addVersion(new Version(version));
+      }
+      return libVersions;
+    }
+    return null;
+  }
+
+
+  private Collection<LibVersions> findPipLibSearch(PythonDepJson lib) throws ServiceException {
     String envName = project.getName();
     String library = lib.getLib();
-    List<LibVersions> all = new ArrayList<>();
+    List<LibVersions> foundLibraryVersions = new ArrayList<>();
 
     String prog = settings.getHopsworksDomainDir() + "/bin/pipsearch.sh";
     ProcessBuilder pb = new ProcessBuilder(prog, library, envName);
@@ -640,8 +670,6 @@ public class PythonDepsService {
           continue;
         }
 
-        LibVersions lv = new LibVersions();
-
         // remove all paranthesis
         line = line.replaceAll("[()]", "");
 
@@ -656,14 +684,18 @@ public class PythonDepsService {
             continue;
           }
 
-          lv.setLib(libName);
-
-          lv.addVersion(new Version(lineSplit[1]));
-
-          all.add(lv);
-
+          LibVersions libVersions = findPipLibPyPi(libName);
+          if(libVersions != null) {
+            foundLibraryVersions.add(libVersions);
+          } else {
+            LibVersions pipSearchVersion = new LibVersions();
+            pipSearchVersion.setLib(libName);
+            pipSearchVersion.addVersion(new Version(lineSplit[1]));
+            foundLibraryVersions.add(pipSearchVersion);
+          }
         }
       }
+
       int errCode = process.waitFor();
       if (errCode == 2) {
         throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_ERROR, Level.SEVERE,
@@ -672,7 +704,7 @@ public class PythonDepsService {
         throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_NOT_FOUND, Level.SEVERE,
           "errCode: " + 1);
       }
-      return all;
+      return foundLibraryVersions;
 
     } catch (IOException | InterruptedException ex) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_ERROR, Level.SEVERE,
