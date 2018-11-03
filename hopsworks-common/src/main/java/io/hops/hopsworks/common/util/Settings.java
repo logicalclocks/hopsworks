@@ -131,6 +131,7 @@ public class Settings implements Serializable {
   /**
    * Global Variables taken from the DB
    */
+  private static final String VARIABLE_PYPI_REST_ENDPOINT = "pypi_rest_endpoint";
   private static final String VARIABLE_PYTHON_KERNEL = "python_kernel";
   private static final String VARIABLE_HADOOP_VERSION = "hadoop_version";
   private static final String VARIABLE_JAVA_HOME = "JAVA_HOME";
@@ -560,7 +561,8 @@ public class Settings implements Serializable {
       CUDA_VERSION = setStrVar(VARIABLE_CUDA_VERSION, CUDA_VERSION);
       HOPSWORKS_VERSION = setStrVar(VARIABLE_HOPSWORKS_VERSION, HOPSWORKS_VERSION);
       HOPSWORKS_REST_LOG_LEVEL = setLogLevelVar(VARIABLE_HOPSWORKS_REST_LOG_LEVEL, HOPSWORKS_REST_LOG_LEVEL);
-      
+
+      PYPI_REST_ENDPOINT = setStrVar(VARIABLE_PYPI_REST_ENDPOINT, PYPI_REST_ENDPOINT);
       PROVIDED_PYTHON_LIBRARY_NAMES = toSetFromCsv(
           setStrVar(VARIABLE_PROVIDED_PYTHON_LIBRARY_NAMES, DEFAULT_PROVIDED_PYTHON_LIBRARY_NAMES),",");
       PREINSTALLED_PYTHON_LIBRARY_NAMES = toSetFromCsv(
@@ -2150,6 +2152,13 @@ public class Settings implements Serializable {
   public synchronized boolean isPythonKernelEnabled() {
     checkCache();
     return PYTHON_KERNEL;
+  }
+
+  private String PYPI_REST_ENDPOINT = "https://pypi.org/pypi/{package}/json";
+
+  public synchronized String getPyPiRESTEndpoint() {
+    checkCache();
+    return PYPI_REST_ENDPOINT;
   }
 
   private String HOPSUTIL_VERSION = "0.3.0";
