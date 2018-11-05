@@ -39,26 +39,28 @@
 
 package io.hops.hopsworks.api.project;
 
+import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
+import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.common.dao.dataset.DatasetRequest;
 import io.hops.hopsworks.common.dao.dataset.DatasetRequestFacade;
 import io.hops.hopsworks.common.dao.message.Message;
 import io.hops.hopsworks.common.dao.message.MessageFacade;
-import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.exception.RequestException;
 import io.hops.hopsworks.common.message.MessageController;
+import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.Api;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -71,12 +73,11 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
 import org.elasticsearch.common.Strings;
 
 @Path("/message")
 @Stateless
-@RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
+@JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
 @Api(value = "Message Service", description = "Message Service")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class MessageService {
@@ -88,58 +89,48 @@ public class MessageService {
   @EJB
   private MessageFacade msgFacade;
   @EJB
-  private UserFacade userFacade;
-  @EJB
   private DatasetRequestFacade dsReqFacade;
   @EJB
   private NoCacheResponse noCacheResponse;
+  @EJB
+  private JWTHelper jWTHelper;
 
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getAllMessagesByUser(@Context SecurityContext sc) {
-    String eamil = sc.getUserPrincipal().getName();
-    Users user = userFacade.findByEmail(eamil);
+  public Response getAllMessagesByUser(@Context HttpServletRequest req) {
+    Users user = jWTHelper.getUserPrincipal(req);
     List<Message> list = msgFacade.getAllMessagesTo(user);
-    GenericEntity<List<Message>> msgs
-            = new GenericEntity<List<Message>>(list) {};
-
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            msgs).build();
+    GenericEntity<List<Message>> msgs = new GenericEntity<List<Message>>(list) {};
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(msgs).build();
   }
 
   @GET
   @Path("deleted")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getAllDeletedMessagesByUser(@Context SecurityContext sc) {
-    String eamil = sc.getUserPrincipal().getName();
-    Users user = userFacade.findByEmail(eamil);
+  public Response getAllDeletedMessagesByUser(@Context HttpServletRequest req) {
+    Users user = jWTHelper.getUserPrincipal(req);
     List<Message> list = msgFacade.getAllDeletedMessagesTo(user);
-    GenericEntity<List<Message>> msgs
-            = new GenericEntity<List<Message>>(list) {};
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            msgs).build();
+    GenericEntity<List<Message>> msgs = new GenericEntity<List<Message>>(list) {};
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(msgs).build();
   }
 
   @GET
   @Path("countUnread")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response countUnreadMessagesByUser(@Context SecurityContext sc) {
+  public Response countUnreadMessagesByUser(@Context HttpServletRequest req) {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
-    String eamil = sc.getUserPrincipal().getName();
-    Users user = userFacade.findByEmail(eamil);
+    Users user = jWTHelper.getUserPrincipal(req);
     Long unread = msgFacade.countUnreadMessagesTo(user);
     json.setData(unread);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            json).build();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }
 
   @PUT
   @Path("markAsRead/{msgId}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response markAsRead(@PathParam("msgId") Integer msgId,
-          @Context SecurityContext sc) throws RequestException {
-    String eamil = sc.getUserPrincipal().getName();
-    Users user = userFacade.findByEmail(eamil);
+  public Response markAsRead(@PathParam("msgId") Integer msgId, @Context HttpServletRequest req) throws 
+      RequestException {
+    Users user = jWTHelper.getUserPrincipal(req);
     Message msg = msgFacade.find(msgId);
     //Delete Dataset request from the database
     if (!Strings.isNullOrEmpty(msg.getSubject())) {
@@ -157,10 +148,9 @@ public class MessageService {
   @PUT
   @Path("moveToTrash/{msgId}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response moveToTrash(@PathParam("msgId") Integer msgId,
-          @Context SecurityContext sc) throws RequestException {
-    String eamil = sc.getUserPrincipal().getName();
-    Users user = userFacade.findByEmail(eamil);
+  public Response moveToTrash(@PathParam("msgId") Integer msgId, @Context HttpServletRequest req) throws
+      RequestException {
+    Users user = jWTHelper.getUserPrincipal(req);
     Message msg = msgFacade.find(msgId);
     if (msg == null) {
       throw new RequestException(RESTCodes.RequestErrorCode.MESSAGE_NOT_FOUND, Level.FINE);
@@ -181,10 +171,9 @@ public class MessageService {
   @PUT
   @Path("restoreFromTrash/{msgId}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response restoreFromTrash(@PathParam("msgId") Integer msgId,
-          @Context SecurityContext sc) throws RequestException {
-    String eamil = sc.getUserPrincipal().getName();
-    Users user = userFacade.findByEmail(eamil);
+  public Response restoreFromTrash(@PathParam("msgId") Integer msgId, @Context HttpServletRequest req) throws
+      RequestException {
+    Users user = jWTHelper.getUserPrincipal(req);
     Message msg = msgFacade.find(msgId);
     if (msg == null) {
       throw new RequestException(RESTCodes.RequestErrorCode.MESSAGE_NOT_FOUND, Level.FINE);
@@ -198,10 +187,9 @@ public class MessageService {
   @DELETE
   @Path("{msgId}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response deleteMessage(@PathParam("msgId") Integer msgId,
-          @Context SecurityContext sc) throws RequestException {
-    String eamil = sc.getUserPrincipal().getName();
-    Users user = userFacade.findByEmail(eamil);
+  public Response deleteMessage(@PathParam("msgId") Integer msgId, @Context HttpServletRequest req) throws 
+      RequestException {
+    Users user = jWTHelper.getUserPrincipal(req);
     Message msg = msgFacade.find(msgId);
     if (msg == null) {
       throw new RequestException(RESTCodes.RequestErrorCode.MESSAGE_NOT_FOUND, Level.FINE);
@@ -214,10 +202,9 @@ public class MessageService {
   @DELETE
   @Path("empty")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response emptyTrash(@Context SecurityContext sc) {
+  public Response emptyTrash(@Context HttpServletRequest req) {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
-    String eamil = sc.getUserPrincipal().getName();
-    Users user = userFacade.findByEmail(eamil);
+    Users user = jWTHelper.getUserPrincipal(req);
     int rowsAffected = msgFacade.emptyTrash(user);
     json.setSuccessMessage(rowsAffected + " messages deleted.");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
@@ -228,11 +215,9 @@ public class MessageService {
   @Path("reply/{msgId}")
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.TEXT_PLAIN)
-  public Response reply(@PathParam("msgId") Integer msgId,
-          String content,
-          @Context SecurityContext sc) throws RequestException {
-    String eamil = sc.getUserPrincipal().getName();
-    Users user = userFacade.findByEmail(eamil);
+  public Response reply(@PathParam("msgId") Integer msgId, String content, @Context HttpServletRequest req) throws
+      RequestException {
+    Users user = jWTHelper.getUserPrincipal(req);
     Message msg = msgFacade.find(msgId);
     if (msg == null) {
       throw new RequestException(RESTCodes.RequestErrorCode.MESSAGE_NOT_FOUND, Level.FINE);
@@ -242,8 +227,7 @@ public class MessageService {
     }
     checkMsgUser(msg, user);//check if the user is the owner of the message
     msgController.reply(user, msg, content);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            msg).build();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(msg).build();
   }
 
   private void checkMsgUser(Message msg, Users user) throws RequestException {

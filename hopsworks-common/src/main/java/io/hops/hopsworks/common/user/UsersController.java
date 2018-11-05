@@ -303,9 +303,8 @@ public class UsersController {
     }
   }
 
-  public void changePassword(String email, String oldPassword, String newPassword, String confirmedPassword,
+  public void changePassword(Users user, String oldPassword, String newPassword, String confirmedPassword,
       HttpServletRequest req) throws UserException {
-    Users user = userFacade.findByEmail(email);
 
     if (!authController.validatePassword(user, oldPassword, req)) {
       throw new UserException(RESTCodes.UserErrorCode.PASSWORD_INCORRECT, Level.FINE);
@@ -326,9 +325,8 @@ public class UsersController {
     }
   }
 
-  public void changeSecQA(String email, String oldPassword, String securityQuestion, String securityAnswer,
+  public void changeSecQA(Users user, String oldPassword, String securityQuestion, String securityAnswer,
       HttpServletRequest req) throws UserException {
-    Users user = userFacade.findByEmail(email);
     if (!authController.validatePassword(user, oldPassword, req)) {
       throw new UserException(RESTCodes.UserErrorCode.PASSWORD_INCORRECT, Level.FINE);
     }
@@ -338,9 +336,8 @@ public class UsersController {
     }
   }
 
-  public Users updateProfile(String email, String firstName, String lastName, String telephoneNum, Integer toursState,
+  public Users updateProfile(Users user, String firstName, String lastName, String telephoneNum, Integer toursState,
       HttpServletRequest req) throws UserException {
-    Users user = userFacade.findByEmail(email);
 
     if (user == null) {
       throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);

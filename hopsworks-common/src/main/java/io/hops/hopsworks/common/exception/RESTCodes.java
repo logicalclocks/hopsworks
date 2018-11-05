@@ -726,7 +726,11 @@ public class RESTCodes {
       "Could not identify local directory to clean certificates. Manual cleanup required.", 
       Response.Status.INTERNAL_SERVER_ERROR),
     MASTER_ENCRYPTION_PASSWORD_ACCESS_ERROR(11, "Could not read master encryption password.",
-      Response.Status.INTERNAL_SERVER_ERROR);
+      Response.Status.INTERNAL_SERVER_ERROR),
+    NOT_RENEWABLE_TOKEN(12, "Token can not be renewed.", Response.Status.BAD_REQUEST),
+    INVALIDATION_ERROR(13, "Error while invalidating token.", Response.Status.EXPECTATION_FAILED),
+    REST_ACCESS_CONTROL(14, "Client not authorized for this invocation.", Response.Status.FORBIDDEN),
+    DUPLICATE_KEY_ERROR(15, "A signing key with the same name already exists.", Response.Status.CONFLICT);
     
     private Integer code;
     private String message;

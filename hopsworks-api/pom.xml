@@ -125,6 +125,13 @@
       <type>ejb</type>
       <scope>provided</scope>
     </dependency>
+    <dependency>
+      <groupId>io.hops.hopsworks</groupId>
+      <artifactId>hopsworks-jwt</artifactId>
+      <version>0.7.0-SNAPSHOT</version>
+      <type>ejb</type>
+      <scope>provided</scope>
+    </dependency>
     <!--Zeppelin dependencies -->
     <!-- CDI bug. Zeppelin-interpreter includes org.sonatype.guice.**
     which has CDI annotated beans, causing deployment of hopsworks to fail. Because Zeppelin-interpreter

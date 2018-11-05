@@ -60,15 +60,15 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
 
 import io.hops.hopsworks.common.exception.JobException;
 import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
+import io.hops.hopsworks.api.filter.Audience;
+import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
@@ -80,6 +80,7 @@ import io.hops.hopsworks.common.jobs.spark.SparkController;
 import io.hops.hopsworks.common.jobs.spark.SparkJobConfiguration;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.jwt.annotation.JWTRequired;
 
 /**
  * Service offering functionality to run a Spark fatjar job.
@@ -98,8 +99,6 @@ public class SparkService {
   @EJB
   private JobFacade jobFacade;
   @EJB
-  private UserFacade userFacade;
-  @EJB
   private ActivityFacade activityFacade;
   @EJB
   private JobController jobController;
@@ -109,6 +108,8 @@ public class SparkService {
   private DistributedFsService dfs;
   @EJB
   private Settings settings;
+  @EJB
+  private JWTHelper jWTHelper;
 
   private Project project;
 
@@ -120,21 +121,16 @@ public class SparkService {
   /**
    * Get all the jobs in this project of type Spark.
    * <p/>
-   * @param sc
-   * @param req
    * @return A list of all Jobs objects of type Spark in this project.
    */
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public Response findAllSparkJobs(@Context SecurityContext sc,
-      @Context HttpServletRequest req) {
-    List<Jobs> jobs = jobFacade.findJobsForProjectAndType(project,
-        JobType.SPARK);
-    GenericEntity<List<Jobs>> jobList
-        = new GenericEntity<List<Jobs>>(jobs) {};
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-        entity(jobList).build();
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response findAllSparkJobs() {
+    List<Jobs> jobs = jobFacade.findJobsForProjectAndType(project, JobType.SPARK);
+    GenericEntity<List<Jobs>> jobList = new GenericEntity<List<Jobs>>(jobs) {};
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(jobList).build();
   }
 
   /**
@@ -142,27 +138,24 @@ public class SparkService {
    * SparkJobConfiguration object.
    * <p/>
    * @param path
-   * @param sc
    * @param req
    * @return
+   * @throws io.hops.hopsworks.common.exception.JobException
    */
   @GET
   @Path("/inspect/{path: .+}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response inspectJar(@PathParam("path") String path,
-      @Context SecurityContext sc, @Context HttpServletRequest req) throws JobException {
-    String email = sc.getUserPrincipal().getName();
-    Users user = userFacade.findByEmail(email);
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response inspectJar(@PathParam("path") String path, @Context HttpServletRequest req) throws JobException {
+    Users user = jWTHelper.getUserPrincipal(req);
     String username = hdfsUsersBean.getHdfsUserName(project, user);
     DistributedFileSystemOps udfso = null;
     try {
       udfso = dfs.getDfsOps(username);
-      SparkJobConfiguration config = sparkController.inspectProgram(path, username,
-        udfso);
+      SparkJobConfiguration config = sparkController.inspectProgram(path, username, udfso);
       //SparkJobConfiguration config = sparkController.inspectProgram(path, username, req.getSession().getId());
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-        entity(config).build();
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(config).build();
     } finally {
       if (udfso != null) {
         dfs.closeDfsClient(udfso);
@@ -174,22 +167,20 @@ public class SparkService {
    * Create a new Job definition. If successful, the job is returned.
    * <p/>
    * @param config The configuration from which to create a Job.
-   * @param sc
    * @param req
    * @return
+   * @throws io.hops.hopsworks.common.exception.JobException
    */
   @POST
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response createJob(SparkJobConfiguration config,
-      @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws JobException {
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response createJob(SparkJobConfiguration config, @Context HttpServletRequest req) throws JobException {
     if (config == null) {
       throw new IllegalArgumentException("Job configuration was not provided.");
     } else {
-      String email = sc.getUserPrincipal().getName();
-      Users user = userFacade.findByEmail(email);
+      Users user = jWTHelper.getUserPrincipal(req);
 
       if (Strings.isNullOrEmpty(config.getAppName())) {
         throw new IllegalArgumentException("Job name was not provided.");
@@ -200,7 +191,7 @@ public class SparkService {
         config.setAnacondaDir(settings.getAnacondaProjectDir(project.getName()));
       }
       Jobs created = jobController.createJob(user, project, config);
-      activityFacade.persistActivity(ActivityFacade.CREATED_JOB + created.getName(), project, email);
+      activityFacade.persistActivity(ActivityFacade.CREATED_JOB + created.getName(), project, user);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(created).build();
     }
   }

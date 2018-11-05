@@ -146,5 +146,10 @@ To run a single test
    cd hopsworks/hopsworks-ear/test
    rspec ./spec/session_spec.rb:60
 ```
+To skip tests that need to run inside a vm 
+```sh
+   cd hopsworks/hopsworks-ear/test
+   rspec --format html --out ../target/test-report.html --tag ~vm:true
+```
 When the test is done if `LAUNCH_BROWSER` is set to true in `.env`, it will open the test report in a browser.
 

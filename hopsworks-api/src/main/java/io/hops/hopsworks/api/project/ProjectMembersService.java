@@ -40,11 +40,15 @@
 package io.hops.hopsworks.api.project;
 
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
+import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
+import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
+import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
+import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.KafkaException;
 import io.hops.hopsworks.common.exception.ProjectException;
 import io.hops.hopsworks.common.exception.RESTCodes;
@@ -53,6 +57,7 @@ import io.hops.hopsworks.common.exception.UserException;
 import io.hops.hopsworks.common.project.MembersDTO;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.security.CAException;
+import io.hops.hopsworks.jwt.annotation.JWTRequired;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -70,7 +75,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
 import java.io.IOException;
 import java.util.List;
 import java.util.logging.Level;
@@ -83,7 +87,11 @@ public class ProjectMembersService {
   @EJB
   private ProjectController projectController;
   @EJB
+  private ProjectTeamFacade projectTeamFacade;
+  @EJB
   private NoCacheResponse noCacheResponse;
+  @EJB
+  private JWTHelper jWTHelper;
   private Integer projectId;
 
   public ProjectMembersService() {
@@ -104,38 +112,31 @@ public class ProjectMembersService {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public Response findMembersByProjectID(
-          @Context SecurityContext sc,
-          @Context HttpServletRequest req) {
-
-    List<ProjectTeam> list = projectController.findProjectTeamById(
-            this.projectId);
-    GenericEntity<List<ProjectTeam>> projects
-            = new GenericEntity<List<ProjectTeam>>(list) {};
-
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            projects).build();
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response findMembersByProjectID() {
+    List<ProjectTeam> list = projectController.findProjectTeamById(this.projectId);
+    GenericEntity<List<ProjectTeam>> projects = new GenericEntity<List<ProjectTeam>>(list) {};
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(projects).build();
   }
 
   @POST
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  public Response addMembers(
-          MembersDTO members,
-          @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws KafkaException, ProjectException, UserException {
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response addMembers(MembersDTO members, @Context HttpServletRequest req) throws KafkaException,
+      ProjectException, UserException {
 
     Project project = projectController.findProjectById(this.projectId);
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     List<String> failedMembers = null;
-    String owner = sc.getUserPrincipal().getName();
+    Users user = jWTHelper.getUserPrincipal(req);
 
     if (members.getProjectTeam() == null || members.getProjectTeam().isEmpty()) {
       throw new IllegalArgumentException("Member was not provided in MembersDTO");
     }
     if (project != null) {
       //add new members of the project
-      failedMembers = projectController.addMembers(project, owner, members.getProjectTeam());
+      failedMembers = projectController.addMembers(project, user, members.getProjectTeam());
     }
 
     if (members.getProjectTeam().size() > 1) {
@@ -163,15 +164,13 @@ public class ProjectMembersService {
   @Path("/{email}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  public Response updateRoleByEmail(
-          @PathParam("email") String email,
-          @FormParam("role") String role,
-          @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws ProjectException, UserException {
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response updateRoleByEmail(@PathParam("email") String email, @FormParam("role") String role,
+      @Context HttpServletRequest req) throws ProjectException, UserException {
 
     Project project = projectController.findProjectById(this.projectId);
     RESTApiJsonResponse json = new RESTApiJsonResponse();
-    String owner = sc.getUserPrincipal().getName();
+    Users user = jWTHelper.getUserPrincipal(req);
     if (email == null) {
       throw new IllegalArgumentException("Email was not provided.");
     }
@@ -181,7 +180,7 @@ public class ProjectMembersService {
     if (project.getOwner().getEmail().equals(email)) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_OWNER_ROLE_NOT_ALLOWED, Level.FINE);
     }
-    projectController.updateMemberRole(project, owner, email, role);
+    projectController.updateMemberRole(project, user, email, role);
 
     json.setSuccessMessage(ResponseMessages.MEMBER_ROLE_UPDATED);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
@@ -192,21 +191,23 @@ public class ProjectMembersService {
   @DELETE
   @Path("/{email}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  public Response removeMembersByID(
-          @PathParam("email") String email,
-          @Context SecurityContext sc,
-          @Context HttpServletRequest req)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response removeMembersByID(@PathParam("email") String email, @Context HttpServletRequest req)
     throws ProjectException, ServiceException, CAException, UserException, IOException {
 
     Project project = projectController.findProjectById(this.projectId);
     RESTApiJsonResponse json = new RESTApiJsonResponse();
-    String owner = sc.getUserPrincipal().getName();
+    Users owner = jWTHelper.getUserPrincipal(req);
     if (email == null) {
       throw new IllegalArgumentException("Email was not provided");
     }
     //Data Scientists are only allowed to remove themselves
-    if (sc.isUserInRole(AllowedProjectRoles.DATA_SCIENTIST) && !owner.equals(email)) {
+    String userProjectRole = projectTeamFacade.findCurrentRole(project, email);
+    if (userProjectRole == null || userProjectRole.isEmpty()) {
+      throw new ProjectException(RESTCodes.ProjectErrorCode.TEAM_MEMBER_NOT_FOUND, Level.FINE);
+    }
+    if (userProjectRole.equals(AllowedProjectRoles.DATA_SCIENTIST) && !owner.getEmail().equals(email)) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.MEMBER_REMOVAL_NOT_ALLOWED, Level.FINE);
     }
     if (project.getOwner().getEmail().equals(email)) {
@@ -215,8 +216,7 @@ public class ProjectMembersService {
     projectController.removeMemberFromTeam(project, owner, email);
 
     json.setSuccessMessage(ResponseMessages.MEMBER_REMOVED_FROM_TEAM);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            json).build();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
 
   }
 

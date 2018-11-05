@@ -39,15 +39,16 @@
 
 package io.hops.hopsworks.api.admin.llap;
 
+import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.common.admin.llap.LlapClusterFacade;
 import io.hops.hopsworks.common.admin.llap.LlapClusterLifecycle;
 import io.hops.hopsworks.common.admin.llap.LlapClusterStatus;
 import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.exception.ServiceException;
+import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.Api;
 
-import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -63,9 +64,9 @@ import javax.ws.rs.core.Response;
 import java.util.logging.Level;
 
 @Path("/admin/llap")
-@RolesAllowed({"HOPS_ADMIN"})
-@Api(value = "Admin")
 @Stateless
+@JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN"})
+@Api(value = "Admin")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class LlapAdmin {
 

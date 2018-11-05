@@ -54,7 +54,10 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.api.agent.AgentResource.class);
     register(io.hops.hopsworks.api.elastic.ElasticService.class);
     register(RESTApiThrowableMapper.class);
-    register(io.hops.hopsworks.api.filter.RequestAuthFilter.class);
+    register(io.hops.hopsworks.api.filter.ProjectAuthFilter.class);
+    register(io.hops.hopsworks.api.filter.AuthFilter.class);
+    register(io.hops.hopsworks.api.filter.JWTAutoRenewFilter.class);
+    register(io.hops.hopsworks.api.jwt.JWTResource.class);
     register(io.hops.hopsworks.api.jobs.ExecutionService.class);
     register(io.hops.hopsworks.api.jobs.FlinkService.class);
     register(io.hops.hopsworks.api.jobs.JobService.class);

@@ -44,10 +44,10 @@
 
 angular.module('hopsWorksApp')
         .controller('MainCtrl', ['$interval', '$cookies', '$location', '$scope', '$rootScope',
-          'AuthService', 'UtilsService', 'ElasticService', 'DelaProjectService',
+          '$http', 'AuthService', 'UtilsService', 'ElasticService', 'DelaProjectService',
           'DelaService', 'md5', 'ModalService', 'ProjectService', 'growl',
           'MessageService', '$routeParams', '$window', 'HopssiteService', 'BannerService',
-          function ($interval, $cookies, $location, $scope, $rootScope, AuthService, UtilsService,
+          function ($interval, $cookies, $location, $scope, $rootScope, $http, AuthService, UtilsService,
                   ElasticService, DelaProjectService, DelaService, md5, ModalService, 
                   ProjectService, growl,
                   MessageService, $routeParams, $window, HopssiteService, BannerService) {
@@ -66,16 +66,19 @@ angular.module('hopsWorksApp')
             }
             
             var checkeIsAdmin = function () {
-              AuthService.isAdmin().then(
+              var isAdmin = sessionStorage.getItem("isAdmin");
+              if (isAdmin === null) {
+                AuthService.isAdmin().then(
                   function (success) {
-                    $cookies.put("isAdmin", success.data === 'true');
-                },function (error) {
-                    $cookies.put("isAdmin", false);
-              });
+                    sessionStorage.setItem("isAdmin", success.data === 'true');
+                  }, function (error) {
+                    sessionStorage.setItem("isAdmin", false);
+                });
+              }
             };
             checkeIsAdmin();
             self.isAdmin = function () {
-              return $cookies.get('isAdmin');
+              return sessionStorage.getItem("isAdmin");
             };
 
             self.goToAdminPage = function () {
@@ -89,17 +92,16 @@ angular.module('hopsWorksApp')
             self.logout = function () {
               AuthService.logout(self.user).then(
                       function (success) {
+                        AuthService.cleanSession();
+                        AuthService.removeToken();
                         $location.url('/login');
-                        $cookies.remove("email");
-                        $cookies.remove("isAdmin");
-                        localStorage.removeItem("SESSIONID");
-                        sessionStorage.removeItem("SESSIONID");
                       }, function (error) {
                 self.errorMessage = error.data.msg;
               });
             };
             
             var checkDelaEnabled = function () {
+              
               HopssiteService.getServiceInfo("dela").then(function (success) {
                 console.log("isDelaEnabled", success);
                 self.delaServiceInfo = success.data;
@@ -113,7 +115,7 @@ angular.module('hopsWorksApp')
                 console.log("isDelaEnabled", error);
               });
             };
-            checkDelaEnabled(); // check 
+            //checkDelaEnabled(); // check 
             
             self.userNotification = '';
             var getUserNotification = function () {

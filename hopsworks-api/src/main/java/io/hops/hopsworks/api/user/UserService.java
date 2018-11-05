@@ -39,25 +39,29 @@
 
 package io.hops.hopsworks.api.user;
 
-import io.hops.hopsworks.api.filter.AllowedProjectRoles;
+import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
+import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
+import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
+import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.UserCardDTO;
 import io.hops.hopsworks.common.dao.user.UserDTO;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.UserProjectDTO;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.sshkey.SshKeyDTO;
+import io.hops.hopsworks.common.exception.ProjectException;
 import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.exception.UserException;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.user.UsersController;
+import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.Api;
 import org.apache.commons.codec.binary.Base64;
 
-import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -73,21 +77,19 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Path("/user")
-@RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
 @Stateless
+@JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
 @Api(value = "User", description = "User service")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class UserService {
 
-  private final static Logger logger = Logger.getLogger(UserService.class.
-          getName());
+  private final static Logger logger = Logger.getLogger(UserService.class.getName());
 
   @EJB
   private UserFacade userBean;
@@ -97,13 +99,15 @@ public class UserService {
   private NoCacheResponse noCacheResponse;
   @EJB
   private ProjectController projectController;
+  @EJB
+  private ProjectTeamFacade projectTeamFacade;
+  @EJB
+  private JWTHelper jWTHelper;
 
   @GET
   @Path("allcards")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.ANYONE})
-  public Response findAllByUser(@Context SecurityContext sc,
-          @Context HttpServletRequest req) {
+  public Response findAllByUser() {
 
     List<Users> users = userBean.findAllUsers();
     List<UserCardDTO> userCardDTOs = new ArrayList<>();
@@ -112,26 +116,20 @@ public class UserService {
       UserCardDTO userCardDTO = new UserCardDTO(user);
       userCardDTOs.add(userCardDTO);
     }
-    GenericEntity<List<UserCardDTO>> userCards
-            = new GenericEntity<List<UserCardDTO>>(userCardDTOs) {};
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            userCards).build();
+    GenericEntity<List<UserCardDTO>> userCards = new GenericEntity<List<UserCardDTO>>(userCardDTOs) {};
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(userCards).build();
   }
 
   @GET
   @Path("profile")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getUserProfile(@Context SecurityContext sc) throws UserException {
-    Users user = userBean.findByEmail(sc.getUserPrincipal().getName());
-
+  public Response getUserProfile(@Context HttpServletRequest req) throws UserException {
+    Users user = jWTHelper.getUserPrincipal(req);
     if (user == null) {
       throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
     }
-
     UserDTO userDTO = new UserDTO(user);
-
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            userDTO).build();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(userDTO).build();
   }
 
   @POST
@@ -143,15 +141,13 @@ public class UserService {
           @FormParam("toursState") Integer toursState,
           @Context HttpServletRequest req) throws UserException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
-    
-    Users user = userController.updateProfile(req.getRemoteUser(), firstName, lastName, telephoneNum, toursState, req);
+    Users user = jWTHelper.getUserPrincipal(req);
+    user = userController.updateProfile(user, firstName, lastName, telephoneNum, toursState, req);
     UserDTO userDTO = new UserDTO(user);
-    
+   
     json.setSuccessMessage(ResponseMessages.PROFILE_UPDATED);
     json.setData(userDTO);
-
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            userDTO).build();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(userDTO).build();
   }
 
   @POST
@@ -163,13 +159,10 @@ public class UserService {
           @FormParam("confirmedPassword") String confirmedPassword,
           @Context HttpServletRequest req) throws UserException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
-
-    userController.changePassword(req.getRemoteUser(), oldPassword, newPassword, confirmedPassword, req);
-
+    Users user = jWTHelper.getUserPrincipal(req);
+    userController.changePassword(user, oldPassword, newPassword, confirmedPassword, req);
     json.setSuccessMessage(ResponseMessages.PASSWORD_CHANGED);
-
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            json).build();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }
 
   @POST
@@ -180,12 +173,10 @@ public class UserService {
           @FormParam("securityAnswer") String securityAnswer,
           @Context HttpServletRequest req) throws UserException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
-    userController.changeSecQA(req.getRemoteUser(), oldPassword, securityQuestion, securityAnswer, req);
-
+    Users user = jWTHelper.getUserPrincipal(req);
+    userController.changeSecQA(user, oldPassword, securityQuestion, securityAnswer, req);
     json.setSuccessMessage(ResponseMessages.SEC_QA_CHANGED);
-
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            json).build();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }
 
   @POST
@@ -194,7 +185,7 @@ public class UserService {
   public Response changeTwoFactor(@FormParam("password") String password,
           @FormParam("twoFactor") boolean twoFactor,
           @Context HttpServletRequest req) throws UserException {
-    Users user = userBean.findByEmail(req.getRemoteUser());
+    Users user = jWTHelper.getUserPrincipal(req);
 
     byte[] qrCode;
     RESTApiJsonResponse json = new RESTApiJsonResponse();
@@ -217,9 +208,9 @@ public class UserService {
   @POST
   @Path("getQRCode")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getQRCode(@FormParam("password") String password, @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws UserException {
-    Users user = userBean.findByEmail(sc.getUserPrincipal().getName());
+  public Response getQRCode(@FormParam("password") String password, @Context HttpServletRequest req) throws
+      UserException {
+    Users user = jWTHelper.getUserPrincipal(req);
     if (user == null) {
       throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
     }
@@ -241,11 +232,8 @@ public class UserService {
   @Path("addSshKey")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public Response addSshkey(SshKeyDTO sshkey,
-          @Context SecurityContext sc,
-          @Context HttpServletRequest req) {
-    Users user = userBean.findByEmail(sc.getUserPrincipal().getName());
+  public Response addSshkey(SshKeyDTO sshkey, @Context HttpServletRequest req) {
+    Users user = jWTHelper.getUserPrincipal(req);
     int id = user.getUid();
     SshKeyDTO dto = userController.addSshKey(id, sshkey.getName(), sshkey.
             getPublicKey());
@@ -256,12 +244,9 @@ public class UserService {
   @POST
   @Path("removeSshKey")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public Response removeSshkey(@FormParam("name") String name,
-          @Context SecurityContext sc,
-          @Context HttpServletRequest req) {
+  public Response removeSshkey(@FormParam("name") String name, @Context HttpServletRequest req) {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
-    Users user = userBean.findByEmail(sc.getUserPrincipal().getName());
+    Users user = jWTHelper.getUserPrincipal(req);
     int id = user.getUid();
     userController.removeSshKey(id, name);
     json.setSuccessMessage(ResponseMessages.SSH_KEY_REMOVED);
@@ -272,10 +257,8 @@ public class UserService {
   @GET
   @Path("getSshKeys")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public Response getSshkeys(@Context SecurityContext sc,
-          @Context HttpServletRequest req) {
-    Users user = userBean.findByEmail(sc.getUserPrincipal().getName());
+  public Response getSshkeys(@Context HttpServletRequest req) {
+    Users user = jWTHelper.getUserPrincipal(req);
     int id = user.getUid();
     List<SshKeyDTO> sshKeys = userController.getSshKeys(id);
 
@@ -289,28 +272,20 @@ public class UserService {
   @POST
   @Path("getRole")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getRole(@FormParam("projectId") int projectId,
-          @Context SecurityContext sc,
-          @Context HttpServletRequest req) {
-    String email = sc.getUserPrincipal().getName();
+  public Response getRole(@FormParam("projectId") int projectId, @Context HttpServletRequest req) throws
+      ProjectException {
+    Users user = jWTHelper.getUserPrincipal(req);
 
     UserProjectDTO userDTO = new UserProjectDTO();
-    userDTO.setEmail(email);
+    userDTO.setEmail(user.getEmail());
     userDTO.setProject(projectId);
-
-    List<ProjectTeam> list = projectController.findProjectTeamById(projectId);
-
-    for (ProjectTeam pt : list) {
-      logger.log(Level.FINEST, "{0} ({1}) -  {2}", new Object[]{pt.
-        getProjectTeamPK().getTeamMember(),
-        pt.getProjectTeamPK().getProjectId(), pt.getTeamRole()});
-      if (pt.getProjectTeamPK().getTeamMember().compareToIgnoreCase(email) == 0) {
-        userDTO.setRole(pt.getTeamRole());
-      }
+    Project project = projectController.findProjectById(projectId);
+    ProjectTeam pt = projectTeamFacade.findByPrimaryKey(project, user);
+    if (pt == null) {
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(userDTO).build();
     }
-
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            userDTO).build();
+    userDTO.setRole(pt.getTeamRole());
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(userDTO).build();
   }
 
 }

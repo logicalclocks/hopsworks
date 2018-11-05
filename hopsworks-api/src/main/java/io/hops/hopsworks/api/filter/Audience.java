@@ -13,15 +13,13 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.jwt.annotation;
+package io.hops.hopsworks.api.filter;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
 
-@Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.TYPE, ElementType.METHOD})
-public @interface AllowedUserRoles {
-  String[] value();
+public class Audience {
+  public static final String API = "api"; // Used by UI. Can access any rest endpoint
+  public static final String JOB ="job"; // Used by internal services to start or stop jobs
+  public static final String DATASET ="dataset";
+  public static final String EMAIL ="email";
+  public static final String SERVICES ="services";
 }

@@ -40,18 +40,22 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .factory('AuthInterceptorService', ['$q', '$location','growl', function ($q, $location, growl) {
+        .factory('AuthInterceptorService', ['$q', '$location', '$injector', function ($q, $location, $injector) {
 
             return {
               response: function (response) {
                 //console.log('From server: ', response);
-
+                var token = response.headers('Authorization');
+                if (token) {
+                  var authService = $injector.get('AuthService');
+                  authService.saveToken(response.headers('Authorization'));
+                }
                 // Return a promise
                 return response || $q.when(response);
               },
               responseError: function (responseRejection) {
                 console.log('Error in response: ', responseRejection);
-
+                
                 if (responseRejection.status === 401) {
                   // Authorization issue, unauthorized, login required
 

@@ -18,7 +18,6 @@ package io.hops.hopsworks.jwt.filter;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
-import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import java.io.IOException;
@@ -53,17 +52,19 @@ public abstract class JWTFilter implements ContainerRequestFilter {
   public void jwtFilter(ContainerRequestContext requestContext) throws IOException {
 
     String authorizationHeader = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
-
+    Object responseEntity;
     if (authorizationHeader == null) {
       LOGGER.log(Level.INFO, "Token not provided.");
+      responseEntity = responseEntity(Response.Status.UNAUTHORIZED, "Token not provided.");
       requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).header(HttpHeaders.WWW_AUTHENTICATE,
-          WWW_AUTHENTICATE_VALUE).entity("Token not provided.").build());
+          WWW_AUTHENTICATE_VALUE).entity(responseEntity).build());
       return;
     }
     if (!authorizationHeader.startsWith(BEARER)) {
       LOGGER.log(Level.INFO, "Invalid token. AuthorizationHeader : {0}", authorizationHeader);
+      responseEntity = responseEntity(Response.Status.UNAUTHORIZED, "Invalidated token.");
       requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).header(HttpHeaders.WWW_AUTHENTICATE,
-          WWW_AUTHENTICATE_VALUE).entity("Invalid token.").build());
+          WWW_AUTHENTICATE_VALUE).entity(responseEntity).build());
       return;
     }
 
@@ -79,17 +80,19 @@ public abstract class JWTFilter implements ContainerRequestFilter {
           .acceptExpiresAt(expLeeway == 0 ? DEFAULT_EXPIRY_LEEWAY : expLeeway)
           .build();
       jwt = verifier.verify(token);
-    } catch (JWTVerificationException | SigningKeyNotFoundException exception) {
+    } catch (Exception exception) {
       LOGGER.log(Level.INFO, "JWT Verification Exception: {0}", exception.getMessage());
+      responseEntity = responseEntity(Response.Status.UNAUTHORIZED, exception.getMessage());
       requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).header(HttpHeaders.WWW_AUTHENTICATE,
-          WWW_AUTHENTICATE_VALUE).entity(exception.getMessage()).build());
+          WWW_AUTHENTICATE_VALUE).entity(responseEntity).build());
       return;
     }
 
     if (!isTokenValid(jwt)) {
       LOGGER.log(Level.INFO, "JWT Verification Exception: Invalidated token.");
+      responseEntity = responseEntity(Response.Status.UNAUTHORIZED, "Invalidated token.");
       requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).header(HttpHeaders.WWW_AUTHENTICATE,
-          WWW_AUTHENTICATE_VALUE).entity("Invalidated token.").build());
+          WWW_AUTHENTICATE_VALUE).entity(responseEntity).build());
       return;
     }
 
@@ -99,8 +102,8 @@ public abstract class JWTFilter implements ContainerRequestFilter {
     if (allowedRolesSet != null && !allowedRolesSet.isEmpty()) {
       if (!intersect(allowedRolesSet, Arrays.asList(userRoles))) {
         LOGGER.log(Level.INFO, "JWT Access Exception: Client not authorized for this invocation.");
-        requestContext.abortWith(Response.status(Response.Status.FORBIDDEN).entity(
-            "Client not authorized for this invocation.").build());
+        responseEntity = responseEntity(Response.Status.FORBIDDEN, "Client not authorized for this invocation.");
+        requestContext.abortWith(Response.status(Response.Status.FORBIDDEN).entity(responseEntity).build());
         return;
       }
     }
@@ -110,8 +113,8 @@ public abstract class JWTFilter implements ContainerRequestFilter {
     if (accepts != null && !accepts.isEmpty()) {
       if (!intersect(accepts, audience)) {
         LOGGER.log(Level.INFO, "JWT Access Exception: Token not issued for this recipient.");
-        requestContext.abortWith(Response.status(Response.Status.FORBIDDEN).entity(
-            "Token not issued for this recipient.").build());
+        responseEntity = responseEntity(Response.Status.FORBIDDEN, "Token not issued for this recipient.");
+        requestContext.abortWith(Response.status(Response.Status.FORBIDDEN).entity(responseEntity).build());
         return;
       }
     }
@@ -142,4 +145,6 @@ public abstract class JWTFilter implements ContainerRequestFilter {
   public abstract void postJWTFilter(ContainerRequestContext requestContext, DecodedJWT jwt) throws IOException;
 
   public abstract String getIssuer();
+  
+  public abstract Object responseEntity(Response.Status status, String msg);
 }

@@ -34,7 +34,7 @@ public class JsonWebToken {
   private Date expiresAt;
   private Date notBefore;
   private String keyId;
-  private String subject; //email
+  private String subject; //email or username
   private boolean renewable;
   private int expLeeway;
   private List<String> role;
@@ -52,7 +52,7 @@ public class JsonWebToken {
     this.keyId = keyId;
     this.subject = subject;
     this.renewable = renewable;
-    this.expLeeway = expLeeway;
+    this.expLeeway = expLeeway < 1 ? DEFAULT_EXPIRY_LEEWAY : expLeeway;
     this.role = role;
   }
 
@@ -67,7 +67,8 @@ public class JsonWebToken {
     Claim renewableClaim = jwt.getClaim(RENEWABLE);
     this.renewable = renewableClaim != null ? renewableClaim.asBoolean() : DEFAULT_RENEWABLE;
     Claim expLeewayClaim = jwt.getClaim(EXPIRY_LEEWAY);
-    this.expLeeway = expLeewayClaim != null ? expLeewayClaim.asInt() : DEFAULT_EXPIRY_LEEWAY;
+    this.expLeeway = expLeewayClaim == null || expLeewayClaim.asInt() < 1 ? DEFAULT_EXPIRY_LEEWAY : expLeewayClaim.
+        asInt();
     Claim roleClaim = jwt.getClaim(ROLES);
     this.role = roleClaim != null ? roleClaim.asList(String.class) : new ArrayList<>();
   }

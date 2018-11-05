@@ -39,15 +39,18 @@
 
 package io.hops.hopsworks.api.hopssite;
 
+import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.hopssite.dto.CategoryDTO;
 import io.hops.hopsworks.api.hopssite.dto.DatasetIssueReqDTO;
 import io.hops.hopsworks.api.hopssite.dto.HopsSiteServiceInfoDTO;
 import io.hops.hopsworks.api.hopssite.dto.LocalDatasetDTO;
+import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
+import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.dela.dto.common.UserDTO;
 import io.hops.hopsworks.dela.dto.hopssite.DatasetDTO;
@@ -55,6 +58,7 @@ import io.hops.hopsworks.dela.dto.hopssite.HopsSiteDatasetDTO;
 import io.hops.hopsworks.common.exception.DelaException;
 import io.hops.hopsworks.dela.hopssite.HopssiteController;
 import io.hops.hopsworks.dela.old_hopssite_dto.DatasetIssueDTO;
+import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiParam;
 import java.util.Arrays;
@@ -62,12 +66,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -79,16 +83,15 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
 
 @Path("/hopssite/")
 @Stateless
-@RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
+@JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-@TransactionAttribute(TransactionAttributeType.NEVER)
 @Api(value = "Hopssite Service",
   description = "Hopssite Service")
+@TransactionAttribute(TransactionAttributeType.NEVER)
 public class HopssiteService {
 
   private final static Logger LOGGER = Logger.getLogger(HopssiteService.class.getName());
@@ -106,6 +109,8 @@ public class HopssiteService {
   private CommentService commentService;
   @Inject
   private RatingService ratingService;
+  @EJB
+  private JWTHelper jWTHelper;
 
   @GET
   @Path("services/{service}")
@@ -133,8 +138,9 @@ public class HopssiteService {
 
   @GET
   @Path("userId")
-  public Response getUserId(@Context SecurityContext sc) throws DelaException {
-    String id = String.valueOf(hopsSite.getUserId(sc.getUserPrincipal().getName()));
+  public Response getUserId(@Context HttpServletRequest req) throws DelaException {
+    Users user = jWTHelper.getUserPrincipal(req);
+    String id = String.valueOf(hopsSite.getUserId(user.getEmail()));
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(id).build();
   }
   
@@ -202,11 +208,12 @@ public class HopssiteService {
   @POST
   @Path("datasets/{publicDSId}/issue")
   public Response addDatasetIssue(@PathParam("publicDSId") String publicDSId, DatasetIssueReqDTO datasetIssueReq,
-          @Context SecurityContext sc) throws DelaException {
+      @Context HttpServletRequest req) throws DelaException {
     if (datasetIssueReq == null) {
       throw new IllegalArgumentException("Dataset issue not set.");
     }
-    UserDTO.Complete user = hopsSite.getUser(sc.getUserPrincipal().getName());
+    Users u = jWTHelper.getUserPrincipal(req);
+    UserDTO.Complete user = hopsSite.getUser(u.getEmail());
     DatasetIssueDTO datasetIssue = new DatasetIssueDTO(publicDSId, user, datasetIssueReq.getType(),
             datasetIssueReq.getMsg());
     boolean added = hopsSite.addDatasetIssue(datasetIssue);

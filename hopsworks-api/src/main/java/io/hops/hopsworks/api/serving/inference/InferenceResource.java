@@ -19,6 +19,7 @@ package io.hops.hopsworks.api.serving.inference;
 import com.google.common.base.Strings;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.serving.inference.InferenceController;
 import io.hops.hopsworks.common.serving.inference.InferenceException;
 import io.swagger.annotations.Api;
@@ -44,11 +45,13 @@ public class InferenceResource {
 
   @EJB
   private InferenceController inferenceController;
-
+  @EJB
+  private ProjectFacade projectFacade;
+  
   private Project project;
 
-  public void setProject(Project project) {
-    this.project = project;
+  public void setProjectId(Integer projectId) {
+    this.project = projectFacade.find(projectId);
   }
 
   @POST

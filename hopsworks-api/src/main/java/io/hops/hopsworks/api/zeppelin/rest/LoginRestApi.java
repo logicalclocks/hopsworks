@@ -16,6 +16,7 @@
  */
 package io.hops.hopsworks.api.zeppelin.rest;
 
+import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.zeppelin.server.JsonResponse;
 import io.hops.hopsworks.api.zeppelin.util.SecurityUtils;
 import io.hops.hopsworks.api.zeppelin.util.TicketContainer;
@@ -24,6 +25,7 @@ import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
 import io.hops.hopsworks.common.dao.user.security.audit.UserAuditActions;
 import io.hops.hopsworks.common.user.AuthController;
+import io.hops.hopsworks.jwt.exception.InvalidationException;
 import org.apache.shiro.subject.Subject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,6 +68,8 @@ public class LoginRestApi {
   private AuthController authController;
   @EJB
   private AccountAuditFacade am;
+  @EJB
+  private JWTHelper jWTHelper;
 
   /**
    * Required by Swagger.
@@ -142,9 +146,9 @@ public class LoginRestApi {
 
   @POST
   @Path("logout")
-  public Response logout(@Context HttpServletRequest req) {
+  public Response logout(@Context HttpServletRequest req) throws InvalidationException {
     JsonResponse response;
-
+    jWTHelper.invalidateToken(req);
     Map<String, String> data = new HashMap<>();
     data.put("principal", "anonymous");
     data.put("roles", "");

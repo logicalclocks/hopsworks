@@ -17,14 +17,15 @@
 package io.hops.hopsworks.api.tensorflow;
 
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
+import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
+import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.project.util.DsPath;
 import io.hops.hopsworks.api.project.util.PathValidator;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.tensorflow.config.TensorBoardDTO;
-import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.elastic.ElasticController;
 import io.hops.hopsworks.common.exception.DatasetException;
@@ -32,6 +33,7 @@ import io.hops.hopsworks.common.exception.ProjectException;
 import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.experiments.TensorBoardController;
+import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.ApiOperation;
 
 import javax.ejb.EJB;
@@ -51,9 +53,9 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.servlet.http.HttpServletRequest;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -62,8 +64,6 @@ public class TensorBoardService {
   @EJB
   private ProjectFacade projectFacade;
   @EJB
-  private UserFacade userFacade;
-  @EJB
   private InodeFacade inodesFacade;
   @EJB
   private TensorBoardController tensorBoardController;
@@ -71,6 +71,8 @@ public class TensorBoardService {
   private ElasticController elasticController;
   @EJB
   private PathValidator pathValidator;
+  @EJB
+  private JWTHelper jWTHelper;
   @EJB
   private NoCacheResponse noCacheResponse;
 
@@ -93,10 +95,11 @@ public class TensorBoardService {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response getTensorBoard(@Context SecurityContext sc) throws ServiceException {
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response getTensorBoard(@Context HttpServletRequest req) throws ServiceException {
 
     try {
-      Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
+      Users user = jWTHelper.getUserPrincipal(req);
       TensorBoardDTO tbDTO = tensorBoardController.getTensorBoard(project, user);
       if(tbDTO == null) {
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
@@ -113,12 +116,11 @@ public class TensorBoardService {
   @Path("/{elasticId}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response startTensorBoard(@PathParam("elasticId") String elasticId,
-                                            @Context SecurityContext sc) throws ServiceException, DatasetException,
-    ProjectException {
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response startTensorBoard(@PathParam("elasticId") String elasticId, @Context HttpServletRequest req) throws
+      ServiceException, DatasetException, ProjectException {
 
-    String loggedinemail = sc.getUserPrincipal().getName();
-    Users user = userFacade.findByEmail(loggedinemail);
+    Users user = jWTHelper.getUserPrincipal(req);
 
     String hdfsLogdir = null;
     hdfsLogdir = elasticController.getLogdirFromElastic(project, elasticId);
@@ -136,10 +138,10 @@ public class TensorBoardService {
   @ApiOperation("Stop the running TensorBoard for the logged in user")
   @DELETE
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response stopTensorBoard(@Context SecurityContext sc) throws ServiceException {
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response stopTensorBoard(@Context HttpServletRequest req) throws ServiceException {
 
-    String loggedinemail = sc.getUserPrincipal().getName();
-    Users user = userFacade.findByEmail(loggedinemail);
+    Users user = jWTHelper.getUserPrincipal(req);
   
     TensorBoardDTO tbDTO = tensorBoardController.getTensorBoard(project, user);
     if (tbDTO == null) {
