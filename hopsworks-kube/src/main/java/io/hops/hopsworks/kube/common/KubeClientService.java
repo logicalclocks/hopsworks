@@ -178,8 +178,15 @@ public class KubeClientService {
 
   // From 0.6.0 usernames are alfanumeric only
   // Previous versions contain _ and -, to maintain compatibility we convert the _ to -
+  // There might be some usernames that end with -, this is not allowed. In this case we add a 0 at the end
   public String getKubeProjectUsername(String kubeProjectName, Users user) {
-    return kubeProjectName + "--" + user.getUsername().toLowerCase().replaceAll("[^a-z0-9-]", "-");
+    String kubeProjectUsername =
+        kubeProjectName + "--" + user.getUsername().toLowerCase().replaceAll("[^a-z0-9-]", "-");
+    if (kubeProjectUsername.endsWith("-")) {
+      return kubeProjectUsername + "0";
+    } else {
+      return kubeProjectUsername;
+    }
   }
 
   private String getProjectUsername(Project project, Users user) {
