@@ -45,6 +45,7 @@ import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
+import io.hops.hopsworks.common.api.ResourceProperties;
 import io.hops.hopsworks.common.dao.jobhistory.Execution;
 import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationAttemptStateFacade;
@@ -77,6 +78,8 @@ import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.yarn.YarnClientService;
 import io.hops.hopsworks.common.yarn.YarnClientWrapper;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
@@ -111,12 +114,14 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
+import javax.ws.rs.core.UriInfo;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -189,6 +194,9 @@ public class JobService {
   private ProjectFacade projectFacade;
   @EJB
   private JWTHelper jWTHelper;
+  @EJB
+  private JobsBuilder jobsBuilder;
+  
 
   // No @EJB annotation for Project, it's injected explicitly in ProjectService.
   private Project project;
@@ -199,21 +207,27 @@ public class JobService {
     return this;
   }
 
-  /**
-   * Get all the jobs in this project.
-   * <p>
-   * @param sc
-   * @param req
-   * @return A list of all defined Jobs in this project.
-   */
+  
+  @ApiOperation(value = "Get a list of all jobs for this project", response = JobDTO.class)
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response findAllJobs() {
-    List<Jobs> jobs = jobFacade.findForProject(project);
-    GenericEntity<List<Jobs>> jobList = new GenericEntity<List<Jobs>>(jobs) { };
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(jobList).build();
+  public Response getAll(
+    @QueryParam("offset") Integer offset,
+    @QueryParam("limit") Integer limit,
+    @QueryParam("sort_by") ResourceProperties.SortBy sortBy,
+    @QueryParam("order_by") ResourceProperties.OrderBy orderBy,
+    @QueryParam("expand") String expand,
+    @ApiParam(value = "Type of job, i.e. spark, flink") JobType type,
+    @Context UriInfo uriInfo) {
+    JobDTO dto = jobsBuilder.build(uriInfo, new ResourceProperties(ResourceProperties.Name.JOBS, offset, limit,
+      sortBy, orderBy, expand), project);
+    
+    GenericEntity<JobDTO> ge
+      = new GenericEntity<JobDTO>(dto) { };
+    
+    return Response.ok().entity(ge).build();
   }
 
   /**
@@ -550,8 +564,6 @@ public class JobService {
    * Get application run info for the specified job
    * <p>
    * @param appId
-   * @param sc
-   * @param req
    * @return url
    */
   @GET
