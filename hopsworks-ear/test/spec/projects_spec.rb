@@ -110,6 +110,7 @@ describe "On #{ENV['OS']}" do
         end
 
         it 'Should fail to create two projects with the same name but different capitalization - HOPSWORKS-256' do
+          check_project_limit(2)
           projectName = "HOPSWORKS256#{random_id}"
           post "#{ENV['HOPSWORKS_API']}/project", {projectName: projectName, description: "", status: 0, services: [], projectTeam:[], retentionPeriod: ""}
           expect_status(201)
@@ -121,6 +122,7 @@ describe "On #{ENV['OS']}" do
         end
 
         it 'Should fail to create two projects with the same name but different capitalization - HOPSWORKS-256' do
+          check_project_limit(2)
           projectName = "hopsworks256#{random_id}"
           post "#{ENV['HOPSWORKS_API']}/project", {projectName: projectName, description: "", status: 0, services: [], projectTeam:[], retentionPeriod: ""}
           expect_status(201)
