@@ -271,7 +271,7 @@ public class ProjectController {
     
     //check that the project name is ok
     String projectName = projectDTO.getProjectName();
-    FolderNameValidator.isValidProjectName(projectName, false);
+    FolderNameValidator.isValidProjectName(projectName);
 
     List<ProjectServiceEnum> projectServices = new ArrayList<>();
     if (projectDTO.getServices() != null) {

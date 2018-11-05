@@ -80,6 +80,7 @@ describe "On #{ENV['OS']}" do
           expect(resources[:permission]).to eq ("rwxrwx--T")
           expect(resources[:owner]).to eq ("#{@user[:fname]} #{@user[:lname]}")
         end
+
         it 'should create JUPYTER and ZEPPELIN notebook datasets with right permissions and owner' do
           projectname = "project_#{Time.now.to_i}"
           post "#{ENV['HOPSWORKS_API']}/project", {projectName: projectname, description: "", status: 0, services: ["JOBS","HIVE", "JUPYTER"], projectTeam:[], retentionPeriod: ""}
@@ -98,6 +99,7 @@ describe "On #{ENV['OS']}" do
           expect(notebook[:permission]).to eq ("rwxrwx--T")
           expect(notebook[:owner]).to eq ("#{@user[:fname]} #{@user[:lname]}")
         end
+
         it 'should fail to create a project with an existing name' do
           with_valid_project
           projectname = "#{@project[:projectname]}"
@@ -106,7 +108,31 @@ describe "On #{ENV['OS']}" do
           expect_status(409)
         end
 
-        it 'should create a project X containing a dataset Y after deleteing a project X containing a dataset Y (issue #425)' do
+        it 'Should fail to create two projects with the same name but different capitalization - HOPSWORKS-256' do
+          check_project_limit(2)
+          projectName = "HOPSWORKS256#{random_id}"
+          post "#{ENV['HOPSWORKS_API']}/project", {projectName: projectName, description: "", status: 0, services: [], projectTeam:[], retentionPeriod: ""}
+          expect_status(201)
+          expect_json(successMessage: regex("Project created successfully.*"))
+
+          post "#{ENV['HOPSWORKS_API']}/project", {projectName: projectName.downcase, description: "", status: 0, services: [], projectTeam:[], retentionPeriod: ""}
+          expect_status(409)
+          expect_json(errorCode: 150001)
+        end
+
+        it 'Should fail to create two projects with the same name but different capitalization - HOPSWORKS-256' do
+          check_project_limit(2)
+          projectName = "hopsworks256#{random_id}"
+          post "#{ENV['HOPSWORKS_API']}/project", {projectName: projectName, description: "", status: 0, services: [], projectTeam:[], retentionPeriod: ""}
+          expect_status(201)
+          expect_json(successMessage: regex("Project created successfully.*"))
+
+          post "#{ENV['HOPSWORKS_API']}/project", {projectName: projectName.upcase, description: "", status: 0, services: [], projectTeam:[], retentionPeriod: ""}
+          expect_status(409)
+          expect_json(errorCode: 150001)
+        end
+
+        it 'should create a project X containing a dataset Y after deleting a project X containing a dataset Y (issue #425)' do
           check_project_limit(2)
           projectname = "project_#{short_random_id}"
           project = create_project_by_name(projectname)
@@ -135,6 +161,30 @@ describe "On #{ENV['OS']}" do
           create_max_num_projects
           post "#{ENV['HOPSWORKS_API']}/project", {projectName: "project_#{Time.now.to_i}"}
           expect_json(errorCode: 150002)
+          expect_status(400)
+        end
+
+        it 'Should fail to create projects with invalid chars - .' do
+          post "#{ENV['HOPSWORKS_API']}/project", {projectName: "project_."}
+          expect_json(errorCode: 150003)
+          expect_status(400)
+        end
+
+        it 'Should fail to create projects with invalid chars - __' do
+          post "#{ENV['HOPSWORKS_API']}/project", {projectName: "project__fail"}
+          expect_json(errorCode: 150003)
+          expect_status(400)
+        end
+
+        it 'Should fail to create projects with invalid chars - Ö' do
+          post "#{ENV['HOPSWORKS_API']}/project", {projectName: "projectÖfail"}
+          expect_json(errorCode: 150003)
+          expect_status(400)
+        end
+
+        it 'Should fail to create a project with a name starting with _' do
+          post "#{ENV['HOPSWORKS_API']}/project", {projectName: "_projectfail"}
+          expect_json(errorCode: 150003)
           expect_status(400)
         end
       end

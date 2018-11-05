@@ -88,6 +88,30 @@ describe "On #{ENV['OS']}" do
           ds = json_body.detect { |d| d[:name] == "README.md" }
           expect(ds).to be_nil
         end
+
+        it 'should fail to create a dataset with space in the name' do
+          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/createTopLevelDataSet", {name: "test dataset", description: "test dataset", searchable: true, generateReadme: true}
+          expect_json(errorCode: 110028)
+          expect_status(400)
+        end
+
+        it 'should fail to create a dataset with Ö in the name' do
+          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/createTopLevelDataSet", {name: "testÖjdataset", description: "test dataset", searchable: true, generateReadme: true}
+          expect_json(errorCode: 110028)
+          expect_status(400)
+        end
+
+        it 'should fail to create a dataset with Ö in the name' do
+          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/createTopLevelDataSet", {name: "testÖjdataset", description: "test dataset", searchable: true, generateReadme: true}
+          expect_json(errorCode: 110028)
+          expect_status(400)
+        end
+
+        it 'should fail to create a dataset with a name that ends with a .' do
+          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/createTopLevelDataSet", {name: "testdot.", description: "test dataset", searchable: true, generateReadme: true}
+          expect_json(errorCode: 110028)
+          expect_status(400)
+        end
       end
     end
     describe "#access" do

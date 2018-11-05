@@ -70,6 +70,7 @@ import io.hops.hopsworks.common.util.EmailBean;
 import io.hops.hopsworks.common.util.FormatUtils;
 import io.hops.hopsworks.common.util.QRCodeGenerator;
 import io.hops.hopsworks.common.util.Settings;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -383,21 +384,36 @@ public class UsersController {
   }
 
   public String generateUsername(String email) {
-    Integer count = 0;
-    String uname = getUsernameFromEmail(email);
-    Users user = userFacade.findByUsername(uname);
-    String suffix = "";
+    if (email == null) {
+      throw new IllegalArgumentException("Email is null");
+    }
+
+    String emailUsername = email.substring(0, email.lastIndexOf("@")).toLowerCase();
+
+    // Remove all special chars from the string
+    String baseUsername = emailUsername.replaceAll("[^a-z0-9]", "");
+
+    if (baseUsername.length() <= Settings.USERNAME_LEN) {
+      baseUsername = baseUsername + StringUtils.repeat( "0", Settings.USERNAME_LEN - baseUsername.length());
+    } else {
+      baseUsername = baseUsername.substring(0, Settings.USERNAME_LEN);
+    }
+
+    Users user = userFacade.findByUsername(baseUsername);
     if (user == null) {
-      return uname;
+      return baseUsername;
     }
 
     String testUname = "";
+    String suffix = "";
+    int count = 1;
     while (user != null && count < 100) {
-      suffix = count.toString();
-      testUname = uname.substring(0, (Settings.USERNAME_LEN - suffix.length()));
+      suffix = String.valueOf(count);
+      testUname = baseUsername.substring(0, (Settings.USERNAME_LEN - suffix.length()));
       user = userFacade.findByUsername(testUname + suffix);
       count++;
     }
+
     if (count == 100) {
       throw new IllegalStateException(
           "You cannot register with this email address. Pick another.");
@@ -405,24 +421,6 @@ public class UsersController {
     return testUname + suffix;
   }
 
-  private String getUsernameFromEmail(String email) {
-    String username = email.substring(0, email.lastIndexOf("@"));
-    if (username.contains(".")) {
-      username = username.replace(".", "_");
-    }
-    if (username.contains("__")) {
-      username = username.replace("__", "_");
-    }
-    if (username.length() > Settings.USERNAME_LEN) {
-      username = username.substring(0, Settings.USERNAME_LEN);
-    }
-    if (username.length() < Settings.USERNAME_LEN) {
-      while (username.length() < Settings.USERNAME_LEN) {
-        username += "0";
-      }
-    }
-    return username;
-  }
 
   /**
    * Enables or disables two factor authentication.

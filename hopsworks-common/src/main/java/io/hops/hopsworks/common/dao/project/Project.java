@@ -87,37 +87,26 @@ import javax.persistence.ManyToMany;
 @Table(name = "hopsworks.project")
 @XmlRootElement
 @NamedQueries({
-  @NamedQuery(name = "Project.findAll",
-      query = "SELECT t FROM Project t")
-  ,
+  @NamedQuery(name = "Project.findAll", query = "SELECT t FROM Project t"),
   @NamedQuery(name = "Project.findByName",
-      query = "SELECT t FROM Project t WHERE t.name = :name")
-  ,
+      query = "SELECT t FROM Project t WHERE t.name = :name"),
   @NamedQuery(name = "Project.findByOwner",
-      query = "SELECT t FROM Project t WHERE t.owner = :owner")
-  ,
+      query = "SELECT t FROM Project t WHERE t.owner = :owner"),
   @NamedQuery(name = "Project.findByCreated",
-      query = "SELECT t FROM Project t WHERE t.created = :created")
-  ,
+      query = "SELECT t FROM Project t WHERE t.created = :created"),
   @NamedQuery(name = "Project.findByRetentionPeriod",
-      query
-      = "SELECT t FROM Project t WHERE t.retentionPeriod = :retentionPeriod")
-  ,
+      query = "SELECT t FROM Project t WHERE t.retentionPeriod = :retentionPeriod"),
   @NamedQuery(name = "Project.countProjectByOwner",
-      query
-      = "SELECT count(t) FROM Project t WHERE t.owner = :owner")
-  ,
+      query = "SELECT count(t) FROM Project t WHERE t.owner = :owner"),
   @NamedQuery(name = "Project.findByOwnerAndName",
-      query
-      = "SELECT t FROM Project t WHERE t.owner = :owner AND t.name = :name")
-  ,
+      query = "SELECT t FROM Project t WHERE t.owner = :owner AND t.name = :name"),
   @NamedQuery(name = "Project.findByInodeId",
-      query
-      = "SELECT t FROM Project t WHERE t.inode.inodePK.parentId = :parentid "
-      + "AND t.inode.inodePK.name = :name")
-  ,
+      query = "SELECT t FROM Project t WHERE t.inode.inodePK.parentId = :parentid "
+      + "AND t.inode.inodePK.name = :name"),
   @NamedQuery(name = "Project.findAllCondaEnabled",
-      query = "SELECT t FROM Project t where t.conda = true")})
+      query = "SELECT t FROM Project t where t.conda = true"),
+  @NamedQuery(name = "Project.findByNameCaseInsensitive",
+      query = "SELECT t FROM Project t where LOWER(t.name) = LOWER(:name)")})
 public class Project implements Serializable {
 
   @Column(name = "conda")
@@ -165,8 +154,7 @@ public class Project implements Serializable {
 
   @Basic(optional = false)
   @NotNull
-  @Size(min = 1,
-      max = 88)
+  @Size(min = 1, max = 88)
   @Column(name = "projectname")
   private String name;
 
