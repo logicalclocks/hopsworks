@@ -230,10 +230,9 @@ public class ProjectFacade extends AbstractFacade<Project> {
    * @return
    */
   public boolean projectExists(String name) {
-    TypedQuery<Project> query = em.createNamedQuery("Project.findByName",
-        Project.class);
-    query.setParameter("name", name);
-    return !query.getResultList().isEmpty();
+    return !(em.createNamedQuery("Project.findByNameCaseInsensitive", Project.class)
+        .setParameter("name", name)
+        .getResultList().isEmpty());
   }
 
   /**
