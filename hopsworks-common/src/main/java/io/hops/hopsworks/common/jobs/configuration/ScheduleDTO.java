@@ -39,19 +39,17 @@
 
 package io.hops.hopsworks.common.jobs.configuration;
 
-import io.hops.hopsworks.common.dao.jobs.JsonReduceable;
-import java.io.Serializable;
-import io.hops.hopsworks.common.jobs.MutableJsonObject;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlRootElement;
 
-public class ScheduleDTO implements JsonReduceable, Serializable {
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.FIELD)
+public class ScheduleDTO {
 
   private long start;
   private int number = 1;
   private TimeUnit unit = TimeUnit.HOUR;
-
-  private static final String KEY_START = "START";
-  private static final String KEY_NUMBER = "NUMBER";
-  private static final String KEY_UNIT = "UNIT";
 
   public long getStart() {
     return start;
@@ -82,34 +80,6 @@ public class ScheduleDTO implements JsonReduceable, Serializable {
     this.unit = unit;
   }
 
-  @Override
-  public MutableJsonObject getReducedJsonObject() {
-    MutableJsonObject obj = new MutableJsonObject();
-    obj.set(KEY_START, "" + start);
-    obj.set(KEY_NUMBER, "" + number);
-    obj.set(KEY_UNIT, unit.name());
-    return obj;
-  }
-
-  @Override
-  public void updateFromJson(MutableJsonObject json) throws
-          IllegalArgumentException {
-    try {
-      String jsonStart = json.getString(KEY_START);
-      String jsonNumber = json.getString(KEY_NUMBER);
-      String jsonUnit = json.getString(KEY_UNIT);
-      long jStart = Long.valueOf(jsonStart);
-      int jNr = Integer.parseInt(jsonNumber);
-      TimeUnit tu = TimeUnit.valueOf(jsonUnit.toUpperCase());
-      this.start = jStart;
-      this.number = jNr;
-      this.unit = tu;
-    } catch (IllegalArgumentException e) {
-      throw new IllegalArgumentException(
-              "Cannot convert json to ScheduleDTO. Json: " + json, e);
-    }
-  }
-
   /**
    * Represents a time unit to be used in scheduling jobs.
    */
@@ -129,10 +99,6 @@ public class ScheduleDTO implements JsonReduceable, Serializable {
 
     public long getDuration() {
       return duration;
-    }
-
-    public TimeUnit getFromString(String unit) {
-      return TimeUnit.valueOf(unit.toUpperCase());
     }
   }
 }

@@ -742,6 +742,7 @@ public class Settings implements Serializable {
   public static final String SPARK_EXECUTORENV_PYSPARK_PYTHON = "spark.executorEnv."+SPARK_PYSPARK_PYTHON ;
   //TFSPARK properties
   public static final String SPARK_TF_GPUS_ENV = "spark.executor.gpus";
+  public static final String SPARK_TENSORFLOW_APPLICATION = "spark.tensorflow.application";
 
   //Spark log4j and metrics properties
   public static final String SPARK_LOG4J_CONFIG = "log4j.configuration";

@@ -44,7 +44,7 @@ import io.hops.hopsworks.common.dao.jobhistory.Execution;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.jobs.configuration.JobConfiguration;
-import io.hops.hopsworks.common.jobs.configuration.JsonReduceableConverter;
+import io.hops.hopsworks.common.jobs.configuration.JobConfigurationConverter;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
 import org.codehaus.jackson.annotate.JsonIgnore;
 
@@ -128,7 +128,7 @@ public class Jobs implements Serializable {
   private Date creationTime;
 
   @Column(name = "json_config")
-  @Convert(converter = JsonReduceableConverter.class)
+  @Convert(converter = JobConfigurationConverter.class)
   private JobConfiguration jobConfig;
 
   @Column(name = "type")
@@ -179,7 +179,7 @@ public class Jobs implements Serializable {
     this.jobConfig = config;
     this.project = project;
     this.creator = creator;
-    this.type = config.getType();
+    this.type = config.getJobType();
   }
 
   public Integer getId() {
