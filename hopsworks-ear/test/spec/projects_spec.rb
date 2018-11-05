@@ -188,15 +188,24 @@ describe "On #{ENV['OS']}" do
           expect_json(errorCode: 150068)
           expect_status(403)
         end
+
+        it "should succeed if user is Hopsworks administrator" do
+          project = get_project
+          with_admin_session()
+          delete "#{ENV['HOPSWORKS_API']}/admin/projects/#{project[:id]}"
+          expect_status(200)
+          expect_json(successMessage: "The project and all related files were removed successfully.")
+        end
       end
+      
       context 'with authentication and sufficient privilege' do
         before :all do
           with_valid_project
         end
         it "should delete project" do
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/delete"
-          expect_json(successMessage: "The project and all related files were removed successfully.")
           expect_status(200)
+          expect_json(successMessage: "The project and all related files were removed successfully.")
         end
       end
     end

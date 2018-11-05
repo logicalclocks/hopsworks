@@ -246,7 +246,6 @@ public class ProjectController {
   @Any
   private Instance<ProjectHandler> projectHandlers;
 
-
   /**
    * Creates a new project(project), the related DIR, the different services in
    * the project, and the master of the
@@ -920,9 +919,9 @@ public class ProjectController {
     if (project == null) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId);
     }
-    //Only project owner is able to delete a project
+    //Only project owner and admin is able to delete a project
     Users user = userFacade.findByEmail(userMail);
-    if (!project.getOwner().equals(user)) {
+    if (!project.getOwner().equals(user) && !usersController.isUserInRole(user, "HOPS_ADMIN")) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_REMOVAL_NOT_ALLOWED, Level.FINE);
     }
     
