@@ -23,7 +23,6 @@ import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.util.Settings;
-import org.elasticsearch.common.Strings;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.Asynchronous;
@@ -171,14 +170,16 @@ public class KubeClientService {
   /* In Kubernetes, most of the regex to validate names do not allow the _.
    * For this reason we replace _ with - which is allowed.
    * Hopsworks projects cannot contain -.
+   * All chars should be lowercase
    */
   public String getKubeProjectName(Project project) {
-    return Strings.replace(project.getName(), "_", "-");
+    return project.getName().toLowerCase().replaceAll("[^a-z0-9-]", "-");
   }
 
-  // Usernames consist only of letters and numbers
+  // From 0.6.0 usernames are alfanumeric only
+  // Previous versions contain _ and -, to maintain compatibility we convert the _ to -
   public String getKubeProjectUsername(String kubeProjectName, Users user) {
-    return kubeProjectName + "--" + user.getUsername();
+    return kubeProjectName + "--" + user.getUsername().toLowerCase().replaceAll("[^a-z0-9-]", "-");
   }
 
   private String getProjectUsername(Project project, Users user) {
