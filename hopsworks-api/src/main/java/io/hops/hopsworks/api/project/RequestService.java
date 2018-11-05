@@ -40,7 +40,9 @@
 package io.hops.hopsworks.api.project;
 
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
+import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
+import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
@@ -62,9 +64,9 @@ import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.message.MessageController;
 import io.hops.hopsworks.common.util.EmailBean;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.Api;
 
-import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -78,15 +80,14 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Path("/request")
-@RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
-@Api(value = "Request Service", description = "Request Service")
-@Produces(MediaType.APPLICATION_JSON)
 @Stateless
+@JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+@Produces(MediaType.APPLICATION_JSON)
+@Api(value = "Request Service", description = "Request Service")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class RequestService {
 
@@ -108,6 +109,8 @@ public class RequestService {
   private UserFacade userFacade;
   @EJB
   private MessageController messageBean;
+  @EJB
+  private JWTHelper jWTHelper;
 
   private final static Logger logger = Logger.getLogger(RequestService.class.
           getName());
@@ -115,16 +118,13 @@ public class RequestService {
   @POST
   @Path("/access")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.ANYONE})
-  public Response requestAccess(RequestDTO requestDTO,
-          @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws DatasetException, ProjectException {
+  public Response requestAccess(RequestDTO requestDTO, @Context HttpServletRequest req) throws DatasetException,
+      ProjectException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
-    if (requestDTO == null || requestDTO.getInodeId() == null
-            || requestDTO.getProjectId() == null) {
+    if (requestDTO == null || requestDTO.getInodeId() == null || requestDTO.getProjectId() == null) {
       throw new IllegalArgumentException("requestDTO was not provided or was incomplete!");
     }
-    Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
+    Users user = jWTHelper.getUserPrincipal(req);
     Inode inode = inodes.findById(requestDTO.getInodeId());
     Inode parent = inodes.findParent(inode);
     //requested project
@@ -170,7 +170,7 @@ public class RequestService {
       dsRequest.setMessageContent(requestDTO.getMessageContent());
       datasetRequest.merge(dsRequest);
     } else {
-      Users from = userFacade.findByEmail(sc.getUserPrincipal().getName());
+      Users from = user;
       Users to = userFacade.findByEmail(proj.getOwner().getEmail());
       String message = "Hi " + to.getFname() + "<br>"
               + "I would like to request access to a dataset in a project you own. <br>"
@@ -218,16 +218,13 @@ public class RequestService {
   @POST
   @Path("/join")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.ANYONE})
-  public Response requestJoin(RequestDTO requestDTO,
-          @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws ProjectException {
+  public Response requestJoin(RequestDTO requestDTO, @Context HttpServletRequest req) throws ProjectException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     if (requestDTO == null || requestDTO.getProjectId() == null) {
       throw new IllegalArgumentException("requestDTO wast not provided or was incomplete.");
     }
     //should be removed when users and user merg.
-    Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
+    Users user = jWTHelper.getUserPrincipal(req);
     Project project = projectFacade.find(requestDTO.getProjectId());
     if(project == null){
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE);
@@ -248,7 +245,7 @@ public class RequestService {
             + " and go to members tab "
             + "if you want to add this person as a member in your project. \n";
 
-    Users from = userFacade.findByEmail(sc.getUserPrincipal().getName());
+    Users from = user;
     Users to = userFacade.findByEmail(project.getOwner().getEmail());
     String message = "Hi " + to.getFname() + "<br>"
             + "I would like to join a project you own. <br>"

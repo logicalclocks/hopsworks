@@ -43,12 +43,65 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('ProjectSettingsCtrl', ['ProjectService', '$routeParams', 'growl', 
-          function (ProjectService,  $routeParams, growl) {
+        .controller('ProjectSettingsCtrl', ['ProjectService', '$routeParams', '$location', 'growl', 'VariablesService',
+          function (ProjectService,  $routeParams, $location, growl, VariablesService) {
 
             var self = this;
             self.projectId = $routeParams.projectID;
             self.quotas = {};
+            self.versions = [];
+            self.pia = {
+              "id": "",
+              "personalData": "",
+              "howDataCollected": "",
+              "specifiedExplicitLegitimate": 0,
+              "consentProcess": "",
+              "consentBasis": "",
+              "dataMinimized": 0,
+              "dataUptodate": 0,
+              "usersInformed_how": "",
+              "userControlsDataCollectionRetention": "",
+              "dataEncrypted": 0,
+              "dataAnonymized": 0,
+              "dataPseudonymized": 0,
+              "dataBackedup": 0,
+              "dataSecurityMeasures": "",
+              "dataPortabilityMeasure": "",
+              "subjectAccessRights": "",
+              "risks": ""
+            };
+            var getPia = function () {
+              ProjectService.getPia({id: self.projectId}).$promise.then(
+                function (success) {
+                  self.pia = success;
+                }, function (error) {
+                  growl.error(error.data.errorMsg, {title: 'Error getting Pia', ttl: 5000});
+                  $location.path('/');
+              });
+            };
+            getPia();
+            
+            self.savePia = function () {
+              var forms = document.getElementsByClassName('needs-validation');
+              Array.prototype.filter.call(forms, function (form) {
+                form.addEventListener('submit', function (event) {
+                  if (form.checkValidity() === false) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                  }
+                  form.classList.add('was-validated');
+                }, false);
+              });
+
+              ProjectService.savePia({id: self.projectId}, self.pia)
+                .$promise.then(function (success) {
+                    growl.success("Saved Pia", {title: 'Saved', ttl: 2000});
+                  }, function (error) {
+                    self.working = false;
+                    growl.warning("Error: " + error.data.errorMsg, {title: 'Error', ttl: 5000});
+                });
+            };
+
 
             self.getQuotas = function () {
               ProjectService.getQuotas({id: self.projectId}).$promise.then(
@@ -92,6 +145,18 @@ angular.module('hopsWorksApp')
 
               return convertSeconds(parseInt(quotaInt));
             };
+            
+            var getVersions = function () {
+              if (self.versions.length === 0) {
+                VariablesService.getVersions()
+                  .then(function (success) {
+                    self.versions = success.data;
+                  }, function (error) {
+                    console.log("Failed to get versions");
+                });
+              }
+            };
+            getVersions();
 
 
           }]);

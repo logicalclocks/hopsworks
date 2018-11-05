@@ -87,7 +87,7 @@ describe "On #{ENV['OS']}" do
           expect_status(400)
         end
 
-        it 'should sign the host certificate' do
+        it 'should sign the host certificate', vm: true do
           post "#{ENV['HOPSWORKS_CA']}/certificate/host", {csr: @csr}
           expect_status(200)
 
@@ -96,7 +96,7 @@ describe "On #{ENV['OS']}" do
           check_certificate_exists(@certs_dir + "/intermediate/", "test__1", @subject)
         end
 
-        it 'should succeed to revoke the certificate' do
+        it 'should succeed to revoke the certificate', vm: true do
           delete "#{ENV['HOPSWORKS_CA']}/certificate/host?certId=test__1"
           expect_status(200)
 
@@ -133,7 +133,7 @@ describe "On #{ENV['OS']}" do
           expect_status(400)
         end
 
-        it 'should sign the app certificate' do
+        it 'should sign the app certificate', vm: true do
           post "#{ENV['HOPSWORKS_CA']}/certificate/app", {csr: @csr}
           expect_status(200)
 
@@ -142,7 +142,7 @@ describe "On #{ENV['OS']}" do
           check_certificate_exists(@certs_dir + "/intermediate/", "test__SE__1", @subject)
         end
 
-        it 'should succeed to revoke the certificate' do
+        it 'should succeed to revoke the certificate', vm: true do
           delete "#{ENV['HOPSWORKS_CA']}/certificate/app?certId=test__SE__1"
           expect_status(200)
 
@@ -186,7 +186,7 @@ describe "On #{ENV['OS']}" do
           expect_status(400)
         end
 
-        it 'should sign the dela certificate' do
+        it 'should sign the dela certificate', vm: true do
           # Add entry in the database
           #   `id` int(11) NOT NULL AUTO_INCREMENT,
           #   `agent_id` int(11) NOT NULL,
@@ -218,7 +218,7 @@ describe "On #{ENV['OS']}" do
           expect_status(400)
         end
 
-        it 'should succeed to revoke the certificate' do
+        it 'should succeed to revoke the certificate', vm: true do
           delete "#{ENV['HOPSWORKS_CA']}/certificate/dela?certId=test"
           expect_status(200)
 

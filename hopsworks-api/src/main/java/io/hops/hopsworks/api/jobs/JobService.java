@@ -41,7 +41,9 @@ package io.hops.hopsworks.api.jobs;
 
 import com.google.common.base.Strings;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
+import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
+import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.common.dao.jobhistory.Execution;
 import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
@@ -54,7 +56,7 @@ import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.jobs.description.YarnAppUrlsDTO;
 import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.user.UserFacade;
+import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.exception.GenericException;
@@ -74,6 +76,7 @@ import io.hops.hopsworks.common.jobs.yarn.YarnMonitor;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.yarn.YarnClientService;
 import io.hops.hopsworks.common.yarn.YarnClientWrapper;
+import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
@@ -113,7 +116,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.StreamingOutput;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -149,8 +151,7 @@ import java.util.stream.Stream;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class JobService {
 
-  private static final Logger LOGGER = Logger.getLogger(JobService.class.
-      getName());
+  private static final Logger LOGGER = Logger.getLogger(JobService.class.getName());
 
   @EJB
   private NoCacheResponse noCacheResponse;
@@ -183,18 +184,18 @@ public class JobService {
   @EJB
   private HdfsUsersController hdfsUsersBean;
   @EJB
-  private UserFacade userFacade;
-  @EJB
   private HdfsUsersController hdfsUsersController;
   @EJB
-  private YarnApplicationstateFacade appStateBean;
+  private ProjectFacade projectFacade;
+  @EJB
+  private JWTHelper jWTHelper;
 
   // No @EJB annotation for Project, it's injected explicitly in ProjectService.
   private Project project;
   private static final String PROXY_USER_COOKIE_NAME = "proxy-user";
 
-  public JobService setProject(Project project) {
-    this.project = project;
+  public JobService setProject(Integer projectId) {
+    this.project = projectFacade.find(projectId);
     return this;
   }
 
@@ -208,13 +209,11 @@ public class JobService {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public Response findAllJobs(@Context SecurityContext sc,
-      @Context HttpServletRequest req) {
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response findAllJobs() {
     List<Jobs> jobs = jobFacade.findForProject(project);
-    GenericEntity<List<Jobs>> jobList
-        = new GenericEntity<List<Jobs>>(jobs) { };
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-        jobList).build();
+    GenericEntity<List<Jobs>> jobList = new GenericEntity<List<Jobs>>(jobs) { };
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(jobList).build();
   }
 
   /**
@@ -229,21 +228,17 @@ public class JobService {
   @Path("/{jobId}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response getJob(@PathParam("jobId") int jobId,
-      @Context SecurityContext sc,
-      @Context HttpServletRequest req) {
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response getJob(@PathParam("jobId") int jobId) {
     Jobs job = jobFacade.findById(jobId);
     if (job == null) {
-      return noCacheResponse.
-          getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
     } else if (!job.getProject().equals(project)) {
       //In this case, a user is trying to access a job outside its project!!!
-      LOGGER.log(Level.SEVERE,
-          "A user is trying to access a job outside their project!");
+      LOGGER.log(Level.SEVERE, "A user is trying to access a job outside their project!");
       return Response.status(Response.Status.FORBIDDEN).build();
     } else {
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-          entity(job).build();
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(job).build();
     }
   }
 
@@ -264,21 +259,17 @@ public class JobService {
   @Path("/{jobId}/config")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response getJobConfiguration(@PathParam("jobId") int jobId,
-      @Context SecurityContext sc,
-      @Context HttpServletRequest req) {
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response getJobConfiguration(@PathParam("jobId") int jobId) {
     Jobs job = jobFacade.findById(jobId);
     if (job == null) {
-      return noCacheResponse.
-          getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
     } else if (!job.getProject().equals(project)) {
       //In this case, a user is trying to access a job outside its project!!!
-      LOGGER.log(Level.SEVERE,
-          "A user is trying to access a job outside their project!");
+      LOGGER.log(Level.SEVERE, "A user is trying to access a job outside their project!");
       return Response.status(Response.Status.FORBIDDEN).build();
     } else {
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-          entity(job.getJobConfig()).build();
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(job.getJobConfig()).build();
     }
   }
 
@@ -294,42 +285,32 @@ public class JobService {
   @Path("/{jobId}/appId")
   @Produces(MediaType.TEXT_PLAIN)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response getAppId(@PathParam("jobId") int jobId,
-      @Context SecurityContext sc,
-      @Context HttpServletRequest req) {
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response getAppId(@PathParam("jobId") int jobId) {
     Jobs job = jobFacade.findById(jobId);
     if (job == null) {
-      return noCacheResponse.
-          getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
     } else if (!job.getProject().equals(project)) {
       //In this case, a user is trying to access a job outside its project!!!
-      LOGGER.log(Level.SEVERE,
-          "A user is trying to access a job outside their project!");
+      LOGGER.log(Level.SEVERE, "A user is trying to access a job outside their project!");
       return Response.status(Response.Status.FORBIDDEN).build();
     } else {
       Execution execution = exeFacade.findForJob(job).get(0);
       if (execution == null) {
-        LOGGER.log(Level.SEVERE, "No job execution found for job {}", job.
-            getName());
+        LOGGER.log(Level.SEVERE, "No job execution found for job {}", job.getName());
         return Response.status(Response.Status.NOT_FOUND).build();
       }
-      Execution updatedExecution = exeFacade.getExecution(execution.getJob().
-          getId());
+      Execution updatedExecution = exeFacade.getExecution(execution.getJob().getId());
       if (updatedExecution != null) {
         execution = updatedExecution;
       }
 
       try {
-
-        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-            entity(execution.getAppId()).build();
-
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(execution.getAppId()).build();
       } catch (Exception e) {
-        LOGGER.log(Level.SEVERE, "exception while geting job ui " + e.
-            getLocalizedMessage(), e);
+        LOGGER.log(Level.SEVERE, "exception while geting job ui " + e.getLocalizedMessage(), e);
       }
-      return noCacheResponse.
-          getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
     }
   }
 
@@ -345,23 +326,19 @@ public class JobService {
   @Path("/{jobId}/appIds")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response getAppIds(@PathParam("jobId") int jobId,
-      @Context SecurityContext sc,
-      @Context HttpServletRequest req) {
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response getAppIds(@PathParam("jobId") int jobId) {
     Jobs job = jobFacade.findById(jobId);
     if (job == null) {
-      return noCacheResponse.
-          getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
     } else if (!job.getProject().equals(project)) {
       //In this case, a user is trying to access a job outside its project!!!
-      LOGGER.log(Level.SEVERE,
-          "A user is trying to access a job outside their project!");
+      LOGGER.log(Level.SEVERE, "A user is trying to access a job outside their project!");
       return Response.status(Response.Status.FORBIDDEN).build();
     } else {
       List<Execution> executions = exeFacade.findForJob(job);
       if (executions == null || executions.isEmpty()) {
-        LOGGER.log(Level.SEVERE, "No job execution found for job {}", job.
-            getName());
+        LOGGER.log(Level.SEVERE, "No job execution found for job {}", job.getName());
         return Response.status(Response.Status.NOT_FOUND).build();
       }
 
@@ -371,23 +348,18 @@ public class JobService {
           appIdStrings.add(new AppIdDTO(ex.getAppId()));
         }
 
-        GenericEntity<List<AppIdDTO>> appIds
-            = new GenericEntity<List<AppIdDTO>>(appIdStrings) { };
-        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-            entity(appIds).build();
+        GenericEntity<List<AppIdDTO>> appIds = new GenericEntity<List<AppIdDTO>>(appIdStrings) { };
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(appIds).build();
 
       } catch (Exception e) {
-        LOGGER.log(Level.SEVERE, "exception while geting job ui " + e.
-            getLocalizedMessage(), e);
+        LOGGER.log(Level.SEVERE, "exception while geting job ui " + e.getLocalizedMessage(), e);
       }
-      return noCacheResponse.
-          getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
     }
   }
 
-  private String getHdfsUser(SecurityContext sc) {
-    String loggedinemail = sc.getUserPrincipal().getName();
-    Users user = userFacade.findByEmail(loggedinemail);
+  private String getHdfsUser(HttpServletRequest req) {
+    Users user = jWTHelper.getUserPrincipal(req);
     String hdfsUsername = hdfsUsersController.getHdfsUserName(project, user);
 
     return hdfsUsername;
@@ -404,22 +376,15 @@ public class JobService {
   @Path("/projectName")
   @Produces(MediaType.TEXT_PLAIN)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response getProjectName(
-      @Context SecurityContext sc,
-      @Context HttpServletRequest req) {
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response getProjectName() {
 
     try {
-
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-          entity(project.getName()).build();
-
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(project.getName()).build();
     } catch (Exception e) {
-      LOGGER.log(Level.SEVERE, "exception while geting job ui " + e.
-          getLocalizedMessage(), e);
+      LOGGER.log(Level.SEVERE, "exception while geting job ui " + e.getLocalizedMessage(), e);
     }
-    return noCacheResponse.
-        getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
-
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
   }
 
   private List<YarnAppUrlsDTO> getTensorBoardUrls(String hdfsUser, String appId) throws JobException {
@@ -476,10 +441,8 @@ public class JobService {
   @Path("/{appId}/ui/{isLivy}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response getJobUI(@PathParam("appId") String appId,
-      @PathParam("isLivy") String isLivy,
-      @Context SecurityContext sc,
-      @Context HttpServletRequest req) {
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response getJobUI(@PathParam("appId") String appId, @PathParam("isLivy") String isLivy) {
     Response noAccess = checkAccessRight(appId);
     if (noAccess != null) {
       return noAccess;
@@ -495,60 +458,54 @@ public class JobService {
         urls.add(new YarnAppUrlsDTO("spark", trackingUrl));
       }
     } catch (Exception e) {
-      LOGGER.log(Level.SEVERE, "exception while geting job ui " + e.
-          getLocalizedMessage(), e);
+      LOGGER.log(Level.SEVERE, "exception while geting job ui " + e.getLocalizedMessage(), e);
     }
 
     GenericEntity<List<YarnAppUrlsDTO>> listUrls = new GenericEntity<List<YarnAppUrlsDTO>>(urls) { };
 
-    return noCacheResponse.getNoCacheResponseBuilder(response)
-        .entity(listUrls).build();
+    return noCacheResponse.getNoCacheResponseBuilder(response).entity(listUrls).build();
   }
 
   /**
    * Get the Job UI url for the specified job
    * <p>
    * @param appId
-   * @param sc
+   * @param req
    * @return url
    */
   @GET
   @Path("/{appId}/tensorboard")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response getTensorBoardUrls(@PathParam("appId") String appId,
-                                     @Context SecurityContext sc)  {
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response getTensorBoardUrls(@PathParam("appId") String appId, @Context HttpServletRequest req)  {
     Response noAccess = checkAccessRight(appId);
     if (noAccess != null) {
       return noAccess;
     }
     Response.Status response = Response.Status.OK;
     List<YarnAppUrlsDTO> urls = new ArrayList<>();
-    String hdfsUser = getHdfsUser(sc);
+    String hdfsUser = getHdfsUser(req);
 
     try {
       urls.addAll(getTensorBoardUrls(hdfsUser, appId));
     } catch (Exception e) {
-      LOGGER.log(Level.SEVERE, "Exception while getting TensorBoard endpoints" + e.
-          getLocalizedMessage(), e);
+      LOGGER.log(Level.SEVERE, "Exception while getting TensorBoard endpoints" + e.getLocalizedMessage(), e);
     }
 
     GenericEntity<List<YarnAppUrlsDTO>> listUrls = new GenericEntity<List<YarnAppUrlsDTO>>(urls) { };
 
-    return noCacheResponse.getNoCacheResponseBuilder(response)
-        .entity(listUrls).build();
+    return noCacheResponse.getNoCacheResponseBuilder(response).entity(listUrls).build();
   }
 
   private Response checkAccessRight(String appId) {
     YarnApplicationstate appState = appStateFacade.findByAppId(appId);
 
     if (appState == null) {
-      return noCacheResponse.
-          getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
     } else if (!hdfsUsersBean.getProjectName(appState.getAppuser()).equals(project.getName())) {
       //In this case, a user is trying to access a job outside its project!!!
-      LOGGER.log(Level.SEVERE,
-          "A user is trying to access a job outside their project!");
+      LOGGER.log(Level.SEVERE, "A user is trying to access a job outside their project!");
       return Response.status(Response.Status.FORBIDDEN).build();
     } else {
       return null;
@@ -567,9 +524,8 @@ public class JobService {
   @Path("/{appId}/yarnui")
   @Produces(MediaType.TEXT_PLAIN)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response getYarnUI(@PathParam("appId") String appId,
-      @Context SecurityContext sc,
-      @Context HttpServletRequest req) {
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response getYarnUI(@PathParam("appId") String appId) {
     Response response = checkAccessRight(appId);
     if (response != null) {
       return response;
@@ -581,15 +537,12 @@ public class JobService {
             + "/cluster/app/"
             + appId;
 
-        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-            entity(yarnUrl).build();
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(yarnUrl).build();
 
       } catch (Exception e) {
-        LOGGER.log(Level.SEVERE, "exception while geting job ui " + e.
-            getLocalizedMessage(), e);
+        LOGGER.log(Level.SEVERE, "exception while geting job ui " + e.getLocalizedMessage(), e);
       }
-      return noCacheResponse.
-          getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
     }
   }
 
@@ -605,9 +558,8 @@ public class JobService {
   @Path("/{appId}/appinfo")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response getAppInfo(@PathParam("appId") String appId,
-      @Context SecurityContext sc,
-      @Context HttpServletRequest req) {
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response getAppInfo(@PathParam("appId") String appId) {
     Response response = checkAccessRight(appId);
     if (response != null) {
       return response;
@@ -702,15 +654,12 @@ public class JobService {
         AppInfoDTO appInfo = new AppInfoDTO(appId, startTime,
             running, endTime, nbExecutors, executorInfo);
 
-        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-            entity(appInfo).build();
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(appInfo).build();
 
       } catch (Exception e) {
-        LOGGER.log(Level.SEVERE, "exception while geting job ui " + e.
-            getLocalizedMessage(), e);
+        LOGGER.log(Level.SEVERE, "exception while geting job ui " + e.getLocalizedMessage(), e);
       }
-      return noCacheResponse.
-          getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
     }
   }
 
@@ -729,7 +678,6 @@ public class JobService {
    * <p>
    * @param appId
    * @param param
-   * @param sc
    * @param req
    * @return
    */
@@ -737,11 +685,8 @@ public class JobService {
   @Path("/{appId}/prox/{path: .+}")
   @Produces(MediaType.WILDCARD)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response getProxy(@PathParam("appId")
-      final String appId,
-      @PathParam("path")
-      final String param,
-      @Context SecurityContext sc,
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response getProxy(@PathParam("appId") final String appId, @PathParam("path") final String param,
       @Context HttpServletRequest req) {
 
     Response response = checkAccessRight(appId);
@@ -849,10 +794,8 @@ public class JobService {
       }
       return responseBuilder.build();
     } catch (Exception e) {
-      LOGGER.log(Level.SEVERE, "exception while geting job ui " + e.
-          getLocalizedMessage(), e);
-      return noCacheResponse.
-          getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
+      LOGGER.log(Level.SEVERE, "exception while geting job ui " + e.getLocalizedMessage(), e);
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
     }
 
   }
@@ -955,12 +898,11 @@ public class JobService {
   @Path("/template/{type}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response getConfigurationTemplate(@PathParam("type") String type,
-      @Context SecurityContext sc, @Context HttpServletRequest req) {
-    JobConfiguration template = JobConfiguration.JobConfigurationFactory.
-        getJobConfigurationTemplate(JobType.valueOf(type));
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-        entity(template).build();
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response getConfigurationTemplate(@PathParam("type") String type) {
+    JobConfiguration template = JobConfiguration.JobConfigurationFactory.getJobConfigurationTemplate(JobType.valueOf(
+        type));
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(template).build();
   }
 
   /**
@@ -969,16 +911,14 @@ public class JobService {
    * id is a key and the corresponding boolean indicates whether the job is
    * running or not.
    * <p/>
-   * @param sc
-   * @param req
    * @return
    */
   @GET
   @Path("/running")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response getConfigurationTemplate(@Context SecurityContext sc,
-      @Context HttpServletRequest req) {
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response getConfigurationTemplate() {
     List<Jobs> running = jobFacade.getRunningJobs(project);
     List<Jobs> allJobs = jobFacade.findForProject(project);
     JsonObjectBuilder builder = Json.createObjectBuilder();
@@ -998,8 +938,7 @@ public class JobService {
           );
         }
       } catch (ArrayIndexOutOfBoundsException e) {
-        LOGGER.log(Level.WARNING, "No execution was found: {0}", e
-            .getMessage());
+        LOGGER.log(Level.WARNING, "No execution was found: {0}", e.getMessage());
       }
     }
     for (Jobs desc : running) {
@@ -1029,12 +968,10 @@ public class JobService {
                 .add("url", trackingUrl)
         );
       } catch (ArrayIndexOutOfBoundsException e) {
-        LOGGER.log(Level.WARNING, "No execution was found: {0}", e
-            .getMessage());
+        LOGGER.log(Level.WARNING, "No execution was found: {0}", e.getMessage());
       }
     }
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-        entity(builder.build()).build();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(builder.build()).build();
   }
 
   /**
@@ -1043,17 +980,14 @@ public class JobService {
    * EXECUTION TIME"}, {"log":"INFORMATION LOG"}, {"err":"ERROR LOG"}]
    * <p>
    * @param jobId
-   * @param sc
-   * @param req
    * @return
    */
   @GET
   @Path("/{jobId}/showlog")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response getLogInformation(@PathParam("jobId") int jobId,
-      @Context SecurityContext sc,
-      @Context HttpServletRequest req) {
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response getLogInformation(@PathParam("jobId") int jobId) {
 
     JsonObjectBuilder builder = Json.createObjectBuilder();
     JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
@@ -1078,8 +1012,7 @@ public class JobService {
     }
     builder.add("logset", arrayBuilder);
 
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-        entity(builder.build()).build();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(builder.build()).build();
   }
 
   private void readLog(Execution e, String type, DistributedFileSystemOps dfso, JsonObjectBuilder arrayObjectBuilder)
@@ -1118,8 +1051,8 @@ public class JobService {
   @Path("/getLog/{appId}/{type}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response getLog(@PathParam("appId") String appId,
-      @PathParam("type") String type) throws JobException {
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response getLog(@PathParam("appId") String appId, @PathParam("type") String type) throws JobException {
     if (Strings.isNullOrEmpty(appId)) {
       throw new IllegalArgumentException("appId cannot be null or empty.");
     }
@@ -1158,6 +1091,7 @@ public class JobService {
   @Path("/getLogByJobId/{jobId}/{submissionTime}/{type}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response getLogByJobId(@PathParam("jobId") Integer jobId, @PathParam("submissionTime") String submissionTime,
       @PathParam("type") String type) throws GenericException, JobException {
     if (jobId == null || jobId <= 0) {
@@ -1209,6 +1143,7 @@ public class JobService {
   @Path("/retryLogAggregation/{appId}/{type}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response retryLogAggregation(@PathParam("appId") String appId,
       @PathParam("type") String type,
       @Context HttpServletRequest req) throws JobException {
@@ -1308,8 +1243,7 @@ public class JobService {
     }
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     json.setSuccessMessage("Log retrieved successfuly.");
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-        json).build();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }
 
 
@@ -1319,17 +1253,13 @@ public class JobService {
    * or not.
    * <p>
    * @param jobId
-   * @param sc
-   * @param req
    * @return
    */
   @DELETE
   @Path("/{jobId}/unschedule")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response unscheduleJob(@PathParam("jobId") int jobId,
-                            @Context SecurityContext sc,
-                            @Context HttpServletRequest req) {
+  public Response unscheduleJob(@PathParam("jobId") int jobId) {
     Jobs job = jobFacade.findById(jobId);
     if (job == null) {
       return noCacheResponse.
@@ -1367,7 +1297,6 @@ public class JobService {
    * or not.
    * <p>
    * @param jobId
-   * @param sc
    * @param req
    * @return
    */
@@ -1375,36 +1304,29 @@ public class JobService {
   @Path("/{jobId}/deleteJob")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  public Response deleteJob(@PathParam("jobId") int jobId,
-      @Context SecurityContext sc,
-      @Context HttpServletRequest req) {
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response deleteJob(@PathParam("jobId") int jobId, @Context HttpServletRequest req) {
     LOGGER.log(Level.INFO, "Request to delete job");
-    String loggedinemail = sc.getUserPrincipal().getName();
+    Users user = jWTHelper.getUserPrincipal(req);
+    String loggedinemail = user.getEmail();
     Jobs job = jobFacade.findById(jobId);
     if (job == null) {
-      return noCacheResponse.
-          getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
     } else if (!job.getProject().equals(project)) {
       //In this case, a user is trying to access a job outside its project!!!
-      LOGGER.log(Level.SEVERE,
-          "A user is trying to access a job outside their project!");
-      return noCacheResponse.
-          getNoCacheResponseBuilder(Response.Status.FORBIDDEN).build();
+      LOGGER.log(Level.SEVERE, "A user is trying to access a job outside their project!");
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.FORBIDDEN).build();
     } else {
       if(job.getJobConfig().getSchedule() != null) {
         jobController.unscheduleJob(job);
       }
-      LOGGER.log(Level.INFO, "Request to delete job name ={0} job id ={1}",
-        new Object[]{job.getName(), job.getId()});
+      LOGGER.log(Level.INFO, "Request to delete job name ={0} job id ={1}", new Object[]{job.getName(), job.getId()});
       jobFacade.removeJob(job);
-      LOGGER.log(Level.INFO, "Deleted job name ={0} job id ={1}",
-        new Object[]{job.getName(), job.getId()});
+      LOGGER.log(Level.INFO, "Deleted job name ={0} job id ={1}", new Object[]{job.getName(), job.getId()});
       RESTApiJsonResponse json = new RESTApiJsonResponse();
       json.setSuccessMessage("Deleted job " + job.getName() + " successfully");
-      activityFacade.persistActivity(ActivityFacade.DELETED_JOB + job.
-        getName(), project, sc.getUserPrincipal().getName());
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-        entity(json).build();
+      activityFacade.persistActivity(ActivityFacade.DELETED_JOB + job.getName(), project, loggedinemail);
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
     }
   }
 
@@ -1414,9 +1336,9 @@ public class JobService {
    * @param jobId
    * @return
    */
-  @Path(
-      "/{jobId}/executions")
+  @Path("/{jobId}/executions")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public ExecutionService executions(@PathParam("jobId") int jobId) {
     Jobs job = jobFacade.findById(jobId);
     if (job == null) {
@@ -1436,10 +1358,10 @@ public class JobService {
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response updateSchedule(ScheduleDTO schedule,
-      @PathParam("jobId") int jobId,
-      @Context SecurityContext sc,
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response updateSchedule(ScheduleDTO schedule, @PathParam("jobId") int jobId, 
       @Context HttpServletRequest req) {
+    Users user = jWTHelper.getUserPrincipal(req);
     Jobs job = jobFacade.findById(jobId);
     if (job == null) {
       return noCacheResponse.
@@ -1458,39 +1380,29 @@ public class JobService {
           RESTApiJsonResponse json = new RESTApiJsonResponse();
           json.setSuccessMessage("Scheduled job " + job.getName()
             + " successfully");
-          activityFacade.persistActivity(ActivityFacade.SCHEDULED_JOB + job.
-            getName(), project, sc.getUserPrincipal().getName());
-          return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-            entity(json).build();
+          activityFacade.persistActivity(ActivityFacade.SCHEDULED_JOB + job.getName(), project, user);
+          return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
         } else {
-          LOGGER.log(Level.WARNING,
-            "Schedule is not created in the scheduler for the jobid {0}",
-            jobId);
+          LOGGER.log(Level.WARNING, "Schedule is not created in the scheduler for the jobid {0}", jobId);
         }
       } else {
-        LOGGER.log(Level.WARNING,
-          "Schedule is not updated in DB for the jobid {0}", jobId);
+        LOGGER.log(Level.WARNING, "Schedule is not updated in DB for the jobid {0}", jobId);
       }
     }
-    return noCacheResponse.getNoCacheResponseBuilder(
-        Response.Status.INTERNAL_SERVER_ERROR).build();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.INTERNAL_SERVER_ERROR).build();
   }
 
-  @Path(
-      "/spark")
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @Path("/spark")
   public SparkService spark() {
     return this.spark.setProject(project);
   }
 
   @Path("/pyspark")
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public SparkService pyspark() {
     return this.spark.setProject(project);
   }
 
   @Path("/flink")
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public FlinkService flink() {
     return this.flink.setProject(project);
   }

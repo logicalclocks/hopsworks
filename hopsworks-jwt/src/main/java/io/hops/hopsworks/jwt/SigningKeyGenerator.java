@@ -15,16 +15,28 @@
  */
 package io.hops.hopsworks.jwt;
 
-public class Constants {
+import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
+import javax.crypto.KeyGenerator;
+import javax.ejb.Singleton;
 
-  public static final String BEARER = "Bearer "; // The whitespace is required. 
-  public static final String RENEWABLE = "renewable";
-  public static final String EXPIRY_LEEWAY = "expLeeway";
-  public static final String ROLES = "roles";
-  public static final String WWW_AUTHENTICATE_VALUE="Bearer realm=\"Cauth Realm\"";
+@Singleton
+public class SigningKeyGenerator {
   
-  public static final int DEFAULT_EXPIRY_LEEWAY = 60; //60 secs for exp
-  public static final boolean DEFAULT_RENEWABLE = false;
+  private KeyGenerator keyGenerator;
   
-  
+  /**
+   * Generates a secret key for the given algorithm.
+   * @param algorithm
+   * @return base64Encoded string
+   * @throws NoSuchAlgorithmException 
+   */
+  public String getSigningKey(String algorithm) throws NoSuchAlgorithmException {
+    if (keyGenerator == null || !keyGenerator.getAlgorithm().equals(algorithm)) {
+      keyGenerator = KeyGenerator.getInstance(algorithm);
+    }
+    byte[] keyBytes = keyGenerator.generateKey().getEncoded();
+    String base64Encoded = Base64.getEncoder().encodeToString(keyBytes);
+    return base64Encoded;
+  }
 }

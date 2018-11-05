@@ -41,13 +41,13 @@ package io.hops.hopsworks.api.jobs;
 
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
+import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.common.dao.jobhistory.Execution;
 import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuota;
 import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuotaFacade;
 import io.hops.hopsworks.common.dao.project.PaymentType;
-import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.GenericException;
 import io.hops.hopsworks.common.exception.JobException;
@@ -69,7 +69,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -85,11 +84,11 @@ public class ExecutionService {
   @EJB
   private NoCacheResponse noCacheResponse;
   @EJB
-  private UserFacade userFacade;
-  @EJB
   private ExecutionController executionController;
   @EJB
   private YarnProjectsQuotaFacade yarnProjectsQuotaFacade;
+  @EJB
+  private JWTHelper jWTHelper;
   
   private Jobs job;
 
@@ -101,37 +100,33 @@ public class ExecutionService {
   /**
    * Get all the executions for the given job.
    * <p/>
-   * @param sc
-   * @param req
    * @return
    */
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public Response getAllExecutions(@Context SecurityContext sc,
-      @Context HttpServletRequest req) {
+  public Response getAllExecutions() {
     List<Execution> executions = executionFacade.findForJob(job);
-    GenericEntity<List<Execution>> list = new GenericEntity<List<Execution>>(
-        executions) {
+    GenericEntity<List<Execution>> list = new GenericEntity<List<Execution>>(executions) {
     };
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-        entity(list).build();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(list).build();
   }
 
   /**
    * Start an Execution of the given job.
    * <p/>
-   * @param sc
    * @param req
    * @return The new execution object.
+   * @throws io.hops.hopsworks.common.exception.ProjectException
+   * @throws io.hops.hopsworks.common.exception.GenericException
+   * @throws io.hops.hopsworks.common.exception.JobException
    */
   @POST
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public Response startExecution(@Context SecurityContext sc,
-      @Context HttpServletRequest req) throws ProjectException, GenericException, JobException {
-    String loggedinemail = sc.getUserPrincipal().getName();
-    Users user = userFacade.findByEmail(loggedinemail);
+  public Response startExecution(@Context HttpServletRequest req) throws ProjectException, GenericException,
+      JobException {
+    Users user = jWTHelper.getUserPrincipal(req);
     if(job.getProject().getPaymentType().equals(PaymentType.PREPAID)){
       YarnProjectsQuota projectQuota = yarnProjectsQuotaFacade.findByProjectName(job.getProject().getName());
       if(projectQuota==null || projectQuota.getQuotaRemaining() < 0){
@@ -139,39 +134,32 @@ public class ExecutionService {
       }
     }
     Execution exec = executionController.start(job, user);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-      entity(exec).build();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(exec).build();
   }
 
   @POST
   @Path("/stop")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public Response stopExecution(@PathParam("jobId") int jobId,
-      @Context SecurityContext sc,
-      @Context HttpServletRequest req) {
-    String loggedinemail = sc.getUserPrincipal().getName();
-    Users user = userFacade.findByEmail(loggedinemail);
+  public Response stopExecution(@PathParam("jobId") int jobId, @Context HttpServletRequest req) {
+    Users user = jWTHelper.getUserPrincipal(req);
 
     executionController.kill(job, user);
     //executionController.stop(job, user, appid);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-        entity("Job stopped").build();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity("Job stopped").build();
   }
 
   /**
    * Get the execution with the specified id under the given job.
    * <p/>
    * @param executionId
-   * @param sc
-   * @param req
    * @return
+   * @throws io.hops.hopsworks.common.exception.JobException
    */
   @GET
   @Path("/{executionId}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public Response getExecution(@PathParam("executionId") int executionId,
-      @Context SecurityContext sc, @Context HttpServletRequest req) throws JobException {
+  public Response getExecution(@PathParam("executionId") int executionId) throws JobException {
     Execution execution = executionFacade.findById(executionId);
     if (execution == null) {
       return Response.status(Response.Status.NOT_FOUND).build();
@@ -180,8 +168,7 @@ public class ExecutionService {
       throw new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_NOT_FOUND, Level.FINE,
         "Trying to access an execution of another job");
     } else {
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-          entity(execution).build();
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(execution).build();
     }
 
   }

@@ -41,7 +41,9 @@ package io.hops.hopsworks.api.admin;
 
 import io.hops.hopsworks.api.admin.dto.ProjectDeletionLog;
 import io.hops.hopsworks.api.admin.dto.ProjectAdminInfoDTO;
+import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
+import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.project.Project;
@@ -60,9 +62,9 @@ import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.project.ProjectDTO;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.project.QuotasDTO;
+import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.Api;
 
-import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -80,16 +82,15 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Path("/admin")
-@RolesAllowed({"HOPS_ADMIN"})
-@Api(value = "Admin")
 @Stateless
+@JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN"})
+@Api(value = "Admin")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ProjectsAdmin {
   private static final Logger LOGGER = Logger.getLogger(ProjectsAdmin.class.getName());
@@ -104,12 +105,14 @@ public class ProjectsAdmin {
   private UserFacade userFacade;
   @EJB
   private Settings settings;
+  @EJB
+  private JWTHelper jWTHelper;
   
   @DELETE
   @Produces(MediaType.APPLICATION_JSON)
   @Path("/projects/{id}")
-  public Response deleteProject(@Context SecurityContext sc, @Context HttpServletRequest req,
-      @PathParam("id") Integer id) throws ProjectException, GenericException {
+  public Response deleteProject(@Context HttpServletRequest req, @PathParam("id") Integer id) throws ProjectException,
+      GenericException {
     Project project = projectFacade.find(id);
     if (project == null) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + id);
@@ -128,12 +131,10 @@ public class ProjectsAdmin {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @Path("/projects/createas")
-  public Response createProjectAsUser(@Context SecurityContext sc, @Context HttpServletRequest request,
-      ProjectDTO projectDTO)
+  public Response createProjectAsUser(@Context HttpServletRequest request, ProjectDTO projectDTO)
     throws DatasetException, GenericException, KafkaException, ProjectException, UserException, ServiceException,
     HopsSecurityException {
-    String userEmail = sc.getUserPrincipal().getName();
-    Users user = userFacade.findByEmail(userEmail);
+    Users user = jWTHelper.getUserPrincipal(request);
     if (user == null || !user.getEmail().equals(Settings.SITE_EMAIL)) {
       throw new UserException(RESTCodes.UserErrorCode.AUTHENTICATION_FAILURE, Level.WARNING,
         "Unauthorized or unknown user tried to create a Project as another user");
@@ -173,7 +174,7 @@ public class ProjectsAdmin {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @Path("/projects")
-  public Response getProjectsAdminInfo(@Context SecurityContext sc, @Context HttpServletRequest req) {
+  public Response getProjectsAdminInfo() {
 
     List<Project> projects = projectFacade.findAll();
     List<ProjectAdminInfoDTO> projectAdminInfoDTOList = new ArrayList<>();
@@ -198,8 +199,7 @@ public class ProjectsAdmin {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @Path("/projects/{id}")
-  public Response getProjectAdminInfo(@Context SecurityContext sc, @Context HttpServletRequest req,
-                                      @PathParam("id") Integer projectId) throws ProjectException {
+  public Response getProjectAdminInfo(@PathParam("id") Integer projectId) throws ProjectException {
     Project project = projectFacade.find(projectId);
     if (project == null) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId);
@@ -217,8 +217,7 @@ public class ProjectsAdmin {
   @PUT
   @Consumes(MediaType.APPLICATION_JSON)
   @Path("/projects")
-  public Response setProjectAdminInfo (@Context SecurityContext sc, @Context HttpServletRequest req,
-                                       ProjectAdminInfoDTO projectAdminInfoDTO) throws ProjectException {
+  public Response setProjectAdminInfo (ProjectAdminInfoDTO projectAdminInfoDTO) throws ProjectException {
     // for changes in space quotas we need to check that both space and ns options are not null
     QuotasDTO quotasDTO = projectAdminInfoDTO.getProjectQuotas();
     if (quotasDTO != null &&
@@ -241,10 +240,9 @@ public class ProjectsAdmin {
   @DELETE
   @Path("/projects/{name}/force")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response forceDeleteProject(@Context SecurityContext sc, @Context HttpServletRequest request,
-      @PathParam("name") String projectName) {
-    String userEmail = sc.getUserPrincipal().getName();
-    String[] logs = projectController.forceCleanup(projectName, userEmail, request.getSession().getId());
+  public Response forceDeleteProject(@Context HttpServletRequest request, @PathParam("name") String projectName) {
+    Users user = jWTHelper.getUserPrincipal(request);
+    String[] logs = projectController.forceCleanup(projectName, user.getEmail(), request.getSession().getId());
     ProjectDeletionLog deletionLog = new ProjectDeletionLog(logs[0], logs[1]);
   
     GenericEntity<ProjectDeletionLog> response = new GenericEntity<ProjectDeletionLog>(deletionLog) {};

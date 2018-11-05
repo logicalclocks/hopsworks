@@ -40,8 +40,8 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('LoginCtrl', ['$location', '$cookies', 'growl', 'TourService', 'AuthService', 'BannerService', 'md5', 
-          function ($location, $cookies, growl, TourService, AuthService, BannerService, md5) {
+        .controller('LoginCtrl', ['$location', '$cookies', '$http','growl', 'TourService', 'AuthService', 'BannerService', 'md5', 
+          function ($location, $cookies, $http, growl, TourService, AuthService, BannerService, md5) {
 
             var self = this;
 
@@ -122,6 +122,7 @@ angular.module('hopsWorksApp')
                         }
                         self.working = false;
                         self.secondFactorRequired = false;
+                        AuthService.saveToken(success.headers('Authorization'));
                         $cookies.put("email", self.user.email);
                         $location.path('/');
                       }, function (error) {

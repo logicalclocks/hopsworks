@@ -38,7 +38,6 @@
 =end
 describe "On #{ENV['OS']}" do
   describe 'projects' do
-    after (:all){clean_projects}
     describe "#create" do
       context 'without authentication' do
         before :all do
@@ -238,7 +237,7 @@ describe "On #{ENV['OS']}" do
           project = get_project
           create_session(member[:email],"Pass123")
           delete "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/projectMembers/#{new_member}"
-          expect_json(errorCode: 150068)
+          expect_json(errorCode: 150012)
           expect_status(403)
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers"
           memb = json_body.detect { |e| e[:user][:email] == new_member }

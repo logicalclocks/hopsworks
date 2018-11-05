@@ -40,6 +40,7 @@
 package io.hops.hopsworks.api.project;
 
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
+import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
@@ -59,14 +60,13 @@ import io.hops.hopsworks.common.jobs.jobhistory.JobHeuristicDetailsComparator;
 import io.hops.hopsworks.common.jobs.jobhistory.JobHeuristicDetailsDTO;
 import io.hops.hopsworks.common.jobs.jobhistory.JobProposedConfigurationDTO;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.Api;
 import org.json.JSONObject;
 
-import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
@@ -74,11 +74,9 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -90,9 +88,11 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import javax.ejb.Stateless;
 
 @Path("history")
-@RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
+@Stateless
+@JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
 @Api(value = "History Service", description = "History Service")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class HistoryService {
@@ -148,9 +148,7 @@ public class HistoryService {
   @Path("all/{projectId}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.ANYONE})
-  public Response getAllProjects(@PathParam("projectId") int projectId,
-          @Context SecurityContext sc,
-          @Context HttpServletRequest req) {
+  public Response getAllProjects(@PathParam("projectId") int projectId) {
 
     Project returnProject = projectFacade.find(projectId);
     List<YarnAppResultDTO> appResultsToReturn = new ArrayList<>();
@@ -181,13 +179,9 @@ public class HistoryService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.ANYONE})
   public Response getJob(@PathParam("jobId") String jobId,
-          @Context SecurityContext sc,
-          @Context HttpServletRequest req,
-          @HeaderParam("Access-Control-Request-Headers") String requestH) {
-
+      @HeaderParam("Access-Control-Request-Headers") String requestH) {
     RESTApiJsonResponse json = getJobDetailsFromDrElephant(jobId);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            json).build();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }
 
   @GET
@@ -195,9 +189,7 @@ public class HistoryService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.ANYONE})
   public Response getConfig(@PathParam("jobId") String jobId,
-          @Context SecurityContext sc,
-          @Context HttpServletRequest req,
-          @HeaderParam("Access-Control-Request-Headers") String requestH) {
+      @HeaderParam("Access-Control-Request-Headers") String requestH) {
 
     JobsHistory jh = jobsHistoryFacade.findByAppId(jobId);
 
@@ -233,9 +225,7 @@ public class HistoryService {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  public Response Heuristics(JobDetailDTO jobDetailDTO,
-          @Context SecurityContext sc,
-          @Context HttpServletRequest req) {
+  public Response Heuristics(JobDetailDTO jobDetailDTO) {
 
     JobHeuristicDTO jobsHistoryResult = jobsHistoryFacade.
             searchHeuristicRusults(jobDetailDTO);

@@ -36,13 +36,16 @@
  * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
 package io.hops.hopsworks.api.user;
 
+import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
+import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.api.zeppelin.util.TicketContainer;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
+import io.hops.hopsworks.common.dao.user.BbcGroup;
+import io.hops.hopsworks.common.dao.user.BbcGroupFacade;
 import io.hops.hopsworks.common.dao.user.UserDTO;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
@@ -57,6 +60,11 @@ import io.hops.hopsworks.common.user.UserStatusValidator;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.user.ldap.LdapUserController;
 import io.hops.hopsworks.common.user.ldap.LdapUserState;
+import io.hops.hopsworks.jwt.Constants;
+import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.hops.hopsworks.jwt.exception.DuplicateSigningKeyException;
+import io.hops.hopsworks.jwt.exception.InvalidationException;
+import io.hops.hopsworks.jwt.exception.SigningKeyNotFoundException;
 import io.swagger.annotations.Api;
 import org.apache.commons.codec.binary.Base64;
 
@@ -79,10 +87,11 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
 import java.security.NoSuchAlgorithmException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import static javax.ws.rs.core.HttpHeaders.AUTHORIZATION;
+import javax.ws.rs.core.UriInfo;
 
 @Path("/auth")
 @Stateless
@@ -95,6 +104,8 @@ public class AuthService {
   @EJB
   private UserFacade userFacade;
   @EJB
+  private BbcGroupFacade bbcGroupFacade;
+  @EJB
   private UsersController userController;
   @EJB
   private UserStatusValidator statusValidator;
@@ -106,14 +117,34 @@ public class AuthService {
   private AuthController authController;
   @EJB
   private LdapUserController ldapUserController;
+  @EJB
+  private JWTHelper jWTHelper;
+
+  @Context
+  private UriInfo uriInfo;
 
   @GET
   @Path("session")
   @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API},
+      allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @Produces(MediaType.APPLICATION_JSON)
-  public Response session(@Context SecurityContext sc, @Context HttpServletRequest req) {
+  public Response session(@Context HttpServletRequest req) {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
-    json.setData(sc.getUserPrincipal().getName());
+    json.setData(req.getRemoteUser());
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+  }
+
+  @GET
+  @Path("jwt/session")
+  @JWTRequired(acceptedTokens = {Audience.API},
+      allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response jwtSession(@Context HttpServletRequest req) {
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
+    Users user = jWTHelper.getUserPrincipal(req);
+    String remoteUser = user != null ? user.getEmail() : req.getRemoteUser();
+    json.setData(remoteUser);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }
 
@@ -121,31 +152,26 @@ public class AuthService {
   @Path("login")
   @Produces(MediaType.APPLICATION_JSON)
   public Response login(@FormParam("email") String email, @FormParam("password") String password,
-      @FormParam("otp") String otp, @Context HttpServletRequest req) throws UserException {
+      @FormParam("otp") String otp, @Context HttpServletRequest req) throws UserException, SigningKeyNotFoundException,
+      NoSuchAlgorithmException, LoginException, DuplicateSigningKeyException {
     logUserLogin(req);
-    RESTApiJsonResponse json = new RESTApiJsonResponse();
     if (email == null || email.isEmpty()) {
       throw new IllegalArgumentException("Email was not provided");
     }
+    if (password == null || password.isEmpty()) {
+      throw new IllegalArgumentException("Password can not be empty.");
+    }
     Users user = userFacade.findByEmail(email);
+    if (user == null) {
+      throw new LoginException("Unrecognized email address. Have you registered yet?");
+    }
+    if (!needLogin(req, user)) {
+      return Response.ok().build();
+    }
     // Do pre cauth realm check
     String passwordWithSaltPlusOtp = authController.preCustomRealmLoginCheck(user, password, otp, req);
 
-    // logout any user already loggedin if a new user tries to login 
-    if (req.getRemoteUser() != null && !req.getRemoteUser().equals(email)) {
-      logoutAndInvalidateSession(req);
-    }
-    //only login if not already logged...
-    if (req.getRemoteUser() == null) {
-      login(user, email, passwordWithSaltPlusOtp, req);
-    } else {
-      req.getServletContext().log("Skip logged because already logged in: " + email);
-    }
-
-    //read the user data from db and return to caller
-    json.setSessionID(req.getSession().getId());
-
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+    return login(user, passwordWithSaltPlusOtp, req);
   }
 
   @POST
@@ -153,8 +179,8 @@ public class AuthService {
   @Produces(MediaType.APPLICATION_JSON)
   public Response ldapLogin(@FormParam("username") String username, @FormParam("password") String password,
       @FormParam("chosenEmail") String chosenEmail, @FormParam("consent") boolean consent,
-      @Context HttpServletRequest req) throws LoginException, UserException {
-    RESTApiJsonResponse json = new RESTApiJsonResponse();
+      @Context HttpServletRequest req) throws LoginException, UserException, NoSuchAlgorithmException,
+      SigningKeyNotFoundException, DuplicateSigningKeyException {
     if (username == null || username.isEmpty()) {
       throw new IllegalArgumentException("Username can not be empty.");
     }
@@ -162,45 +188,27 @@ public class AuthService {
       throw new IllegalArgumentException("Password can not be empty.");
     }
     LdapUserState ldapUserState = ldapUserController.login(username, password, consent, chosenEmail);
-    if (!ldapUserState.isSaved()) {
-      return Response.status(Response.Status.PRECONDITION_FAILED).entity(ldapUserState.getUserDTO()).build();
+    if (!needLogin(req, ldapUserState.getLdapUser().getUid())) {
+      return Response.ok().build();
     }
-    LdapUser ladpUser = ldapUserState.getLdapUser();
-    if (ladpUser == null || ladpUser.getUid() == null) {
-      throw new LoginException("Failed to get ldap user from table.");
-    }
-    Users user = ladpUser.getUid();
-    // Do pre cauth realm check 
-    String passwordWithSalt = authController.preLdapLoginCheck(user, ladpUser.getAuthKey());
-    if (req.getRemoteUser() != null && !req.getRemoteUser().equals(user.getEmail())) {
-      logoutAndInvalidateSession(req);
-    }
-    //only login if not already logged...
-    if (req.getRemoteUser() == null) {
-      login(user, user.getEmail(), passwordWithSalt, req);
-    } else {
-      req.getServletContext().log("Skip logged because already logged in: " + username);
-    }
-    //read the user data from db and return to caller
-    json.setSessionID(req.getSession().getId());
-    json.setData(user.getEmail());
-    return Response.status(Response.Status.OK).entity(json).build();
+    return ldapUserLogin(ldapUserState, req);
   }
 
   @GET
   @Path("logout")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response logout(@Context HttpServletRequest req) throws UserException {
-    RESTApiJsonResponse json = new RESTApiJsonResponse();
+  public Response logout(@Context HttpServletRequest req) throws UserException, InvalidationException {
     logoutAndInvalidateSession(req);
-    return Response.ok().entity(json).build();
+    return Response.ok().build();
   }
 
   @GET
   @Path("isAdmin")
-  @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
-  public Response login(@Context SecurityContext sc) {
-    if (sc.isUserInRole("HOPS_ADMIN")) {
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response login(@Context HttpServletRequest req) {
+    Users user = jWTHelper.getUserPrincipal(req);
+    BbcGroup adminGroup = bbcGroupFacade.findByGroupName("HOPS_ADMIN");
+    if (user.getBbcGroupCollection().contains(adminGroup)) {
       return Response.ok(true).build();
     }
     return Response.ok(false).build();
@@ -211,7 +219,7 @@ public class AuthService {
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
   public Response register(UserDTO newUser, @Context HttpServletRequest req) throws NoSuchAlgorithmException,
-    UserException {
+      UserException {
     byte[] qrCode;
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     qrCode = userController.registerUser(newUser, req);
@@ -230,7 +238,6 @@ public class AuthService {
   public Response recoverPassword(@FormParam("email") String email,
       @FormParam("securityQuestion") String securityQuestion,
       @FormParam("securityAnswer") String securityAnswer,
-      @Context SecurityContext sc,
       @Context HttpServletRequest req) throws UserException, ServiceException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     userController.recoverPassword(email, securityQuestion, securityAnswer, req);
@@ -242,7 +249,7 @@ public class AuthService {
   @Path("/validation/{key}")
   @Produces(MediaType.APPLICATION_JSON)
   public Response validateUserEmail(@Context HttpServletRequest req, @PathParam("key") String key)
-    throws UserException {
+      throws UserException {
     authController.validateKey(key, req);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
@@ -258,7 +265,7 @@ public class AuthService {
   @POST
   @Path("/recovery")
   @Produces(MediaType.TEXT_PLAIN)
-  public Response sendNewValidationKey(@Context SecurityContext sc, @Context HttpServletRequest req,
+  public Response sendNewValidationKey(@Context HttpServletRequest req,
       @FormParam("email") String email) throws MessagingException {
     Users u = userFacade.findByEmail(email);
     if (u == null || statusValidator.isBlockedAccount(u)) {
@@ -269,7 +276,12 @@ public class AuthService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 
-  private void logoutAndInvalidateSession(HttpServletRequest req) throws UserException {
+  private void logoutAndInvalidateSession(HttpServletRequest req) throws UserException, InvalidationException {
+    jWTHelper.invalidateToken(req);//invalidate iff req contains jwt token
+    logoutSession(req);
+  }
+
+  private void logoutSession(HttpServletRequest req) throws UserException {
     Users user = userFacade.findByEmail(req.getRemoteUser());
     try {
       req.getSession().invalidate();
@@ -285,25 +297,92 @@ public class AuthService {
     }
   }
 
-  private void login(Users user, String email, String password, HttpServletRequest req) throws UserException {
-    if (user == null) {
-      throw new IllegalArgumentException("User not set.");
-    }
+  private Response login(Users user, String password, HttpServletRequest req) throws UserException,
+      SigningKeyNotFoundException, NoSuchAlgorithmException, DuplicateSigningKeyException {
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     if (user.getBbcGroupCollection() == null || user.getBbcGroupCollection().isEmpty()) {
       throw new UserException(RESTCodes.UserErrorCode.NO_ROLE_FOUND, Level.FINE);
     }
-    if (statusValidator.checkStatus(user.getStatus())) {
-      try {
-        req.login(email, password);
-        authController.registerLogin(user, req);
-      } catch (ServletException e) {
-        LOGGER.log(Level.WARNING, e.getMessage());
-        authController.registerAuthenticationFailure(user, req);
-        throw new UserException(RESTCodes.UserErrorCode.AUTHENTICATION_FAILURE, Level.SEVERE, null, e.getMessage(), e);
-      }
-    } else { // if user == null
-      throw new UserException(RESTCodes.UserErrorCode.AUTHENTICATION_FAILURE, Level.INFO);
+
+    statusValidator.checkStatus(user.getStatus());
+    try {
+      req.login(user.getEmail(), password);
+      authController.registerLogin(user, req);
+    } catch (ServletException e) {
+      LOGGER.log(Level.WARNING, e.getMessage());
+      authController.registerAuthenticationFailure(user, req);
+      throw new UserException(RESTCodes.UserErrorCode.AUTHENTICATION_FAILURE, Level.SEVERE, null, e.getMessage(), e);
     }
+
+    json.setSessionID(req.getSession().getId());
+    json.setData(user.getEmail());
+    String token = jWTHelper.createToken(user, uriInfo.getBaseUri().getHost());
+    return Response.ok().header(AUTHORIZATION, Constants.BEARER + token).entity(json).build();
+  }
+
+  private Response ldapUserLogin(LdapUserState ldapUserState, HttpServletRequest req) throws LoginException,
+      NoSuchAlgorithmException, SigningKeyNotFoundException, UserException, DuplicateSigningKeyException {
+    if (!ldapUserState.isSaved()) {
+      return Response.status(Response.Status.PRECONDITION_FAILED).entity(ldapUserState.getUserDTO()).build();
+    }
+    LdapUser ladpUser = ldapUserState.getLdapUser();
+    if (ladpUser == null || ladpUser.getUid() == null) {
+      throw new LoginException("Failed to get ldap user from table.");
+    }
+    Users user = ladpUser.getUid();
+    // Do pre cauth realm check 
+    String passwordWithSalt = authController.preLdapLoginCheck(user, ladpUser.getAuthKey());
+    return login(user, passwordWithSalt, req);
+  }
+
+  private boolean isUserLoggedIn(String remoteUser, Users tokenUser, boolean validToken, Users user) {
+    if (user == null) {
+      return false;
+    }
+    boolean sessionLoggedIn = remoteUser != null && remoteUser.equals(user.getEmail());
+    boolean jwtLoggedIn = tokenUser != null && tokenUser.equals(user) && validToken;
+    return sessionLoggedIn && jwtLoggedIn;
+  }
+
+  private boolean isSomeoneElseLoggedIn(String remoteUser, Users tokenUser, boolean validToken, Users user) {
+    if (user == null) {
+      return false;
+    }
+    boolean sessionLoggedIn = remoteUser != null && !remoteUser.equals(user.getEmail());
+    boolean jwtLoggedIn = tokenUser != null && !tokenUser.equals(user) && validToken;
+    return sessionLoggedIn && jwtLoggedIn;
+  }
+
+  private boolean needLogin(HttpServletRequest req, Users user) {
+    String remoteUser = req.getRemoteUser();
+    Users tokenUser = jWTHelper.getUserPrincipal(req);
+    boolean validToken = jWTHelper.validToken(req, uriInfo.getBaseUri().getHost());
+
+    if (isUserLoggedIn(remoteUser, tokenUser, validToken, user)) {
+      return false;
+    } else if (isSomeoneElseLoggedIn(remoteUser, tokenUser, validToken, user)) {
+      try {
+        logoutAndInvalidateSession(req);
+      } catch (InvalidationException | UserException ex) {
+        LOGGER.log(Level.SEVERE, null, ex.getMessage());
+      }
+    } else if (validToken || remoteUser != null) {
+      if (remoteUser != null) {
+        try {
+          logoutSession(req);
+        } catch (UserException ex) {
+          LOGGER.log(Level.SEVERE, null, ex);
+        }
+      }
+      if (validToken) {
+        try {
+          jWTHelper.invalidateToken(req);
+        } catch (InvalidationException ex) {
+          LOGGER.log(Level.SEVERE, null, ex);
+        }
+      }
+    }
+    return true;
   }
 
   private void logUserLogin(HttpServletRequest req) {
