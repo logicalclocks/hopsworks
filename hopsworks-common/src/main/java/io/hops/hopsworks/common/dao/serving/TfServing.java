@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.common.dao.serving;
 
+import io.hops.hopsworks.common.dao.kafka.ProjectTopics;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
 
@@ -93,12 +94,16 @@ public class TfServing implements Serializable {
   @ManyToOne(optional = false)
   private Project project;
   @Column(name = "enable_batching")
-  private boolean batching;
+  private Boolean batchingEnabled;
 
   @Column(name = "lock_ip")
   private String lockIP;
   @Column(name = "lock_timestamp")
   private Long lockTimestamp;
+
+  @JoinColumn(name = "kafka_topic_id", referencedColumnName = "id")
+  @ManyToOne
+  private ProjectTopics kafkaTopic;
 
   @Basic(optional = true)
   @Column(name = "local_port")
@@ -112,12 +117,14 @@ public class TfServing implements Serializable {
 
   public TfServing() { }
 
-  public TfServing(Integer id, String modelName, String modelPath, Integer version, Integer nInstances) {
+  public TfServing(Integer id, String modelName, String modelPath, Integer version,
+                   Integer nInstances, Boolean batchingEnabled) {
     this.id = id;
     this.modelName = modelName;
     this.modelPath = modelPath;
     this.version = version;
     this.instances = nInstances;
+    this.batchingEnabled = batchingEnabled;
   }
 
   public Integer getId() {
@@ -216,12 +223,12 @@ public class TfServing implements Serializable {
     this.localDir = localDir;
   }
 
-  public boolean isBatching() {
-    return batching;
+  public Boolean isBatchingEnabled() {
+    return batchingEnabled;
   }
 
-  public void setBatching(boolean batching) {
-    this.batching = batching;
+  public void setBatchingEnabled(Boolean batching) {
+    this.batchingEnabled = batching;
   }
 
   public String getLockIP() {
@@ -240,6 +247,14 @@ public class TfServing implements Serializable {
     this.lockTimestamp = lockTimestamp;
   }
 
+  public ProjectTopics getKafkaTopic() {
+    return kafkaTopic;
+  }
+
+  public void setKafkaTopic(ProjectTopics kafkaTopic) {
+    this.kafkaTopic = kafkaTopic;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
@@ -248,7 +263,7 @@ public class TfServing implements Serializable {
     TfServing tfServing = (TfServing) o;
 
     if (optimized != tfServing.optimized) return false;
-    if (batching != tfServing.batching) return false;
+    if (batchingEnabled != tfServing.batchingEnabled) return false;
     if (id != null ? !id.equals(tfServing.id) : tfServing.id != null) return false;
     if (created != null ? !created.equals(tfServing.created) : tfServing.created != null) return false;
     if (creator != null ? !creator.equals(tfServing.creator) : tfServing.creator != null) return false;
@@ -260,6 +275,7 @@ public class TfServing implements Serializable {
     if (lockIP != null ? !lockIP.equals(tfServing.lockIP) : tfServing.lockIP != null) return false;
     if (lockTimestamp != null ? !lockTimestamp.equals(tfServing.lockTimestamp) : tfServing.lockTimestamp != null)
       return false;
+    if (kafkaTopic != null ? !kafkaTopic.equals(tfServing.kafkaTopic) : tfServing.kafkaTopic != null) return false;
     if (localPort != null ? !localPort.equals(tfServing.localPort) : tfServing.localPort != null) return false;
     if (localPid != null ? !localPid.equals(tfServing.localPid) : tfServing.localPid != null) return false;
     return localDir != null ? localDir.equals(tfServing.localDir) : tfServing.localDir == null;
@@ -276,9 +292,10 @@ public class TfServing implements Serializable {
     result = 31 * result + (optimized ? 1 : 0);
     result = 31 * result + (instances != null ? instances.hashCode() : 0);
     result = 31 * result + (project != null ? project.hashCode() : 0);
-    result = 31 * result + (batching ? 1 : 0);
+    result = 31 * result + (batchingEnabled ? 1 : 0);
     result = 31 * result + (lockIP != null ? lockIP.hashCode() : 0);
     result = 31 * result + (lockTimestamp != null ? lockTimestamp.hashCode() : 0);
+    result = 31 * result + (kafkaTopic != null ? kafkaTopic.hashCode() : 0);
     result = 31 * result + (localPort != null ? localPort.hashCode() : 0);
     result = 31 * result + (localPid != null ? localPid.hashCode() : 0);
     result = 31 * result + (localDir != null ? localDir.hashCode() : 0);

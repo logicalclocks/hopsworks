@@ -41,14 +41,13 @@ package io.hops.hopsworks.common.dao.host;
 
 import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade;
 
-import java.io.Serializable;
-import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
-import javax.persistence.NonUniqueResultException;
+import java.io.Serializable;
+import java.util.List;
 
 @Stateless
 public class HostsFacade implements Serializable {
@@ -64,27 +63,23 @@ public class HostsFacade implements Serializable {
     return query.getResultList();
   }
 
-  public Hosts findByHostIp(String hostIp) throws Exception {
+  public Hosts findByHostIp(String hostIp) {
     TypedQuery<Hosts> query = em.createNamedQuery("Hosts.findBy-HostIp",
             Hosts.class).setParameter("hostIp", hostIp);
     try {
       return query.getSingleResult();
     } catch (NoResultException ex) {
-      throw new Exception("NoResultException");
+      return null;
     }
   }
-
+  
   public Hosts findByHostname(String hostname) {
     TypedQuery<Hosts> query = em.createNamedQuery("Hosts.findBy-Hostname",
-            Hosts.class).setParameter("hostname", hostname);
-    List<Hosts> result = query.getResultList();
-    if (result.isEmpty()) {
+      Hosts.class).setParameter("hostname", hostname);
+    try {
+      return query.getSingleResult();
+    } catch (NoResultException ex) {
       return null;
-    } else if (result.size() == 1) {
-      return result.get(0);
-    } else {
-      throw new NonUniqueResultException(
-              "Invalid program state - MultipleHostsFoundException. HostId should return a single host.");
     }
   }
 

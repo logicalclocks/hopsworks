@@ -42,19 +42,19 @@ package io.hops.hopsworks.common.dao.metadata.db;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.metadata.Metadata;
 import io.hops.hopsworks.common.dao.metadata.MetadataPK;
-import io.hops.hopsworks.common.metadata.exception.DatabaseException;
 
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Stateless
 public class MetadataFacade extends AbstractFacade<Metadata> {
 
-  private static final Logger logger = Logger.getLogger(MetadataFacade.class.
+  private static final Logger LOGGER = Logger.getLogger(MetadataFacade.class.
           getName());
 
   @PersistenceContext(unitName = "kthfsPU")
@@ -69,7 +69,7 @@ public class MetadataFacade extends AbstractFacade<Metadata> {
     super(Metadata.class);
   }
 
-  public Metadata getMetadata(MetadataPK metadataPK) throws DatabaseException {
+  public Metadata getMetadata(MetadataPK metadataPK) {
 
     TypedQuery<Metadata> q = this.em.createNamedQuery(
             "Metadata.findByPrimaryKey",
@@ -102,9 +102,8 @@ public class MetadataFacade extends AbstractFacade<Metadata> {
    * <p/>
    *
    * @param metadata
-   * @throws se.kth.hopsworks.meta.exception.DatabaseException
    */
-  public void addMetadata(Metadata metadata) throws DatabaseException {
+  public void addMetadata(Metadata metadata) {
 
     try {
       Metadata m = this.contains(metadata) ? metadata : this.getMetadata(
@@ -127,9 +126,9 @@ public class MetadataFacade extends AbstractFacade<Metadata> {
 
       this.em.flush();
       this.em.clear();
-    } catch (IllegalStateException | SecurityException e) {
-
-      throw new DatabaseException(e.getMessage(), e);
+    } catch (IllegalStateException | SecurityException ex) {
+      LOGGER.log(Level.SEVERE, ex.getMessage(), ex);
+      throw ex;
     }
   }
 
@@ -138,9 +137,8 @@ public class MetadataFacade extends AbstractFacade<Metadata> {
    * <p/>
    *
    * @param metadata
-   * @throws se.kth.hopsworks.meta.exception.DatabaseException
    */
-  public void removeMetadata(Metadata metadata) throws DatabaseException {
+  public void removeMetadata(Metadata metadata) {
     try {
       Metadata m = this.contains(metadata) ? metadata : this.getMetadata(
               metadata.getMetadataPK());
@@ -156,9 +154,9 @@ public class MetadataFacade extends AbstractFacade<Metadata> {
 
       this.em.flush();
       this.em.clear();
-    } catch (IllegalStateException | SecurityException e) {
-
-      throw new DatabaseException(e.getMessage(), e);
+    } catch (IllegalStateException | SecurityException ex) {
+      LOGGER.log(Level.SEVERE, ex.getMessage(), ex);
+      throw ex;
     }
   }
 

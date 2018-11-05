@@ -94,7 +94,8 @@ public class FilePreviewDTO {
             + "\", \"extension\":\"" + extension
             + "\", \"content\":\"" + content.replace("\\", "\\\\'").
             replace("\"", "\\\"").replace("\n", "\\n").
-            replace("\r", "\\r").replace("\t", "\\t")
+            replace("\r", "\\r").replace("\t", "\\t").
+            replaceAll("[\\p{Cntrl}]", "")
             + "\"}]}";
   }
 

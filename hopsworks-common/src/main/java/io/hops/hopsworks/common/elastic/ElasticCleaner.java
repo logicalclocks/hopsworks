@@ -38,16 +38,17 @@
  */
 package io.hops.hopsworks.common.elastic;
 
-import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.util.Settings;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.elasticsearch.cluster.metadata.IndexMetaData;
+
 import javax.ejb.EJB;
 import javax.ejb.Schedule;
 import javax.ejb.Singleton;
 import javax.ejb.Timer;
-import org.elasticsearch.cluster.metadata.IndexMetaData;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Singleton
 public class ElasticCleaner {
@@ -71,7 +72,8 @@ public class ElasticCleaner {
     LOGGER.log(Level.INFO, "Cleaning up elastic job lobs, if any");
     //Get all log indices
     try {
-      Map<String, IndexMetaData> indices = elasticContoller.getIndices(Settings.ELASTIC_LOG_INDEX_REGEX);
+      Map<String, IndexMetaData> indices = elasticContoller.getIndices("(" + Settings.ELASTIC_LOG_INDEX_REGEX + ")|("
+          + Settings.ELASTIC_SERVING_INDEX_REGEX + ")");
       for (String index : indices.keySet()) {
         //Get current timestamp
         long currentTime = System.currentTimeMillis();
@@ -83,8 +85,8 @@ public class ElasticCleaner {
           LOGGER.log(Level.INFO, "Deletedindex:{0}", index);
         }
       }
-    } catch (AppException ex) {
-      LOGGER.log(Level.SEVERE, "Index deletion failed", ex.getMessage());
+    } catch (ServiceException ex) {
+      LOGGER.log(Level.SEVERE, "Index deletion failed", ex);
     }
 
   }

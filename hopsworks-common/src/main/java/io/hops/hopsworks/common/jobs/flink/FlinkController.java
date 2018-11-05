@@ -51,7 +51,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
-import org.apache.hadoop.security.AccessControlException;
+
+import io.hops.hopsworks.common.exception.GenericException;
+import io.hops.hopsworks.common.exception.JobException;
+import io.hops.hopsworks.common.exception.RESTCodes;
 import org.apache.hadoop.security.UserGroupInformation;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
@@ -71,7 +74,7 @@ import io.hops.hopsworks.common.util.Settings;
 @Stateless
 public class FlinkController {
 
-  private static final Logger LOG = Logger.getLogger(FlinkController.class.
+  private static final Logger LOGGER = Logger.getLogger(FlinkController.class.
       getName());
 
   @EJB
@@ -96,15 +99,9 @@ public class FlinkController {
    * @param user
    * @param sessionId
    * @return
-   * @throws IllegalStateException If Flink is not set up properly.
-   * @throws IOException If starting the job fails.
-   * @throws NullPointerException If job or user is null.
-   * @throws IllegalArgumentException If the given job does not represent a
    * Flink job.
    */
-  public Execution startJob(final Jobs job, final Users user, String sessionId) throws
-      IllegalStateException,
-      IOException, NullPointerException, IllegalArgumentException {
+  public Execution startJob(final Jobs job, final Users user, String sessionId) throws GenericException, JobException {
     //First: some parameter checking.
     if (job == null) {
       throw new NullPointerException("Cannot run a null job.");
@@ -118,38 +115,40 @@ public class FlinkController {
     }
 
     String username = hdfsUsersBean.getHdfsUserName(job.getProject(), user);
-    UserGroupInformation proxyUser = ugiService.getProxyUser(username);
     FlinkJob flinkjob = null;
     try {
-      flinkjob = proxyUser.doAs(new PrivilegedExceptionAction<FlinkJob>() {
-        @Override
-        public FlinkJob run() throws Exception {
-          return new FlinkJob(job, submitter, user,
+      UserGroupInformation proxyUser = ugiService.getProxyUser(username);
+      try {
+        flinkjob = proxyUser.doAs(new PrivilegedExceptionAction<FlinkJob>() {
+          @Override
+          public FlinkJob run() throws Exception {
+            return new FlinkJob(job, submitter, user,
               settings.getHadoopSymbolicLinkDir(), settings.getFlinkDir(),
               settings.getFlinkConfDir(),
               settings.getFlinkConfFile(),
               settings.getFlinkUser(),
               hdfsUsersBean.getHdfsUserName(job.getProject(),
-                  job.getCreator()),
+                job.getCreator()),
               settings.getHopsworksDomainDir(), jobsMonitor, settings, sessionId);
-        }
-      });
-    } catch (InterruptedException ex) {
-      LOG.log(Level.SEVERE, null, ex);
+          }
+        });
+      } catch (InterruptedException ex) {
+        LOGGER.log(Level.SEVERE, null, ex);
+      }
+    } catch (IOException ex) {
+      throw new JobException(RESTCodes.JobErrorCode.PROXY_ERROR, Level.SEVERE,
+        "job: " + job.getId() + ", user:" + user.getUsername(), ex.getMessage(), ex);
     }
     if (flinkjob == null) {
-      throw new NullPointerException("Could not instantiate Flink job.");
+      throw new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR, Level.WARNING,
+        "Could not instantiate job with name: " + job.getName() + " and id: " + job.getId(),
+        "sparkjob object was null");
     }
     Execution execution = flinkjob.requestExecutionId();
-    if (execution != null) {
-      submitter.startExecution(flinkjob);
-    } else {
-      LOG.log(Level.SEVERE,
-          "Failed to persist JobHistory. Aborting execution.");
-      throw new IOException("Failed to persist JobHistory.");
-    }
+    submitter.startExecution(flinkjob);
     activityFacade.persistActivity(ActivityFacade.RAN_JOB, job.getProject(),
-        user.asUser());
+      user.asUser());
+    
     return execution;
   }
 
@@ -193,7 +192,7 @@ public class FlinkController {
       try {
         isInHdfs = dfso.exists(settings.getHdfsFlinkJarPath());
       } catch (IOException e) {
-        LOG.log(Level.WARNING, "Cannot get Flink jar file from HDFS: {0}",
+        LOGGER.log(Level.WARNING, "Cannot get Flink jar file from HDFS: {0}",
             settings.getHdfsFlinkJarPath());
         //Can't connect to HDFS: return false
         return false;
@@ -212,7 +211,7 @@ public class FlinkController {
           return false;
         }
       } else {
-        LOG.log(Level.WARNING, "Cannot find Flink jar file locally: {0}",
+        LOGGER.log(Level.WARNING, "Cannot find Flink jar file locally: {0}",
             settings.getLocalFlinkJarPath());
         return false;
       }
@@ -233,33 +232,32 @@ public class FlinkController {
    * @param username the user name in a project (projectName__username)
    * @param udfso
    * @return
-   * @throws org.apache.hadoop.security.AccessControlException
-   * @throws IOException
    */
   public FlinkJobConfiguration inspectJar(String path, String username,
-      DistributedFileSystemOps udfso) throws
-      AccessControlException, IOException,
-      IllegalArgumentException {
-    LOG.log(Level.INFO, "Executing Flink job by {0} at path: {1}", new Object[]{
+      DistributedFileSystemOps udfso) throws JobException {
+    LOGGER.log(Level.INFO, "Executing Flink job by {0} at path: {1}", new Object[]{
       username, path});
     if (!path.endsWith(".jar")) {
       throw new IllegalArgumentException("Path does not point to a jar file.");
     }
-    LOG.log(Level.INFO, "Really executing Flink job by {0} at path: {1}",
+    LOGGER.log(Level.INFO, "Really executing Flink job by {0} at path: {1}",
         new Object[]{username, path});
-
-    JarInputStream jis = new JarInputStream(udfso.open(path));
-    Manifest mf = jis.getManifest();
-    Attributes atts = mf.getMainAttributes();
-    FlinkJobConfiguration config = new FlinkJobConfiguration();
-    if (atts.containsKey(Attributes.Name.MAIN_CLASS)) {
-      config.setMainClass(atts.getValue(Attributes.Name.MAIN_CLASS));
+  
+    try (JarInputStream jis = new JarInputStream(udfso.open(path))) {
+      Manifest mf = jis.getManifest();
+      Attributes atts = mf.getMainAttributes();
+      FlinkJobConfiguration config = new FlinkJobConfiguration();
+      if (atts.containsKey(Attributes.Name.MAIN_CLASS)) {
+        config.setMainClass(atts.getValue(Attributes.Name.MAIN_CLASS));
+      }
+      //Set Flink config params
+      config.setFlinkConfDir(settings.getFlinkConfDir());
+      config.setFlinkConfFile(settings.getFlinkConfFile());
+      config.setJarPath(path);
+      return config;
+    } catch (IOException ex) {
+      throw new JobException(RESTCodes.JobErrorCode.JAR_INSEPCTION_ERROR, Level.SEVERE,
+        "Failed to inspect jar at:" + path, ex.getMessage(), ex);
     }
-    //Set Flink config params
-    config.setFlinkConfDir(settings.getFlinkConfDir());
-    config.setFlinkConfFile(settings.getFlinkConfFile());
-
-    config.setJarPath(path);
-    return config;
   }
 }

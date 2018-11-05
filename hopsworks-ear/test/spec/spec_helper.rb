@@ -52,10 +52,12 @@ if RUBY_PLATFORM == "java"
 end
 
 begin
+  mysql_socket = ENV.fetch('MYSQL_SOCKET', '/tmp/mysql.sock')
   ActiveRecord::Base.establish_connection ({
     :adapter => "#{mysql_adapter}",
     :host => ENV['DB_HOST'],
     :port => ENV['DB_PORT'],
+    :socket => mysql_socket,
     :database => "hopsworks",
     :username => "kthfs",
     :password => "kthfs"})
@@ -79,6 +81,10 @@ RSpec.configure do |config|
   config.include CondaHelper
   config.include CaHelper
   config.include HostsHelper
+  config.include KafkaHelper
+  config.include AppserviceHelper
+  config.include ServingHelper
+  config.include HopsFSHelper
   # uncomment next line if you need to clean hdfs and hopsworks db before test.
   # config.before(:suite) { clean_test_data }
   config.after(:suite) {
@@ -91,6 +97,9 @@ RSpec.configure do |config|
 #       Launchy.open("#{ENV['PROJECT_DIR']}#{ENV['RSPEC_REPORT']}")
 #    end
   }
+  if ENV['SKIP_VM_TEST'] == "true" # Skip tests tagged with vm: true
+    config.filter_run_excluding vm: true
+  end
 end
 
 Airborne.configure do |config|
@@ -109,16 +118,15 @@ def clean_test_data
         sh.execute("vagrant ssh -c 'sudo -u #{ENV['RSPEC_VAGRANT_HDFS_USER']} -H sh -c \" /srv/hops/hadoop/bin/hadoop fs -rm -f -R -skipTrash /Projects \" ' ")
         puts "Remote HDFS Clean-up finished."
 
-        puts "DataBase Clean-up starting..."
-        sh.execute("vagrant ssh -c  'sudo -u #{ENV['RSPEC_VAGRANT_MYSQL_USER']} -H sh -c \" /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh -e \\\" DROP DATABASE IF EXISTS hopsworks \\\" \" ' ")
+        puts "Database Clean-up starting..."
+        sh.execute("vagrant ssh -c  'sudo -u #{ENV['RSPEC_VAGRANT_MYSQL_USER']} -H sh -c \" /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh -e \\\" DROP DATABASE IF EXISTS hopsworks \\\" \" ' ")       
         sh.execute("vagrant ssh -c  'sudo -u #{ENV['RSPEC_VAGRANT_MYSQL_USER']} -H sh -c \" /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh -e \\\" CREATE DATABASE IF NOT EXISTS hopsworks CHARACTER SET latin1 \\\" \" ' ")
-        sh.execute("vagrant ssh -c  'sudo -u root -H sh -c \" cat /srv/hops/domains/tables.sql | /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks \" ' ")
-        sh.execute("vagrant ssh -c  'sudo -u root -H sh -c \" cat /srv/hops/domains/rows.sql   | /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks \" ' ")
-        sh.execute("vagrant ssh -c  'sudo -u root -H sh -c \" cat /srv/hops/domains/views.sql  | /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks \" ' ")
-        sh.execute("vagrant ssh -c  'sudo -u root -H sh -c \" /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks -e \\\" UPDATE hosts SET registered=1 WHERE id=1; \\\" \" ' ")
+        sh.execute("vagrant ssh -c  'sudo -u root -H sh -c \" /srv/hops/domains/domain1/flyway/flyway migrate \" ' ")
+        sh.execute("vagrant ssh -c  'sudo -u root -H sh -c \" cat /srv/hops/domains/domain1/flyway/dml/*.sql | /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks \" ' ")
+        sh.execute("vagrant ssh -c  'sudo -u root -H sh -c \" /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks -e \\\" UPDATE hosts SET registered=1; \\\" \" ' ")
         res = sh.execute("exit")
         res.on_finish do |val1, val2|
-        puts "DataBase Clean-up finished."
+        puts "Database Clean-up finished."
         end
       end
     end
@@ -127,13 +135,12 @@ def clean_test_data
     system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c '/srv/hops/hadoop/bin/hadoop fs -rm -f -R -skipTrash /Projects ' ")
     puts "Vagrant HDFS Clean-up finished."
 
-    puts "DataBase Clean-up starting..."
+    puts "Database Clean-up starting..."
     system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c 'sudo -u #{ENV['RSPEC_VAGRANT_MYSQL_USER']} -H sh -c \" /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh -e \\\" DROP DATABASE IF EXISTS hopsworks \\\" \" ' ")
     system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c 'sudo -u #{ENV['RSPEC_VAGRANT_MYSQL_USER']} -H sh -c \" /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh -e \\\" CREATE DATABASE IF NOT EXISTS hopsworks CHARACTER SET latin1 \\\" \" ' ")
-    system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c 'sudo -u root -H sh -c \" cat /srv/hops/domains/tables.sql | /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks \" ' ")
-    system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c 'sudo -u root -H sh -c \" cat /srv/hops/domains/rows.sql   | /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks \" ' ")
-    system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c 'sudo -u root -H sh -c \" cat /srv/hops/domains/views.sql  | /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks \" ' ")
+    system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c 'sudo -u root -H sh -c \" /srv/hops/domains/domain1/flyway/flyway migrate \" ' ")
+    system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c 'sudo -u root -H sh -c \" cat /srv/hops/domains/domain1/flyway/dml/*.sql | /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks \" ' ")
     system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c 'sudo -u root -H sh -c \" /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks -e \\\" UPDATE hosts SET registered=1 WHERE id=1; \\\" \" ' ")
-    puts "DataBase Clean-up finished."
+    puts "Database Clean-up finished."
   end
 end

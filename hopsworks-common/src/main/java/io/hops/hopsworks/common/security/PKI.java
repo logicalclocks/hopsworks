@@ -39,6 +39,12 @@
 
 package io.hops.hopsworks.common.security;
 
+import io.hops.hopsworks.common.util.Settings;
+import org.apache.commons.io.FileUtils;
+import org.javatuples.Pair;
+
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -47,13 +53,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
-
-import io.hops.hopsworks.common.util.Settings;
-import org.apache.commons.io.FileUtils;
-import org.javatuples.Pair;
-
-import javax.ejb.EJB;
-import javax.ejb.Stateless;
 
 import static io.hops.hopsworks.common.security.PKI.CAType.ROOT;
 
@@ -107,8 +106,8 @@ public class PKI {
   }
 
   private long getCertificateValidityInDays(String rawConfigurationProperty) {
-    Long timeValue = Settings.getConfTimeValue(rawConfigurationProperty);
-    TimeUnit unitValue = Settings.getConfTimeTimeUnit(rawConfigurationProperty);
+    Long timeValue = settings.getConfTimeValue(rawConfigurationProperty);
+    TimeUnit unitValue = settings.getConfTimeTimeUnit(rawConfigurationProperty);
     return TimeUnit.DAYS.convert(timeValue, unitValue);
   }
 
@@ -254,11 +253,11 @@ public class PKI {
   public Path getChainOfTrustFilePath(CAType caType) {
     switch (caType) {
       case ROOT:
-        return getCertPath(caType,"ca.cert.pem");
+        return getCertPath(caType,"ca");
       case INTERMEDIATE:
-        return getCertPath(caType, "ca-chain.cert.pem");
+        return getCertPath(caType, "ca-chain");
       case KUBECA:
-        return getCertPath(caType, "ca-chain.cert.pem");
+        return getCertPath(caType, "ca-chain");
       default:
         throw new IllegalArgumentException("CA type not recognized");
     }

@@ -39,25 +39,25 @@
 
 package io.hops.hopsworks.common.dao.metadata.db;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.logging.Logger;
+import io.hops.hopsworks.common.dao.AbstractFacade;
+import io.hops.hopsworks.common.dao.metadata.MTable;
+import io.hops.hopsworks.common.dao.metadata.Template;
+
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
-import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.common.dao.metadata.MTable;
-import io.hops.hopsworks.common.dao.metadata.Template;
-import io.hops.hopsworks.common.metadata.exception.DatabaseException;
+import java.util.Collections;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Stateless
 public class TemplateFacade extends AbstractFacade<Template> {
 
-  private static final Logger logger = Logger.getLogger(TemplateFacade.class.
-          getName());
+  private static final Logger LOGGER = Logger.getLogger(TemplateFacade.class.getName());
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
@@ -80,9 +80,8 @@ public class TemplateFacade extends AbstractFacade<Template> {
    *
    * @param template The template name to be added
    * @return
-   * @throws se.kth.hopsworks.meta.exception.DatabaseException
    */
-  public int addTemplate(Template template) throws DatabaseException {
+  public int addTemplate(Template template) {
 
     try {
       Template t = this.getTemplate(template.getId());
@@ -101,13 +100,13 @@ public class TemplateFacade extends AbstractFacade<Template> {
       this.em.flush();
       this.em.clear();
       return t.getId();
-    } catch (IllegalStateException | SecurityException e) {
-
-      throw new DatabaseException("Could not add template " + template, e);
+    } catch (IllegalStateException | SecurityException ex) {
+      LOGGER.log(Level.SEVERE, "Could not add template " + template, ex);
+      throw ex;
     }
   }
 
-  public void removeTemplate(Template template) throws DatabaseException {
+  public void removeTemplate(Template template) {
     try {
       Template t = this.getTemplate(template.getId());
 
@@ -120,7 +119,8 @@ public class TemplateFacade extends AbstractFacade<Template> {
         }
       }
     } catch (SecurityException | IllegalStateException ex) {
-      throw new DatabaseException("Could not remove template " + template, ex);
+      LOGGER.log(Level.SEVERE, "Could not remove template " + template, ex);
+      throw ex;
     }
   }
 
@@ -201,10 +201,8 @@ public class TemplateFacade extends AbstractFacade<Template> {
    * Update the relationship table <i>meta_template_to_inode</i>
    * <p/>
    * @param template
-   * @throws se.kth.hopsworks.meta.exception.DatabaseException
    */
-  public void updateTemplatesInodesMxN(Template template) throws
-          DatabaseException {
+  public void updateTemplatesInodesMxN(Template template) {
     this.em.merge(template);
   }
 

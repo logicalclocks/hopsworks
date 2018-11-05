@@ -42,7 +42,11 @@ module SessionHelper
       reset_and_create_session
     end
     get "#{ENV['HOPSWORKS_API']}/auth/session"
-    if json_body[:status] != "SUCCESS"
+    if response.code != 200
+      reset_and_create_session
+    end
+    get "#{ENV['HOPSWORKS_API']}/auth/jwt/session"
+    if response.code != 200
       reset_and_create_session
     end
   end
@@ -68,17 +72,21 @@ module SessionHelper
     user = create_user
     post "#{ENV['HOPSWORKS_API']}/auth/login", URI.encode_www_form({ email: user.email, password: "Pass123"}), { content_type: 'application/x-www-form-urlencoded'}
     expect_json(sessionID: ->(value){ expect(value).not_to be_empty})
-    expect_json(status: "SUCCESS")
+    expect(response.code).to eq(200)
     if !headers["set_cookie"][1].nil?
       cookie = headers["set_cookie"][1].split(';')[0].split('=')
       @cookies = {"SESSIONID"=> json_body[:sessionID], cookie[0] => cookie[1]}
     else 
       @cookies = {"SESSIONID"=> json_body[:sessionID]}
     end
+    if !headers["authorization"].nil?
+      @token = headers["authorization"]
+    end
     @user = user
     Airborne.configure do |config|
       config.headers = {:cookies => @cookies, content_type: 'application/json' }
-    end    
+      config.headers["Authorization"] = @token
+    end  
   end
   
   def register_user(params={})
@@ -109,9 +117,11 @@ module SessionHelper
   def reset_session
     get "#{ENV['HOPSWORKS_API']}/auth/logout"
     @cookies = nil
+    @token = nil
     @user = nil
     Airborne.configure do |config|
       config.headers = {:cookies => {}, content_type: 'application/json' }
+      config.headers["Authorization"] = ""
     end
   end
 
@@ -124,8 +134,13 @@ module SessionHelper
     else 
       cookies = {"SESSIONID"=> json_body[:sessionID]}
     end
+    token = ''
+    if !headers["authorization"].nil?
+      token = headers["authorization"]
+    end
     Airborne.configure do |config|
       config.headers = {:cookies => cookies, content_type: 'application/json' }
+      config.headers["Authorization"] = token
     end
     cookies
   end

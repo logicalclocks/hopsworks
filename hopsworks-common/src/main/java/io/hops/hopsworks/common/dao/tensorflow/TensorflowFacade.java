@@ -71,7 +71,7 @@ public class TensorflowFacade {
     return em;
   }
 
-  public TensorflowFacade() throws Exception {
+  public TensorflowFacade() {
   }
 
   public String getTensorboardURI(String appId, String projectName) {

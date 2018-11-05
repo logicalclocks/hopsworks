@@ -45,6 +45,9 @@ import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.exception.GenericException;
+import io.hops.hopsworks.common.exception.MetadataException;
+
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -118,7 +121,7 @@ public class WebSocketEndpoint {
   }
 
   @OnMessage
-  public void message(Session session, Message msg) {
+  public void message(Session session, Message msg) throws GenericException, MetadataException {
     //query string is the client I want to communicate with
     String receiver = session.getQueryString();
 

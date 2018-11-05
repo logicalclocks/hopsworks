@@ -51,7 +51,8 @@ angular.module('hopsWorksApp')
             this.execFile; //Holds the name of the main execution file
             this.showExecutions = false;
             this.projectId = $routeParams.projectID;
-            
+
+            self.unscheduling=false;
             
             this.availableschedule = {
               "start": "-1",
@@ -86,7 +87,11 @@ angular.module('hopsWorksApp')
                         self.setupInfo();
                         initScheduler();
                       }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Error fetching job configuration.', ttl: 15000});
+                      if (typeof error.data.usrMsg !== 'undefined') {
+                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                      } else {
+                          growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                      }
               });
             };
 
@@ -96,7 +101,11 @@ angular.module('hopsWorksApp')
                         self.job.executions = success.data;
                         self.showExecutions = success.data.length > 0;
                       }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Error fetching execution history.', ttl: 15000});
+                      if (typeof error.data.usrMsg !== 'undefined') {
+                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                      } else {
+                          growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                      }
               });
             };
             
@@ -126,13 +135,36 @@ angular.module('hopsWorksApp')
                         function (success) {
                           getConfiguration();
                           getExecutions();
+                          self.close()
                           growl.success(success.data.successMessage, {title: 'Success', ttl: 3000});
                         }, function (error) {
-                  growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
+                        if (typeof error.data.usrMsg !== 'undefined') {
+                            growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                        } else {
+                            growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                        }
                 });             
               } else {
                 growl.info("Select a date", {title: 'Required', ttl: 3000});
               }
+            };
+
+            this.unscheduleJob = function(jobId) {
+            self.unscheduling=true;
+                        JobService.unscheduleJob(self.projectId, jobId).then(
+                                function (success) {
+                                  self.unscheduling=false;
+                                  getExecutions();
+                                  self.close()
+                                  growl.success(success.data.successMessage, {title: 'Success', ttl: 5000});
+                                }, function (error) {
+                                  self.unscheduling=false;
+                                if (typeof error.data.usrMsg !== 'undefined') {
+                                    growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                                } else {
+                                    growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                                }
+                        });
             };
 
             getConfiguration();

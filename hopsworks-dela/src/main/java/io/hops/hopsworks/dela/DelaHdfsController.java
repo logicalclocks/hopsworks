@@ -45,14 +45,23 @@ import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.FilePreviewDTO;
+import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.util.Settings;
-import io.hops.hopsworks.dela.exception.ThirdPartyException;
+import io.hops.hopsworks.common.exception.DelaException;
 import io.hops.hopsworks.dela.old_dto.FileInfo;
 import io.hops.hopsworks.dela.old_dto.ManifestJSON;
 import io.hops.hopsworks.dela.util.ManifestHelper;
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.Path;
+
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import java.io.File;
 import java.io.IOException;
 import java.text.DateFormat;
@@ -63,21 +72,14 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.ejb.EJB;
-import javax.ejb.Stateless;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-import javax.ws.rs.core.Response;
-import org.apache.hadoop.fs.FSDataInputStream;
-import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.Path;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class DelaHdfsController {
 
-  private Logger LOG = Logger.getLogger(DelaHdfsController.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(DelaHdfsController.class.getName());
 
   @EJB
   private DatasetController datasetCtrl;
@@ -88,7 +90,7 @@ public class DelaHdfsController {
   @EJB
   private DistributedFsService dfs;
 
-  public long datasetSize(Project project, Dataset dataset, Users user) throws ThirdPartyException {
+  public long datasetSize(Project project, Dataset dataset, Users user) throws DelaException {
     return length(project, user, datasetCtrl.getDatasetPath(dataset));
   }
 
@@ -98,18 +100,17 @@ public class DelaHdfsController {
     return manifestPath;
   }
 
-  public ManifestJSON readManifest(Project project, Dataset dataset, Users user) throws ThirdPartyException {
+  public ManifestJSON readManifest(Project project, Dataset dataset, Users user) throws DelaException {
     byte[] manifestBytes = read(project, user, manifestPath(dataset));
     ManifestJSON manifest = ManifestHelper.unmarshall(manifestBytes);
     return manifest;
   }
 
-  public ManifestJSON writeManifest(Project project, Dataset dataset, Users user) throws ThirdPartyException {
+  public ManifestJSON writeManifest(Project project, Dataset dataset, Users user) throws DelaException {
     if (inodeFacade.getChildren(dataset.getInode()).isEmpty()) {
-      throw new ThirdPartyException(Response.Status.BAD_REQUEST.getStatusCode(), "dataset empty",
-        ThirdPartyException.Source.LOCAL, "bad request");
+      throw new DelaException(RESTCodes.DelaErrorCode.DATASET_EMPTY, Level.WARNING, DelaException.Source.LOCAL);
     }
-    LOG.log(Settings.DELA_DEBUG, "{0} - writing manifest", dataset.getPublicDsId());
+    LOGGER.log(Settings.DELA_DEBUG, "{0} - writing manifest", dataset.getPublicDsId());
     ManifestJSON manifest = createManifest(project, dataset, user);
     Path manifestPath = manifestPath(dataset);
     delete(project, user, manifestPath);
@@ -117,7 +118,7 @@ public class DelaHdfsController {
     return manifest;
   }
 
-  public void deleteManifest(Project project, Dataset dataset, Users user) throws ThirdPartyException {
+  public void deleteManifest(Project project, Dataset dataset, Users user) throws DelaException {
     delete(project, user, manifestPath(dataset));
   }
 
@@ -127,22 +128,22 @@ public class DelaHdfsController {
     return readmePath;
   }
   
-  public String getReadme(Project project, Dataset dataset, Users user) throws ThirdPartyException {
-    LOG.log(Settings.DELA_DEBUG, "dela:hdfs:readme");
+  public String getReadme(Project project, Dataset dataset, Users user) throws DelaException {
+    LOGGER.log(Settings.DELA_DEBUG, "dela:hdfs:readme");
     String result = new String(read(project, user, readmePath(dataset)));
-    LOG.log(Settings.DELA_DEBUG, "dela:hdfs:readme:done");
+    LOGGER.log(Settings.DELA_DEBUG, "dela:hdfs:readme:done");
     return result;
   }
 
-  public FilePreviewDTO getPublicReadme(Dataset dataset) throws ThirdPartyException {
-    LOG.log(Settings.DELA_DEBUG, "dela:hdfs:readme");
+  public FilePreviewDTO getPublicReadme(Dataset dataset) throws DelaException {
+    LOGGER.log(Settings.DELA_DEBUG, "dela:hdfs:readme");
     DistributedFileSystemOps dfso = dfs.getDfsOps();
     FilePreviewDTO result = new FilePreviewDTO("text", "md", new String(read(dfso, readmePath(dataset))));
-    LOG.log(Settings.DELA_DEBUG, "dela:hdfs:readme");
+    LOGGER.log(Settings.DELA_DEBUG, "dela:hdfs:readme");
     return result;
   }
 
-  private ManifestJSON createManifest(Project project, Dataset dataset, Users user) throws ThirdPartyException {
+  private ManifestJSON createManifest(Project project, Dataset dataset, Users user) throws DelaException {
     String hdfsUser = hdfsUsersBean.getHdfsUserName(project, user);
     DistributedFileSystemOps dfso = dfs.getDfsOps(hdfsUser);
     Path datasetPath = datasetCtrl.getDatasetPath(dataset);
@@ -156,8 +157,7 @@ public class DelaHdfsController {
     Map<String, Inode> avroFiles = new HashMap<>();
     for (Inode i : inodeFacade.getChildren(dataset.getInode())) {
       if (i.isDir()) {
-        throw new ThirdPartyException(Response.Status.BAD_REQUEST.getStatusCode(), "subdirectories not supported",
-          ThirdPartyException.Source.LOCAL, "bad request");
+        throw new DelaException(RESTCodes.DelaErrorCode.SUBDIRS_NOT_SUPPORTED, Level.FINE, DelaException.Source.LOCAL);
       }
       if (isAvro(i.getInodePK().getName())) {
         avroFiles.put(i.getInodePK().getName(), i);
@@ -175,8 +175,8 @@ public class DelaHdfsController {
       try {
         fileInfo.setLength(dfso.getLength(filePath));
       } catch (IOException ex) {
-        throw new ThirdPartyException(Response.Status.BAD_REQUEST.getStatusCode(), "file:" + filePath.toString(),
-          ThirdPartyException.Source.HDFS, "access error");
+        throw new DelaException(RESTCodes.DelaErrorCode.ACCESS_ERROR, Level.SEVERE, DelaException.Source.HDFS, null,
+          ex.getMessage(), ex);
       }
       if (avroFiles.containsKey(fileName + ".avro")) {
         Path avroSchemaPath = new Path(datasetPath, filePath + ".avro");
@@ -207,18 +207,18 @@ public class DelaHdfsController {
     return manifest;
   }
 
-  public void write(Project project, Users user, Path filePath, byte[] fileContent) throws ThirdPartyException {
+  public void write(Project project, Users user, Path filePath, byte[] fileContent) throws DelaException {
 
     String hdfsUser = hdfsUsersBean.getHdfsUserName(project, user);
     DistributedFileSystemOps dfso = dfs.getDfsOps(hdfsUser);
     try {
       if (dfso.exists(filePath)) {
-        throw new ThirdPartyException(Response.Status.BAD_REQUEST.getStatusCode(), "file exists",
-          ThirdPartyException.Source.HDFS, "access error");
+        throw new DelaException(RESTCodes.DelaErrorCode.ACCESS_ERROR, Level.FINE, DelaException.Source.HDFS,
+          "file exists");
       }
     } catch (IOException ex) {
-      throw new ThirdPartyException(Response.Status.BAD_REQUEST.getStatusCode(), "cannot read",
-        ThirdPartyException.Source.HDFS, "access error");
+      throw new DelaException(RESTCodes.DelaErrorCode.ACCESS_ERROR, Level.SEVERE, DelaException.Source.HDFS,
+        "cannot read", ex.getMessage(), ex);
     }
 
     FSDataOutputStream out = null;
@@ -227,36 +227,36 @@ public class DelaHdfsController {
       out.write(fileContent);
       out.flush();
     } catch (IOException ex) {
-      throw new ThirdPartyException(Response.Status.BAD_REQUEST.getStatusCode(), "cannot write",
-        ThirdPartyException.Source.HDFS, "access error");
+      throw new DelaException(RESTCodes.DelaErrorCode.ACCESS_ERROR, Level.SEVERE, DelaException.Source.HDFS,
+        "cannot write", ex.getMessage(), ex);
     } finally {
       if (out != null) {
         try {
           out.close();
         } catch (IOException ex) {
-          throw new ThirdPartyException(Response.Status.BAD_REQUEST.getStatusCode(), "cannot close",
-            ThirdPartyException.Source.HDFS, "access error");
+          throw new DelaException(RESTCodes.DelaErrorCode.ACCESS_ERROR, Level.SEVERE, DelaException.Source.HDFS,
+            "cannot close", ex.getMessage(), ex);
         }
       }
     }
   }
 
-  public byte[] read(Project project, Users user, Path filePath) throws ThirdPartyException {
+  public byte[] read(Project project, Users user, Path filePath) throws DelaException {
     String hdfsUser = hdfsUsersBean.getHdfsUserName(project, user);
     DistributedFileSystemOps dfso = dfs.getDfsOps(hdfsUser);
     byte[] result = read(dfso, filePath);
     return result;
   }
 
-  public byte[] read(DistributedFileSystemOps dfso, Path filePath) throws ThirdPartyException {
+  public byte[] read(DistributedFileSystemOps dfso, Path filePath) throws DelaException {
     try {
       if (!dfso.exists(filePath)) {
-        throw new ThirdPartyException(Response.Status.BAD_REQUEST.getStatusCode(), "file does not exist",
-          ThirdPartyException.Source.HDFS, "access error");
+        throw new DelaException(RESTCodes.DelaErrorCode.ACCESS_ERROR, Level.FINE, DelaException.Source.HDFS,
+          "file does not exist");
       }
     } catch (IOException ex) {
-      throw new ThirdPartyException(Response.Status.BAD_REQUEST.getStatusCode(), "cannot read",
-        ThirdPartyException.Source.HDFS, "access error");
+      throw new DelaException(RESTCodes.DelaErrorCode.ACCESS_ERROR, Level.SEVERE, DelaException.Source.HDFS,
+        "cannot read", ex.getMessage(), ex);
     }
 
     FSDataInputStream fdi = null;
@@ -267,21 +267,21 @@ public class DelaHdfsController {
       fdi.readFully(fileContent);
       return fileContent;
     } catch (IOException ex) {
-      throw new ThirdPartyException(Response.Status.BAD_REQUEST.getStatusCode(), "cannot read",
-        ThirdPartyException.Source.HDFS, "access error");
+      throw new DelaException(RESTCodes.DelaErrorCode.ACCESS_ERROR, Level.SEVERE, DelaException.Source.HDFS,
+        "cannot read", ex.getMessage(), ex);
     } finally {
       if (fdi != null) {
         try {
           fdi.close();
         } catch (IOException ex) {
-          throw new ThirdPartyException(Response.Status.BAD_REQUEST.getStatusCode(), "cannot close",
-            ThirdPartyException.Source.HDFS, "access error");
+          throw new DelaException(RESTCodes.DelaErrorCode.ACCESS_ERROR, Level.SEVERE, DelaException.Source.HDFS,
+            "cannot close", ex.getMessage(), ex);
         }
       }
     }
   }
 
-  public void delete(Project project, Users user, Path filePath) throws ThirdPartyException {
+  public void delete(Project project, Users user, Path filePath) throws DelaException {
 
     String hdfsUser = hdfsUsersBean.getHdfsUserName(project, user);
     DistributedFileSystemOps dfso = dfs.getDfsOps(hdfsUser);
@@ -291,30 +291,30 @@ public class DelaHdfsController {
       }
       dfso.rm(filePath, true);
     } catch (IOException ex) {
-      throw new ThirdPartyException(Response.Status.BAD_REQUEST.getStatusCode(), "cannot delete",
-        ThirdPartyException.Source.HDFS, "access error");
+      throw new DelaException(RESTCodes.DelaErrorCode.ACCESS_ERROR, Level.SEVERE, DelaException.Source.HDFS,
+        "cannot delete", ex.getMessage(), ex);
     }
   }
 
-  public long length(Project project, Users user, Path filePath) throws ThirdPartyException {
+  public long length(Project project, Users user, Path filePath) throws DelaException {
     String hdfsUser = hdfsUsersBean.getHdfsUserName(project, user);
     DistributedFileSystemOps dfso = dfs.getDfsOps(hdfsUser);
     try {
       if (!dfso.exists(filePath)) {
-        throw new ThirdPartyException(Response.Status.BAD_REQUEST.getStatusCode(), "dataset does not exist",
-          ThirdPartyException.Source.HDFS, "access error");
+        throw new DelaException(RESTCodes.DelaErrorCode.ACCESS_ERROR, Level.FINE, DelaException.Source.HDFS,
+          "dataset does not exist");
       }
     } catch (IOException ex) {
-      throw new ThirdPartyException(Response.Status.BAD_REQUEST.getStatusCode(), "cannot read",
-        ThirdPartyException.Source.HDFS, "access error");
+      throw new DelaException(RESTCodes.DelaErrorCode.ACCESS_ERROR, Level.SEVERE, DelaException.Source.HDFS,
+        "cannot read", ex.getMessage(), ex);
     }
 
     try {
       long fileLength = dfso.getDatasetSize(filePath);
       return fileLength;
     } catch (IOException ex) {
-      throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), "cannot read dataset",
-        ThirdPartyException.Source.HDFS, "access error");
+      throw new DelaException(RESTCodes.DelaErrorCode.ACCESS_ERROR, Level.SEVERE, DelaException.Source.HDFS,
+        "cannot read dataset", ex.getMessage(), ex);
     }
   }
 

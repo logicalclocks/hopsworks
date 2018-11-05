@@ -43,9 +43,10 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .factory('AuthService', ['$http', 'TransformRequest', function ($http, TransformRequest) {
+        .factory('AuthService', ['$http', 'TransformRequest', '$cookies', '$location', 
+          function ($http, TransformRequest, $cookies, $location) {
             var service = {
-                
+
               isAdmin: function () {
                 return $http.get('/api/auth/isAdmin');
               },
@@ -80,9 +81,26 @@ angular.module('hopsWorksApp')
                   },
                   data: user
                 };
-
-
                 return $http(regReq);
+              },
+              saveToken: function (token) {
+                if (token) {
+                  localStorage.setItem("token", token);
+                  $http.defaults.headers.common.Authorization = token;
+                }
+              },
+              removeToken: function () {
+                localStorage.removeItem("token");
+                $http.defaults.headers.common.Authorization = '';
+              },
+              cleanSession: function () {
+                $cookies.remove("email");
+                $cookies.remove("ldap");
+                $cookies.remove("otp");
+                $cookies.remove("projectID");
+                $cookies.remove("SESSION");
+                sessionStorage.removeItem("isAdmin");
+                localStorage.removeItem("hopsworks-showtourtips");
               }
             };
             return service;

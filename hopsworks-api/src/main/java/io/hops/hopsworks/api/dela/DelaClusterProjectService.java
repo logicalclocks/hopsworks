@@ -41,19 +41,20 @@ package io.hops.hopsworks.api.dela;
 
 import io.hops.hopsworks.api.dela.dto.InodeIdDTO;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
+import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
-import io.hops.hopsworks.api.util.JsonResponse;
+import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
+import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.dela.cluster.ClusterDatasetController;
-import io.hops.hopsworks.dela.exception.ThirdPartyException;
+import io.hops.hopsworks.common.exception.DelaException;
+import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.Api;
-import java.util.logging.Logger;
-import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -64,20 +65,19 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-@RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
+@RequestScoped
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-@RequestScoped
-@TransactionAttribute(TransactionAttributeType.NEVER)
 @Api(value = "Dela Cluster Project Service",
   description = "Dela Cluster Project Service")
+@TransactionAttribute(TransactionAttributeType.NEVER)
 public class DelaClusterProjectService {
-  private final static Logger logger = Logger.getLogger(DelaClusterProjectService.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(DelaClusterProjectService.class.getName());
   
   @EJB
   private NoCacheResponse noCacheResponse;
@@ -96,11 +96,12 @@ public class DelaClusterProjectService {
   @POST
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  public Response share(@Context SecurityContext sc, InodeIdDTO inodeId) throws ThirdPartyException {
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response share(InodeIdDTO inodeId) throws DelaException {
     Inode inode = getInode(inodeId.getId());
     Dataset dataset = getDatasetByInode(inode);
     clusterCtrl.shareWithCluster(dataset);
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     json.setSuccessMessage("Dataset transfer is started - published");
     return successResponse(json);
   }
@@ -109,34 +110,28 @@ public class DelaClusterProjectService {
   @Path("/{inodeId}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  public Response removePublic(@Context SecurityContext sc, @PathParam("inodeId") Integer inodeId) 
-    throws ThirdPartyException {
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response removePublic(@PathParam("inodeId") Integer inodeId) throws DelaException {
     Inode inode = getInode(inodeId);
     Dataset dataset = getDatasetByInode(inode);
     clusterCtrl.unshareFromCluster(dataset);
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     json.setSuccessMessage("Dataset is now private");
     return successResponse(json);
   }
   
-  private Inode getInode(Integer inodeId) throws ThirdPartyException {
+  private Inode getInode(Integer inodeId) throws DelaException {
     if (inodeId == null) {
-      throw new ThirdPartyException(Response.Status.BAD_REQUEST.getStatusCode(), "inode not found",
-        ThirdPartyException.Source.LOCAL, "bad request");
+      throw new DelaException(RESTCodes.DelaErrorCode.ILLEGAL_ARGUMENT, Level.FINE, DelaException.Source.LOCAL,
+        "inodeId was not provided.");
     }
-    Inode inode = inodeFacade.findById(inodeId);
-    if (inode == null) {
-      throw new ThirdPartyException(Response.Status.BAD_REQUEST.getStatusCode(), "inode not found",
-        ThirdPartyException.Source.LOCAL, "bad request");
-    }
-    return inode;
+    return inodeFacade.findById(inodeId);
   }
   
-  private Dataset getDatasetByInode(Inode inode) throws ThirdPartyException {
+  private Dataset getDatasetByInode(Inode inode) throws DelaException {
     Dataset dataset = datasetFacade.findByProjectAndInode(this.project, inode);
     if (dataset == null) {
-      throw new ThirdPartyException(Response.Status.BAD_REQUEST.getStatusCode(), "dataset not found",
-        ThirdPartyException.Source.LOCAL, "bad request");
+      throw new DelaException(RESTCodes.DelaErrorCode.DATASET_DOES_NOT_EXIST, Level.FINE, DelaException.Source.LOCAL);
     }
     return dataset;
   }

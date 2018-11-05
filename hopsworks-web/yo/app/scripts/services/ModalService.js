@@ -597,6 +597,33 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
+              selectModelServing: function (size, regex, errorMsg) {
+                var modalInstance = $uibModal.open({
+                  templateUrl: 'views/selectModelServing.html',
+                  controller: 'SelectModelServingCtrl as selectModelServingCtrl',
+                  size: size,
+                  resolve: {
+                    auth: ['$q', '$location', 'AuthService',
+                      function ($q, $location, AuthService) {
+                        return AuthService.session().then(
+                                function (success) {
+                                },
+                                function (err) {
+                                  $location.path('/login');
+                                  $location.replace();
+                                  return $q.reject(err);
+                                });
+                      }],
+                    regex: function () {
+                      return regex;
+                    },
+                    errorMsg: function () {
+                      return errorMsg;
+                    }
+                  }
+                });
+                return modalInstance.result;
+              },
               selectLocalFile: function (size, regex, errorMsg) {
                 var modalInstance = $uibModal.open({
                   templateUrl: 'views/selectLocalFile.html',

@@ -61,11 +61,11 @@ angular.module('hopsWorksApp')
             self.projectMembers = [];
             self.projectTeam = [];
             if ($rootScope.isDelaEnabled) {
-              self.projectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'DELA', 'SERVING', 'EXPERIMENTS', 'RSTUDIO'];
-              self.selectionProjectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'DELA', 'SERVING', 'EXPERIMENTS', 'RSTUDIO'];
+              self.projectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'DELA', 'SERVING', 'RSTUDIO'];
+              self.selectionProjectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'DELA', 'SERVING', 'RSTUDIO'];
             } else {
-              self.projectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'SERVING', 'EXPERIMENTS', 'RSTUDIO'];
-              self.selectionProjectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'SERVING', 'EXPERIMENTS', 'RSTUDIO'];
+              self.projectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'SERVING', 'RSTUDIO'];
+              self.selectionProjectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'SERVING', 'RSTUDIO'];
             }
 
             self.projectName = '';
@@ -182,8 +182,13 @@ angular.module('hopsWorksApp')
                         }
                         $uibModalInstance.close($scope.newProject);
                       }, function (error) {
-                self.working = false;
-                growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 1});
+                      self.working = false;
+                      if (typeof error.data.usrMsg !== 'undefined') {
+                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 1});
+                      } else {
+                          growl.error("", {title: error.data.errorMsg, ttl: 5000, referenceId: 1});
+
+                      }
               });
             };
 

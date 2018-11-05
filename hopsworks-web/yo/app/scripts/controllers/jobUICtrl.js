@@ -63,6 +63,7 @@ angular.module('hopsWorksApp')
             self.loading = false;
             self.loadingText = "";
             self.sessions = [];
+            self.tbUrls = [];
             self.session;
             self.tfExecutorId;
 
@@ -81,7 +82,12 @@ angular.module('hopsWorksApp')
                           self.appId = success.data
                           callback();
                         }, function (error) {
-                  growl.error(error.data.errorMsg, {title: 'Error fetching ui.', ttl: 15000});
+
+                        if (typeof error.data.usrMsg !== 'undefined') {
+                            growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                        } else {
+                            growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                        }
                   stopLoading();
                 });
               } else {
@@ -94,7 +100,12 @@ angular.module('hopsWorksApp')
                         function (success) {
                           self.appIds = success.data;
                         }, function (error) {
-                  growl.error(error.data.errorMsg, {title: 'Error fetching ui.', ttl: 15000});
+
+                        if (typeof error.data.usrMsg !== 'undefined') {
+                            growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                        } else {
+                            growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                        }
                   stopLoading();
                 });
               }
@@ -146,7 +157,12 @@ angular.module('hopsWorksApp')
 //                          var iframe = document.getElementById('ui_iframe');
 //                        }
                       }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Error fetching ui.', ttl: 15000});
+
+                      if (typeof error.data.usrMsg !== 'undefined') {
+                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                      } else {
+                          growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                      }
                 stopLoading();
 
               });
@@ -188,7 +204,12 @@ angular.module('hopsWorksApp')
                         // This timeout is ignored when the iframe is loaded, replacing the overlay
                         $timeout(stopLoading(), 5000);
                       }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Error fetching ui.', ttl: 15000});
+
+                      if (typeof error.data.usrMsg !== 'undefined') {
+                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                      } else {
+                          growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                      }
                 stopLoading();
               });
             };
@@ -216,8 +237,12 @@ angular.module('hopsWorksApp')
                           }
                           $timeout(stopLoading(), 1000);
                         }, function (error) {
-                  growl.error(error.data.errorMsg, {title: 'Error fetching project name',
-                    ttl: 15000});
+
+                        if (typeof error.data.usrMsg !== 'undefined') {
+                            growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                        } else {
+                            growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                        }
                   stopLoading();
                 });
               } else {
@@ -264,8 +289,12 @@ angular.module('hopsWorksApp')
                         }
                         $timeout(stopLoading(), 1000);
                       }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Error fetching ui.',
-                  ttl: 15000});
+
+                      if (typeof error.data.usrMsg !== 'undefined') {
+                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                      } else {
+                          growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                      }
                 stopLoading();
               });
             };
@@ -323,22 +352,23 @@ angular.module('hopsWorksApp')
                 ifram.contentWindow.location.reload();
               }
             };
-            /**
-             * Close the poller if the controller is destroyed.
-             */
-//            $scope.$on('$destroy', function () {
-//              $interval.cancel(self.poller);
-//            });
-//
-//            self.poller = $interval(function () {
-//              if (self.ui !== "") {
-//                $interval.cancel(self.poller);
-//                return;
-//              }
-//              getJobUI();
-//            }, 5000);
-//
-//          }]);
+
+            var getTensorBoardUrls = function () {
+              JobService.getTensorBoardUrls(self.projectId, self.appId).then(
+                      function (success) {
+                        self.tbUrls = success.data;
+                      }, function (error) {
+              });
+            };
+
+            getTensorBoardUrls();
+
+            var startPolling = function() {
+                self.poller = $interval(function() {
+                    getTensorBoardUrls();
+                }, 7000);
+            };
+            startPolling();
 
             angular.module('hopsWorksApp').directive('bindHtmlUnsafe', function ($parse, $compile) {
               return function ($scope, $element, $attrs) {

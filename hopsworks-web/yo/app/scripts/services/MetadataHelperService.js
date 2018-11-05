@@ -67,7 +67,7 @@ angular.module('hopsWorksApp')
                 MetadataActionService.fetchTemplates($cookies.get("email"))
                         .then(function (data) {
                           if (data !== null && data.status !== "ERROR" && 
-                              data.board !== null && data.board !== {}) {
+                              data.board !== null && data.board !== {} && typeof data.board != "undefined") {
                               angular.copy(JSON.parse(data.board).templates, availableTemplates);
                               defer.resolve(data);
                           }

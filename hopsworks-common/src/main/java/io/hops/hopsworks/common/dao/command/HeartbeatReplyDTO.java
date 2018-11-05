@@ -45,21 +45,25 @@ import java.util.List;
 
 public class HeartbeatReplyDTO {
   
-  private final List<SystemCommand> systemCommands;
-  private final List<CondaCommands> condaCommands;
+  private List<SystemCommand> systemCommands;
+  private List<CondaCommands> condaCommands;
   
-  
-  public HeartbeatReplyDTO(final List<SystemCommand> systemCommands,
-      final List<CondaCommands> condaCommands) {
-    this.systemCommands = systemCommands;
-    this.condaCommands = condaCommands;
+  public HeartbeatReplyDTO() {
   }
   
   public List<SystemCommand> getSystemCommands() {
     return systemCommands;
   }
   
+  public void setSystemCommands(List<SystemCommand> systemCommands) {
+    this.systemCommands = systemCommands;
+  }
+  
   public List<CondaCommands> getCondaCommands() {
     return condaCommands;
+  }
+  
+  public void setCondaCommands(List<CondaCommands> condaCommands) {
+    this.condaCommands = condaCommands;
   }
 }

@@ -83,7 +83,6 @@
       "spark.driver.extraJavaOptions": "%%spark_driver_extraJavaOptions%%",
       "spark.driver.extraClassPath" : "%%spark_driver_extraClassPath%%",
       "spark.executor.extraClassPath" : "%%spark_executor_extraClassPath%%",
-      "spark.executorEnv.MPI_NP": "%%spark_executorEnv_MPI_NP%%",
       "spark.executorEnv.HADOOP_USER_NAME": "%%hdfs_user%%",
       "spark.executorEnv.REST_ENDPOINT": "%%rest_endpoint%%",
       "spark.executorEnv.HADOOP_HOME": "%%hadoop_home%%",

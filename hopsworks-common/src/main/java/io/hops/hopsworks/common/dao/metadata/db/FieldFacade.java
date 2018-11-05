@@ -39,18 +39,18 @@
 
 package io.hops.hopsworks.common.dao.metadata.db;
 
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.metadata.Field;
-import io.hops.hopsworks.common.metadata.exception.DatabaseException;
 
 @Stateless
 public class FieldFacade extends AbstractFacade<Field> {
 
-  private static final Logger logger = Logger.getLogger(FieldFacade.class.
+  private static final Logger LOGGER = Logger.getLogger(FieldFacade.class.
           getName());
 
   @PersistenceContext(unitName = "kthfsPU")
@@ -65,7 +65,7 @@ public class FieldFacade extends AbstractFacade<Field> {
     super(Field.class);
   }
 
-  public Field getField(int fieldid) throws DatabaseException {
+  public Field getField(int fieldid) {
 
     return this.em.find(Field.class, fieldid);
   }
@@ -77,9 +77,8 @@ public class FieldFacade extends AbstractFacade<Field> {
    *
    * @param field the field with its corresponding attributes
    * @return
-   * @throws se.kth.hopsworks.meta.exception.DatabaseException
    */
-  public int addField(Field field) throws DatabaseException {
+  public int addField(Field field) {
 
     try {
       Field f = this.getField(field.getId());
@@ -104,8 +103,8 @@ public class FieldFacade extends AbstractFacade<Field> {
       this.em.clear();
       return f.getId();
     } catch (IllegalStateException | SecurityException e) {
-
-      throw new DatabaseException("Could not add field " + field, e);
+      LOGGER.log(Level.SEVERE, "Could not add field " + field, e);
+      throw e;
     }
   }
 
@@ -116,11 +115,8 @@ public class FieldFacade extends AbstractFacade<Field> {
    * <p/>
    *
    * @param field the field object that's going to be re
-   * @throws se.kth.hopsworks.meta.exception.DatabaseException when the field to
-   * be
-   * deleted is associated to raw data
    */
-  public void deleteField(Field field) throws DatabaseException {
+  public void deleteField(Field field) {
 
     Field f = this.contains(field) ? field : this.getField(field.getId());
 

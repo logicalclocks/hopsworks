@@ -72,8 +72,8 @@ public class ServiceCertificateRotationTimer {
   @PostConstruct
   public void init() {
     String rawInterval = settings.getServiceKeyRotationInterval();
-    Long intervalValue = Settings.getConfTimeValue(rawInterval);
-    TimeUnit intervalTimeunit = Settings.getConfTimeTimeUnit(rawInterval);
+    Long intervalValue = settings.getConfTimeValue(rawInterval);
+    TimeUnit intervalTimeunit = settings.getConfTimeTimeUnit(rawInterval);
     LOG.log(Level.INFO, "Service certificate rotation is configured to run every " + intervalValue + " " +
         intervalTimeunit.name());
     

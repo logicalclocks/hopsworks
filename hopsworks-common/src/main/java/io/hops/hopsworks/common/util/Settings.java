@@ -40,16 +40,32 @@ package io.hops.hopsworks.common.util;
 
 import com.google.common.base.Splitter;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
-import static io.hops.hopsworks.common.dao.kafka.KafkaFacade.DLIMITER;
-import static io.hops.hopsworks.common.dao.kafka.KafkaFacade.SLASH_SEPARATOR;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
 import io.hops.hopsworks.common.dao.util.Variables;
 import io.hops.hopsworks.common.dela.AddressJSON;
 import io.hops.hopsworks.common.dela.DelaClientType;
-import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.yarn.conf.YarnConfiguration;
+import org.apache.zookeeper.KeeperException;
+import org.apache.zookeeper.WatchedEvent;
+import org.apache.zookeeper.Watcher;
+import org.apache.zookeeper.ZooKeeper;
+
+import javax.annotation.PostConstruct;
+import javax.ejb.ConcurrencyManagement;
+import javax.ejb.ConcurrencyManagementType;
+import javax.ejb.EJB;
+import javax.ejb.Singleton;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityNotFoundException;
+import javax.persistence.NoResultException;
+import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
@@ -72,31 +88,15 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.annotation.PostConstruct;
-import javax.ejb.ConcurrencyManagement;
-import javax.ejb.ConcurrencyManagementType;
-import javax.ejb.EJB;
-import javax.ejb.Singleton;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityNotFoundException;
-import javax.persistence.NoResultException;
-import javax.persistence.PersistenceContext;
-import javax.persistence.TypedQuery;
-import javax.ws.rs.core.Response;
-import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.yarn.conf.YarnConfiguration;
-import org.apache.zookeeper.KeeperException;
-import org.apache.zookeeper.WatchedEvent;
-import org.apache.zookeeper.Watcher;
-import org.apache.zookeeper.ZooKeeper;
+
+import static io.hops.hopsworks.common.dao.kafka.KafkaFacade.DLIMITER;
+import static io.hops.hopsworks.common.dao.kafka.KafkaFacade.SLASH_SEPARATOR;
 
 @Singleton
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class Settings implements Serializable {
 
-  private static final Logger logger = Logger.getLogger(Settings.class.
+  private static final Logger LOGGER = Logger.getLogger(Settings.class.
       getName());
 
   @EJB
@@ -121,8 +121,8 @@ public class Settings implements Serializable {
   private void init() {
     try {
       setKafkaBrokers(getBrokerEndpoints());
-    } catch (AppException ex) {
-      logger.log(Level.SEVERE, null, ex);
+    } catch (IOException | KeeperException | InterruptedException ex) {
+      LOGGER.log(Level.SEVERE, null, ex);
     }
   }
 
@@ -131,6 +131,7 @@ public class Settings implements Serializable {
   /**
    * Global Variables taken from the DB
    */
+  private static final String VARIABLE_PYPI_REST_ENDPOINT = "pypi_rest_endpoint";
   private static final String VARIABLE_PYTHON_KERNEL = "python_kernel";
   private static final String VARIABLE_HADOOP_VERSION = "hadoop_version";
   private static final String VARIABLE_JAVA_HOME = "JAVA_HOME";
@@ -145,6 +146,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_RM_PORT = "rm_port";
   private static final String VARIABLE_LOGSTASH_IP = "logstash_ip";
   private static final String VARIABLE_LOGSTASH_PORT = "logstash_port";
+  private static final String VARIABLE_LOGSTASH_PORT_SERVING = "logstash_port_serving";
   private static final String VARIABLE_OOZIE_IP = "oozie_ip";
   private static final String VARIABLE_SPARK_HISTORY_SERVER_IP
       = "spark_history_server_ip";
@@ -260,6 +262,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_TEZ_VERSION = "tez_version";
   private static final String VARIABLE_SLIDER_VERSION = "slider_version";
   private static final String VARIABLE_SPARK_VERSION = "spark_version";
+  private static final String VARIABLE_PY4J_ARCHIVE = "py4j_version";
   private static final String VARIABLE_FLINK_VERSION = "flink_version";
   private static final String VARIABLE_EPIPE_VERSION = "epipe_version";
   private static final String VARIABLE_DELA_VERSION = "dela_version";
@@ -269,6 +272,9 @@ public class Settings implements Serializable {
   private static final String VARIABLE_TENSORFLOW_VERSION = "tensorflow_version";
   private static final String VARIABLE_CUDA_VERSION = "cuda_version";
   private static final String VARIABLE_HOPSWORKS_VERSION = "hopsworks_version";
+  
+  //Used by RESTException to include devMsg or not in response
+  private static final String VARIABLE_HOPSWORKS_REST_LOG_LEVEL = "hopsworks_rest_log_level";
   
   /* -------------------- TfServing  --------------- */
   private static final String VARIABLE_TF_SERVING_MONITOR_INT = "tf_serving_monitor_int";
@@ -288,6 +294,12 @@ public class Settings implements Serializable {
   private static final String VARIABLE_KUBE_CA_PASSWORD = "kube_ca_password";
   private static final String VARIABLE_KUBE_REGISTRY = "kube_registry";
   private static final String VARIABLE_KUBE_MAX_SERVING = "kube_max_serving_instances";
+  
+    // JWT Variables
+  private static final String VARIABLE_JWT_SIGNATURE_ALGORITHM = "jwt_signature_algorithm";
+  private static final String VARIABLE_JWT_LIFETIME_MS = "jwt_lifetime_ms";
+  private static final String VARIABLE_JWT_EXP_LEEWAY_SEC = "jwt_exp_leeway_sec";
+  private static final String VARIABLE_JWT_SIGNING_KEY_NAME = "jwt_signing_key_name";
 
 
   private String setVar(String varName, String defaultValue) {
@@ -368,7 +380,7 @@ public class Settings implements Serializable {
         }
       }
     } catch (NumberFormatException ex) {
-      logger.info("Error - not an integer! " + varName
+      LOGGER.info("Error - not an integer! " + varName
           + " should be an integer. Value was " + defaultValue);
     }
     return defaultValue;
@@ -384,10 +396,21 @@ public class Settings implements Serializable {
         }
       }
     } catch (NumberFormatException ex) {
-      logger.info("Error - not a long! " + varName
+      LOGGER.info("Error - not a long! " + varName
           + " should be an integer. Value was " + defaultValue);
     }
 
+    return defaultValue;
+  }
+  
+  private LOG_LEVEL setLogLevelVar(String varName, LOG_LEVEL defaultValue) {
+    Variables var = findById(varName);
+    if (var != null && var.getValue() != null) {
+      String val = var.getValue();
+      if (val != null && !val.isEmpty()) {
+        return LOG_LEVEL.valueOf(val);
+      }
+    }
     return defaultValue;
   }
 
@@ -404,6 +427,7 @@ public class Settings implements Serializable {
       YARN_SUPERUSER = setVar(VARIABLE_YARN_SUPERUSER, YARN_SUPERUSER);
       SPARK_USER = setVar(VARIABLE_SPARK_USER, SPARK_USER);
       SPARK_DIR = setDirVar(VARIABLE_SPARK_DIR, SPARK_DIR);
+      PY4J_ARCHIVE = setVar(VARIABLE_PY4J_ARCHIVE, PY4J_ARCHIVE);
       FLINK_USER = setVar(VARIABLE_FLINK_USER, FLINK_USER);
       FLINK_DIR = setDirVar(VARIABLE_FLINK_DIR, FLINK_DIR);
       STAGING_DIR = setDirVar(VARIABLE_STAGING_DIR, STAGING_DIR);
@@ -444,6 +468,7 @@ public class Settings implements Serializable {
       RM_PORT = setIntVar(VARIABLE_RM_PORT, RM_PORT);
       LOGSTASH_IP = setIpVar(VARIABLE_LOGSTASH_IP, LOGSTASH_IP);
       LOGSTASH_PORT = setIntVar(VARIABLE_LOGSTASH_PORT, LOGSTASH_PORT);
+      LOGSTASH_PORT_SERVING = setIntVar(VARIABLE_LOGSTASH_PORT_SERVING, LOGSTASH_PORT_SERVING);
       JHS_IP = setIpVar(VARIABLE_JHS_IP, JHS_IP);
       LIVY_IP = setIpVar(VARIABLE_LIVY_IP, LIVY_IP);
       LIVY_ZEPPELIN_SESSION_TIMEOUT = setVar(VARIABLE_LIVY_ZEPPELIN_SESSION_TIMEOUT, LIVY_ZEPPELIN_SESSION_TIMEOUT);
@@ -461,9 +486,9 @@ public class Settings implements Serializable {
       KAFKA_MAX_NUM_TOPICS = setIntVar(VARIABLE_KAFKA_MAX_NUM_TOPICS, KAFKA_MAX_NUM_TOPICS);
       KAFKA_USER = setVar(VARIABLE_KAFKA_USER, KAFKA_USER);
       KAFKA_DIR = setDirVar(VARIABLE_KAFKA_DIR, KAFKA_DIR);
-      KAFKA_DEFAULT_NUM_PARTITIONS = setDirVar(VARIABLE_KAFKA_NUM_PARTITIONS,
+      KAFKA_DEFAULT_NUM_PARTITIONS = setIntVar(VARIABLE_KAFKA_NUM_PARTITIONS,
           KAFKA_DEFAULT_NUM_PARTITIONS);
-      KAFKA_DEFAULT_NUM_REPLICAS = setDirVar(VARIABLE_KAFKA_NUM_REPLICAS,
+      KAFKA_DEFAULT_NUM_REPLICAS = setIntVar(VARIABLE_KAFKA_NUM_REPLICAS,
           KAFKA_DEFAULT_NUM_REPLICAS);
       YARN_DEFAULT_QUOTA = setIntVar(VARIABLE_YARN_DEFAULT_QUOTA,
           YARN_DEFAULT_QUOTA);
@@ -542,6 +567,9 @@ public class Settings implements Serializable {
       TENSORFLOW_VERSION = setStrVar(VARIABLE_TENSORFLOW_VERSION, TENSORFLOW_VERSION);
       CUDA_VERSION = setStrVar(VARIABLE_CUDA_VERSION, CUDA_VERSION);
       HOPSWORKS_VERSION = setStrVar(VARIABLE_HOPSWORKS_VERSION, HOPSWORKS_VERSION);
+      HOPSWORKS_REST_LOG_LEVEL = setLogLevelVar(VARIABLE_HOPSWORKS_REST_LOG_LEVEL, HOPSWORKS_REST_LOG_LEVEL);
+
+      PYPI_REST_ENDPOINT = setStrVar(VARIABLE_PYPI_REST_ENDPOINT, PYPI_REST_ENDPOINT);
       PROVIDED_PYTHON_LIBRARY_NAMES = toSetFromCsv(
           setStrVar(VARIABLE_PROVIDED_PYTHON_LIBRARY_NAMES, DEFAULT_PROVIDED_PYTHON_LIBRARY_NAMES),",");
       PREINSTALLED_PYTHON_LIBRARY_NAMES = toSetFromCsv(
@@ -565,6 +593,10 @@ public class Settings implements Serializable {
       KUBE_REGISTRY = setStrVar(VARIABLE_KUBE_REGISTRY, KUBE_REGISTRY);
       KUBE_MAX_SERVING_INSTANCES = setIntVar(VARIABLE_KUBE_MAX_SERVING, KUBE_MAX_SERVING_INSTANCES);
 
+      JWT_SIGNATURE_ALGORITHM = setStrVar(VARIABLE_JWT_SIGNATURE_ALGORITHM, JWT_SIGNATURE_ALGORITHM);
+      JWT_LIFETIME_MS = setLongVar(VARIABLE_JWT_LIFETIME_MS, JWT_LIFETIME_MS);
+      JWT_EXP_LEEWAY_SEC = setIntVar(VARIABLE_JWT_EXP_LEEWAY_SEC, JWT_EXP_LEEWAY_SEC);
+      JWT_SIGNING_KEY_NAME = setStrVar(VARIABLE_JWT_SIGNING_KEY_NAME, JWT_SIGNING_KEY_NAME);
       cached = true;
     }
   }
@@ -730,8 +762,15 @@ public class Settings implements Serializable {
   public static final String SPARK_PY_MAINCLASS
       = "org.apache.spark.deploy.PythonRunner";
   public static final String PYSPARK_ZIP = "pyspark.zip";
-  public static final String PYSPARK_PY4J = "py4j-0.10.6-src.zip";
-
+  
+  
+  private String PY4J_ARCHIVE = "py4j-0.10.7-src.zip";
+  
+  public synchronized String getPy4JArchive() {
+    checkCache();
+    return PY4J_ARCHIVE;
+  }
+  
   public synchronized String getSparkDir() {
     checkCache();
     return SPARK_DIR;
@@ -1112,7 +1151,7 @@ public class Settings implements Serializable {
   public static final String HADOOP_USER_NAME = "HADOOP_USER_NAME";
   public static final String YARNTF_HOME_DIR = "YARNTF_HOME_DIR";
   public static final String YARNTF_STAGING_DIR = ".yarntfStaging";
-  public static final String HOPS_TENSORFLOW_TOUR_DATA = "tensorflow_demo";
+  public static final String HOPS_DEEP_LEARNING_TOUR_DATA = "tensorflow_demo";
 
   public String getTensorFlowJarPath(String tfUser) {
     return "hdfs:///user/" + tfUser + "/" + TENSORFLOW_JAR;
@@ -1338,10 +1377,15 @@ public class Settings implements Serializable {
 
   // Resource Manager Port 
   private int LOGSTASH_PORT = 8088;
-
   public synchronized Integer getLogstashPort() {
     checkCache();
     return LOGSTASH_PORT;
+  }
+
+  private int LOGSTASH_PORT_SERVING = 5045;
+  public synchronized Integer getLogstashPortServing() {
+    checkCache();
+    return LOGSTASH_PORT_SERVING;
   }
 
   // Livy Server`
@@ -1535,6 +1579,13 @@ public class Settings implements Serializable {
     checkCache();
     return "https://" + HOPSWORKS_REST_ENDPOINT;
   }
+  
+  private LOG_LEVEL HOPSWORKS_REST_LOG_LEVEL = LOG_LEVEL.PROD;
+  
+  public synchronized LOG_LEVEL getHopsworksRESTLogLevel() {
+    checkCache();
+    return HOPSWORKS_REST_LOG_LEVEL;
+  }
 
   private String SUPPORT_EMAIL_ADDR = "support@hops.io";
 
@@ -1576,15 +1627,15 @@ public class Settings implements Serializable {
     return HOPSWORKS_DEFAULT_SSL_MASTER_PASSWORD;
   }
 
-  private String KAFKA_DEFAULT_NUM_PARTITIONS = "2";
-  private String KAFKA_DEFAULT_NUM_REPLICAS = "1";
+  private Integer KAFKA_DEFAULT_NUM_PARTITIONS = 2;
+  private Integer KAFKA_DEFAULT_NUM_REPLICAS = 1;
 
-  public synchronized String getKafkaDefaultNumPartitions() {
+  public synchronized Integer getKafkaDefaultNumPartitions() {
     checkCache();
     return KAFKA_DEFAULT_NUM_PARTITIONS;
   }
 
-  public synchronized String getKafkaDefaultNumReplicas() {
+  public synchronized Integer getKafkaDefaultNumReplicas() {
     checkCache();
     return KAFKA_DEFAULT_NUM_REPLICAS;
   }
@@ -1722,14 +1773,18 @@ public class Settings implements Serializable {
   public static final String FILE_PREVIEW_MODE_TAIL = "tail";
   
   //Elastic log index pattern
-  public static final String ELASTIC_LOG_INDEX_REGEX = ".*_logs-\\d{4}.\\d{2}.\\d{2}";
+  public static final String ELASTIC_LOGS_INDEX = "logs";
+  public static final String ELASTIC_LOGS_INDEX_PATTERN = "_" +Settings.ELASTIC_LOGS_INDEX+ "-*";
+  public static final String ELASTIC_SERVING_INDEX = "serving";
+  public static final String ELASTIC_SERVING_INDEX_PATTERN = "_" + ELASTIC_SERVING_INDEX + "-*";
   public static final String ELASTIC_EXPERIMENTS_INDEX = "experiments";
   public static final String ELASTIC_SAVED_OBJECTS = "saved_objects";
   public static final String ELASTIC_VISUALIZATION = "visualization";
   public static final String ELASTIC_SAVED_SEARCH = "search";
   public static final String ELASTIC_DASHBOARD = "dashboard";
   public static final String ELASTIC_INDEX_PATTERN = "index-pattern";
-  
+  public static final String ELASTIC_LOG_INDEX_REGEX = ".*_" + ELASTIC_LOGS_INDEX + "-\\d{4}.\\d{2}.\\d{2}";
+  public static final String ELASTIC_SERVING_INDEX_REGEX = ".*_" + ELASTIC_SERVING_INDEX+ "-\\d{4}.\\d{2}.\\d{2}";
   
   public String getHopsworksTmpCertDir() {
     return Paths.get(getCertsDir(), "transient").toString();
@@ -1830,7 +1885,8 @@ public class Settings implements Serializable {
   public static enum ServiceDataset {
     ZEPPELIN("notebook", "Contains Zeppelin notebooks."),
     JUPYTER("Jupyter", "Contains Jupyter notebooks."),
-    SERVING("Models", "Contains models to be used for serving.");
+    SERVING("Models", "Contains models to be used for serving."),
+    EXPERIMENTS("Experiments", "Contains experiments from using the hops python api");
 
     private final String name;
     private final String description;
@@ -1893,7 +1949,7 @@ public class Settings implements Serializable {
     try {
       return query.getResultList();
     } catch (EntityNotFoundException ex) {
-      logger.log(Level.SEVERE, ex.getMessage(), ex);
+      LOGGER.log(Level.SEVERE, ex.getMessage(), ex);
     } catch (NoResultException ex) {
     }
     return new ArrayList<>();
@@ -2109,6 +2165,13 @@ public class Settings implements Serializable {
   public synchronized boolean isPythonKernelEnabled() {
     checkCache();
     return PYTHON_KERNEL;
+  }
+
+  private String PYPI_REST_ENDPOINT = "https://pypi.org/pypi/{package}/json";
+
+  public synchronized String getPyPiRESTEndpoint() {
+    checkCache();
+    return PYPI_REST_ENDPOINT;
   }
 
   private String HOPSUTIL_VERSION = "0.3.0";
@@ -2476,19 +2539,17 @@ public class Settings implements Serializable {
     this.kafkaBrokers.clear();
     this.kafkaBrokers.addAll(kafkaBrokers);
   }
-
-  public Set<String> getBrokerEndpoints() throws AppException {
-
+  
+  public Set<String> getBrokerEndpoints() throws IOException, KeeperException, InterruptedException {
     Set<String> brokerList = new HashSet<>();
-    ZooKeeper zk = null;
+    ZooKeeper zk;
+    zk = new ZooKeeper(getZkConnectStr(),
+      Settings.ZOOKEEPER_SESSION_TIMEOUT_MS, new ZookeeperWatcher());
     try {
-      zk = new ZooKeeper(getZkConnectStr(),
-          Settings.ZOOKEEPER_SESSION_TIMEOUT_MS, new ZookeeperWatcher());
-
       List<String> ids = zk.getChildren("/brokers/ids", false);
       for (String id : ids) {
         String brokerInfo = new String(zk.getData("/brokers/ids/" + id,
-            false, null));
+          false, null));
         String[] tokens = brokerInfo.split(DLIMITER);
         for (String str : tokens) {
           if (str.contains(SLASH_SEPARATOR) && str.startsWith(KAFKA_BROKER_PROTOCOL)) {
@@ -2496,22 +2557,9 @@ public class Settings implements Serializable {
           }
         }
       }
-    } catch (IOException ex) {
-      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-          "Unable to find the zookeeper server: " + ex);
-    } catch (KeeperException | InterruptedException ex) {
-      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-          "Unable to retrieve seed brokers from the kafka cluster: " + ex);
     } finally {
-      if (zk != null) {
-        try {
-          zk.close();
-        } catch (InterruptedException ex) {
-          logger.log(Level.SEVERE, null, ex.getMessage());
-        }
-      }
+      zk.close();
     }
-
     return brokerList;
   }
 
@@ -2686,7 +2734,7 @@ public class Settings implements Serializable {
     return sparkUILogsOffset;
   }
 
-  public static Long getConfTimeValue(String configurationTime) {
+  public Long getConfTimeValue(String configurationTime) {
     Matcher matcher = TIME_CONF_PATTERN.matcher(configurationTime.toLowerCase());
     if (!matcher.matches()) {
       throw new IllegalArgumentException("Invalid time in configuration: " + configurationTime);
@@ -2694,7 +2742,7 @@ public class Settings implements Serializable {
     return Long.parseLong(matcher.group(1));
   }
 
-  public static TimeUnit getConfTimeTimeUnit(String configurationTime) {
+  public TimeUnit getConfTimeTimeUnit(String configurationTime) {
     Matcher matcher = TIME_CONF_PATTERN.matcher(configurationTime.toLowerCase());
     if (!matcher.matches()) {
       throw new IllegalArgumentException("Invalid time in configuration: " + configurationTime);
@@ -2714,7 +2762,7 @@ public class Settings implements Serializable {
   private Set<String> PROVIDED_PYTHON_LIBRARY_NAMES;
   private static final String VARIABLE_PROVIDED_PYTHON_LIBRARY_NAMES = "provided_python_lib_names";
   private static final String DEFAULT_PROVIDED_PYTHON_LIBRARY_NAMES =
-      "hops, tfspark, pandas, tensorflow-serving-api, horovod, hopsfacets, mmlspark, numpy";
+      "hops, pandas, tensorflow-serving-api, hopsfacets, mmlspark, numpy";
   
   public synchronized Set<String> getProvidedPythonLibraryNames() {
     checkCache();
@@ -2989,5 +3037,52 @@ public class Settings implements Serializable {
   public synchronized String getTFServingMonitorInt() {
     checkCache();
     return TF_SERVING_MONITOR_INT;
+  }
+  
+  public enum LOG_LEVEL {
+    DEV(0, "User and Dev messages as well as stack trace are returned to client to client."),
+    TEST(1, "User and Dev messages are returned to client to client."),
+    PROD(2, "User message is returned to client to client.");
+    
+    private final int level;
+    private final String description;
+    
+    LOG_LEVEL(int level, String description) {
+      this.level = level;
+      this.description = description;
+    }
+    
+    public int getLevel() {
+      return level;
+    }
+    
+    public String getDescription() {
+      return description;
+    }
+  }
+  
+  private String JWT_SIGNATURE_ALGORITHM = "HS512";
+  private long JWT_LIFETIME_MS = 1800000l;
+  private int JWT_EXP_LEEWAY_SEC = 900;
+  private String JWT_SIGNING_KEY_NAME = "apiKey";
+
+  public synchronized String getJWTSignatureAlg() {
+    checkCache();
+    return JWT_SIGNATURE_ALGORITHM;
+  }
+  
+  public synchronized long getJWTLifetimeMs() {
+    checkCache();
+    return JWT_LIFETIME_MS;
+  }
+  
+  public synchronized int getJWTExpLeewaySec() {
+    checkCache();
+    return JWT_EXP_LEEWAY_SEC;
+  }
+  
+  public synchronized String getJWTSigningKeyName() {
+    checkCache();
+    return JWT_SIGNING_KEY_NAME;
   }
 }

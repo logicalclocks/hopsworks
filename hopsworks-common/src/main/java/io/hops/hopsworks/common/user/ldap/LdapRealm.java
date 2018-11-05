@@ -412,19 +412,15 @@ public class LdapRealm {
 
   private void validateLdapUser(LdapUserDTO user) throws LoginException {
     if (user.getEntryUUID() == null || user.getEntryUUID().isEmpty()) {
-      LOGGER.log(Level.SEVERE, "Could not find UUID for Ldap user. Check LDAP configuration.");
       throw new LoginException("Could not find UUID for Ldap user.");
     }
     if (user.getEmail() == null || user.getEmail().isEmpty()) {
-      LOGGER.log(Level.SEVERE, "Could not find email for Ldap user. Check LDAP configuration.");
       throw new LoginException("Could not find email for Ldap user.");
     }
     if (user.getGivenName() == null || user.getGivenName().isEmpty()) {
-      LOGGER.log(Level.SEVERE, "Could not find givenName for Ldap user. Check LDAP configuration.");
       throw new LoginException("Could not find givenName for Ldap user.");
     }
     if (user.getSn() == null || user.getSn().isEmpty()) {
-      LOGGER.log(Level.SEVERE, "Could not find surname for Ldap user. Check LDAP configuration.");
       throw new LoginException("Could not find surname for Ldap user.");
     }
 

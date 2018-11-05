@@ -47,9 +47,9 @@ module ProjectHelper
 
   def create_project
     with_valid_session
-    new_project = {projectName: "project_#{short_random_id}", description:"", status: 0, services: ["JOBS","HIVE","SERVING"], projectTeam:[], retentionPeriod: ""}
+    new_project = {projectName: "project_#{short_random_id}", description:"", status: 0, services: ["JOBS","HIVE","KAFKA","SERVING"],
+                   projectTeam:[], retentionPeriod: ""}
     post "#{ENV['HOPSWORKS_API']}/project", new_project
-    expect_json(errorMsg: ->(value){ expect(value).to be_empty})
     expect_json(successMessage: regex("Project created successfully.*"))
     expect_status(201)
     get_project_by_name(new_project[:projectName])
@@ -57,9 +57,9 @@ module ProjectHelper
   
   def create_project_by_name(projectname)
     with_valid_session
-    new_project = {projectName: projectname, description:"", status: 0, services: ["JOBS","HIVE","SERVING"], projectTeam:[], retentionPeriod: ""}
+    new_project = {projectName: projectname, description:"", status: 0, services: ["JOBS","HIVE", "KAFKA","SERVING"],
+                   projectTeam:[], retentionPeriod: ""}
     post "#{ENV['HOPSWORKS_API']}/project", new_project
-    expect_json(errorMsg: ->(value){ expect(value).to be_empty})
     expect_json(successMessage: regex("Project created successfully.*"))
     expect_status(201)
     get_project_by_name(new_project[:projectName])
@@ -67,7 +67,6 @@ module ProjectHelper
   
   def delete_project(project)
     post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/delete"
-    expect_json(errorMsg: "")
     expect_json(successMessage: "The project and all related files were removed successfully.")
     expect_status(200)
   end
@@ -75,7 +74,6 @@ module ProjectHelper
   def add_member(member, role)
     with_valid_project
     post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers", {projectTeam: [{projectTeamPK: {projectId: @project[:id],teamMember: member},teamRole: role}]}
-    expect_json(errorMsg: ->(value){ expect(value).to be_empty})
     expect_json(successMessage: "One member added successfully")
     expect_status(200)
   end

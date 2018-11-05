@@ -40,24 +40,11 @@ package io.hops.hopsworks.api.kibana;
 
 import com.google.api.client.repackaged.com.google.common.base.Strings;
 import io.hops.hopsworks.common.elastic.ElasticController;
-import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.exception.ProjectException;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.project.ProjectDTO;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.ejb.EJB;
-import javax.ejb.Stateless;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpEntityEnclosingRequest;
@@ -75,6 +62,20 @@ import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 /**
  *
  * Authorizes Hopsworks users to access particular elasticsearch indices
@@ -88,12 +89,13 @@ public class KibanaProxyServlet extends ProxyServlet {
   private ProjectController projectController;
   @EJB
   private ElasticController elasticController;
-  private final static Logger LOG = Logger.getLogger(KibanaProxyServlet.class.getName());
+  private static final  Logger LOG = Logger.getLogger(KibanaProxyServlet.class.getName());
 
-  private HashMap<String, String> currentProjects = new HashMap<>();
+  private final HashMap<String, String> currentProjects = new HashMap<>();
 
   private final List<String> registeredKibanaSuffix = new ArrayList<String>() {{
       add("_logs");
+      add("_serving");
       add("_experiments");
       add("_experiments_summary-search");
       add("_experiments_summary-dashboard");
@@ -112,7 +114,7 @@ public class KibanaProxyServlet extends ProxyServlet {
   protected void service(HttpServletRequest servletRequest,
                          HttpServletResponse servletResponse) throws ServletException, IOException {
     if (servletRequest.getUserPrincipal() == null) {
-      servletResponse.sendError(403, "User is not logged in");
+      servletResponse.sendError(401, "User is not logged in");
       return;
     }
     String email = servletRequest.getUserPrincipal().getName();
@@ -122,7 +124,7 @@ public class KibanaProxyServlet extends ProxyServlet {
       try {
         ProjectDTO projectDTO = projectController.getProjectByID(Integer.parseInt(projectId));
         currentProjects.put(email, projectDTO.getProjectName());
-      } catch (AppException ex) {
+      } catch (ProjectException ex) {
         LOG.log(Level.SEVERE, null, ex);
         servletResponse.sendError(403,
                 "Kibana was not accessed from Hopsworks, no current project information is available.");

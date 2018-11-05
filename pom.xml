@@ -43,7 +43,7 @@
 
   <groupId>io.hops</groupId>
   <artifactId>hopsworks</artifactId>
-  <version>0.6.0-SNAPSHOT</version>
+  <version>0.7.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>hopsworks</name>
   <description>Hopsworks parent project</description>
@@ -54,7 +54,6 @@
     <module>hopsworks-kmon</module>
     <module>hopsworks-admin</module>
     <module>hopsworks-api</module>
-    <module>hopsworks-api-v2</module>
     <module>hopsworks-ear</module>
     <module>hopsworks-ca</module>
     <module>hopsworks-dela</module>
@@ -84,7 +83,7 @@
 
   <properties>
     <java.version>1.8</java.version>
-    <hops.version>2.8.2.5-SNAPSHOT</hops.version>
+    <hops.version>2.8.2.5</hops.version>
     <dependency.plugin.version>2.8</dependency.plugin.version>
     <endorsed.dir>${project.build.directory}/endorsed</endorsed.dir>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -187,6 +186,17 @@
     </plugins>
   </build>
   <repositories>
+    <repository>
+      <id>hops-repository</id>
+      <name>Hops Repository</name>
+      <url>https://bbc1.sics.se/archiva/repository/Hops/</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
     <repository>
       <id>apache.snapshots</id>
       <name>Apache Development Snapshot Repository</name>

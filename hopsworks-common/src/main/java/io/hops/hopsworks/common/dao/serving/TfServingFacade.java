@@ -17,6 +17,7 @@
 package io.hops.hopsworks.common.dao.serving;
 
 import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.serving.tf.TfServingException;
 
 import javax.annotation.PostConstruct;
@@ -36,9 +37,9 @@ import java.util.logging.Logger;
 
 @Stateless
 public class TfServingFacade {
-  private final static Logger logger = Logger.getLogger(TfServingFacade.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(TfServingFacade.class.getName());
 
-  private final long LOCK_TIMEOUT = 300000L; // 5 minutes
+  private static final long LOCK_TIMEOUT = 60000L; // 1 minutes
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
@@ -50,7 +51,7 @@ public class TfServingFacade {
     try {
       nodeIP = Inet4Address.getLocalHost().getHostAddress();
     } catch (UnknownHostException e) {
-      logger.log(Level.SEVERE, "Could not get host address", e);
+      LOGGER.log(Level.SEVERE, "Could not get host address", e);
     }
   }
 
@@ -64,6 +65,12 @@ public class TfServingFacade {
     return em.createNamedQuery("TfServing.findByProject", TfServing.class)
         .setParameter("project", project)
         .getResultList();
+  }
+
+  public TfServing findById(Integer id) {
+    return em.createNamedQuery("TfServing.findById", TfServing.class)
+        .setParameter("id", id)
+        .getSingleResult();
   }
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
@@ -94,6 +101,8 @@ public class TfServingFacade {
       dbTfServing.setVersion(newTfServing.getVersion());
     }
 
+    dbTfServing.setKafkaTopic(newTfServing.getKafkaTopic());
+
     if (newTfServing.getLocalPid() != null) {
       dbTfServing.setLocalPid(newTfServing.getLocalPid());
     }
@@ -102,6 +111,10 @@ public class TfServingFacade {
     }
     if (newTfServing.getLocalPort() != null) {
       dbTfServing.setLocalPort(newTfServing.getLocalPort());
+    }
+
+    if (newTfServing.isBatchingEnabled() != null) {
+      dbTfServing.setBatchingEnabled(newTfServing.isBatchingEnabled());
     }
 
     return merge(dbTfServing);
@@ -138,8 +151,7 @@ public class TfServingFacade {
     int retries = 5;
 
     if (nodeIP == null) {
-      logger.log(Level.SEVERE, "nodeIP is null, cannot acquire lock");
-      throw new TfServingException(TfServingException.TfServingExceptionErrors.LIFECYCLEERRORINT);
+      throw new TfServingException(RESTCodes.TfServingErrorCode.LIFECYCLEERRORINT, Level.SEVERE);
     }
 
     // Acquire DB read lock on the row
@@ -152,7 +164,7 @@ public class TfServingFacade {
             .getSingleResult();
 
         if (tfServing == null) {
-          throw new TfServingException(TfServingException.TfServingExceptionErrors.INSTANCENOTFOUND);
+          throw new TfServingException(RESTCodes.TfServingErrorCode.INSTANCENOTFOUND, Level.WARNING);
         }
 
         if (tfServing.getLockIP() != null &&
@@ -172,8 +184,7 @@ public class TfServingFacade {
       }
     }
 
-    logger.log(Level.FINE, "Could not acquire lock for instance: " + id.toString());
-    throw new TfServingException(TfServingException.TfServingExceptionErrors.LIFECYCLEERRORINT);
+    throw new TfServingException(RESTCodes.TfServingErrorCode.LIFECYCLEERRORINT, Level.FINE);
   }
 
 
@@ -200,8 +211,7 @@ public class TfServingFacade {
     }
 
     // Lock will be claimed
-    logger.log(Level.FINE, "Could not release lock for instance: " + id.toString());
-    throw new TfServingException(TfServingException.TfServingExceptionErrors.LIFECYCLEERRORINT);
+    throw new TfServingException(RESTCodes.TfServingErrorCode.LIFECYCLEERRORINT, Level.FINE);
   }
 
   public List<TfServing> getLocalhostRunning() {

@@ -46,5 +46,6 @@
         bean-discovery-mode="annotated">
     <alternatives>
         <class>io.hops.hopsworks.common.serving.tf.LocalhostTfServingController</class>
+        <class>io.hops.hopsworks.common.serving.inference.LocalhostTfInferenceController</class>
     </alternatives>
 </beans>

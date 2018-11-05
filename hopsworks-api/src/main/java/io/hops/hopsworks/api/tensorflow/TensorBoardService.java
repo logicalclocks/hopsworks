@@ -17,20 +17,23 @@
 package io.hops.hopsworks.api.tensorflow;
 
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
+import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
+import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.project.util.DsPath;
 import io.hops.hopsworks.api.project.util.PathValidator;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.tensorflow.config.TensorBoardDTO;
-import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.elastic.ElasticController;
-import io.hops.hopsworks.common.exception.AppException;
-import io.hops.hopsworks.common.exception.TensorBoardCleanupException;
+import io.hops.hopsworks.common.exception.DatasetException;
+import io.hops.hopsworks.common.exception.ProjectException;
+import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.experiments.TensorBoardController;
-import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.ApiOperation;
 
 import javax.ejb.EJB;
@@ -38,24 +41,21 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.persistence.PersistenceException;
-
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
-import javax.ws.rs.DELETE;
+import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.Path;
-import javax.ws.rs.NotFoundException;
-
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.servlet.http.HttpServletRequest;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -64,10 +64,6 @@ public class TensorBoardService {
   @EJB
   private ProjectFacade projectFacade;
   @EJB
-  private Settings settings;
-  @EJB
-  private UserFacade userFacade;
-  @EJB
   private InodeFacade inodesFacade;
   @EJB
   private TensorBoardController tensorBoardController;
@@ -75,6 +71,8 @@ public class TensorBoardService {
   private ElasticController elasticController;
   @EJB
   private PathValidator pathValidator;
+  @EJB
+  private JWTHelper jWTHelper;
   @EJB
   private NoCacheResponse noCacheResponse;
 
@@ -97,20 +95,19 @@ public class TensorBoardService {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response getTensorBoard(@Context SecurityContext sc) throws AppException {
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response getTensorBoard(@Context HttpServletRequest req) throws ServiceException {
 
     try {
-      Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
+      Users user = jWTHelper.getUserPrincipal(req);
       TensorBoardDTO tbDTO = tensorBoardController.getTensorBoard(project, user);
       if(tbDTO == null) {
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
       }
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(tbDTO).build();
     } catch (PersistenceException pe) {
-      LOGGER.log(Level.SEVERE, "Failed to fetch TensorBoard from database", pe);
-      throw new AppException(Response.Status.BAD_REQUEST.
-          getStatusCode(),
-          "Could not get the running TensorBoard.");
+      throw new ServiceException(RESTCodes.ServiceErrorCode.TENSORBOARD_FETCH_ERROR, Level.SEVERE, null,
+        pe.getMessage(), pe);
     }
   }
 
@@ -119,68 +116,40 @@ public class TensorBoardService {
   @Path("/{elasticId}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response startTensorBoard(@PathParam("elasticId") String elasticId,
-                                            @Context SecurityContext sc) throws AppException {
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response startTensorBoard(@PathParam("elasticId") String elasticId, @Context HttpServletRequest req) throws
+      ServiceException, DatasetException, ProjectException {
 
-    String loggedinemail = sc.getUserPrincipal().getName();
-    Users user = userFacade.findByEmail(loggedinemail);
+    Users user = jWTHelper.getUserPrincipal(req);
 
     String hdfsLogdir = null;
-    try {
-      hdfsLogdir = elasticController.getLogdirFromElastic(project, elasticId);
-      hdfsLogdir = tensorBoardController.replaceNN(hdfsLogdir);
-    } catch (NotFoundException nfe) {
-      LOGGER.log(Level.SEVERE, "Could not locate logdir from elastic ", nfe);
-      throw new AppException(Response.Status.NOT_FOUND.
-          getStatusCode(),
-          "Unable to retrieve location of experiment logdir from elastic, contact a system administrator.");
-    }
+    hdfsLogdir = elasticController.getLogdirFromElastic(project, elasticId);
+    hdfsLogdir = tensorBoardController.replaceNN(hdfsLogdir);
 
-    try {
-      DsPath tbPath = pathValidator.validatePath(this.project, hdfsLogdir);
-      tbPath.validatePathExists(inodesFacade, true);
-    } catch(AppException e) {
-      LOGGER.log(Level.SEVERE, "Exception validating path in hdfs for experiment ", e);
-      throw new AppException(Response.Status.BAD_REQUEST.
-          getStatusCode(),
-          "Experiment directory is missing, check in your project if it was deleted.");
-    }
+    DsPath tbPath = pathValidator.validatePath(this.project, hdfsLogdir);
+    tbPath.validatePathExists(inodesFacade, true);
 
     TensorBoardDTO tensorBoardDTO = null;
-    try {
-      tensorBoardDTO = tensorBoardController.startTensorBoard(elasticId, this.project, user, hdfsLogdir);
-      waitForTensorBoardLoaded(tensorBoardDTO);
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).entity(tensorBoardDTO).build();
-    } catch(TensorBoardCleanupException tbce) {
-      LOGGER.log(Level.SEVERE, "Failed to start TensorBoard", tbce);
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-          getStatusCode(),
-          "Could not start TensorBoard.");
-    }
+    tensorBoardDTO = tensorBoardController.startTensorBoard(elasticId, this.project, user, hdfsLogdir);
+    waitForTensorBoardLoaded(tensorBoardDTO);
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).entity(tensorBoardDTO).build();
   }
 
   @ApiOperation("Stop the running TensorBoard for the logged in user")
   @DELETE
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response stopTensorBoard(@Context SecurityContext sc) throws AppException {
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response stopTensorBoard(@Context HttpServletRequest req) throws ServiceException {
 
-    String loggedinemail = sc.getUserPrincipal().getName();
-    Users user = userFacade.findByEmail(loggedinemail);
-
-    try {
-      TensorBoardDTO tbDTO = tensorBoardController.getTensorBoard(project, user);
-      if(tbDTO == null) {
-        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
-      }
-
-      tensorBoardController.cleanup(this.project, user);
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
-    } catch(TensorBoardCleanupException tbce) {
-      LOGGER.log(Level.SEVERE, "Failed to stop TensorBoard", tbce);
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-          getStatusCode(),
-          "Could not stop TensorBoard.");
+    Users user = jWTHelper.getUserPrincipal(req);
+  
+    TensorBoardDTO tbDTO = tensorBoardController.getTensorBoard(project, user);
+    if (tbDTO == null) {
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
     }
+  
+    tensorBoardController.cleanup(this.project, user);
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 
   private void waitForTensorBoardLoaded(TensorBoardDTO tbDTO) {
@@ -194,6 +163,7 @@ public class TensorBoardService {
       try {
         response = target.request().get();
         if(response.getStatus() == Response.Status.OK.getStatusCode()) {
+          Thread.currentThread().sleep(1500);
           return;
         }
         Thread.currentThread().sleep(1000);

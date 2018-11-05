@@ -56,7 +56,11 @@ angular.module('hopsWorksApp')
                   function (success) {                   
                     self.clientType = success.data.clientType;
                   }, function (error) {
-                    growl.error(error.data.errorMsg, {title: 'Error', ttl: 1500});
+                      if (typeof error.data.usrMsg !== 'undefined') {
+                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
+                      } else {
+                          growl.error("", {title: error.data.errorMsg, ttl: 5000});
+                      }
                 });
             };
             

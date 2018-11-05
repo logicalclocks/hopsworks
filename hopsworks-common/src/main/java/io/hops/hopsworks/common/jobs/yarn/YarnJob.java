@@ -173,9 +173,9 @@ public abstract class YarnJob extends HopsJob {
    * @throws IllegalStateException If the YarnRunner has not been set yet.
    */
   protected final boolean startApplicationMaster(DistributedFileSystemOps udfso,
-      DistributedFileSystemOps dfso) throws IllegalStateException {
+      DistributedFileSystemOps dfso) {
     if (runner == null) {
-      throw new IllegalStateException(
+      throw new IllegalArgumentException(
           "The YarnRunner has not been initialized yet.");
     }
     try {
@@ -303,7 +303,7 @@ public abstract class YarnJob extends HopsJob {
       ApplicationId applicationId = ConverterUtils.toApplicationId(appid);
       yarnClientWrapper.getYarnClient().killApplication(applicationId);
     } catch (YarnException | IOException e) {
-      LOG.log(Level.SEVERE, "Could not close yarn client for killing yarn job");
+      LOG.log(Level.SEVERE, "Could not close yarn client for killing yarn job with appId: " + appid);
     } finally {
       if (yarnClientWrapper != null) {
         services.getYarnClientService().closeYarnClient(yarnClientWrapper);

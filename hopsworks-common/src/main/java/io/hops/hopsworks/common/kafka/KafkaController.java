@@ -47,7 +47,9 @@ import io.hops.hopsworks.common.dao.kafka.SharedTopics;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.exception.KafkaException;
+import io.hops.hopsworks.common.exception.ProjectException;
+import io.hops.hopsworks.common.exception.UserException;
 import io.hops.hopsworks.common.util.Settings;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -60,7 +62,7 @@ import javax.ejb.Stateless;
 @Stateless
 public class KafkaController {
 
-  private final static Logger logger = Logger.getLogger(KafkaController.class.getName());
+  private final static Logger LOGGER = Logger.getLogger(KafkaController.class.getName());
 
   @EJB
   private KafkaFacade kafkaFacade;
@@ -111,11 +113,11 @@ public class KafkaController {
    *
    * @param project
    * @param member
-   * @throws AppException
    */
-  public void addProjectMemberToTopics(Project project, String member) throws AppException {
+  public void addProjectMemberToTopics(Project project, String member)
+    throws KafkaException, ProjectException, UserException {
     //Get all topics (shared with project as well)
-    List<TopicDTO> topics = kafkaFacade.findTopicsByProject(project.getId());
+    List<TopicDTO> topics = kafkaFacade.findTopicsByProject(project);
     List<SharedTopics> sharedTopics = kafkaFacade.findSharedTopicsByProject(project.getId());
     //For every topic that has been shared with the current project, add the new member to its ACLs
     for (SharedTopics sharedTopic : sharedTopics) {
@@ -131,7 +133,7 @@ public class KafkaController {
     }
   }
   
-  public void removeProjectMemberFromTopics(Project project, Users user) throws AppException {
+  public void removeProjectMemberFromTopics(Project project, Users user) throws ProjectException {
     //Get all topics (shared with project as well)
     List<SharedTopics> sharedTopics = kafkaFacade.findSharedTopicsByProject(project.getId());
     //For every topic that has been shared with the current project, add the new member to its ACLs
@@ -143,13 +145,13 @@ public class KafkaController {
     }
 
     if (!projectSharedTopics.isEmpty()) {
-      for (Integer projectId : projectSharedTopics) {
-        kafkaFacade.removeAclsForUser(user, projectId);
+      for (Integer projectSharedTopic : projectSharedTopics) {
+        kafkaFacade.removeAclsForUser(user, projectSharedTopic);
       }
     }
 
     //Remove acls for use in current project
-    kafkaFacade.removeAclsForUser(user, project.getId());
+    kafkaFacade.removeAclsForUser(user, project);
   }
   
   /**

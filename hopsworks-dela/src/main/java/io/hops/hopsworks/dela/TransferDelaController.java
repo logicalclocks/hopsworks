@@ -41,10 +41,11 @@ package io.hops.hopsworks.dela;
 
 import com.google.gson.Gson;
 import io.hops.hopsworks.common.dela.AddressJSON;
+import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.util.ClientWrapper;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.dela.dto.common.ClusterAddressDTO;
-import io.hops.hopsworks.dela.exception.ThirdPartyException;
+import io.hops.hopsworks.common.exception.DelaException;
 import io.hops.hopsworks.dela.old_dto.ElementSummaryJSON;
 import io.hops.hopsworks.dela.old_dto.ExtendedDetails;
 import io.hops.hopsworks.dela.old_dto.HDFSEndpoint;
@@ -60,16 +61,16 @@ import io.hops.hopsworks.dela.old_dto.SuccessJSON;
 import io.hops.hopsworks.dela.old_dto.TorrentExtendedStatusJSON;
 import io.hops.hopsworks.dela.old_dto.TorrentId;
 import io.hops.hopsworks.util.SettingsHelper;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.javatuples.Pair;
+
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.ws.rs.core.Response;
-import org.javatuples.Pair;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -81,7 +82,7 @@ public class TransferDelaController {
   @EJB
   private DelaStateController delaStateController;
 
-  public AddressJSON getDelaPublicEndpoint(String delaVersion) throws ThirdPartyException {
+  public AddressJSON getDelaPublicEndpoint(String delaVersion) throws DelaException {
     String delaTransferHttpEndpoint = SettingsHelper.delaTransferHttpEndpoint(settings);
     try {
       ClientWrapper<AddressJSON> rc = ClientWrapper
@@ -95,16 +96,16 @@ public class TransferDelaController {
       return result;
     } catch (IllegalStateException ise) {
       logger.log(Level.WARNING, "dela:contact - communication fail{0}", ise.getMessage());
-      throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), ise.getMessage(),
-        ThirdPartyException.Source.DELA, "communication fail");
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.DELA, null, ise.getMessage(), ise);
     }
   }
 
   public void upload(String publicDSId, HopsDatasetDetailsDTO datasetDetails, HDFSResource resource,
-    HDFSEndpoint endpoint) throws ThirdPartyException {
+    HDFSEndpoint endpoint) throws DelaException {
     if(!delaStateController.transferDelaAvailable()) {
-      throw new ThirdPartyException(Response.Status.BAD_REQUEST.getStatusCode(), "dela transfer not available",
-          ThirdPartyException.Source.LOCAL, "bad request");
+      throw new DelaException(RESTCodes.DelaErrorCode.DELA_TRANSFER_NOT_AVAILABLE, Level.SEVERE,
+        DelaException.Source.LOCAL);
     }
     logger.log(Settings.DELA_DEBUG, "{0} upload - transfer");
     HopsTorrentUpload reqContent = new HopsTorrentUpload(new TorrentId(publicDSId), datasetDetails.getDatasetName(),
@@ -118,18 +119,18 @@ public class TransferDelaController {
       SuccessJSON result = rc.doPost();
     } catch (IllegalStateException ise) {
       logger.log(Level.WARNING, "dela communication fail:{0}", ise.getMessage());
-      throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), ise.getMessage(),
-        ThirdPartyException.Source.DELA, "communication fail");
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.DELA, null, ise.getMessage(), ise);
     }
   }
 
   public void startDownload(String publicDSId, HopsDatasetDetailsDTO datasetDetails, HDFSResource resource,
     HDFSEndpoint endpoint, List<ClusterAddressDTO> bootstrap)
-    throws ThirdPartyException {
+    throws DelaException {
 
     if(!delaStateController.transferDelaAvailable()) {
-      throw new ThirdPartyException(Response.Status.BAD_REQUEST.getStatusCode(), "dela transfer not available",
-          ThirdPartyException.Source.LOCAL, "bad request");
+      throw new DelaException(RESTCodes.DelaErrorCode.DELA_TRANSFER_NOT_AVAILABLE, Level.SEVERE,
+        DelaException.Source.LOCAL);
     }
     List<AddressJSON> bootstrapAdr = new LinkedList<>();
     Gson gson = new Gson();
@@ -147,18 +148,18 @@ public class TransferDelaController {
       SuccessJSON result = rc.doPost();
     } catch (IllegalStateException ise) {
       logger.log(Level.WARNING, "dela communication fail:{0}", ise.getMessage());
-      throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), ise.getMessage(),
-        ThirdPartyException.Source.DELA, "communication fail");
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.DELA, null, ise.getMessage(), ise);
     }
   }
 
   public void advanceDownload(String publicDSId, HDFSEndpoint hdfsEndpoint, KafkaEndpoint kafkaEndpoint,
     ExtendedDetails details)
-    throws ThirdPartyException {
+    throws DelaException {
 
     if(!delaStateController.transferDelaAvailable()) {
-      throw new ThirdPartyException(Response.Status.BAD_REQUEST.getStatusCode(), "dela transfer not available",
-          ThirdPartyException.Source.LOCAL, "bad request");
+      throw new DelaException(RESTCodes.DelaErrorCode.DELA_TRANSFER_NOT_AVAILABLE, Level.SEVERE,
+        DelaException.Source.LOCAL);
     }
     
     HopsTorrentAdvanceDownload reqContent = new HopsTorrentAdvanceDownload(new TorrentId(publicDSId),
@@ -172,15 +173,15 @@ public class TransferDelaController {
       SuccessJSON result = rc.doPost();
     } catch (IllegalStateException ise) {
       logger.log(Level.WARNING, "dela communication fail:{0}", ise.getMessage());
-      throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), ise.getMessage(),
-        ThirdPartyException.Source.DELA, "communication fail");
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.DELA, null, ise.getMessage(), ise);
     }
   }
 
-  public void cancel(String publicDSId) throws ThirdPartyException {
+  public void cancel(String publicDSId) throws DelaException {
     if(!delaStateController.transferDelaAvailable()) {
-      throw new ThirdPartyException(Response.Status.BAD_REQUEST.getStatusCode(), "dela transfer not available",
-          ThirdPartyException.Source.LOCAL, "bad request");
+      throw new DelaException(RESTCodes.DelaErrorCode.DELA_TRANSFER_NOT_AVAILABLE, Level.SEVERE,
+        DelaException.Source.LOCAL);
     }
     
     try {
@@ -191,16 +192,15 @@ public class TransferDelaController {
         .setPayload(new TorrentId(publicDSId));
       SuccessJSON result = rc.doPost();
     } catch (IllegalStateException ise) {
-      logger.log(Level.WARNING, "dela communication fail:{0}", ise.getMessage());
-      throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), ise.getMessage(),
-        ThirdPartyException.Source.DELA, "communication fail");
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.DELA, null, ise.getMessage(), ise);
     }
   }
 
-  public HopsContentsSummaryJSON.Contents getContents(List<Integer> projectIds) throws ThirdPartyException {
+  public HopsContentsSummaryJSON.Contents getContents(List<Integer> projectIds) throws DelaException {
     if(!delaStateController.transferDelaAvailable()) {
-      throw new ThirdPartyException(Response.Status.BAD_REQUEST.getStatusCode(), "dela transfer not available",
-          ThirdPartyException.Source.LOCAL, "bad request");
+      throw new DelaException(RESTCodes.DelaErrorCode.DELA_TRANSFER_NOT_AVAILABLE, Level.WARNING,
+        DelaException.Source.LOCAL);
     }
     HopsContentsReqJSON reqContent = new HopsContentsReqJSON(projectIds);
     try {
@@ -212,16 +212,15 @@ public class TransferDelaController {
       HopsContentsSummaryJSON.Contents result = rc.doPost().resolve();
       return result;
     } catch (IllegalStateException ise) {
-      logger.log(Level.WARNING, "dela communication fail:{0}", ise.getMessage());
-      throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), ise.getMessage(),
-        ThirdPartyException.Source.DELA, "communication fail");
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.DELA, null, ise.getMessage(), ise);
     }
   }
 
-  public TorrentExtendedStatusJSON details(TorrentId torrentId) throws ThirdPartyException {
+  public TorrentExtendedStatusJSON details(TorrentId torrentId) throws DelaException {
     if(!delaStateController.transferDelaAvailable()) {
-      throw new ThirdPartyException(Response.Status.BAD_REQUEST.getStatusCode(), "dela transfer not available",
-          ThirdPartyException.Source.LOCAL, "bad request");
+      throw new DelaException(RESTCodes.DelaErrorCode.DELA_TRANSFER_NOT_AVAILABLE, Level.SEVERE,
+        DelaException.Source.LOCAL);
     }
     try {
       ClientWrapper<TorrentExtendedStatusJSON> rc = ClientWrapper
@@ -232,19 +231,18 @@ public class TransferDelaController {
       TorrentExtendedStatusJSON result = rc.doPost();
       return result;
     } catch (IllegalStateException ise) {
-      logger.log(Level.WARNING, "dela communication fail:{0}", ise.getMessage());
-      throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), ise.getMessage(),
-        ThirdPartyException.Source.DELA, "communication fail");
+      throw new DelaException(RESTCodes.DelaErrorCode.COMMUNICATION_FAILURE, Level.SEVERE,
+        DelaException.Source.DELA, null, ise.getMessage(), ise);
     }
   }
 
   /**
    * @return <upldDS, dwnlDS>
    */
-  public Pair<List<String>, List<String>> getContents() throws ThirdPartyException {
+  public Pair<List<String>, List<String>> getContents() throws DelaException {
     if(!delaStateController.transferDelaAvailable()) {
-      throw new ThirdPartyException(Response.Status.BAD_REQUEST.getStatusCode(), "dela transfer not available",
-          ThirdPartyException.Source.LOCAL, "bad request");
+      throw new DelaException(RESTCodes.DelaErrorCode.DELA_TRANSFER_NOT_AVAILABLE, Level.SEVERE,
+        DelaException.Source.LOCAL);
     }
     HopsContentsSummaryJSON.Contents contents = TransferDelaController.this.getContents(new LinkedList<>());
     List<String> upldDSIds = new LinkedList<>();

@@ -20,6 +20,10 @@ import javax.xml.bind.annotation.XmlEnum;
 
 @XmlEnum
 public enum TfServingCommands {
-    START,
-    STOP
+  START,
+  STOP;
+
+  public static TfServingCommands fromString(String command) {
+    return valueOf(command.toUpperCase());
+  }
 }

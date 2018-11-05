@@ -139,7 +139,7 @@
              context-menu
              data-target="menu-{{$index}}"
              id="{{project.project.name.substr(0, 5) === 'demo_'}}"
-             title="{{project.project.name.length > 17 ? project.project.name:''}}">
+             title="{{project.project.name.length > 28 ? project.project.name:''}}">
             <div ng-if="project.teamRole === 'Data scientist'">
               <i style="width: 20px; margin-right: 10px; font-size: 20px;" class="fa fa-lock fa-2 pull-left"></i>
             </div>
@@ -150,7 +150,7 @@
               <i style="width: 20px; margin-right: 10px; font-size: 20px; color: #9d261d"
                  class="fa fa-ban fa-2 pull-left"></i>
             </div>
-            {{ project.project.name | limitTo: 17 }}{{project.project.name.length > 17 ? '...' : ''}}
+            {{ project.project.name | limitTo: 28 }}{{project.project.name.length > 28 ? '...' : ''}}
             <span ng-if="project.project.name.substr(0, 5) === 'demo_'" class="glyphicon glyphicon-play-circle pull-right" style="margin-top: 5px;"></span>
             <i class="fa fa-cog fa-spin fa-2x  fa-fw pull-right" ng-show="homeCtrl.working[project.project.id]"></i>
           </a>

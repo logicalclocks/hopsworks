@@ -39,6 +39,7 @@
 
 package io.hops.hopsworks.ca.apiV2;
 
+import io.hops.hopsworks.ca.apiV2.exception.mapper.CAThrowableMapper;
 import io.swagger.annotations.Api;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -58,7 +59,7 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.ca.apiV2.filter.CORSFilter.class);
 
     //Exception mappers
-    register(io.hops.hopsworks.ca.apiV2.exception.mapper.EJBExceptionMapper.class);
+    register(CAThrowableMapper.class);
 
     //swagger
     register(io.swagger.jaxrs.listing.ApiListingResource.class);

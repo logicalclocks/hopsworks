@@ -40,24 +40,23 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .factory('AuthInterceptorService', ['$q', '$location','growl', function ($q, $location, growl) {
+        .factory('AuthInterceptorService', ['$q', '$location', '$injector', function ($q, $location, $injector) {
 
             return {
               response: function (response) {
                 //console.log('From server: ', response);
-
+                var token = response.headers('Authorization');
+                if (token) {
+                  var authService = $injector.get('AuthService');
+                  authService.saveToken(response.headers('Authorization'));
+                }
                 // Return a promise
                 return response || $q.when(response);
               },
               responseError: function (responseRejection) {
                 console.log('Error in response: ', responseRejection);
-
-                if (responseRejection.status === 403) {
-                  // Access forbidden, authenticating will make no difference
-
-                  console.log('Error in response: ', responseRejection + 'Access forbidden.');
-
-                } else if (responseRejection.status === 401) {
+                
+                if (responseRejection.status === 401) {
                   // Authorization issue, unauthorized, login required
 
                   console.log('Error in response ', responseRejection + 'Login required.');
@@ -69,9 +68,6 @@ angular.module('hopsWorksApp')
                     $location.replace();
                   }
 
-                } else if (responseRejection.status === 500) {
-                  growl.error(responseRejection.data.errorMsg, {title: 'Error', ttl: 5000}); 
-                  console.log('Unhandled error: ', responseRejection);
                 }
                 return $q.reject(responseRejection);
               }

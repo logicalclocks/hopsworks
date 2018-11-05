@@ -185,7 +185,15 @@ angular.module('hopsWorksApp')
               getExecutionUI: function (projectId, appId, isLivy) {
                 return $http.get('/api/project/' + projectId + '/jobs/' + appId + '/ui/' + isLivy);
               },
-              
+              /**
+               * Get the job ui of the given job.
+               * @param {type} projectId
+               * @param {type} appId
+               * @returns {unresolved} The TensorBoard Urls
+               */
+              getTensorBoardUrls: function (projectId, appId) {
+                return $http.get('/api/project/' + projectId + '/jobs/' + appId + '/tensorboard');
+              },
               /* Get the tensorboard URLs for the appid.
                * @param {type} projectId
                * @param {type} appId
@@ -269,6 +277,15 @@ angular.module('hopsWorksApp')
                */
               deleteJob: function (projectId, jobId) {
                 return $http.delete('/api/project/' + projectId + '/jobs/' + jobId + '/deleteJob');
+              },
+              /**
+               * Unschedule a job
+               * @param {type} projectId
+               * @param {type} jobId
+               * @returns {undefined} true if success, false otheriwse
+               */
+              unscheduleJob: function (projectId, jobId) {
+                return $http.delete('/api/project/' + projectId + '/jobs/' + jobId + '/unschedule');
               }
 
             };

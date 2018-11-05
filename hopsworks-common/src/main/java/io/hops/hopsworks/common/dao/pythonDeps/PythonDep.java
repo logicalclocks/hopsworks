@@ -80,7 +80,8 @@ import org.codehaus.jackson.annotate.JsonIgnore;
   @NamedQuery(name = "PythonDep.findUniqueDependency",
           query
           = "SELECT p FROM PythonDep p WHERE p.dependency = :dependency AND p.version = :version " +
-                  "AND p.installType = :installType AND p.repoUrl = :repoUrl AND p.machineType = :machineType"),
+                  "AND p.installType = :installType AND p.repoUrl = :repoUrl AND p.machineType = :machineType " +
+                  "AND p.status = :status"),
   @NamedQuery(name = "PythonDep.findByVersion",
           query
           = "SELECT p FROM PythonDep p WHERE p.version = :version")})

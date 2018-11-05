@@ -45,12 +45,11 @@ import io.hops.hopsworks.common.dao.metadata.FieldPredefinedValue;
 import io.hops.hopsworks.common.dao.metadata.FieldType;
 import io.hops.hopsworks.common.dao.metadata.MTable;
 import io.hops.hopsworks.common.dao.metadata.Template;
-import io.hops.hopsworks.common.metadata.exception.ApplicationException;
+import io.hops.hopsworks.common.exception.GenericException;
+import io.hops.hopsworks.common.exception.RESTCodes;
 import java.io.StringReader;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.json.Json;
@@ -64,7 +63,7 @@ import javax.json.JsonValue;
  */
 public class TemplateMessage extends ContentMessage {
 
-  private static final Logger logger = Logger.getLogger(TemplateMessage.class.
+  private static final Logger LOGGER = Logger.getLogger(TemplateMessage.class.
           getName());
 
   private final String TYPE = "TemplateMessage";
@@ -94,7 +93,7 @@ public class TemplateMessage extends ContentMessage {
       super.setTemplateid(object.getInt("tempid"));
     } catch (NullPointerException e) {
       // TODO: - Never catch a NPE!! Re-write.
-      logger.log(Level.SEVERE, "Error while retrieving the templateid."
+      LOGGER.log(Level.SEVERE, "Error while retrieving the templateid."
               + " Probably fetching the templates");
     }
   }
@@ -123,37 +122,28 @@ public class TemplateMessage extends ContentMessage {
    * or the template id depending on the desired action.
    *
    * @return the template to be added in the database
-   * @throws ApplicationException
    */
   @Override
-  public Template getTemplate() throws ApplicationException {
-    Template temp = null;
-    JsonObject object = Json.createReader(new StringReader(this.message)).
-            readObject();
-
-    try {
-      switch (Command.valueOf(this.action.toUpperCase())) {
-
-        case ADD_NEW_TEMPLATE:
-          temp = new Template(-1, object.getString("templateName"));
-          break;
-        case REMOVE_TEMPLATE:
-          temp = new Template(object.getInt("templateId"));
-          break;
-        case UPDATE_TEMPLATE_NAME:
-          temp = new Template(object.getInt("templateId"), object.getString(
-                  "templateName"));
-          break;
-        default:
-          throw new ApplicationException("Unknown command in received message");
-      }
-    } catch (NullPointerException e) {
-      logger.log(Level.SEVERE,
-              "Error while retrieving the template attributes.");
-      throw new ApplicationException(
-              "Error while retrieving the template attributes.");
+  public Template getTemplate() throws GenericException {
+    Template temp;
+    JsonObject object = Json.createReader(new StringReader(this.message)).readObject();
+  
+    switch (Command.valueOf(this.action.toUpperCase())) {
+    
+      case ADD_NEW_TEMPLATE:
+        temp = new Template(-1, object.getString("templateName"));
+        break;
+      case REMOVE_TEMPLATE:
+        temp = new Template(object.getInt("templateId"));
+        break;
+      case UPDATE_TEMPLATE_NAME:
+        temp = new Template(object.getInt("templateId"), object.getString(
+          "templateName"));
+        break;
+      default:
+        throw new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ACTION, Level.FINE, "Action:" + this.action);
     }
-
+  
     return temp;
   }
 
@@ -163,7 +153,6 @@ public class TemplateMessage extends ContentMessage {
             readObject();
     JsonObject board = obj.getJsonObject("bd");
 
-    Map<String, String[][]> schema = new HashMap<>();
     List<EntityIntf> tlist = new LinkedList<>();
 
     //get the prospective tables
@@ -194,7 +183,6 @@ public class TemplateMessage extends ContentMessage {
 
       //get the table attributes/fields
       JsonArray fields = item.getJsonArray("cards");
-      int noofFields = fields.size();
 
       int fieldId = -1;
       String fieldName;
@@ -268,8 +256,10 @@ public class TemplateMessage extends ContentMessage {
           table.addField(f);
 
         } catch (NullPointerException e) {
+          LOGGER.log(Level.SEVERE, null, e);
           searchable = false;
           required = false;
+          
         }
       }
       tlist.add(table);

@@ -39,21 +39,10 @@
 
 package io.hops.hopsworks.common.kafka;
 
-import io.hops.hopsworks.common.dao.kafka.ProjectTopics;
 import io.hops.hopsworks.common.dao.kafka.KafkaFacade;
-import io.hops.hopsworks.common.exception.AppException;
-import java.io.IOException;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.ejb.EJB;
-import javax.ejb.Schedule;
-import javax.ejb.Singleton;
-import javax.ejb.Timer;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
+import io.hops.hopsworks.common.dao.kafka.ProjectTopics;
+import io.hops.hopsworks.common.exception.ServiceException;
+import io.hops.hopsworks.common.util.Settings;
 import kafka.admin.AdminUtils;
 import kafka.common.TopicAlreadyMarkedForDeletionException;
 import kafka.utils.ZKStringSerializer$;
@@ -64,7 +53,19 @@ import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.ZooKeeper;
-import io.hops.hopsworks.common.util.Settings;
+
+import javax.ejb.EJB;
+import javax.ejb.Schedule;
+import javax.ejb.Singleton;
+import javax.ejb.Timer;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Periodically sync zookeeper with the database for
@@ -75,11 +76,7 @@ public class ZookeeprTopicCleanerTimer {
 
   private final static Logger LOGGER = Logger.getLogger(
       ZookeeprTopicCleanerTimer.class.getName());
-
-  public final int connectionTimeout = 90 * 1000;// 30 seconds
-
-  public int sessionTimeoutMs = 30 * 1000;//30 seconds
-
+  
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
@@ -88,9 +85,9 @@ public class ZookeeprTopicCleanerTimer {
   @EJB
   KafkaFacade kafkaFacade;
 
-  ZkClient zkClient = null;
-  ZkConnection zkConnection = null;
-  ZooKeeper zk = null;
+  private ZkClient zkClient = null;
+  private ZkConnection zkConnection = null;
+  private ZooKeeper zk = null;
 
   // Run once per hour 
   @Schedule(persistent = false,
@@ -99,13 +96,15 @@ public class ZookeeprTopicCleanerTimer {
   public void execute(Timer timer) {
 
     Set<String> zkTopics = new HashSet<>();
+    //30 seconds
+    int sessionTimeoutMs = 30 * 1000;
     try {
       if (zk == null || !zk.getState().isConnected()) {
         if (zk != null) {
           zk.close();
         }
         zk = new ZooKeeper(settings.getZkConnectStr(),
-            sessionTimeoutMs, new ZookeeperWatcher());
+          sessionTimeoutMs, new ZookeeperWatcher());
       }
       List<String> topics = zk.getChildren("/brokers/topics", false);
       zkTopics.addAll(topics);
@@ -120,7 +119,7 @@ public class ZookeeprTopicCleanerTimer {
 
     for (ProjectTopics pt : dbProjectTopics) {
       try {
-        dbTopics.add(pt.getProjectTopicsPK().getTopicName());
+        dbTopics.add(pt.getTopicName());
       } catch (UnsupportedOperationException e) {
         LOGGER.log(Level.SEVERE, e.toString());
       }
@@ -140,9 +139,11 @@ public class ZookeeprTopicCleanerTimer {
      */
     try {
       if (zkClient == null) {
+        // 30 seconds
+        int connectionTimeout = 90 * 1000;
         zkClient = new ZkClient(kafkaFacade.
             getIp(settings.getZkConnectStr()).getHostName(),
-            sessionTimeoutMs, connectionTimeout,
+          sessionTimeoutMs, connectionTimeout,
             ZKStringSerializer$.MODULE$);
       }
       if (!zkTopics.isEmpty()) {
@@ -164,9 +165,8 @@ public class ZookeeprTopicCleanerTimer {
         }
       }
 
-    } catch (AppException ex) {
-      LOGGER.log(Level.SEVERE, "Unable to get zookeeper ip address ", ex.
-          toString());
+    } catch (ServiceException ex) {
+      LOGGER.log(Level.SEVERE, "Unable to get zookeeper ip address ", ex);
     } finally {
       if (zkClient != null) {
         zkClient.close();
@@ -191,7 +191,7 @@ public class ZookeeprTopicCleanerTimer {
   public void getBrokers() {
     try {
       settings.setKafkaBrokers(settings.getBrokerEndpoints());
-    } catch (AppException ex) {
+    } catch (IOException | KeeperException | InterruptedException ex) {
       LOGGER.log(Level.SEVERE, null, ex);
     }
   }
