@@ -75,7 +75,8 @@ public class FolderNameValidator {
     }
   }
 
-  private static Pattern projectNameRegexValidator = Pattern.compile("^[a-zA-Z0-9]((?!__)[_a-zA-Z0-9]){0,62}$");
+  private static Pattern projectNameRegexValidator =
+      Pattern.compile("^[a-zA-Z0-9]((?!__)[_a-zA-Z0-9]){0,61}[a-zA-Z0-9]$");
 
   /**
    * Check if the given String is a valid Project name.
