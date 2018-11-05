@@ -77,12 +77,9 @@ public class HdfsUsersFacade extends AbstractReadOnlyFacade<HdfsUsers> {
   }
 
   public List<HdfsUsers> findProjectUsers(String projectName) {
-    List<HdfsUsers> users = null;
-    try {
-      users = em.createNamedQuery("HdfsUsers.findProjectUsers", HdfsUsers.class).setParameter("name",
-          projectName).getResultList();
-    } catch (NoResultException e) {
-    }
+    List<HdfsUsers> users = em.createNamedQuery("HdfsUsers.findProjectUsers", HdfsUsers.class)
+      .setParameter("name", projectName)
+      .getResultList();
     try {
       HdfsUsers user = em.createNamedQuery("HdfsUsers.findByName", HdfsUsers.class).setParameter("name", projectName).
           getSingleResult();
@@ -94,6 +91,6 @@ public class HdfsUsersFacade extends AbstractReadOnlyFacade<HdfsUsers> {
       }
     } catch (NoResultException e) {
     }
-    return users;    
+    return users;
   }
 }

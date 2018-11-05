@@ -52,12 +52,12 @@ if RUBY_PLATFORM == "java"
 end
 
 begin
-  mysql_socket = ENV.fetch('MYSQL_SOCKET', '/tmp/mysql.sock')
+  #mysql_socket = ENV.fetch('MYSQL_SOCKET', '/tmp/mysql.sock')
   ActiveRecord::Base.establish_connection ({
     :adapter => "#{mysql_adapter}",
     :host => ENV['DB_HOST'],
     :port => ENV['DB_PORT'],
-    :socket => mysql_socket,
+    #:socket => mysql_socket,
     :database => "hopsworks",
     :username => "kthfs",
     :password => "kthfs"})
@@ -85,6 +85,8 @@ RSpec.configure do |config|
   config.include AppserviceHelper
   config.include ServingHelper
   config.include HopsFSHelper
+  config.include JobHelper
+  config.include ExecutionHelper
   # uncomment next line if you need to clean hdfs and hopsworks db before test.
   # config.before(:suite) { clean_test_data }
   config.after(:suite) {

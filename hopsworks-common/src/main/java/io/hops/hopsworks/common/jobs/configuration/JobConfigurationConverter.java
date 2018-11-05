@@ -41,7 +41,7 @@ import org.json.JSONObject;
 @Converter
 public class JobConfigurationConverter implements AttributeConverter<JobConfiguration, String> {
 
-  private final static Logger LOGGER = Logger.getLogger(JobConfigurationConverter.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(JobConfigurationConverter.class.getName());
 
 
   private static JAXBContext sparkJAXBContext;
@@ -86,7 +86,7 @@ public class JobConfigurationConverter implements AttributeConverter<JobConfigur
     }
   }
 
-  private JAXBContext getJAXBContext(JobType jobType) throws JAXBException {
+  private JAXBContext getJAXBContext(JobType jobType) {
     switch(jobType) {
       case SPARK:
       case PYSPARK:

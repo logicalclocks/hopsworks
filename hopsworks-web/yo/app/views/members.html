@@ -38,18 +38,13 @@
   -->
 
 <div class="modal-header">
-  <button class="close"
-          ng-click="memberCtrl.close()"
-          type="button">&times;
-  </button>
+  <button class="close" ng-click="memberCtrl.close()" type="button">&times;</button>
   <h2 class="modal-title">Members</h2>
 </div>
-<div growl reference="2" class="pull-right" ></div>
+<div growl reference="2" class="pull-right"></div>
 <div class="modal-body" id="profileModal" ng-controller="MainCtrl as mainCtrl">
-
   <div class="row">
     <div class="col-md-5" style="max-width: 400px">
-
       <input type="text"
              id="srch-term"
              ng-model="searchInput"
@@ -72,82 +67,59 @@
       </button>
     </div>
   </div>
-
-
-  <div class="collapse" id="collapseAddMember">
+  <div class="collapse in" id="collapseAddMember">
     <div class="well" style="margin-top:20px;padding-bottom: 40px">
-
       <h2>Members to be added</h2>
-
-      <div class="controls">
-
-        <ui-select ng-model="memberCtrl.card.selected"
-                   theme="select2" class="form-control" 
-                   style="min-width: 300px;">
-
-          <ui-select-match placeholder="Select member..."  style="height:24px;">{{$select.selected.email}}</ui-select-match>
+        <ui-select multiple tagging="tagTransform" ng-model="memberCtrl.selectedUsers" theme="bootstrap" title="Choose a user">
+          <ui-select-match placeholder="Select user...">{{$item.firstname}} {{$item.lastname}}</ui-select-match>
           <ui-select-choices
-            repeat="card in memberCtrl.cards | cardFilter: {email: $select.search, firstname: $select.search, lastname: $select.search}">
-
-            <div ng-bind-html="memberCtrl.card.email | highlight: $select.search"></div>
-            <small>
-              <i class="fa fa-user-plus"></i>
-              <span style="font-size: 14px;"
-                    ng-bind-html="''+card.email | highlight: $select.search">
-              </span>
-              <br/>
-              <span ng-bind-html="''+card.firstname | highlight: $select.search"></span>
-              <span ng-bind-html="''+card.lastname | highlight: $select.search"></span>
-            </small>
+            refresh="memberCtrl.fetchAsync($select.search)"
+            refresh-delay="600"
+            repeat="user in memberCtrl.users">
+            <div>
+              <span ng-bind-html="user.firstname | highlight: $select.search"></span>
+              <span ng-bind-html="user.lastname | highlight: $select.search"></span>
+              <span ng-bind-html="user.username | highlight: $select.search"></span>
+            </div>
           </ui-select-choices>
+          <ui-select-no-choice>
+            <div style="padding: 3px 10px;">
+              <span ng-if="memberCtrl.loadingUsers" class="loading-dots-sm">Searching</span>
+              <span ng-if="!memberCtrl.loadingUsers">{{memberCtrl.selectNoChoice}}</span>
+            </div>
+          </ui-select-no-choice>
         </ui-select>
-
         <div style="margin-top:10px; min-height:50px;" class="thumbnail ui-droppable">
-
           <table class="table">
             <tbody>
-              <tr style="font-weight: bold;" ng-show="!memberCtrl.newMembers.projectTeam.length == 0">
-                <td style="width:70%;border-top:none;">Member</td>
-                <td style="width:20%;border-top:none;">Role</td>
-                <td style="width:10%;border-top:none;"></td>
+              <tr>
+                <td style="font-weight: bold; width:70%;border-top:none;" ng-if="memberCtrl.selectedUsers.length !== 0">Member</td>
+                <td style="font-weight: bold; width:20%;border-top:none;" ng-if="memberCtrl.selectedUsers.length !== 0">Role</td>
+                <td style="border-top: none;" ng-if="memberCtrl.selectedUsers.length === 0">No members added yet...</td>
               </tr>
-
-              <tr ng-show="memberCtrl.newMembers.projectTeam.length == 0">
-                <td style="border-top: none;">
-                  No members added yet...
-                </td>
-              </tr>
-
-              <tr ng-repeat="newMember in memberCtrl.newMembers.projectTeam">
-
+              <tr ng-repeat="newMember in memberCtrl.selectedUsers" ng-init="newMember.teamRole=memberCtrl.roles[0]">
                 <td>
                   <div class="media">
                     <div class="media-body" style="padding-top:8px;">
                       <h4 class="media-heading" style="margin-bottom:0px;">
-                        <b>{{newMember.projectTeamPK.teamMember}}</b>
+                        <span style="font: icon">
+                         {{newMember.firstname}} {{newMember.lastname}} ({{newMember.username}})
+                        </span>
                       </h4>
                     </div>
                   </div>
                 </td>
                 <td>
-                  <select name="role"
-                          ng-model="newMember.teamRole"
-                          class="form-control">
-                    <option ng-repeat="role in memberCtrl.roles"
-                            value="{{role}}">
-                      {{role}}
-                    </option>
+                  <select name="role" ng-model="newMember.teamRole" class="form-control">
+                    <option ng-repeat="role in memberCtrl.roles" value="{{role}}"> {{role}} </option>
                   </select>
-                </td>
+                </td>                
                 <td>
-                  <button type="button"
-                          style="width:32px; height: 32px; border-radius: 16px;"
-                          ng-click="memberCtrl.removeMember(newMember.projectTeamPK.teamMember)"
-                          class="btn btn-danger pull-right">
-                    <em class="fa fa-trash"></em>
+                  <button class="btn btn-danger pull-right" type="button"
+                          ng-click="memberCtrl.removeMember(newMember)">
+                    <i class="fa fa-close"></i>
                   </button>
                 </td>
-
               </tr>
             </tbody>
           </table>
@@ -171,7 +143,6 @@
       </div>
 
     </div>
-  </div>
 
   <form name="tableform"
         style="padding-top:20px;"
@@ -186,11 +157,11 @@
           <td style="width:7%;border-top:none;">Action</td>
         </tr>
 
-        <tr ng-repeat="member in memberCtrl.members| filter:searchInput">
+        <tr ng-repeat="member in memberCtrl.members| filter:searchInput" ng-if="member.user.email !== 'serving@hopsworks.se'">
           <td ng-class="{'text-muted' : member.user.email === mainCtrl.email}">
             <div class="media">
               <a class="pull-left">
-                <img src="https://gravatar.com/avatar/{{mainCtrl.getEmailHash(member.user.email)}}?d=mm"
+                <img alt="gravatar" src="https://gravatar.com/avatar/{{mainCtrl.getEmailHash(member.user.email)}}?d=mm"
                      style="height: 50px; margin-right: 10px;border: 2px solid white;margin-top:3px;"
                      class="profile-image img-circle">
               </a>
@@ -199,8 +170,6 @@
                 <h4 class="media-heading" style="margin-bottom:0px;">
                   <b>{{member.user.fname}} {{member.user.lname}} <span ng-show="member.user.email === mainCtrl.email"> (me)</span></b>
                 </h4>
-
-                <p><span style="font-size:12px;">{{member.user.email}}</span></p>
               </div>
             </div>
           </td>
@@ -223,7 +192,6 @@
           </td>
           <td>
             <button type="button"
-                    style="width:32px; height: 32px; border-radius: 16px;"
                     ng-disabled="member.user.email === memberCtrl.projectOwner.email ||
                       (memberCtrl.teamRole !== 'Data owner' && member.user.email !== mainCtrl.email)"
                     ng-click="memberCtrl.deleteMemberFromBackend(member.user.email)"

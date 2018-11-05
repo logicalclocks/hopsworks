@@ -15,29 +15,30 @@
  */
 package io.hops.hopsworks.common.api;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
 @XmlRootElement
-public abstract class RestDTO<E, D> {
+public abstract class RestDTO<D> {
   
   private URI href;
   protected Boolean expand;
   protected List<D> items;
+  protected Long count = null;
   
   public RestDTO(URI href) {
     this.href = href;
   }
   
-  public RestDTO(URI href, ResourceProperties resourceProperties, ResourceProperties.Name resource) {
+  public RestDTO(URI href, Resource resource) {
     this.href = href;
-    if (resourceProperties != null) {
-      ResourceProperties.ResourceProperty property = resourceProperties.get(resource);
-      if (property != null) {
-        this.expand = true;
-      }
+    if (resource != null) {
+      this.expand = true;
     }
   }
   
@@ -52,10 +53,14 @@ public abstract class RestDTO<E, D> {
     this.href = href;
   }
   
+  @XmlTransient
+  @JsonIgnore
   public Boolean isExpand() {
     return expand != null ? expand : false;
   }
   
+  @XmlTransient
+  @JsonIgnore
   public void setExpand(Boolean expand) {
     this.expand = expand;
   }
@@ -80,5 +85,13 @@ public abstract class RestDTO<E, D> {
       this.items = new ArrayList<>();
     }
     this.items.add(item);
+  }
+  
+  public Long getCount() {
+    return count;
+  }
+  
+  public void setCount(Long count) {
+    this.count = count;
   }
 }

@@ -38,6 +38,7 @@
  */
 package io.hops.hopsworks.api.project;
 
+import io.hops.hopsworks.api.activities.ProjectActivitiesResource;
 import io.hops.hopsworks.api.dela.DelaClusterProjectService;
 import io.hops.hopsworks.api.dela.DelaProjectService;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
@@ -195,6 +196,8 @@ public class ProjectService {
   private DelaClusterProjectService delaclusterService;
   @Inject
   private InferenceResource inference;
+  @Inject
+  private ProjectActivitiesResource activitiesResource;
   @EJB
   private JWTHelper jWTHelper;
 
@@ -397,7 +400,7 @@ public class ProjectService {
   @Path("{projectId}/check")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public Response checkProjectAccess(@PathParam("projectId") Integer id) throws ProjectException {
+  public Response checkProjectAccess(@PathParam("projectId") Integer id) {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     json.setData(id);
     return Response.ok(json).build();
@@ -700,8 +703,8 @@ public class ProjectService {
     datasetFacade.persistDataset(newDS);
     Users user = jWTHelper.getUserPrincipal(sc);
 
-    activityFacade.persistActivity(ActivityFacade.SHARED_DATA + newDS.toString()
-        + " with project " + destProj.getName(), destProj, user);
+    activityFacade.persistActivity(ActivityFacade.SHARED_DATA + newDS.toString() + " with project " + destProj.getName()
+        , destProj, user, ActivityFacade.ActivityFlag.DATASET);
 
     hdfsUsersBean.shareDataset(destProj, ds);
 
@@ -766,7 +769,8 @@ public class ProjectService {
   }
 
   @Path("{projectId}/serving")
-  public TfServingService tfServingService(@PathParam("projectId") Integer id) {
+  public TfServingService tfServingService(@PathParam("projectId") Integer id, @Context HttpServletRequest req) {
+    Users user = jWTHelper.getUserPrincipal(req);
     this.tfServingService.setProjectId(id);
     return this.tfServingService;
   }
@@ -787,6 +791,12 @@ public class ProjectService {
   public DelaClusterProjectService delacluster(@PathParam("projectId") Integer id) {
     this.delaclusterService.setProjectId(id);
     return this.delaclusterService;
+  }
+  
+  @Path("{projectId}/activities")
+  public ProjectActivitiesResource activities(@PathParam("projectId") Integer id) {
+    this.activitiesResource.setProjectId(id);
+    return this.activitiesResource;
   }
 
   @PUT

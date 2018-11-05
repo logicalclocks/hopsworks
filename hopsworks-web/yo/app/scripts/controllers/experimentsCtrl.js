@@ -18,9 +18,9 @@
  * Controller for the job UI dialog.
  */
 angular.module('hopsWorksApp')
-    .controller('ExperimentsCtrl', ['$scope', '$timeout', 'growl', 'JobService', 'TensorBoardService', '$interval',
+    .controller('ExperimentsCtrl', ['$scope', '$timeout', 'growl', 'ProjectService', 'JobService', 'TensorBoardService', '$interval',
         '$routeParams', '$route', '$sce', '$window',
-        function($scope, $timeout, growl, JobService, TensorBoardService, $interval,
+        function($scope, $timeout, growl, ProjectService, JobService, TensorBoardService, $interval,
             $routeParams, $route, $sce, $window) {
 
             var self = this;
@@ -152,11 +152,10 @@ angular.module('hopsWorksApp')
             };
 
             self.kibanaUI = function() {
-
                 startLoading("Loading Experiments Overview...");
-                JobService.getProjectName(self.projectId).then(
-                    function(success) {
-                        var projectName = success.data;
+                ProjectService.get({}, {'id': self.projectId}).$promise.then(
+                    function (success) {
+                        var projectName = success.projectName;
                         self.ui = "/hopsworks-api/kibana/app/kibana?projectId=" + self.projectId + "#/dashboard/" + projectName.toLowerCase() + "_experiments_summary-dashboard?_g=" +
                             "(refreshInterval:('$$hashKey':'object:161',display:'10%20seconds',pause:!f,section:1,value:10000),time:(from:now-15m,mode:quick,to:now))&_a=" +
                             "(description:'A%20summary%20of%20all%20experiments%20run%20in%20this%20project',filters:!(),fullScreenMode:!f,options:(darkTheme:!f,hidePanelTitles:!" +

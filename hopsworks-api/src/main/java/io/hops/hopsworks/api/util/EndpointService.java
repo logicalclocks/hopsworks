@@ -57,26 +57,26 @@ import javax.ws.rs.core.Response;
 @Path("/endpoint")
 @RequestScoped
 @Api(value = "Endpoint service",
-        description = "Endpoint Rest Api")
+  description = "Endpoint Rest Api")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class EndpointService {
-
+  
   public EndpointService() {
   }
-
+  
   @EJB
   private HdfsLeDescriptorsFacade hdfsLeDescriptorsFacade;
   @EJB
   private NoCacheResponse noCacheResponse;
-
+  
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   public Response findEndpoint() {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     HdfsLeDescriptors hdfsLeDescriptors = hdfsLeDescriptorsFacade.findEndpoint();
-
+    
     json.setData(hdfsLeDescriptors.getHostname());
-
+    
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }
 }

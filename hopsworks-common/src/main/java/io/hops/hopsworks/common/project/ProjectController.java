@@ -77,7 +77,6 @@ import io.hops.hopsworks.common.dao.project.team.ProjectTeamPK;
 import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.activity.Activity;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.FolderNameValidator;
@@ -731,12 +730,12 @@ public class ProjectController {
 
     // Persist enabled service in the database
     projectServicesFacade.addServiceForProject(project, service);
-    logActivity(ActivityFacade.ADDED_SERVICE + service.toString(),
-        ActivityFacade.FLAG_PROJECT, user, project);
+    logActivity(ActivityFacade.ADDED_SERVICE + service.toString(), user, project, ActivityFacade.
+        ActivityFlag.SERVICE);
     if (service == ProjectServiceEnum.HIVE) {
       projectServicesFacade.addServiceForProject(project, ProjectServiceEnum.ZEPPELIN);
-      logActivity(ActivityFacade.ADDED_SERVICE + ProjectServiceEnum.ZEPPELIN.toString(),
-          ActivityFacade.FLAG_PROJECT, user, project);
+      logActivity(ActivityFacade.ADDED_SERVICE + ProjectServiceEnum.ZEPPELIN.toString(), user, project, 
+          ActivityFacade.ActivityFlag.SERVICE);
     }
     return futureList;
   }
@@ -836,8 +835,8 @@ public class ProjectController {
       project.setDescription(projectDescr);
       projectFacade.mergeProject(project);
       logProject(project, OperationType.Update);
-      logActivity(ActivityFacade.PROJECT_DESC_CHANGED + projectDescr,
-          ActivityFacade.FLAG_PROJECT, user, project);
+      logActivity(ActivityFacade.PROJECT_DESC_CHANGED + projectDescr, user, project, ActivityFacade.ActivityFlag.
+          PROJECT);
       return true;
     }
     return false;
@@ -858,8 +857,8 @@ public class ProjectController {
       project.setRetentionPeriod(projectRetention);
       projectFacade.mergeProject(project);
       logProject(project, OperationType.Update);
-      logActivity(ActivityFacade.PROJECT_RETENTION_CHANGED + projectRetention,
-          ActivityFacade.FLAG_PROJECT, user, project);
+      logActivity(ActivityFacade.PROJECT_RETENTION_CHANGED + projectRetention, user, project, ActivityFacade.
+          ActivityFlag.PROJECT);
       return true;
     }
     return false;
@@ -1360,7 +1359,7 @@ public class ProjectController {
       Runtime rt = Runtime.getRuntime();
       for (Jobs job : running) {
         //Get the appId of the running app
-        List<Execution> jobExecs = execFacade.findForJob(job);
+        List<Execution> jobExecs = execFacade.findByJob(job);
         //Sort descending based on jobId because therie might be two
         // jobs with the same name and we want the latest
         Collections.sort(jobExecs, new Comparator<Execution>() {
@@ -1804,9 +1803,8 @@ public class ProjectController {
                 new Object[]{newMember.getEmail(),
                   project.getName()});
 
-            logActivity(ActivityFacade.NEW_MEMBER + projectTeam.
-                getProjectTeamPK().getTeamMember(),
-                ActivityFacade.FLAG_PROJECT, owner, project);
+            logActivity(ActivityFacade.NEW_MEMBER + projectTeam.getProjectTeamPK().getTeamMember(), owner, 
+                project, ActivityFacade.ActivityFlag.MEMBER);
           } else if (newMember == null) {
             failedList.add(projectTeam.getProjectTeamPK().getTeamMember()
                 + " was not found in the system.");
@@ -1911,8 +1909,7 @@ public class ProjectController {
     setHdfsSpaceQuotasInMBs(project, diskspaceQuotaInMB, null, dfso);
     projectFacade.setTimestampQuotaUpdate(project, new Date());
     //Add the activity information
-    logActivity(ActivityFacade.NEW_PROJECT + project.getName(),
-        ActivityFacade.FLAG_PROJECT, user, project);
+    logActivity(ActivityFacade.NEW_PROJECT + project.getName(), user, project, ActivityFacade.ActivityFlag.PROJECT);
     //update role information in project
     addProjectOwner(project.getId(), user.getEmail());
     LOGGER.log(Level.FINE, "{0} - project created successfully.", project.
@@ -2050,7 +2047,7 @@ public class ProjectController {
         Runtime rt = Runtime.getRuntime();
         for (Jobs job : running) {
           //Get the appId of the running app
-          List<Execution> jobExecs = execFacade.findForJob(job);
+          List<Execution> jobExecs = execFacade.findByJob(job);
           //Sort descending based on jobId because there might be two 
           // jobs with the same name and we want the latest
           Collections.sort(jobExecs, new Comparator<Execution>() {
@@ -2094,7 +2091,8 @@ public class ProjectController {
 
     kafkaController.removeProjectMemberFromTopics(project, userToBeRemoved);
 
-    logActivity(ActivityFacade.REMOVED_MEMBER + userToBeRemoved.getEmail(), ActivityFacade.FLAG_PROJECT, user, project);
+    logActivity(ActivityFacade.REMOVED_MEMBER + userToBeRemoved.getEmail(), user, project, ActivityFacade.ActivityFlag.
+        MEMBER);
     
     certificateMaterializer.forceRemoveLocalMaterial(userToBeRemoved.getUsername(), project.getName(), null, false);
     certificatesController.deleteUserSpecificCertificates(project, userToBeRemoved);
@@ -2139,8 +2137,7 @@ public class ProjectController {
         hdfsUsersController.modifyProjectMembership(user, project);
       }
 
-      logActivity(ActivityFacade.CHANGE_ROLE + toUpdateEmail,
-          ActivityFacade.FLAG_PROJECT, opsOwner, project);
+      logActivity(ActivityFacade.CHANGE_ROLE + toUpdateEmail, opsOwner, project, ActivityFacade.ActivityFlag.MEMBER);
     }
 
   }
@@ -2211,21 +2208,13 @@ public class ProjectController {
    *
    *
    * @param activityPerformed the description of the operation performed
-   * @param flag on what the operation was performed(FLAG_PROJECT, FLAG_USER)
    * @param performedBy the user that performed the operation
    * @param performedOn the project the operation was performed on.
+   * @param flag
    */
-  public void logActivity(String activityPerformed, String flag,
-      Users performedBy, Project performedOn) {
-    Date now = new Date();
-    Activity activity = new Activity();
-    activity.setActivity(activityPerformed);
-    activity.setFlag(flag);
-    activity.setProject(performedOn);
-    activity.setTimestamp(now);
-    activity.setUser(performedBy);
-
-    activityFacade.persistActivity(activity);
+  public void logActivity(String activityPerformed, Users performedBy, Project performedOn, 
+      ActivityFacade.ActivityFlag flag) {
+    activityFacade.persistActivity(activityPerformed, performedOn, performedBy, flag);
   }
 
   public void addTourFilesToProject(String username, Project project,

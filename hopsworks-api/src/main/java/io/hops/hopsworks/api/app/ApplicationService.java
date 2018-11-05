@@ -237,7 +237,7 @@ public class ApplicationService {
     //Get the jobs to run, if the user is not the creator, run no jobs and return error message
     List<Jobs> jobsToRun = new ArrayList<>();
     for (Integer jobId : jobsDTO.getJobIds()) {
-      Jobs job = jobFacade.findById(jobId);
+      Jobs job = jobFacade.findByProjectAndId(project,jobId);
       if (!job.getProject().equals(project) || !job.getCreator().equals(user)) {
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.UNAUTHORIZED).entity(
             "User is not authorized to start some of the requested jobs").build();

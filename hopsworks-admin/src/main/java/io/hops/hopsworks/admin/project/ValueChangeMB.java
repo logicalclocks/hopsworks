@@ -37,83 +37,70 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package io.hops.hopsworks.common.dao.jobs.description;
+package io.hops.hopsworks.admin.project;
 
-import javax.xml.bind.annotation.XmlRootElement;
-import java.util.HashMap;
-import java.util.List;
+import io.hops.hopsworks.admin.maintenance.ClientSessionState;
+import io.hops.hopsworks.common.dao.project.team.ProjectRoleTypes;
+import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
+import java.io.Serializable;
+import javax.ejb.EJB;
+import javax.faces.bean.ManagedBean;
+import javax.faces.bean.ManagedProperty;
+import javax.faces.bean.RequestScoped;
+import javax.faces.event.AbortProcessingException;
+import javax.faces.event.ValueChangeEvent;
+import javax.faces.event.ValueChangeListener;
+import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 
-@XmlRootElement
-public class AppInfoDTO {
+@ManagedBean(name = "valueChangeMB",
+        eager = true)
+@RequestScoped
+public class ValueChangeMB implements Serializable, ValueChangeListener {
 
-  String appId;
-  long startTime;
-  boolean now;
-  long endTime;
-  int nbExecutors;
-  HashMap<Integer, List<String>> executorInfo;
+  @EJB
+  private ProjectTeamFacade projectTeamController;
 
-  public AppInfoDTO() {
+  @EJB
+  private ActivityFacade activityFacade;
+
+  private ProjectRoleTypes newTeamRole;
+
+  @ManagedProperty(value = "#{clientSessionState}")
+  private ClientSessionState sessionState;
+
+  public void setSessionState(ClientSessionState sessionState) {
+    this.sessionState = sessionState;
   }
 
-  public AppInfoDTO(String appId, long startTime, boolean now, long endTime,
-                    int nbExecutors, HashMap<Integer, List<String>> executorInfo) {
-    this.appId = appId;
-    this.startTime = startTime;
-    this.endTime = endTime;
-    this.now = now;
-    this.nbExecutors = nbExecutors;
-    this.executorInfo = executorInfo;
+  public ProjectRoleTypes getNewTeamRole() {
+    return newTeamRole;
   }
 
-  public void setAppId(String appId) {
-    this.appId = appId;
+  public void setNewTeamRole(ProjectRoleTypes newTeamRole) {
+    this.newTeamRole = newTeamRole;
   }
 
-  public String getAppId() {
-    return appId;
+  public synchronized String updateProjectTeamRole(String email,
+          ProjectRoleTypes role) {
+    try {
+      projectTeamController.updateTeamRole(sessionState.getActiveProject(),
+              email, role.getRole());
+      activityFacade.persistActivity(ActivityFacade.CHANGE_ROLE + email + " to " + role, sessionState.getActiveProject()
+          , sessionState.getLoggedInUsername(), ActivityFacade.ActivityFlag.MEMBER);
+    } catch (Exception ejb) {
+      //addErrorMessageToUserAction("Error: Update failed.");
+      return "Failed";
+    }
+    //addMessage("Team role updated successful "+ email + " at "+ projectMB.getProjectName());
+    //return "projectPage?faces-redirect=true";
+    newTeamRole = null;
+    return "OK";
   }
-
-  public void setStartTime(long startTime) {
-    this.startTime = startTime;
-  }
-
-  public long getStartTime() {
-    return startTime;
-  }
-
-  public void setNow(boolean now) {
-    this.now = now;
-  }
-
-  public boolean isNow() {
-    return now;
-  }
-
-  public void setEndTime(long endTime) {
-    this.endTime = endTime;
-  }
-
-  public long getEndTime() {
-    return endTime;
-  }
-
-  public void setNbExecutors(int nbExecutors) {
-    this.nbExecutors = nbExecutors;
-  }
-
-  public int getNbExecutors() {
-    return nbExecutors;
-  }
-
-  public HashMap<Integer, List<String>> getExecutorInfo() { return executorInfo; }
-
-  public void setExecutorInfo(HashMap<Integer, List<String>> executorInfo) { this.executorInfo = executorInfo; }
 
   @Override
-  public String toString() {
-    return "AppInfoDTO{" + "appId=" + appId + ", startTime=" + startTime
-            + ", now=" + now + ", endTime=" + endTime + ", nbExecutors="
-            + nbExecutors + "executorInfo=" + executorInfo + '}';
+  public void processValueChange(ValueChangeEvent event) throws
+          AbortProcessingException {
+    setNewTeamRole((ProjectRoleTypes) event.getNewValue());
   }
+
 }

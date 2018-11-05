@@ -41,6 +41,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * 15. DelaCSR error codes start with "23".
  * 16. TfServing error codes start with "24".
  * 17. Inference error codes start with "25".
+ * 18. Activities error codes start with "26".
  */
 @XmlRootElement
 public class RESTCodes {
@@ -394,7 +395,7 @@ public class RESTCodes {
     ELASTIC_INDEX_NOT_FOUND(14, "Elasticsearch indices do not exist", Response.Status.BAD_REQUEST),
     ELASTIC_TYPE_NOT_FOUND(15, "Elasticsearch type does not exist", Response.Status.BAD_REQUEST),
     
-    TENSORBOARD_ERROR(16, "Error getting the Tensorboard(s) for this application",
+    TENSORBOARD_ERROR(16, "Error getting the TensorBoard(s) for this application",
       Response.Status.NO_CONTENT),
     
     APPLICATIONID_NOT_FOUND(17, "Error while deleting job.", Response.Status.BAD_REQUEST),
@@ -408,8 +409,11 @@ public class RESTCodes {
     PROXY_ERROR(23, "Could not get proxy user.", Response.Status.INTERNAL_SERVER_ERROR),
 
     JOB_CONFIGURATION_CONVERT_TO_JSON_ERROR(24, "Could not convert JobConfiguration to json",
-        Response.Status.BAD_REQUEST);
-
+        Response.Status.BAD_REQUEST),
+    JOB_DELETION_FORBIDDEN(25, "Your role does not allow to delete this job.",  Response.Status.FORBIDDEN),
+    UNAUTHORIZED_EXECUTION_ACCESS(26, "This execution does not belong to a job of this project. ",
+      Response.Status.FORBIDDEN),
+    APPID_NOT_FOUND(27, "AppId not found.", Response.Status.NOT_FOUND);
     
     private Integer code;
     private String message;
@@ -835,7 +839,8 @@ public class RESTCodes {
     ACCOUNT_REGISTRATION_ERROR(44, "Account registration error.", Response.Status.INTERNAL_SERVER_ERROR),
     TWO_FA_DISABLED(45, "2-factor authentication is disabled.", Response.Status.PRECONDITION_FAILED),
     TRANSITION_STATUS_ERROR(46, "The user can't transition from current status to requested status",
-      Response.Status.BAD_REQUEST);
+      Response.Status.BAD_REQUEST),
+    ACCESS_CONTROL(47, "Client not authorized for this invocation.", Response.Status.FORBIDDEN);
     
     private Integer code;
     private String message;
@@ -1146,6 +1151,79 @@ public class RESTCodes {
       return message;
     }
 
+    public Response.StatusType getRespStatus() {
+      return respStatus;
+    }
+
+    @Override
+    public int getRange() {
+      return range;
+    }
+  }
+  
+  public enum ActivitiesErrorCode implements RESTErrorCode {
+
+    FORBIDDEN(0, "You are not allow to perform this action.", Response.Status.FORBIDDEN),
+    ACTIVITY_NOT_FOUND(1, "Activity instance not found", Response.Status.NOT_FOUND);
+
+    private int code;
+    private String message;
+    private Response.Status respStatus;
+    public final int range = 260000;
+
+    ActivitiesErrorCode(Integer code, String message, Response.Status respStatus) {
+      this.code = range + code;
+      this.message = message;
+      this.respStatus = respStatus;
+    }
+
+    @Override
+    public Integer getCode() {
+      return code;
+    }
+
+    @Override
+    public String getMessage() {
+      return message;
+    }
+
+    @Override
+    public Response.StatusType getRespStatus() {
+      return respStatus;
+    }
+
+    @Override
+    public int getRange() {
+      return range;
+    }
+  }
+  
+  public enum ResourceErrorCode implements RESTErrorCode {
+
+    INVALID_QUERY_PARAMETER(0, "Invalid query.", Response.Status.NOT_FOUND);
+
+    private int code;
+    private String message;
+    private Response.Status respStatus;
+    public final int range = 270000;
+
+    ResourceErrorCode(Integer code, String message, Response.Status respStatus) {
+      this.code = range + code;
+      this.message = message;
+      this.respStatus = respStatus;
+    }
+
+    @Override
+    public Integer getCode() {
+      return code;
+    }
+
+    @Override
+    public String getMessage() {
+      return message;
+    }
+
+    @Override
     public Response.StatusType getRespStatus() {
       return respStatus;
     }
