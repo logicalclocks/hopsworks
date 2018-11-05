@@ -387,6 +387,10 @@ public class UsersController {
   }
 
   public String generateUsername(String email) {
+    if (email == null) {
+      throw new IllegalArgumentException("Email is null");
+    }
+
     String emailUsername = email.substring(0, email.lastIndexOf("@")).toLowerCase();
 
     // Remove all special chars from the string

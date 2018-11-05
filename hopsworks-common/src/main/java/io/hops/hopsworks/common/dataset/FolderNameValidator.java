@@ -60,7 +60,7 @@ public class FolderNameValidator {
 
   public static void isValidName(String name, boolean subdir) throws DatasetException {
     if (name == null) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NAME_INVALID, Level.FINE, "Empty name");
+      throw new IllegalArgumentException("Dataset name is null");
     }
 
     Matcher m;
@@ -84,7 +84,7 @@ public class FolderNameValidator {
    */
   public static void isValidProjectName(String name) throws ProjectException {
     if (name == null) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.INVALID_PROJECT_NAME, Level.FINE);
+      throw new IllegalArgumentException("Project name is null");
     }
 
     Matcher m = projectNameRegexValidator.matcher(name);
