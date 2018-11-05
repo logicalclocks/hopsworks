@@ -39,17 +39,18 @@
 
 package io.hops.hopsworks.common.jobs.erasureCode;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import io.hops.hopsworks.common.jobs.MutableJsonObject;
 import io.hops.hopsworks.common.jobs.configuration.JobConfiguration;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
 
 @XmlRootElement
+@XmlAccessorType(XmlAccessType.NONE)
 public class ErasureCodeJobConfiguration extends JobConfiguration {
 
   private String filePath;
-
-  protected final static String KEY_TYPE = "type";
 
   public ErasureCodeJobConfiguration() {
     super();
@@ -69,17 +70,8 @@ public class ErasureCodeJobConfiguration extends JobConfiguration {
   }
 
   @Override
-  public JobType getType() {
+  @XmlElement(name="jobType")
+  public JobType getJobType() {
     return JobType.ERASURE_CODING;
-  }
-
-  @Override
-  public MutableJsonObject getReducedJsonObject() {
-    MutableJsonObject obj = super.getReducedJsonObject();
-
-    //additional key
-    obj.set(KEY_TYPE, JobType.ERASURE_CODING.toString());
-
-    return obj;
   }
 }

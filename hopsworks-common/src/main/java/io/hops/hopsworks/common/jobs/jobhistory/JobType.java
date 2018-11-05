@@ -39,6 +39,9 @@
 
 package io.hops.hopsworks.common.jobs.jobhistory;
 
+import javax.xml.bind.annotation.XmlEnum;
+
+@XmlEnum
 public enum JobType {
 
   YARN("Yarn"),

@@ -88,7 +88,7 @@ public class KafkaProperties extends ServiceProperties {
         Settings.KAFKA_DEFAULT_CONSUMER_GROUP).append(File.pathSeparator);
     if (consumerGroups != null) {
       for (ConsumerGroupDTO consumerGroup : consumerGroups) {
-        if (!consumerGroup.getName().equals(Settings.KAFKA_DEFAULT_CONSUMER_GROUP)) {
+        if (consumerGroup.getName() != null && !consumerGroup.getName().equals(Settings.KAFKA_DEFAULT_CONSUMER_GROUP)){
           sb.append(projectName).append("__").append(consumerGroup.getName()).append(File.pathSeparator);
         }
       }

@@ -187,9 +187,6 @@ public class SparkService {
       } else if (!HopsUtils.jobNameValidator(config.getAppName(), Settings.FILENAME_DISALLOWED_CHARS)) {
         throw new JobException(RESTCodes.JobErrorCode.JOB_NAME_INVALID, Level.FINE, "job name: " +config.getAppName());
       }
-      if (Strings.isNullOrEmpty(config.getAnacondaDir())) {
-        config.setAnacondaDir(settings.getAnacondaProjectDir(project.getName()));
-      }
       Jobs created = jobController.createJob(user, project, config);
       activityFacade.persistActivity(ActivityFacade.CREATED_JOB + created.getName(), project, user);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(created).build();

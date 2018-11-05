@@ -156,7 +156,9 @@ public class FlinkJob extends YarnJob {
     flinkBuilder.setAppJarPath(jobconfig.getJarPath());
     //Set Kafka params
     flinkBuilder.setServiceProps(serviceProps);
-    flinkBuilder.addExtraFiles(Arrays.asList(jobconfig.getLocalResources()));
+    if(jobconfig.getLocalResources() != null) {
+      flinkBuilder.addExtraFiles(Arrays.asList(jobconfig.getLocalResources()));
+    }
     //Set project specific resources, i.e. Kafka certificates
     flinkBuilder.addExtraFiles(projectLocalResources);
     if (jobconfig.getArgs() != null && !jobconfig.getArgs().isEmpty()) {

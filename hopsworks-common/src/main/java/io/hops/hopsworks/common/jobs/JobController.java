@@ -46,6 +46,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.xml.bind.JAXBException;
+
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.JobException;
@@ -68,8 +70,19 @@ public class JobController {
       throw new JobException(RESTCodes.JobErrorCode.JOB_NAME_EXISTS, Level.FINE,
         "Job with name:" + config.getAppName() + " for " + "project:" + project.getName() + " already exists");
     }
-    
-    Jobs created = jobFacade.create(user, project, config);
+
+    Jobs created;
+    try {
+      created = jobFacade.create(user, project, config);
+    } catch(IllegalStateException ise) {
+      if(ise.getCause() instanceof JAXBException) {
+        throw new JobException(RESTCodes.JobErrorCode.JOB_CONFIGURATION_CONVERT_TO_JSON_ERROR, Level.FINE,
+            "Unable to create json from JobConfiguration", ise.getMessage(), ise);
+      } else {
+        throw ise;
+      }
+    }
+
     if (config.getSchedule() != null) {
       scheduler.scheduleJobPeriodic(created);
     }
@@ -93,5 +106,4 @@ public class JobController {
     }
     return status;
   }
-
 }
