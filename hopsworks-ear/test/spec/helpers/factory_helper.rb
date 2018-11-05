@@ -45,6 +45,10 @@ module FactoryHelper
     SecureRandom.hex(4)
   end
 
+  def random_id
+    SecureRandom.hex(2)
+  end
+
   def pr(res)
     res.on_output do |val1, val2|
       # a is the process itself, b is the output

@@ -39,24 +39,14 @@
 
 package io.hops.hopsworks.common.dataset;
 
-import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.exception.DatasetException;
+import io.hops.hopsworks.common.exception.ProjectException;
 import io.hops.hopsworks.common.exception.RESTCodes;
-import io.hops.hopsworks.common.util.Settings;
 
 import java.util.logging.Level;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-/**
- * Validator for folder names. A folder name is valid if:
- * <ul>
- * <li> It is not empty. </li>
- * <li> It is not longer than 24 characters.</li>
- * <li> It does not end with a dot.</li>
- * <li> It does not contain any of the disallowed characters space (only for Dataset and Project dirs), /, \, ?, *,
- * :, |, ', \", &lt;, &gt; >, %, (, ), &, ;, #, __</li>
- * </ul>
- * <p/>
- */
 public class FolderNameValidator {
 
   /**
@@ -65,72 +55,41 @@ public class FolderNameValidator {
    * @param name
    * @param subdir Indicates a directory under a top-level dataset
    */
+  private static Pattern datasetNameRegex = Pattern.compile("^((?!__)[-_a-zA-Z0-9\\.]){1,87}[-_a-zA-Z0-9]$");
+  private static Pattern subDirNameRegex = Pattern.compile("^((?!__)[-_a-zA-Z0-9 \\.]){0,87}[-_a-zA-Z0-9]$");
+
   public static void isValidName(String name, boolean subdir) throws DatasetException {
-    String reason = "";
-    boolean valid = true;
-    if (name == null || name.isEmpty()) {
-      valid = false;
-      reason = ResponseMessages.FOLDER_NAME_NOT_SET;
-    } else if (name.length() > 88) {
-      valid = false;
-      reason = ResponseMessages.FOLDER_NAME_TOO_LONG;
-    } else if (name.endsWith(".")) {
-      valid = false;
-      reason = ResponseMessages.FOLDER_NAME_ENDS_WITH_DOT;
-    } else if (name.contains("" + Settings.DOUBLE_UNDERSCORE)) {
-      valid = false;
-      reason = ResponseMessages.FOLDER_NAME_CONTAIN_DISALLOWED_CHARS
-              + Settings.FILENAME_DISALLOWED_CHARS + Settings.DOUBLE_UNDERSCORE;
-    } else {
-      char[] disallowedChars = Settings.FILENAME_DISALLOWED_CHARS.toCharArray();
-      if (subdir) {
-        disallowedChars = Settings.SUBDIR_DISALLOWED_CHARS.toCharArray();
-      }
-      for (char c : disallowedChars ) {
-        if (name.contains("" + c)) {
-          valid = false;
-          reason = ResponseMessages.FOLDER_NAME_CONTAIN_DISALLOWED_CHARS
-                  + Settings.FILENAME_DISALLOWED_CHARS
-                  + Settings.DOUBLE_UNDERSCORE;
-        }
-      }
+    if (name == null) {
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NAME_INVALID, Level.FINE, "Empty name");
     }
-    if (!valid) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NAME_INVALID, Level.FINE, reason);
+
+    Matcher m;
+    if (subdir) {
+      m = subDirNameRegex.matcher(name);
+    } else {
+      m = datasetNameRegex.matcher(name);
+    }
+
+    if (!m.find()) {
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NAME_INVALID, Level.FINE);
     }
   }
-  
-  public static void isValidProjectName(String name, boolean subdir) throws DatasetException {
-    String reason = "";
-    boolean valid = true;
-    if (name == null || name.isEmpty()) {
-      valid = false;
-      reason = ResponseMessages.FOLDER_NAME_NOT_SET;
-    } else if (name.length() > 88) {
-      valid = false;
-      reason = ResponseMessages.FOLDER_NAME_TOO_LONG;
-    } else if (name.endsWith(".")) {
-      valid = false;
-      reason = ResponseMessages.FOLDER_NAME_ENDS_WITH_DOT;
-    } else if (name.contains("" + Settings.DOUBLE_UNDERSCORE)) {
-      valid = false;
-      reason = ResponseMessages.FOLDER_NAME_CONTAIN_DISALLOWED_CHARS
-              + Settings.PRINT_PROJECT_DISALLOWED_CHARS + Settings.DOUBLE_UNDERSCORE;
-    } else {
-      char[] disallowedChars = Settings.PROJECT_DISALLOWED_CHARS.toCharArray();
-      if (subdir) {
-        disallowedChars = Settings.SUBDIR_DISALLOWED_CHARS.toCharArray();
-      }
-      for (char c : disallowedChars ) {
-        if (name.contains("" + c)) {
-          valid = false;
-          reason = ResponseMessages.FOLDER_NAME_CONTAIN_DISALLOWED_CHARS + Settings.PRINT_PROJECT_DISALLOWED_CHARS
-                  + Settings.DOUBLE_UNDERSCORE;
-        }
-      }
+
+  private static Pattern projectNameRegexValidator = Pattern.compile("^[a-zA-Z0-9]((?!__)[_a-zA-Z0-9]){0,62}$");
+
+  /**
+   * Check if the given String is a valid Project name.
+   * <p/>
+   * @param name
+   */
+  public static void isValidProjectName(String name) throws ProjectException {
+    if (name == null) {
+      throw new ProjectException(RESTCodes.ProjectErrorCode.INVALID_PROJECT_NAME, Level.FINE);
     }
-    if (!valid) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NAME_INVALID, Level.FINE, reason);
+
+    Matcher m = projectNameRegexValidator.matcher(name);
+    if (!m.find()) {
+      throw new ProjectException(RESTCodes.ProjectErrorCode.INVALID_PROJECT_NAME, Level.FINE);
     }
   }
 }
