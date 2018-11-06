@@ -108,15 +108,15 @@ public class YarnJobsMonitor {
       minute = "*",
       hour = "*")
   synchronized public void monitor(Timer timer) {
-    if (init) {
-      List<Execution> execs = executionFacade.findAllNotFinished();
-      if (execs != null) {
-        for (Execution exec : execs) {
-          if (exec.getAppId() != null) {
-            executions.put(exec.getAppId(), exec);
-          }
+    List<Execution> execs = executionFacade.findAllNotFinished();
+    if (execs != null) {
+      for (Execution exec : execs) {
+        if (exec.getAppId() != null && !executions.containsKey(exec.getAppId())) {
+          executions.put(exec.getAppId(), exec);
         }
       }
+    }
+    if (init) {
       maxStatusPollRetry = settings.getMaxStatusPollRetry();
       init = false;
     }
