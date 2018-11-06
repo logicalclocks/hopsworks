@@ -46,20 +46,7 @@ public class ExecutionDTO extends RestDTO<Execution, ExecutionDTO> {
   public ExecutionDTO() {
   }
   
-  //@Override
-  public Comparator<Execution> getComparator(ResourceProperties.ResourceProperty property) {
-    if(property.getSortBy() != null) {
-      switch (property.getSortBy()) {
-        case ID:
-          return new ExecutionComparatorById(property.getOrderBy());
-        case NAME:
-          throw new UnsupportedOperationException();
-        default:
-          break;
-      }
-    }
-    return new ExecutionComparatorById(property.getOrderBy());
-  }
+  
   
   
   public Integer getId() {
@@ -158,27 +145,6 @@ public class ExecutionDTO extends RestDTO<Execution, ExecutionDTO> {
     this.duration = duration;
   }
   
-  class ExecutionComparatorById implements Comparator<Execution> {
-    ResourceProperties.OrderBy orderByAsc = ResourceProperties.OrderBy.ASC;
-    
-    ExecutionComparatorById(ResourceProperties.OrderBy orderByAsc){
-      if(orderByAsc != null) {
-        this.orderByAsc = orderByAsc;
-      }
-    }
-    
-    @Override
-    public int compare(Execution a, Execution b) {
-      switch (orderByAsc) {
-        case ASC:
-          return a.getSubmissionTime().compareTo(b.getSubmissionTime());
-        case DESC:
-          return b.getSubmissionTime().compareTo(a.getSubmissionTime());
-        default:
-          break;
-      }
-      throw new UnsupportedOperationException("Order By " + orderByAsc + " not supported");
-    }
-  }
+  
   
 }

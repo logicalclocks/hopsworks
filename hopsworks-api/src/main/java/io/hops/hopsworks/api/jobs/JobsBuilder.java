@@ -59,6 +59,9 @@ public class JobsBuilder {
   }
   
   public JobDTO build(UriInfo uriInfo, ResourceProperties resourceProperties, Jobs job) {
+    if(job == null){
+      throw new IllegalArgumentException("job parameter was null.");
+    }
     JobDTO dto = new JobDTO();
     uri(dto, uriInfo, job);
     expand(dto, resourceProperties);

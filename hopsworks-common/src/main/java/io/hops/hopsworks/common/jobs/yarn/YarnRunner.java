@@ -235,7 +235,7 @@ public class YarnRunner {
       YarnClientApplication app = yarnClient.createApplication();
       GetNewApplicationResponse appResponse = app.getNewApplicationResponse();
       appId = appResponse.getApplicationId();
-      //And replace all occurences of $APPID with the real id.
+      //And replace all occurrences of $APPID with the real id.
       fillInAppid(appId.toString());
 
       // When Hops RPC TLS is enabled, Yarn will take care of application certificate

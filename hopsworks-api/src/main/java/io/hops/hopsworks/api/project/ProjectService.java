@@ -624,7 +624,7 @@ public class ProjectService {
   }
 
   @Path("{projectId}/dataset")
-  public DataSetService datasets(@PathParam("projectId") Integer id) throws ProjectException {
+  public DataSetService datasets(@PathParam("projectId") Integer id) {
     this.dataSet.setProjectId(id);
     return this.dataSet;
   }
@@ -636,12 +636,12 @@ public class ProjectService {
   }
 
   @Path("{projectId}/jobs")
-  public JobService jobs(@PathParam("projectId") Integer projectId) throws ProjectException {
+  public JobService jobs(@PathParam("projectId") Integer projectId) {
     return this.jobs.setProject(projectId);
   }
 
   @Path("{projectId}/certs")
-  public CertService certs(@PathParam("projectId") Integer projectId) throws ProjectException {
+  public CertService certs(@PathParam("projectId") Integer projectId) {
     return this.certs.setProjectId(projectId);
   }
 

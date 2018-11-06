@@ -39,29 +39,18 @@
 
 package io.hops.hopsworks.api.jobs;
 
-import com.google.common.base.Strings;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jwt.JWTHelper;
-import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
-import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
-import io.hops.hopsworks.common.exception.GenericException;
 import io.hops.hopsworks.common.exception.JobException;
-import io.hops.hopsworks.common.exception.RESTCodes;
-import io.hops.hopsworks.common.exception.UserException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
-import io.hops.hopsworks.common.jobs.JobController;
 import io.hops.hopsworks.common.jobs.flink.FlinkController;
 import io.hops.hopsworks.common.jobs.flink.FlinkJobConfiguration;
-import io.hops.hopsworks.common.jobs.jobhistory.JobType;
-import io.hops.hopsworks.common.util.HopsUtils;
-import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 
 import javax.ejb.EJB;
@@ -69,18 +58,13 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
-import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -98,12 +82,6 @@ public class FlinkService {
   @EJB
   private FlinkController flinkController;
   @EJB
-  private JobFacade jobFacade;
-  @EJB
-  private ActivityFacade activityFacade;
-  @EJB
-  private JobController jobController;
-  @EJB
   private HdfsUsersController hdfsUsersBean;
   @EJB
   private DistributedFsService dfs;
@@ -117,21 +95,7 @@ public class FlinkService {
     return this;
   }
 
-  /**
-   * Get all the jobs in this project of type Flink.
-   * <p/>
-   * @return A list of all Jobs objects of type Flink in this
- project.
-   */
-  @GET
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response findAllFlinkJobs() {
-    List<Jobs> jobs = jobFacade.findJobsForProjectAndType(project,JobType.FLINK);
-    GenericEntity<List<Jobs>> jobList = new GenericEntity<List<Jobs>>(jobs) {};
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(jobList).build();
-  }
+  
 
   /**
    * Inspect a jar in HDFS prior to running a job. Returns a
@@ -140,17 +104,14 @@ public class FlinkService {
    * @param path
    * @param req
    * @return
-   * @throws io.hops.hopsworks.common.exception.UserException
    * @throws io.hops.hopsworks.common.exception.JobException
-   * @throws io.hops.hopsworks.common.exception.GenericException
    */
   @GET
   @Path("/inspect/{path: .+}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response inspectJar(@PathParam("path") String path, @Context HttpServletRequest req) throws UserException,
-      JobException, GenericException {
+  public Response inspectJar(@PathParam("path") String path, @Context HttpServletRequest req) throws JobException {
     Users user = jWTHelper.getUserPrincipal(req);
     String username = hdfsUsersBean.getHdfsUserName(project, user);
     DistributedFileSystemOps udfso = null;
@@ -162,38 +123,5 @@ public class FlinkService {
       dfs.closeDfsClient(udfso);
     }
   }
-
-  /**
-   * Create a new Job definition. If successful, the job is returned.
-   * <p/>
-   * @param config The configuration from which to create a Job.
-   * @param req
-   * @return
-   * @throws io.hops.hopsworks.common.exception.JobException
-   */
-  @POST
-  @Produces(MediaType.APPLICATION_JSON)
-  @Consumes(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response createJob(FlinkJobConfiguration config, @Context HttpServletRequest req) throws JobException {
-    if (config == null) {
-      throw new IllegalArgumentException("Job config was not provided.");
-    } else {
-      Users user = jWTHelper.getUserPrincipal(req);
-      String path = config.getJarPath();
-      if (!path.startsWith("hdfs")) {
-        path = "hdfs://" + path;
-      }
-
-      if (Strings.isNullOrEmpty(config.getAppName())) {
-        config.setAppName("Untitled Flink job");
-      } else if (!HopsUtils.jobNameValidator(config.getAppName(), Settings.FILENAME_DISALLOWED_CHARS)) {
-        throw new JobException(RESTCodes.JobErrorCode.JOB_NAME_INVALID, Level.FINE, "Job name:" + config.getAppName());
-      }
-      Jobs created = jobController.createJob(user, project, config);
-      activityFacade.persistActivity(ActivityFacade.CREATED_JOB, project, user);
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(created).build();
-    }
-  }
+  
 }

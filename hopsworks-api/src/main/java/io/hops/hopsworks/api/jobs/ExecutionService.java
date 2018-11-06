@@ -40,8 +40,10 @@
 package io.hops.hopsworks.api.jobs;
 
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
+import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.common.api.ResourceProperties;
 import io.hops.hopsworks.common.dao.jobhistory.Execution;
 import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
@@ -54,6 +56,9 @@ import io.hops.hopsworks.common.exception.JobException;
 import io.hops.hopsworks.common.exception.ProjectException;
 import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.jobs.execution.ExecutionController;
+import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -62,13 +67,17 @@ import javax.enterprise.context.RequestScoped;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
+import java.io.IOException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -86,6 +95,8 @@ public class ExecutionService {
   @EJB
   private ExecutionController executionController;
   @EJB
+  private ExecutionsBuilder executionsBuilder;
+  @EJB
   private YarnProjectsQuotaFacade yarnProjectsQuotaFacade;
   @EJB
   private JWTHelper jWTHelper;
@@ -96,22 +107,58 @@ public class ExecutionService {
     this.job = job;
     return this;
   }
-
-  /**
-   * Get all the executions for the given job.
-   * <p/>
-   * @return
-   */
+  
+  @ApiOperation(value = "Get a list of executions for the job.", response = ExecutionDTO.class)
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public Response getAllExecutions() {
-    List<Execution> executions = executionFacade.findForJob(job);
-    GenericEntity<List<Execution>> list = new GenericEntity<List<Execution>>(executions) {
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response getAllExecutions(
+    @ApiParam(value = "offset of the collection of executions") @QueryParam("offset") Integer offset,
+    @ApiParam(value = "number of executions to fetch") @QueryParam("limit") Integer limit,
+    @ApiParam(value = "attribute to sort the collection") @QueryParam("sort_by") ResourceProperties.SortBy sortBy,
+    @ApiParam(value = "attribute to order the collection") @QueryParam("order_by") ResourceProperties.OrderBy orderBy,
+    @ApiParam(value = "comma-separated list of entities to expand in the collection")
+    @QueryParam("expand") String expand,
+    @Context UriInfo uriInfo) {
+    
+    ExecutionDTO executionDTO = executionsBuilder.build(uriInfo,
+      new ResourceProperties(ResourceProperties.Name.EXECUTIONS, offset, limit, sortBy, orderBy, expand), job);
+    
+    GenericEntity<ExecutionDTO> entity = new GenericEntity<ExecutionDTO>(
+      executionDTO) {
     };
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(list).build();
+    return Response.ok().entity(entity).build();
   }
-
+  
+  
+  @ApiOperation(value = "Start/Stop a job",
+    notes = "Starts a job by creating and starting an Execution, stops a job by stopping the Execution.")
+  @PUT
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  public Response execution(
+    @ApiParam(value = "start or stop", required = true) @QueryParam("action") ExecutionController.JobAction action,
+    @Context UriInfo uriInfo) throws IOException, JobException, ProjectException {
+    Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
+    Execution exec;
+    switch (action) {
+      case start:
+        exec = executionController.start(job, user);
+        UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder();
+        uriBuilder.path(Integer.toString(exec.getId()));
+        return Response.created(uriBuilder.build()).entity(executionDTOBuilder.build(uriInfo,
+          new ResourceProperties(ResourceProperties.Name.EXECUTIONS), exec)).build();
+      case stop:
+        exec = executionController.kill(job, user);
+        return Response.ok().entity(executionDTOBuilder.build(uriInfo,
+          new ResourceProperties(ResourceProperties.Name.EXECUTIONS), exec)).build();
+      default:
+        return Response.status(Response.Status.BAD_REQUEST).build();
+    }
+  }
+  
+  
   /**
    * Start an Execution of the given job.
    * <p/>
@@ -144,7 +191,6 @@ public class ExecutionService {
     Users user = jWTHelper.getUserPrincipal(req);
 
     executionController.kill(job, user);
-    //executionController.stop(job, user, appid);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity("Job stopped").build();
   }
 

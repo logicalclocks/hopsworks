@@ -392,7 +392,7 @@ public class RESTCodes {
     ELASTIC_INDEX_NOT_FOUND(14, "Elasticsearch indices do not exist", Response.Status.BAD_REQUEST),
     ELASTIC_TYPE_NOT_FOUND(15, "Elasticsearch type does not exist", Response.Status.BAD_REQUEST),
     
-    TENSORBOARD_ERROR(16, "Error getting the Tensorboard(s) for this application",
+    TENSORBOARD_ERROR(16, "Error getting the TensorBoard(s) for this application",
       Response.Status.NO_CONTENT),
     
     APPLICATIONID_NOT_FOUND(17, "Error while deleting job.", Response.Status.BAD_REQUEST),
@@ -406,7 +406,8 @@ public class RESTCodes {
     PROXY_ERROR(23, "Could not get proxy user.", Response.Status.INTERNAL_SERVER_ERROR),
 
     JOB_CONFIGURATION_CONVERT_TO_JSON_ERROR(24, "Could not convert JobConfiguration to json",
-        Response.Status.BAD_REQUEST);
+        Response.Status.BAD_REQUEST),
+    JOB_DELETION_FORBIDDEN(25, "Your role does not allow to delete this job.",  Response.Status.FORBIDDEN);
 
     
     private Integer code;
