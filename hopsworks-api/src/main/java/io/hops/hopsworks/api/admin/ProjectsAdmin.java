@@ -120,7 +120,7 @@ public class ProjectsAdmin {
     LOGGER.log(Level.INFO, "Deleted project with id: " + id);
   
     RESTApiJsonResponse response = new RESTApiJsonResponse();
-    response.setSuccessMessage("Project with id " + id + " has been successfully deleted");
+    response.setSuccessMessage(ResponseMessages.PROJECT_REMOVED);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(response).build();
   }
 

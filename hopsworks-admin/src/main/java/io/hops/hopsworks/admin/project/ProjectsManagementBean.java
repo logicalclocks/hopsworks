@@ -160,7 +160,7 @@ public class ProjectsManagementBean implements Serializable {
         }
       }
 
-      projectController.removeProject(projectQuotasSelected.getOwner(),
+      projectController.removeProject(projectQuotasSelected.getOwnerEmail(),
           projectQuotasSelected.getId(), sessionId);
 
       projectsQuotas.remove(projectQuotasSelected);
