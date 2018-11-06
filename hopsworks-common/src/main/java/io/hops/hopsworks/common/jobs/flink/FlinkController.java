@@ -152,14 +152,12 @@ public class FlinkController {
     return execution;
   }
 
-  public void stopJob(Jobs job, Users user, String appid, String sessionId) throws
-      IllegalStateException,
-      IOException, NullPointerException, IllegalArgumentException {
+  public void stopJob(Jobs job, Users user, String appid, String sessionId) {
     //First: some parameter checking.
     if (job == null) {
-      throw new NullPointerException("Cannot stop a null job.");
+      throw new IllegalArgumentException("Job parameter was null.");
     } else if (user == null) {
-      throw new NullPointerException("Cannot stop a job as a null user.");
+      throw new IllegalArgumentException("Name parameter was null.");
     } else if (job.getJobType() != JobType.FLINK) {
       throw new IllegalArgumentException(
           "Job configuration is not a Flink job configuration.");

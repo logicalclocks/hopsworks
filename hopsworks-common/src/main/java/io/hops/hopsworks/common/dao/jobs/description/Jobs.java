@@ -98,7 +98,10 @@ import java.util.Date;
   @NamedQuery(name = "Jobs.findByProject",
           query
           = "SELECT j FROM Jobs j WHERE j.project = :project"),
-  @NamedQuery(name = "Jobs.findByNameAndProject",
+  @NamedQuery(name = "Jobs.findByProjectAndId",
+          query
+          = "SELECT j FROM Jobs j WHERE j.id = :id AND j.project = :project"),
+  @NamedQuery(name = "Jobs.findByProjectAndName",
           query
           = "SELECT j FROM Jobs j WHERE j.name = :name AND j.project = :project"),
   @NamedQuery(name = "Jobs.updateConfig",
@@ -106,7 +109,7 @@ import java.util.Date;
           = "UPDATE Jobs j SET j.jobConfig = :jobconfig  WHERE j.id = :id"),
   @NamedQuery(name = "Jobs.findByProjectAndType",
           query
-          = "SELECT j FROM Jobs j WHERE j.project = :project AND j.type = :type")})
+          = "SELECT j FROM Jobs j WHERE j.project = :project AND j.type in :typeList ORDER BY j.id ASC")})
 public class Jobs implements Serializable {
 
   private static final long serialVersionUID = 1L;

@@ -50,60 +50,70 @@ import javax.xml.bind.JAXBException;
 
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.exception.JobException;
 import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.jobs.configuration.JobConfiguration;
+import io.hops.hopsworks.common.jobs.configuration.ScheduleDTO;
 
 @Stateless
 public class JobController {
-
+  
   @EJB
   private JobFacade jobFacade;
   @EJB
   private JobScheduler scheduler;
-
-  private static final Logger logger = Logger.getLogger(JobController.class.getName());
-
+  @EJB
+  private ActivityFacade activityFacade;
+  
+  private static final Logger LOGGER = Logger.getLogger(JobController.class.getName());
+  
   public Jobs createJob(Users user, Project project, JobConfiguration config) throws JobException {
     //Check if job with same name exists and throw error is so
-    if(jobFacade.jobNameExists(project, config.getAppName())){
+    if (jobFacade.findByProjectAndName(project, config.getAppName()) != null) {
       throw new JobException(RESTCodes.JobErrorCode.JOB_NAME_EXISTS, Level.FINE,
         "Job with name:" + config.getAppName() + " for " + "project:" + project.getName() + " already exists");
     }
-
+    
     Jobs created;
     try {
       created = jobFacade.create(user, project, config);
-    } catch(IllegalStateException ise) {
-      if(ise.getCause() instanceof JAXBException) {
+    } catch (IllegalStateException ise) {
+      if (ise.getCause() instanceof JAXBException) {
         throw new JobException(RESTCodes.JobErrorCode.JOB_CONFIGURATION_CONVERT_TO_JSON_ERROR, Level.FINE,
-            "Unable to create json from JobConfiguration", ise.getMessage(), ise);
+          "Unable to create json from JobConfiguration", ise.getMessage(), ise);
       } else {
         throw ise;
       }
     }
-
+    
     if (config.getSchedule() != null) {
       scheduler.scheduleJobPeriodic(created);
     }
     return created;
   }
-
-  public boolean scheduleJob(int jobId) {
-    boolean status = false;
-    Jobs job = jobFacade.findById(jobId);
-    if (job != null) {
+  
+  public void updateSchedule(Project project, Jobs job, ScheduleDTO schedule, Users user) throws JobException {
+    boolean isScheduleUpdated = jobFacade.updateJobSchedule(job.getId(), schedule);
+    if (isScheduleUpdated) {
       scheduler.scheduleJobPeriodic(job);
-      status = true;
+      activityFacade.persistActivity(ActivityFacade.SCHEDULED_JOB + job.getName(), project, user);
+    } else {
+      throw new JobException(RESTCodes.JobErrorCode.JOB_SCHEDULE_UPDATE, Level.WARNING,
+        "Schedule is not updated in the database for jobid: " + job.getId());
     }
-    return status;
   }
-
+  
+  
   public boolean unscheduleJob(Jobs job) {
-    boolean status = false;
-    if (job != null) {
-      status = scheduler.unscheduleJob(job);
+    if (job.getJobConfig().getSchedule() != null) {
+      boolean status = scheduler.unscheduleJob(job);
+      job.getJobConfig().setSchedule(null);
+      jobFacade.updateJobSchedule(job.getId(), null);
+      if (!status) {
+        LOGGER.log(Level.WARNING, "Schedule does not exist in the scheduler for jobid {0}", job.getId());
+      }
     }
-    return status;
+    return scheduler.unscheduleJob(job);
   }
 }

@@ -51,8 +51,10 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -77,32 +79,64 @@ public class JobFacade extends AbstractFacade<Jobs> {
   protected EntityManager getEntityManager() {
     return em;
   }
-
+  
   /**
    * Find all the jobs in this project with the given type.
    * <p/>
-   * @param project
-   * @param type
+   * @param project project to get jobs for
+   * @param types types of jobs to search for
    * @return
    */
   public List<Jobs> findJobsForProjectAndType(
-      Project project, JobType type) {
+    Project project, EnumSet<JobType> types) {
     TypedQuery<Jobs> q = em.createNamedQuery("Jobs.findByProjectAndType",
-        Jobs.class);
+      Jobs.class);
     q.setParameter("project", project);
-    q.setParameter("type", type);
+    q.setParameter("typeList", types);
     return q.getResultList();
   }
-
+  
+  /**
+   * Find all the jobs in this project with the given type.
+   * <p/>
+   * @param project project to get jobs for
+   * @param types types of jobs to search for
+   * @return list of jobs
+   */
+  public List<Jobs> findJobsForProjectAndType(
+    Project project, EnumSet<JobType> types, Integer offset, Integer limit) {
+    TypedQuery<Jobs> q = em.createNamedQuery("Jobs.findByProjectAndType",
+      Jobs.class);
+    q.setParameter("project", project);
+    q.setParameter("typeList", types);
+    if (offset != null) {
+      q.setFirstResult(offset);
+    }
+    if (limit != null) {
+      q.setMaxResults(limit);
+    }
+    return q.getResultList();
+  }
+  
   /**
    * Find all the jobs defined in the given project.
    * <p/>
-   * @param project
-   * @return
+   * @param project project to get jobs for
+   * @return list job jobs
    */
   public List<Jobs> findForProject(Project project) {
+    return findForProject(project, null, null);
+  }
+  
+  public List<Jobs> findForProject(Project project, Integer offset, Integer limit) {
     TypedQuery<Jobs> q = em.createNamedQuery("Jobs.findByProject", Jobs.class);
     q.setParameter("project", project);
+    if (offset != null) {
+      q.setFirstResult(offset);
+    }
+    if (limit != null) {
+      q.setMaxResults(limit);
+    }
     return q.getResultList();
   }
 
@@ -135,16 +169,7 @@ public class JobFacade extends AbstractFacade<Jobs> {
     em.flush(); //To get the id.
     return job;
   }
-
-  /**
-   * Find the Jobs with given id.
-   * <p/>
-   * @param id
-   * @return The found entity or null if no such exists.
-   */
-  public Jobs findById(Integer id) {
-    return em.find(Jobs.class, id);
-  }
+  
   
   /**
    * Checks if a job with the given name exists in this project.
@@ -152,19 +177,27 @@ public class JobFacade extends AbstractFacade<Jobs> {
    * @param name name of job.
    * @return true if at least one job with that name was found.
    */
-  public boolean jobNameExists(Project project, String name) {
-    TypedQuery<Jobs> query = em.createNamedQuery("Jobs.findByNameAndProject", Jobs.class);
+  public Jobs findByProjectAndName(Project project, String name) {
+    TypedQuery<Jobs> query = em.createNamedQuery("Jobs.findByProjectAndName", Jobs.class);
     query.setParameter("name", name).setParameter("project", project);
-    if(query.getResultList() != null && !query.getResultList().  isEmpty()) {
-      return true;
+    try {
+      return query.getSingleResult();
+    } catch (NoResultException e) {
+      return null;
     }
-    return false;
   }
   
-  /**
-   *
-   * @param job
-   */
+  public Jobs findByProjectAndId(Project project, int id) {
+    TypedQuery<Jobs> query = em.createNamedQuery("Jobs.findByProjectAndId", Jobs.class);
+    query.setParameter("id", id).setParameter("project", project);
+    try {
+      return query.getSingleResult();
+    } catch (NoResultException e) {
+      return null;
+    }
+  }
+  
+  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   public void removeJob(Jobs job) {
     try {
       Jobs managedJob = em.find(Jobs.class, job.getId());

@@ -25,6 +25,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ws.rs.core.UriInfo;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 @Stateless
@@ -124,13 +125,50 @@ public class ExecutionsBuilder {
     if (executions != null && !executions.isEmpty()) {
       ResourceProperties.ResourceProperty property = resourceProperties.get(ResourceProperties.Name.EXECUTIONS);
       //Sort collection and return elements based on offset, limit, sortBy, orderBy
-      Collections.sort(executions, dto.getComparator(property));
+      Collections.sort(executions, getComparator(property));
       
       executions.forEach((exec) -> {
         dto.addItem(build(uriInfo, resourceProperties, exec));
       });
     }
     return dto;
+  }
+  
+  public Comparator<Execution> getComparator(ResourceProperties.ResourceProperty property) {
+    if(property.getSortBy() != null) {
+      switch (property.getSortBy()) {
+        case ID:
+          return new ExecutionComparatorById(property.getOrderBy());
+        case NAME:
+          throw new UnsupportedOperationException();
+        default:
+          break;
+      }
+    }
+    return new ExecutionComparatorById(property.getOrderBy());
+  }
+  
+  class ExecutionComparatorById implements Comparator<Execution> {
+    ResourceProperties.OrderBy orderByAsc = ResourceProperties.OrderBy.ASC;
+    
+    ExecutionComparatorById(ResourceProperties.OrderBy orderByAsc){
+      if(orderByAsc != null) {
+        this.orderByAsc = orderByAsc;
+      }
+    }
+    
+    @Override
+    public int compare(Execution a, Execution b) {
+      switch (orderByAsc) {
+        case ASC:
+          return a.getSubmissionTime().compareTo(b.getSubmissionTime());
+        case DESC:
+          return b.getSubmissionTime().compareTo(a.getSubmissionTime());
+        default:
+          break;
+      }
+      throw new UnsupportedOperationException("Order By " + orderByAsc + " not supported");
+    }
   }
 }
 

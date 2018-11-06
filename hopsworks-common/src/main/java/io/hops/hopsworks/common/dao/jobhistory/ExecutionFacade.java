@@ -101,7 +101,7 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
     q.setParameter("project", project);
     return q.getResultList();
   }
-
+  
   /**
    * Get all the executions for a given Jobs.
    * <p/>
@@ -109,9 +109,45 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
    * @return
    */
   public List<Execution> findForJob(Jobs job) {
+    return findForJob(job, null, null);
+  }
+  
+  /**
+   * Get all the executions for a given Jobs.
+   * <p/>
+   * @param job
+   * @return
+   */
+  public List<Execution> findForJob(Jobs job, Integer offset, Integer limit) {
     TypedQuery<Execution> q = em.createNamedQuery("Execution.findByJob",
-            Execution.class);
+      Execution.class);
     q.setParameter("job", job);
+    if (offset != null) {
+      q.setFirstResult(offset);
+    }
+    if (limit != null) {
+      q.setMaxResults(limit);
+    }
+    return q.getResultList();
+  }
+  
+  
+  /**
+   * Get all the executions for a given Jobs sorted by id ordered ASC.
+   * <p/>
+   * @param job
+   * @return
+   */
+  public List<Execution> findForJobSortByIdAsc(Jobs job, Integer offset, Integer limit) {
+    TypedQuery<Execution> q = em.createNamedQuery("Execution.findByJobSortByIdOrderByASC",
+      Execution.class);
+    q.setParameter("job", job);
+    if (offset != null) {
+      q.setFirstResult(offset);
+    }
+    if (limit != null) {
+      q.setMaxResults(limit);
+    }
     return q.getResultList();
   }
 

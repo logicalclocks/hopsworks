@@ -113,6 +113,9 @@ import java.util.List;
   @NamedQuery(name = "Execution.findByJob",
           query
           = "SELECT e FROM Execution e WHERE e.job = :job ORDER BY e.submissionTime DESC"),
+  @NamedQuery(name = "Execution.findByJobSortByIdOrderByASC",
+          query
+          = "SELECT e FROM Execution e WHERE e.job = :job ORDER BY e.id ASC"),
   @NamedQuery(name = "Execution.findByProjectAndJobId",
           query
           = "SELECT e FROM Execution e WHERE e.job.id = :jobid AND e.job.project "
