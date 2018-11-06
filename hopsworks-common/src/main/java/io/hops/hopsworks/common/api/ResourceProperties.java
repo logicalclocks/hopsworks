@@ -185,6 +185,7 @@ public class ResourceProperties {
     REQUESTS,
     INODES,
     MESSAGES,
+    ACTIVITIES,
     DATASETREQUESTS;
     
     
@@ -201,7 +202,8 @@ public class ResourceProperties {
   public enum SortBy {
     ID,
     NAME,
-    DATE_SENT
+    DATE_SENT,
+    DATE_CREATED
   }
   
   public enum OrderBy {
