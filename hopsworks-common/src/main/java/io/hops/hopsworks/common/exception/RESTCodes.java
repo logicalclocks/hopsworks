@@ -41,6 +41,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * 15. DelaCSR error codes start with "23".
  * 16. TfServing error codes start with "24".
  * 17. Inference error codes start with "25".
+ * 18. Activities error codes start with "26".
  */
 @XmlRootElement
 public class RESTCodes {
@@ -1131,6 +1132,42 @@ public class RESTCodes {
     public final int range = 250000;
 
     InferenceErrorCode(Integer code, String message, Response.Status respStatus) {
+      this.code = range + code;
+      this.message = message;
+      this.respStatus = respStatus;
+    }
+
+    @Override
+    public Integer getCode() {
+      return code;
+    }
+
+    @Override
+    public String getMessage() {
+      return message;
+    }
+
+    public Response.StatusType getRespStatus() {
+      return respStatus;
+    }
+
+    @Override
+    public int getRange() {
+      return range;
+    }
+  }
+  
+  public enum ActivitiesErrorCode implements RESTErrorCode {
+
+    FORBIDDEN(0, "You are not allow to perform this action.", Response.Status.FORBIDDEN),
+    ACTIVITY_NOT_FOUND(1, "Activity instance not found", Response.Status.NOT_FOUND);
+
+    private int code;
+    private String message;
+    private Response.Status respStatus;
+    public final int range = 260000;
+
+    ActivitiesErrorCode(Integer code, String message, Response.Status respStatus) {
       this.code = range + code;
       this.message = message;
       this.respStatus = respStatus;

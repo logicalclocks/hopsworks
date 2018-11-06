@@ -92,7 +92,6 @@
     <class>io.hops.hopsworks.common.dao.user.Users</class>
     <class>io.hops.hopsworks.common.dao.user.cluster.ClusterCert</class>
     <class>io.hops.hopsworks.common.dao.user.activity.Activity</class>
-    <class>io.hops.hopsworks.common.dao.user.activity.ActivityDetail</class>
     <class>io.hops.hopsworks.common.dao.user.security.Address</class>
     <class>io.hops.hopsworks.common.dao.user.security.Organization</class>
     <class>io.hops.hopsworks.common.dao.user.security.audit.AccountAudit</class>

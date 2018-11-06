@@ -39,6 +39,7 @@
 
 package io.hops.hopsworks.common.dao.user.activity;
 
+import io.hops.hopsworks.common.api.ResourceProperties;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
@@ -108,27 +109,23 @@ public class ActivityFacade extends AbstractFacade<Activity> {
   }
 
   public long getTotalCount() {
-    TypedQuery<Long> q = em.
-            createNamedQuery("Activity.countAll", Long.class);
+    TypedQuery<Long> q = em.createNamedQuery("Activity.countAll", Long.class);
     return q.getSingleResult();
   }
 
   public long getProjectCount(Project project) {
-    TypedQuery<Long> q = em.createNamedQuery("Activity.countPerProject",
-            Long.class);
+    TypedQuery<Long> q = em.createNamedQuery("Activity.countPerProject", Long.class);
     q.setParameter("project", project);
     return q.getSingleResult();
   }
 
-  public List<Activity> activityOnID(int id) {
-    Query query = em.createNamedQuery("Activity.findById",
-            Activity.class).setParameter("id", id);
-    return query.getResultList();
+  public Activity activityByID(int id) {
+    TypedQuery<Activity> query = em.createNamedQuery("Activity.findById", Activity.class).setParameter("id", id);
+    return query.getSingleResult();
   }
 
   public Activity lastActivityOnProject(Project project) {
-    TypedQuery<Activity> query = em.createNamedQuery("Activity.findByProject",
-            Activity.class);
+    TypedQuery<Activity> query = em.createNamedQuery("Activity.findByProject", Activity.class);
     query.setParameter("project", project);
     query.setMaxResults(1);
     try {
@@ -151,8 +148,7 @@ public class ActivityFacade extends AbstractFacade<Activity> {
   }
 
   public void persistActivity(String activity, Project project, String email) {
-    TypedQuery<Users> userQuery = em.createNamedQuery("Users.findByEmail",
-            Users.class);
+    TypedQuery<Users> userQuery = em.createNamedQuery("Users.findByEmail",Users.class);
     userQuery.setParameter("email", email);
     Users user;
     try {
@@ -170,8 +166,7 @@ public class ActivityFacade extends AbstractFacade<Activity> {
    * @return
    */
   public List<Activity> getAllActivities() {
-    TypedQuery<Activity> q = em.createNamedQuery("Activity.findAll",
-            Activity.class);
+    TypedQuery<Activity> q = em.createNamedQuery("Activity.findAll", Activity.class);
     return q.getResultList();
   }
 
@@ -181,11 +176,17 @@ public class ActivityFacade extends AbstractFacade<Activity> {
    * @param project
    * @return
    */
-  public List<Activity> getAllActivityOnProject(Project project) {
-    TypedQuery<Activity> q = em.createNamedQuery(
-            "Activity.findByProject", Activity.class);
+  public List<Activity> getAllActivityByProject(Project project) {
+    TypedQuery<Activity> q = em.createNamedQuery("Activity.findByProject", Activity.class);
     q.setParameter("project", project);
     return q.getResultList();
+  }
+
+  public Activity getActivityByIdAndProject(Project project, Integer id) {
+    TypedQuery<Activity> q = em.createNamedQuery("Activity.findByIdAndProject", Activity.class);
+    q.setParameter("id", id);
+    q.setParameter("project", project);
+    return q.getSingleResult();
   }
 
   /**
@@ -195,10 +196,16 @@ public class ActivityFacade extends AbstractFacade<Activity> {
    * @return
    */
   public List<Activity> getAllActivityByUser(Users user) {
-    TypedQuery<Activity> q = em.createNamedQuery(
-            "Activity.findByUser", Activity.class);
+    TypedQuery<Activity> q = em.createNamedQuery("Activity.findByUser", Activity.class);
     q.setParameter("user", user);
     return q.getResultList();
+  }
+
+  public Activity getActivityByIdAndUser(Users user, Integer id) {
+    TypedQuery<Activity> q = em.createNamedQuery("Activity.findByIdAndUser", Activity.class);
+    q.setParameter("id", id);
+    q.setParameter("user", user);
+    return q.getSingleResult();
   }
 
   /**
@@ -212,13 +219,10 @@ public class ActivityFacade extends AbstractFacade<Activity> {
    * @param user
    * @return
    */
-  public List<Activity> getPaginatedActivityByUser(int first,
-          int pageSize, Users user) {
-    TypedQuery<Activity> q = em.createNamedQuery(
-            "Activity.findByUser", Activity.class);
+  public List<Activity> getPaginatedActivityByUser(Integer first, Integer pageSize, Users user) {
+    TypedQuery<Activity> q = em.createNamedQuery("Activity.findByUser", Activity.class);
     q.setParameter("user", user);
-    q.setFirstResult(first);
-    q.setMaxResults(pageSize);
+    setOffsetAndLim(first, pageSize, q);
     return q.getResultList();
   }
 
@@ -230,11 +234,9 @@ public class ActivityFacade extends AbstractFacade<Activity> {
    * @param pageSize
    * @return
    */
-  public List<Activity> getPaginatedActivity(int first, int pageSize) {
-    TypedQuery<Activity> q = em.createNamedQuery("Activity.findAll",
-            Activity.class);
-    q.setFirstResult(first);
-    q.setMaxResults(pageSize);
+  public List<Activity> getPaginatedActivity(Integer first, Integer pageSize) {
+    TypedQuery<Activity> q = em.createNamedQuery("Activity.findAll", Activity.class);
+    setOffsetAndLim(first, pageSize, q);
     return q.getResultList();
   }
 
@@ -249,19 +251,73 @@ public class ActivityFacade extends AbstractFacade<Activity> {
    * @param project
    * @return
    */
-  public List<Activity> getPaginatedActivityForProject(int first,
-          int pageSize, Project project) {
-    TypedQuery<Activity> q = em.createNamedQuery(
-            "Activity.findByProject", Activity.class);
+  public List<Activity> getPaginatedActivityForProject(Integer first, Integer pageSize, Project project) {
+    TypedQuery<Activity> q = em.createNamedQuery("Activity.findByProject", Activity.class);
     q.setParameter("project", project);
-    q.setFirstResult(first);
-    q.setMaxResults(pageSize);
+    setOffsetAndLim(first, pageSize, q);
+    return q.getResultList();
+  }
+  
+  public List<Activity> getPaginatedActivity(Integer first, Integer pageSize, ResourceProperties.OrderBy orderBy, 
+      ResourceProperties.SortBy sortBy) {
+    String queryName = "Activity.findAll" + getQuery(orderBy, sortBy);
+    TypedQuery<Activity> q = em.createNamedQuery(queryName, Activity.class);
+    setOffsetAndLim(first, pageSize, q);
+    return q.getResultList();
+  }
+  
+  public List<Activity> getPaginatedActivityByProject(Integer first, Integer pageSize,
+      ResourceProperties.OrderBy orderBy, ResourceProperties.SortBy sortBy, Project project) {
+    String queryName = "Activity.findByProject" + getQuery(orderBy, sortBy);
+    TypedQuery<Activity> q = em.createNamedQuery(queryName, Activity.class);
+    q.setParameter("project", project);
+    setOffsetAndLim(first, pageSize, q);
+    return q.getResultList();
+  }
+
+  public List<Activity> getPaginatedActivityByUser(Integer first, Integer pageSize,
+      ResourceProperties.OrderBy orderBy, ResourceProperties.SortBy sortBy, Users user) {
+    String queryName = "Activity.findByUser" + getQuery(orderBy, sortBy);
+    TypedQuery<Activity> q = em.createNamedQuery(queryName, Activity.class);
+    q.setParameter("user", user);
+    setOffsetAndLim(first, pageSize, q);
     return q.getResultList();
   }
 
   public List<Activity> findAllTeamActivity(String flag) {
-    Query query = em.createNamedQuery("Activity.findByFlag",
-            Activity.class).setParameter("flag", flag);
+    Query query = em.createNamedQuery("Activity.findByFlag", Activity.class).setParameter("flag", flag);
     return query.getResultList();
+  }
+  
+  private void setOffsetAndLim(Integer first, Integer pageSize, TypedQuery<Activity> q) {
+    if (first != null) {
+      q.setFirstResult(first);
+    }
+    if (pageSize != null) {
+      q.setMaxResults(pageSize);
+    }
+  }
+
+  private String getQuery(ResourceProperties.OrderBy orderBy, ResourceProperties.SortBy sortBy) {
+    String query = "";
+    switch (sortBy) {
+      case ID:
+        query = query + "OrderById";
+        break;
+      case DATE_CREATED:
+        break;
+      default:
+        break;
+    }
+    switch (orderBy) {
+      case DESC:
+        break;
+      case ASC:
+        query = query + "Asc";
+        break;
+      default:
+        break;
+    }
+    return query;
   }
 }

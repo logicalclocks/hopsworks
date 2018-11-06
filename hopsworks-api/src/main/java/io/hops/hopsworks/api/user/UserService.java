@@ -39,6 +39,7 @@
 
 package io.hops.hopsworks.api.user;
 
+import io.hops.hopsworks.api.activities.UserActivitiesResource;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jwt.JWTHelper;
@@ -82,6 +83,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ws.rs.core.SecurityContext;
+import javax.inject.Inject;
 
 @Path("/user")
 @Stateless
@@ -90,7 +92,7 @@ import javax.ws.rs.core.SecurityContext;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class UserService {
 
-  private final static Logger logger = Logger.getLogger(UserService.class.getName());
+  private final static Logger LOGGER = Logger.getLogger(UserService.class.getName());
 
   @EJB
   private UserFacade userBean;
@@ -102,6 +104,8 @@ public class UserService {
   private ProjectController projectController;
   @EJB
   private ProjectTeamFacade projectTeamFacade;
+  @Inject
+  private UserActivitiesResource activitiesResource;
   @EJB
   private JWTHelper jWTHelper;
 
@@ -287,6 +291,11 @@ public class UserService {
     }
     userDTO.setRole(pt.getTeamRole());
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(userDTO).build();
+  }
+  
+  @Path("activities")
+  public UserActivitiesResource activities() {
+    return this.activitiesResource;
   }
 
 }

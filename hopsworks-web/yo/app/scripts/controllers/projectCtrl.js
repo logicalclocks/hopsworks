@@ -178,7 +178,7 @@ angular.module('hopsWorksApp')
 
             var getAllActivities = function () {
               ActivityService.getByProjectId(self.projectId).then(function (success) {
-                self.activities = success.data;
+                self.activities = success.data.items;
                 self.pageSize = 8;
                 self.totalPages = Math.floor(self.activities.length / self.pageSize);
                 self.totalItems = self.activities.length;

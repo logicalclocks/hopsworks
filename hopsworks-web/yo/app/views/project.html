@@ -60,13 +60,15 @@
                       <div class="right">
                         <div class="r-arrow"></div>
                         <div class="about-task">
-                          <div class="header">{{activity.user.fname}} {{activity.user.lname}} {{activity.activity}}
-                            <small class="muted">On {{activity.timestamp | date:'medium'}}
+                          <div class="header">
+                            {{activity.userDTO.firstname}} {{activity.userDTO.lastname}} {{activity.activity}}
+                            <small class="muted">
+                              <i class="glyphicon glyphicon-time"></i>
+                              {{activity.timestamp | date:'medium'}}
                             </small>
                           </div>
                           <p class="no-margin">
-                            Project name: {{activity.project.name}} Owner: {{activity.project.owner.fname}}
-                            Created on: {{activity.project.created| date:'medium'}}
+                            Project name: {{activity.projectName}}
                           </p>
                         </div>
                       </div>
