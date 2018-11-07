@@ -44,16 +44,15 @@ import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
+import io.hops.hopsworks.common.api.ResourceProperties;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.UserCardDTO;
-import io.hops.hopsworks.common.dao.user.UserDTO;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.UserProjectDTO;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.sshkey.SshKeyDTO;
 import io.hops.hopsworks.common.exception.ProjectException;
 import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.exception.UserException;
@@ -68,7 +67,6 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -84,11 +82,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ws.rs.core.SecurityContext;
 import javax.inject.Inject;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.UriInfo;
 
-@Path("/user")
+@Path("/users")
 @Stateless
 @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-@Api(value = "User", description = "User service")
+@Api(value = "Users", description = "Users service")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class UserService {
 
@@ -108,7 +109,38 @@ public class UserService {
   private UserActivitiesResource activitiesResource;
   @EJB
   private JWTHelper jWTHelper;
+  @EJB
+  private UsersBuilder usersBuilder;
 
+  @GET
+  @Produces(MediaType.APPLICATION_JSON)
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  public Response findAll(
+      @QueryParam("offset") Integer offset,
+      @QueryParam("limit") Integer limit,
+      @QueryParam("sort_by") ResourceProperties.SortBy sortBy,
+      @QueryParam("order_by") ResourceProperties.OrderBy orderBy,
+      @QueryParam("expand") String expand,
+      @Context UriInfo uriInfo) {
+    ResourceProperties resourceProperties = new ResourceProperties(ResourceProperties.Name.USERS, offset, limit,
+        sortBy, orderBy, expand);
+    UserDTO userDTO = usersBuilder.buildItems(uriInfo, resourceProperties); 
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(userDTO).build();
+  }
+  
+  @GET
+  @Path("{userId}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  public Response findAllById(
+      @PathParam("userId") Integer userId,
+      @QueryParam("expand") String expand,
+      @Context UriInfo uriInfo) {
+    ResourceProperties resourceProperties = new ResourceProperties(ResourceProperties.Name.USERS, expand);
+    UserDTO userDTO = null; 
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(userDTO).build();
+  }
+  
   @GET
   @Path("allcards")
   @Produces(MediaType.APPLICATION_JSON)
@@ -231,47 +263,6 @@ public class UserService {
       throw new UserException(RESTCodes.UserErrorCode.TWO_FA_DISABLED, Level.FINE);
     }
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
-  }
-
-  @POST
-  @Path("addSshKey")
-  @Consumes(MediaType.APPLICATION_JSON)
-  @Produces(MediaType.APPLICATION_JSON)
-  public Response addSshkey(SshKeyDTO sshkey, @Context SecurityContext sc) {
-    Users user = jWTHelper.getUserPrincipal(sc);
-    int id = user.getUid();
-    SshKeyDTO dto = userController.addSshKey(id, sshkey.getName(), sshkey.
-            getPublicKey());
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            dto).build();
-  }
-
-  @POST
-  @Path("removeSshKey")
-  @Produces(MediaType.APPLICATION_JSON)
-  public Response removeSshkey(@FormParam("name") String name, @Context SecurityContext sc) {
-    RESTApiJsonResponse json = new RESTApiJsonResponse();
-    Users user = jWTHelper.getUserPrincipal(sc);
-    int id = user.getUid();
-    userController.removeSshKey(id, name);
-    json.setSuccessMessage(ResponseMessages.SSH_KEY_REMOVED);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            json).build();
-  }
-
-  @GET
-  @Path("getSshKeys")
-  @Produces(MediaType.APPLICATION_JSON)
-  public Response getSshkeys(@Context SecurityContext sc) {
-    Users user = jWTHelper.getUserPrincipal(sc);
-    int id = user.getUid();
-    List<SshKeyDTO> sshKeys = userController.getSshKeys(id);
-
-    GenericEntity<List<SshKeyDTO>> sshKeyViews
-            = new GenericEntity<List<SshKeyDTO>>(sshKeys) {};
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            sshKeyViews).build();
-
   }
 
   @POST

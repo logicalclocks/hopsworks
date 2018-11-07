@@ -36,9 +36,9 @@
  * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
 package io.hops.hopsworks.common.dao.user;
 
+import io.hops.hopsworks.common.api.ResourceProperties;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.user.security.UserGroup;
 import io.hops.hopsworks.common.dao.user.security.UserGroupPK;
@@ -56,7 +56,7 @@ import java.util.List;
 
 @Stateless
 public class UserFacade extends AbstractFacade<Users> {
-  
+
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
@@ -71,14 +71,62 @@ public class UserFacade extends AbstractFacade<Users> {
 
   @Override
   public List<Users> findAll() {
-    TypedQuery<Users> query = em.createNamedQuery("Users.findAll",
-            Users.class);
+    TypedQuery<Users> query = em.createNamedQuery("Users.findAll", Users.class);
     return query.getResultList();
+  }
+
+  public List<Users> findAll(Integer first, Integer pageSize, ResourceProperties.OrderBy orderBy,
+      ResourceProperties.SortBy sortBy) {
+    String queryName = "Users.findAll" + getQuery(orderBy, sortBy);
+    TypedQuery<Users> query = em.createNamedQuery(queryName, Users.class);
+    setOffsetAndLim(first, pageSize, query);
+    return query.getResultList();
+  }
+
+  private void setOffsetAndLim(Integer first, Integer pageSize, TypedQuery<Users> q) {
+    if (first != null) {
+      q.setFirstResult(first);
+    }
+    if (pageSize != null) {
+      q.setMaxResults(pageSize);
+    }
+  }
+
+  private String getQuery(ResourceProperties.OrderBy orderBy, ResourceProperties.SortBy sortBy) {
+    String query = "";
+    sortBy = sortBy == null? ResourceProperties.SortBy.FIRST_NAME : sortBy;
+    switch (sortBy) {
+      case EMAIL:
+        query = query + "OrderByEmail";
+        break;
+      case DATE_CREATED:
+        query = query + "OrderByDate";
+        break;
+      case FIRST_NAME:
+        query = query + "OrderByFname";
+        break;
+      case LAST_NAME:
+        query = query + "OrderByLname";
+        break;
+      default:
+        break;
+    }
+    orderBy = orderBy == null? ResourceProperties.OrderBy.DESC : orderBy;
+    switch (orderBy) {
+      case DESC:
+        break;
+      case ASC:
+        query = query + "Asc";
+        break;
+      default:
+        break;
+    }
+    return query;
   }
 
   public List findAllUsers() {
     Query query = em.createNativeQuery("SELECT * FROM hopsworks.users",
-            Users.class);
+        Users.class);
     return query.getResultList();
   }
 
@@ -87,15 +135,15 @@ public class UserFacade extends AbstractFacade<Users> {
     query.setParameter("status", UserAccountStatus.VERIFIED_ACCOUNT);
     query.setParameter("mode", UserAccountType.M_ACCOUNT_TYPE);
     List<Users> res = query.getResultList();
-    
+
     query = em.createNamedQuery("Users.findByStatusAndMode", Users.class);
     query.setParameter("status", UserAccountStatus.NEW_MOBILE_ACCOUNT);
     query.setParameter("mode", UserAccountType.M_ACCOUNT_TYPE);
-    
+
     res.addAll(query.getResultList());
     return res;
   }
-  
+
   public Users findByUsername(String username) {
     try {
       return em.createNamedQuery("Users.findByUsername", Users.class).setParameter("username", username).
@@ -108,9 +156,9 @@ public class UserFacade extends AbstractFacade<Users> {
   public List<Users> filterUsersBasedOnProject(String name) {
 
     Query query = em.createNativeQuery(
-            "SELECT * FROM hopsworks.users WHERE email NOT IN (SELECT team_member "
-            + "FROM hopsworks.ProjectTeam WHERE name=?)",
-            Users.class).setParameter(1, name);
+        "SELECT * FROM hopsworks.users WHERE email NOT IN (SELECT team_member "
+        + "FROM hopsworks.ProjectTeam WHERE name=?)",
+        Users.class).setParameter(1, name);
     return query.getResultList();
   }
 
@@ -156,8 +204,8 @@ public class UserFacade extends AbstractFacade<Users> {
   public Users findByEmail(String email) {
     try {
       return em.createNamedQuery("Users.findByEmail", Users.class).setParameter(
-        "email", email)
-        .getSingleResult();
+          "email", email)
+          .getSingleResult();
     } catch (NoResultException e) {
       return null;
     }
@@ -175,11 +223,11 @@ public class UserFacade extends AbstractFacade<Users> {
    */
   public List<Users> findAllByStatus(UserAccountStatus status) {
     TypedQuery<Users> query = em.createNamedQuery("Users.findByStatus",
-            Users.class);
+        Users.class);
     query.setParameter("status", status);
     return query.getResultList();
   }
-  
+
   public List<Integer> findAllInGroup(int gid) {
     Query query = em.createNativeQuery(
         "SELECT u.uid FROM hopsworks.users u JOIN hopsworks.user_group g ON u.uid = g.uid Where g.gid = ?");
@@ -190,7 +238,7 @@ public class UserFacade extends AbstractFacade<Users> {
   /**
    * Add a new group for a user.
    *
-   * @param userMail 
+   * @param userMail
    * @param gidNumber
    * @return
    */
@@ -210,14 +258,14 @@ public class UserFacade extends AbstractFacade<Users> {
   public void removeGroup(String userMail, int gid) {
     Users user = findByEmail(userMail);
     UserGroup p = em.find(UserGroup.class, new UserGroup(
-            new UserGroupPK(user.getUid(), gid)).getUserGroupPK());
+        new UserGroupPK(user.getUid(), gid)).getUserGroupPK());
     em.remove(p);
   }
-  
+
   /**
-   * Update a user status 
+   * Update a user status
    *
-   * @param userMail 
+   * @param userMail
    * @param newStatus
    */
   public void updateStatus(String userMail, UserAccountStatus newStatus) {
@@ -225,5 +273,5 @@ public class UserFacade extends AbstractFacade<Users> {
     user.setStatus(newStatus);
     em.merge(user);
   }
-  
+
 }

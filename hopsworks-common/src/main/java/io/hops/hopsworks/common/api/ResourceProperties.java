@@ -202,6 +202,9 @@ public class ResourceProperties {
   public enum SortBy {
     ID,
     NAME,
+    FIRST_NAME,
+    LAST_NAME,
+    EMAIL,
     DATE_SENT,
     DATE_CREATED
   }
