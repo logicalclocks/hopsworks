@@ -165,6 +165,17 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
       return null;
     }
   }
+  
+  public Execution findByJobAndId(Jobs job, int id) {
+    TypedQuery<Execution> q = em.createNamedQuery("Execution.findByJobAndId", Execution.class);
+    q.setParameter("job", job);
+    q.setParameter("id", id);
+    try {
+      return q.getSingleResult();
+    } catch (NoResultException e) {
+      return null;
+    }
+  }
 
   public List<Execution> findbyProjectAndJobId(Project project, int jobId) {
     TypedQuery<Execution> q = em.createNamedQuery(
@@ -189,6 +200,8 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
       return null;
     }
   }
+  
+  
 
   /**
    * Get all executions that are not in a final state.
@@ -204,16 +217,6 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
     } catch (NoResultException e) {
       return null;
     }
-  }
-
-  /**
-   * Find the execution with given id.
-   * <p/>
-   * @param id
-   * @return The found entity, or null if no such exists.
-   */
-  public Execution findById(Integer id) {
-    return em.find(Execution.class, id);
   }
 
   public Execution create(Jobs job, Users user, String stdoutPath,
