@@ -46,6 +46,8 @@ import javax.ejb.EJB;
 import javax.ejb.Schedule;
 import javax.ejb.Singleton;
 import javax.ejb.Timer;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -69,7 +71,17 @@ public class ElasticCleaner {
       minute = "0",
       hour = "1")
   public void deleteLogIndices(Timer timer) {
-    LOGGER.log(Level.INFO, "Cleaning up elastic job lobs, if any");
+    //TODO(Theofilos): Remove check for ca module for 0.7.0 onwards
+    try {
+      String applicationName = InitialContext.doLookup("java:app/AppName");
+      String moduleName = InitialContext.doLookup("java:module/ModuleName");
+      if(applicationName.contains("hopsworks-ca") || moduleName.contains("hopsworks-ca")){
+        return;
+      }
+    } catch (NamingException e) {
+      LOGGER.log(Level.SEVERE, null, e);
+    }
+    LOGGER.log(Level.INFO, "Running ElasticCleaner.");
     //Get all log indices
     try {
       Map<String, IndexMetaData> indices = elasticContoller.getIndices("(" + Settings.ELASTIC_LOG_INDEX_REGEX + ")|("
