@@ -300,6 +300,7 @@ public class ActivityFacade extends AbstractFacade<Activity> {
 
   private String getQuery(ResourceProperties.OrderBy orderBy, ResourceProperties.SortBy sortBy) {
     String query = "";
+    sortBy = sortBy == null? ResourceProperties.SortBy.DATE_CREATED : sortBy;
     switch (sortBy) {
       case ID:
         query = query + "OrderById";
@@ -309,6 +310,7 @@ public class ActivityFacade extends AbstractFacade<Activity> {
       default:
         break;
     }
+    orderBy = orderBy == null? ResourceProperties.OrderBy.DESC : orderBy;
     switch (orderBy) {
       case DESC:
         break;
