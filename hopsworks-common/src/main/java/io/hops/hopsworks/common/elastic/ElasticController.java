@@ -962,8 +962,9 @@ public class ElasticController {
   public String getLogdirFromElastic(Project project, String elasticId) throws ProjectException {
     Map<String, String> params = new HashMap<>();
     params.put("op", "GET");
+    String projectName = project.getName().toLowerCase();
 
-    String experimentsIndex = project.getName() + "_experiments";
+    String experimentsIndex = projectName + "_experiments";
 
     String templateUrl = "http://"+settings.getElasticRESTEndpoint() + "/" +
         experimentsIndex + "/experiments/" + elasticId;
