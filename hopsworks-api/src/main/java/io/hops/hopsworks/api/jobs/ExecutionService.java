@@ -41,20 +41,17 @@ package io.hops.hopsworks.api.jobs;
 
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
-import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.common.api.ResourceProperties;
 import io.hops.hopsworks.common.dao.jobhistory.Execution;
 import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
-import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuota;
-import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuotaFacade;
-import io.hops.hopsworks.common.dao.project.PaymentType;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.GenericException;
 import io.hops.hopsworks.common.exception.JobException;
-import io.hops.hopsworks.common.exception.ProjectException;
 import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.jobs.AppInfoDTO;
+import io.hops.hopsworks.common.jobs.JobLogDTO;
 import io.hops.hopsworks.common.jobs.execution.ExecutionController;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.ApiOperation;
@@ -76,9 +73,9 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 import java.io.IOException;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -91,13 +88,10 @@ public class ExecutionService {
   @EJB
   private ExecutionFacade executionFacade;
   @EJB
-  private NoCacheResponse noCacheResponse;
-  @EJB
   private ExecutionController executionController;
   @EJB
   private ExecutionsBuilder executionsBuilder;
-  @EJB
-  private YarnProjectsQuotaFacade yarnProjectsQuotaFacade;
+  
   @EJB
   private JWTHelper jWTHelper;
   
@@ -131,92 +125,162 @@ public class ExecutionService {
     return Response.ok().entity(entity).build();
   }
   
+  @ApiOperation(value = "Find Execution by Id", response = ExecutionDTO.class)
+  @GET
+  @Path("{id}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response getExecution(
+    @ApiParam(value = "execution id", required = true) @PathParam("id") Integer id,
+    @QueryParam("expand") String expand,
+    @Context UriInfo uriInfo) throws JobException {
+    //If requested execution does not belong to job
+    Execution exec = executionFacade.findByJobAndId(job, id);
+    if(exec == null){
+      throw new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_NOT_FOUND, Level.FINE,
+        "execution with id: " + id + " does not belong to job: " + job.getName());
+    }
+    ExecutionDTO dto = executionsBuilder.build(uriInfo, new ResourceProperties(ResourceProperties.Name.EXECUTIONS,
+      expand), exec);
+    return Response.ok().entity(dto).build();
+  }
+  
   
   @ApiOperation(value = "Start/Stop a job",
     notes = "Starts a job by creating and starting an Execution, stops a job by stopping the Execution.")
   @PUT
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response execution(
-    @ApiParam(value = "start or stop", required = true) @QueryParam("action") ExecutionController.JobAction action,
-    @Context UriInfo uriInfo) throws IOException, JobException, ProjectException {
-    Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
+    @ApiParam(value = "start or stop", required = true) @QueryParam("action") ExecutionDTO.JobAction action,
+    @Context HttpServletRequest req,
+    @Context UriInfo uriInfo) throws JobException, GenericException {
+    
+    Users user = jWTHelper.getUserPrincipal(req);
     Execution exec;
     switch (action) {
       case start:
         exec = executionController.start(job, user);
         UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder();
         uriBuilder.path(Integer.toString(exec.getId()));
-        return Response.created(uriBuilder.build()).entity(executionDTOBuilder.build(uriInfo,
+        return Response.created(uriBuilder.build()).entity(executionsBuilder.build(uriInfo,
           new ResourceProperties(ResourceProperties.Name.EXECUTIONS), exec)).build();
       case stop:
         exec = executionController.kill(job, user);
-        return Response.ok().entity(executionDTOBuilder.build(uriInfo,
+        return Response.ok().entity(executionsBuilder.build(uriInfo,
           new ResourceProperties(ResourceProperties.Name.EXECUTIONS), exec)).build();
       default:
         return Response.status(Response.Status.BAD_REQUEST).build();
     }
+    
   }
   
-  
-  /**
-   * Start an Execution of the given job.
-   * <p/>
-   * @param req
-   * @return The new execution object.
-   * @throws io.hops.hopsworks.common.exception.ProjectException
-   * @throws io.hops.hopsworks.common.exception.GenericException
-   * @throws io.hops.hopsworks.common.exception.JobException
-   */
-  @POST
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public Response startExecution(@Context HttpServletRequest req) throws ProjectException, GenericException,
-      JobException {
-    Users user = jWTHelper.getUserPrincipal(req);
-    if(job.getProject().getPaymentType().equals(PaymentType.PREPAID)){
-      YarnProjectsQuota projectQuota = yarnProjectsQuotaFacade.findByProjectName(job.getProject().getName());
-      if(projectQuota==null || projectQuota.getQuotaRemaining() < 0){
-        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_QUOTA_ERROR, Level.FINE);
-      }
-    }
-    Execution exec = executionController.start(job, user);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(exec).build();
-  }
-
-  @POST
-  @Path("/stop")
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public Response stopExecution(@PathParam("jobId") int jobId, @Context HttpServletRequest req) {
-    Users user = jWTHelper.getUserPrincipal(req);
-
-    executionController.kill(job, user);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity("Job stopped").build();
-  }
-
-  /**
-   * Get the execution with the specified id under the given job.
-   * <p/>
-   * @param executionId
-   * @return
-   * @throws io.hops.hopsworks.common.exception.JobException
-   */
+  @ApiOperation(value = "Retrieve log of given execution and type", response = JobLogDTO.class)
   @GET
-  @Path("/{executionId}")
+  @Path("{id}/log/{type}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response getLog(
+    @PathParam("id") Integer id,
+    @PathParam("type") JobLogDTO.LogType type) throws JobException {
+
+    JobLogDTO dto = executionController.getLog(job, id, type);
+    return Response.ok().entity(dto).build();
+    
+  }
+  
+  @ApiOperation(value = "Retry log aggregation of given execution and type", response = JobLogDTO.class)
+  @POST
+  @Path("{id}/log/{type}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response retryLog(
+    @PathParam("id") Integer id,
+    @PathParam("type") JobLogDTO.LogType type) throws JobException {
+    
+    JobLogDTO dto = executionController.retryLogAggregation(job, id, type);
+    return Response.ok().entity(dto).build();
+    
+  }
+  
+  
+  @ApiOperation(value = "Get Application UI url, i.e. Spark or Flink, for given Execution by Id")
+  @GET
+  @Path("{id}/ui")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public Response getExecution(@PathParam("executionId") int executionId) throws JobException {
-    Execution execution = executionFacade.findById(executionId);
-    if (execution == null) {
-      return Response.status(Response.Status.NOT_FOUND).build();
-    } else if (!execution.getJob().equals(job)) {
-      //The user is requesting an execution that is not under the given job. May be a malicious user!
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response getExecutionUI(
+    @ApiParam(value = "id", required = true) @PathParam("id") Integer id,
+    @Context UriInfo uriInfo) throws JobException {
+    Execution exec = executionFacade.findByJobAndId(job, id);
+    if(exec == null){
       throw new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_NOT_FOUND, Level.FINE,
-        "Trying to access an execution of another job");
-    } else {
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(execution).build();
+        "execution with id: " + id + " does not belong to job: " + job.getName());
     }
-
+    String url = executionController.getExecutionUI(job, id);
+    return Response.ok().entity(url).build();
   }
-
+  
+  @ApiOperation(value = "Get YARN UI url for given Execution by Id")
+  @GET
+  @Path("{id}/yarnui")
+  @Produces(MediaType.TEXT_PLAIN)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response getYarnUI(
+    @ApiParam(value = "id", required = true) @PathParam("id") Integer id,
+    @Context UriInfo uriInfo) throws JobException {
+    Execution exec = executionFacade.findByJobAndId(job, id);
+    if(exec == null){
+      throw new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_NOT_FOUND, Level.FINE,
+        "execution with id: " + id + " does not belong to job: " + job.getName());
+    }
+    String url = executionController.getExecutionYarnUI(job, id);
+    return Response.ok().entity(url).build();
+  }
+  
+  @ApiOperation(value = "Get Application specific information for given Execution")
+  @GET
+  @Path("{id}/appinfo")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response getExecutionAppInfo(
+    @ApiParam(value = "id", required = true) @PathParam("id") Integer id,
+    @Context UriInfo uriInfo) throws JobException {
+    Execution exec = executionFacade.findByJobAndId(job, id);
+    if(exec == null){
+      throw new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_NOT_FOUND, Level.FINE,
+        "execution with id: " + id + " does not belong to job: " + job.getName());
+    }
+    AppInfoDTO dto = executionController.getExecutionAppInfo(job, id);
+    return Response.ok().entity(dto).build();
+  }
+  
+  @ApiOperation(value = "Get Application specific information for given Execution.")
+  @GET
+  @Path("{id}/prox/{path: .+}")
+  @Produces(MediaType.WILDCARD)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  public Response getExecutionProxy(
+    @ApiParam(value = "id", required = true) @PathParam("id") Integer id,
+    @PathParam("path") final String param,
+    @Context HttpServletRequest req,
+    @Context UriInfo uriInfo) throws JobException, IOException {
+    Execution exec = executionFacade.findByJobAndId(job, id);
+    if(exec == null){
+      throw new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_NOT_FOUND, Level.FINE,
+        "execution with id: " + id + " does not belong to job: " + job.getName());
+    }
+    Response.ResponseBuilder responseBuilder = executionController.getExecutionProxy(job, id, param, req);
+    return responseBuilder.build();
+    
+  }
+  
+  
 }

@@ -16,14 +16,12 @@
 package io.hops.hopsworks.api.jobs;
 
 import io.hops.hopsworks.api.user.UserDTO;
-import io.hops.hopsworks.common.api.ResourceProperties;
 import io.hops.hopsworks.common.api.RestDTO;
 import io.hops.hopsworks.common.dao.jobhistory.Execution;
 import io.hops.hopsworks.common.jobs.jobhistory.JobFinalStatus;
 import io.hops.hopsworks.common.jobs.jobhistory.JobState;
 
 import javax.xml.bind.annotation.XmlRootElement;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
@@ -45,9 +43,6 @@ public class ExecutionDTO extends RestDTO<Execution, ExecutionDTO> {
   
   public ExecutionDTO() {
   }
-  
-  
-  
   
   public Integer getId() {
     return id;
@@ -145,6 +140,9 @@ public class ExecutionDTO extends RestDTO<Execution, ExecutionDTO> {
     this.duration = duration;
   }
   
-  
+  public enum JobAction {
+    start,
+    stop;
+  }
   
 }

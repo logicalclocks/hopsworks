@@ -40,20 +40,11 @@
 package io.hops.hopsworks.api.jobs;
 
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
-import io.hops.hopsworks.api.filter.NoCacheResponse;
-import io.hops.hopsworks.api.jwt.JWTHelper;
-import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.exception.JobException;
 import io.hops.hopsworks.common.exception.RESTCodes;
-import io.hops.hopsworks.common.hdfs.DistributedFsService;
-import io.hops.hopsworks.common.hdfs.HdfsUsersController;
-import io.hops.hopsworks.common.jobs.JobController;
-import io.hops.hopsworks.common.jobs.configuration.JobConfiguration;
 import io.hops.hopsworks.common.jobs.spark.SparkController;
 import io.hops.hopsworks.common.jobs.spark.SparkJobConfiguration;
-import io.hops.hopsworks.common.util.Settings;
 import io.swagger.annotations.ApiOperation;
 
 import javax.ejb.EJB;
