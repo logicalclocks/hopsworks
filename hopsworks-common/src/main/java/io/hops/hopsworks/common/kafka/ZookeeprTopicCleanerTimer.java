@@ -58,6 +58,8 @@ import javax.ejb.EJB;
 import javax.ejb.Schedule;
 import javax.ejb.Singleton;
 import javax.ejb.Timer;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import java.io.IOException;
@@ -94,7 +96,18 @@ public class ZookeeprTopicCleanerTimer {
       minute = "0",
       hour = "*")
   public void execute(Timer timer) {
-
+  
+    //TODO(Theofilos): Remove check for ca module for 0.7.0 onwards
+    try {
+      String applicationName = InitialContext.doLookup("java:app/AppName");
+      String moduleName = InitialContext.doLookup("java:module/ModuleName");
+      if(applicationName.contains("hopsworks-ca") || moduleName.contains("hopsworks-ca")){
+        return;
+      }
+    } catch (NamingException e) {
+      LOGGER.log(Level.SEVERE, null, e);
+    }
+    LOGGER.log(Level.INFO, "Running ZookeeprTopicCleanerTimer.");
     Set<String> zkTopics = new HashSet<>();
     //30 seconds
     int sessionTimeoutMs = 30 * 1000;
