@@ -40,8 +40,16 @@ module ProjectHelper
   def with_valid_project
     @project ||= create_project
     get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent"
-    if response.code != 200 # project and logged in user not the same 
+    if response.code != 200 # project and logged in user not the same
       @project = create_project
+    end
+  end
+
+  def with_valid_tour_project(type)
+    @project ||= create_project_tour(type)
+    get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent"
+    if response.code != 200 # project and logged in user not the same
+      @project = create_project_tour(type)
     end
   end
 
@@ -54,7 +62,7 @@ module ProjectHelper
     expect_status(201)
     get_project_by_name(new_project[:projectName])
   end
-  
+
   def create_project_by_name(projectname)
     with_valid_session
     new_project = {projectName: projectname, description:"", status: 0, services: ["JOBS","HIVE", "KAFKA","SERVING"],
@@ -64,7 +72,15 @@ module ProjectHelper
     expect_status(201)
     get_project_by_name(new_project[:projectName])
   end
-  
+
+  def create_project_tour(tourtype)
+    with_valid_session
+    post "#{ENV['HOPSWORKS_API']}/project/starterProject/#{tourtype}"
+    expect_json(description: regex("A demo project*"))
+    expect_status(201)
+    get_project_by_name(json_body[:name])
+  end
+
   def delete_project(project)
     post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/delete"
     expect_json(successMessage: "The project and all related files were removed successfully.")
