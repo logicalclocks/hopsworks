@@ -219,8 +219,8 @@ angular.module('hopsWorksApp')
             });
 
             $scope.$on('$destroy', function () {
-               console.log("Stopping TensorBoard.");
                if(self.tb !== "") {
+                console.log("Stopping TensorBoard.");
                 self.stopTB();
                }
            });
