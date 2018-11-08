@@ -69,6 +69,8 @@ angular.module('hopsWorksApp')
             self.config = {};
             self.numNotEnabledEnvs = 0;
             self.opsStatus = {};
+            self.val.mode = "experiment";
+            self.advanced = true;
             self.dirs = [{
                 id: 1,
                 name: '/'
@@ -534,8 +536,6 @@ angular.module('hopsWorksApp')
                         self.toggleValue = true;
                         if (self.val.project.name.startsWith("demo_deep_learning")) {
                             self.experiment();
-                            self.val.mode = "experiment";
-                            self.advanced = true;
                             //Activate anaconda
                             PythonDepsService.enabled(self.projectId).then(
                                 function(success) {},
