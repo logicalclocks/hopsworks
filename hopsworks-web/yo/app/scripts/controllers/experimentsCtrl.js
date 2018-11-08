@@ -182,7 +182,6 @@ angular.module('hopsWorksApp')
             };
 
             self.stopTB = function() {
-
                 TensorBoardService.stopTensorBoard(self.projectId).then(
                     function(success) {
                         self.tb = "";
@@ -218,6 +217,13 @@ angular.module('hopsWorksApp')
                     });
                 };
             });
+
+            $scope.$on('$destroy', function () {
+               console.log("Stopping TensorBoard.");
+               if(self.tb !== "") {
+                self.stopTB();
+               }
+           });
 
             self.kibanaUI();
         }
