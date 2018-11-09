@@ -22,8 +22,8 @@ import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.Activity;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
-import io.hops.hopsworks.common.exception.ActivitiesException;
-import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.exceptions.ActivitiesException;
+import io.hops.hopsworks.restutils.RESTCodes;
 
 import java.util.Comparator;
 import java.util.Date;

@@ -32,8 +32,6 @@ import io.hops.hopsworks.common.dao.jobs.description.YarnAppUrlsDTO;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.exception.JobException;
-import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.jobs.AppInfoDTO;
 import io.hops.hopsworks.common.jobs.JobController;
 import io.hops.hopsworks.common.jobs.configuration.JobConfiguration;
@@ -44,7 +42,9 @@ import io.hops.hopsworks.common.jobs.spark.SparkJobConfiguration;
 import io.hops.hopsworks.common.jobs.yarn.YarnJobConfiguration;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.influxdb.InfluxDB;
@@ -119,8 +119,6 @@ public class JobsResource {
     this.project = projectFacade.find(projectId);
     return this;
   }
-  
-  private static final String PROXY_USER_COOKIE_NAME = "proxy-user";
   
   @ApiOperation(value = "Get a list of all jobs for this project", response = JobDTO.class)
   @GET

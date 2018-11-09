@@ -44,8 +44,8 @@ import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.ServiceException;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -58,8 +58,6 @@ import javax.ejb.Timer;
 import javax.ejb.TimerService;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -100,17 +98,7 @@ public class JupyterNotebookCleaner {
   @Timeout
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public void execute(Timer timer) throws ServiceException{
-  
-    //TODO(Theofilos): Remove check for ca module for 0.7.0 onwards
-    try {
-      String applicationName = InitialContext.doLookup("java:app/AppName");
-      String moduleName = InitialContext.doLookup("java:module/ModuleName");
-      if(applicationName.contains("hopsworks-ca") || moduleName.contains("hopsworks-ca")){
-        return;
-      }
-    } catch (NamingException e) {
-      LOGGER.log(Level.SEVERE, null, e);
-    }
+
     LOGGER.log(Level.INFO, "Running JupyterNotebookCleaner.");
     // 1. Get all Running Jupyter Notebook Servers
     List<JupyterProject> servers = jupyterFacade.getAllNotebookServers();
@@ -125,7 +113,7 @@ public class JupyterNotebookCleaner {
             Users user = usersFacade.findByUsername(hdfsUser.getUsername());
             LOGGER.log(Level.FINE, "Shutting down expired notebook for hdfs user " + hdfsUser.getName());
             jupyterController.shutdown(jp.getProjectId(), hdfsUser.getName(), user,
-              jp.getSecret(), jp.getPid(), jp.getPort());
+                jp.getSecret(), jp.getPid(), jp.getPort());
           } catch(Exception e) {
             LOGGER.log(Level.SEVERE, "Failed to cleanup notebook with port " + jp.getPort(), e);
           }

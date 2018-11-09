@@ -39,9 +39,9 @@
 
 package io.hops.hopsworks.dela;
 
-import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.common.util.Settings;
-import io.hops.hopsworks.common.exception.DelaException;
+import io.hops.hopsworks.exceptions.DelaException;
 import java.security.KeyStore;
 import java.util.logging.Level;
 import java.util.logging.Logger;

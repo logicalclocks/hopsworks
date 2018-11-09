@@ -41,7 +41,7 @@ package io.hops.hopsworks.common.kafka;
 
 import io.hops.hopsworks.common.dao.kafka.KafkaFacade;
 import io.hops.hopsworks.common.dao.kafka.ProjectTopics;
-import io.hops.hopsworks.common.exception.ServiceException;
+import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.common.util.Settings;
 import kafka.admin.AdminUtils;
 import kafka.common.TopicAlreadyMarkedForDeletionException;

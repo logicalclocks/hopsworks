@@ -49,10 +49,10 @@ import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.exception.EncryptionMasterPasswordException;
 import io.hops.hopsworks.common.message.MessageController;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.EncryptionMasterPasswordException;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
 
@@ -80,7 +80,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -108,14 +107,11 @@ public class CertificatesMgmService {
   @EJB
   private HostsFacade hostsFacade;
   @EJB
-  private OpensslOperations opensslOperations;
-  @EJB
   private ServiceCertificateRotationTimer serviceCertificateRotationTimer;
   
   private File masterPasswordFile;
   private final Map<Class, MasterPasswordChangeHandler> handlersMap = new ConcurrentHashMap<>();
-  private final ReentrantLock opensslLock = new ReentrantLock(true);
-  
+
   public CertificatesMgmService() {
   
   }
@@ -183,11 +179,7 @@ public class CertificatesMgmService {
     delaClusterCertsHandler.setFacade(clusterCertificateFacade);
     registerMasterPasswordChangeHandler(ClusterCertificate.class, delaClusterCertsHandler);
   }
-  
-  public ReentrantLock getOpensslLock() {
-    return opensslLock;
-  }
-  
+
   @Lock(LockType.READ)
   @AccessTimeout(value = 3, unit = TimeUnit.SECONDS)
   public String getMasterEncryptionPassword() throws IOException {
@@ -257,18 +249,7 @@ public class CertificatesMgmService {
       systemCommandFacade.persist(rotateCommand);
     }
   }
-  
-  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-  public void deleteServiceCertificate(Hosts host, Integer commandId) throws IOException, CAException {
-    String suffix = serviceCertificateRotationTimer.getToBeRevokedSuffix(Integer.toString(commandId));
-    try {
-      opensslOperations.revokeCertificate(host.getHostname(), suffix, CertificateType.HOST,
-          true, true);
-    } catch (IllegalArgumentException e) {
-      // Do nothing
-    }
-  }
-  
+
   @SuppressWarnings("unchecked")
   private List<String> callUpdateHandlers(String newDigest) throws EncryptionMasterPasswordException, IOException {
     List<String> updatedCertificates = new ArrayList<>();

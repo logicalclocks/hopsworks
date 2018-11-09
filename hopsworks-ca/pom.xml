@@ -65,54 +65,45 @@
     </dependency>
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
-      <artifactId>hopsworks-common</artifactId>
+      <artifactId>hopsworks-rest-utils</artifactId>
       <version>${project.version}</version>
-      <type>ejb</type>
-      <!--<scope>provided</scope>-->
-      <exclusions>
-        <exclusion>
-          <groupId>javax.servlet</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>com.sun.jersey</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.apache.flink</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-      </exclusions> 
     </dependency>
-
-    <!--CA module needs to bring this dependency as hopsworks-common is added as EJB therefore the hopsworks-persistence-->
-    <!--module is not included-->
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
-      <artifactId>hopsworks-persistence</artifactId>
+      <artifactId>hopsworks-jwt</artifactId>
       <version>${project.version}</version>
+      <type>ejb</type>
     </dependency>
 
-    <!-- jersey dependencies -->
-    <dependency>
-      <groupId>org.glassfish.jersey.core</groupId>
-      <artifactId>jersey-server</artifactId>
-      <version>2.21</version>
+   <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+      <version>1.3.2</version>
     </dependency>
     <dependency>
-      <groupId>org.glassfish.jersey.media</groupId>
-      <artifactId>jersey-media-multipart</artifactId>
-      <version>2.21</version>
+      <groupId>org.javatuples</groupId>
+      <artifactId>javatuples</artifactId>
+      <version>1.2</version>
     </dependency>
-    <!-- end of jersey dependencies -->
     <dependency>
       <groupId>io.swagger</groupId>
       <artifactId>swagger-jersey2-jaxrs</artifactId>
       <version>1.5.10</version>
     </dependency>
     <dependency>
+      <groupId>org.glassfish.jersey.core</groupId>
+      <artifactId>jersey-server</artifactId>
+      <version>2.21</version>
+    </dependency>
+    <dependency>
       <groupId>javax</groupId>
       <artifactId>javaee-web-api</artifactId>
+      <version>7.0</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>javax</groupId>
+      <artifactId>javaee-api</artifactId>
       <version>7.0</version>
       <scope>provided</scope>
     </dependency>
@@ -138,6 +129,14 @@
           </webResources>
           <warSourceDirectory>src/main/webapp</warSourceDirectory>
           <webXml>src/main/webapp/WEB-INF/web.xml</webXml>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>1.8</source>
+          <target>1.8</target>
         </configuration>
       </plugin>
     </plugins>

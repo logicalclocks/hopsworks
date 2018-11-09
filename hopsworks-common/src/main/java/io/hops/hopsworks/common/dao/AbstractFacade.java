@@ -39,7 +39,7 @@
 
 package io.hops.hopsworks.common.dao;
 
-import io.hops.hopsworks.common.exception.InvalidQueryException;
+import io.hops.hopsworks.exceptions.InvalidQueryException;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;

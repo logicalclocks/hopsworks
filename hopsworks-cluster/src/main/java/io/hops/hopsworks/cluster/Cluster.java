@@ -40,9 +40,15 @@ package io.hops.hopsworks.cluster;
 
 import io.hops.hopsworks.cluster.controller.ClusterController;
 import io.hops.hopsworks.common.dao.user.cluster.ClusterCert;
-import io.hops.hopsworks.common.exception.UserException;
+import io.hops.hopsworks.common.security.CSR;
+import io.hops.hopsworks.cluster.controller.DelaTrackerCertController;
+import io.hops.hopsworks.exceptions.DelaCSRCheckException;
+import io.hops.hopsworks.exceptions.GenericException;
+import io.hops.hopsworks.exceptions.HopsSecurityException;
+import io.hops.hopsworks.exceptions.UserException;
 import io.swagger.annotations.Api;
 
+import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
@@ -57,6 +63,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 import java.io.IOException;
 import java.util.List;
 import java.util.logging.Level;
@@ -72,6 +79,8 @@ public class Cluster {
   private ClusterController clusterController;
   @EJB
   private ClusterState clusterState;
+  @EJB
+  private DelaTrackerCertController delaTrackerCertController;
   
   @POST
   @Path("register")
@@ -116,30 +125,20 @@ public class Cluster {
 
   @GET
   @Path("register/confirm/{validationKey}")
-  public Response confirmRegister(@PathParam("validationKey") String validationKey, @Context HttpServletRequest req) {
+  public Response confirmRegister(@PathParam("validationKey") String validationKey, @Context HttpServletRequest req)
+      throws HopsSecurityException, GenericException {
     ClusterJsonResponse res = new ClusterJsonResponse();
-    try {
-      clusterController.validateRequest(validationKey, req, ClusterController.OP_TYPE.REGISTER);
-    } catch (IOException  ex) {
-      LOGGER.log(Level.SEVERE, null, ex);
-      res.setSuccessMessage("Could not validate registration.");
-      return Response.ok().entity(res).build();
-    }
+    clusterController.validateRequest(validationKey, req, ClusterController.OP_TYPE.REGISTER);
     res.setSuccessMessage("Cluster registration validated.");
     return Response.ok().entity(res).build();
   }
 
   @GET
   @Path("unregister/confirm/{validationKey}")
-  public Response confirmUnregister(@PathParam("validationKey") String validationKey, @Context HttpServletRequest req) {
+  public Response confirmUnregister(@PathParam("validationKey") String validationKey, @Context HttpServletRequest req)
+      throws HopsSecurityException, GenericException {
     ClusterJsonResponse res = new ClusterJsonResponse();
-    try {
-      clusterController.validateRequest(validationKey, req, ClusterController.OP_TYPE.UNREGISTER);
-    } catch (IOException  ex) {
-      LOGGER.log(Level.SEVERE, null, ex);
-      res.setSuccessMessage("Could not validate unregistration.");
-      return Response.ok().entity(res).build();
-    }
+    clusterController.validateRequest(validationKey, req, ClusterController.OP_TYPE.UNREGISTER);
     res.setSuccessMessage("Cluster unregistration validated.");
     return Response.ok().entity(res).build();
   }
@@ -172,5 +171,17 @@ public class Cluster {
     cluster.setOrganizationalUnitName(organizationalUnitName);
     ClusterCert clusters = clusterController.getCluster(cluster, req);
     return Response.ok().entity(clusters).build();
+  }
+
+  @POST
+  @Path("certificate")
+  @Produces(MediaType.APPLICATION_JSON)
+  @Consumes(MediaType.APPLICATION_JSON)
+  @RolesAllowed({"CLUSTER_AGENT"})
+  public Response singCertificate(CSR csr, @Context SecurityContext sc)
+      throws HopsSecurityException, GenericException, DelaCSRCheckException, IOException {
+    String userEmail = sc.getUserPrincipal().getName();
+    CSR signedCSR = delaTrackerCertController.signCsr(userEmail, csr);
+    return Response.ok().entity(signedCSR).build();
   }
 }

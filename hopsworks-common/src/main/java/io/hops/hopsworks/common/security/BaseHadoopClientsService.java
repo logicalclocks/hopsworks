@@ -38,7 +38,7 @@
  */
 package io.hops.hopsworks.common.security;
 
-import io.hops.hopsworks.common.exception.CryptoPasswordNotFoundException;
+import io.hops.hopsworks.exceptions.CryptoPasswordNotFoundException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.util.Settings;
 import org.apache.hadoop.conf.Configuration;

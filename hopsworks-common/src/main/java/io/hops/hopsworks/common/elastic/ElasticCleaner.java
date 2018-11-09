@@ -38,7 +38,7 @@
  */
 package io.hops.hopsworks.common.elastic;
 
-import io.hops.hopsworks.common.exception.ServiceException;
+import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.common.util.Settings;
 import org.elasticsearch.cluster.metadata.IndexMetaData;
 

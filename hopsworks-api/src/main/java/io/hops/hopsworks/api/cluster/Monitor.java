@@ -47,7 +47,7 @@ import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.dao.kagent.HostServices;
 import io.hops.hopsworks.common.dao.kagent.HostServicesFacade;
 import io.hops.hopsworks.common.dao.kagent.ServiceStatusDTO;
-import io.hops.hopsworks.common.exception.GenericException;
+import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.Api;
 

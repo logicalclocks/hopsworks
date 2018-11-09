@@ -44,8 +44,8 @@ import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.hdfs.inode.FsView;
-import io.hops.hopsworks.common.exception.DatasetException;
-import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.exceptions.DatasetException;
+import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 
 import javax.ejb.EJB;

@@ -38,10 +38,10 @@
  */
 package io.hops.hopsworks.common.dataset;
 
-import io.hops.hopsworks.common.exception.DatasetException;
-import io.hops.hopsworks.common.exception.ProjectException;
-import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.util.ProjectUtils;
+import io.hops.hopsworks.exceptions.DatasetException;
+import io.hops.hopsworks.exceptions.ProjectException;
+import io.hops.hopsworks.restutils.RESTCodes;
 
 import java.util.logging.Level;
 import java.util.regex.Matcher;

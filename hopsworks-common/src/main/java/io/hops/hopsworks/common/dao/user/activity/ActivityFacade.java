@@ -41,7 +41,7 @@ package io.hops.hopsworks.common.dao.user.activity;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.exception.InvalidQueryException;
+import io.hops.hopsworks.exceptions.InvalidQueryException;
 
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;

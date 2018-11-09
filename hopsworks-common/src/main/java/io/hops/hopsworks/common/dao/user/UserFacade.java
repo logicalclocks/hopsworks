@@ -43,7 +43,7 @@ import io.hops.hopsworks.common.dao.user.security.UserGroup;
 import io.hops.hopsworks.common.dao.user.security.UserGroupPK;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountType;
-import io.hops.hopsworks.common.exception.InvalidQueryException;
+import io.hops.hopsworks.exceptions.InvalidQueryException;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
