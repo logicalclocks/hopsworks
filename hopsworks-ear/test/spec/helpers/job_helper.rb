@@ -36,10 +36,7 @@ module JobHelper
         "spark.dynamicAllocation.enabled":false,
         "spark.dynamicAllocation.minExecutors":1,
         "spark.dynamicAllocation.maxExecutors":10,
-        "spark.dynamicAllocation.initialExecutors":1,
-        "schedule":null,
-        "flinkjobtype":"Streaming",
-        "localResources":[]
+        "spark.dynamicAllocation.initialExecutors":1
     }
 
     post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jobs", job_conf
@@ -51,19 +48,19 @@ module JobHelper
   end
 
   def get_jobs(project_id)
-    get "/hopsworks-api-v2/projects/#{project_id}/jobs"
+    get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs"
   end
 
   def get_job_details(project_id, job_id)
-    get "/hopsworks-api-v2/projects/#{project_id}/jobs/#{job_id}"
+    get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs/#{job_id}"
   end
 
   def delete_job(project_id, job_id)
-    delete "/hopsworks-api-v2/projects/#{project_id}/jobs/#{job_id}"
+    delete "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs/#{job_id}"
   end
 
   def get_project_jobs(project_id)
-    get "/hopsworks-api-v2/projects/#{project_id}/jobs"
+    get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs"
   end
 
   def get_job(job_id)

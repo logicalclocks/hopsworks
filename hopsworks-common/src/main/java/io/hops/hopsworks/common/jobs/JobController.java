@@ -53,8 +53,14 @@ import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.exception.JobException;
 import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
+import io.hops.hopsworks.common.hdfs.DistributedFsService;
+import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.jobs.configuration.JobConfiguration;
 import io.hops.hopsworks.common.jobs.configuration.ScheduleDTO;
+import io.hops.hopsworks.common.jobs.flink.FlinkController;
+import io.hops.hopsworks.common.jobs.jobhistory.JobType;
+import io.hops.hopsworks.common.jobs.spark.SparkController;
 
 @Stateless
 public class JobController {
@@ -65,6 +71,14 @@ public class JobController {
   private JobScheduler scheduler;
   @EJB
   private ActivityFacade activityFacade;
+  @EJB
+  private HdfsUsersController hdfsUsersBean;
+  @EJB
+  private DistributedFsService dfs;
+  @EJB
+  private SparkController sparkController;
+  @EJB
+  private FlinkController flinkController;
   
   private static final Logger LOGGER = Logger.getLogger(JobController.class.getName());
   
@@ -115,5 +129,31 @@ public class JobController {
       }
     }
     return scheduler.unscheduleJob(job);
+  }
+  
+  
+  public JobConfiguration inspectProgram(String path, Project project, Users user, JobType jobType) throws JobException {
+    DistributedFileSystemOps udfso = null;
+    try {
+      String username = hdfsUsersBean.getHdfsUserName(project, user);
+      udfso = dfs.getDfsOps(username);
+      LOGGER.log(Level.INFO, "Executing job by {0} at path: {1}", new Object[]{username, path});
+      if (!path.endsWith(".jar") && !path.endsWith(".py")) {
+        throw new IllegalArgumentException("Path does not point to a jar or .py file.");
+      }
+      switch (jobType){
+        case SPARK:
+        case PYSPARK:
+          return sparkController.inspectProgram(path, udfso);
+        case FLINK:
+          return flinkController.inspectProgram(path, udfso);
+          default:
+            throw new IllegalArgumentException("Job type not supported: " + jobType);
+      }
+    } finally {
+      if (udfso != null) {
+        dfs.closeDfsClient(udfso);
+      }
+    }
   }
 }
