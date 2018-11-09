@@ -117,7 +117,7 @@ public class FlinkService {
     DistributedFileSystemOps udfso = null;
     try {
       udfso = dfs.getDfsOps(username);
-      FlinkJobConfiguration config = flinkController.inspectJar(path,username, udfso);
+      FlinkJobConfiguration config = flinkController.inspectProgram(path,username, udfso);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(config).build();
     } finally {
       dfs.closeDfsClient(udfso);

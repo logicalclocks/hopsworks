@@ -65,7 +65,6 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.api.serving.TfServingService.class);
     register(io.hops.hopsworks.api.serving.inference.InferenceResource.class);
     register(io.hops.hopsworks.api.jobs.KafkaService.class);
-    register(io.hops.hopsworks.api.jobs.SparkService.class);
     register(io.hops.hopsworks.api.project.DataSetService.class);
     register(io.hops.hopsworks.api.project.HistoryService.class);
     register(io.hops.hopsworks.api.project.MessageService.class);

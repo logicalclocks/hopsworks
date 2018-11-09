@@ -159,43 +159,7 @@ public class SparkController {
   }
 
   
-  public SparkJobConfiguration inspectProgram(String path, Project project, String userEmail) throws JobException {
   
-    DistributedFileSystemOps udfso = null;
-    try {
-      Users user = userFacade.findByEmail(userEmail);
-      String username = hdfsUsersBean.getHdfsUserName(project, user);
-      udfso = dfs.getDfsOps(username);
-      LOGGER.log(Level.INFO, "Executing Spark job by {0} at path: {1}", new Object[]{username, path});
-      if (!path.endsWith(".jar") && !path.endsWith(".py")) {
-        throw new IllegalArgumentException("Path does not point to a jar or .py file.");
-      }
-      SparkJobConfiguration config = new SparkJobConfiguration();
-      //If the main program is in a jar, try to set main class from it
-      if (path.endsWith(".jar")) {
-        try (JarInputStream jis = new JarInputStream(udfso.open(path))) {
-          Manifest mf = jis.getManifest();
-          if (mf != null) {
-            Attributes atts = mf.getMainAttributes();
-            if (atts.containsKey(Name.MAIN_CLASS)) {
-              config.setMainClass(atts.getValue(Name.MAIN_CLASS));
-            }
-          }
-        } catch (IOException ex) {
-          throw new JobException(RESTCodes.JobErrorCode.JAR_INSPECTION_ERROR, Level.SEVERE,
-            "Failed to inspect jar at:" + path, ex.getMessage(), ex);
-        }
-      } else {
-        config.setMainClass(Settings.SPARK_PY_MAINCLASS);
-      }
-      config.setAppPath(path);
-      return config;
-    } finally {
-      if (udfso != null) {
-        dfs.closeDfsClient(udfso);
-      }
-    }
-  }
   
   public void deleteJob(Jobs job, Users user) throws JobException {
     //Kill running execution of this job (if any)
@@ -228,6 +192,29 @@ public class SparkController {
     } else if (!Strings.isNullOrEmpty(path) && !path.endsWith(".jar") && !path.endsWith(".py")) {
       throw new IllegalArgumentException("Path does not point to a jar or .py file.");
     }
+  }
+  
+  public SparkJobConfiguration inspectProgram(String path, DistributedFileSystemOps udfso) throws JobException {
+    SparkJobConfiguration config = new SparkJobConfiguration();
+    //If the main program is in a jar, try to set main class from it
+    if (path.endsWith(".jar")) {
+      try (JarInputStream jis = new JarInputStream(udfso.open(path))) {
+        Manifest mf = jis.getManifest();
+        if (mf != null) {
+          Attributes atts = mf.getMainAttributes();
+          if (atts.containsKey(Attributes.Name.MAIN_CLASS)) {
+            config.setMainClass(atts.getValue(Attributes.Name.MAIN_CLASS));
+          }
+        }
+      } catch (IOException ex) {
+        throw new JobException(RESTCodes.JobErrorCode.JAR_INSPECTION_ERROR, Level.SEVERE,
+          "Failed to inspect jar at:" + path, ex.getMessage(), ex);
+      }
+    } else {
+      config.setMainClass(Settings.SPARK_PY_MAINCLASS);
+    }
+    config.setAppPath(path);
+    return config;
   }
 
 }

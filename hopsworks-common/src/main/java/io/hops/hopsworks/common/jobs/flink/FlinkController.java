@@ -227,20 +227,10 @@ public class FlinkController {
    * configuration for this job.
    * <p/>
    * @param path
-   * @param username the user name in a project (projectName__username)
    * @param udfso
    * @return
    */
-  public FlinkJobConfiguration inspectJar(String path, String username,
-      DistributedFileSystemOps udfso) throws JobException {
-    LOGGER.log(Level.INFO, "Executing Flink job by {0} at path: {1}", new Object[]{
-      username, path});
-    if (!path.endsWith(".jar")) {
-      throw new IllegalArgumentException("Path does not point to a jar file.");
-    }
-    LOGGER.log(Level.INFO, "Really executing Flink job by {0} at path: {1}",
-        new Object[]{username, path});
-  
+  public FlinkJobConfiguration inspectProgram(String path, DistributedFileSystemOps udfso) throws JobException {
     try (JarInputStream jis = new JarInputStream(udfso.open(path))) {
       Manifest mf = jis.getManifest();
       Attributes atts = mf.getMainAttributes();
