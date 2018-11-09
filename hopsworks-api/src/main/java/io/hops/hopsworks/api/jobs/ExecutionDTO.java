@@ -17,7 +17,6 @@ package io.hops.hopsworks.api.jobs;
 
 import io.hops.hopsworks.api.user.UserDTO;
 import io.hops.hopsworks.common.api.RestDTO;
-import io.hops.hopsworks.common.dao.jobhistory.Execution;
 import io.hops.hopsworks.common.jobs.jobhistory.JobFinalStatus;
 import io.hops.hopsworks.common.jobs.jobhistory.JobState;
 
@@ -26,7 +25,7 @@ import java.util.Date;
 import java.util.List;
 
 @XmlRootElement
-public class ExecutionDTO extends RestDTO<Execution, ExecutionDTO> {
+public class ExecutionDTO extends RestDTO<ExecutionDTO> {
   
   private Integer id;
   private Date submissionTime;

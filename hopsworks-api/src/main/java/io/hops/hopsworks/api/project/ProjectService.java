@@ -781,7 +781,8 @@ public class ProjectService {
   }
 
   @Path("{projectId}/serving")
-  public TfServingService tfServingService(@PathParam("projectId") Integer id) {
+  public TfServingService tfServingService(@PathParam("projectId") Integer id, @Context HttpServletRequest req) {
+    Users user = jWTHelper.getUserPrincipal(req);
     this.tfServingService.setProjectId(id);
     return this.tfServingService;
   }
