@@ -360,7 +360,7 @@ public class KubeTfServingController implements TfServingController {
     List<EnvVar> tfServingEnv = new ArrayList<>();
     tfServingEnv.add(new EnvVarBuilder().withName(SERVING_ID).withValue(servingIdStr).build());
     tfServingEnv.add(new EnvVarBuilder().withName(MODEL_NAME).withValue(tfServing.getModelName()).build());
-    tfServingEnv.add(new EnvVarBuilder().withName("PROJECT_NAME").withValue(project.getName()).build());
+    tfServingEnv.add(new EnvVarBuilder().withName("PROJECT_NAME").withValue(project.getName().toLowerCase()).build());
     tfServingEnv.add(new EnvVarBuilder().withName(MODEL_DIR)
         .withValue("hdfs://" + hdfsLEFacade.getSingleEndpoint() + tfServing.getModelPath()).build());
     tfServingEnv.add(new EnvVarBuilder().withName(MODEL_VERSION)

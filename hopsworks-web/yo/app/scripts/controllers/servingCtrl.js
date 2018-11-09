@@ -332,7 +332,7 @@ angular.module('hopsWorksApp')
          var projectName = UtilsService.getProjectName();
          self.kibanaUI = "/hopsworks-api/kibana/app/kibana?projectId=" + self.projectId +
              "#/discover?_g=()&_a=(columns:!(modelname,host,log_message,'@timestamp')," +
-             "index:'" + projectName + "_serving-*',interval:auto," +
+             "index:'" + projectName.toLowerCase() + "_serving-*',interval:auto," +
              "query:(language:lucene,query:'modelname:" + serving.modelName + "'),sort:!(_score,desc))";
          self.showLogs = true;
       };
