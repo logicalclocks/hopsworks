@@ -69,8 +69,6 @@ angular.module('hopsWorksApp')
             self.config = {};
             self.numNotEnabledEnvs = 0;
             self.opsStatus = {};
-            self.val.mode = "experiment";
-            self.advanced = true;
             self.dirs = [{
                 id: 1,
                 name: '/'
@@ -535,6 +533,7 @@ angular.module('hopsWorksApp')
                         self.sliderOptions.max = self.val.dynamicMaxExecutors;
                         self.toggleValue = true;
                         if (self.val.project.name.startsWith("demo_deep_learning")) {
+                            self.val.mode = "experiment";
                             self.experiment();
                             //Activate anaconda
                             PythonDepsService.enabled(self.projectId).then(
@@ -556,7 +555,7 @@ angular.module('hopsWorksApp')
                                 });
 
                         } else {
-                            self.val.mode = "sparkDynamic";
+                            self.val.mode = "sparkdynamic";
                         }
                         if (self.val.logLevel === "FINE") {
                             self.logLevelSelected = self.log_levels[0];
