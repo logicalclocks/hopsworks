@@ -59,12 +59,12 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -97,12 +97,12 @@ public class RatingService {
 
   @GET
   public Response getRating(@ApiParam(required = true) @QueryParam("filter") RatingFilter filter,
-      @Context HttpServletRequest req) throws DelaException {
+      @Context SecurityContext sc) throws DelaException {
     switch (filter) {
       case DATASET:
         return getDatasetAllRating();
       case USER:
-        return getDatasetUserRating(req);
+        return getDatasetUserRating(sc);
       default:
         throw new DelaException(RESTCodes.DelaErrorCode.ILLEGAL_ARGUMENT, Level.FINE, DelaException.Source.HOPS_SITE,
           "unknown filter value:" + filter + " - accepted dataset/user");
@@ -116,20 +116,20 @@ public class RatingService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(rating).build();
   }
 
-  public Response getDatasetUserRating(HttpServletRequest req) throws DelaException {
+  public Response getDatasetUserRating(SecurityContext sc) throws DelaException {
     LOGGER.log(Settings.DELA_DEBUG, "hops-site:rating:get:user {0}", publicDSId);
     String publicCId = SettingsHelper.clusterId(settings);
-    Users user = jWTHelper.getUserPrincipal(req);
+    Users user = jWTHelper.getUserPrincipal(sc);
     RatingDTO rating = hopsSite.getDatasetUserRating(publicCId, publicDSId, user.getEmail());
     LOGGER.log(Settings.DELA_DEBUG, "hops-site:rating:get:user - done {0}", publicDSId);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(rating).build();
   }
 
   @POST
-  public Response addRating(HttpServletRequest req, RatingValueDTO rating) throws DelaException {
+  public Response addRating(@Context SecurityContext sc, RatingValueDTO rating) throws DelaException {
     LOGGER.log(Settings.DELA_DEBUG, "hops-site:rating:add {0}", publicDSId);
     String publicCId = SettingsHelper.clusterId(settings);
-    Users user = jWTHelper.getUserPrincipal(req);
+    Users user = jWTHelper.getUserPrincipal(sc);
     hopsSite.performAsUser(user, new HopsSite.UserFunc<String>() {
       @Override
       public String perform() throws DelaException {

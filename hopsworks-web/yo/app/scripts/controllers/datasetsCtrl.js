@@ -42,10 +42,10 @@
 angular.module('hopsWorksApp')
         .controller('DatasetsCtrl', ['$scope', '$mdSidenav', '$mdUtil',
           'DataSetService', 'JupyterService', '$routeParams', 'ModalService', 'growl', '$location',
-          'MetadataHelperService', '$rootScope', 'DelaProjectService', 'DelaClusterProjectService', 'UtilsService', 'UserService',
+          'MetadataHelperService', '$rootScope', 'DelaProjectService', 'DelaClusterProjectService', 'UtilsService', 'UserService', '$mdToast',
           function ($scope, $mdSidenav, $mdUtil, DataSetService, JupyterService, $routeParams,
                   ModalService, growl, $location, MetadataHelperService,
-                  $rootScope, DelaProjectService, DelaClusterProjectService, UtilsService, UserService) {
+                  $rootScope, DelaProjectService, DelaClusterProjectService, UtilsService, UserService, $mdToast) {
 
             var self = this;
             self.itemsPerPage = 14;
@@ -1027,13 +1027,15 @@ angular.module('hopsWorksApp')
               } else if (!file.underConstruction) {
                 ModalService.confirm('sm', 'Confirm', 'Do you want to download this file?').then(
                         function (success) {
+                          showToast('Preparing Download..');
                           var downloadPathArray = self.pathArray.slice(0);
                           downloadPathArray.push(file.name);
-                          var filePath = getPath(downloadPathArray);
-                          //growl.success("Asdfasdf", {title: 'asdfasd', ttl: 5000});
+                          var filePath = getPath(downloadPathArray);                         
                           dataSetService.checkFileForDownload(filePath).then(
                                   function (success) {
-                                    dataSetService.fileDownload(filePath);
+                                    var token = success.data.data.value; 
+                                    closeToast();
+                                    dataSetService.fileDownload(filePath, token);
                                   }, function (error) {
                                     growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
                           });
@@ -1043,7 +1045,25 @@ angular.module('hopsWorksApp')
                 growl.info("File under construction.", {title: 'Info', ttl: 5000});
               }
             };
-
+            
+            var showToast = function(text) {
+              var toast = $mdToast.simple()
+                            .textContent(text)
+                            .action('Close')
+                            .position('bottom right')
+                            .hideDelay(0);
+                    
+              $mdToast.show(toast).then(function(response) {
+                if ( response == 'ok' ) {
+                  $mdToast.hide();
+                }
+              });
+            };
+            
+            var closeToast = function() {
+              $mdToast.hide();
+            };
+            
             /**
              * Go up to parent directory.
              * @returns {undefined}

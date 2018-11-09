@@ -81,6 +81,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.ws.rs.core.SecurityContext;
 
 @Path("/user")
 @Stateless
@@ -123,8 +124,8 @@ public class UserService {
   @GET
   @Path("profile")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getUserProfile(@Context HttpServletRequest req) throws UserException {
-    Users user = jWTHelper.getUserPrincipal(req);
+  public Response getUserProfile(@Context SecurityContext sc) throws UserException {
+    Users user = jWTHelper.getUserPrincipal(sc);
     if (user == null) {
       throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
     }
@@ -139,9 +140,9 @@ public class UserService {
           @FormParam("lastName") String lastName,
           @FormParam("telephoneNum") String telephoneNum,
           @FormParam("toursState") Integer toursState,
-          @Context HttpServletRequest req) throws UserException {
+          @Context HttpServletRequest req, @Context SecurityContext sc) throws UserException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
-    Users user = jWTHelper.getUserPrincipal(req);
+    Users user = jWTHelper.getUserPrincipal(sc);
     user = userController.updateProfile(user, firstName, lastName, telephoneNum, toursState, req);
     UserDTO userDTO = new UserDTO(user);
    
@@ -157,9 +158,9 @@ public class UserService {
           @FormParam("oldPassword") String oldPassword,
           @FormParam("newPassword") String newPassword,
           @FormParam("confirmedPassword") String confirmedPassword,
-          @Context HttpServletRequest req) throws UserException {
+          @Context HttpServletRequest req, @Context SecurityContext sc) throws UserException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
-    Users user = jWTHelper.getUserPrincipal(req);
+    Users user = jWTHelper.getUserPrincipal(sc);
     userController.changePassword(user, oldPassword, newPassword, confirmedPassword, req);
     json.setSuccessMessage(ResponseMessages.PASSWORD_CHANGED);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
@@ -171,9 +172,9 @@ public class UserService {
   public Response changeSecurityQA(@FormParam("oldPassword") String oldPassword,
           @FormParam("securityQuestion") String securityQuestion,
           @FormParam("securityAnswer") String securityAnswer,
-          @Context HttpServletRequest req) throws UserException {
+          @Context HttpServletRequest req, @Context SecurityContext sc) throws UserException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
-    Users user = jWTHelper.getUserPrincipal(req);
+    Users user = jWTHelper.getUserPrincipal(sc);
     userController.changeSecQA(user, oldPassword, securityQuestion, securityAnswer, req);
     json.setSuccessMessage(ResponseMessages.SEC_QA_CHANGED);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
@@ -184,8 +185,8 @@ public class UserService {
   @Produces(MediaType.APPLICATION_JSON)
   public Response changeTwoFactor(@FormParam("password") String password,
           @FormParam("twoFactor") boolean twoFactor,
-          @Context HttpServletRequest req) throws UserException {
-    Users user = jWTHelper.getUserPrincipal(req);
+          @Context HttpServletRequest req, @Context SecurityContext sc) throws UserException {
+    Users user = jWTHelper.getUserPrincipal(sc);
 
     byte[] qrCode;
     RESTApiJsonResponse json = new RESTApiJsonResponse();
@@ -208,9 +209,9 @@ public class UserService {
   @POST
   @Path("getQRCode")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getQRCode(@FormParam("password") String password, @Context HttpServletRequest req) throws
-      UserException {
-    Users user = jWTHelper.getUserPrincipal(req);
+  public Response getQRCode(@FormParam("password") String password, @Context HttpServletRequest req,
+      @Context SecurityContext sc) throws UserException {
+    Users user = jWTHelper.getUserPrincipal(sc);
     if (user == null) {
       throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
     }
@@ -232,8 +233,8 @@ public class UserService {
   @Path("addSshKey")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  public Response addSshkey(SshKeyDTO sshkey, @Context HttpServletRequest req) {
-    Users user = jWTHelper.getUserPrincipal(req);
+  public Response addSshkey(SshKeyDTO sshkey, @Context SecurityContext sc) {
+    Users user = jWTHelper.getUserPrincipal(sc);
     int id = user.getUid();
     SshKeyDTO dto = userController.addSshKey(id, sshkey.getName(), sshkey.
             getPublicKey());
@@ -244,9 +245,9 @@ public class UserService {
   @POST
   @Path("removeSshKey")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response removeSshkey(@FormParam("name") String name, @Context HttpServletRequest req) {
+  public Response removeSshkey(@FormParam("name") String name, @Context SecurityContext sc) {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
-    Users user = jWTHelper.getUserPrincipal(req);
+    Users user = jWTHelper.getUserPrincipal(sc);
     int id = user.getUid();
     userController.removeSshKey(id, name);
     json.setSuccessMessage(ResponseMessages.SSH_KEY_REMOVED);
@@ -257,8 +258,8 @@ public class UserService {
   @GET
   @Path("getSshKeys")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getSshkeys(@Context HttpServletRequest req) {
-    Users user = jWTHelper.getUserPrincipal(req);
+  public Response getSshkeys(@Context SecurityContext sc) {
+    Users user = jWTHelper.getUserPrincipal(sc);
     int id = user.getUid();
     List<SshKeyDTO> sshKeys = userController.getSshKeys(id);
 
@@ -272,9 +273,9 @@ public class UserService {
   @POST
   @Path("getRole")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getRole(@FormParam("projectId") int projectId, @Context HttpServletRequest req) throws
+  public Response getRole(@FormParam("projectId") int projectId, @Context SecurityContext sc) throws
       ProjectException {
-    Users user = jWTHelper.getUserPrincipal(req);
+    Users user = jWTHelper.getUserPrincipal(sc);
 
     UserProjectDTO userDTO = new UserProjectDTO();
     userDTO.setEmail(user.getEmail());

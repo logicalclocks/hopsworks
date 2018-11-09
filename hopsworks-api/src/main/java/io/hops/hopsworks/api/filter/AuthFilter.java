@@ -27,8 +27,11 @@ import io.hops.hopsworks.jwt.exception.SigningKeyNotFoundException;
 import io.hops.hopsworks.jwt.filter.JWTFilter;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.security.Principal;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 import javax.annotation.Priority;
@@ -38,6 +41,7 @@ import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.Provider;
 
@@ -107,7 +111,8 @@ public class AuthFilter extends JWTFilter {
 
   @Override
   public void postJWTFilter(ContainerRequestContext requestContext, DecodedJWT jwt) throws IOException {
-
+    String scheme = requestContext.getUriInfo().getRequestUri().getScheme();
+    requestContext.setSecurityContext(new JWTSecurityContext(jwt, scheme));
   }
 
   @Override
@@ -130,6 +135,48 @@ public class AuthFilter extends JWTFilter {
     }
     jsonResponse.setErrorMsg(msg);
     return jsonResponse;
+  }
+
+  private class JWTSecurityContext implements SecurityContext {
+
+    private final String scheme;
+    private final DecodedJWT jwt;
+
+    public JWTSecurityContext(DecodedJWT jwt, String scheme) {
+      this.scheme = scheme;
+      this.jwt = jwt;
+    }
+
+    @Override
+    public Principal getUserPrincipal() {
+      if (this.jwt == null) {
+        return null;
+      }
+      return () -> this.jwt.getSubject();
+    }
+
+    @Override
+    public boolean isUserInRole(String role) {
+      String[] roles = jwtController.getRolesClaim(jwt);
+      if (roles != null) {
+        List<String> rolesList = new ArrayList<>(Arrays.asList(roles));
+        if (!rolesList.isEmpty()) {
+          return rolesList.contains(role);
+        }
+      }
+      return false;
+    }
+
+    @Override
+    public boolean isSecure() {
+      return "https".equals(this.scheme);
+    }
+
+    @Override
+    public String getAuthenticationScheme() {
+      return SecurityContext.BASIC_AUTH;
+    }
+
   }
 
 }

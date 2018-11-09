@@ -72,7 +72,7 @@ angular.module('hopsWorksApp')
                   function (success) {
                     sessionStorage.setItem("isAdmin", success.data === 'true');
                   }, function (error) {
-                    sessionStorage.setItem("isAdmin", false);
+                    sessionStorage.setItem("isAdmin", null);
                 });
               }
             };

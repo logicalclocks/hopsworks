@@ -126,6 +126,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.ws.rs.core.SecurityContext;
 
 @Path("/project")
 @Stateless
@@ -201,9 +202,9 @@ public class ProjectService {
 
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  public Response findAllByUser(@Context HttpServletRequest req) {
+  public Response findAllByUser(@Context SecurityContext sc) {
     // Get the user according to current session and then get all its projects
-    Users user = jWTHelper.getUserPrincipal(req);
+    Users user = jWTHelper.getUserPrincipal(sc);
     List<ProjectTeam> list = projectController.findProjectByUser(user.getEmail());
     GenericEntity<List<ProjectTeam>> projects = new GenericEntity<List<ProjectTeam>>(list) {
     };
@@ -437,11 +438,11 @@ public class ProjectService {
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response updateProject(ProjectDTO projectDTO, @PathParam("projectId") Integer id,
-      @Context HttpServletRequest req) throws ProjectException, DatasetException, HopsSecurityException,
+      @Context SecurityContext sc) throws ProjectException, DatasetException, HopsSecurityException,
       ServiceException {
 
     RESTApiJsonResponse json = new RESTApiJsonResponse();
-    Users user = jWTHelper.getUserPrincipal(req);
+    Users user = jWTHelper.getUserPrincipal(sc);
     Project project = projectController.findProjectById(id);
 
     boolean updated = false;
@@ -514,8 +515,9 @@ public class ProjectService {
   @POST
   @Path("starterProject/{type}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response example(@PathParam("type") String type, @Context HttpServletRequest req) throws DatasetException,
-      GenericException, KafkaException, ProjectException, UserException, ServiceException, HopsSecurityException {
+  public Response example(@PathParam("type") String type, @Context HttpServletRequest req, @Context SecurityContext sc) 
+      throws DatasetException, GenericException, KafkaException, ProjectException, UserException, ServiceException, 
+      HopsSecurityException {
     if (!Arrays.asList(TourProjectType.values()).contains(TourProjectType.valueOf(type.toUpperCase()))) {
       throw new IllegalArgumentException("Type must be one of: " + Arrays.toString(TourProjectType.values()));
     }
@@ -524,7 +526,7 @@ public class ProjectService {
     Project project = null;
     projectDTO.setDescription("A demo project for getting started with " + type);
 
-    Users user = jWTHelper.getUserPrincipal(req);
+    Users user = jWTHelper.getUserPrincipal(sc);
     String username = usersController.generateUsername(user.getEmail());
     List<String> projectServices = new ArrayList<>();
     //save the project
@@ -581,10 +583,11 @@ public class ProjectService {
   @POST
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
-  public Response createProject(ProjectDTO projectDTO, @Context HttpServletRequest req) throws DatasetException,
-      GenericException, KafkaException, ProjectException, UserException, ServiceException, HopsSecurityException {
+  public Response createProject(ProjectDTO projectDTO, @Context HttpServletRequest req, @Context SecurityContext sc) 
+      throws DatasetException, GenericException, KafkaException, ProjectException, UserException, ServiceException, 
+      HopsSecurityException {
 
-    Users user = jWTHelper.getUserPrincipal(req);
+    Users user = jWTHelper.getUserPrincipal(sc);
     List<String> failedMembers = null;
     projectController.createProject(projectDTO, user, failedMembers, req.getSession().getId());
 
@@ -606,10 +609,10 @@ public class ProjectService {
   @Path("{projectId}/delete")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  public Response removeProjectAndFiles(@PathParam("projectId") Integer id, @Context HttpServletRequest req) throws
-      ProjectException, GenericException {
+  public Response removeProjectAndFiles(@PathParam("projectId") Integer id, @Context HttpServletRequest req, 
+      @Context SecurityContext sc) throws ProjectException, GenericException {
 
-    Users user = jWTHelper.getUserPrincipal(req);
+    Users user = jWTHelper.getUserPrincipal(sc);
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     projectController.removeProject(user.getEmail(), id, req.getSession().getId());
     json.setSuccessMessage(ResponseMessages.PROJECT_REMOVED);
@@ -683,7 +686,7 @@ public class ProjectService {
       @PathParam("projectId") Integer id,
       @PathParam("projectName") String projectName,
       @PathParam("inodeId") Integer dsId,
-      @Context HttpServletRequest req) throws ProjectException, DatasetException {
+      @Context SecurityContext sc) throws ProjectException, DatasetException {
 
     Project destProj = projectController.findProjectById(id);
     Project dsProject = projectFacade.findByName(projectName);
@@ -710,7 +713,7 @@ public class ProjectService {
     }
     newDS.setEditable(DatasetPermissions.OWNER_ONLY);
     datasetFacade.persistDataset(newDS);
-    Users user = jWTHelper.getUserPrincipal(req);
+    Users user = jWTHelper.getUserPrincipal(sc);
 
     activityFacade.persistActivity(ActivityFacade.SHARED_DATA + newDS.toString()
         + " with project " + destProj.getName(), destProj, user);
@@ -725,8 +728,9 @@ public class ProjectService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response downloadCerts(@PathParam("projectId") Integer id, @FormParam("password") String password,
-      @Context HttpServletRequest req) throws ProjectException, HopsSecurityException, DatasetException {
-    Users user = jWTHelper.getUserPrincipal(req);
+      @Context HttpServletRequest req, @Context SecurityContext sc) throws ProjectException, HopsSecurityException, 
+      DatasetException {
+    Users user = jWTHelper.getUserPrincipal(sc);
     if (user.getEmail().equals(Settings.AGENT_EMAIL) || !authController.validatePwd(user, password, req)) {
       throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_ACCESS_DENIED, Level.FINE);
     }
@@ -777,9 +781,9 @@ public class ProjectService {
   }
 
   @Path("{projectId}/serving")
-  public TfServingService tfServingService(@PathParam("projectId") Integer id, @Context HttpServletRequest req) throws
+  public TfServingService tfServingService(@PathParam("projectId") Integer id, @Context SecurityContext sc) throws
       ProjectException {
-    Users user = jWTHelper.getUserPrincipal(req);
+    Users user = jWTHelper.getUserPrincipal(sc);
     this.tfServingService.setProjectId(id);
     this.tfServingService.setUser(user);
     return this.tfServingService;
