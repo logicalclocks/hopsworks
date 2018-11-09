@@ -17,7 +17,6 @@ package io.hops.hopsworks.api.jobs;
 
 import io.hops.hopsworks.api.user.UserDTO;
 import io.hops.hopsworks.common.api.RestDTO;
-import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.jobs.configuration.JobConfiguration;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
 
@@ -25,7 +24,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import java.util.Date;
 
 @XmlRootElement
-public class JobDTO extends RestDTO<Jobs, JobDTO> {
+public class JobDTO extends RestDTO<JobDTO> {
   
   private Integer id;
   private String name;

@@ -61,7 +61,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -94,7 +93,7 @@ public class SparkService {
   public Response action (
     @PathParam("path") String path,
     @QueryParam("action") Action action,
-    @Context SecurityContext sc) throws IOException, JobException {
+    @Context SecurityContext sc) throws JobException {
     switch (action) {
       case INSPECT:
         SparkJobConfiguration config = sparkController.inspectProgram(path, project, sc.getUserPrincipal().getName());

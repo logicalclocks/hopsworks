@@ -18,31 +18,31 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 =end
 module JobHelper
 
-  def create_sparktour_job(project, job_name)
-    job_conf={"type":"SPARK",
-	      "appName":"#{job_name}",
-	      "amMemory":1024,
-	      "amQueue":"default",
-          "amVCores":1,
-          "localResources":[],
-	      "appPath":"hdfs:///Projects/#{project[:projectname]}/TestJob/spark-examples.jar",
-	      "args":"100",
-          "dynamicExecutors":false,
-          "executorCores":1,
-          "executorMemory":1024,
-	      "historyServerIp":"10.0.2.15:18080",
-          "mainClass":"org.apache.spark.examples.SparkPi",
-	      "maxExecutors":1500,
-          "minExecutors":1,
-          "numOfGPUs":0,
-	      "numOfPs":0,
-	      "numberOfExecutors":1,
-	      "numberOfExecutorsInit":1,
-          "selectedMaxExecutors":10,
-          "selectedMinExecutors":1,
-	      "tfOnSpark":false,
-          "flinkjobtype":"Streaming"}
-    post "/hopsworks-api-v2/projects/#{project[:id]}/jobs", job_conf
+  def create_sparktour_job(project)
+    job_conf = {
+        "type":"sparkJobConfiguration",
+        "appName":"#{job_name}",
+        "amQueue":"default",
+        "amMemory":1024,
+        "amVCores":1,
+        "jobType":"SPARK",
+        "appPath":"hdfs:///Projects/#{project[:projectname]}/TestJob/spark-examples.jar",
+        "mainClass":"org.apache.spark.examples.SparkPi",
+        "args":"10",
+        "spark.executor.instances":1,
+        "spark.executor.cores":1,
+        "spark.executor.memory":1024,
+        "spark.executor.gpus":0,
+        "spark.dynamicAllocation.enabled":false,
+        "spark.dynamicAllocation.minExecutors":1,
+        "spark.dynamicAllocation.maxExecutors":10,
+        "spark.dynamicAllocation.initialExecutors":1,
+        "schedule":null,
+        "flinkjobtype":"Streaming",
+        "localResources":[]
+    }
+
+    post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jobs", job_conf
     job_id = json_body[:id]
     job = get_job(job_id)
     expect(job[:id]).to eq job_id

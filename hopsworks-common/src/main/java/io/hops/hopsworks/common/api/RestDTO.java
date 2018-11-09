@@ -15,13 +15,16 @@
  */
 package io.hops.hopsworks.common.api;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
 @XmlRootElement
-public abstract class RestDTO<E, D> {
+public abstract class RestDTO<D> {
   
   private URI href;
   protected Boolean expand;
@@ -52,10 +55,14 @@ public abstract class RestDTO<E, D> {
     this.href = href;
   }
   
+  @XmlTransient
+  @JsonIgnore
   public Boolean isExpand() {
     return expand != null ? expand : false;
   }
   
+  @XmlTransient
+  @JsonIgnore
   public void setExpand(Boolean expand) {
     this.expand = expand;
   }

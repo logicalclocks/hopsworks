@@ -759,26 +759,25 @@ public class ProjectService {
   }
 
   @Path("{projectId}/kafka")
-  public KafkaService kafka(@PathParam("projectId") Integer id) throws ProjectException {
+  public KafkaService kafka(@PathParam("projectId") Integer id) {
     this.kafka.setProjectId(id);
     return this.kafka;
   }
 
   @Path("{projectId}/jupyter")
-  public JupyterService jupyter(@PathParam("projectId") Integer id) throws ProjectException {
+  public JupyterService jupyter(@PathParam("projectId") Integer id) {
     this.jupyter.setProjectId(id);
     return this.jupyter;
   }
 
   @Path("{projectId}/tensorboard")
-  public TensorBoardService tensorboard(@PathParam("projectId") Integer id) throws ProjectException {
+  public TensorBoardService tensorboard(@PathParam("projectId") Integer id) {
     this.tensorboard.setProjectId(id);
     return this.tensorboard;
   }
 
   @Path("{projectId}/serving")
-  public TfServingService tfServingService(@PathParam("projectId") Integer id, @Context HttpServletRequest req) throws
-      ProjectException {
+  public TfServingService tfServingService(@PathParam("projectId") Integer id, @Context HttpServletRequest req) {
     Users user = jWTHelper.getUserPrincipal(req);
     this.tfServingService.setProjectId(id);
     this.tfServingService.setUser(user);
@@ -786,19 +785,19 @@ public class ProjectService {
   }
 
   @Path("{projectId}/pythonDeps")
-  public PythonDepsService pysparkDeps(@PathParam("projectId") Integer id) throws ProjectException {
+  public PythonDepsService pysparkDeps(@PathParam("projectId") Integer id) {
     this.pysparkService.setProjectId(id);
     return pysparkService;
   }
 
   @Path("{projectId}/dela")
-  public DelaProjectService dela(@PathParam("projectId") Integer id) throws ProjectException {
+  public DelaProjectService dela(@PathParam("projectId") Integer id) {
     this.delaService.setProjectId(id);
     return this.delaService;
   }
 
   @Path("{projectId}/delacluster")
-  public DelaClusterProjectService delacluster(@PathParam("projectId") Integer id) throws ProjectException {
+  public DelaClusterProjectService delacluster(@PathParam("projectId") Integer id) {
     this.delaclusterService.setProjectId(id);
     return this.delaclusterService;
   }

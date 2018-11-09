@@ -52,12 +52,16 @@ import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.JobException;
 import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.jobs.JobController;
+import io.hops.hopsworks.common.jobs.configuration.JobConfiguration;
 import io.hops.hopsworks.common.jobs.configuration.ScheduleDTO;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
 import io.hops.hopsworks.common.jobs.spark.SparkController;
+import io.hops.hopsworks.common.util.HopsUtils;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import org.elasticsearch.common.Strings;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -77,6 +81,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -145,13 +150,14 @@ public class JobService {
   
   @ApiOperation(value = "Get the job with requested ID", response = JobDTO.class)
   @GET
-  @Path("{jobId}")
+  @Path("{name}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response getJob(@PathParam("jobId") int jobId,
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response getJob(@PathParam("name") String name,
     @QueryParam("expand") String expand,
     @Context UriInfo uriInfo) throws JobException {
-    Jobs job = jobFacade.findByProjectAndId(project, jobId);
+    Jobs job = jobFacade.findByProjectAndName(project, name);
     if(job == null){
       throw new JobException(RESTCodes.JobErrorCode.JOB_NOT_FOUND, Level.FINEST);
     }
@@ -161,19 +167,47 @@ public class JobService {
   }
   
   
+  @ApiOperation( value = "Create Job", response = JobDTO.class)
+  @POST
+  @Produces(MediaType.APPLICATION_JSON)
+  @Consumes(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response create (
+    JobConfiguration config,
+    @Context HttpServletRequest req,
+    @Context UriInfo uriInfo) throws JobException {
+    if (config == null) {
+      throw new IllegalArgumentException("Job configuration was not provided.");
+    }
+  
+    Users user = jWTHelper.getUserPrincipal(req);
+    if (Strings.isNullOrEmpty(config.getAppName())) {
+      throw new IllegalArgumentException("Job name was not provided.");
+    } else if (!HopsUtils.jobNameValidator(config.getAppName(), Settings.FILENAME_DISALLOWED_CHARS)) {
+      throw new JobException(RESTCodes.JobErrorCode.JOB_NAME_INVALID, Level.FINE, "job name: " + config.getAppName());
+    }
+  
+    Jobs job = jobController.createJob(user, project, config);
+    JobDTO dto = jobsBuilder.build(uriInfo, new ResourceProperties(ResourceProperties.Name.JOBS), job);
+    GenericEntity<JobDTO> ge = new GenericEntity<JobDTO>(dto) {};
+    UriBuilder builder = uriInfo.getAbsolutePathBuilder().path(Integer.toString(dto.getId()));
+    return Response.created(builder.build()).entity(ge).build();
+  }
+  
   @ApiOperation(value = "Delete the job with the given ID")
   @DELETE
-  @Path("/{jobId}")
+  @Path("/{name}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response delete(
-    @ApiParam(value = "id", required = true) @PathParam("jobId") int jobId,
+    @ApiParam(value = "id", required = true) @PathParam("name") String name,
     @Context HttpServletRequest req,
     @Context UriInfo uriInfo) throws JobException {
-    LOGGER.log(Level.FINE, "Request to delete job with id:" + jobId);
+    LOGGER.log(Level.FINE, "Request to delete job with id:" + name);
     Users user = jWTHelper.getUserPrincipal(req);
-    Jobs job = jobFacade.findByProjectAndId(project, jobId);
+    Jobs job = jobFacade.findByProjectAndName(project, name);
     if(job == null){
       throw new JobException(RESTCodes.JobErrorCode.JOB_NOT_FOUND, Level.FINEST);
     }
@@ -200,22 +234,23 @@ public class JobService {
   
   @ApiOperation(value = "Create/Update job's schedule.")
   @POST
-  @Path("{jobId}/schedule")
+  @Path("{name}/schedule")
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response updateSchedule(ScheduleDTO schedule, @PathParam("jobId") Integer jobId,
+  public Response updateSchedule(ScheduleDTO schedule,
+    @PathParam("name") String name,
     @Context HttpServletRequest req) throws JobException {
-    if(jobId == null || jobId < 0) {
-      throw new IllegalArgumentException("jobId parameter was not provided or it was negative.");
+    if(Strings.isNullOrEmpty(name)) {
+      throw new IllegalArgumentException("job name was not provided or it was empty.");
     }
     if(schedule == null){
       throw new IllegalArgumentException("Schedule parameter was null.");
     }
-    Jobs job = jobFacade.findByProjectAndId(project, jobId);
+    Jobs job = jobFacade.findByProjectAndName(project, name);
     if (job == null) {
-      throw new JobException(RESTCodes.JobErrorCode.JOB_NOT_FOUND, Level.FINEST, "jobId:"+jobId);
+      throw new JobException(RESTCodes.JobErrorCode.JOB_NOT_FOUND, Level.FINEST, "jobId:"+name);
     }
     Users user = jWTHelper.getUserPrincipal(req);
     jobController.updateSchedule(project, job, schedule, user);
@@ -227,20 +262,20 @@ public class JobService {
    * JSON object stating operation successful
    * or not.
    * <p>
-   * @param jobId
+   * @param name
    * @return
    */
   @ApiOperation(value = "Cancel a job's schedule.")
   @DELETE
-  @Path("/{jobId}/schedule")
+  @Path("/{name}/schedule")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response unscheduleJob(@PathParam("jobId") Integer jobId) throws JobException {
-    if(jobId == null || jobId < 0) {
-      throw new IllegalArgumentException("jobId parameter was not provided or it was negative.");
+  public Response unscheduleJob(@PathParam("name") String name) throws JobException {
+    if(Strings.isNullOrEmpty(name)) {
+      throw new IllegalArgumentException("job name was not provided or it was empty.");
     }
-    Jobs job = jobFacade.findByProjectAndId(project, jobId);
+    Jobs job = jobFacade.findByProjectAndName(project, name);
     if(job == null){
       throw new JobException(RESTCodes.JobErrorCode.JOB_NOT_FOUND, Level.FINEST);
     }
@@ -263,13 +298,13 @@ public class JobService {
     return this.flink.setProject(project);
   }
   
-  @Path("/{jobId}/executions")
+  @Path("/{name}/executions")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public ExecutionService executions(@PathParam("jobId") int jobId) throws JobException {
-    Jobs job = jobFacade.findByProjectAndId(project, jobId);
+  public ExecutionService executions(@PathParam("name") String name) throws JobException {
+    Jobs job = jobFacade.findByProjectAndName(project, name);
     if (job == null) {
-      throw new JobException(RESTCodes.JobErrorCode.JOB_NOT_FOUND, Level.FINEST, "jobId:" + jobId);
+      throw new JobException(RESTCodes.JobErrorCode.JOB_NOT_FOUND, Level.FINEST, "job name:" + name);
     } else {
       return this.executions.setJob(job);
     }
