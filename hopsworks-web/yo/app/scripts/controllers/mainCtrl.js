@@ -66,14 +66,6 @@ angular.module('hopsWorksApp')
             }
 
             var checkeIsAdmin = function () {
-<<<<<<< HEAD
-              AuthService.isAdmin().then(
-                      function (success) {
-                        $cookies.put("isAdmin", success.data === 'true');
-                      }, function (error) {
-                $cookies.put("isAdmin", false);
-              });
-=======
               var isAdmin = sessionStorage.getItem("isAdmin");
               if (isAdmin === null) {
                 AuthService.isAdmin().then(
@@ -83,7 +75,6 @@ angular.module('hopsWorksApp')
                     sessionStorage.setItem("isAdmin", false);
                 });
               }
->>>>>>> 4ad67dbac40bff62b480ccd204df7d69ffa01d1c
             };
             checkeIsAdmin();
             self.isAdmin = function () {
@@ -124,22 +115,19 @@ angular.module('hopsWorksApp')
                 console.log("isDelaEnabled", error);
               });
             };
-<<<<<<< HEAD
             var checkRStudioEnabled = function () {
 
             }
 
             var init = function () {
-              checkDelaEnabled();
+              //checkDelaEnabled();
               checkRStudioEnabled();
             }
 
             init();
 
-=======
             //checkDelaEnabled(); // check 
             
->>>>>>> 4ad67dbac40bff62b480ccd204df7d69ffa01d1c
             self.userNotification = '';
             var getUserNotification = function () {
               self.userNotification = '';
