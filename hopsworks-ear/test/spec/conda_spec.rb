@@ -109,7 +109,11 @@ describe "On #{ENV['OS']}" do
           tmp_proj.save
 
           trigger_conda_gc
-          sleep(15)
+          
+          wait_for do
+            check_if_env_exists_locally(project2[:projectname]) == false
+          end
+
           expect(check_if_env_exists_locally(project2[:projectname])).to be false
         end
 

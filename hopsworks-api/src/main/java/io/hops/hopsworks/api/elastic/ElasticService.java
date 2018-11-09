@@ -41,13 +41,14 @@ package io.hops.hopsworks.api.elastic;
 
 import com.google.common.base.Strings;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
+import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.common.elastic.ElasticController;
 import io.hops.hopsworks.common.elastic.ElasticHit;
 import io.hops.hopsworks.common.exception.ServiceException;
+import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.Api;
 
-import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -61,16 +62,15 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Path("/elastic")
-@RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
-@Api(value = "Elastic Service", description = "Elastic Service")
-@Produces(MediaType.APPLICATION_JSON)
 @Stateless
+@JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+@Produces(MediaType.APPLICATION_JSON)
+@Api(value = "Elastic Service", description = "Elastic Service")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ElasticService {
 
@@ -86,19 +86,15 @@ public class ElasticService {
    * indices: 'project' and 'dataset'
    * <p/>
    * @param searchTerm
-   * @param sc
    * @param req
    * @return
    */
   @GET
   @Path("globalsearch/{searchTerm}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public Response globalSearch(
-          @PathParam("searchTerm") String searchTerm,
-          @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws ServiceException {
-  
+  public Response globalSearch(@PathParam("searchTerm") String searchTerm, @Context HttpServletRequest req) throws
+      ServiceException {
+
     if (Strings.isNullOrEmpty(searchTerm)) {
       throw new IllegalArgumentException("searchTerm was not provided or was empty");
     }
@@ -122,11 +118,8 @@ public class ElasticService {
   @Path("projectsearch/{projectId}/{searchTerm}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public Response projectSearch(
-      @PathParam("projectId") Integer projectId,
-      @PathParam("searchTerm") String searchTerm,
-      @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws ServiceException {
+  public Response projectSearch(@PathParam("projectId") Integer projectId,
+      @PathParam("searchTerm") String searchTerm) throws ServiceException {
     if (Strings.isNullOrEmpty(searchTerm) || projectId == null) {
       throw new IllegalArgumentException("One or more required parameters were not provided.");
     }
@@ -153,9 +146,7 @@ public class ElasticService {
   public Response datasetSearch(
       @PathParam("projectId") Integer projectId,
       @PathParam("datasetName") String datasetName,
-      @PathParam("searchTerm") String searchTerm,
-      @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws ServiceException {
+      @PathParam("searchTerm") String searchTerm) throws ServiceException {
   
     if (Strings.isNullOrEmpty(searchTerm) || Strings.isNullOrEmpty(datasetName) || projectId == null) {
       throw new IllegalArgumentException("One or more required parameters were not provided.");

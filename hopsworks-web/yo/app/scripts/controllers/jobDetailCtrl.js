@@ -211,7 +211,7 @@ angular.module('hopsWorksApp')
               return false;
             };
             self.hasConsumerGroups = function(){
-              if(typeof self.job.runConfig.kafka.consumergroups !== "undefined"){
+              if(typeof self.job.runConfig.kafka.consumerGroups !== "undefined"){
                 return true;
               }
               return false;

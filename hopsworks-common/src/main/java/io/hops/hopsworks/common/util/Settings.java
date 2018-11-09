@@ -131,6 +131,7 @@ public class Settings implements Serializable {
   /**
    * Global Variables taken from the DB
    */
+  private static final String VARIABLE_PYPI_REST_ENDPOINT = "pypi_rest_endpoint";
   private static final String VARIABLE_PYTHON_KERNEL = "python_kernel";
   private static final String VARIABLE_HADOOP_VERSION = "hadoop_version";
   private static final String VARIABLE_JAVA_HOME = "JAVA_HOME";
@@ -293,6 +294,12 @@ public class Settings implements Serializable {
   private static final String VARIABLE_KUBE_CA_PASSWORD = "kube_ca_password";
   private static final String VARIABLE_KUBE_REGISTRY = "kube_registry";
   private static final String VARIABLE_KUBE_MAX_SERVING = "kube_max_serving_instances";
+  
+    // JWT Variables
+  private static final String VARIABLE_JWT_SIGNATURE_ALGORITHM = "jwt_signature_algorithm";
+  private static final String VARIABLE_JWT_LIFETIME_MS = "jwt_lifetime_ms";
+  private static final String VARIABLE_JWT_EXP_LEEWAY_SEC = "jwt_exp_leeway_sec";
+  private static final String VARIABLE_JWT_SIGNING_KEY_NAME = "jwt_signing_key_name";
 
 
   private String setVar(String varName, String defaultValue) {
@@ -561,7 +568,8 @@ public class Settings implements Serializable {
       CUDA_VERSION = setStrVar(VARIABLE_CUDA_VERSION, CUDA_VERSION);
       HOPSWORKS_VERSION = setStrVar(VARIABLE_HOPSWORKS_VERSION, HOPSWORKS_VERSION);
       HOPSWORKS_REST_LOG_LEVEL = setLogLevelVar(VARIABLE_HOPSWORKS_REST_LOG_LEVEL, HOPSWORKS_REST_LOG_LEVEL);
-      
+
+      PYPI_REST_ENDPOINT = setStrVar(VARIABLE_PYPI_REST_ENDPOINT, PYPI_REST_ENDPOINT);
       PROVIDED_PYTHON_LIBRARY_NAMES = toSetFromCsv(
           setStrVar(VARIABLE_PROVIDED_PYTHON_LIBRARY_NAMES, DEFAULT_PROVIDED_PYTHON_LIBRARY_NAMES),",");
       PREINSTALLED_PYTHON_LIBRARY_NAMES = toSetFromCsv(
@@ -585,6 +593,10 @@ public class Settings implements Serializable {
       KUBE_REGISTRY = setStrVar(VARIABLE_KUBE_REGISTRY, KUBE_REGISTRY);
       KUBE_MAX_SERVING_INSTANCES = setIntVar(VARIABLE_KUBE_MAX_SERVING, KUBE_MAX_SERVING_INSTANCES);
 
+      JWT_SIGNATURE_ALGORITHM = setStrVar(VARIABLE_JWT_SIGNATURE_ALGORITHM, JWT_SIGNATURE_ALGORITHM);
+      JWT_LIFETIME_MS = setLongVar(VARIABLE_JWT_LIFETIME_MS, JWT_LIFETIME_MS);
+      JWT_EXP_LEEWAY_SEC = setIntVar(VARIABLE_JWT_EXP_LEEWAY_SEC, JWT_EXP_LEEWAY_SEC);
+      JWT_SIGNING_KEY_NAME = setStrVar(VARIABLE_JWT_SIGNING_KEY_NAME, JWT_SIGNING_KEY_NAME);
       cached = true;
     }
   }
@@ -730,6 +742,7 @@ public class Settings implements Serializable {
   public static final String SPARK_EXECUTORENV_PYSPARK_PYTHON = "spark.executorEnv."+SPARK_PYSPARK_PYTHON ;
   //TFSPARK properties
   public static final String SPARK_TF_GPUS_ENV = "spark.executor.gpus";
+  public static final String SPARK_TENSORFLOW_APPLICATION = "spark.tensorflow.application";
 
   //Spark log4j and metrics properties
   public static final String SPARK_LOG4J_CONFIG = "log4j.configuration";
@@ -1696,14 +1709,7 @@ public class Settings implements Serializable {
   public static final String META_DATA_FIELDS = META_DATA_NESTED_FIELD + ".*";
 
   //Filename conventions
-  public static final String PROJECT_DISALLOWED_CHARS
-      = " -/\\?*:|'\"<>%()&;#öäåÖÅÄàáéèâîïüÜ@${}[]+~^$`";
-  public static final String PRINT_PROJECT_DISALLOWED_CHARS = "__, -, space, "
-      + "/, \\, ?, *, :, |, ', \", <, >, %, (, ), &, ;, #,ö,ä,å,Ö,Å,Ä,à,á,é,è,â,î,ï,ü,Ü,@,$,{,},[,],+,~,^";
   public static final String FILENAME_DISALLOWED_CHARS = " /\\?*:|'\"<>%()&;#öäåÖÅÄàáéèâîïüÜ@${}[]+~^$`";
-  public static final String SUBDIR_DISALLOWED_CHARS = "/\\?*:|'\"<>%()&;#öäåÖÅÄàáéèâîïüÜ@${}[]+~^$`";
-  public static final String PRINT_FILENAME_DISALLOWED_CHARS
-      = "__, space, /, \\, ?, *, :, |, ', \", <, >, %, (, ), &, ;, #,ö,ä,å,Ö,Å,Ä,à,á,é,è,â,î,ï,ü,Ü,@,$,{,},[,],+,~,^";
   public static final String SHARED_FILE_SEPARATOR = "::";
   public static final String DOUBLE_UNDERSCORE = "__";
 
@@ -2163,6 +2169,13 @@ public class Settings implements Serializable {
   public synchronized boolean isPythonKernelEnabled() {
     checkCache();
     return PYTHON_KERNEL;
+  }
+
+  private String PYPI_REST_ENDPOINT = "https://pypi.org/pypi/{package}/json";
+
+  public synchronized String getPyPiRESTEndpoint() {
+    checkCache();
+    return PYPI_REST_ENDPOINT;
   }
 
   private String HOPSUTIL_VERSION = "0.3.0";
@@ -3050,5 +3063,30 @@ public class Settings implements Serializable {
     public String getDescription() {
       return description;
     }
+  }
+  
+  private String JWT_SIGNATURE_ALGORITHM = "HS512";
+  private long JWT_LIFETIME_MS = 1800000l;
+  private int JWT_EXP_LEEWAY_SEC = 900;
+  private String JWT_SIGNING_KEY_NAME = "apiKey";
+
+  public synchronized String getJWTSignatureAlg() {
+    checkCache();
+    return JWT_SIGNATURE_ALGORITHM;
+  }
+  
+  public synchronized long getJWTLifetimeMs() {
+    checkCache();
+    return JWT_LIFETIME_MS;
+  }
+  
+  public synchronized int getJWTExpLeewaySec() {
+    checkCache();
+    return JWT_EXP_LEEWAY_SEC;
+  }
+  
+  public synchronized String getJWTSigningKeyName() {
+    checkCache();
+    return JWT_SIGNING_KEY_NAME;
   }
 }

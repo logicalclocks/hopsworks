@@ -46,7 +46,7 @@ describe "On #{ENV['OS']}" do
           with_keystore_pwd(project)
         end
 
-        it "should be authenticated but should fail since topic doesn't exist" do
+        it "should be authenticated but should fail since topic doesn't exist", vm: true do
           keystore = get_keystore
           keystore_pwd = get_keystore_pwd
           json_data = {
@@ -70,7 +70,7 @@ describe "On #{ENV['OS']}" do
           with_keystore_pwd(project)
         end
 
-        it "should be authenticated and request to get topic schema should succeed" do
+        it "should be authenticated and request to get topic schema should succeed", vm: true do
           topic = get_topic
           keystore = get_keystore
           keystore_pwd = get_keystore_pwd
@@ -82,10 +82,10 @@ describe "On #{ENV['OS']}" do
           }
           json_data = json_data.to_json
           json = post "#{ENV['HOPSWORKS_API']}/appservice/schema", json_data # This post request authenticates with keystore and pwd to get schema
+          expect_status(200)
           parsed_json = JSON.parse(response.body)
           expect(parsed_json.key?("contents")).to be true
           expect(parsed_json.key?("version")).to be true
-          expect_status(200)
         end
       end
     end

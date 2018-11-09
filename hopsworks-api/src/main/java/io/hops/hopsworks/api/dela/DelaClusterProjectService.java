@@ -41,6 +41,7 @@ package io.hops.hopsworks.api.dela;
 
 import io.hops.hopsworks.api.dela.dto.InodeIdDTO;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
+import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
@@ -52,9 +53,8 @@ import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.dela.cluster.ClusterDatasetController;
 import io.hops.hopsworks.common.exception.DelaException;
+import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.Api;
-
-import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -65,20 +65,17 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-@RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
+@RequestScoped
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-@RequestScoped
-@TransactionAttribute(TransactionAttributeType.NEVER)
 @Api(value = "Dela Cluster Project Service",
   description = "Dela Cluster Project Service")
+@TransactionAttribute(TransactionAttributeType.NEVER)
 public class DelaClusterProjectService {
   private static final Logger LOGGER = Logger.getLogger(DelaClusterProjectService.class.getName());
   
@@ -99,7 +96,8 @@ public class DelaClusterProjectService {
   @POST
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  public Response share(@Context SecurityContext sc, InodeIdDTO inodeId) throws DelaException {
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response share(InodeIdDTO inodeId) throws DelaException {
     Inode inode = getInode(inodeId.getId());
     Dataset dataset = getDatasetByInode(inode);
     clusterCtrl.shareWithCluster(dataset);
@@ -112,8 +110,8 @@ public class DelaClusterProjectService {
   @Path("/{inodeId}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  public Response removePublic(@Context SecurityContext sc, @PathParam("inodeId") Integer inodeId) 
-    throws DelaException {
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response removePublic(@PathParam("inodeId") Integer inodeId) throws DelaException {
     Inode inode = getInode(inodeId);
     Dataset dataset = getDatasetByInode(inode);
     clusterCtrl.unshareFromCluster(dataset);

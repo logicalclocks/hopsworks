@@ -64,7 +64,7 @@ public class RESTCodes {
     PROJECT_EXISTS(1, "Project with the same name already exists.", Response.Status.CONFLICT),
     NUM_PROJECTS_LIMIT_REACHED(2, "You have reached the maximum number of projects you could create."
       + " Contact an administrator to increase your limit.", Response.Status.BAD_REQUEST),
-    INVALID_PROJECT_NAME(3, "Invalid project name, valid characters: [a-z,0-9].",
+    INVALID_PROJECT_NAME(3, "Invalid project name, valid characters: [a-zA-Z0-9]((?!__)[_a-zA-Z0-9]){0,62}",
       Response.Status.BAD_REQUEST),
     PROJECT_NOT_FOUND(4, "Project wasn't found.", Response.Status.BAD_REQUEST),
     PROJECT_NOT_REMOVED(5, "Project wasn't removed.", Response.Status.BAD_REQUEST),
@@ -388,6 +388,7 @@ public class RESTCodes {
     JOB_LOG(11, "Job log error.", Response.Status.BAD_REQUEST),
     JOB_DELETION_ERROR(12, "Error while deleting job.", Response.Status.BAD_REQUEST),
     JOB_CREATION_ERROR(13, "Error while creating job.", Response.Status.BAD_REQUEST),
+
     ELASTIC_INDEX_NOT_FOUND(14, "Elasticsearch indices do not exist", Response.Status.BAD_REQUEST),
     ELASTIC_TYPE_NOT_FOUND(15, "Elasticsearch type does not exist", Response.Status.BAD_REQUEST),
     
@@ -401,8 +402,12 @@ public class RESTCodes {
     LOG_RETRIEVAL_ERROR(20, "Error while retrieving YARN logs", Response.Status.INTERNAL_SERVER_ERROR),
     
     JOB_SCHEDULE_UPDATE(21, "Could not update schedule.", Response.Status.INTERNAL_SERVER_ERROR),
-    JAR_INSEPCTION_ERROR(22, "Could not inspect jar file.", Response.Status.INTERNAL_SERVER_ERROR),
-    PROXY_ERROR(23, "Could not get proxy user.", Response.Status.INTERNAL_SERVER_ERROR);
+    JAR_INSPECTION_ERROR(22, "Could not inspect jar file.", Response.Status.INTERNAL_SERVER_ERROR),
+    PROXY_ERROR(23, "Could not get proxy user.", Response.Status.INTERNAL_SERVER_ERROR),
+
+    JOB_CONFIGURATION_CONVERT_TO_JSON_ERROR(24, "Could not convert JobConfiguration to json",
+        Response.Status.BAD_REQUEST);
+
     
     private Integer code;
     private String message;
@@ -726,7 +731,11 @@ public class RESTCodes {
       "Could not identify local directory to clean certificates. Manual cleanup required.", 
       Response.Status.INTERNAL_SERVER_ERROR),
     MASTER_ENCRYPTION_PASSWORD_ACCESS_ERROR(11, "Could not read master encryption password.",
-      Response.Status.INTERNAL_SERVER_ERROR);
+      Response.Status.INTERNAL_SERVER_ERROR),
+    NOT_RENEWABLE_TOKEN(12, "Token can not be renewed.", Response.Status.BAD_REQUEST),
+    INVALIDATION_ERROR(13, "Error while invalidating token.", Response.Status.EXPECTATION_FAILED),
+    REST_ACCESS_CONTROL(14, "Client not authorized for this invocation.", Response.Status.FORBIDDEN),
+    DUPLICATE_KEY_ERROR(15, "A signing key with the same name already exists.", Response.Status.CONFLICT);
     
     private Integer code;
     private String message;

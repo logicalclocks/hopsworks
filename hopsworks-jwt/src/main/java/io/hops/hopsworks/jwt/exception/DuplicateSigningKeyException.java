@@ -13,15 +13,29 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.jwt.annotation;
+package io.hops.hopsworks.jwt.exception;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+public class DuplicateSigningKeyException extends JWTException {
 
-@Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.TYPE, ElementType.METHOD})
-public @interface AcceptedTokens {
-  String[] value();
+  public DuplicateSigningKeyException() {
+  }
+
+  public DuplicateSigningKeyException(String message) {
+    super(message);
+  }
+
+  public DuplicateSigningKeyException(String message, Throwable cause) {
+    super(message, cause);
+  }
+
+  public DuplicateSigningKeyException(Throwable cause) {
+    super(cause);
+  }
+
+  public DuplicateSigningKeyException(String message, Throwable cause, boolean enableSuppression,
+      boolean writableStackTrace) {
+    super(message, cause, enableSuppression, writableStackTrace);
+  }
+  
+  
 }

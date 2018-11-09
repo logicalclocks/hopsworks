@@ -43,13 +43,12 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('ProjectCtrl', ['$scope', '$rootScope', '$location', '$routeParams', '$route',  '$window', 'UtilsService',
-          'growl', 'ProjectService', 'AuthService', 'ModalService', 'ActivityService', '$cookies', 'DataSetService', 'EndpointService',
+        .controller('ProjectCtrl', ['$scope', '$rootScope', '$location', '$routeParams', '$route', 'UtilsService',
+          'growl', 'ProjectService', 'ModalService', 'ActivityService', '$cookies', 'DataSetService',
           'UserService', 'TourService', 'PythonDepsService', 'StorageService', 'CertService', 'VariablesService', 'FileSaver', 'Blob',
-          'AirflowService',
-          function ($scope, $rootScope, $location, $routeParams, $route, $window, UtilsService, growl, ProjectService, AuthService,
-                  ModalService, ActivityService, $cookies, DataSetService, EndpointService, UserService, TourService, PythonDepsService,
-                  StorageService, CertService, VariablesService, FileSaver, Blob, AirflowService) {
+          function ($scope, $rootScope, $location, $routeParams, $route, UtilsService, growl, ProjectService,
+                  ModalService, ActivityService, $cookies, DataSetService, UserService, TourService, PythonDepsService,
+                  StorageService, CertService, VariablesService, FileSaver, Blob) {
 
             var self = this;
             self.loadedView = false;
@@ -65,27 +64,6 @@ angular.module('hopsWorksApp')
             self.cloak = true;
             self.isClosed = true;
             self.versions = [];
-
-            self.pia = {
-              "id": "",
-              "personalData": "",
-              "howDataCollected": "",
-              "specifiedExplicitLegitimate": 0,
-              "consentProcess": "",
-              "consentBasis": "",
-              "dataMinimized": 0,
-              "dataUptodate": 0,
-              "usersInformed_how": "",
-              "userControlsDataCollectionRetention": "",
-              "dataEncrypted": 0,
-              "dataAnonymized": 0,
-              "dataPseudonymized": 0,
-              "dataBackedup": 0,
-              "dataSecurityMeasures": "",
-              "dataPortabilityMeasure": "",
-              "subjectAccessRights": "",
-              "risks": ""
-            };
 
             self.role = "";
 
@@ -116,18 +94,6 @@ angular.module('hopsWorksApp')
             $scope.$on('$viewContentLoaded', function () {
               self.loadedView = true;
             });
-
-
-
-            var getEndpoint = function () {
-              EndpointService.findEndpoint().then(
-                      function (success) {
-                        console.log(success);
-                        self.endpoint = success.data.data.value;
-                      }, function (error) {
-                self.endpoint = '...';
-              });
-            };
 
             self.initTour = function () {
               if (angular.equals(self.currentProject.projectName.substr(0,
@@ -164,10 +130,6 @@ angular.module('hopsWorksApp')
               }
               return false;
             };
-
-            getEndpoint();
-
-
 
             var getCurrentProject = function () {
               ProjectService.get({}, {'id': self.projectId}).$promise.then(
@@ -219,15 +181,7 @@ angular.module('hopsWorksApp')
                         $cookies.put("projectID", self.projectId);
                         //set the project name under which the search is performed
                         UtilsService.setProjectName(self.currentProject.projectName);
-                        self.getRole();
-
-                        ProjectService.getPia({id: self.projectId}).$promise.then(
-                                function (success) {
-                                  self.pia = success;
-                                }, function (error) {
-                          growl.error(error.data.errorMsg, {title: 'Error getting Pia', ttl: 5000});
-                          $location.path('/');
-                        });
+                        self.getRole();                        
                       }
               );
 
@@ -253,7 +207,7 @@ angular.module('hopsWorksApp')
             var locationPath = $location.path();
             if (locationPath.substring(locationPath.length - self.projectId.length, locationPath.length) === self.projectId) {
               getAllActivities();
-            }
+            }            
 
             getCurrentProject();
 
@@ -289,32 +243,7 @@ angular.module('hopsWorksApp')
                       }, function (error) {
               });
             };
-
-
-            self.savePia = function () {
-              var forms = document.getElementsByClassName('needs-validation');
-              Array.prototype.filter.call(forms, function (form) {
-                form.addEventListener('submit', function (event) {
-                  if (form.checkValidity() === false) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                  }
-                  form.classList.add('was-validated');
-                }, false);
-              });
-
-
-              ProjectService.savePia({id: self.currentProject.projectId}, self.pia)
-                      .$promise.then(
-                              function (success) {
-                                growl.success("Saved Pia", {title: 'Saved', ttl: 2000});
-                              }, function (error) {
-                        self.working = false;
-                        growl.warning("Error: " + error.data.errorMsg, {title: 'Error', ttl: 5000});
-                      }
-                      );
-            };
-
+           
             self.saveProject = function () {
               self.working = true;
               $scope.newProject = {
@@ -737,21 +666,7 @@ angular.module('hopsWorksApp')
             self.isServiceEnabled = function (service) {
               var idx = self.projectTypes.indexOf(service);
               return idx === -1;
-            };
-
-            var getVersions = function () {
-              if (self.versions.length === 0) {
-
-                VariablesService.getVersions()
-                        .then(function (success) {
-                          self.versions = success.data;
-
-                        }, function (error) {
-                          console.log("Failed to get versions");
-                        });
-              }
-            };
-            getVersions();
+            };            
 
 
             self.openWindow = function () {

@@ -52,19 +52,19 @@ public class UserStatusValidator {
 
   public boolean checkStatus(UserAccountStatus status) throws UserException {
     if (status.equals(UserAccountStatus.NEW_MOBILE_ACCOUNT)) {
-      throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_INACTIVE, Level.INFO);
+      throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_INACTIVE, Level.FINE);
     }
     if (status.equals(UserAccountStatus.BLOCKED_ACCOUNT)) {
-      throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_BLOCKED, Level.INFO);
+      throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_BLOCKED, Level.FINE);
     }
     if (status.equals(UserAccountStatus.DEACTIVATED_ACCOUNT)) {
-      throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_DEACTIVATED, Level.INFO);
+      throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_DEACTIVATED, Level.FINE);
     }
     if (status.equals(UserAccountStatus.LOST_MOBILE)) {
-      throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_LOST_DEVICE, Level.INFO);
+      throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_LOST_DEVICE, Level.FINE);
     }
     if (status.equals(UserAccountStatus.VERIFIED_ACCOUNT)) {
-      throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_NOT_APPROVED, Level.INFO);
+      throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_NOT_APPROVED, Level.FINE);
     }
     return true;
   }

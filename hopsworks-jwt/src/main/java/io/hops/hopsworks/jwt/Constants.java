@@ -23,6 +23,8 @@ public class Constants {
   public static final String ROLES = "roles";
   public static final String WWW_AUTHENTICATE_VALUE="Bearer realm=\"Cauth Realm\"";
   
-  public static final int DEFAULT_EXPIRY_LEEWAY = 5;
-  public static final boolean DEFAULT_RENEWABLE = true;
+  public static final int DEFAULT_EXPIRY_LEEWAY = 60; //60 secs for exp
+  public static final boolean DEFAULT_RENEWABLE = false;
+  
+  
 }

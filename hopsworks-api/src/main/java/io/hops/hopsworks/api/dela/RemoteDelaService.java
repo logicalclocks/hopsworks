@@ -39,6 +39,7 @@
 
 package io.hops.hopsworks.api.dela;
 
+import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
@@ -47,6 +48,7 @@ import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.dela.DelaHdfsController;
 import io.hops.hopsworks.common.exception.DelaException;
+import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.Api;
 import java.util.Optional;
 import java.util.logging.Level;
@@ -64,12 +66,13 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 @Path("/remote/dela")
+@Stateless
+@JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-@Stateless
-@TransactionAttribute(TransactionAttributeType.NEVER)
 @Api(value = "Cross Dela Service",
   description = "Cross Dela Service")
+@TransactionAttribute(TransactionAttributeType.NEVER)
 public class RemoteDelaService {
 
   private static final Logger LOGGER = Logger.getLogger(RemoteDelaService.class.getName());

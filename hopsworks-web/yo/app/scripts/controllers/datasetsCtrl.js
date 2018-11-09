@@ -40,12 +40,12 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('DatasetsCtrl', ['$scope', '$q', '$mdSidenav', '$mdUtil', '$log',
-          'DataSetService', 'JupyterService', '$routeParams', '$route', 'ModalService', 'growl', '$location',
-          'MetadataHelperService', '$rootScope', 'DelaProjectService', 'DelaClusterProjectService',
-          function ($scope, $q, $mdSidenav, $mdUtil, $log, DataSetService, JupyterService, $routeParams,
-                  $route, ModalService, growl, $location, MetadataHelperService,
-                  $rootScope, DelaProjectService, DelaClusterProjectService) {
+        .controller('DatasetsCtrl', ['$scope', '$mdSidenav', '$mdUtil',
+          'DataSetService', 'JupyterService', '$routeParams', 'ModalService', 'growl', '$location',
+          'MetadataHelperService', '$rootScope', 'DelaProjectService', 'DelaClusterProjectService', 'UtilsService', 'UserService',
+          function ($scope, $mdSidenav, $mdUtil, DataSetService, JupyterService, $routeParams,
+                  ModalService, growl, $location, MetadataHelperService,
+                  $rootScope, DelaProjectService, DelaClusterProjectService, UtilsService, UserService) {
 
             var self = this;
             self.itemsPerPage = 14;
@@ -615,6 +615,47 @@ angular.module('hopsWorksApp')
               }
               return false;
             };
+            
+            self.browseDataset = function (dataset) {
+              if (dataset.status === true) {
+                UtilsService.setDatasetName(dataset.name);
+                $rootScope.parentDS = dataset;
+                $location.path($location.path() + '/' + dataset.name + '/');
+              } else {
+                ModalService.confirmShare('sm', 'Accept Shared Dataset?', 'Do you want to accept this dataset and add it to this project?')
+                  .then(function (success) {
+                    DataSetService(self.projectId).acceptDataset(dataset.id).then(
+                      function (success) {
+                        $location.path($location.path() + '/' + dataset.name + '/');
+                      }, function (error) {
+                        growl.warning("Error: " + error.data.errorMsg, {title: 'Error', ttl: 5000});
+                    });
+                  }, function (error) {
+                    if (error === 'reject') {
+                      DataSetService(self.projectId).rejectDataset(dataset.id).then(
+                        function (success) {
+                          $location.path($location.path() + '/');
+                          growl.success("Success: " + success.data.successMessage, {title: 'Success', ttl: 5000});
+                        }, function (error) {
+                           growl.warning("Error: " + error.data.errorMsg, {title: 'Error', ttl: 5000});
+                      });
+                    }
+                  });
+              }
+
+            };
+            
+            self.getRole = function () {
+              UserService.getRole(self.projectId).then(
+                function (success) {
+                  self.role = success.data.role;
+                }, function (error) {
+                  self.role = "";
+              });
+            };
+            
+            self.getRole();
+
 
             /**
              * Preview the requested file in a Modal. If the file is README.md

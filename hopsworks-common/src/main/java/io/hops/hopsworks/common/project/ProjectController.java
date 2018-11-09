@@ -246,7 +246,6 @@ public class ProjectController {
   @Any
   private Instance<ProjectHandler> projectHandlers;
 
-
   /**
    * Creates a new project(project), the related DIR, the different services in
    * the project, and the master of the
@@ -271,7 +270,7 @@ public class ProjectController {
     
     //check that the project name is ok
     String projectName = projectDTO.getProjectName();
-    FolderNameValidator.isValidProjectName(projectName, false);
+    FolderNameValidator.isValidProjectName(projectName);
 
     List<ProjectServiceEnum> projectServices = new ArrayList<>();
     if (projectDTO.getServices() != null) {
@@ -404,7 +403,7 @@ public class ProjectController {
       //add members of the project   
       try {
         failedMembers = new ArrayList<>();
-        failedMembers.addAll(addMembers(project, owner.getEmail(), projectDTO.getProjectTeam()));
+        failedMembers.addAll(addMembers(project, owner, projectDTO.getProjectTeam()));
       } catch (KafkaException | UserException | ProjectException | EJBException ex) {
         cleanup(project, sessionId, projectCreationFutures);
         throw ex;
@@ -920,9 +919,9 @@ public class ProjectController {
     if (project == null) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId);
     }
-    //Only project owner is able to delete a project
+    //Only project owner and admin is able to delete a project
     Users user = userFacade.findByEmail(userMail);
-    if (!project.getOwner().equals(user)) {
+    if (!project.getOwner().equals(user) && !usersController.isUserInRole(user, "HOPS_ADMIN")) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_REMOVAL_NOT_ALLOWED, Level.FINE);
     }
     
@@ -1721,20 +1720,22 @@ public class ProjectController {
    *
    *
    * @param project
-   * @param ownerEmail
+   * @param owner
    * @param projectTeams
    * @return a list of user names that could not be added to the project team
    * list.
+   * @throws io.hops.hopsworks.common.exception.KafkaException
+   * @throws io.hops.hopsworks.common.exception.ProjectException
+   * @throws io.hops.hopsworks.common.exception.UserException
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
-  public List<String> addMembers(Project project, String ownerEmail,
-      List<ProjectTeam> projectTeams) throws KafkaException, ProjectException, UserException {
+  public List<String> addMembers(Project project, Users owner, List<ProjectTeam> projectTeams) throws KafkaException,
+      ProjectException, UserException {
     List<String> failedList = new ArrayList<>();
     if (projectTeams == null) {
       return failedList;
     }
 
-    Users owner = userFacade.findByEmail(ownerEmail);
     Users newMember;
     for (ProjectTeam projectTeam : projectTeams) {
       try {
@@ -2001,27 +2002,29 @@ public class ProjectController {
    * Deletes a member from a project
    *
    * @param project
-   * @param email
+   * @param user
    * @param toRemoveEmail
+   * @throws io.hops.hopsworks.common.exception.UserException
+   * @throws io.hops.hopsworks.common.exception.ProjectException
+   * @throws io.hops.hopsworks.common.exception.ServiceException
+   * @throws java.io.IOException
+   * @throws io.hops.hopsworks.common.security.CAException
    */
-  public void removeMemberFromTeam(Project project, String email,
-      String toRemoveEmail) throws UserException, ProjectException, ServiceException, IOException, CAException {
+  public void removeMemberFromTeam(Project project, Users user, String toRemoveEmail) throws UserException,
+      ProjectException, ServiceException, IOException, CAException {
     Users userToBeRemoved = userFacade.findByEmail(toRemoveEmail);
     if (userToBeRemoved == null) {
-      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE, "user: " + email);
+      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE, "user: " + user.getEmail());
     }
-    ProjectTeam projectTeam = projectTeamFacade.findProjectTeam(project,
-        userToBeRemoved);
+    ProjectTeam projectTeam = projectTeamFacade.findProjectTeam(project, userToBeRemoved);
     if (projectTeam == null) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.TEAM_MEMBER_NOT_FOUND, Level.FINE,
-        "project: " + project + ", user: " + email);
+        "project: " + project + ", user: " + user.getEmail());
     }
     projectTeamFacade.removeProjectTeam(project, userToBeRemoved);
-    Users user = userFacade.findByEmail(email);
     String hdfsUser = hdfsUsersController.getHdfsUserName(project, userToBeRemoved);
 
-    YarnClientWrapper yarnClientWrapper = ycs.getYarnClientSuper(settings
-        .getConfiguration());
+    YarnClientWrapper yarnClientWrapper = ycs.getYarnClientSuper(settings.getConfiguration());
     YarnClient client = yarnClientWrapper.getYarnClient();
     try {
       Set<String> hdfsUsers = new HashSet<>();
@@ -2089,8 +2092,7 @@ public class ProjectController {
 
     kafkaController.removeProjectMemberFromTopics(project, userToBeRemoved);
 
-    logActivity(ActivityFacade.REMOVED_MEMBER + toRemoveEmail,
-        ActivityFacade.FLAG_PROJECT, user, project);
+    logActivity(ActivityFacade.REMOVED_MEMBER + userToBeRemoved.getEmail(), ActivityFacade.FLAG_PROJECT, user, project);
     
     certificateMaterializer.forceRemoveLocalMaterial(userToBeRemoved.getUsername(), project.getName(), null, false);
     certificatesController.deleteUserSpecificCertificates(project, userToBeRemoved);
@@ -2100,16 +2102,16 @@ public class ProjectController {
    * Updates the role of a member
    *
    * @param project
-   * @param owner that is performing the update
+   * @param opsOwner
    * @param toUpdateEmail
    * @param newRole
+   * @throws io.hops.hopsworks.common.exception.UserException
+   * @throws io.hops.hopsworks.common.exception.ProjectException
    */
-  @TransactionAttribute(
-      TransactionAttributeType.REQUIRES_NEW)
-  public void updateMemberRole(Project project, String owner,
-      String toUpdateEmail, String newRole) throws UserException, ProjectException {
+  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+  public void updateMemberRole(Project project, Users opsOwner, String toUpdateEmail, String newRole) throws
+      UserException, ProjectException {
     Users projOwner = project.getOwner();
-    Users opsOwner = userFacade.findByEmail(owner);
     Users user = userFacade.findByEmail(toUpdateEmail);
     if (projOwner.equals(user)) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_OWNER_ROLE_NOT_ALLOWED, Level.FINE,

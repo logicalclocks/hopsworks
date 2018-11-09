@@ -71,7 +71,7 @@ describe "On #{ENV['OS']}" do
         end
       end
 
-      context 'with authentication' do
+      context 'with authentication', vm: true do
         before :all do
           with_valid_project
 
@@ -259,7 +259,7 @@ describe "On #{ENV['OS']}" do
 
     end
 
-    describe "#start" do
+    describe "#start", vm: true do
       before :all do
         with_valid_project
         with_serving(@project[:id], @project[:projectname], @user[:username])
@@ -305,7 +305,7 @@ describe "On #{ENV['OS']}" do
       end
     end
 
-    describe "#update" do
+    describe "#update", vm: true do
       before :all do
         with_valid_project
         with_serving(@project[:id], @project[:projectname], @user[:username])
@@ -426,7 +426,7 @@ describe "On #{ENV['OS']}" do
       end
     end
 
-    describe "#kill" do
+    describe "#kill", vm: true do
       before :all do
         with_valid_project
         with_serving(@project[:id], @project[:projectname], @user[:username])
@@ -478,7 +478,7 @@ describe "On #{ENV['OS']}" do
       end
     end
 
-    describe "#delete" do
+    describe "#delete", vm: true do
       before :all do
         # Make sure no tensorflow serving instance is running"
         system "pgrep -f tensorflow_model_server | xargs kill -9"

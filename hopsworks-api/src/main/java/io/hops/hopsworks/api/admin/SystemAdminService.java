@@ -41,11 +41,14 @@ package io.hops.hopsworks.api.admin;
 
 import com.google.common.base.Strings;
 import io.hops.hopsworks.api.admin.dto.VariablesRequest;
+import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
+import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.host.Hosts;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
+import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.util.Variables;
 import io.hops.hopsworks.common.exception.EncryptionMasterPasswordException;
 import io.hops.hopsworks.common.exception.HopsSecurityException;
@@ -53,9 +56,9 @@ import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.security.CertificatesMgmService;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.Api;
 
-import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -74,7 +77,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -84,10 +86,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Path("/admin")
-@RolesAllowed({"HOPS_ADMIN"})
+@Stateless
+@JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN"})
 @Api(value = "Admin")
 @Produces(MediaType.APPLICATION_JSON)
-@Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class SystemAdminService {
   
@@ -101,26 +103,28 @@ public class SystemAdminService {
   private Settings settings;
   @EJB
   private HostsFacade hostsFacade;
+  @EJB
+  private JWTHelper jWTHelper;
   
   /**
    * Admin endpoint that changes the master encryption password used to encrypt the certificates' password
    * stored in the database.
-   * @param sc
    * @param request
    * @param oldPassword Current password
    * @param newPassword New password
    * @return
+   * @throws io.hops.hopsworks.common.exception.HopsSecurityException
    */
   @PUT
   @Path("/encryptionPass")
-  public Response changeMasterEncryptionPassword(@Context SecurityContext sc, @Context HttpServletRequest request,
-      @FormParam("oldPassword") String oldPassword, @FormParam("newPassword") String newPassword)
-    throws HopsSecurityException {
+  public Response changeMasterEncryptionPassword(@Context HttpServletRequest request,
+      @FormParam("oldPassword") String oldPassword, @FormParam("newPassword") String newPassword) throws
+      HopsSecurityException {
     LOGGER.log(Level.FINE, "Requested master encryption password change");
     try {
-      String userEmail = sc.getUserPrincipal().getName();
-      certificatesMgmService.checkPassword(oldPassword, userEmail);
-      certificatesMgmService.resetMasterEncryptionPassword(newPassword, userEmail);
+      Users user = jWTHelper.getUserPrincipal(request);
+      certificatesMgmService.checkPassword(oldPassword, user.getEmail());
+      certificatesMgmService.resetMasterEncryptionPassword(newPassword, user.getEmail());
   
       RESTApiJsonResponse response = noCacheResponse.buildJsonResponse(Response.Status.NO_CONTENT, ResponseMessages
           .MASTER_ENCRYPTION_PASSWORD_CHANGE);
@@ -137,7 +141,7 @@ public class SystemAdminService {
   
   @POST
   @Path("/variables/refresh")
-  public Response refreshVariables(@Context SecurityContext sc, @Context HttpServletRequest request) {
+  public Response refreshVariables() {
     LOGGER.log(Level.FINE, "Requested refreshing variables");
     settings.refreshCache();
     
@@ -148,8 +152,7 @@ public class SystemAdminService {
   @POST
   @Consumes({MediaType.APPLICATION_JSON})
   @Path("/variables")
-  public Response updateVariables(@Context SecurityContext sc, @Context HttpServletRequest request,
-      VariablesRequest variablesRequest) {
+  public Response updateVariables(VariablesRequest variablesRequest) {
   
     List<Variables> variables = variablesRequest.getVariables();
     
@@ -170,7 +173,7 @@ public class SystemAdminService {
   
   @GET
   @Path("/hosts")
-  public Response getAllClusterNodes(@Context SecurityContext sc, @Context HttpServletRequest request) {
+  public Response getAllClusterNodes() {
     List<Hosts> allNodes = hostsFacade.find();
     
     List<Hosts> responseList = new ArrayList<>(allNodes.size());
@@ -190,8 +193,7 @@ public class SystemAdminService {
   @PUT
   @Consumes({MediaType.APPLICATION_JSON})
   @Path("/hosts")
-  public Response updateClusterNode(@Context SecurityContext sc, @Context HttpServletRequest request, Hosts
-      nodeToUpdate) throws ServiceException {
+  public Response updateClusterNode(Hosts nodeToUpdate) throws ServiceException {
   
     Hosts storedNode = hostsFacade.findByHostname(nodeToUpdate.getHostname());
     if (storedNode == null) {
@@ -225,8 +227,7 @@ public class SystemAdminService {
   
   @DELETE
   @Path("/hosts/{hostid}")
-  public Response deleteNode(@Context SecurityContext sc, @Context HttpServletRequest request,
-      @PathParam("hostid") String hostId) {
+  public Response deleteNode(@PathParam("hostid") String hostId) {
     if (hostId == null) {
       throw new IllegalArgumentException("hostId was not provided.");
     }
@@ -245,7 +246,7 @@ public class SystemAdminService {
   @POST
   @Consumes({MediaType.APPLICATION_JSON})
   @Path("/hosts")
-  public Response addNewClusterNode(@Context SecurityContext sc, @Context HttpServletRequest request, Hosts newNode)
+  public Response addNewClusterNode(Hosts newNode)
     throws ServiceException {
     
     // Do some sanity check
@@ -271,7 +272,7 @@ public class SystemAdminService {
   
   @POST
   @Path("/rotate")
-  public Response serviceKeyRotate(@Context SecurityContext sc, @Context HttpServletRequest request) {
+  public Response serviceKeyRotate() {
     certificatesMgmService.issueServiceKeyRotationCommand();
     RESTApiJsonResponse
       response = noCacheResponse.buildJsonResponse(Response.Status.NO_CONTENT, "Key rotation commands " +

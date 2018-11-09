@@ -39,7 +39,9 @@
 
 package io.hops.hopsworks.api.admin;
 
+import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
+import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.common.dao.user.BbcGroup;
 import io.hops.hopsworks.common.dao.user.BbcGroupFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
@@ -55,9 +57,9 @@ import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.exception.UserException;
 import io.hops.hopsworks.common.util.EmailBean;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.Api;
 
-import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -75,17 +77,16 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.logging.Level;
 
 @Path("/admin")
-@RolesAllowed({"HOPS_ADMIN"})
+@Stateless
+@JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN"})
 @Api(value = "Admin")
 @Produces(MediaType.APPLICATION_JSON)
-@Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class UsersAdmin {
 
@@ -101,12 +102,13 @@ public class UsersAdmin {
   private EmailBean emailBean;
   @EJB
   private Settings settings;
+  @EJB
+  private JWTHelper jWTHelper;
 
   @GET
   @Path("/users")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getAllUsers(@Context SecurityContext sc, @Context HttpServletRequest req,
-      @QueryParam("status") String filter){
+  public Response getAllUsers(@QueryParam("status") String filter){
     List<Users> list = new ArrayList<>();
     if (filter == null) {
       list = userFacade.findAllUsers();
@@ -125,8 +127,7 @@ public class UsersAdmin {
   @GET
   @Path("/users/{email}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getUser(@Context SecurityContext sc, @Context HttpServletRequest req,
-      @PathParam("email") String email) throws UserException {
+  public Response getUser(@PathParam("email") String email) throws UserException {
     Users u = userFacade.findByEmail(email);
     if (u == null) {
       throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
@@ -139,19 +140,16 @@ public class UsersAdmin {
   @POST
   @Path("/users/{email}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response updateUser(@Context SecurityContext sc, @Context HttpServletRequest req,
-      @PathParam("email") String email, Users user) throws UserException {
+  public Response updateUser(@Context HttpServletRequest req, @PathParam("email") String email, Users user) throws
+      UserException {
     Users u = userFacade.findByEmail(email);
     if (u != null) {
       if (user.getStatus() != null) {
         u.setStatus(user.getStatus());
         u = userFacade.update(u);
-        String initiatorEmail = sc.getUserPrincipal().getName();
-        Users initiator = userFacade.findByEmail(initiatorEmail);
-        auditManager.registerRoleChange(initiator,
-            AccountsAuditActions.CHANGEDSTATUS.name(), AccountsAuditActions.SUCCESS.
-            name(), u.getStatusName(), u, req);
-
+        Users initiator = jWTHelper.getUserPrincipal(req);
+        auditManager.registerRoleChange(initiator, AccountsAuditActions.CHANGEDSTATUS.name(),
+            AccountsAuditActions.SUCCESS.name(), u.getStatusName(), u, req);
       }
       if (user.getBbcGroupCollection() != null) {
         u.setBbcGroupCollection(user.getBbcGroupCollection());
@@ -160,10 +158,8 @@ public class UsersAdmin {
         for (BbcGroup group : u.getBbcGroupCollection()) {
           result = result + group.getGroupName() + ", ";
         }
-        String initiatorEmail = sc.getUserPrincipal().getName();
-        Users initiator = userFacade.findByEmail(initiatorEmail);
-        auditManager.registerRoleChange(initiator,
-            RolesAuditAction.ROLE_UPDATED.name(), RolesAuditAction.SUCCESS.
+        Users initiator = jWTHelper.getUserPrincipal(req);
+        auditManager.registerRoleChange(initiator, RolesAuditAction.ROLE_UPDATED.name(), RolesAuditAction.SUCCESS.
             name(), result, u, req);
       }
       if (user.getMaxNumProjects() != null) {
@@ -182,8 +178,8 @@ public class UsersAdmin {
   @POST
   @Path("/users/{email}/accepted")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response acceptUser(@Context SecurityContext sc, @Context HttpServletRequest req,
-      @PathParam("email") String email, Users user) throws UserException, ServiceException {
+  public Response acceptUser(@Context HttpServletRequest req, @PathParam("email") String email, Users user) throws
+      UserException, ServiceException {
     Users u = userFacade.findByEmail(email);
     if (u != null) {
       if (u.getStatus().equals(UserAccountStatus.VERIFIED_ACCOUNT)) {
@@ -200,8 +196,7 @@ public class UsersAdmin {
         for (BbcGroup group : u.getBbcGroupCollection()) {
           result = result + group.getGroupName() + ", ";
         }
-        String initiatorEmail = sc.getUserPrincipal().getName();
-        Users initiator = userFacade.findByEmail(initiatorEmail);
+        Users initiator = jWTHelper.getUserPrincipal(req);
         auditManager.registerRoleChange(initiator,
             RolesAuditAction.ROLE_UPDATED.name(), RolesAuditAction.SUCCESS.
             name(), result, u, req);
@@ -224,14 +219,13 @@ public class UsersAdmin {
   @POST
   @Path("/users/{email}/rejected")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response rejectUser(@Context SecurityContext sc, @Context HttpServletRequest req,
-      @PathParam("email") String email) throws UserException, ServiceException {
+  public Response rejectUser(@Context HttpServletRequest req, @PathParam("email") String email) throws UserException,
+      ServiceException {
     Users u = userFacade.findByEmail(email);
     if (u != null) {
       u.setStatus(UserAccountStatus.SPAM_ACCOUNT);
       u = userFacade.update(u);
-      String initiatorEmail = sc.getUserPrincipal().getName();
-      Users initiator = userFacade.findByEmail(initiatorEmail);
+      Users initiator = jWTHelper.getUserPrincipal(req);
 
       auditManager.registerRoleChange(initiator, UserAccountStatus.SPAM_ACCOUNT.name(),
           AccountsAuditActions.SUCCESS.name(), "", u, req);
@@ -248,8 +242,8 @@ public class UsersAdmin {
   @POST
   @Path("/users/{email}/pending")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response pendingUser(@Context SecurityContext sc, @Context HttpServletRequest req,
-      @PathParam("email") String email) throws UserException, ServiceException {
+  public Response pendingUser(@Context HttpServletRequest req, @PathParam("email") String email) throws UserException,
+      ServiceException {
     Users u = userFacade.findByEmail(email);
     if (u != null) {
       if (u.getStatus().equals(UserAccountStatus.NEW_MOBILE_ACCOUNT)) {
@@ -270,7 +264,7 @@ public class UsersAdmin {
   @GET
   @Path("/usergroups")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getAllGroups(@Context SecurityContext sc, @Context HttpServletRequest req) {
+  public Response getAllGroups() {
     List<BbcGroup> list = bbcGroupFacade.findAll();
     GenericEntity<List<BbcGroup>> groups = new GenericEntity<List<BbcGroup>>(list) {
     };

@@ -122,9 +122,7 @@
     <class>io.hops.hopsworks.common.dao.project.pia.Pia</class>
     <!-- Converters -->
     <class>io.hops.hopsworks.common.dao.user.cluster.RegistrationStatusConverter</class>
-    <class>io.hops.hopsworks.common.jobs.configuration.JsonReduceableConverter</class>
-    <class>io.hops.hopsworks.common.dao.user.cluster.RegistrationStatusConverter</class>
-    <class>io.hops.hopsworks.common.jobs.configuration.JsonReduceableConverter</class>
+    <class>io.hops.hopsworks.common.jobs.configuration.JobConfigurationConverter</class>
 
     <class>io.hops.hopsworks.common.dao.rstudio.RStudioProject</class>
     <class>io.hops.hopsworks.common.dao.rstudio.RStudioSettings</class>

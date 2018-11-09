@@ -45,6 +45,10 @@ module SessionHelper
     if response.code != 200
       reset_and_create_session
     end
+    get "#{ENV['HOPSWORKS_API']}/auth/jwt/session"
+    if response.code != 200
+      reset_and_create_session
+    end
   end
   
   def with_admin_session
@@ -75,10 +79,14 @@ module SessionHelper
     else 
       @cookies = {"SESSIONID"=> json_body[:sessionID]}
     end
+    if !headers["authorization"].nil?
+      @token = headers["authorization"]
+    end
     @user = user
     Airborne.configure do |config|
       config.headers = {:cookies => @cookies, content_type: 'application/json' }
-    end    
+      config.headers["Authorization"] = @token
+    end  
   end
   
   def register_user(params={})
@@ -109,9 +117,11 @@ module SessionHelper
   def reset_session
     get "#{ENV['HOPSWORKS_API']}/auth/logout"
     @cookies = nil
+    @token = nil
     @user = nil
     Airborne.configure do |config|
       config.headers = {:cookies => {}, content_type: 'application/json' }
+      config.headers["Authorization"] = ""
     end
   end
 
@@ -124,8 +134,13 @@ module SessionHelper
     else 
       cookies = {"SESSIONID"=> json_body[:sessionID]}
     end
+    token = ''
+    if !headers["authorization"].nil?
+      token = headers["authorization"]
+    end
     Airborne.configure do |config|
       config.headers = {:cookies => cookies, content_type: 'application/json' }
+      config.headers["Authorization"] = token
     end
     cookies
   end

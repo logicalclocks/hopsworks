@@ -89,14 +89,13 @@ public class SparkYarnRunnerBuilder {
   private int numberOfExecutorsMax = Settings.SPARK_MAX_EXECS;
   private int numberOfExecutorsInit = Settings.SPARK_INIT_EXECS;
   private int executorCores = 1;
-  private int numberOfGpus = 0;
+  private int executorGPUs = 0;
   private String properties;
   private boolean dynamicExecutors;
   private String executorMemory = "512m";
   private int driverMemory = 1024; // in MB
   private int driverCores = 1;
   private String driverQueue;
-  private int numOfGPUs = 0;
   private final Map<String, String> envVars = new HashMap<>();
   private final Map<String, String> sysProps = new HashMap<>();
   private String classPath;
@@ -138,7 +137,7 @@ public class SparkYarnRunnerBuilder {
       throws IOException {
 
     Map<String, ConfigProperty> jobHopsworksProps = new HashMap<>();
-    JobType jobType = job.getJobConfig().getType();
+    JobType jobType = job.getJobConfig().getJobType();
     String appPath = ((SparkJobConfiguration) job.getJobConfig()).getAppPath();
 
     String hdfsSparkJarPath = settings.getHdfsSparkJarPath();
@@ -558,7 +557,14 @@ public class SparkYarnRunnerBuilder {
           new ConfigProperty(
               Settings.SPARK_TF_GPUS_ENV,
               HopsUtils.IGNORE,
-              Integer.toString(numOfGPUs)));
+              Integer.toString(executorGPUs)));
+      if(executorGPUs > 0) {
+        jobHopsworksProps.put(Settings.SPARK_TENSORFLOW_APPLICATION,
+            new ConfigProperty(
+                Settings.SPARK_TENSORFLOW_APPLICATION,
+                HopsUtils.IGNORE,
+                "true"));
+      }
       //Add libs to PYTHONPATH
       if (serviceProps.isAnacondaEnabled()) {
         //Add libs to PYTHONPATH
@@ -714,12 +720,12 @@ public class SparkYarnRunnerBuilder {
     return this;
   }
 
-  public SparkYarnRunnerBuilder setNumberOfGpusPerExecutor(int numberOfGpusPerExecutor) {
-    if (numberOfGpusPerExecutor < 0) {
+  public SparkYarnRunnerBuilder setExecutorGPUs(int executorGPUs) {
+    if (executorGPUs < 0) {
       throw new IllegalArgumentException(
           "Number of GPUs per executor cannot be less than 0.");
     }
-    this.numberOfGpus = numberOfGpusPerExecutor;
+    this.executorGPUs = executorGPUs;
     return this;
   }
 
@@ -838,10 +844,6 @@ public class SparkYarnRunnerBuilder {
 
   public void setDriverQueue(String driverQueue) {
     this.driverQueue = driverQueue;
-  }
-
-  public void setNumOfGPUs(int numOfGPUs) {
-    this.numOfGPUs = numOfGPUs;
   }
 
   public void setServiceProps(ServiceProperties serviceProps) {

@@ -81,7 +81,7 @@ describe "On #{ENV['OS']}" do
                        0.0, 0.0, 0.0, 0.0]]}
 
     describe "#infer" do
-      context 'without authentication' do
+      context 'without authentication', vm: true do
         before :all do
           with_valid_project
           with_serving(@project[:id], @project[:projectname], @user[:username])
@@ -95,7 +95,7 @@ describe "On #{ENV['OS']}" do
         end
       end
 
-      context 'with authentication' do
+      context 'with authentication', vm: true do
         before :all do
           with_valid_project
           with_serving(@project[:id], @project[:projectname], @user[:username])

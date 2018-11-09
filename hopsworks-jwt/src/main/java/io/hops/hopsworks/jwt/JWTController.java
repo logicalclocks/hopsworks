@@ -17,7 +17,7 @@ package io.hops.hopsworks.jwt;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
-import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import io.hops.hopsworks.jwt.dao.InvalidJwt;
@@ -25,20 +25,21 @@ import io.hops.hopsworks.jwt.dao.InvalidJwtFacade;
 import io.hops.hopsworks.jwt.dao.JwtSigningKey;
 import io.hops.hopsworks.jwt.dao.JwtSigningKeyFacade;
 import java.security.NoSuchAlgorithmException;
-import java.util.Base64;
 import java.util.Date;
 import java.util.UUID;
 import java.util.logging.Logger;
-import javax.crypto.KeyGenerator;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import static io.hops.hopsworks.jwt.Constants.DEFAULT_EXPIRY_LEEWAY;
+import static io.hops.hopsworks.jwt.Constants.DEFAULT_RENEWABLE;
 import static io.hops.hopsworks.jwt.Constants.EXPIRY_LEEWAY;
 import static io.hops.hopsworks.jwt.Constants.RENEWABLE;
 import static io.hops.hopsworks.jwt.Constants.ROLES;
+import io.hops.hopsworks.jwt.exception.DuplicateSigningKeyException;
 import io.hops.hopsworks.jwt.exception.InvalidationException;
 import io.hops.hopsworks.jwt.exception.NotRenewableException;
 import io.hops.hopsworks.jwt.exception.SigningKeyNotFoundException;
+import io.hops.hopsworks.jwt.exception.VerificationException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -48,7 +49,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
 @Stateless
-@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+@TransactionAttribute(TransactionAttributeType.NEVER)
 public class JWTController {
 
   private final static Logger LOGGER = Logger.getLogger(JWTController.class.getName());
@@ -67,9 +68,9 @@ public class JWTController {
    * @throws io.hops.hopsworks.jwt.exception.SigningKeyNotFoundException
    */
   public String createToken(JsonWebToken jwt) throws SigningKeyNotFoundException {
-    String token = createToken(jwt.getKeyId(), jwt.getIssuer(), (String[]) jwt.getAudience().toArray(), jwt.
-        getExpiresAt(), jwt.getNotBefore(), jwt.getSubject(), jwt.isRenewable(), jwt.getExpLeeway(), (String[]) jwt.
-        getRole().toArray(), jwt.getAlgorithm());
+    String token = createToken(jwt.getKeyId(), jwt.getIssuer(), jwt.getAudience().toArray(new String[0]), jwt.
+        getExpiresAt(), jwt.getNotBefore(), jwt.getSubject(), jwt.isRenewable(), jwt.getExpLeeway(), jwt.
+        getRole().toArray(new String[0]), jwt.getAlgorithm());
     return token;
   }
 
@@ -102,7 +103,7 @@ public class JWTController {
         .withJWTId(generateJti())
         .withSubject(subject)
         .withClaim(RENEWABLE, isRenewable)
-        .withClaim(EXPIRY_LEEWAY, expLeeway)
+        .withClaim(EXPIRY_LEEWAY, getExpLeewayOrDefault(expLeeway))
         .withArrayClaim(ROLES, roles)
         .sign(algorithmFactory.getAlgorithm(algorithm, keyId));
     return token;
@@ -125,12 +126,13 @@ public class JWTController {
    * @param roles
    * @param algorithm
    * @return
-   * @throws java.security.NoSuchAlgorithmException
-   * @throws io.hops.hopsworks.jwt.exception.SigningKeyNotFoundException
+   * @throws NoSuchAlgorithmException
+   * @throws SigningKeyNotFoundException
+   * @throws DuplicateSigningKeyException
    */
   public String createToken(String keyName, boolean createNewKey, String issuer, String[] audience, Date expiresAt,
       Date notBefore, String subject, boolean isRenewable, int expLeeway, String[] roles, SignatureAlgorithm algorithm)
-      throws NoSuchAlgorithmException, SigningKeyNotFoundException {
+      throws NoSuchAlgorithmException, SigningKeyNotFoundException, DuplicateSigningKeyException {
     JwtSigningKey signingKey;
     if (createNewKey) {
       signingKey = createNewSigningKey(keyName, algorithm);
@@ -152,13 +154,54 @@ public class JWTController {
     if (token == null || token.isEmpty()) {
       return;
     }
-    DecodedJWT jwt = JWT.decode(token);
-    if (isTokenInvalidated(jwt) || passedRenewal(jwt)) {
-      return;
-    }
-    Claim expLeewayClaim = jwt.getClaim(EXPIRY_LEEWAY);
-    int expLeeway = expLeewayClaim != null ? expLeewayClaim.asInt() : DEFAULT_EXPIRY_LEEWAY;
+    DecodedJWT jwt;
+    try {
+      jwt = verifyToken(token, null);
+    } catch (Exception ex) {
+      return; // no need to invalidate if not valid
+    } 
+
+    int expLeeway = getExpLeewayClaim(jwt);
     invalidateJWT(jwt.getId(), jwt.getExpiresAt(), expLeeway);
+  }
+  
+  /**
+   * Get expiration leeway from jwt or 60 if no such claim exists.
+   * @param jwt
+   * @return 
+   */
+  public int getExpLeewayClaim(DecodedJWT jwt) {
+    Claim expLeewayClaim = jwt.getClaim(EXPIRY_LEEWAY);
+    return expLeewayClaim == null? DEFAULT_EXPIRY_LEEWAY : getExpLeewayOrDefault(expLeewayClaim.asInt());
+  }
+  
+  /**
+   * Get expLeeway or default if expLeeway < 1
+   * @param expLeeway
+   * @return 
+   */
+  public int getExpLeewayOrDefault(int expLeeway) {
+    return expLeeway < 1 ? DEFAULT_EXPIRY_LEEWAY : expLeeway;
+  }
+  
+  /**
+   * Get renewable claim from jwt or false if no such claim exists.
+   * @param jwt
+   * @return 
+   */
+  public boolean getRenewableClaim(DecodedJWT jwt) {
+    Claim renewableClaim = jwt.getClaim(RENEWABLE);
+    return renewableClaim != null ? renewableClaim.asBoolean() : DEFAULT_RENEWABLE;
+  }
+  
+  /**
+   * Get roles from jwt of empty array if no such claim exists.
+   * @param jwt
+   * @return 
+   */
+  public String[] getRolesClaim(DecodedJWT jwt) {
+    Claim rolesClaim = jwt.getClaim(ROLES);
+    return rolesClaim == null ? new String[0] : rolesClaim.asArray(String.class);
   }
 
   /**
@@ -180,21 +223,17 @@ public class JWTController {
    * @param token
    * @param issuer
    * @return
-   * @throws io.hops.hopsworks.jwt.exception.SigningKeyNotFoundException
+   * @throws SigningKeyNotFoundException
+   * @throws VerificationException
    */
-  public DecodedJWT verifyToken(String token, String issuer) throws SigningKeyNotFoundException {
+  public DecodedJWT verifyToken(String token, String issuer) throws SigningKeyNotFoundException, VerificationException {
     DecodedJWT jwt = JWT.decode(token);
     issuer = issuer == null || issuer.isEmpty() ? jwt.getIssuer() : issuer;
-    Claim expLeewayClaim = jwt.getClaim(EXPIRY_LEEWAY);
-    int expLeeway = expLeewayClaim != null ? expLeewayClaim.asInt() : DEFAULT_EXPIRY_LEEWAY;
-    JWTVerifier verifier = JWT.require(algorithmFactory.getAlgorithm(jwt))
-        .withIssuer(issuer)
-        .acceptExpiresAt(expLeeway)
-        .build();
-    jwt = verifier.verify(token);
+    int expLeeway = getExpLeewayClaim(jwt);
+    jwt = verifyToken(token, issuer, expLeeway, algorithmFactory.getAlgorithm(jwt));
 
     if (isTokenInvalidated(jwt)) {
-      throw new JWTVerificationException("Invalidated token.");
+      throw new VerificationException("Invalidated token.");
     }
     return jwt;
   }
@@ -207,20 +246,17 @@ public class JWTController {
    * @param audiences
    * @param roles
    * @return
-   * @throws io.hops.hopsworks.jwt.exception.SigningKeyNotFoundException
+   * @throws SigningKeyNotFoundException
+   * @throws VerificationException
    */
   public DecodedJWT verifyToken(String token, String issuer, Set<String> audiences, Set<String> roles) throws
-      SigningKeyNotFoundException {
+      SigningKeyNotFoundException, VerificationException {
     JsonWebToken jwt = new JsonWebToken(JWT.decode(token));
     issuer = issuer == null || issuer.isEmpty() ? jwt.getIssuer() : issuer;
-    JWTVerifier verifier = JWT.require(algorithmFactory.getAlgorithm(jwt))
-        .withIssuer(issuer)
-        .acceptExpiresAt(jwt.getExpLeeway())
-        .build();
-    DecodedJWT djwt = verifier.verify(token);
+    DecodedJWT djwt = verifyToken(token, issuer, jwt.getExpLeeway(), algorithmFactory.getAlgorithm(jwt));
 
     if (isTokenInvalidated(djwt)) {
-      throw new JWTVerificationException("Invalidated token.");
+      throw new VerificationException("Invalidated token.");
     }
 
     Set<String> rolesSet = new HashSet<>(jwt.getRole());
@@ -237,6 +273,21 @@ public class JWTController {
       }
     }
     return djwt;
+  }
+  
+  private DecodedJWT verifyToken(String token, String issuer, int expLeeway, Algorithm algorithm) throws
+      VerificationException {
+    DecodedJWT jwt = null;
+    try {
+      JWTVerifier verifier = JWT.require(algorithm)
+          .withIssuer(issuer)
+          .acceptExpiresAt(expLeeway)
+          .build();
+      jwt = verifier.verify(token);
+    } catch (Exception e) {
+      throw new VerificationException(e.getMessage());
+    }
+    return jwt;
   }
 
   private boolean intersect(Collection list1, Collection list2) {
@@ -271,15 +322,14 @@ public class JWTController {
    * @param newExp expiry date of the new token
    * @param notBefore
    * @return
-   * @throws io.hops.hopsworks.jwt.exception.SigningKeyNotFoundException
-   * @throws io.hops.hopsworks.jwt.exception.NotRenewableException
-   * @throws io.hops.hopsworks.jwt.exception.InvalidationException
+   * @throws SigningKeyNotFoundException
+   * @throws NotRenewableException
+   * @throws InvalidationException
    */
-  public String renewToken(String token, Date newExp, Date notBefore) throws SigningKeyNotFoundException,
+  public String autoRenewToken(String token, Date newExp, Date notBefore) throws SigningKeyNotFoundException,
       NotRenewableException, InvalidationException {
-    DecodedJWT jwt = verifyToken(token, null);
-    Claim renewableClaim = jwt.getClaim(RENEWABLE);
-    boolean isRenewable = renewableClaim != null ? renewableClaim.asBoolean() : false;
+    DecodedJWT jwt = verifyTokenForRenewal(token);
+    boolean isRenewable = getRenewableClaim(jwt);
     if (!isRenewable) {
       throw new NotRenewableException("Token not renewable.");
     }
@@ -295,6 +345,43 @@ public class JWTController {
 
     invalidateJWT(jwt.getId(), jwt.getExpiresAt(), _jwt.getExpLeeway());
     return renewedToken;
+  }
+  
+  /**
+   * Creates a new token with the same values as the given token but with newExp and notBefore.
+   * @param token
+   * @param newExp
+   * @param notBefore
+   * @return
+   * @throws SigningKeyNotFoundException
+   * @throws NotRenewableException
+   * @throws InvalidationException
+   */
+  public String renewToken(String token, Date newExp, Date notBefore) throws SigningKeyNotFoundException,
+      NotRenewableException, InvalidationException {
+    DecodedJWT jwt = verifyTokenForRenewal(token);
+    Date currentTime = new Date();
+    if (currentTime.before(jwt.getExpiresAt())) {
+      throw new NotRenewableException("Token not expired.");
+    }
+
+    JsonWebToken _jwt = new JsonWebToken(jwt);
+    _jwt.setExpiresAt(newExp);
+    _jwt.setNotBefore(notBefore);
+    String renewedToken = createToken(_jwt);
+
+    invalidateJWT(jwt.getId(), jwt.getExpiresAt(), _jwt.getExpLeeway());
+    return renewedToken;
+  }
+  
+  private DecodedJWT verifyTokenForRenewal(String token) throws SigningKeyNotFoundException, NotRenewableException {
+    DecodedJWT jwt;
+    try {
+      jwt = verifyToken(token, null);
+    } catch (VerificationException ex) {
+      throw new NotRenewableException(ex.getMessage());
+    }
+    return jwt;
   }
 
   private void invalidateJWT(String id, Date exp, int leeway) throws InvalidationException {
@@ -313,8 +400,7 @@ public class JWTController {
    * @return
    */
   public boolean passedRenewal(DecodedJWT jwt) {
-    Claim expLeewayClaim = jwt.getClaim(EXPIRY_LEEWAY);
-    int expLeeway = expLeewayClaim != null ? expLeewayClaim.asInt() : DEFAULT_EXPIRY_LEEWAY;
+    int expLeeway = getExpLeewayClaim(jwt);
     return passedRenewal(jwt.getExpiresAt(), expLeeway);
   }
 
@@ -357,11 +443,7 @@ public class JWTController {
    * @throws NoSuchAlgorithmException
    */
   public JwtSigningKey getOrCreateSigningKey(String keyName, SignatureAlgorithm alg) throws NoSuchAlgorithmException {
-    JwtSigningKey signingKey = jwtSigningKeyFacade.findByName(keyName);
-    if (signingKey == null) {
-      signingKey = createSigningKey(keyName, alg);
-    }
-    return signingKey;
+    return jwtSigningKeyFacade.getOrCreateSigningKey(keyName, alg);
   }
 
   /**
@@ -371,24 +453,11 @@ public class JWTController {
    * @param alg
    * @return
    * @throws NoSuchAlgorithmException
+   * @throws io.hops.hopsworks.jwt.exception.DuplicateSigningKeyException
    */
-  public JwtSigningKey createNewSigningKey(String keyName, SignatureAlgorithm alg) throws NoSuchAlgorithmException {
-    JwtSigningKey signingKey = jwtSigningKeyFacade.findByName(keyName);
-    if (signingKey != null) {
-      throw new IllegalStateException("A signing key with the same name already exists.");
-    }
-    return createSigningKey(keyName, alg);
-  }
-
-  private JwtSigningKey createSigningKey(String keyName, SignatureAlgorithm alg) throws NoSuchAlgorithmException {
-    JwtSigningKey signingKey;
-    KeyGenerator gen = KeyGenerator.getInstance(alg.getJcaName());
-    byte[] keyBytes = gen.generateKey().getEncoded();
-    String base64Encoded = Base64.getEncoder().encodeToString(keyBytes);
-    signingKey = new JwtSigningKey(base64Encoded, keyName);
-    jwtSigningKeyFacade.persist(signingKey);
-    signingKey = jwtSigningKeyFacade.findByName(keyName);
-    return signingKey;
+  public JwtSigningKey createNewSigningKey(String keyName, SignatureAlgorithm alg) throws NoSuchAlgorithmException,
+      DuplicateSigningKeyException {
+    return jwtSigningKeyFacade.createNewSigningKey(keyName, alg);
   }
 
   /**
@@ -405,6 +474,7 @@ public class JWTController {
    *
    * @return
    */
+  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public int cleanupInvalidTokens() {
     List<InvalidJwt> expiredTokens = invalidJwtFacade.findExpired();
     int count = 0;

@@ -256,7 +256,7 @@ public class FlinkController {
       config.setJarPath(path);
       return config;
     } catch (IOException ex) {
-      throw new JobException(RESTCodes.JobErrorCode.JAR_INSEPCTION_ERROR, Level.SEVERE,
+      throw new JobException(RESTCodes.JobErrorCode.JAR_INSPECTION_ERROR, Level.SEVERE,
         "Failed to inspect jar at:" + path, ex.getMessage(), ex);
     }
   }

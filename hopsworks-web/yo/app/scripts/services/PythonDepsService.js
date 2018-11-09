@@ -138,9 +138,6 @@ angular.module('hopsWorksApp')
                   dataType: "json"
                 };
                 return $http(regReq);
-              },
-              clone: function (projectId, projName) {
-                return $http.get('/api/project/' + projectId + '/pythonDeps/clone/' + projName);
               }
             };
           }]);
