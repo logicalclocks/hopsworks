@@ -173,7 +173,7 @@ public class SparkYarnRunnerBuilder {
         Settings.SPARK_LOG4J_PROPERTIES, log4jPath,
         LocalResourceVisibility.APPLICATION.toString(),
         LocalResourceType.FILE.toString(), null), false);
-    //Add metrics 
+    //Add metrics
     builder.addLocalResource(new LocalResourceDTO(
         Settings.SPARK_METRICS_PROPERTIES, settings.getSparkConfDir() + "/metrics.properties",
         LocalResourceVisibility.PRIVATE.toString(),
@@ -182,6 +182,11 @@ public class SparkYarnRunnerBuilder {
     builder.addLocalResource(new LocalResourceDTO(
         Settings.DOMAIN_CA_TRUSTSTORE, settings.getGlassfishTrustStoreHdfs(),
         LocalResourceVisibility.PRIVATE.toString(),
+        LocalResourceType.FILE.toString(), null), false);
+    // Add Hive-site.xml for SparkSQL
+    builder.addLocalResource(new LocalResourceDTO(
+        Settings.HIVE_SITE, settings.getHiveSiteSparkHdfsPath(),
+        LocalResourceVisibility.APPLICATION.toString(),
         LocalResourceType.FILE.toString(), null), false);
 
     //Add app file
@@ -364,7 +369,7 @@ public class SparkYarnRunnerBuilder {
               secondaryJars.toString().substring(0, secondaryJars.length() - 1)));
     }
 
-    //If DynamicExecutors are not enabled, set the user defined number 
+    //If DynamicExecutors are not enabled, set the user defined number
     //of executors
     if (dynamicExecutors) {
       jobHopsworksProps.put(Settings.SPARK_DYNAMIC_ALLOC_ENV,
