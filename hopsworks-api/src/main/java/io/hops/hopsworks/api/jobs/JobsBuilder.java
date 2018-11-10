@@ -77,11 +77,7 @@ public class JobsBuilder {
     return dto;
   }
   
-  public JobDTO build(UriInfo uriInfo, ResourceProperties resourceProperties, Project project) {
-    return build(new JobDTO(), uriInfo, resourceProperties, project, null);
-  }
-  
-  public JobDTO build(JobDTO dto, UriInfo uriInfo, ResourceProperties resourceProperties, Project project, JobType
+  public JobDTO build(UriInfo uriInfo, ResourceProperties resourceProperties, Project project, JobType
     type) {
     List<Jobs> jobs;
     if (type != null) {
@@ -93,7 +89,7 @@ public class JobsBuilder {
         resourceProperties.get(ResourceProperties.Name.JOBS).getOffset(),
         resourceProperties.get(ResourceProperties.Name.JOBS).getLimit());
     }
-    return build(dto, uriInfo, resourceProperties, jobs);
+    return build(new JobDTO(), uriInfo, resourceProperties, jobs);
   }
   
   public JobDTO build(JobDTO dto, UriInfo uriInfo, ResourceProperties resourceProperties, List<Jobs> jobs) {

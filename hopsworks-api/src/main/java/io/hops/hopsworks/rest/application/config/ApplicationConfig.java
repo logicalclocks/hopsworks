@@ -59,7 +59,6 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.api.filter.JWTAutoRenewFilter.class);
     register(io.hops.hopsworks.api.jwt.JWTResource.class);
     register(io.hops.hopsworks.api.jobs.ExecutionService.class);
-    register(io.hops.hopsworks.api.jobs.FlinkService.class);
     register(io.hops.hopsworks.api.jobs.JobService.class);
     register(io.hops.hopsworks.api.jupyter.JupyterService.class);
     register(io.hops.hopsworks.api.serving.TfServingService.class);
