@@ -58,6 +58,7 @@ import io.hops.hopsworks.common.jobs.flink.FlinkJobConfiguration;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
 import io.hops.hopsworks.common.jobs.spark.SparkController;
 import io.hops.hopsworks.common.jobs.spark.SparkJobConfiguration;
+import io.hops.hopsworks.common.jobs.yarn.YarnJobConfiguration;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
@@ -162,32 +163,33 @@ public class JobService {
   }
   
   
-  @ApiOperation( value = "Create a Spark Job", response = JobDTO.class)
+  @ApiOperation( value = "Create a Job", response = JobDTO.class)
   @POST
-  @Path("/spark")
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response createSpark (
-    SparkJobConfiguration config,
+    YarnJobConfiguration config,
     @Context HttpServletRequest req,
     @Context UriInfo uriInfo) throws JobException {
-    return createJobHelper(config, req, uriInfo);
-  }
+    if (config == null) {
+      throw new IllegalArgumentException("Job configuration was not provided.");
+    }
   
-  @ApiOperation( value = "Create Job", response = JobDTO.class)
-  @POST
-  @Path("/flink")
-  @Produces(MediaType.APPLICATION_JSON)
-  @Consumes(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response createFlink (
-    FlinkJobConfiguration config,
-    @Context HttpServletRequest req,
-    @Context UriInfo uriInfo) throws JobException {
-    return createJobHelper(config, req, uriInfo);
+    Users user = jWTHelper.getUserPrincipal(req);
+    if (Strings.isNullOrEmpty(config.getAppName())) {
+      throw new IllegalArgumentException("Job name was not provided.");
+    } else if (!HopsUtils.jobNameValidator(config.getAppName(), Settings.FILENAME_DISALLOWED_CHARS)) {
+      throw new JobException(RESTCodes.JobErrorCode.JOB_NAME_INVALID, Level.FINE, "job name: " + config.getAppName());
+    }
+  
+    Jobs job = jobController.createJob(user, project, config);
+    JobDTO dto = jobsBuilder.build(uriInfo, new ResourceProperties(ResourceProperties.Name.JOBS), job);
+    GenericEntity<JobDTO> ge = new GenericEntity<JobDTO>(dto) {};
+    UriBuilder builder = uriInfo.getAbsolutePathBuilder().path(Integer.toString(dto.getId()));
+    return Response.created(builder.build()).entity(ge).build();
+  
   }
   
   @ApiOperation(value = "Delete the job with the given ID")
@@ -299,26 +301,6 @@ public class JobService {
     } else {
       return this.executions.setJob(job);
     }
-  }
-  
-  private Response createJobHelper(JobConfiguration config, HttpServletRequest req, UriInfo uriInfo)
-    throws JobException {
-    if (config == null) {
-      throw new IllegalArgumentException("Job configuration was not provided.");
-    }
-  
-    Users user = jWTHelper.getUserPrincipal(req);
-    if (Strings.isNullOrEmpty(config.getAppName())) {
-      throw new IllegalArgumentException("Job name was not provided.");
-    } else if (!HopsUtils.jobNameValidator(config.getAppName(), Settings.FILENAME_DISALLOWED_CHARS)) {
-      throw new JobException(RESTCodes.JobErrorCode.JOB_NAME_INVALID, Level.FINE, "job name: " + config.getAppName());
-    }
-  
-    Jobs job = jobController.createJob(user, project, config);
-    JobDTO dto = jobsBuilder.build(uriInfo, new ResourceProperties(ResourceProperties.Name.JOBS), job);
-    GenericEntity<JobDTO> ge = new GenericEntity<JobDTO>(dto) {};
-    UriBuilder builder = uriInfo.getAbsolutePathBuilder().path(Integer.toString(dto.getId()));
-    return Response.created(builder.build()).entity(ge).build();
   }
   
   public enum Action {
