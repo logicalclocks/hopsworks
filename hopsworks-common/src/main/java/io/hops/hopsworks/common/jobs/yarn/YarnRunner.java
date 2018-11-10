@@ -50,29 +50,11 @@ import io.hops.hopsworks.common.jobs.jobhistory.JobType;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.IoUtils;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.common.yarn.YarnClientService;
 import io.hops.hopsworks.common.yarn.YarnClientWrapper;
 import io.hops.tensorflow.Client;
-import java.io.File;
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import io.hops.hopsworks.common.yarn.YarnClientService;
 import org.apache.flink.client.program.PackagedProgram;
 import org.apache.flink.client.program.ProgramInvocationException;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -93,6 +75,23 @@ import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.util.ConverterUtils;
 import org.codehaus.plexus.util.FileUtils;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**d
  * <p>
@@ -223,7 +222,7 @@ public class YarnRunner {
    */
   public YarnMonitor startAppMaster(YarnClientService ycs, String dfsUsername,
       Project project, DistributedFileSystemOps dfso, String username) throws
-      YarnException, IOException, URISyntaxException {
+    YarnException, IOException, URISyntaxException, InterruptedException {
     logger.info("Starting application master.");
     // Create a new client for monitoring
     YarnClientWrapper newYarnClientWrapper = ycs.getYarnClient(dfsUsername);
@@ -265,7 +264,7 @@ public class YarnRunner {
 
       //Set up commands
       String hdfsUser = project.getName() + "__" + username;
-      List<String> amCommands = setUpCommands(hdfsUser);
+      List<String> amCommands = setUpCommands();
       //Set up container launch context
       ContainerLaunchContext amContainer = ContainerLaunchContext.newInstance(
           localResources, env, amCommands, null, null, null);
@@ -575,7 +574,7 @@ public class YarnRunner {
     }
   }
 
-  private void setUpClassPath(Map<String, String> env) {
+  private void setUpClassPath(Map<String, String> env) throws InterruptedException, IOException {
     // Add AppMaster.jar location to classpath
     StringBuilder classPathEnv = new StringBuilder();
     for (String c : conf.getStrings(
@@ -583,7 +582,6 @@ public class YarnRunner {
         YarnConfiguration.DEFAULT_YARN_APPLICATION_CLASSPATH)) {
       classPathEnv.append(":").append(c.trim());
     }
-    //classPathEnv.append(":").append("./log4j.properties");
     // add the runtime classpath needed for tests to work
     if (conf.getBoolean(YarnConfiguration.IS_MINI_YARN_CLUSTER, false)) {
       classPathEnv.append(':');
@@ -608,7 +606,7 @@ public class YarnRunner {
     env.put(Settings.HADOOP_YARN_HOME_KEY, hadoopDir);
   }
 
-  private List<String> setUpCommands(String hdfsUser) {
+  private List<String> setUpCommands() {
     // Set the necessary command to execute the application master
     List<CharSequence> vargs = new ArrayList<>();
     // Set java executable command
@@ -616,9 +614,6 @@ public class YarnRunner {
     vargs.add(ApplicationConstants.Environment.JAVA_HOME.$() + "/bin/java");
     // Set Xmx based on am memory size
     vargs.add("-Xmx" + amMemory + "M");
-    //vargs.add(" -Dlogback.configurationFile=file:logback.xml");
-    //vargs.add(" -Dlog4j.configuration=file:log4j.properties");
-    //vargs.add(" -Dlog.file=/srv/hadoop/logs/userlogs/jobmanager1.out") ;   
     //Add jvm options
     for (String s : javaOptions) {
       vargs.add(s);
@@ -640,8 +635,6 @@ public class YarnRunner {
     for (CharSequence str : vargs) {
       amcommand.append(str).append(" ");
     }
-//    logger.log(Level.INFO, "Completed setting up app master command: {0}",
-//            amcommand.toString());
     List<String> amCommands = new ArrayList<>();
     amCommands.add(amcommand.toString());
     return amCommands;
