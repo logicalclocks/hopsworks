@@ -42,17 +42,28 @@ package io.hops.hopsworks.common.jobs.configuration;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlSeeAlso;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.hops.hopsworks.common.jobs.erasureCode.ErasureCodeJobConfiguration;
 import io.hops.hopsworks.common.jobs.flink.FlinkJobConfiguration;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
 import io.hops.hopsworks.common.jobs.spark.SparkJobConfiguration;
+import io.hops.hopsworks.common.jobs.yarn.YarnJobConfiguration;
 
 /**
  * Represents the persistable configuration of a runnable job.
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
+@XmlSeeAlso({YarnJobConfiguration.class})
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY)
+@JsonSubTypes({
+  @JsonSubTypes.Type(value = YarnJobConfiguration.class, name = "YarnJobConfiguration") }
+)
 public abstract class JobConfiguration {
 
   protected String appName;
