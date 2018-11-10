@@ -132,7 +132,8 @@ public class JobController {
   }
   
   
-  public JobConfiguration inspectProgram(String path, Project project, Users user, JobType jobType) throws JobException {
+  public JobConfiguration inspectProgram(String path, Project project, Users user, JobType jobType)
+    throws JobException {
     DistributedFileSystemOps udfso = null;
     try {
       String username = hdfsUsersBean.getHdfsUserName(project, user);
@@ -147,8 +148,8 @@ public class JobController {
           return sparkController.inspectProgram(path, udfso);
         case FLINK:
           return flinkController.inspectProgram(path, udfso);
-          default:
-            throw new IllegalArgumentException("Job type not supported: " + jobType);
+        default:
+          throw new IllegalArgumentException("Job type not supported: " + jobType);
       }
     } finally {
       if (udfso != null) {

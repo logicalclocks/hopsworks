@@ -47,11 +47,11 @@ import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.JobException;
 import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.jobs.JobController;
+import io.hops.hopsworks.common.jobs.configuration.JobConfiguration;
 import io.hops.hopsworks.common.jobs.configuration.ScheduleDTO;
 import io.hops.hopsworks.common.jobs.flink.FlinkController;
 import io.hops.hopsworks.common.jobs.flink.FlinkJobConfiguration;
@@ -99,8 +99,6 @@ public class JobService {
   private JobFacade jobFacade;
   @Inject
   private ExecutionService executions;
-  @Inject
-  private FlinkService flink;
   @EJB
   private JobController jobController;
   @EJB
@@ -129,15 +127,15 @@ public class JobService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response getAll(
+    @ApiParam(value = "Type of job, i.e. spark, flink") @QueryParam("type") JobType type,
     @QueryParam("offset") Integer offset,
     @QueryParam("limit") Integer limit,
     @QueryParam("sort_by") ResourceProperties.SortBy sortBy,
     @QueryParam("order_by") ResourceProperties.OrderBy orderBy,
     @QueryParam("expand") String expand,
-    @ApiParam(value = "Type of job, i.e. spark, flink") JobType type,
     @Context UriInfo uriInfo) {
     JobDTO dto = jobsBuilder.build(uriInfo, new ResourceProperties(ResourceProperties.Name.JOBS, offset, limit,
-      sortBy, orderBy, expand), project);
+      sortBy, orderBy, expand), project, type);
     
     GenericEntity<JobDTO> ge
       = new GenericEntity<JobDTO>(dto) { };
@@ -164,32 +162,32 @@ public class JobService {
   }
   
   
-  @ApiOperation( value = "Create Job", response = JobDTO.class)
+  @ApiOperation( value = "Create a Spark Job", response = JobDTO.class)
   @POST
+  @Path("/spark")
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response create (
+  public Response createSpark (
     SparkJobConfiguration config,
     @Context HttpServletRequest req,
     @Context UriInfo uriInfo) throws JobException {
-    if (config == null) {
-      throw new IllegalArgumentException("Job configuration was not provided.");
-    }
+    return createJobHelper(config, req, uriInfo);
+  }
   
-    Users user = jWTHelper.getUserPrincipal(req);
-    if (Strings.isNullOrEmpty(config.getAppName())) {
-      throw new IllegalArgumentException("Job name was not provided.");
-    } else if (!HopsUtils.jobNameValidator(config.getAppName(), Settings.FILENAME_DISALLOWED_CHARS)) {
-      throw new JobException(RESTCodes.JobErrorCode.JOB_NAME_INVALID, Level.FINE, "job name: " + config.getAppName());
-    }
-  
-    Jobs job = jobController.createJob(user, project, config);
-    JobDTO dto = jobsBuilder.build(uriInfo, new ResourceProperties(ResourceProperties.Name.JOBS), job);
-    GenericEntity<JobDTO> ge = new GenericEntity<JobDTO>(dto) {};
-    UriBuilder builder = uriInfo.getAbsolutePathBuilder().path(Integer.toString(dto.getId()));
-    return Response.created(builder.build()).entity(ge).build();
+  @ApiOperation( value = "Create Job", response = JobDTO.class)
+  @POST
+  @Path("/flink")
+  @Produces(MediaType.APPLICATION_JSON)
+  @Consumes(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response createFlink (
+    FlinkJobConfiguration config,
+    @Context HttpServletRequest req,
+    @Context UriInfo uriInfo) throws JobException {
+    return createJobHelper(config, req, uriInfo);
   }
   
   @ApiOperation(value = "Delete the job with the given ID")
@@ -253,7 +251,7 @@ public class JobService {
    * or not.
    * <p>
    * @param name job name
-   * @return
+   * @return Response
    */
   @ApiOperation(value = "Cancel a job's schedule.")
   @DELETE
@@ -273,15 +271,10 @@ public class JobService {
     return Response.ok().build();
   }
   
-  @Path("/flink")
-  public FlinkService flink() {
-    return this.flink.setProject(project);
-  }
-  
   @ApiOperation(value = "Inspect Spark user program and return SparkJobConfiguration",
     response = SparkJobConfiguration.class)
   @GET
-  @Path("/{jobtype : spark|pyspark}/config")
+  @Path("/{jobtype : spark|pyspark|flink}/inspection")
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
@@ -292,26 +285,7 @@ public class JobService {
       required = true)  @QueryParam("path") String path,
     @Context HttpServletRequest req) throws JobException {
     Users user = jWTHelper.getUserPrincipal(req);
-    SparkJobConfiguration config =
-      (SparkJobConfiguration) jobController.inspectProgram(path, project, user, JobType.valueOf(jobtype));
-    return Response.ok().entity(config).build();
-  }
-  
-  @ApiOperation(value = "Inspect Spark user program and return SparkJobConfiguration",
-    response = FlinkJobConfiguration.class)
-  @GET
-  @Path("/flink/config")
-  @Produces(MediaType.APPLICATION_JSON)
-  @Consumes(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response inspectFlink (
-    @ApiParam(value = "path", example = "/Projects/demo_spark_admin000/Resources/spark-examples.jar",
-      required = true)  @QueryParam("path") String path,
-    @Context HttpServletRequest req) throws JobException {
-    Users user = jWTHelper.getUserPrincipal(req);
-    FlinkJobConfiguration config =
-      (FlinkJobConfiguration) jobController.inspectProgram(path, project, user, JobType.FLINK);
+    JobConfiguration config = jobController.inspectProgram(path, project, user, JobType.valueOf(jobtype));
     return Response.ok().entity(config).build();
   }
   
@@ -325,6 +299,26 @@ public class JobService {
     } else {
       return this.executions.setJob(job);
     }
+  }
+  
+  private Response createJobHelper(JobConfiguration config, HttpServletRequest req, UriInfo uriInfo)
+    throws JobException {
+    if (config == null) {
+      throw new IllegalArgumentException("Job configuration was not provided.");
+    }
+  
+    Users user = jWTHelper.getUserPrincipal(req);
+    if (Strings.isNullOrEmpty(config.getAppName())) {
+      throw new IllegalArgumentException("Job name was not provided.");
+    } else if (!HopsUtils.jobNameValidator(config.getAppName(), Settings.FILENAME_DISALLOWED_CHARS)) {
+      throw new JobException(RESTCodes.JobErrorCode.JOB_NAME_INVALID, Level.FINE, "job name: " + config.getAppName());
+    }
+  
+    Jobs job = jobController.createJob(user, project, config);
+    JobDTO dto = jobsBuilder.build(uriInfo, new ResourceProperties(ResourceProperties.Name.JOBS), job);
+    GenericEntity<JobDTO> ge = new GenericEntity<JobDTO>(dto) {};
+    UriBuilder builder = uriInfo.getAbsolutePathBuilder().path(Integer.toString(dto.getId()));
+    return Response.created(builder.build()).entity(ge).build();
   }
   
   public enum Action {
