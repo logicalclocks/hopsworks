@@ -773,7 +773,6 @@ public class ProjectService {
     return this.jupyter;
   }
 
-<<<<<<< HEAD
   @Path("{id}/airflow")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public AirflowService airflow(
@@ -787,18 +786,8 @@ public class ProjectService {
     return this.airflow;
   }
 
-  @Path("{id}/tensorboard")
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public TensorBoardService tensorboard(
-          @PathParam("id") Integer id) throws ProjectException {
-    Project project = projectController.findProjectById(id);
-    if (project == null) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + id);
-    }
-=======
   @Path("{projectId}/tensorboard")
   public TensorBoardService tensorboard(@PathParam("projectId") Integer id) throws ProjectException {
->>>>>>> 031a0d44865a47c203ff360ff3e7063106537569
     this.tensorboard.setProjectId(id);
     return this.tensorboard;
   }
@@ -834,15 +823,7 @@ public class ProjectService {
   @Path("{projectId}/pia")
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-<<<<<<< HEAD
-  public Response updatePia(
-      Pia pia,
-      @PathParam("id") Integer projectId,
-      @Context SecurityContext sc,
-      @Context HttpServletRequest req) {
-=======
   public Response updatePia(Pia pia, @PathParam("projectId") Integer projectId) {
->>>>>>> 031a0d44865a47c203ff360ff3e7063106537569
     piaFacade.mergeUpdate(pia, projectId);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
@@ -851,14 +832,7 @@ public class ProjectService {
   @Path("{projectId}/pia")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-<<<<<<< HEAD
-  public Response getPia(@Context SecurityContext sc,
-      @PathParam("id") Integer projectId,
-      @Context HttpServletRequest req) throws ProjectException {
-=======
   public Response getPia(@PathParam("projectId") Integer projectId) throws ProjectException {
-
->>>>>>> 031a0d44865a47c203ff360ff3e7063106537569
     Project project = projectController.findProjectById(projectId);
     if (project == null) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId);
