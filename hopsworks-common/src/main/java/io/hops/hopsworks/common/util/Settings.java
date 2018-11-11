@@ -3083,6 +3083,6 @@ public class Settings implements Serializable {
   }
 
   public String getHiveSiteSparkHdfsPath() {
-    return "hdfs:///user/spark/hive-site.xml";
+    return "hdfs:///user/" + getSparkUser() + "/hive-site.xml";
   }
 }
