@@ -762,6 +762,7 @@ public class ProjectService {
     return this.jupyter;
   }
 
+
   @Path("{projectId}/tensorboard")
   public TensorBoardService tensorboard(@PathParam("projectId") Integer id) {
     this.tensorboard.setProjectId(id);
