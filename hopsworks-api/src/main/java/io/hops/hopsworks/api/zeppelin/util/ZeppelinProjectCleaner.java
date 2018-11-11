@@ -81,7 +81,8 @@ public class ZeppelinProjectCleaner {
   }
 
   @Timeout
-  public void synchronize(Timer timer) throws IOException, RepositoryException, TaskRunnerException {
+  public void synchronize(Timer timer)
+    throws IOException, RepositoryException, TaskRunnerException, InterruptedException {
     //get list of existing project
     List<Project> projects = projectFacade.findAll();
     //check if their is a zeepeling project folder localy for these projects

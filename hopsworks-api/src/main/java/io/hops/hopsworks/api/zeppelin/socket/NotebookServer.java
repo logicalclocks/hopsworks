@@ -158,7 +158,7 @@ public class NotebookServer {
       String httpHeader = (String) config.getUserProperties().get(WatcherSecurityKey.HTTP_HEADER);
       this.session.getUserProperties().put(WatcherSecurityKey.HTTP_HEADER, httpHeader);
       impl.unicast(new Message(OP.CREATED_SOCKET), conn);
-    } catch (IOException | RepositoryException | TaskRunnerException ex) {
+    } catch (IOException | RepositoryException | TaskRunnerException | InterruptedException ex) {
       throw new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR, Level.SEVERE, null, ex.getMessage(), ex);
     }
   }

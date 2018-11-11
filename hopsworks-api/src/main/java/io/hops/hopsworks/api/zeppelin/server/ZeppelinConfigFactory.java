@@ -123,7 +123,7 @@ public class ZeppelinConfigFactory {
    * @throws com.github.eirslett.maven.plugins.frontend.lib.TaskRunnerException TaskRunnerException
    */
   public ZeppelinConfig getZeppelinConfig(String projectName, NotebookServerImpl nbs) throws IOException,
-      RepositoryException, TaskRunnerException {
+    RepositoryException, TaskRunnerException, InterruptedException {
     // User is null when Hopsworks checks for running interpreters
     ZeppelinConfig config = projectConfCache.get(projectName);
     if (config == null) {
@@ -175,7 +175,8 @@ public class ZeppelinConfigFactory {
    * @param project
    * @return
    */
-  public boolean deleteZeppelinConfDir(Project project) throws IOException, RepositoryException, TaskRunnerException {
+  public boolean deleteZeppelinConfDir(Project project)
+    throws IOException, RepositoryException, TaskRunnerException, InterruptedException {
     ZeppelinConfig conf = projectConfCache.remove(project.getName());
     if (conf != null) {
       return conf.cleanAndRemoveConfDirs(notebookServerImplFactory);
