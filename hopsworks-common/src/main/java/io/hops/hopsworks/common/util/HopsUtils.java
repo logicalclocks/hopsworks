@@ -62,6 +62,7 @@ import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.yarn.api.records.LocalResourceType;
 import org.apache.hadoop.yarn.api.records.LocalResourceVisibility;
+import org.json.JSONObject;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
@@ -81,11 +82,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.json.JSONObject;
 
 /**
  * Utility methods.
@@ -160,41 +161,38 @@ public class HopsUtils {
    * @param params
    * @return hadoop global classpath
    */
-  public static String getHadoopClasspathGlob(String... params) {
+  public static String getHadoopClasspathGlob(String... params) throws IOException, InterruptedException {
     ProcessBuilder pb = new ProcessBuilder(params);
-    try {
-      Process process = pb.start();
-      int errCode = process.waitFor();
-      if (errCode != 0) {
-        return "";
+    Process process = pb.start();
+    StringBuilder sb = new StringBuilder();
+    try (BufferedReader br
+           = new BufferedReader(new InputStreamReader(process.
+      getInputStream()))) {
+      String line;
+      while ((line = br.readLine()) != null) {
+        sb.append(line);
       }
-      StringBuilder sb = new StringBuilder();
-      try (BufferedReader br
-          = new BufferedReader(new InputStreamReader(process.
-              getInputStream()))) {
-        String line;
-        while ((line = br.readLine()) != null) {
-          sb.append(line);
-        }
-      }
-      //Now we must remove the yarn shuffle library as it creates issues for 
-      //Zeppelin Spark Interpreter
-      StringBuilder classpath = new StringBuilder();
-
-      for (String path : sb.toString().split(File.pathSeparator)) {
-        if (!path.contains("yarn") && !path.contains("jersey") && !path.
-            contains("servlet")) {
-          classpath.append(path).append(File.pathSeparator);
-        }
-      }
-      if (classpath.length() > 0) {
-        return classpath.toString().substring(0, classpath.length() - 1);
-      }
-
-    } catch (IOException | InterruptedException ex) {
-      Logger.getLogger(HopsUtils.class.getName()).log(Level.SEVERE, null, ex);
     }
-    return "";
+    process.waitFor(20l, TimeUnit.SECONDS);
+    int errCode  = process.exitValue();
+    if (errCode != 0) {
+      throw new IOException("Could not get hadoop glob classpath. errCode: " + errCode);
+    }
+    //Now we must remove the yarn shuffle library as it creates issues for
+    //Zeppelin Spark Interpreter
+    StringBuilder classpath = new StringBuilder();
+
+    for (String path : sb.toString().split(File.pathSeparator)) {
+      if (!path.contains("yarn") && !path.contains("jersey") && !path.
+          contains("servlet")) {
+        classpath.append(path).append(File.pathSeparator);
+      }
+    }
+    if (classpath.length() > 0) {
+      return classpath.toString().substring(0, classpath.length() - 1);
+    }
+  
+    throw new IOException("Could not get hadoop glob classpath.");
   }
 
   public static String getProjectKeystoreName(String project, String user) {
