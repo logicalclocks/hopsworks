@@ -64,6 +64,9 @@ import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.util.OSProcessExecutor;
+import io.hops.hopsworks.common.util.ProcessDescriptor;
+import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -132,7 +135,9 @@ public class PythonDepsService {
   private DistributedFsService dfs;
   @EJB
   private JWTHelper jWTHelper;
-
+  @EJB
+  private OSProcessExecutor osProcessExecutor;
+  
   public void setProjectId(Integer projectId) {
     this.project = projectFacade.find(projectId);
   }
@@ -675,7 +680,12 @@ public class PythonDepsService {
         }
       }
 
-      int errCode = process.waitFor();
+      boolean exited = process.waitFor(10L, TimeUnit.MINUTES);
+      int errCode = process.exitValue();
+      if (!exited) {
+        throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_ERROR, Level.SEVERE,
+            "errCode: " + errCode);
+      }
       if (errCode == 2) {
         throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_ERROR, Level.SEVERE,
           "errCode: " + errCode);
@@ -738,17 +748,25 @@ public class PythonDepsService {
     exportDir.mkdirs();
 
     String prog = settings.getHopsworksDomainDir() + "/bin/condaexport.sh";
-    ProcessBuilder pb = new ProcessBuilder("/usr/bin/sudo", prog,
-        exportPath, project.getName(), host, environmentFile, hdfsUser);
-
+    
+    ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
+        .addCommand("/usr/bin/sudo")
+        .addCommand(prog)
+        .addCommand(exportPath)
+        .addCommand(project.getName())
+        .addCommand(host)
+        .addCommand(environmentFile)
+        .addCommand(hdfsUser)
+        .setWaitTimeout(180L, TimeUnit.SECONDS)
+        .ignoreOutErrStreams(true)
+        .build();
     try {
-      Process process = pb.start();
-      process.waitFor(180l, TimeUnit.SECONDS);
-      int exitCode = process.exitValue();
-      if (exitCode != 0) {
+      ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
+      
+      if (processResult.getExitCode() != 0) {
         throw new IOException("A problem occurred when exporting the environment. ");
       }
-    } catch (IOException | InterruptedException ex) {
+    } catch (IOException ex) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_EXPORT_ERROR, Level.SEVERE, "host: " + host + "," +
         " environmentFile: " + environmentFile + ", " + "hdfsUser: " + hdfsUser, ex.getMessage(), ex);
     }

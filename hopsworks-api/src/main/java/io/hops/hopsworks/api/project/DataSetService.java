@@ -88,8 +88,10 @@ import io.hops.hopsworks.common.jobs.erasureCode.ErasureCodeJobConfiguration;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
 import io.hops.hopsworks.common.jobs.yarn.YarnJobsMonitor;
 import io.hops.hopsworks.common.util.HopsUtils;
+import io.hops.hopsworks.common.util.OSProcessExecutor;
+import io.hops.hopsworks.common.util.ProcessDescriptor;
+import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.common.util.Settings;
-import io.hops.hopsworks.common.util.SystemCommandExecutor;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.ApiOperation;
 import org.apache.commons.codec.binary.Base64;
@@ -176,6 +178,8 @@ public class DataSetService {
   private ProjectTeamFacade projectTeamFacade;
   @EJB
   private JWTHelper jWTHelper;
+  @EJB
+  private OSProcessExecutor osProcessExecutor;
 
   private Integer projectId;
   private Project project;
@@ -215,20 +219,20 @@ public class DataSetService {
     // HDFS_USERNAME is the next param to the bash script
     Users user = jWTHelper.getUserPrincipal(req);
     String hdfsUser = hdfsUsersBean.getHdfsUserName(project, user);
-
-    List<String> commands = new ArrayList<>();
-
-    commands.add(settings.getHopsworksDomainDir() + "/bin/unzip-background.sh");
-    commands.add(stagingDir);
-    commands.add(fullPath);
-    commands.add(hdfsUser);
-
-    SystemCommandExecutor commandExecutor = new SystemCommandExecutor(commands, false);
-    String stdout = "", stderr = "";
+    
+  
+    ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
+        .addCommand(settings.getHopsworksDomainDir() + "/bin/unzip-background.sh")
+        .addCommand(stagingDir)
+        .addCommand(fullPath)
+        .addCommand(hdfsUser)
+        .ignoreOutErrStreams(true)
+        .build();
+  
     try {
-      int result = commandExecutor.executeCommand();
-      stdout = commandExecutor.getStandardOutputFromCommand();
-      stderr = commandExecutor.getStandardErrorFromCommand();
+      ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
+      
+      int result = processResult.getExitCode();
       if (result == 2) {
         throw new DatasetException(RESTCodes.DatasetErrorCode.COMPRESSION_SIZE_ERROR, Level.WARNING);
       }
@@ -236,7 +240,7 @@ public class DataSetService {
         throw new DatasetException(RESTCodes.DatasetErrorCode.COMPRESSION_ERROR, Level.WARNING,
           "path: " + fullPath + ", result: " + result);
       }
-    } catch (InterruptedException  | IOException ex) {
+    } catch (IOException ex) {
       throw new DatasetException(RESTCodes.DatasetErrorCode.COMPRESSION_ERROR, Level.SEVERE,
         "path: " + fullPath, ex.getMessage(), ex);
     }
@@ -266,20 +270,18 @@ public class DataSetService {
     // HDFS_USERNAME is the next param to the bash script
     Users user = jWTHelper.getUserPrincipal(req);
     String hdfsUser = hdfsUsersBean.getHdfsUserName(project, user);
+    
+    ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
+        .addCommand(settings.getHopsworksDomainDir() + "/bin/zip-background.sh")
+        .addCommand(stagingDir)
+        .addCommand(fullPath)
+        .addCommand(hdfsUser)
+        .ignoreOutErrStreams(true)
+        .build();
 
-    List<String> commands = new ArrayList<>();
-
-    commands.add(settings.getHopsworksDomainDir() + "/bin/zip-background.sh");
-    commands.add(stagingDir);
-    commands.add(fullPath);
-    commands.add(hdfsUser);
-
-    SystemCommandExecutor commandExecutor = new SystemCommandExecutor(commands, false);
-    String stdout = "", stderr = "";
     try {
-      int result = commandExecutor.executeCommand();
-      stdout = commandExecutor.getStandardOutputFromCommand();
-      stderr = commandExecutor.getStandardErrorFromCommand();
+      ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
+      int result = processResult.getExitCode();
       if (result == 2) {
         throw new DatasetException(RESTCodes.DatasetErrorCode.COMPRESSION_SIZE_ERROR, Level.WARNING);
       }
@@ -287,7 +289,7 @@ public class DataSetService {
         throw new DatasetException(RESTCodes.DatasetErrorCode.COMPRESSION_ERROR, Level.WARNING,
           "path: " + fullPath + ", result: " + result);
       }
-    } catch (InterruptedException | IOException ex) {
+    } catch (IOException ex) {
       throw new DatasetException(RESTCodes.DatasetErrorCode.COMPRESSION_ERROR, Level.SEVERE,
         "path: " + fullPath, ex.getMessage(), ex);
     }

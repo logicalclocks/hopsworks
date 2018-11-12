@@ -58,6 +58,10 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
+
+import io.hops.hopsworks.common.util.OSProcessExecutor;
+import io.hops.hopsworks.common.util.ProcessDescriptor;
+import io.hops.hopsworks.common.util.ProcessResult;
 import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
 import org.apache.commons.vfs2.FileSystemManager;
@@ -76,6 +80,8 @@ public class ZeppelinResource {
   private ZeppelinConfigFactory zeppelinConfFactory;
   @EJB
   private ZeppelinInterpreterConfFacade zeppelinInterpreterConfFacade;
+  @EJB
+  private OSProcessExecutor osProcessExecutor;
 
   public ZeppelinResource() {
   }
@@ -222,8 +228,12 @@ public class ZeppelinResource {
   }
 
   private boolean isProccessAlive(String pid) {
-    String[] command = {"kill", "-0", pid};
-    ProcessBuilder pb = new ProcessBuilder(command);
+    ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
+        .addCommand("kill")
+        .addCommand("-0")
+        .addCommand(pid)
+        .ignoreOutErrStreams(true)
+        .build();
     if (pid == null) {
       return false;
     }
@@ -232,10 +242,13 @@ public class ZeppelinResource {
     // redirect stdout and stderr for child process to the zeppelin/project/logs file.
     int exitValue;
     try {
-      Process p = pb.start();
-      p.waitFor();
-      exitValue = p.exitValue();
-    } catch (IOException | InterruptedException ex) {
+      ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
+      if (!processResult.processExited()) {
+        logger.log(Level.WARNING, "Process testing if Zeppelin Interpreter is alive time-out");
+        return false;
+      }
+      exitValue = processResult.getExitCode();
+    } catch (IOException ex) {
 
       logger.log(Level.WARNING, "Problem testing Zeppelin Interpreter: {0}", ex.
               toString());
@@ -247,18 +260,22 @@ public class ZeppelinResource {
   }
 
   private void forceKillProccess(String pid) {
-    String[] command = {"kill", "-9", pid};
-    ProcessBuilder pb = new ProcessBuilder(command);
+    ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
+        .addCommand("kill")
+        .addCommand("-9")
+        .addCommand(pid)
+        .ignoreOutErrStreams(true)
+        .build();
     if (pid == null) {
       return;
     }
     try {
-      Process p = pb.start();
-      p.waitFor();
-      p.exitValue();
-    } catch (IOException | InterruptedException ex) {
-      logger.log(Level.WARNING, "Problem killing Zeppelin Interpreter: {0}", ex.
-              toString());
+      ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
+      if (!processResult.processExited()) {
+        logger.log(Level.SEVERE, "Killing Zeppelin Interpreter time-out");
+      }
+    } catch (IOException ex) {
+      logger.log(Level.WARNING, "Problem killing Zeppelin Interpreter: {0}", ex.toString());
     }
   }
 

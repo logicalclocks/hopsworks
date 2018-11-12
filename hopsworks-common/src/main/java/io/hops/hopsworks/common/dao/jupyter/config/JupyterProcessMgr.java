@@ -50,6 +50,9 @@ import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.util.OSProcessExecutor;
+import io.hops.hopsworks.common.util.ProcessDescriptor;
+import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.common.util.Settings;
 
 import javax.annotation.PostConstruct;
@@ -70,7 +73,6 @@ import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Scanner;
@@ -109,6 +111,8 @@ public class JupyterProcessMgr {
   private JupyterSettingsFacade jupyterSettingsFacade;
   @EJB
   private JupyterConfigFilesGenerator jupyterConfigFilesGenerator;
+  @EJB
+  private OSProcessExecutor osProcessExecutor;
 
 
   @PostConstruct
@@ -151,31 +155,35 @@ public class JupyterProcessMgr {
       }
 
       String logfile = jp.getLogDirPath() + "/" + hdfsUser + "-" + port + ".log";
-      String[] command
-          = {"/usr/bin/sudo", prog, "start", jp.getNotebookPath(),
-            settings.getHadoopSymbolicLinkDir() + "-" + settings.getHadoopVersion(), settings.getJavaHome(),
-            settings.getAnacondaProjectDir(project.getName()), port.
-            toString(),
-            hdfsUser + "-" + port + ".log", secretDir, jp.getCertificatesDir()};
-      LOGGER.log(Level.INFO, Arrays.toString(command));
-      ProcessBuilder pb = new ProcessBuilder(command);
+      
+      ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
+          .addCommand("/usr/bin/sudo")
+          .addCommand(prog)
+          .addCommand("start")
+          .addCommand(jp.getNotebookPath())
+          .addCommand(settings.getHadoopSymbolicLinkDir() + "-" + settings.getHadoopVersion())
+          .addCommand(settings.getJavaHome())
+          .addCommand(settings.getAnacondaProjectDir(project.getName()))
+          .addCommand(port.toString())
+          .addCommand(hdfsUser + "-" + port + ".log")
+          .addCommand(secretDir)
+          .addCommand(jp.getCertificatesDir())
+          .redirectErrorStream(true)
+          .setCurrentWorkingDirectory(new File(jp.getNotebookPath()))
+          .setWaitTimeout(20L, TimeUnit.SECONDS)
+          .build();
+      
+      
       String pidfile = jp.getRunDirPath() + "/jupyter.pid";
       try {
-        // Send both stdout and stderr to the same stream
-        pb.redirectErrorStream(true);
-        pb.directory(new File(jp.getNotebookPath()));
-
-        process = pb.start();
-
-        try {
-          // Wait until the launcher bash script has finished
-          process.waitFor(20l, TimeUnit.SECONDS);
-        } catch (InterruptedException ex) {
-          LOGGER.log(Level.SEVERE,
-              "Woken while waiting for the jupyter server to start: {0}",
-              ex.getMessage());
+        ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
+        if (processResult.getExitCode() != 0) {
+          String errorMsg = "Could not start Jupyter server. Exit code: " + processResult.getExitCode()
+              + " Error: " + processResult.getStdout();
+          LOGGER.log(Level.SEVERE, "Could not start Jupyter server. Exit code: " + processResult.getExitCode()
+              + " Error: " + processResult.getStdout());
+          throw new IOException(errorMsg);
         }
-
         // The logfile should now contain the token we need to read and save.
         final BufferedReader br = new BufferedReader(new InputStreamReader(
             new FileInputStream(logfile), Charset.forName("UTF8")));
@@ -249,27 +257,27 @@ public class JupyterProcessMgr {
     }
     int exitValue = 0;
     Integer id = 1;
-    String[] command = {"/usr/bin/sudo", prog, "kill", jupyterHomePath,
-      pid.toString(), port.toString()};
-    LOGGER.log(Level.INFO, Arrays.toString(command));
-    ProcessBuilder pb = new ProcessBuilder(command);
-    try {
-      Process process = pb.start();
-
-      BufferedReader br = new BufferedReader(new InputStreamReader(
-          process.getInputStream(), Charset.forName("UTF8")));
-      String line;
-      while ((line = br.readLine()) != null) {
-        LOGGER.info(line);
-      }
-      
-      process.waitFor(10l, TimeUnit.SECONDS);
-      exitValue = process.exitValue();
-    } catch (IOException | InterruptedException ex) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_STOP_ERROR, Level.SEVERE, "exitValue: " + exitValue,
-        ex.getMessage(), ex);
+    
+    ProcessDescriptor.Builder pdBuilder = new ProcessDescriptor.Builder()
+        .addCommand("/usr/bin/sudo")
+        .addCommand(prog)
+        .addCommand("kill")
+        .addCommand(jupyterHomePath)
+        .addCommand(pid.toString())
+        .addCommand(port.toString())
+        .setWaitTimeout(10L, TimeUnit.SECONDS);
+    if (!LOGGER.isLoggable(Level.FINE)) {
+      pdBuilder.ignoreOutErrStreams(true);
     }
-
+    
+    try {
+      ProcessResult processResult = osProcessExecutor.execute(pdBuilder.build());
+      LOGGER.log(Level.FINE, processResult.getStdout());
+      exitValue = processResult.getExitCode();
+    } catch (IOException ex) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_STOP_ERROR, Level.SEVERE, "exitValue: " + exitValue,
+          ex.getMessage(), ex);
+    }
     if (exitValue != 0) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_STOP_ERROR, Level.SEVERE,
         "exitValue: " + exitValue);
@@ -306,20 +314,19 @@ public class JupyterProcessMgr {
   private void projectCleanup(Project project) {
     String prog = settings.getHopsworksDomainDir() + "/bin/jupyter-project-cleanup.sh";
     int exitValue;
-    String[] command = {"/usr/bin/sudo", prog, project.getName()};
-    ProcessBuilder pb = new ProcessBuilder(command);
-    try {
-      Process process = pb.start();
+    ProcessDescriptor.Builder pdBuilder = new ProcessDescriptor.Builder()
+        .addCommand("/usr/bin/sudo")
+        .addCommand(prog)
+        .addCommand(project.getName());
+    if (!LOGGER.isLoggable(Level.FINE)) {
+      pdBuilder.ignoreOutErrStreams(true);
+    }
 
-      BufferedReader br = new BufferedReader(new InputStreamReader(
-          process.getInputStream(), Charset.forName("UTF8")));
-      String line;
-      while ((line = br.readLine()) != null) {
-        LOGGER.info(line);
-      }
-      process.waitFor(2l, TimeUnit.SECONDS);
-      exitValue = process.exitValue();
-    } catch (IOException | InterruptedException ex) {
+    try {
+      ProcessResult processResult = osProcessExecutor.execute(pdBuilder.build());
+      LOGGER.log(Level.FINE, processResult.getStdout());
+      exitValue = processResult.getExitCode();
+    } catch (IOException ex) {
       LOGGER.log(Level.SEVERE, "Problem cleaning up project: "
           + project.getName() + ": {0}", ex.toString());
       exitValue = -2;
@@ -417,29 +424,27 @@ public class JupyterProcessMgr {
     int exitValue;
     Integer id = 1;
     String prog = this.settings.getHopsworksDomainDir() + "/bin/jupyter.sh";
-    ArrayList<String> command = new ArrayList<>();
-    command.add("/usr/bin/sudo");
-    command.add(prog);
-    command.addAll(java.util.Arrays.asList(args));
-    LOGGER.log(Level.INFO, Arrays.toString(command.toArray()));
-    ProcessBuilder pb = new ProcessBuilder(command);
+    
+    ProcessDescriptor.Builder pdBuilder = new ProcessDescriptor.Builder()
+        .addCommand("/usr/bin/sudo")
+        .addCommand(prog);
+    for (String arg : args) {
+      pdBuilder.addCommand(arg);
+    }
+    pdBuilder.setWaitTimeout(10L, TimeUnit.SECONDS);
+    if (!LOGGER.isLoggable(Level.FINE)) {
+      pdBuilder.ignoreOutErrStreams(true);
+    }
+    
     try {
-      Process process = pb.start();
-      BufferedReader br = new BufferedReader(new InputStreamReader(
-          process.getInputStream(), Charset.forName("UTF8")));
-      String line;
-      while ((line = br.readLine()) != null) {
-        LOGGER.info(line);
-      }
-
-      process.waitFor(10l, TimeUnit.SECONDS);
-      exitValue = process.exitValue();
-    } catch (IOException | InterruptedException ex) {
+      ProcessResult processResult = osProcessExecutor.execute(pdBuilder.build());
+      LOGGER.log(Level.FINE, processResult.getStdout());
+      exitValue = processResult.getExitCode();
+    } catch (IOException ex) {
       LOGGER.log(Level.SEVERE,
           "Problem checking if Jupyter Notebook server is running: {0}", ex);
       exitValue = -2;
     }
     return exitValue;
   }
-
 }
