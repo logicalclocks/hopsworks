@@ -47,7 +47,7 @@
     <servlet-class>io.swagger.jersey.config.JerseyJaxrsConfig</servlet-class>
     <init-param>
       <param-name>api.version</param-name>
-      <param-value>0.1.0</param-value>
+      <param-value>${project.version}</param-value>
     </init-param>
     <init-param>
       <param-name>swagger.api.title</param-name>

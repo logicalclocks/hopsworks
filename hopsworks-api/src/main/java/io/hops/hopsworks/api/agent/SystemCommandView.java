@@ -45,8 +45,7 @@ public class SystemCommandView {
     this.execUser = builder.execUser;
   }
   
-  @ApiModelProperty(value = "Operation to be performed", required = true,
-    dataType = "io.hops.hopsworks.common.dao.command.OP")
+  @ApiModelProperty(value = "Operation to be performed", required = true)
   public SystemCommandFacade.OP getOp() {
     return op;
   }
@@ -55,8 +54,7 @@ public class SystemCommandView {
     this.op = op;
   }
   
-  @ApiModelProperty(value = "Status of command", required = true,
-    dataType = "io.hops.hopsworks.common.dao.command.STATUS")
+  @ApiModelProperty(value = "Status of command", required = true)
   public SystemCommandFacade.STATUS getStatus() {
     return status;
   }

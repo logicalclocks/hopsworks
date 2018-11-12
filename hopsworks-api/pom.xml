@@ -242,6 +242,17 @@
         <version>3.0.0</version>
         <configuration>
           <failOnMissingWebXml>true</failOnMissingWebXml>
+          <webResources>
+            <resource>
+              <filtering>true</filtering>
+              <directory>src/main/webapp</directory>
+              <includes>
+                <include>**/web.xml</include>
+              </includes>
+            </resource>
+          </webResources>
+          <warSourceDirectory>src/main/webapp</warSourceDirectory>
+          <webXml>src/main/webapp/WEB-INF/web.xml</webXml>
         </configuration>
       </plugin>
     </plugins>
