@@ -58,8 +58,7 @@ public class CondaCommandView {
     this.environmentYml = builder.environmentYml;
   }
   
-  @ApiModelProperty(value = "Operation to be performed", required = true,
-      dataType = "io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade.CondaOp")
+  @ApiModelProperty(value = "Operation to be performed", required = true)
   public PythonDepsFacade.CondaOp getOp() {
     return op;
   }
@@ -104,8 +103,7 @@ public class CondaCommandView {
     this.arg = arg;
   }
   
-  @ApiModelProperty(value = "Status of comamnd", required = true,
-      dataType = "io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade.CondaStatus")
+  @ApiModelProperty(value = "Status of comamnd", required = true)
   public PythonDepsFacade.CondaStatus getStatus() {
     return status;
   }
@@ -132,8 +130,7 @@ public class CondaCommandView {
     this.channelUrl = channelUrl;
   }
   
-  @ApiModelProperty(value = "Type of Conda installation",
-      dataType = "io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade.CondaInstallType")
+  @ApiModelProperty(value = "Type of Conda installation")
   public PythonDepsFacade.CondaInstallType getInstallType() {
     return installType;
   }
