@@ -56,8 +56,9 @@ public class TensorBoardKillTimer {
   @EJB
   private TensorBoardController tensorBoardController;
 
+
   @Schedule(persistent = false,
-          minute = "*/20",
+          minute = "*/10",
           hour = "*")
   public void rotate(Timer timer) {
   
@@ -72,16 +73,17 @@ public class TensorBoardKillTimer {
       LOGGER.log(Level.SEVERE, null, e);
     }
     LOGGER.log(Level.INFO, "Running TensorBoardKillTimer.");
+    int tensorBoardMaxLastAccessed = settings.getTensorBoardMaxLastAccessed();
     Collection<TensorBoard> tensorBoardCollection = tensorBoardFacade.findAll();
     for (TensorBoard tensorBoard : tensorBoardCollection) {
       //Standard case, TB have been idle for a given amount of time
       Date accessed = tensorBoard.getLastAccessed();
       Date current = Calendar.getInstance().getTime();
-      if ((current.getTime() - accessed.getTime()) > settings.getTensorBoardMaxLastAccessed()) {
+      if ((current.getTime() - accessed.getTime()) > tensorBoardMaxLastAccessed) {
         try {
           tensorBoardController.cleanup(tensorBoard);
           LOGGER.log(Level.INFO, "Killed TensorBoard " + tensorBoard.toString() + " not accessed in the last " +
-              settings.getTensorBoardMaxLastAccessed() + " milliseconds");
+              tensorBoardMaxLastAccessed + " milliseconds");
         } catch (ServiceException ex) {
           LOGGER.log(Level.SEVERE, "Failed to clean up running TensorBoard", ex);
         }

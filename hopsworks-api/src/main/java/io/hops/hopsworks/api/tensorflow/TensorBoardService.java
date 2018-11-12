@@ -161,7 +161,6 @@ public class TensorBoardService {
       try {
         response = target.request().get();
         if(response.getStatus() == Response.Status.OK.getStatusCode()) {
-          Thread.currentThread().sleep(1500);
           return;
         }
         Thread.currentThread().sleep(1000);

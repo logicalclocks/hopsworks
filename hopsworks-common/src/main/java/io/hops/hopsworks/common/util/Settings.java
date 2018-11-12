@@ -2696,9 +2696,9 @@ public class Settings implements Serializable {
     return applicationCertificateValidityPeriod;
   }
 
-  // TensorBoard kill rotation interval in milliseconds
+  // TensorBoard kill rotation interval in milliseconds (should be lower than the TensorBoardKillTimer)
   private static final String TENSORBOARD_MAX_LAST_ACCESSED = "tensorboard_max_last_accessed";
-  private int tensorBoardMaxLastAccessed = 1800000;
+  private int tensorBoardMaxLastAccessed = 1140000;
 
   public synchronized int getTensorBoardMaxLastAccessed() {
     checkCache();
