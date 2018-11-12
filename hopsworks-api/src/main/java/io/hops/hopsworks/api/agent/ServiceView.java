@@ -83,8 +83,7 @@ public class ServiceView {
     this.pid = pid;
   }
   
-  @ApiModelProperty(value = "Current status of the service",
-      dataType = "io.hops.hopsworks.common.dao.host.Status")
+  @ApiModelProperty(value = "Current status of the service")
   public Status getStatus() {
     return status;
   }
