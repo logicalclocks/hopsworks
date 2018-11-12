@@ -43,34 +43,34 @@ angular.module('hopsWorksApp')
         .factory('UserService', ['$http', 'TransformRequest', function ($http, TransformRequest) {
             return {
               UpdateProfile: function (user) {
-                return $http.post('/api/user/updateProfile', TransformRequest.jQueryStyle(user));
+                return $http.post('/api/users/updateProfile', TransformRequest.jQueryStyle(user));
               },
               profile: function () {
-                return $http.get('/api/user/profile');
+                return $http.get('/api/users/self');
               },
               changeLoginCredentials: function (newCredentials) {
-                return $http.post('/api/user/changeLoginCredentials', TransformRequest.jQueryStyle(newCredentials));
+                return $http.post('/api/users/changeLoginCredentials', TransformRequest.jQueryStyle(newCredentials));
               },
               allcards: function () {
-                return $http.get('/api/user/allcards');
+                return $http.get('/api/users');
               },
               createProject: function (newProject) {
-                return $http.post('/api/user/newProject', newProject);
+                return $http.post('/api/users/newProject', newProject);
               },
               getRole: function (projectId) {
-                return $http.post('/api/user/getRole', "projectId=" + projectId);
+                return $http.post('/api/users/getRole', "projectId=" + projectId);
               },
               changeTwoFactor: function (newCredentials) {
-                return $http.post('/api/user/changeTwoFactor', TransformRequest.jQueryStyle(newCredentials));
+                return $http.post('/api/users/changeTwoFactor', TransformRequest.jQueryStyle(newCredentials));
               },
               getQR: function (pwd) {
-                return $http.post('/api/user/getQRCode', "password=" + pwd);
+                return $http.post('/api/users/getQRCode', "password=" + pwd);
               },
               addSshKey: function (sshKey) {
               //addSshKey: function (name, sshKey) {
                 return $http({
                   method: 'post',
-                  url: '/api/user/addSshKey',
+                  url: '/api/users/addSshKey',
                   headers: {'Content-Type': 'application/json'},
                   isArray: false,
                   data: sshKey
@@ -79,10 +79,10 @@ angular.module('hopsWorksApp')
                 //return $http.post('/api/user/addSshKey', "name=" + name + "&sshKey=" + sshKey);
               },
               removeSshKey: function (name) {
-                return $http.post('/api/user/removeSshKey', "name="+name);
+                return $http.post('/api/users/removeSshKey', "name="+name);
               },
               getSshKeys: function () {
-                return $http.get('/api/user/getSshKeys');
+                return $http.get('/api/users/getSshKeys');
               }
             };
           }]);

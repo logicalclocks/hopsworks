@@ -836,7 +836,8 @@ public class RESTCodes {
     ACCOUNT_REGISTRATION_ERROR(44, "Account registration error.", Response.Status.INTERNAL_SERVER_ERROR),
     TWO_FA_DISABLED(45, "2-factor authentication is disabled.", Response.Status.PRECONDITION_FAILED),
     TRANSITION_STATUS_ERROR(46, "The user can't transition from current status to requested status",
-      Response.Status.BAD_REQUEST);
+      Response.Status.BAD_REQUEST),
+    ACCESS_CONTROL(47, "Client not authorized for this invocation.", Response.Status.FORBIDDEN);
     
     private Integer code;
     private String message;
