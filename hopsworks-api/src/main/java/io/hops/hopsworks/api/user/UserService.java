@@ -49,8 +49,8 @@ import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
-import io.hops.hopsworks.common.dao.user.UserCardDTO;
-import io.hops.hopsworks.common.dao.user.UserFacade;
+import io.hops.hopsworks.common.dao.user.BbcGroup;
+import io.hops.hopsworks.common.dao.user.BbcGroupFacade;
 import io.hops.hopsworks.common.dao.user.UserProjectDTO;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.ProjectException;
@@ -73,11 +73,9 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ws.rs.core.SecurityContext;
@@ -96,9 +94,9 @@ public class UserService {
   private final static Logger LOGGER = Logger.getLogger(UserService.class.getName());
 
   @EJB
-  private UserFacade userBean;
-  @EJB
   private UsersController userController;
+  @EJB
+  private BbcGroupFacade bbcGroupFacade;
   @EJB
   private NoCacheResponse noCacheResponse;
   @EJB
@@ -132,33 +130,23 @@ public class UserService {
   @Path("{userId}")
   @Produces(MediaType.APPLICATION_JSON)
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response findAllById(
+  public Response findById(
       @PathParam("userId") Integer userId,
       @QueryParam("expand") String expand,
-      @Context UriInfo uriInfo) {
+      @Context UriInfo uriInfo,
+      @Context HttpServletRequest req) throws UserException {
+    Users user = jWTHelper.getUserPrincipal(req);
+    BbcGroup adminGroup = bbcGroupFacade.findByGroupName("HOPS_ADMIN");
+    if (!Objects.equals(user.getUid(), userId) &&  !user.getBbcGroupCollection().contains(adminGroup)) {
+      throw new UserException(RESTCodes.UserErrorCode.ACCESS_CONTROL, Level.SEVERE);
+    }
     ResourceProperties resourceProperties = new ResourceProperties(ResourceProperties.Name.USERS, expand);
-    UserDTO userDTO = null; 
+    UserDTO userDTO = usersBuilder.build(uriInfo, resourceProperties, userId); 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(userDTO).build();
   }
   
   @GET
-  @Path("allcards")
-  @Produces(MediaType.APPLICATION_JSON)
-  public Response findAllByUser() {
-
-    List<Users> users = userBean.findAllUsers();
-    List<UserCardDTO> userCardDTOs = new ArrayList<>();
-
-    for (Users user : users) {
-      UserCardDTO userCardDTO = new UserCardDTO(user);
-      userCardDTOs.add(userCardDTO);
-    }
-    GenericEntity<List<UserCardDTO>> userCards = new GenericEntity<List<UserCardDTO>>(userCardDTOs) {};
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(userCards).build();
-  }
-
-  @GET
-  @Path("profile")
+  @Path("/self")
   @Produces(MediaType.APPLICATION_JSON)
   public Response getUserProfile(@Context SecurityContext sc) throws UserException {
     Users user = jWTHelper.getUserPrincipal(sc);

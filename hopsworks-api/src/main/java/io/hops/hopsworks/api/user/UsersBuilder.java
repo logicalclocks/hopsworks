@@ -32,9 +32,14 @@ public class UsersBuilder {
   private UserFacade userFacade;
 
   public UserDTO uri(UserDTO dto, UriInfo uriInfo, Users user) {
-    dto.setHref(uriInfo.getBaseUriBuilder()
-        .path(ResourceProperties.Name.USERS.toString().toLowerCase())
-        .path(user.getEmail())
+    dto.setHref(uriInfo.getAbsolutePathBuilder()
+        .build());
+    return dto;
+  }
+
+  public UserDTO uriItems(UserDTO dto, UriInfo uriInfo, Users user) {
+    dto.setHref(uriInfo.getAbsolutePathBuilder()
+        .path(Integer.toString(user.getUid()))
         .build());
     return dto;
   }
@@ -51,7 +56,7 @@ public class UsersBuilder {
 
   public UserDTO build(UriInfo uriInfo, ResourceProperties resourceProperties, Users user) {
     UserDTO dto = new UserDTO();
-    uri(dto, uriInfo, user);
+    uriItems(dto, uriInfo, user);
     expand(dto, resourceProperties);
     if (dto.isExpand()) {
       dto.setFirstname(user.getFname());
@@ -59,6 +64,32 @@ public class UsersBuilder {
       dto.setEmail(user.getEmail());
     }
     return dto;
+  }
+
+  public UserDTO buildFull(UriInfo uriInfo, ResourceProperties resourceProperties, Users user) {
+    UserDTO dto = new UserDTO();
+    uri(dto, uriInfo, user);
+    expand(dto, resourceProperties);
+    if (dto.isExpand()) {
+      dto.setFirstname(user.getFname());
+      dto.setLastname(user.getLname());
+      dto.setEmail(user.getEmail());
+      dto.setPhoneNumber(user.getMobile());
+      dto.setMaxNumProjects(user.getMaxNumProjects());
+      dto.setNumCreatedProjects(user.getNumCreatedProjects());
+      dto.setNumActiveProjects(user.getNumActiveProjects());
+    }
+    return dto;
+  }
+
+  public UserDTO build(UriInfo uriInfo, ResourceProperties resourceProperties, Integer id) {
+    Users user = userFacade.find(id);
+    return buildFull(uriInfo, resourceProperties, user);
+  }
+  
+  public UserDTO build(UriInfo uriInfo, ResourceProperties resourceProperties, String email) {
+    Users user = userFacade.findByEmail(email);
+    return buildFull(uriInfo, resourceProperties, user);
   }
 
   public UserDTO buildItems(UriInfo uriInfo, ResourceProperties resourceProperties) {
@@ -69,7 +100,7 @@ public class UsersBuilder {
     List<Users> users;
     ResourceProperties.ResourceProperty property = resourceProperties.get(ResourceProperties.Name.USERS);
     if (property.getLimit() != null || property.getOffset() != null) {
-      users = userFacade.findAll(property.getOffset(), property.getLimit(), property.getOrderBy(), 
+      users = userFacade.findAll(property.getOffset(), property.getLimit(), property.getOrderBy(),
           property.getSortBy());
       return items(userDTO, uriInfo, resourceProperties, users, false);
     }

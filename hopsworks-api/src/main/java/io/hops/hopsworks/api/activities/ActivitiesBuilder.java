@@ -40,13 +40,13 @@ public class ActivitiesBuilder {
 
   public ActivitiesDTO uri(ActivitiesDTO dto, UriInfo uriInfo, Activity activity) {
     dto.setHref(uriInfo.getAbsolutePathBuilder()
-        .path(Integer.toString(activity.getId()))
         .build());
     return dto;
   }
 
   public ActivitiesDTO uriItems(ActivitiesDTO dto, UriInfo uriInfo, Activity activity) {
     dto.setHref(uriInfo.getAbsolutePathBuilder()
+        .path(Integer.toString(activity.getId()))
         .build());
     return dto;
   }
@@ -64,6 +64,19 @@ public class ActivitiesBuilder {
   public ActivitiesDTO build(UriInfo uriInfo, ResourceProperties resourceProperties, Activity activity) {
     ActivitiesDTO dto = new ActivitiesDTO();
     uri(dto, uriInfo, activity);
+    expand(dto, resourceProperties);
+    if (dto.isExpand()) {
+      dto.setActivity(activity.getActivity());
+      dto.setTimestamp(activity.getTimestamp());
+      dto.setProjectName(activity.getProject().getName()); //(TODO: Ermias) make this expandable
+      dto.setUserDTO(usersBuilder.build(uriInfo, resourceProperties, activity.getUser()));
+    }
+    return dto;
+  }
+  
+  public ActivitiesDTO buildItems(UriInfo uriInfo, ResourceProperties resourceProperties, Activity activity) {
+    ActivitiesDTO dto = new ActivitiesDTO();
+    uriItems(dto, uriInfo, activity);
     expand(dto, resourceProperties);
     if (dto.isExpand()) {
       dto.setActivity(activity.getActivity());
@@ -158,7 +171,7 @@ public class ActivitiesBuilder {
         activities.sort(getComparator(property));
       }
       activities.forEach(( activity ) -> {
-        dto.addItem(build(uriInfo, resourceProperties, activity));
+        dto.addItem(buildItems(uriInfo, resourceProperties, activity));
       });
     }
     return dto;

@@ -71,7 +71,7 @@ angular.module('hopsWorksApp')
                           self.projectOwner = self.members[0].project.owner;
                           UserService.allcards().then(
                                   function (success) {
-                                    self.cards = success.data;
+                                    self.cards = success.data.items;
                                     // remove my own 'card' from the list of members
                                     // remove project owner as well, since he is always a 
                                     // member of the project

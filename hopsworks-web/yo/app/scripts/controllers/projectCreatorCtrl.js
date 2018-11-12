@@ -50,11 +50,10 @@ angular.module('hopsWorksApp')
             self.myCard = {};
             self.cards = [];
             self.user = {
-              firstName: '',
-              lastName: '',
+              firstname: '',
+              lastname: '',
               email: '',
-              telephoneNum: '',
-              registeredon: '',
+              phoneNumber: '',
               twoFactor: ''
             };
             
@@ -75,41 +74,31 @@ angular.module('hopsWorksApp')
             self.regex = /^[a-zA-Z0-9]((?!__)[_a-zA-Z0-9]){0,62}$/;
 
             UserService.profile().then(
-                    function (success) {
-                      self.user = success.data;
-                      if (success.data.email !== undefined) {
-                        self.myCard.email = success.data.email;
-                        if (success.data.firstName !== undefined) {
-                          self.myCard.firstname = success.data.firstName;
-                          if (success.data.email !== undefined) {
-                            self.myCard.lastname = success.data.lastName;
-                            UserService.allcards().then(
-                                    function (success) {
-                                      self.cards = success.data;
-                                      // remove my own 'card' from the list of members
-                                      for (var i = 0, len = self.cards.length; i < len; i++) {
-                                        if (self.cards[i].email === self.myCard.email) {
-                                          self.cards.splice(i, 1);
-                                          break;
-                                        }
-                                      }
-                                      for (var i = 0, len = self.cards.length; i < len; i++) {
-                                        if (self.cards[i].email === "agent@hops.io") {
-                                          self.cards.splice(i, 1);
-                                          break;
-                                        }
-                                      }
-                                    }, function (error) {
-                              self.errorMsg = error.data.msg;
-                            });
-                          }
-                        }
+              function (success) {
+                self.user = success.data;
+                console.log("User: ", self.user);
+                UserService.allcards().then(function (success) {
+                    self.cards = success.data.items;
+                    // remove my own 'card' from the list of members
+                    for (var i = 0, len = self.cards.length; i < len; i++) {
+                      if (self.cards[i].email === self.user.email) {
+                        self.cards.splice(i, 1);
+                        break;
                       }
-
-                    },
-                    function (error) {
-                      self.errorMsg = error.data.errorMsg;
-                    });
+                    }
+                    for (var i = 0, len = self.cards.length; i < len; i++) {
+                      if (self.cards[i].email === "agent@hops.io") {
+                        self.cards.splice(i, 1);
+                        break;
+                      }
+                    }
+                  }, function (error) {
+                     self.errorMsg = error.data.msg;
+                });
+              },
+              function (error) {
+                self.errorMsg = error.data.errorMsg;
+              });
 
 
             $scope.$watch('projectCreatorCtrl.card.selected', function (selected) {
