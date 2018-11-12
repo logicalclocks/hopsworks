@@ -344,6 +344,10 @@ angular.module('hopsWorksApp')
             };
             startPolling();
 
+            $scope.$on('$destroy', function () {
+              $interval.cancel(self.poller);
+            });
+
             self.sliderVisible = false;
 
             self.setInitExecs = function() {

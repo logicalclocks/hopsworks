@@ -181,7 +181,7 @@ public class TensorBoardProcessMgr {
           pid = BigInteger.valueOf(Long.parseLong(pidContents));
         }
         if(exitValue == 0 && pid != null) {
-          int maxWait = 10;
+          int maxWait = 30;
           String logFilePath = tbPath + File.separator + port + ".log";
           File logFile = new File(logFilePath);
           while(maxWait > 0) {
@@ -192,7 +192,6 @@ public class TensorBoardProcessMgr {
                 logFileContents.contains("Reloader") |
                 logFileContents.contains("event"))
               | maxWait == 1) {
-              Thread.currentThread().sleep(5000);
               TensorBoardDTO tensorBoardDTO = new TensorBoardDTO();
               String host = null;
               try {
