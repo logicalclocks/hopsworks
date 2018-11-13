@@ -355,7 +355,7 @@ public class LocalhostTfServingController implements TfServingController {
         secretDir.toString(),
         project.getName() + USER_NAME_DELIMITER + user.getUsername(),
         tfServing.isBatchingEnabled() ? "1" : "0",
-        project.getName()};
+        project.getName().toLowerCase()};
 
     logger.log(Level.INFO, Arrays.toString(shCommnad));
 
