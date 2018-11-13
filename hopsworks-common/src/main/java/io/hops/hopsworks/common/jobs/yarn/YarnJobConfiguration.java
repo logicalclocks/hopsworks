@@ -65,7 +65,6 @@ import io.hops.hopsworks.common.util.Settings;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY)
 @JsonSubTypes({
   @JsonSubTypes.Type(value = FlinkJobConfiguration.class, name = "FlinkJobConfiguration"),
-  
   @JsonSubTypes.Type(value = SparkJobConfiguration.class, name = "SparkJobConfiguration") }
 )
 public class YarnJobConfiguration extends JobConfiguration {

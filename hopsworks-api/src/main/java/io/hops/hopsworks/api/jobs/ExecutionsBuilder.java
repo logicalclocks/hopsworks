@@ -45,10 +45,10 @@ public class ExecutionsBuilder {
    */
   public ExecutionDTO uri(ExecutionDTO dto, UriInfo uriInfo, Execution execution) {
     dto.setHref(uriInfo.getBaseUriBuilder()
-      .path(ResourceProperties.Name.PROJECTS.toString())
+      .path(ResourceProperties.Name.PROJECT.toString())
       .path(Integer.toString(execution.getJob().getProject().getId()))
       .path(ResourceProperties.Name.JOBS.toString())
-      .path(Integer.toString(execution.getJob().getId()))
+      .path(execution.getJob().getName())
       .path(ResourceProperties.Name.EXECUTIONS.toString())
       .path(Integer.toString(execution.getId()))
       .build());
@@ -63,7 +63,7 @@ public class ExecutionsBuilder {
    */
   public ExecutionDTO uri(ExecutionDTO dto, UriInfo uriInfo, Jobs job) {
     dto.setHref(uriInfo.getBaseUriBuilder()
-      .path(ResourceProperties.Name.PROJECTS.toString())
+      .path(ResourceProperties.Name.PROJECT.toString())
       .path(Integer.toString(job.getProject().getId()))
       .path(ResourceProperties.Name.JOBS.toString())
       .path(Integer.toString(job.getId()))
@@ -116,7 +116,7 @@ public class ExecutionsBuilder {
   
   public ExecutionDTO build(ExecutionDTO dto, UriInfo uriInfo, ResourceProperties resourceProperties, Jobs job) {
     ResourceProperties.ResourceProperty property = resourceProperties.get(ResourceProperties.Name.EXECUTIONS);
-    List<Execution> executions = executionFacade.findForJob(job, property.getOffset(), property.getLimit());
+    List<Execution> executions = executionFacade.findByJob(job, property.getOffset(), property.getLimit());
     return build(dto, uriInfo, resourceProperties, executions);
   }
   

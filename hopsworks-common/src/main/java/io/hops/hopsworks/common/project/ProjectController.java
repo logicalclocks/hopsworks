@@ -1355,7 +1355,7 @@ public class ProjectController {
       Runtime rt = Runtime.getRuntime();
       for (Jobs job : running) {
         //Get the appId of the running app
-        List<Execution> jobExecs = execFacade.findForJob(job);
+        List<Execution> jobExecs = execFacade.findByJob(job);
         //Sort descending based on jobId because therie might be two
         // jobs with the same name and we want the latest
         Collections.sort(jobExecs, new Comparator<Execution>() {
@@ -2051,7 +2051,7 @@ public class ProjectController {
         Runtime rt = Runtime.getRuntime();
         for (Jobs job : running) {
           //Get the appId of the running app
-          List<Execution> jobExecs = execFacade.findForJob(job);
+          List<Execution> jobExecs = execFacade.findByJob(job);
           //Sort descending based on jobId because there might be two 
           // jobs with the same name and we want the latest
           Collections.sort(jobExecs, new Comparator<Execution>() {

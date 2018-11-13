@@ -412,7 +412,7 @@ public class ProjectService {
   @Path("{projectId}/check")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public Response checkProjectAccess(@PathParam("projectId") Integer id) throws ProjectException {
+  public Response checkProjectAccess(@PathParam("projectId") Integer id) {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     json.setData(id);
     return Response.ok(json).build();

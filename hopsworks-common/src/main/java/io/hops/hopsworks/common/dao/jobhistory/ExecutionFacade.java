@@ -108,8 +108,8 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
    * @param job
    * @return
    */
-  public List<Execution> findForJob(Jobs job) {
-    return findForJob(job, null, null);
+  public List<Execution> findByJob(Jobs job) {
+    return findByJob(job, null, null);
   }
   
   /**
@@ -118,7 +118,7 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
    * @param job
    * @return
    */
-  public List<Execution> findForJob(Jobs job, Integer offset, Integer limit) {
+  public List<Execution> findByJob(Jobs job, Integer offset, Integer limit) {
     TypedQuery<Execution> q = em.createNamedQuery("Execution.findByJob",
       Execution.class);
     q.setParameter("job", job);
@@ -138,7 +138,7 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
    * @param job
    * @return
    */
-  public List<Execution> findForJobSortByIdAsc(Jobs job, Integer offset, Integer limit) {
+  public List<Execution> findByJobSortByIdAsc(Jobs job, Integer offset, Integer limit) {
     TypedQuery<Execution> q = em.createNamedQuery("Execution.findByJobSortByIdOrderByASC",
       Execution.class);
     q.setParameter("job", job);
@@ -332,7 +332,7 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
       count++;
     }
     if (obj == null) {
-      throw new IllegalArgumentException(
+      throw new IllegalStateException(
               "Unable to find Execution object with id " + exec.getId());
     }
     return obj;

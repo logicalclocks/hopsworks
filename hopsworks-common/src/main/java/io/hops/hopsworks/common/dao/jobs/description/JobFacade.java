@@ -39,6 +39,7 @@
 
 package io.hops.hopsworks.common.dao.jobs.description;
 
+import io.hops.hopsworks.common.api.ResourceProperties;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
@@ -124,11 +125,11 @@ public class JobFacade extends AbstractFacade<Jobs> {
    * @param project project to get jobs for
    * @return list job jobs
    */
-  public List<Jobs> findForProject(Project project) {
-    return findForProject(project, null, null);
+  public List<Jobs> findByProject(Project project) {
+    return findByProject(project, null, null);
   }
   
-  public List<Jobs> findForProject(Project project, Integer offset, Integer limit) {
+  public List<Jobs> findByProject(Project project, Integer offset, Integer limit) {
     TypedQuery<Jobs> q = em.createNamedQuery("Jobs.findByProject", Jobs.class);
     q.setParameter("project", project);
     if (offset != null) {
@@ -231,11 +232,6 @@ public class JobFacade extends AbstractFacade<Jobs> {
     return status;
   }
 
-  /**
-   *
-   * @param project
-   * @return
-   */
   public List<Jobs> getRunningJobs(Project project) {
     TypedQuery<Jobs> q = em.createNamedQuery("Execution.findJobsForExecutionInState", Jobs.class);
     q.setParameter("project", project);
@@ -243,12 +239,6 @@ public class JobFacade extends AbstractFacade<Jobs> {
     return q.getResultList();
   }
 
-  /**
-   *
-   * @param project
-   * @param hdfsUser
-   * @return
-   */
   public List<Jobs> getRunningJobs(Project project, String hdfsUser) {
     TypedQuery<Jobs> q = em.createNamedQuery("Execution.findUserJobsForExecutionInState", Jobs.class);
     q.setParameter("project", project);
@@ -257,13 +247,6 @@ public class JobFacade extends AbstractFacade<Jobs> {
     return q.getResultList();
   }
 
-  /**
-   *
-   * @param project
-   * @param hdfsUser
-   * @param jobIds
-   * @return
-   */
   public List<Jobs> getRunningJobs(Project project, String hdfsUser, List<Integer> jobIds) {
     TypedQuery<Jobs> q = em.createNamedQuery("Execution.findUserJobsIdsForExecutionInState", Jobs.class);
     q.setParameter("jobids", jobIds);
@@ -272,5 +255,51 @@ public class JobFacade extends AbstractFacade<Jobs> {
     q.setParameter("stateCollection", JobState.getRunningStates());
     return q.getResultList();
   }
-
+  
+  public List<Jobs> getPaginatedJobs(Integer offset, Integer limit, ResourceProperties.OrderBy orderBy,
+    ResourceProperties.SortBy sortBy) {
+    String queryName = "Activity.findAll" + getQuery(orderBy, sortBy);
+    TypedQuery<Jobs> q = em.createNamedQuery(queryName, Jobs.class);
+    setOffsetAndLimit(offset, limit, q);
+    return q.getResultList();
+  }
+  
+  private void setOffsetAndLimit(Integer offset, Integer limit, TypedQuery<Jobs> q) {
+    if (offset != null) {
+      q.setFirstResult(offset);
+    }
+    if (limit != null) {
+      q.setMaxResults(limit);
+    }
+  }
+  
+  private String getQuery(ResourceProperties.OrderBy orderBy, ResourceProperties.SortBy sortBy) {
+    String query = "";
+    sortBy = sortBy == null? ResourceProperties.SortBy.CREATIONTIME : sortBy;
+    switch (sortBy) {
+      case ID:
+        query = query + "OrderById";
+        break;
+      case NAME:
+        query = query + "OrderByName";
+        break;
+      case CREATIONTIME:
+        query = query + "OrderByCreationTime";
+        break;
+      default:
+        break;
+    }
+    orderBy = orderBy == null? ResourceProperties.OrderBy.DESC : orderBy;
+    switch (orderBy) {
+      case DESC:
+        query = query + "Desc";
+        break;
+      case ASC:
+        query = query + "Asc";
+        break;
+      default:
+        break;
+    }
+    return query;
+  }
 }
