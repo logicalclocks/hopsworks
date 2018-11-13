@@ -17,6 +17,7 @@
 
 package io.hops.hopsworks.api.serving;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
 import io.hops.hopsworks.common.dao.serving.TfServing;
 import io.hops.hopsworks.common.serving.tf.TfServingStatusEnum;
@@ -177,6 +178,7 @@ public class TfServingView implements Serializable {
     this.kafkaTopicDTO = kafkaTopicDTO;
   }
 
+  @JsonIgnore
   public TfServingWrapper getTfServingWrapper() {
 
     TfServingWrapper tfServingWrapper = new TfServingWrapper(

@@ -203,10 +203,10 @@
         </div>
         <div class="" ng-if="servingCtrl.showLogs === true">
           <button ng-click="servingCtrl.showMainUI();$event.stopPropagation();"
-                  class="btn btn-primary btn-md fa fa-table" style="font-size:0.9em; padding:7px 10px; margin-bottom: 10px; background-color:#005571;"
+                  class="btn btn-primary btn-md fa fa-table" style="font-size:0.9em; padding:7px 10px; margin-bottom: 3px; background-color:#005571;"
                   onmouseover="this.style.backgroundColor='#004159'"
                   onmouseout="this.style.backgroundColor='#005571'"> Model Serving Summary</button>
-          <iframe style="overflow-y: auto;" id="ui_iframe"  ng-src="{{servingCtrl.kibanaUI}}" width="99%" height="87%"></iframe>
+          <iframe style="overflow-y: auto;" id="ui_iframe"  ng-src="{{servingCtrl.kibanaUI}}" width="99%" height="86%"></iframe>
         </div>
       </div>
     </div>

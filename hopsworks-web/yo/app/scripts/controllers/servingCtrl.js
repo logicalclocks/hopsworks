@@ -56,7 +56,7 @@ angular.module('hopsWorksApp')
       self.createKafkaTopicDTO.numOfPartitions = self.kafkaDefaultNumPartitions;
       self.createKafkaTopicDTO.numOfReplicas = self.kafkaDefaultNumReplicas;
 
-      // Configuration to not log incoming inference requests 
+      // Configuration to not log incoming inference requests
       self.noneKafkaTopicDTO = {};
       self.noneKafkaTopicDTO.name = "NONE";
       self.noneKafkaTopicDTO.numOfPartitions = 0;
