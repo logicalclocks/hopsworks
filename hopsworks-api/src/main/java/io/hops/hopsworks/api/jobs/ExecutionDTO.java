@@ -139,9 +139,4 @@ public class ExecutionDTO extends RestDTO<ExecutionDTO> {
     this.duration = duration;
   }
   
-  public enum JobAction {
-    start,
-    stop;
-  }
-  
 }

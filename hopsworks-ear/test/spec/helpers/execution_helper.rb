@@ -18,31 +18,35 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 =end
 module ExecutionHelper
 
-  def start_execution(project_id, job_id)
-    put "/hopsworks-api-v2/projects/#{project_id}/jobs/#{job_id}/executions?action=start"    
+  def get_executions(project_id, job_name)
+    get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs/#{job_name}/executions"
   end
 
-  def stop_execution(project_id, job_id)
-    put "/hopsworks-api-v2/projects/#{project_id}/jobs/#{job_id}/executions?action=stop"
+  def get_execution(project_id, job_name, execution_id)
+    get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs/#{job_name}/executions/#{execution_id}"
   end
 
-  def get_execution(project_id, job_id, execution_id)
-    get "/hopsworks-api-v2/projects/#{project_id}/jobs/#{job_id}/executions/#{execution_id}"
+  def start_execution(project_id, job_name)
+    post "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs/#{job_name}/executions?action=start"
   end
 
-  def get_executions(project_id, job_id)
-    get "/hopsworks-api-v2/projects/#{project_id}/jobs/#{job_id}/executions"
+  def stop_execution(project_id, job_name)
+    post "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs/#{job_name}/executions?action=stop"
+  end
+
+  def get_execution_log(project_id, job_name, execution_id, type)
+    get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs/#{job_name}/executions/#{execution_id}/log/#{type}"
   end
 
   def wait_for_execution
-    timeout = 600
+    timeout = 120
     start = Time.now
     x = yield
     until x
       if Time.now - start > timeout
         raise "Timed out waiting for Job to finish. Timeout #{timeout} sec"
       end
-      sleep(1)
+      sleep(5)
       x = yield
     end
   end

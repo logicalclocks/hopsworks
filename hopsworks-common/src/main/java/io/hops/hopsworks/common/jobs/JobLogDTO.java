@@ -65,12 +65,49 @@ public class JobLogDTO {
   }
   
   public enum LogType {
-    out,
-    err;
+    OUT("out"),
+    ERR("err");
+    private final String name;
+    
+    LogType(String name) {
+      this.name = name;
+    }
+    
+    public static LogType fromString(String name) {
+      return valueOf(name.toUpperCase());
+    }
+    
+    public String getName() {
+      return name;
+    }
+    
+    @Override
+    public String toString() {
+      return name;
+    }
   }
   
   public enum Retriable {
-    retriableOut,
-    retriableErr;
+    RETRIEABLE_OUT("retriableOut"),
+    RETRIABLE_ERR("retriableErr");
+    
+    private final String name;
+    
+    Retriable(String name) {
+      this.name = name;
+    }
+    
+    public static Retriable fromString(String name) {
+      return valueOf(name.toUpperCase());
+    }
+    
+    public String getName() {
+      return name;
+    }
+    
+    @Override
+    public String toString() {
+      return name;
+    }
   }
 }

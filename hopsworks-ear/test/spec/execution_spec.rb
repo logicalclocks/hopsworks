@@ -16,62 +16,128 @@ NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE F
 DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 =end
-describe 'execution' do
-  after (:all){clean_projects}
-  describe "#create" do
-    context 'without authentication' do
-      before :all do
-        with_valid_project
-        reset_session
-      end
-      it "should fail" do
-        get_job_details(@project[:id], 1)
-        expect_json(description: "Client not authorized for this invocation")
-        expect_status(401)
-      end
-    end
-    context 'with authentication' do
-      before :all do
-        with_valid_tour_project("spark")
-      end
-      it "should create spark tour job and run until succeeded" do
-        $tour_job = create_sparktour_job(@project, "demo_job")
-        expect_status(201)
-
-        start_execution(@project[:id], $tour_job[:id])
-        expect_status(201)
-
-        wait_for_execution do
-          get_execution(@project[:id], $tour_job[:id], json_body[:id])
-          json_body[:state].eql? "FINISHED"
+describe "On #{ENV['OS']}" do
+  describe 'execution' do
+    after (:all) {clean_projects}
+    describe "#create" do
+      $job_name = "demo_job_1"
+      context 'without authentication' do
+        before :all do
+          with_valid_project
+          reset_session
+        end
+        it "should fail" do
+          create_sparktour_job(@project, $job_name)
+          expect_json(errorCode: 200003)
+          expect_status(401)
         end
       end
-      it "should rerun spark tour job and stop it" do
-        start_execution(@project[:id], $tour_job[:id])
-        expect_status(201)
+      context 'with authentication' do
+        before :all do
+          with_valid_tour_project("spark")
 
-        wait_for_execution do
-          get_execution(@project[:id], $tour_job[:id], json_body[:id])
-          json_body[:state].eql? "RUNNING"
+        end
+        after :each do
+          clean_jobs(@project[:id])
+        end
+        it "should start a job and get its executions" do
+          #create job
+          create_sparktour_job(@project, $job_name)
+          job_id = json_body[:id]
+          #start execution
+          start_execution(@project[:id], $job_name)
+          execution_id = json_body[:id]
+          expect_status(201)
+          expect(json_body[:state]).to eq "INITIALIZING"
+          #get execution
+          get_execution(@project[:id], $job_name, json_body[:id])
+          expect_status(200)
+          expect(json_body[:id]).to eq(execution_id)
+          #wait till it's finished and start second execution
+          wait_for_execution do
+            get_execution(@project[:id], $job_name, json_body[:id])
+            json_body[:state].eql? "FINISHED"
+          end
+          #start execution
+          start_execution(@project[:id], $job_name)
+          execution_id = json_body[:id]
+          expect_status(201)
+
+          #get all executions of job
+          get_executions(@project[:id], $job_name)
+          expect(json_body[:items].count).to eq 2
+
+          #check database
+          num_executions = count_executions(job_id)
+          expect(num_executions).to eq 2
+
+          wait_for_execution do
+            get_execution(@project[:id], $job_name, execution_id)
+            json_body[:state].eql? "FINISHED"
+          end
         end
 
-        stop_execution(@project[:id], $tour_job[:id])
-        expect_status(200)
+        it "should start and stop job" do
+          create_sparktour_job(@project, $job_name)
+          expect_status(201)
 
-        wait_for_execution do
-          get_execution(@project[:id], $tour_job[:id], json_body[:id])
-          json_body[:state].eql? "KILLED"
+          #start execution
+          start_execution(@project[:id], $job_name)
+          execution_id = json_body[:id]
+          expect_status(201)
+          wait_for_execution do
+            get_execution(@project[:id], $job_name, execution_id)
+            json_body[:state].eql? "ACCEPTED"
+          end
+
+          stop_execution(@project[:id], $job_name)
+          expect_status(200)
+          wait_for_execution do
+            get_execution(@project[:id], $job_name, execution_id)
+            json_body[:state].eql? "KILLED"
+          end
         end
-      end
-      it "should be 2 executions in the database" do
-        num_executions = count_executions($tour_job[:id])
-        expect(num_executions).to eq 2
-      end
 
-      it "should be 2 executions returned by rest api" do
-        get_executions(@project[:id], $tour_job[:id])
-        expect_status(200)
-        expect(json_body[:items]).to eq 2
+        it "should fail to start two executions in parallel" do
+          create_sparktour_job(@project, $job_name)
+          start_execution(@project[:id], $job_name)
+          start_execution(@project[:id], $job_name)
+          expect_status(400)
+          expect_json(errorCode: 130010)
+        end
+        it "should run job and get out and err logs" do
+          create_sparktour_job(@project, $job_name)
+          start_execution(@project[:id], $job_name)
+          execution_id = json_body[:id]
+          expect_status(201)
+
+          wait_for_execution do
+            get_execution(@project[:id], $job_name, execution_id)
+            json_body[:state].eql? "FINISHED"
+          end
+
+          #wait for log aggregation
+          wait_for_execution do
+            get_execution_log(@project[:id], $job_name, execution_id, "out")
+            json_body[:message] != "No log available"
+          end
+
+          #get out log
+          get_execution_log(@project[:id], $job_name, execution_id, "out")
+          expect(json_body[:type]).to eq "out"
+          expect(json_body[:message]).to be_present
+
+          #wait for log aggregation
+          wait_for_execution do
+            get_execution_log(@project[:id], $job_name, execution_id, "err")
+            json_body[:message] != "No log available"
+          end
+
+          #get err log
+          get_execution_log(@project[:id], $job_name, execution_id, "err")
+          expect(json_body[:type]).to eq "err"
+          expect(json_body[:message]).to be_present
+        end
       end
     end
   end

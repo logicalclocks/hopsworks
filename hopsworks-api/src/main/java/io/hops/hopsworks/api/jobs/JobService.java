@@ -54,7 +54,6 @@ import io.hops.hopsworks.common.jobs.JobController;
 import io.hops.hopsworks.common.jobs.configuration.JobConfiguration;
 import io.hops.hopsworks.common.jobs.configuration.ScheduleDTO;
 import io.hops.hopsworks.common.jobs.flink.FlinkController;
-import io.hops.hopsworks.common.jobs.flink.FlinkJobConfiguration;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
 import io.hops.hopsworks.common.jobs.spark.SparkController;
 import io.hops.hopsworks.common.jobs.spark.SparkJobConfiguration;
@@ -76,6 +75,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -146,7 +146,7 @@ public class JobService {
   
   @ApiOperation(value = "Get the job with requested ID", response = JobDTO.class)
   @GET
-  @Path("/{name}")
+  @Path("{name}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
@@ -169,7 +169,7 @@ public class JobService {
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response createSpark (
+  public Response create (
     YarnJobConfiguration config,
     @Context HttpServletRequest req,
     @Context UriInfo uriInfo) throws JobException {
@@ -194,7 +194,7 @@ public class JobService {
   
   @ApiOperation(value = "Delete the job with the given ID")
   @DELETE
-  @Path("/{name}")
+  @Path("{name}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
@@ -223,8 +223,8 @@ public class JobService {
   }
   
   @ApiOperation(value = "Create/Update job's schedule.")
-  @POST
-  @Path("/{name}/schedule")
+  @PUT
+  @Path("{name}/schedule")
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
@@ -244,7 +244,7 @@ public class JobService {
     }
     Users user = jWTHelper.getUserPrincipal(req);
     jobController.updateSchedule(project, job, schedule, user);
-    return Response.ok().build();
+    return Response.noContent().build();
   }
   
   /**
@@ -257,7 +257,7 @@ public class JobService {
    */
   @ApiOperation(value = "Cancel a job's schedule.")
   @DELETE
-  @Path("/{name}/schedule")
+  @Path("{name}/schedule")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
@@ -270,28 +270,28 @@ public class JobService {
       throw new JobException(RESTCodes.JobErrorCode.JOB_NOT_FOUND, Level.FINEST);
     }
     
-    return Response.ok().build();
+    return Response.noContent().build();
   }
   
   @ApiOperation(value = "Inspect Spark user program and return SparkJobConfiguration",
     response = SparkJobConfiguration.class)
   @GET
-  @Path("/{jobtype : spark|pyspark|flink}/inspection")
+  @Path("{jobtype : spark|pyspark|flink}/inspection")
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response inspectSpark (
-    @ApiParam (value = "spark job type", example = "spark") @PathParam("jobtype") String jobtype,
+  public Response inspect (
+    @ApiParam (value = "spark job type", example = "spark") @PathParam("jobtype") JobType jobtype,
     @ApiParam(value = "path", example = "/Projects/demo_spark_admin000/Resources/spark-examples.jar",
       required = true)  @QueryParam("path") String path,
     @Context HttpServletRequest req) throws JobException {
     Users user = jWTHelper.getUserPrincipal(req);
-    JobConfiguration config = jobController.inspectProgram(path, project, user, JobType.valueOf(jobtype));
+    JobConfiguration config = jobController.inspectProgram(path, project, user, jobtype);
     return Response.ok().entity(config).build();
   }
   
-  @Path("/{name}/executions")
+  @Path("{name}/executions")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public ExecutionService executions(@PathParam("name") String name) throws JobException {

@@ -18,7 +18,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 =end
 module JobHelper
 
-  def create_sparktour_job(project)
+  def create_sparktour_job(project, job_name)
     job_conf = {
         "type":"sparkJobConfiguration",
         "appName":"#{job_name}",
@@ -40,30 +40,34 @@ module JobHelper
     }
 
     post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jobs", job_conf
-    job_id = json_body[:id]
-    job = get_job(job_id)
-    expect(job[:id]).to eq job_id
-    expect(job[:name]).to eq job_conf[:appName]
-    job
+    #job_id = json_body[:id]
+    #job = get_job_from_db(job_id)
+    #expect(job[:id]).to eq job_id
+    #expect(job[:name]).to eq job_conf[:appName]
+    #job
   end
 
   def get_jobs(project_id)
     get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs"
   end
 
-  def get_job_details(project_id, job_id)
-    get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs/#{job_id}"
+  def get_jobs_with_type(project_id, type)
+    get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs?type=#{type}"
   end
 
-  def delete_job(project_id, job_id)
-    delete "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs/#{job_id}"
+  def get_job(project_id, job_name)
+    get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs/#{job_name}"
+  end
+
+  def delete_job(project_id, job_name)
+    delete "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs/#{job_name}"
   end
 
   def get_project_jobs(project_id)
     get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs"
   end
 
-  def get_job(job_id)
+  def get_job_from_db(job_id)
     # SELECT all columns expect for 'type', this is needed since type is a reserved variable name in ruby used in inheritance.
     # ActiveRecord::SubclassNotFound Exception: The single-table inheritance mechanism failed to locate the subclass: 'SPARK'. This error is raised because the column 'type' is reserved for storing the class in case of inheritance. Please rename t$
     Job.where(["id = ?", job_id]).select("id, name, creation_time, project_id, creator, json_config").first
@@ -71,5 +75,14 @@ module JobHelper
 
   def count_jobs(proj_id)
     Job.where(["project_id = ?", proj_id]).count
+  end
+
+  def clean_jobs(project_id)
+    with_valid_session
+    get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs"
+
+    if !json_body.empty?
+      json_body[:items].map{|job| job[:name]}.each{|i| delete "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs/#{i}"}
+    end
   end
 end

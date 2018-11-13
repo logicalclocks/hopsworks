@@ -117,6 +117,7 @@ public class YarnExecutionFinalizer {
           break;
         case YARN:
           defaultOutputPath = Settings.YARN_DEFAULT_OUTPUT_PATH;
+          break;
         default:
           defaultOutputPath = "Logs/";
       }

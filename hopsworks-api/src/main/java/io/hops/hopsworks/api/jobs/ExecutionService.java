@@ -64,7 +64,6 @@ import javax.enterprise.context.RequestScoped;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -107,7 +106,7 @@ public class ExecutionService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response getAllExecutions(
+  public Response getExecutions(
     @ApiParam(value = "offset of the collection of executions") @QueryParam("offset") Integer offset,
     @ApiParam(value = "number of executions to fetch") @QueryParam("limit") Integer limit,
     @ApiParam(value = "attribute to sort the collection") @QueryParam("sort_by") ResourceProperties.SortBy sortBy,
@@ -133,13 +132,13 @@ public class ExecutionService {
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response getExecution(
     @ApiParam(value = "execution id", required = true) @PathParam("id") Integer id,
-    @QueryParam("expand") String expand,
+    @ApiParam(value = "user") @QueryParam("expand") String expand,
     @Context UriInfo uriInfo) throws JobException {
     //If requested execution does not belong to job
     Execution exec = executionFacade.findByJobAndId(job, id);
     if(exec == null){
       throw new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_NOT_FOUND, Level.FINE,
-        "execution with id: " + id + " does not belong to job: " + job.getName());
+        "execution with id: " + id + " does not belong to job: " + job.getName()  + " or was not found");
     }
     ExecutionDTO dto = executionsBuilder.build(uriInfo, new ResourceProperties(ResourceProperties.Name.EXECUTIONS,
       expand), exec);
@@ -149,25 +148,26 @@ public class ExecutionService {
   
   @ApiOperation(value = "Start/Stop a job",
     notes = "Starts a job by creating and starting an Execution, stops a job by stopping the Execution.")
-  @PUT
+  @POST
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response execution(
-    @ApiParam(value = "start or stop", required = true) @QueryParam("action") ExecutionDTO.JobAction action,
+    @ApiParam(value = "start or stop", required = true) @QueryParam("action")
+      Action action,
     @Context HttpServletRequest req,
     @Context UriInfo uriInfo) throws JobException, GenericException {
     
     Users user = jWTHelper.getUserPrincipal(req);
     Execution exec;
     switch (action) {
-      case start:
+      case START:
         exec = executionController.start(job, user);
         UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder();
         uriBuilder.path(Integer.toString(exec.getId()));
         return Response.created(uriBuilder.build()).entity(executionsBuilder.build(uriInfo,
           new ResourceProperties(ResourceProperties.Name.EXECUTIONS), exec)).build();
-      case stop:
+      case STOP:
         exec = executionController.kill(job, user);
         return Response.ok().entity(executionsBuilder.build(uriInfo,
           new ResourceProperties(ResourceProperties.Name.EXECUTIONS), exec)).build();
@@ -186,10 +186,8 @@ public class ExecutionService {
   public Response getLog(
     @PathParam("id") Integer id,
     @PathParam("type") JobLogDTO.LogType type) throws JobException {
-
     JobLogDTO dto = executionController.getLog(job, id, type);
     return Response.ok().entity(dto).build();
-    
   }
   
   @ApiOperation(value = "Retry log aggregation of given execution and type", response = JobLogDTO.class)
@@ -201,10 +199,8 @@ public class ExecutionService {
   public Response retryLog(
     @PathParam("id") Integer id,
     @PathParam("type") JobLogDTO.LogType type) throws JobException {
-    
     JobLogDTO dto = executionController.retryLogAggregation(job, id, type);
     return Response.ok().entity(dto).build();
-    
   }
   
   
@@ -279,6 +275,31 @@ public class ExecutionService {
     }
     Response.ResponseBuilder responseBuilder = executionController.getExecutionProxy(job, id, param, req);
     return responseBuilder.build();
+    
+  }
+  
+  public enum Action {
+    START("start"),
+    STOP("stop");
+  
+    private final String name;
+    
+    Action(String name) {
+      this.name = name;
+    }
+  
+    public static Action fromString(String name) {
+      return valueOf(name.toUpperCase());
+    }
+  
+    public String getName() {
+      return name;
+    }
+  
+    @Override
+    public String toString() {
+      return name;
+    }
     
   }
   

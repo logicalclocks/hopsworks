@@ -75,10 +75,6 @@ public class ResourceProperties {
     }
   }
   
-  public List<ResourceProperty> getProperties() {
-    return properties;
-  }
-  
   public ResourceProperty get(Name property) {
     if (properties != null) {
       for (ResourceProperty resourceProperty : properties) {
@@ -178,7 +174,7 @@ public class ResourceProperties {
    */
   public enum Name {
     USERS,
-    PROJECTS,
+    PROJECT,
     JOBS,
     EXECUTIONS,
     DATASETS,
@@ -201,7 +197,8 @@ public class ResourceProperties {
   public enum SortBy {
     ID,
     NAME,
-    DATE_SENT
+    CREATIONTIME,//used by jobs
+    SUBMISSIONTIME//used by executions
   }
   
   public enum OrderBy {

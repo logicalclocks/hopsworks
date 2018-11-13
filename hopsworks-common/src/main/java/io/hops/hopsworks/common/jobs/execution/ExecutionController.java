@@ -159,6 +159,19 @@ public class ExecutionController {
   
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   public Execution start(Jobs job, Users user) throws GenericException, JobException {
+    //A job can only have one execution running
+    List<Execution> jobExecs = execFacade.findByJob(job);
+    if(!jobExecs.isEmpty()) {
+      //Sort descending based on executionId
+      jobExecs.sort((lhs, rhs) -> {
+        return lhs.getId() > rhs.getId() ? -1 : (lhs.getId() < rhs.getId()) ? 1 : 0;
+      });
+      if(!jobExecs.get(0).getState().isFinalState()){
+        throw new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_INVALID_STATE, Level.FINE,
+          "Cannot start an execution while another one for the same job has not finished.");
+      }
+    }
+    
     Execution exec;
     switch (job.getJobType()) {
       case FLINK:
@@ -197,9 +210,9 @@ public class ExecutionController {
   
   public Execution kill(Jobs job, Users user) {
     //Get the last appId for the job, a job cannot have two concurrent applications running.
-    List<Execution> jobExecs = execFacade.findForJob(job);
+    List<Execution> jobExecs = execFacade.findByJob(job);
     if(!jobExecs.isEmpty()) {
-      //Sort descending based on jobId
+      //Sort descending based on executionId
       jobExecs.sort((lhs, rhs) -> lhs.getId() > rhs.getId() ? -1 : (lhs.getId() < rhs.getId()) ? 1 : 0);
       String appId = jobExecs.get(0).getAppId();
       //Look for unique marker file which means it is a streaming job. Otherwise proceed with normal kill.
@@ -260,13 +273,13 @@ public class ExecutionController {
       dfso = dfs.getDfsOps();
       String message;
       String stdPath;
-      String path = (dto.getType() == JobLogDTO.LogType.out ? execution.getStdoutPath() : execution.getStderrPath());
-      JobLogDTO.Retriable retriable = (dto.getType() == JobLogDTO.LogType.out ? JobLogDTO.Retriable.retriableOut :
-        JobLogDTO.Retriable.retriableErr);
-      boolean status = (dto.getType() != JobLogDTO.LogType.out || execution.getFinalStatus().equals(JobFinalStatus
+      String path = (dto.getType() == JobLogDTO.LogType.OUT ? execution.getStdoutPath() : execution.getStderrPath());
+      JobLogDTO.Retriable retriable = (dto.getType() == JobLogDTO.LogType.OUT ? JobLogDTO.Retriable.RETRIEABLE_OUT :
+        JobLogDTO.Retriable.RETRIABLE_ERR);
+      boolean status = (dto.getType() != JobLogDTO.LogType.OUT || execution.getFinalStatus().equals(JobFinalStatus
         .SUCCEEDED));
       String hdfsPath = REMOTE_PROTOCOL + path;
-      if (path != null && !path.isEmpty() && dfso.exists(hdfsPath)) {
+      if (!Strings.isNullOrEmpty(path) && dfso.exists(hdfsPath)) {
         if (dfso.listStatus(new org.apache.hadoop.fs.Path(hdfsPath))[0].getLen() > settings.getJobLogsDisplaySize()) {
           Project project = execution.getJob().getProject();
           stdPath = path.split(project.getName())[1];
@@ -326,11 +339,11 @@ public class ExecutionController {
       String hdfsLogPath = null;
       String[] desiredLogTypes = null;
       switch (type){
-        case out:
+        case OUT:
           hdfsLogPath = REMOTE_PROTOCOL + execution.getStdoutPath();
           desiredLogTypes = new String[]{type.name()};
           break;
-        case err:
+        case ERR:
           hdfsLogPath = REMOTE_PROTOCOL + execution.getStderrPath();
           desiredLogTypes = new String[]{type.name(), ".log"};
           break;

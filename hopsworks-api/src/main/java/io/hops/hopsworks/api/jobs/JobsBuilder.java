@@ -40,10 +40,10 @@ public class JobsBuilder {
   private ExecutionsBuilder executionsBuilder;
   
   public JobDTO uri(JobDTO dto, UriInfo uriInfo, Jobs job) {
-    dto.setHref(uriInfo.getBaseUriBuilder().path(ResourceProperties.Name.PROJECTS.toString().toLowerCase())
+    dto.setHref(uriInfo.getBaseUriBuilder().path(ResourceProperties.Name.PROJECT.toString().toLowerCase())
       .path(Integer.toString(job.getProject().getId()))
       .path(ResourceProperties.Name.JOBS.toString().toLowerCase())
-      .path(Integer.toString(job.getId()))
+      .path(job.getName())
       .build());
     return dto;
   }
@@ -85,7 +85,7 @@ public class JobsBuilder {
         resourceProperties.get(ResourceProperties.Name.JOBS).getOffset(),
         resourceProperties.get(ResourceProperties.Name.JOBS).getLimit());
     } else {
-      jobs = jobFacade.findForProject(project,
+      jobs = jobFacade.findByProject(project,
         resourceProperties.get(ResourceProperties.Name.JOBS).getOffset(),
         resourceProperties.get(ResourceProperties.Name.JOBS).getLimit());
     }
