@@ -44,11 +44,12 @@ import io.hops.hopsworks.common.dao.pythonDeps.CondaCommands;
 import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade;
 import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade.CondaStatus;
 import io.hops.hopsworks.common.security.CertificatesMgmService;
+import io.hops.hopsworks.common.util.OSProcessExecutor;
+import io.hops.hopsworks.common.util.ProcessDescriptor;
+import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.common.util.Settings;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import org.primefaces.context.RequestContext;
 import org.primefaces.event.RowEditEvent;
 import org.primefaces.event.SelectEvent;
@@ -58,7 +59,6 @@ import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
 import java.io.Serializable;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -93,6 +93,8 @@ public class NodesBean implements Serializable {
   private CertificatesMgmService certificatesMgmService;
   @EJB
   private PythonDepsFacade pythonDepsFacade;
+  @EJB
+  private OSProcessExecutor osProcessExecutor;
 
   @Resource(lookup = "concurrent/kagentExecutorService")
   private ManagedExecutorService executorService;
@@ -131,36 +133,31 @@ public class NodesBean implements Serializable {
         String prog = settings.getHopsworksDomainDir() + "/bin/anaconda-rsync.sh";
         int exitValue;
         Integer id = 1;
-        String[] command = {prog, this.hostname};
-        ProcessBuilder pb = new ProcessBuilder(command);
+  
+        ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
+            .addCommand(prog)
+            .addCommand(this.hostname)
+            .redirectErrorStream(true)
+            .setWaitTimeout(10L, TimeUnit.MINUTES)
+            .build();
+        
         try {
-          Process process = pb.start();
-          pb.redirectErrorStream(true);
-          BufferedReader br = new BufferedReader(new InputStreamReader(
-              process.getInputStream(), Charset.forName("UTF8")));
-          String line;
-          StringBuilder sb = new StringBuilder();
-
-          while ((line = br.readLine()) != null) {
-            sb.append(line).append("\r\n");
-          }
-          boolean status = process.waitFor(600, TimeUnit.SECONDS);
-          if (status == false) {
-            output = "COMMAND TIMED OUT: \r\n" + sb.toString();
-            return output;
-          }
-          exitValue = process.exitValue();
+          ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
+          exitValue = processResult.getExitCode();
           if (exitValue == 0) {
-            // delete from conda_commands tables
-            output = "SUCCESS. \r\n" + sb.toString();
+            output = "SUCCESS. \r\n" + processResult.getStdout();
           } else {
-            output = "FAILED. \r\n" + sb.toString();
+            if (processResult.processExited()) {
+              output = "FAILED. \r\n" + processResult.getStdout();
+            } else {
+              output = "Process TIMED-OUT. \r\n" + processResult.getStdout();
+            }
           }
-
-        } catch (IOException | InterruptedException ex) {
+        } catch (IOException ex) {
           logger.log(Level.SEVERE, "Problem zipping anaconda libraries for synchronization: {0}", ex.toString());
           exitValue = -2;
         }
+        
         if (exitValue != 0) {
           MessagesController.addInfoMessage("Problem with synchronizing Anaconda libraries to host: " + hostname, null);
         } else {

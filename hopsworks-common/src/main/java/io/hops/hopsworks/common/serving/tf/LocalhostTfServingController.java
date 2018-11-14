@@ -28,6 +28,9 @@ import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.exception.UserException;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.serving.KafkaServingHelper;
+import io.hops.hopsworks.common.util.OSProcessExecutor;
+import io.hops.hopsworks.common.util.ProcessDescriptor;
+import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.common.util.Settings;
 
 import javax.ejb.EJB;
@@ -40,11 +43,11 @@ import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -68,6 +71,8 @@ public class LocalhostTfServingController implements TfServingController {
   private CertificateMaterializer certificateMaterializer;
   @EJB
   private KafkaServingHelper kafkaServingHelper;
+  @EJB
+  private OSProcessExecutor osProcessExecutor;
 
   @Override
   public List<TfServingWrapper> getTfServings(Project project) throws TfServingException {
@@ -267,16 +272,20 @@ public class LocalhostTfServingController implements TfServingController {
     String script = settings.getHopsworksDomainDir() + "/bin/tfserving.sh";
 
     Path secretDir = Paths.get(settings.getStagingDir(), SERVING_DIRS, tfServing.getLocalDir());
-
-    String[] command = {"/usr/bin/sudo", script, "update",
-        tfServing.getModelName(),
-        Paths.get(tfServing.getModelPath(), tfServing.getVersion().toString()).toString(),
-        secretDir.toString(),
-        project.getName() + USER_NAME_DELIMITER + user.getUsername()};
-
-    logger.log(Level.INFO, Arrays.toString(command));
-    ProcessBuilder pb = new ProcessBuilder(command);
-
+  
+    ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
+        .addCommand("/usr/bin/sudo")
+        .addCommand(script)
+        .addCommand("update")
+        .addCommand(tfServing.getModelName())
+        .addCommand(Paths.get(tfServing.getModelPath(), tfServing.getVersion().toString()).toString())
+        .addCommand(secretDir.toString())
+        .addCommand(project.getName() + USER_NAME_DELIMITER + user.getUsername())
+        .ignoreOutErrStreams(true)
+        .setWaitTimeout(2L, TimeUnit.MINUTES)
+        .build();
+    logger.log(Level.INFO, processDescriptor.toString());
+    
     // Materialized TLS certificates to be able to read the model
     if (settings.getHopsRpcTls()) {
       try {
@@ -290,9 +299,8 @@ public class LocalhostTfServingController implements TfServingController {
     }
 
     try {
-      Process process = pb.start();
-      process.waitFor();
-    } catch (IOException | InterruptedException ex) {
+      osProcessExecutor.execute(processDescriptor);
+    } catch (IOException ex) {
       throw new TfServingException(RESTCodes.TfServingErrorCode.UPDATEERROR, Level.SEVERE,
         "tfServing id: " + tfServing.getId(), ex.getMessage(), ex);
     } finally {
@@ -310,16 +318,20 @@ public class LocalhostTfServingController implements TfServingController {
     String script = settings.getHopsworksDomainDir() + "/bin/tfserving.sh";
 
     Path secretDir = Paths.get(settings.getStagingDir(), SERVING_DIRS + tfServing.getLocalDir());
-    String[] command = {"/usr/bin/sudo", script, "kill", String.valueOf(tfServing.getLocalPid()),
-        String.valueOf(tfServing.getLocalPort()), secretDir.toString()};
 
-    logger.log(Level.INFO, Arrays.toString(command));
-    ProcessBuilder pb = new ProcessBuilder(command);
+    ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
+        .addCommand("/usr/bin/sudo")
+        .addCommand(script)
+        .addCommand("kill")
+        .addCommand(String.valueOf(tfServing.getLocalPid()))
+        .addCommand(String.valueOf(tfServing.getLocalPort()))
+        .addCommand(secretDir.toString())
+        .ignoreOutErrStreams(true)
+        .build();
 
     try {
-      Process process = pb.start();
-      process.waitFor();
-    } catch (IOException | InterruptedException ex) {
+      osProcessExecutor.execute(processDescriptor);
+    } catch (IOException ex) {
       throw new TfServingException(RESTCodes.TfServingErrorCode.LIFECYCLEERROR, Level.SEVERE,
         "tfServing id: " + tfServing.getId(), ex.getMessage(), ex);
     }
@@ -347,17 +359,22 @@ public class LocalhostTfServingController implements TfServingController {
 
     Path secretDir = Paths.get(settings.getStagingDir(), SERVING_DIRS + tfServing.getLocalDir());
 
-    String[] shCommnad = new String[]{"/usr/bin/sudo", script, "start",
-        tfServing.getModelName(),
-        Paths.get(tfServing.getModelPath(), tfServing.getVersion().toString()).toString(),
-        String.valueOf(grpcPort),
-        String.valueOf(restPort),
-        secretDir.toString(),
-        project.getName() + USER_NAME_DELIMITER + user.getUsername(),
-        tfServing.isBatchingEnabled() ? "1" : "0",
-        project.getName().toLowerCase()};
-
-    logger.log(Level.INFO, Arrays.toString(shCommnad));
+    ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
+        .addCommand("/usr/bin/sudo")
+        .addCommand(script)
+        .addCommand("start")
+        .addCommand(tfServing.getModelName())
+        .addCommand(Paths.get(tfServing.getModelPath(), tfServing.getVersion().toString()).toString())
+        .addCommand(String.valueOf(grpcPort))
+        .addCommand(String.valueOf(restPort))
+        .addCommand(secretDir.toString())
+        .addCommand(project.getName() + USER_NAME_DELIMITER + user.getUsername())
+        .addCommand(tfServing.isBatchingEnabled() ? "1" : "0")
+        .addCommand(project.getName().toLowerCase())
+        .setWaitTimeout(2L, TimeUnit.MINUTES)
+        .ignoreOutErrStreams(true)
+        .build();
+    logger.log(Level.INFO, processDescriptor.toString());
 
     // Materialized TLS certificates to be able to read the model
     if (settings.getHopsRpcTls()) {
@@ -371,18 +388,11 @@ public class LocalhostTfServingController implements TfServingController {
         tfServingFacade.releaseLock(project, tfServing.getId());
       }
     }
-
-    ProcessBuilder pb = new ProcessBuilder(shCommnad);
-    Process process = null;
+    
     try {
-      // Send both stdout and stderr to the same stream
-      pb.redirectErrorStream(true);
-      process = pb.start();
-
-      // Wait until the launcher bash script has finished
-      process.waitFor();
-
-      if (process.exitValue() != 0) {
+      ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
+      
+      if (processResult.getExitCode() != 0) {
         // Startup process failed for some reason
         tfServing.setLocalPid(PID_STOPPED);
         tfServingFacade.updateDbObject(tfServing, project);
@@ -398,10 +408,6 @@ public class LocalhostTfServingController implements TfServingController {
       tfServing.setLocalPort(restPort);
       tfServingFacade.updateDbObject(tfServing, project);
     } catch (Exception ex) {
-      if (process != null) {
-        process.destroyForcibly();
-      }
-
       // Startup process failed for some reason
       tfServing.setLocalPid(PID_STOPPED);
       tfServingFacade.updateDbObject(tfServing, project);

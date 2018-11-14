@@ -41,6 +41,9 @@ package io.hops.hopsworks.admin.ndb;
 import io.hops.hopsworks.admin.maintenance.MessagesController;
 import io.hops.hopsworks.common.dao.ndb.NdbBackup;
 import io.hops.hopsworks.common.dao.ndb.NdbBackupFacade;
+import io.hops.hopsworks.common.util.OSProcessExecutor;
+import io.hops.hopsworks.common.util.ProcessDescriptor;
+import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.common.util.Settings;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -49,6 +52,7 @@ import java.io.Serializable;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -71,7 +75,9 @@ public class NdbBackupBean implements Serializable {
   private NdbBackupFacade ndbBackupFacade;
   @EJB
   private Settings settings;
-
+  @EJB
+  private OSProcessExecutor osProcessExecutor;
+  
   public List<NdbBackup> allBackups = new ArrayList<>();
 
   public void setAllBackups(List<NdbBackup> allBackups) {
@@ -100,15 +106,23 @@ public class NdbBackupBean implements Serializable {
     String prog = settings.getHopsworksDomainDir() + "/bin/ndb_backup.sh";
     int exitValue;
 
-    String[] command = {"/usr/bin/sudo", prog, "restore", backupId.toString()};
-    ProcessBuilder pb = new ProcessBuilder(command);
+    ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
+        .addCommand("/usr/bin/sudo")
+        .addCommand(prog)
+        .addCommand("restore")
+        .addCommand(backupId.toString())
+        .setWaitTimeout(2L, TimeUnit.HOURS)
+        .ignoreOutErrStreams(true)
+        .build();
 
     try {
-      Process p = pb.start();
-      p.waitFor();
-      exitValue = p.exitValue();
-    } catch (IOException | InterruptedException ex) {
-
+      ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
+      if (!processResult.processExited()) {
+        logger.log(Level.SEVERE, "Restoring NDB backup time-out");
+        return "RESTORE_FAILED";
+      }
+      exitValue = processResult.getExitCode();
+    } catch (IOException ex) {
       logger.log(Level.SEVERE, "Problem restoring a backup: {0}", ex.toString());
       return "RESTORE_FAILED";
     }
@@ -121,17 +135,27 @@ public class NdbBackupBean implements Serializable {
     String prog = settings.getHopsworksDomainDir() + "/bin/ndb_backup.sh";
     int exitValue;
 
-    String[] command = {"/usr/bin/sudo", prog, "remove", backupId.toString()};
-    ProcessBuilder pb = new ProcessBuilder(command);
+    ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
+        .addCommand("/usr/bin/sudo")
+        .addCommand(prog)
+        .addCommand("remove")
+        .addCommand(backupId.toString())
+        .setWaitTimeout(2L, TimeUnit.HOURS)
+        .ignoreOutErrStreams(true)
+        .build();
 
     try {
-      Process p = pb.start();
-      p.waitFor();
-      exitValue = p.exitValue();
+      ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
+      if (!processResult.processExited()) {
+        logger.log(Level.SEVERE, "Removing NDB backup time-out");
+        return "RESTORE_FAILED";
+      }
+      
+      exitValue = processResult.getExitCode();
       if (exitValue == 0) {
         ndbBackupFacade.removeBackup(backupId);        
       }
-    } catch (IOException | InterruptedException ex) {
+    } catch (IOException ex) {
 
       logger.log(Level.SEVERE, "Problem removing the backup: {0}", ex.toString());
       return "RESTORE_FAILED";
