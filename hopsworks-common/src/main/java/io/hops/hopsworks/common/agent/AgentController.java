@@ -38,6 +38,9 @@ import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
 import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.util.EmailBean;
+import io.hops.hopsworks.common.util.OSProcessExecutor;
+import io.hops.hopsworks.common.util.ProcessDescriptor;
+import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.common.util.Settings;
 
 import javax.ejb.EJB;
@@ -45,10 +48,7 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.mail.MessagingException;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -80,6 +80,8 @@ public class AgentController {
   private SystemCommandFacade systemCommandFacade;
   @EJB
   private AlertEJB alertFacade;
+  @EJB
+  private OSProcessExecutor osProcessExecutor;
   
   public String register(String hostId, String password) {
     Hosts host = hostsFacade.findByHostname(hostId);
@@ -304,22 +306,22 @@ public class AgentController {
    */
   private String listCondaEnvironment(String project) {
     final String prog = settings.getHopsworksDomainDir() + "/bin/list_environment.sh";
-    final ProcessBuilder pb = new ProcessBuilder(prog, project);
-    final StringBuilder sb = new StringBuilder();
+  
+    ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
+        .addCommand(prog)
+        .addCommand(project)
+        .build();
+    
     try {
-      final Process process = pb.start();
-      final BufferedReader br = new BufferedReader(new InputStreamReader(
-          process.getInputStream(), Charset.forName("UTF8")));
-      String line;
-      while ((line = br.readLine()) != null) {
-        sb.append(line + System.getProperty("line.separator"));
+      ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
+      if (processResult.processExited()) {
+        return processResult.getStdout();
       }
-      process.waitFor();
-    } catch (IOException | InterruptedException ex) {
+    } catch (IOException ex) {
       LOG.log(Level.SEVERE, "Problem listing conda environment: {0}",
           ex.toString());
     }
-    return sb.toString();
+    return "";
   }
   
   //since we only want to show certain predefined libs or those user have installed we need to be selective about

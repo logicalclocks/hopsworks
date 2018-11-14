@@ -43,6 +43,7 @@ import io.hops.hopsworks.common.dao.dela.certs.ClusterCertificateFacade;
 import io.hops.hopsworks.common.dela.AddressJSON;
 import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.security.CertificatesMgmService;
+import io.hops.hopsworks.common.util.OSProcessExecutor;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.dela.dto.hopssite.ClusterServiceDTO;
 import io.hops.hopsworks.common.exception.DelaException;
@@ -92,6 +93,8 @@ public class DelaSetupWorker {
   private TransferDelaController delaCtrl;
   @EJB
   private CertificatesMgmService certificatesMgmService;
+  @EJB
+  private OSProcessExecutor osProcessExecutor;
 
   private State state;
   //5 required to get from start to running in perfect mode
@@ -175,7 +178,8 @@ public class DelaSetupWorker {
     }
 
     Optional<Triplet<KeyStore, KeyStore, String>> keystoreAux
-      = CertificateHelper.loadKeystoreFromFile(masterPswd.get(), settings, clusterCertFacade, certificatesMgmService);
+      = CertificateHelper.loadKeystoreFromFile(masterPswd.get(), settings, clusterCertFacade, certificatesMgmService,
+          osProcessExecutor);
     if (keystoreAux.isPresent()) {
       setupComplete(keystoreAux.get(), timer);
     } else {

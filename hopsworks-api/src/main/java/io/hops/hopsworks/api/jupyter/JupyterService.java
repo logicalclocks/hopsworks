@@ -92,6 +92,9 @@ import io.hops.hopsworks.common.jobs.jobhistory.JobState;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Ip;
+import io.hops.hopsworks.common.util.OSProcessExecutor;
+import io.hops.hopsworks.common.util.ProcessDescriptor;
+import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -99,11 +102,8 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import javax.ws.rs.core.GenericEntity;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
@@ -143,6 +143,8 @@ public class JupyterService {
   private ElasticController elasticController;
   @EJB
   private JWTHelper jWTHelper;
+  @EJB
+  private OSProcessExecutor osProcessExecutor;
 
   private Integer projectId;
   // No @EJB annotation for Project, it's injected explicitly in ProjectService.
@@ -482,23 +484,21 @@ public class JupyterService {
     String hdfsFilename = "/Projects/" + this.project.getName() + "/" + path;
 
     String prog = settings.getHopsworksDomainDir() + "/bin/convert-ipython-notebook.sh";
-    String[] command = {prog, hdfsFilename, hdfsUsername};
-    LOGGER.log(Level.INFO, Arrays.toString(command));
-    ProcessBuilder pb = new ProcessBuilder(command);
+    ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
+        .addCommand(prog)
+        .addCommand(hdfsFilename)
+        .addCommand(hdfsUsername)
+        .ignoreOutErrStreams(true)
+        .build();
+    LOGGER.log(Level.FINE, processDescriptor.toString());
     try {
-      Process process = pb.start();
-      BufferedReader br = new BufferedReader(new InputStreamReader(process.
-          getInputStream()));
-      String line;
-      while ((line = br.readLine()) != null) {
-        // do nothing
-      }
-      int errCode = process.waitFor();
-      if (errCode != 0) {
+      ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
+      
+      if (!processResult.processExited() || processResult.getExitCode() != 0) {
         throw new ServiceException(RESTCodes.ServiceErrorCode.IPYTHON_CONVERT_ERROR,  Level.SEVERE,
-          "error code: " + errCode);
+          "error code: " + processResult.getExitCode());
       }
-    } catch (IOException | InterruptedException ex) {
+    } catch (IOException ex) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.IPYTHON_CONVERT_ERROR, Level.SEVERE, null, ex.getMessage(),
         ex);
 

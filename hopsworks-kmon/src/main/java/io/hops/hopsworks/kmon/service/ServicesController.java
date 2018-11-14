@@ -47,16 +47,16 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
 import io.hops.hopsworks.common.dao.host.Health;
+import io.hops.hopsworks.common.util.OSProcessExecutor;
+import io.hops.hopsworks.common.util.ProcessDescriptor;
+import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.kmon.struct.InstanceFullInfo;
 import io.hops.hopsworks.common.dao.host.Status;
 import io.hops.hopsworks.common.dao.kagent.HostServicesFacade;
 import io.hops.hopsworks.common.dao.kagent.HostServicesInfo;
 import io.hops.hopsworks.common.util.FormatUtils;
 import io.hops.hopsworks.common.util.Settings;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.charset.Charset;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import javax.faces.application.FacesMessage;
@@ -70,6 +70,8 @@ public class ServicesController {
   private Settings settings;
   @EJB
   private HostServicesFacade hostServicesFacade;
+  @EJB
+  private OSProcessExecutor osProcessExecutor;
   @ManagedProperty("#{param.hostname}")
   private String hostname;
   @ManagedProperty("#{param.service}")
@@ -203,19 +205,21 @@ public class ServicesController {
     String prog = settings.getHopsworksDomainDir() + "/bin/kagent-restart.sh";
     int exitValue;
     Integer id = 1;
-    String[] command = {prog, hostname};
-    ProcessBuilder pb = new ProcessBuilder(command);
+  
+    ProcessDescriptor.Builder pdBuilder = new ProcessDescriptor.Builder()
+        .addCommand(prog)
+        .addCommand(hostname)
+        .setWaitTimeout(10L, TimeUnit.SECONDS);
+    if (!logger.isLoggable(Level.FINE)) {
+      pdBuilder.ignoreOutErrStreams(true);
+    }
+    
+    
     try {
-      Process process = pb.start();
-      BufferedReader br = new BufferedReader(new InputStreamReader(
-          process.getInputStream(), Charset.forName("UTF8")));
-      String line;
-      while ((line = br.readLine()) != null) {
-        logger.info(line);
-      }
-      process.waitFor(10l, TimeUnit.SECONDS);
-      exitValue = process.exitValue();
-    } catch (IOException | InterruptedException ex) {
+      ProcessResult processResult = osProcessExecutor.execute(pdBuilder.build());
+      exitValue = processResult.getExitCode();
+      logger.log(Level.FINE, processResult.getStdout());
+    } catch (IOException ex) {
       logger.log(Level.SEVERE, "Problem restarting kagent: {0}", ex.toString());
       FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_INFO,
           "Problem restarting kagent for: ", hostname);

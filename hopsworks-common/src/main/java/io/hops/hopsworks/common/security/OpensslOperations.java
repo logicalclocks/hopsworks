@@ -40,8 +40,10 @@ package io.hops.hopsworks.common.security;
 
 import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.hdfs.Utils;
+import io.hops.hopsworks.common.util.OSProcessExecutor;
+import io.hops.hopsworks.common.util.ProcessDescriptor;
+import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.common.util.Settings;
-import io.hops.hopsworks.common.util.SystemCommandExecutor;
 import org.apache.commons.io.FileUtils;
 import sun.security.provider.X509Factory;
 
@@ -62,9 +64,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
 import java.security.cert.X509Certificate;
-import java.util.ArrayList;
 import java.util.Base64;
-import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -88,6 +88,8 @@ public class OpensslOperations {
   private Settings settings;
   @EJB
   private PKI pki;
+  @EJB
+  private OSProcessExecutor osProcessExecutor;
   
   @Lock(LockType.WRITE)
   public String createUserCertificate(String projectName, String userName, String countryCode, String city, String
@@ -114,40 +116,44 @@ public class OpensslOperations {
   
     // Need to execute CreatingUserCerts.sh as 'root' using sudo.
     // Solution is to add them to /etc/sudoers.d/glassfish file. Chef cookbook does this for us.
-    List<String> commands = new ArrayList<>(9);
-    commands.add(SUDO);
-    commands.add(Paths.get(intermediateCADir, Settings.SSL_CREATE_CERT_SCRIPTNAME).toString());
-    commands.add(service);
-    commands.add(countryCode);
-    commands.add(city);
-    commands.add(organization);
-    commands.add(email);
-    commands.add(orcid);
-    commands.add(userKeyPassword);
-  
-    return executeCommand(commands, false);
+    ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
+        .addCommand(SUDO)
+        .addCommand(Paths.get(intermediateCADir, Settings.SSL_CREATE_CERT_SCRIPTNAME).toString())
+        .addCommand(service)
+        .addCommand(countryCode)
+        .addCommand(city)
+        .addCommand(organization)
+        .addCommand(email)
+        .addCommand(orcid)
+        .addCommand(userKeyPassword)
+        .build();
+    return executeCommand(processDescriptor);
   }
   
   @Lock(LockType.WRITE)
   public String deleteUserCertificate(String projectSpecificUsername) throws IOException {
     String intermediateCADir = pki.getCAParentPath(PKI.CAType.INTERMEDIATE);
-    List<String> commands = new ArrayList<>(3);
-    commands.add(SUDO);
-    commands.add(Paths.get(intermediateCADir, Settings.SSL_DELETE_CERT_SCRIPTNAME).toString());
-    commands.add(projectSpecificUsername);
     
-    return executeCommand(commands, false);
+    ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
+        .addCommand(SUDO)
+        .addCommand(Paths.get(intermediateCADir, Settings.SSL_DELETE_CERT_SCRIPTNAME).toString())
+        .addCommand(projectSpecificUsername)
+        .build();
+    
+    return executeCommand(processDescriptor);
   }
   
   @Lock(LockType.WRITE)
   public String deleteProjectCertificate(String projectName) throws IOException {
     String intermediateCADir = pki.getCAParentPath(PKI.CAType.INTERMEDIATE);
-    List<String> commands = new ArrayList<>(3);
-    commands.add(SUDO);
-    commands.add(Paths.get(intermediateCADir, Settings.SSL_DELETE_PROJECT_CERTS_SCRIPTNAME).toString());
-    commands.add(projectName);
     
-    return executeCommand(commands, false);
+    ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
+        .addCommand(SUDO)
+        .addCommand(Paths.get(intermediateCADir, Settings.SSL_DELETE_PROJECT_CERTS_SCRIPTNAME).toString())
+        .addCommand(projectName)
+        .build();
+    
+    return executeCommand(processDescriptor);
   }
   
   public boolean isPresentProjectCertificates(String projectName) {
@@ -199,19 +205,20 @@ public class OpensslOperations {
     if (!certificateFile.exists()) {
       throw new CAException(RESTCodes.CAErrorCode.CERTNOTFOUND, Level.WARNING, certType);
     }
-
-    List<String> commands = new ArrayList<>();
-    commands.add(OPENSSL);
-    commands.add("ca");
-    commands.add("-batch");
-    commands.add("-config");
-    commands.add(openSslConfig);
-    commands.add("-passin");
-    commands.add("pass:" + pki.getCAKeyPassword(caType));
-    commands.add("-revoke");
-    commands.add(certificatePath.toString());
     
-    executeCommand(commands, false);
+    ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
+        .addCommand(OPENSSL)
+        .addCommand("ca")
+        .addCommand("-batch")
+        .addCommand("-config")
+        .addCommand(openSslConfig)
+        .addCommand("-passin")
+        .addCommand("pass:" + pki.getCAKeyPassword(caType))
+        .addCommand("-revoke")
+        .addCommand(certificatePath.toString())
+        .build();
+    
+    executeCommand(processDescriptor);
     if (createCRL) {
       createCRL(caType);
     }
@@ -225,17 +232,19 @@ public class OpensslOperations {
   public void pruneDatabase(PKI.CAType caType) throws IOException {
     LOG.log(Level.FINE, "Pruning OpenSSL database");
     String openSslConf = pki.getCAConfPath(caType).toString();
-    List<String> commands = new ArrayList<>();
-    commands.add(OPENSSL);
-    commands.add("ca");
-    commands.add("-batch");
-    commands.add("-config");
-    commands.add(openSslConf);
-    commands.add("-updatedb");
-    commands.add("-passin");
-    commands.add("pass:" + pki.getCAKeyPassword(caType));
     
-    executeCommand(commands, false);
+    ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
+        .addCommand(OPENSSL)
+        .addCommand("ca")
+        .addCommand("-batch")
+        .addCommand("-config")
+        .addCommand(openSslConf)
+        .addCommand("-updatedb")
+        .addCommand("-passin")
+        .addCommand("pass:" + pki.getCAKeyPassword(caType))
+        .build();
+    
+    executeCommand(processDescriptor);
   }
   
   @Lock(LockType.WRITE)
@@ -253,18 +262,19 @@ public class OpensslOperations {
     String openSslConfig = pki.getCAConfPath(caType).toString();
     String crlFile = pki.getCACRLPath(caType).toString();
 
-    List<String> commands = new ArrayList<>(10);
-    commands.add(OPENSSL);
-    commands.add("ca");
-    commands.add("-batch");
-    commands.add("-config");
-    commands.add(openSslConfig);
-    commands.add("-gencrl");
-    commands.add("-passin");
-    commands.add("pass:" + pki.getCAKeyPassword(caType));
-    commands.add("-out");
-    commands.add(crlFile);
-    executeCommand(commands, false);
+    ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
+        .addCommand(OPENSSL)
+        .addCommand("ca")
+        .addCommand("-batch")
+        .addCommand("-config")
+        .addCommand(openSslConfig)
+        .addCommand("-gencrl")
+        .addCommand("-passin")
+        .addCommand("pass:" + pki.getCAKeyPassword(caType))
+        .addCommand("-out")
+        .addCommand(crlFile)
+        .build();
+    executeCommand(processDescriptor);
     LOG.log(Level.FINE, "Created CRL");
   }
   
@@ -280,16 +290,17 @@ public class OpensslOperations {
       fw.flush();
   
   
-      List<String> commands = new ArrayList<>();
-      commands.add(OPENSSL);
-      commands.add("verify");
-      commands.add("-CAfile");
-      commands.add(pki.getChainOfTrustFilePath(caType).toString());
-      commands.add("-crl_check");
-      commands.add("-CRLfile");
-      commands.add(pki.getCACRLPath(caType).toString());
-      commands.add(tmpCertFile.getAbsolutePath());
-      executeCommand(commands, false);
+      ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
+          .addCommand(OPENSSL)
+          .addCommand("verify")
+          .addCommand("-CAfile")
+          .addCommand(pki.getChainOfTrustFilePath(caType).toString())
+          .addCommand("-crl_check")
+          .addCommand("-CRLfile")
+          .addCommand(pki.getCACRLPath(caType).toString())
+          .addCommand(tmpCertFile.getAbsolutePath())
+          .build();
+      executeCommand(processDescriptor);
     } catch (GeneralSecurityException ex) {
       throw new IOException(ex);
     } finally {
@@ -299,16 +310,18 @@ public class OpensslOperations {
   
   private boolean verifyCSR(File csr) throws IOException {
     LOG.log(Level.FINE, "Verifying Certificate Signing Request...");
-    List<String> commands = new ArrayList<>(6);
-    commands.add(OPENSSL);
-    commands.add("req");
-    commands.add("-in");
-    commands.add(csr.getAbsolutePath());
-    commands.add("-noout");
-    commands.add("-verify");
+    ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
+        .addCommand(OPENSSL)
+        .addCommand("req")
+        .addCommand("-in")
+        .addCommand(csr.getAbsolutePath())
+        .addCommand("-noout")
+        .addCommand("-verify")
+        .redirectErrorStream(true)
+        .build();
     
     // For a weird reason, the result string of openssl -verify is in stderr, so redirect stderr to stdout
-    String stdout = executeCommand(commands, true);
+    String stdout = executeCommand(processDescriptor);
     if (stdout.contains("verify OK")) {
       LOG.log(Level.INFO, "CSR verification passed for " + csr.getAbsolutePath());
       return true;
@@ -337,18 +350,19 @@ public class OpensslOperations {
     long valueInDays = pki.getValidityPeriod(certType);
 
     File signedCertificateFile = pki.getCertPath(caType, fileName).toFile();
-
-    List<String> commands = new ArrayList<>();
-    commands.add(SUDO);
-    commands.add(signScript);
-    commands.add(opensslConfFile);
-    commands.add(pki.getCAKeyPassword(caType));
-    commands.add(effectiveExtension);
-    commands.add(csr.getAbsolutePath());
-    commands.add(signedCertificateFile.getAbsolutePath());
-    commands.add(String.valueOf(valueInDays));
+  
+    ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
+        .addCommand(SUDO)
+        .addCommand(signScript)
+        .addCommand(opensslConfFile)
+        .addCommand(pki.getCAKeyPassword(caType))
+        .addCommand(effectiveExtension)
+        .addCommand(csr.getAbsolutePath())
+        .addCommand(signedCertificateFile.getAbsolutePath())
+        .addCommand(String.valueOf(valueInDays))
+        .build();
     
-    String stdout = executeCommand(commands, false);
+    String stdout = executeCommand(processDescriptor);
     LOG.log(Level.FINE, stdout);
     LOG.log(Level.INFO, "Signed CSR");
     
@@ -359,47 +373,50 @@ public class OpensslOperations {
   public String getSerialNumberFromCert(String cert) throws IOException {
     File csrFile = File.createTempFile(System.getProperty("java.io.tmpdir"), ".pem");
     FileUtils.writeStringToFile(csrFile, cert);
-    List<String> cmds = new ArrayList<>();
     //openssl x509 -in certs-dir/hops-site-certs/pub.pem -noout -serial
-    cmds.add(OPENSSL);
-    cmds.add("x509");
-    cmds.add("-in");
-    cmds.add(csrFile.getAbsolutePath());
-    cmds.add("-noout");
-    cmds.add("-serial");
+    ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
+        .addCommand(OPENSSL)
+        .addCommand("x509")
+        .addCommand("-in")
+        .addCommand(csrFile.getAbsolutePath())
+        .addCommand("-noout")
+        .addCommand("-serial")
+        .redirectErrorStream(true)
+        .build();
 
-    return executeCommand(cmds, true);
+    return executeCommand(processDescriptor);
   }
 
   @Lock(LockType.WRITE)
   public String getSubjectFromCSR(String csr) throws IOException {
     File csrFile = File.createTempFile(System.getProperty("java.io.tmpdir"), ".csr");
     FileUtils.writeStringToFile(csrFile, csr);
-    List<String> cmds = new ArrayList<>();
     //openssl req -in certs-dir/hops-site-certs/csr.pem -noout -subject
-    cmds.add(OPENSSL);
-    cmds.add("req");
-    cmds.add("-in");
-    cmds.add(csrFile.getAbsolutePath());
-    cmds.add("-noout");
-    cmds.add("-subject");
+    ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
+        .addCommand(OPENSSL)
+        .addCommand("req")
+        .addCommand("-in")
+        .addCommand(csrFile.getAbsolutePath())
+        .addCommand("-noout")
+        .addCommand("-subject")
+        .redirectErrorStream(true)
+        .build();
 
-    return executeCommand(cmds, true);
+    return executeCommand(processDescriptor);
   }
-
-  private String executeCommand(List<String> commands, boolean redirectErrorStream) throws IOException {
-    SystemCommandExecutor commandExecutor = new SystemCommandExecutor(commands, redirectErrorStream);
+  
+  private String executeCommand(ProcessDescriptor processDescriptor) throws IOException {
     try {
-      int returnValue = commandExecutor.executeCommand();
-      String stdout = commandExecutor.getStandardOutputFromCommand().trim(); // Remove \n from the string
-      String stderr = commandExecutor.getStandardErrorFromCommand().trim(); // Remove \n from the string
-      if (returnValue != 0) {
+      ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
+      String stdOut = processResult.getStdout().trim();
+      String stderr = processResult.getStderr().trim();
+      if (processResult.getExitCode() != 0) {
         throw new IOException(stderr);
       }
-      return stdout;
-    } catch (InterruptedException ex) {
-      LOG.log(Level.SEVERE, "Error while waiting for OpenSSL command to execute");
-      throw new IOException(ex);
+      return stdOut;
+    } catch (IOException ex) {
+      LOG.log(Level.SEVERE, "Error while executing OpenSSL command: " + processDescriptor);
+      throw ex;
     }
   }
 }
