@@ -760,8 +760,10 @@ public class Settings implements Serializable {
   public static final String SPARK_PY_MAINCLASS
       = "org.apache.spark.deploy.PythonRunner";
   public static final String PYSPARK_ZIP = "pyspark.zip";
-  
-  
+
+  //Hive config
+  public static final String HIVE_SITE = "hive-site.xml";
+
   private String PY4J_ARCHIVE = "py4j-0.10.7-src.zip";
   
   public synchronized String getPy4JArchive() {
@@ -3075,5 +3077,9 @@ public class Settings implements Serializable {
   public synchronized String getJWTSigningKeyName() {
     checkCache();
     return JWT_SIGNING_KEY_NAME;
+  }
+
+  public String getHiveSiteSparkHdfsPath() {
+    return "hdfs:///user/" + getSparkUser() + "/hive-site.xml";
   }
 }

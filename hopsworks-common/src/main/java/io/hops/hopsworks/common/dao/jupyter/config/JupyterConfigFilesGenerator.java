@@ -213,7 +213,10 @@ public class JupyterConfigFilesGenerator {
           .append(settings.getGlassfishTrustStoreHdfs()).append("#").append(Settings.DOMAIN_CA_TRUSTSTORE)
           .append(",")
           // Add HopsUtil
-          .append(settings.getHopsUtilHdfsPath());
+          .append(settings.getHopsUtilHdfsPath())
+          .append(",")
+          // Add Hive-site.xml for SparkSQL
+          .append(settings.getHiveSiteSparkHdfsPath());
 
       if (!js.getFiles().equals("")) {
         //Split the comma-separated string and append it to sparkFiles
