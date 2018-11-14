@@ -53,6 +53,7 @@ import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.util.OSProcessExecutor;
 import io.hops.hopsworks.common.util.ProcessDescriptor;
 import io.hops.hopsworks.common.util.ProcessResult;
+import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
 
 import javax.annotation.PostConstruct;
@@ -151,7 +152,10 @@ public class JupyterProcessMgr {
       String secretDir = settings.getStagingDir() + Settings.PRIVATE_DIRS + js.getSecret();
 
       if (settings.isPythonKernelEnabled()) {
-        createPythonKernelForProjectUser(jp.getNotebookPath(), hdfsUser);
+        int res = createPythonKernelForProjectUser(project, jp.getNotebookPath(), hdfsUser);
+        if (res == 0) {
+          LOGGER.log(Level.SEVERE, "Could not create Python kernel for Jupyter. Exit code: {0}", res);
+        }
       }
 
       String logfile = jp.getLogDirPath() + "/" + hdfsUser + "-" + port + ".log";
@@ -163,7 +167,7 @@ public class JupyterProcessMgr {
           .addCommand(jp.getNotebookPath())
           .addCommand(settings.getHadoopSymbolicLinkDir() + "-" + settings.getHadoopVersion())
           .addCommand(settings.getJavaHome())
-          .addCommand(settings.getAnacondaProjectDir(project.getName()))
+          .addCommand(settings.getAnacondaProjectDir(project))
           .addCommand(port.toString())
           .addCommand(hdfsUser + "-" + port + ".log")
           .addCommand(secretDir)
@@ -346,18 +350,17 @@ public class JupyterProcessMgr {
 
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public int createPythonKernelForProjectUser(Project project, Users user) {
-    JupyterSettings js = jupyterSettingsFacade.findByProjectUser(project.getId(), user.getEmail());
     String hdfsUser = hdfsUsersController.getHdfsUserName(project, user);
-
+    JupyterSettings js = jupyterSettingsFacade.findByProjectUser(project.getId(), user.getEmail());
     String privateDir = this.settings.getJupyterDir()
         + Settings.DIR_ROOT + File.separator + project.getName()
         + File.separator + hdfsUser + File.separator + js.getSecret();
-
-    return executeJupyterCommand("kernel-add", privateDir, hdfsUser);
+    return createPythonKernelForProjectUser(project, privateDir, hdfsUser);
   }
 
-  private int createPythonKernelForProjectUser(String privateDir, String hdfsUser) {
-    return executeJupyterCommand("kernel-add", privateDir, hdfsUser);
+  private int createPythonKernelForProjectUser(Project project, String privateDir, String hdfsUser) {
+    String condaEnv = ProjectUtils.getCurrentCondaEnvironment(project);
+    return executeJupyterCommand("kernel-add", privateDir, hdfsUser, condaEnv);
   }
 
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)

@@ -36,66 +36,45 @@
  * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package io.hops.hopsworks.common.dataset;
+package io.hops.hopsworks.common.util;
 
-import io.hops.hopsworks.common.exception.DatasetException;
-import io.hops.hopsworks.common.exception.ProjectException;
-import io.hops.hopsworks.common.exception.RESTCodes;
-import io.hops.hopsworks.common.util.ProjectUtils;
+import io.hops.hopsworks.common.dao.project.Project;
+import java.util.ArrayList;
+import java.util.List;
 
-import java.util.logging.Level;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+public class ProjectUtils {
 
-public class FolderNameValidator {
-
-  /**
-   * Check if the given String is a valid folder name.
-   * <p/>
-   * @param name
-   * @param subdir Indicates a directory under a top-level dataset
-   */
-  private static Pattern datasetNameRegex = Pattern.compile("^((?!__)[-_a-zA-Z0-9\\.]){1,87}[-_a-zA-Z0-9]$");
-  private static Pattern subDirNameRegex = Pattern.compile("^((?!__)[-_a-zA-Z0-9 \\.]){0,87}[-_a-zA-Z0-9]$");
-
-  public static void isValidName(String name, boolean subdir) throws DatasetException {
-    if (name == null) {
-      throw new IllegalArgumentException("Dataset name is null");
-    }
-
-    Matcher m;
-    if (subdir) {
-      m = subDirNameRegex.matcher(name);
-    } else {
-      m = datasetNameRegex.matcher(name);
-    }
-
-    if (!m.find()) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NAME_INVALID, Level.FINE);
-    }
-  }
-
-  private static Pattern projectNameRegexValidator = Pattern.compile(
-      "^[a-zA-Z0-9]((?!__)[_a-zA-Z0-9]){0,61}[a-zA-Z0-9]$");
-
-  /**
-   * Check if the given String is a valid Project name.
-   * <p/>
-   * @param name
-   */
-  public static void isValidProjectName(String name) throws ProjectException {
-    if (name == null) {
-      throw new IllegalArgumentException("Project name is null");
-    }
-
-    for (String reservedName : ProjectUtils.getReservedProjectNames()) {
-      if (name.compareToIgnoreCase(reservedName) == 0) {
-        throw new ProjectException(RESTCodes.ProjectErrorCode.RESERVED_PROJECT_NAME, Level.FINE);
+  public static boolean isReservedProjectName(String projName) {
+    boolean res = false;
+    for (String name : getReservedProjectNames()) {
+      if (name.compareToIgnoreCase(projName) == 0) {
+        res = true;
+        break;
       }
     }
-    Matcher m = projectNameRegexValidator.matcher(name);
-    if (!m.find()) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.INVALID_PROJECT_NAME, Level.FINE);
+    return res;
+  }
+  public static List<String> getReservedProjectNames() {
+    List<String> reservedNames = new ArrayList<>();
+    reservedNames.add("python27");
+    reservedNames.add("python36");
+    reservedNames.add("python37");
+    reservedNames.add("python38");
+    reservedNames.add("python39");
+    reservedNames.add("hops-system");
+    return reservedNames;
+  }
+  public static String getCurrentCondaEnvironment(Project project) {
+    String condaEnv = project.getName();
+    if (project.getCondaEnv() == false) {
+      if (project.getPythonVersion().compareToIgnoreCase("2.7") == 0) {
+        condaEnv = "python27";
+      } else if (project.getPythonVersion().compareToIgnoreCase("3.6") == 0) {
+        condaEnv = "python36";
+      } else {
+        throw new IllegalArgumentException("Error. Python has not been enabled for this project.");
+      }
     }
+    return condaEnv;
   }
 }

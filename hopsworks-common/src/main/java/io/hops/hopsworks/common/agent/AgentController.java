@@ -304,7 +304,7 @@ public class AgentController {
    * @param project
    * @return
    */
-  private String listCondaEnvironment(String project) {
+  public String listCondaEnvironment(String project) {
     final String prog = settings.getHopsworksDomainDir() + "/bin/list_environment.sh";
   
     ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
@@ -336,7 +336,7 @@ public class AgentController {
    * @param currentlyInstalledPyDeps
    * @return
    */
-  private Collection<PythonDep> synchronizeDependencies(Project project, String condaListStr,
+  public Collection<PythonDep> synchronizeDependencies(Project project, String condaListStr,
       Collection<PythonDep> currentlyInstalledPyDeps, PythonDepsFacade.CondaStatus status) throws ServiceException {
     
     Collection<PythonDep> deps = new ArrayList();

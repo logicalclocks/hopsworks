@@ -218,7 +218,7 @@ public abstract class YarnJob extends HopsJob {
         services.getSettings().getElasticRESTEndpoint()));
 
     if (jobs.getProject().getConda()) {
-      serviceProps.initAnaconda(services.getSettings().getAnacondaProjectDir(jobs.getProject().getName())
+      serviceProps.initAnaconda(services.getSettings().getAnacondaProjectDir(jobs.getProject())
           + File.separator + "bin" + File.separator + "python");
     }
     Collection<ProjectServices> projectServices = jobs.getProject().
