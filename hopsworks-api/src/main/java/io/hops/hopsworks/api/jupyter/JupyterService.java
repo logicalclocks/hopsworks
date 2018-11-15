@@ -305,29 +305,24 @@ public class JupyterService {
       String configSecret = DigestUtils.sha256Hex(Integer.toString(ThreadLocalRandom.current().nextInt()));
       JupyterDTO dto = null;
       DistributedFileSystemOps dfso = dfsService.getDfsOps();
-
+  
       try {
         jupyterSettingsFacade.update(jupyterSettings);
         dto = jupyterProcessFacade.startServerAsJupyterUser(project, configSecret, hdfsUser, realName, jupyterSettings);
-        HopsUtils.materializeCertificatesForUserCustomDir(project.getName(), user.getUsername(), settings
-            .getHdfsTmpCertDir(),
-            dfso, certificateMaterializer, settings, dto.getCertificatesDir());
+        HopsUtils.materializeCertificatesForUserCustomDir(project.getName(), user.getUsername(),
+            settings.getHdfsTmpCertDir(), dfso, certificateMaterializer, settings, dto.getCertificatesDir());
         // When Livy launches a job it will look in the standard directory for the certificates
         // We materialize them twice but most probably other operations will need them too, so it is OK
         // Remember to remove both when stopping Jupyter server or an exception is thrown
         certificateMaterializer.materializeCertificatesLocal(user.getUsername(), project.getName());
-      } catch (IOException | ServiceException ex) {
-        LOGGER.log(Level.SEVERE, null, ex);
-        certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());
-        if (dto != null) {
-          HopsUtils.cleanupCertificatesForUserCustomDir(user.getUsername(), project.getName(),
-            settings.getHdfsTmpCertDir(),
-            certificateMaterializer, dto.getCertificatesDir(), settings);
-        } else {
-          throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_LOCATION_UNDEFINED, Level.SEVERE);
-        }
+      } catch (ServiceException ex) {
         throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_START_ERROR, Level.SEVERE, ex.getMessage(),
-          null, ex);
+            null, ex);
+      } catch (IOException ex) {
+        certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());
+        HopsUtils.cleanupCertificatesForUserCustomDir(user.getUsername(), project.getName(),
+            settings.getHdfsTmpCertDir(), certificateMaterializer, dto.getCertificatesDir(), settings);
+        throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_MATERIALIZATION_ERROR, Level.SEVERE);
       } finally {
         if (dfso != null) {
           dfsService.closeDfsClient(dfso);
