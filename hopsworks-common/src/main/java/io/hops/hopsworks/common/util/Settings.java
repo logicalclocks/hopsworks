@@ -91,6 +91,7 @@ import java.util.regex.Pattern;
 
 import static io.hops.hopsworks.common.dao.kafka.KafkaFacade.DLIMITER;
 import static io.hops.hopsworks.common.dao.kafka.KafkaFacade.SLASH_SEPARATOR;
+import io.hops.hopsworks.common.dao.project.Project;
 
 @Singleton
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
@@ -101,6 +102,8 @@ public class Settings implements Serializable {
 
   @EJB
   private UserFacade userFacade;
+  @EJB
+  private ProjectUtils projectUtils;
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
@@ -1534,9 +1537,9 @@ public class Settings implements Serializable {
    * @param projectName name
    * @return conda dir
    */
-  public String getAnacondaProjectDir(String projectName) {
-    return getAnacondaDir() + File.separator + "envs" + File.separator
-        + projectName;
+  public String getAnacondaProjectDir(Project project) {
+    String condaEnv = projectUtils.getCurrentCondaEnvironment(project);
+    return getAnacondaDir() + File.separator + "envs" + File.separator + condaEnv;
   }
 
   private String ANACONDA_ENV = "kagent";

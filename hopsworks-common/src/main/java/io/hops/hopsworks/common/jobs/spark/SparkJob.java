@@ -147,7 +147,7 @@ public class SparkJob extends YarnJob {
       }
 
       runner = runnerbuilder.
-          getYarnRunner(jobs.getProject().getName(),
+          getYarnRunner(jobs.getProject(),
               jobUser, usersFullName,
               services, services.getFileOperations(hdfsUser.getUserName()), yarnClient, settings);
 

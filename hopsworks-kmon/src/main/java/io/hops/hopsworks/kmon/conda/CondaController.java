@@ -21,6 +21,7 @@ package io.hops.hopsworks.kmon.conda;
 import io.hops.hopsworks.common.dao.pythonDeps.CondaCommands;
 import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade;
 import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade.CondaStatus;
+import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.LocalhostServices;
 import io.hops.hopsworks.common.util.Settings;
@@ -99,7 +100,7 @@ public class CondaController implements Serializable {
     loadCommands();
   }
 
-  public void execCommand(CondaCommands command) {
+  public void execCommand(CondaCommands command) throws ServiceException {
     // ssh to the host, run the command, print out the results to the terminal.
 
     try {

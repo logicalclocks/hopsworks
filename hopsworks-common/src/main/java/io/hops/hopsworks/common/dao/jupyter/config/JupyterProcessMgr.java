@@ -50,6 +50,7 @@ import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
 
 import javax.annotation.PostConstruct;
@@ -109,6 +110,8 @@ public class JupyterProcessMgr {
   private JupyterSettingsFacade jupyterSettingsFacade;
   @EJB
   private JupyterConfigFilesGenerator jupyterConfigFilesGenerator;
+  @EJB
+  private ProjectUtils projectUtils;
 
 
   @PostConstruct
@@ -147,18 +150,22 @@ public class JupyterProcessMgr {
       String secretDir = settings.getStagingDir() + Settings.PRIVATE_DIRS + js.getSecret();
 
       if (settings.isPythonKernelEnabled()) {
-        createPythonKernelForProjectUser(jp.getNotebookPath(), hdfsUser);
+        int res = createPythonKernelForProjectUser(project, jp.getNotebookPath(), hdfsUser);
+        if (res == 0) {
+          LOGGER.log(Level.SEVERE, "Could not create Python kernel for Jupyter. Exit code: {0}", res);
+        }
       }
 
       String logfile = jp.getLogDirPath() + "/" + hdfsUser + "-" + port + ".log";
       String[] command
           = {"/usr/bin/sudo", prog, "start", jp.getNotebookPath(),
             settings.getHadoopSymbolicLinkDir() + "-" + settings.getHadoopVersion(), settings.getJavaHome(),
-            settings.getAnacondaProjectDir(project.getName()), port.
+            settings.getAnacondaProjectDir(project), port.
             toString(),
             hdfsUser + "-" + port + ".log", secretDir, jp.getCertificatesDir()};
       LOGGER.log(Level.INFO, Arrays.toString(command));
       ProcessBuilder pb = new ProcessBuilder(command);
+
       String pidfile = jp.getRunDirPath() + "/jupyter.pid";
       try {
         // Send both stdout and stderr to the same stream
@@ -339,18 +346,17 @@ public class JupyterProcessMgr {
 
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public int createPythonKernelForProjectUser(Project project, Users user) {
-    JupyterSettings js = jupyterSettingsFacade.findByProjectUser(project.getId(), user.getEmail());
     String hdfsUser = hdfsUsersController.getHdfsUserName(project, user);
-
+    JupyterSettings js = jupyterSettingsFacade.findByProjectUser(project.getId(), user.getEmail());
     String privateDir = this.settings.getJupyterDir()
         + Settings.DIR_ROOT + File.separator + project.getName()
         + File.separator + hdfsUser + File.separator + js.getSecret();
-
-    return executeJupyterCommand("kernel-add", privateDir, hdfsUser);
+    return createPythonKernelForProjectUser(project, privateDir, hdfsUser);
   }
 
-  private int createPythonKernelForProjectUser(String privateDir, String hdfsUser) {
-    return executeJupyterCommand("kernel-add", privateDir, hdfsUser);
+  private int createPythonKernelForProjectUser(Project project, String privateDir, String hdfsUser) {
+    String condaEnv = projectUtils.getCurrentCondaEnvironment(project);
+    return executeJupyterCommand("kernel-add", privateDir, hdfsUser, condaEnv);
   }
 
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)

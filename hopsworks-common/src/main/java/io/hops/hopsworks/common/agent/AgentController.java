@@ -120,7 +120,10 @@ public class AgentController {
     List<String> envsToDelete = envsToCheck.stream()
         .filter(p -> {
           Project project = projectFacade.findByName(p);
-          return project == null || !project.getConda();
+          // Project does not exist any longer
+          // OR Project does not have a CoW (CopyOnWrite) environment
+          // OR does not have Conda enabled at all (really for safety reasons)
+          return project == null || !project.getCondaEnv() || !project.getConda();
         }).collect(Collectors.toList());
     
     String projectNamesStr = new Gson().toJson(envsToDelete);
@@ -302,7 +305,7 @@ public class AgentController {
    * @param project
    * @return
    */
-  private String listCondaEnvironment(String project) {
+  public String listCondaEnvironment(String project) {
     final String prog = settings.getHopsworksDomainDir() + "/bin/list_environment.sh";
     final ProcessBuilder pb = new ProcessBuilder(prog, project);
     final StringBuilder sb = new StringBuilder();
@@ -334,7 +337,7 @@ public class AgentController {
    * @param currentlyInstalledPyDeps
    * @return
    */
-  private Collection<PythonDep> synchronizeDependencies(Project project, String condaListStr,
+  public Collection<PythonDep> synchronizeDependencies(Project project, String condaListStr,
       Collection<PythonDep> currentlyInstalledPyDeps, PythonDepsFacade.CondaStatus status) throws ServiceException {
     
     Collection<PythonDep> deps = new ArrayList();

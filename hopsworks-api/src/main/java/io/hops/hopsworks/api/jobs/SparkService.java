@@ -197,7 +197,7 @@ public class SparkService {
         throw new JobException(RESTCodes.JobErrorCode.JOB_NAME_INVALID, Level.FINE, "job name: " +config.getAppName());
       }
       if (Strings.isNullOrEmpty(config.getAnacondaDir())) {
-        config.setAnacondaDir(settings.getAnacondaProjectDir(project.getName()));
+        config.setAnacondaDir(settings.getAnacondaProjectDir(project));
       }
       Jobs created = jobController.createJob(user, project, config);
       activityFacade.persistActivity(ActivityFacade.CREATED_JOB + created.getName(), project, email);
