@@ -722,8 +722,7 @@ public class RESTCodes {
     CSR_ERROR(8, "Error while signing CSR.", Response.Status.INTERNAL_SERVER_ERROR),
     CERT_APP_REVOKE_ERROR(9, "Error while revoking application certificate, check the logs",
       Response.Status.INTERNAL_SERVER_ERROR),
-    CERT_LOCATION_UNDEFINED(10, 
-      "Could not identify local directory to clean certificates. Manual cleanup required.", 
+    CERT_MATERIALIZATION_ERROR(10, "CertificateMaterializer error, could not materialize certificates",
       Response.Status.INTERNAL_SERVER_ERROR),
     MASTER_ENCRYPTION_PASSWORD_ACCESS_ERROR(11, "Could not read master encryption password.",
       Response.Status.INTERNAL_SERVER_ERROR);
