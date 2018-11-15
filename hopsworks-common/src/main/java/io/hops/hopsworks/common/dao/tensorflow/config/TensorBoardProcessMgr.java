@@ -138,7 +138,7 @@ public class TensorBoardProcessMgr {
       }
     }
 
-    String anacondaEnvironmentPath = settings.getAnacondaProjectDir(project.getName());
+    String anacondaEnvironmentPath = settings.getAnacondaProjectDir(project);
     int retries = 3;
 
     while(retries > 0) {

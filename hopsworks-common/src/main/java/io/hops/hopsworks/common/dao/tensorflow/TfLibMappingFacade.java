@@ -59,7 +59,12 @@ public class TfLibMappingFacade {
   }
 
   public TfLibMapping findTfMappingForProject(Project project) {
-
+    
+    if (project.getCondaEnv() == false) {
+      return findByTfVersion(settings.getTensorflowVersion());
+    }
+    
+    
     CondaCommands command = pythonDepsFacade.getOngoingEnvCreation(project);
 
     if(command == null) {
