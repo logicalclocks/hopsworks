@@ -195,7 +195,8 @@ public class PythonDepsService {
     pythonDepsFacade.createProjectInDb(project, version, PythonDepsFacade.MachineType.ALL, null);
     project.setPythonVersion(version);
     projectFacade.update(project);
-    final String envStr = agentController.listCondaEnvironment(project.getName());
+
+    final String envStr = agentController.listCondaEnvironment(ProjectUtils.getCurrentCondaEnvironment(project));
     final Collection<PythonDep> pythonDeps = agentController.synchronizeDependencies(
         project, envStr, project.getPythonDepCollection(),
         PythonDepsFacade.CondaStatus.SUCCESS);
