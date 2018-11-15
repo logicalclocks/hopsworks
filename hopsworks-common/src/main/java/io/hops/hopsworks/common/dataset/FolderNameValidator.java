@@ -83,12 +83,12 @@ public class FolderNameValidator {
    * <p/>
    * @param name
    */
-  public static void isValidProjectName(String name) throws ProjectException {
+  public static void isValidProjectName(ProjectUtils projectUtils, String name) throws ProjectException {
     if (name == null) {
       throw new IllegalArgumentException("Project name is null");
     }
 
-    for (String reservedName : ProjectUtils.getReservedProjectNames()) {
+    for (String reservedName : projectUtils.getReservedProjectNames()) {
       if (name.compareToIgnoreCase(reservedName) == 0) {
         throw new ProjectException(RESTCodes.ProjectErrorCode.RESERVED_PROJECT_NAME, Level.FINE);
       }

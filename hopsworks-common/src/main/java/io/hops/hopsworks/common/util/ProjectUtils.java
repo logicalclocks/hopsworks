@@ -39,12 +39,18 @@
 package io.hops.hopsworks.common.util;
 
 import io.hops.hopsworks.common.dao.project.Project;
+
+import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import java.util.ArrayList;
 import java.util.List;
 
+@Stateless
+@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 public class ProjectUtils {
 
-  public static boolean isReservedProjectName(String projName) {
+  public boolean isReservedProjectName(String projName) {
     boolean res = false;
     for (String name : getReservedProjectNames()) {
       if (name.compareToIgnoreCase(projName) == 0) {
@@ -54,7 +60,8 @@ public class ProjectUtils {
     }
     return res;
   }
-  public static List<String> getReservedProjectNames() {
+  
+  public List<String> getReservedProjectNames() {
     List<String> reservedNames = new ArrayList<>();
     reservedNames.add("python27");
     reservedNames.add("python36");
@@ -64,9 +71,9 @@ public class ProjectUtils {
     reservedNames.add("hops-system");
     return reservedNames;
   }
-  public static String getCurrentCondaEnvironment(Project project) {
+  public  String getCurrentCondaEnvironment(Project project) {
     String condaEnv = project.getName();
-    if (project.getCondaEnv() == false) {
+    if (!project.getCondaEnv()) {
       if (project.getPythonVersion().compareToIgnoreCase("2.7") == 0) {
         condaEnv = "python27";
       } else if (project.getPythonVersion().compareToIgnoreCase("3.6") == 0) {

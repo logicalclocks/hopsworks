@@ -102,6 +102,8 @@ public class Settings implements Serializable {
 
   @EJB
   private UserFacade userFacade;
+  @EJB
+  private ProjectUtils projectUtils;
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
@@ -1551,7 +1553,7 @@ public class Settings implements Serializable {
    * @return conda dir
    */
   public String getAnacondaProjectDir(Project project) {
-    String condaEnv = ProjectUtils.getCurrentCondaEnvironment(project);
+    String condaEnv = projectUtils.getCurrentCondaEnvironment(project);
     return getAnacondaDir() + File.separator + "envs" + File.separator + condaEnv;
   }
 

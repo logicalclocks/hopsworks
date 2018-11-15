@@ -105,6 +105,8 @@ public class PythonDepsFacade {
   private ProjectTeamFacade projectTeamFacade;
   @EJB
   private JupyterProcessMgr jupyterProcessMgr;
+  @EJB
+  private ProjectUtils projectUtils;
 
   @Resource(lookup = "concurrent/kagentExecutorService")
   ManagedExecutorService kagentExecutorService;
@@ -259,6 +261,8 @@ public class PythonDepsFacade {
     if (environmentYml != null) {
       condaEnvironmentOp(CondaOp.YML, pythonVersion, project, pythonVersion, machineType, environmentYml);
       setCondaEnv(project, true);
+    } else {
+      validateCondaHosts(machineType);
     }
 
     List<PythonDep> all = new ArrayList<>();
@@ -273,6 +277,14 @@ public class PythonDepsFacade {
     projectFacade.mergeProject(project);
   }
 
+  private List<Hosts> validateCondaHosts(MachineType machineType) throws ServiceException {
+    List<Hosts> hosts = hostsFacade.getCondaHosts(machineType);
+    if (hosts.isEmpty()) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_NODES_UNAVAILABLE, Level.WARNING);
+    }
+    return hosts;
+  }
+  
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public void recreateAllPythonKernels(Project project) {
     // Update all the python kernels for all users in the project
@@ -543,14 +555,11 @@ public class PythonDepsFacade {
    */
   private void condaEnvironmentOp(CondaOp op, String pythonVersion, Project proj,
       String arg, MachineType machineType, String environmentYml) throws ServiceException {
-    if (ProjectUtils.isReservedProjectName(proj.getName())) {
+
+    if (projectUtils.isReservedProjectName(proj.getName())) {
       throw new IllegalStateException("Tried to execute a conda env op on a reserved project name");
     }
-    List<Hosts> hosts = hostsFacade.getCondaHosts(machineType);
-    if (hosts.isEmpty()) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_NODES_UNAVAILABLE, Level.WARNING);
-    }
-
+    List<Hosts> hosts = validateCondaHosts(machineType);
     for (Hosts h : hosts) {
       // For environment operations, we don't care about the Conda Channel, so we just pick 'defaults'
       CondaCommands cc = new CondaCommands(h, settings.getAnacondaUser(),
@@ -711,16 +720,14 @@ public class PythonDepsFacade {
               "dep: " + dep.getDependency());
         }
         depsInProj.remove(dep);
-      } else if (op == CondaOp.UNINSTALL || op == CondaOp.UPGRADE) {
-        throw new ProjectException(RESTCodes.ProjectErrorCode.PYTHON_LIB_NOT_INSTALLED, Level.INFO, "op: " + op);
       }
       if (op == CondaOp.INSTALL || op == CondaOp.UPGRADE) {
         depsInProj.add(dep);
       }
-      proj.setPythonDepCollection(depsInProj);
+      /*proj.setPythonDepCollection(depsInProj);
       em.merge(proj);
       // This flush keeps the transaction state alive - don't want it to timeout
-      em.flush();
+      em.flush();*/
 
       for (Hosts h : hosts) {
         CondaCommands cc = new CondaCommands(h, settings.getAnacondaUser(),
@@ -818,12 +825,14 @@ public class PythonDepsFacade {
             PythonDep dep = getDep(getRepo(cc.getChannelUrl(), false), cc.getMachineType(),
                 cc.getInstallType(), cc.getLib(), cc.getVersion(), true, false,
                 condaStatus);
-            if (condaStatus.equals(CondaStatus.SUCCESS)) {
-              Collection<PythonDep> deps = cc.getProjectId().getPythonDepCollection();
+            Collection<PythonDep> deps = cc.getProjectId().getPythonDepCollection();
+            if (opType.equals(CondaOp.INSTALL)) {
               deps.add(dep);
-              cc.getProjectId().setPythonDepCollection(deps);
+            } else if (opType.equals(CondaOp.UNINSTALL)) {
+              deps.remove(dep);
             }
-
+            cc.getProjectId().setPythonDepCollection(deps);
+            projectFacade.update(cc.getProjectId());
           }
         }
       } else {

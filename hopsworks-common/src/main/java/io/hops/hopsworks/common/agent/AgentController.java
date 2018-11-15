@@ -122,7 +122,10 @@ public class AgentController {
     List<String> envsToDelete = envsToCheck.stream()
         .filter(p -> {
           Project project = projectFacade.findByName(p);
-          return project == null || !project.getConda();
+          // Project does not exist any longer
+          // OR Project does not have a CoW (CopyOnWrite) environment
+          // OR does not have Conda enabled at all (really for safety reasons)
+          return project == null || !project.getCondaEnv() || !project.getConda();
         }).collect(Collectors.toList());
     
     String projectNamesStr = new Gson().toJson(envsToDelete);
