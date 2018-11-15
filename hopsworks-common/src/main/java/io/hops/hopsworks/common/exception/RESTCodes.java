@@ -181,7 +181,9 @@ public class RESTCodes {
     FOLDER_NAME_EXISTS(70, "A directory with the same name already exists. "
       + "If you want to replace it delete it first then try recreating.", Response.Status.BAD_REQUEST),
     PROJECT_SERVICE_NOT_FOUND(71, "service was not found.", Response.Status.BAD_REQUEST),
-    QUOTA_REQUEST_NOT_COMPLETE(72, "Please specify both " + "namespace and space quota.", Response.Status.BAD_REQUEST);
+    QUOTA_REQUEST_NOT_COMPLETE(72, "Please specify both " + "namespace and space quota.", Response.Status.BAD_REQUEST),
+    RESERVED_PROJECT_NAME(73, "Not allowed - reserved project name, pick another project name.",
+      Response.Status.BAD_REQUEST);
   
   
   
