@@ -141,6 +141,8 @@ public class PythonDepsService {
   private OSProcessExecutor osProcessExecutor;
   @EJB
   private AgentController agentController;
+  @EJB
+  private ProjectUtils projectUtils;
 
   public void setProjectId(Integer projectId) {
     this.project = projectFacade.find(projectId);
@@ -195,7 +197,8 @@ public class PythonDepsService {
     pythonDepsFacade.createProjectInDb(project, version, PythonDepsFacade.MachineType.ALL, null);
     project.setPythonVersion(version);
     projectFacade.update(project);
-    final String envStr = agentController.listCondaEnvironment(project.getName());
+
+    final String envStr = agentController.listCondaEnvironment(projectUtils.getCurrentCondaEnvironment(project));
     final Collection<PythonDep> pythonDeps = agentController.synchronizeDependencies(
         project, envStr, project.getPythonDepCollection(),
         PythonDepsFacade.CondaStatus.SUCCESS);
@@ -669,7 +672,7 @@ public class PythonDepsService {
   }
 
   private Collection<LibVersions> findPipLibSearch(PythonDepJson lib) throws ServiceException {
-    String env = ProjectUtils.getCurrentCondaEnvironment(project);
+    String env = projectUtils.getCurrentCondaEnvironment(project);
     String library = lib.getLib();
 
     List<LibVersions> foundLibraryVersions = new ArrayList<>();
@@ -798,6 +801,8 @@ public class PythonDepsService {
         .addCommand(prog)
         .addCommand(exportPath)
         .addCommand(project.getName())
+        // Conda environment name
+        .addCommand(projectUtils.getCurrentCondaEnvironment(project))
         .addCommand(host)
         .addCommand(environmentFile)
         .addCommand(hdfsUser)

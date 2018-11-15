@@ -114,6 +114,8 @@ public class JupyterProcessMgr {
   private JupyterConfigFilesGenerator jupyterConfigFilesGenerator;
   @EJB
   private OSProcessExecutor osProcessExecutor;
+  @EJB
+  private ProjectUtils projectUtils;
 
 
   @PostConstruct
@@ -359,7 +361,7 @@ public class JupyterProcessMgr {
   }
 
   private int createPythonKernelForProjectUser(Project project, String privateDir, String hdfsUser) {
-    String condaEnv = ProjectUtils.getCurrentCondaEnvironment(project);
+    String condaEnv = projectUtils.getCurrentCondaEnvironment(project);
     return executeJupyterCommand("kernel-add", privateDir, hdfsUser, condaEnv);
   }
 

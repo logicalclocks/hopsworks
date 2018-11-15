@@ -312,7 +312,7 @@ describe "On #{ENV['OS']}" do
 
           if num_hosts == 1
             #  If single VM there are no hosts on which to install the library. Hopsworks returns 412
-            expect_status(412)
+            expect_status(503)
           else
             # If it is a multi vm there are hosts to install the library.
             expect_status(200)
