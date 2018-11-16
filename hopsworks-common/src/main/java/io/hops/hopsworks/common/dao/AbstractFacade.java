@@ -114,7 +114,15 @@ public abstract class AbstractFacade<T> {
     return sortBy.getSql() + sortBy.getParam().getSql();
   }
   
+  public String buildQuery(String query, Set<? extends AbstractFacade.FilterBy> filter, 
+      Set<? extends AbstractFacade.SortBy> sort, String more) {
+    return query + buildFilterString(filter, more) + buildSortString(sort);
+  }
+  
   public String buildSortString(Set<? extends SortBy> sortBy) {
+    if (sortBy == null || sortBy.isEmpty()) {
+      return "";
+    }
     Iterator<? extends SortBy> sort = sortBy.iterator();
     if (!sort.hasNext()) {
       return "";
@@ -127,10 +135,10 @@ public abstract class AbstractFacade<T> {
   }
   
   public String buildFilterString(Set<? extends FilterBy> filter, String more) {
-    Iterator<? extends FilterBy> filterBy = filter.iterator();
-    if (!filterBy.hasNext()) {
+    if (filter == null || filter.isEmpty()) {
       return more == null || more.isEmpty()? "": "WHERE " + more;
     }
+    Iterator<? extends FilterBy> filterBy = filter.iterator();
     String c = "WHERE " + filterBy.next().getSql();
     for (;filterBy.hasNext();) {
       c += "AND " + filterBy.next().getSql();

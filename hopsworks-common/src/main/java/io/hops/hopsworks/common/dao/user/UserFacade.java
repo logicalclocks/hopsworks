@@ -80,24 +80,10 @@ public class UserFacade extends AbstractFacade<Users> {
     TypedQuery<Users> query = em.createNamedQuery("Users.findAll", Users.class);
     return query.getResultList();
   }
-
-  public List<Users> findAll(Integer offset, Integer limit, Set<? extends AbstractFacade.SortBy> sort) {
-    String queryStr = "SELECT u FROM Users u " + buildSortString(sort);
-    Query query = em.createQuery(queryStr, Users.class);
-    setOffsetAndLim(offset, limit, query);
-    return query.getResultList();
-  }
   
-  public List<Users> findAll(Set<? extends AbstractFacade.FilterBy> filter, Set<? extends AbstractFacade.SortBy> sort) {
-    String queryStr = "SELECT u FROM Users u " + buildFilterString(filter, "") + buildSortString(sort);
-    Query query = em.createQuery(queryStr, Users.class);
-    setFilter(filter, query);
-    return query.getResultList();
-  }
-
   public List<Users> findAll(Integer offset, Integer limit, Set<? extends AbstractFacade.FilterBy> filter, 
       Set<? extends AbstractFacade.SortBy> sort) {
-    String queryStr = "SELECT u FROM Users u " + buildFilterString(filter, "") + buildSortString(sort);
+    String queryStr = buildQuery("SELECT u FROM Users u ", filter, sort, "");
     Query query = em.createQuery(queryStr, Users.class);
     setFilter(filter, query);
     setOffsetAndLim(offset, limit, query);
@@ -132,6 +118,9 @@ public class UserFacade extends AbstractFacade<Users> {
   }
   
   private void setFilter(Set<? extends AbstractFacade.FilterBy> filter, Query q) {
+    if (filter == null || filter.isEmpty()) {
+      return;
+    }
     Iterator<? extends AbstractFacade.FilterBy> filterBy = filter.iterator();
     for (;filterBy.hasNext();) {
       setFilterQuery(filterBy.next(), q);
