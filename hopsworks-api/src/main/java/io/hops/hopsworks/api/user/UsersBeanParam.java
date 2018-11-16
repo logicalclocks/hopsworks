@@ -13,46 +13,45 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.api.activities;
+package io.hops.hopsworks.api.user;
 
-import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
+import io.hops.hopsworks.common.dao.user.UserFacade;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import javax.ws.rs.QueryParam;
 
-public class ActivitiesBeanParam {
+public class UsersBeanParam {
 
-  private final Set<ActivityFacade.SortBy> sort;
-  private final Set<ActivityFacade.FilterBy> filter;
+  private final Set<UserFacade.SortBy> sort;
+  private final Set<UserFacade.FilterBy> filter;
 
-  public ActivitiesBeanParam(
+  public UsersBeanParam(
       @QueryParam("sort_by") String sortBy,
-      @QueryParam("filter_by") Set<ActivityFacade.FilterBy> filter) {
+      @QueryParam("filter_by") Set<UserFacade.FilterBy> filter) {
     this.sort = getSortBy(sortBy);
     this.filter = filter;
-
   }
 
-  private Set<ActivityFacade.SortBy> getSortBy(String param) {
+  private Set<UserFacade.SortBy> getSortBy(String param) {
     if (param == null || param.isEmpty()) {
       return null;
     }
     String[] params = param.split(",");
     //Hash table and linked list implementation of the Set interface, with predictable iteration order
-    Set<ActivityFacade.SortBy> sortBys = new LinkedHashSet<>();//make orderd
-    ActivityFacade.SortBy sortBy;
+    Set<UserFacade.SortBy> sortBys = new LinkedHashSet<>();//make orderd
+    UserFacade.SortBy sortBy;
     for (String s : params) {
-      sortBy = ActivityFacade.SortBy.fromString(s.trim());
+      sortBy = UserFacade.SortBy.fromString(s.trim());
       sortBys.add(sortBy);
     }
     return sortBys;
   }
 
-  public Set<ActivityFacade.SortBy> getSort() {
+  public Set<UserFacade.SortBy> getSort() {
     return sort;
   }
 
-  public Set<ActivityFacade.FilterBy> getFilter() {
+  public Set<UserFacade.FilterBy> getFilter() {
     return filter;
   }
 

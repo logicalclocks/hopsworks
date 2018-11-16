@@ -267,7 +267,7 @@ public class ActivityFacade extends AbstractFacade<Activity> {
   
   public List<Activity> findAll(Integer offset, Integer limit, Set<? extends AbstractFacade.FilterBy> filter,
       Set<? extends AbstractFacade.SortBy> sort) {
-    String queryStr = "SELECT u FROM Activity u " + buildFilterString(filter, "") + buildSortString(sort);
+    String queryStr = buildQuery("SELECT u FROM Activity u ", filter, sort, "");
     Query query = em.createQuery(queryStr, Activity.class);
     setFilter(filter, query);
     setOffsetAndLim(offset, limit, query);
@@ -276,8 +276,7 @@ public class ActivityFacade extends AbstractFacade<Activity> {
 
   public List<Activity> findAllByProject(Integer offset, Integer limit, Set<? extends AbstractFacade.FilterBy> filter,
       Set<? extends AbstractFacade.SortBy> sort, Project project) {
-    String queryStr = "SELECT u FROM Activity u " + buildFilterString(filter, "u.project = :project ")
-        + buildSortString(sort);
+    String queryStr = buildQuery("SELECT u FROM Activity u ", filter, sort, "u.project = :project ");
     Query query = em.createQuery(queryStr, Activity.class).setParameter("project", project);
     setFilter(filter, query);
     setOffsetAndLim(offset, limit, query);
@@ -286,8 +285,7 @@ public class ActivityFacade extends AbstractFacade<Activity> {
 
   public List<Activity> findAllByUser(Integer offset, Integer limit, Set<? extends AbstractFacade.FilterBy> filter, 
       Set<? extends AbstractFacade.SortBy> sort, Users user) {
-    String queryStr = "SELECT u FROM Activity u " + buildFilterString(filter, "u.user = :user ") + 
-        buildSortString(sort);
+    String queryStr = buildQuery("SELECT u FROM Activity u ", filter, sort, "u.user = :user ");
     Query query = em.createQuery(queryStr, Activity.class).setParameter("user", user);
     setFilter(filter, query);
     setOffsetAndLim(offset, limit, query);
@@ -295,6 +293,9 @@ public class ActivityFacade extends AbstractFacade<Activity> {
   }
 
   private void setFilter(Set<? extends AbstractFacade.FilterBy> filter, Query q) {
+    if (filter == null || filter.isEmpty()) {
+      return;
+    }
     Iterator<? extends AbstractFacade.FilterBy> filterBy = filter.iterator();
     for (;filterBy.hasNext();) {
       setFilterQuery(filterBy.next(), q);

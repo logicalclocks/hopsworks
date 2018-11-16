@@ -52,8 +52,6 @@ import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.BbcGroup;
 import io.hops.hopsworks.common.dao.user.BbcGroupFacade;
-import io.hops.hopsworks.common.dao.user.UserFacade.FilterBy;
-import io.hops.hopsworks.common.dao.user.UserFacade.SortBy;
 import io.hops.hopsworks.common.dao.user.UserProjectDTO;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.ProjectException;
@@ -79,7 +77,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.Objects;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ws.rs.core.SecurityContext;
@@ -120,12 +117,11 @@ public class UserService {
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response findAll(
       @BeanParam Pagination pagination, 
-      @QueryParam("sort_by") Set<SortBy> sort,
-      @QueryParam("filter_by") Set<FilterBy> filter,
+      @BeanParam UsersBeanParam usersBeanParam,
       @QueryParam("expand") String expand,
       @Context UriInfo uriInfo) {
-    ResourceProperties resourceProperties = new ResourceProperties(ResourceProperties.Name.USERS, pagination, sort, 
-        filter, expand);
+    ResourceProperties resourceProperties = new ResourceProperties(ResourceProperties.Name.USERS, pagination, 
+        usersBeanParam.getSort(), usersBeanParam.getFilter(), expand);
     UserDTO userDTO = usersBuilder.buildItems(uriInfo, resourceProperties); 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(userDTO).build();
   }

@@ -27,7 +27,7 @@ import java.util.Set;
  * Class that parses user provided uri query params and then is used to propagate this information to the resource
  * builders. An example of a request accepted by hopsworks api is
  * "offset=5&limit=10&sort_by=date&order_by=asc&expand=param1,param2(offset=0:limit=10)"
- * "?sort_by=date_created:asc&filter_by=flag:dataset"
+ * "?sort_by=date_created:asc,id:desc&filter_by=flag:dataset"
  */
 public class ResourceProperties {
   

@@ -135,16 +135,9 @@ public class UsersBuilder {
   private UserDTO items(UserDTO userDTO, UriInfo uriInfo, ResourceProperties resourceProperties) {
     List<Users> users;
     ResourceProperties.ResourceProperty property = resourceProperties.get(ResourceProperties.Name.USERS);
-    if (property.getPagination() != null && property.getFilter() == null) {
+    if (property.getPagination() != null || property.getFilter() != null) {
       users = userFacade.findAll(property.getPagination().getOffset(), property.getPagination().getLimit(),
           property.getFilter(), property.getSort());
-      return items(userDTO, uriInfo, resourceProperties, users, false);
-    } else if (property.getFilter() != null && property.getPagination() == null) {
-      users = userFacade.findAll(property.getFilter(), property.getSort());
-      return items(userDTO, uriInfo, resourceProperties, users, false);
-    } else if (property.getFilter() != null && property.getPagination() != null) {
-      users = userFacade.findAll(property.getPagination().getOffset(), property.getPagination().getLimit(), property.
-          getFilter(), property.getSort());
       return items(userDTO, uriInfo, resourceProperties, users, false);
     }
     users = userFacade.findAll();
