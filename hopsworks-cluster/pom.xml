@@ -43,13 +43,13 @@
   <parent>
     <groupId>io.hops</groupId>
     <artifactId>hopsworks</artifactId>
-    <version>0.6.1-SNAPSHOT</version>
+    <version>0.6.1</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
   <groupId>io.hops.hopsworks</groupId>
   <artifactId>hopsworks-cluster</artifactId>
-  <version>0.6.1-SNAPSHOT</version>
+  <version>0.6.1</version>
   <packaging>war</packaging>
   <description>Hopsworks cluster registration api</description>
   <name>hopsworks-cluster</name>
@@ -63,7 +63,7 @@
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-common</artifactId>
-      <version>0.6.1-SNAPSHOT</version>
+      <version>0.6.1</version>
       <type>ejb</type>
       <scope>provided</scope>
     </dependency>

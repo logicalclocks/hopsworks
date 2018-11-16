@@ -44,13 +44,13 @@
   <parent>
     <groupId>io.hops</groupId>
     <artifactId>hopsworks</artifactId>
-    <version>0.6.1-SNAPSHOT</version>
+    <version>0.6.1</version>
     <relativePath>..</relativePath>
   </parent>
   
   <groupId>io.hops.hopsworks</groupId>
   <artifactId>hopsworks-ear</artifactId>
-  <version>0.6.1-SNAPSHOT</version>
+  <version>0.6.1</version>
   <packaging>ear</packaging>
 
   <name>hopsworks-ear:0.6.1-SNAPSHOT</name>
@@ -75,37 +75,37 @@
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-common</artifactId>
-      <version>0.6.1-SNAPSHOT</version>
+      <version>0.6.1</version>
       <type>ejb</type>
     </dependency>
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-dela</artifactId>
-      <version>0.6.1-SNAPSHOT</version>
+      <version>0.6.1</version>
       <type>ejb</type>
     </dependency>
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-jwt</artifactId>
-      <version>0.6.1-SNAPSHOT</version>
+      <version>0.6.1</version>
       <type>ejb</type>
     </dependency>
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-kmon</artifactId>
-      <version>0.6.1-SNAPSHOT</version>
+      <version>0.6.1</version>
       <type>war</type>
     </dependency>
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-api</artifactId>
-      <version>0.6.1-SNAPSHOT</version>
+      <version>0.6.1</version>
       <type>war</type>
     </dependency>
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-admin</artifactId>
-      <version>0.6.1-SNAPSHOT</version>
+      <version>0.6.1</version>
       <type>war</type>
     </dependency>
   </dependencies>
@@ -304,7 +304,7 @@
         <dependency>
           <groupId>io.hops.hopsworks</groupId>
           <artifactId>hopsworks-cluster</artifactId>
-          <version>0.6.1-SNAPSHOT</version>
+          <version>0.6.1</version>
           <type>war</type>
         </dependency>
       </dependencies>
