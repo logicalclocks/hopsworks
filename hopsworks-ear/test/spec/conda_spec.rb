@@ -354,8 +354,10 @@ describe "On #{ENV['OS']}" do
             # For single vm, there should not be any command in the db
             expect(CondaCommands.find_by(proj: @project[:projectname])).to be nil
           else
-            # For multi vm setup there should be num_hosts - 1 commands.
-            expect(CondaCommands.where(proj: @project[:projectname]).count).to eq(num_hosts - 1)
+            # For multi vm setup there should be (num_hosts - 1) * 2 commands.
+            # For each library installation there will be one command for the
+            # environment creation and one for the installation.
+            expect(CondaCommands.where(proj: @project[:projectname]).count).to eq((num_hosts - 1) * 2)
           end
         end
 

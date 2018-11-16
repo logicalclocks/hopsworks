@@ -71,9 +71,11 @@ public class ProjectUtils {
     reservedNames.add("hops-system");
     return reservedNames;
   }
+
   public  String getCurrentCondaEnvironment(Project project) {
     String condaEnv = project.getName();
-    if (!project.getCondaEnv()) {
+
+    if (project.getConda() && !project.getCondaEnv()) {
       if (project.getPythonVersion().compareToIgnoreCase("2.7") == 0) {
         condaEnv = "python27";
       } else if (project.getPythonVersion().compareToIgnoreCase("3.6") == 0) {
@@ -82,6 +84,7 @@ public class ProjectUtils {
         throw new IllegalArgumentException("Error. Python has not been enabled for this project.");
       }
     }
+
     return condaEnv;
   }
 }
