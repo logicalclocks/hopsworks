@@ -38,13 +38,15 @@
  */
 package io.hops.hopsworks.common.dao.user;
 
-import io.hops.hopsworks.common.api.ResourceProperties;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.user.security.UserGroup;
 import io.hops.hopsworks.common.dao.user.security.UserGroupPK;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountType;
 import io.hops.hopsworks.common.util.Settings;
+import java.util.ArrayList;
+import java.util.Iterator;
 
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -53,12 +55,16 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import java.util.List;
+import java.util.Set;
+import javax.ejb.EJB;
 
 @Stateless
 public class UserFacade extends AbstractFacade<Users> {
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
+  @EJB
+  private BbcGroupFacade groupFacade;
 
   @Override
   protected EntityManager getEntityManager() {
@@ -75,53 +81,187 @@ public class UserFacade extends AbstractFacade<Users> {
     return query.getResultList();
   }
 
-  public List<Users> findAll(Integer first, Integer pageSize, ResourceProperties.OrderBy orderBy,
-      ResourceProperties.SortBy sortBy) {
-    String queryName = "Users.findAll" + getQuery(orderBy, sortBy);
-    TypedQuery<Users> query = em.createNamedQuery(queryName, Users.class);
-    setOffsetAndLim(first, pageSize, query);
+  public List<Users> findAll(Integer offset, Integer limit, Set<? extends AbstractFacade.SortBy> sort) {
+    String queryStr = "SELECT u FROM Users u " + buildSortString(sort);
+    Query query = em.createQuery(queryStr, Users.class);
+    setOffsetAndLim(offset, limit, query);
+    return query.getResultList();
+  }
+  
+  public List<Users> findAll(Set<? extends AbstractFacade.FilterBy> filter, Set<? extends AbstractFacade.SortBy> sort) {
+    String queryStr = "SELECT u FROM Users u " + buildFilterString(filter, "") + buildSortString(sort);
+    Query query = em.createQuery(queryStr, Users.class);
+    setFilter(filter, query);
     return query.getResultList();
   }
 
-  private void setOffsetAndLim(Integer first, Integer pageSize, TypedQuery<Users> q) {
-    if (first != null) {
-      q.setFirstResult(first);
+  public List<Users> findAll(Integer offset, Integer limit, Set<? extends AbstractFacade.FilterBy> filter, 
+      Set<? extends AbstractFacade.SortBy> sort) {
+    String queryStr = "SELECT u FROM Users u " + buildFilterString(filter, "") + buildSortString(sort);
+    Query query = em.createQuery(queryStr, Users.class);
+    setFilter(filter, query);
+    setOffsetAndLim(offset, limit, query);
+    return query.getResultList();
+  }
+  
+  private List<BbcGroup> getGroups(String field, String values) {
+    String[] groups = values.split(",");
+    BbcGroup role;
+    List<BbcGroup> roles = new ArrayList<>();
+    for (String group : groups) {
+      role = groupFacade.findByGroupName(group.trim());
+      if (role != null) {
+        roles.add(role);
+      }
     }
-    if (pageSize != null) {
-      q.setMaxResults(pageSize);
+    if (roles.isEmpty()) {
+      throw new IllegalArgumentException("Filter value for " + field + " needs to set valid roles, but found: "
+          + values);
+    }
+    return roles;
+  }
+  
+  private Integer getIntValue(String field, String value) {
+    Integer val;
+    try {
+      val = Integer.parseInt(value);
+    } catch (NumberFormatException e) {
+      throw new IllegalArgumentException("Filter value for " + field + " needs to set an Integer, but found: " + value);
+    }
+    return val;
+  }
+  
+  private void setFilter(Set<? extends AbstractFacade.FilterBy> filter, Query q) {
+    Iterator<? extends AbstractFacade.FilterBy> filterBy = filter.iterator();
+    for (;filterBy.hasNext();) {
+      setFilterQuery(filterBy.next(), q);
+    }
+  }
+  
+  private void setFilterQuery(AbstractFacade.FilterBy filterBy, Query q) {
+    if (filterBy.equals(FilterBy.ROLE) || filterBy.equals(FilterBy.ROLE_NEQ)) {
+      List<BbcGroup> roles = getGroups(filterBy.getField(), filterBy.getParam());
+      q.setParameter(filterBy.getField(), roles);
+    } else {
+      q.setParameter(filterBy.getField(), getIntValue(filterBy.getField(), filterBy.getParam()));
     }
   }
 
-  private String getQuery(ResourceProperties.OrderBy orderBy, ResourceProperties.SortBy sortBy) {
-    String query = "";
-    sortBy = sortBy == null? ResourceProperties.SortBy.FIRST_NAME : sortBy;
-    switch (sortBy) {
-      case EMAIL:
-        query = query + "OrderByEmail";
-        break;
-      case DATE_CREATED:
-        query = query + "OrderByDate";
-        break;
-      case FIRST_NAME:
-        query = query + "OrderByFname";
-        break;
-      case LAST_NAME:
-        query = query + "OrderByLname";
-        break;
-      default:
-        break;
+  public enum SortBy implements AbstractFacade.SortBy {
+    FIRST_NAME("FIRST_NAME", "u.fname ", "ASC"),
+    LAST_NAME("LAST_NAME", "u.lname ", "ASC"),
+    EMAIL("EMAIL", "u.email ", "ASC"),
+    DATE_CREATED("DATE_CREATED", "u.activated ", "ASC");
+
+    @JsonCreator
+    public static SortBy fromString(String param) {
+      String[] sortByParams = param.split(":");
+      SortBy sortBy = SortBy.valueOf(sortByParams[0].toUpperCase());
+      String order = sortByParams.length > 1 ? sortByParams[1].toUpperCase() : sortBy.defaultParam;
+      AbstractFacade.OrderBy orderBy = AbstractFacade.OrderBy.valueOf(order);
+      sortBy.setParam(orderBy);
+      return sortBy;
     }
-    orderBy = orderBy == null? ResourceProperties.OrderBy.DESC : orderBy;
-    switch (orderBy) {
-      case DESC:
-        break;
-      case ASC:
-        query = query + "Asc";
-        break;
-      default:
-        break;
+    
+    private final String value;
+    private AbstractFacade.OrderBy param;
+    private final String sql;
+    private final String defaultParam;
+
+    private SortBy(String value, String sql, String defaultParam) {
+      this.value = value;
+      this.sql = sql;
+      this.defaultParam = defaultParam;
     }
-    return query;
+
+    @Override
+    public String getValue() {
+      return value;
+    }
+
+    @Override
+    public OrderBy getParam() {
+      return param;
+    }
+
+    public void setParam(OrderBy param) {
+      this.param = param;
+    }
+    
+    @Override
+    public String getSql() {
+      return sql;
+    }
+
+    @Override
+    public String toString() {
+      return value;
+    }
+
+  }
+
+  public enum FilterBy implements AbstractFacade.FilterBy {
+    ROLE ("ROLE", "u.bbcGroupCollection IN :roles ", "roles", "HOPS_USER"),
+    ROLE_NEQ ("ROLE_NEQ", "u.bbcGroupCollection NOT IN :roles ", "roles", "HOPS_ADMIN,AGENT,AUDITOR"),
+    STATUS ("STATUS", "u.status = :status ", "status", "2"),
+    STATUS_LT ("STATUS_LT", "u.status < :status ", "status", "2"),
+    STATUS_GT ("STATUS_GT", "u.status > :status ", "status", "2"),
+    IS_ONLINE ("IS_ONLINE", "u.isonline = :isonline ", "isonline", "1"),
+    FALSE_LOGIN ("FALSE_LOGIN", "u.falseLogin = :falseLogin ", "falseLogin", "20"),
+    FALSE_LOGIN_GT ("FALSE_LOGIN_GT", "u.falseLogin > :falseLogin ", "falseLogin", "20"),
+    FALSE_LOGIN_LT ("FALSE_LOGIN_LT", "u.falseLogin < :falseLogin ", "falseLogin", "20");
+    
+    @JsonCreator
+    public static FilterBy fromString(String param) {
+      String[] filterByParams = param.split(":");
+      FilterBy filterBy = FilterBy.valueOf(filterByParams[0].toUpperCase());
+      String filter = filterByParams.length > 1 ? filterByParams[1].toUpperCase() : filterBy.defaultParam;
+      filterBy.setParam(filter);
+      return filterBy;
+    }
+    
+    private final String value;
+    private String param;
+    private final String sql;
+    private final String field;
+    private final String defaultParam;
+
+    private FilterBy(String value, String sql, String field, String defaultParam) {
+      this.value = value;
+      this.sql = sql;
+      this.field = field;
+      this.defaultParam = defaultParam;
+    }
+
+    @Override
+    public String getValue() {
+      return value;
+    }
+
+    @Override
+    public String getParam() {
+      return param;
+    }
+
+    public void setParam(String param) {
+      this.param = param;
+    }
+    
+    @Override
+    public String getSql() {
+      return sql;
+    }
+
+    @Override
+    public String getField() {
+      return field;
+    }
+
+    @Override
+    public String toString() {
+      return value;
+    }
+
   }
 
   public List findAllUsers() {

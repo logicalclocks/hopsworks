@@ -18,6 +18,7 @@ package io.hops.hopsworks.api.activities;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
+import io.hops.hopsworks.common.api.Pagination;
 import io.hops.hopsworks.common.api.ResourceProperties;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
@@ -31,6 +32,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -94,15 +96,13 @@ public class ProjectActivitiesResource {
   @JWTRequired(acceptedTokens = {Audience.API},
       allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response findAllByProject(
-      @QueryParam("offset") Integer offset,
-      @QueryParam("limit") Integer limit,
-      @QueryParam("sort_by") ResourceProperties.SortBy sortBy,
-      @QueryParam("order_by") ResourceProperties.OrderBy orderBy,
+      @BeanParam Pagination pagination,
+      @BeanParam ActivitiesBeanParam activitiesBeanParam,
       @QueryParam("expand") String expand,
       @Context UriInfo uriInfo) throws ProjectException {
     Project project = getProject(); //test if project exist 
-    ResourceProperties resourceProperties = new ResourceProperties(ResourceProperties.Name.ACTIVITIES, offset, limit,
-        sortBy, orderBy, expand);
+    ResourceProperties resourceProperties = new ResourceProperties(ResourceProperties.Name.ACTIVITIES, pagination, 
+        activitiesBeanParam.getSort(), activitiesBeanParam.getFilter(), expand);
     ActivitiesDTO activitiesDTO = activitiesBuilder.buildItems(uriInfo, resourceProperties, project);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(activitiesDTO).build();
   }

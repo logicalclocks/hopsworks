@@ -17,9 +17,13 @@ package io.hops.hopsworks.api.user;
 
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.api.ResourceProperties;
+import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import java.util.Comparator;
+import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import javax.ejb.EJB;
 
 import javax.ejb.Stateless;
@@ -36,7 +40,15 @@ public class UsersBuilder {
         .build());
     return dto;
   }
-
+  
+  public UserDTO uriItem(UserDTO dto, UriInfo uriInfo, Users user) {
+    dto.setHref(uriInfo.getBaseUriBuilder()
+        .path(ResourceProperties.Name.USERS.toString())
+        .path(Integer.toString(user.getUid()))
+        .build());
+    return dto;
+  }
+  
   public UserDTO uriItems(UserDTO dto, UriInfo uriInfo, Users user) {
     dto.setHref(uriInfo.getAbsolutePathBuilder()
         .path(Integer.toString(user.getUid()))
@@ -55,6 +67,30 @@ public class UsersBuilder {
   }
 
   public UserDTO build(UriInfo uriInfo, ResourceProperties resourceProperties, Users user) {
+    UserDTO dto = new UserDTO();
+    uri(dto, uriInfo, user);
+    expand(dto, resourceProperties);
+    if (dto.isExpand()) {
+      dto.setFirstname(user.getFname());
+      dto.setLastname(user.getLname());
+      dto.setEmail(user.getEmail());
+    }
+    return dto;
+  }
+  
+  public UserDTO buildItem(UriInfo uriInfo, ResourceProperties resourceProperties, Users user) {
+    UserDTO dto = new UserDTO();
+    uriItem(dto, uriInfo, user);
+    expand(dto, resourceProperties);
+    if (dto.isExpand()) {
+      dto.setFirstname(user.getFname());
+      dto.setLastname(user.getLname());
+      dto.setEmail(user.getEmail());
+    }
+    return dto;
+  }
+
+  public UserDTO buildItems(UriInfo uriInfo, ResourceProperties resourceProperties, Users user) {
     UserDTO dto = new UserDTO();
     uriItems(dto, uriInfo, user);
     expand(dto, resourceProperties);
@@ -86,7 +122,7 @@ public class UsersBuilder {
     Users user = userFacade.find(id);
     return buildFull(uriInfo, resourceProperties, user);
   }
-  
+
   public UserDTO build(UriInfo uriInfo, ResourceProperties resourceProperties, String email) {
     Users user = userFacade.findByEmail(email);
     return buildFull(uriInfo, resourceProperties, user);
@@ -99,9 +135,16 @@ public class UsersBuilder {
   private UserDTO items(UserDTO userDTO, UriInfo uriInfo, ResourceProperties resourceProperties) {
     List<Users> users;
     ResourceProperties.ResourceProperty property = resourceProperties.get(ResourceProperties.Name.USERS);
-    if (property.getLimit() != null || property.getOffset() != null) {
-      users = userFacade.findAll(property.getOffset(), property.getLimit(), property.getOrderBy(),
-          property.getSortBy());
+    if (property.getPagination() != null && property.getFilter() == null) {
+      users = userFacade.findAll(property.getPagination().getOffset(), property.getPagination().getLimit(),
+          property.getFilter(), property.getSort());
+      return items(userDTO, uriInfo, resourceProperties, users, false);
+    } else if (property.getFilter() != null && property.getPagination() == null) {
+      users = userFacade.findAll(property.getFilter(), property.getSort());
+      return items(userDTO, uriInfo, resourceProperties, users, false);
+    } else if (property.getFilter() != null && property.getPagination() != null) {
+      users = userFacade.findAll(property.getPagination().getOffset(), property.getPagination().getLimit(), property.
+          getFilter(), property.getSort());
       return items(userDTO, uriInfo, resourceProperties, users, false);
     }
     users = userFacade.findAll();
@@ -113,126 +156,79 @@ public class UsersBuilder {
     if (users != null && !users.isEmpty()) {
       if (sort) {
         ResourceProperties.ResourceProperty property = resourceProperties.get(ResourceProperties.Name.USERS);
-        users.sort(getComparator(property));
+        Comparator<Users> comparator = getComparator(property);
+        if (comparator != null) {
+          users.sort(comparator);
+        }
       }
       users.forEach(( user ) -> {
-        dto.addItem(build(uriInfo, resourceProperties, user));
+        dto.addItem(buildItems(uriInfo, resourceProperties, user));
       });
     }
     return dto;
   }
 
   public Comparator<Users> getComparator(ResourceProperties.ResourceProperty property) {
-    if (property.getSortBy() != null) {
-      switch (property.getSortBy()) {
+    Set<UserFacade.SortBy> sortBy = (Set<UserFacade.SortBy>) property.getSort();
+    if (property.getSort() != null && !property.getSort().isEmpty()) {
+      return new UsersComparator(sortBy);
+    }
+    return null;
+  }
+
+  class UsersComparator implements Comparator<Users> {
+
+    Set<UserFacade.SortBy> sortBy;
+
+    UsersComparator(Set<UserFacade.SortBy> sort) {
+      this.sortBy = sort;
+    }
+
+    private int compare(Users a, Users b, UserFacade.SortBy sortBy) {
+      switch (sortBy) {
         case EMAIL:
-          return new UsersComparatorByEmail(property.getOrderBy());
+          return order(a.getEmail(), b.getEmail(), sortBy.getParam());
         case DATE_CREATED:
-          return new UsersComparatorByDateCreated(property.getOrderBy());
+          return order(a.getActivated(), b.getActivated(), sortBy.getParam());
         case FIRST_NAME:
-          return new UsersComparatorByFirstName(property.getOrderBy());
+          return order(a.getFname(), b.getFname(), sortBy.getParam());
         case LAST_NAME:
-          return new UsersComparatorByLastName(property.getOrderBy());
+          return order(a.getLname(), b.getLname(), sortBy.getParam());
         default:
-          break;
+          throw new UnsupportedOperationException("Sort By " + sortBy + " not supported");
       }
     }
-    return new UsersComparatorByEmail(property.getOrderBy());
-  }
 
-  class UsersComparatorByEmail implements Comparator<Users> {
+    private int order(String a, String b, AbstractFacade.OrderBy orderBy) {
+      switch (orderBy) {
+        case ASC:
+          return String.CASE_INSENSITIVE_ORDER.compare(a, b);
+        case DESC:
+          return String.CASE_INSENSITIVE_ORDER.compare(b, a);
+        default:
+          throw new UnsupportedOperationException("Order By " + orderBy + " not supported");
+      }
+    }
 
-    ResourceProperties.OrderBy orderByAsc = ResourceProperties.OrderBy.ASC;
-
-    UsersComparatorByEmail(ResourceProperties.OrderBy orderByAsc) {
-      if (orderByAsc != null) {
-        this.orderByAsc = orderByAsc;
+    private int order(Date a, Date b, AbstractFacade.OrderBy orderBy) {
+      switch (orderBy) {
+        case ASC:
+          return a.compareTo(b);
+        case DESC:
+          return a.compareTo(b);
+        default:
+          throw new UnsupportedOperationException("Order By " + orderBy + " not supported");
       }
     }
 
     @Override
     public int compare(Users a, Users b) {
-      switch (orderByAsc) {
-        case ASC:
-          return String.CASE_INSENSITIVE_ORDER.compare(a.getEmail(), b.getEmail());
-        case DESC:
-          return String.CASE_INSENSITIVE_ORDER.compare(b.getEmail(), a.getEmail());
-        default:
-          break;
+      Iterator<UserFacade.SortBy> sort = sortBy.iterator();
+      int c = compare(a, b, sort.next());
+      for (; sort.hasNext() && c == 0;) {
+        c = compare(a, b, sort.next());
       }
-      throw new UnsupportedOperationException("Order By " + orderByAsc + " not supported");
-    }
-  }
-
-  class UsersComparatorByFirstName implements Comparator<Users> {
-
-    ResourceProperties.OrderBy orderByAsc = ResourceProperties.OrderBy.ASC;
-
-    UsersComparatorByFirstName(ResourceProperties.OrderBy orderByAsc) {
-      if (orderByAsc != null) {
-        this.orderByAsc = orderByAsc;
-      }
-    }
-
-    @Override
-    public int compare(Users a, Users b) {
-      switch (orderByAsc) {
-        case ASC:
-          return String.CASE_INSENSITIVE_ORDER.compare(a.getFname(), b.getFname());
-        case DESC:
-          return String.CASE_INSENSITIVE_ORDER.compare(b.getFname(), a.getFname());
-        default:
-          break;
-      }
-      throw new UnsupportedOperationException("Order By " + orderByAsc + " not supported");
-    }
-  }
-
-  class UsersComparatorByLastName implements Comparator<Users> {
-
-    ResourceProperties.OrderBy orderByAsc = ResourceProperties.OrderBy.ASC;
-
-    UsersComparatorByLastName(ResourceProperties.OrderBy orderByAsc) {
-      if (orderByAsc != null) {
-        this.orderByAsc = orderByAsc;
-      }
-    }
-
-    @Override
-    public int compare(Users a, Users b) {
-      switch (orderByAsc) {
-        case ASC:
-          return String.CASE_INSENSITIVE_ORDER.compare(a.getLname(), b.getLname());
-        case DESC:
-          return String.CASE_INSENSITIVE_ORDER.compare(b.getLname(), a.getLname());
-        default:
-          break;
-      }
-      throw new UnsupportedOperationException("Order By " + orderByAsc + " not supported");
-    }
-  }
-
-  class UsersComparatorByDateCreated implements Comparator<Users> {
-
-    ResourceProperties.OrderBy orderByAsc = ResourceProperties.OrderBy.ASC;
-
-    UsersComparatorByDateCreated(ResourceProperties.OrderBy orderByAsc) {
-      if (orderByAsc != null) {
-        this.orderByAsc = orderByAsc;
-      }
-    }
-
-    @Override
-    public int compare(Users a, Users b) {
-      switch (orderByAsc) {
-        case ASC:
-          return a.getActivated().compareTo(b.getActivated());
-        case DESC:
-          return b.getActivated().compareTo(a.getActivated());
-        default:
-          break;
-      }
-      throw new UnsupportedOperationException("Order By " + orderByAsc + " not supported");
+      return c;
     }
   }
 }

@@ -44,6 +44,7 @@ import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
+import io.hops.hopsworks.common.api.Pagination;
 import io.hops.hopsworks.common.api.ResourceProperties;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.project.Project;
@@ -51,6 +52,8 @@ import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.BbcGroup;
 import io.hops.hopsworks.common.dao.user.BbcGroupFacade;
+import io.hops.hopsworks.common.dao.user.UserFacade.FilterBy;
+import io.hops.hopsworks.common.dao.user.UserFacade.SortBy;
 import io.hops.hopsworks.common.dao.user.UserProjectDTO;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.ProjectException;
@@ -76,10 +79,12 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.Objects;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ws.rs.core.SecurityContext;
 import javax.inject.Inject;
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.UriInfo;
@@ -114,14 +119,13 @@ public class UserService {
   @Produces(MediaType.APPLICATION_JSON)
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response findAll(
-      @QueryParam("offset") Integer offset,
-      @QueryParam("limit") Integer limit,
-      @QueryParam("sort_by") ResourceProperties.SortBy sortBy,
-      @QueryParam("order_by") ResourceProperties.OrderBy orderBy,
+      @BeanParam Pagination pagination, 
+      @QueryParam("sort_by") Set<SortBy> sort,
+      @QueryParam("filter_by") Set<FilterBy> filter,
       @QueryParam("expand") String expand,
       @Context UriInfo uriInfo) {
-    ResourceProperties resourceProperties = new ResourceProperties(ResourceProperties.Name.USERS, offset, limit,
-        sortBy, orderBy, expand);
+    ResourceProperties resourceProperties = new ResourceProperties(ResourceProperties.Name.USERS, pagination, sort, 
+        filter, expand);
     UserDTO userDTO = usersBuilder.buildItems(uriInfo, resourceProperties); 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(userDTO).build();
   }

@@ -18,6 +18,7 @@ package io.hops.hopsworks.api.activities;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.common.api.Pagination;
 import io.hops.hopsworks.common.api.ResourceProperties;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.ActivitiesException;
@@ -28,6 +29,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -54,16 +56,14 @@ public class UserActivitiesResource {
   @JWTRequired(acceptedTokens = {Audience.API},
       allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response findAllByProject(
-      @QueryParam("offset") Integer offset,
-      @QueryParam("limit") Integer limit,
-      @QueryParam("sort_by") ResourceProperties.SortBy sortBy,
-      @QueryParam("order_by") ResourceProperties.OrderBy orderBy,
+      @BeanParam Pagination pagination,
+      @BeanParam ActivitiesBeanParam activitiesBeanParam,
       @QueryParam("expand") String expand,
       @Context UriInfo uriInfo,
       @Context HttpServletRequest req) throws UserException, ActivitiesException {
     Users user = jWTHelper.getUserPrincipal(req);
-    ResourceProperties resourceProperties = new ResourceProperties(ResourceProperties.Name.ACTIVITIES, offset, limit,
-        sortBy, orderBy, expand);
+    ResourceProperties resourceProperties = new ResourceProperties(ResourceProperties.Name.ACTIVITIES, pagination, 
+        activitiesBeanParam.getSort(), activitiesBeanParam.getFilter(), expand);
     ActivitiesDTO activitiesDTO = activitiesBuilder.buildItems(uriInfo, resourceProperties, user);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(activitiesDTO).build();
   }
