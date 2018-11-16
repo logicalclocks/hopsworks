@@ -588,7 +588,7 @@ public class YarnRunner {
       classPathEnv.append(System.getProperty("java.class.path"));
     }
     String hadoopDir = services.getSettings().getHadoopSymbolicLinkDir();
-    classPathEnv.append(HopsUtils.getHadoopClasspathGlob(hadoopDir + "/bin/hadoop", "classpath", "--glob"));
+    classPathEnv.append(services.getSettings().getHadoopClasspathGlob());
     //Check whether a classpath variable was already set, and if so: merge them
     //TODO(Theofilos): clean this up so no doubles are found in the classpath.
     if (env.containsKey(KEY_CLASSPATH)) {
