@@ -627,7 +627,7 @@ public class ProjectService {
   }
 
   @Path("{projectId}/dataset")
-  public DataSetService datasets(@PathParam("projectId") Integer id) throws ProjectException {
+  public DataSetService datasets(@PathParam("projectId") Integer id) {
     this.dataSet.setProjectId(id);
     return this.dataSet;
   }
@@ -639,12 +639,12 @@ public class ProjectService {
   }
 
   @Path("{projectId}/jobs")
-  public JobService jobs(@PathParam("projectId") Integer projectId) throws ProjectException {
+  public JobService jobs(@PathParam("projectId") Integer projectId) {
     return this.jobs.setProject(projectId);
   }
 
   @Path("{projectId}/certs")
-  public CertService certs(@PathParam("projectId") Integer projectId) throws ProjectException {
+  public CertService certs(@PathParam("projectId") Integer projectId) {
     return this.certs.setProjectId(projectId);
   }
 
@@ -763,46 +763,43 @@ public class ProjectService {
   }
 
   @Path("{projectId}/kafka")
-  public KafkaService kafka(@PathParam("projectId") Integer id) throws ProjectException {
+  public KafkaService kafka(@PathParam("projectId") Integer id) {
     this.kafka.setProjectId(id);
     return this.kafka;
   }
 
   @Path("{projectId}/jupyter")
-  public JupyterService jupyter(@PathParam("projectId") Integer id) throws ProjectException {
+  public JupyterService jupyter(@PathParam("projectId") Integer id) {
     this.jupyter.setProjectId(id);
     return this.jupyter;
   }
 
   @Path("{projectId}/tensorboard")
-  public TensorBoardService tensorboard(@PathParam("projectId") Integer id) throws ProjectException {
+  public TensorBoardService tensorboard(@PathParam("projectId") Integer id) {
     this.tensorboard.setProjectId(id);
     return this.tensorboard;
   }
 
   @Path("{projectId}/serving")
-  public TfServingService tfServingService(@PathParam("projectId") Integer id, @Context SecurityContext sc) throws
-      ProjectException {
-    Users user = jWTHelper.getUserPrincipal(sc);
+  public TfServingService tfServingService(@PathParam("projectId") Integer id) {
     this.tfServingService.setProjectId(id);
-    this.tfServingService.setUser(user);
     return this.tfServingService;
   }
 
   @Path("{projectId}/pythonDeps")
-  public PythonDepsService pysparkDeps(@PathParam("projectId") Integer id) throws ProjectException {
+  public PythonDepsService pysparkDeps(@PathParam("projectId") Integer id) {
     this.pysparkService.setProjectId(id);
     return pysparkService;
   }
 
   @Path("{projectId}/dela")
-  public DelaProjectService dela(@PathParam("projectId") Integer id) throws ProjectException {
+  public DelaProjectService dela(@PathParam("projectId") Integer id) {
     this.delaService.setProjectId(id);
     return this.delaService;
   }
 
   @Path("{projectId}/delacluster")
-  public DelaClusterProjectService delacluster(@PathParam("projectId") Integer id) throws ProjectException {
+  public DelaClusterProjectService delacluster(@PathParam("projectId") Integer id) {
     this.delaclusterService.setProjectId(id);
     return this.delaclusterService;
   }
@@ -835,7 +832,7 @@ public class ProjectService {
 
   @ApiOperation(value = "Model inference sub-resource", tags = {"Inference"})
   @Path("/{projectId}/inference")
-  public InferenceResource infer(@PathParam("projectId") Integer projectId) throws ProjectException {
+  public InferenceResource infer(@PathParam("projectId") Integer projectId) {
     inference.setProjectId(projectId);
     return inference;
   }
