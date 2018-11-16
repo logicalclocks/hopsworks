@@ -155,7 +155,7 @@ public class SparkYarnRunnerBuilder {
     /**
      * * 1. Set stagingPath **
      */
-    String stagingPath = "/Projects/" + project + "/" + Settings.PROJECT_STAGING_DIR + "/.sparkjobstaging-"
+    String stagingPath = "/Projects/" + project.getName() + "/" + Settings.PROJECT_STAGING_DIR + "/.sparkjobstaging-"
         + YarnRunner.APPID_PLACEHOLDER;
     builder.localResourcesBasePath(stagingPath);
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
