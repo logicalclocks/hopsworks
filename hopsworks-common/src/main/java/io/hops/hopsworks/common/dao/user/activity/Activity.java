@@ -82,22 +82,6 @@ import io.hops.hopsworks.common.dao.user.Users;
           query = "SELECT u FROM Activity u WHERE u.flag = :flag"),
   @NamedQuery(name = "Activity.findByActivity",
           query = "SELECT u FROM Activity u WHERE u.activity = :activity"),
-  @NamedQuery(name = "Activity.findByUser",
-          query = "SELECT u FROM Activity u WHERE u.user = :user ORDER BY u.timestamp DESC"),
-  @NamedQuery(name = "Activity.findByProject",
-          query = "SELECT u FROM Activity u WHERE u.project = :project ORDER BY u.timestamp DESC"),
-  @NamedQuery(name = "Activity.findByUserAsc",
-          query = "SELECT u FROM Activity u WHERE u.user = :user ORDER BY u.timestamp ASC"),
-  @NamedQuery(name = "Activity.findByProjectAsc",
-          query = "SELECT u FROM Activity u WHERE u.project = :project ORDER BY u.timestamp ASC"),
-  @NamedQuery(name = "Activity.findByUserOrderById",
-          query = "SELECT u FROM Activity u WHERE u.user = :user ORDER BY u.id DESC"),
-  @NamedQuery(name = "Activity.findByProjectOrderById",
-          query = "SELECT u FROM Activity u WHERE u.project = :project ORDER BY u.id DESC"),
-  @NamedQuery(name = "Activity.findByUserOrderByIdAsc",
-          query = "SELECT u FROM Activity u WHERE u.user = :user ORDER BY u.id ASC"),
-  @NamedQuery(name = "Activity.findByProjectOrderByIdAsc",
-          query = "SELECT u FROM Activity u WHERE u.project = :project ORDER BY u.id ASC"),
   @NamedQuery(name = "Activity.findByTimestamp",
           query = "SELECT u FROM Activity u WHERE u.timestamp = :timestamp"),
   @NamedQuery(name = "Activity.countAll",
@@ -199,7 +183,7 @@ public class Activity implements Serializable {
 
   @Override
   public String toString() {
-    return "se.kth.bbc.activity.Activity[ id=" + id + " ]";
+    return "Activity[ id=" + id + " ]";
   }
 
   public String getFlag() {

@@ -16,38 +16,40 @@
 package io.hops.hopsworks.common.api;
 
 import com.google.common.base.Strings;
+import io.hops.hopsworks.common.dao.AbstractFacade;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * Class that parses user provided uri query params and then is used to propagate this information to the resource
  * builders. An example of a request accepted by hopsworks api is
  * "offset=5&limit=10&sort_by=date&order_by=asc&expand=param1,param2(offset=0:limit=10)"
+ * "?sort_by=date_created:asc&filter_by=flag:dataset"
  */
 public class ResourceProperties {
   
   private List<ResourceProperty> properties;
   
   public ResourceProperties(Name resourceName) {
-    this(resourceName, null, null, null, null, null);
+    this(resourceName, null, null, null, null);
   }
   
   public ResourceProperties(Name resourceName, String expandParam) {
-    this(resourceName, null, null, null, null, expandParam);
+    this(resourceName, null, null, null, expandParam);
   }
   
-  public ResourceProperties(Name resourceName, Integer offsetParam, Integer limitParam, SortBy sortByParam,
-    OrderBy orderByParam, String expandParam) {
+  public ResourceProperties(Name resourceName, Pagination pagination, Set<? extends AbstractFacade.SortBy> sort, 
+      Set<? extends AbstractFacade.FilterBy> filter, String expandParam) {
     properties = new ArrayList<>();
     //Resource that was requested
     ResourceProperty resource = new ResourceProperty()
       .setName(resourceName)
-      .setOffset(offsetParam)
-      .setLimit(limitParam)
-      .setSortBy(sortByParam)
-      .setOrderBy(orderByParam);
+      .setPagination(pagination)
+      .setSort(sort)
+      .setFilter(filter);
     
     properties.add(resource);
     
@@ -65,10 +67,9 @@ public class ResourceProperties {
         }
         if (property.contains(":")) {
           resourceProperty
-            .setOffset(Integer.parseInt(property.substring(property.indexOf('=') + 1,
-              property.indexOf(':'))))
-            .setLimit(Integer.parseInt(property.substring(property.lastIndexOf('=') + 1,
-              property.indexOf(')'))));
+            .setPagination(new Pagination (Integer.parseInt(property.substring(property.indexOf('=') + 1,
+              property.indexOf(':'))), Integer.parseInt(property.substring(property.lastIndexOf('=') + 1,
+              property.indexOf(')')))));
         }
         properties.add(resourceProperty);
       }
@@ -93,10 +94,9 @@ public class ResourceProperties {
   
   public class ResourceProperty {
     private Name name;
-    private Integer offset;
-    private Integer limit;
-    private SortBy sortBy;
-    private OrderBy orderBy;
+    private Pagination pagination;
+    private Set<? extends AbstractFacade.SortBy> sort;
+    private Set<? extends AbstractFacade.FilterBy> filter;
     
     public Name getName() {
       return name;
@@ -106,43 +106,34 @@ public class ResourceProperties {
       this.name = name;
       return this;
     }
-    
-    public Integer getOffset() {
-      return offset;
+
+    public Pagination getPagination() {
+      return pagination;
     }
-    
-    public ResourceProperty setOffset(Integer offset) {
-      this.offset = offset;
+
+    public ResourceProperty setPagination(Pagination pagination) {
+      this.pagination = pagination;
       return this;
     }
-    
-    public Integer getLimit() {
-      return limit;
+
+    public Set<? extends AbstractFacade.SortBy> getSort() {
+      return sort;
     }
-    
-    public ResourceProperty setLimit(Integer limit) {
-      this.limit = limit;
+
+    public ResourceProperty setSort(Set<? extends AbstractFacade.SortBy> sort) {
+      this.sort = sort;
       return this;
     }
-    
-    public SortBy getSortBy() {
-      return sortBy;
+
+    public Set<? extends AbstractFacade.FilterBy> getFilter() {
+      return filter;
     }
-    
-    public ResourceProperty setSortBy(SortBy sortBy) {
-      this.sortBy = sortBy;
+
+    public ResourceProperty setFilter(Set<? extends AbstractFacade.FilterBy> filter) {
+      this.filter = filter;
       return this;
     }
-    
-    public OrderBy getOrderBy() {
-      return orderBy;
-    }
-    
-    public ResourceProperty setOrderBy(OrderBy orderBy) {
-      this.orderBy = orderBy;
-      return this;
-    }
-    
+
     @Override
     public boolean equals(Object o) {
       if (this == o) {
@@ -160,16 +151,11 @@ public class ResourceProperties {
       
       return Objects.hash(name);
     }
-    
+
     @Override
     public String toString() {
-      return "ResourceProperty{" +
-        "name='" + name + '\'' +
-        ", offset=" + offset +
-        ", limit=" + limit +
-        ", sortBy='" + sortBy + '\'' +
-        ", orderBy='" + orderBy + '\'' +
-        '}';
+      return "ResourceProperty{" + "name=" + name + ", pagination=" + pagination + ", sort=" + sort + ", filter=" +
+          filter + '}';
     }
   }
   
@@ -207,6 +193,10 @@ public class ResourceProperties {
     EMAIL,
     DATE_SENT,
     DATE_CREATED
+  }
+  
+  public enum FilterBy {
+    ROLE   
   }
   
   public enum OrderBy {

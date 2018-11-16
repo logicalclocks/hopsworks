@@ -39,7 +39,7 @@
 
 package io.hops.hopsworks.common.dao.user.activity;
 
-import io.hops.hopsworks.common.api.ResourceProperties;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
@@ -53,6 +53,8 @@ import javax.persistence.TypedQuery;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.AbstractFacade;
+import java.util.Iterator;
+import java.util.Set;
 
 @Stateless
 public class ActivityFacade extends AbstractFacade<Activity> {
@@ -211,76 +213,50 @@ public class ActivityFacade extends AbstractFacade<Activity> {
   /**
    * Get all the activities performed on by user <i>user</i>.but paginated.Items
    * from
-   * <i>first</i> till
-   * <i>first+pageSize</i> are returned.
+   * <i>offset</i> till
+   * <i>offset+limit</i> are returned.
    * <p/>
-   * @param first
-   * @param pageSize
+   * @param offset
+   * @param limit
    * @param user
    * @return
    */
-  public List<Activity> getPaginatedActivityByUser(Integer first, Integer pageSize, Users user) {
+  public List<Activity> getPaginatedActivityByUser(Integer offset, Integer limit, Users user) {
     TypedQuery<Activity> q = em.createNamedQuery("Activity.findByUser", Activity.class);
     q.setParameter("user", user);
-    setOffsetAndLim(first, pageSize, q);
+    setOffsetAndLim(offset, limit, q);
     return q.getResultList();
   }
 
   /**
-   * Returns all activity, but paginated. Items from <i>first</i> till
-   * <i>first+pageSize</i> are returned.
+   * Returns all activity, but paginated. Items from <i>offset</i> till
+   * <i>offset+limit</i> are returned.
    * <p/>
-   * @param first
-   * @param pageSize
+   * @param offset
+   * @param limit
    * @return
    */
-  public List<Activity> getPaginatedActivity(Integer first, Integer pageSize) {
+  public List<Activity> getPaginatedActivity(Integer offset, Integer limit) {
     TypedQuery<Activity> q = em.createNamedQuery("Activity.findAll", Activity.class);
-    setOffsetAndLim(first, pageSize, q);
+    setOffsetAndLim(offset, limit, q);
     return q.getResultList();
   }
 
   /**
    * Returns all activities on project <i>projectName</i>, but paginated. Items
    * from
-   * <i>first</i> till
-   * <i>first+pageSize</i> are returned.
+   * <i>offset</i> till
+   * <i>offset+limit</i> are returned.
    * <p/>
-   * @param first
-   * @param pageSize
+   * @param offset
+   * @param limit
    * @param project
    * @return
    */
-  public List<Activity> getPaginatedActivityForProject(Integer first, Integer pageSize, Project project) {
+  public List<Activity> getPaginatedActivityForProject(Integer offset, Integer limit, Project project) {
     TypedQuery<Activity> q = em.createNamedQuery("Activity.findByProject", Activity.class);
     q.setParameter("project", project);
-    setOffsetAndLim(first, pageSize, q);
-    return q.getResultList();
-  }
-  
-  public List<Activity> getPaginatedActivity(Integer first, Integer pageSize, ResourceProperties.OrderBy orderBy, 
-      ResourceProperties.SortBy sortBy) {
-    String queryName = "Activity.findAll" + getQuery(orderBy, sortBy);
-    TypedQuery<Activity> q = em.createNamedQuery(queryName, Activity.class);
-    setOffsetAndLim(first, pageSize, q);
-    return q.getResultList();
-  }
-  
-  public List<Activity> getPaginatedActivityByProject(Integer first, Integer pageSize,
-      ResourceProperties.OrderBy orderBy, ResourceProperties.SortBy sortBy, Project project) {
-    String queryName = "Activity.findByProject" + getQuery(orderBy, sortBy);
-    TypedQuery<Activity> q = em.createNamedQuery(queryName, Activity.class);
-    q.setParameter("project", project);
-    setOffsetAndLim(first, pageSize, q);
-    return q.getResultList();
-  }
-
-  public List<Activity> getPaginatedActivityByUser(Integer first, Integer pageSize,
-      ResourceProperties.OrderBy orderBy, ResourceProperties.SortBy sortBy, Users user) {
-    String queryName = "Activity.findByUser" + getQuery(orderBy, sortBy);
-    TypedQuery<Activity> q = em.createNamedQuery(queryName, Activity.class);
-    q.setParameter("user", user);
-    setOffsetAndLim(first, pageSize, q);
+    setOffsetAndLim(offset, limit, q);
     return q.getResultList();
   }
 
@@ -289,37 +265,151 @@ public class ActivityFacade extends AbstractFacade<Activity> {
     return query.getResultList();
   }
   
-  private void setOffsetAndLim(Integer first, Integer pageSize, TypedQuery<Activity> q) {
-    if (first != null) {
-      q.setFirstResult(first);
-    }
-    if (pageSize != null) {
-      q.setMaxResults(pageSize);
-    }
+  public List<Activity> findAll(Integer offset, Integer limit, Set<? extends AbstractFacade.FilterBy> filter,
+      Set<? extends AbstractFacade.SortBy> sort) {
+    String queryStr = "SELECT u FROM Activity u " + buildFilterString(filter, "") + buildSortString(sort);
+    Query query = em.createQuery(queryStr, Activity.class);
+    setFilter(filter, query);
+    setOffsetAndLim(offset, limit, query);
+    return query.getResultList();
   }
 
-  private String getQuery(ResourceProperties.OrderBy orderBy, ResourceProperties.SortBy sortBy) {
-    String query = "";
-    sortBy = sortBy == null? ResourceProperties.SortBy.DATE_CREATED : sortBy;
-    switch (sortBy) {
-      case ID:
-        query = query + "OrderById";
-        break;
-      case DATE_CREATED:
-        break;
-      default:
-        break;
+  public List<Activity> findAllByProject(Integer offset, Integer limit, Set<? extends AbstractFacade.FilterBy> filter,
+      Set<? extends AbstractFacade.SortBy> sort, Project project) {
+    String queryStr = "SELECT u FROM Activity u " + buildFilterString(filter, "u.project = :project ")
+        + buildSortString(sort);
+    Query query = em.createQuery(queryStr, Activity.class).setParameter("project", project);
+    setFilter(filter, query);
+    setOffsetAndLim(offset, limit, query);
+    return query.getResultList();
+  }
+
+  public List<Activity> findAllByUser(Integer offset, Integer limit, Set<? extends AbstractFacade.FilterBy> filter, 
+      Set<? extends AbstractFacade.SortBy> sort, Users user) {
+    String queryStr = "SELECT u FROM Activity u " + buildFilterString(filter, "u.user = :user ") + 
+        buildSortString(sort);
+    Query query = em.createQuery(queryStr, Activity.class).setParameter("user", user);
+    setFilter(filter, query);
+    setOffsetAndLim(offset, limit, query);
+    return query.getResultList();
+  }
+
+  private void setFilter(Set<? extends AbstractFacade.FilterBy> filter, Query q) {
+    Iterator<? extends AbstractFacade.FilterBy> filterBy = filter.iterator();
+    for (;filterBy.hasNext();) {
+      setFilterQuery(filterBy.next(), q);
     }
-    orderBy = orderBy == null? ResourceProperties.OrderBy.DESC : orderBy;
-    switch (orderBy) {
-      case DESC:
-        break;
-      case ASC:
-        query = query + "Asc";
-        break;
-      default:
-        break;
+  }
+  
+  private void setFilterQuery(AbstractFacade.FilterBy filterBy, Query q) {
+    q.setParameter(filterBy.getField(), filterBy.getParam());
+  }
+  
+  public enum SortBy implements AbstractFacade.SortBy {
+    ID("ID", "u.id ", "ASC"),
+    FLAG("FLAG", "u.flag ", "ASC"),
+    DATE_CREATED("DATE_CREATED", "u.timestamp ", "ASC");
+
+    @JsonCreator
+    public static SortBy fromString(String param) {
+      String[] sortByParams = param.split(":");
+      SortBy sortBy = SortBy.valueOf(sortByParams[0].toUpperCase());
+      String order = sortByParams.length > 1 ? sortByParams[1].toUpperCase() : sortBy.defaultParam;
+      AbstractFacade.OrderBy orderBy = AbstractFacade.OrderBy.valueOf(order);
+      sortBy.setParam(orderBy);
+      return sortBy;
     }
-    return query;
+    
+    private final String value;
+    private AbstractFacade.OrderBy param;
+    private final String sql;
+    private final String defaultParam;
+    
+    private SortBy(String value, String sql, String defaultParam) {
+      this.value = value;
+      this.sql = sql;
+      this.defaultParam = defaultParam;
+    }
+
+    @Override
+    public String getValue() {
+      return value;
+    }
+
+    @Override
+    public OrderBy getParam() {
+      return param;
+    }
+
+    public void setParam(OrderBy param) {
+      this.param = param;
+    }
+
+    @Override
+    public String getSql() {
+      return sql;
+    }
+
+    @Override
+    public String toString() {
+      return value;
+    }
+
+  }
+  
+  public enum FilterBy implements AbstractFacade.FilterBy {
+    FLAG ("FLAG", "u.flag = :flag ", "flag", "PROJECT");
+    
+    @JsonCreator
+    public static FilterBy fromString(String param) {
+      String[] filterByParams = param.split(":");
+      FilterBy filterBy = FilterBy.valueOf(filterByParams[0].toUpperCase());
+      String filter = filterByParams.length > 1 ? filterByParams[1].toUpperCase() : filterBy.defaultParam;
+      filterBy.setParam(filter);
+      return filterBy;
+    }
+    
+    private final String value;
+    private String param;
+    private final String sql;
+    private final String field;
+    private final String defaultParam;
+
+    private FilterBy(String value, String sql, String field, String defaultParam) {
+      this.value = value;
+      this.sql = sql;
+      this.field = field;
+      this.defaultParam = defaultParam;
+    }
+
+    @Override
+    public String getValue() {
+      return value;
+    }
+
+    @Override
+    public String getParam() {
+      return param;
+    }
+
+    public void setParam(String param) {
+      this.param = param;
+    }
+
+    @Override
+    public String getSql() {
+      return sql;
+    }
+
+    @Override
+    public String getField() {
+      return field;
+    }
+
+    @Override
+    public String toString() {
+      return value;
+    }    
+    
   }
 }

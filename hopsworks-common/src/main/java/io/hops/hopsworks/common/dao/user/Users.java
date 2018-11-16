@@ -81,33 +81,6 @@ import org.codehaus.jackson.annotate.JsonIgnore;
   @NamedQuery(name = "Users.findAll",
       query = "SELECT u FROM Users u")
   ,
-  @NamedQuery(name = "Users.findAllOrderByEmail",
-      query = "SELECT u FROM Users u ORDER BY u.email DESC")
-  ,
-  @NamedQuery(name = "Users.findAllOrderByDate",
-      query = "SELECT u FROM Users u ORDER BY u.activated DESC")
-  ,
-  @NamedQuery(name = "Users.findAllOrderByFname",
-      query = "SELECT u FROM Users u ORDER BY u.fname DESC")
-  ,
-  @NamedQuery(name = "Users.findAllOrderByLname",
-      query = "SELECT u FROM Users u ORDER BY u.lname DESC")
-  ,
-  @NamedQuery(name = "Users.findAllAsc",
-      query = "SELECT u FROM Users u")
-  ,
-  @NamedQuery(name = "Users.findAllOrderByEmailAsc",
-      query = "SELECT u FROM Users u ORDER BY u.email ASC")
-  ,
-  @NamedQuery(name = "Users.findAllOrderByDateAsc",
-      query = "SELECT u FROM Users u ORDER BY u.activated ASC")
-  ,
-  @NamedQuery(name = "Users.findAllOrderByFnameAsc",
-      query = "SELECT u FROM Users u ORDER BY u.fname ASC")
-  ,
-  @NamedQuery(name = "Users.findAllOrderByLnameAsc",
-      query = "SELECT u FROM Users u ORDER BY u.lname ASC")
-  ,
   @NamedQuery(name = "Users.findByUid",
       query = "SELECT u FROM Users u WHERE u.uid = :uid")
   ,
