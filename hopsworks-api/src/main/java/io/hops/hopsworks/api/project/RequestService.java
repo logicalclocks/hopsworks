@@ -154,12 +154,13 @@ public class RequestService {
             + "Dataset name: " + ds.getInode().getInodePK().getName() + "\n"
             + "Project name: " + proj.getName() + "\n";
 
-            if(requestDTO.getMessageContent() != null) {
-              msg += requestDTO.getMessageContent() + "\n";
-            }
-            msg += "After logging in to hopsworks go to : /project/" + proj.getId()
-            + "/datasets "
-            + " if you want to share this dataset. \n";
+    if(requestDTO.getMessageContent() != null) {
+      msg += requestDTO.getMessageContent() + "\n";
+    }
+
+    msg += "After logging in to hopsworks go to : /project/" + proj.getId()
+        + "/datasets "
+        + " if you want to share this dataset. \n";
 
     //if there is a prior request by a user in the same project with the same role
     // or the prior request is from a data owner do nothing.
@@ -244,22 +245,24 @@ public class RequestService {
             + " wants to join a project you own. \n\n"
             + "Project name: " + project.getName() + "\n";
 
-            if(requestDTO.getMessageContent() != null) {
-              msg += "Attached message: " + requestDTO.getMessageContent() + "\n";
-            }
+    if(requestDTO.getMessageContent() != null) {
+      msg += "Attached message: " + requestDTO.getMessageContent() + "\n";
+    }
 
-            msg += "After loging in to hopsworks go to : /project" + project.getId()
-                + " and go to members tab "
-                + "if you want to add this person as a member in your project. \n";
+    msg += "After loging in to hopsworks go to : /project" + project.getId()
+        + " and go to members tab "
+        + "if you want to add this person as a member in your project. \n";
 
     Users from = user;
     Users to = userFacade.findByEmail(project.getOwner().getEmail());
     String message = "Hi " + to.getFname() + "<br>"
             + "I would like to join a project you own. <br>"
             + "Project name: " + project.getName() + "<br>";
-            if(requestDTO.getMessageContent() != null) {
-              message += requestDTO.getMessageContent();
-            }
+
+    if(requestDTO.getMessageContent() != null) {
+      message += requestDTO.getMessageContent();
+    }
+
     String preview = from.getFname() + " would like to join a project you own.";
     String subject = "Project join request.";
     String path = "project/" + project.getId();
