@@ -155,10 +155,10 @@ public class RequestService {
             + "Project name: " + proj.getName() + "\n";
 
     if(requestDTO.getMessageContent() != null) {
-      msg += requestDTO.getMessageContent() + "\n";
+      msg += "Attached message: " + requestDTO.getMessageContent() + "\n";
     }
 
-    msg += "After logging in to hopsworks go to : /project/" + proj.getId()
+    msg += "After logging in to Hopsworks go to : /project/" + proj.getId()
         + "/datasets "
         + " if you want to share this dataset. \n";
 
@@ -249,7 +249,7 @@ public class RequestService {
       msg += "Attached message: " + requestDTO.getMessageContent() + "\n";
     }
 
-    msg += "After loging in to hopsworks go to : /project" + project.getId()
+    msg += "After loging in to Hopsworks go to : /project" + project.getId()
         + " and go to members tab "
         + "if you want to add this person as a member in your project. \n";
 
