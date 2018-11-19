@@ -45,7 +45,6 @@ import io.hops.hopsworks.api.zeppelin.socket.NotebookServerImplFactory;
 import io.hops.hopsworks.api.zeppelin.util.SecurityUtils;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
 import io.hops.hopsworks.common.util.ConfigFileGenerator;
-import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -477,8 +476,7 @@ public class ZeppelinConfig {
           "java_home", javaHome,
           "cuda_dir", settings.getCudaDir(),
           "ld_library_path", ldLibraryPath,
-          "hadoop_classpath", HopsUtils.getHadoopClasspathGlob(settings.getHadoopSymbolicLinkDir() + "/bin/hadoop",
-              "classpath", "--glob"),
+          "hadoop_classpath", settings.getHadoopClasspathGlob(),
           "spark_options", "--files " + log4jPath
       );
       createdSh = ConfigFileGenerator.createConfigFile(zeppelin_env_file,
