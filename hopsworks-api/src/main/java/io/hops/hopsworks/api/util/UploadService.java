@@ -329,9 +329,9 @@ public class UploadService {
       @FormDataParam("flowIdentifier") String flowIdentifier,
       @FormDataParam("flowRelativePath") String flowRelativePath,
       @FormDataParam("flowTotalChunks") String flowTotalChunks,
-      @FormDataParam("flowTotalSize") String flowTotalSize)
-      throws IOException, GenericException, MetadataException, DatasetException {
-
+      @FormDataParam("flowTotalSize") String flowTotalSize, @Context SecurityContext sc)
+      throws IOException, GenericException, MetadataException, DatasetException, ProjectException {
+    configureUploader(sc);
     RESTApiJsonResponse json = new RESTApiJsonResponse();
 
     int resumableChunkNumber = HttpUtils.toInt(flowChunkNumber, -1);

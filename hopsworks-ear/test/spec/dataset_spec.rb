@@ -500,8 +500,13 @@ describe "On #{ENV['OS']}" do
           expect_json(errorCode: 200003)
           expect_status(401)
         end
-        it "should fail to download file with an empty token" do
+        it "should fail to download file with an empty string token" do
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/fileDownload/Logs/README.md?token= "
+          expect_json(errorCode: 200003)
+          expect_status(401)
+        end
+        it "should fail to download file with an empty token" do
+          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/fileDownload/Logs/README.md?token="
           expect_json(errorCode: 200003)
           expect_status(401)
         end
@@ -513,21 +518,21 @@ describe "On #{ENV['OS']}" do
         it "should download Logs/README.md" do
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/checkFileForDownload/Logs/README.md"
           expect_status(200)
-          token = json_body["data"]["data"]["value"]
+          token = json_body[:data][:value]
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/fileDownload/Logs/README.md?token=" + token 
           expect_status(200)
         end
         it "should fail to download with a token issued for a different file path" do
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/checkFileForDownload/Resources/README.md"
           expect_status(200)
-          token = json_body["data"]["data"]["value"]
+          token = json_body[:data][:value]
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/fileDownload/Logs/README.md?token=" + token 
           expect_status(401)
         end
         it "should fail to download more than one file with a single token" do
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/checkFileForDownload/Resources/README.md"
           expect_status(200)
-          token = json_body["data"]["data"]["value"]
+          token = json_body[:data][:value]
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/fileDownload/Resources/README.md?token=" + token 
           expect_status(200)
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/fileDownload/Resources/README.md?token=" + token 
