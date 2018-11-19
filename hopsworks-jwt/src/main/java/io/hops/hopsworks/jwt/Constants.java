@@ -26,5 +26,9 @@ public class Constants {
   public static final int DEFAULT_EXPIRY_LEEWAY = 60; //60 secs for exp
   public static final boolean DEFAULT_RENEWABLE = false;
   
-  
+  public static final int ONE_TIME_JWT_SIGNING_KEY_ROTATION_DAYS = 1;
+  public static final String ONE_TIME_JWT_SIGNATURE_ALGORITHM = "HS256";
+  public static final String ONE_TIME_JWT_SIGNING_KEY_NAME = "oneTimeKey";
+  public static final String OLD_ONE_TIME_JWT_SIGNING_KEY_NAME = ONE_TIME_JWT_SIGNING_KEY_NAME + "_old";
+  public static final long ONE_TIME_JWT_LIFETIME_MS = 60000l;
 }

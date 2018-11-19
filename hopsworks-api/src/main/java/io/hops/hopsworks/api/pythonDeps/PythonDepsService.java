@@ -80,7 +80,6 @@ import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.json.Json;
 import javax.json.JsonObjectBuilder;
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -106,6 +105,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import javax.ws.rs.core.SecurityContext;
 
 @RequestScoped
 @Produces(MediaType.APPLICATION_JSON)
@@ -212,12 +212,11 @@ public class PythonDepsService {
   @Path("/enableYml")
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API},
-      allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response enableYml(EnvironmentYmlJson environmentYmlJson, @Context HttpServletRequest req)
-      throws ServiceException, DatasetException, ProjectException {
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response enableYml(EnvironmentYmlJson environmentYmlJson, @Context SecurityContext sc)
+    throws ServiceException, DatasetException, ProjectException {
 
-    Users user = jWTHelper.getUserPrincipal(req);
+    Users user = jWTHelper.getUserPrincipal(sc);
     String username = hdfsUsersController.getHdfsUserName(project, user);
 
     String version = "0.0";
@@ -449,10 +448,9 @@ public class PythonDepsService {
   @GET
   @Path("/export")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API},
-      allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response export(@Context HttpServletRequest req) throws ServiceException {
-    Users user = jWTHelper.getUserPrincipal(req);
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response export(@Context SecurityContext sc) throws ServiceException {
+    Users user = jWTHelper.getUserPrincipal(sc);
     String hdfsUser = hdfsUsersController.getHdfsUserName(project, user);
 
     String cpuHost = hostsFacade.findCPUHost();

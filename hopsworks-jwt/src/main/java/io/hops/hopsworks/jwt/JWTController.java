@@ -40,10 +40,12 @@ import io.hops.hopsworks.jwt.exception.InvalidationException;
 import io.hops.hopsworks.jwt.exception.NotRenewableException;
 import io.hops.hopsworks.jwt.exception.SigningKeyNotFoundException;
 import io.hops.hopsworks.jwt.exception.VerificationException;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
 import javax.ejb.AccessLocalException;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -64,7 +66,7 @@ public class JWTController {
    * Create a jwt.
    *
    * @param jwt
-   * @return
+   * @return three Base64-URL strings separated by dots
    * @throws io.hops.hopsworks.jwt.exception.SigningKeyNotFoundException
    */
   public String createToken(JsonWebToken jwt) throws SigningKeyNotFoundException {
@@ -87,7 +89,7 @@ public class JWTController {
    * @param expLeeway
    * @param roles
    * @param algorithm
-   * @return
+   * @return three Base64-URL strings separated by dots
    * @throws io.hops.hopsworks.jwt.exception.SigningKeyNotFoundException
    */
   public String createToken(String keyId, String issuer, String[] audience, Date expiresAt, Date notBefore,
@@ -125,7 +127,7 @@ public class JWTController {
    * @param expLeeway
    * @param roles
    * @param algorithm
-   * @return
+   * @return three Base64-URL strings separated by dots
    * @throws NoSuchAlgorithmException
    * @throws SigningKeyNotFoundException
    * @throws DuplicateSigningKeyException
@@ -235,6 +237,22 @@ public class JWTController {
     if (isTokenInvalidated(jwt)) {
       throw new VerificationException("Invalidated token.");
     }
+    return jwt;
+  }
+  
+  /**
+   * Will verify then invalidate a one time key
+   * @param token
+   * @param issuer
+   * @return
+   * @throws SigningKeyNotFoundException
+   * @throws VerificationException
+   * @throws InvalidationException 
+   */
+  public DecodedJWT verifyOneTimeToken(String token, String issuer) throws SigningKeyNotFoundException,
+      VerificationException, InvalidationException {
+    DecodedJWT jwt = verifyToken(token, issuer);
+    invalidateJWT(jwt.getId(), jwt.getExpiresAt(), getExpLeewayClaim(jwt));
     return jwt;
   }
 
@@ -485,6 +503,31 @@ public class JWTController {
       }
     }
     return count;
+  }
+  
+  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+  public boolean markOldSigningKeys() {
+    JwtSigningKey jwtSigningKey = jwtSigningKeyFacade.findByName(Constants.ONE_TIME_JWT_SIGNING_KEY_NAME);
+    final Calendar cal = Calendar.getInstance();
+    cal.add(Calendar.DATE, -Constants.ONE_TIME_JWT_SIGNING_KEY_ROTATION_DAYS);
+    if (jwtSigningKey != null && jwtSigningKey.getCreatedOn().before(cal.getTime())) {
+      jwtSigningKeyFacade.renameSigningKey(jwtSigningKey, Constants.OLD_ONE_TIME_JWT_SIGNING_KEY_NAME);
+      try {
+        jwtSigningKeyFacade.getOrCreateSigningKey(Constants.ONE_TIME_JWT_SIGNING_KEY_NAME, SignatureAlgorithm.HS256);
+      } catch (NoSuchAlgorithmException ex) {
+        LOGGER.log(Level.SEVERE, null, ex);
+      }
+      return true;
+    }
+    return false;
+  }
+  
+  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+  public void removeMarkedKeys() {
+    JwtSigningKey jwtSigningKey = jwtSigningKeyFacade.findByName(Constants.OLD_ONE_TIME_JWT_SIGNING_KEY_NAME);
+    if (jwtSigningKey != null) {
+      jwtSigningKeyFacade.remove(jwtSigningKey);
+    }
   }
 
 }
