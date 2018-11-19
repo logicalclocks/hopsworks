@@ -104,6 +104,8 @@ public class Settings implements Serializable {
   private UserFacade userFacade;
   @EJB
   private ProjectUtils projectUtils;
+  @EJB
+  private OSProcessExecutor osProcessExecutor;
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
@@ -1214,6 +1216,50 @@ public class Settings implements Serializable {
 
   private String sparkDefaultClasspath(String sparkDir) {
     return sparkDir + "/lib/*";
+  }
+  
+  private static final String HADOOP_GLASSPATH_GLOB_ENV_VAR_KEY = "HADOOP_GLOB";
+  private volatile String HADOOP_CLASSPATH_GLOB = null;
+  
+  public String getHadoopClasspathGlob() throws IOException {
+    if (HADOOP_CLASSPATH_GLOB == null) {
+      synchronized (Settings.class) {
+        if (HADOOP_CLASSPATH_GLOB == null) {
+          String classpathGlob = System.getenv(HADOOP_GLASSPATH_GLOB_ENV_VAR_KEY);
+          if (classpathGlob == null) {
+            LOGGER.log(Level.WARNING, HADOOP_GLASSPATH_GLOB_ENV_VAR_KEY + " environment variable is not set. " +
+                "Launching a subprocess to discover it");
+            String bin = Paths.get(getHadoopSymbolicLinkDir(), "bin", "hadoop").toString();
+            ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
+                .addCommand(bin)
+                .addCommand("classpath")
+                .addCommand("--glob")
+                .build();
+            ProcessResult result = osProcessExecutor.execute(processDescriptor);
+            if (result.getExitCode() != 0) {
+              throw new IOException("Could not get Hadoop classpath, exit code " + result.getExitCode()
+                + " Error: " + result.getStderr());
+            }
+            classpathGlob = result.getStdout();
+          }
+          //Now we must remove the yarn shuffle library as it creates issues for
+          //Zeppelin Spark Interpreter
+          StringBuilder classpath = new StringBuilder();
+  
+          for (String path : classpathGlob.split(File.pathSeparator)) {
+            if (!path.contains("yarn") && !path.contains("jersey") && !path.contains("servlet")) {
+              classpath.append(path).append(File.pathSeparator);
+            }
+          }
+          if (classpath.length() > 0) {
+            HADOOP_CLASSPATH_GLOB = classpath.toString().substring(0, classpath.length() - 1);
+          } else {
+            throw new IOException("Hadoop classpath appears to be empty");
+          }
+        }
+      }
+    }
+    return HADOOP_CLASSPATH_GLOB;
   }
 
   /**
