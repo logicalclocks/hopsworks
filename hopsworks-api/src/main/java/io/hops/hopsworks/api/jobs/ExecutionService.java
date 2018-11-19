@@ -40,6 +40,7 @@
 package io.hops.hopsworks.api.jobs;
 
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
+import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.common.dao.jobhistory.Execution;
@@ -54,6 +55,7 @@ import io.hops.hopsworks.common.exception.JobException;
 import io.hops.hopsworks.common.exception.ProjectException;
 import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.jobs.execution.ExecutionController;
+import io.hops.hopsworks.jwt.annotation.JWTRequired;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -105,6 +107,7 @@ public class ExecutionService {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response getAllExecutions() {
     List<Execution> executions = executionFacade.findForJob(job);
     GenericEntity<List<Execution>> list = new GenericEntity<List<Execution>>(executions) {
@@ -115,7 +118,7 @@ public class ExecutionService {
   /**
    * Start an Execution of the given job.
    * <p/>
-   * @param req
+   * @param sc
    * @return The new execution object.
    * @throws io.hops.hopsworks.common.exception.ProjectException
    * @throws io.hops.hopsworks.common.exception.GenericException
@@ -124,6 +127,7 @@ public class ExecutionService {
   @POST
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response startExecution(@Context SecurityContext sc) throws ProjectException, GenericException,
       JobException {
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -140,6 +144,7 @@ public class ExecutionService {
   @POST
   @Path("/stop")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response stopExecution(@PathParam("jobId") int jobId, @Context SecurityContext sc) {
     Users user = jWTHelper.getUserPrincipal(sc);
 
@@ -159,6 +164,7 @@ public class ExecutionService {
   @Path("/{executionId}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response getExecution(@PathParam("executionId") int executionId) throws JobException {
     Execution execution = executionFacade.findById(executionId);
     if (execution == null) {
