@@ -52,14 +52,14 @@ public class JobConfigurationConverter implements AttributeConverter<JobConfigur
       sparkJAXBContext = JAXBContextFactory.createContext(new Class[] {SparkJobConfiguration.class}, null);
       flinkJAXBContext = JAXBContextFactory.createContext(new Class[] {FlinkJobConfiguration.class}, null);
     } catch (JAXBException e) {
-      LOGGER.log(Level.SEVERE, "Problems ");
+      LOGGER.log(Level.SEVERE, "An error occurred while initializing JAXBContext", e);
     }
   }
 
   @Override
   public String convertToDatabaseColumn(JobConfiguration config) {
     try {
-      JAXBContext jc = createJAXBContext(config.getJobType());
+      JAXBContext jc = getJAXBContext(config.getJobType());
       Marshaller marshaller = jc.createMarshaller();
       marshaller.setProperty(MarshallerProperties.JSON_INCLUDE_ROOT, false);
       marshaller.setProperty(MarshallerProperties.MEDIA_TYPE, MediaType.APPLICATION_JSON);
@@ -79,14 +79,14 @@ public class JobConfigurationConverter implements AttributeConverter<JobConfigur
     try {
       JSONObject obj = new JSONObject(jsonConfig);
       JobType type = JobType.valueOf((((String)obj.get("jobType"))));
-      JAXBContext jc = createJAXBContext(type);
+      JAXBContext jc = getJAXBContext(type);
       return unmarshal(jsonConfig, type, jc);
     } catch (JAXBException e) {
       throw new IllegalStateException(e);
     }
   }
 
-  private JAXBContext createJAXBContext(JobType jobType) throws JAXBException {
+  private JAXBContext getJAXBContext(JobType jobType) throws JAXBException {
     switch(jobType) {
       case SPARK:
       case PYSPARK:
