@@ -68,7 +68,6 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -82,6 +81,7 @@ import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.ws.rs.core.SecurityContext;
 
 /**
  * Service offering functionality to run a Flink fatjar job.
@@ -138,7 +138,7 @@ public class FlinkService {
    * FlinkJobConfiguration object.
    * <p/>
    * @param path
-   * @param req
+   * @param sc
    * @return
    * @throws io.hops.hopsworks.common.exception.UserException
    * @throws io.hops.hopsworks.common.exception.JobException
@@ -149,9 +149,9 @@ public class FlinkService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response inspectJar(@PathParam("path") String path, @Context HttpServletRequest req) throws UserException,
+  public Response inspectJar(@PathParam("path") String path, @Context SecurityContext sc) throws UserException,
       JobException, GenericException {
-    Users user = jWTHelper.getUserPrincipal(req);
+    Users user = jWTHelper.getUserPrincipal(sc);
     String username = hdfsUsersBean.getHdfsUserName(project, user);
     DistributedFileSystemOps udfso = null;
     try {
@@ -167,7 +167,7 @@ public class FlinkService {
    * Create a new Job definition. If successful, the job is returned.
    * <p/>
    * @param config The configuration from which to create a Job.
-   * @param req
+   * @param sc
    * @return
    * @throws io.hops.hopsworks.common.exception.JobException
    */
@@ -176,11 +176,11 @@ public class FlinkService {
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response createJob(FlinkJobConfiguration config, @Context HttpServletRequest req) throws JobException {
+  public Response createJob(FlinkJobConfiguration config, @Context SecurityContext sc) throws JobException {
     if (config == null) {
       throw new IllegalArgumentException("Job config was not provided.");
     } else {
-      Users user = jWTHelper.getUserPrincipal(req);
+      Users user = jWTHelper.getUserPrincipal(sc);
       String path = config.getJarPath();
       if (!path.startsWith("hdfs")) {
         path = "hdfs://" + path;

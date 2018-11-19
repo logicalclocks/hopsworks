@@ -73,7 +73,6 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.mail.Message.RecipientType;
 import javax.mail.MessagingException;
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -82,6 +81,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.ws.rs.core.SecurityContext;
 
 @Path("/request")
 @Stateless
@@ -118,13 +118,13 @@ public class RequestService {
   @POST
   @Path("/access")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response requestAccess(RequestDTO requestDTO, @Context HttpServletRequest req) throws DatasetException,
+  public Response requestAccess(RequestDTO requestDTO, @Context SecurityContext sc) throws DatasetException,
       ProjectException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     if (requestDTO == null || requestDTO.getInodeId() == null || requestDTO.getProjectId() == null) {
       throw new IllegalArgumentException("requestDTO was not provided or was incomplete!");
     }
-    Users user = jWTHelper.getUserPrincipal(req);
+    Users user = jWTHelper.getUserPrincipal(sc);
     Inode inode = inodes.findById(requestDTO.getInodeId());
     Inode parent = inodes.findParent(inode);
     //requested project
@@ -218,13 +218,13 @@ public class RequestService {
   @POST
   @Path("/join")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response requestJoin(RequestDTO requestDTO, @Context HttpServletRequest req) throws ProjectException {
+  public Response requestJoin(RequestDTO requestDTO, @Context SecurityContext sc) throws ProjectException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     if (requestDTO == null || requestDTO.getProjectId() == null) {
       throw new IllegalArgumentException("requestDTO wast not provided or was incomplete.");
     }
     //should be removed when users and user merg.
-    Users user = jWTHelper.getUserPrincipal(req);
+    Users user = jWTHelper.getUserPrincipal(sc);
     Project project = projectFacade.find(requestDTO.getProjectId());
     if(project == null){
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE);

@@ -59,7 +59,6 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -72,6 +71,7 @@ import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.ws.rs.core.SecurityContext;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -124,9 +124,9 @@ public class ExecutionService {
   @POST
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public Response startExecution(@Context HttpServletRequest req) throws ProjectException, GenericException,
+  public Response startExecution(@Context SecurityContext sc) throws ProjectException, GenericException,
       JobException {
-    Users user = jWTHelper.getUserPrincipal(req);
+    Users user = jWTHelper.getUserPrincipal(sc);
     if(job.getProject().getPaymentType().equals(PaymentType.PREPAID)){
       YarnProjectsQuota projectQuota = yarnProjectsQuotaFacade.findByProjectName(job.getProject().getName());
       if(projectQuota==null || projectQuota.getQuotaRemaining() < 0){
@@ -140,8 +140,8 @@ public class ExecutionService {
   @POST
   @Path("/stop")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public Response stopExecution(@PathParam("jobId") int jobId, @Context HttpServletRequest req) {
-    Users user = jWTHelper.getUserPrincipal(req);
+  public Response stopExecution(@PathParam("jobId") int jobId, @Context SecurityContext sc) {
+    Users user = jWTHelper.getUserPrincipal(sc);
 
     executionController.kill(job, user);
     //executionController.stop(job, user, appid);

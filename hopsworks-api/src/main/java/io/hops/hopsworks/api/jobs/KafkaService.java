@@ -69,7 +69,6 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -86,6 +85,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.ws.rs.core.SecurityContext;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -198,9 +198,9 @@ public class KafkaService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response getTopicDetails(@PathParam("topic") String topicName, @Context HttpServletRequest req) throws
+  public Response getTopicDetails(@PathParam("topic") String topicName, @Context SecurityContext sc) throws
       Exception {
-    Users user = jWTHelper.getUserPrincipal(req);
+    Users user = jWTHelper.getUserPrincipal(sc);
     List<PartitionDetailsDTO> topic;
     topic = kafkaFacade.getTopicDetails(project, user, topicName);
     GenericEntity<List<PartitionDetailsDTO>> topics = new GenericEntity<List<PartitionDetailsDTO>>(topic) {};

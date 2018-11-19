@@ -142,6 +142,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.ws.rs.core.SecurityContext;
 
 /**
  *
@@ -202,8 +203,6 @@ public class JobService {
   /**
    * Get all the jobs in this project.
    * <p>
-   * @param sc
-   * @param req
    * @return A list of all defined Jobs in this project.
    */
   @GET
@@ -220,8 +219,6 @@ public class JobService {
    * Get the job with the given id in the current project.
    * <p>
    * @param jobId
-   * @param sc
-   * @param req
    * @return
    */
   @GET
@@ -251,8 +248,6 @@ public class JobService {
    * configuration.
    * <p>
    * @param jobId
-   * @param sc
-   * @param req
    * @return
    */
   @GET
@@ -277,8 +272,6 @@ public class JobService {
    * Get the appId for the specified job
    * <p>
    * @param jobId
-   * @param sc
-   * @param req
    * @return url
    */
   @GET
@@ -318,8 +311,6 @@ public class JobService {
    * Get all the appIds for the specified job
    * <p>
    * @param jobId
-   * @param sc
-   * @param req
    * @return url
    */
   @GET
@@ -358,8 +349,8 @@ public class JobService {
     }
   }
 
-  private String getHdfsUser(HttpServletRequest req) {
-    Users user = jWTHelper.getUserPrincipal(req);
+  private String getHdfsUser(SecurityContext sc) {
+    Users user = jWTHelper.getUserPrincipal(sc);
     String hdfsUsername = hdfsUsersController.getHdfsUserName(project, user);
 
     return hdfsUsername;
@@ -368,8 +359,6 @@ public class JobService {
   /**
    * Get the projectName for the specified projectId
    * <p>
-   * @param sc
-   * @param req
    * @return url
    */
   @GET
@@ -433,8 +422,6 @@ public class JobService {
    * <p>
    * @param appId
    * @param isLivy
-   * @param sc
-   * @param req
    * @return url
    */
   @GET
@@ -470,7 +457,7 @@ public class JobService {
    * Get the Job UI url for the specified job
    * <p>
    * @param appId
-   * @param req
+   * @param sc
    * @return url
    */
   @GET
@@ -478,14 +465,14 @@ public class JobService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response getTensorBoardUrls(@PathParam("appId") String appId, @Context HttpServletRequest req)  {
+  public Response getTensorBoardUrls(@PathParam("appId") String appId, @Context SecurityContext sc)  {
     Response noAccess = checkAccessRight(appId);
     if (noAccess != null) {
       return noAccess;
     }
     Response.Status response = Response.Status.OK;
     List<YarnAppUrlsDTO> urls = new ArrayList<>();
-    String hdfsUser = getHdfsUser(req);
+    String hdfsUser = getHdfsUser(sc);
 
     try {
       urls.addAll(getTensorBoardUrls(hdfsUser, appId));
@@ -516,8 +503,6 @@ public class JobService {
    * Get the Yarn UI url for the specified job
    * <p>
    * @param appId
-   * @param sc
-   * @param req
    * @return url
    */
   @GET
@@ -550,8 +535,6 @@ public class JobService {
    * Get application run info for the specified job
    * <p>
    * @param appId
-   * @param sc
-   * @param req
    * @return url
    */
   @GET
@@ -685,7 +668,6 @@ public class JobService {
   @Path("/{appId}/prox/{path: .+}")
   @Produces(MediaType.WILDCARD)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response getProxy(@PathParam("appId") final String appId, @PathParam("path") final String param,
       @Context HttpServletRequest req) {
 
@@ -1305,9 +1287,9 @@ public class JobService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response deleteJob(@PathParam("jobId") int jobId, @Context HttpServletRequest req) {
+  public Response deleteJob(@PathParam("jobId") int jobId, @Context SecurityContext sc) {
     LOGGER.log(Level.INFO, "Request to delete job");
-    Users user = jWTHelper.getUserPrincipal(req);
+    Users user = jWTHelper.getUserPrincipal(sc);
     String loggedinemail = user.getEmail();
     Jobs job = jobFacade.findById(jobId);
     if (job == null) {
@@ -1359,9 +1341,8 @@ public class JobService {
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response updateSchedule(ScheduleDTO schedule, @PathParam("jobId") int jobId, 
-      @Context HttpServletRequest req) {
-    Users user = jWTHelper.getUserPrincipal(req);
+  public Response updateSchedule(ScheduleDTO schedule, @PathParam("jobId") int jobId, @Context SecurityContext sc) {
+    Users user = jWTHelper.getUserPrincipal(sc);
     Jobs job = jobFacade.findById(jobId);
     if (job == null) {
       return noCacheResponse.

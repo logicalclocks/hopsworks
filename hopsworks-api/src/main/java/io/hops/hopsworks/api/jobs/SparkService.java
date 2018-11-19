@@ -49,7 +49,6 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -81,6 +80,7 @@ import io.hops.hopsworks.common.jobs.spark.SparkJobConfiguration;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import javax.ws.rs.core.SecurityContext;
 
 /**
  * Service offering functionality to run a Spark fatjar job.
@@ -138,7 +138,7 @@ public class SparkService {
    * SparkJobConfiguration object.
    * <p/>
    * @param path
-   * @param req
+   * @param sc
    * @return
    * @throws io.hops.hopsworks.common.exception.JobException
    */
@@ -147,8 +147,8 @@ public class SparkService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response inspectJar(@PathParam("path") String path, @Context HttpServletRequest req) throws JobException {
-    Users user = jWTHelper.getUserPrincipal(req);
+  public Response inspectJar(@PathParam("path") String path, @Context SecurityContext sc) throws JobException {
+    Users user = jWTHelper.getUserPrincipal(sc);
     String username = hdfsUsersBean.getHdfsUserName(project, user);
     DistributedFileSystemOps udfso = null;
     try {
@@ -167,7 +167,7 @@ public class SparkService {
    * Create a new Job definition. If successful, the job is returned.
    * <p/>
    * @param config The configuration from which to create a Job.
-   * @param req
+   * @param sc
    * @return
    * @throws io.hops.hopsworks.common.exception.JobException
    */
@@ -176,11 +176,11 @@ public class SparkService {
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response createJob(SparkJobConfiguration config, @Context HttpServletRequest req) throws JobException {
+  public Response createJob(SparkJobConfiguration config, @Context SecurityContext sc) throws JobException {
     if (config == null) {
       throw new IllegalArgumentException("Job configuration was not provided.");
     } else {
-      Users user = jWTHelper.getUserPrincipal(req);
+      Users user = jWTHelper.getUserPrincipal(sc);
 
       if (Strings.isNullOrEmpty(config.getAppName())) {
         throw new IllegalArgumentException("Job name was not provided.");

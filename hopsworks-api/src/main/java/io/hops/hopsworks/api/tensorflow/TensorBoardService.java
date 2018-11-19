@@ -55,7 +55,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.SecurityContext;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -96,10 +96,10 @@ public class TensorBoardService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response getTensorBoard(@Context HttpServletRequest req) throws ServiceException {
+  public Response getTensorBoard(@Context SecurityContext sc) throws ServiceException {
 
     try {
-      Users user = jWTHelper.getUserPrincipal(req);
+      Users user = jWTHelper.getUserPrincipal(sc);
       TensorBoardDTO tbDTO = tensorBoardController.getTensorBoard(project, user);
       if(tbDTO == null) {
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
@@ -117,10 +117,10 @@ public class TensorBoardService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response startTensorBoard(@PathParam("elasticId") String elasticId, @Context HttpServletRequest req) throws
+  public Response startTensorBoard(@PathParam("elasticId") String elasticId, @Context SecurityContext sc) throws
       ServiceException, DatasetException, ProjectException {
 
-    Users user = jWTHelper.getUserPrincipal(req);
+    Users user = jWTHelper.getUserPrincipal(sc);
 
     String hdfsLogdir = null;
     hdfsLogdir = elasticController.getLogdirFromElastic(project, elasticId);
@@ -139,9 +139,9 @@ public class TensorBoardService {
   @DELETE
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response stopTensorBoard(@Context HttpServletRequest req) throws ServiceException {
+  public Response stopTensorBoard(@Context SecurityContext sc) throws ServiceException {
 
-    Users user = jWTHelper.getUserPrincipal(req);
+    Users user = jWTHelper.getUserPrincipal(sc);
   
     TensorBoardDTO tbDTO = tensorBoardController.getTensorBoard(project, user);
     if (tbDTO == null) {

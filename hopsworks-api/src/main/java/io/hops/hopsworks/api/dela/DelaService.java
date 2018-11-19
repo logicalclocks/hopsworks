@@ -86,7 +86,6 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -98,6 +97,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 
 @Path("/dela")
 @Stateless
@@ -199,13 +199,13 @@ public class DelaService {
   @GET
   @Path("/transfers")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getContentsForUser(@Context HttpServletRequest req, @QueryParam("filter") TransfersFilter filter)
+  public Response getContentsForUser(@Context SecurityContext sc, @QueryParam("filter") TransfersFilter filter)
       throws DelaException {
     if (!filter.equals(TransfersFilter.USER)) {
       throw new DelaException(RESTCodes.DelaErrorCode.ILLEGAL_ARGUMENT, Level.FINE, DelaException.Source.LOCAL,
         "not handling filter value:" + filter);
     }
-    Users user = jWTHelper.getUserPrincipal(req);
+    Users user = jWTHelper.getUserPrincipal(sc);
     List<ProjectTeam> teams = projectCtrl.findProjectByUser(user.getEmail());
     List<Integer> projectIds = new LinkedList<>();
     for (ProjectTeam t : teams) {

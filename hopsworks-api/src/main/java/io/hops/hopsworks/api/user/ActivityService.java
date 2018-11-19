@@ -45,7 +45,6 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -65,6 +64,7 @@ import io.hops.hopsworks.common.dao.user.activity.Activity;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.Api;
+import javax.ws.rs.core.SecurityContext;
 
 @Path("/activity")
 @Stateless
@@ -84,8 +84,8 @@ public class ActivityService {
 
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  public Response findAllByUser(@Context HttpServletRequest req) {
-    Users user = jWTHelper.getUserPrincipal(req);
+  public Response findAllByUser(@Context SecurityContext sc) {
+    Users user = jWTHelper.getUserPrincipal(sc);
     List<Activity> activityDetails = activityFacade.getAllActivityByUser(user);
     GenericEntity<List<Activity>> projectActivities = new GenericEntity<List<Activity>>(activityDetails) {};
     Response r = noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(projectActivities).build();
@@ -98,8 +98,8 @@ public class ActivityService {
   public Response findByInode(@QueryParam("inodeId") int inodeId,
           @QueryParam("from") int from,
           @QueryParam("to") int to,
-          @Context HttpServletRequest req) {
-    Users user = jWTHelper.getUserPrincipal(req);
+          @Context SecurityContext sc) {
+    Users user = jWTHelper.getUserPrincipal(sc);
     List<Activity> activityDetails = activityFacade.getAllActivityByUser(user);
     GenericEntity<List<Activity>> projectActivities = new GenericEntity<List<Activity>>(activityDetails) {};
     Response r = noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(projectActivities).build();
@@ -110,8 +110,8 @@ public class ActivityService {
   @Path("/query")
   @Produces(MediaType.APPLICATION_JSON)
   public Response findPaginatedByUser(@QueryParam("from") int from, @QueryParam("to") int to,
-          @Context HttpServletRequest req) {
-    Users user = jWTHelper.getUserPrincipal(req);
+          @Context SecurityContext sc) {
+    Users user = jWTHelper.getUserPrincipal(sc);
     List<Activity> activityDetails = activityFacade.getPaginatedActivityByUser(from, to, user);
     GenericEntity<List<Activity>> projectActivities = new GenericEntity<List<Activity>>(activityDetails) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(projectActivities).build();
