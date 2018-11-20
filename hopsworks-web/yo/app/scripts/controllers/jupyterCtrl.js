@@ -543,8 +543,8 @@ angular.module('hopsWorksApp')
                             PythonDepsService.enabled(self.projectId).then(
                                 function(success) {},
                                 function(error) {
-                                    growl.info("Preparing Python Anaconda environment, please wait...", {
-                                        ttl: 20000
+                                    growl.info("Anaconda environment with python 2.7 was selected for the project", {
+                                        ttl: 10000
                                     });
                                     PythonDepsService.enable(self.projectId, "2.7", "true").then(
                                         function(success) {
