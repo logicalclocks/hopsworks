@@ -166,7 +166,6 @@ public class JupyterService {
   /**
    * Launches a Jupyter notebook server for this project-specific user
    *
-   * @param req
    * @return
    * @throws io.hops.hopsworks.common.exception.ServiceException
    */
@@ -174,7 +173,7 @@ public class JupyterService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response getAllNotebookServersInProject(@Context HttpServletRequest req) throws ServiceException {
+  public Response getAllNotebookServersInProject() throws ServiceException {
 
     Collection<JupyterProject> servers = project.getJupyterProjectCollection();
 
@@ -218,7 +217,7 @@ public class JupyterService {
   /**
    * Get livy session Yarn AppId
    *
-   * @param req
+   * @param sc
    * @return
    */
   @GET
