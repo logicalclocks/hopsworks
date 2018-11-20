@@ -154,9 +154,9 @@ public class ActivitiesBuilder {
   private ActivitiesDTO items(ActivitiesDTO dto, UriInfo uriInfo, ResourceProperties resourceProperties) {
     List<Activity> activities;
     ResourceProperties.ResourceProperty property = resourceProperties.get(ResourceProperties.Name.ACTIVITIES);
-    if (property.getPagination() != null) {
-      activities = activityFacade.findAll(property.getPagination().getOffset(), property.getPagination().getLimit(),
-          property.getFilter(), property.getSort());
+    if (property.getOffset() != null || property.getLimit() != null || property.getFilter() != null) {
+      activities = activityFacade.findAll(property.getOffset(), property.getLimit(), property.getFilter(), 
+          property.getSort());
       return items(dto, uriInfo, resourceProperties, activities, false);
     }
     activities = activityFacade.getAllActivities();
@@ -166,9 +166,9 @@ public class ActivitiesBuilder {
   private ActivitiesDTO items(ActivitiesDTO dto, UriInfo uriInfo, ResourceProperties resourceProperties, Users user) {
     List<Activity> activities;
     ResourceProperties.ResourceProperty property = resourceProperties.get(ResourceProperties.Name.ACTIVITIES);
-    if (property.getPagination() != null) {
-      activities = activityFacade.findAllByUser(property.getPagination().getOffset(), property.getPagination().
-          getLimit(), property.getFilter(), property.getSort(), user);
+    if (property.getOffset() != null || property.getLimit() != null || property.getFilter() != null) {
+      activities = activityFacade.findAllByUser(property.getOffset(), property.getLimit(), property.getFilter(), 
+          property.getSort(), user);
       return items(dto, uriInfo, resourceProperties, activities, false);
     }
     activities = activityFacade.getAllActivityByUser(user);
@@ -179,9 +179,9 @@ public class ActivitiesBuilder {
       Project project) {
     List<Activity> activities;
     ResourceProperties.ResourceProperty property = resourceProperties.get(ResourceProperties.Name.ACTIVITIES);
-    if (property.getPagination() != null) {
-      activities = activityFacade.findAllByProject(property.getPagination().getOffset(), property.getPagination().
-          getLimit(), property.getFilter(), property.getSort(), project);
+    if (property.getOffset() != null || property.getLimit() != null || property.getFilter() != null) {
+      activities = activityFacade.findAllByProject(property.getOffset(), property.getLimit(), property.getFilter(), 
+          property.getSort(), project);
       return items(dto, uriInfo, resourceProperties, activities, false);
     }
     activities = activityFacade.getAllActivityByProject(project);

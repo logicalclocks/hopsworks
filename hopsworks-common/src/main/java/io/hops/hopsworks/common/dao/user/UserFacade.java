@@ -190,8 +190,8 @@ public class UserFacade extends AbstractFacade<Users> {
   }
 
   public enum FilterBy implements AbstractFacade.FilterBy {
-    ROLE ("ROLE", "u.bbcGroupCollection IN :roles ", "roles", "HOPS_USER"),
-    ROLE_NEQ ("ROLE_NEQ", "u.bbcGroupCollection NOT IN :roles ", "roles", "HOPS_ADMIN,AGENT,AUDITOR"),
+    ROLE ("ROLE", "u.bbcGroupCollection IN :roles ", "roles", "HOPS_ADMIN,HOPS_USER"),
+    ROLE_NEQ ("ROLE_NEQ", "u.bbcGroupCollection NOT IN :roles ", "roles", "AGENT,AUDITOR"),
     STATUS ("STATUS", "u.status = :status ", "status", "2"),
     STATUS_LT ("STATUS_LT", "u.status < :status ", "status", "2"),
     STATUS_GT ("STATUS_GT", "u.status > :status ", "status", "2"),

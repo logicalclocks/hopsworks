@@ -18,7 +18,7 @@ package io.hops.hopsworks.api.activities;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jwt.JWTHelper;
-import io.hops.hopsworks.common.api.Pagination;
+import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.api.ResourceProperties;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.ActivitiesException;
@@ -62,8 +62,9 @@ public class UserActivitiesResource {
       @Context UriInfo uriInfo,
       @Context HttpServletRequest req) throws UserException, ActivitiesException {
     Users user = jWTHelper.getUserPrincipal(req);
-    ResourceProperties resourceProperties = new ResourceProperties(ResourceProperties.Name.ACTIVITIES, pagination, 
-        activitiesBeanParam.getSort(), activitiesBeanParam.getFilter(), expand);
+    ResourceProperties resourceProperties = new ResourceProperties(ResourceProperties.Name.ACTIVITIES, pagination.
+        getOffset(), pagination.getLimit(), activitiesBeanParam.getSortBySet(), activitiesBeanParam.getFilter(), 
+        expand);
     ActivitiesDTO activitiesDTO = activitiesBuilder.buildItems(uriInfo, resourceProperties, user);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(activitiesDTO).build();
   }
