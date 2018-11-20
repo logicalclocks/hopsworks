@@ -110,6 +110,8 @@ public class TensorboardProxyServlet extends ProxyServlet {
       uriToFinish = urlMatcher.group(2);
     }
     if (hostPortPair.isEmpty()) {
+      servletResponse.sendError(Response.Status.FORBIDDEN.getStatusCode(),
+          "This TensorBoard is not accessible right now");
       return;
     }
 
