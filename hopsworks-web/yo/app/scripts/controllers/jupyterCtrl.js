@@ -337,15 +337,31 @@ angular.module('hopsWorksApp')
 
             getCondaCommands();
 
-            var startPolling = function() {
-                self.poller = $interval(function() {
+            var condaCommandsPoller = function() {
+                self.condaPoller = $interval(function() {
                     getCondaCommands();
                 }, 5000);
             };
-            startPolling();
+            condaCommandsPoller();
+
+            var jupyterNotebookPoller = function() {
+                self.notebookPoller = $interval(function() {
+                JupyterService.running(self.projectId).then(
+                    function(success) {
+                        self.ui = "/hopsworks-api/jupyter/" + self.config.port + "/?token=" + self.config.token;
+                    },
+                    function(error) {
+                        self.ui = '';
+                    }
+                );
+                }, 20000);
+            };
+            jupyterNotebookPoller();
+
 
             $scope.$on('$destroy', function () {
-              $interval.cancel(self.poller);
+              $interval.cancel(self.condaPoller);
+              $interval.cancel(self.notebookPoller);
             });
 
             self.sliderVisible = false;
