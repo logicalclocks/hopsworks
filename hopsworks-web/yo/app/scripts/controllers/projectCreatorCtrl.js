@@ -76,24 +76,16 @@ angular.module('hopsWorksApp')
             UserService.profile().then(
               function (success) {
                 self.user = success.data;
-                console.log("User: ", self.user);
-                UserService.allcards().then(function (success) {
+                UserService.allValidUsers().then(function (success) {
                     self.cards = success.data.items;
-                    // remove my own 'card' from the list of members
                     for (var i = 0, len = self.cards.length; i < len; i++) {
                       if (self.cards[i].email === self.user.email) {
                         self.cards.splice(i, 1);
                         break;
                       }
                     }
-                    for (var i = 0, len = self.cards.length; i < len; i++) {
-                      if (self.cards[i].email === "agent@hops.io") {
-                        self.cards.splice(i, 1);
-                        break;
-                      }
-                    }
                   }, function (error) {
-                     self.errorMsg = error.data.msg;
+                    self.errorMsg = error.data.msg;
                 });
               },
               function (error) {

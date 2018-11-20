@@ -186,11 +186,11 @@
           <td style="width:7%;border-top:none;">Action</td>
         </tr>
 
-        <tr ng-repeat="member in memberCtrl.members| filter:searchInput">
+        <tr ng-repeat="member in memberCtrl.members| filter:searchInput" ng-if="member.user.email !== 'serving@hopsworks.se'">
           <td ng-class="{'text-muted' : member.user.email === mainCtrl.email}">
             <div class="media">
               <a class="pull-left">
-                <img src="https://gravatar.com/avatar/{{mainCtrl.getEmailHash(member.user.email)}}?d=mm"
+                <img alt="gravatar" src="https://gravatar.com/avatar/{{mainCtrl.getEmailHash(member.user.email)}}?d=mm"
                      style="height: 50px; margin-right: 10px;border: 2px solid white;margin-top:3px;"
                      class="profile-image img-circle">
               </a>
