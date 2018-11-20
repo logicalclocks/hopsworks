@@ -20,6 +20,8 @@ import com.google.common.base.Strings;
 
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.persistence.AttributeConverter;
 import javax.persistence.Converter;
 import javax.ws.rs.core.MediaType;
@@ -39,10 +41,25 @@ import org.json.JSONObject;
 @Converter
 public class JobConfigurationConverter implements AttributeConverter<JobConfiguration, String> {
 
+  private final static Logger LOGGER = Logger.getLogger(JobConfigurationConverter.class.getName());
+
+
+  private static JAXBContext sparkJAXBContext;
+  private static JAXBContext flinkJAXBContext;
+
+  static {
+    try {
+      sparkJAXBContext = JAXBContextFactory.createContext(new Class[] {SparkJobConfiguration.class}, null);
+      flinkJAXBContext = JAXBContextFactory.createContext(new Class[] {FlinkJobConfiguration.class}, null);
+    } catch (JAXBException e) {
+      LOGGER.log(Level.SEVERE, "An error occurred while initializing JAXBContext", e);
+    }
+  }
+
   @Override
   public String convertToDatabaseColumn(JobConfiguration config) {
     try {
-      JAXBContext jc = createJAXBContext(config.getJobType());
+      JAXBContext jc = getJAXBContext(config.getJobType());
       Marshaller marshaller = jc.createMarshaller();
       marshaller.setProperty(MarshallerProperties.JSON_INCLUDE_ROOT, false);
       marshaller.setProperty(MarshallerProperties.MEDIA_TYPE, MediaType.APPLICATION_JSON);
@@ -62,20 +79,20 @@ public class JobConfigurationConverter implements AttributeConverter<JobConfigur
     try {
       JSONObject obj = new JSONObject(jsonConfig);
       JobType type = JobType.valueOf((((String)obj.get("jobType"))));
-      JAXBContext jc = createJAXBContext(type);
+      JAXBContext jc = getJAXBContext(type);
       return unmarshal(jsonConfig, type, jc);
     } catch (JAXBException e) {
       throw new IllegalStateException(e);
     }
   }
 
-  private JAXBContext createJAXBContext(JobType jobType) throws JAXBException {
+  private JAXBContext getJAXBContext(JobType jobType) throws JAXBException {
     switch(jobType) {
       case SPARK:
       case PYSPARK:
-        return JAXBContextFactory.createContext(new Class[] {SparkJobConfiguration.class}, null);
+        return sparkJAXBContext;
       case FLINK:
-        return JAXBContextFactory.createContext(new Class[] {FlinkJobConfiguration.class}, null);
+        return flinkJAXBContext;
       default:
         throw new IllegalArgumentException("Could not find a mapping for JobType " + jobType);
     }
