@@ -66,6 +66,7 @@ import io.hops.hopsworks.common.util.EmailBean;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.Api;
+import org.elasticsearch.common.Strings;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -154,7 +155,7 @@ public class RequestService {
             + "Dataset name: " + ds.getInode().getInodePK().getName() + "\n"
             + "Project name: " + proj.getName() + "\n";
 
-    if(requestDTO.getMessageContent() != null) {
+    if(!Strings.isNullOrEmpty(requestDTO.getMessageContent())) {
       msg += "Attached message: " + requestDTO.getMessageContent() + "\n";
     }
 
@@ -245,11 +246,11 @@ public class RequestService {
             + " wants to join a project you own. \n\n"
             + "Project name: " + project.getName() + "\n";
 
-    if(requestDTO.getMessageContent() != null) {
+    if(!Strings.isNullOrEmpty(requestDTO.getMessageContent())) {
       msg += "Attached message: " + requestDTO.getMessageContent() + "\n";
     }
 
-    msg += "After loging in to Hopsworks go to : /project" + project.getId()
+    msg += "After logging in to Hopsworks go to : /project" + project.getId()
         + " and go to members tab "
         + "if you want to add this person as a member in your project. \n";
 
@@ -259,7 +260,7 @@ public class RequestService {
             + "I would like to join a project you own. <br>"
             + "Project name: " + project.getName() + "<br>";
 
-    if(requestDTO.getMessageContent() != null) {
+    if(!Strings.isNullOrEmpty(requestDTO.getMessageContent())) {
       message += requestDTO.getMessageContent();
     }
 
