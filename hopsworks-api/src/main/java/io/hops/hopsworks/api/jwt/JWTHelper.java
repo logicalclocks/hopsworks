@@ -324,6 +324,9 @@ public class JWTHelper {
   public DecodedJWT verifyOneTimeToken(String token, String issuer) throws SigningKeyNotFoundException, 
       VerificationException {
     DecodedJWT jwt = null;
+    if (token == null || token.trim().isEmpty()) {
+      throw new VerificationException("Token not provided.");
+    }
     try {
       jwt = jwtController.verifyOneTimeToken(token, issuer);
     } catch (InvalidationException ex) {

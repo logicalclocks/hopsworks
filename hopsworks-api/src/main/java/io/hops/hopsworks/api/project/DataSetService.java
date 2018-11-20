@@ -329,9 +329,9 @@ public class DataSetService {
    * Get the inodes in the given project-relative path.
    * <p/>
    * @param path
-   * @param sc
-   * @param req
    * @return
+   * @throws io.hops.hopsworks.common.exception.DatasetException
+   * @throws io.hops.hopsworks.common.exception.ProjectException
    */
   @GET
   @Path("/getContent/{path: .+}")
@@ -656,7 +656,7 @@ public class DataSetService {
    * This function is used only for deletion of dataset directories
    * as it does not accept a path
    * @param fileName
-   * @param req
+   * @param sc
    * @return 
    * @throws io.hops.hopsworks.common.exception.DatasetException 
    * @throws io.hops.hopsworks.common.exception.ProjectException 
@@ -1224,7 +1224,6 @@ public class DataSetService {
   }
 
   @Path("fileDownload")
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public DownloadService downloadDS() {
     this.downloader.setProject(project);
     return this.downloader;
@@ -1267,41 +1266,15 @@ public class DataSetService {
   }
 
   /**
-   * Upload methods does not need to go through the filter, hdfs will through the exception and it is propagated to 
-   * the HTTP response.
+   * Upload methods 
    * 
    * @param path
    * @param templateId
-   * @param sc
    * @return
-   * @throws io.hops.hopsworks.common.exception.DatasetException
-   * @throws io.hops.hopsworks.common.exception.ProjectException
    */
   @Path("upload/{path: .+}")
-  public UploadService upload(@PathParam("path") String path, @QueryParam("templateId") int templateId,
-      @Context SecurityContext sc) throws DatasetException, ProjectException {
-    Users user = jWTHelper.getUserPrincipal(sc);
-    String username = hdfsUsersBean.getHdfsUserName(project, user);
-
-    DsPath dsPath = pathValidator.validatePath(this.project, path);
-    Project owning = datasetController.getOwningProject(dsPath.getDs());
-    //Is user a member of this project? If so get their role
-    boolean isMember = projectTeamFacade.isUserMemberOfProject(owning, user);
-    String role = null;
-    if (isMember) {
-      role = projectTeamFacade.findCurrentRole(owning, user);
-    }
-
-    //Do not allow non-DataOwners to upload to a non-Editable dataset
-    //Do not allow anyone to upload if the dataset is shared and non-Editable
-    if (dsPath.getDs().getEditable() == DatasetPermissions.OWNER_ONLY 
-        && ((role != null && project.equals(owning) && !role.equals(AllowedProjectRoles.DATA_OWNER)) 
-        || !project.equals(owning))) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_EDITABLE, Level.FINE,
-        "dataset: " + dsPath.getDs().getName(), "datasetId: " + dsPath.getDs().getId());
-    }
-     
-    this.uploader.confFileUpload(dsPath, username, templateId, role);
+  public UploadService upload(@PathParam("path") String path, @QueryParam("templateId") int templateId) {
+    this.uploader.setParams(project, path, templateId, false);
     return this.uploader;
   }
 

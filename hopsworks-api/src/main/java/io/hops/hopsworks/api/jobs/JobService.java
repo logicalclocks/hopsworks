@@ -1319,16 +1319,13 @@ public class JobService {
    * @return
    */
   @Path("/{jobId}/executions")
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public ExecutionService executions(@PathParam("jobId") int jobId) {
     Jobs job = jobFacade.findById(jobId);
     if (job == null) {
       return null;
     } else if (!job.getProject().equals(project)) {
       //In this case, a user is trying to access a job outside its project!!!
-      LOGGER.log(Level.SEVERE,
-          "A user is trying to access a job outside their project!");
+      LOGGER.log(Level.SEVERE, "A user is trying to access a job outside their project!");
       return null;
     } else {
       return this.executions.setJob(job);

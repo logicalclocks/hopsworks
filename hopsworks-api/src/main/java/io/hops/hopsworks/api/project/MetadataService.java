@@ -159,8 +159,8 @@ public class MetadataService {
    */
   @Path("upload")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public UploadService upload() throws DatasetException {
-    this.uploader.confUploadTemplate();
+  public UploadService upload() {
+    this.uploader.setParams(null, null, -1, true);
     return this.uploader;
   }
 
