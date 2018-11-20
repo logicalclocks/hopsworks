@@ -39,6 +39,7 @@
 
 package io.hops.hopsworks.api.project;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
@@ -66,7 +67,6 @@ import io.hops.hopsworks.common.util.EmailBean;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.Api;
-import org.elasticsearch.common.Strings;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
