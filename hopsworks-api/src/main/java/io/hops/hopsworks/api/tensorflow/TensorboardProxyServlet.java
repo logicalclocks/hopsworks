@@ -147,6 +147,7 @@ public class TensorboardProxyServlet extends ProxyServlet {
         targetUriObj = new URI(targetUri);
         targetUriHost = new URI(theHost);
       } catch (Exception e) {
+        LOGGER.log(Level.FINE, "An error occurred serving the request", e);
         return;
       }
       targetHost = URIUtils.extractHost(targetUriHost);
@@ -207,6 +208,7 @@ public class TensorboardProxyServlet extends ProxyServlet {
         targetUriObj = new URI(targetUri);
         targetUriHost = new URI(theHost);
       } catch (Exception e) {
+        LOGGER.log(Level.FINE, "An error occurred serving the request", e);
         return;
       }
       targetHost = URIUtils.extractHost(targetUriHost);
