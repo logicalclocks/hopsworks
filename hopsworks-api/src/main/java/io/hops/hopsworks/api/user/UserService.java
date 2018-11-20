@@ -36,7 +36,6 @@
  * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
 package io.hops.hopsworks.api.user;
 
 import io.hops.hopsworks.api.activities.UserActivitiesResource;
@@ -44,7 +43,7 @@ import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
-import io.hops.hopsworks.common.api.Pagination;
+import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.api.ResourceProperties;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.project.Project;
@@ -88,8 +87,10 @@ import javax.ws.rs.core.UriInfo;
 
 @Path("/users")
 @Stateless
-@JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-@Api(value = "Users", description = "Users service")
+@JWTRequired(acceptedTokens = {Audience.API},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+@Api(value = "Users",
+    description = "Users service")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class UserService {
 
@@ -115,16 +116,16 @@ public class UserService {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   public Response findAll(
-      @BeanParam Pagination pagination, 
+      @BeanParam Pagination pagination,
       @BeanParam UsersBeanParam usersBeanParam,
       @QueryParam("expand") String expand,
       @Context UriInfo uriInfo) {
-    ResourceProperties resourceProperties = new ResourceProperties(ResourceProperties.Name.USERS, pagination, 
-        usersBeanParam.getSort(), usersBeanParam.getFilter(), expand);
-    UserDTO userDTO = usersBuilder.buildItems(uriInfo, resourceProperties); 
+    ResourceProperties resourceProperties = new ResourceProperties(ResourceProperties.Name.USERS, pagination.getOffset()
+        , pagination.getLimit(), usersBeanParam.getSortBySet(), usersBeanParam.getFilter(), expand);
+    UserDTO userDTO = usersBuilder.buildItems(uriInfo, resourceProperties);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(userDTO).build();
   }
-  
+
   @GET
   @Path("{userId}")
   @Produces(MediaType.APPLICATION_JSON)
@@ -135,14 +136,14 @@ public class UserService {
       @Context HttpServletRequest req) throws UserException {
     Users user = jWTHelper.getUserPrincipal(req);
     BbcGroup adminGroup = bbcGroupFacade.findByGroupName("HOPS_ADMIN");
-    if (!Objects.equals(user.getUid(), userId) &&  !user.getBbcGroupCollection().contains(adminGroup)) {
+    if (!Objects.equals(user.getUid(), userId) && !user.getBbcGroupCollection().contains(adminGroup)) {
       throw new UserException(RESTCodes.UserErrorCode.ACCESS_CONTROL, Level.SEVERE);
     }
     ResourceProperties resourceProperties = new ResourceProperties(ResourceProperties.Name.USERS, expand);
-    UserDTO userDTO = usersBuilder.build(uriInfo, resourceProperties, userId); 
+    UserDTO userDTO = usersBuilder.build(uriInfo, resourceProperties, userId);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(userDTO).build();
   }
-  
+
   @GET
   @Path("profile")
   @Produces(MediaType.APPLICATION_JSON)
@@ -159,15 +160,15 @@ public class UserService {
   @Path("profile")
   @Produces(MediaType.APPLICATION_JSON)
   public Response updateProfile(@FormParam("firstName") String firstName,
-          @FormParam("lastName") String lastName,
-          @FormParam("telephoneNum") String telephoneNum,
-          @FormParam("toursState") Integer toursState,
-          @Context HttpServletRequest req, @Context SecurityContext sc) throws UserException {
+      @FormParam("lastName") String lastName,
+      @FormParam("telephoneNum") String telephoneNum,
+      @FormParam("toursState") Integer toursState,
+      @Context HttpServletRequest req, @Context SecurityContext sc) throws UserException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     Users user = jWTHelper.getUserPrincipal(sc);
     user = userController.updateProfile(user, firstName, lastName, telephoneNum, toursState, req);
     UserDTO userDTO = new UserDTO(user);
-   
+
     json.setSuccessMessage(ResponseMessages.PROFILE_UPDATED);
     json.setData(userDTO);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(userDTO).build();
@@ -177,10 +178,10 @@ public class UserService {
   @Path("credentials")
   @Produces(MediaType.APPLICATION_JSON)
   public Response changeLoginCredentials(
-          @FormParam("oldPassword") String oldPassword,
-          @FormParam("newPassword") String newPassword,
-          @FormParam("confirmedPassword") String confirmedPassword,
-          @Context HttpServletRequest req, @Context SecurityContext sc) throws UserException {
+      @FormParam("oldPassword") String oldPassword,
+      @FormParam("newPassword") String newPassword,
+      @FormParam("confirmedPassword") String confirmedPassword,
+      @Context HttpServletRequest req, @Context SecurityContext sc) throws UserException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     Users user = jWTHelper.getUserPrincipal(sc);
     userController.changePassword(user, oldPassword, newPassword, confirmedPassword, req);
@@ -192,9 +193,9 @@ public class UserService {
   @Path("securityQA")
   @Produces(MediaType.APPLICATION_JSON)
   public Response changeSecurityQA(@FormParam("oldPassword") String oldPassword,
-          @FormParam("securityQuestion") String securityQuestion,
-          @FormParam("securityAnswer") String securityAnswer,
-          @Context HttpServletRequest req, @Context SecurityContext sc) throws UserException {
+      @FormParam("securityQuestion") String securityQuestion,
+      @FormParam("securityAnswer") String securityAnswer,
+      @Context HttpServletRequest req, @Context SecurityContext sc) throws UserException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     Users user = jWTHelper.getUserPrincipal(sc);
     userController.changeSecQA(user, oldPassword, securityQuestion, securityAnswer, req);
@@ -206,8 +207,8 @@ public class UserService {
   @Path("twoFactor")
   @Produces(MediaType.APPLICATION_JSON)
   public Response changeTwoFactor(@FormParam("password") String password,
-          @FormParam("twoFactor") boolean twoFactor,
-          @Context HttpServletRequest req, @Context SecurityContext sc) throws UserException {
+      @FormParam("twoFactor") boolean twoFactor,
+      @Context HttpServletRequest req, @Context SecurityContext sc) throws UserException {
     Users user = jWTHelper.getUserPrincipal(sc);
     byte[] qrCode;
     RESTApiJsonResponse json = new RESTApiJsonResponse();
@@ -263,7 +264,7 @@ public class UserService {
     userDTO.setRole(pt.getTeamRole());
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(userDTO).build();
   }
-  
+
   @Path("activities")
   public UserActivitiesResource activities() {
     return this.activitiesResource;

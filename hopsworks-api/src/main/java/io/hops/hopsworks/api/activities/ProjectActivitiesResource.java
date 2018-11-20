@@ -18,7 +18,7 @@ package io.hops.hopsworks.api.activities;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
-import io.hops.hopsworks.common.api.Pagination;
+import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.api.ResourceProperties;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
@@ -101,8 +101,9 @@ public class ProjectActivitiesResource {
       @QueryParam("expand") String expand,
       @Context UriInfo uriInfo) throws ProjectException {
     Project project = getProject(); //test if project exist 
-    ResourceProperties resourceProperties = new ResourceProperties(ResourceProperties.Name.ACTIVITIES, pagination, 
-        activitiesBeanParam.getSort(), activitiesBeanParam.getFilter(), expand);
+    ResourceProperties resourceProperties = new ResourceProperties(ResourceProperties.Name.ACTIVITIES, pagination.
+        getOffset(), pagination.getLimit(), activitiesBeanParam.getSortBySet(), activitiesBeanParam.getFilter(), 
+        expand);
     ActivitiesDTO activitiesDTO = activitiesBuilder.buildItems(uriInfo, resourceProperties, project);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(activitiesDTO).build();
   }

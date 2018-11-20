@@ -13,16 +13,24 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.common.api;
+package io.hops.hopsworks.api.util;
 
+import io.swagger.annotations.ApiParam;
 import javax.ws.rs.QueryParam;
 
-
 public class Pagination {
-  private final Integer offset;
-  private final Integer limit;
 
-  public Pagination(@QueryParam("offset") Integer offset, @QueryParam("limit") Integer limit) {
+  @QueryParam("offset")
+  @ApiParam(required = false)
+  private Integer offset;
+
+  @QueryParam("limit")
+  @ApiParam(required = false)
+  private Integer limit;
+
+  public Pagination(
+      @QueryParam("offset") Integer offset,
+      @QueryParam("limit") Integer limit) {
     this.offset = offset;
     this.limit = limit;
     if ((this.offset != null && this.offset < 0) || (this.limit != null && this.limit < 0)) {
@@ -34,13 +42,21 @@ public class Pagination {
     return offset;
   }
 
+  public void setOffset(Integer offset) {
+    this.offset = offset;
+  }
+
   public Integer getLimit() {
     return limit;
+  }
+
+  public void setLimit(Integer limit) {
+    this.limit = limit;
   }
 
   @Override
   public String toString() {
     return "Pagination{" + "offset=" + offset + ", limit=" + limit + '}';
   }
-  
+
 }

@@ -16,19 +16,31 @@
 package io.hops.hopsworks.api.user;
 
 import io.hops.hopsworks.common.dao.user.UserFacade;
+import io.swagger.annotations.ApiParam;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import javax.ws.rs.QueryParam;
 
 public class UsersBeanParam {
 
-  private final Set<UserFacade.SortBy> sort;
-  private final Set<UserFacade.FilterBy> filter;
+  @QueryParam("sort_by")
+  @ApiParam(required = false,
+      value = "ex. sort_by=FIRST_NAME:asc,LAST_NAME:desc",
+      allowableValues = "FIRST_NAME:asc,FIRST_NAME:desc,LAST_NAME:asc,LAST_NAME:desc,DATE_CREATED:asc,DATE_CREATED:desc"
+      + ",EMAIL:asc,EMAIL:desc")
+  private String sortBy;
+  private final Set<UserFacade.SortBy> sortBySet;
+  @QueryParam("filter_by")
+  @ApiParam(required = false,
+      value = "ex. filter_by=ROLE:hops_admin,hops_user&filter_by=STATUS:2",
+      allowMultiple = true)
+  private Set<UserFacade.FilterBy> filter;
 
   public UsersBeanParam(
-      @QueryParam("sort_by") String sortBy,
+      @QueryParam("sort_by") String sortBy, 
       @QueryParam("filter_by") Set<UserFacade.FilterBy> filter) {
-    this.sort = getSortBy(sortBy);
+    this.sortBy = sortBy;
+    this.sortBySet = getSortBy(sortBy);
     this.filter = filter;
   }
 
@@ -39,20 +51,32 @@ public class UsersBeanParam {
     String[] params = param.split(",");
     //Hash table and linked list implementation of the Set interface, with predictable iteration order
     Set<UserFacade.SortBy> sortBys = new LinkedHashSet<>();//make orderd
-    UserFacade.SortBy sortBy;
+    UserFacade.SortBy sort;
     for (String s : params) {
-      sortBy = UserFacade.SortBy.fromString(s.trim());
-      sortBys.add(sortBy);
+      sort = UserFacade.SortBy.fromString(s.trim());
+      sortBys.add(sort);
     }
     return sortBys;
   }
 
-  public Set<UserFacade.SortBy> getSort() {
-    return sort;
+  public String getSortBy() {
+    return sortBy;
+  }
+
+  public void setSortBy(String sortBy) {
+    this.sortBy = sortBy;
   }
 
   public Set<UserFacade.FilterBy> getFilter() {
     return filter;
+  }
+
+  public void setFilter(Set<UserFacade.FilterBy> filter) {
+    this.filter = filter;
+  }
+
+  public Set<UserFacade.SortBy> getSortBySet() {
+    return sortBySet;
   }
 
 }
