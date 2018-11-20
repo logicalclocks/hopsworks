@@ -90,7 +90,7 @@ angular.module('hopsWorksApp')
 
             self.updateProfile = function () {
               self.working = true;
-              UserService.UpdateProfile(self.user).then(
+              UserService.updateProfile(self.user).then(
                       function (success) {
                         self.working = false;
                         self.user = success.data;

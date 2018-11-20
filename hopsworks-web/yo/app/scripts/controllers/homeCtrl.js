@@ -194,7 +194,7 @@ angular.module('hopsWorksApp')
             };
 
             self.updateProfile = function (fun) {
-              UserService.UpdateProfile(self.user).then (
+              UserService.updateProfile(self.user).then (
                 function (success) {
                   fun();
                 }, function (error) {
@@ -217,14 +217,12 @@ angular.module('hopsWorksApp')
             // Create a new project
             self.newProject = function () {
               ModalService.createProject('lg').then(
-                      function (success) {
-                        updateUIAfterChange(false);
-                      }, function (error) {
-                      if (typeof error.data.usrMsg !== 'undefined') {
-                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
-                      } else {
-                          growl.error("", {title: error.data.errorMsg, ttl: 8000});
-                      }
+                function (success) {
+                  updateUIAfterChange(false);
+                }, function (error) {
+                  if (typeof error.data !== 'undefined' && typeof error.data.usrMsg !== 'undefined') {
+                    growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                  } 
               });
             };
 

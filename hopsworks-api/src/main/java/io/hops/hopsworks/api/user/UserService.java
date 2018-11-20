@@ -114,7 +114,6 @@ public class UserService {
 
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response findAll(
       @BeanParam Pagination pagination, 
       @BeanParam UsersBeanParam usersBeanParam,
@@ -129,7 +128,6 @@ public class UserService {
   @GET
   @Path("{userId}")
   @Produces(MediaType.APPLICATION_JSON)
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response findById(
       @PathParam("userId") Integer userId,
       @QueryParam("expand") String expand,
@@ -146,7 +144,7 @@ public class UserService {
   }
   
   @GET
-  @Path("/self")
+  @Path("profile")
   @Produces(MediaType.APPLICATION_JSON)
   public Response getUserProfile(@Context SecurityContext sc) throws UserException {
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -158,7 +156,7 @@ public class UserService {
   }
 
   @POST
-  @Path("updateProfile")
+  @Path("profile")
   @Produces(MediaType.APPLICATION_JSON)
   public Response updateProfile(@FormParam("firstName") String firstName,
           @FormParam("lastName") String lastName,
@@ -176,7 +174,7 @@ public class UserService {
   }
 
   @POST
-  @Path("changeLoginCredentials")
+  @Path("credentials")
   @Produces(MediaType.APPLICATION_JSON)
   public Response changeLoginCredentials(
           @FormParam("oldPassword") String oldPassword,
@@ -191,7 +189,7 @@ public class UserService {
   }
 
   @POST
-  @Path("changeSecurityQA")
+  @Path("securityQA")
   @Produces(MediaType.APPLICATION_JSON)
   public Response changeSecurityQA(@FormParam("oldPassword") String oldPassword,
           @FormParam("securityQuestion") String securityQuestion,
@@ -205,29 +203,25 @@ public class UserService {
   }
 
   @POST
-  @Path("changeTwoFactor")
+  @Path("twoFactor")
   @Produces(MediaType.APPLICATION_JSON)
   public Response changeTwoFactor(@FormParam("password") String password,
           @FormParam("twoFactor") boolean twoFactor,
           @Context HttpServletRequest req, @Context SecurityContext sc) throws UserException {
     Users user = jWTHelper.getUserPrincipal(sc);
-
     byte[] qrCode;
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     if (user.getTwoFactor() == twoFactor) {
       json.setSuccessMessage("No change made.");
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-              entity(json).build();
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
     }
-
     qrCode = userController.changeTwoFactor(user, password, req);
     if (qrCode != null) {
       json.setQRCode(new String(Base64.encodeBase64(qrCode)));
     } else {
       json.setSuccessMessage("Tow factor authentication disabled.");
     }
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-            entity(json).build();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }
 
   @POST
@@ -256,10 +250,8 @@ public class UserService {
   @POST
   @Path("getRole")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getRole(@FormParam("projectId") int projectId, @Context SecurityContext sc) throws
-      ProjectException {
+  public Response getRole(@FormParam("projectId") int projectId, @Context SecurityContext sc) throws ProjectException {
     Users user = jWTHelper.getUserPrincipal(sc);
-
     UserProjectDTO userDTO = new UserProjectDTO();
     userDTO.setEmail(user.getEmail());
     userDTO.setProject(projectId);
