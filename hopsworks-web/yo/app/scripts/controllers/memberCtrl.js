@@ -69,9 +69,9 @@ angular.module('hopsWorksApp')
                         self.members = success;
                         if(self.members.length > 0){
                           self.projectOwner = self.members[0].project.owner;
-                          UserService.allcards().then(
+                          UserService.allValidUsers().then(
                                   function (success) {
-                                    self.cards = success.data;
+                                    self.cards = success.data.items;
                                     // remove my own 'card' from the list of members
                                     // remove project owner as well, since he is always a 
                                     // member of the project
@@ -79,11 +79,10 @@ angular.module('hopsWorksApp')
                                     var i = self.cards.length;
                                     while(i--) {
                                         if (self.cards[i].email === self.myCard.email ||
-                                                self.cards[i].email === self.projectOwner.email ||
-                                                self.cards[i].email === "agent@hops.io") {
+                                                self.cards[i].email === self.projectOwner.email) {
                                           self.cards.splice(i, 1);
                                           countRemoved++;
-                                          if(countRemoved === 3){
+                                          if(countRemoved === 2){
                                             break;
                                           }
                                         }

@@ -59,7 +59,7 @@
             <div class="form-group has-feedback">
               <label class="text-muted">First Name</label>
               <input name="first_name" placeholder="First Name" autocomplete="off"
-                     ng-model="profileCtrl.user.firstName" required class="form-control "
+                     ng-model="profileCtrl.user.firstname" required class="form-control "
                      type="text">
               <span ng-show="(profileForm.$submitted || profileForm.first_name.$dirty) && profileForm.first_name.$error.required"
                     class="text-danger ng-hide">This field is required</span>
@@ -69,7 +69,7 @@
             <div class="form-group has-feedback">
               <label class="text-muted">Last Name</label>
               <input name="last_name" placeholder="Last Name" autocomplete="off"
-                     ng-model="profileCtrl.user.lastName" required class="form-control "
+                     ng-model="profileCtrl.user.lastname" required class="form-control "
                      type="text">
               <span ng-show="(profileForm.$submitted || profileForm.last_name.$dirty) && profileForm.last_name.$error.required"
                     class="text-danger ng-hide">This field is required</span>
@@ -79,7 +79,7 @@
         <div class="form-group has-feedback">
           <label class="text-muted">Phone Number</label>
           <input name="phone_number" placeholder="Phone" autocomplete="on"
-                 ng-model="profileCtrl.user.telephoneNum"
+                 ng-model="profileCtrl.user.phoneNumber"
                  ng-pattern="/^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/"
                  class="form-control "
                  type="text">

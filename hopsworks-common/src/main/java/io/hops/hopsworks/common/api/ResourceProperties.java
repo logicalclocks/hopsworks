@@ -16,41 +16,44 @@
 package io.hops.hopsworks.common.api;
 
 import com.google.common.base.Strings;
+import io.hops.hopsworks.common.dao.AbstractFacade;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * Class that parses user provided uri query params and then is used to propagate this information to the resource
  * builders. An example of a request accepted by hopsworks api is
  * "offset=5&limit=10&sort_by=date&order_by=asc&expand=param1,param2(offset=0:limit=10)"
+ * "?sort_by=date_created:asc,id:desc&filter_by=flag:dataset"
  */
 public class ResourceProperties {
-  
+
   private List<ResourceProperty> properties;
-  
+
   public ResourceProperties(Name resourceName) {
     this(resourceName, null, null, null, null, null);
   }
-  
+
   public ResourceProperties(Name resourceName, String expandParam) {
     this(resourceName, null, null, null, null, expandParam);
   }
-  
-  public ResourceProperties(Name resourceName, Integer offsetParam, Integer limitParam, SortBy sortByParam,
-    OrderBy orderByParam, String expandParam) {
+
+  public ResourceProperties(Name resourceName, Integer offset, Integer limit, Set<? extends AbstractFacade.SortBy> sort
+      , Set<? extends AbstractFacade.FilterBy> filter, String expandParam) {
     properties = new ArrayList<>();
     //Resource that was requested
     ResourceProperty resource = new ResourceProperty()
-      .setName(resourceName)
-      .setOffset(offsetParam)
-      .setLimit(limitParam)
-      .setSortBy(sortByParam)
-      .setOrderBy(orderByParam);
-    
+        .setName(resourceName)
+        .setOffset(offset)
+        .setLimit(limit)
+        .setSort(sort)
+        .setFilter(filter);
+
     properties.add(resource);
-    
+
     //Parse expand param of the requested resource
     if (!Strings.isNullOrEmpty(expandParam)) {
       String[] propertiesToExpand = expandParam.split(",");
@@ -59,22 +62,24 @@ public class ResourceProperties {
         //Get offset and limit if any
         if (property.contains("(")) {
           resourceProperty = new ResourceProperty().setName(Name.valueOf(property.substring(0, property.indexOf('('))
-            .toUpperCase()));
+              .toUpperCase()));
         } else {
           resourceProperty = new ResourceProperty().setName(Name.valueOf(property.toUpperCase()));
         }
         if (property.contains(":")) {
           resourceProperty
-            .setOffset(Integer.parseInt(property.substring(property.indexOf('=') + 1,
-              property.indexOf(':'))))
-            .setLimit(Integer.parseInt(property.substring(property.lastIndexOf('=') + 1,
-              property.indexOf(')'))));
+              .setOffset(Integer.parseInt(property.substring(property.indexOf('=') + 1, property.indexOf(':'))))
+              .setLimit(Integer.parseInt(property.substring(property.lastIndexOf('=') + 1, property.indexOf(')'))));
         }
         properties.add(resourceProperty);
       }
     }
   }
-  
+
+  public List<ResourceProperty> getProperties() {
+    return properties;
+  }
+
   public ResourceProperty get(Name property) {
     if (properties != null) {
       for (ResourceProperty resourceProperty : properties) {
@@ -85,60 +90,60 @@ public class ResourceProperties {
     }
     return null;
   }
-  
-  
+
   public class ResourceProperty {
+
     private Name name;
     private Integer offset;
     private Integer limit;
-    private SortBy sortBy;
-    private OrderBy orderBy;
-    
+    private Set<? extends AbstractFacade.SortBy> sort;
+    private Set<? extends AbstractFacade.FilterBy> filter;
+
     public Name getName() {
       return name;
     }
-    
+
     public ResourceProperty setName(Name name) {
       this.name = name;
       return this;
     }
-    
+
     public Integer getOffset() {
       return offset;
     }
-    
+
     public ResourceProperty setOffset(Integer offset) {
       this.offset = offset;
       return this;
     }
-    
+
     public Integer getLimit() {
       return limit;
     }
-    
+
     public ResourceProperty setLimit(Integer limit) {
       this.limit = limit;
       return this;
     }
-    
-    public SortBy getSortBy() {
-      return sortBy;
+
+    public Set<? extends AbstractFacade.SortBy> getSort() {
+      return sort;
     }
-    
-    public ResourceProperty setSortBy(SortBy sortBy) {
-      this.sortBy = sortBy;
+
+    public ResourceProperty setSort(Set<? extends AbstractFacade.SortBy> sort) {
+      this.sort = sort;
       return this;
     }
-    
-    public OrderBy getOrderBy() {
-      return orderBy;
+
+    public Set<? extends AbstractFacade.FilterBy> getFilter() {
+      return filter;
     }
-    
-    public ResourceProperty setOrderBy(OrderBy orderBy) {
-      this.orderBy = orderBy;
+
+    public ResourceProperty setFilter(Set<? extends AbstractFacade.FilterBy> filter) {
+      this.filter = filter;
       return this;
     }
-    
+
     @Override
     public boolean equals(Object o) {
       if (this == o) {
@@ -150,25 +155,20 @@ public class ResourceProperties {
       ResourceProperty that = (ResourceProperty) o;
       return Objects.equals(name, that.name);
     }
-    
+
     @Override
     public int hashCode() {
-      
+
       return Objects.hash(name);
     }
-    
+
     @Override
     public String toString() {
-      return "ResourceProperty{" +
-        "name='" + name + '\'' +
-        ", offset=" + offset +
-        ", limit=" + limit +
-        ", sortBy='" + sortBy + '\'' +
-        ", orderBy='" + orderBy + '\'' +
-        '}';
+      return "ResourceProperty{" + "name=" + name + ", offset=" + offset + ", limit=" + limit + ", sort=" + sort
+          + ", filter=" + filter + '}';
     }
   }
-  
+
   /**
    * Name of the resource requested by the user which needs to match the name of the resource in Hopsworks.
    */
@@ -181,29 +181,17 @@ public class ResourceProperties {
     REQUESTS,
     INODES,
     MESSAGES,
+    ACTIVITIES,
     DATASETREQUESTS;
-    
-    
+
     public static Name fromString(String name) {
       return valueOf(name.toUpperCase());
     }
-    
+
     @Override
     public String toString() {
       return this.name().toLowerCase();
     }
   }
-  
-  public enum SortBy {
-    ID,
-    NAME,
-    CREATIONTIME,//used by jobs
-    SUBMISSIONTIME//used by executions
-  }
-  
-  public enum OrderBy {
-    ASC,
-    DESC
-  }
-}
 
+}

@@ -38,6 +38,7 @@
  */
 package io.hops.hopsworks.api.project;
 
+import io.hops.hopsworks.api.activities.ProjectActivitiesResource;
 import io.hops.hopsworks.api.dela.DelaClusterProjectService;
 import io.hops.hopsworks.api.dela.DelaProjectService;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
@@ -195,6 +196,8 @@ public class ProjectService {
   private DelaClusterProjectService delaclusterService;
   @Inject
   private InferenceResource inference;
+  @Inject
+  private ProjectActivitiesResource activitiesResource;
   @EJB
   private JWTHelper jWTHelper;
 
@@ -803,6 +806,12 @@ public class ProjectService {
   public DelaClusterProjectService delacluster(@PathParam("projectId") Integer id) {
     this.delaclusterService.setProjectId(id);
     return this.delaclusterService;
+  }
+  
+  @Path("{projectId}/activities")
+  public ProjectActivitiesResource activities(@PathParam("projectId") Integer id) {
+    this.activitiesResource.setProjectId(id);
+    return this.activitiesResource;
   }
 
   @PUT
