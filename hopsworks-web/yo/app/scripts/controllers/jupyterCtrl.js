@@ -348,7 +348,9 @@ angular.module('hopsWorksApp')
                 self.notebookPoller = $interval(function() {
                 JupyterService.running(self.projectId).then(
                     function(success) {
+                        self.config = success.data;
                         self.ui = "/hopsworks-api/jupyter/" + self.config.port + "/?token=" + self.config.token;
+                        timeToShutdown();
                     },
                     function(error) {
                         self.ui = '';
