@@ -41,6 +41,7 @@ package io.hops.hopsworks.common.jobs;
 
 import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
+import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.exception.GenericException;
 import io.hops.hopsworks.common.exception.JobException;
 import io.hops.hopsworks.common.jobs.configuration.ScheduleDTO;
@@ -76,6 +77,8 @@ public class JobScheduler {
   private ExecutionController executionController;
   @Resource
   private TimerService timerService;
+  @EJB
+  private ProjectTeamFacade projectTeamFacade;
 
   /**
    * Execute the job given as extra info to the timer object.
@@ -93,8 +96,14 @@ public class JobScheduler {
     }
     //Valid job?
     Jobs job = jobFacade.findById((Integer) jobId);
+
+    //The user may have been removed from the project so any timers for scheduled jobs should be removed too
     if (job == null) {
       logger.log(Level.WARNING, "Trying to run a job with non-existing id, canceling timer.");
+      timer.cancel();
+      return;
+    } else if(projectTeamFacade.findCurrentRole(job.getProject(), job.getCreator()) == null) {
+      logger.log(Level.WARNING, "Trying to run a job created by a user no longer in this project, canceling timer.");
       timer.cancel();
       return;
     }

@@ -198,26 +198,29 @@ public class ProjectMembersService {
 
     Project project = projectController.findProjectById(this.projectId);
     RESTApiJsonResponse json = new RESTApiJsonResponse();
-    Users owner = jWTHelper.getUserPrincipal(sc);
+    Users reqUser = jWTHelper.getUserPrincipal(sc);
     if (email == null) {
       throw new IllegalArgumentException("Email was not provided");
     }
-    //Data Scientists are only allowed to remove themselves
+    //Not able to remove members that do not exist
     String userProjectRole = projectTeamFacade.findCurrentRole(project, email);
     if (userProjectRole == null || userProjectRole.isEmpty()) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.TEAM_MEMBER_NOT_FOUND, Level.FINE);
     }
-    if (userProjectRole.equals(AllowedProjectRoles.DATA_SCIENTIST) && !owner.getEmail().equals(email)) {
+
+    //Data scientist can only remove themselves
+    String reqUserProjectRole = projectTeamFacade.findCurrentRole(project, reqUser.getEmail());
+    if (reqUserProjectRole.equals(AllowedProjectRoles.DATA_SCIENTIST) && !reqUser.getEmail().equals(email)) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.MEMBER_REMOVAL_NOT_ALLOWED, Level.FINE);
     }
+
+    //Not able to remove project own regardless who is trying to remove the member
     if (project.getOwner().getEmail().equals(email)) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_OWNER_NOT_ALLOWED, Level.FINE);
     }
-    projectController.removeMemberFromTeam(project, owner, email);
-
+    projectController.removeMemberFromTeam(project, reqUser, email);
     json.setSuccessMessage(ResponseMessages.MEMBER_REMOVED_FROM_TEAM);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
-
   }
 
 }
