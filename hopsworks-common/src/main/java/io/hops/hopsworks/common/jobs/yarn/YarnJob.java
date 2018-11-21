@@ -44,6 +44,20 @@ import io.hops.hopsworks.common.dao.project.service.ProjectServiceEnum;
 import io.hops.hopsworks.common.dao.project.service.ProjectServices;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
+import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
+import io.hops.hopsworks.common.jobs.execution.HopsJob;
+import io.hops.hopsworks.common.jobs.jobhistory.JobState;
+import io.hops.hopsworks.common.jobs.jobhistory.JobType;
+import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.common.yarn.YarnClientWrapper;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.security.AccessControlException;
+import org.apache.hadoop.yarn.api.records.ApplicationId;
+import org.apache.hadoop.yarn.api.records.YarnApplicationState;
+import org.apache.hadoop.yarn.client.api.YarnClient;
+import org.apache.hadoop.yarn.exceptions.YarnException;
+import org.apache.hadoop.yarn.util.ConverterUtils;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -57,20 +71,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import io.hops.hopsworks.common.yarn.YarnClientWrapper;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.yarn.api.records.ApplicationId;
-import org.apache.hadoop.security.AccessControlException;
-import org.apache.hadoop.yarn.api.records.YarnApplicationState;
-import org.apache.hadoop.yarn.client.api.YarnClient;
-import org.apache.hadoop.yarn.exceptions.YarnException;
-import org.apache.hadoop.yarn.util.ConverterUtils;
-import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
-import io.hops.hopsworks.common.jobs.execution.HopsJob;
-import io.hops.hopsworks.common.jobs.jobhistory.JobState;
-import io.hops.hopsworks.common.jobs.jobhistory.JobType;
-import io.hops.hopsworks.common.util.Settings;
 
 public abstract class YarnJob extends HopsJob {
 
@@ -190,7 +190,7 @@ public abstract class YarnJob extends HopsJob {
       LOG.log(Level.SEVERE, "Permission denied:- {0}", ex.getMessage());
       updateState(JobState.APP_MASTER_START_FAILED);
       return false;
-    } catch (YarnException | IOException | URISyntaxException e) {
+    } catch (YarnException | IOException | URISyntaxException | InterruptedException e) {
       LOG.log(Level.SEVERE, "Failed to start application master for execution " + execution
           + ". Aborting execution", e);
       writeLog("Failed to start application master for execution " + execution + ". Aborting execution", e, udfso);
@@ -218,7 +218,7 @@ public abstract class YarnJob extends HopsJob {
         services.getSettings().getElasticRESTEndpoint()));
 
     if (jobs.getProject().getConda()) {
-      serviceProps.initAnaconda(services.getSettings().getAnacondaProjectDir(jobs.getProject().getName())
+      serviceProps.initAnaconda(services.getSettings().getAnacondaProjectDir(jobs.getProject())
           + File.separator + "bin" + File.separator + "python");
     }
     Collection<ProjectServices> projectServices = jobs.getProject().

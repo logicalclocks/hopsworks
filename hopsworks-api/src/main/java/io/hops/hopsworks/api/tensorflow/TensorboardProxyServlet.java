@@ -110,7 +110,9 @@ public class TensorboardProxyServlet extends ProxyServlet {
       uriToFinish = urlMatcher.group(2);
     }
     if (hostPortPair.isEmpty()) {
-      throw new ServletException("Couldn't extract host:port from: " + servletRequest.getRequestURI());
+      servletResponse.sendError(Response.Status.FORBIDDEN.getStatusCode(),
+          "This TensorBoard is not accessible right now");
+      return;
     }
 
     Pattern appPattern = Pattern.compile("(application_.*?_\\d*)");
@@ -147,7 +149,8 @@ public class TensorboardProxyServlet extends ProxyServlet {
         targetUriObj = new URI(targetUri);
         targetUriHost = new URI(theHost);
       } catch (Exception e) {
-        throw new ServletException("Trying to process targetUri init parameter: ", e);
+        LOGGER.log(Level.FINE, "An error occurred serving the request", e);
+        return;
       }
       targetHost = URIUtils.extractHost(targetUriHost);
       servletRequest.setAttribute(ATTR_TARGET_URI, targetUri);
@@ -207,7 +210,8 @@ public class TensorboardProxyServlet extends ProxyServlet {
         targetUriObj = new URI(targetUri);
         targetUriHost = new URI(theHost);
       } catch (Exception e) {
-        throw new ServletException("Trying to process targetUri init parameter: ", e);
+        LOGGER.log(Level.FINE, "An error occurred serving the request", e);
+        return;
       }
       targetHost = URIUtils.extractHost(targetUriHost);
       servletRequest.setAttribute(ATTR_TARGET_URI, targetUri);

@@ -36,12 +36,12 @@
  * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
 package io.hops.hopsworks.common.dataset;
 
 import io.hops.hopsworks.common.exception.DatasetException;
 import io.hops.hopsworks.common.exception.ProjectException;
 import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.util.ProjectUtils;
 
 import java.util.logging.Level;
 import java.util.regex.Matcher;
@@ -75,19 +75,24 @@ public class FolderNameValidator {
     }
   }
 
-  private static Pattern projectNameRegexValidator =
-      Pattern.compile("^[a-zA-Z0-9]((?!__)[_a-zA-Z0-9]){0,61}[a-zA-Z0-9]$");
+  private static Pattern projectNameRegexValidator = Pattern.compile(
+      "^[a-zA-Z0-9]((?!__)[_a-zA-Z0-9]){0,61}[a-zA-Z0-9]$");
 
   /**
    * Check if the given String is a valid Project name.
    * <p/>
    * @param name
    */
-  public static void isValidProjectName(String name) throws ProjectException {
+  public static void isValidProjectName(ProjectUtils projectUtils, String name) throws ProjectException {
     if (name == null) {
       throw new IllegalArgumentException("Project name is null");
     }
 
+    for (String reservedName : projectUtils.getReservedProjectNames()) {
+      if (name.compareToIgnoreCase(reservedName) == 0) {
+        throw new ProjectException(RESTCodes.ProjectErrorCode.RESERVED_PROJECT_NAME, Level.FINE);
+      }
+    }
     Matcher m = projectNameRegexValidator.matcher(name);
     if (!m.find()) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.INVALID_PROJECT_NAME, Level.FINE);

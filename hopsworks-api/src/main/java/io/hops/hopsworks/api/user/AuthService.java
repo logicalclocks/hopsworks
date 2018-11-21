@@ -44,8 +44,6 @@ import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.api.zeppelin.util.TicketContainer;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
-import io.hops.hopsworks.common.dao.user.BbcGroup;
-import io.hops.hopsworks.common.dao.user.BbcGroupFacade;
 import io.hops.hopsworks.common.dao.user.UserDTO;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
@@ -91,6 +89,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import static javax.ws.rs.core.HttpHeaders.AUTHORIZATION;
+import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 
 @Path("/auth")
@@ -103,8 +102,6 @@ public class AuthService {
   private static final Logger LOGGER = Logger.getLogger(AuthService.class.getName());
   @EJB
   private UserFacade userFacade;
-  @EJB
-  private BbcGroupFacade bbcGroupFacade;
   @EJB
   private UsersController userController;
   @EJB
@@ -140,10 +137,10 @@ public class AuthService {
   @JWTRequired(acceptedTokens = {Audience.API},
       allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @Produces(MediaType.APPLICATION_JSON)
-  public Response jwtSession(@Context HttpServletRequest req) {
+  public Response jwtSession(@Context SecurityContext sc) {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
-    Users user = jWTHelper.getUserPrincipal(req);
-    String remoteUser = user != null ? user.getEmail() : req.getRemoteUser();
+    Users user = jWTHelper.getUserPrincipal(sc);
+    String remoteUser = user != null ? user.getEmail() : sc.getUserPrincipal().getName();
     json.setData(remoteUser);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }
@@ -205,10 +202,8 @@ public class AuthService {
   @GET
   @Path("isAdmin")
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response login(@Context HttpServletRequest req) {
-    Users user = jWTHelper.getUserPrincipal(req);
-    BbcGroup adminGroup = bbcGroupFacade.findByGroupName("HOPS_ADMIN");
-    if (user.getBbcGroupCollection().contains(adminGroup)) {
+  public Response login(@Context SecurityContext sc) {
+    if (sc.isUserInRole("HOPS_ADMIN")) {
       return Response.ok(true).build();
     }
     return Response.ok(false).build();

@@ -357,18 +357,29 @@ angular.module('hopsWorksApp')
               JobService.getTensorBoardUrls(self.projectId, self.appId).then(
                       function (success) {
                         self.tbUrls = success.data;
+                        $interval.cancel(self.poller);
                       }, function (error) {
               });
             };
 
-            getTensorBoardUrls();
-
             var startPolling = function() {
                 self.poller = $interval(function() {
                     getTensorBoardUrls();
-                }, 7000);
+                }, 20000);
             };
+
             startPolling();
+            
+            $scope.$on('$destroy', function () {
+              $interval.cancel(self.poller);
+            });
+
+            $scope.$on('$destroy', function () {
+              $interval.cancel(self.poller);
+            });
+
+            getTensorBoardUrls();
+
 
             angular.module('hopsWorksApp').directive('bindHtmlUnsafe', function ($parse, $compile) {
               return function ($scope, $element, $attrs) {

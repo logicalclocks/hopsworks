@@ -39,6 +39,7 @@
 package io.hops.hopsworks.common.jobs.spark;
 
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
+import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
@@ -130,7 +131,7 @@ public class SparkYarnRunnerBuilder {
    * @return The YarnRunner instance to launch the Spark job on Yarn.
    * @throws IOException If creation failed.
    */
-  public YarnRunner getYarnRunner(String project,
+  public YarnRunner getYarnRunner(Project project,
       String jobUser, String usersFullName, AsynchronousJobExecutor services,
       final DistributedFileSystemOps dfsClient, final YarnClient yarnClient,
       Settings settings)
@@ -154,7 +155,7 @@ public class SparkYarnRunnerBuilder {
     /**
      * * 1. Set stagingPath **
      */
-    String stagingPath = "/Projects/" + project + "/" + Settings.PROJECT_STAGING_DIR + "/.sparkjobstaging-"
+    String stagingPath = "/Projects/" + project.getName() + "/" + Settings.PROJECT_STAGING_DIR + "/.sparkjobstaging-"
         + YarnRunner.APPID_PLACEHOLDER;
     builder.localResourcesBasePath(stagingPath);
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -173,7 +174,7 @@ public class SparkYarnRunnerBuilder {
         Settings.SPARK_LOG4J_PROPERTIES, log4jPath,
         LocalResourceVisibility.APPLICATION.toString(),
         LocalResourceType.FILE.toString(), null), false);
-    //Add metrics 
+    //Add metrics
     builder.addLocalResource(new LocalResourceDTO(
         Settings.SPARK_METRICS_PROPERTIES, settings.getSparkConfDir() + "/metrics.properties",
         LocalResourceVisibility.PRIVATE.toString(),
@@ -182,6 +183,11 @@ public class SparkYarnRunnerBuilder {
     builder.addLocalResource(new LocalResourceDTO(
         Settings.DOMAIN_CA_TRUSTSTORE, settings.getGlassfishTrustStoreHdfs(),
         LocalResourceVisibility.PRIVATE.toString(),
+        LocalResourceType.FILE.toString(), null), false);
+    // Add Hive-site.xml for SparkSQL
+    builder.addLocalResource(new LocalResourceDTO(
+        Settings.HIVE_SITE, settings.getHiveSiteSparkHdfsPath(),
+        LocalResourceVisibility.APPLICATION.toString(),
         LocalResourceType.FILE.toString(), null), false);
 
     //Add app file
@@ -294,7 +300,7 @@ public class SparkYarnRunnerBuilder {
       builder.addLocalResource(dto, !appPath.startsWith("hdfs:"));
     }
 
-    if(jobType == JobType.PYSPARK) {
+    if (jobType == JobType.PYSPARK) {
       builder.addToAppMasterEnvironment("REST_ENDPOINT", settings.getRestEndpoint());
       builder.addToAppMasterEnvironment("ELASTIC_ENDPOINT", settings.getElasticRESTEndpoint());
       builder.addToAppMasterEnvironment("SPARK_VERSION", settings.getSparkVersion());
@@ -303,7 +309,7 @@ public class SparkYarnRunnerBuilder {
       builder.addToAppMasterEnvironment("CUDA_VERSION", settings.getHopsworksVersion());
       builder.addToAppMasterEnvironment("HOPSWORKS_VERSION", settings.getCudaVersion());
       builder.addToAppMasterEnvironment("LIVY_VERSION", settings.getLivyVersion());
-      if(usersFullName != null && !usersFullName.isEmpty()) {
+      if (usersFullName != null && !usersFullName.isEmpty()) {
         builder.addToAppMasterEnvironment("HOPSWORKS_USER", usersFullName);
       }
       builder.addToAppMasterEnvironment("KAFKA_BROKERS", settings.getKafkaBrokersStr());
@@ -364,7 +370,7 @@ public class SparkYarnRunnerBuilder {
               secondaryJars.toString().substring(0, secondaryJars.length() - 1)));
     }
 
-    //If DynamicExecutors are not enabled, set the user defined number 
+    //If DynamicExecutors are not enabled, set the user defined number
     //of executors
     if (dynamicExecutors) {
       jobHopsworksProps.put(Settings.SPARK_DYNAMIC_ALLOC_ENV,
@@ -449,7 +455,7 @@ public class SparkYarnRunnerBuilder {
         new ConfigProperty(
             Settings.LOGSTASH_JOB_INFO,
             HopsUtils.IGNORE,
-            project.toLowerCase() + "," + jobName + "," + job.getId() + "," + YarnRunner.APPID_PLACEHOLDER));
+            project.getName().toLowerCase() + "," + jobName + "," + job.getId() + "," + YarnRunner.APPID_PLACEHOLDER));
     jobHopsworksProps.put(Settings.HOPSWORKS_APPID_PROPERTY,
         new ConfigProperty(
             Settings.HOPSWORKS_APPID_PROPERTY,
@@ -464,7 +470,8 @@ public class SparkYarnRunnerBuilder {
     //Set executor extraJavaOptions to make parameters available to executors
     Map<String, String> extraJavaOptions = new HashMap<>();
     extraJavaOptions.put(Settings.SPARK_LOG4J_CONFIG, Settings.SPARK_LOG4J_PROPERTIES);
-    extraJavaOptions.put(Settings.LOGSTASH_JOB_INFO, project.toLowerCase() + "," + jobName + "," + job.getId() + ","
+    extraJavaOptions.put(Settings.LOGSTASH_JOB_INFO,
+        project.getName().toLowerCase() + "," + jobName + "," + job.getId() + ","
         + YarnRunner.APPID_PLACEHOLDER);
     extraJavaOptions.put(Settings.SPARK_JAVA_LIBRARY_PROP, services.getSettings().getHadoopSymbolicLinkDir()
         + "/lib/native/");
@@ -558,7 +565,7 @@ public class SparkYarnRunnerBuilder {
               Settings.SPARK_TF_GPUS_ENV,
               HopsUtils.IGNORE,
               Integer.toString(executorGPUs)));
-      if(executorGPUs > 0) {
+      if (executorGPUs > 0) {
         jobHopsworksProps.put(Settings.SPARK_TENSORFLOW_APPLICATION,
             new ConfigProperty(
                 Settings.SPARK_TENSORFLOW_APPLICATION,
@@ -568,14 +575,15 @@ public class SparkYarnRunnerBuilder {
       //Add libs to PYTHONPATH
       if (serviceProps.isAnacondaEnabled()) {
         //Add libs to PYTHONPATH
+
         builder.addToAppMasterEnvironment(Settings.SPARK_PYSPARK_PYTHON,
-            settings.getAnacondaProjectDir(project + "/bin/python"));
+            settings.getAnacondaProjectDir(project) + "/bin/python");
 
         jobHopsworksProps.put(Settings.SPARK_EXECUTORENV_PYSPARK_PYTHON,
             new ConfigProperty(
                 Settings.SPARK_EXECUTORENV_PYSPARK_PYTHON,
                 HopsUtils.IGNORE,
-                settings.getAnacondaProjectDir(project + "/bin/python")));
+                settings.getAnacondaProjectDir(project) + "/bin/python"));
       } else {
         //Throw error in Hopswors UI to notify user to enable Anaconda
         throw new IOException("Pyspark job needs to have Python Anaconda environment enabled");

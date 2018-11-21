@@ -90,7 +90,6 @@ import javax.inject.Inject;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonString;
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -110,6 +109,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.ws.rs.core.SecurityContext;
 
 @Path("/metadata")
 @Stateless
@@ -159,8 +159,8 @@ public class MetadataService {
    */
   @Path("upload")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public UploadService upload() throws DatasetException {
-    this.uploader.confUploadTemplate();
+  public UploadService upload() {
+    this.uploader.setParams(null, null, -1, true);
     return this.uploader;
   }
 
@@ -478,9 +478,9 @@ public class MetadataService {
   @Path("addWithSchema")
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public Response addMetadataWithSchema(@Context HttpServletRequest req, String metaObj) throws MetadataException,
+  public Response addMetadataWithSchema(@Context SecurityContext sc, String metaObj) throws MetadataException,
       GenericException {
-    Users user = jWTHelper.getUserPrincipal(req);
+    Users user = jWTHelper.getUserPrincipal(sc);
     return mutateMetadata(user, metaObj, MetadataOp.ADD);
   }
 
@@ -488,9 +488,9 @@ public class MetadataService {
   @Path("updateWithSchema")
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public Response updateMetadataWithSchema(@Context HttpServletRequest req, String metaObj) throws MetadataException,
+  public Response updateMetadataWithSchema(@Context SecurityContext sc, String metaObj) throws MetadataException,
       GenericException {
-    Users user = jWTHelper.getUserPrincipal(req);
+    Users user = jWTHelper.getUserPrincipal(sc);
     return mutateMetadata(user, metaObj, MetadataOp.UPDATE);
   }
 
@@ -498,9 +498,9 @@ public class MetadataService {
   @Path("removeWithSchema")
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public Response removeMetadataWithSchema(@Context HttpServletRequest req, String metaObj) throws MetadataException,
+  public Response removeMetadataWithSchema(@Context SecurityContext sc, String metaObj) throws MetadataException,
       GenericException {
-    Users user = jWTHelper.getUserPrincipal(req);
+    Users user = jWTHelper.getUserPrincipal(sc);
     return mutateMetadata(user, metaObj, MetadataOp.REMOVE);
   }
 

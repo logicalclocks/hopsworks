@@ -109,8 +109,8 @@ angular.module('hopsWorksApp')
                  * @param {type} fileName is a path relative to the current ds to the file 
                  * @returns {undefined}
                  */
-                fileDownload: function (fileName) {
-                  location.href=getPathname() + '/api/project/' + id + '/dataset/fileDownload/' + fileName;
+                fileDownload: function (fileName, token) {
+                  location.href=getPathname() + '/api/project/' + id + '/dataset/fileDownload/' + fileName + '?token=' + token;
                 },
                 compressFile: function(fileName) {
                   return $http.get('/api/project/' + id + '/dataset/compressFile/' + fileName);

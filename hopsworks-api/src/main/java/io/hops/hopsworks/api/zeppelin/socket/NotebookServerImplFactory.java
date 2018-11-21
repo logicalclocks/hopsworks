@@ -85,8 +85,8 @@ public class NotebookServerImplFactory {
   }
   
   public NotebookServerImpl getNotebookServerImps(String projectName, Session session) throws IOException,
-      RepositoryException,
-      TaskRunnerException {
+    RepositoryException,
+    TaskRunnerException, InterruptedException {
     Project project = projectBean.findByName(projectName);
     if (project == null) {
       return null;

@@ -45,6 +45,7 @@ import io.hops.hopsworks.common.dao.dela.certs.ClusterCertificateFacade;
 import io.hops.hopsworks.common.security.CertificatesMgmService;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.LocalhostServices;
+import io.hops.hopsworks.common.util.OSProcessExecutor;
 import io.hops.hopsworks.common.util.Settings;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -69,7 +70,8 @@ public class CertificateHelper {
   private final static Logger LOG = Logger.getLogger(CertificateHelper.class.getName());
 
   public static Optional<Triplet<KeyStore, KeyStore, String>> loadKeystoreFromFile(String masterPswd, Settings settings,
-    ClusterCertificateFacade certFacade, CertificatesMgmService certificatesMgmService) {
+    ClusterCertificateFacade certFacade, CertificatesMgmService certificatesMgmService,
+      OSProcessExecutor osProcessExecutor) {
     String certPath = settings.getHopsSiteCert();
     String intermediateCertPath = settings.getHopsSiteIntermediateCert();
     String keystorePath = settings.getHopsSiteKeyStorePath();
@@ -82,7 +84,7 @@ public class CertificateHelper {
       File intermediateCertFile = readFile(intermediateCertPath);
       String clusterName = getClusterName(certFile);
       settings.setHopsSiteClusterName(clusterName);
-      generateKeystore(certFile, intermediateCertFile, certPswd, settings);
+      generateKeystore(certFile, intermediateCertFile, certPswd, settings, osProcessExecutor);
       File keystoreFile = readFile(keystorePath);
       File truststoreFile = readFile(truststorePath);
       KeyStore keystore, truststore;
@@ -129,13 +131,13 @@ public class CertificateHelper {
     }
   }
 
-  private static void generateKeystore(File cert, File intermediateCert, String certPswd, Settings settings)
-    throws IllegalStateException {
+  private static void generateKeystore(File cert, File intermediateCert, String certPswd, Settings settings,
+      OSProcessExecutor osProcessExecutor) throws IllegalStateException {
     if (!isCertSigned(cert, intermediateCert)) {
       throw new IllegalStateException("Certificate is not signed");
     }
     try {
-      LocalhostServices.generateHopsSiteKeystore(settings, certPswd);
+      LocalhostServices.generateHopsSiteKeystore(settings, osProcessExecutor, certPswd);
     } catch (IOException ex) {
       LOG.log(Level.SEVERE, "keystore generate ex. {0}", ex.getMessage());
       throw new IllegalStateException("keystore generate ex", ex);

@@ -15,6 +15,7 @@
  */
 package io.hops.hopsworks.jwt.cleanup;
 
+import io.hops.hopsworks.jwt.Constants;
 import io.hops.hopsworks.jwt.JWTController;
 import java.util.Date;
 import java.util.logging.Level;
@@ -27,14 +28,16 @@ import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.ejb.Timeout;
 import javax.ejb.Timer;
+import javax.ejb.TimerConfig;
 import javax.ejb.TimerService;
 
 @Startup
 @Singleton
-public class InvalidatedJWTCleanup {
+public class OneTimeJWTRotation {
 
-  private final static Logger LOGGER = Logger.getLogger(InvalidatedJWTCleanup.class.getName());
-  private final static long CLEANUP_INTERVAL = 2 * (24 * 60 * 60 * 1000);
+  private final static Logger LOGGER = Logger.getLogger(OneTimeJWTRotation.class.getName());
+  private final static long TIMER_INTERVAL = 1 * (24 * 60 * 60 * 1000);
+
   @EJB
   private JWTController jWTController;
   @Resource
@@ -42,7 +45,7 @@ public class InvalidatedJWTCleanup {
 
   @PostConstruct
   private void init() {
-    timerService.createTimer(0, CLEANUP_INTERVAL, "Invalidated JWT cleanup");
+    timerService.createTimer(0, TIMER_INTERVAL, "Mark");
   }
 
   @PreDestroy
@@ -52,10 +55,25 @@ public class InvalidatedJWTCleanup {
     }
   }
 
+  private void markAndSetTimer() {
+    boolean marked = jWTController.markOldSigningKeys();
+    if (marked) {
+      //(60000 + 60000)*2 = 240000 milliseconds = 4 min
+      long duration = (Constants.DEFAULT_EXPIRY_LEEWAY * 1000 + Constants.ONE_TIME_JWT_LIFETIME_MS) * 2;
+      TimerConfig config = new TimerConfig();
+      config.setInfo("Remove");
+      timerService.createSingleActionTimer(duration, config);
+    }
+  }
+
   @Timeout
   public void performTimeout(Timer timer) {
-    int count = jWTController.cleanupInvalidTokens();
-    LOGGER.
-        log(Level.INFO, "{0} timer event: {1}, removed {2} tokens.", new Object[]{timer.getInfo(), new Date(), count});
+    String name = (String) timer.getInfo();
+    if ("Mark".equals(name)) {
+      markAndSetTimer();
+    } else {
+      jWTController.removeMarkedKeys();
+    }
+    LOGGER.log(Level.INFO, "{0} timer event: {1}.", new Object[]{timer.getInfo(), new Date()});
   }
 }

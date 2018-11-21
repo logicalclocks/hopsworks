@@ -63,7 +63,6 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.FormParam;
@@ -84,6 +83,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.ws.rs.core.SecurityContext;
 
 @Path("/admin")
 @Stateless
@@ -109,7 +109,7 @@ public class SystemAdminService {
   /**
    * Admin endpoint that changes the master encryption password used to encrypt the certificates' password
    * stored in the database.
-   * @param request
+   * @param sc
    * @param oldPassword Current password
    * @param newPassword New password
    * @return
@@ -117,12 +117,12 @@ public class SystemAdminService {
    */
   @PUT
   @Path("/encryptionPass")
-  public Response changeMasterEncryptionPassword(@Context HttpServletRequest request,
+  public Response changeMasterEncryptionPassword(@Context SecurityContext sc,
       @FormParam("oldPassword") String oldPassword, @FormParam("newPassword") String newPassword) throws
       HopsSecurityException {
     LOGGER.log(Level.FINE, "Requested master encryption password change");
     try {
-      Users user = jWTHelper.getUserPrincipal(request);
+      Users user = jWTHelper.getUserPrincipal(sc);
       certificatesMgmService.checkPassword(oldPassword, user.getEmail());
       certificatesMgmService.resetMasterEncryptionPassword(newPassword, user.getEmail());
   

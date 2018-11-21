@@ -109,6 +109,7 @@ import io.hops.hopsworks.common.serving.tf.TfServingController;
 import io.hops.hopsworks.common.serving.tf.TfServingException;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.HopsUtils;
+import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.yarn.YarnClientService;
 import io.hops.hopsworks.common.yarn.YarnClientWrapper;
@@ -245,6 +246,8 @@ public class ProjectController {
   @Inject
   @Any
   private Instance<ProjectHandler> projectHandlers;
+  @EJB
+  private ProjectUtils projectUtils;
 
   /**
    * Creates a new project(project), the related DIR, the different services in
@@ -270,7 +273,7 @@ public class ProjectController {
     
     //check that the project name is ok
     String projectName = projectDTO.getProjectName();
-    FolderNameValidator.isValidProjectName(projectName);
+    FolderNameValidator.isValidProjectName(projectUtils, projectName);
 
     List<ProjectServiceEnum> projectServices = new ArrayList<>();
     if (projectDTO.getServices() != null) {

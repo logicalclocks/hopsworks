@@ -164,8 +164,8 @@ public class NotebookServerImpl implements
   public NotebookServerImpl(Project project, ZeppelinConfigFactory zeppelin,
       CertsFacade certsFacade, Settings settings, ProjectTeamFacade projectTeamFacade,
       ActivityFacade activityFacade, CertificatesMgmService certificatesMgmService)
-      throws IOException, RepositoryException,
-      TaskRunnerException {
+    throws IOException, RepositoryException,
+    TaskRunnerException, InterruptedException {
     this.project = project;
     this.conf = zeppelin.getZeppelinConfig(project.getName(), this);
     this.notebook = this.conf.getNotebook();

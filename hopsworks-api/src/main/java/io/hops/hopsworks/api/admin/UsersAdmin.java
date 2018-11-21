@@ -81,6 +81,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.logging.Level;
+import javax.ws.rs.core.SecurityContext;
 
 @Path("/admin")
 @Stateless
@@ -140,14 +141,14 @@ public class UsersAdmin {
   @POST
   @Path("/users/{email}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response updateUser(@Context HttpServletRequest req, @PathParam("email") String email, Users user) throws
-      UserException {
+  public Response updateUser(@Context HttpServletRequest req, @Context SecurityContext sc,
+      @PathParam("email") String email, Users user) throws UserException {
     Users u = userFacade.findByEmail(email);
     if (u != null) {
       if (user.getStatus() != null) {
         u.setStatus(user.getStatus());
         u = userFacade.update(u);
-        Users initiator = jWTHelper.getUserPrincipal(req);
+        Users initiator = jWTHelper.getUserPrincipal(sc);
         auditManager.registerRoleChange(initiator, AccountsAuditActions.CHANGEDSTATUS.name(),
             AccountsAuditActions.SUCCESS.name(), u.getStatusName(), u, req);
       }
@@ -158,7 +159,7 @@ public class UsersAdmin {
         for (BbcGroup group : u.getBbcGroupCollection()) {
           result = result + group.getGroupName() + ", ";
         }
-        Users initiator = jWTHelper.getUserPrincipal(req);
+        Users initiator = jWTHelper.getUserPrincipal(sc);
         auditManager.registerRoleChange(initiator, RolesAuditAction.ROLE_UPDATED.name(), RolesAuditAction.SUCCESS.
             name(), result, u, req);
       }
@@ -178,8 +179,8 @@ public class UsersAdmin {
   @POST
   @Path("/users/{email}/accepted")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response acceptUser(@Context HttpServletRequest req, @PathParam("email") String email, Users user) throws
-      UserException, ServiceException {
+  public Response acceptUser(@Context HttpServletRequest req, @Context SecurityContext sc,
+      @PathParam("email") String email, Users user) throws UserException, ServiceException {
     Users u = userFacade.findByEmail(email);
     if (u != null) {
       if (u.getStatus().equals(UserAccountStatus.VERIFIED_ACCOUNT)) {
@@ -196,7 +197,7 @@ public class UsersAdmin {
         for (BbcGroup group : u.getBbcGroupCollection()) {
           result = result + group.getGroupName() + ", ";
         }
-        Users initiator = jWTHelper.getUserPrincipal(req);
+        Users initiator = jWTHelper.getUserPrincipal(sc);
         auditManager.registerRoleChange(initiator,
             RolesAuditAction.ROLE_UPDATED.name(), RolesAuditAction.SUCCESS.
             name(), result, u, req);
@@ -219,13 +220,13 @@ public class UsersAdmin {
   @POST
   @Path("/users/{email}/rejected")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response rejectUser(@Context HttpServletRequest req, @PathParam("email") String email) throws UserException,
-      ServiceException {
+  public Response rejectUser(@Context HttpServletRequest req, @Context SecurityContext sc,
+      @PathParam("email") String email) throws UserException, ServiceException {
     Users u = userFacade.findByEmail(email);
     if (u != null) {
       u.setStatus(UserAccountStatus.SPAM_ACCOUNT);
       u = userFacade.update(u);
-      Users initiator = jWTHelper.getUserPrincipal(req);
+      Users initiator = jWTHelper.getUserPrincipal(sc);
 
       auditManager.registerRoleChange(initiator, UserAccountStatus.SPAM_ACCOUNT.name(),
           AccountsAuditActions.SUCCESS.name(), "", u, req);

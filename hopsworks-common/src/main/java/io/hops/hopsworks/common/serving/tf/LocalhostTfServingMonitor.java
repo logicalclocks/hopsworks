@@ -18,6 +18,9 @@ package io.hops.hopsworks.common.serving.tf;
 
 import io.hops.hopsworks.common.dao.serving.TfServing;
 import io.hops.hopsworks.common.dao.serving.TfServingFacade;
+import io.hops.hopsworks.common.util.OSProcessExecutor;
+import io.hops.hopsworks.common.util.ProcessDescriptor;
+import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.common.util.Settings;
 
 import javax.annotation.PostConstruct;
@@ -32,7 +35,6 @@ import javax.inject.Inject;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -61,7 +63,9 @@ public class LocalhostTfServingMonitor {
   private TfServingFacade tfServingFacade;
   @EJB
   private Settings settings;
-
+  @EJB
+  private OSProcessExecutor osProcessExecutor;
+  
   @Inject
   private TfServingController tfServingController;
 
@@ -94,30 +98,37 @@ public class LocalhostTfServingMonitor {
     for (TfServing tfServing : tfServingList) {
       try {
         TfServing dbTfServing = tfServingFacade.acquireLock(tfServing.getProject(), tfServing.getId());
+        
+        ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
+            .addCommand("/usr/bin/sudo")
+            .addCommand(script)
+            .addCommand("alive")
+            .addCommand(String.valueOf(dbTfServing.getLocalPid()))
+            .addCommand(dbTfServing.getLocalDir())
+            .ignoreOutErrStreams(true)
+            .build();
 
-        String[] aliveCommand = new String[]{"/usr/bin/sudo", script, "alive",
-            String.valueOf(dbTfServing.getLocalPid()), dbTfServing.getLocalDir()};
-
-        LOGGER.log(Level.FINE, Arrays.toString(aliveCommand));
-        ProcessBuilder pb = new ProcessBuilder(aliveCommand);
+        LOGGER.log(Level.FINE, processDescriptor.toString());
         try {
-          Process process = pb.start();
-          process.waitFor();
+          ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
 
-          if (process.exitValue() != 0) {
+          if (processResult.getExitCode() != 0) {
 
             // The processes is dead, run the kill script to delete the directory
             // and update the value in the db
             Path secretDir = Paths.get(settings.getStagingDir(), SERVING_DIRS + tfServing.getLocalDir());
+            processDescriptor = new ProcessDescriptor.Builder()
+                .addCommand("/usr/bin/sudo")
+                .addCommand(script)
+                .addCommand("kill")
+                .addCommand(String.valueOf(dbTfServing.getLocalPid()))
+                .addCommand(String.valueOf(dbTfServing.getLocalPort()))
+                .addCommand(secretDir.toString())
+                .ignoreOutErrStreams(true)
+                .build();
 
-            String[] killCommand = {"/usr/bin/sudo", script, "kill", String.valueOf(dbTfServing.getLocalPid()),
-                String.valueOf(dbTfServing.getLocalPort()), secretDir.toString()};
-
-            LOGGER.log(Level.FINE, Arrays.toString(killCommand));
-            pb = new ProcessBuilder(killCommand);
-
-            process = pb.start();
-            process.waitFor();
+            LOGGER.log(Level.FINE, processDescriptor.toString());
+            osProcessExecutor.execute(processDescriptor);
 
             // If the process succeeded to delete the localDir update the db
             dbTfServing.setLocalPid(PID_STOPPED);
@@ -125,7 +136,7 @@ public class LocalhostTfServingMonitor {
             tfServingFacade.updateDbObject(dbTfServing, dbTfServing.getProject());
           }
 
-        } catch (IOException | InterruptedException e) {
+        } catch (IOException e) {
           LOGGER.log(Level.SEVERE, "Could not clean up TfServing instance with id: "
               + tfServing.getId(), e);
         }

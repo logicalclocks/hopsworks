@@ -62,13 +62,12 @@ import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.yarn.api.records.LocalResourceType;
 import org.apache.hadoop.yarn.api.records.LocalResourceVisibility;
+import org.json.JSONObject;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.file.Paths;
 import java.security.Key;
 import java.security.SecureRandom;
@@ -85,7 +84,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.json.JSONObject;
 
 /**
  * Utility methods.
@@ -152,49 +150,6 @@ public class HopsUtils {
 
   private static boolean isTreeLevelRandomPartitioned(int depth) {
     return depth <= RANDOM_PARTITIONING_MAX_LEVEL;
-  }
-
-  /**
-   * Retrieves the global hadoop classpath.
-   *
-   * @param params
-   * @return hadoop global classpath
-   */
-  public static String getHadoopClasspathGlob(String... params) {
-    ProcessBuilder pb = new ProcessBuilder(params);
-    try {
-      Process process = pb.start();
-      int errCode = process.waitFor();
-      if (errCode != 0) {
-        return "";
-      }
-      StringBuilder sb = new StringBuilder();
-      try (BufferedReader br
-          = new BufferedReader(new InputStreamReader(process.
-              getInputStream()))) {
-        String line;
-        while ((line = br.readLine()) != null) {
-          sb.append(line);
-        }
-      }
-      //Now we must remove the yarn shuffle library as it creates issues for 
-      //Zeppelin Spark Interpreter
-      StringBuilder classpath = new StringBuilder();
-
-      for (String path : sb.toString().split(File.pathSeparator)) {
-        if (!path.contains("yarn") && !path.contains("jersey") && !path.
-            contains("servlet")) {
-          classpath.append(path).append(File.pathSeparator);
-        }
-      }
-      if (classpath.length() > 0) {
-        return classpath.toString().substring(0, classpath.length() - 1);
-      }
-
-    } catch (IOException | InterruptedException ex) {
-      Logger.getLogger(HopsUtils.class.getName()).log(Level.SEVERE, null, ex);
-    }
-    return "";
   }
 
   public static String getProjectKeystoreName(String project, String user) {

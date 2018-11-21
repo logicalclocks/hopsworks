@@ -91,6 +91,7 @@ import java.util.regex.Pattern;
 
 import static io.hops.hopsworks.common.dao.kafka.KafkaFacade.DLIMITER;
 import static io.hops.hopsworks.common.dao.kafka.KafkaFacade.SLASH_SEPARATOR;
+import io.hops.hopsworks.common.dao.project.Project;
 
 @Singleton
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
@@ -101,6 +102,10 @@ public class Settings implements Serializable {
 
   @EJB
   private UserFacade userFacade;
+  @EJB
+  private ProjectUtils projectUtils;
+  @EJB
+  private OSProcessExecutor osProcessExecutor;
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
@@ -763,8 +768,10 @@ public class Settings implements Serializable {
   public static final String SPARK_PY_MAINCLASS
       = "org.apache.spark.deploy.PythonRunner";
   public static final String PYSPARK_ZIP = "pyspark.zip";
-  
-  
+
+  //Hive config
+  public static final String HIVE_SITE = "hive-site.xml";
+
   private String PY4J_ARCHIVE = "py4j-0.10.7-src.zip";
   
   public synchronized String getPy4JArchive() {
@@ -1223,6 +1230,50 @@ public class Settings implements Serializable {
   private String sparkDefaultClasspath(String sparkDir) {
     return sparkDir + "/lib/*";
   }
+  
+  private static final String HADOOP_GLASSPATH_GLOB_ENV_VAR_KEY = "HADOOP_GLOB";
+  private volatile String HADOOP_CLASSPATH_GLOB = null;
+  
+  public String getHadoopClasspathGlob() throws IOException {
+    if (HADOOP_CLASSPATH_GLOB == null) {
+      synchronized (Settings.class) {
+        if (HADOOP_CLASSPATH_GLOB == null) {
+          String classpathGlob = System.getenv(HADOOP_GLASSPATH_GLOB_ENV_VAR_KEY);
+          if (classpathGlob == null) {
+            LOGGER.log(Level.WARNING, HADOOP_GLASSPATH_GLOB_ENV_VAR_KEY + " environment variable is not set. " +
+                "Launching a subprocess to discover it");
+            String bin = Paths.get(getHadoopSymbolicLinkDir(), "bin", "hadoop").toString();
+            ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
+                .addCommand(bin)
+                .addCommand("classpath")
+                .addCommand("--glob")
+                .build();
+            ProcessResult result = osProcessExecutor.execute(processDescriptor);
+            if (result.getExitCode() != 0) {
+              throw new IOException("Could not get Hadoop classpath, exit code " + result.getExitCode()
+                + " Error: " + result.getStderr());
+            }
+            classpathGlob = result.getStdout();
+          }
+          //Now we must remove the yarn shuffle library as it creates issues for
+          //Zeppelin Spark Interpreter
+          StringBuilder classpath = new StringBuilder();
+  
+          for (String path : classpathGlob.split(File.pathSeparator)) {
+            if (!path.contains("yarn") && !path.contains("jersey") && !path.contains("servlet")) {
+              classpath.append(path).append(File.pathSeparator);
+            }
+          }
+          if (classpath.length() > 0) {
+            HADOOP_CLASSPATH_GLOB = classpath.toString().substring(0, classpath.length() - 1);
+          } else {
+            throw new IOException("Hadoop classpath appears to be empty");
+          }
+        }
+      }
+    }
+    return HADOOP_CLASSPATH_GLOB;
+  }
 
   /**
    * Constructs the path to the marker file of a streaming job that uses
@@ -1557,9 +1608,9 @@ public class Settings implements Serializable {
    * @param projectName name
    * @return conda dir
    */
-  public String getAnacondaProjectDir(String projectName) {
-    return getAnacondaDir() + File.separator + "envs" + File.separator
-        + projectName;
+  public String getAnacondaProjectDir(Project project) {
+    String condaEnv = projectUtils.getCurrentCondaEnvironment(project);
+    return getAnacondaDir() + File.separator + "envs" + File.separator + condaEnv;
   }
 
   private String ANACONDA_ENV = "kagent";
@@ -2720,9 +2771,9 @@ public class Settings implements Serializable {
     return applicationCertificateValidityPeriod;
   }
 
-  // TensorBoard kill rotation interval in milliseconds
+  // TensorBoard kill rotation interval in milliseconds (should be lower than the TensorBoardKillTimer)
   private static final String TENSORBOARD_MAX_LAST_ACCESSED = "tensorboard_max_last_accessed";
-  private int tensorBoardMaxLastAccessed = 1800000;
+  private int tensorBoardMaxLastAccessed = 1140000;
 
   public synchronized int getTensorBoardMaxLastAccessed() {
     checkCache();
@@ -3088,5 +3139,9 @@ public class Settings implements Serializable {
   public synchronized String getJWTSigningKeyName() {
     checkCache();
     return JWT_SIGNING_KEY_NAME;
+  }
+
+  public String getHiveSiteSparkHdfsPath() {
+    return "hdfs:///user/" + getSparkUser() + "/hive-site.xml";
   }
 }

@@ -115,6 +115,10 @@ public class Project implements Serializable {
   private Boolean archived = false;
   @Column(name = "logs")
   private Boolean logs = false;
+  // conda_env indicates whether the user has customized his/her conda environment by installing/removing a library.
+  // If 'true' the user now has his/her own conda env.
+  @Column(name = "conda_env")
+  private Boolean condaEnv = false;
   @OneToMany(cascade = CascadeType.ALL,
       mappedBy = "project")
   private Collection<ProjectTeam> projectTeamCollection;
@@ -379,6 +383,14 @@ public class Project implements Serializable {
     this.archived = archived;
   }
 
+  public Boolean getCondaEnv() {
+    return condaEnv;
+  }
+
+  public void setCondaEnv(Boolean condaEnv) {
+    this.condaEnv = condaEnv;
+  }
+  
   public Boolean getLogs() {
     return logs;
   }
@@ -504,13 +516,7 @@ public class Project implements Serializable {
     this.lastQuotaUpdate = lastQuotaUpdate;
   }
 
-//  public Collection<Pia> getPiaCollection() {
-//    return piaCollection;
-//  }
-//
-//  public void setPiaCollection(Collection<Pia> piaCollection) {
-//    this.piaCollection = piaCollection;
-//  }
+  
   public Integer getKafkaMaxNumTopics() {
     return kafkaMaxNumTopics;
   }
