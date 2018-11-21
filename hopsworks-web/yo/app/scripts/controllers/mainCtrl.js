@@ -70,7 +70,7 @@ angular.module('hopsWorksApp')
               if (isAdmin != 'true' && isAdmin != 'false') {
                 AuthService.isAdmin().then(
                   function (success) {
-                    sessionStorage.setItem("isAdmin", success.data === 'true');
+                    sessionStorage.setItem("isAdmin", success.data.data.value);
                   }, function (error) {
                     sessionStorage.setItem("isAdmin", null);
                 });

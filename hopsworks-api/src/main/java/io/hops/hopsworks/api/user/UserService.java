@@ -60,6 +60,7 @@ import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.Authorization;
 import org.apache.commons.codec.binary.Base64;
 
 import javax.ejb.EJB;
@@ -90,7 +91,9 @@ import javax.ws.rs.core.UriInfo;
 @JWTRequired(acceptedTokens = {Audience.API},
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
 @Api(value = "Users",
-    description = "Users service")
+    description = "Users service",
+    authorizations = {
+      @Authorization(value = "Cauth-Realm")})
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class UserService {
 
@@ -133,8 +136,8 @@ public class UserService {
       @PathParam("userId") Integer userId,
       @QueryParam("expand") String expand,
       @Context UriInfo uriInfo,
-      @Context HttpServletRequest req) throws UserException {
-    Users user = jWTHelper.getUserPrincipal(req);
+      @Context SecurityContext sc) throws UserException {
+    Users user = jWTHelper.getUserPrincipal(sc);
     BbcGroup adminGroup = bbcGroupFacade.findByGroupName("HOPS_ADMIN");
     if (!Objects.equals(user.getUid(), userId) && !user.getBbcGroupCollection().contains(adminGroup)) {
       throw new UserException(RESTCodes.UserErrorCode.ACCESS_CONTROL, Level.SEVERE);
@@ -147,12 +150,13 @@ public class UserService {
   @GET
   @Path("profile")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getUserProfile(@Context SecurityContext sc) throws UserException {
+  public Response getUserProfile(@Context UriInfo uriInfo, @Context SecurityContext sc) throws UserException {
     Users user = jWTHelper.getUserPrincipal(sc);
     if (user == null) {
       throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
     }
-    UserDTO userDTO = new UserDTO(user);
+    ResourceProperties resourceProperties = new ResourceProperties(ResourceProperties.Name.USERS, null);
+    UserDTO userDTO = usersBuilder.buildFull(uriInfo, resourceProperties, user);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(userDTO).build();
   }
 
@@ -163,14 +167,13 @@ public class UserService {
       @FormParam("lastName") String lastName,
       @FormParam("telephoneNum") String telephoneNum,
       @FormParam("toursState") Integer toursState,
-      @Context HttpServletRequest req, @Context SecurityContext sc) throws UserException {
-    RESTApiJsonResponse json = new RESTApiJsonResponse();
+      @Context UriInfo uriInfo, 
+      @Context HttpServletRequest req, 
+      @Context SecurityContext sc) throws UserException {
     Users user = jWTHelper.getUserPrincipal(sc);
     user = userController.updateProfile(user, firstName, lastName, telephoneNum, toursState, req);
-    UserDTO userDTO = new UserDTO(user);
-
-    json.setSuccessMessage(ResponseMessages.PROFILE_UPDATED);
-    json.setData(userDTO);
+    ResourceProperties resourceProperties = new ResourceProperties(ResourceProperties.Name.USERS, null);
+    UserDTO userDTO = usersBuilder.buildFull(uriInfo, resourceProperties, user);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(userDTO).build();
   }
 

@@ -75,7 +75,6 @@ angular.module('hopsWorksApp')
               UserService.profile().then(
                       function (success) {
                         self.user = success.data;
-                        console.log("User: ", self.user);
                         self.emailHash = md5.createHash(self.user.email || '');
                         self.master = angular.copy(self.user);
                         self.twoFactorAuth.twoFactor = self.master.twoFactor;
