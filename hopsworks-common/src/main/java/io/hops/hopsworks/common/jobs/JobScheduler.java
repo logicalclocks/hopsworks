@@ -97,13 +97,13 @@ public class JobScheduler {
     //Valid job?
     Jobs job = jobFacade.findById((Integer) jobId);
 
-    //The user may have been removed from the project so any timers for scheduled jobs should be removed too
+    //Make sure the job is valid (still exists in DB and user still in the project where the job is)
     if (job == null) {
       logger.log(Level.WARNING, "Trying to run a job with non-existing id, canceling timer.");
       timer.cancel();
       return;
     } else if(projectTeamFacade.findCurrentRole(job.getProject(), job.getCreator()) == null) {
-      logger.log(Level.WARNING, "Trying to run a job created by a user no longer in this project, canceling timer.");
+      logger.log(Level.INFO, "Trying to run a job created by a user no longer in this project, canceling timer.");
       timer.cancel();
       return;
     }
