@@ -352,7 +352,7 @@ describe "On #{ENV['OS']}" do
         end
         it "should fail for project owner to remove themselves from project" do
           delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers/#{@user[:email]}"
-          expect_json(errorMsg: "Removing the project owner is not allowed.")
+          expect_json(errorCode: 150013)
           expect_status(403)
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers"
           memb = json_body.detect { |e| e[:user][:email] == @user[:email] }
@@ -365,7 +365,7 @@ describe "On #{ENV['OS']}" do
           reset_session
           create_session(new_member,"Pass123")
           delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers/#{data_owner}"
-          expect_json(errorMsg: "Your project role does not allow to remove other members from this project.")
+          expect_json(errorCode: 150012)
           expect_status(403)
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers"
           memb = json_body.detect { |e| e[:user][:email] == data_owner }
