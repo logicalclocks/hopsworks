@@ -362,6 +362,7 @@ describe "On #{ENV['OS']}" do
           data_owner = @user[:email]
           new_member = create_user[:email]
           add_member(new_member, "Data scientist")
+          reset_session
           create_session(new_member,"Pass123")
           delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers/#{data_owner}"
           expect_json(errorMsg: "Your project role does not allow to remove other members from this project.")
@@ -369,6 +370,8 @@ describe "On #{ENV['OS']}" do
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers"
           memb = json_body.detect { |e| e[:user][:email] == data_owner }
           expect(memb).should_not be_nil
+          reset_session
+          create_session(data_owner,"Pass123")
         end
         it "should fail to remove a non-existing team member" do
           new_member = create_user[:email]
@@ -420,7 +423,7 @@ describe "On #{ENV['OS']}" do
         it "should fail to change the role of the project owner" do
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers/#{@project[:username]}", URI.encode_www_form({ role: "Data scientist"}), { content_type: 'application/x-www-form-urlencoded'}
           expect_json(errorCode: 150014)
-          expect_status(400)
+          expect_status(403)
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers"
           memb = json_body.detect { |e| e[:user][:email] == @project[:username] }
           expect(memb[:teamRole]).to eq ("Data owner")
