@@ -39,11 +39,11 @@
 
 package io.hops.hopsworks.api.zeppelin.rest;
 
-import io.hops.hopsworks.api.util.LivyController;
+import io.hops.hopsworks.common.livy.LivyController;
 import io.hops.hopsworks.api.zeppelin.server.JsonResponse;
 import io.hops.hopsworks.api.zeppelin.server.ZeppelinConfig;
 import io.hops.hopsworks.api.zeppelin.server.ZeppelinConfigFactory;
-import io.hops.hopsworks.api.zeppelin.util.LivyMsg;
+import io.hops.hopsworks.common.livy.LivyMsg;
 import io.hops.hopsworks.api.zeppelin.util.ZeppelinResource;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;

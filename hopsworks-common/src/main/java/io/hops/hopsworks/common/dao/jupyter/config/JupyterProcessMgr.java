@@ -272,6 +272,7 @@ public class JupyterProcessMgr {
         .addCommand(pid.toString())
         .addCommand(port.toString())
         .setWaitTimeout(10L, TimeUnit.SECONDS);
+    
     if (!LOGGER.isLoggable(Level.FINE)) {
       pdBuilder.ignoreOutErrStreams(true);
     }
@@ -309,9 +310,11 @@ public class JupyterProcessMgr {
     String jupyterHomePath = "";
     for (JupyterProject jp : project.getJupyterProjectCollection()) {
       HdfsUsers hdfsUser = hdfsUsersFacade.find(jp.getHdfsUserId());
-      String hdfsUsername = (hdfsUser == null) ? "" : hdfsUser.getName();
-      killServerJupyterUser(hdfsUsername, jupyterHomePath, jp.getPid(), jp.getPort());
-
+      if(hdfsUser != null) {
+        String hdfsUsername = hdfsUser.getName();
+        jupyterHomePath = getJupyterHome(hdfsUser.getName(), jp);
+        killServerJupyterUser(hdfsUsername, jupyterHomePath, jp.getPid(), jp.getPort());
+      }
     }
     projectCleanup(project);
   }
@@ -436,7 +439,7 @@ public class JupyterProcessMgr {
     for (String arg : args) {
       pdBuilder.addCommand(arg);
     }
-    pdBuilder.setWaitTimeout(10L, TimeUnit.SECONDS);
+    pdBuilder.setWaitTimeout(20L, TimeUnit.SECONDS);
     if (!LOGGER.isLoggable(Level.FINE)) {
       pdBuilder.ignoreOutErrStreams(true);
     }
