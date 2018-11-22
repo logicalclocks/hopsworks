@@ -44,7 +44,6 @@ import io.hops.hopsworks.common.dao.user.security.UserGroup;
 import io.hops.hopsworks.common.dao.user.security.UserGroupPK;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountType;
-import io.hops.hopsworks.common.util.Settings;
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -254,8 +253,7 @@ public class UserFacade extends AbstractFacade<Users> {
   }
 
   public List findAllUsers() {
-    Query query = em.createNativeQuery("SELECT * FROM hopsworks.users",
-        Users.class);
+    Query query = em.createNativeQuery("SELECT * FROM hopsworks.users", Users.class);
     return query.getResultList();
   }
 
@@ -282,27 +280,8 @@ public class UserFacade extends AbstractFacade<Users> {
     }
   }
 
-  public List<Users> filterUsersBasedOnProject(String name) {
-
-    Query query = em.createNativeQuery(
-        "SELECT * FROM hopsworks.users WHERE email NOT IN (SELECT team_member "
-        + "FROM hopsworks.ProjectTeam WHERE name=?)",
-        Users.class).setParameter(1, name);
-    return query.getResultList();
-  }
-
   public void persist(Users user) {
     em.persist(user);
-  }
-
-  public int lastUserID() {
-    Query query = em.createNativeQuery("SELECT MAX(p.uid) FROM hopsworks.users p");
-    Object obj = query.getSingleResult();
-
-    if (obj == null) {
-      return Settings.STARTING_USER;
-    }
-    return (Integer) obj;
   }
 
   @Override
@@ -332,9 +311,7 @@ public class UserFacade extends AbstractFacade<Users> {
    */
   public Users findByEmail(String email) {
     try {
-      return em.createNamedQuery("Users.findByEmail", Users.class).setParameter(
-          "email", email)
-          .getSingleResult();
+      return em.createNamedQuery("Users.findByEmail", Users.class).setParameter("email", email).getSingleResult();
     } catch (NoResultException e) {
       return null;
     }
@@ -351,17 +328,24 @@ public class UserFacade extends AbstractFacade<Users> {
    * @return
    */
   public List<Users> findAllByStatus(UserAccountStatus status) {
-    TypedQuery<Users> query = em.createNamedQuery("Users.findByStatus",
-        Users.class);
+    TypedQuery<Users> query = em.createNamedQuery("Users.findByStatus", Users.class);
     query.setParameter("status", status);
     return query.getResultList();
   }
 
+  
   public List<Integer> findAllInGroup(int gid) {
-    Query query = em.createNativeQuery(
-        "SELECT u.uid FROM hopsworks.users u JOIN hopsworks.user_group g ON u.uid = g.uid Where g.gid = ?");
-    query.setParameter(1, gid);
-    return (List<Integer>) query.getResultList();
+    BbcGroup role = groupFacade.find(gid);
+    List<Integer> uIds = new ArrayList<>();
+    if (role == null) {
+      return uIds;
+    }
+    List<BbcGroup> roles = new ArrayList<>();
+    roles.add(role);
+    TypedQuery<Integer> query = em.createNamedQuery("Users.findAllInGroup", Integer.class);
+    query.setParameter("roles", roles);
+    uIds.addAll(query.getResultList());
+    return uIds;
   }
 
   /**
@@ -369,7 +353,6 @@ public class UserFacade extends AbstractFacade<Users> {
    *
    * @param userMail
    * @param gidNumber
-   * @return
    */
   public void addGroup(String userMail, int gidNumber) {
     BbcGroup bbcGroup = em.find(BbcGroup.class, gidNumber);

@@ -64,5 +64,21 @@ describe "On #{ENV['OS']}" do
         expect(user[:username]).to match(/^[a-z0-9]{8}$/)
       end
     end
+    describe "User sort, filter, offset and limit " do
+      context 'with authentication' do
+        before :all do
+          with_valid_session
+          @users=create_users
+        end
+        it 'should get all users sorted by firstname' do
+          get "#{ENV['HOPSWORKS_API']}/users?sort_by=first_name"
+          byebug
+        end
+        it 'should get all users sorted by firstname and lastname' do
+          get "#{ENV['HOPSWORKS_API']}/users?sort_by=first_name,last_name"
+          
+        end 
+      end
+    end
   end
 end

@@ -167,6 +167,11 @@ module SessionHelper
       UserGroup.create(uid: user.uid, gid: group.gid)
     end
   end
+  
+  def create_role(user, role)
+    group = BbcGroup.find_by(group_name: role)
+    UserGroup.create(uid: user.uid, gid: group.gid)
+  end
 
   def create_role_type(role_type)
     type = BbcGroup.find_by(group_name: role_type)
@@ -180,6 +185,16 @@ module SessionHelper
     create_validated_user(params)
     user = User.find_by(email: params[:email])
     create_role(user)
+    user.status = 2
+    user.save
+    user
+  end
+  
+  def create_user(params={}, role)
+    params[:email] = "#{random_id}@email.com" unless params[:email]
+    create_validated_user(params)
+    user = User.find_by(email: params[:email])
+    create_role(user, role)
     user.status = 2
     user.save
     user
@@ -249,5 +264,54 @@ module SessionHelper
     user.status = 5
     user.save
     user
+  end
+  
+  def create_users()
+    user[:email]     = "#{random_id}@email.com"
+    user[:firstName] = "Admin"
+    user[:lastName]  = "Bob"
+    create_user(user, "HOPS_ADMIN")
+    user[:email]     = "#{random_id}@email.com"
+    user[:firstName] = "Admin"
+    user[:lastName]  = "Clara"
+    create_lostdevice_user(user)
+    user[:email]     = "#{random_id}@email.com"
+    user[:firstName] = "Admin"
+    user[:lastName]  = "Doe"
+    create_user(user, "HOPS_ADMIN")
+    user[:email]     = "#{random_id}@email.com"
+    user[:firstName] = "Bob"
+    user[:lastName]  = "Admin"
+    create_user(user)
+    user[:email]     = "#{random_id}@email.com"
+    user[:firstName] = "Clara"
+    user[:lastName]  = "Admin"
+    create_user(user)
+    user[:email]     = "#{random_id}@email.com"
+    user[:firstName] = "Doe"
+    user[:lastName]  = "Admin"
+    create_deactivated_user(user)
+    user[:email]     = "#{random_id}@email.com"
+    user[:firstName] = "John"
+    user[:lastName]  = "Kelly"
+    create_user(user)
+    user[:email]     = "#{random_id}@email.com"
+    user[:firstName] = "Timothy"
+    user[:lastName]  = "Labonte"
+    create_blocked_user(user)
+    user[:email]     = "#{random_id}@email.com"
+    user[:firstName] = "Santa"
+    user[:lastName]  = "Mason"
+    create_user(user)
+    user[:email]     = "#{random_id}@email.com"
+    user[:firstName] = "Ted"
+    user[:lastName]  = "Morris"
+    create_unapproved_user(user)
+    user[:email]     = "#{random_id}@email.com"
+    user[:firstName] = "Agent"
+    user[:lastName]  = "Morris"
+    create_user(user, "AGENT")
+    get "#{ENV['HOPSWORKS_API']}/users"
+    response.body
   end
 end
