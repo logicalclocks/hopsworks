@@ -353,7 +353,7 @@ describe "On #{ENV['OS']}" do
         it "should fail for project owner to remove themselves from project" do
           delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers/#{@user[:email]}"
           expect_json(errorMsg: "Removing the project owner is not allowed.")
-          expect_status(400)
+          expect_status(403)
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers"
           memb = json_body.detect { |e| e[:user][:email] == @user[:email] }
           expect(memb).should_not be_nil
@@ -365,7 +365,7 @@ describe "On #{ENV['OS']}" do
           create_session(new_member,"Pass123")
           delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers/#{data_owner}"
           expect_json(errorMsg: "Your project role does not allow to remove other members from this project.")
-          expect_status(400)
+          expect_status(403)
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers"
           memb = json_body.detect { |e| e[:user][:email] == data_owner }
           expect(memb).should_not be_nil
@@ -444,7 +444,7 @@ describe "On #{ENV['OS']}" do
           field_errors = json_body[:fieldErrors]
           expect(field_errors).to include("none_existing_user@email.com was not found in the system.")
         end
-        it "should exclude non-existing user but add exsisting one" do
+        it "should exclude non-existing user but add existing one" do
           new_member = create_user[:email]
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers", {projectTeam: [{projectTeamPK: {projectId: @project[:id],teamMember: "none_existing_user@email.com"},teamRole: "Data scientist"},{projectTeamPK: {projectId: @project[:id],teamMember: new_member},teamRole: "Data scientist"}]}
           expect_json(successMessage: "One member added successfully")
