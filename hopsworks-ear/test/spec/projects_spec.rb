@@ -340,7 +340,7 @@ describe "On #{ENV['OS']}" do
           memb = json_body.detect { |e| e[:user][:email] == new_member }
           expect(memb).to be_nil
         end
-        it "should remove data scientist from project when remove issued by another data owner" do
+        it "should remove data scientist from project when remove issued by data owner" do
           new_member = create_user[:email]
           add_member(new_member, "Data scientist")
           delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers/#{new_member}"
@@ -359,11 +359,15 @@ describe "On #{ENV['OS']}" do
           expect(memb).should_not be_nil
         end
         it "should fail for data scientist to remove data owner from project" do
-          delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers/#{@user[:email]}"
-          expect_json(errorMsg: "Removing the project owner is not allowed.")
+          data_owner = @user[:email]
+          new_member = create_user[:email]
+          add_member(new_member, "Data scientist")
+          create_session(new_member,"Pass123")
+          delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers/#{data_owner}"
+          expect_json(successMessage: "Member removed from team.")
           expect_status(400)
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers"
-          memb = json_body.detect { |e| e[:user][:email] == @user[:email] }
+          memb = json_body.detect { |e| e[:user][:email] == data_owner }
           expect(memb).should_not be_nil
         end
         it "should fail to remove a non-existing team member" do
