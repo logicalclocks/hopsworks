@@ -168,7 +168,7 @@ module SessionHelper
     end
   end
   
-  def create_role(user, role)
+  def create_with_role(user, role)
     group = BbcGroup.find_by(group_name: role)
     UserGroup.create(uid: user.uid, gid: group.gid)
   end
@@ -190,11 +190,11 @@ module SessionHelper
     user
   end
   
-  def create_user(params={}, role)
+  def create_user_with_role(params={}, role)
     params[:email] = "#{random_id}@email.com" unless params[:email]
     create_validated_user(params)
     user = User.find_by(email: params[:email])
-    create_role(user, role)
+    create_with_role(user, role)
     user.status = 2
     user.save
     user
@@ -270,7 +270,7 @@ module SessionHelper
     user[:email]     = "#{random_id}@email.com"
     user[:firstName] = "Admin"
     user[:lastName]  = "Bob"
-    create_user(user, "HOPS_ADMIN")
+    create_user_with_role(user, "HOPS_ADMIN")
     user[:email]     = "#{random_id}@email.com"
     user[:firstName] = "Admin"
     user[:lastName]  = "Clara"
@@ -278,7 +278,7 @@ module SessionHelper
     user[:email]     = "#{random_id}@email.com"
     user[:firstName] = "Admin"
     user[:lastName]  = "Doe"
-    create_user(user, "HOPS_ADMIN")
+    create_user_with_role(user, "HOPS_ADMIN")
     user[:email]     = "#{random_id}@email.com"
     user[:firstName] = "Bob"
     user[:lastName]  = "Admin"
@@ -310,7 +310,7 @@ module SessionHelper
     user[:email]     = "#{random_id}@email.com"
     user[:firstName] = "Agent"
     user[:lastName]  = "Morris"
-    create_user(user, "AGENT")
+    create_user_with_role(user, "AGENT")
     get "#{ENV['HOPSWORKS_API']}/users"
     response.body
   end
