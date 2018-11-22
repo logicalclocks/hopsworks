@@ -364,7 +364,7 @@ describe "On #{ENV['OS']}" do
           add_member(new_member, "Data scientist")
           create_session(new_member,"Pass123")
           delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers/#{data_owner}"
-          expect_json(successMessage: "Member removed from team.")
+          expect_json(errorMsg: "Your project role does not allow to remove other members from this project.")
           expect_status(400)
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers"
           memb = json_body.detect { |e| e[:user][:email] == data_owner }
