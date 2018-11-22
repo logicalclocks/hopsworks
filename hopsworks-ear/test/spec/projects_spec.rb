@@ -356,7 +356,7 @@ describe "On #{ENV['OS']}" do
           expect_status(400)
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers"
           memb = json_body.detect { |e| e[:user][:email] == @user[:email] }
-          expect(memb).to exist
+          expect(memb).should_not be_nil
         end
         it "should fail to remove a non-existing team member" do
           new_member = create_user[:email]
