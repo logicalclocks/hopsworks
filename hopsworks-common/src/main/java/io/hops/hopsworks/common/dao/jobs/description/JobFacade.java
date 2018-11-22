@@ -58,6 +58,7 @@ import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
@@ -360,5 +361,101 @@ public class JobFacade extends AbstractFacade<Jobs> {
     }
     
   }
+  
+  public enum JobExpansions {
+    CREATOR,
+    EXECUTIONS;
+    
+    JobExpansions() {
+    }
+    
+    @JsonCreator
+    public static JobExpansions fromString(String queryParam) {
+      //executions(offset=0;limit=1;sort_by=id:asc,name:desc;filter_by=name;filter_by=bla)
+      JobExpansions expand = null;
+      //Get the name of the property to expand
+      if (queryParam.contains("(")) {
+        expand = JobExpansions.valueOf(queryParam.substring(0, queryParam.indexOf('(')).toUpperCase());
+      } else {
+        expand = JobExpansions.valueOf(queryParam.toUpperCase());
+      }
+  
+  
+      String[] expansions = queryParam.substring(queryParam.indexOf('(') + 1, queryParam.lastIndexOf(')')).split(";");
+      for (String expansion : expansions) {
+        //Set offset
+        if (expansion.startsWith("offset")) {
+          expand.setOffset(Integer.parseInt(expansion.substring(expansion.indexOf('=') + 1)));
+        }
+        //Set limit
+        if (expansion.startsWith("limit")) {
+          expand.setLimit(Integer.parseInt(expansion.substring(expansion.indexOf('=') + 1)));
+        }
+        //Set sort_by
+        if (expansion.startsWith("sort_by")) {
+          String[] params = expansion.substring(expansion.indexOf('=') + 1).split(",");
+          //Hash table and linked list implementation of the Set interface, with predictable iteration order
+          Set<JobFacade.SortBy> sortBys = new LinkedHashSet<>();//make ordered
+          JobFacade.SortBy sort;
+          for (String s : params) {
+            sort = JobFacade.SortBy.fromString(s.trim());
+            sortBys.add(sort);
+          }
+          expand.setSort(sortBys);
+        }
+        
+        //Set filter_by
+        if (expansion.startsWith("filter_by")){
+         expand.addFilter(FilterBy.fromString(expansion.substring(expansion.indexOf('=') + 1)));
+        }
+      }
+      
+      return expand;
+    }
+  
+    private int offset;
+    private int limit;
+    private Set<SortBy> sort;
+    private Set<FilterBy> filter;
+    
+    public Integer getOffset() {
+      return offset;
+    }
+    
+    public Integer getLimit() {
+      return limit;
+    }
+    
+    public void setOffset(Integer offset) {
+      this.offset = offset;
+    }
+    
+    public void setLimit(Integer limit) {
+      this.limit = limit;
+    }
+  
+    public Set<SortBy> getSort() {
+      return sort;
+    }
+  
+    public void setSort(Set<SortBy> sort) {
+      this.sort = sort;
+    }
+  
+    public Set<FilterBy> getFilter() {
+      return filter;
+    }
+  
+    public void setFilter(Set<FilterBy> filter) {
+      this.filter = filter;
+    }
+    public void addFilter(FilterBy filter){
+      if(this.filter == null){
+        this.filter = new HashSet<>();
+      }
+      this.filter.add(filter);
+    }
+  }
+  
   
 }

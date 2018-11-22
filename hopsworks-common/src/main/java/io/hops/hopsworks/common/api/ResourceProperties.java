@@ -66,9 +66,9 @@ public class ResourceProperties {
         } else {
           resourceProperty = new ResourceProperty().setName(Name.valueOf(property.toUpperCase()));
         }
-        if (property.contains(":")) {
+        if (property.contains(";")) {
           resourceProperty
-              .setOffset(Integer.parseInt(property.substring(property.indexOf('=') + 1, property.indexOf(':'))))
+              .setOffset(Integer.parseInt(property.substring(property.indexOf('=') + 1, property.indexOf(';'))))
               .setLimit(Integer.parseInt(property.substring(property.lastIndexOf('=') + 1, property.indexOf(')'))));
         }
         properties.add(resourceProperty);

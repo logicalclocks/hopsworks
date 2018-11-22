@@ -47,7 +47,7 @@ public class JobsBeanParam {
     }
     String[] params = param.split(",");
     //Hash table and linked list implementation of the Set interface, with predictable iteration order
-    Set<JobFacade.SortBy> sortBys = new LinkedHashSet<>();//make orderd
+    Set<JobFacade.SortBy> sortBys = new LinkedHashSet<>();//make ordered
     JobFacade.SortBy sort;
     for (String s : params) {
       sort = JobFacade.SortBy.fromString(s.trim());
