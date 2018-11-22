@@ -42,10 +42,12 @@ package io.hops.hopsworks.api.jobs;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.api.ResourceProperties;
 import io.hops.hopsworks.common.dao.jobhistory.Execution;
 import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
+import io.hops.hopsworks.common.dao.jobs.description.YarnAppUrlsDTO;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.GenericException;
 import io.hops.hopsworks.common.exception.JobException;
@@ -62,6 +64,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -72,9 +75,12 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -90,6 +96,7 @@ public class ExecutionService {
   private ExecutionController executionController;
   @EJB
   private ExecutionsBuilder executionsBuilder;
+  
   
   @EJB
   private JWTHelper jWTHelper;
@@ -107,17 +114,16 @@ public class ExecutionService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response getExecutions(
-    @ApiParam(value = "offset of the collection of executions") @QueryParam("offset") Integer offset,
-    @ApiParam(value = "number of executions to fetch") @QueryParam("limit") Integer limit,
-    @ApiParam(value = "attribute to sort the collection") @QueryParam("sort_by") ResourceProperties.SortBy sortBy,
-    @ApiParam(value = "attribute to order the collection") @QueryParam("order_by") ResourceProperties.OrderBy orderBy,
+    @BeanParam Pagination pagination,
+    @BeanParam ExecutionsBeanParam executionsBeanParam,
     @ApiParam(value = "comma-separated list of entities to expand in the collection")
     @QueryParam("expand") String expand,
     @Context UriInfo uriInfo) {
-    
+
     ExecutionDTO executionDTO = executionsBuilder.build(uriInfo,
-      new ResourceProperties(ResourceProperties.Name.EXECUTIONS, offset, limit, sortBy, orderBy, expand), job);
-    
+      new ResourceProperties(ResourceProperties.Name.EXECUTIONS, pagination.getOffset(), pagination.getLimit(),
+        executionsBeanParam.getSortBySet(), executionsBeanParam.getFilter(), expand), job);
+
     GenericEntity<ExecutionDTO> entity = new GenericEntity<ExecutionDTO>(
       executionDTO) {
     };
@@ -135,13 +141,10 @@ public class ExecutionService {
     @ApiParam(value = "user") @QueryParam("expand") String expand,
     @Context UriInfo uriInfo) throws JobException {
     //If requested execution does not belong to job
-    Execution exec = executionFacade.findByJobAndId(job, id);
-    if(exec == null){
-      throw new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_NOT_FOUND, Level.FINE,
-        "execution with id: " + id + " does not belong to job: " + job.getName()  + " or was not found");
-    }
+    Execution execution = authorize(id);
+    
     ExecutionDTO dto = executionsBuilder.build(uriInfo, new ResourceProperties(ResourceProperties.Name.EXECUTIONS,
-      expand), exec);
+      expand), execution);
     return Response.ok().entity(dto).build();
   }
   
@@ -186,7 +189,8 @@ public class ExecutionService {
   public Response getLog(
     @PathParam("id") Integer id,
     @PathParam("type") JobLogDTO.LogType type) throws JobException {
-    JobLogDTO dto = executionController.getLog(job, id, type);
+    Execution execution = authorize(id);
+    JobLogDTO dto = executionController.getLog(execution, type);
     return Response.ok().entity(dto).build();
   }
   
@@ -199,7 +203,8 @@ public class ExecutionService {
   public Response retryLog(
     @PathParam("id") Integer id,
     @PathParam("type") JobLogDTO.LogType type) throws JobException {
-    JobLogDTO dto = executionController.retryLogAggregation(job, id, type);
+    Execution execution = authorize(id);
+    JobLogDTO dto = executionController.retryLogAggregation(execution, type);
     return Response.ok().entity(dto).build();
   }
   
@@ -213,12 +218,8 @@ public class ExecutionService {
   public Response getExecutionUI(
     @ApiParam(value = "id", required = true) @PathParam("id") Integer id,
     @Context UriInfo uriInfo) throws JobException {
-    Execution exec = executionFacade.findByJobAndId(job, id);
-    if(exec == null){
-      throw new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_NOT_FOUND, Level.FINE,
-        "execution with id: " + id + " does not belong to job: " + job.getName());
-    }
-    String url = executionController.getExecutionUI(job, id);
+    Execution execution = authorize(id);
+    String url = executionController.getExecutionUI(execution);
     return Response.ok().entity(url).build();
   }
   
@@ -231,12 +232,8 @@ public class ExecutionService {
   public Response getYarnUI(
     @ApiParam(value = "id", required = true) @PathParam("id") Integer id,
     @Context UriInfo uriInfo) throws JobException {
-    Execution exec = executionFacade.findByJobAndId(job, id);
-    if(exec == null){
-      throw new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_NOT_FOUND, Level.FINE,
-        "execution with id: " + id + " does not belong to job: " + job.getName());
-    }
-    String url = executionController.getExecutionYarnUI(job, id);
+    authorize(id);
+    String url = executionController.getExecutionYarnUI(id);
     return Response.ok().entity(url).build();
   }
   
@@ -249,12 +246,8 @@ public class ExecutionService {
   public Response getExecutionAppInfo(
     @ApiParam(value = "id", required = true) @PathParam("id") Integer id,
     @Context UriInfo uriInfo) throws JobException {
-    Execution exec = executionFacade.findByJobAndId(job, id);
-    if(exec == null){
-      throw new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_NOT_FOUND, Level.FINE,
-        "execution with id: " + id + " does not belong to job: " + job.getName());
-    }
-    AppInfoDTO dto = executionController.getExecutionAppInfo(job, id);
+    Execution execution = authorize(id);
+    AppInfoDTO dto = executionController.getExecutionAppInfo(execution);
     return Response.ok().entity(dto).build();
   }
   
@@ -268,15 +261,46 @@ public class ExecutionService {
     @PathParam("path") final String param,
     @Context HttpServletRequest req,
     @Context UriInfo uriInfo) throws JobException, IOException {
-    Execution exec = executionFacade.findByJobAndId(job, id);
-    if(exec == null){
-      throw new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_NOT_FOUND, Level.FINE,
-        "execution with id: " + id + " does not belong to job: " + job.getName());
-    }
-    Response.ResponseBuilder responseBuilder = executionController.getExecutionProxy(job, id, param, req);
+    Execution execution = authorize(id);
+    Response.ResponseBuilder responseBuilder = executionController.getExecutionProxy(execution, param, req);
     return responseBuilder.build();
     
   }
+  
+  @GET
+  @Path("/{id}/tensorboard")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response getTensorBoardUrls(@PathParam("id") Integer id, @Context SecurityContext sc) throws JobException {
+    Execution exec = authorize(id);
+    List<YarnAppUrlsDTO> urls = new ArrayList<>();
+    Users user = jWTHelper.getUserPrincipal(sc);
+    try {
+      urls.addAll(executionController.getTensorBoardUrls(user, exec, job));
+    } catch (Exception e) {
+      LOGGER.log(Level.SEVERE, "Exception while getting TensorBoard endpoints" + e.getLocalizedMessage(), e);
+    }
+    
+    GenericEntity<List<YarnAppUrlsDTO>> listUrls = new GenericEntity<List<YarnAppUrlsDTO>>(urls) { };
+    
+    return Response.ok().entity(listUrls).build();
+  }
+  
+  
+  private Execution authorize(Integer id) throws JobException {
+    Execution execution = executionFacade.findById(id);
+    if (execution == null) {
+      throw new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_NOT_FOUND, Level.FINE,
+        "execution with id: " + id + " does not belong to job: " + job.getName() + " or does not exist");
+    } else {
+      if (!job.getExecutionCollection().contains(execution)) {
+        throw new JobException(RESTCodes.JobErrorCode.UNAUTHORIZED_EXECUTION_ACCESS, Level.FINE);
+      }
+    }
+    return execution;
+  }
+  
   
   public enum Action {
     START("start"),

@@ -17,12 +17,12 @@ package io.hops.hopsworks.api.activities;
 
 import io.hops.hopsworks.api.user.UserDTO;
 import io.hops.hopsworks.common.api.RestDTO;
-import io.hops.hopsworks.common.dao.user.activity.Activity;
-import java.util.Date;
+
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.Date;
 
 @XmlRootElement
-public class ActivitiesDTO extends RestDTO<Activity, ActivitiesDTO>{
+public class ActivitiesDTO extends RestDTO<ActivitiesDTO>{
   
   private String activity;
   private Date timestamp;
@@ -30,12 +30,6 @@ public class ActivitiesDTO extends RestDTO<Activity, ActivitiesDTO>{
   private UserDTO userDTO;
 
   public ActivitiesDTO() {
-  }
-
-  public ActivitiesDTO(Activity activity) {
-    this.activity = activity.getActivity();
-    this.timestamp = activity.getTimestamp();
-    this.projectName = activity.getProject().getName();
   }
 
   public String getActivity() {

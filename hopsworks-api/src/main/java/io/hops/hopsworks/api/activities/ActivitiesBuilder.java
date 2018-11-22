@@ -42,7 +42,7 @@ public class ActivitiesBuilder {
   @EJB
   private ActivityFacade activityFacade;
 
-  public ActivitiesDTO uri(ActivitiesDTO dto, UriInfo uriInfo, Activity activity) {
+  public ActivitiesDTO uri(ActivitiesDTO dto, UriInfo uriInfo) {
     dto.setHref(uriInfo.getAbsolutePathBuilder()
         .build());
     return dto;
@@ -75,7 +75,7 @@ public class ActivitiesBuilder {
 
   public ActivitiesDTO build(UriInfo uriInfo, ResourceProperties resourceProperties, Activity activity) {
     ActivitiesDTO dto = new ActivitiesDTO();
-    uri(dto, uriInfo, activity);
+    uri(dto, uriInfo);
     expand(dto, resourceProperties);
     if (dto.isExpand()) {
       dto.setActivity(activity.getActivity());

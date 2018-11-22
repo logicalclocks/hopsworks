@@ -107,9 +107,9 @@ import java.util.Date;
   @NamedQuery(name = "Jobs.updateConfig",
           query
           = "UPDATE Jobs j SET j.jobConfig = :jobconfig  WHERE j.id = :id"),
-  @NamedQuery(name = "Jobs.findByProjectAndType",
+  @NamedQuery(name = "Jobs.findByProjectAndTypes",
           query
-          = "SELECT j FROM Jobs j WHERE j.project = :project AND j.type in :typeList ORDER BY j.id ASC")})
+          = "SELECT j FROM Jobs j WHERE j.project = :project AND j.type in :types ORDER BY j.id ASC")})
 public class Jobs implements Serializable {
 
   private static final long serialVersionUID = 1L;

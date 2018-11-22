@@ -48,6 +48,7 @@ import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationAttemptStateFacade
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
 import io.hops.hopsworks.common.dao.jobs.JobsHistoryFacade;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
+import io.hops.hopsworks.common.dao.jobs.description.YarnAppUrlsDTO;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
@@ -75,6 +76,8 @@ import org.apache.commons.httpclient.cookie.CookiePolicy;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.params.HttpClientParams;
 import org.apache.commons.io.IOUtils;
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.util.ConverterUtils;
@@ -100,6 +103,7 @@ import java.io.Reader;
 import java.io.Writer;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -132,7 +136,7 @@ public class ExecutionController {
   @EJB
   private JobsHistoryFacade jobHistoryFac;
   @EJB
-  private HdfsUsersController hdfsUsersBean;
+  private HdfsUsersController hdfsUsersController;
   @EJB
   private DistributedFsService dfs;
   @EJB
@@ -217,7 +221,7 @@ public class ExecutionController {
       String appId = jobExecs.get(0).getAppId();
       //Look for unique marker file which means it is a streaming job. Otherwise proceed with normal kill.
       DistributedFileSystemOps udfso = null;
-      String username = hdfsUsersBean.getHdfsUserName(job.getProject(), user);
+      String username = hdfsUsersController.getHdfsUserName(job.getProject(), user);
       try {
         udfso = dfs.getDfsOps(username);
         String marker = settings.getJobMarkerFile(job, appId);
@@ -258,11 +262,7 @@ public class ExecutionController {
   // Execution logs
   //====================================================================================================================
   
-  public JobLogDTO getLog(Jobs job, Integer executionId, JobLogDTO.LogType type) throws JobException {
-    Execution execution = execFacade.findByJobAndId(job, executionId);
-    if (execution == null) {
-      throw new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_NOT_FOUND, Level.FINE, "ExecutionId: " + execution);
-    }
+  public JobLogDTO getLog(Execution execution, JobLogDTO.LogType type) throws JobException {
     if (!execution.getState().isFinalState()) {
       throw new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_INVALID_STATE, Level.FINE, "Job still running.");
     }
@@ -312,11 +312,7 @@ public class ExecutionController {
     return dto;
   }
   
-  public JobLogDTO retryLogAggregation(Jobs job, Integer executionId, JobLogDTO.LogType type) throws JobException {
-    Execution execution = execFacade.findByJobAndId(job, executionId);
-    if (execution == null) {
-      throw new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_NOT_FOUND, Level.FINE, "ExecutionId: " + execution);
-    }
+  public JobLogDTO retryLogAggregation(Execution execution, JobLogDTO.LogType type) throws JobException {
     if (!execution.getState().isFinalState()) {
       throw new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_INVALID_STATE, Level.FINE, "Job still running.");
     }
@@ -324,7 +320,7 @@ public class ExecutionController {
     DistributedFileSystemOps dfso = null;
     DistributedFileSystemOps udfso = null;
     Users user = execution.getUser();
-    String hdfsUser = hdfsUsersBean.getHdfsUserName(execution.getJob().getProject(), user);
+    String hdfsUser = hdfsUsersController.getHdfsUserName(execution.getJob().getProject(), user);
     String aggregatedLogPath = settings.getAggregatedLogPath(hdfsUser, execution.getAppId());
     if (aggregatedLogPath == null) {
       throw new JobException(RESTCodes.JobErrorCode.JOB_LOG, Level.INFO,"Log aggregation is not enabled");
@@ -375,7 +371,7 @@ public class ExecutionController {
       }
     }
     
-    return getLog(job, executionId, type);
+    return getLog(execution, type);
   }
   
   
@@ -383,27 +379,25 @@ public class ExecutionController {
   // Execution Proxies
   //====================================================================================================================
   
-  public String getExecutionUI(Jobs job, Integer execId) throws JobException {
-    String appId = execFacade.findByJobAndId(job, execId).getAppId();
-    String trackingUrl = appAttemptStateFacade.findTrackingUrlByAppId(appId);
+  public String getExecutionUI(Execution execution) throws JobException {
+    String trackingUrl = appAttemptStateFacade.findTrackingUrlByAppId(execution.getAppId());
     if (trackingUrl != null && !trackingUrl.isEmpty()) {
-      return "/project/" + job.getProject().getId() + "/jobs/" + appId + "/prox/" + trackingUrl;
+      return "/project/" + execution.getJob().getProject().getId() + "/jobs/" + execution.getAppId() + "/prox/" +
+        trackingUrl;
     }
     throw new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_TRACKING_URL_NOT_FOUND, Level.FINE,
-      "ExecutionId:" + execId);
+      "ExecutionId:" + execution.getId());
   }
   
-  public String getExecutionYarnUI(Jobs job, int execId) {
-    String appId = execFacade.findByJobAndId(job, execId).getAppId();
-    return "/project/" + job.getProject().getId()
-      + "/jobs/" + appId + "/prox/" + settings.getYarnWebUIAddress()
-      + "/cluster/app/" + appId;
+  public String getExecutionYarnUI(int execId) {
+    Execution execution = execFacade.findById(execId);
+    return "/project/" + execution.getJob().getProject().getId()
+      + "/jobs/" + execution.getAppId() + "/prox/" + settings.getYarnWebUIAddress()
+      + "/cluster/app/" + execution.getAppId();
   }
   
-  public AppInfoDTO getExecutionAppInfo(Jobs job, Integer execId) {
+  public AppInfoDTO getExecutionAppInfo(Execution execution) {
     
-    String appId = execFacade.findByJobAndId(job, execId).getAppId();
-    Execution execution = execFacade.findByAppId(appId);
     long startTime = System.currentTimeMillis() - 60000;
     long endTime = System.currentTimeMillis();
     boolean running = true;
@@ -423,7 +417,7 @@ public class ExecutionController {
       
       // Transform application_1493112123688_0001 to 1493112123688_0001
       // application_ = 12 chars
-      String timestamp_attempt = appId.substring(12);
+      String timestamp_attempt = execution.getAppId().substring(12);
       
       Query query = new Query("show tag values from nodemanager with key=\"source\" " + "where source =~ /^.*"
         + timestamp_attempt + ".*$/", "graphite");
@@ -496,13 +490,12 @@ public class ExecutionController {
       }
     }
     
-    AppInfoDTO appInfo = new AppInfoDTO(appId, startTime, running, endTime, nbExecutors, executorInfo);
+    AppInfoDTO appInfo = new AppInfoDTO(execution.getAppId(), startTime, running, endTime, nbExecutors, executorInfo);
     return appInfo;
   }
   
-  public Response.ResponseBuilder getExecutionProxy(Jobs job, Integer executionId, String param, HttpServletRequest req)
+  public Response.ResponseBuilder getExecutionProxy(Execution execution, String param, HttpServletRequest req)
     throws JobException, IOException {
-    String appId = execFacade.findByJobAndId(job, executionId).getAppId();
     String trackingUrl;
     if (param.matches("http([a-zA-Z,:,/,.,0-9,-])+:([0-9])+(.)+")) {
       trackingUrl = param;
@@ -510,7 +503,7 @@ public class ExecutionController {
       trackingUrl = "http://" + param;
     }
     trackingUrl = trackingUrl.replace("@hwqm", "?");
-    if (!hasAppAccessRight(trackingUrl, job.getProject().getName())) {
+    if (!hasAppAccessRight(trackingUrl, execution.getJob().getProject().getName())) {
       LOGGER.log(Level.SEVERE, "A user is trying to access an app outside their project!");
       throw new JobException(RESTCodes.JobErrorCode.JOB_NOT_FOUND, Level.FINE);
     }
@@ -568,8 +561,8 @@ public class ExecutionController {
               String s = remaining + strb.toString();
               remaining = s.substring(s.lastIndexOf('>') + 1, s.length());
               s = hopify(s.substring(0, s.lastIndexOf('>') + 1), param,
-                job.getProject().getId(),
-                appId,
+                execution.getJob().getProject().getId(),
+                execution.getAppId(),
                 source);
               writer.write(s);
             }
@@ -577,7 +570,8 @@ public class ExecutionController {
           }
         });
       } else {
-        String s = hopify(method.getResponseBodyAsString(), param, job.getProject().getId(), appId, source);
+        String s = hopify(method.getResponseBodyAsString(), param, execution.getJob().getProject().getId(),
+          execution.getAppId(), source);
         responseBuilder.entity(s);
         responseBuilder.header("Content-Length", s.length());
       }
@@ -678,13 +672,71 @@ public class ExecutionController {
     }
     if (!appId.isEmpty()) {
       String appUser = yarnApplicationstateFacade.findByAppId(appId).getAppuser();
-      if (!projectName.equals(hdfsUsersBean.getProjectName(appUser))) {
+      if (!projectName.equals(hdfsUsersController.getProjectName(appUser))) {
         return false;
       }
     }
     return true;
   }
   
+//  private Response checkAccessRight(String projectName, String appId) {
+//    YarnApplicationstate appState = yarnApplicationstateFacade.findByAppId(appId);
+//
+//    if (appState == null) {
+//      return Response.status(Response.Status.NOT_FOUND).build();
+//    } else if (!hdfsUsersController.getProjectName(appState.getAppuser()).equals(projectName)) {
+//      //In this case, a user is trying to access a job outside its project!!!
+//      LOGGER.log(Level.SEVERE, "A user is trying to access a job outside their project!");
+//      return Response.status(Response.Status.FORBIDDEN).build();
+//    } else {
+//      return null;
+//    }
+//  }
   
   
+  //====================================================================================================================
+  // TensorBoard
+  //====================================================================================================================
+  public List<YarnAppUrlsDTO> getTensorBoardUrls(Users user, Execution execution, Jobs job)
+    throws JobException {
+    List<YarnAppUrlsDTO> urls = new ArrayList<>();
+    DistributedFileSystemOps udfso = null;
+  
+    try {
+      String hdfsUser = hdfsUsersController.getHdfsUserName(job.getProject(), user);
+  
+      udfso = dfs.getDfsOps(hdfsUser);
+      FileStatus[] statuses = udfso.getFilesystem().globStatus(
+        new org.apache.hadoop.fs.Path(
+          "/Projects/" + job.getProject().getName() + "/Experiments/" + execution.getAppId() + "/TensorBoard.*"));
+    
+      for (FileStatus status : statuses) {
+        LOGGER.log(Level.FINE, "Reading tensorboard for: {0}", status.getPath());
+        FSDataInputStream in = null;
+        try {
+          in = udfso.open(new org.apache.hadoop.fs.Path(status.getPath().toString()));
+          String url = IOUtils.toString(in, "UTF-8");
+          int prefix = url.indexOf("http://");
+          if (prefix != -1) {
+            url = url.substring("http://".length());
+          }
+          String name = status.getPath().getName();
+          urls.add(new YarnAppUrlsDTO(name, url));
+        } catch (Exception e) {
+          LOGGER.log(Level.WARNING, "Problem reading file with tensorboard address from HDFS: " + e.getMessage());
+        } finally {
+          org.apache.hadoop.io.IOUtils.closeStream(in);
+        }
+      
+      }
+    } catch (Exception e) {
+      throw new JobException(RESTCodes.JobErrorCode.TENSORBOARD_ERROR, Level.SEVERE, null, e.getMessage(), e);
+    } finally {
+      if (udfso != null) {
+        dfs.closeDfsClient(udfso);
+      }
+    }
+  
+    return urls;
+  }
 }

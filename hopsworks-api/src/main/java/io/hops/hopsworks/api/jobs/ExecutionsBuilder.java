@@ -17,6 +17,7 @@ package io.hops.hopsworks.api.jobs;
 
 import io.hops.hopsworks.api.user.UsersBuilder;
 import io.hops.hopsworks.common.api.ResourceProperties;
+import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.jobhistory.Execution;
 import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
@@ -24,9 +25,11 @@ import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ws.rs.core.UriInfo;
-import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 @Stateless
 public class ExecutionsBuilder {
@@ -96,7 +99,7 @@ public class ExecutionsBuilder {
       dto.setHdfsUser(execution.getHdfsUser());
       dto.setFinalStatus(execution.getFinalStatus());
       dto.setProgress(execution.getProgress());
-      dto.setUser(usersBuilder.build(execution.getUser(), uriInfo, resourceProperties));
+      dto.setUser(usersBuilder.buildItem(uriInfo, resourceProperties, execution.getUser()));
       dto.setFilesToRemove(execution.getFilesToRemove());
       dto.setDuration(execution.getExecutionDuration());
     }
@@ -108,25 +111,30 @@ public class ExecutionsBuilder {
     uri(dto, uriInfo, job);
     expand(dto, resourceProperties);
     if (dto.isExpand()) {
-      dto = build(dto, uriInfo, resourceProperties, job);
+      ResourceProperties.ResourceProperty property = resourceProperties.get(ResourceProperties.Name.EXECUTIONS);
+      List<Execution> executions;
+      if (property.getOffset() != null || property.getLimit() != null || property.getFilter() != null) {
+        executions = executionFacade.findByJob(property.getOffset(), property.getLimit(), property.getFilter(),
+          property.getSort(), job);
+        return items(new ExecutionDTO(), uriInfo, resourceProperties, executions, false);
+      }
+      executions = executionFacade.findByJob(job);
+      return items(new ExecutionDTO(), uriInfo, resourceProperties, executions, true);
     }
     return dto;
   }
   
-  
-  public ExecutionDTO build(ExecutionDTO dto, UriInfo uriInfo, ResourceProperties resourceProperties, Jobs job) {
-    ResourceProperties.ResourceProperty property = resourceProperties.get(ResourceProperties.Name.EXECUTIONS);
-    List<Execution> executions = executionFacade.findByJob(job, property.getOffset(), property.getLimit());
-    return build(dto, uriInfo, resourceProperties, executions);
-  }
-  
-  public ExecutionDTO build(ExecutionDTO dto, UriInfo uriInfo, ResourceProperties resourceProperties, List<Execution>
-    executions) {
+  private ExecutionDTO items(ExecutionDTO dto, UriInfo uriInfo, ResourceProperties resourceProperties,
+    List<Execution> executions, boolean sort) {
     if (executions != null && !executions.isEmpty()) {
-      ResourceProperties.ResourceProperty property = resourceProperties.get(ResourceProperties.Name.EXECUTIONS);
-      //Sort collection and return elements based on offset, limit, sortBy, orderBy
-      Collections.sort(executions, getComparator(property));
-      
+      if(sort) {
+        ResourceProperties.ResourceProperty property = resourceProperties.get(ResourceProperties.Name.EXECUTIONS);
+        //Sort collection and return elements based on offset, limit, sortBy, orderBy
+        Comparator<Execution> comparator = getComparator(property);
+        if (comparator != null) {
+          executions.sort(comparator);
+        }
+      }
       executions.forEach((exec) -> {
         dto.addItem(build(uriInfo, resourceProperties, exec));
       });
@@ -135,40 +143,75 @@ public class ExecutionsBuilder {
   }
   
   public Comparator<Execution> getComparator(ResourceProperties.ResourceProperty property) {
-    if(property.getSortBy() != null) {
-      switch (property.getSortBy()) {
-        case ID:
-          return new ExecutionComparatorById(property.getOrderBy());
-        case NAME:
-          throw new UnsupportedOperationException();
-        default:
-          break;
-      }
+    Set<ExecutionFacade.SortBy> sortBy = (Set<ExecutionFacade.SortBy>) property.getSort();
+    if (property.getSort() != null && !property.getSort().isEmpty()) {
+      return new ExecutionsComparator(sortBy);
     }
-    return new ExecutionComparatorById(property.getOrderBy());
+    return null;
   }
   
-  class ExecutionComparatorById implements Comparator<Execution> {
-    ResourceProperties.OrderBy orderByAsc = ResourceProperties.OrderBy.ASC;
+  class ExecutionsComparator implements Comparator<Execution> {
     
-    ExecutionComparatorById(ResourceProperties.OrderBy orderByAsc){
-      if(orderByAsc != null) {
-        this.orderByAsc = orderByAsc;
+    Set<ExecutionFacade.SortBy> sortBy;
+  
+    ExecutionsComparator(Set<ExecutionFacade.SortBy> sort) {
+      this.sortBy = sort;
+    }
+    
+    private int compare(Execution a, Execution b, ExecutionFacade.SortBy sortBy) {
+      switch (sortBy) {
+        case ID:
+          return order(a.getId(), b.getId(), sortBy.getParam());
+        case SUBMISSION_TIME:
+          return order(a.getSubmissionTime(), b.getSubmissionTime(), sortBy.getParam());
+        default:
+          throw new UnsupportedOperationException("Sort By " + sortBy + " not supported");
+      }
+    }
+    
+    private int order(String a, String b, AbstractFacade.OrderBy orderBy) {
+      switch (orderBy) {
+        case ASC:
+          return String.CASE_INSENSITIVE_ORDER.compare(a, b);
+        case DESC:
+          return String.CASE_INSENSITIVE_ORDER.compare(b, a);
+        default:
+          throw new UnsupportedOperationException("Order By " + orderBy + " not supported");
+      }
+    }
+    
+    private int order(Integer a, Integer b, AbstractFacade.OrderBy orderBy) {
+      switch (orderBy) {
+        case ASC:
+          return a.compareTo(b);
+        case DESC:
+          return a.compareTo(b);
+        default:
+          throw new UnsupportedOperationException("Order By " + orderBy + " not supported");
+      }
+    }
+    
+    private int order(Date a, Date b, AbstractFacade.OrderBy orderBy) {
+      switch (orderBy) {
+        case ASC:
+          return a.compareTo(b);
+        case DESC:
+          return a.compareTo(b);
+        default:
+          throw new UnsupportedOperationException("Order By " + orderBy + " not supported");
       }
     }
     
     @Override
     public int compare(Execution a, Execution b) {
-      switch (orderByAsc) {
-        case ASC:
-          return a.getSubmissionTime().compareTo(b.getSubmissionTime());
-        case DESC:
-          return b.getSubmissionTime().compareTo(a.getSubmissionTime());
-        default:
-          break;
+      Iterator<ExecutionFacade.SortBy> sort = sortBy.iterator();
+      int c = compare(a, b, sort.next());
+      for (; sort.hasNext() && c == 0; ) {
+        c = compare(a, b, sort.next());
       }
-      throw new UnsupportedOperationException("Order By " + orderByAsc + " not supported");
+      return c;
     }
   }
+  
 }
 

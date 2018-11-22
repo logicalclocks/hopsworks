@@ -39,9 +39,11 @@
 
 package io.hops.hopsworks.api.jobs;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.api.ResourceProperties;
 import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
@@ -53,7 +55,6 @@ import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.jobs.JobController;
 import io.hops.hopsworks.common.jobs.configuration.JobConfiguration;
 import io.hops.hopsworks.common.jobs.configuration.ScheduleDTO;
-import io.hops.hopsworks.common.jobs.flink.FlinkController;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
 import io.hops.hopsworks.common.jobs.spark.SparkController;
 import io.hops.hopsworks.common.jobs.spark.SparkJobConfiguration;
@@ -63,7 +64,6 @@ import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import org.elasticsearch.common.Strings;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -71,6 +71,7 @@ import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -105,8 +106,6 @@ public class JobService {
   @EJB
   private SparkController sparkController;
   @EJB
-  private FlinkController flinkController;
-  @EJB
   private ProjectFacade projectFacade;
   @EJB
   private JWTHelper jWTHelper;
@@ -128,15 +127,13 @@ public class JobService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response getAll(
-    @ApiParam(value = "Type of job, i.e. spark, flink") @QueryParam("type") JobType type,
-    @QueryParam("offset") Integer offset,
-    @QueryParam("limit") Integer limit,
-    @QueryParam("sort_by") ResourceProperties.SortBy sortBy,
-    @QueryParam("order_by") ResourceProperties.OrderBy orderBy,
+    @BeanParam Pagination pagination,
+    @BeanParam JobsBeanParam jobsBeanParam,
     @QueryParam("expand") String expand,
     @Context UriInfo uriInfo) {
-    JobDTO dto = jobsBuilder.build(uriInfo, new ResourceProperties(ResourceProperties.Name.JOBS, offset, limit,
-      sortBy, orderBy, expand), project, type);
+    JobDTO dto = jobsBuilder.build(uriInfo, new ResourceProperties(ResourceProperties.Name.JOBS,
+      pagination.getOffset(), pagination.getLimit(), jobsBeanParam.getSortBySet(), jobsBeanParam.getFilter(), expand),
+      project);
     
     GenericEntity<JobDTO> ge
       = new GenericEntity<JobDTO>(dto) { };
@@ -292,8 +289,6 @@ public class JobService {
   }
   
   @Path("{name}/executions")
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public ExecutionService executions(@PathParam("name") String name) throws JobException {
     Jobs job = jobFacade.findByProjectAndName(project, name);
     if (job == null) {

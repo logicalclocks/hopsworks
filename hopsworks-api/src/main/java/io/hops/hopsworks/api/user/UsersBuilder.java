@@ -68,7 +68,7 @@ public class UsersBuilder {
 
   public UserDTO build(UriInfo uriInfo, ResourceProperties resourceProperties, Users user) {
     UserDTO dto = new UserDTO();
-    uri(dto, uriInfo, user);
+    uri(dto, uriInfo);
     expand(dto, resourceProperties);
     if (dto.isExpand()) {
       dto.setFirstname(user.getFname());
@@ -104,7 +104,7 @@ public class UsersBuilder {
 
   public UserDTO buildFull(UriInfo uriInfo, ResourceProperties resourceProperties, Users user) {
     UserDTO dto = new UserDTO();
-    uri(dto, uriInfo, user);
+    uri(dto, uriInfo);
     expand(dto, resourceProperties);
     if (dto.isExpand()) {
       dto.setFirstname(user.getFname());

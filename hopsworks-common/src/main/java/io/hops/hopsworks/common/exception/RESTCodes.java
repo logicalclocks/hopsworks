@@ -410,8 +410,9 @@ public class RESTCodes {
 
     JOB_CONFIGURATION_CONVERT_TO_JSON_ERROR(24, "Could not convert JobConfiguration to json",
         Response.Status.BAD_REQUEST),
-    JOB_DELETION_FORBIDDEN(25, "Your role does not allow to delete this job.",  Response.Status.FORBIDDEN);
-
+    JOB_DELETION_FORBIDDEN(25, "Your role does not allow to delete this job.",  Response.Status.FORBIDDEN),
+    UNAUTHORIZED_EXECUTION_ACCESS(26, "This execution does not belong to a job of this project. ",
+      Response.Status.FORBIDDEN);
     
     private Integer code;
     private String message;

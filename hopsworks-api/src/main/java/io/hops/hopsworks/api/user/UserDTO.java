@@ -42,6 +42,19 @@ public class UserDTO extends RestDTO<UserDTO> {
   public UserDTO() {
   }
   
+  public UserDTO(Users user) {
+    this.firstname = user.getFname();
+    this.lastname = user.getLname();
+    this.email = user.getEmail();
+    this.phoneNumber = user.getMobile();
+    this.toursState = user.getToursState();
+    this.status = user.getStatus().getValue();
+    this.userAccountType = user.getMode().toString();
+    this.maxNumProjects = user.getMaxNumProjects();
+    this.numCreatedProjects = user.getNumCreatedProjects();
+    this.numActiveProjects = user.getNumActiveProjects();
+  }
+  
   public String getFirstname() {
     return firstname;
   }

@@ -39,28 +39,30 @@
 
 package io.hops.hopsworks.common.dao.jobhistory;
 
-import io.hops.hopsworks.common.jobs.jobhistory.JobFinalStatus;
-import io.hops.hopsworks.common.jobs.jobhistory.JobState;
-import io.hops.hopsworks.common.jobs.jobhistory.JobType;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.ejb.Stateless;
-import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
-import javax.persistence.PersistenceContext;
-import javax.persistence.TypedQuery;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.jobs.JobInputFile;
 import io.hops.hopsworks.common.dao.jobs.JobOutputFile;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
-import java.util.Arrays;
-import java.util.Date;
-import javax.persistence.NonUniqueResultException;
+import io.hops.hopsworks.common.jobs.jobhistory.JobFinalStatus;
+import io.hops.hopsworks.common.jobs.jobhistory.JobState;
+import io.hops.hopsworks.common.jobs.jobhistory.JobType;
+
+import javax.ejb.Stateless;
+import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
+import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
+import javax.persistence.TypedQuery;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Facade for management of persistent Execution objects.
@@ -68,8 +70,7 @@ import javax.persistence.NonUniqueResultException;
 @Stateless
 public class ExecutionFacade extends AbstractFacade<Execution> {
 
-  private static final Logger logger = Logger.getLogger(ExecutionFacade.class.
-          getName());
+  private static final Logger logger = Logger.getLogger(ExecutionFacade.class.getName());
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
@@ -83,80 +84,6 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
     return em;
   }
 
-  private HashMap<Integer, Execution> executions = new HashMap<>();
-
-  /**
-   * Find all the Execution entries for the given project and type.
-   * <p/>
-   * @param project
-   * @param type
-   * @return List of JobHistory objects.
-   * @throws IllegalArgumentException If the given JobType is not supported.
-   */
-  public List<Execution> findForProjectByType(Project project, JobType type)
-          throws IllegalArgumentException {
-    TypedQuery<Execution> q = em.createNamedQuery(
-            "Execution.findByProjectAndType", Execution.class);
-    q.setParameter("type", type);
-    q.setParameter("project", project);
-    return q.getResultList();
-  }
-  
-  /**
-   * Get all the executions for a given Jobs.
-   * <p/>
-   * @param job
-   * @return
-   */
-  public List<Execution> findByJob(Jobs job) {
-    return findByJob(job, null, null);
-  }
-  
-  /**
-   * Get all the executions for a given Jobs.
-   * <p/>
-   * @param job
-   * @return
-   */
-  public List<Execution> findByJob(Jobs job, Integer offset, Integer limit) {
-    TypedQuery<Execution> q = em.createNamedQuery("Execution.findByJob",
-      Execution.class);
-    q.setParameter("job", job);
-    if (offset != null) {
-      q.setFirstResult(offset);
-    }
-    if (limit != null) {
-      q.setMaxResults(limit);
-    }
-    return q.getResultList();
-  }
-  
-  
-  /**
-   * Get all the executions for a given Jobs sorted by id ordered ASC.
-   * <p/>
-   * @param job
-   * @return
-   */
-  public List<Execution> findByJobSortByIdAsc(Jobs job, Integer offset, Integer limit) {
-    TypedQuery<Execution> q = em.createNamedQuery("Execution.findByJobSortByIdOrderByASC",
-      Execution.class);
-    q.setParameter("job", job);
-    if (offset != null) {
-      q.setFirstResult(offset);
-    }
-    if (limit != null) {
-      q.setMaxResults(limit);
-    }
-    return q.getResultList();
-  }
-
-  /**
-   * Get an execution for application id.
-   * <p/>
-   * @param appId
-   * @return
-   */
   public Execution findByAppId(String appId) {
     try {
       return em.createNamedQuery("Execution.findByAppId",
@@ -166,9 +93,8 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
     }
   }
   
-  public Execution findByJobAndId(Jobs job, int id) {
-    TypedQuery<Execution> q = em.createNamedQuery("Execution.findByJobAndId", Execution.class);
-    q.setParameter("job", job);
+  public Execution findById(int id) {
+    TypedQuery<Execution> q = em.createNamedQuery("Execution.findById", Execution.class);
     q.setParameter("id", id);
     try {
       return q.getSingleResult();
@@ -176,49 +102,222 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
       return null;
     }
   }
-
-  public List<Execution> findbyProjectAndJobId(Project project, int jobId) {
+  
+  /**
+   * Enforces
+   * @param id
+   * @return
+   */
+  public Execution findByIdAndJob(int id, Jobs job) {
+    TypedQuery<Execution> q = em.createNamedQuery("Execution.findByIdAndJob", Execution.class);
+    q.setParameter("id", id).setParameter("job", job);
+    try {
+      return q.getSingleResult();
+    } catch (NoResultException e) {
+      return null;
+    }
+  }
+  
+  
+  /**
+   * Find all the Execution entries for the given project and type.
+   * <p/>
+   * @param project
+   * @param type
+   * @return List of JobHistory objects.
+   * @throws IllegalArgumentException If the given JobType is not supported.
+   */
+  public List<Execution> findByProjectAndType(Project project, JobType type) {
     TypedQuery<Execution> q = em.createNamedQuery(
-            "Execution.findByProjectAndJobId",
-            Execution.class);
-    q.setParameter("jobid", jobId);
+      "Execution.findByProjectAndType", Execution.class);
+    q.setParameter("type", type);
     q.setParameter("project", project);
     return q.getResultList();
   }
   
-  public Execution findByJobIdAndSubmissionTime(Date submissionTime, Jobs job) {
-    TypedQuery<Execution> q = em.createNamedQuery("Execution.findByJobIdAndSubmissionTime", Execution.class);
+  public List<Execution> findByJob(Jobs job) {
+    TypedQuery<Execution> q = em.createNamedQuery("Execution.findByJob",
+      Execution.class);
     q.setParameter("job", job);
-    q.setParameter("submissionTime", submissionTime);
-    try {
-      return q.getSingleResult();
-    } catch (NonUniqueResultException ex) {
-      // if more than one exc found for the same submissionTime return the first. 
-      // this will ignore other results.
-      return q.getResultList().get(0);
-    } catch (NoResultException e) {
-      return null;
-    }
+    return q.getResultList();
   }
-  
-  
 
   /**
    * Get all executions that are not in a final state.
-   * <p/>
-   * @return
+   *
+   * @return list of executions
    */
-  public List<Execution> findAllNotFinished() {
-    try {
-      return em.createNamedQuery("Execution.findByStates",
-          Execution.class).setParameter("states", Arrays.asList(JobState.RUNNING, JobState.ACCEPTED,
-              JobState.AGGREGATING_LOGS, JobState.INITIALIZING, JobState.NEW, JobState.NEW_SAVING,
-              JobState.STARTING_APP_MASTER, JobState.SUBMITTED)).getResultList();
-    } catch (NoResultException e) {
-      return null;
+  public List<Execution> findNotFinished() {
+    return em.createNamedQuery("Execution.findByStates",
+      Execution.class).setParameter("states", JobState.getRunningStates()).getResultList();
+  }
+  
+  public List<Execution> findByJob(Integer offset, Integer limit,
+    Set<? extends AbstractFacade.FilterBy> filter,
+    Set<? extends AbstractFacade.SortBy> sort,
+    Jobs job) {
+    String queryStr = buildQuery("SELECT e FROM Execution e ", filter, sort, "e.job = :job ");
+    Query query = em.createQuery(queryStr, Jobs.class).setParameter("job", job);
+    setFilter(filter, query);
+    setOffsetAndLim(offset, limit, query);
+    return query.getResultList();
+  }
+  
+  
+  private void setFilter(Set<? extends AbstractFacade.FilterBy> filter, Query q) {
+    if (filter == null || filter.isEmpty()) {
+      return;
+    }
+    Iterator<? extends AbstractFacade.FilterBy> filterBy = filter.iterator();
+    for (;filterBy.hasNext();) {
+      setFilterQuery(filterBy.next(), q);
     }
   }
+  
+  private void setFilterQuery(AbstractFacade.FilterBy filterBy, Query q) {
+    if (filterBy.equals(FilterBy.STATE) || filterBy.equals(FilterBy.STATE_NEQ)) {
+      Set<JobState> jobTypes = getJobStates(filterBy.getField(), filterBy.getParam());
+      q.setParameter(filterBy.getField(), jobTypes);
+    } else if (filterBy.equals(FilterBy.FINALSTATUS) || filterBy.equals(FilterBy.FINALSTATUS_NEQ)) {
+      Set<JobFinalStatus> jobTypes = getJobFinalStatus(filterBy.getField(), filterBy.getParam());
+      q.setParameter(filterBy.getField(), jobTypes);
+    }
+  }
+  
+  private Set<JobState> getJobStates(String field, String values) {
+    Set<JobState> states = new HashSet<>();
+    for (String state : values.split(",")) {
+      states.add(JobState.valueOf(state.trim()));
+    }
+    return states;
+  }
+  
+  private Set<JobFinalStatus> getJobFinalStatus(String field, String values) {
+    Set<JobFinalStatus> statuses = new HashSet<>();
+    for (String status : values.split(",")) {
+      statuses.add(JobFinalStatus.valueOf(status.trim()));
+    }
+    return statuses;
+  }
+  
+  
+  public enum SortBy implements AbstractFacade.SortBy {
+    ID("ID", "e.id ", "ASC"),
+    SUBMISSION_TIME("SUBMISSION_TIME", "e.submissionTime ", "DESC"),
+    DURATION("DURATION", "e.execution_stop-e.execution_start", "ASC");
+    
+    @JsonCreator
+    public static SortBy fromString(String param) {
+      String[] sortByParams = param.split(":");
+      SortBy sortBy = SortBy.valueOf(sortByParams[0].toUpperCase());
+      String order = sortByParams.length > 1 ? sortByParams[1].toUpperCase() : sortBy.defaultParam;
+      AbstractFacade.OrderBy orderBy = AbstractFacade.OrderBy.valueOf(order);
+      sortBy.setParam(orderBy);
+      return sortBy;
+    }
+    
+    private final String value;
+    private AbstractFacade.OrderBy param;
+    private final String sql;
+    private final String defaultParam;
+    
+    private SortBy(String value, String sql, String defaultParam) {
+      this.value = value;
+      this.sql = sql;
+      this.defaultParam = defaultParam;
+    }
+    
+    @Override
+    public String getValue() {
+      return value;
+    }
+    
+    @Override
+    public OrderBy getParam() {
+      return param;
+    }
+    
+    public void setParam(OrderBy param) {
+      this.param = param;
+    }
+    
+    @Override
+    public String getSql() {
+      return sql;
+    }
+    
+    @Override
+    public String toString() {
+      return value;
+    }
+    
+  }
+  
+  public enum FilterBy implements AbstractFacade.FilterBy {
+    STATE ("STATE", "e.state IN :states ", "states", ""),
+    STATE_NEQ ("STATE_NEQ", "e.state NOT IN :states ", "states", ""),
+    FINALSTATUS ("FINALSTATUS", "e.finalStatus IN :finalstatuses ", "finalstatuses", ""),
+    FINALSTATUS_NEQ ("FINALSTATUS_NEQ", "e.finalStatus NOT IN :finalstatuses ", "finalstatuses", ""),
+    SUBMISSION_TIME("SUBMISSION_TIME", "e.submissionTime = :submissionTime ", "submissionTime", "");
+    
+    @JsonCreator
+    public static FilterBy fromString(String param) {
+      String[] filterByParams = param.split(":");
+      FilterBy filterBy = FilterBy.valueOf(filterByParams[0].toUpperCase());
+      String filter = filterByParams.length > 1 ? filterByParams[1].toUpperCase() : filterBy.defaultParam;
+      filterBy.setParam(filter);
+      return filterBy;
+    }
+    
+    private final String value;
+    private String param;
+    private final String sql;
+    private final String field;
+    private final String defaultParam;
+    
+    private FilterBy(String value, String sql, String field, String defaultParam) {
+      this.value = value;
+      this.sql = sql;
+      this.field = field;
+      this.defaultParam = defaultParam;
+    }
+    
+    @Override
+    public String getValue() {
+      return value;
+    }
+    
+    @Override
+    public String getParam() {
+      return param;
+    }
+    
+    public void setParam(String param) {
+      this.param = param;
+    }
+    
+    @Override
+    public String getSql() {
+      return sql;
+    }
+    
+    @Override
+    public String getField() {
+      return field;
+    }
+    
+    @Override
+    public String toString() {
+      return value;
+    }
+    
+  }
+  
 
+  //====================================================================================================================
+  // Create update remove
+  //====================================================================================================================
+  
   public Execution create(Jobs job, Users user, String stdoutPath,
           String stderrPath, Collection<JobInputFile> input,
           JobFinalStatus finalStatus, float progress, String hdfsUser) {
@@ -340,15 +439,6 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
   
   private void merge(Execution exec){
     em.merge(exec);
-    executions.put(exec.getJob().getId(), exec);
-  }
-
-  public Execution getExecution(int id) {
-    try {
-      return executions.get(id);
-    } catch (Exception e) {
-      return null;
-    }
   }
 
 }

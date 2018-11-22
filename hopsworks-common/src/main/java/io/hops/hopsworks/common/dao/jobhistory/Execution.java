@@ -79,54 +79,27 @@ import java.util.List;
 @Table(name = "hopsworks.executions")
 @XmlRootElement
 @NamedQueries({
-  @NamedQuery(name = "Execution.findAll",
-          query
-          = "SELECT e FROM Execution e"),
   @NamedQuery(name = "Execution.findById",
           query
           = "SELECT e FROM Execution e WHERE e.id = :id"),
-  @NamedQuery(name = "Execution.findByJobAndId",
+  @NamedQuery(name = "Execution.findByIdAndJob",
     query
       = "SELECT e FROM Execution e WHERE e.id = :id AND e.job = :job"),
-  @NamedQuery(name = "Execution.findBySubmissionTime",
-          query
-          = "SELECT e FROM Execution e WHERE e.submissionTime = :submissionTime"),
-  @NamedQuery(name = "Execution.findByJobIdAndSubmissionTime",
-          query
-          = "SELECT e FROM Execution e WHERE e.job = :job AND e.submissionTime = :submissionTime"),
-  @NamedQuery(name = "Execution.findByState",
-          query
-          = "SELECT e FROM Execution e WHERE e.state = :state"),
   @NamedQuery(name = "Execution.findByStates",
           query
           = "SELECT e FROM Execution e WHERE e.state in :states"),
-  @NamedQuery(name = "Execution.findByStdoutPath",
-          query
-          = "SELECT e FROM Execution e WHERE e.stdoutPath = :stdoutPath"),
-  @NamedQuery(name = "Execution.findByStderrPath",
-          query
-          = "SELECT e FROM Execution e WHERE e.stderrPath = :stderrPath"),
   @NamedQuery(name = "Execution.findByAppId",
           query
           = "SELECT e FROM Execution e WHERE e.appId = :appId"),
   @NamedQuery(name = "Execution.findByProjectAndType",
           query
-          = "SELECT e FROM Execution e WHERE e.job.type = :type AND e.job.project "
-          + "= :project ORDER BY e.submissionTime DESC"),
+          = "SELECT e FROM Execution e WHERE e.job.type = :type AND e.job.project = :project"),
   @NamedQuery(name = "Execution.findByJob",
           query
-          = "SELECT e FROM Execution e WHERE e.job = :job ORDER BY e.submissionTime DESC"),
-  @NamedQuery(name = "Execution.findByJobSortByIdOrderByASC",
-          query
-          = "SELECT e FROM Execution e WHERE e.job = :job ORDER BY e.id ASC"),
-  @NamedQuery(name = "Execution.findByProjectAndJobId",
-          query
-          = "SELECT e FROM Execution e WHERE e.job.id = :jobid AND e.job.project "
-          + "= :project ORDER BY e.submissionTime DESC"),
+          = "SELECT e FROM Execution e WHERE e.job = :job"),
   @NamedQuery(name = "Execution.findJobsForExecutionInState",
           query
-          = "SELECT DISTINCT e.job FROM Execution e WHERE e.job.project = :project "
-      + "AND e.state IN :stateCollection ORDER BY e.submissionTime DESC"),
+          = "SELECT DISTINCT e.job FROM Execution e WHERE e.job.project = :project AND e.state IN :stateCollection"),
   @NamedQuery(name = "Execution.findUserJobsForExecutionInState",
       query
       = "SELECT DISTINCT e.job FROM Execution e WHERE e.job.project = :project AND e.hdfsUser = :hdfsUser "
@@ -386,7 +359,6 @@ public class Execution implements Serializable {
 
   @Override
   public boolean equals(Object object) {
-    // TODO: Warning - this method won't work in the case the id fields are not set
     if (!(object instanceof Execution)) {
       return false;
     }

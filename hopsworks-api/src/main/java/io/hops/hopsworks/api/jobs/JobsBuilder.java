@@ -17,17 +17,19 @@ package io.hops.hopsworks.api.jobs;
 
 import io.hops.hopsworks.api.user.UsersBuilder;
 import io.hops.hopsworks.common.api.ResourceProperties;
+import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.jobs.jobhistory.JobType;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ws.rs.core.UriInfo;
 import java.util.Comparator;
-import java.util.EnumSet;
+import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 @Stateless
 public class JobsBuilder {
@@ -59,9 +61,6 @@ public class JobsBuilder {
   }
   
   public JobDTO build(UriInfo uriInfo, ResourceProperties resourceProperties, Jobs job) {
-    if(job == null){
-      throw new IllegalArgumentException("job parameter was null.");
-    }
     JobDTO dto = new JobDTO();
     uri(dto, uriInfo, job);
     expand(dto, resourceProperties);
@@ -71,32 +70,35 @@ public class JobsBuilder {
       dto.setCreationTime(job.getCreationTime());
       dto.setConfig(job.getJobConfig());
       dto.setType(job.getJobType());
-      dto.setCreator(usersBuilder.build(job.getCreator(), uriInfo, resourceProperties));
+      dto.setCreator(usersBuilder.build(uriInfo, resourceProperties, job.getCreator()));
       dto.setExecutions(executionsBuilder.build(uriInfo, resourceProperties, job));
     }
     return dto;
   }
   
-  public JobDTO build(UriInfo uriInfo, ResourceProperties resourceProperties, Project project, JobType
-    type) {
+  public JobDTO build(UriInfo uriInfo, ResourceProperties resourceProperties, Project project) {
+    ResourceProperties.ResourceProperty property = resourceProperties.get(ResourceProperties.Name.JOBS);
     List<Jobs> jobs;
-    if (type != null) {
-      jobs = jobFacade.findJobsForProjectAndType(project, EnumSet.of(type),
-        resourceProperties.get(ResourceProperties.Name.JOBS).getOffset(),
-        resourceProperties.get(ResourceProperties.Name.JOBS).getLimit());
-    } else {
-      jobs = jobFacade.findByProject(project,
-        resourceProperties.get(ResourceProperties.Name.JOBS).getOffset(),
-        resourceProperties.get(ResourceProperties.Name.JOBS).getLimit());
+    if (property.getOffset() != null || property.getLimit() != null || property.getFilter() != null) {
+      jobs = jobFacade.findByProject(property.getOffset(), property.getLimit(), property.getFilter(),
+        property.getSort(), project);
+      return items(new JobDTO(), uriInfo, resourceProperties, jobs, false);
     }
-    return build(new JobDTO(), uriInfo, resourceProperties, jobs);
+    jobs = jobFacade.findByProject(project);
+    return items(new JobDTO(), uriInfo, resourceProperties, jobs, true);
   }
   
-  public JobDTO build(JobDTO dto, UriInfo uriInfo, ResourceProperties resourceProperties, List<Jobs> jobs) {
+  private JobDTO items(JobDTO dto, UriInfo uriInfo, ResourceProperties resourceProperties, List<Jobs> jobs,
+    boolean sort) {
     if (jobs != null && !jobs.isEmpty()) {
-      ResourceProperties.ResourceProperty property = resourceProperties.get(ResourceProperties.Name.JOBS);
-      //Sort collection and return elements based on offset, limit, sortBy, orderBy
-      jobs.sort(getComparator(property));
+      if (sort) {
+        ResourceProperties.ResourceProperty property = resourceProperties.get(ResourceProperties.Name.JOBS);
+        //Sort collection and return elements based on offset, limit, sortBy, orderBy
+        Comparator<Jobs> comparator = getComparator(property);
+        if (comparator != null) {
+          jobs.sort(comparator);
+        }
+      }
       jobs.forEach((job) -> {
         dto.addItem(build(uriInfo, resourceProperties, job));
       });
@@ -105,62 +107,75 @@ public class JobsBuilder {
   }
   
   public Comparator<Jobs> getComparator(ResourceProperties.ResourceProperty property) {
-    if (property.getSortBy() != null) {
-      switch (property.getSortBy()) {
+    Set<JobFacade.SortBy> sortBy = (Set<JobFacade.SortBy>) property.getSort();
+    if (property.getSort() != null && !property.getSort().isEmpty()) {
+      return new JobsComparator(sortBy);
+    }
+    return null;
+  }
+  
+  class JobsComparator implements Comparator<Jobs> {
+    
+    Set<JobFacade.SortBy> sortBy;
+    
+    JobsComparator(Set<JobFacade.SortBy> sort) {
+      this.sortBy = sort;
+    }
+    
+    private int compare(Jobs a, Jobs b, JobFacade.SortBy sortBy) {
+      switch (sortBy) {
         case ID:
-          return new JobComparatorById(property.getOrderBy());
+          return order(a.getId(), b.getId(), sortBy.getParam());
         case NAME:
-          return new JobComparatorByName(property.getOrderBy());
+          return order(a.getName(), b.getName(), sortBy.getParam());
+        case DATE_CREATED:
+          return order(a.getCreationTime(), b.getCreationTime(), sortBy.getParam());
         default:
-          break;
+          throw new UnsupportedOperationException("Sort By " + sortBy + " not supported");
       }
     }
-    return new JobComparatorById(property.getOrderBy());
-  }
-  
-  class JobComparatorById implements Comparator<Jobs> {
-    ResourceProperties.OrderBy orderByAsc = ResourceProperties.OrderBy.ASC;
     
-    JobComparatorById(ResourceProperties.OrderBy orderByAsc) {
-      if (orderByAsc != null) {
-        this.orderByAsc = orderByAsc;
+    private int order(String a, String b, AbstractFacade.OrderBy orderBy) {
+      switch (orderBy) {
+        case ASC:
+          return String.CASE_INSENSITIVE_ORDER.compare(a, b);
+        case DESC:
+          return String.CASE_INSENSITIVE_ORDER.compare(b, a);
+        default:
+          throw new UnsupportedOperationException("Order By " + orderBy + " not supported");
+      }
+    }
+    
+    private int order(Integer a, Integer b, AbstractFacade.OrderBy orderBy) {
+      switch (orderBy) {
+        case ASC:
+          return a.compareTo(b);
+        case DESC:
+          return a.compareTo(b);
+        default:
+          throw new UnsupportedOperationException("Order By " + orderBy + " not supported");
+      }
+    }
+    
+    private int order(Date a, Date b, AbstractFacade.OrderBy orderBy) {
+      switch (orderBy) {
+        case ASC:
+          return a.compareTo(b);
+        case DESC:
+          return a.compareTo(b);
+        default:
+          throw new UnsupportedOperationException("Order By " + orderBy + " not supported");
       }
     }
     
     @Override
     public int compare(Jobs a, Jobs b) {
-      switch (orderByAsc) {
-        case ASC:
-          return a.getId().compareTo(b.getId());
-        case DESC:
-          return b.getId().compareTo(a.getId());
-        default:
-          break;
+      Iterator<JobFacade.SortBy> sort = sortBy.iterator();
+      int c = compare(a, b, sort.next());
+      for (; sort.hasNext() && c == 0; ) {
+        c = compare(a, b, sort.next());
       }
-      throw new UnsupportedOperationException("Order By " + orderByAsc + " not supported");
-    }
-  }
-  
-  class JobComparatorByName implements Comparator<Jobs> {
-    ResourceProperties.OrderBy orderByAsc = ResourceProperties.OrderBy.ASC;
-    
-    JobComparatorByName(ResourceProperties.OrderBy orderByAsc) {
-      if (orderByAsc != null) {
-        this.orderByAsc = orderByAsc;
-      }
-    }
-    
-    @Override
-    public int compare(Jobs a, Jobs b) {
-      switch (orderByAsc) {
-        case ASC:
-          return a.getName().compareTo(b.getName());
-        case DESC:
-          return b.getName().compareTo(a.getName());
-        default:
-          break;
-      }
-      throw new UnsupportedOperationException("Order By " + orderByAsc + " not supported");
+      return c;
     }
   }
   

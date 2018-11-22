@@ -15,42 +15,41 @@
  */
 package io.hops.hopsworks.api.jobs;
 
-import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
+import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
 import io.swagger.annotations.ApiParam;
 
 import javax.ws.rs.QueryParam;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-public class JobsBeanParam {
-  
+public class ExecutionsBeanParam {
   @QueryParam("sort_by")
-  @ApiParam(value = "ex. sort_by=date_created:desc,name:asc",
+  @ApiParam(value = "ex. sort_by=submission_time:desc,id:asc",
     allowableValues = "id:asc,id:desc,name:asc,name:desc,date_created:asc,date_created:desc")
   private String sortBy;
-  private final Set<JobFacade.SortBy> sortBySet;
+  private final Set<ExecutionFacade.SortBy> sortBySet;
   @QueryParam("filter_by")
-  @ApiParam(value = "ex. filter_by=type:spark,pyspark")
-  private Set<JobFacade.FilterBy> filter;
+  @ApiParam(value = "ex. filter_by=state:running,finished")
+  private Set<ExecutionFacade.FilterBy> filter;
   
-  public JobsBeanParam(
+  public ExecutionsBeanParam(
     @QueryParam("sort_by") String sortBy,
-    @QueryParam("filter_by") Set<JobFacade.FilterBy> filter) {
+    @QueryParam("filter_by") Set<ExecutionFacade.FilterBy> filter) {
     this.sortBy = sortBy;
     this.sortBySet = getSortBy(sortBy);
     this.filter = filter;
   }
   
-  private Set<JobFacade.SortBy> getSortBy(String param) {
+  private Set<ExecutionFacade.SortBy> getSortBy(String param) {
     if (param == null || param.isEmpty()) {
       return null;
     }
     String[] params = param.split(",");
     //Hash table and linked list implementation of the Set interface, with predictable iteration order
-    Set<JobFacade.SortBy> sortBys = new LinkedHashSet<>();//make orderd
-    JobFacade.SortBy sort;
+    Set<ExecutionFacade.SortBy> sortBys = new LinkedHashSet<>();//make ordered
+    ExecutionFacade.SortBy sort;
     for (String s : params) {
-      sort = JobFacade.SortBy.fromString(s.trim());
+      sort = ExecutionFacade.SortBy.fromString(s.trim());
       sortBys.add(sort);
     }
     return sortBys;
@@ -64,15 +63,15 @@ public class JobsBeanParam {
     this.sortBy = sortBy;
   }
   
-  public Set<JobFacade.FilterBy> getFilter() {
+  public Set<ExecutionFacade.FilterBy> getFilter() {
     return filter;
   }
   
-  public void setFilter(Set<JobFacade.FilterBy> filter) {
+  public void setFilter(Set<ExecutionFacade.FilterBy> filter) {
     this.filter = filter;
   }
   
-  public Set<JobFacade.SortBy> getSortBySet() {
+  public Set<ExecutionFacade.SortBy> getSortBySet() {
     return sortBySet;
   }
 }
