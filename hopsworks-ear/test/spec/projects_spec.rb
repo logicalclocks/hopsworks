@@ -334,7 +334,6 @@ describe "On #{ENV['OS']}" do
           new_member = create_user[:email]
           add_member(new_member, "Data owner")
           delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers/#{new_member}"
-          expect_json(successMessage: "Member removed from team.")
           expect_status(200)
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers"
           memb = json_body.detect { |e| e[:user][:email] == new_member }
