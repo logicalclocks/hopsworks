@@ -167,8 +167,8 @@ public class UserService {
       @FormParam("lastName") String lastName,
       @FormParam("telephoneNum") String telephoneNum,
       @FormParam("toursState") Integer toursState,
-      @Context UriInfo uriInfo, 
-      @Context HttpServletRequest req, 
+      @Context UriInfo uriInfo,
+      @Context HttpServletRequest req,
       @Context SecurityContext sc) throws UserException {
     Users user = jWTHelper.getUserPrincipal(sc);
     user = userController.updateProfile(user, firstName, lastName, telephoneNum, toursState, req);

@@ -177,7 +177,7 @@ public class UsersBuilder {
     }
 
     private int compare(Users a, Users b, UserFacade.SortBy sortBy) {
-      switch (sortBy) {
+      switch (UserFacade.Sorts.valueOf(sortBy.getValue())) {
         case EMAIL:
           return order(a.getEmail(), b.getEmail(), sortBy.getParam());
         case DATE_CREATED:

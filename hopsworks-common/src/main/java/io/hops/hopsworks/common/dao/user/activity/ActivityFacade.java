@@ -36,10 +36,8 @@
  * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
 package io.hops.hopsworks.common.dao.user.activity;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
@@ -60,7 +58,7 @@ import java.util.Set;
 public class ActivityFacade extends AbstractFacade<Activity> {
 
   private static final Logger logger = Logger.getLogger(ActivityFacade.class.
-          getName());
+      getName());
 
   // String constants
   public static final String NEW_PROJECT = " created a new project named ";
@@ -133,7 +131,7 @@ public class ActivityFacade extends AbstractFacade<Activity> {
       return query.getSingleResult();
     } catch (NoResultException e) {
       logger.log(Level.SEVERE, "No activity returned for project " + project
-              + ", while its creation should always be there!", e);
+          + ", while its creation should always be there!", e);
       return null;
     }
   }
@@ -149,14 +147,14 @@ public class ActivityFacade extends AbstractFacade<Activity> {
   }
 
   public void persistActivity(String activity, Project project, String email) {
-    TypedQuery<Users> userQuery = em.createNamedQuery("Users.findByEmail",Users.class);
+    TypedQuery<Users> userQuery = em.createNamedQuery("Users.findByEmail", Users.class);
     userQuery.setParameter("email", email);
     Users user;
     try {
       user = userQuery.getSingleResult();
     } catch (NoResultException e) {
       throw new IllegalArgumentException("No user found with email " + email
-              + " when trying to persist activity for that user.", e);
+          + " when trying to persist activity for that user.", e);
     }
     persistActivity(activity, project, user);
   }
@@ -263,7 +261,7 @@ public class ActivityFacade extends AbstractFacade<Activity> {
     Query query = em.createNamedQuery("Activity.findByFlag", Activity.class).setParameter("flag", flag);
     return query.getResultList();
   }
-  
+
   public List<Activity> findAll(Integer offset, Integer limit, Set<? extends AbstractFacade.FilterBy> filter,
       Set<? extends AbstractFacade.SortBy> sort) {
     String queryStr = buildQuery("SELECT u FROM Activity u ", filter, sort, "");
@@ -282,7 +280,7 @@ public class ActivityFacade extends AbstractFacade<Activity> {
     return query.getResultList();
   }
 
-  public List<Activity> findAllByUser(Integer offset, Integer limit, Set<? extends AbstractFacade.FilterBy> filter, 
+  public List<Activity> findAllByUser(Integer offset, Integer limit, Set<? extends AbstractFacade.FilterBy> filter,
       Set<? extends AbstractFacade.SortBy> sort, Users user) {
     String queryStr = buildQuery("SELECT u FROM Activity u ", filter, sort, "u.user = :user ");
     Query query = em.createQuery(queryStr, Activity.class).setParameter("user", user);
@@ -296,58 +294,40 @@ public class ActivityFacade extends AbstractFacade<Activity> {
       return;
     }
     Iterator<? extends AbstractFacade.FilterBy> filterBy = filter.iterator();
-    for (;filterBy.hasNext();) {
+    for (; filterBy.hasNext();) {
       setFilterQuery(filterBy.next(), q);
     }
   }
-  
+
   private void setFilterQuery(AbstractFacade.FilterBy filterBy, Query q) {
     q.setParameter(filterBy.getField(), filterBy.getParam());
   }
-  
-  public enum SortBy implements AbstractFacade.SortBy {
+
+  public enum Sorts {
     ID("ID", "u.id ", "ASC"),
     FLAG("FLAG", "u.flag ", "ASC"),
     DATE_CREATED("DATE_CREATED", "u.timestamp ", "ASC");
 
-    @JsonCreator
-    public static SortBy fromString(String param) {
-      String[] sortByParams = param.split(":");
-      SortBy sortBy = SortBy.valueOf(sortByParams[0].toUpperCase());
-      String order = sortByParams.length > 1 ? sortByParams[1].toUpperCase() : sortBy.defaultParam;
-      AbstractFacade.OrderBy orderBy = AbstractFacade.OrderBy.valueOf(order);
-      sortBy.setParam(orderBy);
-      return sortBy;
-    }
-    
     private final String value;
-    private AbstractFacade.OrderBy param;
     private final String sql;
     private final String defaultParam;
-    
-    private SortBy(String value, String sql, String defaultParam) {
+
+    private Sorts(String value, String sql, String defaultParam) {
       this.value = value;
       this.sql = sql;
       this.defaultParam = defaultParam;
     }
 
-    @Override
     public String getValue() {
       return value;
     }
 
-    @Override
-    public OrderBy getParam() {
-      return param;
-    }
-
-    public void setParam(OrderBy param) {
-      this.param = param;
-    }
-
-    @Override
     public String getSql() {
       return sql;
+    }
+
+    public String getDefaultParam() {
+      return defaultParam;
     }
 
     @Override
@@ -356,52 +336,34 @@ public class ActivityFacade extends AbstractFacade<Activity> {
     }
 
   }
-  
-  public enum FilterBy implements AbstractFacade.FilterBy {
-    FLAG ("FLAG", "u.flag = :flag ", "flag", "PROJECT");
-    
-    @JsonCreator
-    public static FilterBy fromString(String param) {
-      String[] filterByParams = param.split(":");
-      FilterBy filterBy = FilterBy.valueOf(filterByParams[0].toUpperCase());
-      String filter = filterByParams.length > 1 ? filterByParams[1].toUpperCase() : filterBy.defaultParam;
-      filterBy.setParam(filter);
-      return filterBy;
-    }
-    
+
+  public enum Filters {
+    FLAG("FLAG", "u.flag = :flag ", "flag", "PROJECT");
+
     private final String value;
-    private String param;
     private final String sql;
     private final String field;
     private final String defaultParam;
 
-    private FilterBy(String value, String sql, String field, String defaultParam) {
+    private Filters(String value, String sql, String field, String defaultParam) {
       this.value = value;
       this.sql = sql;
       this.field = field;
       this.defaultParam = defaultParam;
     }
 
-    @Override
+    public String getDefaultParam() {
+      return defaultParam;
+    }
+
     public String getValue() {
       return value;
     }
 
-    @Override
-    public String getParam() {
-      return param;
-    }
-
-    public void setParam(String param) {
-      this.param = param;
-    }
-
-    @Override
     public String getSql() {
       return sql;
     }
 
-    @Override
     public String getField() {
       return field;
     }
@@ -409,7 +371,7 @@ public class ActivityFacade extends AbstractFacade<Activity> {
     @Override
     public String toString() {
       return value;
-    }    
-    
+    }
+
   }
 }

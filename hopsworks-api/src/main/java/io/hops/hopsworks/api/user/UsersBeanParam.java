@@ -15,7 +15,6 @@
  */
 package io.hops.hopsworks.api.user;
 
-import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.swagger.annotations.ApiParam;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -25,35 +24,39 @@ public class UsersBeanParam {
 
   @QueryParam("sort_by")
   @ApiParam(required = false,
-      value = "ex. sort_by=FIRST_NAME:asc,LAST_NAME:desc",
-      allowableValues = "FIRST_NAME:asc,FIRST_NAME:desc,LAST_NAME:asc,LAST_NAME:desc,DATE_CREATED:asc,DATE_CREATED:desc"
-      + ",EMAIL:asc,EMAIL:desc")
+      value = "ex. sort_by=first_name:asc,last_name:desc",
+      allowableValues = "first_name:asc,first_name:desc,last_name:asc,last_name:desc,date_created:asc,date_created:desc"
+      + ",email:asc,email:desc")
   private String sortBy;
-  private final Set<UserFacade.SortBy> sortBySet;
+  private final Set<SortBy> sortBySet;
   @QueryParam("filter_by")
   @ApiParam(required = false,
-      value = "ex. filter_by=ROLE:hops_admin,hops_user&filter_by=STATUS:2",
-      allowMultiple = true)
-  private Set<UserFacade.FilterBy> filter;
+      value = "ex. filter_by=role:hops_admin,hops_user&filter_by=status:2",
+      allowableValues = "role:hops_admin,role_neq:hops_admin,role:hops_user,role_neq:hops_user,role:agent, "
+          + "role_neq:agent, role:hops_admin,hops_user, role_neq:hops_admin,hops_user, status=new_mobile_account,"
+          + " status=verified_account, status=activated_account, status=deactivated_account, status=blocked_account,"
+          + " status=lost_mobile, status=spam_account, status_gt=2, status_gt=2, status_lt=2, is_online=0, is_online=1, "
+          + "false_login=10, false_login_gt=20, false_login_lt=20,", allowMultiple = true)
+  private Set<FilterBy> filter;
 
   public UsersBeanParam(
-      @QueryParam("sort_by") String sortBy, 
-      @QueryParam("filter_by") Set<UserFacade.FilterBy> filter) {
+      @QueryParam("sort_by") String sortBy,
+      @QueryParam("filter_by") Set<FilterBy> filter) {
     this.sortBy = sortBy;
     this.sortBySet = getSortBy(sortBy);
     this.filter = filter;
   }
 
-  private Set<UserFacade.SortBy> getSortBy(String param) {
+  private Set<SortBy> getSortBy(String param) {
     if (param == null || param.isEmpty()) {
       return null;
     }
     String[] params = param.split(",");
     //Hash table and linked list implementation of the Set interface, with predictable iteration order
-    Set<UserFacade.SortBy> sortBys = new LinkedHashSet<>();//make orderd
-    UserFacade.SortBy sort;
+    Set<SortBy> sortBys = new LinkedHashSet<>();//make orderd
+    SortBy sort;
     for (String s : params) {
-      sort = UserFacade.SortBy.fromString(s.trim());
+      sort = new SortBy(s.trim());
       sortBys.add(sort);
     }
     return sortBys;
@@ -67,15 +70,15 @@ public class UsersBeanParam {
     this.sortBy = sortBy;
   }
 
-  public Set<UserFacade.FilterBy> getFilter() {
+  public Set<FilterBy> getFilter() {
     return filter;
   }
 
-  public void setFilter(Set<UserFacade.FilterBy> filter) {
+  public void setFilter(Set<FilterBy> filter) {
     this.filter = filter;
   }
 
-  public Set<UserFacade.SortBy> getSortBySet() {
+  public Set<SortBy> getSortBySet() {
     return sortBySet;
   }
 

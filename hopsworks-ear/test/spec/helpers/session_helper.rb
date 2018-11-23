@@ -267,51 +267,52 @@ module SessionHelper
   end
   
   def create_users()
+    user = {}
     user[:email]     = "#{random_id}@email.com"
-    user[:firstName] = "Admin"
-    user[:lastName]  = "Bob"
+    user[:first_name] = "Admin"
+    user[:last_name]  = "Bob"
     create_user_with_role(user, "HOPS_ADMIN")
     user[:email]     = "#{random_id}@email.com"
-    user[:firstName] = "Admin"
-    user[:lastName]  = "Clara"
+    user[:first_name] = "Admin"
+    user[:last_name]  = "Clara"
     create_lostdevice_user(user)
     user[:email]     = "#{random_id}@email.com"
-    user[:firstName] = "Admin"
-    user[:lastName]  = "Doe"
+    user[:first_name] = "Admin"
+    user[:last_name]  = "Doe"
     create_user_with_role(user, "HOPS_ADMIN")
     user[:email]     = "#{random_id}@email.com"
-    user[:firstName] = "Bob"
-    user[:lastName]  = "Admin"
+    user[:first_name] = "Bob"
+    user[:last_name]  = "Admin"
     create_user(user)
     user[:email]     = "#{random_id}@email.com"
-    user[:firstName] = "Clara"
-    user[:lastName]  = "Admin"
+    user[:first_name] = "Clara"
+    user[:last_name]  = "Admin"
     create_user(user)
     user[:email]     = "#{random_id}@email.com"
-    user[:firstName] = "Doe"
-    user[:lastName]  = "Admin"
+    user[:first_name] = "Doe"
+    user[:last_name]  = "Admin"
     create_deactivated_user(user)
     user[:email]     = "#{random_id}@email.com"
-    user[:firstName] = "John"
-    user[:lastName]  = "Kelly"
+    user[:first_name] = "John"
+    user[:last_name]  = "Kelly"
     create_user(user)
     user[:email]     = "#{random_id}@email.com"
-    user[:firstName] = "Timothy"
-    user[:lastName]  = "Labonte"
+    user[:first_name] = "Timothy"
+    user[:last_name]  = "Labonte"
     create_blocked_user(user)
     user[:email]     = "#{random_id}@email.com"
-    user[:firstName] = "Santa"
-    user[:lastName]  = "Mason"
+    user[:first_name] = "Santa"
+    user[:last_name]  = "Mason"
     create_user(user)
     user[:email]     = "#{random_id}@email.com"
-    user[:firstName] = "Ted"
-    user[:lastName]  = "Morris"
+    user[:first_name] = "Ted"
+    user[:last_name]  = "Morris"
     create_unapproved_user(user)
     user[:email]     = "#{random_id}@email.com"
-    user[:firstName] = "Agent"
-    user[:lastName]  = "Morris"
+    user[:first_name] = "Agent"
+    user[:last_name]  = "Morris"
     create_user_with_role(user, "AGENT")
     get "#{ENV['HOPSWORKS_API']}/users"
-    response.body
+    json_body[:items]
   end
 end

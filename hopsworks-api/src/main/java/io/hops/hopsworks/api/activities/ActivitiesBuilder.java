@@ -222,7 +222,7 @@ public class ActivitiesBuilder {
     }
 
     private int compare(Activity a, Activity b, ActivityFacade.SortBy sortBy) {
-      switch (sortBy) {
+      switch (ActivityFacade.Sorts.valueOf(sortBy.getValue())) {
         case ID:
           return order(a.getId(), b.getId(), sortBy.getParam());
         case FLAG:
