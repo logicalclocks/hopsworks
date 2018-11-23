@@ -41,6 +41,15 @@ public class JobsBuilder {
   @EJB
   private ExecutionsBuilder executionsBuilder;
   
+  
+  public JobDTO uri(JobDTO dto, UriInfo uriInfo, Project project) {
+    dto.setHref(uriInfo.getBaseUriBuilder().path(ResourceProperties.Name.PROJECT.toString().toLowerCase())
+      .path(Integer.toString(project.getId()))
+      .path(ResourceProperties.Name.JOBS.toString().toLowerCase())
+      .build());
+    return dto;
+  }
+  
   public JobDTO uri(JobDTO dto, UriInfo uriInfo, Jobs job) {
     dto.setHref(uriInfo.getBaseUriBuilder().path(ResourceProperties.Name.PROJECT.toString().toLowerCase())
       .path(Integer.toString(job.getProject().getId()))
@@ -51,11 +60,8 @@ public class JobsBuilder {
   }
   
   public JobDTO expand(JobDTO dto, ResourceProperties resourceProperties) {
-    if (resourceProperties != null) {
-      ResourceProperties.ResourceProperty property = resourceProperties.get(ResourceProperties.Name.JOBS);
-      if (property != null) {
-        dto.setExpand(true);
-      }
+    if (resourceProperties != null && resourceProperties.contains(ResourceProperties.Name.JOBS)) {
+      dto.setExpand(true);
     }
     return dto;
   }
@@ -77,15 +83,18 @@ public class JobsBuilder {
   }
   
   public JobDTO build(UriInfo uriInfo, ResourceProperties resourceProperties, Project project) {
+    JobDTO dto = new JobDTO();
+    uri(dto, uriInfo, project);
+    expand(dto, resourceProperties);
     ResourceProperties.ResourceProperty property = resourceProperties.get(ResourceProperties.Name.JOBS);
     List<Jobs> jobs;
     if (property.getOffset() != null || property.getLimit() != null || property.getFilter() != null) {
       jobs = jobFacade.findByProject(property.getOffset(), property.getLimit(), property.getFilter(),
         property.getSort(), project);
-      return items(new JobDTO(), uriInfo, resourceProperties, jobs, false);
+      return items(dto, uriInfo, resourceProperties, jobs, false);
     }
     jobs = jobFacade.findByProject(project);
-    return items(new JobDTO(), uriInfo, resourceProperties, jobs, true);
+    return items(dto, uriInfo, resourceProperties, jobs, true);
   }
   
   private JobDTO items(JobDTO dto, UriInfo uriInfo, ResourceProperties resourceProperties, List<Jobs> jobs,

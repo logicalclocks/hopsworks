@@ -32,13 +32,18 @@ public class JobsBeanParam {
   @QueryParam("filter_by")
   @ApiParam(value = "ex. filter_by=type:spark,pyspark")
   private Set<JobFacade.FilterBy> filter;
+//  @QueryParam("expand")
+//  @ApiParam(value = "ex. expand=creator")
+//  private Set<JobFacade.JobExpansion> expand;
   
   public JobsBeanParam(
     @QueryParam("sort_by") String sortBy,
-    @QueryParam("filter_by") Set<JobFacade.FilterBy> filter) {
+    @QueryParam("filter_by") Set<JobFacade.FilterBy> filter,
+    @QueryParam("expand") Set<JobFacade.JobExpansion> expand) {
     this.sortBy = sortBy;
     this.sortBySet = getSortBy(sortBy);
     this.filter = filter;
+//    this.expand = expand;
   }
   
   private Set<JobFacade.SortBy> getSortBy(String param) {
@@ -75,4 +80,12 @@ public class JobsBeanParam {
   public Set<JobFacade.SortBy> getSortBySet() {
     return sortBySet;
   }
+  
+//  public Set<JobFacade.JobExpansion> getExpand() {
+//    return expand;
+//  }
+//
+//  public void setExpand(Set<JobFacade.JobExpansion> expand) {
+//    this.expand = expand;
+//  }
 }

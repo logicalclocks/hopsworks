@@ -15,10 +15,10 @@
  */
 package io.hops.hopsworks.common.api;
 
-import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -34,63 +34,76 @@ public class ResourceProperties {
   private List<ResourceProperty> properties;
 
   public ResourceProperties(Name resourceName) {
-    this(resourceName, null, null, null, null, null);
+    this(resourceName, null, null, null, null, new HashSet<>());
   }
 
-  public ResourceProperties(Name resourceName, String expandParam) {
-    this(resourceName, null, null, null, null, expandParam);
+  public ResourceProperties(Name resourceName, Set<? extends AbstractFacade.Expansion> expansions) {
+    this(resourceName, null, null, null, null, expansions);
+  }
+  public ResourceProperties(Name resourceName, Integer offset, Integer limit,
+    Set<? extends AbstractFacade.SortBy> sort,
+    Set<? extends AbstractFacade.FilterBy> filter){
+    this(resourceName, offset, limit, sort, filter, new HashSet<>());
   }
 
-  public ResourceProperties(Name resourceName, Integer offset, Integer limit, Set<? extends AbstractFacade.SortBy> sort
-      , Set<? extends AbstractFacade.FilterBy> filter, String expandParam) {
+  public ResourceProperties(Name resourceName, Integer offset, Integer limit,
+    Set<? extends AbstractFacade.SortBy> sort,
+    Set<? extends AbstractFacade.FilterBy> filter,
+    Set<? extends AbstractFacade.Expansion> expansions) {
     properties = new ArrayList<>();
     //Resource that was requested
-    ResourceProperty resource = new ResourceProperty()
-        .setName(resourceName)
-        .setOffset(offset)
-        .setLimit(limit)
-        .setSort(sort)
-        .setFilter(filter);
-
-    properties.add(resource);
-
-    //Parse expand param of the requested resource
-    if (!Strings.isNullOrEmpty(expandParam)) {
-      String[] propertiesToExpand = expandParam.split(",");
-      for (String property : propertiesToExpand) {
-        ResourceProperty resourceProperty;
-        //Get offset and limit if any
-        if (property.contains("(")) {
-          resourceProperty = new ResourceProperty().setName(Name.valueOf(property.substring(0, property.indexOf('('))
-              .toUpperCase()));
-        } else {
-          resourceProperty = new ResourceProperty().setName(Name.valueOf(property.toUpperCase()));
-        }
-        if (property.contains(";")) {
-          resourceProperty
-              .setOffset(Integer.parseInt(property.substring(property.indexOf('=') + 1, property.indexOf(';'))))
-              .setLimit(Integer.parseInt(property.substring(property.lastIndexOf('=') + 1, property.indexOf(')'))));
-        }
-        properties.add(resourceProperty);
-      }
+    ResourceProperty property = new ResourceProperty(resourceName)
+      .setOffset(offset)
+      .setLimit(limit)
+      .setSort(sort)
+      .setFilter(filter);
+    
+    for (AbstractFacade.Expansion expansion : expansions) {
+      property.addExpansion(new ResourceProperty(expansion.getValue())
+        .setLimit(expansion.getLimit())
+        .setOffset(expansion.getOffset())
+        .setSort(expansion.getSort())
+        .setFilter(expansion.getFilter()));
     }
+    properties.add(property);
   }
 
   public List<ResourceProperty> getProperties() {
     return properties;
   }
-
-  public ResourceProperty get(Name property) {
-    if (properties != null) {
-      for (ResourceProperty resourceProperty : properties) {
-        if (resourceProperty.getName().equals(property)) {
-          return resourceProperty;
+  
+  public ResourceProperty get(Name name) {
+    ResourceProperty find = new ResourceProperty(name);
+    for (ResourceProperty resourceProperty : properties) {
+      if (resourceProperty.equals(find)) {
+        return resourceProperty;
+      } else {
+        for (ResourceProperty expansion : resourceProperty.getExpansions()) {
+          if (expansion.equals(find)) {
+            return expansion;
+          }
         }
       }
     }
     return null;
   }
-
+  
+  public boolean contains(Name name) {
+    ResourceProperty find = new ResourceProperty(name);
+    for (ResourceProperty resourceProperty : properties) {
+      if (resourceProperty.equals(find)) {
+        return true;
+      } else {
+        for (ResourceProperty expansion : resourceProperty.getExpansions()) {
+          if (expansion.equals(find)) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
+  
   public class ResourceProperty {
 
     private Name name;
@@ -98,7 +111,12 @@ public class ResourceProperties {
     private Integer limit;
     private Set<? extends AbstractFacade.SortBy> sort;
     private Set<? extends AbstractFacade.FilterBy> filter;
-
+    private List<ResourceProperty> expansions;
+  
+    public ResourceProperty(Name name) {
+      this.name = name;
+    }
+  
     public Name getName() {
       return name;
     }
@@ -143,7 +161,22 @@ public class ResourceProperties {
       this.filter = filter;
       return this;
     }
-
+  
+    public List<ResourceProperty> getExpansions() {
+      return expansions;
+    }
+  
+    public void setExpansions(List<ResourceProperty> expansions) {
+      this.expansions = expansions;
+    }
+    
+    public void addExpansion(ResourceProperty expansion){
+      if(this.expansions == null){
+        this.expansions = new ArrayList<>();
+      }
+      this.expansions.add(expansion);
+    }
+  
     @Override
     public boolean equals(Object o) {
       if (this == o) {
@@ -173,16 +206,20 @@ public class ResourceProperties {
    * Name of the resource requested by the user which needs to match the name of the resource in Hopsworks.
    */
   public enum Name {
+    //Resources
     USERS,
     PROJECT,
     JOBS,
-    EXECUTIONS,
+    EXECUTIONS, //Also used as expansion for JOBS
     DATASETS,
     REQUESTS,
     INODES,
     MESSAGES,
     ACTIVITIES,
-    DATASETREQUESTS;
+    DATASETREQUESTS,
+    
+    //Job expanions
+    CREATOR;
 
     public static Name fromString(String name) {
       return valueOf(name.toUpperCase());

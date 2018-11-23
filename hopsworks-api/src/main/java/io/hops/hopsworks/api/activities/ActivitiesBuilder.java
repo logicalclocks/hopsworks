@@ -81,7 +81,7 @@ public class ActivitiesBuilder {
       dto.setActivity(activity.getActivity());
       dto.setTimestamp(activity.getTimestamp());
       dto.setProjectName(activity.getProject().getName()); //(TODO: Ermias) make this expandable
-      dto.setUserDTO(usersBuilder.buildItem(uriInfo, resourceProperties, activity.getUser()));
+      dto.setUser(usersBuilder.buildItem(uriInfo, resourceProperties, activity.getUser()));
     }
     return dto;
   }
@@ -94,7 +94,7 @@ public class ActivitiesBuilder {
       dto.setActivity(activity.getActivity());
       dto.setTimestamp(activity.getTimestamp());
       dto.setProjectName(activity.getProject().getName()); //(TODO: Ermias) make this expandable
-      dto.setUserDTO(usersBuilder.buildItem(uriInfo, resourceProperties, activity.getUser()));
+      dto.setUser(usersBuilder.buildItem(uriInfo, resourceProperties, activity.getUser()));
     }
     return dto;
   }
@@ -107,7 +107,7 @@ public class ActivitiesBuilder {
       dto.setActivity(activity.getActivity());
       dto.setTimestamp(activity.getTimestamp());
       dto.setProjectName(activity.getProject().getName()); //(TODO: Ermias) make this expandable
-      dto.setUserDTO(usersBuilder.buildItem(uriInfo, resourceProperties, activity.getUser()));
+      dto.setUser(usersBuilder.buildItem(uriInfo, resourceProperties, activity.getUser()));
     }
     return dto;
   }

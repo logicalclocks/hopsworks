@@ -69,18 +69,15 @@ public class ExecutionsBuilder {
       .path(ResourceProperties.Name.PROJECT.toString())
       .path(Integer.toString(job.getProject().getId()))
       .path(ResourceProperties.Name.JOBS.toString())
-      .path(Integer.toString(job.getId()))
+      .path(job.getName())
       .path(ResourceProperties.Name.EXECUTIONS.toString())
       .build());
     return dto;
   }
   
   public ExecutionDTO expand(ExecutionDTO dto, ResourceProperties resourceProperties) {
-    if (resourceProperties != null) {
-      ResourceProperties.ResourceProperty property = resourceProperties.get(ResourceProperties.Name.EXECUTIONS);
-      if (property != null) {
-        dto.setExpand(true);
-      }
+    if (resourceProperties != null && (resourceProperties.contains(ResourceProperties.Name.EXECUTIONS))) {
+      dto.setExpand(true);
     }
     return dto;
   }

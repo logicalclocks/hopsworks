@@ -41,6 +41,8 @@ package io.hops.hopsworks.common.dao.user.activity;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -50,6 +52,8 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
+
+import io.hops.hopsworks.common.api.ResourceProperties;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.AbstractFacade;
@@ -411,6 +415,111 @@ public class ActivityFacade extends AbstractFacade<Activity> {
     public String toString() {
       return value;
     }    
+    
+  }
+  
+  public enum ActivityExpansion {
+    CREATOR,
+    EXECUTIONS;
+  
+    ActivityExpansion() {
+    }
+    
+    @JsonCreator
+    public ActivityExpansion fromString(String queryParam) {
+      //executions(offset=0;limit=1;sort_by=id:asc,name:desc;filter_by=name;filter_by=bla)
+      ActivityExpansion expand = null;
+      //Get the name of the property to expand
+      if (queryParam.contains("(")) {
+        expand = ActivityExpansion.valueOf(queryParam.substring(0, queryParam.indexOf('(')).toUpperCase());
+      } else {
+        expand = ActivityExpansion.valueOf(queryParam.toUpperCase());
+      }
+      
+      
+      String[] expansions = queryParam.substring(queryParam.indexOf('(') + 1, queryParam.lastIndexOf(')')).split(";");
+      for (String expansion : expansions) {
+        //Set offset
+        if (expansion.startsWith("offset")) {
+          expand.setOffset(Integer.parseInt(expansion.substring(expansion.indexOf('=') + 1)));
+        }
+        //Set limit
+        if (expansion.startsWith("limit")) {
+          expand.setLimit(Integer.parseInt(expansion.substring(expansion.indexOf('=') + 1)));
+        }
+        //Set sort_by
+        if (expansion.startsWith("sort_by")) {
+          String[] params = expansion.substring(expansion.indexOf('=') + 1).split(",");
+          //Hash table and linked list implementation of the Set interface, with predictable iteration order
+          Set<AbstractFacade.SortBy> sortBys = new LinkedHashSet<AbstractFacade.SortBy>();//make ordered
+          SortBy sort;
+          for (String s : params) {
+            sort = SortBy.fromString(s.trim());
+            sortBys.add(sort);
+          }
+          expand.setSort(sortBys);
+        }
+        
+        //Set filter_by
+        if (expansion.startsWith("filter_by")){
+          expand.addFilter(FilterBy.fromString(expansion.substring(expansion.indexOf('=') + 1)));
+        }
+      }
+      
+      return expand;
+    }
+    
+    private ResourceProperties.Name name;
+    private int offset;
+    private int limit;
+    private Set<AbstractFacade.SortBy> sort;
+    private Set<AbstractFacade.FilterBy> filter;
+    
+    public ResourceProperties.Name getName() {
+      return name;
+    }
+    
+    public void setName(ResourceProperties.Name name) {
+      this.name = name;
+    }
+    
+    public Integer getOffset() {
+      return offset;
+    }
+    
+    public Integer getLimit() {
+      return limit;
+    }
+    
+    public void setOffset(Integer offset) {
+      this.offset = offset;
+    }
+    
+    public void setLimit(Integer limit) {
+      this.limit = limit;
+    }
+    
+    public Set<AbstractFacade.SortBy> getSort() {
+      return sort;
+    }
+    
+    public void setSort(Set<AbstractFacade.SortBy> sort) {
+      this.sort = sort;
+    }
+    
+    public Set<AbstractFacade.FilterBy> getFilter() {
+      return filter;
+    }
+    
+    public void setFilter(Set<AbstractFacade.FilterBy> filter) {
+      this.filter = filter;
+    }
+    public void addFilter(FilterBy filter){
+      if(this.filter == null){
+        this.filter = new HashSet<>();
+      }
+      this.filter.add(filter);
+    }
     
   }
 }

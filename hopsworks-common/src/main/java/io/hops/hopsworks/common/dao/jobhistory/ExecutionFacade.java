@@ -40,6 +40,7 @@
 package io.hops.hopsworks.common.dao.jobhistory;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import io.hops.hopsworks.common.api.ResourceProperties;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.jobs.JobInputFile;
 import io.hops.hopsworks.common.dao.jobs.JobOutputFile;
@@ -59,6 +60,7 @@ import javax.persistence.TypedQuery;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
@@ -157,7 +159,7 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
     Set<? extends AbstractFacade.SortBy> sort,
     Jobs job) {
     String queryStr = buildQuery("SELECT e FROM Execution e ", filter, sort, "e.job = :job ");
-    Query query = em.createQuery(queryStr, Jobs.class).setParameter("job", job);
+    Query query = em.createQuery(queryStr, Execution.class).setParameter("job", job);
     setFilter(filter, query);
     setOffsetAndLim(offset, limit, query);
     return query.getResultList();
@@ -204,7 +206,7 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
   public enum SortBy implements AbstractFacade.SortBy {
     ID("ID", "e.id ", "ASC"),
     SUBMISSION_TIME("SUBMISSION_TIME", "e.submissionTime ", "DESC"),
-    DURATION("DURATION", "e.execution_stop-e.execution_start", "ASC");
+    DURATION("DURATION", "(e.execution_stop-e.execution_start) ", "ASC");
     
     @JsonCreator
     public static SortBy fromString(String param) {
@@ -311,6 +313,109 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
       return value;
     }
     
+  }
+  
+  public enum ExecutionExpansion  {
+    USER;
+  
+    ExecutionExpansion() {
+    }
+    
+    @JsonCreator
+    public ExecutionExpansion fromString(String queryParam) {
+      //executions(offset=0;limit=1;sort_by=id:asc,name:desc;filter_by=name;filter_by=bla)
+      ExecutionExpansion expand = null;
+      //Get the name of the property to expand
+      if (queryParam.contains("(")) {
+        expand = ExecutionExpansion.valueOf(queryParam.substring(0, queryParam.indexOf('(')).toUpperCase());
+      } else {
+        expand = ExecutionExpansion.valueOf(queryParam.toUpperCase());
+      }
+      
+      
+      String[] expansions = queryParam.substring(queryParam.indexOf('(') + 1, queryParam.lastIndexOf(')')).split(";");
+      for (String expansion : expansions) {
+        //Set offset
+        if (expansion.startsWith("offset")) {
+          expand.setOffset(Integer.parseInt(expansion.substring(expansion.indexOf('=') + 1)));
+        }
+        //Set limit
+        if (expansion.startsWith("limit")) {
+          expand.setLimit(Integer.parseInt(expansion.substring(expansion.indexOf('=') + 1)));
+        }
+        //Set sort_by
+        if (expansion.startsWith("sort_by")) {
+          String[] params = expansion.substring(expansion.indexOf('=') + 1).split(",");
+          //Hash table and linked list implementation of the Set interface, with predictable iteration order
+          Set<AbstractFacade.SortBy> sortBys = new LinkedHashSet<>();//make ordered
+          SortBy sort;
+          for (String s : params) {
+            sort = SortBy.fromString(s.trim());
+            sortBys.add(sort);
+          }
+          expand.setSort(sortBys);
+        }
+        
+        //Set filter_by
+        if (expansion.startsWith("filter_by")){
+          expand.addFilter(FilterBy.fromString(expansion.substring(expansion.indexOf('=') + 1)));
+        }
+      }
+      
+      return expand;
+    }
+    
+    private ResourceProperties.Name name;
+    private int offset;
+    private int limit;
+    private Set<AbstractFacade.SortBy> sort;
+    private Set<AbstractFacade.FilterBy> filter;
+    
+    public ResourceProperties.Name getName() {
+      return name;
+    }
+    
+    public void setName(ResourceProperties.Name name) {
+      this.name = name;
+    }
+    
+    public Integer getOffset() {
+      return offset;
+    }
+    
+    public Integer getLimit() {
+      return limit;
+    }
+    
+    public void setOffset(Integer offset) {
+      this.offset = offset;
+    }
+    
+    public void setLimit(Integer limit) {
+      this.limit = limit;
+    }
+    
+    public Set<AbstractFacade.SortBy> getSort() {
+      return sort;
+    }
+    
+    public void setSort(Set<AbstractFacade.SortBy> sort) {
+      this.sort = sort;
+    }
+    
+    public Set<AbstractFacade.FilterBy> getFilter() {
+      return filter;
+    }
+    
+    public void setFilter(Set<AbstractFacade.FilterBy> filter) {
+      this.filter = filter;
+    }
+    public void addFilter(FilterBy filter){
+      if(this.filter == null){
+        this.filter = new HashSet<>();
+      }
+      this.filter.add(filter);
+    }
   }
   
 

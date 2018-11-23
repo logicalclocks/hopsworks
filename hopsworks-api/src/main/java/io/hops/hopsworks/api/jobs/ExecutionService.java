@@ -81,6 +81,7 @@ import javax.ws.rs.core.UriInfo;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -117,17 +118,17 @@ public class ExecutionService {
     @BeanParam Pagination pagination,
     @BeanParam ExecutionsBeanParam executionsBeanParam,
     @ApiParam(value = "comma-separated list of entities to expand in the collection")
-    @QueryParam("expand") String expand,
+    @QueryParam("expand") Set<ExecutionFacade.ExecutionExpansion> expand,
     @Context UriInfo uriInfo) {
 
-    ExecutionDTO executionDTO = executionsBuilder.build(uriInfo,
-      new ResourceProperties(ResourceProperties.Name.EXECUTIONS, pagination.getOffset(), pagination.getLimit(),
-        executionsBeanParam.getSortBySet(), executionsBeanParam.getFilter(), expand), job);
-
-    GenericEntity<ExecutionDTO> entity = new GenericEntity<ExecutionDTO>(
-      executionDTO) {
-    };
-    return Response.ok().entity(entity).build();
+//    ExecutionDTO executionDTO = executionsBuilder.build(uriInfo,
+//      new ResourceProperties(ResourceProperties.Name.EXECUTIONS, pagination.getOffset(), pagination.getLimit(),
+//        executionsBeanParam.getSortBySet(), executionsBeanParam.getFilter(), expand), job);
+//
+//    GenericEntity<ExecutionDTO> entity = new GenericEntity<ExecutionDTO>(
+//      executionDTO) {
+//    };
+    return Response.ok().build();
   }
   
   @ApiOperation(value = "Find Execution by Id", response = ExecutionDTO.class)
@@ -138,14 +139,14 @@ public class ExecutionService {
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response getExecution(
     @ApiParam(value = "execution id", required = true) @PathParam("id") Integer id,
-    @ApiParam(value = "user") @QueryParam("expand") String expand,
+    @QueryParam("expand") Set<ExecutionFacade.ExecutionExpansion> expand,
     @Context UriInfo uriInfo) throws JobException {
     //If requested execution does not belong to job
     Execution execution = authorize(id);
     
-    ExecutionDTO dto = executionsBuilder.build(uriInfo, new ResourceProperties(ResourceProperties.Name.EXECUTIONS,
-      expand), execution);
-    return Response.ok().entity(dto).build();
+//    ExecutionDTO dto = executionsBuilder.build(uriInfo, new ResourceProperties(ResourceProperties.Name.EXECUTIONS,
+//      expand), execution);
+    return Response.ok().build();
   }
   
   

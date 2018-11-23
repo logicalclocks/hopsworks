@@ -113,7 +113,6 @@ public class JobService {
   private JobsBuilder jobsBuilder;
   
   
-  // No @EJB annotation for Project, it's injected explicitly in ProjectService.
   private Project project;
   public JobService setProject(Integer projectId) {
     this.project = projectFacade.find(projectId);
@@ -129,12 +128,11 @@ public class JobService {
   public Response getAll(
     @BeanParam Pagination pagination,
     @BeanParam JobsBeanParam jobsBeanParam,
-    @QueryParam("expand") String expand,
     @Context UriInfo uriInfo) {
     JobDTO dto = jobsBuilder.build(uriInfo, new ResourceProperties(ResourceProperties.Name.JOBS,
-      pagination.getOffset(), pagination.getLimit(), jobsBeanParam.getSortBySet(), jobsBeanParam.getFilter(), expand),
-      project);
-    
+      pagination.getOffset(), pagination.getLimit(), jobsBeanParam.getSortBySet(), jobsBeanParam.getFilter(),
+        jobsBeanParam.getExpand()), project);
+
     GenericEntity<JobDTO> ge
       = new GenericEntity<JobDTO>(dto) { };
     
@@ -148,13 +146,14 @@ public class JobService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response getJob(@PathParam("name") String name,
-    @QueryParam("expand") String expand,
+    @BeanParam JobsBeanParam jobsBeanParam,
     @Context UriInfo uriInfo) throws JobException {
     Jobs job = jobFacade.findByProjectAndName(project, name);
     if(job == null){
       throw new JobException(RESTCodes.JobErrorCode.JOB_NOT_FOUND, Level.FINEST);
     }
-    JobDTO dto = jobsBuilder.build(uriInfo, new ResourceProperties(ResourceProperties.Name.JOBS, expand), job);
+    JobDTO dto = jobsBuilder.build(uriInfo, new ResourceProperties(ResourceProperties.Name.JOBS,
+      jobsBeanParam.getExpand()), job);
     GenericEntity<JobDTO> ge = new GenericEntity<JobDTO>(dto) { };
     return Response.ok().entity(ge).build();
   }

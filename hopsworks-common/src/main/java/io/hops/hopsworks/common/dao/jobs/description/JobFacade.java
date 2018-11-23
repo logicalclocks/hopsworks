@@ -40,7 +40,9 @@
 package io.hops.hopsworks.common.dao.jobs.description;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import io.hops.hopsworks.common.api.ResourceProperties;
 import io.hops.hopsworks.common.dao.AbstractFacade;
+import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.jobs.configuration.JobConfiguration;
@@ -362,66 +364,77 @@ public class JobFacade extends AbstractFacade<Jobs> {
     
   }
   
-  public enum JobExpansions {
-    CREATOR,
-    EXECUTIONS;
-    
-    JobExpansions() {
-    }
+  public enum JobExpansion implements AbstractFacade.Expansion {
+    CREATOR(ResourceProperties.Name.CREATOR),
+    EXECUTIONS(ResourceProperties.Name.EXECUTIONS);
     
     @JsonCreator
-    public static JobExpansions fromString(String queryParam) {
+    public static JobExpansion fromString(String queryParam) {
       //executions(offset=0;limit=1;sort_by=id:asc,name:desc;filter_by=name;filter_by=bla)
-      JobExpansions expand = null;
+      JobExpansion expand = null;
       //Get the name of the property to expand
       if (queryParam.contains("(")) {
-        expand = JobExpansions.valueOf(queryParam.substring(0, queryParam.indexOf('(')).toUpperCase());
-      } else {
-        expand = JobExpansions.valueOf(queryParam.toUpperCase());
-      }
-  
-  
-      String[] expansions = queryParam.substring(queryParam.indexOf('(') + 1, queryParam.lastIndexOf(')')).split(";");
-      for (String expansion : expansions) {
-        //Set offset
-        if (expansion.startsWith("offset")) {
-          expand.setOffset(Integer.parseInt(expansion.substring(expansion.indexOf('=') + 1)));
-        }
-        //Set limit
-        if (expansion.startsWith("limit")) {
-          expand.setLimit(Integer.parseInt(expansion.substring(expansion.indexOf('=') + 1)));
-        }
-        //Set sort_by
-        if (expansion.startsWith("sort_by")) {
-          String[] params = expansion.substring(expansion.indexOf('=') + 1).split(",");
-          //Hash table and linked list implementation of the Set interface, with predictable iteration order
-          Set<JobFacade.SortBy> sortBys = new LinkedHashSet<>();//make ordered
-          JobFacade.SortBy sort;
-          for (String s : params) {
-            sort = JobFacade.SortBy.fromString(s.trim());
-            sortBys.add(sort);
+        expand = JobExpansion.valueOf(queryParam.substring(0, queryParam.indexOf('(')).toUpperCase());
+        String[] expansions = queryParam.substring(queryParam.indexOf('(') + 1, queryParam.lastIndexOf(')')).split(";");
+        for (String expansion : expansions) {
+          //Set offset
+          if (expansion.startsWith("offset")) {
+            expand.setOffset(Integer.parseInt(expansion.substring(expansion.indexOf('=') + 1)));
           }
-          expand.setSort(sortBys);
+          //Set limit
+          if (expansion.startsWith("limit")) {
+            expand.setLimit(Integer.parseInt(expansion.substring(expansion.indexOf('=') + 1)));
+          }
+          //Set sort_by
+          if (expansion.startsWith("sort_by")) {
+            String[] params = expansion.substring(expansion.indexOf('=') + 1).split(",");
+            //Hash table and linked list implementation of the Set interface, with predictable iteration order
+            Set<AbstractFacade.SortBy> sortBys = new LinkedHashSet<>();//make ordered
+            ExecutionFacade.SortBy sort;
+            for (String s : params) {
+              sort = ExecutionFacade.SortBy.fromString(s.trim());
+              sortBys.add(sort);
+            }
+            expand.setSort(sortBys);
+          }
+      
+          //Set filter_by
+          if (expansion.startsWith("filter_by")) {
+            expand.addFilter(ExecutionFacade.FilterBy.fromString(expansion.substring(expansion.indexOf('=') + 1)));
+          }
         }
-        
-        //Set filter_by
-        if (expansion.startsWith("filter_by")){
-         expand.addFilter(FilterBy.fromString(expansion.substring(expansion.indexOf('=') + 1)));
-        }
+      } else {
+        expand = JobExpansion.valueOf(queryParam.toUpperCase());
       }
       
       return expand;
     }
   
+    JobExpansion() {
+    }
+  
+    JobExpansion(ResourceProperties.Name value) {
+      this.value = value;
+    }
+  
+    private ResourceProperties.Name value;
     private int offset;
     private int limit;
-    private Set<SortBy> sort;
-    private Set<FilterBy> filter;
-    
+    private Set<AbstractFacade.SortBy> sort;
+    private Set<AbstractFacade.FilterBy> filter;
+  
+    public ResourceProperties.Name getValue() {
+      return value;
+    }
+  
+    public void setValue(ResourceProperties.Name value) {
+      this.value = value;
+    }
+  
     public Integer getOffset() {
       return offset;
     }
-    
+  
     public Integer getLimit() {
       return limit;
     }
@@ -434,26 +447,32 @@ public class JobFacade extends AbstractFacade<Jobs> {
       this.limit = limit;
     }
   
-    public Set<SortBy> getSort() {
+    public Set<AbstractFacade.SortBy> getSort() {
       return sort;
     }
   
-    public void setSort(Set<SortBy> sort) {
+    public void setSort(Set<AbstractFacade.SortBy> sort) {
       this.sort = sort;
     }
   
-    public Set<FilterBy> getFilter() {
+    public Set<AbstractFacade.FilterBy> getFilter() {
       return filter;
     }
   
-    public void setFilter(Set<FilterBy> filter) {
+    public void setFilter(Set<AbstractFacade.FilterBy> filter) {
       this.filter = filter;
     }
-    public void addFilter(FilterBy filter){
+    
+    public void addFilter(AbstractFacade.FilterBy filter){
       if(this.filter == null){
         this.filter = new HashSet<>();
       }
       this.filter.add(filter);
+    }
+  
+    @Override
+    public String toString() {
+      return value.toString();
     }
   }
   

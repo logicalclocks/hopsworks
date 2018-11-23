@@ -55,13 +55,12 @@ public class UsersBuilder {
         .build());
     return dto;
   }
-
+  
   public UserDTO expand(UserDTO dto, ResourceProperties resourceProperties) {
-    if (resourceProperties != null) {
-      ResourceProperties.ResourceProperty property = resourceProperties.get(ResourceProperties.Name.USERS);
-      if (property != null) {
-        dto.setExpand(true);
-      }
+    if (resourceProperties != null &&
+      (resourceProperties.contains(ResourceProperties.Name.USERS)
+        || resourceProperties.contains(ResourceProperties.Name.CREATOR))) {
+      dto.setExpand(true);
     }
     return dto;
   }
