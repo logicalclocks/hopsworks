@@ -18,7 +18,7 @@ package io.hops.hopsworks.api.zeppelin.rest;
 
 import com.google.gson.Gson;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
-import io.hops.hopsworks.api.util.LivyController;
+import io.hops.hopsworks.common.livy.LivyController;
 import io.hops.hopsworks.api.zeppelin.rest.message.NewInterpreterSettingRequest;
 import io.hops.hopsworks.api.zeppelin.rest.message.RestartInterpreterRequest;
 import io.hops.hopsworks.api.zeppelin.rest.message.UpdateInterpreterSettingRequest;
@@ -27,7 +27,7 @@ import io.hops.hopsworks.api.zeppelin.server.ZeppelinConfig;
 import io.hops.hopsworks.api.zeppelin.server.ZeppelinConfigFactory;
 import io.hops.hopsworks.api.zeppelin.socket.NotebookServerImpl;
 import io.hops.hopsworks.api.zeppelin.socket.NotebookServerImplFactory;
-import io.hops.hopsworks.api.zeppelin.util.LivyMsg;
+import io.hops.hopsworks.common.livy.LivyMsg;
 import io.hops.hopsworks.api.zeppelin.util.SecurityUtils;
 import io.hops.hopsworks.api.zeppelin.util.TicketContainer;
 import io.hops.hopsworks.api.zeppelin.util.ZeppelinResource;

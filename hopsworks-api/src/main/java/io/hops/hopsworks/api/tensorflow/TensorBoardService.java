@@ -152,8 +152,12 @@ public class TensorBoardService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 
+
   private void waitForTensorBoardLoaded(TensorBoardDTO tbDTO) {
-    int retries = 10;
+    int retries = 20;
+
+    int currentConsecutiveOK = 0;
+    int maxConsecutiveOK = 3;
 
     while (retries > 0) {
       Response response;
@@ -161,11 +165,16 @@ public class TensorBoardService {
       Client client = ClientBuilder.newClient();
       WebTarget target = client.target(tbUrl);
       try {
+        Thread.currentThread().sleep(1500);
         response = target.request().get();
         if(response.getStatus() == Response.Status.OK.getStatusCode()) {
-          return;
+          currentConsecutiveOK += 1;
+          if(currentConsecutiveOK == maxConsecutiveOK) {
+            return;
+          }
+        } else {
+          currentConsecutiveOK = 0;
         }
-        Thread.currentThread().sleep(1000);
       } catch (Exception ex) {
         LOGGER.log(Level.FINE, "Exception trying to get TensorBoard content", ex);
       } finally {

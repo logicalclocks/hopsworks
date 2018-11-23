@@ -37,7 +37,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package io.hops.hopsworks.api.zeppelin.util;
+package io.hops.hopsworks.common.livy;
 
 import javax.xml.bind.annotation.XmlRootElement;
 

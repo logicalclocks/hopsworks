@@ -38,9 +38,9 @@
  */
 package io.hops.hopsworks.api.jupyter;
 
-import io.hops.hopsworks.api.util.LivyController;
-import io.hops.hopsworks.api.zeppelin.util.LivyMsg;
-import io.hops.hopsworks.api.zeppelin.util.LivyMsg.Session;
+import io.hops.hopsworks.common.livy.LivyController;
+import io.hops.hopsworks.common.livy.LivyMsg;
+import io.hops.hopsworks.common.livy.LivyMsg.Session;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.jupyter.JupyterProject;

@@ -529,8 +529,6 @@ public class PythonDepsFacade {
    * @param proj
    */
   public void removeProject(Project proj) throws ServiceException {
-
-    this.jupyterProcessMgr.stopProject(proj);
     deleteCommandsForProject(proj);
     if (proj.getCondaEnv()) {
       condaEnvironmentRemove(proj);

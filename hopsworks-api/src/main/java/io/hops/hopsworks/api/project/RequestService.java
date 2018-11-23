@@ -39,6 +39,7 @@
 
 package io.hops.hopsworks.api.project;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
@@ -147,16 +148,20 @@ public class RequestService {
     DatasetRequest dsRequest = datasetRequest.findByProjectAndDataset(
             project, ds);
     //email body
-    String msg = "Hi " + project.getOwner().getFname() + " " + project.
+    String msg = "Hi " + proj.getOwner().getFname() + " " + proj.
             getOwner().getLname() + ", \n\n"
             + user.getFname() + " " + user.getLname()
             + " wants access to a dataset in a project you own. \n\n"
             + "Dataset name: " + ds.getInode().getInodePK().getName() + "\n"
-            + "Project name: " + proj.getName() + "\n"
-            + "Attached message: " + requestDTO.getMessageContent() + "\n"
-            + "After logging in to hopsworks go to : /project/" + proj.getId()
-            + "/datasets "
-            + " if you want to share this dataset. \n";
+            + "Project name: " + proj.getName() + "\n";
+
+    if(!Strings.isNullOrEmpty(requestDTO.getMessageContent())) {
+      msg += "Attached message: " + requestDTO.getMessageContent() + "\n";
+    }
+
+    msg += "After logging in to Hopsworks go to : /project/" + proj.getId()
+        + "/datasets "
+        + " if you want to share this dataset. \n";
 
     //if there is a prior request by a user in the same project with the same role
     // or the prior request is from a data owner do nothing.
@@ -239,18 +244,26 @@ public class RequestService {
             getOwner().getLname() + ", \n\n"
             + user.getFname() + " " + user.getLname()
             + " wants to join a project you own. \n\n"
-            + "Project name: " + project.getName() + "\n"
-            + "Attached message: " + requestDTO.getMessageContent() + "\n"
-            + "After loging in to hopsworks go to : /project" + project.getId()
-            + " and go to members tab "
-            + "if you want to add this person as a member in your project. \n";
+            + "Project name: " + project.getName() + "\n";
+
+    if(!Strings.isNullOrEmpty(requestDTO.getMessageContent())) {
+      msg += "Attached message: " + requestDTO.getMessageContent() + "\n";
+    }
+
+    msg += "After logging in to Hopsworks go to : /project" + project.getId()
+        + " and go to members tab "
+        + "if you want to add this person as a member in your project. \n";
 
     Users from = user;
     Users to = userFacade.findByEmail(project.getOwner().getEmail());
     String message = "Hi " + to.getFname() + "<br>"
             + "I would like to join a project you own. <br>"
-            + "Project name: " + project.getName() + "<br>"
-            + requestDTO.getMessageContent();
+            + "Project name: " + project.getName() + "<br>";
+
+    if(!Strings.isNullOrEmpty(requestDTO.getMessageContent())) {
+      message += requestDTO.getMessageContent();
+    }
+
     String preview = from.getFname() + " would like to join a project you own.";
     String subject = "Project join request.";
     String path = "project/" + project.getId();

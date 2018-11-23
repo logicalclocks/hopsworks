@@ -98,6 +98,7 @@ import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hive.HiveController;
 import io.hops.hopsworks.common.jobs.yarn.YarnLogUtil;
 import io.hops.hopsworks.common.kafka.KafkaController;
+import io.hops.hopsworks.common.livy.LivyController;
 import io.hops.hopsworks.common.message.MessageController;
 import io.hops.hopsworks.common.security.CAException;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
@@ -248,6 +249,9 @@ public class ProjectController {
   private Instance<ProjectHandler> projectHandlers;
   @EJB
   private ProjectUtils projectUtils;
+  @EJB
+  private LivyController livyController;
+
 
   /**
    * Creates a new project(project), the related DIR, the different services in
@@ -2040,6 +2044,7 @@ public class ProjectController {
       if (settings.isPythonKernelEnabled()) {
         jupyterProcessFacade.removePythonKernelForProjectUser(hdfsUser);
       }
+      livyController.deleteAllLivySessions(hdfsUser, ProjectServiceEnum.JUPYTER);
 
       //kill running TB if any
       tensorBoardController.cleanup(project, user);
@@ -2360,6 +2365,7 @@ public class ProjectController {
 
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public void removeJupyter(Project project) throws ServiceException {
+    livyController.deleteAllLivySessionsForProject(project);
     jupyterProcessFacade.stopProject(project);
   }
 

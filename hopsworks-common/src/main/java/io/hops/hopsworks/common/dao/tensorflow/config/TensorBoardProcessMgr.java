@@ -183,36 +183,11 @@ public class TensorBoardProcessMgr {
         if(pidFile.exists()) {
           String pidContents = com.google.common.io.Files.readFirstLine(pidFile, Charset.defaultCharset());
           pid = BigInteger.valueOf(Long.parseLong(pidContents));
+        } else {
+          throw new IOException("No .pid file found for TensorBoard" + pidPath);
         }
         if(exitValue == 0 && pid != null) {
-          int maxWait = 30;
-          String logFilePath = tbPath + File.separator + port + ".log";
-          File logFile = new File(logFilePath);
-          while(maxWait > 0) {
-            String logFileContents = com.google.common.io.Files.readFirstLine(logFile, Charset.defaultCharset());
-            // It is not possible to have a fixed wait time before showing the TB, we need to be sure it has started
-            if(logFile.length() > 0 &&
-                (logFileContents.contains("Loaded") |
-                logFileContents.contains("Reloader") |
-                logFileContents.contains("event"))
-              | maxWait == 1) {
-              TensorBoardDTO tensorBoardDTO = new TensorBoardDTO();
-              String host = null;
-              try {
-                host = InetAddress.getLocalHost().getHostAddress();
-              } catch (UnknownHostException ex) {
-                Logger.getLogger(TensorBoardProcessMgr.class.getName()).log(Level.SEVERE, null, ex);
-              }
-              tensorBoardDTO.setEndpoint(host + ":" + port);
-              tensorBoardDTO.setPid(pid);
-              return tensorBoardDTO;
-            } else {
-              Thread.currentThread().sleep(1000);
-              maxWait--;
-            }
-          }
           TensorBoardDTO tensorBoardDTO = new TensorBoardDTO();
-          tensorBoardDTO.setPid(pid);
           String host = null;
           try {
             host = InetAddress.getLocalHost().getHostAddress();
@@ -220,6 +195,7 @@ public class TensorBoardProcessMgr {
             Logger.getLogger(TensorBoardProcessMgr.class.getName()).log(Level.SEVERE, null, ex);
           }
           tensorBoardDTO.setEndpoint(host + ":" + port);
+          tensorBoardDTO.setPid(pid);
           return tensorBoardDTO;
         } else {
           LOGGER.log(Level.SEVERE,"Failed starting TensorBoard got exitcode " + exitValue + " retrying on new port");
