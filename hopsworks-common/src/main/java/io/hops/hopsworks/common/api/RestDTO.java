@@ -34,13 +34,10 @@ public abstract class RestDTO<D> {
     this.href = href;
   }
   
-  public RestDTO(URI href, ResourceProperties resourceProperties, ResourceProperties.Name resource) {
+  public RestDTO(URI href, Resource resource) {
     this.href = href;
-    if (resourceProperties != null) {
-      ResourceProperties.ResourceProperty property = resourceProperties.get(resource);
-      if (property != null) {
-        this.expand = true;
-      }
+    if (resource != null) {
+      this.expand = true;
     }
   }
   

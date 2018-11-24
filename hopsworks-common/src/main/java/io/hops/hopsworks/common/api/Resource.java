@@ -15,6 +15,7 @@
  */
 package io.hops.hopsworks.common.api;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 
 import java.util.ArrayList;
@@ -27,16 +28,21 @@ public class Resource {
   private Integer limit;
   private Set<? extends AbstractFacade.SortBy> sort;
   private Set<? extends AbstractFacade.FilterBy> filter;
+  private Set<Resource> expansions;
   
   //Only for internal use by child classes
   protected List<String> queryProps;
   
+  public Resource(Name name) {
+    this(name, null);
+  }
+  
   public Resource(Name name, String queryParam) {
     this.name = name;
-    if (queryParam.contains("(")) {
+    this.queryProps = new ArrayList<>();
+    if (!Strings.isNullOrEmpty(queryParam) && queryParam.contains("(")) {
       String[] queryPropsArr = queryParam.substring(queryParam.indexOf('(') + 1, queryParam.lastIndexOf(')')).split(
         ";");
-      this.queryProps = new ArrayList<>();
       for (String queryProp : queryPropsArr) {
         String queryName = queryProp.substring(0, queryProp.indexOf('=') + 1);
         String queryVal = queryProp.substring(queryProp.indexOf('=') + 1);
@@ -96,6 +102,37 @@ public class Resource {
     this.filter = filter;
   }
   
+  public Set<Resource> getExpansions() {
+    return expansions;
+  }
+  
+  public void setExpansions(Set<Resource> expansions) {
+    this.expansions = expansions;
+  }
+  
+  public boolean contains(Name name) {
+    if(this.name == name){
+      return true;
+    }
+    for(Resource expansion : expansions){
+      if(expansion.name == name){
+        return true;
+      }
+    }
+    return false;
+  }
+  
+  public Resource get(Name name) {
+    if(expansions != null && !expansions.isEmpty()) {
+      for (Resource expansion : expansions) {
+        if (expansion.name == name) {
+          return expansion;
+        }
+      }
+    }
+    return null;
+  }
+  
   /**
    * Name of the resource requested by the user which needs to match the name of the resource in Hopsworks.
    */
@@ -103,7 +140,7 @@ public class Resource {
     USERS,
     USER, //user as it appears in ExecutionDTO
     CREATOR,//user as it appears in JobDTO
-    PROJECTS,
+    PROJECT,
     JOBS,
     EXECUTIONS,
     DATASETS,

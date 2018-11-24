@@ -35,7 +35,7 @@ public class UsersBeanParam {
       allowableValues = "role:hops_admin,role_neq:hops_admin,role:hops_user,role_neq:hops_user,role:agent, "
           + "role_neq:agent, role:hops_admin,hops_user, role_neq:hops_admin,hops_user, status=new_mobile_account,"
           + " status=verified_account, status=activated_account, status=deactivated_account, status=blocked_account,"
-          + " status=lost_mobile, status=spam_account, status_gt=2, status_gt=2, status_lt=2, is_online=0, is_online=1, "
+          + " status=lost_mobile, status=spam_account, status_gt=2, status_gt=2, status_lt=2, is_online=0, is_online=1,"
           + "false_login=10, false_login_gt=20, false_login_lt=20,", allowMultiple = true)
   private Set<FilterBy> filter;
 

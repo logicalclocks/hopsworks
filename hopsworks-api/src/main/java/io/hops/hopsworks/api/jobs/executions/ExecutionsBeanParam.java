@@ -15,10 +15,11 @@
  */
 package io.hops.hopsworks.api.jobs.executions;
 
-import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
+import io.hops.hopsworks.common.api.Resource;
 import io.swagger.annotations.ApiParam;
 
 import javax.ws.rs.QueryParam;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -27,29 +28,34 @@ public class ExecutionsBeanParam {
   @ApiParam(value = "ex. sort_by=submission_time:desc,id:asc",
     allowableValues = "id:asc,id:desc,name:asc,name:desc,date_created:asc,date_created:desc")
   private String sortBy;
-  private final Set<ExecutionFacade.SortBy> sortBySet;
+  private final Set<SortBy> sortBySet;
   @QueryParam("filter_by")
   @ApiParam(value = "ex. filter_by=state:running,finished")
-  private Set<ExecutionFacade.FilterBy> filter;
+  private Set<FilterBy> filter;
+  @QueryParam("expand")
+  @ApiParam(value = "ex. expand=creator")
+  private Set<ExecutionExpansions> expansions;
   
   public ExecutionsBeanParam(
     @QueryParam("sort_by") String sortBy,
-    @QueryParam("filter_by") Set<ExecutionFacade.FilterBy> filter) {
+    @QueryParam("filter_by") Set<FilterBy> filter,
+    @QueryParam("expand") Set<ExecutionExpansions> expansions) {
     this.sortBy = sortBy;
     this.sortBySet = getSortBy(sortBy);
     this.filter = filter;
+    this.expansions = expansions;
   }
   
-  private Set<ExecutionFacade.SortBy> getSortBy(String param) {
+  private Set<SortBy> getSortBy(String param) {
     if (param == null || param.isEmpty()) {
       return null;
     }
     String[] params = param.split(",");
     //Hash table and linked list implementation of the Set interface, with predictable iteration order
-    Set<ExecutionFacade.SortBy> sortBys = new LinkedHashSet<>();//make ordered
-    ExecutionFacade.SortBy sort;
+    Set<SortBy> sortBys = new LinkedHashSet<>();//make orderd
+    SortBy sort;
     for (String s : params) {
-      sort = ExecutionFacade.SortBy.fromString(s.trim());
+      sort = new SortBy(s.trim());
       sortBys.add(sort);
     }
     return sortBys;
@@ -63,15 +69,23 @@ public class ExecutionsBeanParam {
     this.sortBy = sortBy;
   }
   
-  public Set<ExecutionFacade.FilterBy> getFilter() {
+  public Set<FilterBy> getFilter() {
     return filter;
   }
   
-  public void setFilter(Set<ExecutionFacade.FilterBy> filter) {
+  public void setFilter(Set<FilterBy> filter) {
     this.filter = filter;
   }
   
-  public Set<ExecutionFacade.SortBy> getSortBySet() {
+  public Set<SortBy> getSortBySet() {
     return sortBySet;
+  }
+  
+  public Set<Resource> getResources(){
+    Set<Resource> expansions = new HashSet<>();
+    for(ExecutionExpansions jobExpansion : this.expansions){
+      expansions.add(jobExpansion.getResource());
+    }
+    return expansions;
   }
 }

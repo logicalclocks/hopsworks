@@ -45,7 +45,7 @@ import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.jobs.executions.ExecutionService;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.Pagination;
-import io.hops.hopsworks.common.api.ResourceProperties;
+import io.hops.hopsworks.common.api.Resource;
 import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.project.Project;
@@ -130,14 +130,19 @@ public class JobService {
     @BeanParam Pagination pagination,
     @BeanParam JobsBeanParam jobsBeanParam,
     @Context UriInfo uriInfo) {
-//    JobDTO dto = jobsBuilder.build(uriInfo, new ResourceProperties(ResourceProperties.Name.JOBS,
-//      pagination.getOffset(), pagination.getLimit(), jobsBeanParam.getSortBySet(), jobsBeanParam.getFilter(),
-//        jobsBeanParam.getExpand()), project);
-//
-//    GenericEntity<JobDTO> ge
-//      = new GenericEntity<JobDTO>(dto) { };
+    Resource resource = new Resource(Resource.Name.JOBS);
+    resource.setOffset(pagination.getOffset());
+    resource.setLimit(pagination.getLimit());
+    resource.setSort(jobsBeanParam.getSortBySet());
+    resource.setFilter(jobsBeanParam.getFilter());
+    resource.setExpansions(jobsBeanParam.getResources());
     
-    return Response.ok().build();
+    JobDTO dto = jobsBuilder.build(uriInfo, resource, project);
+
+    GenericEntity<JobDTO> ge
+      = new GenericEntity<JobDTO>(dto) { };
+    
+    return Response.ok().entity(ge).build();
   }
   
   @ApiOperation(value = "Get the job with requested ID", response = JobDTO.class)
@@ -153,8 +158,9 @@ public class JobService {
     if(job == null){
       throw new JobException(RESTCodes.JobErrorCode.JOB_NOT_FOUND, Level.FINEST);
     }
-    JobDTO dto = jobsBuilder.build(uriInfo, new ResourceProperties(ResourceProperties.Name.JOBS,
-      jobsBeanParam.getExpand()), job);
+    Resource resource = new Resource(Resource.Name.JOBS);
+    resource.setExpansions(jobsBeanParam.getResources());
+    JobDTO dto = jobsBuilder.build(uriInfo, resource, job);
     GenericEntity<JobDTO> ge = new GenericEntity<JobDTO>(dto) { };
     return Response.ok().entity(ge).build();
   }
@@ -182,7 +188,7 @@ public class JobService {
     }
     
     Jobs job = jobController.createJob(user, project, config);
-    JobDTO dto = jobsBuilder.build(uriInfo, new ResourceProperties(ResourceProperties.Name.JOBS), job);
+    JobDTO dto = jobsBuilder.build(uriInfo, new Resource(Resource.Name.JOBS), job);
     GenericEntity<JobDTO> ge = new GenericEntity<JobDTO>(dto) {};
     UriBuilder builder = uriInfo.getAbsolutePathBuilder().path(Integer.toString(dto.getId()));
     return Response.created(builder.build()).entity(ge).build();

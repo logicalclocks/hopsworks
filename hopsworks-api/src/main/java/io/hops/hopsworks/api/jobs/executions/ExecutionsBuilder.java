@@ -15,9 +15,8 @@
  */
 package io.hops.hopsworks.api.jobs.executions;
 
-import io.hops.hopsworks.api.jobs.executions.ExecutionDTO;
 import io.hops.hopsworks.api.user.UsersBuilder;
-import io.hops.hopsworks.common.api.ResourceProperties;
+import io.hops.hopsworks.common.api.Resource;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.jobhistory.Execution;
 import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
@@ -49,11 +48,11 @@ public class ExecutionsBuilder {
    */
   public ExecutionDTO uri(ExecutionDTO dto, UriInfo uriInfo, Execution execution) {
     dto.setHref(uriInfo.getBaseUriBuilder()
-      .path(ResourceProperties.Name.PROJECT.toString())
+      .path(Resource.Name.PROJECT.toString())
       .path(Integer.toString(execution.getJob().getProject().getId()))
-      .path(ResourceProperties.Name.JOBS.toString())
+      .path(Resource.Name.JOBS.toString())
       .path(execution.getJob().getName())
-      .path(ResourceProperties.Name.EXECUTIONS.toString())
+      .path(Resource.Name.EXECUTIONS.toString())
       .path(Integer.toString(execution.getId()))
       .build());
     return dto;
@@ -67,26 +66,26 @@ public class ExecutionsBuilder {
    */
   public ExecutionDTO uri(ExecutionDTO dto, UriInfo uriInfo, Jobs job) {
     dto.setHref(uriInfo.getBaseUriBuilder()
-      .path(ResourceProperties.Name.PROJECT.toString())
+      .path(Resource.Name.PROJECT.toString())
       .path(Integer.toString(job.getProject().getId()))
-      .path(ResourceProperties.Name.JOBS.toString())
+      .path(Resource.Name.JOBS.toString())
       .path(job.getName())
-      .path(ResourceProperties.Name.EXECUTIONS.toString())
+      .path(Resource.Name.EXECUTIONS.toString())
       .build());
     return dto;
   }
   
-  public ExecutionDTO expand(ExecutionDTO dto, ResourceProperties resourceProperties) {
-    if (resourceProperties != null && (resourceProperties.contains(ResourceProperties.Name.EXECUTIONS))) {
+  public ExecutionDTO expand(ExecutionDTO dto, Resource resource) {
+    if (resource != null && (resource.contains(Resource.Name.EXECUTIONS))) {
       dto.setExpand(true);
     }
     return dto;
   }
   
-  public ExecutionDTO build(UriInfo uriInfo, ResourceProperties resourceProperties, Execution execution) {
+  public ExecutionDTO build(UriInfo uriInfo, Resource resource, Execution execution) {
     ExecutionDTO dto = new ExecutionDTO();
     uri(dto, uriInfo, execution);
-    expand(dto, resourceProperties);
+    expand(dto, resource);
     if (dto.isExpand()) {
       dto.setId(execution.getId());
       dto.setSubmissionTime(execution.getSubmissionTime());
@@ -97,52 +96,51 @@ public class ExecutionsBuilder {
       dto.setHdfsUser(execution.getHdfsUser());
       dto.setFinalStatus(execution.getFinalStatus());
       dto.setProgress(execution.getProgress());
-      dto.setUser(usersBuilder.buildItem(uriInfo, resourceProperties, execution.getUser()));
+      dto.setUser(usersBuilder.buildItem(uriInfo, resource.get(Resource.Name.USER), execution.getUser()));
       dto.setFilesToRemove(execution.getFilesToRemove());
       dto.setDuration(execution.getExecutionDuration());
     }
     return dto;
   }
   
-  public ExecutionDTO build(UriInfo uriInfo, ResourceProperties resourceProperties, Jobs job) {
+  public ExecutionDTO build(UriInfo uriInfo, Resource resource, Jobs job) {
     ExecutionDTO dto = new ExecutionDTO();
     uri(dto, uriInfo, job);
-    expand(dto, resourceProperties);
+    expand(dto, resource);
     if (dto.isExpand()) {
-      ResourceProperties.ResourceProperty property = resourceProperties.get(ResourceProperties.Name.EXECUTIONS);
       List<Execution> executions;
-      if (property.getOffset() != null || property.getLimit() != null || property.getFilter() != null) {
-        executions = executionFacade.findByJob(property.getOffset(), property.getLimit(), property.getFilter(),
-          property.getSort(), job);
-        return items(new ExecutionDTO(), uriInfo, resourceProperties, executions, false);
+      if (resource.getOffset() != null || resource.getLimit() != null || resource.getSort() != null
+        || resource.getFilter() != null) {
+        executions = executionFacade.findByJob(resource.getOffset(), resource.getLimit(), resource.getFilter(),
+          resource.getSort(), job);
+        return items(new ExecutionDTO(), uriInfo, resource, executions, false);
       }
       executions = executionFacade.findByJob(job);
-      return items(new ExecutionDTO(), uriInfo, resourceProperties, executions, true);
+      return items(new ExecutionDTO(), uriInfo, resource, executions, true);
     }
     return dto;
   }
   
-  private ExecutionDTO items(ExecutionDTO dto, UriInfo uriInfo, ResourceProperties resourceProperties,
+  private ExecutionDTO items(ExecutionDTO dto, UriInfo uriInfo, Resource resource,
     List<Execution> executions, boolean sort) {
     if (executions != null && !executions.isEmpty()) {
       if(sort) {
-        ResourceProperties.ResourceProperty property = resourceProperties.get(ResourceProperties.Name.EXECUTIONS);
         //Sort collection and return elements based on offset, limit, sortBy, orderBy
-        Comparator<Execution> comparator = getComparator(property);
+        Comparator<Execution> comparator = getComparator(resource);
         if (comparator != null) {
           executions.sort(comparator);
         }
       }
       executions.forEach((exec) -> {
-        dto.addItem(build(uriInfo, resourceProperties, exec));
+        dto.addItem(build(uriInfo, resource, exec));
       });
     }
     return dto;
   }
   
-  public Comparator<Execution> getComparator(ResourceProperties.ResourceProperty property) {
-    Set<ExecutionFacade.SortBy> sortBy = (Set<ExecutionFacade.SortBy>) property.getSort();
-    if (property.getSort() != null && !property.getSort().isEmpty()) {
+  public Comparator<Execution> getComparator(Resource resource) {
+    Set<ExecutionFacade.SortBy> sortBy = (Set<ExecutionFacade.SortBy>) resource.getSort();
+    if (resource.getSort() != null && !resource.getSort().isEmpty()) {
       return new ExecutionsComparator(sortBy);
     }
     return null;
@@ -157,7 +155,7 @@ public class ExecutionsBuilder {
     }
     
     private int compare(Execution a, Execution b, ExecutionFacade.SortBy sortBy) {
-      switch (sortBy) {
+      switch (ExecutionFacade.Sorts.valueOf(sortBy.getValue())) {
         case ID:
           return order(a.getId(), b.getId(), sortBy.getParam());
         case SUBMISSION_TIME:

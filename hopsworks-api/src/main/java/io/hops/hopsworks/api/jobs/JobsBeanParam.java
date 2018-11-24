@@ -15,9 +15,11 @@
  */
 package io.hops.hopsworks.api.jobs;
 
+import io.hops.hopsworks.common.api.Resource;
 import io.swagger.annotations.ApiParam;
 
 import javax.ws.rs.QueryParam;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -86,5 +88,13 @@ public class JobsBeanParam {
   
   public void setExpansions(Set<JobExpansions> expansions) {
     this.expansions = expansions;
+  }
+  
+  public Set<Resource> getResources(){
+    Set<Resource> expansions = new HashSet<>();
+    for(JobExpansions jobExpansion : this.expansions){
+      expansions.add(jobExpansion.getResource());
+    }
+    return expansions;
   }
 }

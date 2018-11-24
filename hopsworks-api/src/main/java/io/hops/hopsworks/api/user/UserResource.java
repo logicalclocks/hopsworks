@@ -29,7 +29,7 @@ public class UserResource extends Resource {
     Set<FilterBy> filters = null;
     for (String queryProp : queryProps) {
       if (queryProp.startsWith("sort_by")) {
-        String[] params = queryProp.split(",");
+        String[] params = queryProp.substring(queryProp.indexOf('=')+1).split(",");
         //Hash table and linked list implementation of the Set interface, with predictable iteration order
         Set<SortBy> sortBys = new LinkedHashSet<>();//make ordered
         SortBy sort;
@@ -43,7 +43,7 @@ public class UserResource extends Resource {
           filters = new HashSet<>();
         }
         //Set filter_by
-        FilterBy filterBy = new FilterBy(queryProp);
+        FilterBy filterBy = new FilterBy(queryProp.substring(queryProp.indexOf('=')+1));
         filters.add(filterBy);
       }
     }

@@ -44,7 +44,6 @@ import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.api.util.Pagination;
-import io.hops.hopsworks.common.api.ResourceProperties;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
@@ -123,10 +122,8 @@ public class UserService {
       @BeanParam UsersBeanParam usersBeanParam,
       @QueryParam("expand") String expand,
       @Context UriInfo uriInfo) {
-    ResourceProperties resourceProperties = new ResourceProperties(ResourceProperties.Name.USERS, pagination.getOffset()
-        , pagination.getLimit(), usersBeanParam.getSortBySet(), usersBeanParam.getFilter(), expand);
-    UserDTO userDTO = usersBuilder.buildItems(uriInfo, resourceProperties);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(userDTO).build();
+//    UserDTO userDTO = usersBuilder.buildItems(uriInfo, resourceProperties);
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 
   @GET
@@ -142,9 +139,9 @@ public class UserService {
     if (!Objects.equals(user.getUid(), userId) && !user.getBbcGroupCollection().contains(adminGroup)) {
       throw new UserException(RESTCodes.UserErrorCode.ACCESS_CONTROL, Level.SEVERE);
     }
-    ResourceProperties resourceProperties = new ResourceProperties(ResourceProperties.Name.USERS, expand);
-    UserDTO userDTO = usersBuilder.build(uriInfo, resourceProperties, userId);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(userDTO).build();
+//    ResourceProperties resourceProperties = new ResourceProperties(ResourceProperties.Name.USERS, expand);
+//    UserDTO userDTO = usersBuilder.build(uriInfo, resourceProperties, userId);
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 
   @GET
@@ -155,9 +152,9 @@ public class UserService {
     if (user == null) {
       throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
     }
-    ResourceProperties resourceProperties = new ResourceProperties(ResourceProperties.Name.USERS, null);
-    UserDTO userDTO = usersBuilder.buildFull(uriInfo, resourceProperties, user);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(userDTO).build();
+//    ResourceProperties resourceProperties = new ResourceProperties(ResourceProperties.Name.USERS, null);
+//    UserDTO userDTO = usersBuilder.buildFull(uriInfo, resourceProperties, user);
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 
   @POST
@@ -172,9 +169,9 @@ public class UserService {
       @Context SecurityContext sc) throws UserException {
     Users user = jWTHelper.getUserPrincipal(sc);
     user = userController.updateProfile(user, firstName, lastName, telephoneNum, toursState, req);
-    ResourceProperties resourceProperties = new ResourceProperties(ResourceProperties.Name.USERS, null);
-    UserDTO userDTO = usersBuilder.buildFull(uriInfo, resourceProperties, user);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(userDTO).build();
+//    ResourceProperties resourceProperties = new ResourceProperties(ResourceProperties.Name.USERS, null);
+//    UserDTO userDTO = usersBuilder.buildFull(uriInfo, resourceProperties, user);
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 
   @POST

@@ -17,7 +17,7 @@ package io.hops.hopsworks.api.jobs;
 
 import io.hops.hopsworks.api.jobs.executions.ExecutionsBuilder;
 import io.hops.hopsworks.api.user.UsersBuilder;
-import io.hops.hopsworks.common.api.ResourceProperties;
+import io.hops.hopsworks.common.api.Resource;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
@@ -44,81 +44,80 @@ public class JobsBuilder {
   
   
   public JobDTO uri(JobDTO dto, UriInfo uriInfo, Project project) {
-    dto.setHref(uriInfo.getBaseUriBuilder().path(ResourceProperties.Name.PROJECT.toString().toLowerCase())
+    dto.setHref(uriInfo.getBaseUriBuilder().path(Resource.Name.PROJECT.toString().toLowerCase())
       .path(Integer.toString(project.getId()))
-      .path(ResourceProperties.Name.JOBS.toString().toLowerCase())
+      .path(Resource.Name.JOBS.toString().toLowerCase())
       .build());
     return dto;
   }
   
   public JobDTO uri(JobDTO dto, UriInfo uriInfo, Jobs job) {
-    dto.setHref(uriInfo.getBaseUriBuilder().path(ResourceProperties.Name.PROJECT.toString().toLowerCase())
+    dto.setHref(uriInfo.getBaseUriBuilder().path(Resource.Name.PROJECT.toString().toLowerCase())
       .path(Integer.toString(job.getProject().getId()))
-      .path(ResourceProperties.Name.JOBS.toString().toLowerCase())
+      .path(Resource.Name.JOBS.toString().toLowerCase())
       .path(job.getName())
       .build());
     return dto;
   }
   
-  public JobDTO expand(JobDTO dto, ResourceProperties resourceProperties) {
-    if (resourceProperties != null && resourceProperties.contains(ResourceProperties.Name.JOBS)) {
+  public JobDTO expand(JobDTO dto, Resource resource) {
+    if (resource != null && resource.contains(Resource.Name.JOBS)) {
       dto.setExpand(true);
     }
     return dto;
   }
   
-  public JobDTO build(UriInfo uriInfo, ResourceProperties resourceProperties, Jobs job) {
+  public JobDTO build(UriInfo uriInfo, Resource resource, Jobs job) {
     JobDTO dto = new JobDTO();
     uri(dto, uriInfo, job);
-    expand(dto, resourceProperties);
+    expand(dto, resource);
     if (dto.isExpand()) {
       dto.setId(job.getId());
       dto.setName(job.getName());
       dto.setCreationTime(job.getCreationTime());
       dto.setConfig(job.getJobConfig());
       dto.setType(job.getJobType());
-      dto.setCreator(usersBuilder.build(uriInfo, resourceProperties, job.getCreator()));
-      dto.setExecutions(executionsBuilder.build(uriInfo, resourceProperties, job));
+      dto.setCreator(usersBuilder.build(uriInfo, resource.get(Resource.Name.CREATOR), job.getCreator()));
+      dto.setExecutions(executionsBuilder.build(uriInfo, resource.get(Resource.Name.EXECUTIONS), job));
     }
     return dto;
   }
   
-  public JobDTO build(UriInfo uriInfo, ResourceProperties resourceProperties, Project project) {
+  public JobDTO build(UriInfo uriInfo, Resource resource, Project project) {
     JobDTO dto = new JobDTO();
     uri(dto, uriInfo, project);
-    expand(dto, resourceProperties);
-    ResourceProperties.ResourceProperty property = resourceProperties.get(ResourceProperties.Name.JOBS);
+    expand(dto, resource);
     List<Jobs> jobs;
-    if (property.getOffset() != null || property.getLimit() != null || property.getFilter() != null) {
-      jobs = jobFacade.findByProject(property.getOffset(), property.getLimit(), property.getFilter(),
-        property.getSort(), project);
-      return items(dto, uriInfo, resourceProperties, jobs, false);
+    if (resource.getOffset() != null || resource.getLimit() != null || resource.getSort() != null
+      || !resource.getFilter().isEmpty()) {
+      jobs = jobFacade.findByProject(resource.getOffset(), resource.getLimit(), resource.getFilter(),
+        resource.getSort(), project);
+      return items(dto, uriInfo, resource, jobs, false);
     }
     jobs = jobFacade.findByProject(project);
-    return items(dto, uriInfo, resourceProperties, jobs, true);
+    return items(dto, uriInfo, resource, jobs, true);
   }
   
-  private JobDTO items(JobDTO dto, UriInfo uriInfo, ResourceProperties resourceProperties, List<Jobs> jobs,
+  private JobDTO items(JobDTO dto, UriInfo uriInfo, Resource resource, List<Jobs> jobs,
     boolean sort) {
     if (jobs != null && !jobs.isEmpty()) {
       if (sort) {
-        ResourceProperties.ResourceProperty property = resourceProperties.get(ResourceProperties.Name.JOBS);
         //Sort collection and return elements based on offset, limit, sortBy, orderBy
-        Comparator<Jobs> comparator = getComparator(property);
+        Comparator<Jobs> comparator = getComparator(resource);
         if (comparator != null) {
           jobs.sort(comparator);
         }
       }
       jobs.forEach((job) -> {
-        dto.addItem(build(uriInfo, resourceProperties, job));
+        dto.addItem(build(uriInfo, resource, job));
       });
     }
     return dto;
   }
   
-  public Comparator<Jobs> getComparator(ResourceProperties.ResourceProperty property) {
-    Set<JobFacade.SortBy> sortBy = (Set<JobFacade.SortBy>) property.getSort();
-    if (property.getSort() != null && !property.getSort().isEmpty()) {
+  public Comparator<Jobs> getComparator(Resource resource) {
+    Set<JobFacade.SortBy> sortBy = (Set<JobFacade.SortBy>) resource.getSort();
+    if (resource.getSort() != null && !resource.getSort().isEmpty()) {
       return new JobsComparator(sortBy);
     }
     return null;
@@ -133,7 +132,7 @@ public class JobsBuilder {
     }
     
     private int compare(Jobs a, Jobs b, JobFacade.SortBy sortBy) {
-      switch (sortBy) {
+      switch (JobFacade.Sorts.valueOf(sortBy.getValue())) {
         case ID:
           return order(a.getId(), b.getId(), sortBy.getParam());
         case NAME:

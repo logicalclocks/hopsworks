@@ -43,7 +43,7 @@ import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.Pagination;
-import io.hops.hopsworks.common.api.ResourceProperties;
+import io.hops.hopsworks.common.api.Resource;
 import io.hops.hopsworks.common.dao.jobhistory.Execution;
 import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
@@ -81,7 +81,6 @@ import javax.ws.rs.core.UriInfo;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -116,20 +115,22 @@ public class ExecutionService {
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response getExecutions(
     @BeanParam Pagination pagination,
-    @BeanParam
-      ExecutionsBeanParam executionsBeanParam,
-    @ApiParam(value = "comma-separated list of entities to expand in the collection")
-    @QueryParam("expand") Set<ExecutionFacade.ExecutionExpansion> expand,
+    @BeanParam ExecutionsBeanParam executionsBeanParam,
     @Context UriInfo uriInfo) {
+  
+    Resource resource = new Resource(Resource.Name.EXECUTIONS);
+    resource.setOffset(pagination.getOffset());
+    resource.setLimit(pagination.getLimit());
+    resource.setSort(executionsBeanParam.getSortBySet());
+    resource.setFilter(executionsBeanParam.getFilter());
+    resource.setExpansions(executionsBeanParam.getResources());
+    
+    ExecutionDTO executionDTO = executionsBuilder.build(uriInfo, resource, job);
 
-//    ExecutionDTO executionDTO = executionsBuilder.build(uriInfo,
-//      new ResourceProperties(ResourceProperties.Name.EXECUTIONS, pagination.getOffset(), pagination.getLimit(),
-//        executionsBeanParam.getSortBySet(), executionsBeanParam.getFilter(), expand), job);
-//
-//    GenericEntity<ExecutionDTO> entity = new GenericEntity<ExecutionDTO>(
-//      executionDTO) {
-//    };
-    return Response.ok().build();
+    GenericEntity<ExecutionDTO> entity = new GenericEntity<ExecutionDTO>(
+      executionDTO) {
+    };
+    return Response.ok().entity(entity).build();
   }
   
   @ApiOperation(value = "Find Execution by Id", response = ExecutionDTO.class)
@@ -140,14 +141,14 @@ public class ExecutionService {
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response getExecution(
     @ApiParam(value = "execution id", required = true) @PathParam("id") Integer id,
-    @QueryParam("expand") Set<ExecutionFacade.ExecutionExpansion> expand,
+    @BeanParam ExecutionsBeanParam executionsBeanParam,
     @Context UriInfo uriInfo) throws JobException {
     //If requested execution does not belong to job
     Execution execution = authorize(id);
-    
-//    ExecutionDTO dto = executionsBuilder.build(uriInfo, new ResourceProperties(ResourceProperties.Name.EXECUTIONS,
-//      expand), execution);
-    return Response.ok().build();
+    Resource resource = new Resource(Resource.Name.EXECUTIONS);
+    resource.setExpansions(executionsBeanParam.getResources());
+    ExecutionDTO dto = executionsBuilder.build(uriInfo, resource, execution);
+    return Response.ok().entity(dto).build();
   }
   
   
@@ -170,12 +171,12 @@ public class ExecutionService {
         exec = executionController.start(job, user);
         UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder();
         uriBuilder.path(Integer.toString(exec.getId()));
-        return Response.created(uriBuilder.build()).entity(executionsBuilder.build(uriInfo,
-          new ResourceProperties(ResourceProperties.Name.EXECUTIONS), exec)).build();
+        Resource resource = new Resource(Resource.Name.EXECUTIONS);
+        return Response.created(uriBuilder.build()).entity(executionsBuilder.build(uriInfo, resource, exec)).build();
       case STOP:
         exec = executionController.kill(job, user);
-        return Response.ok().entity(executionsBuilder.build(uriInfo,
-          new ResourceProperties(ResourceProperties.Name.EXECUTIONS), exec)).build();
+        resource = new Resource(Resource.Name.EXECUTIONS);
+        return Response.ok().entity(executionsBuilder.build(uriInfo, resource, exec)).build();
       default:
         return Response.status(Response.Status.BAD_REQUEST).build();
     }

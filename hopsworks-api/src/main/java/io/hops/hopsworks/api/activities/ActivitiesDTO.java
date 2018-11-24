@@ -22,7 +22,7 @@ import java.util.Date;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
-public class ActivitiesDTO extends RestDTO<Activity, ActivitiesDTO>{
+public class ActivitiesDTO extends RestDTO<ActivitiesDTO>{
   
   private String activity;
   private Date timestamp;

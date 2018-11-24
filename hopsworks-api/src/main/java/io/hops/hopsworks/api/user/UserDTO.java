@@ -25,7 +25,7 @@ import io.hops.hopsworks.common.dao.user.Users;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
-public class UserDTO extends RestDTO<Users, UserDTO> {
+public class UserDTO extends RestDTO<UserDTO> {
   
   private String firstname;
   private String lastname;
