@@ -1160,7 +1160,7 @@ public class RESTCodes {
     }
   }
   
-  public enum   ActivitiesErrorCode implements RESTErrorCode {
+  public enum ActivitiesErrorCode implements RESTErrorCode {
 
     FORBIDDEN(0, "You are not allow to perform this action.", Response.Status.FORBIDDEN),
     ACTIVITY_NOT_FOUND(1, "Activity instance not found", Response.Status.NOT_FOUND);

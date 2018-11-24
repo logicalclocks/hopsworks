@@ -35,7 +35,7 @@ public class UsersBuilder {
   @EJB
   private UserFacade userFacade;
 
-  public UserDTO uri(UserDTO dto, UriInfo uriInfo) {
+  public UserDTO uri(UserDTO dto, UriInfo uriInfo, Users user) {
     dto.setHref(uriInfo.getAbsolutePathBuilder()
         .build());
     return dto;
@@ -55,19 +55,20 @@ public class UsersBuilder {
         .build());
     return dto;
   }
-  
+
   public UserDTO expand(UserDTO dto, ResourceProperties resourceProperties) {
-    if (resourceProperties != null &&
-      (resourceProperties.contains(ResourceProperties.Name.USERS)
-        || resourceProperties.contains(ResourceProperties.Name.CREATOR))) {
-      dto.setExpand(true);
+    if (resourceProperties != null) {
+      ResourceProperties.ResourceProperty property = resourceProperties.get(ResourceProperties.Name.USERS);
+      if (property != null) {
+        dto.setExpand(true);
+      }
     }
     return dto;
   }
 
   public UserDTO build(UriInfo uriInfo, ResourceProperties resourceProperties, Users user) {
     UserDTO dto = new UserDTO();
-    uri(dto, uriInfo);
+    uri(dto, uriInfo, user);
     expand(dto, resourceProperties);
     if (dto.isExpand()) {
       dto.setFirstname(user.getFname());
@@ -103,7 +104,7 @@ public class UsersBuilder {
 
   public UserDTO buildFull(UriInfo uriInfo, ResourceProperties resourceProperties, Users user) {
     UserDTO dto = new UserDTO();
-    uri(dto, uriInfo);
+    uri(dto, uriInfo, user);
     expand(dto, resourceProperties);
     if (dto.isExpand()) {
       dto.setFirstname(user.getFname());
@@ -176,7 +177,7 @@ public class UsersBuilder {
     }
 
     private int compare(Users a, Users b, UserFacade.SortBy sortBy) {
-      switch (sortBy) {
+      switch (UserFacade.Sorts.valueOf(sortBy.getValue())) {
         case EMAIL:
           return order(a.getEmail(), b.getEmail(), sortBy.getParam());
         case DATE_CREATED:

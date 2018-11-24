@@ -64,5 +64,69 @@ describe "On #{ENV['OS']}" do
         expect(user[:username]).to match(/^[a-z0-9]{8}$/)
       end
     end
+    describe "User sort, filter, offset and limit " do
+      context 'with authentication' do
+        before :all do
+          with_valid_session
+          @users=create_users
+        end
+        it 'should get all users sorted by firstname' do
+          names = @users.map { |o| "#{o[:firstname]}" }
+          sorted = names.sort_by(&:downcase)
+          get "#{ENV['HOPSWORKS_API']}/users?sort_by=first_name"
+          sortedRes = json_body[:items].map { |o| "#{o[:firstname]}" }
+          expect(sortedRes).to eq(sorted)
+        end
+        it 'should get all users sorted by firstname and lastname' do
+          names = @users.map { |o| "#{o[:firstname]} #{o[:lastname]}" }
+          sorted = names.sort_by(&:downcase)
+          get "#{ENV['HOPSWORKS_API']}/users?sort_by=first_name,last_name"
+          sortedRes = json_body[:items].map { |o| "#{o[:firstname]} #{o[:lastname]}" }
+          expect(sortedRes).to eq(sorted)
+        end
+        it 'should get only limit=x users' do
+          get "#{ENV['HOPSWORKS_API']}/users?limit=10"
+          expect(json_body[:items].size).to eq(10)
+          get "#{ENV['HOPSWORKS_API']}/users?limit=5"
+          expect(json_body[:items].size).to eq(5)
+        end
+        it 'should get users with offset=y' do
+          names = @users.map { |o| "#{o[:firstname]}" }
+          sorted = names.sort_by(&:downcase)
+          get "#{ENV['HOPSWORKS_API']}/users?offset=5&sort_by=first_name"
+          sortedRes = json_body[:items].map { |o| "#{o[:firstname]}" }
+          expect(sortedRes).to eq(sorted.drop(5))
+        end
+        it 'should get only limit=x users with offset=y' do
+          names = @users.map { |o| "#{o[:firstname]}" }
+          sorted = names.sort_by(&:downcase)
+          get "#{ENV['HOPSWORKS_API']}/users?offset=5&limit=6&sort_by=first_name"
+          sortedRes = json_body[:items].map { |o| "#{o[:firstname]}" }
+          expect(sortedRes).to eq(sorted.drop(5).take(6))
+        end
+        it 'should ignore limit=0' do
+          names = @users.map { |o| "#{o[:firstname]}" }
+          sorted = names.sort_by(&:downcase)
+          get "#{ENV['HOPSWORKS_API']}/users?limit=0&sort_by=first_name"
+          sortedRes = json_body[:items].map { |o| "#{o[:firstname]}" }
+          expect(sortedRes).to eq(sorted)
+        end
+        it 'should work for offset >= size' do
+          size = @users.size
+          get "#{ENV['HOPSWORKS_API']}/users?offset=#{size}"
+          expect(json_body[:items]).to be_nil
+          get "#{ENV['HOPSWORKS_API']}/users?offset=#{size + 1}"
+          expect(json_body[:items]).to be_nil
+        end
+        it 'should get own user\'s detail using the href' do
+          get "#{ENV['HOPSWORKS_API']}/users"
+          res = json_body[:items]
+          user = res.detect { |e| e[:email] == @user[:email] }
+          uri = URI(user[:href])
+          get uri.path
+          expect(user[:email]).to eq(json_body[:email])
+        end
+      end
+    end
   end
 end

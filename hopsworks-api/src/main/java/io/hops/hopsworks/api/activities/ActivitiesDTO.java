@@ -17,19 +17,25 @@ package io.hops.hopsworks.api.activities;
 
 import io.hops.hopsworks.api.user.UserDTO;
 import io.hops.hopsworks.common.api.RestDTO;
-
-import javax.xml.bind.annotation.XmlRootElement;
+import io.hops.hopsworks.common.dao.user.activity.Activity;
 import java.util.Date;
+import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
-public class ActivitiesDTO extends RestDTO<ActivitiesDTO>{
+public class ActivitiesDTO extends RestDTO<Activity, ActivitiesDTO>{
   
   private String activity;
   private Date timestamp;
   private String projectName; //(TODO: Ermias) make projectDTO when ProjectResource is done.
-  private UserDTO user;
+  private UserDTO userDTO;
 
   public ActivitiesDTO() {
+  }
+
+  public ActivitiesDTO(Activity activity) {
+    this.activity = activity.getActivity();
+    this.timestamp = activity.getTimestamp();
+    this.projectName = activity.getProject().getName();
   }
 
   public String getActivity() {
@@ -56,12 +62,12 @@ public class ActivitiesDTO extends RestDTO<ActivitiesDTO>{
     this.projectName = projectName;
   }
 
-  public UserDTO getUser() {
-    return user;
+  public UserDTO getUserDTO() {
+    return userDTO;
   }
 
-  public void setUser(UserDTO user) {
-    this.user = user;
+  public void setUserDTO(UserDTO userDTO) {
+    this.userDTO = userDTO;
   }
   
 }

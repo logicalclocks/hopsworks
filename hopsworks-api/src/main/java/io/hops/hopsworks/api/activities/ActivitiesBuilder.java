@@ -42,7 +42,7 @@ public class ActivitiesBuilder {
   @EJB
   private ActivityFacade activityFacade;
 
-  public ActivitiesDTO uri(ActivitiesDTO dto, UriInfo uriInfo) {
+  public ActivitiesDTO uri(ActivitiesDTO dto, UriInfo uriInfo, Activity activity) {
     dto.setHref(uriInfo.getAbsolutePathBuilder()
         .build());
     return dto;
@@ -75,13 +75,13 @@ public class ActivitiesBuilder {
 
   public ActivitiesDTO build(UriInfo uriInfo, ResourceProperties resourceProperties, Activity activity) {
     ActivitiesDTO dto = new ActivitiesDTO();
-    uri(dto, uriInfo);
+    uri(dto, uriInfo, activity);
     expand(dto, resourceProperties);
     if (dto.isExpand()) {
       dto.setActivity(activity.getActivity());
       dto.setTimestamp(activity.getTimestamp());
       dto.setProjectName(activity.getProject().getName()); //(TODO: Ermias) make this expandable
-      dto.setUser(usersBuilder.buildItem(uriInfo, resourceProperties, activity.getUser()));
+      dto.setUserDTO(usersBuilder.buildItem(uriInfo, resourceProperties, activity.getUser()));
     }
     return dto;
   }
@@ -94,7 +94,7 @@ public class ActivitiesBuilder {
       dto.setActivity(activity.getActivity());
       dto.setTimestamp(activity.getTimestamp());
       dto.setProjectName(activity.getProject().getName()); //(TODO: Ermias) make this expandable
-      dto.setUser(usersBuilder.buildItem(uriInfo, resourceProperties, activity.getUser()));
+      dto.setUserDTO(usersBuilder.buildItem(uriInfo, resourceProperties, activity.getUser()));
     }
     return dto;
   }
@@ -107,7 +107,7 @@ public class ActivitiesBuilder {
       dto.setActivity(activity.getActivity());
       dto.setTimestamp(activity.getTimestamp());
       dto.setProjectName(activity.getProject().getName()); //(TODO: Ermias) make this expandable
-      dto.setUser(usersBuilder.buildItem(uriInfo, resourceProperties, activity.getUser()));
+      dto.setUserDTO(usersBuilder.buildItem(uriInfo, resourceProperties, activity.getUser()));
     }
     return dto;
   }
@@ -222,7 +222,7 @@ public class ActivitiesBuilder {
     }
 
     private int compare(Activity a, Activity b, ActivityFacade.SortBy sortBy) {
-      switch (sortBy) {
+      switch (ActivityFacade.Sorts.valueOf(sortBy.getValue())) {
         case ID:
           return order(a.getId(), b.getId(), sortBy.getParam());
         case FLAG:

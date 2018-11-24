@@ -38,6 +38,7 @@
  */
 package io.hops.hopsworks.api.exception.mapper;
 
+import com.auth0.jwt.exceptions.JWTVerificationException;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.common.exception.GenericException;
 import io.hops.hopsworks.common.exception.HopsSecurityException;
@@ -97,6 +98,9 @@ public class RESTApiThrowableMapper extends io.hops.hopsworks.common.exception.T
         return handleRESTException(new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR, Level.SEVERE, null,
             exception.getMessage(), exception));
       }
+    } else if (exception instanceof JWTVerificationException) {
+      return handleRESTException(new HopsSecurityException(RESTCodes.SecurityErrorCode.EJB_ACCESS_LOCAL, Level.FINE,
+          null, exception.getMessage(), exception));
     } else {
       return handleRESTException(new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR, Level.SEVERE, null,
           exception.getMessage(), exception));

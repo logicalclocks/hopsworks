@@ -39,13 +39,11 @@
 
 package io.hops.hopsworks.common.dao;
 
-import io.hops.hopsworks.common.api.ResourceProperties;
-
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
 
 public abstract class AbstractFacade<T> {
 
@@ -161,16 +159,6 @@ public abstract class AbstractFacade<T> {
     public String getSql();
     public String getField();
   }
-  
-  public interface Expansion {
-    
-    ResourceProperties.Name getValue();
-    Integer getOffset();
-    Integer getLimit();
-    Set<AbstractFacade.SortBy> getSort();
-    Set<AbstractFacade.FilterBy> getFilter();
-    
-  }
 
   public enum OrderBy {
     ASC ("ASC", "ASC"),
@@ -197,12 +185,5 @@ public abstract class AbstractFacade<T> {
       return value;
     }
 
-  }
-  
-  public class FilterBye {
-    
-    private FilterBy filterby;
-    private param;
-    
   }
 }

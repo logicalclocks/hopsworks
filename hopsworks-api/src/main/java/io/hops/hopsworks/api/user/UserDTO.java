@@ -25,7 +25,7 @@ import io.hops.hopsworks.common.dao.user.Users;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
-public class UserDTO extends RestDTO<UserDTO> {
+public class UserDTO extends RestDTO<Users, UserDTO> {
   
   private String firstname;
   private String lastname;
@@ -54,91 +54,91 @@ public class UserDTO extends RestDTO<UserDTO> {
     this.numCreatedProjects = user.getNumCreatedProjects();
     this.numActiveProjects = user.getNumActiveProjects();
   }
-  
+
   public String getFirstname() {
     return firstname;
   }
-  
+
   public void setFirstname(String firstname) {
     this.firstname = firstname;
   }
-  
+
   public String getLastname() {
     return lastname;
   }
-  
+
   public void setLastname(String lastname) {
     this.lastname = lastname;
   }
-  
+
   public String getEmail() {
     return email;
   }
-  
+
   public void setEmail(String email) {
     this.email = email;
   }
-  
+
   public String getPhoneNumber() {
     return phoneNumber;
   }
-  
+
   public void setPhoneNumber(String phoneNumber) {
     this.phoneNumber = phoneNumber;
   }
-  
+
   public String getUserAccountType() {
     return userAccountType;
   }
-  
+
   public void setUserAccountType(String userAccountType) {
     this.userAccountType = userAccountType;
   }
-  
+
   public Boolean getTwoFactor() {
     return twoFactor;
   }
-  
+
   public void setTwoFactor(Boolean twoFactor) {
     this.twoFactor = twoFactor;
   }
-  
+
   public Integer getToursState() {
     return toursState;
   }
-  
+
   public void setToursState(Integer toursState) {
     this.toursState = toursState;
   }
-  
+
   public Integer getStatus() {
     return status;
   }
-  
+
   public void setStatus(Integer status) {
     this.status = status;
   }
-  
+
   public Integer getMaxNumProjects() {
     return maxNumProjects;
   }
-  
+
   public void setMaxNumProjects(Integer maxNumProjects) {
     this.maxNumProjects = maxNumProjects;
   }
-  
+
   public Integer getNumCreatedProjects() {
     return numCreatedProjects;
   }
-  
+
   public void setNumCreatedProjects(Integer numCreatedProjects) {
     this.numCreatedProjects = numCreatedProjects;
   }
-  
+
   public Integer getNumActiveProjects() {
     return numActiveProjects;
   }
-  
+
   public void setNumActiveProjects(Integer numActiveProjects) {
     this.numActiveProjects = numActiveProjects;
   }

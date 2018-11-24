@@ -21,11 +21,11 @@ import javax.ws.rs.QueryParam;
 public class Pagination {
 
   @QueryParam("offset")
-  @ApiParam
+  @ApiParam(required = false)
   private Integer offset;
 
   @QueryParam("limit")
-  @ApiParam
+  @ApiParam(required = false)
   private Integer limit;
 
   public Pagination(

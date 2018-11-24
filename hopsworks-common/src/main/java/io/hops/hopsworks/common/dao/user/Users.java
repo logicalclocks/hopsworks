@@ -149,7 +149,11 @@ import org.codehaus.jackson.annotate.JsonIgnore;
   ,
   @NamedQuery(name = "Users.findByTwoFactor",
       query
-      = "SELECT u FROM Users u WHERE u.twoFactor = :twoFactor")})
+      = "SELECT u FROM Users u WHERE u.twoFactor = :twoFactor")
+  ,
+  @NamedQuery(name = "Users.findAllInGroup",
+      query
+      = "SELECT u.uid FROM Users u WHERE u.bbcGroupCollection IN :roles")})
 public class Users implements Serializable {
 
   private static final long serialVersionUID = 1L;
