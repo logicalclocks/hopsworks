@@ -13,8 +13,9 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.api.jobs;
+package io.hops.hopsworks.api.jobs.executions;
 
+import io.hops.hopsworks.api.jobs.executions.ExecutionDTO;
 import io.hops.hopsworks.api.user.UsersBuilder;
 import io.hops.hopsworks.common.api.ResourceProperties;
 import io.hops.hopsworks.common.dao.AbstractFacade;

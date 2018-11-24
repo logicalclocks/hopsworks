@@ -39,8 +39,6 @@
 
 package io.hops.hopsworks.common.dao.jobhistory;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import io.hops.hopsworks.common.api.ResourceProperties;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.jobs.JobInputFile;
 import io.hops.hopsworks.common.dao.jobs.JobOutputFile;
@@ -60,7 +58,6 @@ import javax.persistence.TypedQuery;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
@@ -177,12 +174,19 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
   }
   
   private void setFilterQuery(AbstractFacade.FilterBy filterBy, Query q) {
-    if (filterBy.equals(FilterBy.STATE) || filterBy.equals(FilterBy.STATE_NEQ)) {
-      Set<JobState> jobTypes = getJobStates(filterBy.getField(), filterBy.getParam());
-      q.setParameter(filterBy.getField(), jobTypes);
-    } else if (filterBy.equals(FilterBy.FINALSTATUS) || filterBy.equals(FilterBy.FINALSTATUS_NEQ)) {
-      Set<JobFinalStatus> jobTypes = getJobFinalStatus(filterBy.getField(), filterBy.getParam());
-      q.setParameter(filterBy.getField(), jobTypes);
+    switch (Filters.valueOf(filterBy.getValue())) {
+      case STATE:
+      case STATE_NEQ:
+        Set<JobState> jobTypes = getJobStates(filterBy.getField(), filterBy.getParam());
+        q.setParameter(filterBy.getField(), jobTypes);
+        break;
+      case FINALSTATUS:
+      case FINALSTATUS_NEQ:
+        Set<JobFinalStatus> jobFinalStatuses = getJobFinalStatus(filterBy.getField(), filterBy.getParam());
+        q.setParameter(filterBy.getField(), jobFinalStatuses);
+        break;
+      default:
+        break;
     }
   }
   
@@ -203,51 +207,33 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
   }
   
   
-  public enum SortBy implements AbstractFacade.SortBy {
+  public enum Sorts {
     ID("ID", "e.id ", "ASC"),
     SUBMISSION_TIME("SUBMISSION_TIME", "e.submissionTime ", "DESC"),
     DURATION("DURATION", "(e.execution_stop-e.execution_start) ", "ASC");
-    
-    @JsonCreator
-    public static SortBy fromString(String param) {
-      String[] sortByParams = param.split(":");
-      SortBy sortBy = SortBy.valueOf(sortByParams[0].toUpperCase());
-      String order = sortByParams.length > 1 ? sortByParams[1].toUpperCase() : sortBy.defaultParam;
-      AbstractFacade.OrderBy orderBy = AbstractFacade.OrderBy.valueOf(order);
-      sortBy.setParam(orderBy);
-      return sortBy;
-    }
-    
+  
     private final String value;
-    private AbstractFacade.OrderBy param;
     private final String sql;
     private final String defaultParam;
-    
-    private SortBy(String value, String sql, String defaultParam) {
+  
+    private Sorts(String value, String sql, String defaultParam) {
       this.value = value;
       this.sql = sql;
       this.defaultParam = defaultParam;
     }
-    
-    @Override
+  
     public String getValue() {
       return value;
     }
-    
-    @Override
-    public OrderBy getParam() {
-      return param;
+  
+    public String getDefaultParam() {
+      return defaultParam;
     }
-    
-    public void setParam(OrderBy param) {
-      this.param = param;
-    }
-    
-    @Override
+  
     public String getSql() {
       return sql;
     }
-    
+  
     @Override
     public String toString() {
       return value;
@@ -255,169 +241,46 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
     
   }
   
-  public enum FilterBy implements AbstractFacade.FilterBy {
+  public enum Filters {
     STATE ("STATE", "e.state IN :states ", "states", ""),
     STATE_NEQ ("STATE_NEQ", "e.state NOT IN :states ", "states", ""),
     FINALSTATUS ("FINALSTATUS", "e.finalStatus IN :finalstatuses ", "finalstatuses", ""),
     FINALSTATUS_NEQ ("FINALSTATUS_NEQ", "e.finalStatus NOT IN :finalstatuses ", "finalstatuses", ""),
     SUBMISSION_TIME("SUBMISSION_TIME", "e.submissionTime = :submissionTime ", "submissionTime", "");
-    
-    @JsonCreator
-    public static FilterBy fromString(String param) {
-      String[] filterByParams = param.split(":");
-      FilterBy filterBy = FilterBy.valueOf(filterByParams[0].toUpperCase());
-      String filter = filterByParams.length > 1 ? filterByParams[1].toUpperCase() : filterBy.defaultParam;
-      filterBy.setParam(filter);
-      return filterBy;
-    }
-    
     private final String value;
-    private String param;
     private final String sql;
     private final String field;
     private final String defaultParam;
-    
-    private FilterBy(String value, String sql, String field, String defaultParam) {
+  
+    private Filters(String value, String sql, String field, String defaultParam) {
       this.value = value;
       this.sql = sql;
       this.field = field;
       this.defaultParam = defaultParam;
     }
-    
-    @Override
+  
     public String getValue() {
       return value;
     }
-    
-    @Override
-    public String getParam() {
-      return param;
+  
+    public String getDefaultParam() {
+      return defaultParam;
     }
-    
-    public void setParam(String param) {
-      this.param = param;
-    }
-    
-    @Override
+  
     public String getSql() {
       return sql;
     }
-    
-    @Override
+  
     public String getField() {
       return field;
     }
-    
+  
     @Override
     public String toString() {
       return value;
     }
     
   }
-  
-  public enum ExecutionExpansion  {
-    USER;
-  
-    ExecutionExpansion() {
-    }
-    
-    @JsonCreator
-    public ExecutionExpansion fromString(String queryParam) {
-      //executions(offset=0;limit=1;sort_by=id:asc,name:desc;filter_by=name;filter_by=bla)
-      ExecutionExpansion expand = null;
-      //Get the name of the property to expand
-      if (queryParam.contains("(")) {
-        expand = ExecutionExpansion.valueOf(queryParam.substring(0, queryParam.indexOf('(')).toUpperCase());
-      } else {
-        expand = ExecutionExpansion.valueOf(queryParam.toUpperCase());
-      }
-      
-      
-      String[] expansions = queryParam.substring(queryParam.indexOf('(') + 1, queryParam.lastIndexOf(')')).split(";");
-      for (String expansion : expansions) {
-        //Set offset
-        if (expansion.startsWith("offset")) {
-          expand.setOffset(Integer.parseInt(expansion.substring(expansion.indexOf('=') + 1)));
-        }
-        //Set limit
-        if (expansion.startsWith("limit")) {
-          expand.setLimit(Integer.parseInt(expansion.substring(expansion.indexOf('=') + 1)));
-        }
-        //Set sort_by
-        if (expansion.startsWith("sort_by")) {
-          String[] params = expansion.substring(expansion.indexOf('=') + 1).split(",");
-          //Hash table and linked list implementation of the Set interface, with predictable iteration order
-          Set<AbstractFacade.SortBy> sortBys = new LinkedHashSet<>();//make ordered
-          SortBy sort;
-          for (String s : params) {
-            sort = SortBy.fromString(s.trim());
-            sortBys.add(sort);
-          }
-          expand.setSort(sortBys);
-        }
-        
-        //Set filter_by
-        if (expansion.startsWith("filter_by")){
-          expand.addFilter(FilterBy.fromString(expansion.substring(expansion.indexOf('=') + 1)));
-        }
-      }
-      
-      return expand;
-    }
-    
-    private ResourceProperties.Name name;
-    private int offset;
-    private int limit;
-    private Set<AbstractFacade.SortBy> sort;
-    private Set<AbstractFacade.FilterBy> filter;
-    
-    public ResourceProperties.Name getName() {
-      return name;
-    }
-    
-    public void setName(ResourceProperties.Name name) {
-      this.name = name;
-    }
-    
-    public Integer getOffset() {
-      return offset;
-    }
-    
-    public Integer getLimit() {
-      return limit;
-    }
-    
-    public void setOffset(Integer offset) {
-      this.offset = offset;
-    }
-    
-    public void setLimit(Integer limit) {
-      this.limit = limit;
-    }
-    
-    public Set<AbstractFacade.SortBy> getSort() {
-      return sort;
-    }
-    
-    public void setSort(Set<AbstractFacade.SortBy> sort) {
-      this.sort = sort;
-    }
-    
-    public Set<AbstractFacade.FilterBy> getFilter() {
-      return filter;
-    }
-    
-    public void setFilter(Set<AbstractFacade.FilterBy> filter) {
-      this.filter = filter;
-    }
-    public void addFilter(FilterBy filter){
-      if(this.filter == null){
-        this.filter = new HashSet<>();
-      }
-      this.filter.add(filter);
-    }
-  }
-  
 
   //====================================================================================================================
   // Create update remove

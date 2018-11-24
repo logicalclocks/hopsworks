@@ -40,6 +40,7 @@
 package io.hops.hopsworks.rest.application.config;
 
 import io.hops.hopsworks.api.exception.mapper.RESTApiThrowableMapper;
+import io.hops.hopsworks.api.jobs.executions.ExecutionService;
 import io.swagger.annotations.Api;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -58,7 +59,7 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.api.filter.AuthFilter.class);
     register(io.hops.hopsworks.api.filter.JWTAutoRenewFilter.class);
     register(io.hops.hopsworks.api.jwt.JWTResource.class);
-    register(io.hops.hopsworks.api.jobs.ExecutionService.class);
+    register(ExecutionService.class);
     register(io.hops.hopsworks.api.jobs.JobService.class);
     register(io.hops.hopsworks.api.jupyter.JupyterService.class);
     register(io.hops.hopsworks.api.serving.TfServingService.class);

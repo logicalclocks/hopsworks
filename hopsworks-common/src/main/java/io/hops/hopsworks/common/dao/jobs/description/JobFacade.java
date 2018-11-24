@@ -39,10 +39,7 @@
 
 package io.hops.hopsworks.common.dao.jobs.description;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import io.hops.hopsworks.common.api.ResourceProperties;
 import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.jobs.configuration.JobConfiguration;
@@ -60,7 +57,6 @@ import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
@@ -71,17 +67,17 @@ import java.util.logging.Logger;
  */
 @Stateless
 public class JobFacade extends AbstractFacade<Jobs> {
-
+  
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
-
+  
   private static final Logger LOGGER = Logger.getLogger(JobFacade.class.
-      getName());
-
+    getName());
+  
   public JobFacade() {
     super(Jobs.class);
   }
-
+  
   @Override
   protected EntityManager getEntityManager() {
     return em;
@@ -90,23 +86,27 @@ public class JobFacade extends AbstractFacade<Jobs> {
   /**
    * Create a new Jobs instance.
    * <p/>
-   * @param creator The creator of the job.
-   * @param project The project in which this job is defined.
-   * @param config The job configuration file.
+   *
+   * @param creator
+   *   The creator of the job.
+   * @param project
+   *   The project in which this job is defined.
+   * @param config
+   *   The job configuration file.
    * @return
    */
   //This seems to ensure that the entity is actually created and can later 
   //be found using em.find().
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   public Jobs create(Users creator, Project project,
-      JobConfiguration config) {
+    JobConfiguration config) {
     //Argument checking
     if (creator == null || project == null || config == null) {
       throw new IllegalArgumentException("Owner, project and config must be non-null.");
     }
     //First: create a job object
     Jobs job = new Jobs(config, project, creator, config.
-        getAppName());
+      getAppName());
     //Finally: persist it, getting the assigned id.
     em.persist(job);
     em.flush(); //To get the id.
@@ -116,8 +116,11 @@ public class JobFacade extends AbstractFacade<Jobs> {
   
   /**
    * Checks if a job with the given name exists in this project.
-   * @param project project to search.
-   * @param name name of job.
+   *
+   * @param project
+   *   project to search.
+   * @param name
+   *   name of job.
    * @return job if exactly one job with that name was found.
    */
   public Jobs findByProjectAndName(Project project, String name) {
@@ -150,9 +153,9 @@ public class JobFacade extends AbstractFacade<Jobs> {
       LOGGER.log(Level.SEVERE, "Could not delete job:" + job.getId());
       throw ex;
     }
-
+    
   }
-
+  
   public boolean updateJobSchedule(int jobId, ScheduleDTO schedule) {
     boolean status = false;
     try {
@@ -173,14 +176,14 @@ public class JobFacade extends AbstractFacade<Jobs> {
     }
     return status;
   }
-
+  
   public List<Jobs> getRunningJobs(Project project) {
     TypedQuery<Jobs> q = em.createNamedQuery("Execution.findJobsForExecutionInState", Jobs.class);
     q.setParameter("project", project);
     q.setParameter("stateCollection", JobState.getRunningStates());
     return q.getResultList();
   }
-
+  
   public List<Jobs> getRunningJobs(Project project, String hdfsUser) {
     TypedQuery<Jobs> q = em.createNamedQuery("Execution.findUserJobsForExecutionInState", Jobs.class);
     q.setParameter("project", project);
@@ -188,7 +191,7 @@ public class JobFacade extends AbstractFacade<Jobs> {
     q.setParameter("stateCollection", JobState.getRunningStates());
     return q.getResultList();
   }
-
+  
   public List<Jobs> getRunningJobs(Project project, String hdfsUser, List<Integer> jobIds) {
     TypedQuery<Jobs> q = em.createNamedQuery("Execution.findUserJobsIdsForExecutionInState", Jobs.class);
     q.setParameter("jobids", jobIds);
@@ -230,13 +233,13 @@ public class JobFacade extends AbstractFacade<Jobs> {
       return;
     }
     Iterator<? extends AbstractFacade.FilterBy> filterBy = filter.iterator();
-    for (;filterBy.hasNext();) {
+    for (; filterBy.hasNext(); ) {
       setFilterQuery(filterBy.next(), q);
     }
   }
   
   private void setFilterQuery(AbstractFacade.FilterBy filterBy, Query q) {
-    if (filterBy.equals(FilterBy.TYPE) || filterBy.equals(FilterBy.TYPE_NEQ)) {
+    if (filterBy.equals(Filters.TYPE) || filterBy.equals(Filters.TYPE_NEQ)) {
       Set<JobType> jobTypes = getJobTypes(filterBy.getField(), filterBy.getParam());
       q.setParameter(filterBy.getField(), jobTypes);
     }
@@ -244,55 +247,37 @@ public class JobFacade extends AbstractFacade<Jobs> {
   
   private Set<JobType> getJobTypes(String field, String values) {
     String[] jobTypesArr = values.split(",");
-    Set<JobType> jobTypes= new HashSet<>();
+    Set<JobType> jobTypes = new HashSet<>();
     for (String jobTypeStr : jobTypesArr) {
       jobTypes.add(JobType.valueOf(jobTypeStr.trim()));
     }
     return jobTypes;
   }
   
-  public enum SortBy implements AbstractFacade.SortBy {
+  public enum Sorts {
     ID("ID", "j.id ", "ASC"),
     NAME("NAME", "j.name ", "ASC"),
     DATE_CREATED("DATE_CREATED", "j.creationTime ", "DESC"),
     TYPE("TYPE", "j.type ", "ASC");
     
-    @JsonCreator
-    public static SortBy fromString(String param) {
-      String[] sortByParams = param.split(":");
-      SortBy sortBy = SortBy.valueOf(sortByParams[0].toUpperCase());
-      String order = sortByParams.length > 1 ? sortByParams[1].toUpperCase() : sortBy.defaultParam;
-      AbstractFacade.OrderBy orderBy = AbstractFacade.OrderBy.valueOf(order);
-      sortBy.setParam(orderBy);
-      return sortBy;
-    }
-    
     private final String value;
-    private AbstractFacade.OrderBy param;
     private final String sql;
     private final String defaultParam;
     
-    private SortBy(String value, String sql, String defaultParam) {
+    private Sorts(String value, String sql, String defaultParam) {
       this.value = value;
       this.sql = sql;
       this.defaultParam = defaultParam;
     }
     
-    @Override
     public String getValue() {
       return value;
     }
     
-    @Override
-    public OrderBy getParam() {
-      return param;
+    public String getDefaultParam() {
+      return defaultParam;
     }
     
-    public void setParam(OrderBy param) {
-      this.param = param;
-    }
-    
-    @Override
     public String getSql() {
       return sql;
     }
@@ -304,55 +289,37 @@ public class JobFacade extends AbstractFacade<Jobs> {
     
   }
   
-  public enum FilterBy implements AbstractFacade.FilterBy {
-    TYPE ("TYPE", "j.type IN :types ", "types",
+  public enum Filters {
+    TYPE("TYPE", "j.type IN :types ", "types",
       JobType.SPARK.toString().toUpperCase() + "," + JobType.PYSPARK.toString().toUpperCase()),
-    TYPE_NEQ ("TYPE_NEQ", "j.type NOT IN :types ", "types",
+    TYPE_NEQ("TYPE_NEQ", "j.type NOT IN :types ", "types",
       JobType.FLINK.toString().toUpperCase() + "," + JobType.YARN.toString().toUpperCase()
         + "," + JobType.ERASURE_CODING.toString().toUpperCase());
     
-    @JsonCreator
-    public static FilterBy fromString(String param) {
-      String[] filterByParams = param.split(":");
-      FilterBy filterBy = FilterBy.valueOf(filterByParams[0].toUpperCase());
-      String filter = filterByParams.length > 1 ? filterByParams[1].toUpperCase() : filterBy.defaultParam;
-      filterBy.setParam(filter);
-      return filterBy;
-    }
-    
     private final String value;
-    private String param;
     private final String sql;
     private final String field;
     private final String defaultParam;
     
-    private FilterBy(String value, String sql, String field, String defaultParam) {
+    private Filters(String value, String sql, String field, String defaultParam) {
       this.value = value;
       this.sql = sql;
       this.field = field;
       this.defaultParam = defaultParam;
     }
     
-    @Override
     public String getValue() {
       return value;
     }
     
-    @Override
-    public String getParam() {
-      return param;
+    public String getDefaultParam() {
+      return defaultParam;
     }
     
-    public void setParam(String param) {
-      this.param = param;
-    }
-    
-    @Override
     public String getSql() {
       return sql;
     }
     
-    @Override
     public String getField() {
       return field;
     }
@@ -360,119 +327,6 @@ public class JobFacade extends AbstractFacade<Jobs> {
     @Override
     public String toString() {
       return value;
-    }
-    
-  }
-  
-  public enum JobExpansion implements AbstractFacade.Expansion {
-    CREATOR(ResourceProperties.Name.CREATOR),
-    EXECUTIONS(ResourceProperties.Name.EXECUTIONS);
-    
-    @JsonCreator
-    public static JobExpansion fromString(String queryParam) {
-      //executions(offset=0;limit=1;sort_by=id:asc,name:desc;filter_by=name;filter_by=bla)
-      JobExpansion expand = null;
-      //Get the name of the property to expand
-      if (queryParam.contains("(")) {
-        expand = JobExpansion.valueOf(queryParam.substring(0, queryParam.indexOf('(')).toUpperCase());
-        String[] expansions = queryParam.substring(queryParam.indexOf('(') + 1, queryParam.lastIndexOf(')')).split(";");
-        for (String expansion : expansions) {
-          //Set offset
-          if (expansion.startsWith("offset")) {
-            expand.setOffset(Integer.parseInt(expansion.substring(expansion.indexOf('=') + 1)));
-          }
-          //Set limit
-          if (expansion.startsWith("limit")) {
-            expand.setLimit(Integer.parseInt(expansion.substring(expansion.indexOf('=') + 1)));
-          }
-          //Set sort_by
-          if (expansion.startsWith("sort_by")) {
-            String[] params = expansion.substring(expansion.indexOf('=') + 1).split(",");
-            //Hash table and linked list implementation of the Set interface, with predictable iteration order
-            Set<AbstractFacade.SortBy> sortBys = new LinkedHashSet<>();//make ordered
-            ExecutionFacade.SortBy sort;
-            for (String s : params) {
-              sort = ExecutionFacade.SortBy.fromString(s.trim());
-              sortBys.add(sort);
-            }
-            expand.setSort(sortBys);
-          }
-      
-          //Set filter_by
-          if (expansion.startsWith("filter_by")) {
-            expand.addFilter(ExecutionFacade.FilterBy.fromString(expansion.substring(expansion.indexOf('=') + 1)));
-          }
-        }
-      } else {
-        expand = JobExpansion.valueOf(queryParam.toUpperCase());
-      }
-      
-      return expand;
-    }
-  
-    JobExpansion() {
-    }
-  
-    JobExpansion(ResourceProperties.Name value) {
-      this.value = value;
-    }
-  
-    private ResourceProperties.Name value;
-    private int offset;
-    private int limit;
-    private Set<AbstractFacade.SortBy> sort;
-    private Set<AbstractFacade.FilterBy> filter;
-  
-    public ResourceProperties.Name getValue() {
-      return value;
-    }
-  
-    public void setValue(ResourceProperties.Name value) {
-      this.value = value;
-    }
-  
-    public Integer getOffset() {
-      return offset;
-    }
-  
-    public Integer getLimit() {
-      return limit;
-    }
-    
-    public void setOffset(Integer offset) {
-      this.offset = offset;
-    }
-    
-    public void setLimit(Integer limit) {
-      this.limit = limit;
-    }
-  
-    public Set<AbstractFacade.SortBy> getSort() {
-      return sort;
-    }
-  
-    public void setSort(Set<AbstractFacade.SortBy> sort) {
-      this.sort = sort;
-    }
-  
-    public Set<AbstractFacade.FilterBy> getFilter() {
-      return filter;
-    }
-  
-    public void setFilter(Set<AbstractFacade.FilterBy> filter) {
-      this.filter = filter;
-    }
-    
-    public void addFilter(AbstractFacade.FilterBy filter){
-      if(this.filter == null){
-        this.filter = new HashSet<>();
-      }
-      this.filter.add(filter);
-    }
-  
-    @Override
-    public String toString() {
-      return value.toString();
     }
   }
   

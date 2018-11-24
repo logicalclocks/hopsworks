@@ -42,6 +42,7 @@ package io.hops.hopsworks.api.jobs;
 import com.google.common.base.Strings;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
+import io.hops.hopsworks.api.jobs.executions.ExecutionService;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.api.ResourceProperties;
@@ -129,14 +130,14 @@ public class JobService {
     @BeanParam Pagination pagination,
     @BeanParam JobsBeanParam jobsBeanParam,
     @Context UriInfo uriInfo) {
-    JobDTO dto = jobsBuilder.build(uriInfo, new ResourceProperties(ResourceProperties.Name.JOBS,
-      pagination.getOffset(), pagination.getLimit(), jobsBeanParam.getSortBySet(), jobsBeanParam.getFilter(),
-        jobsBeanParam.getExpand()), project);
-
-    GenericEntity<JobDTO> ge
-      = new GenericEntity<JobDTO>(dto) { };
+//    JobDTO dto = jobsBuilder.build(uriInfo, new ResourceProperties(ResourceProperties.Name.JOBS,
+//      pagination.getOffset(), pagination.getLimit(), jobsBeanParam.getSortBySet(), jobsBeanParam.getFilter(),
+//        jobsBeanParam.getExpand()), project);
+//
+//    GenericEntity<JobDTO> ge
+//      = new GenericEntity<JobDTO>(dto) { };
     
-    return Response.ok().entity(ge).build();
+    return Response.ok().build();
   }
   
   @ApiOperation(value = "Get the job with requested ID", response = JobDTO.class)

@@ -37,7 +37,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package io.hops.hopsworks.api.jobs;
+package io.hops.hopsworks.api.jobs.executions;
 
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
@@ -104,7 +104,7 @@ public class ExecutionService {
   
   private Jobs job;
   
-  ExecutionService setJob(Jobs job) {
+  public ExecutionService setJob(Jobs job) {
     this.job = job;
     return this;
   }
@@ -116,7 +116,8 @@ public class ExecutionService {
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response getExecutions(
     @BeanParam Pagination pagination,
-    @BeanParam ExecutionsBeanParam executionsBeanParam,
+    @BeanParam
+      ExecutionsBeanParam executionsBeanParam,
     @ApiParam(value = "comma-separated list of entities to expand in the collection")
     @QueryParam("expand") Set<ExecutionFacade.ExecutionExpansion> expand,
     @Context UriInfo uriInfo) {

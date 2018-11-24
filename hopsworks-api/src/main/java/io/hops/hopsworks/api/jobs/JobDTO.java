@@ -15,6 +15,7 @@
  */
 package io.hops.hopsworks.api.jobs;
 
+import io.hops.hopsworks.api.jobs.executions.ExecutionDTO;
 import io.hops.hopsworks.api.user.UserDTO;
 import io.hops.hopsworks.common.api.RestDTO;
 import io.hops.hopsworks.common.jobs.configuration.JobConfiguration;

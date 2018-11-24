@@ -15,6 +15,7 @@
  */
 package io.hops.hopsworks.api.jobs;
 
+import io.hops.hopsworks.api.jobs.executions.ExecutionsBuilder;
 import io.hops.hopsworks.api.user.UsersBuilder;
 import io.hops.hopsworks.common.api.ResourceProperties;
 import io.hops.hopsworks.common.dao.AbstractFacade;

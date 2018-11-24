@@ -42,7 +42,7 @@ public class ResourceProperties {
   }
 
   public ResourceProperties(Name resourceName, Integer offset, Integer limit, Set<? extends AbstractFacade.SortBy> sort
-      , Set<? extends AbstractFacade.FilterBy> filter, String expandParam) {
+      , Set<? extends AbstractFacade.FilterBy> filter, Set<Expansions> expandParam) {
     properties = new ArrayList<>();
     //Resource that was requested
     ResourceProperty resource = new ResourceProperty()
