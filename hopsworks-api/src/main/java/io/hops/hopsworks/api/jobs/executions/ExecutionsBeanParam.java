@@ -52,7 +52,7 @@ public class ExecutionsBeanParam {
     }
     String[] params = param.split(",");
     //Hash table and linked list implementation of the Set interface, with predictable iteration order
-    Set<SortBy> sortBys = new LinkedHashSet<>();//make orderd
+    Set<SortBy> sortBys = new LinkedHashSet<>();//make ordered
     SortBy sort;
     for (String s : params) {
       sort = new SortBy(s.trim());

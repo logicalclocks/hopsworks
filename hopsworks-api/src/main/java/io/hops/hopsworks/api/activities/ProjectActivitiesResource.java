@@ -19,14 +19,14 @@ import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.util.Pagination;
+import io.hops.hopsworks.common.api.Resource;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.exception.ActivitiesException;
 import io.hops.hopsworks.common.exception.ProjectException;
 import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -36,11 +36,12 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -97,14 +98,17 @@ public class ProjectActivitiesResource {
   public Response findAllByProject(
       @BeanParam Pagination pagination,
       @BeanParam ActivitiesBeanParam activitiesBeanParam,
-      @QueryParam("expand") String expand,
       @Context UriInfo uriInfo) throws ProjectException {
-    Project project = getProject(); //test if project exist 
-//    ResourceProperties resourceProperties = new ResourceProperties(ResourceProperties.Name.ACTIVITIES, pagination.
-//        getOffset(), pagination.getLimit(), activitiesBeanParam.getSortBySet(), activitiesBeanParam.getFilter(),
-//        expand);
-//    ActivitiesDTO activitiesDTO = activitiesBuilder.buildItems(uriInfo, resourceProperties, project);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
+    Project project = getProject(); //test if project exist
+    Resource resource = new Resource(Resource.Name.ACTIVITIES);
+    resource.setOffset(pagination.getOffset());
+    resource.setLimit(pagination.getLimit());
+    resource.setSort(activitiesBeanParam.getSortBySet());
+    resource.setFilter(activitiesBeanParam.getFilter());
+    resource.setExpansions(activitiesBeanParam.getResources());
+  
+    ActivitiesDTO activitiesDTO = activitiesBuilder.buildItems(uriInfo, resource, project);
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(activitiesDTO).build();
   }
 
   @GET
@@ -115,12 +119,13 @@ public class ProjectActivitiesResource {
       allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response findAllById(
       @PathParam("activityId") Integer activityId,
-      @QueryParam("expand") String expand,
+      @BeanParam ActivitiesBeanParam activitiesBeanParam,
       @Context UriInfo uriInfo) throws ProjectException, ActivitiesException {
-//    Project project = getProject(); //test if project exist
-//    ResourceProperties resourceProperties = new ResourceProperties(ResourceProperties.Name.ACTIVITIES, expand);
-//    ActivitiesDTO activitiesDTO = activitiesBuilder.build(uriInfo, resourceProperties, project, activityId);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
+    Project project = getProject(); //test if project exist
+    Resource resource = new Resource(Resource.Name.ACTIVITIES);
+    resource.setExpansions(activitiesBeanParam.getResources());
+    ActivitiesDTO activitiesDTO = activitiesBuilder.build(uriInfo, resource, project, activityId);
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(activitiesDTO).build();
   }
 
 }

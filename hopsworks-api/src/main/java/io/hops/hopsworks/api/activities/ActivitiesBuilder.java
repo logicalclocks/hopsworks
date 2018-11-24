@@ -43,13 +43,12 @@ public class ActivitiesBuilder {
   @EJB
   private ActivityFacade activityFacade;
   
-  public ActivitiesDTO uri(ActivitiesDTO dto, UriInfo uriInfo, Activity activity) {
-    dto.setHref(uriInfo.getAbsolutePathBuilder()
-      .build());
+  public ActivitiesDTO uri(ActivitiesDTO dto, UriInfo uriInfo) {
+    dto.setHref(uriInfo.getAbsolutePathBuilder().build());
     return dto;
   }
   
-  public ActivitiesDTO uriItem(ActivitiesDTO dto, UriInfo uriInfo, Activity activity) {
+  public ActivitiesDTO uri(ActivitiesDTO dto, UriInfo uriInfo, Activity activity) {
     dto.setHref(uriInfo.getBaseUriBuilder()
       .path(Resource.Name.ACTIVITIES.toString())
       .path(Integer.toString(activity.getId()))
@@ -86,7 +85,7 @@ public class ActivitiesBuilder {
   
   public ActivitiesDTO buildItem(UriInfo uriInfo, Resource resource, Activity activity) {
     ActivitiesDTO dto = new ActivitiesDTO();
-    uriItem(dto, uriInfo, activity);
+    uri(dto, uriInfo, activity);
     expand(dto, resource);
     if (dto.isExpand()) {
       dto.setActivity(activity.getActivity());
@@ -171,16 +170,17 @@ public class ActivitiesBuilder {
     return items(dto, uriInfo, property, activities, true);
   }
   
-  private ActivitiesDTO items(ActivitiesDTO dto, UriInfo uriInfo, Resource property,
+  private ActivitiesDTO items(ActivitiesDTO dto, UriInfo uriInfo, Resource resource,
     Project project) {
     List<Activity> activities;
-    if (property.getOffset() != null || property.getLimit() != null || property.getFilter() != null) {
-      activities = activityFacade.findAllByProject(property.getOffset(), property.getLimit(), property.getFilter(),
-        property.getSort(), project);
-      return items(dto, uriInfo, property, activities, false);
+    if (resource.getOffset() != null || resource.getLimit() != null || resource.getSort() != null
+      || resource.getFilter() != null) {
+      activities = activityFacade.findAllByProject(resource.getOffset(), resource.getLimit(), resource.getFilter(),
+        resource.getSort(), project);
+      return items(dto, uriInfo, resource, activities, false);
     }
     activities = activityFacade.getAllActivityByProject(project);
-    return items(dto, uriInfo, property, activities, true);
+    return items(dto, uriInfo, resource, activities, true);
   }
   
   private ActivitiesDTO items(ActivitiesDTO dto, UriInfo uriInfo, Resource property,

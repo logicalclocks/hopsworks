@@ -15,7 +15,10 @@
  */
 package io.hops.hopsworks.api.activities;
 
+import io.hops.hopsworks.common.api.Resource;
 import io.swagger.annotations.ApiParam;
+
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import javax.ws.rs.QueryParam;
@@ -23,17 +26,18 @@ import javax.ws.rs.QueryParam;
 public class ActivitiesBeanParam {
 
   @QueryParam("sort_by")
-  @ApiParam(required = false, 
-      value = "ex. sort_by=ID:asc,DATE_CREATED:desc",
+  @ApiParam(value = "ex. sort_by=ID:asc,DATE_CREATED:desc",
       allowableValues = "id:asc, id:desc, date_created:asc, date_created:desc, flag:asc, flag:desc")
   private String sortBy;
   private final Set<SortBy> sortBySet;
   @QueryParam("filter_by")
-  @ApiParam(required = false,
-      value = "ex. filter_by=flag:dataset",
+  @ApiParam(value = "ex. filter_by=flag:dataset",
       allowableValues = "flag:project, flag:dataset",
       allowMultiple = true)
   private Set<FilterBy> filter;
+  @QueryParam("expand")
+  @ApiParam(value = "ex. expand=creator")
+  private Set<ActivityExpansions> expansions;
 
   public ActivitiesBeanParam(
       @QueryParam("sort_by") String sortBy, 
@@ -50,7 +54,7 @@ public class ActivitiesBeanParam {
     }
     String[] params = param.split(",");
     //Hash table and linked list implementation of the Set interface, with predictable iteration order
-    Set<SortBy> sortBys = new LinkedHashSet<>();//make orderd
+    Set<SortBy> sortBys = new LinkedHashSet<>();//make ordered
     SortBy sort;
     for (String s : params) {
       sort = new SortBy(s.trim());
@@ -77,6 +81,22 @@ public class ActivitiesBeanParam {
 
   public Set<SortBy> getSortBySet() {
     return sortBySet;
+  }
+  
+  public Set<ActivityExpansions> getExpansions() {
+    return expansions;
+  }
+  
+  public void setExpansions(Set<ActivityExpansions> expansions) {
+    this.expansions = expansions;
+  }
+  
+  public Set<Resource> getResources(){
+    Set<Resource> expansions = new HashSet<>();
+    for(ActivityExpansions activityExpansion : this.expansions){
+      expansions.add(activityExpansion.getResource());
+    }
+    return expansions;
   }
 
 }
