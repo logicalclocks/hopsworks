@@ -114,9 +114,11 @@ public class Resource {
     if(this.name == name){
       return true;
     }
-    for(Resource expansion : expansions){
-      if(expansion.name == name){
-        return true;
+    if(expansions != null && !expansions.isEmpty()) {
+      for (Resource expansion : expansions) {
+        if (expansion.name == name) {
+          return true;
+        }
       }
     }
     return false;

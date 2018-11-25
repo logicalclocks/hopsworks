@@ -177,12 +177,13 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
     switch (Filters.valueOf(filterBy.getValue())) {
       case STATE:
       case STATE_NEQ:
-        Set<JobState> jobTypes = getJobStates(filterBy.getField(), filterBy.getParam());
+        Set<JobState> jobTypes = new HashSet<>(getJobStates(filterBy.getField(), filterBy.getParam()));
         q.setParameter(filterBy.getField(), jobTypes);
         break;
       case FINALSTATUS:
       case FINALSTATUS_NEQ:
-        Set<JobFinalStatus> jobFinalStatuses = getJobFinalStatus(filterBy.getField(), filterBy.getParam());
+        Set<JobFinalStatus> jobFinalStatuses = new HashSet<>(getJobFinalStatus(filterBy.getField(),
+          filterBy.getParam()));
         q.setParameter(filterBy.getField(), jobFinalStatuses);
         break;
       default:
@@ -243,7 +244,7 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
   
   public enum Filters {
     STATE ("STATE", "e.state IN :states ", "states", ""),
-    STATE_NEQ ("STATE_NEQ", "e.state NOT IN :states ", "states", ""),
+    STATE_NEQ ("STATE_NEQ", "e.state NOT IN :states_neq ", "states_neq", ""),
     FINALSTATUS ("FINALSTATUS", "e.finalStatus IN :finalstatuses ", "finalstatuses", ""),
     FINALSTATUS_NEQ ("FINALSTATUS_NEQ", "e.finalStatus NOT IN :finalstatuses ", "finalstatuses", ""),
     SUBMISSION_TIME("SUBMISSION_TIME", "e.submissionTime = :submissionTime ", "submissionTime", "");

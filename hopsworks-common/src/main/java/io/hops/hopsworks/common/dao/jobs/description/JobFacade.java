@@ -239,9 +239,14 @@ public class JobFacade extends AbstractFacade<Jobs> {
   }
   
   private void setFilterQuery(AbstractFacade.FilterBy filterBy, Query q) {
-    if (filterBy.equals(Filters.TYPE) || filterBy.equals(Filters.TYPE_NEQ)) {
-      Set<JobType> jobTypes = getJobTypes(filterBy.getField(), filterBy.getParam());
-      q.setParameter(filterBy.getField(), jobTypes);
+    switch (Filters.valueOf(filterBy.getValue())) {
+      case TYPE:
+      case TYPE_NEQ:
+        Set<JobType> jobTypes = new HashSet<>(getJobTypes(filterBy.getField(), filterBy.getParam()));
+        q.setParameter(filterBy.getField(), jobTypes);
+        break;
+      default:
+        break;
     }
   }
   
@@ -292,7 +297,7 @@ public class JobFacade extends AbstractFacade<Jobs> {
   public enum Filters {
     TYPE("TYPE", "j.type IN :types ", "types",
       JobType.SPARK.toString().toUpperCase() + "," + JobType.PYSPARK.toString().toUpperCase()),
-    TYPE_NEQ("TYPE_NEQ", "j.type NOT IN :types ", "types",
+    TYPE_NEQ("TYPE_NEQ", "j.type NOT IN :types_neq ", "types_neq",
       JobType.FLINK.toString().toUpperCase() + "," + JobType.YARN.toString().toUpperCase()
         + "," + JobType.ERASURE_CODING.toString().toUpperCase());
     
