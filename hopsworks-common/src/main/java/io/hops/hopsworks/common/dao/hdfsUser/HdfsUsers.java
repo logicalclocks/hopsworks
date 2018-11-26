@@ -68,9 +68,6 @@ import org.codehaus.jackson.annotate.JsonIgnore;
           = "SELECT h FROM HdfsUsers h"),
   @NamedQuery(name = "HdfsUsers.findProjectUsers",
       query = "SELECT h FROM HdfsUsers h WHERE h.name LIKE CONCAT(:name, '\\_\\_%')"),
-  @NamedQuery(name = "HdfsUsers.delete",
-          query
-          = "DELETE FROM HdfsUsers h WHERE h.id =:id"),
   @NamedQuery(name = "HdfsUsers.findByName",
           query
           = "SELECT h FROM HdfsUsers h WHERE h.name = :name")})
@@ -155,11 +152,12 @@ public class HdfsUsers implements Serializable {
     return hdfsGroupsCollection;
   }
 
-  public void setHdfsGroupsCollection(
-          Collection<HdfsGroups> hdfsGroupsCollection) {
-    this.hdfsGroupsCollection = hdfsGroupsCollection;
+  public boolean inGroup(HdfsGroups group){
+    if(hdfsGroupsCollection == null || group == null)
+      return false;
+    return hdfsGroupsCollection.contains(group);
   }
-
+  
   @Override
   public int hashCode() {
     int hash = 0;

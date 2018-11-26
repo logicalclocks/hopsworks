@@ -439,7 +439,7 @@ public class ProjectService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response updateProject(ProjectDTO projectDTO, @PathParam("projectId") Integer id,
       @Context SecurityContext sc) throws ProjectException, DatasetException, HopsSecurityException,
-      ServiceException {
+      ServiceException, UserException {
 
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     Users user = jWTHelper.getUserPrincipal(sc);

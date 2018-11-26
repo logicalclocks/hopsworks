@@ -314,9 +314,6 @@ public class HopsUtils {
       dfso.setOwner(projectRemoteFSDir, owner, owner);
       createdDir = true;
     }
-    if (createdDir) {
-      dfso.flushCache(owner, owner);
-    }
     
     return projectRemoteFSDir.toString();
   }

@@ -123,7 +123,7 @@ public class DelaDatasetController {
     return dataset;
   }
 
-  public void delete(Project project, Dataset dataset) throws DelaException {
+  public void delete(Project project, Dataset dataset) throws DelaException, DatasetException {
     if (dataset.isShared()) {
       //remove the entry in the table that represents shared ds
       //but leave the dataset in hdfs b/c the user does not have the right to delete it.

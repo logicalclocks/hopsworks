@@ -1034,9 +1034,7 @@ public class CertificateMaterializer {
             writeToHDFS(dfso, passwordFile, new String(material.getPassword()).getBytes());
             dfso.setOwner(passwordFile, ownerName, groupName);
             dfso.setPermission(passwordFile, permissions);
-  
-            // Cache should be flushed otherwise NN will raise permission exceptions
-            dfso.flushCache(ownerName, groupName);
+            
           } finally {
             if (dfso != null) {
               distributedFsService.closeDfsClient(dfso);
