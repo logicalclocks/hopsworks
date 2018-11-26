@@ -57,6 +57,8 @@ angular.module('hopsWorksApp')
             self.projectId = $routeParams.projectID;
             self.jobs; // Will contain all the jobs.
             self.runningInfo; //Will contain run information
+            self.runningStates = ['INITIALIZING', 'RUNNING', 'ACCEPTED', 'NEW', 'NEW_SAVING', 'SUBMITTED',
+                  'STARTING_APP_MASTER', 'AGGREGATING_LOGS'];
             self.buttonArray = [];
             self.workingArray = [];
             self.jobFilter = "";
@@ -197,10 +199,10 @@ angular.module('hopsWorksApp')
             var getAllJobs = function () {
               JobService.getAllJobsInProject(self.projectId).then(
                       function (success) {
-                        self.jobs = success.data;
-                        angular.forEach(self.jobs, function (job, key) {
-                          job.showing = false;
-                        });
+                          self.jobs = success.data.items;
+                          angular.forEach(self.jobs, function (job, key) {
+                              job.showing = false;
+                          });
                       }, function (error) {
                       if (typeof error.data.usrMsg !== 'undefined') {
                           growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
@@ -225,29 +227,45 @@ angular.module('hopsWorksApp')
               }
             };
 
-            /**
-             * Retrieve status for all jobs of this project.
-             * @returns {undefined}
-             */
-            self.getRunStatus = function () {
+          /**
+           * Retrieve status for all jobs of this project.
+           * @returns {undefined}
+           */
+          self.getRunStatus = function () {
               JobService.getRunStatus(self.projectId).then(
-                      function (success) {
-                        self.runningInfo = success.data;
-                        angular.forEach(self.jobs, function (temp, key) {
-                          if (typeof self.runningInfo['' + temp.id] !== "undefined") {
-                            if (!self.runningInfo['' + temp.id].running) {
-                              self.buttonArray[temp.id] = false;
-                            }
+                  function (success) {
+                      var jobLatestExecutions = success.data.items;
+                      //Construct a map of <jobId,execInfo>
+                      self.runningInfo = {};
+                      angular.forEach(jobLatestExecutions, function (temp, key) {
+                          var jobId = temp.id;
+                          angular.forEach(temp.executions.items, function (temp, key) {
+                              var running = temp.state in self.runningStates;
+                              self.runningInfo[jobId] = {
+                                  "running": running,
+                                  "state": temp.state,
+                                  "finalStatus": temp.finalStatus,
+                                  "progress": temp.progress,
+                                  "duration": temp.duration,
+                                  "submissionTime": temp.submissionTime
+                              };
+                          });
+                      });
+                      angular.forEach(self.jobs, function (temp, key) {
+                          if (typeof self.runningInfo[temp.id] !== "undefined") {
+                              if (!self.runningInfo[temp.id].running) {
+                                  self.buttonArray[temp.id] = false;
+                              }
                           }
-                        });
-                      }, function (error) {
+                      });
+                  }, function (error) {
                       if (typeof error.data.usrMsg !== 'undefined') {
                           growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
                       } else {
                           growl.error("", {title: error.data.errorMsg, ttl: 8000});
                       }
-              });
-            };
+                  });
+          };
 
             /**
              * Get data from runningInfo and update jobs.
@@ -388,12 +406,17 @@ angular.module('hopsWorksApp')
 
             };
 
-            self.showLogs = function (jobId) {
+            self.showLogs = function (jobName) {
               self.fetchingLogs = 1;
-              JobService.showLog(self.projectId, jobId).then(
-                  function (success) {
-                    self.logset = success.data.logset;
-                    self.fetchingLogs = 0;
+                JobService.getAllExecutions(self.projectId, jobName).then(
+                    function (success) {
+                        self.logset = [];
+                        angular.forEach(success.data.items, function (temp, key) {
+                            var entry = {"jobName": jobName, "executionId": temp.id,  "appId":temp.appId, "time": temp.submissionTime};
+                            self.logset.push(entry);
+                        });
+
+                        self.fetchingLogs = 0;
                   }, function (error) {
                     self.fetchingLogs = 0;
                       if (typeof error.data.usrMsg !== 'undefined') {
@@ -404,28 +427,27 @@ angular.module('hopsWorksApp')
               });
             };
 
-            self.getLog = function (job, type) {
-              if (!(job[type] === undefined || job[type] === null)) {
-                return;
-              }
-              self.loadingLog = 1;
-              if (job.appId !== "") {
-                JobService.getLog(self.projectId, job.appId, type).then(
-                    function (success) {
-                      var logContent = success.data;
-                      if (logContent[type] !== undefined) {
-                        job[type] = logContent[type];
-                      }
-                      if (logContent[type + 'Path'] !== undefined) {
-                        job[type + 'Path'] = logContent[type + 'Path'];
-                      }
-                      if (logContent['retriableErr'] !== undefined) {
-                        job['retriableErr'] = logContent['retriableErr'];
-                      }
-                      if (logContent['retriableOut'] !== undefined) {
-                        job['retriableOut'] = logContent['retriableOut'];
-                      }
-                      self.loadingLog = 0;
+              self.getLog = function (logsetEntry, type) {
+                  self.loadingLog = 1;
+                  JobService.getLog(self.projectId, logsetEntry.jobName, logsetEntry.executionId, type).then(
+                      function (success) {
+                          var logContent = success.data;
+                          if (logContent['log'] !== undefined) {
+                              logsetEntry['log'+type] = logContent['log'];
+                          }
+                          if (logContent['type'] !== undefined) {
+                              logsetEntry['type'] = logContent['type'];
+                          }
+                          if (logContent[type + 'Path'] !== undefined) {
+                              logsetEntry[type + 'Path'] = logContent[type + 'Path'];
+                          }
+                          if (logContent['retriableErr'] !== undefined) {
+                              logsetEntry['retriableErr'] = logContent['retriableErr'];
+                          }
+                          if (logContent['retriableOut'] !== undefined) {
+                              logsetEntry['retriableOut'] = logContent['retriableOut'];
+                          }
+                          self.loadingLog = 0;
                     }, function (error) {
                         self.loadingLog = 0;
                         if (typeof error.data.usrMsg !== 'undefined') {
@@ -434,34 +456,6 @@ angular.module('hopsWorksApp')
                             growl.error("", {title: error.data.errorMsg, ttl: 8000});
                         }
                 });
-            } else if(job.jobId !== "") {
-              //getLogByJobIdAndSubmissionTime
-                JobService.getLogByJobIdAndSubmissionTime(self.projectId, job.jobId, job.time, type).then(
-                    function (success) {
-                      var logContent = success.data;
-                      if (logContent[type] !== undefined) {
-                        job[type] = logContent[type];
-                      }
-                      if (logContent[type + 'Path'] !== undefined) {
-                        job[type + 'Path'] = logContent[type + 'Path'];
-                      }
-                      if (logContent['retriableErr'] !== undefined) {
-                        job['retriableErr'] = logContent['retriableErr'];
-                      }
-                      if (logContent['retriableOut'] !== undefined) {
-                        job['retriableOut'] = logContent['retriableOut'];
-                      }
-                      self.loadingLog = 0;
-                    }, function (error) {
-                      self.loadingLog = 0;
-                        if (typeof error.data.usrMsg !== 'undefined') {
-                            growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
-                        } else {
-                            growl.error("", {title: error.data.errorMsg, ttl: 8000});
-                        }
-                });
-            }
-
             };
 
             self.retryLogs = function (appId, type) {
@@ -591,6 +585,11 @@ angular.module('hopsWorksApp')
               return ret;
             };
 
+            self.toTitleCase = function(str) {
+                return str.replace(/\w\S*/g, function(txt){
+                    return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+                });
+            }
 
             var init = function () {
               var stored = StorageService.contains(self.projectId + "_newjob");

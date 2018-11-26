@@ -51,7 +51,7 @@ angular.module('hopsWorksApp')
                * @returns {unresolved} A list of job objects.
                */
               getAllJobsInProject: function (projectId) {
-                return $http.get('/api/project/' + projectId + '/jobs');
+                return $http.get('/api/project/' + projectId + '/jobs?expand=creator');
               },
               /**
                * Get the details of the job with given ID, under the given project.
@@ -111,11 +111,11 @@ angular.module('hopsWorksApp')
               /**
                * Get all the registered executions for the given job.
                * @param {type} projectId
-               * @param {type} jobId
+               * @param {type} jobName
                * @returns {undefined}
                */
-              getAllExecutions: function (projectId, jobId) {
-                return $http.get('/api/project/' + projectId + '/jobs/' + jobId + '/executions');
+              getAllExecutions: function (projectId, jobName) {
+                return $http.get('/api/project/' + projectId + '/jobs/' + jobName + '/executions');
               },
               /**
                * Get the configuration object for the given job.
@@ -227,7 +227,7 @@ angular.module('hopsWorksApp')
                * @returns {unresolved}
                */
               getRunStatus: function (projectId) {
-                return $http.get('/api/project/' + projectId + '/jobs/running');
+                return $http.get('/api/project/' + projectId + '/jobs?expand=executions(offset=0;limit=1;sort_by=id:desc)');
               },
               /**
                * Retrieve the logs associated with a certain job.
@@ -241,24 +241,15 @@ angular.module('hopsWorksApp')
               /**
                * Get the content of log for the appId
                * @param {type} projectId
-               * @param {type} jobId
+               * @param {type} jobName
+               * @param {type} executionId
                * @param {type} type
                * @returns {unresolved}
                */
-              getLog: function (projectId, jobId, type) {
-                return $http.get('/api/project/' + projectId + '/jobs/getLog/' + jobId + '/' + type);
+              getLog: function (projectId, jobName, executionId, type) {
+                  return $http.get('/api/project/' + projectId + '/jobs/' + jobName + '/executions/' + executionId+ '/log/' + type);
               },
-              /**
-               * Get log by job id and submission time if app id not available.
-               * @param {type} projectId
-               * @param {type} jobId
-               * @param {type} submissionTime
-               * @param {type} type
-               * @returns {unresolved}
-               */
-              getLogByJobIdAndSubmissionTime: function (projectId, jobId, submissionTime, type) {
-                return $http.get('/api/project/' + projectId + '/jobs/getLogByJobId/' + jobId + '/' + submissionTime + '/' + type);
-              },
+
               /**
                * Retrieve the logs associated to a certain job.
                * @param {type} projectId

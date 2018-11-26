@@ -290,13 +290,13 @@ public class ExecutionController {
           try (InputStream input = dfso.open(hdfsPath)) {
             message = IOUtils.toString(input, "UTF-8");
           }
-          dto.setMessage(message.isEmpty() ? "No information." : message);
+          dto.setLog(message.isEmpty() ? "No information." : message);
           if (message.isEmpty() && execution.getState().isFinalState() && execution.getAppId() != null && status) {
             dto.setRetriable(retriable);
           }
         }
       } else {
-        dto.setMessage("No log available");
+        dto.setLog("No log available");
         if (execution.getState().isFinalState() && execution.getAppId() != null && status) {
           dto.setRetriable(retriable);
         }

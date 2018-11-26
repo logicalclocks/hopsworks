@@ -20,7 +20,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class JobLogDTO {
   
-  private String message;
+  private String log;
   private String path;
   private LogType type;
   private Retriable retriable;
@@ -32,12 +32,12 @@ public class JobLogDTO {
     this.type = type;
   }
   
-  public String getMessage() {
-    return message;
+  public String getLog() {
+    return log;
   }
   
-  public void setMessage(String message) {
-    this.message = message;
+  public void setLog(String message) {
+    this.log = message;
   }
   
   public String getPath() {

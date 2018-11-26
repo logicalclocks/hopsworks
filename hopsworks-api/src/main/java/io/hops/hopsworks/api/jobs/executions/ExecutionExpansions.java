@@ -1,5 +1,6 @@
 package io.hops.hopsworks.api.jobs.executions;
 
+import io.hops.hopsworks.api.user.UserResource;
 import io.hops.hopsworks.common.api.Expansions;
 import io.hops.hopsworks.common.api.Resource;
 
@@ -17,7 +18,7 @@ public class ExecutionExpansions implements Expansions {
     
     switch (name) {
       case USER:
-        resource = new ExecutionResource(name, queryParam);
+        resource = new UserResource(name, queryParam);
         break;
       default:
         break;

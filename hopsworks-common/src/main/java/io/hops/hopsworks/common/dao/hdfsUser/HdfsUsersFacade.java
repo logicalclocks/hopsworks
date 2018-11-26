@@ -93,7 +93,7 @@ public class HdfsUsersFacade extends AbstractFacade<HdfsUsers> {
       }
     } catch (NoResultException e) {
     }
-    return users;    
+    return users;
   }
  
   public void persist(HdfsUsers user) {

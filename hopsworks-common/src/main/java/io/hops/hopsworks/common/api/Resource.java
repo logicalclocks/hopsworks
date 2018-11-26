@@ -44,7 +44,7 @@ public class Resource {
       String[] queryPropsArr = queryParam.substring(queryParam.indexOf('(') + 1, queryParam.lastIndexOf(')')).split(
         ";");
       for (String queryProp : queryPropsArr) {
-        String queryName = queryProp.substring(0, queryProp.indexOf('=') + 1);
+        String queryName = queryProp.substring(0, queryProp.indexOf('='));
         String queryVal = queryProp.substring(queryProp.indexOf('=') + 1);
         //Set offset
         switch (queryName) {
