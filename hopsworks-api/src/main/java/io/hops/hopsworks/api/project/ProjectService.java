@@ -230,35 +230,24 @@ public class ProjectService {
   }
 
   @GET
-  @Path("/getMoreInfo/{type}/{projectId}")
+  @Path("/getMoreInfo/proj/{projectId}")
   @Produces(MediaType.APPLICATION_JSON)
   public Response getMoreInfo(@PathParam("type") String type, @PathParam("projectId") Integer id) throws
-      ProjectException, DatasetException {
+      ProjectException {
     MoreInfoDTO info = null;
+
     if (id != null) {
       String errorMsg;
-      switch (type) {
-        case "proj":
-          Project proj = projectFacade.find(id);
-          if (proj == null) {
-            errorMsg = "Project with id <" + id
-                + "> could not be found";
-            LOGGER.log(Level.WARNING, errorMsg);
-            throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + id);
-          }
-          info = new MoreInfoDTO(proj);
-          break;
-        case "ds":
-          info = datasetInfo(id);
-          if (info == null) {
-            errorMsg = "Dataset with id <" + id
-                + "> could not be found";
-            LOGGER.log(Level.WARNING, errorMsg);
-            throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_FOUND, Level.FINE, "datasetId: " + id);
-          }
-          break;
+      Project proj = projectFacade.find(id);
+      if (proj == null) {
+        errorMsg = "Project with id <" + id
+            + "> could not be found";
+        LOGGER.log(Level.WARNING, errorMsg);
+        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + id);
       }
+      info = new MoreInfoDTO(proj);
     }
+
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
         info).build();
   }
@@ -267,21 +256,12 @@ public class ProjectService {
   @Path("{projectId}/getMoreInfo/{type}/{inodeId}")
   @Produces(MediaType.APPLICATION_JSON)
   public Response getMoreInfo(@PathParam("projectId") Integer projectId, @PathParam("type") String type,
-      @PathParam("inodeId") Integer id) throws ProjectException, DatasetException {
+      @PathParam("inodeId") Long id) throws ProjectException, DatasetException {
     MoreInfoDTO info = null;
     if (id != null) {
       String errorMsg;
       switch (type) {
-        case "proj":
-          Project proj = projectFacade.find(id);
-          if (proj == null) {
-            errorMsg = "Project with id <" + id
-                + "> could not be found";
-            LOGGER.log(Level.WARNING, errorMsg);
-            throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + id);
-          }
-          info = new MoreInfoDTO(proj);
-          break;
+        // This switch is probably not needed, but I'll keep it for compatibility reason
         case "ds":
         case "inode":
           info = inodeInfo(id, projectId);
@@ -301,7 +281,7 @@ public class ProjectService {
   @GET
   @Path("/readme/byInodeId/{inodeId}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getReadmeByInodeId(@PathParam("inodeId") Integer inodeId) throws DatasetException {
+  public Response getReadmeByInodeId(@PathParam("inodeId") Long inodeId) throws DatasetException {
     if (inodeId == null) {
       throw new IllegalArgumentException("No inodeId provided.");
     }
@@ -328,7 +308,7 @@ public class ProjectService {
         filePreviewDTO).build();
   }
 
-  private MoreInfoDTO datasetInfo(Integer inodeId) {
+  private MoreInfoDTO datasetInfo(Long inodeId) {
     Inode inode = inodes.findById(inodeId);
     if (inode == null) {
       return null;
@@ -345,7 +325,7 @@ public class ProjectService {
     return info;
   }
 
-  private MoreInfoDTO inodeInfo(Integer inodeId, Integer projectId) {
+  private MoreInfoDTO inodeInfo(Long inodeId, Integer projectId) {
     Inode inode = inodes.findById(inodeId);
     if (inode == null) {
       return null;
@@ -366,7 +346,7 @@ public class ProjectService {
   @GET
   @Path("getDatasetInfo/{inodeId}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getDatasetInfo(@PathParam("inodeId") Integer inodeId) throws DatasetException {
+  public Response getDatasetInfo(@PathParam("inodeId") Long inodeId) throws DatasetException {
     Inode inode = inodes.findById(inodeId);
     Inode parent = inodes.findParent(inode);
     Project proj = projectFacade.findByName(parent.getInodePK().getName());
@@ -392,7 +372,7 @@ public class ProjectService {
   @Path("{projectId}/getInodeInfo/{inodeId}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.ANYONE})
-  public Response getDatasetInfo(@PathParam("projectId") Integer projectId, @PathParam("inodeId") Integer inodeId) 
+  public Response getDatasetInfo(@PathParam("projectId") Integer projectId, @PathParam("inodeId") Long inodeId)
       throws ProjectException, DatasetException {
     Inode inode = inodes.findById(inodeId);
     if (inode == null) {
@@ -685,7 +665,7 @@ public class ProjectService {
   public Response quotasByProjectID(
       @PathParam("projectId") Integer id,
       @PathParam("projectName") String projectName,
-      @PathParam("inodeId") Integer dsId,
+      @PathParam("inodeId") Long dsId,
       @Context SecurityContext sc) throws ProjectException, DatasetException {
 
     Project destProj = projectController.findProjectById(id);
@@ -698,7 +678,7 @@ public class ProjectService {
           + ", inodeId:" + dsId);
     }
 
-    if (ds.isPublicDs() == false) {
+    if (!ds.isPublicDs()) {
       throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_PUBLIC, Level.FINE, "datasetId: " + ds.getId());
     }
 
@@ -812,6 +792,7 @@ public class ProjectService {
     piaFacade.mergeUpdate(pia, projectId);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
+
 
   @GET
   @Path("{projectId}/pia")

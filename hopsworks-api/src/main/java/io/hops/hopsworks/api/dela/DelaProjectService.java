@@ -300,7 +300,7 @@ public class DelaProjectService {
     return dataset;
   }
 
-  private Inode getInode(Integer inodeId) throws DelaException {
+  private Inode getInode(Long inodeId) throws DelaException {
     if (inodeId == null) {
       throw new DelaException(RESTCodes.DelaErrorCode.ILLEGAL_ARGUMENT,  Level.FINE, DelaException.Source.LOCAL,
         "inodeId was not provided.");

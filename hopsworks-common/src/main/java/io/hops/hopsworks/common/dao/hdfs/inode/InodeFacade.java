@@ -188,7 +188,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
     if(i == null){
       throw new IllegalArgumentException("Inode must be provided.");
     }
-    int id = i.getInodePK().getParentId();
+    long id = i.getInodePK().getParentId();
     TypedQuery<Inode> q = em.createNamedQuery("Inode.findById", Inode.class);
     q.setParameter("id", id);
     try {
@@ -204,7 +204,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
    * @param id
    * @return
    */
-  public Inode findById(Integer id) {
+  public Inode findById(Long id) {
     TypedQuery<Inode> q = em.createNamedQuery("Inode.findById", Inode.class);
     q.setParameter("id", id);
     try {
@@ -242,7 +242,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
     }
     //Move down the path
     for (int i = 1; i < p.length; i++) {
-      int partitionId = HopsUtils.
+      long partitionId = HopsUtils.
               calculatePartitionId(curr.getId(), p[i], i + 1);
       Inode next = findByInodePK(curr, p[i], partitionId);
       if (next == null) {
@@ -259,7 +259,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   private Inode getRootNode(String name) {
-    int partitionId = HopsUtils.calculatePartitionId(HopsUtils.ROOT_INODE_ID, name, HopsUtils.ROOT_DIR_DEPTH + 1);
+    long partitionId = HopsUtils.calculatePartitionId(HopsUtils.ROOT_INODE_ID, name, HopsUtils.ROOT_DIR_DEPTH + 1);
     TypedQuery<Inode> query = em.createNamedQuery("Inode.findRootByName",
             Inode.class);
     query.setParameter("name", name);
@@ -319,7 +319,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
    * @return
    */
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  public Inode findByInodePK(Inode parent, String name, int partitionId) {
+  public Inode findByInodePK(Inode parent, String name, long partitionId) {
 
     TypedQuery<Inode> q = em.createNamedQuery("Inode.findByPrimaryKey",
             Inode.class);

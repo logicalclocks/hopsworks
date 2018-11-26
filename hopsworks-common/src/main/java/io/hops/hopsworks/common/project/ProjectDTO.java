@@ -59,7 +59,7 @@ public class ProjectDTO {
   private List<String> services;
   private List<ProjectTeam> projectTeam;
   private List<InodeView> datasets;
-  private Integer inodeid;
+  private Long inodeid;
   private QuotasDTO quotas;
   private String hopsExamples;
 
@@ -72,7 +72,7 @@ public class ProjectDTO {
     this.owner = owner;
   }
 
-  public ProjectDTO(Project project, Integer inodeid, List<String> services,
+  public ProjectDTO(Project project, Long inodeid, List<String> services,
       List<ProjectTeam> projectTeam, QuotasDTO quotas, String hopsExamples) {
     this.projectId = project.getId();
     this.inodeid = inodeid;
@@ -88,7 +88,7 @@ public class ProjectDTO {
     this.hopsExamples = hopsExamples;
   }
 
-  public ProjectDTO(Project project, Integer inodeid, List<String> services,
+  public ProjectDTO(Project project, Long inodeid, List<String> services,
       List<ProjectTeam> projectTeam, List<InodeView> datasets) {
     this.projectId = project.getId();
     //the inodeid of the current project comes from hops database
@@ -122,7 +122,7 @@ public class ProjectDTO {
     return projectId;
   }
 
-  public Integer getInodeid() {
+  public Long getInodeid() {
     return this.inodeid;
   }
 
@@ -130,7 +130,7 @@ public class ProjectDTO {
     this.projectId = projectId;
   }
 
-  public void setInodeid(Integer inodeid) {
+  public void setInodeid(Long inodeid) {
     this.inodeid = inodeid;
   }
 

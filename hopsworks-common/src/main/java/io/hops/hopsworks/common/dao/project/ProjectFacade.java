@@ -74,7 +74,7 @@ public class ProjectFacade extends AbstractFacade<Project> {
     return em.find(Project.class, id);
   }
 
-  public Project findByInodeId(Integer parentId, String name) {
+  public Project findByInodeId(Long parentId, String name) {
     TypedQuery<Project> query = this.em.
         createNamedQuery("Project.findByInodeId", Project.class).
         setParameter("parentid", parentId).setParameter("name", name);

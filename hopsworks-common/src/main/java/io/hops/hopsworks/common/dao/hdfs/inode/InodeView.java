@@ -62,8 +62,8 @@ public final class InodeView {
   private String owningProjectName;
   private Date modification;
   private Date accessTime;
-  private int id;
-  private int parentId;
+  private Long id;
+  private Long parentId;
   private int template;
   private String description;
   private boolean status = true;
@@ -182,11 +182,11 @@ public final class InodeView {
     this.dir = dir;
   }
 
-  public void setParentId(int parentId) {
+  public void setParentId(Long parentId) {
     this.parentId = parentId;
   }
 
-  public void setId(int id) {
+  public void setId(Long id) {
     this.id = id;
   }
 
@@ -218,11 +218,11 @@ public final class InodeView {
     return dir;
   }
 
-  public int getId() {
+  public Long getId() {
     return this.id;
   }
 
-  public int getParentId() {
+  public Long getParentId() {
     return this.parentId;
   }
 

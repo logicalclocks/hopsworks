@@ -51,7 +51,7 @@ import io.hops.hopsworks.common.util.Settings;
 @XmlRootElement
 public class MoreInfoDTO {
 
-  private Integer inodeid;
+  private Long inodeid;
   private String user;
   private double size;
   private Date createDate;
@@ -89,7 +89,7 @@ public class MoreInfoDTO {
     this.uploadDate = null;
   }
 
-  public MoreInfoDTO(Integer inodeid, String user, double size, Date createDate,
+  public MoreInfoDTO(Long inodeid, String user, double size, Date createDate,
           Date uploadDate, int votes, long downloads) {
     this.inodeid = inodeid;
     this.user = user;
@@ -104,11 +104,11 @@ public class MoreInfoDTO {
     return user;
   }
 
-  public Integer getInodeid() {
+  public Long getInodeid() {
     return inodeid;
   }
 
-  public void setInodeid(Integer inodeid) {
+  public void setInodeid(Long inodeid) {
     this.inodeid = inodeid;
   }
 

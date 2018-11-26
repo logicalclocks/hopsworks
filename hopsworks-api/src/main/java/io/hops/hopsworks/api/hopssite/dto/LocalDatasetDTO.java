@@ -44,7 +44,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
 public class LocalDatasetDTO {
-  private int inodeId;
+  private Long inodeId;
   private String name;
   private String description;
   private String projectName;
@@ -55,19 +55,19 @@ public class LocalDatasetDTO {
   public LocalDatasetDTO() {
   }
 
-  public LocalDatasetDTO(int InodeId, String projectName) {
+  public LocalDatasetDTO(Long InodeId, String projectName) {
     this.inodeId = InodeId;
     this.projectName = projectName;
   }
 
-  public LocalDatasetDTO(int inodeId, String name, String description, String projectName) {
+  public LocalDatasetDTO(Long inodeId, String name, String description, String projectName) {
     this.inodeId = inodeId;
     this.name = name;
     this.description = description;
     this.projectName = projectName;
   }
 
-  public LocalDatasetDTO(int inodeId, String name, String description, String projectName, Date createDate,
+  public LocalDatasetDTO(Long inodeId, String name, String description, String projectName, Date createDate,
           Date publishedOn, long size) {
     this.inodeId = inodeId;
     this.name = name;
@@ -78,11 +78,11 @@ public class LocalDatasetDTO {
     this.size = size;
   }
 
-  public int getInodeId() {
+  public Long getInodeId() {
     return inodeId;
   }
 
-  public void setInodeId(int InodeId) {
+  public void setInodeId(Long InodeId) {
     this.inodeId = InodeId;
   }
 

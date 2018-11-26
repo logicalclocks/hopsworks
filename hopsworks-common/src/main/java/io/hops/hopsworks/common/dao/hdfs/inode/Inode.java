@@ -136,7 +136,7 @@ public class Inode implements Serializable {
   @Basic(optional = false)
   @NotNull
   @Column(name = "id")
-  private int id;
+  private Long id;
   @Column(name = "modification_time")
   private BigInteger modificationTime;
   @Column(name = "access_time")
@@ -203,7 +203,7 @@ public class Inode implements Serializable {
     this.inodePK = inodePK;
   }
 
-  public Inode(InodePK inodePK, int id, boolean quotaEnabled,
+  public Inode(InodePK inodePK, Long id, boolean quotaEnabled,
           boolean underConstruction, boolean subtreeLocked, boolean metaEnabled,
           boolean dir) {
     this.inodePK = inodePK;
@@ -224,7 +224,7 @@ public class Inode implements Serializable {
             isMetaEnabled(), inode.isDir());
   }
 
-  public Inode(int parentId, String name, int partitionId) {
+  public Inode(long parentId, String name, long partitionId) {
     this.inodePK = new InodePK(parentId, name, partitionId);
   }
 
@@ -236,11 +236,11 @@ public class Inode implements Serializable {
     this.inodePK = inodePK;
   }
 
-  public int getId() {
+  public Long getId() {
     return id;
   }
 
-  public void setId(int id) {
+  public void setId(Long id) {
     this.id = id;
   }
 
