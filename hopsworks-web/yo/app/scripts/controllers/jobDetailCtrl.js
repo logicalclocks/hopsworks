@@ -81,25 +81,16 @@ angular.module('hopsWorksApp')
             };
 
             var getConfiguration = function () {
-              JobService.getConfiguration(projectId, job.id).then(
-                      function (success) {
-                        self.job.runConfig = success.data;
-                        self.setupInfo();
-                        initScheduler();
-                      }, function (error) {
-                      if (typeof error.data.usrMsg !== 'undefined') {
-                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
-                      } else {
-                          growl.error("", {title: error.data.errorMsg, ttl: 8000});
-                      }
-              });
+                self.job.runConfig = job.config;
+                self.setupInfo();
+                initScheduler();
             };
 
             var getExecutions = function () {
-              JobService.getAllExecutions(projectId, job.id).then(
+              JobService.getAllExecutions(projectId, job.name).then(
                       function (success) {
-                        self.job.executions = success.data;
-                        self.showExecutions = success.data.length > 0;
+                        self.job.executions = success.data.items;
+                        self.showExecutions = success.data.items.length > 0;
                       }, function (error) {
                       if (typeof error.data.usrMsg !== 'undefined') {
                           growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
@@ -115,10 +106,13 @@ angular.module('hopsWorksApp')
 
             this.setupInfo = function () {
 
-              if (self.job.runConfig.type === "sparkJobConfiguration") {
+              if (self.job.runConfig.jobType === "SPARK") {
                 self.jobtype = "Spark";
                 self.execFile = getFileName(job.runConfig.appPath);
-              } else if (self.job.runConfig.type === "flinkJobConfiguration") {
+              } else if (self.job.runConfig.jobType === "PYSPARK") {
+                    self.jobtype = "PySpark";
+                    self.execFile = getFileName(job.runConfig.appPath);
+              } else if (self.job.runConfig.jobType === "FLINK") {
                 self.jobtype = "Flink";
                 self.execFile = getFileName(job.runConfig.jarPath);
               }
@@ -131,7 +125,7 @@ angular.module('hopsWorksApp')
                   "unit": self.schedule.unit.toUpperCase(),
                   "number": self.schedule.number};
                 self.job.runConfig.type=self.jobtype.toUpperCase();
-                JobService.updateSchedule(self.projectId, self.jobtype.toUpperCase(), self.job.runConfig.schedule,job.id).then(
+                JobService.updateSchedule(self.projectId, self.jobtype.toUpperCase(), self.job.runConfig.schedule,job.name).then(
                         function (success) {
                           getConfiguration();
                           getExecutions();
@@ -149,9 +143,9 @@ angular.module('hopsWorksApp')
               }
             };
 
-            this.unscheduleJob = function(jobId) {
+            this.unscheduleJob = function(name) {
             self.unscheduling=true;
-                        JobService.unscheduleJob(self.projectId, jobId).then(
+                        JobService.unscheduleJob(self.projectId, name).then(
                                 function (success) {
                                   self.unscheduling=false;
                                   getExecutions();

@@ -31,7 +31,7 @@ public class JobDTO extends RestDTO<JobDTO> {
   private String name;
   private Date creationTime;
   private JobConfiguration config;
-  private JobType type;
+  private JobType jobType;
   private UserDTO creator;
   private ExecutionDTO executions;
   
@@ -67,12 +67,12 @@ public class JobDTO extends RestDTO<JobDTO> {
     this.config = config;
   }
   
-  public JobType getType() {
-    return type;
+  public JobType getJobType() {
+    return jobType;
   }
   
-  public void setType(JobType type) {
-    this.type = type;
+  public void setJobType(JobType jobType) {
+    this.jobType = jobType;
   }
   
   public UserDTO getCreator() {

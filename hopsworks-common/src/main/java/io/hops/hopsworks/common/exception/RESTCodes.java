@@ -412,7 +412,8 @@ public class RESTCodes {
         Response.Status.BAD_REQUEST),
     JOB_DELETION_FORBIDDEN(25, "Your role does not allow to delete this job.",  Response.Status.FORBIDDEN),
     UNAUTHORIZED_EXECUTION_ACCESS(26, "This execution does not belong to a job of this project. ",
-      Response.Status.FORBIDDEN);
+      Response.Status.FORBIDDEN),
+    APPID_NOT_FOUND(27, "AppId not found.", Response.Status.NOT_FOUND);
     
     private Integer code;
     private String message;

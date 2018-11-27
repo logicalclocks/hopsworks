@@ -45,6 +45,7 @@ import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.jobhistory.Execution;
 import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationAttemptStateFacade;
+import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstate;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
 import io.hops.hopsworks.common.dao.jobs.JobsHistoryFacade;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
@@ -69,12 +70,6 @@ import io.hops.hopsworks.common.jobs.yarn.YarnMonitor;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.yarn.YarnClientService;
 import io.hops.hopsworks.common.yarn.YarnClientWrapper;
-import org.apache.commons.httpclient.Header;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.cookie.CookiePolicy;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.params.HttpClientParams;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
@@ -90,22 +85,10 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.StreamingOutput;
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.Reader;
-import java.io.Writer;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -494,221 +477,222 @@ public class ExecutionController {
     return appInfo;
   }
   
-  public Response.ResponseBuilder getExecutionProxy(Execution execution, String param, HttpServletRequest req)
-    throws JobException, IOException {
-    String trackingUrl;
-    if (param.matches("http([a-zA-Z,:,/,.,0-9,-])+:([0-9])+(.)+")) {
-      trackingUrl = param;
-    } else {
-      trackingUrl = "http://" + param;
-    }
-    trackingUrl = trackingUrl.replace("@hwqm", "?");
-    if (!hasAppAccessRight(trackingUrl, execution.getJob().getProject().getName())) {
-      LOGGER.log(Level.SEVERE, "A user is trying to access an app outside their project!");
-      throw new JobException(RESTCodes.JobErrorCode.JOB_NOT_FOUND, Level.FINE);
-    }
-    org.apache.commons.httpclient.URI uri = new org.apache.commons.httpclient.URI(trackingUrl, false);
-    
-    HttpClientParams params = new HttpClientParams();
-    params.setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
-    params.setBooleanParameter(HttpClientParams.ALLOW_CIRCULAR_REDIRECTS,
-      true);
-    HttpClient client = new HttpClient(params);
-    
-    final HttpMethod method = new GetMethod(uri.getEscapedURI());
-    Enumeration<String> names = req.getHeaderNames();
-    while (names.hasMoreElements()) {
-      String name = names.nextElement();
-      String value = req.getHeader(name);
-      if (PASS_THROUGH_HEADERS.contains(name)) {
-        //yarn does not send back the js if encoding is not accepted
-        //but we don't want to accept encoding for the html because we
-        //need to be able to parse it
-        if (!name.toLowerCase().equals("accept-encoding") || trackingUrl.contains(".js")) {
-          method.setRequestHeader(name, value);
-        }
-      }
-    }
-    String user = req.getRemoteUser();
-    if (user != null && !user.isEmpty()) {
-      method.setRequestHeader("Cookie", PROXY_USER_COOKIE_NAME + "=" + URLEncoder.encode(user, "ASCII"));
-    }
-    
-    client.executeMethod(method);
-    Response.ResponseBuilder responseBuilder = Response.ok();
-    for (Header header : method.getResponseHeaders()) {
-      responseBuilder.header(header.getName(), header.getValue());
-    }
-    if (method.getResponseHeader("Content-Type") == null || method.
-      getResponseHeader("Content-Type").getValue().contains("html")
-      || method.getPath().contains("/allexecutors")) {
-      final String source = "http://" + method.getURI().getHost() + ":"
-        + method.getURI().getPort();
-      if (method.getResponseHeader("Content-Length") == null) {
-        responseBuilder.entity(new StreamingOutput() {
-          @Override
-          public void write(OutputStream out) throws IOException {
-            Writer writer
-              = new BufferedWriter(new OutputStreamWriter(out));
-            InputStream stream = method.getResponseBodyAsStream();
-            Reader in = new InputStreamReader(stream, StandardCharsets.UTF_8);
-            char[] buffer = new char[4 * 1024];
-            String remaining = "";
-            int n;
-            while ((n = in.read(buffer)) != -1) {
-              StringBuilder strb = new StringBuilder();
-              strb.append(buffer, 0, n);
-              String s = remaining + strb.toString();
-              remaining = s.substring(s.lastIndexOf('>') + 1, s.length());
-              s = hopify(s.substring(0, s.lastIndexOf('>') + 1), param,
-                execution.getJob().getProject().getId(),
-                execution.getAppId(),
-                source);
-              writer.write(s);
-            }
-            writer.flush();
-          }
-        });
-      } else {
-        String s = hopify(method.getResponseBodyAsString(), param, execution.getJob().getProject().getId(),
-          execution.getAppId(), source);
-        responseBuilder.entity(s);
-        responseBuilder.header("Content-Length", s.length());
-      }
-      
-    } else {
-      responseBuilder.entity((StreamingOutput) out -> {
-        InputStream stream = method.getResponseBodyAsStream();
-        org.apache.hadoop.io.IOUtils.copyBytes(stream, out, 4096, true);
-        out.flush();
-      });
-    }
-    return responseBuilder;
-  }
-  
-  
-  private String hopify(String ui, String param, int projectId, String appId, String source) {
-    
-    //remove the link to the full cluster information in the yarn ui
-    ui = ui.replaceAll(
-      "<div id=\"user\">[\\s\\S]+Logged in as: dr.who[\\s\\S]+<div id=\"logo\">",
-      "<div id=\"logo\">");
-    ui = ui.replaceAll(
-      "<tfoot>[\\s\\S]+</tfoot>",
-      "");
-    ui = ui.replaceAll("<td id=\"navcell\">[\\s\\S]+<td class=\"content\">",
-      "<td class=\"content\">");
-    ui = ui.replaceAll("<td id=\"navcell\">[\\s\\S]+<td ", "<td ");
-    ui = ui.replaceAll(
-      "<li><a ui-sref=\"submit\"[\\s\\S]+new Job</a></li>", "");
-    
-    ui = ui.replaceAll("(?<=(href|src)=.[^>]{0,200})\\?", "@hwqm");
-    
-    ui = ui.replaceAll("(?<=(href|src)=\")/(?=[a-zA-Z])",
-      "/hopsworks-api/api/project/"
-        + projectId + "/jobs/" + appId + "/prox/"
-        + source + "/");
-    ui = ui.replaceAll("(?<=(href|src)=\')/(?=[a-zA-Z])",
-      "/hopsworks-api/api/project/"
-        + projectId + "/jobs/" + appId + "/prox/"
-        + source + "/");
-    ui = ui.replaceAll("(?<=(href|src)=\")//", "/hopsworks-api/api/project/"
-      + projectId + "/jobs/" + appId + "/prox/");
-    ui = ui.replaceAll("(?<=(href|src)=\')//", "/hopsworks-api/api/project/"
-      + projectId + "/jobs/" + appId + "/prox/");
-    ui = ui.replaceAll("(?<=(href|src)=\")(?=http)",
-      "/hopsworks-api/api/project/"
-        + projectId + "/jobs/" + appId + "/prox/");
-    ui = ui.replaceAll("(?<=(href|src)=\')(?=http)",
-      "/hopsworks-api/api/project/"
-        + projectId + "/jobs/" + appId + "/prox/");
-    ui = ui.replaceAll("(?<=(href|src)=\")(?=[a-zA-Z])",
-      "/hopsworks-api/api/project/"
-        + projectId + "/jobs/" + appId + "/prox/" + param);
-    ui = ui.replaceAll("(?<=(href|src)=\')(?=[a-zA-Z])",
-      "/hopsworks-api/api/project/"
-        + projectId + "/jobs/" + appId + "/prox/" + param);
-    ui = ui.replaceAll("(?<=\"(stdout\"|stderr\") : \")(?=[a-zA-Z])",
-      "/hopsworks-api/api/project/"
-        + projectId + "/jobs/" + appId + "/prox/");
-    ui = ui.replaceAll("here</a>\\s+for full log", "here</a> for latest " + settings.getSparkUILogsOffset()
-      + " bytes of logs");
-    ui = ui.replaceAll("/@hwqmstart=0", "/@hwqmstart=-" + settings.getSparkUILogsOffset());
-    return ui;
-  }
-  
-  private boolean hasAppAccessRight(String projectName, String trackingUrl) {
-    String appId = "";
-    if (trackingUrl.contains("application_")) {
-      for (String elem : trackingUrl.split("/")) {
-        if (elem.contains("application_")) {
-          appId = elem;
-          break;
-        }
-      }
-    } else if (trackingUrl.contains("container_")) {
-      appId = "application_";
-      for (String elem : trackingUrl.split("/")) {
-        if (elem.contains("container_")) {
-          String[] containerIdElem = elem.split("_");
-          appId = appId + containerIdElem[2] + "_" + containerIdElem[3];
-          break;
-        }
-      }
-    } else if (trackingUrl.contains("appattempt_")) {
-      appId = "application_";
-      for (String elem : trackingUrl.split("/")) {
-        if (elem.contains("appattempt_")) {
-          String[] containerIdElem = elem.split("_");
-          appId = appId + containerIdElem[1] + "_" + containerIdElem[2];
-          break;
-        }
-      }
-    } else {
-      if (trackingUrl.contains("static")) {
-        return true;
-      }
-      return false;
-    }
-    if (!appId.isEmpty()) {
-      String appUser = yarnApplicationstateFacade.findByAppId(appId).getAppuser();
-      if (!projectName.equals(hdfsUsersController.getProjectName(appUser))) {
-        return false;
-      }
-    }
-    return true;
-  }
-  
-//  private Response checkAccessRight(String projectName, String appId) {
-//    YarnApplicationstate appState = yarnApplicationstateFacade.findByAppId(appId);
-//
-//    if (appState == null) {
-//      return Response.status(Response.Status.NOT_FOUND).build();
-//    } else if (!hdfsUsersController.getProjectName(appState.getAppuser()).equals(projectName)) {
-//      //In this case, a user is trying to access a job outside its project!!!
-//      LOGGER.log(Level.SEVERE, "A user is trying to access a job outside their project!");
-//      return Response.status(Response.Status.FORBIDDEN).build();
+//  public Response.ResponseBuilder getExecutionProxy(Execution execution, String param, HttpServletRequest req)
+//    throws JobException, IOException {
+//    String trackingUrl;
+//    if (param.matches("http([a-zA-Z,:,/,.,0-9,-])+:([0-9])+(.)+")) {
+//      trackingUrl = param;
 //    } else {
-//      return null;
+//      trackingUrl = "http://" + param;
 //    }
+//    trackingUrl = trackingUrl.replace("@hwqm", "?");
+//    if (!hasAppAccessRight(trackingUrl, execution.getJob().getProject().getName())) {
+//      LOGGER.log(Level.SEVERE, "A user is trying to access an app outside their project!");
+//      throw new JobException(RESTCodes.JobErrorCode.JOB_NOT_FOUND, Level.FINE);
+//    }
+//    org.apache.commons.httpclient.URI uri = new org.apache.commons.httpclient.URI(trackingUrl, false);
+//
+//    HttpClientParams params = new HttpClientParams();
+//    params.setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
+//    params.setBooleanParameter(HttpClientParams.ALLOW_CIRCULAR_REDIRECTS,
+//      true);
+//    HttpClient client = new HttpClient(params);
+//
+//    final HttpMethod method = new GetMethod(uri.getEscapedURI());
+//    Enumeration<String> names = req.getHeaderNames();
+//    while (names.hasMoreElements()) {
+//      String name = names.nextElement();
+//      String value = req.getHeader(name);
+//      if (PASS_THROUGH_HEADERS.contains(name)) {
+//        //yarn does not send back the js if encoding is not accepted
+//        //but we don't want to accept encoding for the html because we
+//        //need to be able to parse it
+//        if (!name.toLowerCase().equals("accept-encoding") || trackingUrl.contains(".js")) {
+//          method.setRequestHeader(name, value);
+//        }
+//      }
+//    }
+//    String user = req.getRemoteUser();
+//    if (user != null && !user.isEmpty()) {
+//      method.setRequestHeader("Cookie", PROXY_USER_COOKIE_NAME + "=" + URLEncoder.encode(user, "ASCII"));
+//    }
+//
+//    client.executeMethod(method);
+//    Response.ResponseBuilder responseBuilder = Response.ok();
+//    for (Header header : method.getResponseHeaders()) {
+//      responseBuilder.header(header.getName(), header.getValue());
+//    }
+//    if (method.getResponseHeader("Content-Type") == null || method.
+//      getResponseHeader("Content-Type").getValue().contains("html")
+//      || method.getPath().contains("/allexecutors")) {
+//      final String source = "http://" + method.getURI().getHost() + ":"
+//        + method.getURI().getPort();
+//      if (method.getResponseHeader("Content-Length") == null) {
+//        responseBuilder.entity(new StreamingOutput() {
+//          @Override
+//          public void write(OutputStream out) throws IOException {
+//            Writer writer
+//              = new BufferedWriter(new OutputStreamWriter(out));
+//            InputStream stream = method.getResponseBodyAsStream();
+//            Reader in = new InputStreamReader(stream, StandardCharsets.UTF_8);
+//            char[] buffer = new char[4 * 1024];
+//            String remaining = "";
+//            int n;
+//            while ((n = in.read(buffer)) != -1) {
+//              StringBuilder strb = new StringBuilder();
+//              strb.append(buffer, 0, n);
+//              String s = remaining + strb.toString();
+//              remaining = s.substring(s.lastIndexOf('>') + 1, s.length());
+//              s = hopify(s.substring(0, s.lastIndexOf('>') + 1), param,
+//                execution.getJob().getProject().getId(),
+//                execution.getAppId(),
+//                source);
+//              writer.write(s);
+//            }
+//            writer.flush();
+//          }
+//        });
+//      } else {
+//        String s = hopify(method.getResponseBodyAsString(), param, execution.getJob().getProject().getId(),
+//          execution.getAppId(), source);
+//        responseBuilder.entity(s);
+//        responseBuilder.header("Content-Length", s.length());
+//      }
+//
+//    } else {
+//      responseBuilder.entity((StreamingOutput) out -> {
+//        InputStream stream = method.getResponseBodyAsStream();
+//        org.apache.hadoop.io.IOUtils.copyBytes(stream, out, 4096, true);
+//        out.flush();
+//      });
+//    }
+//    return responseBuilder;
 //  }
+  
+  
+//  private String hopify(String ui, String param, int projectId, String appId, String source) {
+//
+//    //remove the link to the full cluster information in the yarn ui
+//    ui = ui.replaceAll(
+//      "<div id=\"user\">[\\s\\S]+Logged in as: dr.who[\\s\\S]+<div id=\"logo\">",
+//      "<div id=\"logo\">");
+//    ui = ui.replaceAll(
+//      "<tfoot>[\\s\\S]+</tfoot>",
+//      "");
+//    ui = ui.replaceAll("<td id=\"navcell\">[\\s\\S]+<td class=\"content\">",
+//      "<td class=\"content\">");
+//    ui = ui.replaceAll("<td id=\"navcell\">[\\s\\S]+<td ", "<td ");
+//    ui = ui.replaceAll(
+//      "<li><a ui-sref=\"submit\"[\\s\\S]+new Job</a></li>", "");
+//
+//    ui = ui.replaceAll("(?<=(href|src)=.[^>]{0,200})\\?", "@hwqm");
+//
+//    ui = ui.replaceAll("(?<=(href|src)=\")/(?=[a-zA-Z])",
+//      "/hopsworks-api/api/project/"
+//        + projectId + "/jobs/" + appId + "/prox/"
+//        + source + "/");
+//    ui = ui.replaceAll("(?<=(href|src)=\')/(?=[a-zA-Z])",
+//      "/hopsworks-api/api/project/"
+//        + projectId + "/jobs/" + appId + "/prox/"
+//        + source + "/");
+//    ui = ui.replaceAll("(?<=(href|src)=\")//", "/hopsworks-api/api/project/"
+//      + projectId + "/jobs/" + appId + "/prox/");
+//    ui = ui.replaceAll("(?<=(href|src)=\')//", "/hopsworks-api/api/project/"
+//      + projectId + "/jobs/" + appId + "/prox/");
+//    ui = ui.replaceAll("(?<=(href|src)=\")(?=http)",
+//      "/hopsworks-api/api/project/"
+//        + projectId + "/jobs/" + appId + "/prox/");
+//    ui = ui.replaceAll("(?<=(href|src)=\')(?=http)",
+//      "/hopsworks-api/api/project/"
+//        + projectId + "/jobs/" + appId + "/prox/");
+//    ui = ui.replaceAll("(?<=(href|src)=\")(?=[a-zA-Z])",
+//      "/hopsworks-api/api/project/"
+//        + projectId + "/jobs/" + appId + "/prox/" + param);
+//    ui = ui.replaceAll("(?<=(href|src)=\')(?=[a-zA-Z])",
+//      "/hopsworks-api/api/project/"
+//        + projectId + "/jobs/" + appId + "/prox/" + param);
+//    ui = ui.replaceAll("(?<=\"(stdout\"|stderr\") : \")(?=[a-zA-Z])",
+//      "/hopsworks-api/api/project/"
+//        + projectId + "/jobs/" + appId + "/prox/");
+//    ui = ui.replaceAll("here</a>\\s+for full log", "here</a> for latest " + settings.getSparkUILogsOffset()
+//      + " bytes of logs");
+//    ui = ui.replaceAll("/@hwqmstart=0", "/@hwqmstart=-" + settings.getSparkUILogsOffset());
+//    return ui;
+//  }
+  
+//  private boolean hasAppAccessRight(String projectName, String trackingUrl) {
+//    String appId = "";
+//    if (trackingUrl.contains("application_")) {
+//      for (String elem : trackingUrl.split("/")) {
+//        if (elem.contains("application_")) {
+//          appId = elem;
+//          break;
+//        }
+//      }
+//    } else if (trackingUrl.contains("container_")) {
+//      appId = "application_";
+//      for (String elem : trackingUrl.split("/")) {
+//        if (elem.contains("container_")) {
+//          String[] containerIdElem = elem.split("_");
+//          appId = appId + containerIdElem[2] + "_" + containerIdElem[3];
+//          break;
+//        }
+//      }
+//    } else if (trackingUrl.contains("appattempt_")) {
+//      appId = "application_";
+//      for (String elem : trackingUrl.split("/")) {
+//        if (elem.contains("appattempt_")) {
+//          String[] containerIdElem = elem.split("_");
+//          appId = appId + containerIdElem[1] + "_" + containerIdElem[2];
+//          break;
+//        }
+//      }
+//    } else {
+//      if (trackingUrl.contains("static")) {
+//        return true;
+//      }
+//      return false;
+//    }
+//    if (!appId.isEmpty()) {
+//      String appUser = yarnApplicationstateFacade.findByAppId(appId).getAppuser();
+//      if (!projectName.equals(hdfsUsersController.getProjectName(appUser))) {
+//        return false;
+//      }
+//    }
+//    return true;
+//  }
+  
+  public void checkAccessRight(String appId, Project project) throws JobException {
+    YarnApplicationstate appState = yarnApplicationstateFacade.findByAppId(appId);
+    
+    if (appState == null) {
+      throw new JobException(RESTCodes.JobErrorCode.APPID_NOT_FOUND, Level.FINE);
+    } else if (!hdfsUsersController.getProjectName(appState.getAppuser()).equals(project.getName())) {
+      throw new JobException(RESTCodes.JobErrorCode.JOB_ACCESS_ERROR, Level.FINE);
+    }
+  }
   
   
   //====================================================================================================================
   // TensorBoard
   //====================================================================================================================
-  public List<YarnAppUrlsDTO> getTensorBoardUrls(Users user, Execution execution, Jobs job)
+  
+  public List<YarnAppUrlsDTO> getTensorBoardUrls(Users user, Execution execution, Jobs job) throws JobException {
+    return getTensorBoardUrls(user, execution.getAppId(), job.getProject());
+  }
+  
+  public List<YarnAppUrlsDTO> getTensorBoardUrls(Users user, String appId, Project project)
     throws JobException {
     List<YarnAppUrlsDTO> urls = new ArrayList<>();
     DistributedFileSystemOps udfso = null;
   
     try {
-      String hdfsUser = hdfsUsersController.getHdfsUserName(job.getProject(), user);
+      String hdfsUser = hdfsUsersController.getHdfsUserName(project, user);
   
       udfso = dfs.getDfsOps(hdfsUser);
       FileStatus[] statuses = udfso.getFilesystem().globStatus(
         new org.apache.hadoop.fs.Path(
-          "/Projects/" + job.getProject().getName() + "/Experiments/" + execution.getAppId() + "/TensorBoard.*"));
+          "/Projects/" + project.getName() + "/Experiments/" + appId + "/TensorBoard.*"));
     
       for (FileStatus status : statuses) {
         LOGGER.log(Level.FINE, "Reading tensorboard for: {0}", status.getPath());

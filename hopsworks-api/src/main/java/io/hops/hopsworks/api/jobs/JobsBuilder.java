@@ -76,7 +76,7 @@ public class JobsBuilder {
       dto.setName(job.getName());
       dto.setCreationTime(job.getCreationTime());
       dto.setConfig(job.getJobConfig());
-      dto.setType(job.getJobType());
+      dto.setJobType(job.getJobType());
       dto.setCreator(usersBuilder.build(uriInfo, resource.get(Resource.Name.CREATOR), job.getCreator()));
       dto.setExecutions(executionsBuilder.build(uriInfo, resource.get(Resource.Name.EXECUTIONS), job));
     }

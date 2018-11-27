@@ -46,16 +46,25 @@ import io.hops.hopsworks.api.jobs.executions.ExecutionService;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.api.Resource;
+import io.hops.hopsworks.common.dao.jobhistory.Execution;
+import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
+import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationAttemptStateFacade;
+import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
 import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
+import io.hops.hopsworks.common.dao.jobs.description.YarnAppUrlsDTO;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
+import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.JobException;
 import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.jobs.AppInfoDTO;
 import io.hops.hopsworks.common.jobs.JobController;
 import io.hops.hopsworks.common.jobs.configuration.JobConfiguration;
 import io.hops.hopsworks.common.jobs.configuration.ScheduleDTO;
+import io.hops.hopsworks.common.jobs.execution.ExecutionController;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
 import io.hops.hopsworks.common.jobs.spark.SparkController;
 import io.hops.hopsworks.common.jobs.spark.SparkJobConfiguration;
@@ -63,8 +72,18 @@ import io.hops.hopsworks.common.jobs.yarn.YarnJobConfiguration;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import org.apache.commons.httpclient.Header;
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpMethod;
+import org.apache.commons.httpclient.cookie.CookiePolicy;
+import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.params.HttpClientParams;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import org.influxdb.InfluxDB;
+import org.influxdb.InfluxDBFactory;
+import org.influxdb.dto.Query;
+import org.influxdb.dto.QueryResult;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -82,14 +101,37 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
+import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Reader;
+import java.io.Writer;
+import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
 @RequestScoped
@@ -104,6 +146,20 @@ public class JobService {
   private ExecutionService executions;
   @EJB
   private JobController jobController;
+  @EJB
+  private ExecutionController executionController;
+  @EJB
+  private ExecutionFacade executionFacade;
+  @EJB
+  private HdfsUsersController hdfsUsersBean;
+  @EJB
+  private YarnApplicationAttemptStateFacade yarnApplicationAttemptStateFacade;
+  @EJB
+  private YarnApplicationstateFacade yarnApplicationstateFacade;
+  @EJB
+  private Settings settings;
+  @EJB
+  private UserFacade userFacade;
   @EJB
   private SparkController sparkController;
   @EJB
@@ -120,6 +176,7 @@ public class JobService {
     return this;
   }
   
+  private static final String PROXY_USER_COOKIE_NAME = "proxy-user";
   
   @ApiOperation(value = "Get a list of all jobs for this project", response = JobDTO.class)
   @GET
@@ -307,5 +364,435 @@ public class JobService {
   public enum Action {
     INSPECT
   }
+ 
   
+  //====================================================================================================================
+  // Jobs & Notebooks proxy endpoints
+  //====================================================================================================================
+  
+  /**
+   * Get the Job UI url for the specified job
+   * <p>
+   * @param appId
+   * @param isLivy
+   * @return url
+   */
+  @GET
+  @Path("/{appId}/ui/{isLivy}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response getJobUI(@PathParam("appId") String appId, @PathParam("isLivy") String isLivy) throws JobException {
+    executionController.checkAccessRight(appId, project);
+    List<YarnAppUrlsDTO> urls = new ArrayList<>();
+    
+    try {
+      String trackingUrl = yarnApplicationAttemptStateFacade.findTrackingUrlByAppId(appId);
+      if (trackingUrl != null && !trackingUrl.isEmpty()) {
+        trackingUrl = "/hopsworks-api/api/project/" + project.getId() + "/jobs/"
+          + appId + "/prox/" + trackingUrl;
+        urls.add(new YarnAppUrlsDTO("spark", trackingUrl));
+      }
+    } catch (Exception e) {
+      LOGGER.log(Level.SEVERE, "exception while geting job ui " + e.getLocalizedMessage(), e);
+    }
+    
+    GenericEntity<List<YarnAppUrlsDTO>> listUrls = new GenericEntity<List<YarnAppUrlsDTO>>(urls) { };
+    
+    return Response.ok().entity(listUrls).build();
+  }
+  
+  /**
+   * Get the Job UI url for the specified job
+   * <p>
+   * @param appId
+   * @param sc
+   * @return url
+   */
+  @GET
+  @Path("/{appId}/tensorboard")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response getTensorBoardUrls(@PathParam("appId") String appId,
+    @Context SecurityContext sc)
+    throws JobException {
+    executionController.checkAccessRight(appId, project);
+    List<YarnAppUrlsDTO> urls = new ArrayList<>();
+    Users user = jWTHelper.getUserPrincipal(sc);
+    try {
+      urls.addAll(executionController.getTensorBoardUrls(user, appId, project));
+    } catch (Exception e) {
+      LOGGER.log(Level.SEVERE, "Exception while getting TensorBoard endpoints" + e.getLocalizedMessage(), e);
+    }
+    
+    GenericEntity<List<YarnAppUrlsDTO>> listUrls = new GenericEntity<List<YarnAppUrlsDTO>>(urls) { };
+    
+    return Response.ok().entity(listUrls).build();
+  }
+  
+  /**
+   * Get the Yarn UI url for the specified job
+   * <p>
+   * @param appId
+   * @return url
+   */
+  @GET
+  @Path("/{appId}/yarnui")
+  @Produces(MediaType.TEXT_PLAIN)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response getYarnUI(@PathParam("appId") String appId) throws JobException {
+    executionController.checkAccessRight(appId, project);
+    
+    try {
+      String yarnUrl = "/hopsworks-api/api/project/" + project.getId() + "/jobs/"
+        + appId + "/prox/" + settings.getYarnWebUIAddress()
+        + "/cluster/app/"
+        + appId;
+      
+      return Response.ok().entity(yarnUrl).build();
+      
+    } catch (Exception e) {
+      LOGGER.log(Level.SEVERE, "exception while geting job ui " + e.getLocalizedMessage(), e);
+    }
+    return Response.ok().build();
+  }
+  
+  /**
+   * Get application run info for the specified job
+   * <p>
+   * @param appId
+   * @return url
+   */
+  @GET
+  @Path("/{appId}/appinfo")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response getAppInfo(@PathParam("appId") String appId) throws JobException {
+    executionController.checkAccessRight(appId, project);
+    Execution execution = executionFacade.findByAppId(appId);
+    try {
+      long startTime = System.currentTimeMillis() - 60000;
+      long endTime = System.currentTimeMillis();
+      boolean running = true;
+      if (execution != null) {
+        startTime = execution.getSubmissionTime().getTime();
+        endTime = startTime + execution.getExecutionDuration();
+        running = false;
+        if (!execution.getState().isFinalState()) {
+          running = true;
+        }
+      }
+    
+      InfluxDB influxDB = InfluxDBFactory.connect(settings.
+        getInfluxDBAddress(), settings.getInfluxDBUser(), settings.
+        getInfluxDBPW());
+    
+      // Transform application_1493112123688_0001 to 1493112123688_0001
+      // application_ = 12 chars
+      String timestamp_attempt = appId.substring(12);
+    
+      Query query = new Query("show tag values from nodemanager with key=\"source\" " + "where source =~ /^.*"
+        + timestamp_attempt + ".*$/", "graphite");
+      QueryResult queryResult = influxDB.query(query, TimeUnit.MILLISECONDS);
+    
+      int nbExecutors = 0;
+      HashMap<Integer, List<String>> executorInfo = new HashMap<>();
+      int index = 0;
+      if (queryResult != null && queryResult.getResults() != null) {
+        for (QueryResult.Result res : queryResult.getResults()) {
+          if (res.getSeries() != null) {
+            for (QueryResult.Series series : res.getSeries()) {
+              List<List<Object>> values = series.getValues();
+              if (values != null) {
+                nbExecutors += values.size();
+                for (List<Object> l : values) {
+                  executorInfo.put(index, Stream.of(Objects.toString(l.get(1))).collect(Collectors.toList()));
+                  index++;
+                }
+              }
+            }
+          }
+        }
+      }
+    
+      /*
+       * At this point executor info contains the keys and a list with a single value, the YARN container id
+       */
+      String vCoreTemp = null;
+      HashMap<String, String> hostnameVCoreCache = new HashMap<>();
+    
+      for (Map.Entry<Integer, List<String>> entry : executorInfo.entrySet()) {
+        query = new Query("select MilliVcoreUsageAvgMilliVcores, hostname from nodemanager where source = \'" + entry.
+          getValue().get(0) + "\' limit 1", "graphite");
+        queryResult = influxDB.query(query, TimeUnit.MILLISECONDS);
+      
+        if (queryResult != null && queryResult.getResults() != null
+          && queryResult.getResults().get(0) != null && queryResult.
+          getResults().get(0).getSeries() != null) {
+          List<List<Object>> values = queryResult.getResults().get(0).getSeries().get(0).getValues();
+          String hostname = Objects.toString(values.get(0).get(2)).split("=")[1];
+          entry.getValue().add(hostname);
+        
+          if (!hostnameVCoreCache.containsKey(hostname)) {
+            // Not in cache, get the vcores of the host machine
+            query = new Query("select AllocatedVCores+AvailableVCores from nodemanager " + "where hostname =~ /.*"
+              + hostname + ".*/ limit 1", "graphite");
+            queryResult = influxDB.query(query, TimeUnit.MILLISECONDS);
+          
+            if (queryResult != null && queryResult.getResults() != null
+              && queryResult.getResults().get(0) != null && queryResult.
+              getResults().get(0).getSeries() != null) {
+              values = queryResult.getResults().get(0).getSeries().get(0).getValues();
+              vCoreTemp = Objects.toString(values.get(0).get(1));
+              entry.getValue().add(vCoreTemp);
+              hostnameVCoreCache.put(hostname, vCoreTemp); // cache it
+            }
+          } else {
+            // It's a hit, skip the database query
+            entry.getValue().add(hostnameVCoreCache.get(hostname));
+          }
+        }
+      }
+    
+      influxDB.close();
+    
+      AppInfoDTO appInfo = new AppInfoDTO(appId, startTime,
+        running, endTime, nbExecutors, executorInfo);
+    
+      return Response.ok().entity(appInfo).build();
+    
+    } catch (Exception e) {
+      LOGGER.log(Level.SEVERE, "exception while geting job ui " + e.getLocalizedMessage(), e);
+    }
+    return Response.ok().status(Response.Status.NOT_FOUND).build();
+  }
+  
+  private static final HashSet<String> PASS_THROUGH_HEADERS
+    = new HashSet<String>(
+    Arrays
+      .asList("User-Agent", "user-agent", "Accept", "accept",
+        "Accept-Encoding", "accept-encoding",
+        "Accept-Language",
+        "accept-language",
+        "Accept-Charset", "accept-charset"));
+  
+  /**
+   * Get the job ui for the specified job.
+   * This act as a proxy to get the job ui from yarn
+   * <p>
+   * @param appId
+   * @param param
+   * @param req
+   * @return
+   */
+  @GET
+  @Path("/{appId}/prox/{path: .+}")
+  @Produces(MediaType.WILDCARD)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  public Response getProxy(@PathParam("appId") final String appId, @PathParam("path") final String param,
+    @Context HttpServletRequest req) throws JobException {
+  
+    executionController.checkAccessRight(appId, project);
+    try {
+      String trackingUrl;
+      if (param.matches("http([a-zA-Z,:,/,.,0-9,-])+:([0-9])+(.)+")) {
+        trackingUrl = param;
+      } else {
+        trackingUrl = "http://" + param;
+      }
+      trackingUrl = trackingUrl.replace("@hwqm", "?");
+      if (!hasAppAccessRight(trackingUrl)) {
+        LOGGER.log(Level.SEVERE,
+          "A user is trying to access an app outside their project!");
+        return Response.status(Response.Status.FORBIDDEN).build();
+      }
+      org.apache.commons.httpclient.URI uri
+        = new org.apache.commons.httpclient.URI(trackingUrl, false);
+      
+      HttpClientParams params = new HttpClientParams();
+      params.setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
+      params.setBooleanParameter(HttpClientParams.ALLOW_CIRCULAR_REDIRECTS,
+        true);
+      HttpClient client = new HttpClient(params);
+      
+      final HttpMethod method = new GetMethod(uri.getEscapedURI());
+      Enumeration<String> names = req.getHeaderNames();
+      while (names.hasMoreElements()) {
+        String name = names.nextElement();
+        String value = req.getHeader(name);
+        if (PASS_THROUGH_HEADERS.contains(name)) {
+          //yarn does not send back the js if encoding is not accepted
+          //but we don't want to accept encoding for the html because we
+          //need to be able to parse it
+          if (!name.toLowerCase().equals("accept-encoding") || trackingUrl.
+            contains(".js")) {
+            method.setRequestHeader(name, value);
+          }
+        }
+      }
+      String user = req.getRemoteUser();
+      if (user != null && !user.isEmpty()) {
+        method.setRequestHeader("Cookie", PROXY_USER_COOKIE_NAME + "="
+          + URLEncoder.encode(user, "ASCII"));
+      }
+      
+      client.executeMethod(method);
+      Response.ResponseBuilder responseBuilder = Response.ok();
+      for (Header header : method.getResponseHeaders()) {
+        responseBuilder.header(header.getName(), header.getValue());
+      }
+      //method.getPath().contains("/allexecutors") is needed to replace the links under Executors tab
+      //which are in a json response object
+      if (method.getResponseHeader("Content-Type") == null || method.
+        getResponseHeader("Content-Type").getValue().contains("html")
+        || method.getPath().contains("/allexecutors")) {
+        final String source = "http://" + method.getURI().getHost() + ":"
+          + method.getURI().getPort();
+        if (method.getResponseHeader("Content-Length") == null) {
+          responseBuilder.entity(new StreamingOutput() {
+            @Override
+            public void write(OutputStream out) throws IOException,
+              WebApplicationException {
+              Writer writer
+                = new BufferedWriter(new OutputStreamWriter(out));
+              InputStream stream = method.getResponseBodyAsStream();
+              Reader in = new InputStreamReader(stream, "UTF-8");
+              char[] buffer = new char[4 * 1024];
+              String remaining = "";
+              int n;
+              while ((n = in.read(buffer)) != -1) {
+                StringBuilder strb = new StringBuilder();
+                strb.append(buffer, 0, n);
+                String s = remaining + strb.toString();
+                remaining = s.substring(s.lastIndexOf(">") + 1, s.length());
+                s = hopify(s.substring(0, s.lastIndexOf(">") + 1), param,
+                  appId,
+                  source);
+                writer.write(s);
+              }
+              writer.flush();
+            }
+          });
+        } else {
+          String s = hopify(method.getResponseBodyAsString(), param, appId,
+            source);
+          responseBuilder.entity(s);
+          responseBuilder.header("Content-Length", s.length());
+        }
+        
+      } else {
+        responseBuilder.entity(new StreamingOutput() {
+          @Override
+          public void write(OutputStream out) throws IOException,
+            WebApplicationException {
+            InputStream stream = method.getResponseBodyAsStream();
+            org.apache.hadoop.io.IOUtils.copyBytes(stream, out, 4096, true);
+            out.flush();
+          }
+        });
+      }
+      return responseBuilder.build();
+    } catch (Exception e) {
+      LOGGER.log(Level.SEVERE, "exception while geting job ui " + e.getLocalizedMessage(), e);
+      return Response.ok().build();
+    }
+    
+  }
+  
+  private String hopify(String ui, String param, String appId, String source) {
+    
+    //remove the link to the full cluster information in the yarn ui
+    ui = ui.replaceAll(
+      "<div id=\"user\">[\\s\\S]+Logged in as: dr.who[\\s\\S]+<div id=\"logo\">",
+      "<div id=\"logo\">");
+    ui = ui.replaceAll(
+      "<tfoot>[\\s\\S]+</tfoot>",
+      "");
+    ui = ui.replaceAll("<td id=\"navcell\">[\\s\\S]+<td class=\"content\">",
+      "<td class=\"content\">");
+    ui = ui.replaceAll("<td id=\"navcell\">[\\s\\S]+<td ", "<td ");
+    ui = ui.replaceAll(
+      "<li><a ui-sref=\"submit\"[\\s\\S]+new Job</a></li>", "");
+    
+    ui = ui.replaceAll("(?<=(href|src)=.[^>]{0,200})\\?", "@hwqm");
+    
+    ui = ui.replaceAll("(?<=(href|src)=\")/(?=[a-zA-Z])",
+      "/hopsworks-api/api/project/"
+        + project.getId() + "/jobs/" + appId + "/prox/"
+        + source + "/");
+    ui = ui.replaceAll("(?<=(href|src)=\')/(?=[a-zA-Z])",
+      "/hopsworks-api/api/project/"
+        + project.getId() + "/jobs/" + appId + "/prox/"
+        + source + "/");
+    ui = ui.replaceAll("(?<=(href|src)=\")//", "/hopsworks-api/api/project/"
+      + project.getId() + "/jobs/" + appId + "/prox/");
+    ui = ui.replaceAll("(?<=(href|src)=\')//", "/hopsworks-api/api/project/"
+      + project.getId() + "/jobs/" + appId + "/prox/");
+    ui = ui.replaceAll("(?<=(href|src)=\")(?=http)",
+      "/hopsworks-api/api/project/"
+        + project.getId() + "/jobs/" + appId + "/prox/");
+    ui = ui.replaceAll("(?<=(href|src)=\')(?=http)",
+      "/hopsworks-api/api/project/"
+        + project.getId() + "/jobs/" + appId + "/prox/");
+    ui = ui.replaceAll("(?<=(href|src)=\")(?=[a-zA-Z])",
+      "/hopsworks-api/api/project/"
+        + project.getId() + "/jobs/" + appId + "/prox/" + param);
+    ui = ui.replaceAll("(?<=(href|src)=\')(?=[a-zA-Z])",
+      "/hopsworks-api/api/project/"
+        + project.getId() + "/jobs/" + appId + "/prox/" + param);
+    ui = ui.replaceAll("(?<=\"(stdout\"|stderr\") : \")(?=[a-zA-Z])",
+      "/hopsworks-api/api/project/"
+        + project.getId() + "/jobs/" + appId + "/prox/");
+    ui = ui.replaceAll("here</a>\\s+for full log", "here</a> for latest " + settings.getSparkUILogsOffset()
+      + " bytes of logs");
+    ui = ui.replaceAll("/@hwqmstart=0", "/@hwqmstart=-" + settings.getSparkUILogsOffset());
+    return ui;
+  }
+  
+  private boolean hasAppAccessRight(String trackingUrl) {
+    String appId = "";
+    if (trackingUrl.contains("application_")) {
+      for (String elem : trackingUrl.split("/")) {
+        if (elem.contains("application_")) {
+          appId = elem;
+          break;
+        }
+      }
+    } else if (trackingUrl.contains("container_")) {
+      appId = "application_";
+      for (String elem : trackingUrl.split("/")) {
+        if (elem.contains("container_")) {
+          String[] containerIdElem = elem.split("_");
+          appId = appId + containerIdElem[2] + "_" + containerIdElem[3];
+          break;
+        }
+      }
+    } else if (trackingUrl.contains("appattempt_")) {
+      appId = "application_";
+      for (String elem : trackingUrl.split("/")) {
+        if (elem.contains("appattempt_")) {
+          String[] containerIdElem = elem.split("_");
+          appId = appId + containerIdElem[1] + "_" + containerIdElem[2];
+          break;
+        }
+      }
+    } else {
+      if (trackingUrl.contains("static")) {
+        return true;
+      }
+      return false;
+    }
+    if (!appId.isEmpty()) {
+      String appUser = yarnApplicationstateFacade.findByAppId(appId).
+        getAppuser();
+      if (!project.getName().equals(hdfsUsersBean.getProjectName(
+        appUser))) {
+        return false;
+      }
+    }
+    return true;
+  }
 }

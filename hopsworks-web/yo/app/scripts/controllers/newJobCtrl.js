@@ -368,7 +368,7 @@ angular.module('hopsWorksApp')
             var jobConfigFileImported = function (config) {
               try {
                 var jobConfig = angular.fromJson(config);
-                JobService.createNewJob(self.projectId, jobConfig.type, jobConfig.config).then(
+                JobService.createNewJob(self.projectId, jobConfig.config).then(
                         function (success) {
                           $location.path('project/' + self.projectId + '/jobs');
                           self.removed = true;
@@ -443,7 +443,7 @@ angular.module('hopsWorksApp')
                 self.tourService.createdJobName = self.jobname;
               }
 
-              JobService.createNewJob(self.projectId, self.getJobType(), self.runConfig).then(
+              JobService.createNewJob(self.projectId, self.runConfig).then(
                       function (success) {
                         $location.path('project/' + self.projectId + '/jobs');
                         StorageService.remove(self.newJobName);
