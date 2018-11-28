@@ -58,7 +58,7 @@ public class SchemalessMetadataPK {
   @Basic(optional = false)
   @NotNull
   @Column(name = "inode_id")
-  private long inodeId;
+  private Long inodeId;
 
   @Basic(optional = false)
   @NotNull
@@ -81,11 +81,11 @@ public class SchemalessMetadataPK {
     this.id = id;
   }
 
-  public long getInodeId() {
+  public Long getInodeId() {
     return inodeId;
   }
 
-  public void setInodeId(long inodeId) {
+  public void setInodeId(Long inodeId) {
     this.inodeId = inodeId;
   }
 
