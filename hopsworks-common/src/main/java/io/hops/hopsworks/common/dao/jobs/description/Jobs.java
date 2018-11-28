@@ -152,7 +152,7 @@ public class Jobs implements Serializable {
           mappedBy = "job")
   private Collection<Execution> executionCollection;
 
-  protected Jobs() {
+  public Jobs() {
     this.name = "Hopsworks job";
   }
 

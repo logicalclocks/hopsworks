@@ -41,10 +41,10 @@
 
 angular.module('hopsWorksApp')
         .controller('NewJobCtrl', ['$routeParams', 'growl', 'JobService',
-          '$location', 'ModalService', 'StorageService', '$scope', 'SparkService',
-          'FlinkService', 'TourService', 'HistoryService', 'KafkaService', 'ProjectService', 'PythonDepsService', '$timeout',
+          '$location', 'ModalService', 'StorageService', '$scope', 'TourService', 'HistoryService',
+            'KafkaService', 'ProjectService', 'PythonDepsService', '$timeout',
           function ($routeParams, growl, JobService,
-                  $location, ModalService, StorageService, $scope, SparkService, FlinkService, TourService,
+                  $location, ModalService, StorageService, $scope, TourService,
                   HistoryService, KafkaService, ProjectService, PythonDepsService, $timeout) {
 
             var self = this;
@@ -676,7 +676,7 @@ angular.module('hopsWorksApp')
                 case "SPARK":
                 case "PYSPARK":
                   self.sparkState.selectedJar = filename;
-                  SparkService.inspectJar(self.projectId, path).then(
+                  JobService.getInspection(self.projectId, reason.toLowerCase(), path).then(
                           function (success) {
                             self.runConfig = success.data;
 
@@ -728,7 +728,7 @@ angular.module('hopsWorksApp')
                   break;
                 case "FLINK":
                   self.flinkState.selectedJar = filename;
-                  FlinkService.inspectJar(self.projectId, path).then(
+                  JobService.getInspection(self.projectId, reason.toLowerCase(), path).then(
                           function (success) {
                             self.runConfig = success.data;
                             self.mainFileSelected(filename);

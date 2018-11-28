@@ -92,6 +92,7 @@ public class JobsBuilder {
       || !resource.getFilter().isEmpty()) {
       jobs = jobFacade.findByProject(resource.getOffset(), resource.getLimit(), resource.getFilter(),
         resource.getSort(), project);
+      //set the count
       return items(dto, uriInfo, resource, jobs, false);
     }
     jobs = jobFacade.findByProject(project);

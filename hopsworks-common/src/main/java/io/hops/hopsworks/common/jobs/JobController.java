@@ -46,6 +46,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.xml.bind.JAXBException;
 
 import io.hops.hopsworks.common.dao.project.Project;
@@ -106,10 +108,11 @@ public class JobController {
     }
     return created;
   }
-  
+  @TransactionAttribute(TransactionAttributeType.NEVER)
   public void updateSchedule(Project project, Jobs job, ScheduleDTO schedule, Users user) throws JobException {
     boolean isScheduleUpdated = jobFacade.updateJobSchedule(job.getId(), schedule);
     if (isScheduleUpdated) {
+      job.getJobConfig().setSchedule(schedule);
       scheduler.scheduleJobPeriodic(job);
       activityFacade.persistActivity(ActivityFacade.SCHEDULED_JOB + job.getName(), project, user);
     } else {
@@ -118,7 +121,7 @@ public class JobController {
     }
   }
   
-  
+  @TransactionAttribute(TransactionAttributeType.NEVER)
   public boolean unscheduleJob(Jobs job) {
     if (job.getJobConfig().getSchedule() != null) {
       boolean status = scheduler.unscheduleJob(job);

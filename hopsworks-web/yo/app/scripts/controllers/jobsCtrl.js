@@ -381,7 +381,7 @@ angular.module('hopsWorksApp')
 
             self.showLogs = function (jobName) {
               self.fetchingLogs = 1;
-                JobService.getAllExecutions(self.projectId, jobName).then(
+                JobService.getAllExecutions(self.projectId, jobName, "").then(
                     function (success) {
                         self.logset = [];
                         angular.forEach(success.data.items, function (temp, key) {

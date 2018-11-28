@@ -41,8 +41,6 @@ package io.hops.hopsworks.common.jobs;
 
 import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
-import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.exception.GenericException;
 import io.hops.hopsworks.common.exception.JobException;
@@ -76,8 +74,6 @@ public class JobScheduler {
   @EJB
   private JobFacade jobFacade;
   @EJB
-  private ProjectFacade projectFacade;
-  @EJB
   private ExecutionController executionController;
   @Resource
   private TimerService timerService;
@@ -91,16 +87,15 @@ public class JobScheduler {
    */
   @Timeout
   public void timeout(Timer timer) throws GenericException, JobException {
-    Serializable schedulerJobInfo = timer.getInfo();
+    Serializable jobId = timer.getInfo();
     //Valid id?
-    if (!(schedulerJobInfo instanceof SchedulerJobInfo)) {
+    if (!(jobId instanceof Integer)) {
       logger.log(Level.WARNING,
-        "Trying to run a scheduled execution, but info is not " + schedulerJobInfo.getClass().getSimpleName());
+        "Trying to run a scheduled execution, but info is not " + jobId.getClass().getSimpleName());
       return;
     }
     //Valid job?
-    Project project = projectFacade.findByName(((SchedulerJobInfo) schedulerJobInfo).getProjectName());
-    Jobs job = jobFacade.findByProjectAndId(project, ((SchedulerJobInfo) schedulerJobInfo).getJobId());
+    Jobs job = jobFacade.find(jobId);
 
     //Make sure the job is valid (still exists in DB and user still in the project where the job is)
     if (job == null) {
@@ -151,7 +146,7 @@ public class JobScheduler {
    */
   public void scheduleJobOnCalendar(Jobs job, ScheduleExpression when) {
     TimerConfig config = new TimerConfig();
-    config.setInfo(new SchedulerJobInfo(job.getProject().getName(), job.getId()));
+    config.setInfo(job.getId());
     timerService.createCalendarTimer(when, config);
   }
 
@@ -170,8 +165,8 @@ public class JobScheduler {
     }
     //Then: set up interval timer
     ScheduleDTO schedule = job.getJobConfig().getSchedule();
-    timerService.createTimer(new Date(schedule.getStart()), schedule.getNumber()
-            * schedule.getUnit().getDuration(), job.getId());
+    timerService.createTimer(new Date(schedule.getStart()), schedule.getNumber() * schedule.getUnit().getDuration(),
+      job.getId());
   }
   /**
    * Unschedule the given job.
@@ -188,32 +183,6 @@ public class JobScheduler {
       }
     }
     return false;
-  }
-  
-  public class SchedulerJobInfo implements Serializable {
-    private String projectName;
-    private Integer jobId;
-    
-    public SchedulerJobInfo(String projectName, Integer jobId) {
-      this.projectName = projectName;
-      this.jobId = jobId;
-    }
-    
-    public String getProjectName() {
-      return projectName;
-    }
-    
-    public void setProjectName(String projectName) {
-      this.projectName = projectName;
-    }
-    
-    public Integer getJobId() {
-      return jobId;
-    }
-    
-    public void setJobId(Integer jobId) {
-      this.jobId = jobId;
-    }
   }
   
 }

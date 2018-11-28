@@ -222,6 +222,15 @@ angular.module('hopsWorksApp')
                */
               unscheduleJob: function (projectId, name) {
                 return $http.delete('/api/project/' + projectId + '/jobs/' + name  + "/schedule");
+              },
+              /**
+               * Get inspection object (it's a subset of a job configuration)
+               * @param projectId
+               * @param path
+               * @returns {*}
+               */
+              getInspection: function (projectId, type, path) {
+                  return $http.get('/api/project/' + projectId + '/jobs/' + type + '/inspection?path=' + path);
               }
 
             };

@@ -87,7 +87,7 @@ angular.module('hopsWorksApp')
             };
 
             var getExecutions = function () {
-              JobService.getAllExecutions(projectId, job.name).then(
+              JobService.getAllExecutions(projectId, job.name, "").then(
                       function (success) {
                         self.job.executions = success.data.items;
                         self.showExecutions = success.data.items.length > 0;

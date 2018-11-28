@@ -291,12 +291,13 @@ public class JobService {
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response updateSchedule(ScheduleDTO schedule,
     @PathParam("name") String name,
-    @Context HttpServletRequest req) throws JobException {
+    @Context HttpServletRequest req,
+    @Context UriInfo uriInfo) throws JobException {
     if(Strings.isNullOrEmpty(name)) {
-      throw new IllegalArgumentException("job name was not provided or it was empty.");
+      throw new IllegalArgumentException("job name was not provided or it was not set.");
     }
     if(schedule == null){
-      throw new IllegalArgumentException("Schedule parameter was null.");
+      throw new IllegalArgumentException("Schedule parameter was not provided.");
     }
     Jobs job = jobFacade.findByProjectAndName(project, name);
     if (job == null) {
@@ -321,15 +322,15 @@ public class JobService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response unscheduleJob(@PathParam("name") String name) throws JobException {
+  public Response unscheduleJob(@PathParam("name") String name, @Context HttpServletRequest req) throws JobException {
     if(Strings.isNullOrEmpty(name)) {
-      throw new IllegalArgumentException("job name was not provided or it was empty.");
+      throw new IllegalArgumentException("job name was not provided or it was not set.");
     }
     Jobs job = jobFacade.findByProjectAndName(project, name);
     if(job == null){
       throw new JobException(RESTCodes.JobErrorCode.JOB_NOT_FOUND, Level.FINEST);
     }
-    
+    jobController.unscheduleJob(job);
     return Response.noContent().build();
   }
   

@@ -29,6 +29,7 @@ public abstract class RestDTO<D> {
   private URI href;
   protected Boolean expand;
   protected List<D> items;
+  protected Long count;
   
   public RestDTO(URI href) {
     this.href = href;
@@ -84,5 +85,13 @@ public abstract class RestDTO<D> {
       this.items = new ArrayList<>();
     }
     this.items.add(item);
+  }
+  
+  public Long getCount() {
+    return count;
+  }
+  
+  public void setCount(Long count) {
+    this.count = count;
   }
 }

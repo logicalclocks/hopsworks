@@ -92,13 +92,13 @@ public abstract class AbstractFacade<T> {
     return q.getResultList();
   }
 
-  public int count() {
+  public long count() {
     javax.persistence.criteria.CriteriaQuery cq = getEntityManager().
             getCriteriaBuilder().createQuery();
     javax.persistence.criteria.Root<T> rt = cq.from(entityClass);
     cq.select(getEntityManager().getCriteriaBuilder().count(rt));
     javax.persistence.Query q = getEntityManager().createQuery(cq);
-    return ((Long) q.getSingleResult()).intValue();
+    return (Long) q.getSingleResult();
   }
   
   public void setOffsetAndLim(Integer offset, Integer limit, Query q) {

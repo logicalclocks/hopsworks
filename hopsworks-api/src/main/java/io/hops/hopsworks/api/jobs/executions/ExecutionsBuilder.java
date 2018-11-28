@@ -113,24 +113,24 @@ public class ExecutionsBuilder {
         || resource.getFilter() != null) {
         executions = executionFacade.findByJob(resource.getOffset(), resource.getLimit(), resource.getFilter(),
           resource.getSort(), job);
-        return items(new ExecutionDTO(), uriInfo, resource, executions, false);
-      }
-      executions = executionFacade.findByJob(job);
-      return items(new ExecutionDTO(), uriInfo, resource, executions, true);
-    }
-    return dto;
-  }
-  
-  private ExecutionDTO items(ExecutionDTO dto, UriInfo uriInfo, Resource resource,
-    List<Execution> executions, boolean sort) {
-    if (executions != null && !executions.isEmpty()) {
-      if(sort) {
+      } else {
+        executions = executionFacade.findByJob(job);
         //Sort collection and return elements based on offset, limit, sortBy, orderBy
         Comparator<Execution> comparator = getComparator(resource);
         if (comparator != null) {
           executions.sort(comparator);
         }
       }
+      dto.setCount(executionFacade.count());
+      return items(dto, uriInfo, resource, executions);
+      
+    }
+    return dto;
+  }
+  
+  private ExecutionDTO items(ExecutionDTO dto, UriInfo uriInfo, Resource resource,
+    List<Execution> executions) {
+    if (executions != null && !executions.isEmpty()) {
       executions.forEach((exec) -> {
         dto.addItem(build(uriInfo, resource, exec));
       });
