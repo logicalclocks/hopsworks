@@ -93,22 +93,21 @@ public class JobsBuilder {
       jobs = jobFacade.findByProject(resource.getOffset(), resource.getLimit(), resource.getFilter(),
         resource.getSort(), project);
       //set the count
-      return items(dto, uriInfo, resource, jobs, false);
+    } else {
+      jobs = jobFacade.findByProject(project);
+      //Sort collection and return elements based on offset, limit, sortBy, orderBy
+      Comparator<Jobs> comparator = getComparator(resource);
+      if (comparator != null) {
+        jobs.sort(comparator);
+      }
     }
-    jobs = jobFacade.findByProject(project);
-    return items(dto, uriInfo, resource, jobs, true);
+    dto.setCount(jobFacade.count());
+    return items(dto, uriInfo, resource, jobs);
   }
   
-  private JobDTO items(JobDTO dto, UriInfo uriInfo, Resource resource, List<Jobs> jobs,
-    boolean sort) {
+  private JobDTO items(JobDTO dto, UriInfo uriInfo, Resource resource, List<Jobs> jobs) {
     if (jobs != null && !jobs.isEmpty()) {
-      if (sort) {
-        //Sort collection and return elements based on offset, limit, sortBy, orderBy
-        Comparator<Jobs> comparator = getComparator(resource);
-        if (comparator != null) {
-          jobs.sort(comparator);
-        }
-      }
+      
       jobs.forEach((job) -> {
         dto.addItem(build(uriInfo, resource, job));
       });

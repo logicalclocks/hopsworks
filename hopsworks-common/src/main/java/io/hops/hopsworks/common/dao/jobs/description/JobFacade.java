@@ -87,12 +87,9 @@ public class JobFacade extends AbstractFacade<Jobs> {
    * Create a new Jobs instance.
    * <p/>
    *
-   * @param creator
-   *   The creator of the job.
-   * @param project
-   *   The project in which this job is defined.
-   * @param config
-   *   The job configuration file.
+   * @param creator The creator of the job.
+   * @param project The project in which this job is defined.
+   * @param config The job configuration file.
    * @return
    */
   //This seems to ensure that the entity is actually created and can later 

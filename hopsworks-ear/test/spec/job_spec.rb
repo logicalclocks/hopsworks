@@ -33,7 +33,7 @@ describe "On #{ENV['OS']}" do
       before :all do
         with_valid_tour_project("spark")
       end
-      after :all do
+      after :each do
         clean_jobs(@project[:id])
       end
       it "should create three spark jobs" do
@@ -61,7 +61,7 @@ describe "On #{ENV['OS']}" do
         #validate href
         expect(URI(json_body[:href]).path).to eq "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jobs/demo_job_1"
         expect(json_body[:config][:type]).to eq "sparkJobConfiguration"
-        expect(json_body[:type]).to eq "SPARK"
+        expect(json_body[:jobType]).to eq "SPARK"
       end
       it "should get three jobs" do
         create_sparktour_job(@project, "demo_job_1")
@@ -71,7 +71,6 @@ describe "On #{ENV['OS']}" do
         expect_status(200)
         expect(json_body[:items].count).to eq 3
       end
-
       it "should get three jobs with type spark" do
         create_sparktour_job(@project, "demo_job_1")
         create_sparktour_job(@project, "demo_job_2")
@@ -98,9 +97,33 @@ describe "On #{ENV['OS']}" do
         create_sparktour_job(@project, "demo_job_1")
         member = create_user
         add_member(member[:email], "Data scientist")
-        create_session(member[:email],"Pass123")
+        create_session(member[:email], "Pass123")
         delete_job(@project[:id], "demo_job_1")
         puts response
+      end
+    end
+  end
+  describe 'job sort, filter, offset and limit' do
+    context 'with authentication' do
+      before :all do
+        with_valid_tour_project("spark")
+        create_sparktour_job(@project, "demo_job_1")
+        create_sparktour_job(@project, "demo_job_2")
+        create_sparktour_job(@project, "demo_job_3")
+        create_spark_py
+      end
+      after :each do
+        clean_jobs(@project[:id])
+      end
+      describe "Jobs sort" do
+        it "should get all jobs sorted by name" do
+          create_sparktour_job(@project, "demo_job_1")
+          expect_status(201)
+          create_sparktour_job(@project, "demo_job_2")
+          expect_status(201)
+          create_sparktour_job(@project, "demo_job_3")
+          expect_status(201)
+        end
       end
     end
   end

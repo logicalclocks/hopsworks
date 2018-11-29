@@ -47,6 +47,35 @@ module JobHelper
     #job
   end
 
+  def create_sparkpy_job(project, job_name)
+    job_conf = {
+        "type":"sparkJobConfiguration",
+        "appName":"#{job_name}",
+        "amQueue":"default",
+        "amMemory":1024,
+        "amVCores":1,
+        "jobType":"PYSPARK",
+        "appPath":"hdfs:///Projects/#{project[:projectname]}/TestJob/pi.py",
+        "mainClass":"org.apache.spark.deploy.PythonRunner",
+        "args":"10",
+        "spark.executor.instances":1,
+        "spark.executor.cores":1,
+        "spark.executor.memory":1024,
+        "spark.executor.gpus":0,
+        "spark.dynamicAllocation.enabled":false,
+        "spark.dynamicAllocation.minExecutors":1,
+        "spark.dynamicAllocation.maxExecutors":10,
+        "spark.dynamicAllocation.initialExecutors":1
+    }
+
+    post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jobs", job_conf
+    #job_id = json_body[:id]
+    #job = get_job_from_db(job_id)
+    #expect(job[:id]).to eq job_id
+    #expect(job[:name]).to eq job_conf[:appName]
+    #job
+  end
+
   def get_jobs(project_id)
     get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs"
   end

@@ -211,8 +211,10 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
   public enum Sorts {
     ID("ID", "e.id ", "ASC"),
     SUBMISSION_TIME("SUBMISSION_TIME", "e.submissionTime ", "DESC"),
-    DURATION("DURATION", "(e.execution_stop-e.execution_start) ", "ASC");
-  
+    STATE("STATE", "e.state ", "ASC"),
+    FINAL_STATUS("FINAL_STATUS", "e.finalStatus ", "ASC"),
+    APPID("APPID", "e.appId ", "DESC"),
+    PROGRESS("PROGRESS", "e.progress ", "ASC");
     private final String value;
     private final String sql;
     private final String defaultParam;
