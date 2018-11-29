@@ -183,10 +183,67 @@ describe "On #{ENV['OS']}" do
               expect(sortedRes & ["PROJECT", "DATASET", "JOB"]).to be_empty
             end
           end
+          describe "Activities expand" do
+            it 'should expand creator for all activities.' do
+              get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/activities?expand=creator"
+              expandedRes = json_body[:items].map { |o| o[:userDTO] }
+              expandedRes.each do | u |
+                expect(u[:email]).not_to be_nil
+                expect(u[:firstname]).not_to be_nil
+                expect(u[:lastname]).not_to be_nil
+              end              
+            end
+            it 'should not expand creator for all activities.' do
+              get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/activities"
+              expandedRes = json_body[:items].map { |o| o[:userDTO] }
+              expandedRes.each do | u |
+                expect(u[:email]).to be_nil
+                expect(u[:firstname]).to be_nil
+                expect(u[:lastname]).to be_nil
+              end              
+            end
+            it 'should not expand creator.' do
+              uri = URI(@activities.first[:href])
+              get uri.path
+              u = json_body[:userDTO]
+              expect(u[:email]).to be_nil
+              expect(u[:firstname]).to be_nil
+              expect(u[:lastname]).to be_nil             
+            end
+            it 'should expand creator.' do
+              uri = URI(@activities.first[:href])
+              get "#{uri.path}?expand=creator"
+              u = json_body[:userDTO]
+              expect(u[:email]).not_to be_nil
+              expect(u[:firstname]).not_to be_nil
+              expect(u[:lastname]).not_to be_nil             
+            end
+          end
           describe "Activities invaid query" do
-            it 'should return invalid query error code.' do
+            it 'should return invalid query error code filter by param is invalid.' do
               get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/activities?filter_by=flag_neq:bla"
-              expect(json_body[:errorCode]).to eq(120000)#should be 270000
+              expect(json_body[:errorCode]).to eq(270000)
+            end
+            it 'should return invalid query error code filter by key is invalid.' do
+              get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/activities?filter_by=flag_nq:bla"
+              expect(json_body[:errorCode]).to eq(120004)
+            end
+            it 'should return invalid query error code sort by param is invalid.' do
+              get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/activities?sort_by=flag:bla"
+              expect(json_body[:errorCode]).to eq(120004) 
+            end
+            it 'should return invalid query error code sort by key is invalid.' do
+              get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/activities?sort_by=false:asc"
+              expect(json_body[:errorCode]).to eq(120004)
+            end
+            it 'should return invalid query error code if expand by key is invalid.' do
+              get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/activities?expand=creato"
+              expect(json_body[:errorCode]).to eq(120004)
+            end
+            it 'should return invalid query error code if expand by key is invalid.' do
+              uri = URI(@activities.first[:href])
+              get "#{uri.path}?expand=creato"
+              expect(json_body[:errorCode]).to eq(120004)
             end
           end
         end
@@ -343,11 +400,68 @@ describe "On #{ENV['OS']}" do
               sortedRes = json_body[:items].map { |o| "#{o[:flag]}" }
               expect(sortedRes & ["PROJECT", "DATASET", "JOB"]).to be_empty
             end
+            describe "Activities expand" do
+              it 'should expand creator for all activities.' do
+                get "#{ENV['HOPSWORKS_API']}/users/activities?expand=creator"
+                expandedRes = json_body[:items].map { |o| o[:userDTO] }
+                expandedRes.each do | u |
+                  expect(u[:email]).not_to be_nil
+                  expect(u[:firstname]).not_to be_nil
+                  expect(u[:lastname]).not_to be_nil
+                end              
+              end
+              it 'should not expand creator for all activities.' do
+                get "#{ENV['HOPSWORKS_API']}/users/activities"
+                expandedRes = json_body[:items].map { |o| o[:userDTO] }
+                expandedRes.each do | u |
+                  expect(u[:email]).to be_nil
+                  expect(u[:firstname]).to be_nil
+                  expect(u[:lastname]).to be_nil
+                end              
+              end
+              it 'should not expand creator.' do
+                uri = URI(@user_activities.first[:href])
+                get uri.path
+                u = json_body[:userDTO]
+                expect(u[:email]).to be_nil
+                expect(u[:firstname]).to be_nil
+                expect(u[:lastname]).to be_nil             
+              end
+              it 'should expand creator.' do
+                uri = URI(@user_activities.first[:href])
+                get "#{uri.path}?expand=creator"
+                u = json_body[:userDTO]
+                expect(u[:email]).not_to be_nil
+                expect(u[:firstname]).not_to be_nil
+                expect(u[:lastname]).not_to be_nil             
+              end
+            end
           end
           describe "Activities invaid query" do
-            it 'should return invalid query error code.' do
+            it 'should return invalid query error code if filter by parm is invalid.' do
               get "#{ENV['HOPSWORKS_API']}/users/activities?filter_by=flag_neq:bla"
-              expect(json_body[:errorCode]).to eq(120000)#should be 270000
+              expect(json_body[:errorCode]).to eq(270000)
+            end
+            it 'should return invalid query error code if filter by key is invalid.' do
+              get "#{ENV['HOPSWORKS_API']}/users/activities?filter_by=flag_nq:bla"
+              expect(json_body[:errorCode]).to eq(120004)
+            end
+            it 'should return invalid query error code if sort by param is invalid.' do
+              get "#{ENV['HOPSWORKS_API']}/users/activities?sort_by=flag:bla"
+              expect(json_body[:errorCode]).to eq(120004) 
+            end
+            it 'should return invalid query error code if sort by key is invalid.' do
+              get "#{ENV['HOPSWORKS_API']}/users/activities?sort_by=false:asc"
+              expect(json_body[:errorCode]).to eq(120004)
+            end
+            it 'should return invalid query error code if expand by key is invalid.' do
+              get "#{ENV['HOPSWORKS_API']}/users/activities?expand=creato"
+              expect(json_body[:errorCode]).to eq(120004)
+            end
+            it 'should return invalid query error code if expand by key is invalid.' do
+              uri = URI(@user_activities.first[:href])
+              get "#{uri.path}?expand=creato"
+              expect(json_body[:errorCode]).to eq(120004)
             end
           end
         end

@@ -24,7 +24,6 @@ import io.hops.hopsworks.common.dao.user.activity.Activity;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.exception.ActivitiesException;
 import io.hops.hopsworks.common.exception.RESTCodes;
-import io.hops.hopsworks.common.exception.ResourceException;
 
 import java.util.Comparator;
 import java.util.Date;
@@ -34,9 +33,12 @@ import java.util.Set;
 import java.util.logging.Level;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.ws.rs.core.UriInfo;
 
 @Stateless
+@TransactionAttribute(TransactionAttributeType.NEVER)
 public class ActivitiesBuilder {
 
   @EJB
@@ -140,69 +142,56 @@ public class ActivitiesBuilder {
     return build(uriInfo, resource, activity);
   }
 
-  public ActivitiesDTO buildItems(UriInfo uriInfo, Resource Resource) throws ResourceException {
+  public ActivitiesDTO buildItems(UriInfo uriInfo, Resource Resource)  {
     return items(new ActivitiesDTO(), uriInfo, Resource);
   }
 
-  public ActivitiesDTO buildItems(UriInfo uriInfo, Resource Resource, Users user) throws ResourceException {
+  public ActivitiesDTO buildItems(UriInfo uriInfo, Resource Resource, Users user) {
     return items(new ActivitiesDTO(), uriInfo, Resource, user);
   }
 
-  public ActivitiesDTO buildItems(UriInfo uriInfo, Resource Resource, Project project) throws ResourceException {
+  public ActivitiesDTO buildItems(UriInfo uriInfo, Resource Resource, Project project) {
     return items(new ActivitiesDTO(), uriInfo, Resource, project);
   }
 
-  private ActivitiesDTO items(ActivitiesDTO dto, UriInfo uriInfo, Resource property) throws ResourceException {
+  private ActivitiesDTO items(ActivitiesDTO dto, UriInfo uriInfo, Resource resource) {
     List<Activity> activities;
-    try {
-      if (property.getOffset() != null || property.getLimit() != null || (property.getFilter() != null && !property.
-          getFilter().isEmpty())) {
-        activities = activityFacade.findAll(property.getOffset(), property.getLimit(), property.getFilter(),
-            property.getSort());
-        return items(dto, uriInfo, property, activities, false);
-      }
-      activities = activityFacade.getAllActivities();
-      return items(dto, uriInfo, property, activities, true);
-    } catch (IllegalArgumentException iae) {
-      throw new ResourceException(RESTCodes.ResourceErrorCode.INVALID_QUERY_PARAMETER, Level.FINE, iae.getMessage());
+    if (resource.getOffset() != null || resource.getLimit() != null || (resource.getFilter() != null && !resource.
+        getFilter().isEmpty())) {
+      activities = activityFacade.findAll(resource.getOffset(), resource.getLimit(), resource.getFilter(),
+          resource.getSort());
+      return items(dto, uriInfo, resource, activities, false);
     }
+    activities = activityFacade.getAllActivities();
+    return items(dto, uriInfo, resource, activities, true);
   }
 
-  private ActivitiesDTO items(ActivitiesDTO dto, UriInfo uriInfo, Resource property, Users user) throws
-      ResourceException {
+  private ActivitiesDTO items(ActivitiesDTO dto, UriInfo uriInfo, Resource resource, Users user) {
     List<Activity> activities;
-    try {
-      if (property.getOffset() != null || property.getLimit() != null || property.getFilter() != null) {
-        activities = activityFacade.findAllByUser(property.getOffset(), property.getLimit(), property.getFilter(),
-            property.getSort(), user);
-        return items(dto, uriInfo, property, activities, false);
-      }
-      activities = activityFacade.getAllActivityByUser(user);
-      return items(dto, uriInfo, property, activities, true);
-    } catch (IllegalArgumentException iae) {
-      throw new ResourceException(RESTCodes.ResourceErrorCode.INVALID_QUERY_PARAMETER, Level.FINE, iae.getMessage());
+    if (resource.getOffset() != null || resource.getLimit() != null || (resource.getFilter() != null && !resource.
+        getFilter().isEmpty())) {
+      activities = activityFacade.findAllByUser(resource.getOffset(), resource.getLimit(), resource.getFilter(),
+          resource.getSort(), user);
+      return items(dto, uriInfo, resource, activities, false);
     }
+    activities = activityFacade.getAllActivityByUser(user);
+    return items(dto, uriInfo, resource, activities, true);
   }
 
-  private ActivitiesDTO items(ActivitiesDTO dto, UriInfo uriInfo, Resource resource, Project project) throws
-      ResourceException {
+  private ActivitiesDTO items(ActivitiesDTO dto, UriInfo uriInfo, Resource resource, Project project) {
     List<Activity> activities;
-    try {
-      if (resource.getOffset() != null || resource.getLimit() != null || resource.getSort() != null
-          || resource.getFilter() != null) {
-        activities = activityFacade.findAllByProject(resource.getOffset(), resource.getLimit(), resource.getFilter(),
-            resource.getSort(), project);
-        return items(dto, uriInfo, resource, activities, false);
-      }
-      activities = activityFacade.getAllActivityByProject(project);
-      return items(dto, uriInfo, resource, activities, true);
-    } catch (IllegalArgumentException iae) {
-      throw new ResourceException(RESTCodes.ResourceErrorCode.INVALID_QUERY_PARAMETER, Level.FINE, iae.getMessage());
+    if (resource.getOffset() != null || resource.getLimit() != null || (resource.getFilter() != null && !resource.
+        getFilter().isEmpty())) {
+      activities = activityFacade.findAllByProject(resource.getOffset(), resource.getLimit(), resource.getFilter(),
+          resource.getSort(), project);
+      return items(dto, uriInfo, resource, activities, false);
     }
+    activities = activityFacade.getAllActivityByProject(project);
+    return items(dto, uriInfo, resource, activities, true);
   }
 
-  private ActivitiesDTO items(ActivitiesDTO dto, UriInfo uriInfo, Resource property,
-      List<Activity> activities, boolean sort) {
+  private ActivitiesDTO items(ActivitiesDTO dto, UriInfo uriInfo, Resource property, List<Activity> activities, 
+      boolean sort) {
     if (activities != null && !activities.isEmpty()) {
       if (sort) {
         Comparator<Activity> comparator = getComparator(property);
@@ -273,7 +262,7 @@ public class ActivitiesBuilder {
         case ASC:
           return a.compareTo(b);
         case DESC:
-          return a.compareTo(b);
+          return b.compareTo(a);
         default:
           throw new UnsupportedOperationException("Order By " + orderBy + " not supported");
       }

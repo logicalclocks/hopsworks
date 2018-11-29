@@ -51,6 +51,7 @@ import javax.persistence.TypedQuery;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.AbstractFacade;
+import io.hops.hopsworks.common.exception.InvalidQueryException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Set;
@@ -84,6 +85,7 @@ public class ActivityFacade extends AbstractFacade<Activity> {
   public static final String SCHEDULED_JOB = " scheduled a job named ";
   public static final String EXECUTED_JOB = " ran a job used as input file ";
   public static final String TRASH_NOTEBOOK = " moved to Zeppelin Trash ";
+
   // Flag constants 
   public enum ActivityFlag {
     MEMBER("MEMBER"),
@@ -91,7 +93,7 @@ public class ActivityFacade extends AbstractFacade<Activity> {
     SERVICE("SERVICE"),
     DATASET("DATASET"),
     JOB("JOB");
-    
+
     private final String value;
 
     private ActivityFlag(String value) {
@@ -324,8 +326,16 @@ public class ActivityFacade extends AbstractFacade<Activity> {
   private void setFilterQuery(AbstractFacade.FilterBy filterBy, Query q) {
     String[] filterStrs = filterBy.getParam().split(",");
     List<String> activityFlags = new ArrayList<>();
+    ActivityFacade.ActivityFlag flag;
+    String field = filterBy.getField();
     for (String filterStr : filterStrs) {
-      activityFlags.add(ActivityFacade.ActivityFlag.valueOf(filterStr).getValue());
+      try {
+        flag = ActivityFacade.ActivityFlag.valueOf(filterStr);
+      } catch (IllegalArgumentException iae) {
+        throw new InvalidQueryException("Filter value for " + field + " needs to set valid " + field + ", but found: "
+            + filterStr, iae);
+      }
+      activityFlags.add(flag.getValue());
     }
     q.setParameter(filterBy.getField(), activityFlags);
   }

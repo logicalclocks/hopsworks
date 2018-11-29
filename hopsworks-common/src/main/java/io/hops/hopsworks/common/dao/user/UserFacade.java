@@ -43,6 +43,7 @@ import io.hops.hopsworks.common.dao.user.security.UserGroup;
 import io.hops.hopsworks.common.dao.user.security.UserGroupPK;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountType;
+import io.hops.hopsworks.common.exception.InvalidQueryException;
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -99,8 +100,7 @@ public class UserFacade extends AbstractFacade<Users> {
       }
     }
     if (roles.isEmpty()) {
-      throw new IllegalArgumentException("Filter value for " + field + " needs to set valid roles, but found: "
-          + values);
+      throw new InvalidQueryException("Filter value for " + field + " needs to set valid roles, but found: " + values);
     }
     return roles;
   }
@@ -110,14 +110,14 @@ public class UserFacade extends AbstractFacade<Users> {
     try {
       val = Integer.parseInt(value);
     } catch (NumberFormatException e) {
-      throw new IllegalArgumentException("Filter value for " + field + " needs to set an Integer, but found: " + value);
+      throw new InvalidQueryException("Filter value for " + field + " needs to set an Integer, but found: " + value);
     }
     return val;
   }
   
   private UserAccountStatus getStatusValue(String field, String value) {
     if (value == null || value.isEmpty()) {
-      throw new IllegalArgumentException("Filter value for " + field + " needs to set an Integer or a valid " + field
+      throw new InvalidQueryException("Filter value for " + field + " needs to set an Integer or a valid " + field
           + ", but found: " + value);
     }
     UserAccountStatus val;
@@ -128,7 +128,7 @@ public class UserFacade extends AbstractFacade<Users> {
       try {
         val = UserAccountStatus.valueOf(value);
       } catch (IllegalArgumentException ie) {
-        throw new IllegalArgumentException("Filter value for " + field + " needs to set an Integer or a valid " + field
+        throw new InvalidQueryException("Filter value for " + field + " needs to set an Integer or a valid " + field
             + ", but found: " + value);
       }
     }

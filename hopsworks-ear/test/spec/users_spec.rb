@@ -450,6 +450,24 @@ describe "On #{ENV['OS']}" do
             end
           end
         end
+        describe "Users invalid query" do
+          it 'should return invalid query error code if filter by param is invalid.' do
+            get "#{ENV['HOPSWORKS_API']}/users?filter_by=false_login_lt:bla"
+            expect(json_body[:errorCode]).to eq(270000) 
+          end
+          it 'should return invalid query error code if filter by key is invalid.' do
+            get "#{ENV['HOPSWORKS_API']}/users?filter_by=false_login_ls:bla"
+            expect(json_body[:errorCode]).to eq(120004)
+          end
+          it 'should return invalid query error code if sort by param is invalid.' do
+            get "#{ENV['HOPSWORKS_API']}/users?sort_by=false_login_lt:bla"
+            expect(json_body[:errorCode]).to eq(120004) 
+          end
+          it 'should return invalid query error code if sort by key is invalid.' do
+            get "#{ENV['HOPSWORKS_API']}/users?sort_by=false_login_ls:bla"
+            expect(json_body[:errorCode]).to eq(120004)
+          end
+        end
       end
     end
   end

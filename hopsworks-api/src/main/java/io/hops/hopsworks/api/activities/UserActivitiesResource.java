@@ -21,7 +21,6 @@ import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.api.Resource;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.ActivitiesException;
-import io.hops.hopsworks.common.exception.ResourceException;
 import io.hops.hopsworks.common.exception.UserException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.ApiOperation;
@@ -55,18 +54,20 @@ public class UserActivitiesResource {
   @ApiOperation(value = "Finds all activities for a user.", response = ActivitiesDTO.class)
   @JWTRequired(acceptedTokens = {Audience.API},
       allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response findAllByProject(
+  public Response findAllByUser(
       @BeanParam Pagination pagination,
       @BeanParam ActivitiesBeanParam activitiesBeanParam,
       @Context UriInfo uriInfo,
-      @Context SecurityContext sc) throws ResourceException {
+      @Context SecurityContext sc) {
     Users user = jWTHelper.getUserPrincipal(sc);
     Resource resource = new Resource(Resource.Name.ACTIVITIES);
     resource.setOffset(pagination.getOffset());
     resource.setLimit(pagination.getLimit());
     resource.setSort(activitiesBeanParam.getSortBySet());
     resource.setFilter(activitiesBeanParam.getFilter());
-    resource.setExpansions(activitiesBeanParam.getResources());
+    if (activitiesBeanParam.getExpansions() != null) {
+      resource.setExpansions(activitiesBeanParam.getExpansions().getResources());
+    }
   
     ActivitiesDTO activitiesDTO = activitiesBuilder.buildItems(uriInfo, resource, user);
     return Response.ok().entity(activitiesDTO).build();
@@ -80,12 +81,12 @@ public class UserActivitiesResource {
       allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response findAllById(
       @PathParam("activityId") Integer activityId,
-      @BeanParam ActivitiesBeanParam activitiesBeanParam,
+      @BeanParam ExpansionBeanParam expansions,
       @Context UriInfo uriInfo,
       @Context SecurityContext sc) throws ActivitiesException, UserException {
     Users user = jWTHelper.getUserPrincipal(sc);
     Resource resource = new Resource(Resource.Name.ACTIVITIES);
-    resource.setExpansions(activitiesBeanParam.getResources());
+    resource.setExpansions(expansions.getResources());
     ActivitiesDTO activitiesDTO = activitiesBuilder.build(uriInfo, resource, user, activityId);
     return Response.ok().entity(activitiesDTO).build();
   }

@@ -15,12 +15,11 @@
  */
 package io.hops.hopsworks.api.activities;
 
-import io.hops.hopsworks.common.api.Resource;
 import io.swagger.annotations.ApiParam;
 
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.QueryParam;
 
 public class ActivitiesBeanParam {
@@ -35,13 +34,13 @@ public class ActivitiesBeanParam {
       allowableValues = "flag:project, flag:dataset, flag:member, flag:service, flag:job",
       allowMultiple = true)
   private Set<FilterBy> filter;
-  @QueryParam("expand")
-  @ApiParam(value = "ex. expand=creator")
-  private Set<ActivityExpansions> expansions;
+  @BeanParam
+  private ExpansionBeanParam expansions;
 
   public ActivitiesBeanParam(
       @QueryParam("sort_by") String sortBy, 
-      @QueryParam("filter_by") Set<FilterBy> filter) {
+      @QueryParam("filter_by") Set<FilterBy> filter,
+      @BeanParam ExpansionBeanParam expansions) {
     this.sortBy = sortBy;
     this.sortBySet = getSortBy(sortBy);
     this.filter = filter;
@@ -81,22 +80,14 @@ public class ActivitiesBeanParam {
 
   public Set<SortBy> getSortBySet() {
     return sortBySet;
-  }
-  
-  public Set<ActivityExpansions> getExpansions() {
+  } 
+
+  public ExpansionBeanParam getExpansions() {
     return expansions;
   }
-  
-  public void setExpansions(Set<ActivityExpansions> expansions) {
+
+  public void setExpansions(ExpansionBeanParam expansions) {
     this.expansions = expansions;
-  }
-  
-  public Set<Resource> getResources(){
-    Set<Resource> expansions = new HashSet<>();
-    for(ActivityExpansions activityExpansion : this.expansions){
-      expansions.add(activityExpansion.getResource());
-    }
-    return expansions;
   }
 
 }

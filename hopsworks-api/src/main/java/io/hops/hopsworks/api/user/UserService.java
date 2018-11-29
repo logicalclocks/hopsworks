@@ -54,7 +54,6 @@ import io.hops.hopsworks.common.dao.user.UserProjectDTO;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.ProjectException;
 import io.hops.hopsworks.common.exception.RESTCodes;
-import io.hops.hopsworks.common.exception.ResourceException;
 import io.hops.hopsworks.common.exception.UserException;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.user.UsersController;
@@ -120,7 +119,7 @@ public class UserService {
   public Response findAll(
       @BeanParam Pagination pagination,
       @BeanParam UsersBeanParam usersBeanParam,
-      @Context UriInfo uriInfo) throws ResourceException {
+      @Context UriInfo uriInfo) {
     Resource resource = new Resource(Resource.Name.USERS);
     resource.setOffset(pagination.getOffset());
     resource.setLimit(pagination.getLimit());

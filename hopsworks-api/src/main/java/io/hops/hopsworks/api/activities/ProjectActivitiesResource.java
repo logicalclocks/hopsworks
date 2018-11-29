@@ -105,7 +105,9 @@ public class ProjectActivitiesResource {
     resource.setLimit(pagination.getLimit());
     resource.setSort(activitiesBeanParam.getSortBySet());
     resource.setFilter(activitiesBeanParam.getFilter());
-    resource.setExpansions(activitiesBeanParam.getResources());
+    if (activitiesBeanParam.getExpansions() != null) {
+      resource.setExpansions(activitiesBeanParam.getExpansions().getResources());
+    }
   
     ActivitiesDTO activitiesDTO = activitiesBuilder.buildItems(uriInfo, resource, project);
     return Response.ok().entity(activitiesDTO).build();
@@ -120,11 +122,11 @@ public class ProjectActivitiesResource {
       allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response findAllById(
       @PathParam("activityId") Integer activityId,
-      @BeanParam ActivitiesBeanParam activitiesBeanParam,
+      @BeanParam ExpansionBeanParam expansions,
       @Context UriInfo uriInfo) throws ProjectException, ActivitiesException {
     Project project = getProject(); //test if project exist
     Resource resource = new Resource(Resource.Name.ACTIVITIES);
-    resource.setExpansions(activitiesBeanParam.getResources());
+    resource.setExpansions(expansions.getResources());
     ActivitiesDTO activitiesDTO = activitiesBuilder.build(uriInfo, resource, project, activityId);
     return Response.ok().entity(activitiesDTO).build();
   }
