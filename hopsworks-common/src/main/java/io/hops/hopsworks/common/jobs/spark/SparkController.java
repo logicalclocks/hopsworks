@@ -141,9 +141,8 @@ public class SparkController {
     }
     Execution jh = sparkjob.requestExecutionId();
     submitter.startExecution(sparkjob);
-    activityFacade.persistActivity(ActivityFacade.RAN_JOB + job.getName(), job.
-        getProject(),
-        user.asUser());
+    activityFacade.persistActivity(ActivityFacade.RAN_JOB + job.getName(), job.getProject(), user.asUser(),
+        ActivityFacade.ActivityFlag.JOB);
     return jh;
   }
 
@@ -167,7 +166,8 @@ public class SparkController {
         new Object[]{job.getName(), job.getId()});
       jobFacade.removeJob(job);
       LOGGER.log(Level.INFO, "Deleted job name ={0} job id ={1}", new Object[]{job.getName(), job.getId()});
-      activityFacade.persistActivity(ActivityFacade.DELETED_JOB + job.getName(), job.getProject(), user.getEmail());
+      activityFacade.persistActivity(ActivityFacade.DELETED_JOB + job.getName(), job.getProject(), user.getEmail(), 
+          ActivityFacade.ActivityFlag.JOB);
     } catch (DatabaseException ex) {
       LOGGER.log(Level.SEVERE, "Job cannot be deleted job name ={0} job id ={1}",
         new Object[]{job.getName(), job.getId()});

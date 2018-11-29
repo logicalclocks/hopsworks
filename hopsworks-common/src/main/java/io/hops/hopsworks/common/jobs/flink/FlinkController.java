@@ -147,7 +147,7 @@ public class FlinkController {
     Execution execution = flinkjob.requestExecutionId();
     submitter.startExecution(flinkjob);
     activityFacade.persistActivity(ActivityFacade.RAN_JOB, job.getProject(),
-      user.asUser());
+      user.asUser(), ActivityFacade.ActivityFlag.JOB);
     
     return execution;
   }

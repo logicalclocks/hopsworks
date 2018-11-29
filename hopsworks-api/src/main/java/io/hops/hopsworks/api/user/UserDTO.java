@@ -30,14 +30,6 @@ public class UserDTO extends RestDTO<UserDTO> {
   private String firstname;
   private String lastname;
   private String email;
-  private String phoneNumber;
-  private String userAccountType;
-  private Boolean twoFactor;
-  private Integer toursState;
-  private Integer status;
-  private Integer maxNumProjects;
-  private Integer numCreatedProjects;
-  private Integer numActiveProjects;
   
   public UserDTO() {
   }
@@ -46,13 +38,6 @@ public class UserDTO extends RestDTO<UserDTO> {
     this.firstname = user.getFname();
     this.lastname = user.getLname();
     this.email = user.getEmail();
-    this.phoneNumber = user.getMobile();
-    this.toursState = user.getToursState();
-    this.status = user.getStatus().getValue();
-    this.userAccountType = user.getMode().toString();
-    this.maxNumProjects = user.getMaxNumProjects();
-    this.numCreatedProjects = user.getNumCreatedProjects();
-    this.numActiveProjects = user.getNumActiveProjects();
   }
 
   public String getFirstname() {
@@ -78,70 +63,5 @@ public class UserDTO extends RestDTO<UserDTO> {
   public void setEmail(String email) {
     this.email = email;
   }
-
-  public String getPhoneNumber() {
-    return phoneNumber;
-  }
-
-  public void setPhoneNumber(String phoneNumber) {
-    this.phoneNumber = phoneNumber;
-  }
-
-  public String getUserAccountType() {
-    return userAccountType;
-  }
-
-  public void setUserAccountType(String userAccountType) {
-    this.userAccountType = userAccountType;
-  }
-
-  public Boolean getTwoFactor() {
-    return twoFactor;
-  }
-
-  public void setTwoFactor(Boolean twoFactor) {
-    this.twoFactor = twoFactor;
-  }
-
-  public Integer getToursState() {
-    return toursState;
-  }
-
-  public void setToursState(Integer toursState) {
-    this.toursState = toursState;
-  }
-
-  public Integer getStatus() {
-    return status;
-  }
-
-  public void setStatus(Integer status) {
-    this.status = status;
-  }
-
-  public Integer getMaxNumProjects() {
-    return maxNumProjects;
-  }
-
-  public void setMaxNumProjects(Integer maxNumProjects) {
-    this.maxNumProjects = maxNumProjects;
-  }
-
-  public Integer getNumCreatedProjects() {
-    return numCreatedProjects;
-  }
-
-  public void setNumCreatedProjects(Integer numCreatedProjects) {
-    this.numCreatedProjects = numCreatedProjects;
-  }
-
-  public Integer getNumActiveProjects() {
-    return numActiveProjects;
-  }
-
-  public void setNumActiveProjects(Integer numActiveProjects) {
-    this.numActiveProjects = numActiveProjects;
-  }
-  
   
 }

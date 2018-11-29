@@ -718,8 +718,8 @@ public class ProjectService {
     datasetFacade.persistDataset(newDS);
     Users user = jWTHelper.getUserPrincipal(sc);
 
-    activityFacade.persistActivity(ActivityFacade.SHARED_DATA + newDS.toString()
-        + " with project " + destProj.getName(), destProj, user);
+    activityFacade.persistActivity(ActivityFacade.SHARED_DATA + newDS.toString() + " with project " + destProj.getName()
+        , destProj, user, ActivityFacade.ActivityFlag.DATASET);
 
     hdfsUsersBean.shareDataset(destProj, ds);
 

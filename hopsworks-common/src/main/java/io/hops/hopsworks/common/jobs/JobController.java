@@ -106,6 +106,8 @@ public class JobController {
     if (config.getSchedule() != null) {
       scheduler.scheduleJobPeriodic(created);
     }
+    activityFacade.persistActivity(ActivityFacade.CREATED_JOB + created.getName(), project, user, ActivityFacade.
+          ActivityFlag.JOB);
     return created;
   }
   @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -114,7 +116,8 @@ public class JobController {
     if (isScheduleUpdated) {
       job.getJobConfig().setSchedule(schedule);
       scheduler.scheduleJobPeriodic(job);
-      activityFacade.persistActivity(ActivityFacade.SCHEDULED_JOB + job.getName(), project, user);
+      activityFacade.persistActivity(ActivityFacade.SCHEDULED_JOB + job.getName(), project, user, ActivityFacade.
+          ActivityFlag.JOB);
     } else {
       throw new JobException(RESTCodes.JobErrorCode.JOB_SCHEDULE_UPDATE, Level.WARNING,
         "Schedule is not updated in the database for jobid: " + job.getId());

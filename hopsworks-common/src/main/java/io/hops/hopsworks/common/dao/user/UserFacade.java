@@ -115,16 +115,22 @@ public class UserFacade extends AbstractFacade<Users> {
     return val;
   }
   
-  private Integer getStatusValue(String field, String value) {
-    Integer val;
+  private UserAccountStatus getStatusValue(String field, String value) {
+    if (value == null || value.isEmpty()) {
+      throw new IllegalArgumentException("Filter value for " + field + " needs to set an Integer or a valid " + field
+          + ", but found: " + value);
+    }
+    UserAccountStatus val;
     try {
-      val = Integer.parseInt(value);
-    } catch (NumberFormatException e) {
-      if (null == UserAccountStatus.valueOf(value)) {
-        throw new IllegalArgumentException("Filter value for " + field + " needs to set an Integer or a valid " + field 
-            +", but found: " + value);
+      int v = Integer.parseInt(value);
+      val = UserAccountStatus.fromValue(v);
+    } catch (IllegalArgumentException e) {
+      try {
+        val = UserAccountStatus.valueOf(value);
+      } catch (IllegalArgumentException ie) {
+        throw new IllegalArgumentException("Filter value for " + field + " needs to set an Integer or a valid " + field
+            + ", but found: " + value);
       }
-      val = UserAccountStatus.valueOf(value).getValue();
     }
     return val;
   }
@@ -151,15 +157,21 @@ public class UserFacade extends AbstractFacade<Users> {
       case STATUS_LT:
         q.setParameter(filterBy.getField(), getStatusValue(filterBy.getField(), filterBy.getParam()));
         break;
+      case IS_ONLINE:
+      case FALSE_LOGIN:
+      case FALSE_LOGIN_GT:
+      case FALSE_LOGIN_LT:
+        q.setParameter(filterBy.getField(), getIntValue(filterBy.getField(), filterBy.getParam()));
+        break;
       default:
         break;
     }
   }
 
   public enum Sorts {
-    FIRST_NAME("FIRST_NAME", "u.fname ", "ASC"),
-    LAST_NAME("LAST_NAME", "u.lname ", "ASC"),
-    EMAIL("EMAIL", "u.email ", "ASC"),
+    FIRST_NAME("FIRST_NAME", "LOWER(u.fname) ", "ASC"),
+    LAST_NAME("LAST_NAME", "LOWER(u.lname) ", "ASC"),
+    EMAIL("EMAIL", "LOWER(u.email) ", "ASC"),
     DATE_CREATED("DATE_CREATED", "u.activated ", "ASC");
 
     private final String value;
@@ -193,14 +205,14 @@ public class UserFacade extends AbstractFacade<Users> {
 
   public enum Filters {
     ROLE("ROLE", "u.bbcGroupCollection IN :roles ", "roles", "HOPS_ADMIN,HOPS_USER"),
-    ROLE_NEQ("ROLE_NEQ", "u.bbcGroupCollection NOT IN :roles ", "roles", "AGENT,AUDITOR"),
+    ROLE_NEQ("ROLE_NEQ", "u.bbcGroupCollection NOT IN :roles_neq ", "roles_neq", "AGENT,AUDITOR"),
     STATUS("STATUS", "u.status = :status ", "status", "2"),
-    STATUS_LT("STATUS_LT", "u.status < :status ", "status", "2"),
-    STATUS_GT("STATUS_GT", "u.status > :status ", "status", "2"),
+    STATUS_LT("STATUS_LT", "u.status < :status_lt ", "status_lt", "2"),
+    STATUS_GT("STATUS_GT", "u.status > :status_gt ", "status_gt", "2"),
     IS_ONLINE("IS_ONLINE", "u.isonline = :isonline ", "isonline", "1"),
     FALSE_LOGIN("FALSE_LOGIN", "u.falseLogin = :falseLogin ", "falseLogin", "20"),
-    FALSE_LOGIN_GT("FALSE_LOGIN_GT", "u.falseLogin > :falseLogin ", "falseLogin", "20"),
-    FALSE_LOGIN_LT("FALSE_LOGIN_LT", "u.falseLogin < :falseLogin ", "falseLogin", "20");
+    FALSE_LOGIN_GT("FALSE_LOGIN_GT", "u.falseLogin > :falseLogin_gt ", "falseLogin_gt", "20"),
+    FALSE_LOGIN_LT("FALSE_LOGIN_LT", "u.falseLogin < :falseLogin_lt ", "falseLogin_lt", "20");
 
     private final String value;
     private final String sql;

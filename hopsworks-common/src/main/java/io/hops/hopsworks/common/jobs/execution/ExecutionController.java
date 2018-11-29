@@ -179,7 +179,8 @@ public class ExecutionController {
         String inodeName = inode.getInodePK().getName();
 
         jobHistoryFac.persist(user, job, execId, exec.getAppId());
-        activityFacade.persistActivity(ActivityFacade.EXECUTED_JOB + inodeName, job.getProject(), user);
+        activityFacade.persistActivity(ActivityFacade.EXECUTED_JOB + inodeName, job.getProject(), user, ActivityFacade.
+            ActivityFlag.JOB);
         break;
       case PYSPARK:
         exec = sparkController.startJob(job, user);

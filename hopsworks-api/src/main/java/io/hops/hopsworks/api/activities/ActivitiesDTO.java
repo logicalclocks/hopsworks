@@ -26,7 +26,8 @@ public class ActivitiesDTO extends RestDTO<ActivitiesDTO>{
   
   private String activity;
   private Date timestamp;
-  private String projectName; //(TODO: Ermias) make projectDTO when ProjectResource is done.
+  private String projectName;
+  private String flag;
   private UserDTO userDTO;
 
   public ActivitiesDTO() {
@@ -36,6 +37,7 @@ public class ActivitiesDTO extends RestDTO<ActivitiesDTO>{
     this.activity = activity.getActivity();
     this.timestamp = activity.getTimestamp();
     this.projectName = activity.getProject().getName();
+    this.flag = activity.getFlag();
   }
 
   public String getActivity() {
@@ -68,6 +70,14 @@ public class ActivitiesDTO extends RestDTO<ActivitiesDTO>{
 
   public void setUserDTO(UserDTO userDTO) {
     this.userDTO = userDTO;
+  }
+
+  public String getFlag() {
+    return flag;
+  }
+
+  public void setFlag(String flag) {
+    this.flag = flag;
   }
   
 }

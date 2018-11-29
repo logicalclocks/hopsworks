@@ -24,6 +24,7 @@ import io.hops.hopsworks.common.dao.user.activity.Activity;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.exception.ActivitiesException;
 import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.exception.ResourceException;
 
 import java.util.Comparator;
 import java.util.Date;
@@ -37,39 +38,39 @@ import javax.ws.rs.core.UriInfo;
 
 @Stateless
 public class ActivitiesBuilder {
-  
+
   @EJB
   private UsersBuilder usersBuilder;
   @EJB
   private ActivityFacade activityFacade;
-  
+
   public ActivitiesDTO uri(ActivitiesDTO dto, UriInfo uriInfo) {
     dto.setHref(uriInfo.getAbsolutePathBuilder().build());
     return dto;
   }
-  
+
   public ActivitiesDTO uri(ActivitiesDTO dto, UriInfo uriInfo, Activity activity) {
     dto.setHref(uriInfo.getBaseUriBuilder()
-      .path(Resource.Name.ACTIVITIES.toString())
-      .path(Integer.toString(activity.getId()))
-      .build());
+        .path(Resource.Name.ACTIVITIES.toString())
+        .path(Integer.toString(activity.getId()))
+        .build());
     return dto;
   }
-  
+
   public ActivitiesDTO uriItems(ActivitiesDTO dto, UriInfo uriInfo, Activity activity) {
     dto.setHref(uriInfo.getAbsolutePathBuilder()
-      .path(Integer.toString(activity.getId()))
-      .build());
+        .path(Integer.toString(activity.getId()))
+        .build());
     return dto;
   }
-  
+
   public ActivitiesDTO expand(ActivitiesDTO dto, Resource resource) {
     if (resource != null) {
       dto.setExpand(true);
     }
     return dto;
   }
-  
+
   public ActivitiesDTO build(UriInfo uriInfo, Resource resource, Activity activity) {
     ActivitiesDTO dto = new ActivitiesDTO();
     uri(dto, uriInfo, activity);
@@ -77,12 +78,13 @@ public class ActivitiesBuilder {
     if (dto.isExpand()) {
       dto.setActivity(activity.getActivity());
       dto.setTimestamp(activity.getTimestamp());
-      dto.setProjectName(activity.getProject().getName()); //(TODO: Ermias) make this expandable
+      dto.setProjectName(activity.getProject().getName());
+      dto.setFlag(activity.getFlag());
       dto.setUserDTO(usersBuilder.buildItem(uriInfo, resource, activity.getUser()));
     }
     return dto;
   }
-  
+
   public ActivitiesDTO buildItem(UriInfo uriInfo, Resource resource, Activity activity) {
     ActivitiesDTO dto = new ActivitiesDTO();
     uri(dto, uriInfo, activity);
@@ -90,12 +92,13 @@ public class ActivitiesBuilder {
     if (dto.isExpand()) {
       dto.setActivity(activity.getActivity());
       dto.setTimestamp(activity.getTimestamp());
-      dto.setProjectName(activity.getProject().getName()); //(TODO: Ermias) make this expandable
+      dto.setProjectName(activity.getProject().getName());
+      dto.setFlag(activity.getFlag());
       dto.setUserDTO(usersBuilder.buildItem(uriInfo, resource, activity.getUser()));
     }
     return dto;
   }
-  
+
   public ActivitiesDTO buildItems(UriInfo uriInfo, Resource resource, Activity activity) {
     ActivitiesDTO dto = new ActivitiesDTO();
     uriItems(dto, uriInfo, activity);
@@ -103,88 +106,103 @@ public class ActivitiesBuilder {
     if (dto.isExpand()) {
       dto.setActivity(activity.getActivity());
       dto.setTimestamp(activity.getTimestamp());
-      dto.setProjectName(activity.getProject().getName()); //(TODO: Ermias) make this expandable
+      dto.setProjectName(activity.getProject().getName());
+      dto.setFlag(activity.getFlag());
       dto.setUserDTO(usersBuilder.buildItem(uriInfo, resource, activity.getUser()));
     }
     return dto;
   }
-  
+
   public ActivitiesDTO build(UriInfo uriInfo, Resource resource, Integer id) throws
-    ActivitiesException {
+      ActivitiesException {
     Activity activity = activityFacade.activityByID(id);
     if (activity == null) {
       throw new ActivitiesException(RESTCodes.ActivitiesErrorCode.ACTIVITY_NOT_FOUND, Level.FINE, "activityId: " + id);
     }
     return build(uriInfo, resource, activity);
   }
-  
+
   public ActivitiesDTO build(UriInfo uriInfo, Resource resource, Users user, Integer id) throws
-    ActivitiesException {
+      ActivitiesException {
     Activity activity = activityFacade.getActivityByIdAndUser(user, id);
     if (activity == null) {
       throw new ActivitiesException(RESTCodes.ActivitiesErrorCode.ACTIVITY_NOT_FOUND, Level.FINE, "activityId: " + id);
     }
     return build(uriInfo, resource, activity);
   }
-  
+
   public ActivitiesDTO build(UriInfo uriInfo, Resource resource, Project project, Integer id) throws
-    ActivitiesException {
+      ActivitiesException {
     Activity activity = activityFacade.getActivityByIdAndProject(project, id);
     if (activity == null) {
       throw new ActivitiesException(RESTCodes.ActivitiesErrorCode.ACTIVITY_NOT_FOUND, Level.FINE, "activityId: " + id);
     }
     return build(uriInfo, resource, activity);
   }
-  
-  public ActivitiesDTO buildItems(UriInfo uriInfo, Resource Resource) {
+
+  public ActivitiesDTO buildItems(UriInfo uriInfo, Resource Resource) throws ResourceException {
     return items(new ActivitiesDTO(), uriInfo, Resource);
   }
-  
-  public ActivitiesDTO buildItems(UriInfo uriInfo, Resource Resource, Users user) {
+
+  public ActivitiesDTO buildItems(UriInfo uriInfo, Resource Resource, Users user) throws ResourceException {
     return items(new ActivitiesDTO(), uriInfo, Resource, user);
   }
-  
-  public ActivitiesDTO buildItems(UriInfo uriInfo, Resource Resource, Project project) {
+
+  public ActivitiesDTO buildItems(UriInfo uriInfo, Resource Resource, Project project) throws ResourceException {
     return items(new ActivitiesDTO(), uriInfo, Resource, project);
   }
-  
-  private ActivitiesDTO items(ActivitiesDTO dto, UriInfo uriInfo, Resource property) {
+
+  private ActivitiesDTO items(ActivitiesDTO dto, UriInfo uriInfo, Resource property) throws ResourceException {
     List<Activity> activities;
-    if (property.getOffset() != null || property.getLimit() != null || property.getFilter() != null) {
-      activities = activityFacade.findAll(property.getOffset(), property.getLimit(), property.getFilter(),
-        property.getSort());
-      return items(dto, uriInfo, property, activities, false);
+    try {
+      if (property.getOffset() != null || property.getLimit() != null || (property.getFilter() != null && !property.
+          getFilter().isEmpty())) {
+        activities = activityFacade.findAll(property.getOffset(), property.getLimit(), property.getFilter(),
+            property.getSort());
+        return items(dto, uriInfo, property, activities, false);
+      }
+      activities = activityFacade.getAllActivities();
+      return items(dto, uriInfo, property, activities, true);
+    } catch (IllegalArgumentException iae) {
+      throw new ResourceException(RESTCodes.ResourceErrorCode.INVALID_QUERY_PARAMETER, Level.FINE, iae.getMessage());
     }
-    activities = activityFacade.getAllActivities();
-    return items(dto, uriInfo, property, activities, true);
   }
-  
-  private ActivitiesDTO items(ActivitiesDTO dto, UriInfo uriInfo, Resource property, Users user) {
+
+  private ActivitiesDTO items(ActivitiesDTO dto, UriInfo uriInfo, Resource property, Users user) throws
+      ResourceException {
     List<Activity> activities;
-    if (property.getOffset() != null || property.getLimit() != null || property.getFilter() != null) {
-      activities = activityFacade.findAllByUser(property.getOffset(), property.getLimit(), property.getFilter(),
-        property.getSort(), user);
-      return items(dto, uriInfo, property, activities, false);
+    try {
+      if (property.getOffset() != null || property.getLimit() != null || property.getFilter() != null) {
+        activities = activityFacade.findAllByUser(property.getOffset(), property.getLimit(), property.getFilter(),
+            property.getSort(), user);
+        return items(dto, uriInfo, property, activities, false);
+      }
+      activities = activityFacade.getAllActivityByUser(user);
+      return items(dto, uriInfo, property, activities, true);
+    } catch (IllegalArgumentException iae) {
+      throw new ResourceException(RESTCodes.ResourceErrorCode.INVALID_QUERY_PARAMETER, Level.FINE, iae.getMessage());
     }
-    activities = activityFacade.getAllActivityByUser(user);
-    return items(dto, uriInfo, property, activities, true);
   }
-  
-  private ActivitiesDTO items(ActivitiesDTO dto, UriInfo uriInfo, Resource resource,
-    Project project) {
+
+  private ActivitiesDTO items(ActivitiesDTO dto, UriInfo uriInfo, Resource resource, Project project) throws
+      ResourceException {
     List<Activity> activities;
-    if (resource.getOffset() != null || resource.getLimit() != null || resource.getSort() != null
-      || resource.getFilter() != null) {
-      activities = activityFacade.findAllByProject(resource.getOffset(), resource.getLimit(), resource.getFilter(),
-        resource.getSort(), project);
-      return items(dto, uriInfo, resource, activities, false);
+    try {
+      if (resource.getOffset() != null || resource.getLimit() != null || resource.getSort() != null
+          || resource.getFilter() != null) {
+        activities = activityFacade.findAllByProject(resource.getOffset(), resource.getLimit(), resource.getFilter(),
+            resource.getSort(), project);
+        return items(dto, uriInfo, resource, activities, false);
+      }
+      activities = activityFacade.getAllActivityByProject(project);
+      return items(dto, uriInfo, resource, activities, true);
+    } catch (IllegalArgumentException iae) {
+      throw new ResourceException(RESTCodes.ResourceErrorCode.INVALID_QUERY_PARAMETER, Level.FINE, iae.getMessage());
     }
-    activities = activityFacade.getAllActivityByProject(project);
-    return items(dto, uriInfo, resource, activities, true);
   }
-  
+
   private ActivitiesDTO items(ActivitiesDTO dto, UriInfo uriInfo, Resource property,
-    List<Activity> activities, boolean sort) {
+      List<Activity> activities, boolean sort) {
     if (activities != null && !activities.isEmpty()) {
       if (sort) {
         Comparator<Activity> comparator = getComparator(property);
@@ -192,13 +210,13 @@ public class ActivitiesBuilder {
           activities.sort(comparator);
         }
       }
-      activities.forEach((activity) -> {
+      activities.forEach(( activity ) -> {
         dto.addItem(buildItems(uriInfo, property, activity));
       });
     }
     return dto;
   }
-  
+
   public Comparator<Activity> getComparator(Resource property) {
     Set<ActivityFacade.SortBy> sortBy = (Set<ActivityFacade.SortBy>) property.getSort();
     if (property.getSort() != null && !property.getSort().isEmpty()) {
@@ -206,15 +224,15 @@ public class ActivitiesBuilder {
     }
     return null;
   }
-  
+
   class ActivityComparator implements Comparator<Activity> {
-    
+
     Set<ActivityFacade.SortBy> sortBy;
-    
+
     ActivityComparator(Set<ActivityFacade.SortBy> sortBy) {
       this.sortBy = sortBy;
     }
-    
+
     private int compare(Activity a, Activity b, ActivityFacade.SortBy sortBy) {
       switch (ActivityFacade.Sorts.valueOf(sortBy.getValue())) {
         case ID:
@@ -227,7 +245,7 @@ public class ActivitiesBuilder {
           throw new UnsupportedOperationException("Sort By " + sortBy + " not supported");
       }
     }
-    
+
     private int order(String a, String b, AbstractFacade.OrderBy orderBy) {
       switch (orderBy) {
         case ASC:
@@ -238,7 +256,7 @@ public class ActivitiesBuilder {
           throw new UnsupportedOperationException("Order By " + orderBy + " not supported");
       }
     }
-    
+
     private int order(Integer a, Integer b, AbstractFacade.OrderBy orderBy) {
       switch (orderBy) {
         case ASC:
@@ -249,7 +267,7 @@ public class ActivitiesBuilder {
           throw new UnsupportedOperationException("Order By " + orderBy + " not supported");
       }
     }
-    
+
     private int order(Date a, Date b, AbstractFacade.OrderBy orderBy) {
       switch (orderBy) {
         case ASC:
@@ -260,16 +278,16 @@ public class ActivitiesBuilder {
           throw new UnsupportedOperationException("Order By " + orderBy + " not supported");
       }
     }
-    
+
     @Override
     public int compare(Activity a, Activity b) {
       Iterator<ActivityFacade.SortBy> sort = sortBy.iterator();
       int c = compare(a, b, sort.next());
-      for (; sort.hasNext() && c == 0; ) {
+      for (; sort.hasNext() && c == 0;) {
         c = compare(a, b, sort.next());
       }
       return c;
     }
   }
-  
+
 }

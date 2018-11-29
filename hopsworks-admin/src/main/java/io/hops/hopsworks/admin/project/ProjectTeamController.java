@@ -95,9 +95,8 @@ public class ProjectTeamController implements Serializable {
       Users user = this.teamFacade.findUserByEmail(toRemoveEmail);
       teamFacade.removeProjectTeam(sessionState.getActiveProject(),
               user);
-      activityFacade.persistActivity(ActivityFacade.REMOVED_MEMBER
-              + toRemoveEmail, sessionState.getActiveProject(), sessionState.
-              getLoggedInUsername());
+      activityFacade.persistActivity(ActivityFacade.REMOVED_MEMBER + toRemoveEmail, sessionState.getActiveProject(), 
+          sessionState.getLoggedInUsername(), ActivityFacade.ActivityFlag.MEMBER);
     } catch (EJBException ejb) {
       MessagesController.addErrorMessage("Deleting team member failed.");
       logger.log(Level.WARNING, "Failed to remove team member " + toRemoveEmail

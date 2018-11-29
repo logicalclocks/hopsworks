@@ -46,7 +46,7 @@ angular.module('hopsWorksApp')
                 return $http.get('/api/user/activities?expand=users');
               },
               getByProjectId: function (id) {
-                return $http.get('/api/project/' + id + '/activities?order_by=DESC&sort_by=DATE_CREATED&expand=users');
+                return $http.get('/api/project/' + id + '/activities?sort_by=date_created:desc&expand=creator');
               }
             };
             return service;

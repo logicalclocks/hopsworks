@@ -51,6 +51,7 @@ import javax.persistence.TypedQuery;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.AbstractFacade;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -83,9 +84,30 @@ public class ActivityFacade extends AbstractFacade<Activity> {
   public static final String SCHEDULED_JOB = " scheduled a job named ";
   public static final String EXECUTED_JOB = " ran a job used as input file ";
   public static final String TRASH_NOTEBOOK = " moved to Zeppelin Trash ";
-  // Flag constants
-  public static final String FLAG_PROJECT = "PROJECT";
-  public static final String FLAG_DATASET = "DATASET";
+  // Flag constants 
+  public enum ActivityFlag {
+    MEMBER("MEMBER"),
+    PROJECT("PROJECT"),
+    SERVICE("SERVICE"),
+    DATASET("DATASET"),
+    JOB("JOB");
+    
+    private final String value;
+
+    private ActivityFlag(String value) {
+      this.value = value;
+    }
+
+    public String getValue() {
+      return value;
+    }
+
+    @Override
+    public String toString() {
+      return value;
+    }
+
+  }
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
@@ -136,17 +158,17 @@ public class ActivityFacade extends AbstractFacade<Activity> {
     }
   }
 
-  public void persistActivity(String activity, Project project, Users user) {
+  public void persistActivity(String activity, Project project, Users user, ActivityFlag flag) {
     Activity a = new Activity();
     a.setActivity(activity);
     a.setProject(project);
-    a.setFlag(FLAG_PROJECT);
+    a.setFlag(flag.getValue());
     a.setUser(user);
     a.setTimestamp(new Date());
     em.persist(a);
   }
 
-  public void persistActivity(String activity, Project project, String email) {
+  public void persistActivity(String activity, Project project, String email, ActivityFlag flag) {
     TypedQuery<Users> userQuery = em.createNamedQuery("Users.findByEmail", Users.class);
     userQuery.setParameter("email", email);
     Users user;
@@ -156,7 +178,7 @@ public class ActivityFacade extends AbstractFacade<Activity> {
       throw new IllegalArgumentException("No user found with email " + email
           + " when trying to persist activity for that user.", e);
     }
-    persistActivity(activity, project, user);
+    persistActivity(activity, project, user, flag);
   }
 
   /**
@@ -300,7 +322,12 @@ public class ActivityFacade extends AbstractFacade<Activity> {
   }
 
   private void setFilterQuery(AbstractFacade.FilterBy filterBy, Query q) {
-    q.setParameter(filterBy.getField(), filterBy.getParam());
+    String[] filterStrs = filterBy.getParam().split(",");
+    List<String> activityFlags = new ArrayList<>();
+    for (String filterStr : filterStrs) {
+      activityFlags.add(ActivityFacade.ActivityFlag.valueOf(filterStr).getValue());
+    }
+    q.setParameter(filterBy.getField(), activityFlags);
   }
 
   public enum Sorts {
@@ -338,7 +365,8 @@ public class ActivityFacade extends AbstractFacade<Activity> {
   }
 
   public enum Filters {
-    FLAG("FLAG", "u.flag = :flag ", "flag", "PROJECT");
+    FLAG("FLAG", "u.flag IN :flag ", "flag", "PROJECT"),
+    FLAG_NEQ("FLAG_NEQ", "u.flag NOT IN :flag_neq ", "flag_neq", "PROJECT");
 
     private final String value;
     private final String sql;

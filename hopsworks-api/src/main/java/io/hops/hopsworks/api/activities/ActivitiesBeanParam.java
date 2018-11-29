@@ -32,7 +32,7 @@ public class ActivitiesBeanParam {
   private final Set<SortBy> sortBySet;
   @QueryParam("filter_by")
   @ApiParam(value = "ex. filter_by=flag:dataset",
-      allowableValues = "flag:project, flag:dataset",
+      allowableValues = "flag:project, flag:dataset, flag:member, flag:service, flag:job",
       allowMultiple = true)
   private Set<FilterBy> filter;
   @QueryParam("expand")

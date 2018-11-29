@@ -19,12 +19,15 @@ import io.hops.hopsworks.common.api.Resource;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
+import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.exception.ResourceException;
 
 import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
 import javax.ejb.EJB;
 
 import javax.ejb.Stateless;
@@ -42,6 +45,14 @@ public class UsersBuilder {
     return dto;
   }
   
+  public UserProfileDTO uri(UserProfileDTO dto, UriInfo uriInfo, Users user) {
+    dto.setHref(uriInfo.getBaseUriBuilder()
+      .path(Resource.Name.USERS.toString())
+      .path(Integer.toString(user.getUid()))
+      .build());
+    return dto;
+  }
+  
   public UserDTO uri(UserDTO dto, UriInfo uriInfo, Users user) {
     dto.setHref(uriInfo.getBaseUriBuilder()
       .path(Resource.Name.USERS.toString())
@@ -54,6 +65,13 @@ public class UsersBuilder {
     dto.setHref(uriInfo.getAbsolutePathBuilder()
       .path(Integer.toString(user.getUid()))
       .build());
+    return dto;
+  }
+  
+  public UserProfileDTO expand(UserProfileDTO dto, Resource resource) {
+    if (resource != null && resource.contains(Resource.Name.USERS)) {
+      dto.setExpand(true);
+    }
     return dto;
   }
   
@@ -102,8 +120,8 @@ public class UsersBuilder {
     return dto;
   }
   
-  public UserDTO buildFull(UriInfo uriInfo, Resource resource, Users user) {
-    UserDTO dto = new UserDTO();
+  public UserProfileDTO buildFull(UriInfo uriInfo, Resource resource, Users user) {
+    UserProfileDTO dto = new UserProfileDTO();
     uri(dto, uriInfo, user);
     expand(dto, resource);
     if (dto.isExpand()) {
@@ -118,29 +136,33 @@ public class UsersBuilder {
     return dto;
   }
   
-  public UserDTO build(UriInfo uriInfo, Resource resource, Integer id) {
+  public UserProfileDTO build(UriInfo uriInfo, Resource resource, Integer id) {
     Users user = userFacade.find(id);
     return buildFull(uriInfo, resource, user);
   }
   
-  public UserDTO build(UriInfo uriInfo, Resource resource, String email) {
+  public UserProfileDTO build(UriInfo uriInfo, Resource resource, String email) {
     Users user = userFacade.findByEmail(email);
     return buildFull(uriInfo, resource, user);
   }
   
-  public UserDTO buildItems(UriInfo uriInfo, Resource resource) {
+  public UserDTO buildItems(UriInfo uriInfo, Resource resource) throws ResourceException {
     return items(new UserDTO(), uriInfo, resource);
   }
   
-  private UserDTO items(UserDTO userDTO, UriInfo uriInfo, Resource resource) {
+  private UserDTO items(UserDTO userDTO, UriInfo uriInfo, Resource resource) throws ResourceException {
     List<Users> users;
-    if (resource.getOffset() != null || resource.getLimit() != null || resource.getSort() != null
-      || resource.getFilter() != null) {
-      users = userFacade.findAll(resource.getOffset(), resource.getLimit(), resource.getFilter(), resource.getSort());
-      return items(userDTO, uriInfo, resource, users, false);
+    try {
+      if (resource.getOffset() != null || resource.getLimit() != null || (resource.getFilter() != null && !resource.
+          getFilter().isEmpty())) {
+        users = userFacade.findAll(resource.getOffset(), resource.getLimit(), resource.getFilter(), resource.getSort());
+        return items(userDTO, uriInfo, resource, users, false);
+      }
+      users = userFacade.findAll();
+      return items(userDTO, uriInfo, resource, users, true);
+    } catch (IllegalArgumentException iae) {
+      throw new ResourceException(RESTCodes.ResourceErrorCode.INVALID_QUERY_PARAMETER, Level.FINE, iae.getMessage());
     }
-    users = userFacade.findAll();
-    return items(userDTO, uriInfo, resource, users, true);
   }
   
   private UserDTO items(UserDTO dto, UriInfo uriInfo, Resource resource, List<Users> users, boolean sort) {

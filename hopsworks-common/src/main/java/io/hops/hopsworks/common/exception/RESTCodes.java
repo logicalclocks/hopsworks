@@ -1187,6 +1187,43 @@ public class RESTCodes {
       return message;
     }
 
+    @Override
+    public Response.StatusType getRespStatus() {
+      return respStatus;
+    }
+
+    @Override
+    public int getRange() {
+      return range;
+    }
+  }
+  
+  public enum ResourceErrorCode implements RESTErrorCode {
+
+    INVALID_QUERY_PARAMETER(0, "Invalid query.", Response.Status.NOT_FOUND);
+
+    private int code;
+    private String message;
+    private Response.Status respStatus;
+    public final int range = 270000;
+
+    ResourceErrorCode(Integer code, String message, Response.Status respStatus) {
+      this.code = range + code;
+      this.message = message;
+      this.respStatus = respStatus;
+    }
+
+    @Override
+    public Integer getCode() {
+      return code;
+    }
+
+    @Override
+    public String getMessage() {
+      return message;
+    }
+
+    @Override
     public Response.StatusType getRespStatus() {
       return respStatus;
     }

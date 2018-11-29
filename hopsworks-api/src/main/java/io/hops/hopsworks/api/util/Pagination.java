@@ -33,9 +33,6 @@ public class Pagination {
       @QueryParam("limit") Integer limit) {
     this.offset = offset;
     this.limit = limit;
-    if ((this.offset != null && this.offset < 0) || (this.limit != null && this.limit < 0)) {
-      throw new IllegalArgumentException("Offset and limit can not be negative.");
-    }
   }
 
   public Integer getOffset() {

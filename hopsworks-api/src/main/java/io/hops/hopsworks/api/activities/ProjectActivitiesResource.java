@@ -17,7 +17,6 @@ package io.hops.hopsworks.api.activities;
 
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
-import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.api.Resource;
 import io.hops.hopsworks.common.dao.project.Project;
@@ -25,7 +24,9 @@ import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.exception.ActivitiesException;
 import io.hops.hopsworks.common.exception.ProjectException;
 import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.exception.ResourceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.swagger.annotations.ApiOperation;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -52,8 +53,6 @@ public class ProjectActivitiesResource {
   private ActivitiesBuilder activitiesBuilder;
   @EJB
   private ProjectFacade projectFacade;
-  @EJB
-  private NoCacheResponse noCacheResponse;
 
   private Integer projectId;
   private String projectName;
@@ -92,13 +91,14 @@ public class ProjectActivitiesResource {
 
   @GET
   @Produces(MediaType.APPLICATION_JSON)
+  @ApiOperation(value = "Finds activities in project.", response = ActivitiesDTO.class)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens = {Audience.API},
       allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response findAllByProject(
       @BeanParam Pagination pagination,
       @BeanParam ActivitiesBeanParam activitiesBeanParam,
-      @Context UriInfo uriInfo) throws ProjectException {
+      @Context UriInfo uriInfo) throws ProjectException, ResourceException {
     Project project = getProject(); //test if project exist
     Resource resource = new Resource(Resource.Name.ACTIVITIES);
     resource.setOffset(pagination.getOffset());
@@ -108,12 +108,13 @@ public class ProjectActivitiesResource {
     resource.setExpansions(activitiesBeanParam.getResources());
   
     ActivitiesDTO activitiesDTO = activitiesBuilder.buildItems(uriInfo, resource, project);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(activitiesDTO).build();
+    return Response.ok().entity(activitiesDTO).build();
   }
 
   @GET
   @Path("{activityId}")
   @Produces(MediaType.APPLICATION_JSON)
+  @ApiOperation(value = "Finds an activity in project.", response = ActivitiesDTO.class)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens = {Audience.API},
       allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
@@ -125,7 +126,7 @@ public class ProjectActivitiesResource {
     Resource resource = new Resource(Resource.Name.ACTIVITIES);
     resource.setExpansions(activitiesBeanParam.getResources());
     ActivitiesDTO activitiesDTO = activitiesBuilder.build(uriInfo, resource, project, activityId);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(activitiesDTO).build();
+    return Response.ok().entity(activitiesDTO).build();
   }
 
 }

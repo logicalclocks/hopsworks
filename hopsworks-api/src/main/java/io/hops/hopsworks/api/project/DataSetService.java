@@ -434,8 +434,8 @@ public class DataSetService {
       datasetRequest.remove(dsReq);//the dataset is shared so remove the request.
     }
 
-    activityFacade.persistActivity(ActivityFacade.SHARED_DATA + dataSet.
-            getName() + " with project " + proj.getName(), project, user);
+    activityFacade.persistActivity(ActivityFacade.SHARED_DATA + dataSet.getName() + " with project " + proj.getName(), 
+        project, user, ActivityFacade.ActivityFlag.DATASET);
 
     json.setSuccessMessage("The Dataset was successfully shared.");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
@@ -464,8 +464,8 @@ public class DataSetService {
 
       hdfsUsersBean.unshareDataset(proj, ds);
       datasetFacade.removeDataset(dst);
-      activityFacade.persistActivity(ActivityFacade.UNSHARED_DATA + dataSet.
-              getName() + " with project " + proj.getName(), project, user);
+      activityFacade.persistActivity(ActivityFacade.UNSHARED_DATA + dataSet.getName() + " with project " + 
+          proj.getName(), project, user, ActivityFacade.ActivityFlag.DATASET);
     }
     json.setSuccessMessage("The Dataset was successfully unshared.");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(

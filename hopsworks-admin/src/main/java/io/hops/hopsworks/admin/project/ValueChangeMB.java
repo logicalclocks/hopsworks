@@ -85,9 +85,8 @@ public class ValueChangeMB implements Serializable, ValueChangeListener {
     try {
       projectTeamController.updateTeamRole(sessionState.getActiveProject(),
               email, role.getRole());
-      activityFacade.persistActivity(ActivityFacade.CHANGE_ROLE + email + " to "
-              + role, sessionState.getActiveProject(), sessionState.
-              getLoggedInUsername());
+      activityFacade.persistActivity(ActivityFacade.CHANGE_ROLE + email + " to " + role, sessionState.getActiveProject()
+          , sessionState.getLoggedInUsername(), ActivityFacade.ActivityFlag.MEMBER);
     } catch (Exception ejb) {
       //addErrorMessageToUserAction("Error: Update failed.");
       return "Failed";

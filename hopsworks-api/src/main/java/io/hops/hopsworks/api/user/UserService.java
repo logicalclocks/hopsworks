@@ -40,10 +40,10 @@ package io.hops.hopsworks.api.user;
 
 import io.hops.hopsworks.api.activities.UserActivitiesResource;
 import io.hops.hopsworks.api.filter.Audience;
-import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.api.util.Pagination;
+import io.hops.hopsworks.common.api.Resource;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
@@ -54,11 +54,13 @@ import io.hops.hopsworks.common.dao.user.UserProjectDTO;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.ProjectException;
 import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.exception.ResourceException;
 import io.hops.hopsworks.common.exception.UserException;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;
 import org.apache.commons.codec.binary.Base64;
 
@@ -82,7 +84,6 @@ import javax.ws.rs.core.SecurityContext;
 import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.PathParam;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.UriInfo;
 
 @Path("/users")
@@ -103,8 +104,6 @@ public class UserService {
   @EJB
   private BbcGroupFacade bbcGroupFacade;
   @EJB
-  private NoCacheResponse noCacheResponse;
-  @EJB
   private ProjectController projectController;
   @EJB
   private ProjectTeamFacade projectTeamFacade;
@@ -117,21 +116,26 @@ public class UserService {
 
   @GET
   @Produces(MediaType.APPLICATION_JSON)
+  @ApiOperation(value = "Get all users.", response = UserDTO.class)
   public Response findAll(
       @BeanParam Pagination pagination,
       @BeanParam UsersBeanParam usersBeanParam,
-      @QueryParam("expand") String expand,
-      @Context UriInfo uriInfo) {
-//    UserDTO userDTO = usersBuilder.buildItems(uriInfo, resourceProperties);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
+      @Context UriInfo uriInfo) throws ResourceException {
+    Resource resource = new Resource(Resource.Name.USERS);
+    resource.setOffset(pagination.getOffset());
+    resource.setLimit(pagination.getLimit());
+    resource.setSort(usersBeanParam.getSortBySet());
+    resource.setFilter(usersBeanParam.getFilter());
+    UserDTO userDTO = usersBuilder.buildItems(uriInfo, resource);
+    return Response.ok().entity(userDTO).build();
   }
 
   @GET
   @Path("{userId}")
   @Produces(MediaType.APPLICATION_JSON)
+  @ApiOperation(value = "Find User by Id.", response = UserProfileDTO.class)
   public Response findById(
       @PathParam("userId") Integer userId,
-      @QueryParam("expand") String expand,
       @Context UriInfo uriInfo,
       @Context SecurityContext sc) throws UserException {
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -139,44 +143,47 @@ public class UserService {
     if (!Objects.equals(user.getUid(), userId) && !user.getBbcGroupCollection().contains(adminGroup)) {
       throw new UserException(RESTCodes.UserErrorCode.ACCESS_CONTROL, Level.SEVERE);
     }
-//    ResourceProperties resourceProperties = new ResourceProperties(ResourceProperties.Name.USERS, expand);
-//    UserDTO userDTO = usersBuilder.build(uriInfo, resourceProperties, userId);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
+    Resource resource = new Resource(Resource.Name.USERS);
+    UserProfileDTO userDTO = usersBuilder.build(uriInfo, resource, userId);
+    return Response.ok().entity(userDTO).build();
   }
 
   @GET
   @Path("profile")
   @Produces(MediaType.APPLICATION_JSON)
+  @ApiOperation(value = "Gets logedin User\'s info.", response = UserProfileDTO.class)
   public Response getUserProfile(@Context UriInfo uriInfo, @Context SecurityContext sc) throws UserException {
     Users user = jWTHelper.getUserPrincipal(sc);
     if (user == null) {
       throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
     }
-//    ResourceProperties resourceProperties = new ResourceProperties(ResourceProperties.Name.USERS, null);
-//    UserDTO userDTO = usersBuilder.buildFull(uriInfo, resourceProperties, user);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
+    Resource resource = new Resource(Resource.Name.USERS);
+    UserProfileDTO userDTO = usersBuilder.buildFull(uriInfo, resource, user);
+    return Response.ok().entity(userDTO).build();
   }
 
   @POST
   @Path("profile")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response updateProfile(@FormParam("firstName") String firstName,
-      @FormParam("lastName") String lastName,
-      @FormParam("telephoneNum") String telephoneNum,
+  @ApiOperation(value = "Updates logedin User\'s info.", response = UserProfileDTO.class)
+  public Response updateProfile(@FormParam("firstname") String firstName,
+      @FormParam("lastname") String lastName,
+      @FormParam("phoneNumber") String phoneNumber,
       @FormParam("toursState") Integer toursState,
       @Context UriInfo uriInfo,
       @Context HttpServletRequest req,
       @Context SecurityContext sc) throws UserException {
     Users user = jWTHelper.getUserPrincipal(sc);
-    user = userController.updateProfile(user, firstName, lastName, telephoneNum, toursState, req);
-//    ResourceProperties resourceProperties = new ResourceProperties(ResourceProperties.Name.USERS, null);
-//    UserDTO userDTO = usersBuilder.buildFull(uriInfo, resourceProperties, user);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
+    user = userController.updateProfile(user, firstName, lastName, phoneNumber, toursState, req);
+    Resource resource = new Resource(Resource.Name.USERS);
+    UserProfileDTO userDTO = usersBuilder.buildFull(uriInfo, resource, user);
+    return Response.ok().entity(userDTO).build();
   }
 
   @POST
   @Path("credentials")
   @Produces(MediaType.APPLICATION_JSON)
+  @ApiOperation(value = "Updates logedin User\'s credentials.", response = RESTApiJsonResponse.class)
   public Response changeLoginCredentials(
       @FormParam("oldPassword") String oldPassword,
       @FormParam("newPassword") String newPassword,
@@ -186,12 +193,13 @@ public class UserService {
     Users user = jWTHelper.getUserPrincipal(sc);
     userController.changePassword(user, oldPassword, newPassword, confirmedPassword, req);
     json.setSuccessMessage(ResponseMessages.PASSWORD_CHANGED);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+    return Response.ok().entity(json).build();
   }
 
   @POST
   @Path("securityQA")
   @Produces(MediaType.APPLICATION_JSON)
+  @ApiOperation(value = "Updates logedin User\'s security quesion and answer.", response = RESTApiJsonResponse.class)
   public Response changeSecurityQA(@FormParam("oldPassword") String oldPassword,
       @FormParam("securityQuestion") String securityQuestion,
       @FormParam("securityAnswer") String securityAnswer,
@@ -200,12 +208,13 @@ public class UserService {
     Users user = jWTHelper.getUserPrincipal(sc);
     userController.changeSecQA(user, oldPassword, securityQuestion, securityAnswer, req);
     json.setSuccessMessage(ResponseMessages.SEC_QA_CHANGED);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+    return Response.ok().entity(json).build();
   }
 
   @POST
   @Path("twoFactor")
   @Produces(MediaType.APPLICATION_JSON)
+  @ApiOperation(value = "Updates logedin User\'s two factor setting.", response = RESTApiJsonResponse.class)
   public Response changeTwoFactor(@FormParam("password") String password,
       @FormParam("twoFactor") boolean twoFactor,
       @Context HttpServletRequest req, @Context SecurityContext sc) throws UserException {
@@ -214,7 +223,7 @@ public class UserService {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     if (user.getTwoFactor() == twoFactor) {
       json.setSuccessMessage("No change made.");
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+      return Response.ok().entity(json).build();
     }
     qrCode = userController.changeTwoFactor(user, password, req);
     if (qrCode != null) {
@@ -222,12 +231,13 @@ public class UserService {
     } else {
       json.setSuccessMessage("Tow factor authentication disabled.");
     }
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+    return Response.ok().entity(json).build();
   }
 
   @POST
   @Path("getQRCode")
   @Produces(MediaType.APPLICATION_JSON)
+  @ApiOperation(value = "Gets the logedin User\'s QR code.", response = RESTApiJsonResponse.class)
   public Response getQRCode(@FormParam("password") String password, @Context HttpServletRequest req,
       @Context SecurityContext sc) throws UserException {
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -245,12 +255,13 @@ public class UserService {
     } else {
       throw new UserException(RESTCodes.UserErrorCode.TWO_FA_DISABLED, Level.FINE);
     }
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+    return Response.ok().entity(json).build();
   }
 
   @POST
   @Path("getRole")
   @Produces(MediaType.APPLICATION_JSON)
+  @ApiOperation(value = "Gets the logedin User\'s role in project.", response = UserProjectDTO.class)
   public Response getRole(@FormParam("projectId") int projectId, @Context SecurityContext sc) throws ProjectException {
     Users user = jWTHelper.getUserPrincipal(sc);
     UserProjectDTO userDTO = new UserProjectDTO();
@@ -259,10 +270,10 @@ public class UserService {
     Project project = projectController.findProjectById(projectId);
     ProjectTeam pt = projectTeamFacade.findByPrimaryKey(project, user);
     if (pt == null) {
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(userDTO).build();
+      return Response.ok().entity(userDTO).build();
     }
     userDTO.setRole(pt.getTeamRole());
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(userDTO).build();
+    return Response.ok().entity(userDTO).build();
   }
 
   @Path("activities")
