@@ -200,28 +200,26 @@ public class JobFacade extends AbstractFacade<Jobs> {
   
   //====================================================================================================================
   
-  public List<Jobs> findByProject(Project project) {
-    TypedQuery<Jobs> q = em.createNamedQuery("Jobs.findByProject", Jobs.class);
-    q.setParameter("project", project);
-    return q.getResultList();
-  }
-  
-  public List<Jobs> findByProject(Integer offset, Integer limit, Set<? extends AbstractFacade.FilterBy> filter,
+  public CollectionInfo findByProject(Integer offset, Integer limit,
+    Set<? extends AbstractFacade.FilterBy> filter,
     Set<? extends AbstractFacade.SortBy> sort, Project project) {
     return findByProjectAndCreator(offset, limit, filter, sort, project, null);
   }
   
-  public List<Jobs> findByProjectAndCreator(Integer offset, Integer limit,
+  public CollectionInfo findByProjectAndCreator(Integer offset, Integer limit,
     Set<? extends AbstractFacade.FilterBy> filter,
     Set<? extends AbstractFacade.SortBy> sort, Project project, Users creator) {
     String queryStr = buildQuery("SELECT j FROM Jobs j ", filter, sort, "j.project = :project ");
+    String queryCountStr = buildQuery("SELECT count(j.id) FROM Jobs j ", filter, sort, "j.project = :project ");
     Query query = em.createQuery(queryStr, Jobs.class).setParameter("project", project);
+    Query queryCount = em.createQuery(queryCountStr, Jobs.class).setParameter("project", project);
     if (creator != null) {
       query.setParameter("creator", creator);
+      queryCount.setParameter("creator", creator);
     }
     setFilter(filter, query);
     setOffsetAndLim(offset, limit, query);
-    return query.getResultList();
+    return new CollectionInfo((Long) queryCount.getSingleResult(), query.getResultList());
   }
   
   

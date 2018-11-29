@@ -70,7 +70,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
@@ -119,12 +118,8 @@ public class ExecutionService {
     resource.setFilter(executionsBeanParam.getFilter());
     resource.setExpansions(executionsBeanParam.getResources());
     
-    ExecutionDTO executionDTO = executionsBuilder.build(uriInfo, resource, job);
-
-    GenericEntity<ExecutionDTO> entity = new GenericEntity<ExecutionDTO>(
-      executionDTO) {
-    };
-    return Response.ok().entity(entity).build();
+    ExecutionDTO dto = executionsBuilder.build(uriInfo, resource, job);
+    return Response.ok().entity(dto).build();
   }
   
   @ApiOperation(value = "Find Execution by Id", response = ExecutionDTO.class)
@@ -204,85 +199,6 @@ public class ExecutionService {
     JobLogDTO dto = executionController.retryLogAggregation(execution, type);
     return Response.ok().entity(dto).build();
   }
-  
-  
-//  @ApiOperation(value = "Get Application UI url, i.e. Spark or Flink, for given Execution by Id")
-//  @GET
-//  @Path("{id}/ui")
-//  @Produces(MediaType.APPLICATION_JSON)
-//  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-//  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-//  public Response getExecutionUI(
-//    @ApiParam(value = "id", required = true) @PathParam("id") Integer id,
-//    @Context UriInfo uriInfo) throws JobException {
-//    Execution execution = authorize(id);
-//    String url = executionController.getExecutionUI(execution);
-//    return Response.ok().entity(url).build();
-//  }
-//
-//  @ApiOperation(value = "Get YARN UI url for given Execution by Id")
-//  @GET
-//  @Path("{id}/yarnui")
-//  @Produces(MediaType.TEXT_PLAIN)
-//  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-//  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-//  public Response getYarnUI(
-//    @ApiParam(value = "id", required = true) @PathParam("id") Integer id,
-//    @Context UriInfo uriInfo) throws JobException {
-//    authorize(id);
-//    String url = executionController.getExecutionYarnUI(id);
-//    return Response.ok().entity(url).build();
-//  }
-//
-//  @ApiOperation(value = "Get Application specific information for given Execution")
-//  @GET
-//  @Path("{id}/appinfo")
-//  @Produces(MediaType.APPLICATION_JSON)
-//  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-//  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-//  public Response getExecutionAppInfo(
-//    @ApiParam(value = "id", required = true) @PathParam("id") Integer id,
-//    @Context UriInfo uriInfo) throws JobException {
-//    Execution execution = authorize(id);
-//    AppInfoDTO dto = executionController.getExecutionAppInfo(execution);
-//    return Response.ok().entity(dto).build();
-//  }
-//
-//  @ApiOperation(value = "Get Application specific information for given Execution.")
-//  @GET
-//  @Path("{id}/prox/{path: .+}")
-//  @Produces(MediaType.WILDCARD)
-//  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-//  public Response getExecutionProxy(
-//    @ApiParam(value = "id", required = true) @PathParam("id") Integer id,
-//    @PathParam("path") final String param,
-//    @Context HttpServletRequest req,
-//    @Context UriInfo uriInfo) throws JobException, IOException {
-//    Execution execution = authorize(id);
-//    Response.ResponseBuilder responseBuilder = executionController.getExecutionProxy(execution, param, req);
-//    return responseBuilder.build();
-//
-//  }
-//
-//  @GET
-//  @Path("/{id}/tensorboard")
-//  @Produces(MediaType.APPLICATION_JSON)
-//  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-//  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-//  public Response getTensorBoardUrls(@PathParam("id") Integer id, @Context SecurityContext sc) throws JobException {
-//    Execution exec = authorize(id);
-//    List<YarnAppUrlsDTO> urls = new ArrayList<>();
-//    Users user = jWTHelper.getUserPrincipal(sc);
-//    try {
-//      urls.addAll(executionController.getTensorBoardUrls(user, exec, job));
-//    } catch (Exception e) {
-//      LOGGER.log(Level.SEVERE, "Exception while getting TensorBoard endpoints" + e.getLocalizedMessage(), e);
-//    }
-//
-//    GenericEntity<List<YarnAppUrlsDTO>> listUrls = new GenericEntity<List<YarnAppUrlsDTO>>(urls) { };
-//
-//    return Response.ok().entity(listUrls).build();
-//  }
   
   
   private Execution authorize(Integer id) throws JobException {

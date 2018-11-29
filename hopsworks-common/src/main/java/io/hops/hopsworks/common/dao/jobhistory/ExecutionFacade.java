@@ -151,15 +151,19 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
       Execution.class).setParameter("states", JobState.getRunningStates()).getResultList();
   }
   
-  public List<Execution> findByJob(Integer offset, Integer limit,
+  public CollectionInfo findByJob(Integer offset, Integer limit,
     Set<? extends AbstractFacade.FilterBy> filter,
     Set<? extends AbstractFacade.SortBy> sort,
     Jobs job) {
     String queryStr = buildQuery("SELECT e FROM Execution e ", filter, sort, "e.job = :job ");
+    String queryCountStr = buildQuery("SELECT COUNT(e.id) FROM Execution e ", filter, sort, "e.job = :job ");
+  
     Query query = em.createQuery(queryStr, Execution.class).setParameter("job", job);
+    Query queryCount = em.createQuery(queryCountStr, Execution.class).setParameter("job", job);
     setFilter(filter, query);
+    
     setOffsetAndLim(offset, limit, query);
-    return query.getResultList();
+    return new CollectionInfo((Long) queryCount.getSingleResult(), query.getResultList());
   }
   
   

@@ -96,7 +96,7 @@ public abstract class AbstractFacade<T> {
     javax.persistence.criteria.CriteriaQuery cq = getEntityManager().
             getCriteriaBuilder().createQuery();
     javax.persistence.criteria.Root<T> rt = cq.from(entityClass);
-    cq.select(getEntityManager().getCriteriaBuilder().count(rt));
+    cq.select(getEntityManager().getCriteriaBuilder().count(rt)).where();
     javax.persistence.Query q = getEntityManager().createQuery(cq);
     return (Long) q.getSingleResult();
   }
@@ -185,5 +185,35 @@ public abstract class AbstractFacade<T> {
       return value;
     }
 
+  }
+  
+  public class CollectionInfo {
+    private Long count;
+    private List items;
+  
+    public CollectionInfo(Long count, List items) {
+      this.count = count;
+      this.items = items;
+    }
+  
+    public CollectionInfo(List items) {
+      this.items = items;
+    }
+  
+    public Long getCount() {
+      return count;
+    }
+    
+    public List getItems() {
+      return items;
+    }
+    
+    public void setItems(List items) {
+      this.items = items;
+    }
+    
+    public void setCount(Long count) {
+      this.count = count;
+    }
   }
 }

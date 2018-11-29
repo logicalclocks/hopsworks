@@ -70,6 +70,7 @@ describe "On #{ENV['OS']}" do
         get_jobs(@project[:id])
         expect_status(200)
         expect(json_body[:items].count).to eq 3
+        expect(json_body[:count]).to eq 3
       end
       it "should get three jobs with type spark" do
         create_sparktour_job(@project, "demo_job_1")
@@ -110,19 +111,18 @@ describe "On #{ENV['OS']}" do
         create_sparktour_job(@project, "demo_job_1")
         create_sparktour_job(@project, "demo_job_2")
         create_sparktour_job(@project, "demo_job_3")
-        create_spark_py
+        create_sparktour_job(@project, "demo_job_4")
+        create_sparktour_job(@project, "demo_job_5")
+        create_sparkpy_job(@project, "demo_pyjob_1")
+        create_sparkpy_job(@project, "demo_pyjob_2")
       end
       after :each do
         clean_jobs(@project[:id])
       end
       describe "Jobs sort" do
         it "should get all jobs sorted by name" do
-          create_sparktour_job(@project, "demo_job_1")
-          expect_status(201)
-          create_sparktour_job(@project, "demo_job_2")
-          expect_status(201)
-          create_sparktour_job(@project, "demo_job_3")
-          expect_status(201)
+          get_jobs(@project[:id])
+
         end
       end
     end

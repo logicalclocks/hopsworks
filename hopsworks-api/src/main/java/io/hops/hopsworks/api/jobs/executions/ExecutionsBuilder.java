@@ -108,32 +108,12 @@ public class ExecutionsBuilder {
     uri(dto, uriInfo, job);
     expand(dto, resource);
     if (dto.isExpand()) {
-      List<Execution> executions;
-      if (resource.getOffset() != null || resource.getLimit() != null || resource.getSort() != null
-        || resource.getFilter() != null) {
-        executions = executionFacade.findByJob(resource.getOffset(), resource.getLimit(), resource.getFilter(),
-          resource.getSort(), job);
-      } else {
-        executions = executionFacade.findByJob(job);
-        //Sort collection and return elements based on offset, limit, sortBy, orderBy
-        Comparator<Execution> comparator = getComparator(resource);
-        if (comparator != null) {
-          executions.sort(comparator);
-        }
+      AbstractFacade.CollectionInfo collectionInfo = executionFacade.findByJob(resource.getOffset(),
+        resource.getLimit(), resource.getFilter(), resource.getSort(), job);
+      dto.setCount(collectionInfo.getCount());
+      if (collectionInfo.getItems() != null && !collectionInfo.getItems().isEmpty()) {
+        collectionInfo.getItems().forEach((exec) -> dto.addItem(build(uriInfo, resource, (Execution) exec)));
       }
-      dto.setCount(executionFacade.count());
-      return items(dto, uriInfo, resource, executions);
-      
-    }
-    return dto;
-  }
-  
-  private ExecutionDTO items(ExecutionDTO dto, UriInfo uriInfo, Resource resource,
-    List<Execution> executions) {
-    if (executions != null && !executions.isEmpty()) {
-      executions.forEach((exec) -> {
-        dto.addItem(build(uriInfo, resource, exec));
-      });
     }
     return dto;
   }

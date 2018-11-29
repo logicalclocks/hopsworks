@@ -55,7 +55,6 @@ import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.jobs.description.YarnAppUrlsDTO;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.JobException;
 import io.hops.hopsworks.common.exception.RESTCodes;
@@ -72,14 +71,14 @@ import io.hops.hopsworks.common.jobs.yarn.YarnJobConfiguration;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.cookie.CookiePolicy;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.params.HttpClientParams;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
 import org.influxdb.InfluxDB;
 import org.influxdb.InfluxDBFactory;
 import org.influxdb.dto.Query;
@@ -159,8 +158,6 @@ public class JobService {
   @EJB
   private Settings settings;
   @EJB
-  private UserFacade userFacade;
-  @EJB
   private SparkController sparkController;
   @EJB
   private ProjectFacade projectFacade;
@@ -195,11 +192,7 @@ public class JobService {
     resource.setExpansions(jobsBeanParam.getResources());
     
     JobDTO dto = jobsBuilder.build(uriInfo, resource, project);
-
-    GenericEntity<JobDTO> ge
-      = new GenericEntity<JobDTO>(dto) { };
-    
-    return Response.ok().entity(ge).build();
+    return Response.ok().entity(dto).build();
   }
   
   @ApiOperation(value = "Get the job with requested ID", response = JobDTO.class)
@@ -218,8 +211,7 @@ public class JobService {
     Resource resource = new Resource(Resource.Name.JOBS);
     resource.setExpansions(jobsBeanParam.getResources());
     JobDTO dto = jobsBuilder.build(uriInfo, resource, job);
-    GenericEntity<JobDTO> ge = new GenericEntity<JobDTO>(dto) { };
-    return Response.ok().entity(ge).build();
+    return Response.ok().entity(dto).build();
   }
   
   
@@ -246,9 +238,8 @@ public class JobService {
     
     Jobs job = jobController.createJob(user, project, config);
     JobDTO dto = jobsBuilder.build(uriInfo, new Resource(Resource.Name.JOBS), job);
-    GenericEntity<JobDTO> ge = new GenericEntity<JobDTO>(dto) {};
     UriBuilder builder = uriInfo.getAbsolutePathBuilder().path(Integer.toString(dto.getId()));
-    return Response.created(builder.build()).entity(ge).build();
+    return Response.created(builder.build()).entity(dto).build();
     
   }
   

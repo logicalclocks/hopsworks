@@ -87,31 +87,13 @@ public class JobsBuilder {
     JobDTO dto = new JobDTO();
     uri(dto, uriInfo, project);
     expand(dto, resource);
-    List<Jobs> jobs;
-    if (resource.getOffset() != null || resource.getLimit() != null || resource.getSort() != null
-      || !resource.getFilter().isEmpty()) {
-      jobs = jobFacade.findByProject(resource.getOffset(), resource.getLimit(), resource.getFilter(),
-        resource.getSort(), project);
-      //set the count
-    } else {
-      jobs = jobFacade.findByProject(project);
-      //Sort collection and return elements based on offset, limit, sortBy, orderBy
-      Comparator<Jobs> comparator = getComparator(resource);
-      if (comparator != null) {
-        jobs.sort(comparator);
-      }
-    }
-    dto.setCount(jobFacade.count());
-    return items(dto, uriInfo, resource, jobs);
-  }
-  
-  private JobDTO items(JobDTO dto, UriInfo uriInfo, Resource resource, List<Jobs> jobs) {
-    if (jobs != null && !jobs.isEmpty()) {
-      
-      jobs.forEach((job) -> {
-        dto.addItem(build(uriInfo, resource, job));
-      });
-    }
+    AbstractFacade.CollectionInfo collectionInfo = jobFacade.findByProject(resource.getOffset(),
+      resource.getLimit(),
+      resource.getFilter(),
+      resource.getSort(), project);
+    //set the count
+    dto.setCount(collectionInfo.getCount());
+    collectionInfo.getItems().forEach((job) -> dto.addItem(build(uriInfo, resource, (Jobs) job)));
     return dto;
   }
   
