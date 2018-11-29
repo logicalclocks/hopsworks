@@ -24,6 +24,8 @@ import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.ws.rs.core.UriInfo;
 import java.util.Comparator;
 import java.util.Date;
@@ -31,6 +33,7 @@ import java.util.Iterator;
 import java.util.Set;
 
 @Stateless
+@TransactionAttribute(TransactionAttributeType.NEVER)
 public class ExecutionsBuilder {
   
   @EJB
@@ -95,7 +98,7 @@ public class ExecutionsBuilder {
       dto.setHdfsUser(execution.getHdfsUser());
       dto.setFinalStatus(execution.getFinalStatus());
       dto.setProgress(execution.getProgress());
-      dto.setUser(usersBuilder.buildItem(uriInfo, resource.get(Resource.Name.USER), execution.getUser()));
+      dto.setUser(usersBuilder.build(uriInfo, resource.get(Resource.Name.USER), execution.getUser()));
       dto.setFilesToRemove(execution.getFilesToRemove());
       dto.setDuration(execution.getExecutionDuration());
     }
@@ -110,9 +113,7 @@ public class ExecutionsBuilder {
       AbstractFacade.CollectionInfo collectionInfo = executionFacade.findByJob(resource.getOffset(),
         resource.getLimit(), resource.getFilter(), resource.getSort(), job);
       dto.setCount(collectionInfo.getCount());
-      if (collectionInfo.getItems() != null && !collectionInfo.getItems().isEmpty()) {
-        collectionInfo.getItems().forEach((exec) -> dto.addItem(build(uriInfo, resource, (Execution) exec)));
-      }
+      collectionInfo.getItems().forEach((exec) -> dto.addItem(build(uriInfo, resource, (Execution) exec)));
     }
     return dto;
   }

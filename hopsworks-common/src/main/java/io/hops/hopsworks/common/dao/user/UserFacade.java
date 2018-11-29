@@ -80,13 +80,16 @@ public class UserFacade extends AbstractFacade<Users> {
     return query.getResultList();
   }
 
-  public List<Users> findAll(Integer offset, Integer limit, Set<? extends AbstractFacade.FilterBy> filter,
+  public CollectionInfo findAll(Integer offset, Integer limit, Set<? extends AbstractFacade.FilterBy> filter,
       Set<? extends AbstractFacade.SortBy> sort) {
     String queryStr = buildQuery("SELECT u FROM Users u ", filter, sort, "");
+    String queryCountStr = buildQuery("SELECT COUNT(u.uid) FROM Users u ", filter, sort, "");
     Query query = em.createQuery(queryStr, Users.class);
+    Query queryCount = em.createQuery(queryCountStr, Users.class);
     setFilter(filter, query);
+    setFilter(filter, queryCount);
     setOffsetAndLim(offset, limit, query);
-    return query.getResultList();
+    return new CollectionInfo((Long) queryCount.getSingleResult(), query.getResultList());
   }
 
   private List<BbcGroup> getGroups(String field, String values) {

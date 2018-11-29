@@ -21,7 +21,6 @@ import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.api.Resource;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.ActivitiesException;
-import io.hops.hopsworks.common.exception.UserException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.ApiOperation;
 
@@ -83,7 +82,7 @@ public class UserActivitiesResource {
       @PathParam("activityId") Integer activityId,
       @BeanParam ExpansionBeanParam expansions,
       @Context UriInfo uriInfo,
-      @Context SecurityContext sc) throws ActivitiesException, UserException {
+      @Context SecurityContext sc) throws ActivitiesException {
     Users user = jWTHelper.getUserPrincipal(sc);
     Resource resource = new Resource(Resource.Name.ACTIVITIES);
     resource.setExpansions(expansions.getResources());

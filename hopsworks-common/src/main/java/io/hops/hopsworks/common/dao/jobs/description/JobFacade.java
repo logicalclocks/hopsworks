@@ -42,6 +42,7 @@ package io.hops.hopsworks.common.dao.jobs.description;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.exception.InvalidQueryException;
 import io.hops.hopsworks.common.jobs.configuration.JobConfiguration;
 import io.hops.hopsworks.common.jobs.configuration.ScheduleDTO;
 import io.hops.hopsworks.common.jobs.jobhistory.JobState;
@@ -114,10 +115,8 @@ public class JobFacade extends AbstractFacade<Jobs> {
   /**
    * Checks if a job with the given name exists in this project.
    *
-   * @param project
-   *   project to search.
-   * @param name
-   *   name of job.
+   * @param project project to search.
+   * @param name name of job.
    * @return job if exactly one job with that name was found.
    */
   public Jobs findByProjectAndName(Project project, String name) {
@@ -235,8 +234,8 @@ public class JobFacade extends AbstractFacade<Jobs> {
   
   private void setFilterQuery(AbstractFacade.FilterBy filterBy, Query q) {
     switch (Filters.valueOf(filterBy.getValue())) {
-      case TYPE:
-      case TYPE_NEQ:
+      case JOBTYPE:
+      case JOBTYPE_NEQ:
         Set<JobType> jobTypes = new HashSet<>(getJobTypes(filterBy.getField(), filterBy.getParam()));
         q.setParameter(filterBy.getField(), jobTypes);
         break;
@@ -248,17 +247,26 @@ public class JobFacade extends AbstractFacade<Jobs> {
   private Set<JobType> getJobTypes(String field, String values) {
     String[] jobTypesArr = values.split(",");
     Set<JobType> jobTypes = new HashSet<>();
-    for (String jobTypeStr : jobTypesArr) {
-      jobTypes.add(JobType.valueOf(jobTypeStr.trim()));
+    for (String jobType : jobTypesArr) {
+      try {
+        jobTypes.add(JobType.valueOf(jobType.trim()));
+      } catch (IllegalArgumentException ie) {
+        throw new InvalidQueryException("Filter value for " + field + " needs to set a valid " + field + ", but found: "
+          + jobType);
+      }
+    }
+    if (jobTypes.isEmpty()) {
+      throw new InvalidQueryException(
+        "Filter value for " + field + " needs to set valid job types, but found: " + values);
     }
     return jobTypes;
   }
   
   public enum Sorts {
     ID("ID", "j.id ", "ASC"),
-    NAME("NAME", "j.name ", "ASC"),
+    NAME("NAME", "LOWER(j.name) ", "ASC"),
     DATE_CREATED("DATE_CREATED", "j.creationTime ", "DESC"),
-    TYPE("TYPE", "j.type ", "ASC");
+    JOBTYPE("JOBTYPE", "j.type ", "ASC");
     
     private final String value;
     private final String sql;
@@ -290,9 +298,9 @@ public class JobFacade extends AbstractFacade<Jobs> {
   }
   
   public enum Filters {
-    TYPE("TYPE", "j.type IN :types ", "types",
+    JOBTYPE("JOBTYPE", "j.type IN :types ", "types",
       JobType.SPARK.toString().toUpperCase() + "," + JobType.PYSPARK.toString().toUpperCase()),
-    TYPE_NEQ("TYPE_NEQ", "j.type NOT IN :types_neq ", "types_neq",
+    JOBTYPE_NEQ("JOBTYPE_NEQ", "j.type NOT IN :types_neq ", "types_neq",
       JobType.FLINK.toString().toUpperCase() + "," + JobType.YARN.toString().toUpperCase()
         + "," + JobType.ERASURE_CODING.toString().toUpperCase());
     

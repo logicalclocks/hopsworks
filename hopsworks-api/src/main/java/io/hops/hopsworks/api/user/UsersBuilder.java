@@ -16,85 +16,73 @@
 package io.hops.hopsworks.api.user;
 
 import io.hops.hopsworks.common.api.Resource;
-import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import io.hops.hopsworks.common.dao.user.Users;
+
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.ws.rs.core.UriInfo;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.Set;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class UsersBuilder {
-
+  
   @EJB
   private UserFacade userFacade;
-
+  
   public UserDTO uri(UserDTO dto, UriInfo uriInfo) {
     dto.setHref(uriInfo.getAbsolutePathBuilder()
-        .build());
+      .build());
     return dto;
   }
-
+  
   public UserProfileDTO uri(UserProfileDTO dto, UriInfo uriInfo, Users user) {
     dto.setHref(uriInfo.getBaseUriBuilder()
-        .path(Resource.Name.USERS.toString())
-        .path(Integer.toString(user.getUid()))
-        .build());
+      .path(Resource.Name.USERS.toString())
+      .path(Integer.toString(user.getUid()))
+      .build());
     return dto;
   }
-
+  
   public UserDTO uri(UserDTO dto, UriInfo uriInfo, Users user) {
     dto.setHref(uriInfo.getBaseUriBuilder()
-        .path(Resource.Name.USERS.toString())
-        .path(Integer.toString(user.getUid()))
-        .build());
+      .path(Resource.Name.USERS.toString())
+      .path(Integer.toString(user.getUid()))
+      .build());
     return dto;
   }
-
+  
   public UserDTO uriItems(UserDTO dto, UriInfo uriInfo, Users user) {
     dto.setHref(uriInfo.getAbsolutePathBuilder()
-        .path(Integer.toString(user.getUid()))
-        .build());
+      .path(Integer.toString(user.getUid()))
+      .build());
     return dto;
   }
-
+  
   public UserProfileDTO expand(UserProfileDTO dto, Resource resource) {
     if (resource != null && resource.contains(Resource.Name.USERS)) {
       dto.setExpand(true);
     }
     return dto;
   }
-
+  
   public UserDTO expand(UserDTO dto, Resource resource) {
     if (resource != null && (resource.contains(Resource.Name.USER)
-        || resource.contains(Resource.Name.USERS)
-        || resource.contains(Resource.Name.CREATOR))) {
+      || resource.contains(Resource.Name.USERS)
+      || resource.contains(Resource.Name.CREATOR))) {
       dto.setExpand(true);
     }
     return dto;
   }
-
-  public UserDTO build(UriInfo uriInfo, Resource resourceProperties, Users user) {
-    UserDTO dto = new UserDTO();
-    uri(dto, uriInfo, user);
-    expand(dto, resourceProperties);
-    if (dto.isExpand()) {
-      dto.setFirstname(user.getFname());
-      dto.setLastname(user.getLname());
-      dto.setEmail(user.getEmail());
-    }
-    return dto;
-  }
-
-  public UserDTO buildItem(UriInfo uriInfo, Resource resource, Users user) {
+  
+  public UserDTO build(UriInfo uriInfo, Resource resource, Users user) {
     UserDTO dto = new UserDTO();
     uri(dto, uriInfo, user);
     expand(dto, resource);
@@ -105,19 +93,7 @@ public class UsersBuilder {
     }
     return dto;
   }
-
-  public UserDTO buildItems(UriInfo uriInfo, Resource resource, Users user) {
-    UserDTO dto = new UserDTO();
-    uriItems(dto, uriInfo, user);
-    expand(dto, resource);
-    if (dto.isExpand()) {
-      dto.setFirstname(user.getFname());
-      dto.setLastname(user.getLname());
-      dto.setEmail(user.getEmail());
-    }
-    return dto;
-  }
-
+  
   public UserProfileDTO buildFull(UriInfo uriInfo, Resource resource, Users user) {
     UserProfileDTO dto = new UserProfileDTO();
     uri(dto, uriInfo, user);
@@ -133,47 +109,32 @@ public class UsersBuilder {
     }
     return dto;
   }
-
+  
   public UserProfileDTO build(UriInfo uriInfo, Resource resource, Integer id) {
     Users user = userFacade.find(id);
     return buildFull(uriInfo, resource, user);
   }
-
+  
   public UserProfileDTO build(UriInfo uriInfo, Resource resource, String email) {
     Users user = userFacade.findByEmail(email);
     return buildFull(uriInfo, resource, user);
   }
-
+  
   public UserDTO buildItems(UriInfo uriInfo, Resource resource) {
-    return items(new UserDTO(), uriInfo, resource);
-  }
-
-  private UserDTO items(UserDTO userDTO, UriInfo uriInfo, Resource resource) {
-    List<Users> users;
-    if (resource.getOffset() != null || resource.getLimit() != null || (resource.getFilter() != null && !resource.
-        getFilter().isEmpty())) {
-      users = userFacade.findAll(resource.getOffset(), resource.getLimit(), resource.getFilter(), resource.getSort());
-      return items(userDTO, uriInfo, resource, users, false);
-    }
-    users = userFacade.findAll();
-    return items(userDTO, uriInfo, resource, users, true);
-  }
-
-  private UserDTO items(UserDTO dto, UriInfo uriInfo, Resource resource, List<Users> users, boolean sort) {
-    if (users != null && !users.isEmpty()) {
-      if (sort) {
-        Comparator<Users> comparator = getComparator(resource);
-        if (comparator != null) {
-          users.sort(comparator);
-        }
-      }
-      users.forEach(( user ) -> {
-        dto.addItem(buildItems(uriInfo, resource, user));
-      });
+    UserDTO dto = new UserDTO();
+    uri(dto, uriInfo);
+    expand(dto, resource);
+    if(dto.isExpand()){
+      AbstractFacade.CollectionInfo collectionInfo = userFacade.findAll(resource.getOffset(), resource.getLimit(),
+        resource.getFilter(), resource.getSort());
+      //set the count
+      dto.setCount(collectionInfo.getCount());
+      collectionInfo.getItems().forEach((user) -> dto.addItem(build(uriInfo, resource, (Users) user)));
+  
     }
     return dto;
   }
-
+  
   public Comparator<Users> getComparator(Resource resource) {
     Set<UserFacade.SortBy> sortBy = (Set<UserFacade.SortBy>) resource.getSort();
     if (resource.getSort() != null && !resource.getSort().isEmpty()) {

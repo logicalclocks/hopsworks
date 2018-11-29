@@ -25,6 +25,8 @@ import io.hops.hopsworks.common.dao.project.Project;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.ws.rs.core.UriInfo;
 import java.util.Comparator;
 import java.util.Date;
@@ -32,6 +34,7 @@ import java.util.Iterator;
 import java.util.Set;
 
 @Stateless
+@TransactionAttribute(TransactionAttributeType.NEVER)
 public class JobsBuilder {
   
   @EJB
@@ -86,13 +89,15 @@ public class JobsBuilder {
     JobDTO dto = new JobDTO();
     uri(dto, uriInfo, project);
     expand(dto, resource);
-    AbstractFacade.CollectionInfo collectionInfo = jobFacade.findByProject(resource.getOffset(),
-      resource.getLimit(),
-      resource.getFilter(),
-      resource.getSort(), project);
-    //set the count
-    dto.setCount(collectionInfo.getCount());
-    collectionInfo.getItems().forEach((job) -> dto.addItem(build(uriInfo, resource, (Jobs) job)));
+    if(dto.isExpand()) {
+      AbstractFacade.CollectionInfo collectionInfo = jobFacade.findByProject(resource.getOffset(),
+        resource.getLimit(),
+        resource.getFilter(),
+        resource.getSort(), project);
+      //set the count
+      dto.setCount(collectionInfo.getCount());
+      collectionInfo.getItems().forEach((job) -> dto.addItem(build(uriInfo, resource, (Jobs) job)));
+    }
     return dto;
   }
   

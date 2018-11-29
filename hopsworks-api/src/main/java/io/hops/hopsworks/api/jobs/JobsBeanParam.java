@@ -15,11 +15,11 @@
  */
 package io.hops.hopsworks.api.jobs;
 
-import io.hops.hopsworks.common.api.Resource;
+import io.hops.hopsworks.api.activities.ExpansionBeanParam;
 import io.swagger.annotations.ApiParam;
 
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.QueryParam;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -31,20 +31,19 @@ public class JobsBeanParam {
   private String sortBy;
   private final Set<SortBy> sortBySet;
   @QueryParam("filter_by")
-  @ApiParam(value = "ex. filter_by=type:spark,pyspark")
+  @ApiParam(value = "ex. filter_by=jobtype:dataset",
+    allowableValues = "flag:project, flag:dataset, flag:member, flag:service, flag:job",
+    allowMultiple = true)
   private Set<FilterBy> filter;
-  @QueryParam("expand")
-  @ApiParam(value = "ex. expand=creator")
-  private Set<JobExpansions> expansions;
+  @BeanParam
+  private ExpansionBeanParam expansions;
   
   public JobsBeanParam(
     @QueryParam("sort_by") String sortBy,
-    @QueryParam("filter_by") Set<FilterBy> filter,
-    @QueryParam("expand") Set<JobExpansions> expansions) {
+    @QueryParam("filter_by") Set<FilterBy> filter) {
     this.sortBy = sortBy;
     this.sortBySet = getSortBy(sortBy);
     this.filter = filter;
-    this.expansions = expansions;
   }
   
   private Set<SortBy> getSortBy(String param) {
@@ -82,19 +81,11 @@ public class JobsBeanParam {
     return sortBySet;
   }
   
-  public Set<JobExpansions> getExpansions() {
+  public ExpansionBeanParam getExpansions() {
     return expansions;
   }
   
-  public void setExpansions(Set<JobExpansions> expansions) {
+  public void setExpansions(ExpansionBeanParam expansions) {
     this.expansions = expansions;
-  }
-  
-  public Set<Resource> getResources(){
-    Set<Resource> expansions = new HashSet<>();
-    for(JobExpansions jobExpansion : this.expansions){
-      expansions.add(jobExpansion.getResource());
-    }
-    return expansions;
   }
 }

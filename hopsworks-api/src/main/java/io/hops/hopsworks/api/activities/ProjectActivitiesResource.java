@@ -24,7 +24,6 @@ import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.exception.ActivitiesException;
 import io.hops.hopsworks.common.exception.ProjectException;
 import io.hops.hopsworks.common.exception.RESTCodes;
-import io.hops.hopsworks.common.exception.ResourceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.ApiOperation;
 
@@ -98,7 +97,7 @@ public class ProjectActivitiesResource {
   public Response findAllByProject(
       @BeanParam Pagination pagination,
       @BeanParam ActivitiesBeanParam activitiesBeanParam,
-      @Context UriInfo uriInfo) throws ProjectException, ResourceException {
+      @Context UriInfo uriInfo) throws ProjectException {
     Project project = getProject(); //test if project exist
     Resource resource = new Resource(Resource.Name.ACTIVITIES);
     resource.setOffset(pagination.getOffset());

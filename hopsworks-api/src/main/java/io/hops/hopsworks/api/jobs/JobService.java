@@ -189,7 +189,7 @@ public class JobService {
     resource.setLimit(pagination.getLimit());
     resource.setSort(jobsBeanParam.getSortBySet());
     resource.setFilter(jobsBeanParam.getFilter());
-    resource.setExpansions(jobsBeanParam.getResources());
+    resource.setExpansions(jobsBeanParam.getExpansions().getResources());
     
     JobDTO dto = jobsBuilder.build(uriInfo, resource, project);
     return Response.ok().entity(dto).build();
@@ -204,12 +204,9 @@ public class JobService {
   public Response getJob(@PathParam("name") String name,
     @BeanParam JobsBeanParam jobsBeanParam,
     @Context UriInfo uriInfo) throws JobException {
-    Jobs job = jobFacade.findByProjectAndName(project, name);
-    if(job == null){
-      throw new JobException(RESTCodes.JobErrorCode.JOB_NOT_FOUND, Level.FINEST);
-    }
+    Jobs job = jobController.getJob(project, name);
     Resource resource = new Resource(Resource.Name.JOBS);
-    resource.setExpansions(jobsBeanParam.getResources());
+    resource.setExpansions(jobsBeanParam.getExpansions().getResources());
     JobDTO dto = jobsBuilder.build(uriInfo, resource, job);
     return Response.ok().entity(dto).build();
   }
@@ -240,7 +237,6 @@ public class JobService {
     JobDTO dto = jobsBuilder.build(uriInfo, new Resource(Resource.Name.JOBS), job);
     UriBuilder builder = uriInfo.getAbsolutePathBuilder().path(Integer.toString(dto.getId()));
     return Response.created(builder.build()).entity(dto).build();
-    
   }
   
   @ApiOperation(value = "Delete the job with the given ID")
@@ -254,10 +250,7 @@ public class JobService {
     @Context HttpServletRequest req,
     @Context UriInfo uriInfo) throws JobException {
     Users user = jWTHelper.getUserPrincipal(req);
-    Jobs job = jobFacade.findByProjectAndName(project, name);
-    if(job == null){
-      throw new JobException(RESTCodes.JobErrorCode.JOB_NOT_FOUND, Level.FINEST);
-    }
+    Jobs job = jobController.getJob(project, name);
     
     if(job.getJobConfig().getSchedule() != null) {
       jobController.unscheduleJob(job);
@@ -284,16 +277,12 @@ public class JobService {
     @PathParam("name") String name,
     @Context HttpServletRequest req,
     @Context UriInfo uriInfo) throws JobException {
-    if(Strings.isNullOrEmpty(name)) {
-      throw new IllegalArgumentException("job name was not provided or it was not set.");
-    }
+    
     if(schedule == null){
       throw new IllegalArgumentException("Schedule parameter was not provided.");
     }
-    Jobs job = jobFacade.findByProjectAndName(project, name);
-    if (job == null) {
-      throw new JobException(RESTCodes.JobErrorCode.JOB_NOT_FOUND, Level.FINEST, "jobId:"+name);
-    }
+    Jobs job = jobController.getJob(project, name);
+    
     Users user = jWTHelper.getUserPrincipal(req);
     jobController.updateSchedule(project, job, schedule, user);
     return Response.noContent().build();

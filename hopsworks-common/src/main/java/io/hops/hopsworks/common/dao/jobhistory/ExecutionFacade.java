@@ -45,6 +45,7 @@ import io.hops.hopsworks.common.dao.jobs.JobOutputFile;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.exception.InvalidQueryException;
 import io.hops.hopsworks.common.jobs.jobhistory.JobFinalStatus;
 import io.hops.hopsworks.common.jobs.jobhistory.JobState;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
@@ -206,7 +207,16 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
   private Set<JobFinalStatus> getJobFinalStatus(String field, String values) {
     Set<JobFinalStatus> statuses = new HashSet<>();
     for (String status : values.split(",")) {
-      statuses.add(JobFinalStatus.valueOf(status.trim()));
+      try {
+        statuses.add(JobFinalStatus.valueOf(status.trim()));
+      } catch (IllegalArgumentException ie) {
+        throw new InvalidQueryException("Filter value for " + field + " needs to set a valid " + field + ", but found: "
+          + status);
+      }
+    }
+    if (statuses.isEmpty()) {
+      throw new InvalidQueryException(
+        "Filter value for " + field + " needs to set valid execution statuses, but found: " + values);
     }
     return statuses;
   }

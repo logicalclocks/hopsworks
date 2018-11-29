@@ -286,31 +286,31 @@ public class ActivityFacade extends AbstractFacade<Activity> {
     return query.getResultList();
   }
 
-  public List<Activity> findAll(Integer offset, Integer limit, Set<? extends AbstractFacade.FilterBy> filter,
-      Set<? extends AbstractFacade.SortBy> sort) {
-    String queryStr = buildQuery("SELECT u FROM Activity u ", filter, sort, "");
-    Query query = em.createQuery(queryStr, Activity.class);
-    setFilter(filter, query);
-    setOffsetAndLim(offset, limit, query);
-    return query.getResultList();
-  }
-
-  public List<Activity> findAllByProject(Integer offset, Integer limit, Set<? extends AbstractFacade.FilterBy> filter,
-      Set<? extends AbstractFacade.SortBy> sort, Project project) {
+  public CollectionInfo findAllByProject(Integer offset, Integer limit, Set<? extends AbstractFacade.FilterBy> filter,
+    Set<? extends AbstractFacade.SortBy> sort, Project project) {
     String queryStr = buildQuery("SELECT u FROM Activity u ", filter, sort, "u.project = :project ");
+    String queryCountStr = buildQuery("SELECT COUNT(u.id) FROM Activity u ", filter, sort, "u.project = :project ");
     Query query = em.createQuery(queryStr, Activity.class).setParameter("project", project);
-    setFilter(filter, query);
-    setOffsetAndLim(offset, limit, query);
-    return query.getResultList();
+    Query queryCount = em.createQuery(queryCountStr, Activity.class).setParameter("project", project);
+    return findAll(offset, limit, filter, query, queryCount);
   }
-
-  public List<Activity> findAllByUser(Integer offset, Integer limit, Set<? extends AbstractFacade.FilterBy> filter,
-      Set<? extends AbstractFacade.SortBy> sort, Users user) {
+  
+  public CollectionInfo findAllByUser(Integer offset, Integer limit,
+    Set<? extends AbstractFacade.FilterBy> filter,
+    Set<? extends AbstractFacade.SortBy> sort, Users user) {
     String queryStr = buildQuery("SELECT u FROM Activity u ", filter, sort, "u.user = :user ");
+    String queryCountStr = buildQuery("SELECT COUNT(u.id) FROM Activity u ", filter, sort, "u.user = :user ");
     Query query = em.createQuery(queryStr, Activity.class).setParameter("user", user);
+    Query queryCount = em.createQuery(queryCountStr, Activity.class).setParameter("user", user);
+    return findAll(offset, limit, filter, query, queryCount);
+  }
+  
+  private CollectionInfo findAll(Integer offset, Integer limit,
+    Set<? extends AbstractFacade.FilterBy> filter, Query query, Query queryCount) {
     setFilter(filter, query);
+    setFilter(filter, queryCount);
     setOffsetAndLim(offset, limit, query);
-    return query.getResultList();
+    return new CollectionInfo((Long) queryCount.getSingleResult(), query.getResultList());
   }
 
   private void setFilter(Set<? extends AbstractFacade.FilterBy> filter, Query q) {

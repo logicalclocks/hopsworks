@@ -39,6 +39,7 @@
 
 package io.hops.hopsworks.common.jobs;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 
@@ -138,6 +139,18 @@ public class JobController {
   }
   
   
+  public Jobs getJob(Project project, String name) throws JobException {
+    if(Strings.isNullOrEmpty(name)) {
+      throw new IllegalArgumentException("job name was not provided or it was not set.");
+    }
+    Jobs job = jobFacade.findByProjectAndName(project, name);
+    if (job == null) {
+      throw new JobException(RESTCodes.JobErrorCode.JOB_NOT_FOUND, Level.FINEST, "jobId:" + name);
+    }
+    return job;
+  }
+  
+  @TransactionAttribute(TransactionAttributeType.NEVER)
   public JobConfiguration inspectProgram(String path, Project project, Users user, JobType jobType)
     throws JobException {
     DistributedFileSystemOps udfso = null;

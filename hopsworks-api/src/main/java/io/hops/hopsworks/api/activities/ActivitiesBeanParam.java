@@ -39,8 +39,7 @@ public class ActivitiesBeanParam {
 
   public ActivitiesBeanParam(
       @QueryParam("sort_by") String sortBy, 
-      @QueryParam("filter_by") Set<FilterBy> filter,
-      @BeanParam ExpansionBeanParam expansions) {
+      @QueryParam("filter_by") Set<FilterBy> filter) {
     this.sortBy = sortBy;
     this.sortBySet = getSortBy(sortBy);
     this.filter = filter;

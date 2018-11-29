@@ -82,21 +82,7 @@ public class ActivitiesBuilder {
       dto.setTimestamp(activity.getTimestamp());
       dto.setProjectName(activity.getProject().getName());
       dto.setFlag(activity.getFlag());
-      dto.setUserDTO(usersBuilder.buildItem(uriInfo, resource, activity.getUser()));
-    }
-    return dto;
-  }
-
-  public ActivitiesDTO buildItem(UriInfo uriInfo, Resource resource, Activity activity) {
-    ActivitiesDTO dto = new ActivitiesDTO();
-    uri(dto, uriInfo, activity);
-    expand(dto, resource);
-    if (dto.isExpand()) {
-      dto.setActivity(activity.getActivity());
-      dto.setTimestamp(activity.getTimestamp());
-      dto.setProjectName(activity.getProject().getName());
-      dto.setFlag(activity.getFlag());
-      dto.setUserDTO(usersBuilder.buildItem(uriInfo, resource, activity.getUser()));
+      dto.setUserDTO(usersBuilder.build(uriInfo, resource, activity.getUser()));
     }
     return dto;
   }
@@ -110,18 +96,9 @@ public class ActivitiesBuilder {
       dto.setTimestamp(activity.getTimestamp());
       dto.setProjectName(activity.getProject().getName());
       dto.setFlag(activity.getFlag());
-      dto.setUserDTO(usersBuilder.buildItem(uriInfo, resource, activity.getUser()));
+      dto.setUserDTO(usersBuilder.build(uriInfo, resource, activity.getUser()));
     }
     return dto;
-  }
-
-  public ActivitiesDTO build(UriInfo uriInfo, Resource resource, Integer id) throws
-      ActivitiesException {
-    Activity activity = activityFacade.activityByID(id);
-    if (activity == null) {
-      throw new ActivitiesException(RESTCodes.ActivitiesErrorCode.ACTIVITY_NOT_FOUND, Level.FINE, "activityId: " + id);
-    }
-    return build(uriInfo, resource, activity);
   }
 
   public ActivitiesDTO build(UriInfo uriInfo, Resource resource, Users user, Integer id) throws
@@ -142,67 +119,31 @@ public class ActivitiesBuilder {
     return build(uriInfo, resource, activity);
   }
 
-  public ActivitiesDTO buildItems(UriInfo uriInfo, Resource Resource)  {
-    return items(new ActivitiesDTO(), uriInfo, Resource);
+  public ActivitiesDTO buildItems(UriInfo uriInfo, Resource resource, Users user) {
+    return items(new ActivitiesDTO(), uriInfo, resource, user);
   }
 
-  public ActivitiesDTO buildItems(UriInfo uriInfo, Resource Resource, Users user) {
-    return items(new ActivitiesDTO(), uriInfo, Resource, user);
-  }
-
-  public ActivitiesDTO buildItems(UriInfo uriInfo, Resource Resource, Project project) {
-    return items(new ActivitiesDTO(), uriInfo, Resource, project);
-  }
-
-  private ActivitiesDTO items(ActivitiesDTO dto, UriInfo uriInfo, Resource resource) {
-    List<Activity> activities;
-    if (resource.getOffset() != null || resource.getLimit() != null || (resource.getFilter() != null && !resource.
-        getFilter().isEmpty())) {
-      activities = activityFacade.findAll(resource.getOffset(), resource.getLimit(), resource.getFilter(),
-          resource.getSort());
-      return items(dto, uriInfo, resource, activities, false);
-    }
-    activities = activityFacade.getAllActivities();
-    return items(dto, uriInfo, resource, activities, true);
+  public ActivitiesDTO buildItems(UriInfo uriInfo, Resource resource, Project project) {
+    return items(new ActivitiesDTO(), uriInfo, resource, project);
   }
 
   private ActivitiesDTO items(ActivitiesDTO dto, UriInfo uriInfo, Resource resource, Users user) {
-    List<Activity> activities;
-    if (resource.getOffset() != null || resource.getLimit() != null || (resource.getFilter() != null && !resource.
-        getFilter().isEmpty())) {
-      activities = activityFacade.findAllByUser(resource.getOffset(), resource.getLimit(), resource.getFilter(),
+    AbstractFacade.CollectionInfo
+      collectionInfo = activityFacade.findAllByUser(resource.getOffset(), resource.getLimit(), resource.getFilter(),
           resource.getSort(), user);
-      return items(dto, uriInfo, resource, activities, false);
-    }
-    activities = activityFacade.getAllActivityByUser(user);
-    return items(dto, uriInfo, resource, activities, true);
+    dto.setCount(collectionInfo.getCount());
+    return items(dto, uriInfo, resource, collectionInfo.getItems());
   }
 
   private ActivitiesDTO items(ActivitiesDTO dto, UriInfo uriInfo, Resource resource, Project project) {
-    List<Activity> activities;
-    if (resource.getOffset() != null || resource.getLimit() != null || (resource.getFilter() != null && !resource.
-        getFilter().isEmpty())) {
-      activities = activityFacade.findAllByProject(resource.getOffset(), resource.getLimit(), resource.getFilter(),
-          resource.getSort(), project);
-      return items(dto, uriInfo, resource, activities, false);
-    }
-    activities = activityFacade.getAllActivityByProject(project);
-    return items(dto, uriInfo, resource, activities, true);
+    AbstractFacade.CollectionInfo collectionInfo = activityFacade.findAllByProject(resource.getOffset(),
+      resource.getLimit(), resource.getFilter(), resource.getSort(), project);
+    dto.setCount(collectionInfo.getCount());
+    return items(dto, uriInfo, resource, collectionInfo.getItems());
   }
-
-  private ActivitiesDTO items(ActivitiesDTO dto, UriInfo uriInfo, Resource property, List<Activity> activities, 
-      boolean sort) {
-    if (activities != null && !activities.isEmpty()) {
-      if (sort) {
-        Comparator<Activity> comparator = getComparator(property);
-        if (comparator != null) {
-          activities.sort(comparator);
-        }
-      }
-      activities.forEach(( activity ) -> {
-        dto.addItem(buildItems(uriInfo, property, activity));
-      });
-    }
+  
+  private ActivitiesDTO items(ActivitiesDTO dto, UriInfo uriInfo, Resource property, List<Activity> activities) {
+    activities.forEach((activity) -> dto.addItem(buildItems(uriInfo, property, activity)));
     return dto;
   }
 

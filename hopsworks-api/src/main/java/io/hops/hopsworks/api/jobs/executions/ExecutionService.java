@@ -116,7 +116,7 @@ public class ExecutionService {
     resource.setLimit(pagination.getLimit());
     resource.setSort(executionsBeanParam.getSortBySet());
     resource.setFilter(executionsBeanParam.getFilter());
-    resource.setExpansions(executionsBeanParam.getResources());
+    resource.setExpansions(executionsBeanParam.getExpansions().getResources());
     
     ExecutionDTO dto = executionsBuilder.build(uriInfo, resource, job);
     return Response.ok().entity(dto).build();
@@ -135,7 +135,7 @@ public class ExecutionService {
     //If requested execution does not belong to job
     Execution execution = authorize(id);
     Resource resource = new Resource(Resource.Name.EXECUTIONS);
-    resource.setExpansions(executionsBeanParam.getResources());
+    resource.setExpansions(executionsBeanParam.getExpansions().getResources());
     ExecutionDTO dto = executionsBuilder.build(uriInfo, resource, execution);
     return Response.ok().entity(dto).build();
   }
@@ -148,8 +148,7 @@ public class ExecutionService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response execution(
-    @ApiParam(value = "start or stop", required = true) @QueryParam("action")
-      Action action,
+    @ApiParam(value = "start or stop", required = true) @QueryParam("action") Action action,
     @Context HttpServletRequest req,
     @Context UriInfo uriInfo) throws JobException, GenericException {
     
@@ -169,7 +168,6 @@ public class ExecutionService {
       default:
         return Response.status(Response.Status.BAD_REQUEST).build();
     }
-    
   }
   
   @ApiOperation(value = "Retrieve log of given execution and type", response = JobLogDTO.class)
@@ -237,8 +235,6 @@ public class ExecutionService {
     public String toString() {
       return name;
     }
-    
   }
-  
   
 }

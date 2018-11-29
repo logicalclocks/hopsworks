@@ -108,12 +108,12 @@ describe "On #{ENV['OS']}" do
     context 'with authentication' do
       before :all do
         with_valid_tour_project("spark")
-        create_sparktour_job(@project, "demo_job_1")
-        create_sparktour_job(@project, "demo_job_2")
         create_sparktour_job(@project, "demo_job_3")
-        create_sparktour_job(@project, "demo_job_4")
-        create_sparktour_job(@project, "demo_job_5")
+        create_sparktour_job(@project, "demo_job_1")
         create_sparkpy_job(@project, "demo_pyjob_1")
+        create_sparktour_job(@project, "demo_job_5")
+        create_sparktour_job(@project, "demo_job_2")
+        create_sparktour_job(@project, "demo_job_4")
         create_sparkpy_job(@project, "demo_pyjob_2")
       end
       after :each do
@@ -121,8 +121,22 @@ describe "On #{ENV['OS']}" do
       end
       describe "Jobs sort" do
         it "should get all jobs sorted by name" do
-          get_jobs(@project[:id])
-
+          #sort in memory and compare with query
+          get_jobs(@project[:id], "")
+          jobs = json_body[:items].map{|job| job[:name]}
+          sorted = jobs.sort_by(&:downcase)
+          get_jobs(@project[:id], "?sort_by=name:asc")
+          sorted_res = json_body[:items].map { |job| job[:name] }
+          expect(sorted_res).to eq(sorted)
+        end
+        it "should get all jobs sorted by name descending" do
+          #sort in memory and compare with query
+          get_jobs(@project[:id], "")
+          jobs = json_body[:items].map{|job| job[:name]}
+          sorted = jobs.sort_by(&:downcase).reverse
+          get_jobs(@project[:id], "?sort_by=name:desc")
+          sorted_res = json_body[:items].map { |job| job[:name] }
+          expect(sorted_res).to eq(sorted)
         end
       end
     end
