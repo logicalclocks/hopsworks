@@ -82,7 +82,7 @@ public class ActivitiesBuilder {
       dto.setTimestamp(activity.getTimestamp());
       dto.setProjectName(activity.getProject().getName());
       dto.setFlag(activity.getFlag());
-      dto.setUserDTO(usersBuilder.build(uriInfo, resource, activity.getUser()));
+      dto.setUser(usersBuilder.build(uriInfo, resource, activity.getUser()));
     }
     return dto;
   }
@@ -96,7 +96,7 @@ public class ActivitiesBuilder {
       dto.setTimestamp(activity.getTimestamp());
       dto.setProjectName(activity.getProject().getName());
       dto.setFlag(activity.getFlag());
-      dto.setUserDTO(usersBuilder.build(uriInfo, resource, activity.getUser()));
+      dto.setUser(usersBuilder.build(uriInfo, resource, activity.getUser()));
     }
     return dto;
   }

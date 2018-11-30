@@ -183,6 +183,37 @@ describe "On #{ENV['OS']}" do
           sorted_res = json_body[:items].map { |job| "#{job[:jobType]} #{job[:name]}" }
           expect(sorted_res).to eq(sorted)
         end
+        it "should get all jobs sorted by type ascending and name descending" do
+          #sort in memory and compare with query
+          get_jobs(@project[:id], "")
+          s = json_body[:items].sort do |a, b|
+            res = (a[:jobType] <=> b[:jobType])
+            res = -(a[:name] <=> b[:name]) if res == 0
+            res
+          end
+          sorted = s.map { |o| "#{o[:jobType]} #{o[:name]}" }
+          get_jobs(@project[:id], "?sort_by=jobtype:asc,name:desc")
+          sorted_res = json_body[:items].map { |job| "#{job[:jobType]} #{job[:name]}" }
+          expect(sorted_res).to eq(sorted)
+        end
+        it "should get all jobs sorted by type descending and name ascending" do
+          #sort in memory and compare with query
+          get_jobs(@project[:id], "")
+          s = json_body[:items].sort do |a, b|
+            res = -(a[:jobType] <=> b[:jobType])
+            res = (a[:name] <=> b[:name]) if res == 0
+            res
+          end
+          sorted = s.map { |o| "#{o[:jobType]} #{o[:name]}" }
+          get_jobs(@project[:id], "?sort_by=job2type:desc,name:asc")
+          sorted_res = json_body[:items].map { |job| "#{job[:jobType]} #{job[:name]}" }
+          expect(sorted_res).to eq(sorted)
+        end
+        it "should fail to sort by unsupported field" do
+          get_jobs(@project[:id], "?sort_by=unsupported:desc,name:asc")
+          expect_status(404)
+          expect_json(errorCode: 120004)
+        end
       end
     end
   end

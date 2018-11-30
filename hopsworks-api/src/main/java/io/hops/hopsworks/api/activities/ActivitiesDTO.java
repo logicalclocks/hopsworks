@@ -28,7 +28,7 @@ public class ActivitiesDTO extends RestDTO<ActivitiesDTO>{
   private Date timestamp;
   private String projectName;
   private String flag;
-  private UserDTO userDTO;
+  private UserDTO user;
 
   public ActivitiesDTO() {
   }
@@ -64,12 +64,12 @@ public class ActivitiesDTO extends RestDTO<ActivitiesDTO>{
     this.projectName = projectName;
   }
 
-  public UserDTO getUserDTO() {
-    return userDTO;
+  public UserDTO getUser() {
+    return user;
   }
 
-  public void setUserDTO(UserDTO userDTO) {
-    this.userDTO = userDTO;
+  public void setUser(UserDTO user) {
+    this.user = user;
   }
 
   public String getFlag() {

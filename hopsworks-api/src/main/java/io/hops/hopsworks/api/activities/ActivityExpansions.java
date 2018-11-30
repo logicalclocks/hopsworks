@@ -32,7 +32,7 @@ public class ActivityExpansions implements Expansions {
     }
     
     switch (name) {
-      case CREATOR:
+      case USER:
         resource = new UserResource(name, queryParam);
         break;
       default:

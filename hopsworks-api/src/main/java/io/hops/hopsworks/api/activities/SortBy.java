@@ -24,7 +24,7 @@ public class SortBy implements AbstractFacade.SortBy {
 
   private final ActivityFacade.Sorts sortBy;
   private final AbstractFacade.OrderBy param;
-
+  
   public SortBy(String param) {
     String[] sortByParams = param.split(":");
     String sort = "";
@@ -32,8 +32,8 @@ public class SortBy implements AbstractFacade.SortBy {
       sort = sortByParams[0].toUpperCase();
       this.sortBy = ActivityFacade.Sorts.valueOf(sort);
     } catch (IllegalArgumentException iae) {
-      throw new WebApplicationException("Sort by need to set a valid sort parameter, but found: " + sort, 
-          Response.Status.NOT_FOUND);
+      throw new WebApplicationException("Sort by need to set a valid sort parameter, but found: " + sort,
+        Response.Status.NOT_FOUND);
     }
     String order = "";
     try {
@@ -41,7 +41,7 @@ public class SortBy implements AbstractFacade.SortBy {
       this.param = AbstractFacade.OrderBy.valueOf(order);
     } catch (IllegalArgumentException iae) {
       throw new WebApplicationException("Sort by " + sort + " need to set a valid order(asc|desc), but found: " + order
-          , Response.Status.NOT_FOUND);
+        , Response.Status.NOT_FOUND);
     }
   }
 
