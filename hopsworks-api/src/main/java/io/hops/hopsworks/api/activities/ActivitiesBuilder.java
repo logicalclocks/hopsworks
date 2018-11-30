@@ -143,7 +143,7 @@ public class ActivitiesBuilder {
   }
   
   private ActivitiesDTO items(ActivitiesDTO dto, UriInfo uriInfo, Resource property, List<Activity> activities) {
-    activities.forEach((activity) -> dto.addItem(buildItems(uriInfo, property, activity)));
+    activities.forEach(activity -> dto.addItem(buildItems(uriInfo, property, activity)));
     return dto;
   }
 

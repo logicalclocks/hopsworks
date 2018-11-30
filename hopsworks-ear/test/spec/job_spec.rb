@@ -116,7 +116,7 @@ describe "On #{ENV['OS']}" do
         create_sparktour_job(@project, "demo_job_4")
         create_sparkpy_job(@project, "demo_pyjob_2")
       end
-      after :each do
+      after :all do
         clean_jobs(@project[:id])
       end
       describe "Jobs sort" do
@@ -136,6 +136,60 @@ describe "On #{ENV['OS']}" do
           sorted = jobs.sort_by(&:downcase).reverse
           get_jobs(@project[:id], "?sort_by=name:desc")
           sorted_res = json_body[:items].map { |job| job[:name] }
+          expect(sorted_res).to eq(sorted)
+        end
+        it "should get all jobs sorted by id" do
+          #sort in memory and compare with query
+          get_jobs(@project[:id], "")
+          jobs = json_body[:items].map{|job| job[:id]}
+          sorted = jobs.sort
+          get_jobs(@project[:id], "?sort_by=id:asc")
+          sorted_res = json_body[:items].map { |job| job[:id] }
+          expect(sorted_res).to eq(sorted)
+        end
+        it "should get all jobs sorted by id descending" do
+          #sort in memory and compare with query
+          get_jobs(@project[:id], "")
+          jobs = json_body[:items].map{|job| job[:id]}
+          sorted = jobs.sort.reverse
+          get_jobs(@project[:id], "?sort_by=id:desc")
+          sorted_res = json_body[:items].map { |job| job[:id] }
+          expect(sorted_res).to eq(sorted)
+        end
+        it "should get all jobs sorted by date created" do
+          #sort in memory and compare with query
+          get_jobs(@project[:id], "")
+          jobs = json_body[:items].map{|job| job[:creationTime]}
+          sorted = jobs.sort
+          get_jobs(@project[:id], "?sort_by=date_created:asc")
+          sorted_res = json_body[:items].map { |job| job[:creationTime] }
+          expect(sorted_res).to eq(sorted)
+        end
+        it "should get all jobs sorted by date created descending" do
+          #sort in memory and compare with query
+          get_jobs(@project[:id], "")
+          jobs = json_body[:items].map{|job| job[:creationTime]}
+          sorted = jobs.sort.reverse
+          get_jobs(@project[:id], "?sort_by=date_created:desc")
+          sorted_res = json_body[:items].map { |job| job[:creationTime] }
+          expect(sorted_res).to eq(sorted)
+        end
+        it "should get all jobs sorted by type ascending and name ascending" do
+          #sort in memory and compare with query
+          get_jobs(@project[:id], "")
+          jobs = json_body[:items].map{|job| "#{job[:jobType]} #{job[:name]}"}
+          sorted = jobs.sort
+          get_jobs(@project[:id], "?sort_by=jobtype:asc,name:asc")
+          sorted_res = json_body[:items].map { |job| "#{job[:jobType]} #{job[:name]}" }
+          expect(sorted_res).to eq(sorted)
+        end
+        it "should get all jobs sorted by type ascending and name descending" do
+          #sort in memory and compare with query
+          get_jobs(@project[:id], "")
+          jobs = json_body[:items].map{|job| "#{job[:jobType]} #{job[:name]}"}
+          sorted = jobs.sort.reverse
+          get_jobs(@project[:id], "?sort_by=jobtype:asc,name:desc")
+          sorted_res = json_body[:items].map { |job| "#{job[:jobType]} #{job[:name]}" }
           expect(sorted_res).to eq(sorted)
         end
       end

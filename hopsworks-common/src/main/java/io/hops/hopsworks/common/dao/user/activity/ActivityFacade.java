@@ -38,23 +38,23 @@
  */
 package io.hops.hopsworks.common.dao.user.activity;
 
-import java.util.Date;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import io.hops.hopsworks.common.dao.AbstractFacade;
+import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.exception.InvalidQueryException;
+
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
-import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.common.exception.InvalidQueryException;
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.Date;
+import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Stateless
 public class ActivityFacade extends AbstractFacade<Activity> {
@@ -317,9 +317,8 @@ public class ActivityFacade extends AbstractFacade<Activity> {
     if (filter == null || filter.isEmpty()) {
       return;
     }
-    Iterator<? extends AbstractFacade.FilterBy> filterBy = filter.iterator();
-    for (; filterBy.hasNext();) {
-      setFilterQuery(filterBy.next(), q);
+    for (FilterBy aFilter : filter) {
+      setFilterQuery(aFilter, q);
     }
   }
 

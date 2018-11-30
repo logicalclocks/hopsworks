@@ -57,7 +57,6 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
@@ -226,9 +225,8 @@ public class JobFacade extends AbstractFacade<Jobs> {
     if (filter == null || filter.isEmpty()) {
       return;
     }
-    Iterator<? extends AbstractFacade.FilterBy> filterBy = filter.iterator();
-    for (; filterBy.hasNext(); ) {
-      setFilterQuery(filterBy.next(), q);
+    for (FilterBy aFilter : filter) {
+      setFilterQuery(aFilter, q);
     }
   }
   
@@ -264,7 +262,7 @@ public class JobFacade extends AbstractFacade<Jobs> {
   
   public enum Sorts {
     ID("ID", "j.id ", "ASC"),
-    NAME("NAME", "LOWER(j.name) ", "ASC"),
+    NAME("NAME", "j.name ", "ASC"),
     DATE_CREATED("DATE_CREATED", "j.creationTime ", "DESC"),
     JOBTYPE("JOBTYPE", "j.type ", "ASC");
     

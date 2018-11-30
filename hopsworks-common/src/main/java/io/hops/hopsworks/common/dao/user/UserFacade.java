@@ -44,18 +44,17 @@ import io.hops.hopsworks.common.dao.user.security.UserGroupPK;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountType;
 import io.hops.hopsworks.common.exception.InvalidQueryException;
-import java.util.ArrayList;
-import java.util.Iterator;
 
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import javax.ejb.EJB;
 
 @Stateless
 public class UserFacade extends AbstractFacade<Users> {
@@ -142,9 +141,8 @@ public class UserFacade extends AbstractFacade<Users> {
     if (filter == null || filter.isEmpty()) {
       return;
     }
-    Iterator<? extends AbstractFacade.FilterBy> filterBy = filter.iterator();
-    for (; filterBy.hasNext();) {
-      setFilterQuery(filterBy.next(), q);
+    for (FilterBy aFilter : filter) {
+      setFilterQuery(aFilter, q);
     }
   }
 

@@ -58,7 +58,6 @@ import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
@@ -104,7 +103,7 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
   }
   
   /**
-   * Enforces
+   * Enforces clients to search jobs for particular projects.
    * @param id
    * @return
    */
@@ -172,9 +171,8 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
     if (filter == null || filter.isEmpty()) {
       return;
     }
-    Iterator<? extends AbstractFacade.FilterBy> filterBy = filter.iterator();
-    for (;filterBy.hasNext();) {
-      setFilterQuery(filterBy.next(), q);
+    for (FilterBy aFilter : filter) {
+      setFilterQuery(aFilter, q);
     }
   }
   

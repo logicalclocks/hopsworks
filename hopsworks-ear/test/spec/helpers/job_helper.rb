@@ -77,11 +77,11 @@ module JobHelper
   end
 
   def get_jobs(project_id, query)
-    get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs"
+    get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs#{query}"
   end
 
   def get_job(project_id, job_name, query)
-    get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs/#{job_name}"
+    get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs/#{job_name}/#{query}"
   end
 
   def delete_job(project_id, job_name)
