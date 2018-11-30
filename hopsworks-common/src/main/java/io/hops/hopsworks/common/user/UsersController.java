@@ -407,16 +407,15 @@ public class UsersController {
     String testUname = "";
     String suffix = "";
     int count = 1;
-    while (user != null && count < 100) {
+    while (user != null && count < 1000) {
       suffix = String.valueOf(count);
       testUname = baseUsername.substring(0, (Settings.USERNAME_LEN - suffix.length()));
       user = userFacade.findByUsername(testUname + suffix);
       count++;
     }
 
-    if (count == 100) {
-      throw new IllegalStateException(
-          "You cannot register with this email address. Pick another.");
+    if (count == 1000) {
+      throw new IllegalStateException("You cannot register with this email address. Pick another.");
     }
     return testUname + suffix;
   }

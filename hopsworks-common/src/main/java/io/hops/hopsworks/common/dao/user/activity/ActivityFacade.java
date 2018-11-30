@@ -59,8 +59,7 @@ import java.util.logging.Logger;
 @Stateless
 public class ActivityFacade extends AbstractFacade<Activity> {
 
-  private static final Logger logger = Logger.getLogger(ActivityFacade.class.
-      getName());
+  private static final Logger LOGGER = Logger.getLogger(ActivityFacade.class.getName());
 
   // String constants
   public static final String NEW_PROJECT = " created a new project named ";
@@ -144,7 +143,13 @@ public class ActivityFacade extends AbstractFacade<Activity> {
 
   public Activity activityByID(int id) {
     TypedQuery<Activity> query = em.createNamedQuery("Activity.findById", Activity.class).setParameter("id", id);
-    return query.getSingleResult();
+    Activity activity = null;
+    try {
+      activity = query.getSingleResult();
+    } catch (NoResultException e) {
+      LOGGER.log(Level.FINE, e.getMessage());
+    }
+    return activity;
   }
 
   public Activity lastActivityOnProject(Project project) {
@@ -154,7 +159,7 @@ public class ActivityFacade extends AbstractFacade<Activity> {
     try {
       return query.getSingleResult();
     } catch (NoResultException e) {
-      logger.log(Level.SEVERE, "No activity returned for project " + project
+      LOGGER.log(Level.SEVERE, "No activity returned for project " + project
           + ", while its creation should always be there!", e);
       return null;
     }
@@ -209,7 +214,13 @@ public class ActivityFacade extends AbstractFacade<Activity> {
     TypedQuery<Activity> q = em.createNamedQuery("Activity.findByIdAndProject", Activity.class);
     q.setParameter("id", id);
     q.setParameter("project", project);
-    return q.getSingleResult();
+    Activity activity = null;
+    try {
+      activity = q.getSingleResult();
+    } catch (NoResultException e) {
+      LOGGER.log(Level.FINE, e.getMessage());
+    }
+    return activity;
   }
 
   /**
@@ -228,7 +239,13 @@ public class ActivityFacade extends AbstractFacade<Activity> {
     TypedQuery<Activity> q = em.createNamedQuery("Activity.findByIdAndUser", Activity.class);
     q.setParameter("id", id);
     q.setParameter("user", user);
-    return q.getSingleResult();
+    Activity activity = null;
+    try {
+      activity = q.getSingleResult();
+    } catch (NoResultException e) {
+      LOGGER.log(Level.FINE, e.getMessage());
+    }
+    return activity;
   }
 
   /**

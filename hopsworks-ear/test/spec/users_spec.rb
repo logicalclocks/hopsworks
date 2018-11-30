@@ -99,6 +99,64 @@ describe "On #{ENV['OS']}" do
             sortedRes = json_body[:items].map { |o| "#{o[:firstname]} #{o[:lastname]}" }
             expect(sortedRes).to eq(sorted)
           end
+          it 'should get all users sorted by email descending' do
+            names = @users.map { |o| "#{o[:email]}" }
+            sorted = names.sort_by(&:downcase).reverse
+            get "#{ENV['HOPSWORKS_API']}/users?sort_by=email:desc"
+            sortedRes = json_body[:items].map { |o| "#{o[:email]}" }
+            expect(sortedRes).to eq(sorted)
+          end
+          it 'should get all users sorted by email ascending' do
+            names = @users.map { |o| "#{o[:email]}" }
+            sorted = names.sort_by(&:downcase)
+            get "#{ENV['HOPSWORKS_API']}/users?sort_by=email:asc"
+            sortedRes = json_body[:items].map { |o| "#{o[:email]}" }
+            expect(sortedRes).to eq(sorted)
+          end
+          it 'should get all users sorted by firstname ascending and lastname descending' do
+            s = @users.sort do |a, b|
+                res = (a[:firstname].downcase <=> b[:firstname].downcase)
+                res = -(a[:lastname].downcase <=> b[:lastname].downcase) if res == 0
+                res
+            end
+            sorted = s.map { |o| "#{o[:firstname]} #{o[:lastname]}" }
+            get "#{ENV['HOPSWORKS_API']}/users?sort_by=first_name:asc,last_name:desc"
+            sortedRes = json_body[:items].map { |o| "#{o[:firstname]} #{o[:lastname]}" }
+            expect(sortedRes).to eq(sorted)
+          end
+          it 'should get all users sorted by firstname descending and lastname ascending' do
+            s = @users.sort do |a, b|
+                res = -(a[:firstname].downcase <=> b[:firstname].downcase)
+                res = (a[:lastname].downcase <=> b[:lastname].downcase) if res == 0
+                res
+            end
+            sorted = s.map { |o| "#{o[:firstname]} #{o[:lastname]}" }
+            get "#{ENV['HOPSWORKS_API']}/users?sort_by=first_name:desc,last_name:asc"
+            sortedRes = json_body[:items].map { |o| "#{o[:firstname]} #{o[:lastname]}" }
+            expect(sortedRes).to eq(sorted)
+          end
+          it 'should get all users sorted by lastname ascending and firstname descending' do
+            s = @users.sort do |a, b|
+                res = (a[:lastname].downcase <=> b[:lastname].downcase)
+                res = -(a[:firstname].downcase <=> b[:firstname].downcase) if res == 0
+                res
+            end
+            sorted = s.map { |o| "#{o[:lastname]} #{o[:firstname]}" }
+            get "#{ENV['HOPSWORKS_API']}/users?sort_by=last_name:asc,first_name:desc"
+            sortedRes = json_body[:items].map { |o| "#{o[:lastname]} #{o[:firstname]}" }
+            expect(sortedRes).to eq(sorted)
+          end
+          it 'should get all users sorted by lastname descending and firstname ascending' do
+            s = @users.sort do |a, b|
+                res = -(a[:lastname].downcase <=> b[:lastname].downcase)
+                res = (a[:firstname].downcase <=> b[:firstname].downcase) if res == 0
+                res
+            end
+            sorted = s.map { |o| "#{o[:lastname]} #{o[:firstname]}" }
+            get "#{ENV['HOPSWORKS_API']}/users?sort_by=last_name:desc,first_name:asc"
+            sortedRes = json_body[:items].map { |o| "#{o[:lastname]} #{o[:firstname]}" }
+            expect(sortedRes).to eq(sorted)
+          end
         end
         describe "Users limit and offset" do
           it 'should get only limit=x users' do

@@ -59,6 +59,94 @@ describe "On #{ENV['OS']}" do
               sortedRes = json_body[:items].map { |o| "#{o[:timestamp]}" }
               expect(sortedRes).to eq(sorted)
             end
+            it 'should return activities sorted by flag descending and date created descending.' do
+              s = @activities.sort do |a, b|
+                res = -(a[:flag] <=> b[:flag])
+                res = -(a[:timestamp] <=> b[:timestamp]) if res == 0
+                res
+              end
+              sorted = s.map { |o| "#{o[:flag]} #{o[:timestamp]}" }
+              get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/activities?sort_by=flag:desc,date_created:desc"
+              sortedRes = json_body[:items].map { |o| "#{o[:flag]} #{o[:timestamp]}" }
+              expect(sortedRes).to eq(sorted)
+            end
+            it 'should return activities sorted by flag ascending and date created ascending.' do
+              s = @activities.sort do |a, b|
+                res = (a[:flag] <=> b[:flag])
+                res = (a[:timestamp] <=> b[:timestamp]) if res == 0
+                res
+              end
+              sorted = s.map { |o| "#{o[:flag]} #{o[:timestamp]}" }
+              get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/activities?sort_by=flag:asc,date_created:asc"
+              sortedRes = json_body[:items].map { |o| "#{o[:flag]} #{o[:timestamp]}" }
+              expect(sortedRes).to eq(sorted)
+            end
+            it 'should return activities sorted by flag descending and date created ascending.' do
+              s = @activities.sort do |a, b|
+                res = -(a[:flag] <=> b[:flag])
+                res = (a[:timestamp] <=> b[:timestamp]) if res == 0
+                res
+              end
+              sorted = s.map { |o| "#{o[:flag]} #{o[:timestamp]}" }
+              get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/activities?sort_by=flag:desc,date_created:asc"
+              sortedRes = json_body[:items].map { |o| "#{o[:flag]} #{o[:timestamp]}" }
+              expect(sortedRes).to eq(sorted)
+            end
+            it 'should return activities sorted by flag ascending and date created descending.' do
+              s = @activities.sort do |a, b|
+                res = (a[:flag] <=> b[:flag])
+                res = -(a[:timestamp] <=> b[:timestamp]) if res == 0
+                res
+              end
+              sorted = s.map { |o| "#{o[:flag]} #{o[:timestamp]}" }
+              get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/activities?sort_by=flag:asc,date_created:desc"
+              sortedRes = json_body[:items].map { |o| "#{o[:flag]} #{o[:timestamp]}" }
+              expect(sortedRes).to eq(sorted)
+            end
+            it 'should return activities sorted by date created descending and flag descending.' do
+              s = @activities.sort do |a, b|
+                res = -(a[:timestamp] <=> b[:timestamp])
+                res = -(a[:flag] <=> b[:flag]) if res == 0
+                res
+              end
+              sorted = s.map { |o| "#{o[:timestamp]} #{o[:flag]}" }
+              get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/activities?sort_by=date_created:desc,flag:desc"
+              sortedRes = json_body[:items].map { |o| "#{o[:timestamp]} #{o[:flag]}" }
+              expect(sortedRes).to eq(sorted)
+            end
+            it 'should return activities sorted by date created ascending and flag ascending.' do
+              s = @activities.sort do |a, b|
+                res = (a[:timestamp] <=> b[:timestamp])
+                res = (a[:flag] <=> b[:flag]) if res == 0
+                res
+              end
+              sorted = s.map { |o| "#{o[:timestamp]} #{o[:flag]}" }
+              get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/activities?sort_by=date_created:asc,flag:asc"
+              sortedRes = json_body[:items].map { |o| "#{o[:timestamp]} #{o[:flag]}" }
+              expect(sortedRes).to eq(sorted)
+            end
+            it 'should return activities sorted by date created descending and flag ascending.' do
+              s = @activities.sort do |a, b|
+                res = -(a[:timestamp] <=> b[:timestamp])
+                res = (a[:flag] <=> b[:flag]) if res == 0
+                res
+              end
+              sorted = s.map { |o| "#{o[:timestamp]} #{o[:flag]}" }
+              get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/activities?sort_by=date_created:desc,flag:asc"
+              sortedRes = json_body[:items].map { |o| "#{o[:timestamp]} #{o[:flag]}" }
+              expect(sortedRes).to eq(sorted)
+            end
+            it 'should return activities sorted by date created ascending and flag descending.' do
+              s = @activities.sort do |a, b|
+                res = (a[:timestamp] <=> b[:timestamp])
+                res = -(a[:flag] <=> b[:flag]) if res == 0
+                res
+              end
+              sorted = s.map { |o| "#{o[:timestamp]} #{o[:flag]}" }
+              get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/activities?sort_by=date_created:asc,flag:desc"
+              sortedRes = json_body[:items].map { |o| "#{o[:timestamp]} #{o[:flag]}" }
+              expect(sortedRes).to eq(sorted)
+            end
           end
           describe "Activities offset and limit" do
             it 'should return limit=x activities.' do
@@ -246,6 +334,16 @@ describe "On #{ENV['OS']}" do
               expect(json_body[:errorCode]).to eq(120004)
             end
           end
+          describe "Activities count" do
+            it 'should return the correct count when limit is set' do
+              get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/activities?limit=5"
+              expect(@activities.size).to eq(json_body[:count])
+            end
+            it 'should return the correct count when offset is set' do
+              get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/activities?offset=5"
+              expect(@activities.size).to eq(json_body[:count])
+            end
+          end
         end
         describe "Activities by user" do
           describe "Activities sort" do
@@ -275,6 +373,94 @@ describe "On #{ENV['OS']}" do
               sorted = flags.sort.reverse
               get "#{ENV['HOPSWORKS_API']}/users/activities?sort_by=date_created:desc"
               sortedRes = json_body[:items].map { |o| "#{o[:timestamp]}" }
+              expect(sortedRes).to eq(sorted)
+            end
+            it 'should return activities sorted by flag descending and date created descending.' do
+              s = @activities.sort do |a, b|
+                res = -(a[:flag] <=> b[:flag])
+                res = -(a[:timestamp] <=> b[:timestamp]) if res == 0
+                res
+              end
+              sorted = s.map { |o| "#{o[:flag]} #{o[:timestamp]}" }
+              get "#{ENV['HOPSWORKS_API']}/users/activities?sort_by=flag:desc,date_created:desc"
+              sortedRes = json_body[:items].map { |o| "#{o[:flag]} #{o[:timestamp]}" }
+              expect(sortedRes).to eq(sorted)
+            end
+            it 'should return activities sorted by flag ascending and date created ascending.' do
+              s = @activities.sort do |a, b|
+                res = (a[:flag] <=> b[:flag])
+                res = (a[:timestamp] <=> b[:timestamp]) if res == 0
+                res
+              end
+              sorted = s.map { |o| "#{o[:flag]} #{o[:timestamp]}" }
+              get "#{ENV['HOPSWORKS_API']}/users/activities?sort_by=flag:asc,date_created:asc"
+              sortedRes = json_body[:items].map { |o| "#{o[:flag]} #{o[:timestamp]}" }
+              expect(sortedRes).to eq(sorted)
+            end
+            it 'should return activities sorted by flag descending and date created ascending.' do
+              s = @activities.sort do |a, b|
+                res = -(a[:flag] <=> b[:flag])
+                res = (a[:timestamp] <=> b[:timestamp]) if res == 0
+                res
+              end
+              sorted = s.map { |o| "#{o[:flag]} #{o[:timestamp]}" }
+              get "#{ENV['HOPSWORKS_API']}/users/activities?sort_by=flag:desc,date_created:asc"
+              sortedRes = json_body[:items].map { |o| "#{o[:flag]} #{o[:timestamp]}" }
+              expect(sortedRes).to eq(sorted)
+            end
+            it 'should return activities sorted by flag ascending and date created descending.' do
+              s = @activities.sort do |a, b|
+                res = (a[:flag] <=> b[:flag])
+                res = -(a[:timestamp] <=> b[:timestamp]) if res == 0
+                res
+              end
+              sorted = s.map { |o| "#{o[:flag]} #{o[:timestamp]}" }
+              get "#{ENV['HOPSWORKS_API']}/users/activities?sort_by=flag:asc,date_created:desc"
+              sortedRes = json_body[:items].map { |o| "#{o[:flag]} #{o[:timestamp]}" }
+              expect(sortedRes).to eq(sorted)
+            end
+            it 'should return activities sorted by date created descending and flag descending.' do
+              s = @activities.sort do |a, b|
+                res = -(a[:timestamp] <=> b[:timestamp])
+                res = -(a[:flag] <=> b[:flag]) if res == 0
+                res
+              end
+              sorted = s.map { |o| "#{o[:timestamp]} #{o[:flag]}" }
+              get "#{ENV['HOPSWORKS_API']}/users/activities?sort_by=date_created:desc,flag:desc"
+              sortedRes = json_body[:items].map { |o| "#{o[:timestamp]} #{o[:flag]}" }
+              expect(sortedRes).to eq(sorted)
+            end
+            it 'should return activities sorted by date created ascending and flag ascending.' do
+              s = @activities.sort do |a, b|
+                res = (a[:timestamp] <=> b[:timestamp])
+                res = (a[:flag] <=> b[:flag]) if res == 0
+                res
+              end
+              sorted = s.map { |o| "#{o[:timestamp]} #{o[:flag]}" }
+              get "#{ENV['HOPSWORKS_API']}/users/activities?sort_by=date_created:asc,flag:asc"
+              sortedRes = json_body[:items].map { |o| "#{o[:timestamp]} #{o[:flag]}" }
+              expect(sortedRes).to eq(sorted)
+            end
+            it 'should return activities sorted by date created descending and flag ascending.' do
+              s = @activities.sort do |a, b|
+                res = -(a[:timestamp] <=> b[:timestamp])
+                res = (a[:flag] <=> b[:flag]) if res == 0
+                res
+              end
+              sorted = s.map { |o| "#{o[:timestamp]} #{o[:flag]}" }
+              get "#{ENV['HOPSWORKS_API']}/users/activities?sort_by=date_created:desc,flag:asc"
+              sortedRes = json_body[:items].map { |o| "#{o[:timestamp]} #{o[:flag]}" }
+              expect(sortedRes).to eq(sorted)
+            end
+            it 'should return activities sorted by date created ascending and flag descending.' do
+              s = @activities.sort do |a, b|
+                res = (a[:timestamp] <=> b[:timestamp])
+                res = -(a[:flag] <=> b[:flag]) if res == 0
+                res
+              end
+              sorted = s.map { |o| "#{o[:timestamp]} #{o[:flag]}" }
+              get "#{ENV['HOPSWORKS_API']}/users/activities?sort_by=date_created:asc,flag:desc"
+              sortedRes = json_body[:items].map { |o| "#{o[:timestamp]} #{o[:flag]}" }
               expect(sortedRes).to eq(sorted)
             end
           end
@@ -462,6 +648,16 @@ describe "On #{ENV['OS']}" do
               uri = URI(@user_activities.first[:href])
               get "#{uri.path}?expand=creato"
               expect(json_body[:errorCode]).to eq(120004)
+            end
+          end
+          describe "Activities count" do
+            it 'should return the correct count when limit is set' do
+              get "#{ENV['HOPSWORKS_API']}/users/activities?limit=5"
+              expect(@user_activities.size).to eq(json_body[:count])
+            end
+            it 'should return the correct count when offset is set' do
+              get "#{ENV['HOPSWORKS_API']}/users/activities?offset=5"
+              expect(@user_activities.size).to eq(json_body[:count])
             end
           end
         end
