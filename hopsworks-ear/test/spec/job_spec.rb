@@ -183,15 +183,6 @@ describe "On #{ENV['OS']}" do
           sorted_res = json_body[:items].map { |job| "#{job[:jobType]} #{job[:name]}" }
           expect(sorted_res).to eq(sorted)
         end
-        it "should get all jobs sorted by type ascending and name descending" do
-          #sort in memory and compare with query
-          get_jobs(@project[:id], "")
-          jobs = json_body[:items].map{|job| "#{job[:jobType]} #{job[:name]}"}
-          sorted = jobs.sort.reverse
-          get_jobs(@project[:id], "?sort_by=jobtype:asc,name:desc")
-          sorted_res = json_body[:items].map { |job| "#{job[:jobType]} #{job[:name]}" }
-          expect(sorted_res).to eq(sorted)
-        end
       end
     end
   end

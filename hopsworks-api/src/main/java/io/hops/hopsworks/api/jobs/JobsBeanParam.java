@@ -15,7 +15,6 @@
  */
 package io.hops.hopsworks.api.jobs;
 
-import io.hops.hopsworks.api.activities.ExpansionBeanParam;
 import io.swagger.annotations.ApiParam;
 
 import javax.ws.rs.BeanParam;

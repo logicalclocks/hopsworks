@@ -161,7 +161,7 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
     Query query = em.createQuery(queryStr, Execution.class).setParameter("job", job);
     Query queryCount = em.createQuery(queryCountStr, Execution.class).setParameter("job", job);
     setFilter(filter, query);
-    
+    setFilter(filter, queryCount);
     setOffsetAndLim(offset, limit, query);
     return new CollectionInfo((Long) queryCount.getSingleResult(), query.getResultList());
   }

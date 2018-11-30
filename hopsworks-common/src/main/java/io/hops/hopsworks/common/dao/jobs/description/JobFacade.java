@@ -216,6 +216,7 @@ public class JobFacade extends AbstractFacade<Jobs> {
       queryCount.setParameter("creator", creator);
     }
     setFilter(filter, query);
+    setFilter(filter, queryCount);
     setOffsetAndLim(offset, limit, query);
     return new CollectionInfo((Long) queryCount.getSingleResult(), query.getResultList());
   }
