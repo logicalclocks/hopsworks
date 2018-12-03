@@ -43,10 +43,16 @@ angular.module('hopsWorksApp')
         .factory('ActivityService', ['$http', function ($http) {
             var service = {
               getByUser: function () {
-                return $http.get('/api/user/activities?expand=user');
+                return $http.get('/api/user/activities?expand=creator');
               },
-              getByProjectId: function (id) {
-                return $http.get('/api/project/' + id + '/activities?sort_by=date_created:desc&expand=user');
+              getByProjectId: function (id, limit, offset) {
+                if (limit === undefined || limit === null) {
+                  limit = 0;
+                }
+                if (offset === undefined || offset === null) {
+                  offset = 0;
+                }
+                return $http.get('/api/project/' + id + '/activities?limit=' + limit + '&offset=' + offset +'&sort_by=date_created:desc&expand=creator');
               }
             };
             return service;

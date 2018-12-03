@@ -175,13 +175,12 @@ angular.module('hopsWorksApp')
 
             };
 
-
-            var getAllActivities = function () {
-              ActivityService.getByProjectId(self.projectId).then(function (success) {
-                self.activities = success.data.items;
-                self.pageSize = 8;
-                self.totalPages = Math.floor(self.activities.length / self.pageSize);
-                self.totalItems = self.activities.length;
+            self.pageSize = 8;
+            self.curentPage = 1;
+            var getAllActivities = function (offset) {
+              ActivityService.getByProjectId(self.projectId, self.pageSize, offset).then(function (success) {
+                self.activities = success.data.items;                
+                self.totalItems = success.data.count;
               }, function (error) {
                   if (typeof error.data.usrMsg !== 'undefined') {
                       growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
@@ -190,11 +189,18 @@ angular.module('hopsWorksApp')
                   }
               });
             };
+            
+            self.getActivitiesNextPage = function () {
+              var offset = self.pageSize * (self.curentPage - 1);
+              if (self.totalItems > offset) {
+                getAllActivities(offset);
+              }
+            };
 
             //we only need to load the activities if the path is project (endswith pId).
             var locationPath = $location.path();
             if (locationPath.substring(locationPath.length - self.projectId.length, locationPath.length) === self.projectId) {
-              getAllActivities();
+              getAllActivities(0);
             }            
 
             getCurrentProject();

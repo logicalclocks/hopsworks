@@ -56,7 +56,9 @@
                 <div class="widget-body col-md-10 thin-scrollbar" style="height: 90%; overflow-y: auto;">
                   <div class="timeline clearfix">
                     <div class="mid-line"></div>
-                    <div dir-paginate="activity in projectCtrl.activities | itemsPerPage:projectCtrl.pageSize">
+                    <div dir-paginate="activity in projectCtrl.activities | itemsPerPage:projectCtrl.pageSize" 
+                         current-page="projectCtrl.curentPage"
+                         total-items="projectCtrl.totalItems">
                       <div class="right">
                         <div class="r-arrow"></div>
                         <div class="about-task">
@@ -73,7 +75,9 @@
                         </div>
                       </div>
                     </div>
-                    <dir-pagination-controls max-size="projectCtrl.pageSize" class="pagination-sm" boundary-links="true" rotate="false" >
+                    <dir-pagination-controls class="pagination-sm" boundary-links="true" rotate="false"
+                                             max-size="projectCtrl.pageSize"
+                                             on-page-change="projectCtrl.getActivitiesNextPage()">
                     </dir-pagination-controls>
                   </div>
                 </div>
