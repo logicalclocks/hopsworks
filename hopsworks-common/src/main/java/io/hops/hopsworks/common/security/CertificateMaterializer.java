@@ -699,11 +699,11 @@ public class CertificateMaterializer {
     Map<MaterialKey, ReentrantReadWriteLock> materialKeyLocks = null;
   
     // Take all the write locks
-    TreeSet<ReentrantReadWriteLock> acquiredLocks = acquireWriteLocks(materialKeyLocks);
+    TreeSet<ReentrantReadWriteLock> acquiredLocks = acquireWriteLocks(this.materialKeyLocks);
     try {
       localMaterial = MapUtils.unmodifiableMap(materializedCerts);
       scheduledRemovals = MapUtils.unmodifiableMap(fileRemovers);
-      materialKeyLocks = MapUtils.unmodifiableMap(materialKeyLocks);
+      materialKeyLocks = MapUtils.unmodifiableMap(this.materialKeyLocks);
       remoteMaterial = remoteMaterialReferencesFacade.findAll();
     } finally {
       // Release all locks acquired
