@@ -265,7 +265,8 @@ public class JobFacade extends AbstractFacade<Jobs> {
     ID("ID", "j.id ", "ASC"),
     NAME("NAME", "j.name ", "ASC"),
     CREATIONTIME("CREATIONTIME", "j.creationTime ", "DESC"),
-    JOBTYPE("JOBTYPE", "j.type ", "ASC");
+    JOBTYPE("JOBTYPE", "j.type ", "ASC"),
+    CREATOR("CREATOR", "j.creator " , "ASC");
     
     private final String value;
     private final String sql;

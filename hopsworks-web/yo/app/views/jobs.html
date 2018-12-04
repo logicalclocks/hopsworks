@@ -96,36 +96,35 @@
                   </th>
                   <th ng-click="jobsCtrl.sort('creationTime')" style="width: 10%">
                     Created on
-                    <span class="glyphicon sort-icon" ng-show="jobsCtrl.sortKey == 'creationTime'"
-                          ng-class="{'glyphicon-chevron-up':!jobsCtrl.reverse,'glyphicon-chevron-down':jobsCtrl.reverse}"></span>
+                    <span class="glyphicon sort-icon" ng-show="jobsCtrl.sortKey == 'creationTime'" ng-class="{'glyphicon-chevron-up':!jobsCtrl.reverse,'glyphicon-chevron-down':jobsCtrl.reverse}"></span>
                   </th>
                   <th ng-click="jobsCtrl.sort('jobType')" style="width: 5%">
                     Type
-                    <span class="glyphicon sort-icon" ng-show="jobsCtrl.sortKey == 'jobType'" ng-class="{'glyphicon-chevron-up':jobsCtrl.reverse,'glyphicon-chevron-down':!jobsCtrl.reverse}"></span>
+                    <span class="glyphicon sort-icon" ng-show="jobsCtrl.sortKey == 'jobType'" ng-class="{'glyphicon-chevron-up':!jobsCtrl.reverse,'glyphicon-chevron-down':jobsCtrl.reverse}"></span>
                   </th>
-                  <th ng-click="sort('owner')" style="width: 8%">
+                  <th ng-click="jobsCtrl.sort('creator')" style="width: 8%">
                     Owner
-                    <span class="glyphicon sort-icon" ng-show="jobsCtrl.sortKey == 'owner'" ng-class="{'glyphicon-chevron-up':jobsCtrl.reverse,'glyphicon-chevron-down':!jobsCtrl.reverse}"></span>
+                    <span class="glyphicon sort-icon" ng-show="jobsCtrl.sortKey == 'creator'" ng-class="{'glyphicon-chevron-up':!jobsCtrl.reverse,'glyphicon-chevron-down':jobsCtrl.reverse}"></span>
                   </th>
                   <th ng-click="jobsCtrl.sort('submissionTime')" style="width: 13%">
                     Submitted at
-                    <span class="glyphicon sort-icon" ng-show="jobsCtrl.sortKey == 'submissionTime'" ng-class="{'glyphicon-chevron-up':jobsCtrl.reverse,'glyphicon-chevron-down':!jobsCtrl.reverse}"></span>
+                    <span class="glyphicon sort-icon" ng-show="jobsCtrl.sortKey == 'submissionTime'" ng-class="{'glyphicon-chevron-up':!jobsCtrl.reverse,'glyphicon-chevron-down':jobsCtrl.reverse}"></span>
                   </th>
-                  <th ng-click="sort('state')" style="width: 10%">
+                  <th ng-click="jobsCtrl.sort('state')" style="width: 10%">
                     State
-                    <span class="glyphicon sort-icon" ng-show="jobsCtrl.sortKey == 'state'" ng-class="{'glyphicon-chevron-up':jobsCtrl.reverse,'glyphicon-chevron-down':!jobsCtrl.reverse}"></span>
+                    <span class="glyphicon sort-icon" ng-show="jobsCtrl.sortKey == 'state'" ng-class="{'glyphicon-chevron-up':!jobsCtrl.reverse,'glyphicon-chevron-down':jobsCtrl.reverse}"></span>
                   </th>
-                  <th ng-click="sort('finalStatus')" style="width: 5%">
+                  <th ng-click="jobsCtrl.sort('finalStatus')" style="width: 5%">
                     Status
-                    <span class="glyphicon sort-icon" ng-show="jobsCtrl.sortKey == 'finalStatus'" ng-class="{'glyphicon-chevron-up':jobsCtrl.reverse,'glyphicon-chevron-down':!jobsCtrl.reverse}"></span>
+                    <span class="glyphicon sort-icon" ng-show="jobsCtrl.sortKey == 'finalStatus'" ng-class="{'glyphicon-chevron-up':!jobsCtrl.reverse,'glyphicon-chevron-down':jobsCtrl.reverse}"></span>
                   </th>
-                  <th ng-click="sort('progress')" style="width: 13%">
+                  <th ng-click="jobsCtrl.sort('progress')" style="width: 11%">
                     Progress
-                    <span class="glyphicon sort-icon" ng-show="jobsCtrl.sortKey == 'progress'" ng-class="{'glyphicon-chevron-up':jobsCtrl.reverse,'glyphicon-chevron-down':!jobsCtrl.reverse}"></span>
+                    <span class="glyphicon sort-icon" ng-show="jobsCtrl.sortKey == 'progress'" ng-class="{'glyphicon-chevron-up':!jobsCtrl.reverse,'glyphicon-chevron-down':jobsCtrl.reverse}"></span>
                   </th>
-                  <th ng-click="sort('duration')" style="width: 5%">
+                  <th ng-click="jobsCtrl.sort('duration')" style="width: 7%">
                     Duration
-                    <span class="glyphicon sort-icon" ng-show="jobsCtrl.sortKey == 'duration'" ng-class="{'glyphicon-chevron-up':jobsCtrl.reverse,'glyphicon-chevron-down':!jobsCtrl.reverse}"></span>
+                    <span class="glyphicon sort-icon" ng-show="jobsCtrl.sortKey == 'duration'" ng-class="{'glyphicon-chevron-up':!jobsCtrl.reverse,'glyphicon-chevron-down':jobsCtrl.reverse}"></span>
                   </th>
                   <th style="width: 12%">
                     Actions

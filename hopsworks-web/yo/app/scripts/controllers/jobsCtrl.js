@@ -78,7 +78,13 @@ angular.module('hopsWorksApp')
                 self.sortKey = keyname;   //set the sortKey to the param passed
                 self.reverse = !self.reverse; //if true make it false and vice versa
                 self.order();
-                self.getAllJobs(null, null);
+                //We need to fetch all the jobs for these
+                if(self.sortKey === 'submissionTime' || self.sortKey === 'state' || self.sortKey === 'finalStatus'
+                || self.sortKey === 'progress' || self.sortKey === 'duration'){
+                    self.getAllJobs(0, 0, "");
+                } else {
+                    self.getAllJobs();
+                }
             };
 
             self.order = function () {
@@ -200,16 +206,22 @@ angular.module('hopsWorksApp')
 
             self.pageSize = 8;
             self.currentPage = 1;
-            self.getAllJobs = function (offset, query) {
+            self.getAllJobs = function (limit, offset, sortBy, expansion) {
                 var jobsTemp = [];
+                if(limit === undefined || limit === null){
+                    limit = self.pageSize;
+                }
                 if(offset === undefined || offset === null){
                     offset = self.pageSize * (self.currentPage - 1);
                 }
-                if(query === undefined || query === null){
-                    query = "&expand=executions(offset=0;limit=1;sort_by=id:desc)&expand=creator";
+                if(expansion === undefined || expansion === null){
+                    expansion = "&expand=executions(offset=0;limit=1;sort_by=id:desc)&expand=creator";
                 }
-                JobService.getJobs(self.projectId, self.pageSize, offset, "&sort_by=" + self.sortKey.toLowerCase() + ":" + self.orderBy.toLowerCase()
-                    + query).then(
+                if(sortBy === undefined || sortBy === null){
+                    sortBy = "&sort_by=" + self.sortKey.toLowerCase() + ":" + self.orderBy.toLowerCase();
+                }
+
+                JobService.getJobs(self.projectId, limit, offset, sortBy + expansion).then(
                     function (success) {
                         self.totalItems = 0;
                         if(success.data.count !== undefined && success.data.count !== null) {
@@ -264,7 +276,7 @@ angular.module('hopsWorksApp')
             self.getJobsNextPage = function () {
                 var offset = self.pageSize * (self.currentPage - 1);
                 if (self.totalItems > offset) {
-                    self.getAllJobs(offset, null);
+                    self.getAllJobs(null, offset);
                 }
             };
 
@@ -283,7 +295,7 @@ angular.module('hopsWorksApp')
               }
             };
 
-            self.getAllJobs(null, null);
+            self.getAllJobs();
 
             self.runJob = function (job, index) {
                 ProjectService.uberPrice({id: self.projectId}).$promise.then(
@@ -308,7 +320,7 @@ angular.module('hopsWorksApp')
                                           self.toggle(job, index);
                                           self.buttonClickedToggle(job.name, true);
                                           StorageService.store(self.projectId + "_jobstopclicked_" + job.name, "running");
-                                          self.getAllJobs(null, null);
+                                          self.getAllJobs();
                                         }, function (error) {
                                         if (typeof error.data.usrMsg !== 'undefined') {
                                             growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
@@ -333,7 +345,7 @@ angular.module('hopsWorksApp')
               self.stopButtonClickedToggle(name, "true");
               JobService.stopJob(self.projectId, name).then(
                   function (success) {
-                    self.getAllJobs(null, null);
+                    self.getAllJobs();
                   }, function (error) {
                   if (typeof error.data.usrMsg !== 'undefined') {
                       growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
@@ -457,7 +469,7 @@ angular.module('hopsWorksApp')
                       .then(function (success) {
                         JobService.deleteJob(self.projectId, jobName).then(
                                 function (success) {
-                                  self.getAllJobs(null, null);
+                                  self.getAllJobs();
                                   self.hasSelectJob = false;
                                   StorageService.remove(self.projectId + "_jobui_" + jobName);
                                   growl.success("Job was deleted.", {title: 'Success', ttl: 5000});
@@ -536,7 +548,7 @@ angular.module('hopsWorksApp')
 
             var startPolling = function () {
               self.poller = $interval(function () {
-                self.getAllJobs(null, null);
+                self.getAllJobs();
               }, 5000);
             };
             // startPolling();

@@ -125,6 +125,8 @@ public class JobsBuilder {
           return order(a.getName(), b.getName(), sortBy.getParam());
         case CREATIONTIME:
           return order(a.getCreationTime(), b.getCreationTime(), sortBy.getParam());
+        case CREATOR:
+          return order(a.getCreator().getUsername(), b.getCreator().getUsername(), sortBy.getParam());
         default:
           throw new UnsupportedOperationException("Sort By " + sortBy + " not supported");
       }
