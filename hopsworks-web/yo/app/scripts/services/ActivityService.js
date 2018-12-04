@@ -52,7 +52,7 @@ angular.module('hopsWorksApp')
                 if (offset === undefined || offset === null) {
                   offset = 0;
                 }
-                return $http.get('/api/project/' + id + '/activities?limit=' + limit + '&offset=' + offset +'&sort_by=date_created:desc&expand=creator');
+                return $http.get('/api/project/' + id + '/activities?limit=' + limit + '&offset=' + offset +'&sort_by=date_created:desc&expand=user');
               }
             };
             return service;

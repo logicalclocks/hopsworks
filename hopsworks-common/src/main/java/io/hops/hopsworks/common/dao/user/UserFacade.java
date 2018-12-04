@@ -164,6 +164,13 @@ public class UserFacade extends AbstractFacade<Users> {
       case FALSE_LOGIN_LT:
         q.setParameter(filterBy.getField(), getIntValue(filterBy.getField(), filterBy.getParam()));
         break;
+      case USER_NAME:
+      case USER_FIRST_NAME:
+      case USER_LAST_NAME:
+      case USER_EMAIL:
+      case USER_LIKE:
+        q.setParameter(filterBy.getField(), filterBy.getParam());
+        break;
       default:
         break;
     }
@@ -213,7 +220,13 @@ public class UserFacade extends AbstractFacade<Users> {
     IS_ONLINE("IS_ONLINE", "u.isonline = :isonline ", "isonline", "1"),
     FALSE_LOGIN("FALSE_LOGIN", "u.falseLogin = :falseLogin ", "falseLogin", "20"),
     FALSE_LOGIN_GT("FALSE_LOGIN_GT", "u.falseLogin > :falseLogin_gt ", "falseLogin_gt", "20"),
-    FALSE_LOGIN_LT("FALSE_LOGIN_LT", "u.falseLogin < :falseLogin_lt ", "falseLogin_lt", "20");
+    FALSE_LOGIN_LT("FALSE_LOGIN_LT", "u.falseLogin < :falseLogin_lt ", "falseLogin_lt", "20"),
+    USER_NAME("USER_NAME", "UPPER(u.username) LIKE CONCAT(:username, '%') ", "username", " "),
+    USER_FIRST_NAME("USER_FIRST_NAME", "UPPER(u.fname) LIKE CONCAT(:fname, '%') ", "fname", " "),
+    USER_LAST_NAME("USER_LAST_NAME", "UPPER(u.lname) LIKE CONCAT(:lname, '%') ", "lname", " "),
+    USER_EMAIL("USER_EMAIL", "UPPER(u.email) LIKE CONCAT(:email, '%') ", "email", " "),
+    USER_LIKE("USER_LIKE", "(UPPER(u.username) LIKE CONCAT(:user, '%') OR UPPER(u.fname) LIKE CONCAT(:user, '%') OR "
+        + "UPPER(u.lname) LIKE CONCAT(:user, '%') OR UPPER(u.email) LIKE CONCAT(:user, '%')) ", "user", " ");
 
     private final String value;
     private final String sql;
