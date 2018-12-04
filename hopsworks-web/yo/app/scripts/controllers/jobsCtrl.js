@@ -47,16 +47,15 @@
 angular.module('hopsWorksApp')
         .controller('JobsCtrl', ['$scope', '$window', '$routeParams', 'growl',
         'JobService', '$location', 'ModalService', '$interval', 'StorageService',
-                    'TourService', 'ProjectService','FileSaver', '$timeout', '$route',
+                    'TourService', 'ProjectService','FileSaver', '$timeout',
           function ($scope, $window, $routeParams, growl, JobService, $location,
           ModalService, $interval, StorageService, TourService, ProjectService, FileSaver,
-          $timeout, $route) {
+          $timeout) {
 
             var self = this;
             self.tourService = TourService;
             self.projectId = $routeParams.projectID;
-            self.jobs; // Will contain all the jobs.
-            self.runningInfo; //Will contain run information
+            self.jobs = []; // Will contain all the jobs.
             self.runningStates = ['INITIALIZING', 'RUNNING', 'ACCEPTED', 'NEW', 'NEW_SAVING', 'SUBMITTED',
                   'STARTING_APP_MASTER', 'AGGREGATING_LOGS'];
             self.buttonArray = [];
@@ -68,26 +67,39 @@ angular.module('hopsWorksApp')
             self.currentToggledIndex = -1;
             self.fetchingLogs = 0;
             self.loadingLog = 0;
-            $scope.pageSize = 10;
-            $scope.sortKey = 'creationTime';
-            $scope.reverse = true;
+            self.pageSize = 10;
+            self.sortKey = 'creationTime';
+            self.orderBy = "desc";
+            self.reverse = true;
 
-            $scope.sort = function (keyname) {
-              $scope.sortKey = keyname;   //set the sortKey to the param passed
-              $scope.reverse = !$scope.reverse; //if true make it false and vice versa
+            self.sort = function (keyname) {
+                self.jobs.length = 0;
+                self.totalItems = 0;
+                self.sortKey = keyname;   //set the sortKey to the param passed
+                self.reverse = !self.reverse; //if true make it false and vice versa
+                self.order();
+                self.getAllJobs(null, null);
+            };
+
+            self.order = function () {
+                if (self.reverse) {
+                    self.orderBy = "desc";
+                } else {
+                    self.orderBy = "asc";
+                }
             };
 
             self.refreshSlider = function () {
-              $timeout(function () {
+                $timeout(function () {
                 $scope.$broadcast('rzSliderForceRender');
               });
             };
 
             self.editAsNew = function (job) {
-                        self.currentjob = job;
-                        self.currentjob.runConfig = job.config;
-                        self.refreshSlider();
-                        self.copy();
+                self.currentjob = job;
+                self.currentjob.runConfig = job.config;
+                self.refreshSlider();
+                self.copy();
             };
 
             self.buttonClickedToggle = function (name, display) {
@@ -95,7 +107,7 @@ angular.module('hopsWorksApp')
               self.workingArray[name] = "true";
             };
 
-            self.stopbuttonClickedToggle = function (name, display) {
+            self.stopButtonClickedToggle = function (name, display) {
               self.workingArray[name] = display;
               var jobClickStatus = StorageService.recover(self.projectId + "_jobstopclicked_"+name);
               StorageService.store(self.projectId + "_jobstopclicked_"+name, jobClickStatus);
@@ -186,21 +198,74 @@ angular.module('hopsWorksApp')
             };
 
 
+            self.pageSize = 8;
+            self.currentPage = 1;
+            self.getAllJobs = function (offset, query) {
+                var jobsTemp = [];
+                if(offset === undefined || offset === null){
+                    offset = self.pageSize * (self.currentPage - 1);
+                }
+                if(query === undefined || query === null){
+                    query = "&expand=executions(offset=0;limit=1;sort_by=id:desc)&expand=creator";
+                }
+                JobService.getJobs(self.projectId, self.pageSize, offset, "&sort_by=" + self.sortKey.toLowerCase() + ":" + self.orderBy.toLowerCase()
+                    + query).then(
+                    function (success) {
+                        self.totalItems = 0;
+                        if(success.data.count !== undefined && success.data.count !== null) {
+                            self.totalItems = success.data.count;
+                        }
+                        //Construct an array of jobs and their latest execution info
+                        angular.forEach(success.data.items, function (job, key) {
+                            var tempJob = {
+                                "name": job.name,
+                                "id": job.id,
+                                "creationTime": job.creationTime,
+                                "jobType": job.jobType,
+                                "creator": {"firstname": job.creator.firstname, "lastname": job.creator.lastname},
+                                "config": job.config
+                            };
 
-            var getAllJobs = function () {
-              JobService.getJobs(self.projectId, "?expand=creator").then(
-                      function (success) {
-                          self.jobs = success.data.items;
-                          angular.forEach(self.jobs, function (job, key) {
-                              job.showing = false;
-                          });
-                      }, function (error) {
-                      if (typeof error.data.usrMsg !== 'undefined') {
-                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
-                      } else {
-                          growl.error("", {title: error.data.errorMsg, ttl: 8000});
-                      }
-              });
+                            if(job.executions.items !== undefined && job.executions.items !== null) {
+                                tempJob.running =  self.runningStates.includes(job.executions.items[0].state);
+                                tempJob.showing = false;
+                                tempJob.state = job.executions.items[0].state;
+                                tempJob.finalStatus = job.executions.items[0].finalStatus;
+                                tempJob.progress = job.executions.items[0].progress;
+                                tempJob.duration = job.executions.items[0].duration;
+                                tempJob.submissionTime = job.executions.items[0].submissionTime;
+                                //Loop through existing jobs
+                                if (self.currentjob != null
+                                    && self.currentjob.name === job.name
+                                    && job.executions.items[0].state !== self.currentjob.state
+                                    && self.currentjob.showing === true) {
+                                    self.showLogs(job.name);
+                                }
+                            }
+
+                            jobsTemp.push(tempJob);
+                        });
+                        self.jobs = JSON.parse(JSON.stringify(jobsTemp));
+
+                        angular.forEach(self.jobs, function (job, key) {
+                            if (!job.running) {
+                                self.buttonArray[job.name] = false;
+                            }
+                        });
+                    }, function (error) {
+                        if (typeof error.data.usrMsg !== 'undefined') {
+                            growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                        } else {
+                            growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                        }
+                    });
+            };
+
+            self.getJobsNextPage = function () {
+                var offset = self.pageSize * (self.currentPage - 1);
+                if (self.totalItems > offset) {
+                    self.getAllJobs(offset, null);
+                }
             };
 
             self.getNumOfExecution = function () {
@@ -218,125 +283,63 @@ angular.module('hopsWorksApp')
               }
             };
 
-          /**
-           * Retrieve status for all jobs of this project.
-           * @returns {undefined}
-           */
-          self.getRunStatus = function () {
-              JobService.getJobs(self.projectId, "?expand=executions(offset=0;limit=1;sort_by=id:desc)").then(
-                  function (success) {
-                      var jobLatestExecutions = success.data.items;
-                      //Construct a map of <jobName,execInfo>
-                      self.runningInfo = {};
-                      angular.forEach(jobLatestExecutions, function (temp, key) {
-                          var name = temp.name;
-                          angular.forEach(temp.executions.items, function (temp, key) {
-                              var running = self.runningStates.includes(temp.state);
-                              self.runningInfo[name] = {
-                                  "running": running,
-                                  "state": temp.state,
-                                  "finalStatus": temp.finalStatus,
-                                  "progress": temp.progress,
-                                  "duration": temp.duration,
-                                  "submissionTime": temp.submissionTime
-                              };
-                          });
-                      });
-                      angular.forEach(self.jobs, function (temp, key) {
-                          if (typeof self.runningInfo[temp.name] !== "undefined") {
-                              if (!self.runningInfo[temp.name].running) {
-                                  self.buttonArray[temp.name] = false;
-                              }
-                          }
-                      });
-                  }, function (error) {
-                      if (typeof error.data.usrMsg !== 'undefined') {
-                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
-                      } else {
-                          growl.error("", {title: error.data.errorMsg, ttl: 8000});
-                      }
-                  });
-          };
-
-            /**
-             * Get data from runningInfo and update jobs.
-             * @returns {undefined}
-             */
-            self.createAppReport = function () {
-              angular.forEach(self.jobs, function (temp, key) {
-                if (typeof self.runningInfo['' + temp.name] !== "undefined") {
-                  if (temp.state !== self.runningInfo['' + temp.name].state && temp.showing === true) {
-                    self.showLogs(temp.name);
-                  }
-                  temp.duration = self.runningInfo['' + temp.name].duration;
-                  temp.finalStatus = self.runningInfo['' + temp.name].finalStatus;
-                  temp.progress = self.runningInfo['' + temp.name].progress;
-                  temp.running = self.runningInfo['' + temp.name].running;
-                  temp.state = self.runningInfo['' + temp.name].state;
-                  temp.submissionTime = self.runningInfo['' + temp.name].submissionTime;
-                  temp.url = self.runningInfo['' + temp.name].url;
-                }
-              });
-            };
-            getAllJobs();
-            self.getRunStatus();
-            self.createAppReport();
+            self.getAllJobs(null, null);
 
             self.runJob = function (job, index) {
-                        ProjectService.uberPrice({id: self.projectId}).$promise.then(
-                                function (success) {
-                                  var gpuPrice = 0;
-                                  var generalPrice = 0;
-                                  for (var i = 0; i < success.length; i++) {
-                                    var multiplicator = success[i];
-                                    if (multiplicator.id === "GPU") {
-                                      gpuPrice = Math.ceil(parseFloat(multiplicator.multiplicator).toFixed(4) * 100) / 100;
-                                    } else if (multiplicator.id === "GENERAL") {
-                                      generalPrice = Math.ceil(parseFloat(multiplicator.multiplicator).toFixed(4) * 100) / 100;
-                                    }
-                                  }
-                                  if (typeof job.config['spark.executor.gpus'] === 'undefined' || job.config['spark.executor.gpus'] === 0) {
-                                    gpuPrice = 0;
-                                  }
-                                  ModalService.uberPrice('sm', 'Confirm', 'Do you still want to run this job?', generalPrice, gpuPrice).then(
-                                          function (success) {
-                                            JobService.runJob(self.projectId, job.name).then(
-                                                    function (success) {
-                                                      self.toggle(job, index);
-                                                      self.buttonClickedToggle(job.name, true);
-                                                      StorageService.store(self.projectId + "_jobstopclicked_" + job.name, "running");
-                                                      self.getRunStatus();
-                                                    }, function (error) {
-                                                    if (typeof error.data.usrMsg !== 'undefined') {
-                                                        growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
-                                                    } else {
-                                                        growl.error("", {title: error.data.errorMsg, ttl: 8000});
-                                                    }
-                                            });
+                ProjectService.uberPrice({id: self.projectId}).$promise.then(
+                    function (success) {
+                      var gpuPrice = 0;
+                      var generalPrice = 0;
+                      for (var i = 0; i < success.length; i++) {
+                        var multiplicator = success[i];
+                        if (multiplicator.id === "GPU") {
+                          gpuPrice = Math.ceil(parseFloat(multiplicator.multiplicator).toFixed(4) * 100) / 100;
+                        } else if (multiplicator.id === "GENERAL") {
+                          generalPrice = Math.ceil(parseFloat(multiplicator.multiplicator).toFixed(4) * 100) / 100;
+                        }
+                      }
+                      if (typeof job.config['spark.executor.gpus'] === 'undefined' || job.config['spark.executor.gpus'] === 0) {
+                        gpuPrice = 0;
+                      }
+                      ModalService.uberPrice('sm', 'Confirm', 'Do you still want to run this job?', generalPrice, gpuPrice).then(
+                              function (success) {
+                                JobService.runJob(self.projectId, job.name).then(
+                                        function (success) {
+                                          self.toggle(job, index);
+                                          self.buttonClickedToggle(job.name, true);
+                                          StorageService.store(self.projectId + "_jobstopclicked_" + job.name, "running");
+                                          self.getAllJobs(null, null);
+                                        }, function (error) {
+                                        if (typeof error.data.usrMsg !== 'undefined') {
+                                            growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                                        } else {
+                                            growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                                        }
+                                });
 
-                                          }
-                                  );
+                              }
+                      );
 
-                                }, function (error) {
-                                if (typeof error.data.usrMsg !== 'undefined') {
-                                    growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
-                                } else {
-                                    growl.error("", {title: error.data.errorMsg, ttl: 8000});
-                                }
-                        });
+                    }, function (error) {
+                    if (typeof error.data.usrMsg !== 'undefined') {
+                        growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                    } else {
+                        growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                    }
+                });
             };
 
             self.stopJob = function (name) {
-              self.stopbuttonClickedToggle(name, "true");
+              self.stopButtonClickedToggle(name, "true");
               JobService.stopJob(self.projectId, name).then(
-                      function (success) {
-                        self.getRunStatus();
-                      }, function (error) {
-                      if (typeof error.data.usrMsg !== 'undefined') {
-                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
-                      } else {
-                          growl.error("", {title: error.data.errorMsg, ttl: 8000});
-                      }
+                  function (success) {
+                    self.getAllJobs(null, null);
+                  }, function (error) {
+                  if (typeof error.data.usrMsg !== 'undefined') {
+                      growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                  } else {
+                      growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                  }
               });
             };
 
@@ -384,8 +387,8 @@ angular.module('hopsWorksApp')
                 JobService.getAllExecutions(self.projectId, jobName, "").then(
                     function (success) {
                         self.logset = [];
-                        angular.forEach(success.data.items, function (temp, key) {
-                            var entry = {"jobName": jobName, "executionId": temp.id,  "appId":temp.appId, "time": temp.submissionTime};
+                        angular.forEach(success.data.items, function (execution, key) {
+                            var entry = {"jobName": jobName, "executionId": execution.id,  "appId":execution.appId, "time": execution.submissionTime};
                             self.logset.push(entry);
                         });
 
@@ -437,7 +440,7 @@ angular.module('hopsWorksApp')
               }
               JobService.retryLog(self.projectId, appId, type).then(
                       function (success) {
-                        growl.success(success.data.successMessage, {title: 'Success', ttl: 5000});
+                        growl.success("Retry was successful", {title: 'Success', ttl: 5000});
                         self.showLogs(self.currentjob.name);
                       }, function (error) {
                       if (typeof error.data.usrMsg !== 'undefined') {
@@ -450,15 +453,14 @@ angular.module('hopsWorksApp')
 
             self.deleteJob = function (jobName) {
               ModalService.confirm("sm", "Delete Job (" + jobName + ")",
-                      "Do you really want to delete this job?\n\
-                                This action cannot be undone.")
+                      "Do you really want to delete this job? This action cannot be undone.")
                       .then(function (success) {
                         JobService.deleteJob(self.projectId, jobName).then(
                                 function (success) {
-                                  getAllJobs();
+                                  self.getAllJobs(null, null);
                                   self.hasSelectJob = false;
                                   StorageService.remove(self.projectId + "_jobui_" + jobName);
-                                  growl.success(success.data.successMessage, {title: 'Success', ttl: 5000});
+                                  growl.success("Job was deleted.", {title: 'Success', ttl: 5000});
                                 }, function (error) {
                                 if (typeof error.data.usrMsg !== 'undefined') {
                                     growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
@@ -474,9 +476,9 @@ angular.module('hopsWorksApp')
             //Called when clicking on a job row
             self.toggle = function (job, index) {
               //reset all jobs showing flag
-              angular.forEach(self.jobs, function (temp, key) {
-                if (job.name !== temp.name) {
-                  temp.showing = false;
+              angular.forEach(self.jobs, function (job, key) {
+                if (job.name !== job.name) {
+                    job.showing = false;
                 }
               });
 
@@ -496,8 +498,8 @@ angular.module('hopsWorksApp')
             self.untoggle = function (job, index) {
               StorageService.remove(self.projectId + "_jobui_" + job.name)
               //reset all jobs showing flag
-              angular.forEach(self.jobs, function (temp, key) {
-                temp.showing = false;
+              angular.forEach(self.jobs, function (job, key) {
+                  job.showing = false;
               });
 
               if (self.currentToggledIndex !== index) {
@@ -534,11 +536,10 @@ angular.module('hopsWorksApp')
 
             var startPolling = function () {
               self.poller = $interval(function () {
-                self.getRunStatus();
-                self.createAppReport();
+                self.getAllJobs(null, null);
               }, 5000);
             };
-            startPolling();
+            // startPolling();
 
             $scope.convertMS = function (ms) {
               if (ms === undefined) {

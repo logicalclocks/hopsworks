@@ -25,7 +25,7 @@ import javax.ws.rs.QueryParam;
 public class ActivitiesBeanParam {
 
   @QueryParam("sort_by")
-  @ApiParam(value = "ex. sort_by=ID:asc,DATE_CREATED:desc",
+  @ApiParam(value = "ex. sort_by=ID:asc,CREATIONTIME:desc",
       allowableValues = "id:asc, id:desc, date_created:asc, date_created:desc, flag:asc, flag:desc")
   private String sortBy;
   private final Set<SortBy> sortBySet;

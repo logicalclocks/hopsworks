@@ -48,10 +48,19 @@ angular.module('hopsWorksApp')
               /**
                * Get all the jobs defined in the project with given id.
                * @param {int} projectId
+               * @param {int} limit
+               * @param {int} offset
+               * @param {string} query
                * @returns {unresolved} A list of job objects.
                */
-              getJobs: function (projectId, query) {
-                return $http.get('/api/project/' + projectId + '/jobs' + query);
+              getJobs: function (projectId, limit, offset, query) {
+                if (limit === undefined || limit === null) {
+                    limit = 0;
+                }
+                if (offset === undefined || offset === null) {
+                    offset = 0;
+                }
+                return $http.get('/api/project/' + projectId + '/jobs?limit=' + limit + '&offset=' + offset + query);
               },
               /**
                * Create a new Job in the given project, of the given type. 
@@ -75,7 +84,7 @@ angular.module('hopsWorksApp')
                * @param {type} projectId 
                * @param {type} type
                * @param {type} schedule
-               * @param {type} jobId
+               * @param {type} name
                * @returns {undefined}
                */
               updateSchedule: function (projectId, type, schedule, name) {
@@ -93,6 +102,7 @@ angular.module('hopsWorksApp')
                * Get all the registered executions for the given job.
                * @param {type} projectId
                * @param {type} name
+               * @param {string} query
                * @returns {undefined}
                */
               getAllExecutions: function (projectId, name, query) {

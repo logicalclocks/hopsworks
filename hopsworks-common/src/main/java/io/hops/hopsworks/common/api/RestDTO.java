@@ -29,7 +29,7 @@ public abstract class RestDTO<D> {
   private URI href;
   protected Boolean expand;
   protected List<D> items;
-  protected Long count;
+  protected Long count = null;
   
   public RestDTO(URI href) {
     this.href = href;

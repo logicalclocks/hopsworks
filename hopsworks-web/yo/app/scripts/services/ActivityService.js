@@ -43,7 +43,7 @@ angular.module('hopsWorksApp')
         .factory('ActivityService', ['$http', function ($http) {
             var service = {
               getByUser: function () {
-                return $http.get('/api/user/activities?expand=creator');
+                return $http.get('/api/user/activities?expand=user');
               },
               getByProjectId: function (id, limit, offset) {
                 if (limit === undefined || limit === null) {

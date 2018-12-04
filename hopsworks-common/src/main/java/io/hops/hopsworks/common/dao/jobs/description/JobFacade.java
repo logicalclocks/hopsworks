@@ -264,7 +264,7 @@ public class JobFacade extends AbstractFacade<Jobs> {
   public enum Sorts {
     ID("ID", "j.id ", "ASC"),
     NAME("NAME", "j.name ", "ASC"),
-    DATE_CREATED("DATE_CREATED", "j.creationTime ", "DESC"),
+    CREATIONTIME("CREATIONTIME", "j.creationTime ", "DESC"),
     JOBTYPE("JOBTYPE", "j.type ", "ASC");
     
     private final String value;

@@ -76,7 +76,7 @@ angular.module('hopsWorksApp')
               self.loadingText = "";
             };
             var getAppId = function (callback) {
-              if (self.appId == undefined || self.appId == false || self.appId == "") {
+              if (self.appId === undefined || self.appId === null || self.appId === "") {
                 JobService.getAllExecutions(self.projectId, self.job.name, '?sort_by=submission_time:desc&offset=0&limit=1').then(
                         function (success) {
                           self.appId = success.data.items[0].appId;
@@ -114,16 +114,12 @@ angular.module('hopsWorksApp')
               }
             };
             var getJobUI = function () {
-//              startLoading("Loading Job Details...");
-              if (self.jobName != false && self.jobName != "") {
-//              if (self.jobName != undefined && self.jobName != false && self.jobName != "") {
+              if (self.jobName !== undefined && self.jobName !== null && self.jobName !== "") {
                 self.job = StorageService.recover(self.projectId + "_jobui_" + self.jobName);
                 StorageService.store(self.projectId + "_jobui_" + self.jobName, self.job);
                 self.jobType = self.job.jobType;
               }
               if (self.job || self.appId) {
-                console.log("Job object found was: ");
-                console.log(self.job);
                 getAppIds();
                 getAppId(getJobUIInt);
               }
@@ -161,8 +157,8 @@ angular.module('hopsWorksApp')
               });
             };
             self.jobUI = function () {
-              if (self.job == undefined || self.job == false) {
-                if (self.jobName != undefined && self.jobName != false && self.jobName != "") {
+              if (self.job === undefined || self.job === null) {
+                  if (self.jobName !== undefined && self.jobName !== null && self.jobName !== "") {
                   self.job = StorageService.recover(self.projectId + "_jobui_" + self.jobName);
                   StorageService.store(self.projectId + "_jobui_" + self.jobName, self.job);
                 }
@@ -173,8 +169,8 @@ angular.module('hopsWorksApp')
             };
             self.yarnUI = function () {
 
-              if (self.job == undefined || self.job == false) {
-                if (self.jobName != undefined && self.jobName != false && self.jobName != "") {
+              if (self.job === undefined || self.job === null) {
+                if (self.jobName !== undefined && self.jobName !== null && self.jobName !== "") {
                   self.job = StorageService.recover(self.projectId + "_jobui_" + self.jobName);
                   StorageService.store(self.projectId + "_jobui_" + self.jobName, self.job);
                 }
@@ -186,13 +182,11 @@ angular.module('hopsWorksApp')
             var yarnUIInt = function () {
               JobService.getYarnUI(self.projectId, self.appId).then(
                       function (success) {
-
                         self.ui = success.data;
                         self.current = "yarnUI";
                         var iframe = document.getElementById('ui_iframe');
                         if (iframe !== null) {
                           iframe.src = $sce.trustAsResourceUrl(self.ui);
-//                          iframe.src = self.ui;
                         }
                         // This timeout is ignored when the iframe is loaded, replacing the overlay
                         $timeout(stopLoading(), 5000);
@@ -210,7 +204,7 @@ angular.module('hopsWorksApp')
               getAppId(kibanaUIInt);
             };
             var kibanaUIInt = function () {
-              if (self.job == undefined || self.job == false) {
+              if (self.job === undefined || self.job === null) {
                   ProjectService.get({}, {'id': self.projectId}).$promise.then(
                         function (success) {
                           var projectName = success.projectName;
@@ -338,7 +332,7 @@ angular.module('hopsWorksApp')
             };
             
             self.backToHome = function () {
-              if (self.jobName != undefined && self.jobName != false && self.jobName != "") {
+              if (self.jobName !== undefined && self.jobName !== null && self.jobName !== "") {
                 StorageService.store(self.projectId + "_jobui_" + self.jobName, self.job);
               }
               $timeout($route.reload(), 1000);
@@ -361,12 +355,14 @@ angular.module('hopsWorksApp')
             };
 
             var getTensorBoardUrls = function () {
-              JobService.getTensorBoardUrls(self.projectId, self.appId).then(
-                      function (success) {
-                        self.tbUrls = success.data;
-                        $interval.cancel(self.poller);
-                      }, function (error) {
-              });
+                if(self.appId !== undefined && self.appId !== null) {
+                    JobService.getTensorBoardUrls(self.projectId, self.appId).then(
+                        function (success) {
+                            self.tbUrls = success.data;
+                            $interval.cancel(self.poller);
+                        }, function (error) {
+                        });
+                }
             };
 
             var startPolling = function() {
