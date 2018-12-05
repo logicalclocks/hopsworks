@@ -102,18 +102,22 @@ public class HdfsUsersController {
    * @param dfso
    * @throws java.io.IOException
    */
-  public void addProjectFolderOwner(Project project,
-      DistributedFileSystemOps dfso) throws IOException {
+  public void addProjectFolderOwner(Project project, DistributedFileSystemOps dfso) throws IOException {
     String owner = getHdfsUserName(project, project.getOwner());
-    String projectPath = File.separator + Settings.DIR_ROOT + File.separator
-        + project.getName();
+    String projectPath = File.separator + Settings.DIR_ROOT + File.separator + project.getName();
     Path location = new Path(projectPath);
     //FsPermission(FsAction u, FsAction g, FsAction o) 555
     //We prohibit a user from creating top-level datasets bypassing Hopsworks UI (i.e. from as Spark app)
-    FsPermission fsPermission = new FsPermission(FsAction.READ_EXECUTE,
-        FsAction.READ_EXECUTE, FsAction.READ_EXECUTE);// 555
+    FsPermission fsPermission = new FsPermission(FsAction.READ_EXECUTE, FsAction.READ_EXECUTE, FsAction.READ_EXECUTE);
     dfso.setOwner(location, owner, project.getName());
     dfso.setPermission(location, fsPermission);
+
+    // Add project owner to the project group
+    HdfsGroups projectGroup = hdfsGroupsFacade.findByName(project.getName());
+    if (projectGroup == null) {
+      throw new IllegalArgumentException("No group found for project in HDFS.");
+    }
+    addUserToGroup(dfso, owner, projectGroup);
   }
 
   /**
@@ -193,9 +197,12 @@ public class HdfsUsersController {
 
     HdfsGroups hdfsGroup = hdfsGroupsFacade.findByName(datasetGroup);
     if (hdfsGroup == null) {
-      throw new IllegalArgumentException(
-          "Could not create dataset group in HDFS.");
+      throw new IllegalArgumentException("Could not create dataset group in HDFS.");
     }
+
+    //during the project creation we cannot rely on the owner being in the projectTeamCollection
+    //when this method is invoked, hence we explicitly add them to the group.
+    addUserToGroup(dfso, dsOwner, hdfsGroup);
 
     //add project generic user as a user
     addUserToGroup(dfso, project.getProjectGenericUser(), hdfsGroup);
@@ -203,10 +210,6 @@ public class HdfsUsersController {
     //add every member to the new ds group
     for (ProjectTeam member : project.getProjectTeamCollection()) {
       String hdfsUsername = getHdfsUserName(project, member.getUser());
-      //the owner does not need to be added to the group.
-      if (hdfsUsername.equals(dsOwner)) {
-        continue;
-      }
       addUserToGroup(dfso, hdfsUsername, hdfsGroup);
     }
   }

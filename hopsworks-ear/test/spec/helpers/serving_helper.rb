@@ -23,8 +23,8 @@ module ServingHelper
 
   def with_serving(project_id, project_name, user)
     # Copy model to the project directory
-    mkdir("/Projects/#{project_name}/Models/mnist/", user, "#{project_name}__Models", 750)
-    copy(TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/mnist/", user, "#{project_name}__Models", 750)
+    mkdir("/Projects/#{project_name}/Models/mnist/", "#{project_name}__#{user[:username]}", "#{project_name}__Models", 750)
+    copy(TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/mnist/", "#{project_name}__#{user[:username]}", "#{project_name}__Models", 750)
 
     @serving ||= create_serving(project_id, project_name)
     @topic = ProjectTopics.find(@serving[:kafka_topic_id])
