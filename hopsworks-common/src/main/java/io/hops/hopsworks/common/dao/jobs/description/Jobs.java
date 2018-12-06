@@ -150,7 +150,7 @@ public class Jobs implements Serializable {
 
   @OneToMany(cascade = CascadeType.ALL,
           mappedBy = "job")
-  private Collection<Execution> executionCollection;
+  private Collection<Execution> executions;
 
   public Jobs() {
     this.name = "Hopsworks job";
@@ -229,13 +229,13 @@ public class Jobs implements Serializable {
 
   @JsonIgnore
   @XmlTransient
-  public Collection<Execution> getExecutionCollection() {
-    return executionCollection;
+  public Collection<Execution> getExecutions() {
+    return executions;
   }
 
-  public void setExecutionCollection(
-          Collection<Execution> executionCollection) {
-    this.executionCollection = executionCollection;
+  public void setExecutions(
+          Collection<Execution> executions) {
+    this.executions = executions;
   }
 
   @Override

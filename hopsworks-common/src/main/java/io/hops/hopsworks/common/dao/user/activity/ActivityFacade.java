@@ -382,6 +382,10 @@ public class ActivityFacade extends AbstractFacade<Activity> {
     public String getDefaultParam() {
       return defaultParam;
     }
+    
+    public String getJoin(){
+      return null;
+    }
 
     @Override
     public String toString() {

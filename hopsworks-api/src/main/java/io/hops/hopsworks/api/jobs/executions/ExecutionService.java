@@ -205,7 +205,7 @@ public class ExecutionService {
       throw new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_NOT_FOUND, Level.FINE,
         "execution with id: " + id + " does not belong to job: " + job.getName() + " or does not exist");
     } else {
-      if (!job.getExecutionCollection().contains(execution)) {
+      if (!job.getExecutions().contains(execution)) {
         throw new JobException(RESTCodes.JobErrorCode.UNAUTHORIZED_EXECUTION_ACCESS, Level.FINE);
       }
     }

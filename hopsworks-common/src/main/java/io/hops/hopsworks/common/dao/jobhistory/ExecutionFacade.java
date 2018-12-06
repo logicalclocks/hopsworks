@@ -222,9 +222,9 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
   
   public enum Sorts {
     ID("ID", "e.id ", "ASC"),
-    SUBMISSION_TIME("SUBMISSION_TIME", "e.submissionTime ", "DESC"),
+    SUBMISSIONTIME("SUBMISSIONTIME", "e.submissionTime ", "DESC"),
     STATE("STATE", "e.state ", "ASC"),
-    FINAL_STATUS("FINAL_STATUS", "e.finalStatus ", "ASC"),
+    FINALSTATUS("FINALSTATUS", "e.finalStatus ", "ASC"),
     APPID("APPID", "e.appId ", "DESC"),
     PROGRESS("PROGRESS", "e.progress ", "ASC");
     private final String value;
@@ -248,6 +248,10 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
     public String getSql() {
       return sql;
     }
+    
+    public String getJoin() {
+      return null;
+    }
   
     @Override
     public String toString() {
@@ -261,7 +265,7 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
     STATE_NEQ ("STATE_NEQ", "e.state NOT IN :states_neq ", "states_neq", ""),
     FINALSTATUS ("FINALSTATUS", "e.finalStatus IN :finalstatuses ", "finalstatuses", ""),
     FINALSTATUS_NEQ ("FINALSTATUS_NEQ", "e.finalStatus NOT IN :finalstatuses ", "finalstatuses", ""),
-    SUBMISSION_TIME("SUBMISSION_TIME", "e.submissionTime = :submissionTime ", "submissionTime", "");
+    SUBMISSIONTIME("SUBMISSIONTIME", "e.submissionTime = :submissionTime ", "submissionTime", "");
     private final String value;
     private final String sql;
     private final String field;

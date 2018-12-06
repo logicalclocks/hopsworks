@@ -138,7 +138,7 @@ public class ExecutionsBuilder {
       switch (ExecutionFacade.Sorts.valueOf(sortBy.getValue())) {
         case ID:
           return order(a.getId(), b.getId(), sortBy.getParam());
-        case SUBMISSION_TIME:
+        case SUBMISSIONTIME:
           return order(a.getSubmissionTime(), b.getSubmissionTime(), sortBy.getParam());
         default:
           throw new UnsupportedOperationException("Sort By " + sortBy + " not supported");

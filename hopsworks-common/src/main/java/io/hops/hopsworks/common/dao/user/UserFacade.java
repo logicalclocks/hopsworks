@@ -203,6 +203,10 @@ public class UserFacade extends AbstractFacade<Users> {
     public String getDefaultParam() {
       return defaultParam;
     }
+    
+    public String getJoin() {
+      return null;
+    }
 
     @Override
     public String toString() {

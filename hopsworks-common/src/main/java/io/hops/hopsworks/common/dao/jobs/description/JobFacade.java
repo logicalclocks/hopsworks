@@ -208,7 +208,8 @@ public class JobFacade extends AbstractFacade<Jobs> {
     Set<? extends AbstractFacade.FilterBy> filter,
     Set<? extends AbstractFacade.SortBy> sort, Project project, Users creator) {
     String queryStr = buildQuery("SELECT j FROM Jobs j ", filter, sort, "j.project = :project ");
-    String queryCountStr = buildQuery("SELECT count(j.id) FROM Jobs j ", filter, sort, "j.project = :project ");
+    String queryCountStr = buildQuery("SELECT COUNT(DISTINCT j.id) FROM Jobs j ", filter, sort,
+      "j.project = :project ");
     Query query = em.createQuery(queryStr, Jobs.class).setParameter("project", project);
     Query queryCount = em.createQuery(queryCountStr, Jobs.class).setParameter("project", project);
     if (creator != null) {
@@ -266,16 +267,31 @@ public class JobFacade extends AbstractFacade<Jobs> {
     NAME("NAME", "j.name ", "ASC"),
     CREATIONTIME("CREATIONTIME", "j.creationTime ", "DESC"),
     JOBTYPE("JOBTYPE", "j.type ", "ASC"),
-    CREATOR("CREATOR", "j.creator " , "ASC");
-    
+    CREATOR("CREATOR", "LOWER(CONCAT (j.creator.fname, j.creator.lname)) " , "ASC"),
+    CREATOR_LAST_NAME("CREATOR_LAST_NAME", "LOWER(j.creator.lname) " , "ASC"),
+    //Execution related, to make it easier for clients to use pagination
+    STATE("STATE", "executions.state ", "ASC", "LEFT JOIN j.executions executions AND executions.id = " +
+      "(SELECT MAX(executions.id) FROM executions WHERE executions.job.id = j.id GROUP BY executions.job.id "),
+    FINALSTATUS("FINALSTATUS", "executions.finalStatus ", "ASC", "LEFT JOIN j.executions executions "),
+//    DURATION("DURATION", "e.appId ", "DESC"),
+    PROGRESS("PROGRESS", "executions.progress ", "ASC", "LEFT JOIN j.executions executions "),
+    SUBMISSIONTIME("SUBMISSIONTIME", "executions.submissionTime ", "ASC", "LEFT JOIN j.executions e " +
+      "ON e.id = (SELECT MAX(e.id) FROM executions e WHERE e.job.id: j.id GROUP BY e.job.id) ");
+  
     private final String value;
     private final String sql;
+    private final String join;
     private final String defaultParam;
     
     private Sorts(String value, String sql, String defaultParam) {
+      this(value, sql, defaultParam, null);
+    }
+  
+    private Sorts(String value, String sql, String defaultParam, String join) {
       this.value = value;
       this.sql = sql;
       this.defaultParam = defaultParam;
+      this.join = join;
     }
     
     public String getValue() {
@@ -289,7 +305,11 @@ public class JobFacade extends AbstractFacade<Jobs> {
     public String getSql() {
       return sql;
     }
-    
+  
+    public String getJoin() {
+      return join;
+    }
+  
     @Override
     public String toString() {
       return value;

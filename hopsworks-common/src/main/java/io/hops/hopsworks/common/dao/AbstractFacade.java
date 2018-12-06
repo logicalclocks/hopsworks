@@ -39,11 +39,13 @@
 
 package io.hops.hopsworks.common.dao;
 
+import org.elasticsearch.common.Strings;
+
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
 
 public abstract class AbstractFacade<T> {
 
@@ -114,9 +116,30 @@ public abstract class AbstractFacade<T> {
     return sortBy.getSql() + sortBy.getParam().getSql();
   }
   
-  public String buildQuery(String query, Set<? extends AbstractFacade.FilterBy> filter, 
-      Set<? extends AbstractFacade.SortBy> sort, String more) {
-    return query + buildFilterString(filter, more) + buildSortString(sort);
+  public String buildQuery(String query, Set<? extends AbstractFacade.FilterBy> filters,
+      Set<? extends AbstractFacade.SortBy> sorts, String more) {
+//    if(StringUtils.containsIgnoreCase(query,"COUNT")){
+//      return query + buildFilterString(filters, more) + buildSortString(sorts);
+//    }
+    return query + buildJoinString(sorts) + buildFilterString(filters, more) + buildSortString(sorts);
+  }
+  
+  public String buildJoinString(Set<? extends SortBy> sorts) {
+    if (sorts == null || sorts.isEmpty()) {
+      return "";
+    }
+    Iterator<? extends SortBy> sortsIter = sorts.iterator();
+    if (!sortsIter.hasNext()) {
+      return "";
+    }
+    String c = "";
+    while (sortsIter.hasNext()) {
+      SortBy sort = sortsIter.next();
+      if (!Strings.isNullOrEmpty(sort.getJoin())) {
+        c += sort.getJoin();
+      }
+    }
+    return c;
   }
   
   public String buildSortString(Set<? extends SortBy> sortBy) {
@@ -148,16 +171,17 @@ public abstract class AbstractFacade<T> {
   }
   
   public interface SortBy {
-    public String getValue();
-    public OrderBy getParam();
-    public String getSql();
+    String getValue();
+    OrderBy getParam();
+    String getSql();
+    String getJoin();
   }
   
   public interface FilterBy {
-    public String getValue();
-    public String getParam();
-    public String getSql();
-    public String getField();
+    String getValue();
+    String getParam();
+    String getSql();
+    String getField();
   }
 
   public enum OrderBy {

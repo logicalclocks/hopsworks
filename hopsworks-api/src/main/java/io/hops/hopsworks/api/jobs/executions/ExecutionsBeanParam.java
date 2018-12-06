@@ -24,7 +24,7 @@ import java.util.Set;
 
 public class ExecutionsBeanParam {
   @QueryParam("sort_by")
-  @ApiParam(value = "ex. sort_by=submission_time:desc,id:asc",
+  @ApiParam(value = "ex. sort_by=submissiontime:desc,id:asc",
     allowableValues = "id:asc,id:desc,name:asc,name:desc,date_created:asc,date_created:desc")
   private String sortBy;
   private final Set<SortBy> sortBySet;

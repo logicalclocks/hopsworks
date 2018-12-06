@@ -77,7 +77,7 @@ angular.module('hopsWorksApp')
             };
             var getAppId = function (callback) {
               if (self.appId === undefined || self.appId === null || self.appId === "") {
-                JobService.getAllExecutions(self.projectId, self.job.name, '?sort_by=submission_time:desc&offset=0&limit=1').then(
+                JobService.getAllExecutions(self.projectId, self.job.name, '?sort_by=submissiontime:desc&offset=0&limit=1').then(
                         function (success) {
                           self.appId = success.data.items[0].appId;
                           callback();

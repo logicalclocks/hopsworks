@@ -170,8 +170,6 @@ public class ProjectsAdmin {
   /**
    * Returns admin information about all the projects
    *
-   * @param sc
-   * @param req
    * @return
    */
   @GET
@@ -196,8 +194,6 @@ public class ProjectsAdmin {
   /**
    * Returns admin information about the requested project
    *
-   * @param sc
-   * @param req
    * @param projectId
    * @return
    */
