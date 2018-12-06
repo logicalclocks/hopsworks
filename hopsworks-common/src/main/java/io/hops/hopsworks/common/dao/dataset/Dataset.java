@@ -130,7 +130,7 @@ public class Dataset implements Serializable {
 
   @Basic(optional = false)
   @Column(name = "inode_id")
-  private int InodeId = 0;
+  private long InodeId = 0;
 
   @Size(max = 3000)
   @Column(name = "description")
@@ -369,11 +369,11 @@ public class Dataset implements Serializable {
    *
    * @return
    */
-  public int getInodeId() {
+  public long getInodeId() {
     return InodeId;
   }
 
-  public void setInodeId(int InodeId) {
+  public void setInodeId(long InodeId) {
     this.InodeId = InodeId;
   }
 

@@ -40,19 +40,15 @@
 package io.hops.hopsworks.common.dao.hdfsUser;
 
 import javax.ejb.Stateless;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
-import io.hops.hopsworks.common.dao.AbstractFacade;
+import io.hops.hopsworks.common.dao.AbstractReadOnlyFacade;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 @Stateless
-public class HdfsGroupsFacade extends AbstractFacade<HdfsGroups> {
+public class HdfsGroupsFacade extends AbstractReadOnlyFacade<HdfsGroups> {
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
@@ -77,29 +73,6 @@ public class HdfsGroupsFacade extends AbstractFacade<HdfsGroups> {
                       "name", name).getSingleResult();
     } catch (NoResultException e) {
       return null;
-    }
-  }
-
-  public void persist(HdfsGroups user) {
-    Logger.getLogger(HdfsUsersFacade.class.getName()).
-                    log(Level.INFO, "persist group " + user.getName());
-    em.persist(user);
-  }
-
-  public void merge(HdfsGroups user) {
-    Logger.getLogger(HdfsUsersFacade.class.getName()).
-                    log(Level.INFO, "merge group " + user.getName());
-    em.merge(user);
-    em.flush();
-  }
-
-  @Override
-  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  public void remove(HdfsGroups group) {
-    HdfsGroups g = em.find(HdfsGroups.class, group.getId());
-    if (g != null) {
-      em.createNamedQuery("HdfsGroups.delete", HdfsGroups.class).
-              setParameter("id", group.getId()).executeUpdate();
     }
   }
   

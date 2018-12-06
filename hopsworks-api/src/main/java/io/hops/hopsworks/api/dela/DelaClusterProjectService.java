@@ -111,7 +111,7 @@ public class DelaClusterProjectService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response removePublic(@PathParam("inodeId") Integer inodeId) throws DelaException {
+  public Response removePublic(@PathParam("inodeId") Long inodeId) throws DelaException {
     Inode inode = getInode(inodeId);
     Dataset dataset = getDatasetByInode(inode);
     clusterCtrl.unshareFromCluster(dataset);
@@ -120,7 +120,7 @@ public class DelaClusterProjectService {
     return successResponse(json);
   }
   
-  private Inode getInode(Integer inodeId) throws DelaException {
+  private Inode getInode(Long inodeId) throws DelaException {
     if (inodeId == null) {
       throw new DelaException(RESTCodes.DelaErrorCode.ILLEGAL_ARGUMENT, Level.FINE, DelaException.Source.LOCAL,
         "inodeId was not provided.");

@@ -44,13 +44,13 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class MoveDTO {
 
-  private int inodeId;
+  private Long inodeId;
   private String destPath;
 
   public MoveDTO() {
   }
 
-  public MoveDTO(int inodeId, String destPath) {
+  public MoveDTO(Long inodeId, String destPath) {
     this.inodeId = inodeId;
     this.destPath = destPath;
   }
@@ -59,7 +59,7 @@ public class MoveDTO {
     return destPath;
   }
 
-  public int getInodeId() {
+  public Long getInodeId() {
     return inodeId;
   }
 
@@ -67,7 +67,7 @@ public class MoveDTO {
     this.destPath = destPath;
   }
 
-  public void setInodeId(int inodeId) {
+  public void setInodeId(Long inodeId) {
     this.inodeId = inodeId;
   }
 

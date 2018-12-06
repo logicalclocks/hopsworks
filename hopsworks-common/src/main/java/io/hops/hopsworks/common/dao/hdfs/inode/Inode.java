@@ -97,9 +97,6 @@ import io.hops.hopsworks.common.dao.metadata.Template;
   @NamedQuery(name = "Inode.findByClientMachine",
           query
           = "SELECT i FROM Inode i WHERE i.clientMachine = :clientMachine"),
-  @NamedQuery(name = "Inode.findByClientNode",
-          query
-          = "SELECT i FROM Inode i WHERE i.clientNode = :clientNode"),
   @NamedQuery(name = "Inode.findByGenerationStamp",
           query
           = "SELECT i FROM Inode i WHERE i.generationStamp = :generationStamp"),
@@ -136,7 +133,7 @@ public class Inode implements Serializable {
   @Basic(optional = false)
   @NotNull
   @Column(name = "id")
-  private int id;
+  private Long id;
   @Column(name = "modification_time")
   private BigInteger modificationTime;
   @Column(name = "access_time")
@@ -157,9 +154,6 @@ public class Inode implements Serializable {
   @Size(max = 100)
   @Column(name = "client_machine")
   private String clientMachine;
-  @Size(max = 100)
-  @Column(name = "client_node")
-  private String clientNode;
   @Column(name = "generation_stamp")
   private Integer generationStamp;
   @Column(name = "header")
@@ -203,7 +197,7 @@ public class Inode implements Serializable {
     this.inodePK = inodePK;
   }
 
-  public Inode(InodePK inodePK, int id, boolean quotaEnabled,
+  public Inode(InodePK inodePK, Long id, boolean quotaEnabled,
           boolean underConstruction, boolean subtreeLocked, boolean metaEnabled,
           boolean dir) {
     this.inodePK = inodePK;
@@ -224,7 +218,7 @@ public class Inode implements Serializable {
             isMetaEnabled(), inode.isDir());
   }
 
-  public Inode(int parentId, String name, int partitionId) {
+  public Inode(long parentId, String name, long partitionId) {
     this.inodePK = new InodePK(parentId, name, partitionId);
   }
 
@@ -236,11 +230,11 @@ public class Inode implements Serializable {
     this.inodePK = inodePK;
   }
 
-  public int getId() {
+  public Long getId() {
     return id;
   }
 
-  public void setId(int id) {
+  public void setId(Long id) {
     this.id = id;
   }
 
@@ -282,14 +276,6 @@ public class Inode implements Serializable {
 
   public void setClientMachine(String clientMachine) {
     this.clientMachine = clientMachine;
-  }
-
-  public String getClientNode() {
-    return clientNode;
-  }
-
-  public void setClientNode(String clientNode) {
-    this.clientNode = clientNode;
   }
 
   public Integer getGenerationStamp() {

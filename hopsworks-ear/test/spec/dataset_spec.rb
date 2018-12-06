@@ -423,9 +423,49 @@ describe "On #{ENV['OS']}" do
           create_session(member[:email],"Pass123")
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset", {name: dirname}
           expect_status(403)
-          get_datasets_in(@project, @dataset[:name])
+          get_datasets_in(@project, @dataset[:inode_name])
           createdDir = json_body.detect { |inode| inode[:name] == "afterDir" }
           expect(createdDir).to be_nil
+        end
+      end
+
+      context 'test if the dataset owner is added to the dataset group' do
+        before :all do
+          with_valid_project
+          with_valid_dataset
+        end
+
+        it "should be able to download a file created by another user" do
+          # Make the dataset writable by other members of the project
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/permissions", {name: @dataset[:inode_name], permissions: "GROUP_WRITABLE_SB"}
+          expect_status(200)
+
+          dirname = @dataset[:inode_name] + "/afterDir"
+          project_owner = @user
+          member = create_user
+          add_member(member[:email], "Data owner")
+          create_session(member[:email],"Pass123")
+
+          # Create a subdirectory
+          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset", {name: dirname}
+          expect_status(200)
+
+          # Get README.md inodeId
+          get_datasets_in(@project, @dataset[:inode_name])
+          readme = json_body.detect { |inode| inode[:name] == "README.md" }
+
+          # Copy README.md to the subdirectory
+          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/copy",
+               {destPath: "/Projects/#{@project[:projectname]}/#{dirname}/README.md",
+                inodeId: readme[:id]}
+          expect_status(200)
+
+          # Log in as project owner, if the project owner is in the dataset group, it should be able to preview
+          # the copied README.md file.
+          create_session(project_owner[:email], "Pass123")
+          # Try to preview the README.md
+          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/filePreview/#{dirname}/README.md?mode=head"
+          expect_status(200)
         end
       end
     end

@@ -177,7 +177,7 @@ public class UploadService {
       for (String dirName : dsPathComponents) {
         if (parent != null) {
           int pathLen = depth;
-          int partitionId = HopsUtils.calculatePartitionId(parent.getId(), dirName, pathLen);
+          long partitionId = HopsUtils.calculatePartitionId(parent.getId(), dirName, pathLen);
           parent = inodes.findByInodePK(parent, dirName, partitionId);
           depth += 1;
         } else {
@@ -269,7 +269,7 @@ public class UploadService {
       if (this.fileParent != null) {
 
         int pathLen = Utils.pathLen(this.path) - 1;
-        int partitionId = HopsUtils.calculatePartitionId(this.fileParent.getId(),
+        long partitionId = HopsUtils.calculatePartitionId(this.fileParent.getId(),
             fileName, pathLen);
         parent = inodes.findByInodePK(this.fileParent, fileName, partitionId);
         if (parent != null) {

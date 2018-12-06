@@ -71,7 +71,7 @@ public class TupleToFileFacade extends AbstractFacade<TupleToFile> {
     return this.em.find(TupleToFile.class, tupleid);
   }
 
-  public List<TupleToFile> getTuplesByInodeId(Integer parentId, String inodeName)  {
+  public List<TupleToFile> getTuplesByInodeId(Long parentId, String inodeName)  {
 
     String queryString = "TupleToFile.findByInodeid";
 

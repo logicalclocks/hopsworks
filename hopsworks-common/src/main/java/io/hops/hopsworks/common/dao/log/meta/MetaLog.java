@@ -76,12 +76,12 @@ public class MetaLog implements Serializable {
   @Basic(optional = false)
   @NotNull
   @Column(name = "meta_pk2")
-  private Integer metaPk2;
+  private Long metaPk2;
 
   @Basic(optional = false)
   @NotNull
   @Column(name = "meta_pk3")
-  private Integer metaPk3;
+  private Long metaPk3;
 
   @Basic(optional = false)
   @NotNull
@@ -101,8 +101,8 @@ public class MetaLog implements Serializable {
     this.metaType = MetaType.SchemaBased;
     MetadataPK pk = metaData.getMetadataPK();
     this.metaPk1 = pk.getId();
-    this.metaPk2 = pk.getFieldid();
-    this.metaPk3 = pk.getTupleid();
+    this.metaPk2 = (long) pk.getFieldid();
+    this.metaPk3 = (long) pk.getTupleid();
     this.metaOpType = opType;
   }
 
@@ -131,19 +131,19 @@ public class MetaLog implements Serializable {
     this.metaPk1 = metaPk1;
   }
 
-  public Integer getMetaPk2() {
+  public Long getMetaPk2() {
     return metaPk2;
   }
 
-  public void setMetaPk2(Integer metaPk2) {
+  public void setMetaPk2(Long metaPk2) {
     this.metaPk2 = metaPk2;
   }
 
-  public Integer getMetaPk3() {
+  public Long getMetaPk3() {
     return metaPk3;
   }
 
-  public void setMetaPk3(Integer metaPk3) {
+  public void setMetaPk3(Long metaPk3) {
     this.metaPk3 = metaPk3;
   }
 

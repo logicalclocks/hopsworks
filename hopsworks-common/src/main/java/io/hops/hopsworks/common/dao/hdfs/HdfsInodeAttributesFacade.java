@@ -64,7 +64,7 @@ public class HdfsInodeAttributesFacade extends AbstractFacade<HdfsInodeAttribute
 
   public HdfsInodeAttributesFacade() { super(HdfsInodeAttributes.class); }
 
-  public HdfsInodeAttributes getInodeAttributes(int inodeId) {
+  public HdfsInodeAttributes getInodeAttributes(Long inodeId) {
     TypedQuery<HdfsInodeAttributes> query = em.createNamedQuery(
         "HdfsInodeAttributes.findByInodeId", HdfsInodeAttributes.class)
         .setParameter("inodeId", inodeId);

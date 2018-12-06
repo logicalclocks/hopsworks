@@ -44,24 +44,24 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class RequestDTO {
 
-  private Integer inodeId;
+  private Long inodeId;
   private Integer projectId;
   private String messageContent;
 
   public RequestDTO() {
   }
 
-  public RequestDTO(Integer inodeId, Integer projectId, String message) {
+  public RequestDTO(Long inodeId, Integer projectId, String message) {
     this.inodeId = inodeId;
     this.projectId = projectId;
     this.messageContent = message;
   }
 
-  public Integer getInodeId() {
+  public Long getInodeId() {
     return inodeId;
   }
 
-  public void setInodeId(Integer inodeId) {
+  public void setInodeId(Long inodeId) {
     this.inodeId = inodeId;
   }
 
