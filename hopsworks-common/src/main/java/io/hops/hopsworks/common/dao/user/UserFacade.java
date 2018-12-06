@@ -180,7 +180,7 @@ public class UserFacade extends AbstractFacade<Users> {
     FIRST_NAME("FIRST_NAME", "LOWER(u.fname) ", "ASC"),
     LAST_NAME("LAST_NAME", "LOWER(u.lname) ", "ASC"),
     EMAIL("EMAIL", "LOWER(u.email) ", "ASC"),
-    DATE_CREATED("CREATIONTIME", "u.activated ", "ASC");
+    DATE_CREATED("DATE_CREATED", "u.activated ", "ASC");
 
     private final String value;
     private final String sql;

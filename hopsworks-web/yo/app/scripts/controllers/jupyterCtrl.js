@@ -40,10 +40,10 @@
 
 angular.module('hopsWorksApp')
     .controller('JupyterCtrl', ['$scope', '$routeParams', '$route',
-        'growl', 'ModalService', '$interval', 'JupyterService', 'SparkService', 'StorageService', '$location',
+        'growl', 'ModalService', '$interval', 'JupyterService', 'StorageService', '$location',
         '$timeout', '$window', '$sce', 'PythonDepsService', 'TourService',
         function($scope, $routeParams, $route, growl, ModalService, $interval, JupyterService,
-            SparkService, StorageService, $location, $timeout, $window, $sce, PythonDepsService, TourService) {
+            StorageService, $location, $timeout, $window, $sce, PythonDepsService, TourService) {
 
             var self = this;
             self.connectedStatus = false;

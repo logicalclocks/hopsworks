@@ -201,21 +201,16 @@ public class JobFacade extends AbstractFacade<Jobs> {
   public CollectionInfo findByProject(Integer offset, Integer limit,
     Set<? extends AbstractFacade.FilterBy> filter,
     Set<? extends AbstractFacade.SortBy> sort, Project project) {
-    return findByProjectAndCreator(offset, limit, filter, sort, project, null);
-  }
-  
-  public CollectionInfo findByProjectAndCreator(Integer offset, Integer limit,
-    Set<? extends AbstractFacade.FilterBy> filter,
-    Set<? extends AbstractFacade.SortBy> sort, Project project, Users creator) {
-    String queryStr = buildQuery("SELECT j FROM Jobs j ", filter, sort, "j.project = :project ");
-    String queryCountStr = buildQuery("SELECT COUNT(DISTINCT j.id) FROM Jobs j ", filter, sort,
-      "j.project = :project ");
+    String queryStr = "select j from Jobs j left join j.executions e on e.id = " +
+      "(select max(e.id) from Execution e where e.job = j group by e.job) where j.project = :project " +
+      "ORDER BY e.submissionTime DESC";
+    //buildQuery("SELECT j FROM Jobs j ", filter, sort, "j.project = :project ");
+    String queryCountStr = "SELECT COUNT(DISTINCT j.id) FROM Jobs j LEFT JOIN j.executions e ON e.id = " +
+      "(SELECT MAX(e.id) FROM Execution e WHERE e.job= j GROUP BY e.job.id) WHERE j.project = :project " +
+      "ORDER BY e.submissionTime DESC";
+//      buildQuery("SELECT COUNT(DISTINCT j.id) FROM Jobs j ", filter, sort,"j.project = :project ");
     Query query = em.createQuery(queryStr, Jobs.class).setParameter("project", project);
     Query queryCount = em.createQuery(queryCountStr, Jobs.class).setParameter("project", project);
-    if (creator != null) {
-      query.setParameter("creator", creator);
-      queryCount.setParameter("creator", creator);
-    }
     setFilter(filter, query);
     setFilter(filter, queryCount);
     setOffsetAndLim(offset, limit, query);
@@ -238,6 +233,10 @@ public class JobFacade extends AbstractFacade<Jobs> {
       case JOBTYPE_NEQ:
         Set<JobType> jobTypes = new HashSet<>(getJobTypes(filterBy.getField(), filterBy.getParam()));
         q.setParameter(filterBy.getField(), jobTypes);
+        break;
+      case JOB_NAME:
+      case CREATOR_LIKE:
+        q.setParameter(filterBy.getField(), filterBy.getParam());
         break;
       default:
         break;
@@ -322,7 +321,12 @@ public class JobFacade extends AbstractFacade<Jobs> {
       JobType.SPARK.toString().toUpperCase() + "," + JobType.PYSPARK.toString().toUpperCase()),
     JOBTYPE_NEQ("JOBTYPE_NEQ", "j.type NOT IN :types_neq ", "types_neq",
       JobType.FLINK.toString().toUpperCase() + "," + JobType.YARN.toString().toUpperCase()
-        + "," + JobType.ERASURE_CODING.toString().toUpperCase());
+        + "," + JobType.ERASURE_CODING.toString().toUpperCase()),
+    JOB_NAME("JOB_NAME", "UPPER(j.name) LIKE CONCAT('%', :name, '%') ", "name", " "),
+    CREATOR_LIKE("CREATOR_LIKE", "(UPPER(j.creator.username) LIKE CONCAT(:user, '%') " +
+      "OR UPPER(j.creator.fname) LIKE CONCAT(:user, '%') " +
+      "OR UPPER(j.creator.lname) LIKE CONCAT(:user, '%') " +
+      "OR UPPER(j.creator.email) LIKE CONCAT(:user, '%')) ", "user", " ");
     
     private final String value;
     private final String sql;
