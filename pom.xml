@@ -87,6 +87,7 @@
     <dependency.plugin.version>2.8</dependency.plugin.version>
     <endorsed.dir>${project.build.directory}/endorsed</endorsed.dir>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <maven.deploy.skip>true</maven.deploy.skip>
 
     <glassfish.hostname>localhost</glassfish.hostname>
     <glassfish.admin>adminuser</glassfish.admin>
@@ -198,14 +199,6 @@
       </snapshots>
     </repository>
     <repository>
-      <id>apache.snapshots</id>
-      <name>Apache Development Snapshot Repository</name>
-      <url>https://repository.apache.org/content/repositories/snapshots/</url>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-    </repository>
-    <repository>
       <id>sics-snapshot-repository</id>
       <name>SICS Release Repository</name>
       <url>http://kompics.sics.se/maven/snapshotrepository</url>
@@ -225,29 +218,24 @@
   </repositories>
   <!-- Spacer //-->
   <scm>
-    <connection>scm:git:https://github.com/hopshadoop/hopsworks.git</connection>
-    <developerConnection>scm:git:git@github.com:hopshadoop/hopsworks.git</developerConnection>
-    <url>https://github.com/hopshadoop/hopsworks</url>
+    <connection>scm:git:https://github.com/logicalclocks/hopsworks.git</connection>
+    <developerConnection>scm:git:git@github.com:logicalclocks/hopsworks.git</developerConnection>
+    <url>https://github.com/logicalclocks/hopsworks</url>
     <tag>hopsworks-0.3.0-SNAPSHOT</tag>
   </scm>
-  <!-- Spacer //-->
+
   <distributionManagement>
     <repository>
-      <id>sics-release-repository</id>
-      <name>SICS Repository</name>
-      <url>scpexe://kompics.i.sics.se/home/maven/repository</url>
+      <id>Hops</id>
+      <name>Hops Repo</name>
+      <url>https://bbc1.sics.se/archiva/repository/Hops/</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
     </repository>
-    <snapshotRepository>
-      <id>sics-snapshot-repository</id>
-      <name>SICS Snapshot Repository</name>
-      <url>scpexe://kompics.i.sics.se/home/maven/snapshotrepository</url>
-    </snapshotRepository>
-    <site>
-      <id>kompics-site</id>
-      <url>scpexe://kompics.i.sics.se/var/www/kompics/report/trunk</url>
-    </site>
-    <downloadUrl>http://kompics.i.sics.se/maven/repository</downloadUrl>
   </distributionManagement>
-
 </project>
 
