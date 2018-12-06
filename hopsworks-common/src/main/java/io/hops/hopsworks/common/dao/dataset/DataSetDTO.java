@@ -49,7 +49,7 @@ import io.hops.hopsworks.common.dao.user.UserCardDTO;
 @XmlRootElement
 public class DataSetDTO {
 
-  private Integer inodeId;
+  private Long inodeId;
   private String name;
   private String description;
   private boolean isPublic;
@@ -94,7 +94,7 @@ public class DataSetDTO {
     this.type = ds.getType();
   }
 
-  public DataSetDTO(String name, int inodeId, Project project) {
+  public DataSetDTO(String name, Long inodeId, Project project) {
     this.inodeId = inodeId;
     this.name = name;
     this.projectName = project.getName();
@@ -106,11 +106,11 @@ public class DataSetDTO {
     }
   }
   
-  public Integer getInodeId() {
+  public Long getInodeId() {
     return inodeId;
   }
 
-  public void setInodeId(Integer inodeId) {
+  public void setInodeId(Long inodeId) {
     this.inodeId = inodeId;
   }
 

@@ -52,7 +52,7 @@ public class InodePK implements Serializable {
   @Basic(optional = false)
   @NotNull
   @Column(name = "parent_id")
-  private int parentId;
+  private long parentId;
 
   @Basic(optional = false)
   @NotNull
@@ -64,22 +64,22 @@ public class InodePK implements Serializable {
   @Basic(optional = false)
   @NotNull
   @Column(name = "partition_id")
-  private int partitionId;
+  private long partitionId;
 
   public InodePK() {
   }
 
-  public InodePK(int parentId, String name, int partitionId) {
+  public InodePK(long parentId, String name, long partitionId) {
     this.parentId = parentId;
     this.name = name;
     this.partitionId = partitionId;
   }
 
-  public int getParentId() {
+  public long getParentId() {
     return parentId;
   }
 
-  public void setParentId(int parentId) {
+  public void setParentId(long parentId) {
     this.parentId = parentId;
   }
 
@@ -91,11 +91,11 @@ public class InodePK implements Serializable {
     this.name = name;
   }
 
-  public int getPartitionId() {
+  public long getPartitionId() {
     return partitionId;
   }
 
-  public void setPartitionId(int partitionId) {
+  public void setPartitionId(long partitionId) {
     this.partitionId = partitionId;
   }
 

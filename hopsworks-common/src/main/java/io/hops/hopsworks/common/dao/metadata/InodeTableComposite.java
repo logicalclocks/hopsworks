@@ -50,13 +50,13 @@ public class InodeTableComposite implements Serializable, EntityIntf {
   private static final long serialVersionUID = 1L;
 
   private int tableid;
-  private int inodePid;
+  private long inodePid;
   private String inodeName;
 
   public InodeTableComposite() {
   }
 
-  public InodeTableComposite(int tableid, int inodePid, String inodeName) {
+  public InodeTableComposite(int tableid, long inodePid, String inodeName) {
     if (inodeName == null) {
       throw new NullPointerException("inodeName");
     }
@@ -69,7 +69,7 @@ public class InodeTableComposite implements Serializable, EntityIntf {
     return this.tableid;
   }
 
-  public int getInodePid() {
+  public long getInodePid() {
     return this.inodePid;
   }
 
@@ -81,7 +81,7 @@ public class InodeTableComposite implements Serializable, EntityIntf {
     this.tableid = tableid;
   }
 
-  public void setInodePid(int inodePid) {
+  public void setInodePid(long inodePid) {
     this.inodePid = inodePid;
   }
 

@@ -43,6 +43,7 @@ import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dataset.DatasetController;
+import io.hops.hopsworks.common.exception.DatasetException;
 import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.util.Settings;
@@ -155,13 +156,14 @@ public class DelaWorkerController {
     delaDatasetCtrl.unshareFromHops(dataset);
   }
 
-  public void unshareFromHopsAndClean(Project project, Dataset dataset, Users user) throws DelaException {
+  public void unshareFromHopsAndClean(Project project, Dataset dataset, Users user) throws DelaException,
+      DatasetException {
     unshareFromHops(project, dataset, user);
     delaDatasetCtrl.delete(project, dataset);
   }
   
   public ManifestJSON startDownload(Project project, Users user, HopsworksTransferDTO.Download downloadDTO)
-    throws DelaException {
+    throws DelaException, DatasetException {
     delaStateCtrl.checkDelaAvailable();
     Dataset dataset = delaDatasetCtrl.download(project, user, downloadDTO.getPublicDSId(), downloadDTO.getName());
 

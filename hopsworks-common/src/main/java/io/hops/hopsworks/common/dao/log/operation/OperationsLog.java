@@ -90,12 +90,12 @@ public class OperationsLog implements Serializable {
   @Basic(optional = false)
   @NotNull
   @Column(name = "dataset_id")
-  private Integer datasetId;
+  private Long datasetId;
 
   @Basic(optional = false)
   @NotNull
   @Column(name = "inode_id")
-  private Integer inodeId;
+  private Long inodeId;
 
   public OperationsLog() {
   }
@@ -115,7 +115,7 @@ public class OperationsLog implements Serializable {
     this.opType = opType;
     this.projectId = project.getId();
     this.inodeId = project.getInode().getId();
-    this.datasetId = -1;
+    this.datasetId = -1L;
   }
 
   public OperationsLog(Project project, Dataset dataset, Template template,
@@ -168,19 +168,19 @@ public class OperationsLog implements Serializable {
     this.projectId = projectId;
   }
 
-  public Integer getInodeId() {
+  public Long getInodeId() {
     return inodeId;
   }
 
-  public void setInodeId(Integer inodeId) {
+  public void setInodeId(Long inodeId) {
     this.inodeId = inodeId;
   }
 
-  public Integer getDatasetId() {
+  public Long getDatasetId() {
     return datasetId;
   }
 
-  public void setDatasetId(Integer datasetId) {
+  public void setDatasetId(Long datasetId) {
     this.datasetId = datasetId;
   }
 

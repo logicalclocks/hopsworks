@@ -272,7 +272,7 @@ public class DatasetController {
     //description and searchable attribute
     if (success) {
       //find the corresponding inode
-      int partitionId = HopsUtils.calculatePartitionId(parent.getId(),
+      long partitionId = HopsUtils.calculatePartitionId(parent.getId(),
           folderName, dirPath.depth());
       Inode folder = this.inodes.findByInodePK(parent, folderName, partitionId);
       InodeBasicMetadata basicMeta = new InodeBasicMetadata(folder, description,

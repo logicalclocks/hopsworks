@@ -174,7 +174,7 @@ public class MetadataService {
   @Path("{inodepid}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public Response fetchMetadataCompact(@PathParam("inodepid") Integer inodePid) {
+  public Response fetchMetadataCompact(@PathParam("inodepid") Long inodePid) {
   
     if (inodePid == null) {
       throw new IllegalArgumentException("inodepid was not provided.");
@@ -230,7 +230,7 @@ public class MetadataService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response fetchMetadata(
-          @PathParam("inodepid") Integer inodePid,
+          @PathParam("inodepid") Long inodePid,
           @PathParam("inodename") String inodeName,
           @PathParam("tableid") Integer tableid) {
 
@@ -299,7 +299,7 @@ public class MetadataService {
   @Path("fetchtemplatesforinode/{inodeid}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public Response fetchTemplatesforInode(@PathParam("inodeid") Integer inodeid) {
+  public Response fetchTemplatesforInode(@PathParam("inodeid") Long inodeid) {
 
     if (inodeid == null) {
       throw new IllegalArgumentException("inodeid was not provided.");
@@ -332,7 +332,7 @@ public class MetadataService {
   @Path("fetchavailabletemplatesforinode/{inodeid}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public Response fetchAvailableTemplatesForInode(@PathParam("inodeid") Integer inodeid) {
+  public Response fetchAvailableTemplatesForInode(@PathParam("inodeid") Long inodeid) {
   
     if (inodeid == null) {
       throw new IllegalArgumentException("inodeid was not provided.");
@@ -377,7 +377,7 @@ public class MetadataService {
   @Path("detachtemplate/{inodeid}/{templateid}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public Response detachTemplateFromInode(@PathParam("inodeid") Integer inodeid,
+  public Response detachTemplateFromInode(@PathParam("inodeid") Long inodeid,
           @PathParam("templateid") Integer templateid) throws MetadataException {
 
     if (inodeid == null || templateid == null) {
