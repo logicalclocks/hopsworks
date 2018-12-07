@@ -120,6 +120,15 @@
   font: 100 2em/150% Impact;
   text-align: center;}
 
+.loading-dots-sm {
+  text-align: center;
+}
+
+.loading-dots-sm:after  {
+  content: ' .';
+  animation: dots 1s infinite;
+}
+
 .loading-dots:after {
   content: ' .';
   animation: dots 1s infinite;}

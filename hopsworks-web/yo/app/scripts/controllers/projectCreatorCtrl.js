@@ -46,18 +46,16 @@ angular.module('hopsWorksApp')
             var self = this;
 
             self.working = false;
-            self.card = {};
-            self.myCard = {};
-            self.cards = [];
+            self.loadingUsers = false;
+            self.users = undefined;
+            self.selectedUsers = [];
+            self.selectNoChoice = 'Could not find any user...';
             self.user = {
               firstname: '',
               lastname: '',
-              email: '',
-              phoneNumber: '',
-              twoFactor: ''
+              email: ''
             };
-            
-            self.projectMembers = [];
+
             self.projectTeam = [];
             if ($rootScope.isDelaEnabled) {
               // , 'RSTUDIO'
@@ -72,42 +70,34 @@ angular.module('hopsWorksApp')
             self.projectDesc = '';
 
             self.regex = /^[a-zA-Z0-9]((?!__)[_a-zA-Z0-9]){0,62}$/;
-
-            UserService.profile().then(
-              function (success) {
-                self.user = success.data;
-                UserService.allValidUsers().then(function (success) {
-                    self.cards = success.data.items;
-                    for (var i = 0, len = self.cards.length; i < len; i++) {
-                      if (self.cards[i].email === self.user.email) {
-                        self.cards.splice(i, 1);
-                        break;
+            var getUsers = function (query) {
+              self.loadingUsers = true;
+              UserService.profile().then(               
+                function (success) {
+                  self.user = success.data;
+                  UserService.allValidUsers(query).then(function (success) {
+                      var items = success.data.items;
+                      var len = success.data.count;
+                      for (var i = 0; i < len; i++) {
+                        if (items[i].email === self.user.email) {
+                          items.splice(i, 1);
+                          break;
+                        }
                       }
-                    }
-                  }, function (error) {
-                    self.errorMsg = error.data.msg;
-                });
-              },
-              function (error) {
-                self.errorMsg = error.data.errorMsg;
+                      self.users = items;
+                      self.loadingUsers = false;
+                    }, function (error) {
+                      self.errorMsg = error.data.msg;
+                      self.loadingUsers = false;
+                  });
+                },
+                function (error) {
+                  self.errorMsg = error.data.errorMsg;
+                  self.loadingUsers = false;
               });
+            };
 
-
-            $scope.$watch('projectCreatorCtrl.card.selected', function (selected) {
-              var projectTeamPK = {'projectId': "", 'teamMember': ""};
-              var projectTeam = {'projectTeamPK': projectTeamPK};
-              if (selected !== undefined) {
-                projectTeamPK.teamMember = selected.email;
-                if (self.projectMembers.indexOf(selected.email) === -1) {
-                  self.projectMembers.push(selected.email);
-                  self.projectTeam.push(projectTeam);
-                }
-                self.card.selected = undefined;
-              }
-            });
-
-
-            self.addSelected = function exists(projectType) {
+            self.addSelected = function (projectType) {
               var idx = self.selectionProjectTypes.indexOf(projectType);
               if (idx > -1) {
                 self.selectionProjectTypes.splice(idx, 1);
@@ -116,14 +106,19 @@ angular.module('hopsWorksApp')
               }
             };
 
-            self.exists = function exists(projectType) {
+            self.exists = function (projectType) {
               var idx = self.selectionProjectTypes.indexOf(projectType);
               return idx > -1;
             };
-
-
-            self.removeMember = function (member) {
-              self.projectMembers.splice(self.projectMembers.indexOf(member), 1);
+            
+            var getProjectTeams = function () {
+              self.selectedUsers.forEach(function (selected) {
+                var projectTeamPK = {'projectId': "", 'teamMember': ""};
+                var projectTeam = {'projectTeamPK': projectTeamPK};
+                projectTeamPK.teamMember = selected.email;
+                self.projectTeam.push(projectTeam);
+              });
+              return self.projectTeam;
             };
 
             self.createProject = function () {
@@ -134,9 +129,8 @@ angular.module('hopsWorksApp')
                 'retentionPeriod': "",
                 'status': 0,
                 'services': self.selectionProjectTypes,
-                'projectTeam': self.projectTeam
+                'projectTeam': getProjectTeams()
               };
-
               ProjectService.save($scope.newProject).$promise.then(
                       function (success) {
                         self.working = false;
@@ -159,6 +153,16 @@ angular.module('hopsWorksApp')
 
                       }
               });
+            };
+            
+            self.fetchAsync = function (query) {
+              if (query) {
+                getUsers(query);
+                self.selectNoChoice = 'Could not find any user...';
+              } else {
+                self.users = undefined;
+                self.selectNoChoice = 'Search for a user...';
+              }
             };
 
             self.close = function () {

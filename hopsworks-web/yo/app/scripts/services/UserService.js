@@ -54,8 +54,11 @@ angular.module('hopsWorksApp')
               allUsers: function () {
                 return $http.get('/api/users');
               },
-              allValidUsers: function () {
-                return $http.get('/api/users?sort_by=last_name,first_name&filter_by=role:hops_admin,hops_user');
+              allValidUsers: function (search) {
+                if (search === undefined || search === null) {
+                  search = '';
+                }
+                return $http.get('/api/users?sort_by=last_name,first_name&filter_by=role:hops_admin,hops_user&filter_by=status:2&filter_by=user_like:' + search);
               },            
               getRole: function (projectId) {
                 return $http.post('/api/users/getRole', "projectId=" + projectId);

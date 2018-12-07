@@ -576,10 +576,10 @@ md-input-container {
   width: 100%;
 }
 
-.ui-select-multiple.ui-select-bootstrap{
+/*.ui-select-multiple.ui-select-bootstrap{
   max-height: 100px; 
   overflow: auto;
-}
+}*/
 
 .btn-huge{
     padding-top:10px;
