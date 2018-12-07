@@ -40,14 +40,14 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('MemberCtrl', ['$timeout', '$uibModalStack', '$location','MembersService', 'projectId', 'UserService', 'growl',
-          function ($timeout, $uibModalStack, $location, MembersService, projectId, UserService, growl) {
+        .controller('MemberCtrl', ['$scope', '$timeout', '$uibModalStack', '$location','MembersService', 'projectId', 'UserService', 'growl',
+          function ($scope, $timeout, $uibModalStack, $location, MembersService, projectId, UserService, growl) {
             var self = this;
             self.roles = ["Data scientist", "Data owner"];
             self.newRole = "";
             self.projectId = projectId;
             self.loadingUsers = false;
-            self.users = undefined;
+            self.users = [];
             self.selectedUsers = [];
             self.selectNoChoice = 'Could not find any user...';
             self.members = [];
@@ -61,6 +61,16 @@ angular.module('hopsWorksApp')
               return role === self.roles[0]? 'selected' : '';
             };
             
+            var inSelectedUsers = function (email) {
+              var len = self.selectedUsers.length;
+              for (var i = 0; i < len; i++) {
+                if (self.selectedUsers[i].email === email) {
+                  return true;
+                }
+              }
+              return false;
+            };
+            
             var getUsers = function (query) {
               self.loadingUsers = true;
               UserService.allValidUsers(query).then(function (success) {
@@ -69,12 +79,13 @@ angular.module('hopsWorksApp')
                   // remove project owner as well, since he is always a 
                   // member of the project
                   var countRemoved = 0;
-                  var i = success.data.count;
-                  while(i--) {
-                    if (items[i].email === self.myCard.email || items.email === self.projectOwner.email) {
+                  for (var i = items.length-1; i >= 0; i--) {
+                    if (items[i].email === self.myCard.email 
+                            || items[i].email === self.projectOwner.email
+                            || inSelectedUsers(items[i].email)) {
                       items.splice(i, 1);
                       countRemoved++;
-                      if(countRemoved === 2){
+                      if(countRemoved === self.selectedUsers.length + 2){
                         break;
                       }
                     }
@@ -129,7 +140,7 @@ angular.module('hopsWorksApp')
                 self.newMembers.push(projectTeam);
               });
               return self.projectTeam;
-            };            
+            };        
 
 
             self.removeMember = function (user) {

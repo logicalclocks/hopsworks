@@ -72,7 +72,7 @@
       <h2>Members to be added</h2>
         <ui-select multiple tagging="tagTransform" ng-model="memberCtrl.selectedUsers" theme="bootstrap" title="Choose a user">
           <ui-select-match placeholder="Select user...">{{$item.firstname}} {{$item.lastname}}</ui-select-match>
-          <ui-select-choices 
+          <ui-select-choices
             refresh="memberCtrl.fetchAsync($select.search)"
             refresh-delay="600"
             repeat="user in memberCtrl.users">
@@ -81,7 +81,7 @@
               <span ng-bind-html="user.lastname | highlight: $select.search"></span>
             </div>
             <small><span ng-bind-html="user.email | highlight: $select.search"></span></small>
-          </ui-select-choices>
+          </ui-select-choices> 
           <ui-select-no-choice>
             <div style="padding: 3px 10px;">
               <span ng-if="memberCtrl.loadingUsers" class="loading-dots-sm">Searching</span>

@@ -47,7 +47,7 @@ angular.module('hopsWorksApp')
 
             self.working = false;
             self.loadingUsers = false;
-            self.users = undefined;
+            self.users = [];
             self.selectedUsers = [];
             self.selectNoChoice = 'Could not find any user...';
             self.user = {
@@ -70,6 +70,17 @@ angular.module('hopsWorksApp')
             self.projectDesc = '';
 
             self.regex = /^[a-zA-Z0-9]((?!__)[_a-zA-Z0-9]){0,62}$/;
+            
+            var inSelectedUsers = function (email) {
+              var len = self.selectedUsers.length;
+              for (var i = 0; i < len; i++) {
+                if (self.selectedUsers[i].email === email) {
+                  return true;
+                }
+              }
+              return false;
+            };
+            
             var getUsers = function (query) {
               self.loadingUsers = true;
               UserService.profile().then(               
@@ -77,10 +88,13 @@ angular.module('hopsWorksApp')
                   self.user = success.data;
                   UserService.allValidUsers(query).then(function (success) {
                       var items = success.data.items;
-                      var len = success.data.count;
-                      for (var i = 0; i < len; i++) {
-                        if (items[i].email === self.user.email) {
+                      var countRemoved = 0;
+                      for (var i = items.length -1; i >= 0; i--) {
+                        if (items[i].email === self.user.email || inSelectedUsers(items[i].email)) {
                           items.splice(i, 1);
+                        }
+                        countRemoved++;
+                        if(countRemoved === self.selectedUsers.length + 1){
                           break;
                         }
                       }
