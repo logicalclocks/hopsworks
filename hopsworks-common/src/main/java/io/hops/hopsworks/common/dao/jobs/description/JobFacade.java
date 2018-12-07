@@ -74,6 +74,9 @@ public class JobFacade extends AbstractFacade<Jobs> {
   private static final Logger LOGGER = Logger.getLogger(JobFacade.class.
     getName());
   
+  private static final String JPQL_EXECUTIONS = "LEFT JOIN FETCH j.executions e on e.id = " +
+    "(select max(e.id) from Execution e where e.job = j group by e.job) ";
+  
   public JobFacade() {
     super(Jobs.class);
   }
@@ -199,20 +202,37 @@ public class JobFacade extends AbstractFacade<Jobs> {
   //====================================================================================================================
   
   public CollectionInfo findByProject(Integer offset, Integer limit,
-    Set<? extends AbstractFacade.FilterBy> filter,
-    Set<? extends AbstractFacade.SortBy> sort, Project project) {
-    String queryStr = "select j from Jobs j left join j.executions e on e.id = " +
-      "(select max(e.id) from Execution e where e.job = j group by e.job) where j.project = :project " +
-      "ORDER BY e.submissionTime DESC";
-    //buildQuery("SELECT j FROM Jobs j ", filter, sort, "j.project = :project ");
-    String queryCountStr = "SELECT COUNT(DISTINCT j.id) FROM Jobs j LEFT JOIN j.executions e ON e.id = " +
-      "(SELECT MAX(e.id) FROM Execution e WHERE e.job= j GROUP BY e.job.id) WHERE j.project = :project " +
-      "ORDER BY e.submissionTime DESC";
-//      buildQuery("SELECT COUNT(DISTINCT j.id) FROM Jobs j ", filter, sort,"j.project = :project ");
+    Set<? extends AbstractFacade.FilterBy> filters,
+    Set<? extends AbstractFacade.SortBy> sorts, Project project) {
+    //If filter or sort are on subresource, set inner join
+    String join = "";
+    if(sorts != null) {
+      for (SortBy sort : sorts) {
+        if (sort.getValue().endsWith("_LATEST")) {
+          join = JPQL_EXECUTIONS;
+          break;
+        }
+      }
+    }
+    if(filters != null) {
+      for (FilterBy filterBy : filters) {
+        if (filterBy.getValue().endsWith("_LATEST")) {
+          join = JPQL_EXECUTIONS;
+          break;
+        }
+      }
+    }
+    
+    String queryStr = buildQuery("SELECT j FROM Jobs j " + join, filters, sorts, "j.project = :project ");
+//      "select j from Jobs j left join j.executions e on e.id = " +
+//      "(select max(e.id) from Execution e where e.job = j group by e.job) where j.project = :project " +
+//      "ORDER BY e.submissionTime DESC";
+    String queryCountStr =
+      buildQuery("SELECT COUNT(DISTINCT j.id) FROM Jobs j " + join, filters, sorts, "j.project = :project ");
     Query query = em.createQuery(queryStr, Jobs.class).setParameter("project", project);
     Query queryCount = em.createQuery(queryCountStr, Jobs.class).setParameter("project", project);
-    setFilter(filter, query);
-    setFilter(filter, queryCount);
+    setFilter(filters, query);
+    setFilter(filters, queryCount);
     setOffsetAndLim(offset, limit, query);
     return new CollectionInfo((Long) queryCount.getSingleResult(), query.getResultList());
   }
@@ -234,8 +254,9 @@ public class JobFacade extends AbstractFacade<Jobs> {
         Set<JobType> jobTypes = new HashSet<>(getJobTypes(filterBy.getField(), filterBy.getParam()));
         q.setParameter(filterBy.getField(), jobTypes);
         break;
-      case JOB_NAME:
-      case CREATOR_LIKE:
+      case NAME:
+      case CREATOR:
+      case JOB:
         q.setParameter(filterBy.getField(), filterBy.getParam());
         break;
       default:
@@ -269,28 +290,24 @@ public class JobFacade extends AbstractFacade<Jobs> {
     CREATOR("CREATOR", "LOWER(CONCAT (j.creator.fname, j.creator.lname)) " , "ASC"),
     CREATOR_LAST_NAME("CREATOR_LAST_NAME", "LOWER(j.creator.lname) " , "ASC"),
     //Execution related, to make it easier for clients to use pagination
-    STATE("STATE", "executions.state ", "ASC", "LEFT JOIN j.executions executions AND executions.id = " +
-      "(SELECT MAX(executions.id) FROM executions WHERE executions.job.id = j.id GROUP BY executions.job.id "),
-    FINALSTATUS("FINALSTATUS", "executions.finalStatus ", "ASC", "LEFT JOIN j.executions executions "),
-//    DURATION("DURATION", "e.appId ", "DESC"),
-    PROGRESS("PROGRESS", "executions.progress ", "ASC", "LEFT JOIN j.executions executions "),
-    SUBMISSIONTIME("SUBMISSIONTIME", "executions.submissionTime ", "ASC", "LEFT JOIN j.executions e " +
-      "ON e.id = (SELECT MAX(e.id) FROM executions e WHERE e.job.id: j.id GROUP BY e.job.id) ");
+    STATE("STATE", "e.state ", "ASC"),
+    FINALSTATUS("FINALSTATUS", "e.finalStatus ", "ASC"),
+    PROGRESS("PROGRESS", "e.progress ", "ASC"),
+    SUBMISSIONTIME("SUBMISSIONTIME", "e.submissionTime ", "DESC"),
+    //Latest job execution
+    STATE_LATEST("STATE_LATEST", "e.state ", "ASC"),
+    FINALSTATUS_LATEST("FINALSTATUS_LATEST", "e.finalStatus ", "ASC"),
+    PROGRESS_LATEST("PROGRESS_LATEST", "e.progress ", "ASC"),
+    SUBMISSIONTIME_LATEST("SUBMISSIONTIME_LATEST", "e.submissionTime ", "DESC");
   
     private final String value;
     private final String sql;
-    private final String join;
     private final String defaultParam;
     
     private Sorts(String value, String sql, String defaultParam) {
-      this(value, sql, defaultParam, null);
-    }
-  
-    private Sorts(String value, String sql, String defaultParam, String join) {
       this.value = value;
       this.sql = sql;
       this.defaultParam = defaultParam;
-      this.join = join;
     }
     
     public String getValue() {
@@ -303,10 +320,6 @@ public class JobFacade extends AbstractFacade<Jobs> {
     
     public String getSql() {
       return sql;
-    }
-  
-    public String getJoin() {
-      return join;
     }
   
     @Override
@@ -322,11 +335,25 @@ public class JobFacade extends AbstractFacade<Jobs> {
     JOBTYPE_NEQ("JOBTYPE_NEQ", "j.type NOT IN :types_neq ", "types_neq",
       JobType.FLINK.toString().toUpperCase() + "," + JobType.YARN.toString().toUpperCase()
         + "," + JobType.ERASURE_CODING.toString().toUpperCase()),
-    JOB_NAME("JOB_NAME", "UPPER(j.name) LIKE CONCAT('%', :name, '%') ", "name", " "),
-    CREATOR_LIKE("CREATOR_LIKE", "(UPPER(j.creator.username) LIKE CONCAT(:user, '%') " +
-      "OR UPPER(j.creator.fname) LIKE CONCAT(:user, '%') " +
-      "OR UPPER(j.creator.lname) LIKE CONCAT(:user, '%') " +
-      "OR UPPER(j.creator.email) LIKE CONCAT(:user, '%')) ", "user", " ");
+    NAME("NAME", "UPPER(j.name) LIKE CONCAT('%', :name, '%') ", "name", " "),
+    CREATOR("CREATOR", "(UPPER(j.creator.username) LIKE CONCAT(:user, '%') "
+      + "OR UPPER(j.creator.fname) LIKE CONCAT(:user, '%') "
+      + "OR UPPER(j.creator.lname) LIKE CONCAT(:user, '%') "
+      + "OR UPPER(j.creator.email) LIKE CONCAT(:user, '%')) ", "user", " "),
+    JOB("JOB", "(UPPER(j.creator.username) LIKE CONCAT(:search, '%') "
+      + "OR UPPER(j.creator.fname) LIKE CONCAT(:search, '%') "
+      + "OR UPPER(j.creator.lname) LIKE CONCAT(:search, '%') "
+      + "OR UPPER(j.creator.email) LIKE CONCAT(:search, '%')) "
+      + "OR UPPER(j.name) LIKE CONCAT('%', :search, '%') "
+      + "OR UPPER(e.state) LIKE CONCAT(:search, '%') "
+      + "OR UPPER(e.finalStatus) LIKE CONCAT(:search, '%') ", "search", " "),
+    JOB_LATEST("JOB", "(UPPER(j.creator.username) LIKE CONCAT(:search, '%') "
+      + "OR UPPER(j.creator.fname) LIKE CONCAT(:search, '%') "
+      + "OR UPPER(j.creator.lname) LIKE CONCAT(:search, '%') "
+      + "OR UPPER(j.creator.email) LIKE CONCAT(:search, '%')) "
+      + "OR UPPER(j.name) LIKE CONCAT('%', :search, '%') "
+      + "OR UPPER(e.state) LIKE CONCAT(:search, '%') "
+      + "OR UPPER(e.finalStatus) LIKE CONCAT(:search, '%') ", "search", " ");
     
     private final String value;
     private final String sql;

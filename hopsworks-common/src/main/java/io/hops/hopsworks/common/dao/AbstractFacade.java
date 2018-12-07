@@ -39,8 +39,6 @@
 
 package io.hops.hopsworks.common.dao;
 
-import org.elasticsearch.common.Strings;
-
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import java.util.Iterator;
@@ -118,28 +116,7 @@ public abstract class AbstractFacade<T> {
   
   public String buildQuery(String query, Set<? extends AbstractFacade.FilterBy> filters,
       Set<? extends AbstractFacade.SortBy> sorts, String more) {
-//    if(StringUtils.containsIgnoreCase(query,"COUNT")){
-//      return query + buildFilterString(filters, more) + buildSortString(sorts);
-//    }
-    return query + buildJoinString(sorts) + buildFilterString(filters, more) + buildSortString(sorts);
-  }
-  
-  public String buildJoinString(Set<? extends SortBy> sorts) {
-    if (sorts == null || sorts.isEmpty()) {
-      return "";
-    }
-    Iterator<? extends SortBy> sortsIter = sorts.iterator();
-    if (!sortsIter.hasNext()) {
-      return "";
-    }
-    String c = "";
-    while (sortsIter.hasNext()) {
-      SortBy sort = sortsIter.next();
-      if (!Strings.isNullOrEmpty(sort.getJoin())) {
-        c += sort.getJoin();
-      }
-    }
-    return c;
+    return query + buildFilterString(filters, more) + buildSortString(sorts);
   }
   
   public String buildSortString(Set<? extends SortBy> sortBy) {
@@ -174,7 +151,6 @@ public abstract class AbstractFacade<T> {
     String getValue();
     OrderBy getParam();
     String getSql();
-    String getJoin();
   }
   
   public interface FilterBy {

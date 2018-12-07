@@ -71,7 +71,7 @@
             <div style="height:100%;">
               <div class="row form-inline">
                 <div class="col-sm-6 col-md-6 col-lg-6 form-group">
-                  <label>Search: <input class="form-control" style="margin-left: 10px;" ng-model="jobsCtrl.jobFilter">
+                  <label>Search: <input class="form-control" style="margin-left: 10px;" ng-model="jobsCtrl.jobFilter" ng-model-options="{debounce: 1000}">
                   </label>
                 </div>
                 <div class="col-sm-6 col-md-6 col-lg-6 form-group">
@@ -79,7 +79,7 @@
                     <label>jobs per page:
                       <input type="number" min="1"
                              max="50"
-                             class="form-control" ng-model="jobsCtrl.pageSize">
+                             class="form-control" ng-model="jobsCtrl.pageSize" ng-model-options="{debounce: 300}">
                     </label>
                   </div>
                 </div>
@@ -132,7 +132,7 @@
                   </thead>
                   <tbody>
                     <tr
-                      dir-paginate="job in jobsCtrl.jobs| orderBy :jobsCtrl.sortKey:jobsCtrl.reverse| filter:jobsCtrl.jobFilter:false | itemsPerPage:jobsCtrl.pageSize"
+                      dir-paginate="job in jobsCtrl.jobs| itemsPerPage:jobsCtrl.pageSize"
                       current-page="jobsCtrl.currentPage"
                       total-items="jobsCtrl.totalItems"
                       ng-class="{'active':$index === jobsCtrl.selectedIndex}" ng-click="jobsCtrl.toggle(job, $index);jobsCtrl.showLogs(job.name);">

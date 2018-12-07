@@ -60,9 +60,4 @@ public class SortBy implements AbstractFacade.SortBy {
     return this.sortBy.getSql();
   }
   
-  @Override
-  public String getJoin() {
-    return this.sortBy.getJoin();
-  }
-
 }
