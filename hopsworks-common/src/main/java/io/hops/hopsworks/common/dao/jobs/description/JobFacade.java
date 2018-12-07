@@ -93,7 +93,7 @@ public class JobFacade extends AbstractFacade<Jobs> {
    * @param creator The creator of the job.
    * @param project The project in which this job is defined.
    * @param config The job configuration file.
-   * @return
+   * @return Jobs The created Jobs entity instance.
    */
   //This seems to ensure that the entity is actually created and can later 
   //be found using em.find().
@@ -208,7 +208,11 @@ public class JobFacade extends AbstractFacade<Jobs> {
     String join = "";
     if(sorts != null) {
       for (SortBy sort : sorts) {
-        if (sort.getValue().endsWith("_LATEST")) {
+        if(sort.getValue().equals(Sorts.FINALSTATUS.getValue())
+          || sort.getValue().equals(Sorts.PROGRESS.getValue())
+          || sort.getValue().equals(Sorts.STATE.getValue())
+          || sort.getValue().equals(Sorts.SUBMISSIONTIME.getValue())
+          || sort.getValue().equals(Sorts.DURATION.getValue())){
           join = JPQL_EXECUTIONS;
           break;
         }
@@ -216,7 +220,7 @@ public class JobFacade extends AbstractFacade<Jobs> {
     }
     if(filters != null) {
       for (FilterBy filterBy : filters) {
-        if (filterBy.getValue().endsWith("_LATEST")) {
+        if(filterBy.getValue().equals(Filters.JOB_LATEST_EXECUTION.getValue())){
           join = JPQL_EXECUTIONS;
           break;
         }
@@ -256,7 +260,7 @@ public class JobFacade extends AbstractFacade<Jobs> {
         break;
       case NAME:
       case CREATOR:
-      case JOB:
+      case JOB_LATEST_EXECUTION:
         q.setParameter(filterBy.getField(), filterBy.getParam());
         break;
       default:
@@ -294,12 +298,7 @@ public class JobFacade extends AbstractFacade<Jobs> {
     FINALSTATUS("FINALSTATUS", "e.finalStatus ", "ASC"),
     PROGRESS("PROGRESS", "e.progress ", "ASC"),
     SUBMISSIONTIME("SUBMISSIONTIME", "e.submissionTime ", "DESC"),
-    //Latest job execution
-    STATE_LATEST("STATE_LATEST", "e.state ", "ASC"),
-    FINALSTATUS_LATEST("FINALSTATUS_LATEST", "e.finalStatus ", "ASC"),
-    PROGRESS_LATEST("PROGRESS_LATEST", "e.progress ", "ASC"),
-    SUBMISSIONTIME_LATEST("SUBMISSIONTIME_LATEST", "e.submissionTime ", "DESC");
-  
+    DURATION("DURATION", " e.executionStop-e.executionStart ", "ASC");
     private final String value;
     private final String sql;
     private final String defaultParam;
@@ -340,20 +339,14 @@ public class JobFacade extends AbstractFacade<Jobs> {
       + "OR UPPER(j.creator.fname) LIKE CONCAT(:user, '%') "
       + "OR UPPER(j.creator.lname) LIKE CONCAT(:user, '%') "
       + "OR UPPER(j.creator.email) LIKE CONCAT(:user, '%')) ", "user", " "),
-    JOB("JOB", "(UPPER(j.creator.username) LIKE CONCAT(:search, '%') "
+    JOB_LATEST_EXECUTION("JOB_LATEST_EXECUTION", "(UPPER(j.creator.username) LIKE CONCAT(:search, '%') "
       + "OR UPPER(j.creator.fname) LIKE CONCAT(:search, '%') "
       + "OR UPPER(j.creator.lname) LIKE CONCAT(:search, '%') "
-      + "OR UPPER(j.creator.email) LIKE CONCAT(:search, '%')) "
+      + "OR UPPER(j.creator.email) LIKE CONCAT(:search, '%') "
       + "OR UPPER(j.name) LIKE CONCAT('%', :search, '%') "
+      + "OR j.type LIKE CONCAT(:search, '%') "
       + "OR UPPER(e.state) LIKE CONCAT(:search, '%') "
-      + "OR UPPER(e.finalStatus) LIKE CONCAT(:search, '%') ", "search", " "),
-    JOB_LATEST("JOB", "(UPPER(j.creator.username) LIKE CONCAT(:search, '%') "
-      + "OR UPPER(j.creator.fname) LIKE CONCAT(:search, '%') "
-      + "OR UPPER(j.creator.lname) LIKE CONCAT(:search, '%') "
-      + "OR UPPER(j.creator.email) LIKE CONCAT(:search, '%')) "
-      + "OR UPPER(j.name) LIKE CONCAT('%', :search, '%') "
-      + "OR UPPER(e.state) LIKE CONCAT(:search, '%') "
-      + "OR UPPER(e.finalStatus) LIKE CONCAT(:search, '%') ", "search", " ");
+      + "OR UPPER(e.finalStatus) LIKE CONCAT(:search, '%')) ", "search", " ");
     
     private final String value;
     private final String sql;

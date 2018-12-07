@@ -73,16 +73,15 @@ angular.module('hopsWorksApp')
             self.reverse = true;
 
             self.sort = function (keyname) {
-
+                if(self.sortKey !== keyname){
+                    self.reverse = true;
+                } else {
+                    self.reverse = !self.reverse; //if true make it false and vice versa
+                }
                 self.sortKey = keyname;   //set the sortKey to the param passed
-                self.reverse = !self.reverse; //if true make it false and vice versa
                 self.order();
                 //We need to fetch all the jobs for these
-                if(self.sortKey === 'duration'){
-                    self.getAllJobsStatus(0, 0, "");
-                } else {
-                    self.getAllJobsStatus();
-                }
+                self.getAllJobsStatus();
             };
 
             self.order = function () {
@@ -204,7 +203,7 @@ angular.module('hopsWorksApp')
 
             self.pageSize = 8;
             self.currentPage = 1;
-            self.getAllJobsStatus = function (limit, offset, sortBy, filterBy, expansion) {
+            self.getAllJobsStatus = function (limit, offset, sortBy, expansion) {
                 var jobsTemp = [];
                 if(limit === undefined || limit === null){
                     limit = self.pageSize;
@@ -218,15 +217,11 @@ angular.module('hopsWorksApp')
                 if(sortBy === undefined || sortBy === null){
                     //Here we want to use the *_latest sortBy keys of Hopsworks, which return a view of the jobs
                     // sorted by their latest execution (=subresource) attributes
-                    if(self.sortKey === 'submissionTime' || self.sortKey === 'state' || self.sortKey === 'finalStatus'
-                        || self.sortKey === 'progress'){
-                        sortBy = "&sort_by=" + self.sortKey.toLowerCase() + "_latest" + ":" + self.orderBy.toLowerCase();
-                    } else {
-                        sortBy = "&sort_by=" + self.sortKey.toLowerCase() + ":" + self.orderBy.toLowerCase();
-                    }
+                    sortBy = "&sort_by=" + self.sortKey.toLowerCase() + ":" + self.orderBy.toLowerCase();
                 }
-                if(filterBy === undefined || filterBy === null){
-                    filterBy = "&filter_by=job:" + self.jobFilter;
+                var filterBy = "";
+                if(self.jobFilter !== undefined && self.jobFilter !== null && self.jobFilter !== "") {
+                    filterBy = "&filter_by=job_latest_execution:" + self.jobFilter;
                 }
 
                 JobService.getJobs(self.projectId, limit, offset, sortBy + filterBy + expansion).then(
@@ -551,7 +546,7 @@ angular.module('hopsWorksApp')
                 self.getAllJobsStatus();
               }, 5000);
             };
-            // startPolling();
+            startPolling();
 
             $scope.convertMS = function (ms) {
               if (ms === undefined) {
@@ -575,7 +570,7 @@ angular.module('hopsWorksApp')
                 return str.replace(/\w\S*/g, function(txt){
                     return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
                 }).replace(/_/g, ' ');
-            }
+            };
 
             var init = function () {
               var stored = StorageService.contains(self.projectId + "_newjob");

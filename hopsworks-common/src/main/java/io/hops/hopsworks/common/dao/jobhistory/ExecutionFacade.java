@@ -152,16 +152,27 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
   }
   
   public CollectionInfo findByJob(Integer offset, Integer limit,
-    Set<? extends AbstractFacade.FilterBy> filter,
-    Set<? extends AbstractFacade.SortBy> sort,
+    Set<? extends AbstractFacade.FilterBy> filters,
+    Set<? extends AbstractFacade.SortBy> sorts,
     Jobs job) {
-    String queryStr = buildQuery("SELECT e FROM Execution e ", filter, sort, "e.job = :job ");
-    String queryCountStr = buildQuery("SELECT COUNT(e.id) FROM Execution e ", filter, sort, "e.job = :job ");
+    
+    String duration = "";
+//    if(sorts != null) {
+//      for (SortBy sort : sorts) {
+//        if(sort.getValue().equals(sort.getValue().equals(Sorts.DURATION.getValue()))){
+//          duration = ", (e.executionStop - e.executionStart) as duration ";
+//          break;
+//        }
+//      }
+//    }
+    
+    String queryStr = buildQuery("SELECT e" + duration + " FROM Execution e ", filters, sorts, "e.job = :job ");
+    String queryCountStr = buildQuery("SELECT COUNT(e.id) FROM Execution e ", filters, sorts, "e.job = :job ");
   
     Query query = em.createQuery(queryStr, Execution.class).setParameter("job", job);
     Query queryCount = em.createQuery(queryCountStr, Execution.class).setParameter("job", job);
-    setFilter(filter, query);
-    setFilter(filter, queryCount);
+    setFilter(filters, query);
+    setFilter(filters, queryCount);
     setOffsetAndLim(offset, limit, query);
     return new CollectionInfo((Long) queryCount.getSingleResult(), query.getResultList());
   }
@@ -226,7 +237,8 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
     STATE("STATE", "e.state ", "ASC"),
     FINALSTATUS("FINALSTATUS", "e.finalStatus ", "ASC"),
     APPID("APPID", "e.appId ", "DESC"),
-    PROGRESS("PROGRESS", "e.progress ", "ASC");
+    PROGRESS("PROGRESS", "e.progress ", "ASC"),
+    DURATION("DURATION", "e.executionStop-e.executionStart ", "ASC");
     private final String value;
     private final String sql;
     private final String defaultParam;

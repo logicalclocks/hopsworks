@@ -58,6 +58,7 @@ module ProjectHelper
     new_project = {projectName: "project_#{short_random_id}", description:"", status: 0, services: ["JOBS","HIVE","KAFKA","SERVING"],
                    projectTeam:[], retentionPeriod: ""}
     post "#{ENV['HOPSWORKS_API']}/project", new_project
+    byebug
     expect_json(successMessage: regex("Project created successfully.*"))
     expect_status(201)
     get_project_by_name(new_project[:projectName])
