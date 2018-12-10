@@ -290,7 +290,6 @@
                         </div>
                       </td>
                       <td>
-                        <!--                      {{jobsCtrl.jobs['' + job.id].duration * 0.000016667| number:2}}-->
                         {{convertMS(job.duration)}}
                       </td>
                       <td>
@@ -373,7 +372,8 @@
               <div class="tab-content" >
                 <div id="logs" class="tab-pane fade in active">
                   <div uib-accordion close-others="true" >
-                    <div uib-accordion-group class="panel-default" ng-repeat="item in jobsCtrl.logset" heading="{{item.time}}">
+                    <div uib-accordion-group class="panel-default"
+                         ng-repeat="item in jobsCtrl.logset" heading="{{item.time}}">
                       <uib-accordion-heading ng-if="item.appId !== ''">
                         <div ng-click="jobsCtrl.getLog(item, 'out')">
                           Application Id = {{item.appId}}
@@ -396,6 +396,10 @@
                         </div>
                       </div>
                     </div>
+                    <ul uib-pagination
+                        total-items="list.length" ng-model="currentPage" max-size="maxSize" boundary-links="true"
+                        boundary-link-numbers="true" force-ellipses="true" items-per-page="itemPage"
+                        first-text="First" last-text="Last" next-text="Next" previous-text="Prev"></ul>
                   </div>
                 </div>
                 <div id="errs" class="tab-pane fade">

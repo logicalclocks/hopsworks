@@ -68,6 +68,9 @@ angular.module('hopsWorksApp')
             self.fetchingLogs = 0;
             self.loadingLog = 0;
             self.pageSize = 10;
+            self.executionsPageSize = 1;
+            self.executionsCurrentPage = 1;
+
             self.sortKey = 'creationTime';
             self.orderBy = "desc";
             self.reverse = true;
@@ -399,16 +402,19 @@ angular.module('hopsWorksApp')
 
             };
 
-            self.showLogs = function (jobName) {
-              self.fetchingLogs = 1;
-                JobService.getAllExecutions(self.projectId, jobName, "").then(
+            self.showLogs = function (jobName, offset) {
+                self.fetchingLogs = 1;
+                if(offset === undefined || offset === null ){
+                    offset = 0;
+                }
+                JobService.getAllExecutions(self.projectId, jobName, "?offset="+offset + "&limit=2").then(
                     function (success) {
                         self.logset = [];
                         angular.forEach(success.data.items, function (execution, key) {
                             var entry = {"jobName": jobName, "executionId": execution.id,  "appId":execution.appId, "time": execution.submissionTime};
                             self.logset.push(entry);
                         });
-
+                        self.executionTotalItems = self.logset.length;
                         self.fetchingLogs = 0;
                   }, function (error) {
                     self.fetchingLogs = 0;
@@ -419,6 +425,13 @@ angular.module('hopsWorksApp')
                       }
               });
             };
+
+              self.getExecutionsNextPage = function () {
+                  var offset = self.executionsPageSize * (self.executionsCurrentPage - 1);
+                  if (self.executionTotalItems > offset) {
+                      self.showLogs(self.currentjob.name, offset);
+                  }
+              };
 
               self.getLog = function (logsetEntry, type) {
                   self.loadingLog = 1;
