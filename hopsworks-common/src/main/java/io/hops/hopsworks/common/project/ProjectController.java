@@ -98,6 +98,7 @@ import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hive.HiveController;
 import io.hops.hopsworks.common.jobs.yarn.YarnLogUtil;
 import io.hops.hopsworks.common.kafka.KafkaController;
+import io.hops.hopsworks.common.livy.LivyController;
 import io.hops.hopsworks.common.message.MessageController;
 import io.hops.hopsworks.common.security.CAException;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
@@ -248,6 +249,9 @@ public class ProjectController {
   private Instance<ProjectHandler> projectHandlers;
   @EJB
   private ProjectUtils projectUtils;
+  @EJB
+  private LivyController livyController;
+
 
   /**
    * Creates a new project(project), the related DIR, the different services in
@@ -684,13 +688,13 @@ public class ProjectController {
   // Used only during project creation
   private List<Future<?>> addService(Project project, ProjectServiceEnum service,
       Users user, DistributedFileSystemOps dfso)
-    throws ProjectException, ServiceException, DatasetException, HopsSecurityException {
+    throws ProjectException, ServiceException, DatasetException, HopsSecurityException, UserException {
     return addService(project, service, user, dfso, dfso);
   }
 
   public List<Future<?>> addService(Project project, ProjectServiceEnum service,
       Users user, DistributedFileSystemOps dfso, DistributedFileSystemOps udfso)
-    throws ProjectException, ServiceException, DatasetException, HopsSecurityException {
+    throws ProjectException, ServiceException, DatasetException, HopsSecurityException, UserException {
 
     List<Future<?>> futureList = new ArrayList<>();
 
@@ -779,7 +783,7 @@ public class ProjectController {
 
   private Future<CertificatesController.CertsResult> addServiceServing(Project project, Users user,
                                  DistributedFileSystemOps dfso, DistributedFileSystemOps udfso)
-      throws ProjectException, DatasetException, HopsSecurityException {
+      throws ProjectException, DatasetException, HopsSecurityException, UserException {
 
     addServiceDataset(project, user, Settings.ServiceDataset.SERVING, dfso, udfso);
     elasticController.createIndexPattern(project, project.getName().toLowerCase() + "_serving-*");
@@ -794,7 +798,8 @@ public class ProjectController {
    * Add to the project the serving manager. The user responsible of writing the inference logs to kafka
    * @param project
    */
-  private Future<CertificatesController.CertsResult> addServingManager(Project project) throws HopsSecurityException {
+  private Future<CertificatesController.CertsResult> addServingManager(Project project) throws HopsSecurityException,
+      UserException {
     // Add the Serving Manager user to the project team
     Users servingManagerUser = userFacade.findByUsername(KafkaInferenceLogger.SERVING_MANAGER_USERNAME);
     ProjectTeamPK stp = new ProjectTeamPK(project.getId(), servingManagerUser.getEmail());
@@ -1791,14 +1796,7 @@ public class ProjectController {
               }
               LOGGER.log(Level.SEVERE, "error while creating certificates, jupyter kernel: " + ex.getMessage(), ex);
               projectTeamFacade.removeProjectTeam(project, newMember);
-              try {
-                hdfsUsersController.removeProjectMember(newMember, project);
-              } catch (IOException ex1) {
-                LOGGER.log(Level.SEVERE, null, ex1);
-                throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_MEMBER_NOT_REMOVED,
-                  Level.SEVERE, "user: " +  newMember, " project: " + project.getName());
-              }
-
+              hdfsUsersController.removeProjectMember(newMember, project);
               throw new EJBException("Could not create certificates for user");
             }
 
@@ -2040,6 +2038,7 @@ public class ProjectController {
       if (settings.isPythonKernelEnabled()) {
         jupyterProcessFacade.removePythonKernelForProjectUser(hdfsUser);
       }
+      livyController.deleteAllLivySessions(hdfsUser, ProjectServiceEnum.JUPYTER);
 
       //kill running TB if any
       tensorBoardController.cleanup(project, user);
@@ -2360,6 +2359,7 @@ public class ProjectController {
 
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public void removeJupyter(Project project) throws ServiceException {
+    livyController.deleteAllLivySessionsForProject(project);
     jupyterProcessFacade.stopProject(project);
   }
 

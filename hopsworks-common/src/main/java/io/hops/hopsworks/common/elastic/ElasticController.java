@@ -301,7 +301,7 @@ public class ElasticController {
     }
 
     Dataset dataset = datasetFacade.findByNameAndProjectId(project, dsName);
-    final int datasetId = dataset.getInodeId();
+    final long datasetId = dataset.getInodeId();
 
     //hit the indices - execute the queries
     SearchRequestBuilder srb = client.prepareSearch(Settings.META_INDEX);
@@ -478,7 +478,7 @@ public class ElasticController {
         List<Dataset> dss = datasetFacade.findByInode(ds.getInode());
         for (Dataset sh : dss) {
           if (!sh.isShared()) {
-            int datasetId = ds.getInodeId();
+            long datasetId = ds.getInodeId();
             executeProjectSearchQuery(client, searchSpecificDataset(datasetId,
                 searchTerm), elasticHits);
 
@@ -511,13 +511,12 @@ public class ElasticController {
     }
   }
 
-  private QueryBuilder searchSpecificDataset(int datasetId, String searchTerm) {
+  private QueryBuilder searchSpecificDataset(Long datasetId, String searchTerm) {
     QueryBuilder dataset = matchQuery(Settings.META_ID, datasetId);
     QueryBuilder nameDescQuery = getNameDescriptionMetadataQuery(searchTerm);
-    QueryBuilder query = boolQuery()
+    return boolQuery()
         .must(dataset)
         .must(nameDescQuery);
-    return query;
   }
 
   /**
@@ -563,7 +562,7 @@ public class ElasticController {
    * @param searchTerm
    * @return
    */
-  private QueryBuilder datasetSearchQuery(int datasetId, String searchTerm) {
+  private QueryBuilder datasetSearchQuery(long datasetId, String searchTerm) {
     QueryBuilder datasetIdQuery = termQuery(Settings.META_DATASET_ID_FIELD, datasetId);
     QueryBuilder query = getNameDescriptionMetadataQuery(searchTerm);
     QueryBuilder onlyInodes = termQuery(Settings.META_DOC_TYPE_FIELD,

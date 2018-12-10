@@ -37,21 +37,111 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package io.hops.hopsworks.admin.project;
+package io.hops.hopsworks.common.livy;
 
-import io.hops.hopsworks.common.dao.project.team.ProjectRoleTypes;
-import javax.faces.context.FacesContext;
-import javax.faces.event.AbortProcessingException;
-import javax.faces.event.ValueChangeEvent;
-import javax.faces.event.ValueChangeListener;
+import javax.xml.bind.annotation.XmlRootElement;
 
-public class ChangeListener implements ValueChangeListener {
+@XmlRootElement
+public class LivyMsg {
 
-  @Override
-  public void processValueChange(ValueChangeEvent event) throws
-          AbortProcessingException {
-    ValueChangeMB teamRole = (ValueChangeMB) FacesContext.getCurrentInstance().
-            getExternalContext().getSessionMap().get("valueChangeMB");
-    teamRole.setNewTeamRole((ProjectRoleTypes) event.getNewValue());
+  private int from;
+  private Session[] sessions;
+  private int total;
+
+  public LivyMsg() {
+
+  }
+
+  public int getFrom() {
+    return from;
+  }
+
+  public void setFrom(int from) {
+    this.from = from;
+  }
+
+  public Session[] getSessions() {
+    return sessions;
+  }
+
+  public void setSessions(Session[] sessions) {
+    this.sessions = sessions;
+  }
+
+  public int getTotal() {
+    return total;
+  }
+
+  public void setTotal(int total) {
+    this.total = total;
+  }
+
+  @XmlRootElement
+  public static class Session {
+
+    private int id;
+    private String appId;
+    private String kind;
+    private String owner;
+    private String proxyUser;
+    private String state;
+
+    public Session() {
+    }
+
+    public Session(int id, String owner) {
+      this.id = id;
+      this.owner = owner;
+    }
+
+    public int getId() {
+      return id;
+    }
+
+    public void setId(int id) {
+      this.id = id;
+    }
+
+    public String getAppId() {
+      return appId;
+    }
+
+    public void setAppId(String appId) {
+      this.appId = appId;
+    }
+
+    public String getKind() {
+      return kind;
+    }
+
+    public void setKind(String kind) {
+      this.kind = kind;
+    }
+
+    public String getOwner() {
+      return owner;
+    }
+
+    public void setOwner(String owner) {
+      this.owner = owner;
+    }
+
+    public String getProxyUser() {
+      return proxyUser;
+    }
+
+    public void setProxyUser(String proxyUser) {
+      this.proxyUser = proxyUser;
+    }
+
+    public String getState() {
+      return state;
+    }
+
+    public void setState(String state) {
+      this.state = state;
+    }
+    
+
   }
 }

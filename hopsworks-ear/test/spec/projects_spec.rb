@@ -330,15 +330,46 @@ describe "On #{ENV['OS']}" do
           memb = json_body.detect { |e| e[:user][:email] == new_member }
           expect(memb[:teamRole]).to eq ("Data scientist")
         end
-        it "should remove a team member" do
+        it "should remove data owner from project when remove issued by another data owner" do
           new_member = create_user[:email]
           add_member(new_member, "Data owner")
           delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers/#{new_member}"
-          expect_json(successMessage: "Member removed from team.")
           expect_status(200)
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers"
           memb = json_body.detect { |e| e[:user][:email] == new_member }
           expect(memb).to be_nil
+        end
+        it "should remove data scientist from project when remove issued by data owner" do
+          new_member = create_user[:email]
+          add_member(new_member, "Data scientist")
+          delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers/#{new_member}"
+          expect_status(200)
+          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers"
+          memb = json_body.detect { |e| e[:user][:email] == new_member }
+          expect(memb).to be_nil
+        end
+        it "should fail for project owner to remove themselves from project" do
+          delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers/#{@user[:email]}"
+          expect_json(errorCode: 150013)
+          expect_status(403)
+          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers"
+          memb = json_body.detect { |e| e[:user][:email] == @user[:email] }
+          expect(memb).should_not be_nil
+        end
+        it "should fail for data scientist to remove data owner from project" do
+          data_owner = @user[:email]
+          new_member = create_user[:email]
+          add_member(new_member, "Data scientist")
+          reset_session
+          create_session(new_member,"Pass123")
+          delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers/#{data_owner}"
+          expect_json(errorCode: 150012)
+          expect_status(403)
+          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers"
+          memb = json_body.detect { |e| e[:user][:email] == data_owner }
+          expect(memb).should_not be_nil
+          reset_session
+          create_session(data_owner,"Pass123")
         end
         it "should fail to remove a non-existing team member" do
           new_member = create_user[:email]
@@ -390,7 +421,7 @@ describe "On #{ENV['OS']}" do
         it "should fail to change the role of the project owner" do
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers/#{@project[:username]}", URI.encode_www_form({ role: "Data scientist"}), { content_type: 'application/x-www-form-urlencoded'}
           expect_json(errorCode: 150014)
-          expect_status(400)
+          expect_status(403)
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers"
           memb = json_body.detect { |e| e[:user][:email] == @project[:username] }
           expect(memb[:teamRole]).to eq ("Data owner")
@@ -414,7 +445,7 @@ describe "On #{ENV['OS']}" do
           field_errors = json_body[:fieldErrors]
           expect(field_errors).to include("none_existing_user@email.com was not found in the system.")
         end
-        it "should exclude non-existing user but add exsisting one" do
+        it "should exclude non-existing user but add existing one" do
           new_member = create_user[:email]
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers", {projectTeam: [{projectTeamPK: {projectId: @project[:id],teamMember: "none_existing_user@email.com"},teamRole: "Data scientist"},{projectTeamPK: {projectId: @project[:id],teamMember: new_member},teamRole: "Data scientist"}]}
           expect_json(successMessage: "One member added successfully")

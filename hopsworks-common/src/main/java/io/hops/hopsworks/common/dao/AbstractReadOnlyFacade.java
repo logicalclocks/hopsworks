@@ -37,111 +37,49 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package io.hops.hopsworks.api.zeppelin.util;
+package io.hops.hopsworks.common.dao;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import java.util.List;
+import javax.persistence.EntityManager;
 
-@XmlRootElement
-public class LivyMsg {
+public abstract class AbstractReadOnlyFacade<T> {
 
-  private int from;
-  private Session[] sessions;
-  private int total;
+  private final Class<T> entityClass;
 
-  public LivyMsg() {
-
+  public AbstractReadOnlyFacade(Class<T> entityClass) {
+    this.entityClass = entityClass;
   }
 
-  public int getFrom() {
-    return from;
+  protected abstract EntityManager getEntityManager();
+
+  public T find(Object id) {
+    return getEntityManager().find(entityClass, id);
   }
 
-  public void setFrom(int from) {
-    this.from = from;
+  public List<T> findAll() {
+    javax.persistence.criteria.CriteriaQuery cq = getEntityManager().
+            getCriteriaBuilder().createQuery();
+    cq.select(cq.from(entityClass));
+    return getEntityManager().createQuery(cq).getResultList();
   }
 
-  public Session[] getSessions() {
-    return sessions;
+  public List<T> findRange(int[] range) {
+    javax.persistence.criteria.CriteriaQuery cq = getEntityManager().
+            getCriteriaBuilder().createQuery();
+    cq.select(cq.from(entityClass));
+    javax.persistence.Query q = getEntityManager().createQuery(cq);
+    q.setMaxResults(range[1] - range[0]);
+    q.setFirstResult(range[0]);
+    return q.getResultList();
   }
 
-  public void setSessions(Session[] sessions) {
-    this.sessions = sessions;
+  public int count() {
+    javax.persistence.criteria.CriteriaQuery cq = getEntityManager().
+            getCriteriaBuilder().createQuery();
+    javax.persistence.criteria.Root<T> rt = cq.from(entityClass);
+    cq.select(getEntityManager().getCriteriaBuilder().count(rt));
+    javax.persistence.Query q = getEntityManager().createQuery(cq);
+    return ((Long) q.getSingleResult()).intValue();
   }
-
-  public int getTotal() {
-    return total;
-  }
-
-  public void setTotal(int total) {
-    this.total = total;
-  }
-
-  @XmlRootElement
-  public static class Session {
-
-    private int id;
-    private String appId;
-    private String kind;
-    private String owner;
-    private String proxyUser;
-    private String state;
-
-    public Session() {
-    }
-
-    public Session(int id, String owner) {
-      this.id = id;
-      this.owner = owner;
-    }
-
-    public int getId() {
-      return id;
-    }
-
-    public void setId(int id) {
-      this.id = id;
-    }
-
-    public String getAppId() {
-      return appId;
-    }
-
-    public void setAppId(String appId) {
-      this.appId = appId;
-    }
-
-    public String getKind() {
-      return kind;
-    }
-
-    public void setKind(String kind) {
-      this.kind = kind;
-    }
-
-    public String getOwner() {
-      return owner;
-    }
-
-    public void setOwner(String owner) {
-      this.owner = owner;
-    }
-
-    public String getProxyUser() {
-      return proxyUser;
-    }
-
-    public void setProxyUser(String proxyUser) {
-      this.proxyUser = proxyUser;
-    }
-
-    public String getState() {
-      return state;
-    }
-
-    public void setState(String state) {
-      this.state = state;
-    }
-    
-
-  }
+  
 }

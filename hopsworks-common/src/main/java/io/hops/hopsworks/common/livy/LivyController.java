@@ -37,9 +37,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package io.hops.hopsworks.api.util;
+package io.hops.hopsworks.common.livy;
 
-import io.hops.hopsworks.api.zeppelin.util.LivyMsg;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstate;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
 import io.hops.hopsworks.common.dao.project.Project;
@@ -136,6 +135,21 @@ public class LivyController {
         break;
     }
     return sessions;
+  }
+
+  /**
+   * Deletes all livy sessions in the project
+   *
+   * @param project
+   */
+  public void deleteAllLivySessionsForProject(Project project) {
+    List<ProjectTeam> projectTeam;
+    projectTeam = teambean.findMembersByProject(project);
+    String hdfsUsername;
+    for (ProjectTeam member : projectTeam) {
+      hdfsUsername = hdfsUserBean.getHdfsUserName(project, member.getUser());
+      deleteAllLivySessions(hdfsUsername, ProjectServiceEnum.JUPYTER);
+    }
   }
 
   /**

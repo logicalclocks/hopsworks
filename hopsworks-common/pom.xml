@@ -57,7 +57,8 @@
 
   <properties>
     <tuples.version>1.2</tuples.version>
-  </properties> 
+    <maven.deploy.skip>false</maven.deploy.skip>
+  </properties>
   
   <dependencies>
     <dependency>

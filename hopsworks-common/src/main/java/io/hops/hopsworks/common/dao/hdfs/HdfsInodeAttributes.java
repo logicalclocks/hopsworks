@@ -81,7 +81,7 @@ public class HdfsInodeAttributes implements Serializable {
   @Basic(optional = false)
   @NotNull
   @Column(name = "inodeId")
-  private Integer inodeId;
+  private Long inodeId;
   @Column(name = "nsquota")
   private BigInteger nsquota;
   @Column(name = "dsquota")
@@ -94,15 +94,15 @@ public class HdfsInodeAttributes implements Serializable {
   public HdfsInodeAttributes() {
   }
 
-  public HdfsInodeAttributes(Integer inodeId) {
+  public HdfsInodeAttributes(Long inodeId) {
     this.inodeId = inodeId;
   }
 
-  public Integer getInodeId() {
+  public Long getInodeId() {
     return inodeId;
   }
 
-  public void setInodeId(Integer inodeId) {
+  public void setInodeId(Long inodeId) {
     this.inodeId = inodeId;
   }
 

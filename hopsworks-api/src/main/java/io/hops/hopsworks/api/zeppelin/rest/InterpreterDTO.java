@@ -39,7 +39,7 @@
 
 package io.hops.hopsworks.api.zeppelin.rest;
 
-import io.hops.hopsworks.api.zeppelin.util.LivyMsg;
+import io.hops.hopsworks.common.livy.LivyMsg;
 import java.util.ArrayList;
 import java.util.List;
 import javax.xml.bind.annotation.XmlRootElement;
