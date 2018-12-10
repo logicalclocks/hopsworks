@@ -317,6 +317,10 @@ public class PythonDepsService {
   public Response enabled() {
     boolean enabled = project.getConda();
     if (enabled) {
+      // This is an hack for HOPSWORKS-750 which starts jupyter from the project environments.
+      // Because of this we can have a situation where conda is enabled, but Jupyter is not installed in the env.
+      // I guess we can do better in the refactoring of this endpoint, but for the moment I'm going to modify
+      // what is returned by this endpoint to notify the fronted if jupyter is installed.
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(project.getPythonVersion()).build();
     }
     return noCacheResponse.getNoCacheResponseBuilder(
