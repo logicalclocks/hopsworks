@@ -397,14 +397,19 @@
                       </div>
                     </div>
                     <ul uib-pagination
-                        total-items="list.length" ng-model="currentPage" max-size="maxSize" boundary-links="true"
-                        boundary-link-numbers="true" force-ellipses="true" items-per-page="itemPage"
-                        first-text="First" last-text="Last" next-text="Next" previous-text="Prev"></ul>
+                        ng-change="jobsCtrl.getExecutionsNextPage()"
+                        total-items="jobsCtrl.executionTotalItems" ng-model="jobsCtrl.executionsCurrentPage"
+                        boundary-links="false"
+                        boundary-link-numbers="true" force-ellipses="true"
+                        items-per-page="jobsCtrl.executionsPageSize"
+                        first-text="First" last-text="Last" next-text="Next" previous-text="Prev">
+                    </ul>
                   </div>
                 </div>
                 <div id="errs" class="tab-pane fade">
                   <div uib-accordion close-others="true" infinite-scroll="jobsCtrl.loadMore()" infinite-scroll-distance='2'>
-                    <div uib-accordion-group class="panel-default" ng-repeat="item in jobsCtrl.logset" heading="{{item.time}}">
+                    <div uib-accordion-group class="panel-default"
+                         ng-repeat="item in jobsCtrl.logset" heading="{{item.time}}">
                       <uib-accordion-heading>
                         <div ng-click="jobsCtrl.getLog(item, 'err')">
                           <div ng-if="item.appId !== ''">
@@ -432,6 +437,14 @@
                         </div>
                       </div>
                     </div>
+                    <ul uib-pagination
+                        ng-change="jobsCtrl.getExecutionsNextPage()"
+                        total-items="jobsCtrl.executionTotalItems" ng-model="jobsCtrl.executionsCurrentPage"
+                        boundary-links="false"
+                        boundary-link-numbers="true" force-ellipses="true"
+                        items-per-page="jobsCtrl.executionsPageSize"
+                        first-text="First" last-text="Last" next-text="Next" previous-text="Prev">
+                    </ul>
                   </div>
                 </div>
               </div>

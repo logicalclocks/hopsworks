@@ -401,20 +401,18 @@ angular.module('hopsWorksApp')
               $location.path('project/' + self.projectId + '/jobMonitor-job/' + job.name);
 
             };
-
-            self.showLogs = function (jobName, offset) {
+            self.logset = [];
+            self.showLogs = function (jobName) {
                 self.fetchingLogs = 1;
-                if(offset === undefined || offset === null ){
-                    offset = 0;
-                }
-                JobService.getAllExecutions(self.projectId, jobName, "?offset="+offset + "&limit=2").then(
+                var offset = self.executionsPageSize * (self.executionsCurrentPage - 1);
+                JobService.getAllExecutions(self.projectId, jobName, "?offset="+offset+ "&limit="+self.executionsPageSize).then(
                     function (success) {
-                        self.logset = [];
+                        self.logset.length = 0;
                         angular.forEach(success.data.items, function (execution, key) {
                             var entry = {"jobName": jobName, "executionId": execution.id,  "appId":execution.appId, "time": execution.submissionTime};
                             self.logset.push(entry);
                         });
-                        self.executionTotalItems = self.logset.length;
+                        self.executionTotalItems = success.data.count;
                         self.fetchingLogs = 0;
                   }, function (error) {
                     self.fetchingLogs = 0;
@@ -429,7 +427,7 @@ angular.module('hopsWorksApp')
               self.getExecutionsNextPage = function () {
                   var offset = self.executionsPageSize * (self.executionsCurrentPage - 1);
                   if (self.executionTotalItems > offset) {
-                      self.showLogs(self.currentjob.name, offset);
+                      self.showLogs(self.currentjob.name);
                   }
               };
 
