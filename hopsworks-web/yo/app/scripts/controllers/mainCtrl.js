@@ -120,7 +120,6 @@ angular.module('hopsWorksApp')
               });
             };
             //checkDelaEnabled(); // check 
-            
             self.userNotification = '';
             var getUserNotification = function () {
               self.userNotification = '';
