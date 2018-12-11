@@ -304,28 +304,39 @@ angular.module('hopsWorksApp')
               // If not running, start a new instance
 
 //              http://localhost:8080/hopsworks/#!/project/1/settings
-             if (self.tourService.currentStep_TourTwo > -1) {
-                self.tourService.resetTours();
+              if (self.tourService.currentStep_TourTwo > -1) {
+                  self.tourService.resetTours();
               }
 
-//              if (self.currentProject.projectName.startsWith("demo_tensorflow")) {
-//                self.goToUrl('jupyter');
-//              } else {
               self.enabling = true;
-              PythonDepsService.enabled(self.projectId).then(function (success) {
-                self.goToUrl('jupyter');
-              }, function (error) {
-                if (self.currentProject.projectName.startsWith("demo_deep_learning")) {
-                  self.goToUrl('jupyter');
-                } else {
-                  ModalService.confirm('sm', 'Enable Anaconda First', 'You need to enable Anaconda before running Jupyter!')
-                          .then(function (success) {
-                            self.goToUrl('python');
-                          }, function (error) {
-                            self.goToUrl('jupyter');
-                          });
-                }
-              });
+              PythonDepsService.enabled(self.projectId).then(
+                  function (success) {
+                      // Check if jupyter is installed
+                      PythonDepsService.libInstalled(self.projectId, "hdfscontents").then(
+                          function(success) {
+                              self.goToUrl('jupyter');
+                          },
+                          function(error) {
+                              ModalService.confirm('sm', 'Install Jupyter first', 'Make sure Jupyter is installed in your project environment')
+                              .then(function (success) {
+                                  self.goToUrl('python');
+                              }, function (error) {
+                                  self.goToUrl('jupyter');
+                              });
+                          }
+                      );
+                  }, function (error) {
+                      if (self.currentProject.projectName.startsWith("demo_deep_learning")) {
+                          self.goToUrl('jupyter');
+                      } else {
+                          ModalService.confirm('sm', 'Enable Anaconda First', 'You need to enable Anaconda before running Jupyter!')
+                              .then(function (success) {
+                                  self.goToUrl('python');
+                              }, function (error) {
+                                  self.goToUrl('jupyter');
+                              });
+                      }
+                  });
             };
 
 

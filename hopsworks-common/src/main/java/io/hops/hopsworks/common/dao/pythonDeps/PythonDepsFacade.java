@@ -249,7 +249,7 @@ public class PythonDepsFacade {
 
   public Collection<PythonDep> createProjectInDb(Project project,
       String pythonVersion, MachineType machineType,
-      String environmentYml) throws ServiceException {
+      String environmentYml, Boolean installJupyter) throws ServiceException {
 
     if (environmentYml == null && pythonVersion.compareToIgnoreCase("2.7") != 0 && pythonVersion.
         compareToIgnoreCase("3.5") != 0 && pythonVersion.
@@ -259,7 +259,8 @@ public class PythonDepsFacade {
     }
 
     if (environmentYml != null) {
-      condaEnvironmentOp(CondaOp.YML, pythonVersion, project, pythonVersion, machineType, environmentYml);
+      condaEnvironmentOp(CondaOp.YML, pythonVersion, project, pythonVersion, machineType,
+          environmentYml, installJupyter);
       setCondaEnv(project, true);
     } else {
       validateCondaHosts(machineType);
@@ -299,7 +300,7 @@ public class PythonDepsFacade {
 
   public void copyOnWriteCondaEnv(Project project) throws ServiceException {
     condaEnvironmentOp(CondaOp.CREATE, project.getPythonVersion(), project, project.getPythonVersion(),
-        MachineType.ALL, null);
+        MachineType.ALL, null, false);
     setCondaEnv(project, true);
   }
 
@@ -552,7 +553,7 @@ public class PythonDepsFacade {
    * @param arg
    */
   private void condaEnvironmentOp(CondaOp op, String pythonVersion, Project proj,
-      String arg, MachineType machineType, String environmentYml) throws ServiceException {
+      String arg, MachineType machineType, String environmentYml, Boolean installJupyter) throws ServiceException {
 
     if (projectUtils.isReservedProjectName(proj.getName())) {
       throw new IllegalStateException("Tried to execute a conda env op on a reserved project name");
@@ -562,17 +563,17 @@ public class PythonDepsFacade {
       // For environment operations, we don't care about the Conda Channel, so we just pick 'defaults'
       CondaCommands cc = new CondaCommands(h, settings.getAnacondaUser(),
           op, CondaStatus.NEW, CondaInstallType.ENVIRONMENT, machineType, proj, pythonVersion, "",
-          "defaults", new Date(), arg, environmentYml);
+          "defaults", new Date(), arg, environmentYml, installJupyter);
       em.persist(cc);
     }
   }
 
   private void condaEnvironmentRemove(Project proj) throws ServiceException {
-    condaEnvironmentOp(CondaOp.REMOVE, "", proj, "", MachineType.ALL, null);
+    condaEnvironmentOp(CondaOp.REMOVE, "", proj, "", MachineType.ALL, null, false);
   }
 
   private void condaEnvironmentClone(Project srcProj, Project destProj) throws ServiceException {
-    condaEnvironmentOp(CondaOp.CLONE, "", srcProj, destProj.getName(), MachineType.ALL, null);
+    condaEnvironmentOp(CondaOp.CLONE, "", srcProj, destProj.getName(), MachineType.ALL, null, false);
   }
 
   public CondaCommands getOngoingEnvCreation(Project proj) {
@@ -730,7 +731,7 @@ public class PythonDepsFacade {
       for (Hosts h : hosts) {
         CondaCommands cc = new CondaCommands(h, settings.getAnacondaUser(),
             op, CondaStatus.NEW, installType, machineType, proj, lib,
-            version, channelUrl, new Date(), "", null);
+            version, channelUrl, new Date(), "", null, false);
         em.persist(cc);
       }
       //      kagentCalls(hosts, op, proj, dep);
@@ -848,7 +849,7 @@ public class PythonDepsFacade {
     List<Project> projects = projectFacade.findAll();
     if (projects != null && !projects.isEmpty()) {
       Project project = projects.get(0);
-      condaEnvironmentOp(CondaOp.CLEAN, "", project, "", MachineType.ALL, "");
+      condaEnvironmentOp(CondaOp.CLEAN, "", project, "", MachineType.ALL, "", false);
     }
   }
 
