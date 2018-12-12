@@ -936,9 +936,6 @@ public class ProjectController {
     cleanup(project, sessionId);
     
     certificateMaterializer.forceRemoveLocalMaterial(user.getUsername(), project.getName(), null, true);
-    if (settings.isPythonKernelEnabled()) {
-      jupyterProcessFacade.removePythonKernelsForProject(project.getName());
-    }
   }
 
   public String[] forceCleanup(String projectName, String userEmail, String sessionId) {
@@ -1779,9 +1776,6 @@ public class ProjectController {
             try {
               certsResultFuture = certificatesController.generateCertificates(project, newMember, false);
               certsResultFuture.get();
-              if (settings.isPythonKernelEnabled()) {
-                jupyterProcessFacade.createPythonKernelForProjectUser(project, newMember);
-              }
             } catch (Exception ex) {
               try {
                 if (certsResultFuture != null) {
@@ -2035,9 +2029,6 @@ public class ProjectController {
           YarnApplicationState.RUNNING, YarnApplicationState.SUBMITTED));
       //kill jupyter for this user
       jupyterProcessFacade.stopCleanly(hdfsUser);
-      if (settings.isPythonKernelEnabled()) {
-        jupyterProcessFacade.removePythonKernelForProjectUser(hdfsUser);
-      }
       livyController.deleteAllLivySessions(hdfsUser, ProjectServiceEnum.JUPYTER);
 
       //kill running TB if any

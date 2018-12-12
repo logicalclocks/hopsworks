@@ -49,9 +49,6 @@ import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.util.WebCommunication;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterProcessMgr;
-import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
-import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
-import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.util.ProjectUtils;
 import javax.annotation.Resource;
@@ -101,8 +98,6 @@ public class PythonDepsFacade {
   UserFacade userFacade;
   @EJB
   private WebCommunication web;
-  @EJB
-  private ProjectTeamFacade projectTeamFacade;
   @EJB
   private JupyterProcessMgr jupyterProcessMgr;
   @EJB
@@ -286,18 +281,6 @@ public class PythonDepsFacade {
     return hosts;
   }
   
-  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-  public void recreateAllPythonKernels(Project project) {
-    // Update all the python kernels for all users in the project
-    if (settings.isPythonKernelEnabled()) {
-      List<ProjectTeam> projectTeams = projectTeamFacade.findMembersByProject(project);
-      for (ProjectTeam projectTeam : projectTeams) {
-        Users newMember = userFacade.findByEmail(projectTeam.getProjectTeamPK().getTeamMember());
-        jupyterProcessMgr.createPythonKernelForProjectUser(project, newMember);
-      }
-    }
-  }
-
   public void copyOnWriteCondaEnv(Project project) throws ServiceException {
     condaEnvironmentOp(CondaOp.CREATE, project.getPythonVersion(), project, project.getPythonVersion(),
         MachineType.ALL, null, false);

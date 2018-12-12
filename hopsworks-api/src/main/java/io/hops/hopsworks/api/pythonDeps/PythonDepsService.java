@@ -372,7 +372,6 @@ public class PythonDepsService {
     String msg = "";
     if (!project.getCondaEnv()) {
       pythonDepsFacade.copyOnWriteCondaEnv(project);
-      pythonDepsFacade.recreateAllPythonKernels(project);
       msg = "First, we have to create a new conda environment on all hosts. This will take a few mins.";
     }
     return msg;
