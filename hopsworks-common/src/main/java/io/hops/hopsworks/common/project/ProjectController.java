@@ -639,7 +639,7 @@ public class ProjectController {
 
     for (Settings.BaseDataset ds : Settings.BaseDataset.values()) {
       datasetController.createDataset(user, project, ds.getName(), ds.
-          getDescription(), -1, false, true, dfso);
+          getDescription(), -1, false, true, true, dfso);
 
       StringBuilder dsStrBuilder = new StringBuilder();
       dsStrBuilder.append(File.separator).append(Settings.DIR_ROOT)
@@ -746,7 +746,7 @@ public class ProjectController {
       DistributedFileSystemOps udfso) throws DatasetException, HopsSecurityException, ProjectException {
     try {
       datasetController.createDataset(user, project, ds.getName(), ds.
-          getDescription(), -1, false, true, dfso);
+          getDescription(), -1, false, false, true, dfso);
       datasetController.generateReadme(udfso, ds.getName(),
           ds.getDescription(), project.getName());
 
@@ -2225,7 +2225,7 @@ public class ProjectController {
   
     Users user = userFacade.findByEmail(username);
     datasetController.createDataset(user, project, Settings.HOPS_TOUR_DATASET,
-      "files for guide projects", -1, false, true, dfso);
+      "files for guide projects", -1, false, true, true, dfso);
 
     if (null != projectType) {
       switch (projectType) {

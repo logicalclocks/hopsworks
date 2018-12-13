@@ -114,7 +114,6 @@ public class JupyterProcessMgr {
 
   @PreDestroy
   public void preDestroy() {
-
   }
 
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
