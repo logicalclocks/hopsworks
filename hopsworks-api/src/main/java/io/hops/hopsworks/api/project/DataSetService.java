@@ -217,7 +217,7 @@ public class DataSetService {
 
     // HDFS_USERNAME is the next param to the bash script
     Users user = jWTHelper.getUserPrincipal(sc);
-    String hdfsUser = hdfsUsersBean.getHdfsUserName(project, user);
+    String hdfsUser = hdfsUsersController.getHdfsUserName(project, user);
     
   
     ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
@@ -268,7 +268,7 @@ public class DataSetService {
 
     // HDFS_USERNAME is the next param to the bash script
     Users user = jWTHelper.getUserPrincipal(sc);
-    String hdfsUser = hdfsUsersBean.getHdfsUserName(project, user);
+    String hdfsUser = hdfsUsersController.getHdfsUserName(project, user);
     
     ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
         .addCommand(settings.getHopsworksDomainDir() + "/bin/zip-background.sh")
@@ -550,7 +550,7 @@ public class DataSetService {
     }
     Inode inode = inodes.findById(inodeId);
     Dataset ds = datasetFacade.findByProjectAndInode(this.project, inode);
-    hdfsUsersBean.shareDataset(this.project, ds);
+    hdfsUsersController.shareDataset(this.project, ds);
     ds.setStatus(Dataset.ACCEPTED);
     datasetFacade.merge(ds);
     json.setSuccessMessage("The Dataset is now accessable.");
@@ -587,7 +587,7 @@ public class DataSetService {
 
     Users user = jWTHelper.getUserPrincipal(sc);
     DistributedFileSystemOps dfso = dfs.getDfsOps();
-    String username = hdfsUsersBean.getHdfsUserName(project, user);
+    String username = hdfsUsersController.getHdfsUserName(project, user);
     DistributedFileSystemOps udfso = dfs.getDfsOps(username);
   
     try {
@@ -688,7 +688,7 @@ public class DataSetService {
     DistributedFileSystemOps dfso = null;
     try {
       Users user = jWTHelper.getUserPrincipal(sc);
-      String username = hdfsUsersBean.getHdfsUserName(project, user);
+      String username = hdfsUsersController.getHdfsUserName(project, user);
       //If a Data Scientist requested it, do it as project user to avoid deleting Data Owner files
       //Find project of dataset as it might be shared
       Project owning = datasetController.getOwningProject(ds);
@@ -869,7 +869,7 @@ public class DataSetService {
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response moveFile(@Context SecurityContext sc, MoveDTO dto) throws DatasetException, ProjectException {
     Users user = jWTHelper.getUserPrincipal(sc);
-    String username = hdfsUsersBean.getHdfsUserName(project, user);
+    String username = hdfsUsersController.getHdfsUserName(project, user);
 
     Inode sourceInode = inodes.findById(dto.getInodeId());
 
@@ -963,7 +963,7 @@ public class DataSetService {
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response copyFile(@Context SecurityContext sc, MoveDTO dto) throws DatasetException, ProjectException {
     Users user = jWTHelper.getUserPrincipal(sc);
-    String username = hdfsUsersBean.getHdfsUserName(project, user);
+    String username = hdfsUsersController.getHdfsUserName(project, user);
     Inode sourceInode = inodes.findById(dto.getInodeId());
     String sourcePathStr = inodes.getPath(sourceInode);
 
@@ -1027,7 +1027,7 @@ public class DataSetService {
   public Response checkFileExists(@PathParam("path") String path, @Context SecurityContext sc) throws
       DatasetException, ProjectException {
     Users user = jWTHelper.getUserPrincipal(sc);
-    String username = hdfsUsersBean.getHdfsUserName(project, user);
+    String username = hdfsUsersController.getHdfsUserName(project, user);
 
     DsPath dsPath = pathValidator.validatePath(this.project, path);
     dsPath.validatePathExists(inodes, false);
@@ -1093,7 +1093,7 @@ public class DataSetService {
   public Response filePreview(@PathParam("path") String path, @QueryParam("mode") String mode,
           @Context SecurityContext sc) throws DatasetException, ProjectException {
     Users user = jWTHelper.getUserPrincipal(sc);
-    String username = hdfsUsersBean.getHdfsUserName(project, user);
+    String username = hdfsUsersController.getHdfsUserName(project, user);
 
     DsPath dsPath = pathValidator.validatePath(this.project, path);
     dsPath.validatePathExists(inodes,false);
