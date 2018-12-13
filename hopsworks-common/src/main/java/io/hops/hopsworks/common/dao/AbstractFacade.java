@@ -39,8 +39,13 @@
 
 package io.hops.hopsworks.common.dao;
 
+import io.hops.hopsworks.common.exception.InvalidQueryException;
+
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -145,6 +150,16 @@ public abstract class AbstractFacade<T> {
     }
 
     return c + (more == null || more.isEmpty()? "": "AND " + more);
+  }
+  
+  public Date getDate(String field, String value) {
+    SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+    try {
+      return formatter.parse(value);
+    } catch (ParseException e) {
+      throw new InvalidQueryException(
+        "Filter value for " + field + " needs to set valid format. Expected:yyyy-mm-dd hh:mm:ss but found: " + value);
+    }
   }
   
   public interface SortBy {

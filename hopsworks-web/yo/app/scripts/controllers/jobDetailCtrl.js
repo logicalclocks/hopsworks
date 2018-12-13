@@ -49,7 +49,6 @@ angular.module('hopsWorksApp')
             this.job = job;
             this.jobtype; //Holds the type of job.
             this.execFile; //Holds the name of the main execution file
-            this.showExecutions = false;
             this.projectId = $routeParams.projectID;
 
             self.unscheduling=false;
@@ -86,20 +85,6 @@ angular.module('hopsWorksApp')
                 initScheduler();
             };
 
-            var getExecutions = function () {
-              JobService.getAllExecutions(projectId, job.name, "").then(
-                      function (success) {
-                        self.job.executions = success.data.items;
-                        self.showExecutions = success.data.items.length > 0;
-                      }, function (error) {
-                      if (typeof error.data.usrMsg !== 'undefined') {
-                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
-                      } else {
-                          growl.error("", {title: error.data.errorMsg, ttl: 8000});
-                      }
-              });
-            };
-            
            this.updateNumberOfScheduleUnits = function () {
               self.schedule.addition = self.schedule.number == 1 ? "" : "s";
             };
@@ -128,7 +113,6 @@ angular.module('hopsWorksApp')
                 JobService.updateSchedule(self.projectId, self.jobtype.toUpperCase(), self.job.runConfig.schedule,job.name).then(
                         function (success) {
                           getConfiguration();
-                          getExecutions();
                           self.close()
                           growl.success(success.data.successMessage, {title: 'Success', ttl: 3000});
                         }, function (error) {
@@ -148,7 +132,6 @@ angular.module('hopsWorksApp')
                         JobService.unscheduleJob(self.projectId, name).then(
                                 function (success) {
                                   self.unscheduling=false;
-                                  getExecutions();
                                   self.close()
                                   growl.success(success.data.successMessage, {title: 'Success', ttl: 5000});
                                 }, function (error) {
@@ -162,7 +145,6 @@ angular.module('hopsWorksApp')
             };
 
             getConfiguration();
-            getExecutions();            
 
             /**
              * Close the modal dialog.
@@ -171,17 +153,6 @@ angular.module('hopsWorksApp')
             self.close = function () {
               $uibModalInstance.dismiss('cancel');
             };
-
-            /**
-             * Close the poller if the controller is destroyed.
-             */
-            $scope.$on('$destroy', function () {
-              $interval.cancel(self.poller);
-            });
-
-            self.poller = $interval(function () {
-              getExecutions();
-            }, 3000);
 
             /**
              * Converts the colon-separated list of topics to a nicer human friendly format

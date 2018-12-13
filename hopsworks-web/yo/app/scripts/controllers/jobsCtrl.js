@@ -37,11 +37,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-/**
- * Created by stig on 2015-07-27.
- * Controller for the jobs page.
- */
-
 'use strict';
 
 angular.module('hopsWorksApp')
@@ -68,13 +63,18 @@ angular.module('hopsWorksApp')
             self.fetchingLogs = 0;
             self.loadingLog = 0;
             self.pageSize = 10;
-            self.executionsPageSize = 1;
+            self.executionsPageSize = 5;
             self.executionsCurrentPage = 1;
 
-            self.sortKey = 'creationTime';
+            self.jobsToDate = new Date();
+            self.jobsFromDate = new Date();
+            self.jobsFromDate.setMonth(self.jobsToDate.getMonth() - 1);
+
+            self.sortKey = 'date_created';
             self.orderBy = "desc";
             self.reverse = true;
-
+            self.getAllJobsStatusIsPending = false;
+            self.dimTable = false;
             self.sort = function (keyname) {
                 if(self.sortKey !== keyname){
                     self.reverse = true;
@@ -206,7 +206,10 @@ angular.module('hopsWorksApp')
 
             self.pageSize = 8;
             self.currentPage = 1;
-            self.getAllJobsStatus = function (limit, offset, sortBy, expansion) {
+
+              self.getAllJobsStatus = function (limit, offset, sortBy, expansion) {
+                self.getAllJobsStatusIsPending = true;
+                self.dimTable = true;
                 var jobsTemp = [];
                 if(limit === undefined || limit === null){
                     limit = self.pageSize;
@@ -222,9 +225,11 @@ angular.module('hopsWorksApp')
                     // sorted by their latest execution (=subresource) attributes
                     sortBy = "&sort_by=" + self.sortKey.toLowerCase() + ":" + self.orderBy.toLowerCase();
                 }
-                var filterBy = "";
+
+                var filterBy = "&filter_by=date_created_lt:" + self.jobsToDate.toISOString().replace('Z','')
+                    + "&filter_by=date_created_gt:" + self.jobsFromDate.toISOString().replace('Z','');
                 if(self.jobFilter !== undefined && self.jobFilter !== null && self.jobFilter !== "") {
-                    filterBy = "&filter_by=job_latest_execution:" + self.jobFilter;
+                    filterBy += "&filter_by=latest_execution:" + self.jobFilter;
                 }
 
                 JobService.getJobs(self.projectId, limit, offset, sortBy + filterBy + expansion).then(
@@ -272,7 +277,10 @@ angular.module('hopsWorksApp')
                                 self.buttonArray[job.name] = false;
                             }
                         });
+                        self.getAllJobsStatusIsPending = false;
+                        self.dimTable = false;
                     }, function (error) {
+                        self.getAllJobsStatusIsPending = false;
                         if (typeof error.data.usrMsg !== 'undefined') {
                             growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
                         } else {
@@ -501,6 +509,7 @@ angular.module('hopsWorksApp')
                       });
             };
 
+
             //Called when clicking on a job row
             self.toggle = function (job, index) {
               //reset all jobs showing flag
@@ -521,7 +530,7 @@ angular.module('hopsWorksApp')
 
             };
 
-            //untoggle is not used in the jobsCtrl
+
             ////////////////////////////////////////////////////////////////////
             self.untoggle = function (job, index) {
               StorageService.remove(self.projectId + "_jobui_" + job.name)
@@ -554,6 +563,9 @@ angular.module('hopsWorksApp')
 
             var startPolling = function () {
               self.poller = $interval(function () {
+                if (self.getAllJobsStatusIsPending){
+                    return;
+                }
                 self.getAllJobsStatus();
               }, 5000);
             };

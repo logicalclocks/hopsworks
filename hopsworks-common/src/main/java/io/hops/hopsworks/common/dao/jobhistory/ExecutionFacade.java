@@ -57,6 +57,7 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -194,6 +195,12 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
         Set<JobState> jobTypes = new HashSet<>(getJobStates(filterBy.getField(), filterBy.getParam()));
         q.setParameter(filterBy.getField(), jobTypes);
         break;
+      case SUBMISSIONTIME_GT:
+      case SUBMISSIONTIME_LT:
+      case SUBMISSIONTIME:
+        Date date = getDate(filterBy.getField(), filterBy.getParam());
+        q.setParameter(filterBy.getField(), date);
+        break;
       case FINALSTATUS:
       case FINALSTATUS_NEQ:
         Set<JobFinalStatus> jobFinalStatuses = new HashSet<>(getJobFinalStatus(filterBy.getField(),
@@ -277,7 +284,9 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
     STATE_NEQ ("STATE_NEQ", "e.state NOT IN :states_neq ", "states_neq", ""),
     FINALSTATUS ("FINALSTATUS", "e.finalStatus IN :finalstatuses ", "finalstatuses", ""),
     FINALSTATUS_NEQ ("FINALSTATUS_NEQ", "e.finalStatus NOT IN :finalstatuses ", "finalstatuses", ""),
-    SUBMISSIONTIME("SUBMISSIONTIME", "e.submissionTime = :submissionTime ", "submissionTime", "");
+    SUBMISSIONTIME("SUBMISSIONTIME", "e.submissionTime = :submissionTime ", "submissionTime", ""),
+    SUBMISSIONTIME_LT("SUBMISSIONTIME", "e.submissionTime < :submissionTime ", "submissionTime", ""),
+    SUBMISSIONTIME_GT("SUBMISSIONTIME", "e.submissionTime > :submissionTime ", "submissionTime", "");
     private final String value;
     private final String sql;
     private final String field;

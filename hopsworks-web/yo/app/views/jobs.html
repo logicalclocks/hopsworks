@@ -71,7 +71,15 @@
             <div style="height:100%;">
               <div class="row form-inline">
                 <div class="col-sm-6 col-md-6 col-lg-6 form-group">
-                  <label>Search: <input class="form-control" style="margin-left: 10px;" ng-model="jobsCtrl.jobFilter" ng-model-options="{debounce: 1000}">
+                  <label>Search
+                    <input class="form-control" style="margin-left: 10px;" ng-model="jobsCtrl.jobFilter"
+                           ng-model-options="{debounce: 800}" ng-change="jobsCtrl.untoggle(job, $index)">
+                    <i class="fa fa-info-circle"
+                       uib-tooltip="Case sensitive search name, type, owner. Select dates to search based on when jobs were created."></i>
+                    <md-datepicker ng-change="jobsCtrl.getAllJobsStatus()" ng-model="jobsCtrl.jobsFromDate"
+                                   md-placeholder="From"></md-datepicker>
+                    <md-datepicker ng-change="jobsCtrl.getAllJobsStatus()" ng-model="jobsCtrl.jobsToDate"
+                                   md-placeholder="To"></md-datepicker>
                   </label>
                 </div>
                 <div class="col-sm-6 col-md-6 col-lg-6 form-group">
@@ -85,7 +93,8 @@
                 </div>
               </div>
               <div style="height:85%; overflow: auto;" >
-                <table class="table table-hover">
+                <table class="table table-hover"
+                       ng-style="(jobsCtrl.dimTable) ? {'opacity': 0.5} : {}">
                   <thead>
                   <th style="width: 5%">
                   </th>
@@ -94,9 +103,9 @@
                     <span class="glyphicon sort-icon" ng-show="jobsCtrl.sortKey == 'name'"
                           ng-class="{'glyphicon-chevron-up':!jobsCtrl.reverse,'glyphicon-chevron-down':jobsCtrl.reverse}"></span>
                   </th>
-                  <th ng-click="jobsCtrl.sort('creationTime')" style="width: 10%">
+                  <th ng-click="jobsCtrl.sort('date_created')" style="width: 10%">
                     Created on
-                    <span class="glyphicon sort-icon" ng-show="jobsCtrl.sortKey == 'creationTime'" ng-class="{'glyphicon-chevron-up':!jobsCtrl.reverse,'glyphicon-chevron-down':jobsCtrl.reverse}"></span>
+                    <span class="glyphicon sort-icon" ng-show="jobsCtrl.sortKey == 'date_created'" ng-class="{'glyphicon-chevron-up':!jobsCtrl.reverse,'glyphicon-chevron-down':jobsCtrl.reverse}"></span>
                   </th>
                   <th ng-click="jobsCtrl.sort('jobType')" style="width: 5%">
                     Type
@@ -399,7 +408,7 @@
                     <ul uib-pagination
                         ng-change="jobsCtrl.getExecutionsNextPage()"
                         total-items="jobsCtrl.executionTotalItems" ng-model="jobsCtrl.executionsCurrentPage"
-                        boundary-links="false"
+                        boundary-links="true"
                         boundary-link-numbers="true" force-ellipses="true"
                         items-per-page="jobsCtrl.executionsPageSize"
                         first-text="First" last-text="Last" next-text="Next" previous-text="Prev">
@@ -440,7 +449,7 @@
                     <ul uib-pagination
                         ng-change="jobsCtrl.getExecutionsNextPage()"
                         total-items="jobsCtrl.executionTotalItems" ng-model="jobsCtrl.executionsCurrentPage"
-                        boundary-links="false"
+                        boundary-links="true"
                         boundary-link-numbers="true" force-ellipses="true"
                         items-per-page="jobsCtrl.executionsPageSize"
                         first-text="First" last-text="Last" next-text="Next" previous-text="Prev">

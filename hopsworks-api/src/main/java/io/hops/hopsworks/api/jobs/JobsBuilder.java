@@ -123,7 +123,7 @@ public class JobsBuilder {
           return order(a.getId(), b.getId(), sortBy.getParam());
         case NAME:
           return order(a.getName(), b.getName(), sortBy.getParam());
-        case CREATIONTIME:
+        case DATE_CREATED:
           return order(a.getCreationTime(), b.getCreationTime(), sortBy.getParam());
         case CREATOR:
           return order(a.getCreator().getFname() + " " + a.getCreator().getLname(),

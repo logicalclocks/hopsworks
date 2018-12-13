@@ -24,10 +24,13 @@ public class FilterBy implements AbstractFacade.FilterBy {
   private final String param;
   
   public FilterBy(String param) {
-    String[] filterByParams = param.split(":");
-    this.filter = JobFacade.Filters.valueOf(filterByParams[0].toUpperCase());
-    String filterStr = filterByParams.length > 1 ? filterByParams[1].toUpperCase() : this.filter.getDefaultParam();
-    this.param = filterStr;
+    if (param.contains(":")) {
+      this.filter = JobFacade.Filters.valueOf(param.substring(0, param.indexOf(':')).toUpperCase());
+      this.param = param.substring(param.indexOf(':') + 1);
+    } else {
+      this.filter = JobFacade.Filters.valueOf(param);
+      this.param = this.filter.getDefaultParam();
+    }
   }
   
   @Override

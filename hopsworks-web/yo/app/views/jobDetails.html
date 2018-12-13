@@ -358,59 +358,6 @@
         </div>
        </div>
     </div>
-    <div uib-accordion-group  class="panel-default" heading="Execution history">
-      <span ng-show="!jobDetailCtrl.showExecutions">
-        There are no registered executions for this job.
-      </span>
-      <table ng-show="jobDetailCtrl.showExecutions" class="table chrome-table">
-        <thead>
-          <tr>
-            <th>
-              Submission time
-            </th>
-            <th>
-              Current state
-            </th>
-            <th>
-              Execution duration (ms)
-            </th>
-            <th>
-              Stdout
-            </th>
-            <th>
-              Stderr
-            </th>
-            <th>
-              Output files
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr ng-repeat="exec in jobDetailCtrl.job.executions">
-            <td>
-              {{exec.submissionTime| date:'medium'}}
-            </td>
-            <td>
-              {{exec.state}}
-            </td>
-            <td>
-              {{exec.executionDuration}}
-            </td>
-            <td>
-              {{exec.stdoutPath}}
-            </td>
-            <td>
-              {{exec.stderrPath}}
-            </td>
-            <td>
-              <span ng-repeat="output in exec.jobOutputFileCollection">
-                {{output.jobOutputFilePK.name}}
-              </span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
   </div>
 
 
