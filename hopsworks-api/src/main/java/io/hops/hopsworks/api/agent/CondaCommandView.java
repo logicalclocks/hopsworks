@@ -40,6 +40,7 @@ public class CondaCommandView {
   private PythonDepsFacade.CondaInstallType installType;
   private String lib;
   private String environmentYml;
+  private Boolean installJupyter;
   
   public CondaCommandView() {
   }
@@ -56,6 +57,7 @@ public class CondaCommandView {
     this.installType = builder.installType;
     this.lib = builder.lib;
     this.environmentYml = builder.environmentYml;
+    this.installJupyter = builder.installJupyter;
   }
   
   @ApiModelProperty(value = "Operation to be performed", required = true)
@@ -156,7 +158,16 @@ public class CondaCommandView {
   public void setEnvironmentYml(String environmentYml) {
     this.environmentYml = environmentYml;
   }
-  
+
+  @ApiModelProperty(value = "Whether or not to install Jupyter during the environment creation from a YML file")
+  public Boolean getInstallJupyter() {
+    return installJupyter;
+  }
+
+  public void setInstallJupyter(Boolean installJupyter) {
+    this.installJupyter = installJupyter;
+  }
+
   public CondaCommands toCondaCommands() {
     final CondaCommands cc = new CondaCommands();
     cc.setOp(op);
@@ -170,6 +181,7 @@ public class CondaCommandView {
     cc.setInstallType(installType);
     cc.setLib(lib);
     cc.setEnvironmentYml(environmentYml);
+    cc.setInstallJupyter(installJupyter);
     return cc;
   }
   
@@ -185,6 +197,7 @@ public class CondaCommandView {
     private PythonDepsFacade.CondaInstallType installType;
     private String lib;
     private String environmentYml;
+    private Boolean installJupyter;
     
     public Builder() {}
     
@@ -242,7 +255,12 @@ public class CondaCommandView {
       this.environmentYml = yml;
       return this;
     }
-    
+
+    public Builder setInstallJupyter(Boolean installJupyter) {
+      this.installJupyter = installJupyter;
+      return this;
+    }
+
     public CondaCommandView build() {
       return new CondaCommandView(this);
     }
@@ -259,6 +277,7 @@ public class CondaCommandView {
       this.installType = null;
       this.lib = null;
       this.environmentYml = null;
+      this.installJupyter = null;
     
       return this;
     }
