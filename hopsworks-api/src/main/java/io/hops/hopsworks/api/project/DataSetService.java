@@ -593,7 +593,7 @@ public class DataSetService {
     try {
       datasetController.createDataset(user, project, dataSet.getName(),
         dataSet.getDescription(), dataSet.getTemplate(), dataSet.isSearchable(),
-        false, dfso);
+        false, false, dfso);
       //Generate README.md for the dataset if the user requested it
       if (dataSet.isGenerateReadme()) {
         //Persist README.md to hdfs

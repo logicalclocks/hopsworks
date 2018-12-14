@@ -47,7 +47,7 @@ module ProjectHelper
 
   def create_project
     with_valid_session
-    new_project = {projectName: "project_#{short_random_id}", description:"", status: 0, services: ["JOBS","HIVE","KAFKA","SERVING"],
+    new_project = {projectName: "project_#{short_random_id}", description:"", status: 0, services: ["JOBS","JUPYTER","HIVE","KAFKA","SERVING"],
                    projectTeam:[], retentionPeriod: ""}
     post "#{ENV['HOPSWORKS_API']}/project", new_project
     expect_json(successMessage: regex("Project created successfully.*"))
@@ -57,7 +57,7 @@ module ProjectHelper
   
   def create_project_by_name(projectname)
     with_valid_session
-    new_project = {projectName: projectname, description:"", status: 0, services: ["JOBS","HIVE", "KAFKA","SERVING"],
+    new_project = {projectName: projectname, description:"", status: 0, services: ["JOBS","JUPYTER", "HIVE", "KAFKA","SERVING"],
                    projectTeam:[], retentionPeriod: ""}
     post "#{ENV['HOPSWORKS_API']}/project", new_project
     expect_json(successMessage: regex("Project created successfully.*"))

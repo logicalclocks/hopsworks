@@ -47,16 +47,19 @@ public class EnvironmentYmlJson {
   private String allYmlPath;
   private String cpuYmlPath;
   private String gpuYmlPath;
-  private String pythonKernelEnable;
+  private Boolean pythonKernelEnable;
+  private Boolean installJupyter;
 
   public EnvironmentYmlJson() {
   }
 
-  public EnvironmentYmlJson(String allYmlPath, String cpuYmlPath, String gpuYmlPath, String pythonKernelEnable) {
+  public EnvironmentYmlJson(String allYmlPath, String cpuYmlPath, String gpuYmlPath,
+                            Boolean pythonKernelEnable, Boolean installJupyter) {
     this.allYmlPath = allYmlPath;
     this.cpuYmlPath = cpuYmlPath;
     this.gpuYmlPath = gpuYmlPath;
     this.pythonKernelEnable = pythonKernelEnable;
+    this.installJupyter = installJupyter;
   }
 
   public String getCpuYmlPath() {
@@ -75,11 +78,11 @@ public class EnvironmentYmlJson {
     this.gpuYmlPath = gpuYmlPath;
   }
 
-  public String getPythonKernelEnable() {
+  public Boolean getPythonKernelEnable() {
     return pythonKernelEnable;
   }
 
-  public void setPythonKernelEnable(String pythonKernelEnable) {
+  public void setPythonKernelEnable(Boolean pythonKernelEnable) {
     this.pythonKernelEnable = pythonKernelEnable;
   }
 
@@ -89,5 +92,13 @@ public class EnvironmentYmlJson {
 
   public void setAllYmlPath(String allYmlPath) {
     this.allYmlPath = allYmlPath;
+  }
+
+  public Boolean getInstallJupyter() {
+    return installJupyter;
+  }
+
+  public void setInstallJupyter(Boolean installJupyter) {
+    this.installJupyter = installJupyter;
   }
 }

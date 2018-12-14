@@ -184,13 +184,16 @@ public class CondaCommands implements Serializable {
   @Column(name = "environment_yml")
   private String environmentYml;
 
+  @Column(name= "install_jupyter")
+  private Boolean installJupyter = false;
+
   public CondaCommands() {
   }
 
   public CondaCommands(Hosts h, String user, PythonDepsFacade.CondaOp op,
           PythonDepsFacade.CondaStatus status, PythonDepsFacade.CondaInstallType installType,
           PythonDepsFacade.MachineType machineType, Project project, String lib, String version, String channelUrl,
-                       Date created, String arg,  String environmentYml) {
+                       Date created, String arg,  String environmentYml, Boolean installJupyter) {
     this.hostId = h;
     if (op  == null || user == null || project == null) { 
       throw new NullPointerException("Op/user/project cannot be null");
@@ -208,6 +211,7 @@ public class CondaCommands implements Serializable {
     this.version = version;
     this.arg = arg;
     this.environmentYml = environmentYml;
+    this.installJupyter = installJupyter;
   }
 
   public Integer getId() {
@@ -329,6 +333,14 @@ public class CondaCommands implements Serializable {
 
   public void setEnvironmentYml(String environmentYml) {
     this.environmentYml = environmentYml;
+  }
+
+  public Boolean getInstallJupyter() {
+    return installJupyter;
+  }
+
+  public void setInstallJupyter(Boolean installJupyter) {
+    this.installJupyter = installJupyter;
   }
 
   @Override

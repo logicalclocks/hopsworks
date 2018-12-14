@@ -28,6 +28,7 @@ public class JupyterPaths {
   private String logDirPath;
   private String runDirPath;
   private String certificatesDir;
+  private String kernelsDir;
 
   public JupyterPaths(String jupyterDir, String projectName, String hdfsUser, String secretConfig) {
     projectUserPath = jupyterDir + File.separator + Settings.DIR_ROOT +
@@ -36,6 +37,7 @@ public class JupyterPaths {
     confDirPath = notebookPath + File.separator + "conf";
     logDirPath = notebookPath + File.separator + "logs";
     runDirPath = notebookPath + File.separator + "run";
+    kernelsDir = notebookPath + File.separator + "kernels";
     certificatesDir = notebookPath + File.separator + "certificates";
   }
 
@@ -61,5 +63,9 @@ public class JupyterPaths {
 
   public String getCertificatesDir() {
     return certificatesDir;
+  }
+
+  public String getKernelsDir() {
+    return kernelsDir;
   }
 }
