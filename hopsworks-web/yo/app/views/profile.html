@@ -76,7 +76,16 @@
             </div>
           </div>
         </div>
-        <div class="form-group has-feedback">
+        <div class="form-group has-feedback row">
+          <div class="col-xs-6 col-sm-6 col-md-6">
+            <div class="form-group has-feedback">
+              <label class="text-muted">Username</label>
+              <input name="username" placeholder="Username" autocomplete="off"
+                     ng-model="profileCtrl.user.username" required class="form-control"
+                     type="text" ng-disabled="true">
+            </div>
+          </div>
+          <div class="col-xs-6 col-sm-6 col-md-6">
           <label class="text-muted">Phone Number</label>
           <input name="phone_number" placeholder="Phone" autocomplete="on"
                  ng-model="profileCtrl.user.phoneNumber"
@@ -85,6 +94,7 @@
                  type="text">
           <span ng-show="profileForm.phone_number.$dirty && profileForm.phone_number.$error.pattern"
                 class="text-danger ng-hide">Phone number should be in (+00-000-000000) format.</span>
+          </div>
         </div>
 
         <div class="row form-actions">

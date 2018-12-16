@@ -30,6 +30,7 @@ public class UserDTO extends RestDTO<UserDTO> {
   private String firstname;
   private String lastname;
   private String email;
+  private String username;
   
   public UserDTO() {
   }
@@ -38,6 +39,7 @@ public class UserDTO extends RestDTO<UserDTO> {
     this.firstname = user.getFname();
     this.lastname = user.getLname();
     this.email = user.getEmail();
+    this.username = user.getUsername();
   }
 
   public String getFirstname() {
@@ -64,4 +66,11 @@ public class UserDTO extends RestDTO<UserDTO> {
     this.email = email;
   }
   
+  public String getUsername() {
+    return username;
+  }
+  
+  public void setUsername(String username) {
+    this.username = username;
+  }
 }

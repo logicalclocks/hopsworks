@@ -90,6 +90,7 @@ public class UsersBuilder {
       dto.setFirstname(user.getFname());
       dto.setLastname(user.getLname());
       dto.setEmail(user.getEmail());
+      dto.setUsername(user.getUsername());
     }
     return dto;
   }
@@ -102,6 +103,7 @@ public class UsersBuilder {
       dto.setFirstname(user.getFname());
       dto.setLastname(user.getLname());
       dto.setEmail(user.getEmail());
+      dto.setUsername(user.getUsername());
       dto.setPhoneNumber(user.getMobile());
       dto.setMaxNumProjects(user.getMaxNumProjects());
       dto.setNumCreatedProjects(user.getNumCreatedProjects());

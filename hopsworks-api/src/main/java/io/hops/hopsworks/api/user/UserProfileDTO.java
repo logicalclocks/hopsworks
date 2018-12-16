@@ -28,6 +28,7 @@ public class UserProfileDTO extends RestDTO<UserDTO> {
   private String firstname;
   private String lastname;
   private String email;
+  private String username;
   private String phoneNumber;
   private String userAccountType;
   private Boolean twoFactor;
@@ -40,12 +41,14 @@ public class UserProfileDTO extends RestDTO<UserDTO> {
   public UserProfileDTO() {
   }
 
-  public UserProfileDTO(String firstname, String lastname, String email, String phoneNumber, String userAccountType,
+  public UserProfileDTO(String firstname, String lastname, String email, String username, String phoneNumber,
+    String userAccountType,
       Boolean twoFactor, Integer toursState, Integer status, Integer maxNumProjects, Integer numCreatedProjects,
       Integer numActiveProjects) {
     this.firstname = firstname;
     this.lastname = lastname;
     this.email = email;
+    this.username = username;
     this.phoneNumber = phoneNumber;
     this.userAccountType = userAccountType;
     this.twoFactor = twoFactor;
@@ -143,5 +146,12 @@ public class UserProfileDTO extends RestDTO<UserDTO> {
   public void setNumActiveProjects(Integer numActiveProjects) {
     this.numActiveProjects = numActiveProjects;
   }
-
+  
+  public String getUsername() {
+    return username;
+  }
+  
+  public void setUsername(String username) {
+    this.username = username;
+  }
 }

@@ -150,7 +150,7 @@ public class UserService {
   @GET
   @Path("profile")
   @Produces(MediaType.APPLICATION_JSON)
-  @ApiOperation(value = "Gets logedin User\'s info.", response = UserProfileDTO.class)
+  @ApiOperation(value = "Gets logged in User\'s info.", response = UserProfileDTO.class)
   public Response getUserProfile(@Context UriInfo uriInfo, @Context SecurityContext sc) throws UserException {
     Users user = jWTHelper.getUserPrincipal(sc);
     if (user == null) {
@@ -164,7 +164,7 @@ public class UserService {
   @POST
   @Path("profile")
   @Produces(MediaType.APPLICATION_JSON)
-  @ApiOperation(value = "Updates logedin User\'s info.", response = UserProfileDTO.class)
+  @ApiOperation(value = "Updates logged in User\'s info.", response = UserProfileDTO.class)
   public Response updateProfile(@FormParam("firstname") String firstName,
       @FormParam("lastname") String lastName,
       @FormParam("phoneNumber") String phoneNumber,

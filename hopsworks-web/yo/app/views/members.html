@@ -79,9 +79,9 @@
             <div>
               <span ng-bind-html="user.firstname | highlight: $select.search"></span>
               <span ng-bind-html="user.lastname | highlight: $select.search"></span>
+              <span ng-bind-html="user.username | highlight: $select.search"></span>
             </div>
-            <small><span ng-bind-html="user.email | highlight: $select.search"></span></small>
-          </ui-select-choices> 
+          </ui-select-choices>
           <ui-select-no-choice>
             <div style="padding: 3px 10px;">
               <span ng-if="memberCtrl.loadingUsers" class="loading-dots-sm">Searching</span>
@@ -103,7 +103,7 @@
                     <div class="media-body" style="padding-top:8px;">
                       <h4 class="media-heading" style="margin-bottom:0px;">
                         <span style="font: icon">
-                         {{newMember.firstname}} {{newMember.lastname}} &lt;{{newMember.email}}&gt;
+                         {{newMember.firstname}} {{newMember.lastname}} ({{newMember.username}})
                         </span>
                       </h4>
                     </div>
