@@ -1595,7 +1595,7 @@ public class Settings implements Serializable {
   /**
    * Constructs the path to the project environment in Anaconda
    *
-   * @param projectName name
+   * @param project project
    * @return conda dir
    */
   public String getAnacondaProjectDir(Project project) {
