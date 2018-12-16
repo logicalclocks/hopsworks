@@ -207,9 +207,13 @@ angular.module('hopsWorksApp')
             self.pageSize = 8;
             self.currentPage = 1;
 
-              self.getAllJobsStatus = function (limit, offset, sortBy, expansion) {
+              self.getAllJobsStatus = function (toDimTable, limit, offset, sortBy, expansion) {
                 self.getAllJobsStatusIsPending = true;
-                self.dimTable = true;
+                if(toDimTable !== undefined && toDimTable !== null && toDimTable) {
+                    self.dimTable = true;
+                } else {
+                    self.dimTable = false;
+                }
                 var jobsTemp = [];
                 if(limit === undefined || limit === null){
                     limit = self.pageSize;
@@ -278,8 +282,13 @@ angular.module('hopsWorksApp')
                             }
                         });
                         self.getAllJobsStatusIsPending = false;
-                        self.dimTable = false;
+                        if(toDimTable !== undefined && toDimTable !== null && toDimTable){
+                            self.dimTable = false;
+                        }
                     }, function (error) {
+                        if(toDimTable !== undefined && toDimTable !== null && toDimTable){
+                            self.dimTable = false;
+                        }
                         self.getAllJobsStatusIsPending = false;
                         if (typeof error.data.usrMsg !== 'undefined') {
                             growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
@@ -292,7 +301,7 @@ angular.module('hopsWorksApp')
             self.getJobsNextPage = function () {
                 var offset = self.pageSize * (self.currentPage - 1);
                 if (self.totalItems > offset) {
-                    self.getAllJobsStatus(null, offset);
+                    self.getAllJobsStatus(true, null, offset);
                 }
             };
 
@@ -533,13 +542,16 @@ angular.module('hopsWorksApp')
 
             ////////////////////////////////////////////////////////////////////
             self.untoggle = function (job, index) {
+              if(job === undefined || job === null){
+                  job = self.currentjob;
+              }
               StorageService.remove(self.projectId + "_jobui_" + job.name)
               //reset all jobs showing flag
               angular.forEach(self.jobs, function (job, key) {
                   job.showing = false;
               });
 
-              if (self.currentToggledIndex !== index) {
+              if (index === undefined || index === null || self.currentToggledIndex !== index) {
                 self.hasSelectJob = false;
                 self.selectedIndex = -1;
                 self.currentToggledIndex = -1;
@@ -566,7 +578,7 @@ angular.module('hopsWorksApp')
                 if (self.getAllJobsStatusIsPending){
                     return;
                 }
-                self.getAllJobsStatus();
+                self.getAllJobsStatus(false);
               }, 5000);
             };
             startPolling();

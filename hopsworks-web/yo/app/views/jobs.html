@@ -75,7 +75,7 @@
                     <input class="form-control" style="margin-left: 10px;" ng-model="jobsCtrl.jobFilter"
                            ng-model-options="{debounce: 800}" ng-change="jobsCtrl.untoggle(job, $index)">
                     <i class="fa fa-info-circle"
-                       uib-tooltip="Case sensitive search name, type, owner. Select dates to search based on when jobs were created."></i>
+                       uib-tooltip="Case sensitive search name, type, owner. Select date range to search based on jobs creation date."></i>
                     <md-datepicker ng-change="jobsCtrl.getAllJobsStatus()" ng-model="jobsCtrl.jobsFromDate"
                                    md-placeholder="From"></md-datepicker>
                     <md-datepicker ng-change="jobsCtrl.getAllJobsStatus()" ng-model="jobsCtrl.jobsToDate"
@@ -94,7 +94,7 @@
               </div>
               <div style="height:85%; overflow: auto;" >
                 <table class="table table-hover"
-                       ng-style="(jobsCtrl.dimTable) ? {'opacity': 0.5} : {}">
+                       ng-style="(jobsCtrl.dimTable) ? {'opacity': 0.3} : {}">
                   <thead>
                   <th style="width: 5%">
                   </th>
