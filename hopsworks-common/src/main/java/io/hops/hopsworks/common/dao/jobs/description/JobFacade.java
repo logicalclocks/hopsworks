@@ -263,6 +263,8 @@ public class JobFacade extends AbstractFacade<Jobs> {
         q.setParameter(filterBy.getField(), date);
         break;
       case NAME:
+        q.setParameter(filterBy.getField(), filterBy.getParam());
+        break;
       case CREATOR:
       case LATEST_EXECUTION:
         q.setParameter(filterBy.getField(), filterBy.getParam());

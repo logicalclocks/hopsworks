@@ -29,7 +29,7 @@ describe "On #{ENV['OS']}" do
         expect_status(401)
       end
     end
-    context 'with authentication' do
+    context 'with authentication create, delete, get' do
       before :all do
         with_valid_tour_project("spark")
       end
@@ -72,14 +72,6 @@ describe "On #{ENV['OS']}" do
         expect(json_body[:items].count).to eq 3
         expect(json_body[:count]).to eq 3
       end
-      it "should get three jobs with type spark" do
-        create_sparktour_job(@project, "demo_job_1")
-        create_sparktour_job(@project, "demo_job_2")
-        create_sparktour_job(@project, "demo_job_3")
-        get_jobs(@project[:id], "?filter_by=jobtype:spark")
-        expect_status(200)
-        expect(json_body[:items].count).to eq 3
-      end
       it "should inspect spark app jar and get configuration" do
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jobs/spark/inspection?path=/Projects/#{@project[:projectname]}/TestJob/spark-examples.jar"
         expect_status(200)
@@ -104,15 +96,17 @@ describe "On #{ENV['OS']}" do
     end
   end
   describe 'job sort, filter, offset and limit' do
+    $job_spark_1 = "demo_job_1"
+    $job_spark_2 = "demo_job_2"
     context 'with authentication' do
       before :all do
         with_valid_tour_project("spark")
-        create_sparktour_job(@project, "demo_job_3")
-        create_sparktour_job(@project, "demo_job_1")
-        create_sparkpy_job(@project, "demo_pyjob_1")
-        create_sparktour_job(@project, "demo_job_5")
+        create_sparktour_job(@project, $job_spark_1)
         create_sparktour_job(@project, "demo_job_2")
+        create_sparkpy_job(@project, "demo_pyjob_1")
+        create_sparktour_job(@project, "demo_job_3")
         create_sparktour_job(@project, "demo_job_4")
+        create_sparktour_job(@project, "demo_job_5")
         create_sparkpy_job(@project, "demo_pyjob_2")
       end
       after :all do
@@ -122,64 +116,64 @@ describe "On #{ENV['OS']}" do
         it "should get all jobs sorted by name" do
           #sort in memory and compare with query
           get_jobs(@project[:id], nil)
-          jobs = json_body[:items].map{|job| job[:name]}
+          jobs = json_body[:items].map {|job| job[:name]}
           sorted = jobs.sort_by(&:downcase)
           get_jobs(@project[:id], "?sort_by=name:asc")
-          sorted_res = json_body[:items].map { |job| job[:name] }
+          sorted_res = json_body[:items].map {|job| job[:name]}
           expect(sorted_res).to eq(sorted)
         end
         it "should get all jobs sorted by name descending" do
           #sort in memory and compare with query
           get_jobs(@project[:id], nil)
-          jobs = json_body[:items].map{|job| job[:name]}
+          jobs = json_body[:items].map {|job| job[:name]}
           sorted = jobs.sort_by(&:downcase).reverse
           get_jobs(@project[:id], "?sort_by=name:desc")
-          sorted_res = json_body[:items].map { |job| job[:name] }
+          sorted_res = json_body[:items].map {|job| job[:name]}
           expect(sorted_res).to eq(sorted)
         end
         it "should get all jobs sorted by id" do
           #sort in memory and compare with query
           get_jobs(@project[:id], nil)
-          jobs = json_body[:items].map{|job| job[:id]}
+          jobs = json_body[:items].map {|job| job[:id]}
           sorted = jobs.sort
           get_jobs(@project[:id], "?sort_by=id:asc")
-          sorted_res = json_body[:items].map { |job| job[:id] }
+          sorted_res = json_body[:items].map {|job| job[:id]}
           expect(sorted_res).to eq(sorted)
         end
         it "should get all jobs sorted by id descending" do
           #sort in memory and compare with query
           get_jobs(@project[:id], nil)
-          jobs = json_body[:items].map{|job| job[:id]}
+          jobs = json_body[:items].map {|job| job[:id]}
           sorted = jobs.sort.reverse
           get_jobs(@project[:id], "?sort_by=id:desc")
-          sorted_res = json_body[:items].map { |job| job[:id] }
+          sorted_res = json_body[:items].map {|job| job[:id]}
           expect(sorted_res).to eq(sorted)
         end
         it "should get all jobs sorted by date created" do
           #sort in memory and compare with query
           get_jobs(@project[:id], nil)
-          jobs = json_body[:items].map{|job| job[:creationTime]}
+          jobs = json_body[:items].map {|job| job[:creationTime]}
           sorted = jobs.sort
           get_jobs(@project[:id], "?sort_by=date_created:asc")
-          sorted_res = json_body[:items].map { |job| job[:creationTime] }
+          sorted_res = json_body[:items].map {|job| job[:creationTime]}
           expect(sorted_res).to eq(sorted)
         end
         it "should get all jobs sorted by date created descending" do
           #sort in memory and compare with query
           get_jobs(@project[:id], nil)
-          jobs = json_body[:items].map{|job| job[:creationTime]}
+          jobs = json_body[:items].map {|job| job[:creationTime]}
           sorted = jobs.sort.reverse
           get_jobs(@project[:id], "?sort_by=date_created:desc")
-          sorted_res = json_body[:items].map { |job| job[:creationTime] }
+          sorted_res = json_body[:items].map {|job| job[:creationTime]}
           expect(sorted_res).to eq(sorted)
         end
         it "should get all jobs sorted by type ascending and name ascending" do
           #sort in memory and compare with query
           get_jobs(@project[:id], nil)
-          jobs = json_body[:items].map{|job| "#{job[:jobType]} #{job[:name]}"}
+          jobs = json_body[:items].map {|job| "#{job[:jobType]} #{job[:name]}"}
           sorted = jobs.sort
           get_jobs(@project[:id], "?sort_by=jobtype:asc,name:asc")
-          sorted_res = json_body[:items].map { |job| "#{job[:jobType]} #{job[:name]}" }
+          sorted_res = json_body[:items].map {|job| "#{job[:jobType]} #{job[:name]}"}
           expect(sorted_res).to eq(sorted)
         end
         it "should get all jobs sorted by type ascending and name descending" do
@@ -190,9 +184,9 @@ describe "On #{ENV['OS']}" do
             res = -(a[:name] <=> b[:name]) if res == 0
             res
           end
-          sorted = s.map { |o| "#{o[:jobType]} #{o[:name]}" }
+          sorted = s.map {|o| "#{o[:jobType]} #{o[:name]}"}
           get_jobs(@project[:id], "?sort_by=jobtype:asc,name:desc")
-          sorted_res = json_body[:items].map { |job| "#{job[:jobType]} #{job[:name]}" }
+          sorted_res = json_body[:items].map {|job| "#{job[:jobType]} #{job[:name]}"}
           expect(sorted_res).to eq(sorted)
         end
         it "should get all jobs sorted by type descending and name ascending" do
@@ -203,15 +197,92 @@ describe "On #{ENV['OS']}" do
             res = (a[:name] <=> b[:name]) if res == 0
             res
           end
-          sorted = s.map { |o| "#{o[:jobType]} #{o[:name]}" }
+          sorted = s.map {|o| "#{o[:jobType]} #{o[:name]}"}
           get_jobs(@project[:id], "?sort_by=jobtype:desc,name:asc")
-          sorted_res = json_body[:items].map { |job| "#{job[:jobType]} #{job[:name]}" }
+          sorted_res = json_body[:items].map {|job| "#{job[:jobType]} #{job[:name]}"}
           expect(sorted_res).to eq(sorted)
         end
         it "should fail to sort by unsupported field" do
           get_jobs(@project[:id], "?sort_by=unsupported:desc,name:asc")
           expect_status(404)
           expect_json(errorCode: 120004)
+        end
+      end
+      describe "Jobs filter" do
+        it "should get three jobs with type spark" do
+          get_jobs(@project[:id], "?filter_by=jobtype:spark")
+          expect_status(200)
+          expect(json_body[:items].count).to eq 5
+        end
+        it "should get three jobs with type pyspark" do
+          get_jobs(@project[:id], "?filter_by=jobtype:pyspark")
+          expect_status(200)
+          expect(json_body[:items].count).to eq 2
+        end
+        it "should fail to find job with type flink" do
+          get_jobs(@project[:id], "?filter_by=jobtype:flink")
+          expect_status(200)
+          expect(json_body[:items]).to be nil
+        end
+        it "should find jobs with name like 'demo'" do
+          get_jobs(@project[:id], "?filter_by=name:demo")
+          expect_status(200)
+          expect(json_body[:items].count).to eq 7
+        end
+        it "should find jobs with name like 'demo_job'" do
+          get_jobs(@project[:id], "?filter_by=name:demo")
+          expect_status(200)
+          expect(json_body[:items].count).to eq 7
+        end
+        it "should find job with name like" do
+          get_jobs(@project[:id], "?filter_by=name:" + $job_spark_1)
+          expect_status(200)
+          expect(json_body[:items].count).to eq 1
+        end
+
+        describe "Jobs filter latest_execution" do
+          it "should execute two jobs and search based on finalStatus" do
+            start_execution(@project[:id], $job_spark_1)
+            execution_id = json_body[:id]
+            wait_for_execution do
+              get_execution(@project[:id], $job_spark_1, execution_id)
+              json_body[:state].eql? "FINISHED"
+            end
+            start_execution(@project[:id], $job_spark_2)
+            execution_id = json_body[:id]
+            wait_for_execution do
+              get_execution(@project[:id], $job_spark_2, execution_id)
+              json_body[:state].eql? "FINISHED"
+              end
+            get_jobs(@project[:id], "?filter_by=latest_execution:finished")
+            expect_status(200)
+            expect(json_body[:items].count).to eq 2
+          end
+          it "should execute two jobs and search based on finalStatus with query startingWith term" do
+            get_jobs(@project[:id], "?filter_by=latest_execution:finis")
+            expect_status(200)
+            expect(json_body[:items].count).to eq 2
+          end
+          it "should execute two jobs and search based on state" do
+            get_jobs(@project[:id], "?filter_by=latest_execution:succeeded")
+            expect_status(200)
+            expect(json_body[:items].count).to eq 2
+          end
+          it "should execute two jobs and search based on state with query startingWith term" do
+            get_jobs(@project[:id], "?filter_by=latest_execution:succee")
+            expect_status(200)
+            expect(json_body[:items].count).to eq 2
+          end
+          it "should execute two jobs and search based on name" do
+            get_jobs(@project[:id], "?filter_by=latest_execution:" + $job_spark_1)
+            expect_status(200)
+            expect(json_body[:items].count).to eq 1
+          end
+          it "should execute two jobs and search based on name with query startingWith term" do
+            get_jobs(@project[:id], "?filter_by=latest_execution:job")
+            expect_status(200)
+            expect(json_body[:items].count).to eq 7
+          end
         end
       end
     end
