@@ -272,39 +272,43 @@ describe "On #{ENV['OS']}" do
             end
           end
           describe "Activities expand" do
-            it 'should expand creator for all activities.' do
-              get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/activities?expand=creator"
-              expandedRes = json_body[:items].map { |o| o[:userDTO] }
+            it 'should expand user for all activities.' do
+              get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/activities?expand=user"
+              expandedRes = json_body[:items].map { |o| o[:user] }
               expandedRes.each do | u |
                 expect(u[:email]).not_to be_nil
                 expect(u[:firstname]).not_to be_nil
                 expect(u[:lastname]).not_to be_nil
+                expect(u[:username]).not_to be_nil
               end              
             end
-            it 'should not expand creator for all activities.' do
+            it 'should not expand user for all activities.' do
               get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/activities"
-              expandedRes = json_body[:items].map { |o| o[:userDTO] }
+              expandedRes = json_body[:items].map { |o| o[:user] }
               expandedRes.each do | u |
                 expect(u[:email]).to be_nil
                 expect(u[:firstname]).to be_nil
                 expect(u[:lastname]).to be_nil
+                expect(u[:username]).to be_nil
               end              
             end
-            it 'should not expand creator.' do
+            it 'should not expand user.' do
               uri = URI(@activities.first[:href])
               get uri.path
-              u = json_body[:userDTO]
+              u = json_body[:user]
               expect(u[:email]).to be_nil
               expect(u[:firstname]).to be_nil
-              expect(u[:lastname]).to be_nil             
+              expect(u[:lastname]).to be_nil
+              expect(u[:username]).to be_nil
             end
-            it 'should expand creator.' do
+            it 'should expand user.' do
               uri = URI(@activities.first[:href])
-              get "#{uri.path}?expand=creator"
-              u = json_body[:userDTO]
+              get "#{uri.path}?expand=user"
+              u = json_body[:user]
               expect(u[:email]).not_to be_nil
               expect(u[:firstname]).not_to be_nil
-              expect(u[:lastname]).not_to be_nil             
+              expect(u[:lastname]).not_to be_nil
+              expect(u[:username]).not_to be_nil
             end
           end
           describe "Activities invaid query" do
@@ -587,36 +591,36 @@ describe "On #{ENV['OS']}" do
               expect(sortedRes & ["PROJECT", "DATASET", "JOB"]).to be_empty
             end
             describe "Activities expand" do
-              it 'should expand creator for all activities.' do
-                get "#{ENV['HOPSWORKS_API']}/users/activities?expand=creator"
-                expandedRes = json_body[:items].map { |o| o[:userDTO] }
+              it 'should expand user for all activities.' do
+                get "#{ENV['HOPSWORKS_API']}/users/activities?expand=user"
+                expandedRes = json_body[:items].map { |o| o[:user] }
                 expandedRes.each do | u |
                   expect(u[:email]).not_to be_nil
                   expect(u[:firstname]).not_to be_nil
                   expect(u[:lastname]).not_to be_nil
                 end              
               end
-              it 'should not expand creator for all activities.' do
+              it 'should not expand user for all activities.' do
                 get "#{ENV['HOPSWORKS_API']}/users/activities"
-                expandedRes = json_body[:items].map { |o| o[:userDTO] }
+                expandedRes = json_body[:items].map { |o| o[:user] }
                 expandedRes.each do | u |
                   expect(u[:email]).to be_nil
                   expect(u[:firstname]).to be_nil
                   expect(u[:lastname]).to be_nil
                 end              
               end
-              it 'should not expand creator.' do
+              it 'should not expand user.' do
                 uri = URI(@user_activities.first[:href])
                 get uri.path
-                u = json_body[:userDTO]
+                u = json_body[:user]
                 expect(u[:email]).to be_nil
                 expect(u[:firstname]).to be_nil
                 expect(u[:lastname]).to be_nil             
               end
-              it 'should expand creator.' do
+              it 'should expand user.' do
                 uri = URI(@user_activities.first[:href])
-                get "#{uri.path}?expand=creator"
-                u = json_body[:userDTO]
+                get "#{uri.path}?expand=user"
+                u = json_body[:user]
                 expect(u[:email]).not_to be_nil
                 expect(u[:firstname]).not_to be_nil
                 expect(u[:lastname]).not_to be_nil             
