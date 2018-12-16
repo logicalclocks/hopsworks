@@ -53,7 +53,7 @@ angular.module('hopsWorksApp')
             self.members = [];
             self.projectOwner = "";
 
-            self.newMembers = [];
+            self.newMembers = {'projectTeam': []};
             self.card = {};
             self.myCard = {};
             
@@ -133,11 +133,11 @@ angular.module('hopsWorksApp')
             
             var addNewMembers = function () {
               self.selectedUsers.forEach(function (selected) {
-                var projectTeamPK = {'projectId': self.projectId, 'teamMember': "", 'teamRole': ""};
-                var projectTeam = {'projectTeamPK': projectTeamPK};
+                var projectTeamPK = {'projectId': self.projectId, 'teamMember': ""};
+                var projectTeam = {'projectTeamPK': projectTeamPK, 'teamRole': ""};
                 projectTeamPK.teamMember = selected.email;
-                projectTeamPK.teamRole = selected.teamRole;
-                self.newMembers.push(projectTeam);
+                projectTeam.teamRole = selected.teamRole;
+                self.newMembers.projectTeam.push(projectTeam);
               });
               return self.projectTeam;
             };        
@@ -159,7 +159,7 @@ angular.module('hopsWorksApp')
             self.addMembers = function () {
               addNewMembers();
               MembersService.save({id: self.projectId}, self.newMembers).$promise.then(function (success) {
-                  self.newMembers.length = 0;
+                  self.newMembers.projectTeam.length = 0;
                   self.selectedUsers.length = 0;
                   getMembers();
                 }, function (error) {
