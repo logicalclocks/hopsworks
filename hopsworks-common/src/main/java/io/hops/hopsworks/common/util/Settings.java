@@ -306,6 +306,8 @@ public class Settings implements Serializable {
   private static final String VARIABLE_JWT_EXP_LEEWAY_SEC = "jwt_exp_leeway_sec";
   private static final String VARIABLE_JWT_SIGNING_KEY_NAME = "jwt_signing_key_name";
 
+    // Downloadable Datasets
+  private static Map<String,List<String>> dsDownloadableDatasets = new HashMap<String,List<String>>();    
 
   private String setVar(String varName, String defaultValue) {
     Variables userName = findById(varName);
@@ -602,6 +604,9 @@ public class Settings implements Serializable {
       JWT_LIFETIME_MS = setLongVar(VARIABLE_JWT_LIFETIME_MS, JWT_LIFETIME_MS);
       JWT_EXP_LEEWAY_SEC = setIntVar(VARIABLE_JWT_EXP_LEEWAY_SEC, JWT_EXP_LEEWAY_SEC);
       JWT_SIGNING_KEY_NAME = setStrVar(VARIABLE_JWT_SIGNING_KEY_NAME, JWT_SIGNING_KEY_NAME);
+      // PROJECT Download permissions
+      PROJECT_DOWNLOADABLE_DIRS = setStrVar(VARIABLE_JWT_SIGNING_KEY_NAME, JWT_SIGNING_KEY_NAME);
+      
       cached = true;
     }
   }
@@ -3144,4 +3149,70 @@ public class Settings implements Serializable {
   public String getHiveSiteSparkHdfsPath() {
     return "hdfs:///user/" + getSparkUser() + "/hive-site.xml";
   }
+
+
+  private String DOWNLOADABLE_DIRS = "";
+
+  public synchronized List<String> getDownloadableDatasets(String project) {
+    if (project == null || project.isEmpty()) {
+      throw new IllegalArgumentException("Target project name was null or empty");
+    }
+    Map<String,List<String>> allProjects = getDownloadableDirsasJson();
+    List<String> downloadableDatasets = allProjects.get(project);
+    if (downloadableDatasets == null) {
+      downloadableDatasets = new ArrayList<String>();
+    }
+    return downloadableDatasets;      
+  }
+    
+    
+  private Map<String,List<String>> getDownloadableDirsasJson() {
+    checkCache();
+    JSONParser parser = new JSONParser();
+    JSONObject json = (JSONObject) parser.parse(DOWNLOADABLE_DIRS);
+    Map<String, Object> objs = jsonToMap(json);
+  }
+
+  private Map<String, Object> jsonToMap(JSONObject json) throws JSONException {
+    Map<String, Object> retMap = new HashMap<String, Object>();
+    if(json != JSONObject.NULL) {
+      retMap = toMap(json);
+    }
+    return retMap;
+  }
+
+  private  Map<String, Object> toMap(JSONObject object) throws JSONException {
+    Map<String, Object> map = new HashMap<String, Object>();
+    Iterator<String> keysItr = object.keys();
+    while(keysItr.hasNext()) {
+      String key = keysItr.next();
+      Object value = object.get(key);
+      if(value instanceof JSONArray) {
+        value = toList((JSONArray) value);
+      }
+      else if(value instanceof JSONObject) {
+        value = toMap((JSONObject) value);
+      }
+      map.put(key, value);
+    }
+    return map;
+  }
+
+  private List<Object> toList(JSONArray array) throws JSONException {
+    List<Object> list = new ArrayList<Object>();
+    for(int i = 0; i < array.length(); i++) {
+      Object value = array.get(i);
+      if(value instanceof JSONArray) {
+        value = toList((JSONArray) value);
+      }
+      else if(value instanceof JSONObject) {
+        value = toMap((JSONObject) value);
+      }
+      list.add(value);
+    }
+    return list;
+  }
+  
 }
+
+
