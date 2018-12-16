@@ -101,8 +101,7 @@ module JobHelper
   def clean_jobs(project_id)
     with_valid_session
     get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs"
-
-    if !json_body.empty?
+    if !json_body.empty? && json_body[:items].present?
       json_body[:items].map{|job| job[:name]}.each{|i| delete "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs/#{i}"}
     end
   end

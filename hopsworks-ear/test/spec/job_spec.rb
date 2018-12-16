@@ -24,7 +24,7 @@ describe "On #{ENV['OS']}" do
         reset_session
       end
       it "should fail" do
-        get_job(@project[:id], 1)
+        get_job(@project[:id], 1, nil)
         expect_json(errorCode: 200003)
         expect_status(401)
       end
@@ -51,12 +51,12 @@ describe "On #{ENV['OS']}" do
       end
       it "should get a single spark job" do
         create_sparktour_job(@project, "demo_job_1")
-        get_job(@project[:id], "demo_job_1")
+        get_job(@project[:id], "demo_job_1", nil)
         expect_status(200)
       end
       it "should get spark job dto with href" do
         create_sparktour_job(@project, "demo_job_1")
-        get_job(@project[:id], "demo_job_1")
+        get_job(@project[:id], "demo_job_1", nil)
         expect_status(200)
         #validate href
         expect(URI(json_body[:href]).path).to eq "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jobs/demo_job_1"
@@ -67,7 +67,7 @@ describe "On #{ENV['OS']}" do
         create_sparktour_job(@project, "demo_job_1")
         create_sparktour_job(@project, "demo_job_2")
         create_sparktour_job(@project, "demo_job_3")
-        get_jobs(@project[:id])
+        get_jobs(@project[:id], nil)
         expect_status(200)
         expect(json_body[:items].count).to eq 3
         expect(json_body[:count]).to eq 3
@@ -76,7 +76,7 @@ describe "On #{ENV['OS']}" do
         create_sparktour_job(@project, "demo_job_1")
         create_sparktour_job(@project, "demo_job_2")
         create_sparktour_job(@project, "demo_job_3")
-        get_jobs_with_type(@project[:id], "spark")
+        get_jobs(@project[:id], "?filter_by=jobtype:spark")
         expect_status(200)
         expect(json_body[:items].count).to eq 3
       end
@@ -100,7 +100,6 @@ describe "On #{ENV['OS']}" do
         add_member(member[:email], "Data scientist")
         create_session(member[:email], "Pass123")
         delete_job(@project[:id], "demo_job_1")
-        puts response
       end
     end
   end
@@ -122,7 +121,7 @@ describe "On #{ENV['OS']}" do
       describe "Jobs sort" do
         it "should get all jobs sorted by name" do
           #sort in memory and compare with query
-          get_jobs(@project[:id], "")
+          get_jobs(@project[:id], nil)
           jobs = json_body[:items].map{|job| job[:name]}
           sorted = jobs.sort_by(&:downcase)
           get_jobs(@project[:id], "?sort_by=name:asc")
@@ -131,7 +130,7 @@ describe "On #{ENV['OS']}" do
         end
         it "should get all jobs sorted by name descending" do
           #sort in memory and compare with query
-          get_jobs(@project[:id], "")
+          get_jobs(@project[:id], nil)
           jobs = json_body[:items].map{|job| job[:name]}
           sorted = jobs.sort_by(&:downcase).reverse
           get_jobs(@project[:id], "?sort_by=name:desc")
@@ -140,7 +139,7 @@ describe "On #{ENV['OS']}" do
         end
         it "should get all jobs sorted by id" do
           #sort in memory and compare with query
-          get_jobs(@project[:id], "")
+          get_jobs(@project[:id], nil)
           jobs = json_body[:items].map{|job| job[:id]}
           sorted = jobs.sort
           get_jobs(@project[:id], "?sort_by=id:asc")
@@ -149,7 +148,7 @@ describe "On #{ENV['OS']}" do
         end
         it "should get all jobs sorted by id descending" do
           #sort in memory and compare with query
-          get_jobs(@project[:id], "")
+          get_jobs(@project[:id], nil)
           jobs = json_body[:items].map{|job| job[:id]}
           sorted = jobs.sort.reverse
           get_jobs(@project[:id], "?sort_by=id:desc")
@@ -158,7 +157,7 @@ describe "On #{ENV['OS']}" do
         end
         it "should get all jobs sorted by date created" do
           #sort in memory and compare with query
-          get_jobs(@project[:id], "")
+          get_jobs(@project[:id], nil)
           jobs = json_body[:items].map{|job| job[:creationTime]}
           sorted = jobs.sort
           get_jobs(@project[:id], "?sort_by=date_created:asc")
@@ -167,7 +166,7 @@ describe "On #{ENV['OS']}" do
         end
         it "should get all jobs sorted by date created descending" do
           #sort in memory and compare with query
-          get_jobs(@project[:id], "")
+          get_jobs(@project[:id], nil)
           jobs = json_body[:items].map{|job| job[:creationTime]}
           sorted = jobs.sort.reverse
           get_jobs(@project[:id], "?sort_by=date_created:desc")
@@ -176,7 +175,7 @@ describe "On #{ENV['OS']}" do
         end
         it "should get all jobs sorted by type ascending and name ascending" do
           #sort in memory and compare with query
-          get_jobs(@project[:id], "")
+          get_jobs(@project[:id], nil)
           jobs = json_body[:items].map{|job| "#{job[:jobType]} #{job[:name]}"}
           sorted = jobs.sort
           get_jobs(@project[:id], "?sort_by=jobtype:asc,name:asc")
@@ -185,7 +184,7 @@ describe "On #{ENV['OS']}" do
         end
         it "should get all jobs sorted by type ascending and name descending" do
           #sort in memory and compare with query
-          get_jobs(@project[:id], "")
+          get_jobs(@project[:id], nil)
           s = json_body[:items].sort do |a, b|
             res = (a[:jobType] <=> b[:jobType])
             res = -(a[:name] <=> b[:name]) if res == 0
@@ -198,14 +197,14 @@ describe "On #{ENV['OS']}" do
         end
         it "should get all jobs sorted by type descending and name ascending" do
           #sort in memory and compare with query
-          get_jobs(@project[:id], "")
+          get_jobs(@project[:id], nil)
           s = json_body[:items].sort do |a, b|
             res = -(a[:jobType] <=> b[:jobType])
             res = (a[:name] <=> b[:name]) if res == 0
             res
           end
           sorted = s.map { |o| "#{o[:jobType]} #{o[:name]}" }
-          get_jobs(@project[:id], "?sort_by=job2type:desc,name:asc")
+          get_jobs(@project[:id], "?sort_by=jobtype:desc,name:asc")
           sorted_res = json_body[:items].map { |job| "#{job[:jobType]} #{job[:name]}" }
           expect(sorted_res).to eq(sorted)
         end

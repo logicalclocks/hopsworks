@@ -30,8 +30,8 @@ public class JobsBeanParam {
   private String sortBy;
   private final Set<SortBy> sortBySet;
   @QueryParam("filter_by")
-  @ApiParam(value = "ex. filter_by=jobtype:dataset",
-    allowableValues = "flag:project, flag:dataset, flag:member, flag:service, flag:job",
+  @ApiParam(value = "ex. filter_by=jobtype:spark",
+    allowableValues = "jobtype:spark, jobtype:pyspark, jobtype:flink",
     allowMultiple = true)
   private Set<FilterBy> filter;
   @BeanParam
