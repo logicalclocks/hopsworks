@@ -311,7 +311,7 @@ describe "On #{ENV['OS']}" do
               expect(u[:username]).not_to be_nil
             end
           end
-          describe "Activities invaid query" do
+          describe "Activities invalid query" do
             it 'should return invalid query error code filter by param is invalid.' do
               get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/activities?filter_by=flag_neq:bla"
               expect(json_body[:errorCode]).to eq(270000)
@@ -329,12 +329,12 @@ describe "On #{ENV['OS']}" do
               expect(json_body[:errorCode]).to eq(120004)
             end
             it 'should return invalid query error code if expand by key is invalid.' do
-              get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/activities?expand=creato"
+              get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/activities?expand=invalid"
               expect(json_body[:errorCode]).to eq(120004)
             end
-            it 'should return invalid query error code if expand by key is invalid.' do
+            it 'should return invalid query error code if expand by key is invalid and using uri.' do
               uri = URI(@activities.first[:href])
-              get "#{uri.path}?expand=creato"
+              get "#{uri.path}?expand=invalid"
               expect(json_body[:errorCode]).to eq(120004)
             end
           end
@@ -627,7 +627,7 @@ describe "On #{ENV['OS']}" do
               end
             end
           end
-          describe "Activities invaid query" do
+          describe "Activities invalid query" do
             it 'should return invalid query error code if filter by parm is invalid.' do
               get "#{ENV['HOPSWORKS_API']}/users/activities?filter_by=flag_neq:bla"
               expect(json_body[:errorCode]).to eq(270000)
@@ -645,12 +645,12 @@ describe "On #{ENV['OS']}" do
               expect(json_body[:errorCode]).to eq(120004)
             end
             it 'should return invalid query error code if expand by key is invalid.' do
-              get "#{ENV['HOPSWORKS_API']}/users/activities?expand=creato"
+              get "#{ENV['HOPSWORKS_API']}/users/activities?expand=invalid"
               expect(json_body[:errorCode]).to eq(120004)
             end
-            it 'should return invalid query error code if expand by key is invalid.' do
+            it 'should return invalid query error code if expand by key is invalid and using uri.' do
               uri = URI(@user_activities.first[:href])
-              get "#{uri.path}?expand=creato"
+              get "#{uri.path}?expand=invalid"
               expect(json_body[:errorCode]).to eq(120004)
             end
           end
