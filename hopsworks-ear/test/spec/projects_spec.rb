@@ -90,11 +90,7 @@ describe "On #{ENV['OS']}" do
           project_id = json_body[:projectId]
           get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/dataset/getContent"
           expect_status(200)
-          jupyter = json_body.detect { |e| e[:name] == "Jupyter" }
           notebook = json_body.detect { |e| e[:name] == "notebook" }
-          expect(jupyter[:description]).to eq ("Contains Jupyter notebooks.")
-          expect(jupyter[:permission]).to eq ("rwxrwx--T")
-          expect(jupyter[:owner]).to eq ("#{@user[:fname]} #{@user[:lname]}")
           expect(notebook[:description]).to eq ("Contains Zeppelin notebooks.")
           expect(notebook[:permission]).to eq ("rwxrwx--T")
           expect(notebook[:owner]).to eq ("#{@user[:fname]} #{@user[:lname]}")
