@@ -1124,7 +1124,6 @@ public class CertificateMaterializer {
             remoteMaterialReferencesFacade.delete(materialRef.getIdentifier());
             deletedMaterial = true;
           } else {
-            materialRef.decrementReferences();
             remoteMaterialReferencesFacade.update(materialRef);
           }
         } else {
