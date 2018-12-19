@@ -119,24 +119,24 @@ describe "On #{ENV['OS']}" do
           #wait for log aggregation
           wait_for_execution do
             get_execution_log(@project[:id], $job_name, execution_id, "out")
-            json_body[:message] != "No log available"
+            json_body[:log] != "No log available"
           end
 
           #get out log
           get_execution_log(@project[:id], $job_name, execution_id, "out")
-          expect(json_body[:type]).to eq "out"
-          expect(json_body[:message]).to be_present
+          expect(json_body[:type]).to eq "OUT"
+          expect(json_body[:log]).to be_present
 
           #wait for log aggregation
           wait_for_execution do
             get_execution_log(@project[:id], $job_name, execution_id, "err")
-            json_body[:message] != "No log available"
+            json_body[:log] != "No log available"
           end
 
           #get err log
           get_execution_log(@project[:id], $job_name, execution_id, "err")
-          expect(json_body[:type]).to eq "err"
-          expect(json_body[:message]).to be_present
+          expect(json_body[:type]).to eq "ERR"
+          expect(json_body[:log]).to be_present
         end
       end
     end

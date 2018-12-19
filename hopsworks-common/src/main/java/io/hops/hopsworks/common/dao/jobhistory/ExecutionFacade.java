@@ -104,22 +104,6 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
   }
   
   /**
-   * Enforces clients to search jobs for particular projects.
-   * @param id
-   * @return
-   */
-  public Execution findByIdAndJob(int id, Jobs job) {
-    TypedQuery<Execution> q = em.createNamedQuery("Execution.findByIdAndJob", Execution.class);
-    q.setParameter("id", id).setParameter("job", job);
-    try {
-      return q.getSingleResult();
-    } catch (NoResultException e) {
-      return null;
-    }
-  }
-  
-  
-  /**
    * Find all the Execution entries for the given project and type.
    * <p/>
    * @param project

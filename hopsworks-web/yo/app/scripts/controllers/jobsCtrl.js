@@ -426,7 +426,12 @@ angular.module('hopsWorksApp')
                     function (success) {
                         self.logset.length = 0;
                         angular.forEach(success.data.items, function (execution, key) {
-                            var entry = {"jobName": jobName, "executionId": execution.id,  "appId":execution.appId, "time": execution.submissionTime};
+                            var entry = {"jobName": jobName, "executionId": execution.id,  "time": execution.submissionTime};
+                            if(execution.appId === undefined){
+                                entry["appId"]  = "N/A";
+                            } else {
+                                entry["appId"] = execution.appId;
+                            }
                             self.logset.push(entry);
                         });
                         self.executionTotalItems = success.data.count;
@@ -459,8 +464,8 @@ angular.module('hopsWorksApp')
                           if (logContent['type'] !== undefined) {
                               logsetEntry['type'] = logContent['type'];
                           }
-                          if (logContent[type + 'Path'] !== undefined) {
-                              logsetEntry[type + 'Path'] = logContent[type + 'Path'];
+                          if (logContent['path'] !== undefined) {
+                              logsetEntry[type + 'path'] = logContent['path'];
                           }
                           if (logContent['retriableErr'] !== undefined) {
                               logsetEntry['retriableErr'] = logContent['retriableErr'];

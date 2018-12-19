@@ -382,12 +382,12 @@
                 <div id="logs" class="tab-pane fade in active">
                   <div uib-accordion close-others="true" >
                     <div uib-accordion-group class="panel-default"
-                         ng-repeat="item in jobsCtrl.logset" heading="{{item.time}}">
-                      <uib-accordion-heading ng-if="item.appId !== ''">
+                         ng-repeat="item in jobsCtrl.logset" heading="{{item.time| date:'medium'}}">
+                      <uib-accordion-heading ng-if="item.appId !== undefined">
                         <div ng-click="jobsCtrl.getLog(item, 'out')">
-                          Application Id = {{item.appId}}
+                          ApplicationId: {{item.appId}}
                           <div class="pull-right">
-                            {{item.time}}
+                            {{item.time| date:'medium'}}
                           </div>
                         </div>
                       </uib-accordion-heading>
@@ -396,12 +396,13 @@
                         <button ng-if="item.retriableOut !== undefined && item.appId !== ''" class="btn btn-default" ng-click="jobsCtrl.retryLogs(item.appId, 'out')" >
                           Retry log
                         </button><br>
-                        <textarea ng-show="item.outPath === undefined && item.logout !== undefined" class="form-control" rows="15" placeholer="No log information available" readonly>
+                        <textarea ng-show="item.outpath === undefined && item.logout !== undefined"
+                                  class="form-control" rows="15" placeholer="No log information available" readonly>
                                        {{item.logout}}
                         </textarea>
-                        <div ng-show="item.outPath !== undefined" contenteditable="false" class="form-control" rows="15" placeholer="No log information available" readonly>
-                          {{item.out}}
-                          <a href="#!{{item.outPath}}">here!</a>
+                        <div ng-show="item.outpath !== undefined" contenteditable="false" class="form-control"
+                             rows="15" placeholer="No log information available" readonly>
+                          Log is too big to preview. Click <a href="#!{{item.outpath}}"> here</a>  to download it!
                         </div>
                       </div>
                     </div>
@@ -418,17 +419,17 @@
                 <div id="errs" class="tab-pane fade">
                   <div uib-accordion close-others="true" infinite-scroll="jobsCtrl.loadMore()" infinite-scroll-distance='2'>
                     <div uib-accordion-group class="panel-default"
-                         ng-repeat="item in jobsCtrl.logset" heading="{{item.time}}">
+                         ng-repeat="item in jobsCtrl.logset" heading="{{item.time| date:'medium'}}">
                       <uib-accordion-heading>
                         <div ng-click="jobsCtrl.getLog(item, 'err')">
-                          <div ng-if="item.appId !== ''">
-                            Application Id = {{item.appId}}
+                          <div ng-if="item.appId !== undefined">
+                            ApplicationId: {{item.appId}}
                             <div class="pull-right">
-                              {{item.time}}
+                              {{item.time| date:'medium'}}
                             </div>
                           </div>
-                          <div ng-if="item.appId === ''">
-                              {{item.time}}
+                          <div ng-if="item.appId === undefined">
+                              {{item.time| date:'medium'}}
                           </div>
                         </div>
                       </uib-accordion-heading>
@@ -437,12 +438,14 @@
                         <button  ng-if="item.retriableErr !== undefined && item.appId !== ''" class="btn btn-default" ng-click="jobsCtrl.retryLogs(item.appId, 'err')" >
                           Retry log
                         </button><br>
-                        <textarea ng-show="item.errPath === undefined && item.logerr !== undefined" class="form-control" rows="15" placeholer="No error information available" readonly>
+                        <textarea ng-show="item.errpath === undefined && item.logerr !== undefined"
+                                  class="form-control" rows="15" placeholer="No error information available" readonly>
                                        {{item.logerr}}
                         </textarea>
-                        <div ng-show="item.errPath !== undefined" contenteditable="false" class="form-control" rows="15" placeholer="No error information available" readonly>
-                          {{item.err}}
-                          <a href="#!{{item.errPath}}">here!</a>
+                        <div ng-show="item.errpath !== undefined" contenteditable="false" class="form-control"
+                             rows="15" placeholer="No error information available" readonly>
+                          Log is too big to preview. Click
+                          <a href="#!{{item.errpath}}"> here</a>  to download it!
                         </div>
                       </div>
                     </div>
