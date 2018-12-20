@@ -24,7 +24,7 @@ import java.util.Set;
 
 public class ExpansionBeanParam {
   @QueryParam("expand")
-  @ApiParam(value = "ex. expand=creator", allowableValues = "expand=creator")
+  @ApiParam(value = "ex. expand=creator", allowableValues = "expand=creator, expand=executions")
   private Set<JobExpansions> expansions;
   
   public ExpansionBeanParam(@QueryParam("expand") Set<JobExpansions> expansions) {

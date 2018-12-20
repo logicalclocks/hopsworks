@@ -25,7 +25,7 @@ import javax.ws.rs.QueryParam;
 public class ActivitiesBeanParam {
 
   @QueryParam("sort_by")
-  @ApiParam(value = "ex. sort_by=ID:asc,CREATIONTIME:desc",
+  @ApiParam(value = "ex. sort_by=ID:asc,date_created:desc",
       allowableValues = "id:asc, id:desc, date_created:asc, date_created:desc, flag:asc, flag:desc")
   private String sortBy;
   private final Set<SortBy> sortBySet;
@@ -49,7 +49,7 @@ public class ActivitiesBeanParam {
 
   private Set<SortBy> getSortBy(String param) {
     if (param == null || param.isEmpty()) {
-      return null;
+      return new LinkedHashSet<>();
     }
     String[] params = param.split(",");
     //Hash table and linked list implementation of the Set interface, with predictable iteration order

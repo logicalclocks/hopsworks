@@ -18,8 +18,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 =end
 module ExecutionHelper
 
-  def get_executions(project_id, job_name)
-    get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs/#{job_name}/executions"
+  def get_executions(project_id, job_name, query)
+    get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs/#{job_name}/executions#{query}"
   end
 
   def get_execution(project_id, job_name, execution_id)

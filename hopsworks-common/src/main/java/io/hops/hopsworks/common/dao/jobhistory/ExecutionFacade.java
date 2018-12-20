@@ -142,15 +142,6 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
     Jobs job) {
     
     String duration = "";
-//    if(sorts != null) {
-//      for (SortBy sort : sorts) {
-//        if(sort.getValue().equals(sort.getValue().equals(Sorts.DURATION.getValue()))){
-//          duration = ", (e.executionStop - e.executionStart) as duration ";
-//          break;
-//        }
-//      }
-//    }
-    
     String queryStr = buildQuery("SELECT e" + duration + " FROM Execution e ", filters, sorts, "e.job = :job ");
     String queryCountStr = buildQuery("SELECT COUNT(e.id) FROM Execution e ", filters, sorts, "e.job = :job ");
   

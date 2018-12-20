@@ -299,7 +299,8 @@ public class JobFacade extends AbstractFacade<Jobs> {
     DATE_CREATED("DATE_CREATED", "j.creationTime ", "DESC"),
     JOBTYPE("JOBTYPE", "j.type ", "ASC"),
     CREATOR("CREATOR", "LOWER(CONCAT (j.creator.fname, j.creator.lname)) " , "ASC"),
-    CREATOR_LAST_NAME("CREATOR_LAST_NAME", "LOWER(j.creator.lname) " , "ASC"),
+    CREATOR_FIRST_NAME("CREATOR_FIRSTNAME", "j.creator.fname " , "ASC"),
+    CREATOR_LAST_NAME("CREATOR_LASTNAME", "j.creator.lname " , "ASC"),
     //Execution related, to make it easier for clients to use pagination
     STATE("STATE", "e.state ", "ASC"),
     FINALSTATUS("FINALSTATUS", "e.finalStatus ", "ASC"),
@@ -347,13 +348,10 @@ public class JobFacade extends AbstractFacade<Jobs> {
     NAME("NAME", "j.name LIKE CONCAT(:name, '%') ", "name", " "),
     CREATOR("CREATOR", "(j.creator.username LIKE CONCAT(:user, '%') "
       + "OR j.creator.fname LIKE CONCAT(:user, '%') "
-      + "OR j.creator.lname LIKE CONCAT(:user, '%') "
-      + "OR j.creator.email LIKE CONCAT(:user, '%')) ", "user", " "),
-    LATEST_EXECUTION("LATEST_EXECUTION", "(j.creator.username LIKE CONCAT(:search, '%') "
-      + "OR j.creator.fname LIKE CONCAT(:search, '%') "
+      + "OR j.creator.lname LIKE CONCAT(:user, '%') ", "user", " "),
+    LATEST_EXECUTION("LATEST_EXECUTION", "(j.creator.fname LIKE CONCAT(:search, '%') "
       + "OR j.creator.lname LIKE CONCAT(:search, '%') "
-      + "OR j.creator.email LIKE CONCAT(:search, '%') "
-      + "OR j.name LIKE CONCAT('%', :search, '%') "
+      + "OR j.name LIKE CONCAT(:search, '%') "
       + "OR j.type LIKE CONCAT(:searchUpper, '%') "
       + "OR e.state LIKE CONCAT(:searchUpper, '%') "
       + "OR e.finalStatus LIKE CONCAT(:searchUpper, '%')) ", "search", " ");

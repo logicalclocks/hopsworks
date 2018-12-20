@@ -26,12 +26,18 @@ public class JobsBeanParam {
   
   @QueryParam("sort_by")
   @ApiParam(value = "ex. sort_by=date_created:desc,name:asc",
-    allowableValues = "id:asc,id:desc,name:asc,name:desc,date_created:asc,date_created:desc")
+    allowableValues = "id:asc,id:desc,name:asc,name:desc,date_created:asc,date_created:desc,jobtype:asc," +
+      "jobtype:desc,creator:asc,creator:desc,creator_firstname:asc,creator_firstname:desc," +
+      "creator_lastname:asc,creator_lastname:desc,state:asc,state:desc,finalstatus:asc,finalstatus:desc,progress:asc," +
+      "progress:desc,submissiontime:asc,submissiontime:desc,duration:asc,duration:desc")
   private String sortBy;
   private final Set<SortBy> sortBySet;
   @QueryParam("filter_by")
-  @ApiParam(value = "ex. filter_by=jobtype:spark",
-    allowableValues = "jobtype:spark, jobtype:pyspark, jobtype:flink",
+  @ApiParam(value = "ex. filter_by=jobtype:spark&filter_by=date_created_gt:2018-12-25T17:12:10",
+    allowableValues = "jobtype:spark, jobtype:pyspark, jobtype:flink,jobtype_neq:spark, jobtype_neq:pyspark, " +
+      "jobtype_neq:flink,filter_by=date_created:2018-12-25T17:12:10.058, " +
+      "filter_by=date_created_gt:2018-12-25T17:12:10.058, filter_by=date_created_lt:2018-12-25T17:12:10.058, " +
+      "filter_by=name:myetl, filter_by=creator:john, filter_by=latest_execution:finished",
     allowMultiple = true)
   private Set<FilterBy> filter;
   @BeanParam
@@ -47,7 +53,7 @@ public class JobsBeanParam {
   
   private Set<SortBy> getSortBy(String param) {
     if (param == null || param.isEmpty()) {
-      return null;
+      return new LinkedHashSet<>();
     }
     String[] params = param.split(",");
     //Hash table and linked list implementation of the Set interface, with predictable iteration order

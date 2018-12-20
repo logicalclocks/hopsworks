@@ -279,9 +279,9 @@ describe "On #{ENV['OS']}" do
             expect(json_body[:items].count).to eq 1
           end
           it "should execute two jobs and search based on name with query startingWith term" do
-            get_jobs(@project[:id], "?filter_by=latest_execution:job")
+            get_jobs(@project[:id], "?filter_by=latest_execution:demo_job")
             expect_status(200)
-            expect(json_body[:items].count).to eq 7
+            expect(json_body[:items].count).to eq 5
           end
         end
       end

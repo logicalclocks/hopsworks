@@ -67,6 +67,7 @@ angular.module('hopsWorksApp')
             self.executionsCurrentPage = 1;
 
             self.jobsToDate = new Date();
+            self.jobsToDate.setMinutes(self.jobsToDate.getMinutes() + 1);
             self.jobsFromDate = new Date();
             self.jobsFromDate.setMonth(self.jobsToDate.getMonth() - 1);
 
@@ -84,7 +85,7 @@ angular.module('hopsWorksApp')
                 self.sortKey = keyname;   //set the sortKey to the param passed
                 self.order();
                 //We need to fetch all the jobs for these
-                self.getAllJobsStatus();
+                self.getAllJobsStatus(true);
             };
 
             self.order = function () {
@@ -207,7 +208,10 @@ angular.module('hopsWorksApp')
             self.pageSize = 8;
             self.currentPage = 1;
 
-              self.getAllJobsStatus = function (toDimTable, limit, offset, sortBy, expansion) {
+            self.getAllJobsStatus = function (toDimTable, limit, offset, sortBy, expansion) {
+                if(self.getAllJobsStatusIsPending === true){
+                    return;
+                }
                 self.getAllJobsStatusIsPending = true;
                 if(toDimTable !== undefined && toDimTable !== null && toDimTable) {
                     self.dimTable = true;
@@ -307,15 +311,10 @@ angular.module('hopsWorksApp')
 
             self.getNumOfExecution = function () {
               if (self.hasSelectJob) {
-                if (self.logset === undefined) {
+                if (self.executionTotalItems === undefined) {
                   return 0;
-                }
-                if (self.logset.length > 1) {
-                  return self.logset.length;
-                } else if (self.logset.length === 1) {
-                  return 1;
                 } else {
-                  return 0;
+                    return self.executionTotalItems;
                 }
               }
             };
@@ -567,7 +566,7 @@ angular.module('hopsWorksApp')
             ////////////////////////////////////////////////////////////////////
 
             $scope.$watch('jobsCtrl.jobFilter', function (val) {
-                self.getAllJobsStatus();
+                self.getAllJobsStatus(true);
             });
 
 

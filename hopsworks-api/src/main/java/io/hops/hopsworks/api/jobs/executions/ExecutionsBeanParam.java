@@ -25,11 +25,19 @@ import java.util.Set;
 public class ExecutionsBeanParam {
   @QueryParam("sort_by")
   @ApiParam(value = "ex. sort_by=submissiontime:desc,id:asc",
-    allowableValues = "id:asc,id:desc,name:asc,name:desc,date_created:asc,date_created:desc")
+    allowableValues = "id:asc,id:desc,name,submissiontime:asc,submissiontime:desc,state:asc,state:desc," +
+      "finalstatus:asc,finalstatus:desc,appId:asc,appId:desc,progress:asc,progress:desc,duration:asc,duration:desc")
   private String sortBy;
   private final Set<SortBy> sortBySet;
   @QueryParam("filter_by")
-  @ApiParam(value = "ex. filter_by=state:running,finished")
+  @ApiParam(value = "state and finalstatus accept also neq (not equals) ex. " +
+    "filter_by=state:running&filter_by=state_neq:new&filter_by=submissiontime:2018-12-25T17:12:10.058",
+    allowableValues = "state:initializing, state:initilization_failed, state:finished, state:running, " +
+      "state:accepted, state:failed, state:killed, state:new, state:new_saving, state:submitted, " +
+      "state:aggregating_logs, state:framework_failure, state:starting_app_master, state:app_master_start_failed," +
+      "finalstatus:undefined, finalstatus:succeeded, finalstatus:failed, finalstatus:killed, " +
+      "submissiontime:2018-12-25T17:12:10.058, submissiontime_gt:2018-12-25T17:12:10.058, " +
+      "submissiontime_lt:2018-12-25T17:12:10.058")
   private Set<FilterBy> filter;
   @BeanParam
   private ExpansionBeanParam expansions;
@@ -44,7 +52,7 @@ public class ExecutionsBeanParam {
   
   private Set<SortBy> getSortBy(String param) {
     if (param == null || param.isEmpty()) {
-      return null;
+      return new LinkedHashSet<>();
     }
     String[] params = param.split(",");
     //Hash table and linked list implementation of the Set interface, with predictable iteration order

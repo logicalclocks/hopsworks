@@ -73,7 +73,7 @@
                 <div class="col-sm-6 col-md-6 col-lg-6 form-group">
                   <label>Search
                     <input class="form-control" style="margin-left: 10px;" ng-model="jobsCtrl.jobFilter"
-                           ng-model-options="{debounce: 800}" ng-change="jobsCtrl.untoggle(job, $index)">
+                           ng-model-options="{debounce: 700}" ng-change="jobsCtrl.untoggle(job, $index)">
                     <i class="fa fa-info-circle"
                        uib-tooltip="Case sensitive search name, type, owner. Select date range to search based on jobs creation date."></i>
                     <md-datepicker ng-change="jobsCtrl.getAllJobsStatus()" ng-model="jobsCtrl.jobsFromDate"
@@ -294,7 +294,8 @@
                       </td>
                       <td>
                         <div class="progress-bar progress-bar-success progress-bar-striped" role="progressbar" aria-valuenow="{{job.progress * 100}}"
-                             aria-valuemin="0" aria-valuemax="100" style="width:{{job.progress * 90}}%">
+                             aria-valuemin="0" aria-valuemax="100" style="width:{{job.progress * 90}}%"
+                             ng-if="job.progress !== undefined && job.progress !== null">
                           {{job.progress * 100}}%
                         </div>
                       </td>
