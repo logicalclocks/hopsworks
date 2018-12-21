@@ -208,6 +208,80 @@ describe "On #{ENV['OS']}" do
           expect_json(errorCode: 120004)
         end
       end
+      describe "Jobs filter, limit" do
+        it "should return limit=x jobs" do
+          #sort in memory and compare with query
+          get_jobs(@project[:id], nil)
+          jobs = json_body[:items].map {|job| job[:name]}
+          sorted = jobs.sort_by(&:downcase)
+          get_jobs(@project[:id], "?limit=2&sort_by=name:asc")
+          sorted_res = json_body[:items].map {|job| job[:name]}
+          expect(sorted_res).to eq(sorted.take(2))
+        end
+        it "should return jobs starting from offset=y" do
+          #sort in memory and compare with query
+          get_jobs(@project[:id], nil)
+          jobs = json_body[:items].map {|job| job[:name]}
+          sorted = jobs.sort_by(&:downcase)
+          get_jobs(@project[:id], "?offset=1&sort_by=name:asc")
+          sorted_res = json_body[:items].map {|job| job[:name]}
+          expect(sorted_res).to eq(sorted.drop(1))
+        end
+        it "should return limit=x jobs with offset=y" do
+          #sort in memory and compare with query
+          get_jobs(@project[:id], nil)
+          jobs = json_body[:items].map {|job| job[:name]}
+          sorted = jobs.sort_by(&:downcase)
+          get_jobs(@project[:id], "?offset=1&limit=2&sort_by=name:asc")
+          sorted_res = json_body[:items].map {|job| job[:name]}
+          expect(sorted_res).to eq(sorted.drop(1).take(2))
+        end
+        it "should ignore if limit < 0" do
+          #sort in memory and compare with query
+          get_jobs(@project[:id], nil)
+          jobs = json_body[:items].map {|job| job[:name]}
+          sorted = jobs.sort_by(&:downcase)
+          get_jobs(@project[:id], "?limit<0&sort_by=name:asc")
+          sorted_res = json_body[:items].map {|job| job[:name]}
+          expect(sorted_res).to eq(sorted)
+        end
+        it "should ignore if offset < 0" do
+          #sort in memory and compare with query
+          get_jobs(@project[:id], nil)
+          jobs = json_body[:items].map {|job| job[:name]}
+          sorted = jobs.sort_by(&:downcase)
+          get_jobs(@project[:id], "?offset<0&sort_by=name:asc")
+          sorted_res = json_body[:items].map {|job| job[:name]}
+          expect(sorted_res).to eq(sorted)
+        end
+        it "should ignore if limit = 0" do
+          #sort in memory and compare with query
+          get_jobs(@project[:id], nil)
+          jobs = json_body[:items].map {|job| job[:name]}
+          sorted = jobs.sort_by(&:downcase)
+          get_jobs(@project[:id], "?limit=0&sort_by=name:asc")
+          sorted_res = json_body[:items].map {|job| job[:name]}
+          expect(sorted_res).to eq(sorted)
+        end
+        it "should ignore if offset = 0" do
+          #sort in memory and compare with query
+          get_jobs(@project[:id], nil)
+          jobs = json_body[:items].map {|job| job[:name]}
+          sorted = jobs.sort_by(&:downcase)
+          get_jobs(@project[:id], "?offset=0&sort_by=name:asc")
+          sorted_res = json_body[:items].map {|job| job[:name]}
+          expect(sorted_res).to eq(sorted)
+        end
+        it "should ignore if limit = 0 and offset = 0" do
+          #sort in memory and compare with query
+          get_jobs(@project[:id], nil)
+          jobs = json_body[:items].map {|job| job[:name]}
+          sorted = jobs.sort_by(&:downcase)
+          get_jobs(@project[:id], "?limit=0&offset=0&sort_by=name:asc")
+          sorted_res = json_body[:items].map {|job| job[:name]}
+          expect(sorted_res).to eq(sorted)
+        end
+      end
       describe "Jobs filter" do
         it "should get three jobs with type spark" do
           get_jobs(@project[:id], "?filter_by=jobtype:spark")
@@ -253,7 +327,7 @@ describe "On #{ENV['OS']}" do
             wait_for_execution do
               get_execution(@project[:id], $job_spark_2, execution_id)
               json_body[:state].eql? "FINISHED"
-              end
+            end
             get_jobs(@project[:id], "?filter_by=latest_execution:finished")
             expect_status(200)
             expect(json_body[:items].count).to eq 2

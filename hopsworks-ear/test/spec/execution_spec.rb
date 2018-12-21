@@ -64,7 +64,7 @@ describe "On #{ENV['OS']}" do
             expect_status(201)
 
             #get all executions of job
-            get_executions(@project[:id], $job_name)
+            get_executions(@project[:id], $job_name, "")
             expect(json_body[:items].count).to eq 2
 
             #check database
@@ -140,16 +140,20 @@ describe "On #{ENV['OS']}" do
       end
       describe 'execution sort, filter, offset and limit' do
         $job_spark_1 = "demo_job_1"
+        $execution_ids = []
         context 'with authentication' do
           before :all do
             with_valid_tour_project("spark")
             create_sparktour_job(@project, $job_spark_1)
-            #start execution
-            start_execution(@project[:id], $job_spark_1)
-            #wait till it's finished and start second execution
-            wait_for_execution do
-              get_execution(@project[:id], $job_spark_1, json_body[:id])
-              json_body[:state].eql? "FINISHED"
+            #start 3 executions
+            for i in 0..2 do
+              start_execution(@project[:id], $job_spark_1)
+              $execution_ids.push(json_body[:id])
+              #wait till it's finished and start second execution
+              wait_for_execution do
+                get_execution(@project[:id], $job_spark_1, json_body[:id])
+                json_body[:state].eql? "FINISHED"
+              end
             end
           end
           after :all do
@@ -275,6 +279,136 @@ describe "On #{ENV['OS']}" do
               get_executions(@project[:id], $job_spark_1, "?sort_by=progress:desc")
               sorted_res = json_body[:items].map {|execution| execution[:progress]}
               expect(sorted_res).to eq(sorted)
+            end
+            it "should get all executions sorted by duration asc" do
+              #sort in memory and compare with query
+              #get all executions of job
+              get_executions(@project[:id], $job_spark_1, "")
+              executions = json_body[:items].map {|execution| execution[:duration]}
+              sorted = executions.sort
+              get_executions(@project[:id], $job_spark_1, "?sort_by=duration:asc")
+              sorted_res = json_body[:items].map {|execution| execution[:duration]}
+              expect(sorted_res).to eq(sorted)
+            end
+            it "should get all executions sorted by duration desc" do
+              #sort in memory and compare with query
+              #get all executions of job
+              get_executions(@project[:id], $job_spark_1, "")
+              executions = json_body[:items].map {|execution| execution[:duration]}
+              sorted = executions.sort.reverse
+              get_executions(@project[:id], $job_spark_1, "?sort_by=duration:desc")
+              sorted_res = json_body[:items].map {|execution| execution[:duration]}
+              expect(sorted_res).to eq(sorted)
+            end
+          end
+          describe "Executions offset, limit" do
+            it 'should return limit=x executions.' do
+              get_executions(@project[:id], $job_spark_1, "")
+              executions = json_body[:items].map {|execution| execution[:id]}
+              sorted = executions.sort
+              get_executions(@project[:id], $job_spark_1, "?limit=2&sort_by=id:asc")
+              sorted_res = json_body[:items].map {|execution| execution[:id]}
+              expect(sorted_res).to eq(sorted.take(2))
+            end
+            it 'should return executions starting from offset=y.' do
+              get_executions(@project[:id], $job_spark_1, "")
+              executions = json_body[:items].map {|execution| execution[:id]}
+              sorted = executions.sort
+              get_executions(@project[:id], $job_spark_1, "?offset=1&sort_by=id:asc")
+              sorted_res = json_body[:items].map {|execution| execution[:id]}
+              expect(sorted_res).to eq(sorted.drop(1))
+            end
+            it 'should return limit=x executions with offset=y.' do
+              get_executions(@project[:id], $job_spark_1, "")
+              executions = json_body[:items].map {|execution| execution[:id]}
+              sorted = executions.sort
+              get_executions(@project[:id], $job_spark_1, "?offset=1&limit=2&sort_by=id:asc")
+              sorted_res = json_body[:items].map {|execution| execution[:id]}
+              expect(sorted_res).to eq(sorted.drop(1).take(2))
+            end
+            it 'should ignore if limit < 0.' do
+              get_executions(@project[:id], $job_spark_1, "")
+              executions = json_body[:items].map {|execution| execution[:id]}
+              sorted = executions.sort
+              get_executions(@project[:id], $job_spark_1, "?limit=-2&sort_by=id:asc")
+              sorted_res = json_body[:items].map {|execution| execution[:id]}
+              expect(sorted_res).to eq(sorted)
+            end
+            it 'should ignore if offset < 0.' do
+              get_executions(@project[:id], $job_spark_1, "")
+              executions = json_body[:items].map {|execution| execution[:id]}
+              sorted = executions.sort
+              get_executions(@project[:id], $job_spark_1, "?offset=-1&sort_by=id:asc")
+              sorted_res = json_body[:items].map {|execution| execution[:id]}
+              expect(sorted_res).to eq(sorted)
+            end
+            it 'should ignore if limit = 0.' do
+              get_executions(@project[:id], $job_spark_1, "")
+              executions = json_body[:items].map {|execution| execution[:id]}
+              sorted = executions.sort
+              get_executions(@project[:id], $job_spark_1, "?limit=0&sort_by=id:asc")
+              sorted_res = json_body[:items].map {|execution| execution[:id]}
+              expect(sorted_res).to eq(sorted)
+            end
+            it 'should ignore if offset = 0.' do
+              get_executions(@project[:id], $job_spark_1, "")
+              executions = json_body[:items].map {|execution| execution[:id]}
+              sorted = executions.sort
+              get_executions(@project[:id], $job_spark_1, "?offset=0&sort_by=id:asc")
+              sorted_res = json_body[:items].map {|execution| execution[:id]}
+              expect(sorted_res).to eq(sorted)
+            end
+            it 'should ignore if limit=0 and offset = 0.' do
+              get_executions(@project[:id], $job_spark_1, "")
+              executions = json_body[:items].map {|execution| execution[:id]}
+              sorted = executions.sort
+              get_executions(@project[:id], $job_spark_1, "?offset=0&limit=0&sort_by=id:asc")
+              sorted_res = json_body[:items].map {|execution| execution[:id]}
+              expect(sorted_res).to eq(sorted)
+            end
+          end
+          describe "Executions filter" do
+            it "should get all executions filtered by state" do
+              get_executions(@project[:id], $job_spark_1, "?filter_by=state:finished")
+              json_body[:items].map {|execution| execution[:id]}
+              expect(json_body[:items].count).to eq 3
+            end
+            it "should get all executions filtered by state_neq" do
+              get_executions(@project[:id], $job_spark_1, "?filter_by=state_neq:finished")
+              expect(json_body[:items]).to be nil
+            end
+            it "should get all executions filtered by finalStatus" do
+              get_executions(@project[:id], $job_spark_1, "?filter_by=finalstatus:succeeded")
+              json_body[:items].map {|execution| execution[:id]}
+              expect(json_body[:items].count).to eq 3
+            end
+            it "should get all executions filtered by finalStatus_neq" do
+              get_executions(@project[:id], $job_spark_1, "?filter_by=finalstatus_neq:succeeded")
+              expect(json_body[:items]).to be nil
+            end
+            it "should get all executions filtered by submissiontime" do
+              #get submissiontime of last execution
+              get_execution(@project[:id], $job_spark_1, $execution_ids[0])
+              submissiontime = json_body[:submissionTime]
+              get_executions(@project[:id], $job_spark_1, "?filter_by=submissiontime:#{submissiontime.gsub('Z','')}.000")
+              expect_status(200)
+              expect(json_body[:items].count).to eq 1
+            end
+            it "should get all executions filtered by submissiontime gt" do
+              #get submissiontime of last execution
+              get_execution(@project[:id], $job_spark_1, $execution_ids[0])
+              submissiontime = json_body[:submissionTime]
+              get_executions(@project[:id], $job_spark_1, "?filter_by=submissiontime_gt:#{submissiontime.gsub('Z','')}.000")
+              expect_status(200)
+              expect(json_body[:items].count).to eq 2
+            end
+            it "should get all executions filtered by submissiontime lt" do
+              #get submissiontime of last execution
+              get_execution(@project[:id], $job_spark_1, $execution_ids[1])
+              submissiontime = json_body[:submissionTime]
+              get_executions(@project[:id], $job_spark_1, "?filter_by=submissiontime_lt:#{submissiontime.gsub('Z','')}.000")
+              expect_status(200)
+              expect(json_body[:items].count).to eq 1
             end
           end
         end
