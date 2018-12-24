@@ -15,7 +15,7 @@
  */
 package io.hops.hopsworks.api.activities;
 
-import io.hops.hopsworks.common.api.Resource;
+import io.hops.hopsworks.common.api.ResourceRequest;
 import io.swagger.annotations.ApiParam;
 import java.util.HashSet;
 import java.util.Set;
@@ -40,10 +40,10 @@ public class ExpansionBeanParam {
     this.expansions = expansions;
   }
   
-  public Set<Resource> getResources(){
-    Set<Resource> expansions = new HashSet<>();
+  public Set<ResourceRequest> getResources(){
+    Set<ResourceRequest> expansions = new HashSet<>();
     for(ActivityExpansions activityExpansion : this.expansions){
-      expansions.add(activityExpansion.getResource());
+      expansions.add(activityExpansion.getResourceRequest());
     }
     return expansions;
   }

@@ -40,7 +40,9 @@
 package io.hops.hopsworks.rest.application.config;
 
 import io.hops.hopsworks.api.exception.mapper.RESTApiThrowableMapper;
-import io.hops.hopsworks.api.jobs.executions.ExecutionService;
+import io.hops.hopsworks.api.jobs.JobsResource;
+import io.hops.hopsworks.api.jobs.executions.ExecutionsResource;
+import io.hops.hopsworks.api.user.UsersResource;
 import io.swagger.annotations.Api;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -59,8 +61,8 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.api.filter.AuthFilter.class);
     register(io.hops.hopsworks.api.filter.JWTAutoRenewFilter.class);
     register(io.hops.hopsworks.api.jwt.JWTResource.class);
-    register(ExecutionService.class);
-    register(io.hops.hopsworks.api.jobs.JobService.class);
+    register(ExecutionsResource.class);
+    register(JobsResource.class);
     register(io.hops.hopsworks.api.jupyter.JupyterService.class);
     register(io.hops.hopsworks.api.serving.TfServingService.class);
     register(io.hops.hopsworks.api.serving.inference.InferenceResource.class);
@@ -76,7 +78,7 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.api.pythonDeps.PythonDepsService.class);
     register(io.hops.hopsworks.api.activities.ProjectActivitiesResource.class);
     register(io.hops.hopsworks.api.user.AuthService.class);
-    register(io.hops.hopsworks.api.user.UserService.class);
+    register(UsersResource.class);
     register(io.hops.hopsworks.api.util.BannerService.class);
     register(io.hops.hopsworks.api.util.ClusterUtilisationService.class);
     register(io.hops.hopsworks.api.util.DownloadService.class);

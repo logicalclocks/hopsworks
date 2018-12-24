@@ -44,7 +44,7 @@ import io.hops.hopsworks.api.dela.DelaProjectService;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
-import io.hops.hopsworks.api.jobs.JobService;
+import io.hops.hopsworks.api.jobs.JobsResource;
 import io.hops.hopsworks.api.jobs.KafkaService;
 import io.hops.hopsworks.api.jupyter.JupyterService;
 import io.hops.hopsworks.api.jwt.JWTHelper;
@@ -159,7 +159,7 @@ public class ProjectService {
   @Inject
   private LocalFsService localFs;
   @Inject
-  private JobService jobs;
+  private JobsResource jobs;
   @Inject
   private PythonDepsService pysparkService;
   @Inject
@@ -627,7 +627,7 @@ public class ProjectService {
   }
 
   @Path("{projectId}/jobs")
-  public JobService jobs(@PathParam("projectId") Integer projectId) {
+  public JobsResource jobs(@PathParam("projectId") Integer projectId) {
     return this.jobs.setProject(projectId);
   }
 

@@ -18,7 +18,7 @@ package io.hops.hopsworks.api.activities;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.Pagination;
-import io.hops.hopsworks.common.api.Resource;
+import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.ActivitiesException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
@@ -59,16 +59,16 @@ public class UserActivitiesResource {
       @Context UriInfo uriInfo,
       @Context SecurityContext sc) {
     Users user = jWTHelper.getUserPrincipal(sc);
-    Resource resource = new Resource(Resource.Name.ACTIVITIES);
-    resource.setOffset(pagination.getOffset());
-    resource.setLimit(pagination.getLimit());
-    resource.setSort(activitiesBeanParam.getSortBySet());
-    resource.setFilter(activitiesBeanParam.getFilter());
+    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.ACTIVITIES);
+    resourceRequest.setOffset(pagination.getOffset());
+    resourceRequest.setLimit(pagination.getLimit());
+    resourceRequest.setSort(activitiesBeanParam.getSortBySet());
+    resourceRequest.setFilter(activitiesBeanParam.getFilter());
     if (activitiesBeanParam.getExpansions() != null) {
-      resource.setExpansions(activitiesBeanParam.getExpansions().getResources());
+      resourceRequest.setExpansions(activitiesBeanParam.getExpansions().getResources());
     }
   
-    ActivitiesDTO activitiesDTO = activitiesBuilder.buildItems(uriInfo, resource, user);
+    ActivitiesDTO activitiesDTO = activitiesBuilder.buildItems(uriInfo, resourceRequest, user);
     return Response.ok().entity(activitiesDTO).build();
   }
 
@@ -84,9 +84,9 @@ public class UserActivitiesResource {
       @Context UriInfo uriInfo,
       @Context SecurityContext sc) throws ActivitiesException {
     Users user = jWTHelper.getUserPrincipal(sc);
-    Resource resource = new Resource(Resource.Name.ACTIVITIES);
-    resource.setExpansions(expansions.getResources());
-    ActivitiesDTO activitiesDTO = activitiesBuilder.build(uriInfo, resource, user, activityId);
+    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.ACTIVITIES);
+    resourceRequest.setExpansions(expansions.getResources());
+    ActivitiesDTO activitiesDTO = activitiesBuilder.build(uriInfo, resourceRequest, user, activityId);
     return Response.ok().entity(activitiesDTO).build();
   }
 }

@@ -16,7 +16,7 @@
 package io.hops.hopsworks.api.jobs.executions;
 
 import io.hops.hopsworks.api.user.UsersBuilder;
-import io.hops.hopsworks.common.api.Resource;
+import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.jobhistory.Execution;
 import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
@@ -50,11 +50,11 @@ public class ExecutionsBuilder {
    */
   public ExecutionDTO uri(ExecutionDTO dto, UriInfo uriInfo, Execution execution) {
     dto.setHref(uriInfo.getBaseUriBuilder()
-      .path(Resource.Name.PROJECT.toString())
+      .path(ResourceRequest.Name.PROJECT.toString())
       .path(Integer.toString(execution.getJob().getProject().getId()))
-      .path(Resource.Name.JOBS.toString())
+      .path(ResourceRequest.Name.JOBS.toString())
       .path(execution.getJob().getName())
-      .path(Resource.Name.EXECUTIONS.toString())
+      .path(ResourceRequest.Name.EXECUTIONS.toString())
       .path(Integer.toString(execution.getId()))
       .build());
     return dto;
@@ -68,26 +68,26 @@ public class ExecutionsBuilder {
    */
   public ExecutionDTO uri(ExecutionDTO dto, UriInfo uriInfo, Jobs job) {
     dto.setHref(uriInfo.getBaseUriBuilder()
-      .path(Resource.Name.PROJECT.toString())
+      .path(ResourceRequest.Name.PROJECT.toString())
       .path(Integer.toString(job.getProject().getId()))
-      .path(Resource.Name.JOBS.toString())
+      .path(ResourceRequest.Name.JOBS.toString())
       .path(job.getName())
-      .path(Resource.Name.EXECUTIONS.toString())
+      .path(ResourceRequest.Name.EXECUTIONS.toString())
       .build());
     return dto;
   }
   
-  public ExecutionDTO expand(ExecutionDTO dto, Resource resource) {
-    if (resource != null && (resource.contains(Resource.Name.EXECUTIONS))) {
+  public ExecutionDTO expand(ExecutionDTO dto, ResourceRequest resourceRequest) {
+    if (resourceRequest != null && (resourceRequest.contains(ResourceRequest.Name.EXECUTIONS))) {
       dto.setExpand(true);
     }
     return dto;
   }
   
-  public ExecutionDTO build(UriInfo uriInfo, Resource resource, Execution execution) {
+  public ExecutionDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Execution execution) {
     ExecutionDTO dto = new ExecutionDTO();
     uri(dto, uriInfo, execution);
-    expand(dto, resource);
+    expand(dto, resourceRequest);
     if (dto.isExpand()) {
       dto.setId(execution.getId());
       dto.setSubmissionTime(execution.getSubmissionTime());
@@ -98,29 +98,29 @@ public class ExecutionsBuilder {
       dto.setHdfsUser(execution.getHdfsUser());
       dto.setFinalStatus(execution.getFinalStatus());
       dto.setProgress(execution.getProgress());
-      dto.setUser(usersBuilder.build(uriInfo, resource.get(Resource.Name.USER), execution.getUser()));
+      dto.setUser(usersBuilder.build(uriInfo, resourceRequest.get(ResourceRequest.Name.USER), execution.getUser()));
       dto.setFilesToRemove(execution.getFilesToRemove());
       dto.setDuration(execution.getExecutionDuration());
     }
     return dto;
   }
   
-  public ExecutionDTO build(UriInfo uriInfo, Resource resource, Jobs job) {
+  public ExecutionDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Jobs job) {
     ExecutionDTO dto = new ExecutionDTO();
     uri(dto, uriInfo, job);
-    expand(dto, resource);
+    expand(dto, resourceRequest);
     if (dto.isExpand()) {
-      AbstractFacade.CollectionInfo collectionInfo = executionFacade.findByJob(resource.getOffset(),
-        resource.getLimit(), resource.getFilter(), resource.getSort(), job);
+      AbstractFacade.CollectionInfo collectionInfo = executionFacade.findByJob(resourceRequest.getOffset(),
+        resourceRequest.getLimit(), resourceRequest.getFilter(), resourceRequest.getSort(), job);
       dto.setCount(collectionInfo.getCount());
-      collectionInfo.getItems().forEach((exec) -> dto.addItem(build(uriInfo, resource, (Execution) exec)));
+      collectionInfo.getItems().forEach((exec) -> dto.addItem(build(uriInfo, resourceRequest, (Execution) exec)));
     }
     return dto;
   }
   
-  public Comparator<Execution> getComparator(Resource resource) {
-    Set<ExecutionFacade.SortBy> sortBy = (Set<ExecutionFacade.SortBy>) resource.getSort();
-    if (resource.getSort() != null && !resource.getSort().isEmpty()) {
+  public Comparator<Execution> getComparator(ResourceRequest resourceRequest) {
+    Set<ExecutionFacade.SortBy> sortBy = (Set<ExecutionFacade.SortBy>) resourceRequest.getSort();
+    if (resourceRequest.getSort() != null && !resourceRequest.getSort().isEmpty()) {
       return new ExecutionsComparator(sortBy);
     }
     return null;

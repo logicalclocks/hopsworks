@@ -22,22 +22,22 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-public class Resource {
-  private Resource.Name name;
+public class ResourceRequest {
+  private ResourceRequest.Name name;
   private Integer offset;
   private Integer limit;
   private Set<? extends AbstractFacade.SortBy> sort;
   private Set<? extends AbstractFacade.FilterBy> filter;
-  private Set<Resource> expansions;
+  private Set<ResourceRequest> expansions;
   
   //Only for internal use by child classes
   protected List<String> queryProps;
   
-  public Resource(Name name) {
+  public ResourceRequest(Name name) {
     this(name, null);
   }
   
-  public Resource(Name name, String queryParam) {
+  public ResourceRequest(Name name, String queryParam) {
     this.name = name;
     this.queryProps = new ArrayList<>();
     if (!Strings.isNullOrEmpty(queryParam) && queryParam.contains("(")) {
@@ -102,11 +102,11 @@ public class Resource {
     this.filter = filter;
   }
   
-  public Set<Resource> getExpansions() {
+  public Set<ResourceRequest> getExpansions() {
     return expansions;
   }
   
-  public void setExpansions(Set<Resource> expansions) {
+  public void setExpansions(Set<ResourceRequest> expansions) {
     this.expansions = expansions;
   }
   
@@ -115,7 +115,7 @@ public class Resource {
       return true;
     }
     if(expansions != null && !expansions.isEmpty()) {
-      for (Resource expansion : expansions) {
+      for (ResourceRequest expansion : expansions) {
         if (expansion.name == name) {
           return true;
         }
@@ -124,9 +124,9 @@ public class Resource {
     return false;
   }
   
-  public Resource get(Name name) {
+  public ResourceRequest get(Name name) {
     if(expansions != null && !expansions.isEmpty()) {
-      for (Resource expansion : expansions) {
+      for (ResourceRequest expansion : expansions) {
         if (expansion.name == name) {
           return expansion;
         }

@@ -35,9 +35,9 @@ public abstract class RestDTO<D> {
     this.href = href;
   }
   
-  public RestDTO(URI href, Resource resource) {
+  public RestDTO(URI href, ResourceRequest resourceRequest) {
     this.href = href;
-    if (resource != null) {
+    if (resourceRequest != null) {
       this.expand = true;
     }
   }

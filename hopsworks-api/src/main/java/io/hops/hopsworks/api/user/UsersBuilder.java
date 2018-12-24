@@ -15,7 +15,7 @@
  */
 package io.hops.hopsworks.api.user;
 
-import io.hops.hopsworks.common.api.Resource;
+import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
@@ -45,7 +45,7 @@ public class UsersBuilder {
 
   public UserProfileDTO uri(UserProfileDTO dto, UriInfo uriInfo, Users user) {
     dto.setHref(uriInfo.getBaseUriBuilder()
-        .path(Resource.Name.USERS.toString())
+        .path(ResourceRequest.Name.USERS.toString())
         .path(Integer.toString(user.getUid()))
         .build());
     return dto;
@@ -53,7 +53,7 @@ public class UsersBuilder {
 
   public UserDTO uri(UserDTO dto, UriInfo uriInfo, Users user) {
     dto.setHref(uriInfo.getBaseUriBuilder()
-        .path(Resource.Name.USERS.toString())
+        .path(ResourceRequest.Name.USERS.toString())
         .path(Integer.toString(user.getUid()))
         .build());
     return dto;
@@ -66,26 +66,26 @@ public class UsersBuilder {
     return dto;
   }
 
-  public UserProfileDTO expand(UserProfileDTO dto, Resource resource) {
-    if (resource != null && resource.contains(Resource.Name.USERS)) {
+  public UserProfileDTO expand(UserProfileDTO dto, ResourceRequest resourceRequest) {
+    if (resourceRequest != null && resourceRequest.contains(ResourceRequest.Name.USERS)) {
       dto.setExpand(true);
     }
     return dto;
   }
 
-  public UserDTO expand(UserDTO dto, Resource resource) {
-    if (resource != null && (resource.contains(Resource.Name.USER)
-        || resource.contains(Resource.Name.USERS)
-        || resource.contains(Resource.Name.CREATOR))) {
+  public UserDTO expand(UserDTO dto, ResourceRequest resourceRequest) {
+    if (resourceRequest != null && (resourceRequest.contains(ResourceRequest.Name.USER)
+        || resourceRequest.contains(ResourceRequest.Name.USERS)
+        || resourceRequest.contains(ResourceRequest.Name.CREATOR))) {
       dto.setExpand(true);
     }
     return dto;
   }
 
-  public UserDTO build(UriInfo uriInfo, Resource resource, Users user) {
+  public UserDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Users user) {
     UserDTO dto = new UserDTO();
     uri(dto, uriInfo, user);
-    expand(dto, resource);
+    expand(dto, resourceRequest);
     if (dto.isExpand()) {
       dto.setFirstname(user.getFname());
       dto.setLastname(user.getLname());
@@ -95,10 +95,10 @@ public class UsersBuilder {
     return dto;
   }
 
-  public UserProfileDTO buildFull(UriInfo uriInfo, Resource resource, Users user) {
+  public UserProfileDTO buildFull(UriInfo uriInfo, ResourceRequest resourceRequest, Users user) {
     UserProfileDTO dto = new UserProfileDTO();
     uri(dto, uriInfo, user);
-    expand(dto, resource);
+    expand(dto, resourceRequest);
     if (dto.isExpand()) {
       dto.setFirstname(user.getFname());
       dto.setLastname(user.getLname());
@@ -112,33 +112,33 @@ public class UsersBuilder {
     return dto;
   }
 
-  public UserProfileDTO build(UriInfo uriInfo, Resource resource, Integer id) {
+  public UserProfileDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Integer id) {
     Users user = userFacade.find(id);
-    return buildFull(uriInfo, resource, user);
+    return buildFull(uriInfo, resourceRequest, user);
   }
 
-  public UserProfileDTO build(UriInfo uriInfo, Resource resource, String email) {
+  public UserProfileDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, String email) {
     Users user = userFacade.findByEmail(email);
-    return buildFull(uriInfo, resource, user);
+    return buildFull(uriInfo, resourceRequest, user);
   }
 
-  public UserDTO buildItems(UriInfo uriInfo, Resource resource) {
+  public UserDTO buildItems(UriInfo uriInfo, ResourceRequest resourceRequest) {
     UserDTO dto = new UserDTO();
     uri(dto, uriInfo);
-    expand(dto, resource);
+    expand(dto, resourceRequest);
     if (dto.isExpand()) {
-      AbstractFacade.CollectionInfo collectionInfo = userFacade.findAll(resource.getOffset(), resource.getLimit(),
-          resource.getFilter(), resource.getSort());
+      AbstractFacade.CollectionInfo collectionInfo = userFacade.findAll(resourceRequest.getOffset(),
+        resourceRequest.getLimit(), resourceRequest.getFilter(), resourceRequest.getSort());
       //set the count
       dto.setCount(collectionInfo.getCount());
-      collectionInfo.getItems().forEach(( user ) -> dto.addItem(build(uriInfo, resource, (Users) user)));
+      collectionInfo.getItems().forEach(( user ) -> dto.addItem(build(uriInfo, resourceRequest, (Users) user)));
     }
     return dto;
   }
 
-  public Comparator<Users> getComparator(Resource resource) {
-    Set<UserFacade.SortBy> sortBy = (Set<UserFacade.SortBy>) resource.getSort();
-    if (resource.getSort() != null && !resource.getSort().isEmpty()) {
+  public Comparator<Users> getComparator(ResourceRequest resourceRequest) {
+    Set<UserFacade.SortBy> sortBy = (Set<UserFacade.SortBy>) resourceRequest.getSort();
+    if (resourceRequest.getSort() != null && !resourceRequest.getSort().isEmpty()) {
       return new UsersComparator(sortBy);
     }
     return null;

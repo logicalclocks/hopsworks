@@ -16,7 +16,7 @@
 package io.hops.hopsworks.api.activities;
 
 import io.hops.hopsworks.api.user.UsersBuilder;
-import io.hops.hopsworks.common.api.Resource;
+import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
@@ -53,7 +53,7 @@ public class ActivitiesBuilder {
 
   public ActivitiesDTO uri(ActivitiesDTO dto, UriInfo uriInfo, Activity activity) {
     dto.setHref(uriInfo.getBaseUriBuilder()
-        .path(Resource.Name.ACTIVITIES.toString())
+        .path(ResourceRequest.Name.ACTIVITIES.toString())
         .path(Integer.toString(activity.getId()))
         .build());
     return dto;
@@ -66,88 +66,88 @@ public class ActivitiesBuilder {
     return dto;
   }
 
-  public ActivitiesDTO expand(ActivitiesDTO dto, Resource resource) {
-    if (resource != null) {
+  public ActivitiesDTO expand(ActivitiesDTO dto, ResourceRequest resourceRequest) {
+    if (resourceRequest != null) {
       dto.setExpand(true);
     }
     return dto;
   }
 
-  public ActivitiesDTO build(UriInfo uriInfo, Resource resource, Activity activity) {
+  public ActivitiesDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Activity activity) {
     ActivitiesDTO dto = new ActivitiesDTO();
     uri(dto, uriInfo, activity);
-    expand(dto, resource);
+    expand(dto, resourceRequest);
     if (dto.isExpand()) {
       dto.setActivity(activity.getActivity());
       dto.setTimestamp(activity.getTimestamp());
       dto.setProjectName(activity.getProject().getName());
       dto.setFlag(activity.getFlag());
-      dto.setUser(usersBuilder.build(uriInfo, resource, activity.getUser()));
+      dto.setUser(usersBuilder.build(uriInfo, resourceRequest, activity.getUser()));
     }
     return dto;
   }
 
-  public ActivitiesDTO buildItems(UriInfo uriInfo, Resource resource, Activity activity) {
+  public ActivitiesDTO buildItems(UriInfo uriInfo, ResourceRequest resourceRequest, Activity activity) {
     ActivitiesDTO dto = new ActivitiesDTO();
     uriItems(dto, uriInfo, activity);
-    expand(dto, resource);
+    expand(dto, resourceRequest);
     if (dto.isExpand()) {
       dto.setActivity(activity.getActivity());
       dto.setTimestamp(activity.getTimestamp());
       dto.setProjectName(activity.getProject().getName());
       dto.setFlag(activity.getFlag());
-      dto.setUser(usersBuilder.build(uriInfo, resource, activity.getUser()));
+      dto.setUser(usersBuilder.build(uriInfo, resourceRequest, activity.getUser()));
     }
     return dto;
   }
 
-  public ActivitiesDTO build(UriInfo uriInfo, Resource resource, Users user, Integer id) throws
+  public ActivitiesDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Users user, Integer id) throws
       ActivitiesException {
     Activity activity = activityFacade.getActivityByIdAndUser(user, id);
     if (activity == null) {
       throw new ActivitiesException(RESTCodes.ActivitiesErrorCode.ACTIVITY_NOT_FOUND, Level.FINE, "activityId: " + id);
     }
-    return build(uriInfo, resource, activity);
+    return build(uriInfo, resourceRequest, activity);
   }
 
-  public ActivitiesDTO build(UriInfo uriInfo, Resource resource, Project project, Integer id) throws
+  public ActivitiesDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Project project, Integer id) throws
       ActivitiesException {
     Activity activity = activityFacade.getActivityByIdAndProject(project, id);
     if (activity == null) {
       throw new ActivitiesException(RESTCodes.ActivitiesErrorCode.ACTIVITY_NOT_FOUND, Level.FINE, "activityId: " + id);
     }
-    return build(uriInfo, resource, activity);
+    return build(uriInfo, resourceRequest, activity);
   }
 
-  public ActivitiesDTO buildItems(UriInfo uriInfo, Resource resource, Users user) {
-    return items(new ActivitiesDTO(), uriInfo, resource, user);
+  public ActivitiesDTO buildItems(UriInfo uriInfo, ResourceRequest resourceRequest, Users user) {
+    return items(new ActivitiesDTO(), uriInfo, resourceRequest, user);
   }
 
-  public ActivitiesDTO buildItems(UriInfo uriInfo, Resource resource, Project project) {
-    return items(new ActivitiesDTO(), uriInfo, resource, project);
+  public ActivitiesDTO buildItems(UriInfo uriInfo, ResourceRequest resourceRequest, Project project) {
+    return items(new ActivitiesDTO(), uriInfo, resourceRequest, project);
   }
 
-  private ActivitiesDTO items(ActivitiesDTO dto, UriInfo uriInfo, Resource resource, Users user) {
+  private ActivitiesDTO items(ActivitiesDTO dto, UriInfo uriInfo, ResourceRequest resourceRequest, Users user) {
     AbstractFacade.CollectionInfo
-      collectionInfo = activityFacade.findAllByUser(resource.getOffset(), resource.getLimit(), resource.getFilter(),
-          resource.getSort(), user);
+      collectionInfo = activityFacade.findAllByUser(resourceRequest.getOffset(), resourceRequest.getLimit(),
+      resourceRequest.getFilter(), resourceRequest.getSort(), user);
     dto.setCount(collectionInfo.getCount());
-    return items(dto, uriInfo, resource, collectionInfo.getItems());
+    return items(dto, uriInfo, resourceRequest, collectionInfo.getItems());
   }
 
-  private ActivitiesDTO items(ActivitiesDTO dto, UriInfo uriInfo, Resource resource, Project project) {
-    AbstractFacade.CollectionInfo collectionInfo = activityFacade.findAllByProject(resource.getOffset(),
-      resource.getLimit(), resource.getFilter(), resource.getSort(), project);
+  private ActivitiesDTO items(ActivitiesDTO dto, UriInfo uriInfo, ResourceRequest resourceRequest, Project project) {
+    AbstractFacade.CollectionInfo collectionInfo = activityFacade.findAllByProject(resourceRequest.getOffset(),
+      resourceRequest.getLimit(), resourceRequest.getFilter(), resourceRequest.getSort(), project);
     dto.setCount(collectionInfo.getCount());
-    return items(dto, uriInfo, resource, collectionInfo.getItems());
+    return items(dto, uriInfo, resourceRequest, collectionInfo.getItems());
   }
   
-  private ActivitiesDTO items(ActivitiesDTO dto, UriInfo uriInfo, Resource property, List<Activity> activities) {
+  private ActivitiesDTO items(ActivitiesDTO dto, UriInfo uriInfo, ResourceRequest property, List<Activity> activities) {
     activities.forEach(activity -> dto.addItem(buildItems(uriInfo, property, activity)));
     return dto;
   }
 
-  public Comparator<Activity> getComparator(Resource property) {
+  public Comparator<Activity> getComparator(ResourceRequest property) {
     Set<ActivityFacade.SortBy> sortBy = (Set<ActivityFacade.SortBy>) property.getSort();
     if (property.getSort() != null && !property.getSort().isEmpty()) {
       return new ActivityComparator(sortBy);

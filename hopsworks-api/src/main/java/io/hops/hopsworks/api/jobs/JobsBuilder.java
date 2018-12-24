@@ -17,7 +17,7 @@ package io.hops.hopsworks.api.jobs;
 
 import io.hops.hopsworks.api.jobs.executions.ExecutionsBuilder;
 import io.hops.hopsworks.api.user.UsersBuilder;
-import io.hops.hopsworks.common.api.Resource;
+import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
@@ -46,64 +46,64 @@ public class JobsBuilder {
   
   
   public JobDTO uri(JobDTO dto, UriInfo uriInfo, Project project) {
-    dto.setHref(uriInfo.getBaseUriBuilder().path(Resource.Name.PROJECT.toString().toLowerCase())
+    dto.setHref(uriInfo.getBaseUriBuilder().path(ResourceRequest.Name.PROJECT.toString().toLowerCase())
       .path(Integer.toString(project.getId()))
-      .path(Resource.Name.JOBS.toString().toLowerCase())
+      .path(ResourceRequest.Name.JOBS.toString().toLowerCase())
       .build());
     return dto;
   }
   
   public JobDTO uri(JobDTO dto, UriInfo uriInfo, Jobs job) {
-    dto.setHref(uriInfo.getBaseUriBuilder().path(Resource.Name.PROJECT.toString().toLowerCase())
+    dto.setHref(uriInfo.getBaseUriBuilder().path(ResourceRequest.Name.PROJECT.toString().toLowerCase())
       .path(Integer.toString(job.getProject().getId()))
-      .path(Resource.Name.JOBS.toString().toLowerCase())
+      .path(ResourceRequest.Name.JOBS.toString().toLowerCase())
       .path(job.getName())
       .build());
     return dto;
   }
   
-  public JobDTO expand(JobDTO dto, Resource resource) {
-    if (resource != null && resource.contains(Resource.Name.JOBS)) {
+  public JobDTO expand(JobDTO dto, ResourceRequest resourceRequest) {
+    if (resourceRequest != null && resourceRequest.contains(ResourceRequest.Name.JOBS)) {
       dto.setExpand(true);
     }
     return dto;
   }
   
-  public JobDTO build(UriInfo uriInfo, Resource resource, Jobs job) {
+  public JobDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Jobs job) {
     JobDTO dto = new JobDTO();
     uri(dto, uriInfo, job);
-    expand(dto, resource);
+    expand(dto, resourceRequest);
     if (dto.isExpand()) {
       dto.setId(job.getId());
       dto.setName(job.getName());
       dto.setCreationTime(job.getCreationTime());
       dto.setConfig(job.getJobConfig());
       dto.setJobType(job.getJobType());
-      dto.setCreator(usersBuilder.build(uriInfo, resource.get(Resource.Name.CREATOR), job.getCreator()));
-      dto.setExecutions(executionsBuilder.build(uriInfo, resource.get(Resource.Name.EXECUTIONS), job));
+      dto.setCreator(usersBuilder.build(uriInfo, resourceRequest.get(ResourceRequest.Name.CREATOR), job.getCreator()));
+      dto.setExecutions(executionsBuilder.build(uriInfo, resourceRequest.get(ResourceRequest.Name.EXECUTIONS), job));
     }
     return dto;
   }
   
-  public JobDTO build(UriInfo uriInfo, Resource resource, Project project) {
+  public JobDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Project project) {
     JobDTO dto = new JobDTO();
     uri(dto, uriInfo, project);
-    expand(dto, resource);
+    expand(dto, resourceRequest);
     if(dto.isExpand()) {
-      AbstractFacade.CollectionInfo collectionInfo = jobFacade.findByProject(resource.getOffset(),
-        resource.getLimit(),
-        resource.getFilter(),
-        resource.getSort(), project);
+      AbstractFacade.CollectionInfo collectionInfo = jobFacade.findByProject(resourceRequest.getOffset(),
+        resourceRequest.getLimit(),
+        resourceRequest.getFilter(),
+        resourceRequest.getSort(), project);
       //set the count
       dto.setCount(collectionInfo.getCount());
-      collectionInfo.getItems().forEach((job) -> dto.addItem(build(uriInfo, resource, (Jobs) job)));
+      collectionInfo.getItems().forEach((job) -> dto.addItem(build(uriInfo, resourceRequest, (Jobs) job)));
     }
     return dto;
   }
   
-  public Comparator<Jobs> getComparator(Resource resource) {
-    Set<JobFacade.SortBy> sortBy = (Set<JobFacade.SortBy>) resource.getSort();
-    if (resource.getSort() != null && !resource.getSort().isEmpty()) {
+  public Comparator<Jobs> getComparator(ResourceRequest resourceRequest) {
+    Set<JobFacade.SortBy> sortBy = (Set<JobFacade.SortBy>) resourceRequest.getSort();
+    if (resourceRequest.getSort() != null && !resourceRequest.getSort().isEmpty()) {
       return new JobsComparator(sortBy);
     }
     return null;

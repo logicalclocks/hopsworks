@@ -42,10 +42,10 @@ package io.hops.hopsworks.api.jobs;
 import com.google.common.base.Strings;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
-import io.hops.hopsworks.api.jobs.executions.ExecutionService;
+import io.hops.hopsworks.api.jobs.executions.ExecutionsResource;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.Pagination;
-import io.hops.hopsworks.common.api.Resource;
+import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.jobhistory.Execution;
 import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationAttemptStateFacade;
@@ -135,14 +135,14 @@ import java.util.stream.Stream;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class JobService {
+public class JobsResource {
   
-  private static final Logger LOGGER = Logger.getLogger(JobService.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(JobsResource.class.getName());
   
   @EJB
   private JobFacade jobFacade;
   @Inject
-  private ExecutionService executions;
+  private ExecutionsResource executions;
   @EJB
   private JobController jobController;
   @EJB
@@ -168,7 +168,7 @@ public class JobService {
   
   
   private Project project;
-  public JobService setProject(Integer projectId) {
+  public JobsResource setProject(Integer projectId) {
     this.project = projectFacade.find(projectId);
     return this;
   }
@@ -184,14 +184,14 @@ public class JobService {
     @BeanParam Pagination pagination,
     @BeanParam JobsBeanParam jobsBeanParam,
     @Context UriInfo uriInfo) {
-    Resource resource = new Resource(Resource.Name.JOBS);
-    resource.setOffset(pagination.getOffset());
-    resource.setLimit(pagination.getLimit());
-    resource.setSort(jobsBeanParam.getSortBySet());
-    resource.setFilter(jobsBeanParam.getFilter());
-    resource.setExpansions(jobsBeanParam.getExpansions().getResources());
+    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.JOBS);
+    resourceRequest.setOffset(pagination.getOffset());
+    resourceRequest.setLimit(pagination.getLimit());
+    resourceRequest.setSort(jobsBeanParam.getSortBySet());
+    resourceRequest.setFilter(jobsBeanParam.getFilter());
+    resourceRequest.setExpansions(jobsBeanParam.getExpansions().getResources());
     
-    JobDTO dto = jobsBuilder.build(uriInfo, resource, project);
+    JobDTO dto = jobsBuilder.build(uriInfo, resourceRequest, project);
     return Response.ok().entity(dto).build();
   }
   
@@ -205,9 +205,9 @@ public class JobService {
     @BeanParam JobsBeanParam jobsBeanParam,
     @Context UriInfo uriInfo) throws JobException {
     Jobs job = jobController.getJob(project, name);
-    Resource resource = new Resource(Resource.Name.JOBS);
-    resource.setExpansions(jobsBeanParam.getExpansions().getResources());
-    JobDTO dto = jobsBuilder.build(uriInfo, resource, job);
+    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.JOBS);
+    resourceRequest.setExpansions(jobsBeanParam.getExpansions().getResources());
+    JobDTO dto = jobsBuilder.build(uriInfo, resourceRequest, job);
     return Response.ok().entity(dto).build();
   }
   
@@ -234,7 +234,7 @@ public class JobService {
     }
     
     Jobs job = jobController.createJob(user, project, config);
-    JobDTO dto = jobsBuilder.build(uriInfo, new Resource(Resource.Name.JOBS), job);
+    JobDTO dto = jobsBuilder.build(uriInfo, new ResourceRequest(ResourceRequest.Name.JOBS), job);
     UriBuilder builder = uriInfo.getAbsolutePathBuilder().path(Integer.toString(dto.getId()));
     return Response.created(builder.build()).entity(dto).build();
   }
@@ -333,7 +333,7 @@ public class JobService {
   }
   
   @Path("{name}/executions")
-  public ExecutionService executions(@PathParam("name") String name) throws JobException {
+  public ExecutionsResource executions(@PathParam("name") String name) throws JobException {
     Jobs job = jobFacade.findByProjectAndName(project, name);
     if (job == null) {
       throw new JobException(RESTCodes.JobErrorCode.JOB_NOT_FOUND, Level.FINEST, "job name:" + name);

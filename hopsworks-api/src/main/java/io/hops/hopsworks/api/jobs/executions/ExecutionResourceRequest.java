@@ -15,14 +15,14 @@
  */
 package io.hops.hopsworks.api.jobs.executions;
 
-import io.hops.hopsworks.common.api.Resource;
+import io.hops.hopsworks.common.api.ResourceRequest;
 
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-public class ExecutionResource extends Resource {
-  public ExecutionResource(Resource.Name name, String queryParam) {
+public class ExecutionResourceRequest extends ResourceRequest {
+  public ExecutionResourceRequest(ResourceRequest.Name name, String queryParam) {
     super(name, queryParam);
     //Set sort_by
     Set<FilterBy> filters = null;

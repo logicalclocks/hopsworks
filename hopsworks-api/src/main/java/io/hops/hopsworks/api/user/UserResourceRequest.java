@@ -15,15 +15,15 @@
  */
 package io.hops.hopsworks.api.user;
 
-import io.hops.hopsworks.common.api.Resource;
+import io.hops.hopsworks.common.api.ResourceRequest;
 
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-public class UserResource extends Resource {
+public class UserResourceRequest extends ResourceRequest {
   
-  public UserResource(Resource.Name name, String queryParam) {
+  public UserResourceRequest(ResourceRequest.Name name, String queryParam) {
     super(name, queryParam);
     //Set sort_by
     Set<FilterBy> filters = null;

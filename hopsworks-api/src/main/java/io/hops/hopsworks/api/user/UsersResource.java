@@ -43,7 +43,7 @@ import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.api.util.Pagination;
-import io.hops.hopsworks.common.api.Resource;
+import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
@@ -94,9 +94,9 @@ import javax.ws.rs.core.UriInfo;
     authorizations = {
       @Authorization(value = "Cauth-Realm")})
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class UserService {
+public class UsersResource {
 
-  private final static Logger LOGGER = Logger.getLogger(UserService.class.getName());
+  private final static Logger LOGGER = Logger.getLogger(UsersResource.class.getName());
 
   @EJB
   private UsersController userController;
@@ -120,12 +120,12 @@ public class UserService {
       @BeanParam Pagination pagination,
       @BeanParam UsersBeanParam usersBeanParam,
       @Context UriInfo uriInfo) {
-    Resource resource = new Resource(Resource.Name.USERS);
-    resource.setOffset(pagination.getOffset());
-    resource.setLimit(pagination.getLimit());
-    resource.setSort(usersBeanParam.getSortBySet());
-    resource.setFilter(usersBeanParam.getFilter());
-    UserDTO userDTO = usersBuilder.buildItems(uriInfo, resource);
+    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.USERS);
+    resourceRequest.setOffset(pagination.getOffset());
+    resourceRequest.setLimit(pagination.getLimit());
+    resourceRequest.setSort(usersBeanParam.getSortBySet());
+    resourceRequest.setFilter(usersBeanParam.getFilter());
+    UserDTO userDTO = usersBuilder.buildItems(uriInfo, resourceRequest);
     return Response.ok().entity(userDTO).build();
   }
 
@@ -142,8 +142,8 @@ public class UserService {
     if (!Objects.equals(user.getUid(), userId) && !user.getBbcGroupCollection().contains(adminGroup)) {
       throw new UserException(RESTCodes.UserErrorCode.ACCESS_CONTROL, Level.SEVERE);
     }
-    Resource resource = new Resource(Resource.Name.USERS);
-    UserProfileDTO userDTO = usersBuilder.build(uriInfo, resource, userId);
+    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.USERS);
+    UserProfileDTO userDTO = usersBuilder.build(uriInfo, resourceRequest, userId);
     return Response.ok().entity(userDTO).build();
   }
 
@@ -156,8 +156,8 @@ public class UserService {
     if (user == null) {
       throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
     }
-    Resource resource = new Resource(Resource.Name.USERS);
-    UserProfileDTO userDTO = usersBuilder.buildFull(uriInfo, resource, user);
+    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.USERS);
+    UserProfileDTO userDTO = usersBuilder.buildFull(uriInfo, resourceRequest, user);
     return Response.ok().entity(userDTO).build();
   }
 
@@ -174,8 +174,8 @@ public class UserService {
       @Context SecurityContext sc) throws UserException {
     Users user = jWTHelper.getUserPrincipal(sc);
     user = userController.updateProfile(user, firstName, lastName, phoneNumber, toursState, req);
-    Resource resource = new Resource(Resource.Name.USERS);
-    UserProfileDTO userDTO = usersBuilder.buildFull(uriInfo, resource, user);
+    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.USERS);
+    UserProfileDTO userDTO = usersBuilder.buildFull(uriInfo, resourceRequest, user);
     return Response.ok().entity(userDTO).build();
   }
 

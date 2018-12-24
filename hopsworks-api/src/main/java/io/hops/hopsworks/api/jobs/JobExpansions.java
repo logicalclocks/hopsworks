@@ -15,41 +15,41 @@
  */
 package io.hops.hopsworks.api.jobs;
 
-import io.hops.hopsworks.api.user.UserResource;
-import io.hops.hopsworks.api.jobs.executions.ExecutionResource;
+import io.hops.hopsworks.api.user.UserResourceRequest;
+import io.hops.hopsworks.api.jobs.executions.ExecutionResourceRequest;
 import io.hops.hopsworks.common.api.Expansions;
-import io.hops.hopsworks.common.api.Resource;
+import io.hops.hopsworks.common.api.ResourceRequest;
 
 public class JobExpansions implements Expansions {
-  private Resource resource;
+  private ResourceRequest resourceRequest;
   
   public JobExpansions(String queryParam) {
-    Resource.Name name;
+    ResourceRequest.Name name;
     //Get name of resource
     if (queryParam.contains("(")) {
-      name = Resource.Name.valueOf(queryParam.substring(0, queryParam.indexOf('(')).toUpperCase());
+      name = ResourceRequest.Name.valueOf(queryParam.substring(0, queryParam.indexOf('(')).toUpperCase());
     } else {
-      name = Resource.Name.valueOf(queryParam.toUpperCase());
+      name = ResourceRequest.Name.valueOf(queryParam.toUpperCase());
     }
     
     switch (name) {
       case CREATOR:
-        resource = new UserResource(name, queryParam);
+        resourceRequest = new UserResourceRequest(name, queryParam);
         break;
       case EXECUTIONS:
-        resource = new ExecutionResource(name, queryParam);
+        resourceRequest = new ExecutionResourceRequest(name, queryParam);
         break;
       default:
         break;
     }
   }
   @Override
-  public Resource getResource() {
-    return resource;
+  public ResourceRequest getResourceRequest() {
+    return resourceRequest;
   }
   
   @Override
-  public void setResource(Resource resource) {
-    this.resource = resource;
+  public void setResourceRequest(ResourceRequest resourceRequest) {
+    this.resourceRequest = resourceRequest;
   }
 }

@@ -43,7 +43,7 @@ import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.Pagination;
-import io.hops.hopsworks.common.api.Resource;
+import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.jobhistory.Execution;
 import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
@@ -79,9 +79,9 @@ import java.util.logging.Logger;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class ExecutionService {
+public class ExecutionsResource {
   
-  private static final Logger LOGGER = Logger.getLogger(ExecutionService.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(ExecutionsResource.class.getName());
   
   @EJB
   private ExecutionFacade executionFacade;
@@ -96,7 +96,7 @@ public class ExecutionService {
   
   private Jobs job;
   
-  public ExecutionService setJob(Jobs job) {
+  public ExecutionsResource setJob(Jobs job) {
     this.job = job;
     return this;
   }
@@ -111,14 +111,14 @@ public class ExecutionService {
     @BeanParam ExecutionsBeanParam executionsBeanParam,
     @Context UriInfo uriInfo) {
   
-    Resource resource = new Resource(Resource.Name.EXECUTIONS);
-    resource.setOffset(pagination.getOffset());
-    resource.setLimit(pagination.getLimit());
-    resource.setSort(executionsBeanParam.getSortBySet());
-    resource.setFilter(executionsBeanParam.getFilter());
-    resource.setExpansions(executionsBeanParam.getExpansions().getResources());
+    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.EXECUTIONS);
+    resourceRequest.setOffset(pagination.getOffset());
+    resourceRequest.setLimit(pagination.getLimit());
+    resourceRequest.setSort(executionsBeanParam.getSortBySet());
+    resourceRequest.setFilter(executionsBeanParam.getFilter());
+    resourceRequest.setExpansions(executionsBeanParam.getExpansions().getResources());
     
-    ExecutionDTO dto = executionsBuilder.build(uriInfo, resource, job);
+    ExecutionDTO dto = executionsBuilder.build(uriInfo, resourceRequest, job);
     return Response.ok().entity(dto).build();
   }
   
@@ -134,9 +134,9 @@ public class ExecutionService {
     @Context UriInfo uriInfo) throws JobException {
     //If requested execution does not belong to job
     Execution execution = authorize(id);
-    Resource resource = new Resource(Resource.Name.EXECUTIONS);
-    resource.setExpansions(executionsBeanParam.getExpansions().getResources());
-    ExecutionDTO dto = executionsBuilder.build(uriInfo, resource, execution);
+    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.EXECUTIONS);
+    resourceRequest.setExpansions(executionsBeanParam.getExpansions().getResources());
+    ExecutionDTO dto = executionsBuilder.build(uriInfo, resourceRequest, execution);
     return Response.ok().entity(dto).build();
   }
   
@@ -159,12 +159,13 @@ public class ExecutionService {
         exec = executionController.start(job, user);
         UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder();
         uriBuilder.path(Integer.toString(exec.getId()));
-        Resource resource = new Resource(Resource.Name.EXECUTIONS);
-        return Response.created(uriBuilder.build()).entity(executionsBuilder.build(uriInfo, resource, exec)).build();
+        ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.EXECUTIONS);
+        return Response.created(uriBuilder.build()).entity(executionsBuilder.build(uriInfo, resourceRequest, exec))
+          .build();
       case STOP:
         exec = executionController.kill(job, user);
-        resource = new Resource(Resource.Name.EXECUTIONS);
-        return Response.ok().entity(executionsBuilder.build(uriInfo, resource, exec)).build();
+        resourceRequest = new ResourceRequest(ResourceRequest.Name.EXECUTIONS);
+        return Response.ok().entity(executionsBuilder.build(uriInfo, resourceRequest, exec)).build();
       default:
         return Response.status(Response.Status.BAD_REQUEST).build();
     }
