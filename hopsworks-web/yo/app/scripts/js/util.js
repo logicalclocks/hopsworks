@@ -41,21 +41,6 @@
  * Defines general, global scope, functions. 
  */
 
-var download = function (text, fileName) {
-  var bytes = toByteArray(text);
-  var data = new Blob([bytes], {type: 'application/octet-binary'});
-  FileSaver.saveAs(data, fileName);
-};
-
-var toByteArray = function (text) {
-  var l = text.length;
-  var bytes = new Uint8Array(l);
-  for (var i = 0; i < l; i++) {
-      bytes[i] = text.charCodeAt(i);
-  }
-  return bytes;
-};
-
 /**
  * Get the filename from a path.
  * @param {string} path
