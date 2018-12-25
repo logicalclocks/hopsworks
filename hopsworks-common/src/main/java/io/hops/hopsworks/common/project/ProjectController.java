@@ -638,7 +638,7 @@ public class ProjectController {
 
     for (Settings.BaseDataset ds : Settings.BaseDataset.values()) {
       datasetController.createDataset(user, project, ds.getName(), ds.
-          getDescription(), -1, false, true, dfso);
+          getDescription(), -1, false, true, true, dfso);
 
       StringBuilder dsStrBuilder = new StringBuilder();
       dsStrBuilder.append(File.separator).append(Settings.DIR_ROOT)
@@ -745,7 +745,7 @@ public class ProjectController {
       DistributedFileSystemOps udfso) throws DatasetException, HopsSecurityException, ProjectException {
     try {
       datasetController.createDataset(user, project, ds.getName(), ds.
-          getDescription(), -1, false, true, dfso);
+          getDescription(), -1, false, false, true, dfso);
       datasetController.generateReadme(udfso, ds.getName(),
           ds.getDescription(), project.getName());
 
@@ -935,9 +935,6 @@ public class ProjectController {
     cleanup(project, sessionId);
     
     certificateMaterializer.forceRemoveLocalMaterial(user.getUsername(), project.getName(), null, true);
-    if (settings.isPythonKernelEnabled()) {
-      jupyterProcessFacade.removePythonKernelsForProject(project.getName());
-    }
   }
 
   public String[] forceCleanup(String projectName, String userEmail, String sessionId) {
@@ -1778,9 +1775,6 @@ public class ProjectController {
             try {
               certsResultFuture = certificatesController.generateCertificates(project, newMember, false);
               certsResultFuture.get();
-              if (settings.isPythonKernelEnabled()) {
-                jupyterProcessFacade.createPythonKernelForProjectUser(project, newMember);
-              }
             } catch (Exception ex) {
               try {
                 if (certsResultFuture != null) {
@@ -2032,9 +2026,6 @@ public class ProjectController {
           YarnApplicationState.RUNNING, YarnApplicationState.SUBMITTED));
       //kill jupyter for this user
       jupyterProcessFacade.stopCleanly(hdfsUser);
-      if (settings.isPythonKernelEnabled()) {
-        jupyterProcessFacade.removePythonKernelForProjectUser(hdfsUser);
-      }
       livyController.deleteAllLivySessions(hdfsUser, ProjectServiceEnum.JUPYTER);
 
       //kill running TB if any
@@ -2223,7 +2214,7 @@ public class ProjectController {
   
     Users user = userFacade.findByEmail(username);
     datasetController.createDataset(user, project, Settings.HOPS_TOUR_DATASET,
-      "files for guide projects", -1, false, true, dfso);
+      "files for guide projects", -1, false, true, true, dfso);
 
     if (null != projectType) {
       switch (projectType) {

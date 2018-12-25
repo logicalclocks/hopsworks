@@ -44,7 +44,6 @@ import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
 import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.util.Settings;
 
 import javax.ejb.EJB;
@@ -78,20 +77,6 @@ public class JupyterFacade {
     return em;
   }
 
-//  public List<JupyterProject> findNotebooksByProject(Integer projectId) {
-//    TypedQuery<JupyterProject> query = em.createNamedQuery(
-//        "JupyterProject.findByProjectId",
-//        JupyterProject.class);
-//    query.setParameter("projectId", projectId);
-//    List<JupyterProject> res = query.getResultList();
-//    List<JupyterProject> notebooks = new ArrayList<>();
-//    for (JupyterProject pt : res) {
-////      notebooks.add(new TopicDTO(pt.getProjectTopicsPK().getTopicName(),
-////              pt.getSchemaTopics().getSchemaTopicsPK().getName(),
-////              pt.getSchemaTopics().getSchemaTopicsPK().getVersion()));
-//    }
-//    return notebooks;
-//  }
   public boolean removeNotebookServer(String hdfsUsername) {
 
     if (hdfsUsername == null || hdfsUsername.isEmpty()) {
@@ -111,34 +96,6 @@ public class JupyterFacade {
       return false;
     }
     return true;
-  }
-
-  /**
-   * Deletes jupyter configuration dir for user.
-   *
-   * @param project
-   * @return
-   */
-  public boolean deleteProject(Project project) {
-    Collection<ProjectTeam> ptc = project.getProjectTeamCollection();
-
-    for (ProjectTeam pt : ptc) {
-
-    }
-
-//    JupyterConfig conf = hdfsuserConfCache.remove(project.getName());
-//    if (conf != null) {
-//      return conf.cleanAndRemoveConfDirs();
-//    }
-//    String projectDirPath = settings.getZeppelinDir() + File.separator
-//            + Settings.DIR_ROOT + File.separator + project.getName();
-//    File projectDir = new File(projectDirPath);
-//    String hdfsUser = hdfsUsername.getHdfsUserName(project, project.getOwner());
-//    if (projectDir.exists()) {
-//      conf = new JupyterConfig(project.getName(), hdfsUser, settings, null);
-//      return conf.cleanAndRemoveConfDirs();
-//    }
-    return false;
   }
 
   public JupyterProject findByUser(String hdfsUser) {

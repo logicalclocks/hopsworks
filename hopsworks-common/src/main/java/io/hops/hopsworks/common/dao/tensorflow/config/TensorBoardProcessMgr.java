@@ -143,19 +143,17 @@ public class TensorBoardProcessMgr {
 
     while(retries > 0) {
 
-      if(retries == 0) {
-        throw new IOException("Failed to start TensorBoard for project=" + project.getName() + ", user="
-                + user.getUid());
-      }
+      try {
 
-      // use pidfile to kill any running servers
-      port = ThreadLocalRandom.current().nextInt(40000, 59999);
+        if(retries == 0) {
+          throw new IOException("Failed to start TensorBoard for project=" + project.getName() + ", user="
+                  + user.getUid());
+        }
 
-      String[] command = new String[]{"/usr/bin/sudo", prog, "start", hdfsUser.getName(), hdfsLogdir,
-        tbPath, port.toString(), anacondaEnvironmentPath, settings.getHadoopVersion(), certsPath,
-      settings.getJavaHome()};
+        // use pidfile to kill any running servers
+        port = ThreadLocalRandom.current().nextInt(40000, 59999);
   
-      ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
+        ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
           .addCommand("/usr/bin/sudo")
           .addCommand(prog)
           .addCommand("start")
@@ -169,9 +167,8 @@ public class TensorBoardProcessMgr {
           .addCommand(settings.getJavaHome())
           .ignoreOutErrStreams(true)
           .build();
-      LOGGER.log(Level.FINE, processDescriptor.toString());
-      
-      try {
+        LOGGER.log(Level.FINE, processDescriptor.toString());
+
         ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
         if (!processResult.processExited()) {
           throw new IOException("Tensorboard start process timed out!");
@@ -192,7 +189,7 @@ public class TensorBoardProcessMgr {
           try {
             host = InetAddress.getLocalHost().getHostAddress();
           } catch (UnknownHostException ex) {
-            Logger.getLogger(TensorBoardProcessMgr.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, null, ex);
           }
           tensorBoardDTO.setEndpoint(host + ":" + port);
           tensorBoardDTO.setPid(pid);
@@ -262,7 +259,6 @@ public class TensorBoardProcessMgr {
       ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
       if (!processResult.processExited()) {
         LOGGER.log(Level.SEVERE,"Failed to kill TensorBoard");
-        exitValue = 2;
       }
       exitValue = processResult.getExitCode();
     } catch (IOException ex) {
@@ -278,7 +274,7 @@ public class TensorBoardProcessMgr {
    * @return
    */
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-  public int killTensorBoard(TensorBoard tb) throws ServiceException {
+  public int killTensorBoard(TensorBoard tb) {
 
     String prog = settings.getHopsworksDomainDir() + "/bin/tensorboard.sh";
     int exitValue;
@@ -295,10 +291,8 @@ public class TensorBoardProcessMgr {
       ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
       if (!processResult.processExited()) {
         LOGGER.log(Level.SEVERE, "Failed to kill TensorBoard, process time-out");
-        exitValue = 2;
       }
       exitValue = processResult.getExitCode();
-      cleanupLocalTBDir(tb);
     } catch (IOException ex) {
       exitValue=2;
       LOGGER.log(Level.SEVERE,"Failed to kill TensorBoard" , ex);
