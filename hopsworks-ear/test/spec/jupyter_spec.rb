@@ -27,5 +27,25 @@ describe "On #{ENV['OS']}" do
       ds = json_body.detect { |d| d[:name] == "Jupyter"}
       expect(ds[:permission]).not_to include("t", "T")
     end
+
+    it "should convert .ipynb file to .py file" do
+
+      copy("/user/hdfs/tensorflow_demo/notebooks/Experiment/Keras/mnist.ipynb", "/Projects/#{@project[:projectname]}/Resources", @user[:username], "#{@project[:projectname]}__Resources", 750)
+
+      get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/enable/2.7/true"
+      expect_status(200)
+
+      get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent/Resources"
+      notebook_file = json_body.detect { |d| d[:name] == "mnist.ipynb" }
+      expect(notebook_file).to be_present
+
+      get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/convertIPythonNotebook/Resources/mnist.ipynb"
+      expect_status(200)
+
+      get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent/Resources"
+      python_file = json_body.detect { |d| d[:name] == "mnist.py" }
+      expect(python_file).to be_present
+    end
+
   end
 end
