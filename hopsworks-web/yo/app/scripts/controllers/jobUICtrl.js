@@ -191,10 +191,7 @@ angular.module('hopsWorksApp')
               getAppId(yarnUIInt);
             };
             var yarnUIInt = function () {
-              JobService.getYarnUI(self.projectId, self.appId).then(
-                      function (success) {
-
-                        self.ui = success.data;
+                self.ui = '/hopsworks-api/yarnui/cluster/app/' + self.appId;
                         self.current = "yarnUI";
                         var iframe = document.getElementById('ui_iframe');
                         if (iframe !== null) {
@@ -203,15 +200,6 @@ angular.module('hopsWorksApp')
                         }
                         // This timeout is ignored when the iframe is loaded, replacing the overlay
                         $timeout(stopLoading(), 5000);
-                      }, function (error) {
-
-                      if (typeof error.data.usrMsg !== 'undefined') {
-                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
-                      } else {
-                          growl.error("", {title: error.data.errorMsg, ttl: 8000});
-                      }
-                stopLoading();
-              });
             };
             self.kibanaUI = function () {
               getAppId(kibanaUIInt);

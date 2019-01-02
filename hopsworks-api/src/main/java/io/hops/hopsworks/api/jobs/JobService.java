@@ -77,12 +77,6 @@ import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.yarn.YarnClientService;
 import io.hops.hopsworks.common.yarn.YarnClientWrapper;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
-import org.apache.commons.httpclient.Header;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.cookie.CookiePolicy;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.params.HttpClientParams;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
@@ -111,29 +105,17 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.StreamingOutput;
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.Reader;
-import java.io.Writer;
-import java.net.URLEncoder;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
-import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -440,8 +422,7 @@ public class JobService {
     try {
       String trackingUrl = appAttemptStateFacade.findTrackingUrlByAppId(appId);
       if (trackingUrl != null && !trackingUrl.isEmpty()) {
-        trackingUrl = "/hopsworks-api/api/project/" + project.getId() + "/jobs/"
-            + appId + "/prox/" + trackingUrl;
+        trackingUrl = "/hopsworks-api/yarnui/" + trackingUrl;
         urls.add(new YarnAppUrlsDTO("spark", trackingUrl));
       }
     } catch (Exception e) {
@@ -644,236 +625,6 @@ public class JobService {
       }
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
     }
-  }
-
-  private static final HashSet<String> PASS_THROUGH_HEADERS
-      = new HashSet<String>(
-          Arrays
-              .asList("User-Agent", "user-agent", "Accept", "accept",
-                  "Accept-Encoding", "accept-encoding",
-                  "Accept-Language",
-                  "accept-language",
-                  "Accept-Charset", "accept-charset"));
-
-  /**
-   * Get the job ui for the specified job.
-   * This act as a proxy to get the job ui from yarn
-   * <p>
-   * @param appId
-   * @param param
-   * @param req
-   * @return
-   */
-  @GET
-  @Path("/{appId}/prox/{path: .+}")
-  @Produces(MediaType.WILDCARD)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response getProxy(@PathParam("appId") final String appId, @PathParam("path") final String param,
-      @Context HttpServletRequest req) {
-
-    Response response = checkAccessRight(appId);
-    if (response != null) {
-      return response;
-    }
-    try {
-      String trackingUrl;
-      if (param.matches("http([a-zA-Z,:,/,.,0-9,-])+:([0-9])+(.)+")) {
-        trackingUrl = param;
-      } else {
-        trackingUrl = "http://" + param;
-      }
-      trackingUrl = trackingUrl.replace("@hwqm", "?");
-      if (!hasAppAccessRight(trackingUrl)) {
-        LOGGER.log(Level.SEVERE,
-            "A user is trying to access an app outside their project!");
-        return Response.status(Response.Status.FORBIDDEN).build();
-      }
-      org.apache.commons.httpclient.URI uri
-          = new org.apache.commons.httpclient.URI(trackingUrl, false);
-
-      HttpClientParams params = new HttpClientParams();
-      params.setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
-      params.setBooleanParameter(HttpClientParams.ALLOW_CIRCULAR_REDIRECTS,
-          true);
-      HttpClient client = new HttpClient(params);
-
-      final HttpMethod method = new GetMethod(uri.getEscapedURI());
-      Enumeration<String> names = req.getHeaderNames();
-      while (names.hasMoreElements()) {
-        String name = names.nextElement();
-        String value = req.getHeader(name);
-        if (PASS_THROUGH_HEADERS.contains(name)) {
-          //yarn does not send back the js if encoding is not accepted
-          //but we don't want to accept encoding for the html because we
-          //need to be able to parse it
-          if (!name.toLowerCase().equals("accept-encoding") || trackingUrl.
-              contains(".js")) {
-            method.setRequestHeader(name, value);
-          }
-        }
-      }
-      String user = req.getRemoteUser();
-      if (user != null && !user.isEmpty()) {
-        method.setRequestHeader("Cookie", PROXY_USER_COOKIE_NAME + "="
-            + URLEncoder.encode(user, "ASCII"));
-      }
-
-      client.executeMethod(method);
-      Response.ResponseBuilder responseBuilder = noCacheResponse.
-          getNoCacheResponseBuilder(Response.Status.OK);
-      for (Header header : method.getResponseHeaders()) {
-        responseBuilder.header(header.getName(), header.getValue());
-      }
-      //method.getPath().contains("/allexecutors") is needed to replace the links under Executors tab
-      //which are in a json response object
-      if (method.getResponseHeader("Content-Type") == null || method.
-          getResponseHeader("Content-Type").getValue().contains("html")
-          || method.getPath().contains("/allexecutors")) {
-        final String source = "http://" + method.getURI().getHost() + ":"
-            + method.getURI().getPort();
-        if (method.getResponseHeader("Content-Length") == null) {
-          responseBuilder.entity(new StreamingOutput() {
-            @Override
-            public void write(OutputStream out) throws IOException,
-                WebApplicationException {
-              Writer writer
-                  = new BufferedWriter(new OutputStreamWriter(out));
-              InputStream stream = method.getResponseBodyAsStream();
-              Reader in = new InputStreamReader(stream, "UTF-8");
-              char[] buffer = new char[4 * 1024];
-              String remaining = "";
-              int n;
-              while ((n = in.read(buffer)) != -1) {
-                StringBuilder strb = new StringBuilder();
-                strb.append(buffer, 0, n);
-                String s = remaining + strb.toString();
-                remaining = s.substring(s.lastIndexOf(">") + 1, s.length());
-                s = hopify(s.substring(0, s.lastIndexOf(">") + 1), param,
-                    appId,
-                    source);
-                writer.write(s);
-              }
-              writer.flush();
-            }
-          });
-        } else {
-          String s = hopify(method.getResponseBodyAsString(), param, appId,
-              source);
-          responseBuilder.entity(s);
-          responseBuilder.header("Content-Length", s.length());
-        }
-
-      } else {
-        responseBuilder.entity(new StreamingOutput() {
-          @Override
-          public void write(OutputStream out) throws IOException,
-              WebApplicationException {
-            InputStream stream = method.getResponseBodyAsStream();
-            org.apache.hadoop.io.IOUtils.copyBytes(stream, out, 4096, true);
-            out.flush();
-          }
-        });
-      }
-      return responseBuilder.build();
-    } catch (Exception e) {
-      LOGGER.log(Level.SEVERE, "exception while geting job ui " + e.getLocalizedMessage(), e);
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
-    }
-
-  }
-
-  private String hopify(String ui, String param, String appId, String source) {
-
-    //remove the link to the full cluster information in the yarn ui
-    ui = ui.replaceAll(
-        "<div id=\"user\">[\\s\\S]+Logged in as: dr.who[\\s\\S]+<div id=\"logo\">",
-        "<div id=\"logo\">");
-    ui = ui.replaceAll(
-        "<tfoot>[\\s\\S]+</tfoot>",
-        "");
-    ui = ui.replaceAll("<td id=\"navcell\">[\\s\\S]+<td class=\"content\">",
-        "<td class=\"content\">");
-    ui = ui.replaceAll("<td id=\"navcell\">[\\s\\S]+<td ", "<td ");
-    ui = ui.replaceAll(
-        "<li><a ui-sref=\"submit\"[\\s\\S]+new Job</a></li>", "");
-
-    ui = ui.replaceAll("(?<=(href|src)=.[^>]{0,200})\\?", "@hwqm");
-
-    ui = ui.replaceAll("(?<=(href|src)=\")/(?=[a-zA-Z])",
-        "/hopsworks-api/api/project/"
-        + project.getId() + "/jobs/" + appId + "/prox/"
-        + source + "/");
-    ui = ui.replaceAll("(?<=(href|src)=\')/(?=[a-zA-Z])",
-        "/hopsworks-api/api/project/"
-        + project.getId() + "/jobs/" + appId + "/prox/"
-        + source + "/");
-    ui = ui.replaceAll("(?<=(href|src)=\")//", "/hopsworks-api/api/project/"
-        + project.getId() + "/jobs/" + appId + "/prox/");
-    ui = ui.replaceAll("(?<=(href|src)=\')//", "/hopsworks-api/api/project/"
-        + project.getId() + "/jobs/" + appId + "/prox/");
-    ui = ui.replaceAll("(?<=(href|src)=\")(?=http)",
-        "/hopsworks-api/api/project/"
-        + project.getId() + "/jobs/" + appId + "/prox/");
-    ui = ui.replaceAll("(?<=(href|src)=\')(?=http)",
-        "/hopsworks-api/api/project/"
-        + project.getId() + "/jobs/" + appId + "/prox/");
-    ui = ui.replaceAll("(?<=(href|src)=\")(?=[a-zA-Z])",
-        "/hopsworks-api/api/project/"
-        + project.getId() + "/jobs/" + appId + "/prox/" + param);
-    ui = ui.replaceAll("(?<=(href|src)=\')(?=[a-zA-Z])",
-        "/hopsworks-api/api/project/"
-        + project.getId() + "/jobs/" + appId + "/prox/" + param);
-    ui = ui.replaceAll("(?<=\"(stdout\"|stderr\") : \")(?=[a-zA-Z])",
-        "/hopsworks-api/api/project/"
-        + project.getId() + "/jobs/" + appId + "/prox/");
-    ui = ui.replaceAll("here</a>\\s+for full log", "here</a> for latest " + settings.getSparkUILogsOffset()
-        + " bytes of logs");
-    ui = ui.replaceAll("/@hwqmstart=0", "/@hwqmstart=-" + settings.getSparkUILogsOffset());
-    return ui;
-  }
-
-  private boolean hasAppAccessRight(String trackingUrl) {
-    String appId = "";
-    if (trackingUrl.contains("application_")) {
-      for (String elem : trackingUrl.split("/")) {
-        if (elem.contains("application_")) {
-          appId = elem;
-          break;
-        }
-      }
-    } else if (trackingUrl.contains("container_")) {
-      appId = "application_";
-      for (String elem : trackingUrl.split("/")) {
-        if (elem.contains("container_")) {
-          String[] containerIdElem = elem.split("_");
-          appId = appId + containerIdElem[2] + "_" + containerIdElem[3];
-          break;
-        }
-      }
-    } else if (trackingUrl.contains("appattempt_")) {
-      appId = "application_";
-      for (String elem : trackingUrl.split("/")) {
-        if (elem.contains("appattempt_")) {
-          String[] containerIdElem = elem.split("_");
-          appId = appId + containerIdElem[1] + "_" + containerIdElem[2];
-          break;
-        }
-      }
-    } else {
-      if (trackingUrl.contains("static")) {
-        return true;
-      }
-      return false;
-    }
-    if (!appId.isEmpty()) {
-      String appUser = yarnApplicationstateFacade.findByAppId(appId).
-          getAppuser();
-      if (!project.getName().equals(hdfsUsersBean.getProjectName(
-          appUser))) {
-        return false;
-      }
-    }
-    return true;
   }
 
   @GET
