@@ -63,6 +63,7 @@ angular.module('hopsWorksApp')
             self.sparkDynamic = false;
             self.experiment = false;
             self.condaEnabled = true;
+            self.jupyterInstalled = true;
             $scope.sessions = null;
             self.val = {};
             $scope.tgState = true;
@@ -271,7 +272,7 @@ angular.module('hopsWorksApp')
                 self.val.appmasterMemory = 1024;
                 self.val.numExecutorGpus = 0;
                 self.val.numDriverGpus = 0;
-            }
+            };
 
             self.setMultiExecutor = function() {
                 // If leaving TF Driver mode, change default executor memory to 4096
@@ -325,7 +326,7 @@ angular.module('hopsWorksApp')
                                 break;
                             }
                         }
-                        self.checkCondaEnabled()
+                        self.checkCondaEnabled();
                         self.numNotEnabledEnvs = self.tempEnvs;
 
                     },
@@ -336,6 +337,20 @@ angular.module('hopsWorksApp')
             };
 
             getCondaCommands();
+
+            var checkJupyterInstalled = function() {
+                // Use hdfscontents as a proxy to now if jupyter has been installed correctly or not
+                PythonDepsService.libInstalled(self.projectId, "hdfscontents").then(
+                    function(success) {
+                        self.jupyterInstalled = true;
+                    },
+                    function(error) {
+                        self.jupyterInstalled = false;
+                    }
+                );
+            };
+
+            checkJupyterInstalled();
 
             var condaCommandsPoller = function() {
                 self.condaPoller = $interval(function() {

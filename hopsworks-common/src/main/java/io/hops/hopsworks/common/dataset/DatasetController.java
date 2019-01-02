@@ -131,6 +131,7 @@ public class DatasetController {
    * this DataSet.
    * @param searchable Defines whether the dataset can be indexed or not (i.e.
    * whether it can be visible in the search results or not)
+   * @param stickyBit Whether or not the dataset should have the sticky bit set
    * @param defaultDataset
    * @param dfso
    * folder names, or the folder already exists.
@@ -138,7 +139,7 @@ public class DatasetController {
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public void createDataset(Users user, Project project, String dataSetName,
       String datasetDescription, int templateId, boolean searchable,
-      boolean defaultDataset, DistributedFileSystemOps dfso)
+      boolean stickyBit, boolean defaultDataset, DistributedFileSystemOps dfso)
     throws DatasetException, HopsSecurityException {
     //Parameter checking.
     if (user == null || project == null || dataSetName == null) {
@@ -163,7 +164,7 @@ public class DatasetController {
     FsAction group = (defaultDataset ? FsAction.ALL
         : FsAction.READ_EXECUTE);
     FsPermission fsPermission = new FsPermission(FsAction.ALL,
-        group, global, defaultDataset);
+        group, global, stickyBit);
     success = createFolder(dsPath, templateId, fsPermission, dfso);
     if (success) {
       try {
