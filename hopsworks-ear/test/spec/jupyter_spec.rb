@@ -36,6 +36,7 @@ describe "On #{ENV['OS']}" do
       expect_status(200)
 
       get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent/Resources"
+      expect_status(200)
       notebook_file = json_body.detect { |d| d[:name] == "mnist.ipynb" }
       expect(notebook_file).to be_present
 
@@ -43,6 +44,7 @@ describe "On #{ENV['OS']}" do
       expect_status(200)
 
       get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent/Resources"
+      expect_status(200)
       python_file = json_body.detect { |d| d[:name] == "mnist.py" }
       expect(python_file).to be_present
     end
