@@ -36,7 +36,7 @@ module ExecutionHelper
   end
 
   def wait_for_execution
-    timeout = 120
+    timeout = 240
     start = Time.now
     x = yield
     until x

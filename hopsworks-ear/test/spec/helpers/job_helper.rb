@@ -66,11 +66,6 @@ module JobHelper
     }
 
     post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jobs", job_conf
-    #job_id = json_body[:id]
-    #job = get_job_from_db(job_id)
-    #expect(job[:id]).to eq job_id
-    #expect(job[:name]).to eq job_conf[:appName]
-    #job
   end
 
   def get_jobs(project_id, query)
