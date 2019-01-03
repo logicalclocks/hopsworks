@@ -731,6 +731,17 @@ public class ProjectController {
           addServiceDataset(project, user, Settings.ServiceDataset.EXPERIMENTS, dfso, udfso);
           addKibana(project);
         }
+        break;
+      case FEATURESTORE:
+        addServiceFeaturestore(project, user, dfso);
+        addServiceDataset(project, user, Settings.ServiceDataset.TRAININGDATASETS, dfso, udfso);
+        //Enable Jobs service at the same time as featurestore
+        if (!projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.JOBS)) {
+          if (!projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.JUPYTER)) {
+            addServiceDataset(project, user, Settings.ServiceDataset.EXPERIMENTS, dfso, udfso);
+            addKibana(project);
+          }
+        }
     }
 
     // Persist enabled service in the database

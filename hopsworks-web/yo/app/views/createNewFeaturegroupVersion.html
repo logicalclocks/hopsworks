@@ -87,6 +87,8 @@
                     </div>
                 </div>
             </div>
+            <div ng-if="createNewFeaturegroupVersionCtrl.dependenciesWrongValue[$index] === -1" style="color: red">{{"Feature dependency cannot be empty"}}
+            </div>
         </div>
         <div class="view-info">
             <div class="col-md-12">

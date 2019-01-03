@@ -66,6 +66,10 @@ angular.module('hopsWorksApp')
             for (i = 0; i < self.featuregroup.dependencies.length; i++) {
                 self.dependencies.push(self.featuregroup.dependencies[i].path)
             }
+            self.dependenciesWrongValue = [];
+            for (i = 0; i < self.dependencies.length; i++) {
+                self.dependenciesWrongValue.push(1)
+            }
             self.hiveDataTypes = [
                 "TINYINT", "SMALLINT", "INT", "BIGINT", "FLOAT", "DOUBLE",
                 "DECIMAL", "TIMESTAMP", "DATE", "INTERVAL", "STRING", "VARCHAR",
@@ -87,6 +91,14 @@ angular.module('hopsWorksApp')
                 self.primaryKeyWrongValue = 1;
                 self.dependenciesNotUnique = 1;
                 self.working = true;
+                for (i = 0; i < self.dependencies.length; i++) {
+                    if(!self.dependencies[i] || self.dependencies[i] === "" || self.dependencies[i] === null){
+                        self.dependenciesWrongValue[i] = -1
+                        self.wrong_values = -1;
+                    } else {
+                        self.dependenciesWrongValue[i] = 1
+                    }
+                }
                 for (i = 0; i < self.featuresNameWrongValue.length; i++) {
                     self.featuresNameWrongValue[i] = 1
                 }

@@ -48,6 +48,10 @@ angular.module('hopsWorksApp')
             self.trainingDatasetName;
             self.trainingDatasetDescription;
             self.dependencies = [];
+            self.dependenciesWrongValue = [];
+            for (i = 0; i < self.dependencies.length; i++) {
+                self.dependenciesWrongValue.push(1)
+            }
             self.trainingDatasetFormat;
 
             self.dataFormats = [
@@ -72,7 +76,14 @@ angular.module('hopsWorksApp')
                 self.trainingDatasetDescriptionWrongValue = 1;
                 self.wrong_values = 1;
                 self.working = true;
-
+                for (i = 0; i < self.dependencies.length; i++) {
+                    if(!self.dependencies[i] || self.dependencies[i] === "" || self.dependencies[i] === null){
+                        self.dependenciesWrongValue[i] = -1
+                        self.wrong_values = -1;
+                    } else {
+                        self.dependenciesWrongValue[i] = 1
+                    }
+                }
                 if (!self.trainingDatasetName || self.trainingDatasetName.search(self.trainingDatasetNameRegexp) == -1 || self.trainingDatasetName.length > 256) {
                     self.trainingDatasetNameWrongValue = -1;
                     self.wrong_values = -1;

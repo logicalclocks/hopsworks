@@ -62,6 +62,10 @@ angular.module('hopsWorksApp')
             self.featuregroupName;
             self.featuregroupDoc = "";
             self.dependencies = []
+            self.dependenciesWrongValue = [];
+            for (i = 0; i < self.dependencies.length; i++) {
+                self.dependenciesWrongValue.push(1)
+            }
 
             /**
              * Function called when the "create feature group" button is pressed.
@@ -78,6 +82,14 @@ angular.module('hopsWorksApp')
                 self.featuregroupDocWrongValue = 1;
                 self.primaryKeyWrongValue = 1;
                 self.working = true;
+                for (i = 0; i < self.dependencies.length; i++) {
+                    if(!self.dependencies[i] || self.dependencies[i] === "" || self.dependencies[i] === null){
+                        self.dependenciesWrongValue[i] = -1
+                        self.wrong_values = -1;
+                    } else {
+                        self.dependenciesWrongValue[i] = 1
+                    }
+                }
                 for (i = 0; i < self.featuresNameWrongValue.length; i++) {
                     self.featuresNameWrongValue[i] = 1
                 }

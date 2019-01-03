@@ -42,19 +42,19 @@ public class FeaturestoreDependencyController {
   /**
    * Updates the list of dependencies for a featuregroup or training dataset
    *
-   * @param featuregroup the featuregroup to update dependencies for
+   * @param featuregroup    the featuregroup to update dependencies for
    * @param trainingDataset the training dataset to update dependencies for
-   * @param fileNames the list of filenames of the new dependencies
+   * @param fileNames       the list of filenames of the new dependencies
    */
   public void updateFeaturestoreDependencies(
       Featuregroup featuregroup, TrainingDataset trainingDataset, List<String> fileNames) {
-    if(fileNames == null) {
+    if (fileNames == null) {
       return;
     }
-    if(featuregroup != null){
+    if (featuregroup != null) {
       removeFeaturestoreDependencies((List) featuregroup.getDependencies());
     }
-    if(trainingDataset != null){
+    if (trainingDataset != null) {
       removeFeaturestoreDependencies((List) trainingDataset.getDependencies());
     }
     insertFeaturestoreDependencies(featuregroup, trainingDataset, fileNames);
@@ -72,9 +72,9 @@ public class FeaturestoreDependencyController {
   /**
    * Inserts a list of dependencies in the database, linked to a featuregroup or training dataset
    *
-   * @param featuregroup the featuregroup that the dependencies are linked to
+   * @param featuregroup    the featuregroup that the dependencies are linked to
    * @param trainingDataset the training dataset that the dependencies are linked to
-   * @param fileNames the list of file names of the new dependencies
+   * @param fileNames       the list of file names of the new dependencies
    */
   private void insertFeaturestoreDependencies(
       Featuregroup featuregroup, TrainingDataset trainingDataset,
@@ -87,18 +87,20 @@ public class FeaturestoreDependencyController {
   /**
    * Converts a list of file names into FeatureStoreDependency entities that can be inserted in the database
    *
-   * @param featuregroup the featuregroup that the dependencies are linked to
+   * @param featuregroup    the featuregroup that the dependencies are linked to
    * @param trainingDataset the training dataset that the dependencies are linked to
-   * @param fileNames the list of filenames for the dependencies
+   * @param fileNames       the list of filenames for the dependencies
    * @return a list of FeaturestoreDependency entities
    */
   private List<FeaturestoreDependency> convertFileNamesToFeaturestoreDependencies(
       Featuregroup featuregroup, TrainingDataset trainingDataset,
       List<String> fileNames) {
     List<FeaturestoreDependency> featurestoreDependencies = new ArrayList<>();
-    for (String fileName: fileNames) {
-      Inode inode = inodeFacade.getInodeAtPath(preProcessDependencyPath(fileName));
-      if(inode == null){
+    for (String fileName : fileNames) {
+      Inode inode = null;
+      if (fileName != null && fileName.length() > 0)
+        inode = inodeFacade.getInodeAtPath(preProcessDependencyPath(fileName));
+      if (inode == null) {
         LOGGER.log(Level.WARNING, "Could not find inode for feature store dependency with name: " + fileName);
       } else {
         FeaturestoreDependency featurestoreDependency = new FeaturestoreDependency();
@@ -117,9 +119,9 @@ public class FeaturestoreDependencyController {
    * @param dependencyPath the path to drop the prefix from
    * @return the path without the prefix
    */
-  private String preProcessDependencyPath(String dependencyPath){
-    if(dependencyPath.length() > 7){
-      if(dependencyPath.substring(0, 7).equalsIgnoreCase("hdfs://")){
+  private String preProcessDependencyPath(String dependencyPath) {
+    if (dependencyPath.length() > 7) {
+      if (dependencyPath.substring(0, 7).equalsIgnoreCase("hdfs://")) {
         dependencyPath = dependencyPath.substring(7);
       }
     }

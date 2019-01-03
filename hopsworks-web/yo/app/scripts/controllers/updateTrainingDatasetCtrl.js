@@ -53,6 +53,10 @@ angular.module('hopsWorksApp')
             for (i = 0; i < self.trainingDataset.dependencies.length; i++) {
                 self.dependencies.push(self.trainingDataset.dependencies[i].path)
             }
+            self.dependenciesWrongValue = [];
+            for (i = 0; i < self.dependencies.length; i++) {
+                self.dependenciesWrongValue.push(1)
+            }
             self.trainingDatasetFormat = self.dataFormats[self.dataFormats.indexOf(trainingDataset.dataFormat)]
             self.job;
             self.pageSize = 1000; //don't show pagination controls, let the user scroll instead
@@ -88,7 +92,14 @@ angular.module('hopsWorksApp')
                 self.dependenciesNotUnique = 1
                 self.wrong_values = 1;
                 self.working = true;
-
+                for (i = 0; i < self.dependencies.length; i++) {
+                    if(!self.dependencies[i] || self.dependencies[i] === "" || self.dependencies[i] === null){
+                        self.dependenciesWrongValue[i] = -1
+                        self.wrong_values = -1;
+                    } else {
+                        self.dependenciesWrongValue[i] = 1
+                    }
+                }
                 if (!self.trainingDatasetName || self.trainingDatasetName.search(self.trainingDatasetNameRegexp) == -1 || self.trainingDatasetName.length > 256) {
                     self.trainingDatasetNameWrongValue = -1;
                     self.wrong_values = -1;
