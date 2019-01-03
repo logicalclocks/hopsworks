@@ -27,8 +27,6 @@ angular.module('hopsWorksApp')
             var self = this;
             self.projectId = projectId;
             self.featuregroup = featuregroup;
-            console.log("received fg: ")
-            console.log(featuregroup)
 
             /**
              * Function for preprocessing the spark descriptive statistics to a format that is suitable to

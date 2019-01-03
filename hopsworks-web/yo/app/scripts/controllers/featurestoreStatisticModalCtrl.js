@@ -34,35 +34,15 @@ angular.module('hopsWorksApp')
             self.trainingDataset = trainingDataset
 
             /**
-             * Function to start the loading screen
-             *
-             * @param label the text to show to the user while loading
-             */
-            self.startLoading = function (label) {
-                self.loading = true;
-                self.loadingText = label;
-            };
-
-            /**
-             * Function to stop the loading screen
-             */
-            self.stopLoading = function () {
-                self.loading = false;
-                self.loadingText = "";
-            };
-
-            /**
              * Render heatmap to visualize feature correlations
              */
             self.renderHeatmap = function () {
-                self.startLoading("Rendering correlation matrix..")
                 $uibModalInstance.rendered.then(function () {
                     self.heatmapChart = new ApexCharts(
                         document.querySelector("#heatmapchart"),
                         self.statisticData
                     );
                     self.heatmapChart.render()
-                    setTimeout(function(){ self.stopLoading()}, 150);
                 });
             };
 
