@@ -546,6 +546,13 @@ public class ProjectService {
       projectDTO.setProjectName("demo_" + TourProjectType.DEEP_LEARNING.getTourName() + "_" + username);
       populateActiveServices(projectServices, TourProjectType.DEEP_LEARNING);
       readMeMessage = "Jupyter notebooks and training data for demonstrating how to run Deep Learning";
+    } else if (TourProjectType.FEATURESTORE.getTourName().equalsIgnoreCase(type)) {
+      // It's a Featurestore guide
+      demoType = TourProjectType.FEATURESTORE;
+      projectDTO.setProjectName("demo_" + TourProjectType.FEATURESTORE.getTourName() + "_" + username);
+      populateActiveServices(projectServices, TourProjectType.FEATURESTORE);
+      readMeMessage = "jar file to demonstrate feature engineering and writing to the feature store and " +
+          "Jupyter notebooks to demonstrate how to fetch features from the feature store and use to build models";
     }
     projectDTO.setServices(projectServices);
 

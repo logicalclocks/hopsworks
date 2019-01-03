@@ -43,9 +43,10 @@ angular.module('hopsWorksApp')
         .controller('DatasetsCtrl', ['$scope', '$mdSidenav', '$mdUtil',
           'DataSetService', 'JupyterService', '$routeParams', 'ModalService', 'growl', '$location',
           'MetadataHelperService', '$rootScope', 'DelaProjectService', 'DelaClusterProjectService', 'UtilsService', 'UserService', '$mdToast',
+          'TourService',
           function ($scope, $mdSidenav, $mdUtil, DataSetService, JupyterService, $routeParams,
                   ModalService, growl, $location, MetadataHelperService,
-                  $rootScope, DelaProjectService, DelaClusterProjectService, UtilsService, UserService, $mdToast) {
+                  $rootScope, DelaProjectService, DelaClusterProjectService, UtilsService, UserService, $mdToast, TourService) {
 
             var self = this;
             self.itemsPerPage = 14;
@@ -57,7 +58,8 @@ angular.module('hopsWorksApp')
             self.sharedPathArray; //An array containing all the path components of a path in a shared dataset 
             self.highlighted;
             self.parentDS = $rootScope.parentDS;
-            
+            self.tourService = TourService;
+            self.tourService.currentStep_TourNine = 6; //Feature store Tour
 
             // Details of the currently selecte file/dir
             self.selected = null; //The index of the selected file in the files array.
@@ -131,7 +133,9 @@ angular.module('hopsWorksApp')
               }
             });
 
-
+            self.goToUrl = function (serviceName) {
+                $location.path('project/' + self.projectId + '/' + serviceName);
+            }
             self.isSharedDs = function (name) {
               var top = name.split("::");
               if (top.length === 1) {

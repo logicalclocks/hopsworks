@@ -47,6 +47,7 @@ import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
 import io.hops.hopsworks.common.dao.dataset.DatasetType;
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
 import io.hops.hopsworks.common.dao.featurestore.FeaturestoreController;
+import io.hops.hopsworks.common.dao.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.dao.hdfs.HdfsInodeAttributes;
 import io.hops.hopsworks.common.dao.hdfs.HdfsInodeAttributesFacade;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
@@ -87,6 +88,7 @@ import io.hops.hopsworks.common.exception.DatasetException;
 import io.hops.hopsworks.common.exception.FeaturestoreException;
 import io.hops.hopsworks.common.exception.GenericException;
 import io.hops.hopsworks.common.exception.HopsSecurityException;
+import io.hops.hopsworks.common.exception.JobException;
 import io.hops.hopsworks.common.exception.KafkaException;
 import io.hops.hopsworks.common.exception.ProjectException;
 import io.hops.hopsworks.common.exception.RESTCodes;
@@ -98,6 +100,10 @@ import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hive.HiveController;
+import io.hops.hopsworks.common.jobs.JobController;
+import io.hops.hopsworks.common.jobs.execution.ExecutionController;
+import io.hops.hopsworks.common.jobs.spark.SparkJobConfiguration;
+import io.hops.hopsworks.common.jobs.yarn.LocalResourceDTO;
 import io.hops.hopsworks.common.jobs.yarn.YarnLogUtil;
 import io.hops.hopsworks.common.kafka.KafkaController;
 import io.hops.hopsworks.common.livy.LivyController;
@@ -255,6 +261,12 @@ public class ProjectController {
   private ProjectUtils projectUtils;
   @EJB
   private LivyController livyController;
+  @EJB
+  protected JobController jobController;
+  @EJB
+  protected ExecutionController executionController;
+  @EJB
+  protected FeaturegroupController featuregroupController;
 
 
   /**
@@ -1903,7 +1915,8 @@ public class ProjectController {
 
     QuotasDTO quotas = getQuotasInternal(project);
 
-    return new ProjectDTO(project, inode.getId(), services, projectTeam, quotas, settings.getHopsExamplesFilename());
+    return new ProjectDTO(project, inode.getId(), services, projectTeam, quotas,
+        settings.getHopsExamplesSparkFilename());
   }
 
   /**
@@ -2328,9 +2341,9 @@ public class ProjectController {
         case KAFKA:
           // Get the JAR from /user/<super user>
           String kafkaExampleSrc = "/user/" + settings.getSparkUser() + "/"
-              + settings.getHopsExamplesFilename();
+              + settings.getHopsExamplesSparkFilename();
           String kafkaExampleDst = "/" + Settings.DIR_ROOT + "/" + project.getName()
-              + "/" + Settings.HOPS_TOUR_DATASET + "/" + settings.getHopsExamplesFilename();
+              + "/" + Settings.HOPS_TOUR_DATASET + "/" + settings.getHopsExamplesSparkFilename();
           try {
             udfso.copyInHdfs(new Path(kafkaExampleSrc), new Path(kafkaExampleDst));
             String datasetGroup = hdfsUsersController.getHdfsGroupName(project, Settings.HOPS_TOUR_DATASET);
@@ -2386,6 +2399,90 @@ public class ProjectController {
           } catch (IOException ex) {
             throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_TOUR_FILES_ERROR, Level.SEVERE,
               "project: " + project.getName(), ex.getMessage(), ex);
+          }
+          break;
+        case FEATURESTORE:
+          // Get the JAR from /user/<super user>
+          String featurestoreExampleJarSrc = "/user/" + settings.getSparkUser() + "/"
+              + settings.getHopsExamplesFeaturestoreFilename();
+          String featurestoreExampleJarDst = "/" + Settings.DIR_ROOT + "/" + project.getName()
+              + "/" + Settings.HOPS_TOUR_DATASET + "/" + settings.getHopsExamplesFeaturestoreFilename();
+          // Get the sample data and notebooks from /user/<super user>/featurestore_demo/
+          String featurestoreExampleDataSrc = "/user/" + settings.getHdfsSuperUser() + "/" +
+              Settings.HOPS_FEATURESTORE_TOUR_DATA + "/*";
+          String featurestoreExampleDataDst = "/" + Settings.DIR_ROOT + "/" + project.getName() + "/"
+              + Settings.HOPS_TOUR_DATASET;
+          try {
+            //Move example .jar file to HDFS
+            udfso.copyInHdfs(new Path(featurestoreExampleJarSrc), new Path(featurestoreExampleJarDst));
+            String datasetGroup = hdfsUsersController.getHdfsGroupName(project, Settings.HOPS_TOUR_DATASET);
+            String userHdfsName = hdfsUsersController.getHdfsUserName(project, user);
+            udfso.setPermission(new Path(featurestoreExampleJarDst),
+                udfso.getParentPermission(new Path(featurestoreExampleJarDst)));
+            udfso.setOwner(new Path(featurestoreExampleJarDst), userHdfsName, datasetGroup);
+            //Move example data and notebooks to HDFS
+            udfso.copyInHdfs(new Path(featurestoreExampleDataSrc), new Path(featurestoreExampleDataDst));
+            datasetGroup = hdfsUsersController.getHdfsGroupName(project, Settings.HOPS_TOUR_DATASET);
+            userHdfsName = hdfsUsersController.getHdfsUserName(project, user);
+            Inode parent = inodes.getInodeAtPath(featurestoreExampleDataDst);
+            List<Inode> children = new ArrayList<>();
+            inodes.getAllChildren(parent, children);
+            for (Inode child : children) {
+              if (child.getHdfsUser() != null && child.getHdfsUser().getName().equals(settings.getHdfsSuperUser())) {
+                Path path = new Path(inodes.getPath(child));
+                udfso.setPermission(path, udfso.getParentPermission(path));
+                udfso.setOwner(path, userHdfsName, datasetGroup);
+              }
+            }
+            //Move example notebooks to Jupyter dataset
+            String featurestoreExampleNotebooksSrc = featurestoreExampleDataDst + "/notebooks";
+            String featurestoreExampleNotebooksDst = "/" + Settings.DIR_ROOT + "/" + project.getName() + "/"
+                + Settings.HOPS_TOUR_DATASET_JUPYTER;
+            udfso.copyInHdfs(new Path(featurestoreExampleNotebooksSrc + "/*"),
+                new Path(featurestoreExampleNotebooksDst));
+            datasetGroup = hdfsUsersController.getHdfsGroupName(project, Settings.HOPS_TOUR_DATASET_JUPYTER);
+            Inode parentJupyterDs = inodes.getInodeAtPath(featurestoreExampleNotebooksDst);
+            List<Inode> childrenJupyterDs = new ArrayList<>();
+            inodes.getAllChildren(parentJupyterDs, childrenJupyterDs);
+            for (Inode child : childrenJupyterDs) {
+              if (child.getHdfsUser() != null) {
+                Path path = new Path(inodes.getPath(child));
+                udfso.setPermission(path, udfso.getParentPermission(path));
+                udfso.setOwner(path, userHdfsName, datasetGroup);
+              }
+            }
+            udfso.rm(new Path(featurestoreExampleNotebooksSrc), true);
+          } catch (IOException ex) {
+            throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_TOUR_FILES_ERROR, Level.SEVERE,
+                "project: " + project.getName(), ex.getMessage(), ex);
+          }
+          try {
+            SparkJobConfiguration sparkJobConfiguration = new SparkJobConfiguration();
+            sparkJobConfiguration.setAmQueue("default");
+            sparkJobConfiguration.setAmMemory(1024);
+            sparkJobConfiguration.setAmVCores(1);
+            sparkJobConfiguration.setAppPath("hdfs://" + featurestoreExampleJarDst);
+            sparkJobConfiguration.setMainClass(Settings.HOPS_FEATURESTORE_TOUR_JOB_CLASS);
+            sparkJobConfiguration.setExecutorInstances(1);
+            sparkJobConfiguration.setExecutorCores(1);
+            sparkJobConfiguration.setExecutorMemory(1024);
+            sparkJobConfiguration.setExecutorGpus(0);
+            sparkJobConfiguration.setDynamicAllocationEnabled(false);
+            sparkJobConfiguration.setDynamicAllocationMinExecutors(1);
+            sparkJobConfiguration.setDynamicAllocationMinExecutors(1);
+            sparkJobConfiguration.setDynamicAllocationInitialExecutors(1);
+            sparkJobConfiguration.setArgs("");
+            sparkJobConfiguration.setAppName(Settings.HOPS_FEATURESTORE_TOUR_JOB_NAME);
+            sparkJobConfiguration.setLocalResources(new LocalResourceDTO[0]);
+            Jobs job = jobController.createJob(user, project, sparkJobConfiguration);
+            activityFacade.persistActivity(ActivityFacade.CREATED_JOB + job.getName(),
+                project, user, ActivityFacade.ActivityFlag.SERVICE);
+            executionController.start(job, user);
+            activityFacade.persistActivity(ActivityFacade.RAN_JOB + job.getName(),
+                project, user, ActivityFacade.ActivityFlag.SERVICE);
+          } catch (JobException | GenericException e) {
+            throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_JOB_ERROR, Level.SEVERE,
+                "project: " + project.getName(), e.getMessage(), e);
           }
           break;
         default:
