@@ -6,7 +6,7 @@
                     <i class="glyphicon glyphicon-folder-open" ng-show="item.model.type === 'dir'"></i>
                     <i class="glyphicon glyphicon-file" data-ext="{{ item.model.name | fileExtension }}" ng-show="item.model.type === 'file'" ng-class="{'item-extension': config.showExtensionIcons}"></i>
                 </div>
-                {{item.model.name | strLimit : 11 }}
+                {{item.model.name | limitTo : 11 }}
             </a>
         </div>
     </div>

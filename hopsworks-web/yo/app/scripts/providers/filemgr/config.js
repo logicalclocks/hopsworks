@@ -23,8 +23,8 @@
             permissionsUrl: 'filemanager',
             basePath: '/',
 
-            searchForm: true,
-            sidebar: true,
+            searchForm: false,
+            sidebar: false,
             breadcrumb: true,
             allowedActions: {
                 upload: true,

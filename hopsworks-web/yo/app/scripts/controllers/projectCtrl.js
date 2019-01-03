@@ -43,11 +43,11 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('ProjectCtrl', ['$scope', '$rootScope', '$location', '$routeParams', '$route', 'UtilsService',
+        .controller('ProjectCtrl', ['$scope', '$rootScope', '$location', '$routeParams', '$route', '$window', 'UtilsService',
           'growl', 'ProjectService', 'ModalService', 'ActivityService', '$cookies', 'DataSetService',
           'UserService', 'TourService', 'PythonDepsService', 'StorageService', 'CertService', 'VariablesService', 'FileSaver', 'Blob',
           'AirflowService',				    
-          function ($scope, $rootScope, $location, $routeParams, $route, UtilsService, growl, ProjectService,
+          function ($scope, $rootScope, $location, $routeParams, $route, $window, UtilsService, growl, ProjectService,
                   ModalService, ActivityService, $cookies, DataSetService, UserService, TourService, PythonDepsService,
                     StorageService, CertService, VariablesService, FileSaver, Blob, AirflowService) {
 

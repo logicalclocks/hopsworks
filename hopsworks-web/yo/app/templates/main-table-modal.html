@@ -33,7 +33,7 @@
             <td>
                 <a href="" ng-click="fileNavigator.folderClick(item)" title="{{item.model.name}} ({{item.model.size | humanReadableFileSize}})">
                     <i class="glyphicon glyphicon-folder-close"></i>
-                    {{item.model.name | strLimit : 32}}
+                    {{item.model.name | limitTo : 32}}
                 </a>
             </td>
             <td class="text-right">
