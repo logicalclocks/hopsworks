@@ -75,8 +75,8 @@ public class JwtSigningKey implements Serializable {
   @Column(name = "name")
   private String name;
 
-  @Basic(optional = false)
-  @Column(name = "created_on", nullable = true)
+  @Basic(optional = true)
+  @Column(name = "created_on", updatable= false, insertable=false)
   @Temporal(TemporalType.TIMESTAMP)
   private Date createdOn;
 
@@ -90,6 +90,7 @@ public class JwtSigningKey implements Serializable {
   public JwtSigningKey(String secret, String name) {
     this.secret = secret;
     this.name = name;
+//    this.createdOn = java.sql.Date.valueOf(java.time.LocalDate.now());
   }
 
   public Integer getId() {
