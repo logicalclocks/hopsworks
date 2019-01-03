@@ -1,7 +1,8 @@
 (function(angular) {
     'use strict';
     angular.module('hopsWorksApp').service('fileNavigator', [
-        'apiMiddleware', 'fileManagerConfig', 'item', function (ApiMiddleware, fileManagerConfig, Item) {
+        'apiMiddleware', 'fileManagerConfig', 'item', 'AirflowService', 
+        function (ApiMiddleware, fileManagerConfig, Item, AirflowService) {
 
         var FileNavigator = function() {
             this.apiMiddleware = new ApiMiddleware();
@@ -15,7 +16,7 @@
         };
 
         FileNavigator.prototype.getBasePath = function() {
-            var path = (fileManagerConfig.basePath || '').replace(/^\//, '');
+            var path = (fileManagerConfig.basePath + '/' + AirflowService.getSecretPath()  || '').replace(/^\//, '');
             return path.trim() ? path.split('/') : [];
         };
 

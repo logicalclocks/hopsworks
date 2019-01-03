@@ -245,6 +245,9 @@ public class AngularFileManagerServlet extends HttpServlet {
   @Override
   protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
     try {
+        
+      String secretDir = request.getParameter("dir");        
+        
       // if request contains multipart-form-data
       if (ServletFileUpload.isMultipartContent(request)) {
         if (isSupportFeature(Mode.upload)) {

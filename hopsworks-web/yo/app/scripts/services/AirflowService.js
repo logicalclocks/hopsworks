@@ -23,6 +23,9 @@
 angular.module('hopsWorksApp')
         .factory('AirflowService', ['$http', function ($http) {
             return {
+              getSecretPath: function (projectId) {
+                return $http.get('/api/project/' + projectId + '/airflow/secretDir');
+              },
               purgeAirflowDagsLocal: function (projectId) {
                 return $http.get('/api/project/' + projectId + '/airflow/purgeAirflowDagsLocal');
               },

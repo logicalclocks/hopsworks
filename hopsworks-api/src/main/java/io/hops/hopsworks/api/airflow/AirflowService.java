@@ -82,6 +82,15 @@ public class AirflowService {
   }
 
   @GET
+  @Path("secretDir")
+  @Produces(MediaType.TEXT_PLAIN)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  public Response secretDir(@Context HttpServletRequest req) {
+    String secretDir = "jim";
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(secretDir).build();
+  }
+
+  @GET
   @Path("purgeAirflowDagsLocal")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
