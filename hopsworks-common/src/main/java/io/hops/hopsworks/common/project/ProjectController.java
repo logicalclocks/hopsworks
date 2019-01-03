@@ -705,8 +705,8 @@ public class ProjectController {
     switch (service) {
       case JUPYTER:
         addServiceDataset(project, user, Settings.ServiceDataset.JUPYTER, dfso, udfso);
-        addKibana(project, service);
         if (!projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.JOBS)) {
+          addKibana(project);
           addServiceDataset(project, user, Settings.ServiceDataset.EXPERIMENTS, dfso, udfso);
         }
         break;
@@ -719,13 +719,10 @@ public class ProjectController {
         futureList.add(addServiceServing(project, user, dfso, udfso));
         break;
       case JOBS:
-        addKibana(project, service);
         if (!projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.JUPYTER)) {
           addServiceDataset(project, user, Settings.ServiceDataset.EXPERIMENTS, dfso, udfso);
+          addKibana(project);
         }
-        break;
-      default:
-        break;
     }
 
     // Persist enabled service in the database
@@ -2359,68 +2356,60 @@ public class ProjectController {
    * @throws ProjectException ProjectException
    * @throws ServiceException ServiceException
    */
-  public void addKibana(Project project, ProjectServiceEnum service) throws ProjectException, ServiceException {
+  public void addKibana(Project project) throws ProjectException, ServiceException {
   
     String projectName = project.getName().toLowerCase();
-    switch (service) {
-      case JOBS:
-        // Create index pattern in Kibana for spark logs
-        elasticController.createIndexPattern(project, projectName + Settings.ELASTIC_LOGS_INDEX_PATTERN);
-        break;
-      case JUPYTER:
-        // Create index and index-pattern for experiment service
-        String indexName = projectName + "_" + Settings.ELASTIC_EXPERIMENTS_INDEX;
-        if (!elasticController.indexExists(indexName)) {
-          elasticController.createIndex(indexName);
-        }
-      
-        elasticController.createIndexPattern(project, indexName);
-      
-        String savedSummarySearch =
-          "{\"attributes\":{\"title\":\"Experiments summary\",\"description\":\"\",\"hits\":0,\"columns\"" +
-            ":[\"_id\",\"user\",\"name\",\"start\",\"finished\",\"status\",\"module\",\"function\"" +
-            ",\"hyperparameter\"" +
-            ",\"metric\"],\"sort\":[\"start\"" +
-            ",\"desc\"],\"version\":1,\"kibanaSavedObjectMeta\":{\"searchSourceJSON\":\"" +
-            "{\\\"index\\\":\\\"" + indexName + "\\\",\\\"highlightAll\\\":true,\\\"version\\\":true" +
-            ",\\\"query\\\":{\\\"language\\\":\\\"lucene\\\",\\\"query\\\":\\\"\\\"},\\\"filter\\\":" +
-            "[]}\"}}}";
-      
-        Map<String, String> params = new HashMap<>();
-        params.put("op", "POST");
-        params.put("data", savedSummarySearch);
-        JSONObject resp = elasticController.sendKibanaReq(params, "search", indexName + "_summary-search", true);
-      
-        if (!(resp.has("updated_at") || (resp.has("statusCode") && resp.get("statusCode").toString().equals("409")))) {
-          throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_KIBANA_CREATE_SEARCH_ERROR, Level.SEVERE,
-            "project: " + projectName + ", resp: " + resp.toString(2));
-        }
-      
-        String savedSummaryDashboard =
-          "{\"attributes\":{\"title\":\"Experiments summary dashboard\",\"hits\":0,\"description\":\"" +
-            "A summary of all experiments run in this project\",\"panelsJSON\":\"[{\\\"gridData\\\"" +
-            ":{\\\"h\\\":9,\\\"i\\\":\\\"1\\\",\\\"w\\\":12,\\\"x\\\":0,\\\"y\\\":0},\\\"id\\\"" +
-            ":\\\"" + indexName + "_summary-search" + "\\\",\\\"panelIndex\\\":\\\"1\\\"" +
-            ",\\\"type\\\":\\\"search\\\"" +
-            ",\\\"version\\\":\\\"" + settings.getKibanaVersion() +
-            "\\\"}]\",\"optionsJSON\":\"{\\\"darkTheme\\\":false" +
-            ",\\\"hidePanelTitles\\\":false,\\\"useMargins\\\":true}\",\"version\":1,\"timeRestore\":" +
-            "false" +
-            ",\"kibanaSavedObjectMeta\":{\"searchSourceJSON\":\"{\\\"query\\\":{\\\"language\\\"" +
-            ":\\\"lucene\\\",\\\"query\\\":\\\"\\\"},\\\"filter\\\":[],\\\"highlightAll\\\":" +
-            "true,\\\"version\\\":true}\"}}}";
-        params.clear();
-        params.put("op", "POST");
-        params.put("data", savedSummaryDashboard);
-        resp = elasticController.sendKibanaReq(params, "dashboard", indexName + "_summary-dashboard", true);
-      
-        if (!(resp.has("updated_at") || (resp.has("statusCode") && resp.get("statusCode").toString().equals("409")))) {
-          throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_KIBANA_CREATE_DASHBOARD_ERROR, Level.SEVERE,
-            "project: " + projectName + ", resp: " + resp.toString(2));
-        }
-        break;
-      default:
-        break;
+
+    elasticController.createIndexPattern(project, projectName + Settings.ELASTIC_LOGS_INDEX_PATTERN);
+    // Create index and index-pattern for experiment service
+    String indexName = projectName + "_" + Settings.ELASTIC_EXPERIMENTS_INDEX;
+    if (!elasticController.indexExists(indexName)) {
+      elasticController.createIndex(indexName);
+    }
+
+    elasticController.createIndexPattern(project, indexName);
+
+    String savedSummarySearch =
+      "{\"attributes\":{\"title\":\"Experiments summary\",\"description\":\"\",\"hits\":0,\"columns\"" +
+        ":[\"_id\",\"user\",\"name\",\"start\",\"finished\",\"status\",\"module\",\"function\"" +
+        ",\"hyperparameter\"" +
+        ",\"metric\"],\"sort\":[\"start\"" +
+        ",\"desc\"],\"version\":1,\"kibanaSavedObjectMeta\":{\"searchSourceJSON\":\"" +
+        "{\\\"index\\\":\\\"" + indexName + "\\\",\\\"highlightAll\\\":true,\\\"version\\\":true" +
+        ",\\\"query\\\":{\\\"language\\\":\\\"lucene\\\",\\\"query\\\":\\\"\\\"},\\\"filter\\\":" +
+        "[]}\"}}}";
+
+    Map<String, String> params = new HashMap<>();
+    params.put("op", "POST");
+    params.put("data", savedSummarySearch);
+    JSONObject resp = elasticController.sendKibanaReq(params, "search", indexName + "_summary-search", true);
+
+    if (!(resp.has("updated_at") || (resp.has("statusCode") && resp.get("statusCode").toString().equals("409")))) {
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_KIBANA_CREATE_SEARCH_ERROR, Level.SEVERE,
+        "project: " + projectName + ", resp: " + resp.toString(2));
+    }
+
+    String savedSummaryDashboard =
+      "{\"attributes\":{\"title\":\"Experiments summary dashboard\",\"hits\":0,\"description\":\"" +
+        "A summary of all experiments run in this project\",\"panelsJSON\":\"[{\\\"gridData\\\"" +
+        ":{\\\"h\\\":9,\\\"i\\\":\\\"1\\\",\\\"w\\\":12,\\\"x\\\":0,\\\"y\\\":0},\\\"id\\\"" +
+        ":\\\"" + indexName + "_summary-search" + "\\\",\\\"panelIndex\\\":\\\"1\\\"" +
+        ",\\\"type\\\":\\\"search\\\"" +
+        ",\\\"version\\\":\\\"" + settings.getKibanaVersion() +
+        "\\\"}]\",\"optionsJSON\":\"{\\\"darkTheme\\\":false" +
+        ",\\\"hidePanelTitles\\\":false,\\\"useMargins\\\":true}\",\"version\":1,\"timeRestore\":" +
+        "false" +
+        ",\"kibanaSavedObjectMeta\":{\"searchSourceJSON\":\"{\\\"query\\\":{\\\"language\\\"" +
+        ":\\\"lucene\\\",\\\"query\\\":\\\"\\\"},\\\"filter\\\":[],\\\"highlightAll\\\":" +
+        "true,\\\"version\\\":true}\"}}}";
+    params.clear();
+    params.put("op", "POST");
+    params.put("data", savedSummaryDashboard);
+    resp = elasticController.sendKibanaReq(params, "dashboard", indexName + "_summary-dashboard", true);
+
+    if (!(resp.has("updated_at") || (resp.has("statusCode") && resp.get("statusCode").toString().equals("409")))) {
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_KIBANA_CREATE_DASHBOARD_ERROR, Level.SEVERE,
+        "project: " + projectName + ", resp: " + resp.toString(2));
     }
   }
 
