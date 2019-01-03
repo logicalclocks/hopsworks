@@ -92,11 +92,6 @@ import java.util.regex.Pattern;
 import static io.hops.hopsworks.common.dao.kafka.KafkaFacade.DLIMITER;
 import static io.hops.hopsworks.common.dao.kafka.KafkaFacade.SLASH_SEPARATOR;
 import io.hops.hopsworks.common.dao.project.Project;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 
 @Singleton
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
@@ -314,9 +309,6 @@ public class Settings implements Serializable {
   private static final String VARIABLE_JWT_LIFETIME_MS = "jwt_lifetime_ms";
   private static final String VARIABLE_JWT_EXP_LEEWAY_SEC = "jwt_exp_leeway_sec";
   private static final String VARIABLE_JWT_SIGNING_KEY_NAME = "jwt_signing_key_name";
-
-  // Downloadable Datasets
-  private static final String VARIABLE_PROJECT_DOWNLOADABLE_DIRS = "project_downloadable_dirs";
 
   private String setVar(String varName, String defaultValue) {
     Variables userName = findById(varName);
@@ -613,8 +605,6 @@ public class Settings implements Serializable {
       JWT_LIFETIME_MS = setLongVar(VARIABLE_JWT_LIFETIME_MS, JWT_LIFETIME_MS);
       JWT_EXP_LEEWAY_SEC = setIntVar(VARIABLE_JWT_EXP_LEEWAY_SEC, JWT_EXP_LEEWAY_SEC);
       JWT_SIGNING_KEY_NAME = setStrVar(VARIABLE_JWT_SIGNING_KEY_NAME, JWT_SIGNING_KEY_NAME);
-      // PROJECT Download permissions
-      PROJECT_DOWNLOADABLE_DIRS = setStrVar(VARIABLE_PROJECT_DOWNLOADABLE_DIRS, PROJECT_DOWNLOADABLE_DIRS);
 
       cached = true;
     }
@@ -3168,132 +3158,4 @@ public class Settings implements Serializable {
     return "hdfs:///user/" + getSparkUser() + "/hive-site.xml";
   }
 
-  private String PROJECT_DOWNLOADABLE_DIRS = "";
-  private JSONObject downloadableDirsObj;
-
-  public synchronized List<String> getDownloadableDatasets(String project) {
-    if (project == null || project.isEmpty()) {
-      throw new IllegalArgumentException("Target project name was null or empty");
-    }
-    List<String> downloadableDatasets = new ArrayList<>();
-    Map<String, List<String>> allProjects = getDownloadableDirsasJson();
-    if (allProjects != null && allProjects.isEmpty() == false) {
-      downloadableDatasets = allProjects.get(project);
-    }
-    return downloadableDatasets;
-  }
-
-  public synchronized void updateDownloadableDirs(String project, List<String> downloadableDirs) {
-    if (project == null || downloadableDirs == null) {
-      throw new IllegalArgumentException("An arg was null");
-    }
-    downloadableDirsObj.put("project", downloadableDirs.to)
-    updateVariableInternal(VARIABLE_PROJECT_DOWNLOADABLE_DIRS, json.toString());
-    refreshCache();
-  }
-
-  public synchronized void updateDownloadableDirs(JSONObject json) {
-    if (json == null) {
-      throw new IllegalArgumentException("Json object was null");
-    }
-    updateVariableInternal(VARIABLE_PROJECT_DOWNLOADABLE_DIRS, json.toString());
-    refreshCache();
-  }
-
-  private Map<String, List<String>> getDownloadableDirs() {
-    Map<String, List<String>> objs = new HashMap<>();
-    checkCache();
-    if (downloadableDirsObj == null) {
-      try {
-        JSONParser parser = new JSONParser();
-        JSONObject json = (JSONObject) parser.parse(PROJECT_DOWNLOADABLE_DIRS);
-        Map<String, Object> o = jsonToMap(json);
-        if (o != null) {
-          for (String s : o.keySet()) {
-            downloadableDirsObj.put(s, (List<String>) o.get(s));
-          }
-        }
-      } catch (ParseException ex) {
-        Logger.getLogger(Settings.class.getName()).log(Level.SEVERE, null, ex);
-      }
-    }
-    return objs;
-  }
-
-  private Map<String, Object> jsonToMap(JSONObject json) throws JSONException {
-    Map<String, Object> retMap = new HashMap<String, Object>();
-    if (json != JSONObject.NULL) {
-      retMap = toMap(json);
-    }
-    return retMap;
-  }
-
-  private Map<String, Object> toMap(JSONObject object) throws JSONException {
-    Map<String, Object> map = new HashMap<String, Object>();
-    Iterator<String> keysItr = object.keys();
-    while (keysItr.hasNext()) {
-      String key = keysItr.next();
-      Object value = object.get(key);
-      if (value instanceof JSONArray) {
-        value = toList((JSONArray) value);
-      } else if (value instanceof JSONObject) {
-        value = toMap((JSONObject) value);
-      }
-      map.put(key, value);
-    }
-    return map;
-  }
-
-  private List<Object> toList(JSONArray array) throws JSONException {
-    List<Object> list = new ArrayList<Object>();
-    for (int i = 0; i < array.length(); i++) {
-      Object value = array.get(i);
-      if (value instanceof JSONArray) {
-        value = toList((JSONArray) value);
-      } else if (value instanceof JSONObject) {
-        value = toMap((JSONObject) value);
-      }
-      list.add(value);
-    }
-    return list;
-  }
-
-//  public static HashMap<String, List<String>> createHashMapFromJsonString(String json) {
-//    JsonParser parser = new JsonParser();
-//    JsonObject object = (JsonObject) parser.parse(json);
-//    Set<Map.Entry<String, JsonElement>> set = object.entrySet();
-//    Iterator<Map.Entry<String, JsonElement>> iterator = set.iterator();
-//    HashMap<String, List<String>> map = new HashMap<>();
-//
-//    while (iterator.hasNext()) {
-//
-//      Map.Entry<String, JsonElement> entry = iterator.next();
-//      String key = entry.getKey();
-//      JsonElement value = entry.getValue();
-//
-//      if (null != value) {
-//        if (!value.isJsonPrimitive()) {
-//          if (value.isJsonObject()) {
-//
-//            map.put(key, createHashMapFromJsonString(value.toString()));
-//          } else if (value.isJsonArray() && value.toString().contains(":")) {
-//
-//            List<HashMap<String, List<String>>> list = new ArrayList<>();
-//            JsonArray array = value.getAsJsonArray();
-//            if (null != array) {
-//              for (JsonElement element : array) {
-//                list.add(createHashMapFromJsonString(element.toString()));
-//              }
-//              map.put(key, list);
-//            }
-//          } else if (value.isJsonArray() && !value.toString().contains(":")) {
-//            map.put(key, value.getAsJsonArray());
-//          }
-//        } else {
-//          map.put(key, value.getAsString());
-//        }
-//      }
-//    }
-//    return map;
-//  }
 }
