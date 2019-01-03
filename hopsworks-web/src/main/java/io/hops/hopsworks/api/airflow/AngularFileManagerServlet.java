@@ -77,7 +77,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * This servlet serve angular-filemanager call<br>
- * It's here for example purpouse, to use it you have to put it in your java web
+ * It's here for example purpose, to use it you have to put it in your java web
  * project<br>
  * Put in web.xml the servlet mapping
  * <p>
