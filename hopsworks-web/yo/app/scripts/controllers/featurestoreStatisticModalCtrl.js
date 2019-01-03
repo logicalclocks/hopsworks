@@ -62,7 +62,7 @@ angular.module('hopsWorksApp')
                         self.statisticData
                     );
                     self.heatmapChart.render()
-                    setTimeout(function(){ self.stopLoading()}, 300);
+                    setTimeout(function(){ self.stopLoading()}, 150);
                 });
             };
 
