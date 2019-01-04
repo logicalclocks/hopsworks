@@ -563,7 +563,7 @@ public class FeaturegroupController {
       stmt.executeUpdate(query);
     } catch (Exception e) {
       //Hive throws a generic HiveSQLException not a specific AuthorizationException
-      if (e.getMessage().contains("Permission Denied") || e.getMessage().contains("permission denied"))
+      if (e.getMessage().toLowerCase().contains("permission denied"))
         throw new HopsSecurityException(RESTCodes.SecurityErrorCode.HDFS_ACCESS_CONTROL, Level.FINE,
             "project: " + project.getName() +
                 ", hive database: " + databaseName + " hive query: " + query, e.getMessage(), e);
@@ -632,7 +632,7 @@ public class FeaturegroupController {
       resultList = parseResultset(rs);
     } catch (Exception e) {
       //Hive throws a generic HiveSQLException not a specific AuthorizationException
-      if (e.getMessage().contains("Permission Denied") || e.getMessage().contains("permission denied"))
+      if (e.getMessage().toLowerCase().contains("permission denied"))
         throw new HopsSecurityException(RESTCodes.SecurityErrorCode.HDFS_ACCESS_CONTROL, Level.FINE,
             "project: " + project.getName() +
                 ", hive database: " + databaseName + " hive query: " + query, e.getMessage(), e);
@@ -659,7 +659,7 @@ public class FeaturegroupController {
       //don't add this line:
       //certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());
       //concurrent requests by the same user will fail, let certs be cleaned up by
-      //garbage collector instead
+      //garbage collector periodically instead
     } catch (SQLException e) {
       LOGGER.log(Level.WARNING, "Error closing Hive JDBC connection: " +
           e);
