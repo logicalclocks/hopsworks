@@ -295,6 +295,7 @@ angular.module('hopsWorksApp')
             };
 
             self.goToJobs = function () {
+              self.toggleKibanaNavBar();
               self.goToUrl('jobs');
               if (self.tourService.currentStep_TourTwo > -1) {
                 self.tourService.resetTours();
@@ -361,6 +362,7 @@ angular.module('hopsWorksApp')
             };
 
             self.goToTfServing = function () {
+              self.toggleKibanaNavBar();
               self.goToUrl('serving');
             };
 
@@ -373,6 +375,7 @@ angular.module('hopsWorksApp')
             };
 
             self.goToExperiments = function () {
+              self.toggleKibanaNavBar();
               self.goToUrl('experiments');
             };
 
@@ -699,6 +702,15 @@ angular.module('hopsWorksApp')
             self.isServiceEnabled = function (service) {
               var idx = self.projectTypes.indexOf(service);
               return idx === -1;
+            };
+
+            var kibanaNavVarInitKey = "hopsworks.kibana.navbar.set";
+            self.toggleKibanaNavBar = function () {
+                var kibanaNavBarInit = StorageService.get(kibanaNavVarInitKey);
+                if(kibanaNavBarInit === false){
+                    StorageService.store(kibanaNavVarInitKey, true);
+                    StorageService.store("kibana.isGlobalNavOpen", false);
+                }
             };
 
           }]);
