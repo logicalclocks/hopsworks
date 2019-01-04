@@ -38,8 +38,8 @@
  */
 package io.hops.hopsworks.api.admin;
 
-import io.hops.hopsworks.api.admin.dto.ProjectDeletionLog;
 import io.hops.hopsworks.api.admin.dto.ProjectAdminInfoDTO;
+import io.hops.hopsworks.api.admin.dto.ProjectDeletionLog;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jwt.JWTHelper;
@@ -50,6 +50,7 @@ import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.DatasetException;
+import io.hops.hopsworks.common.exception.FeaturestoreException;
 import io.hops.hopsworks.common.exception.GenericException;
 import io.hops.hopsworks.common.exception.HopsSecurityException;
 import io.hops.hopsworks.common.exception.KafkaException;
@@ -59,8 +60,8 @@ import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.exception.UserException;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.project.ProjectDTO;
-import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.project.QuotasDTO;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.Api;
 
@@ -71,8 +72,8 @@ import javax.ejb.TransactionAttributeType;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
-import javax.ws.rs.POST;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -81,11 +82,11 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.ws.rs.core.SecurityContext;
 
 @Path("/admin")
 @Stateless
@@ -135,7 +136,7 @@ public class ProjectsAdmin {
   @Path("/projects/createas")
   public Response createProjectAsUser(@Context HttpServletRequest request, @Context SecurityContext sc,
       ProjectDTO projectDTO) throws DatasetException, GenericException, KafkaException, ProjectException, UserException,
-      ServiceException, HopsSecurityException {
+      ServiceException, HopsSecurityException, FeaturestoreException {
     Users user = jWTHelper.getUserPrincipal(sc);
     if (user == null || !user.getEmail().equals(Settings.SITE_EMAIL)) {
       throw new UserException(RESTCodes.UserErrorCode.AUTHENTICATION_FAILURE, Level.WARNING,
@@ -170,8 +171,6 @@ public class ProjectsAdmin {
   /**
    * Returns admin information about all the projects
    *
-   * @param sc
-   * @param req
    * @return
    */
   @GET
@@ -196,8 +195,6 @@ public class ProjectsAdmin {
   /**
    * Returns admin information about the requested project
    *
-   * @param sc
-   * @param req
    * @param projectId
    * @return
    */
@@ -225,7 +222,9 @@ public class ProjectsAdmin {
     // for changes in space quotas we need to check that both space and ns options are not null
     QuotasDTO quotasDTO = projectAdminInfoDTO.getProjectQuotas();
     if (quotasDTO != null && (((quotasDTO.getHdfsQuotaInBytes() == null) != (quotasDTO.getHdfsNsQuota() == null))
-        || ((quotasDTO.getHiveHdfsQuotaInBytes() == null) != (quotasDTO.getHiveHdfsNsQuota() == null)))) {
+        || ((quotasDTO.getHiveHdfsQuotaInBytes() == null) != (quotasDTO.getHiveHdfsNsQuota() == null))
+        || ((quotasDTO.getFeaturestoreHdfsQuotaInBytes() == null) !=
+        (quotasDTO.getFeaturestoreHdfsNsQuota() == null)))) {
       throw new IllegalArgumentException("projectAdminInfoDTO did not provide quotasDTO or the latter was incomplete.");
     }
 

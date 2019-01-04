@@ -65,6 +65,10 @@ public class ProjectQuotas {
   private String hiveUsedHdfsQuota = "-1MB";
   private String hiveHdfsNsQuota = "-1";
   private String hiveUsedHdfsNsQuota = "-1";
+  private String featurestoreHdfsQuota = "-1MB";
+  private String featurestoreUsedHdfsQuota = "-1MB";
+  private String featurestoreHdfsNsQuota = "-1";
+  private String featurestoreUsedHdfsNsQuota = "-1";
   private String yarnQuota = "0:00:00:00";
   private String yarnTotalQuota = "0:00:00:00";
   private int kafkaMaxNumTopics = 0;
@@ -105,6 +109,8 @@ public class ProjectQuotas {
         HopsUtils.spaceQuotaToLong(hdfsNsQuota),
         HopsUtils.spaceQuotaToLong(hiveHdfsQuota),
         HopsUtils.spaceQuotaToLong(hiveHdfsNsQuota),
+        HopsUtils.spaceQuotaToLong(featurestoreHdfsQuota),
+        HopsUtils.spaceQuotaToLong(featurestoreHdfsNsQuota),
         HopsUtils.procQuotaToFloat(yarnQuota),
         this.kafkaMaxNumTopics
     );
@@ -254,4 +260,35 @@ public class ProjectQuotas {
     this.kafkaMaxNumTopics = kafkaMaxNumTopics;
   }
 
+  public String getFeaturestoreHdfsQuota() {
+    return featurestoreHdfsQuota;
+  }
+
+  public void setFeaturestoreHdfsQuota(String featurestoreHdfsQuota) {
+    this.featurestoreHdfsQuota = featurestoreHdfsQuota;
+  }
+
+  public String getFeaturestoreUsedHdfsQuota() {
+    return featurestoreUsedHdfsQuota;
+  }
+
+  public void setFeaturestoreUsedHdfsQuota(String featurestoreUsedHdfsQuota) {
+    this.featurestoreUsedHdfsQuota = featurestoreUsedHdfsQuota;
+  }
+
+  public String getFeaturestoreHdfsNsQuota() {
+    return featurestoreHdfsNsQuota;
+  }
+
+  public void setFeaturestoreHdfsNsQuota(String featurestoreHdfsNsQuota) {
+    this.featurestoreHdfsNsQuota = featurestoreHdfsNsQuota;
+  }
+
+  public String getFeaturestoreUsedHdfsNsQuota() {
+    return featurestoreUsedHdfsNsQuota;
+  }
+
+  public void setFeaturestoreUsedHdfsNsQuota(String featurestoreUsedHdfsNsQuota) {
+    this.featurestoreUsedHdfsNsQuota = featurestoreUsedHdfsNsQuota;
+  }
 }

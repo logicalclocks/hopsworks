@@ -592,7 +592,6 @@ public class HdfsUsersController {
     Project owningProject = datasetController.getOwningProject(dataset);
     return owningProject.getName() + USER_NAME_DELIMITER
         + dataset.getInode().getInodePK().getName();
-
   }
 
   private void addDataOwnerToProject(DistributedFileSystemOps dfso,

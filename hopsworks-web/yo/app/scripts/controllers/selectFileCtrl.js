@@ -42,11 +42,11 @@
  * Controller for the file selection dialog. 
  */
 angular.module('hopsWorksApp')
-        .controller('SelectFileCtrl', ['$uibModalInstance', 'growl', 'regex', 'errorMsg',
-          function ($uibModalInstance, growl, regex, errorMsg) {
+    .controller('SelectFileCtrl', ['$uibModalInstance', 'growl', 'regex', 'errorMsg','dirAllowed',
+        function ($uibModalInstance, growl, regex, errorMsg, dirAllowed) {
 
             var self = this;
-
+            self.dirAllowed = dirAllowed
             var selectedFilePath;
             self.isDir = false;
 
@@ -55,7 +55,7 @@ angular.module('hopsWorksApp')
              * @returns {undefined}
              */
             self.close = function () {
-              $uibModalInstance.dismiss('cancel');
+                $uibModalInstance.dismiss('cancel');
             };
 
             /**
@@ -65,47 +65,47 @@ angular.module('hopsWorksApp')
              * @returns {undefined}
              */
             self.select = function (filepath, isDirectory) {
-              selectedFilePath = filepath;
-              self.isDir = isDirectory;
+                selectedFilePath = filepath;
+                self.isDir = isDirectory;
             };
 
             self.confirmSelection = function (isDirectory) {
-              if (selectedFilePath == null) {
-                growl.error("Please select a file.", {title: "No file selected", ttl: 15000});
-              } else if (self.isDir !== isDirectory) {
-                var msg;
-                if (self.isDir) {
-                  msg = "You should select a directory."
+                if (selectedFilePath == null) {
+                    growl.error("Please select a file.", {title: "No file selected", ttl: 15000});
+                } else if (self.isDir !== isDirectory) {
+                    var msg;
+                    if (self.isDir) {
+                        msg = "You should select a directory."
+                    } else {
+                        msg = "You should select a file."
+                    }
+                    growl.error(errorMsg, {title: msg, ttl: 10000});
                 } else {
-                  msg = "You should select a file."
+                    $uibModalInstance.close(selectedFilePath);
                 }
-                growl.error(errorMsg, {title: msg, ttl: 10000});
-              } else {
-                $uibModalInstance.close(selectedFilePath);
-              }
             };
 
             self.click = function (datasetsCtrl, file, isDirectory) {
-              if (file.dir) {
-                self.select(file.path, true);
-                datasetsCtrl.openDir(file);
-              } else {
-                self.select(file.path, false);
-                if(!isDirectory){
-                  self.confirmSelection(false);
+                if (file.dir) {
+                    self.select(file.path, true);
+                    datasetsCtrl.openDir(file);
                 } else {
-                  growl.warning("", {title: "Please select a directory", ttl: 5000});
-                  self.back(datasetsCtrl);
+                    self.select(file.path, false);
+                    if (!isDirectory) {
+                        self.confirmSelection(false);
+                    } else {
+                        growl.warning("", {title: "Please select a directory", ttl: 5000});
+                        self.back(datasetsCtrl);
+                    }
                 }
-              }
             };
 
             self.back = function (datasetsCtrl) {
-              if (datasetsCtrl.pathArray.length <= 1) {
-                datasetsCtrl.getAllDatasets();
-              } else {
-                datasetsCtrl.back();
-              }
+                if (datasetsCtrl.pathArray.length <= 1) {
+                    datasetsCtrl.getAllDatasets();
+                } else {
+                    datasetsCtrl.back();
+                }
             };
 
-          }]);
+        }]);

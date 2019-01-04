@@ -59,7 +59,7 @@ angular.module('hopsWorksApp')
             self.runningInfo; //Will contain run information
             self.buttonArray = [];
             self.workingArray = [];
-            self.jobFilter = "";
+            self.jobFilter = JobService.getJobFilter();
             self.hasSelectJob = false;
 
             self.currentjob = null;

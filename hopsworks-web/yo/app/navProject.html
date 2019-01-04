@@ -112,7 +112,7 @@
           RStudio<img class="pull-right" style="margin-right:15px" height="25" src="images/rstudio.png">
         </a>
       </li>
-      
+
       <li ng-click="projectCtrl.goToTfServing()" ng-show="projectCtrl.showTfServing()" id="servingTab">
         <a class="left-right">
           Model Serving
@@ -123,6 +123,12 @@
       <li ng-click="projectCtrl.goToExperiments()" ng-show="projectCtrl.showExperiments()" id="experimentsTab">
         <a>
           Experiments<img class="pull-right" style="margin-right:8px" height="27" src="images/experiments.png"/>
+        </a>
+      </li>
+
+      <li ng-click="projectCtrl.goToFeaturestore()" ng-show="projectCtrl.showFeaturestore()" id="featurestoreTab">
+        <a>
+          Feature Store<span class="sub_icon fa fa-database fa-lg pull-right"></span>
         </a>
       </li>
       

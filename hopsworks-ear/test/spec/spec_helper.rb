@@ -85,11 +85,12 @@ RSpec.configure do |config|
   config.include AppserviceHelper
   config.include ServingHelper
   config.include HopsFSHelper
+  config.include FeaturestoreHelper
   # uncomment next line if you need to clean hdfs and hopsworks db before test.
   # config.before(:suite) { clean_test_data }
   config.after(:suite) {
     # If we are not using Jenkins, then clean the data
-    if ARGV.grep(/spec\.rb/).empty? && (!ENV['JENKINS'] || ENV['JENKINS'] == "false") 
+    if ARGV.grep(/spec\.rb/).empty? && (!ENV['JENKINS'] || ENV['JENKINS'] == "false")
       clean_test_data
     end
 

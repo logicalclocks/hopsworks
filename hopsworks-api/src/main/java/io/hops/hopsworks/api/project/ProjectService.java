@@ -40,6 +40,7 @@ package io.hops.hopsworks.api.project;
 
 import io.hops.hopsworks.api.dela.DelaClusterProjectService;
 import io.hops.hopsworks.api.dela.DelaProjectService;
+import io.hops.hopsworks.api.featurestore.FeaturestoreService;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
@@ -73,6 +74,7 @@ import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.FilePreviewDTO;
 import io.hops.hopsworks.common.exception.DatasetException;
+import io.hops.hopsworks.common.exception.FeaturestoreException;
 import io.hops.hopsworks.common.exception.GenericException;
 import io.hops.hopsworks.common.exception.HopsSecurityException;
 import io.hops.hopsworks.common.exception.KafkaException;
@@ -197,6 +199,8 @@ public class ProjectService {
   private InferenceResource inference;
   @EJB
   private JWTHelper jWTHelper;
+  @Inject
+  private FeaturestoreService featurestoreService;
 
   private final static Logger LOGGER = Logger.getLogger(ProjectService.class.getName());
 
@@ -392,7 +396,7 @@ public class ProjectService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
         dataset).build();
   }
-  
+
   @GET
   @Path("{projectId}/check")
   @Produces(MediaType.APPLICATION_JSON)
@@ -409,8 +413,8 @@ public class ProjectService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response findByProjectID(@PathParam("projectId") Integer id) throws ProjectException {
 
-    // Get a specific project based on the id, Annotated so that 
-    // only the user with the allowed role is able to see it 
+    // Get a specific project based on the id, Annotated so that
+    // only the user with the allowed role is able to see it
     ProjectDTO proj = projectController.getProjectByID(id);
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
@@ -422,9 +426,10 @@ public class ProjectService {
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  public Response updateProject(ProjectDTO projectDTO, @PathParam("projectId") Integer id,
+  public Response updateProject(
+      ProjectDTO projectDTO, @PathParam("projectId") Integer id,
       @Context SecurityContext sc) throws ProjectException, DatasetException, HopsSecurityException,
-      ServiceException, UserException {
+      ServiceException, FeaturestoreException, UserException {
 
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -491,7 +496,7 @@ public class ProjectService {
   }
 
   private void populateActiveServices(List<String> projectServices,
-      TourProjectType tourType) {
+                                      TourProjectType tourType) {
     for (ProjectServiceEnum service : tourType.getActiveServices()) {
       projectServices.add(service.name());
     }
@@ -500,9 +505,10 @@ public class ProjectService {
   @POST
   @Path("starterProject/{type}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response example(@PathParam("type") String type, @Context HttpServletRequest req, @Context SecurityContext sc) 
-      throws DatasetException, GenericException, KafkaException, ProjectException, UserException, ServiceException, 
-      HopsSecurityException {
+  public Response example(@PathParam("type") String type, @Context HttpServletRequest req, @Context SecurityContext sc)
+      throws DatasetException,
+      GenericException, KafkaException, ProjectException, UserException, ServiceException, HopsSecurityException,
+      FeaturestoreException {
     if (!Arrays.asList(TourProjectType.values()).contains(TourProjectType.valueOf(type.toUpperCase()))) {
       throw new IllegalArgumentException("Type must be one of: " + Arrays.toString(TourProjectType.values()));
     }
@@ -568,9 +574,10 @@ public class ProjectService {
   @POST
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
-  public Response createProject(ProjectDTO projectDTO, @Context HttpServletRequest req, @Context SecurityContext sc) 
-      throws DatasetException, GenericException, KafkaException, ProjectException, UserException, ServiceException, 
-      HopsSecurityException {
+  public Response createProject(ProjectDTO projectDTO, @Context HttpServletRequest req, @Context SecurityContext sc)
+      throws DatasetException,
+      GenericException, KafkaException, ProjectException, UserException, ServiceException, HopsSecurityException,
+      FeaturestoreException {
 
     Users user = jWTHelper.getUserPrincipal(sc);
     List<String> failedMembers = null;
@@ -594,7 +601,7 @@ public class ProjectService {
   @Path("{projectId}/delete")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  public Response removeProjectAndFiles(@PathParam("projectId") Integer id, @Context HttpServletRequest req, 
+  public Response removeProjectAndFiles(@PathParam("projectId") Integer id, @Context HttpServletRequest req,
       @Context SecurityContext sc) throws ProjectException, GenericException {
 
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -713,7 +720,7 @@ public class ProjectService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response downloadCerts(@PathParam("projectId") Integer id, @FormParam("password") String password,
-      @Context HttpServletRequest req, @Context SecurityContext sc) throws ProjectException, HopsSecurityException, 
+      @Context HttpServletRequest req, @Context SecurityContext sc) throws ProjectException, HopsSecurityException,
       DatasetException {
     Users user = jWTHelper.getUserPrincipal(sc);
     if (user.getEmail().equals(Settings.AGENT_EMAIL) || !authController.validatePwd(user, password, req)) {
@@ -821,6 +828,12 @@ public class ProjectService {
   public InferenceResource infer(@PathParam("projectId") Integer projectId) {
     inference.setProjectId(projectId);
     return inference;
+  }
+
+  @Path("{id}/featurestores")
+  public FeaturestoreService featurestoreService(@PathParam("id") Integer id, @Context HttpServletRequest req) {
+    this.featurestoreService.setProjectId(id);
+    return this.featurestoreService;
   }
 
 }
