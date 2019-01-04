@@ -21,8 +21,8 @@
 
 angular.module('hopsWorksApp')
     .controller('featurestoreCtrl', ['$scope', '$routeParams', 'growl', 'FeaturestoreService', '$location', '$interval', '$mdSidenav', 'ModalService',
-        'JobService', 'ProjectService',
-        function ($scope, $routeParams, growl, FeaturestoreService, $location, $interval, $mdSidenav, ModalService, JobService, ProjectService) {
+        'JobService',
+        function ($scope, $routeParams, growl, FeaturestoreService, $location, $interval, $mdSidenav, ModalService, JobService) {
 
 
             /**
@@ -141,8 +141,8 @@ angular.module('hopsWorksApp')
                 ModalService.updateFeaturegroup('lg', self.projectId, featuregroup, $scope.selected.value, self.jobs, self.trainingDatasets)
                     .then(
                         function (success) {
-                            self.getFeaturegroups($scope.selected.value)
-                            self.showFeaturegroups()
+                            self.getFeaturegroups($scope.selected.value);
+                            self.showFeaturegroups();
                         }, function (error) {
 
                             self.showFeaturegroups()
@@ -178,7 +178,7 @@ angular.module('hopsWorksApp')
                     .then(function (success) {
                         FeaturestoreService.deleteFeaturegroup(self.projectId, $scope.selected.value, featuregroup.id).then(
                             function (success) {
-                                self.getFeaturegroups($scope.selected.value)
+                                self.getFeaturegroups($scope.selected.value);
                                 growl.success("Feature group deleted", {title: 'Success', ttl: 1000});
                             },
                             function (error) {
@@ -747,7 +747,7 @@ angular.module('hopsWorksApp')
             self.goToFeaturegroup = function (featuregroupName) {
                 self.showFeaturesBool = -1;
                 self.showFeaturegroupsBool = 1;
-                self.fgFilter = featuregroupName
+                self.fgFilter = featuregroupName;
             };
 
 
@@ -758,7 +758,6 @@ angular.module('hopsWorksApp')
              */
             self.isJobLocal = function (jobId) {
                 var i;
-                var jobIds = [];
                 var jobFoundBool = false;
                 for (i = 0; i < self.jobs.length; i++) {
                     if (self.jobs[i].id === jobId) {
@@ -792,14 +791,13 @@ angular.module('hopsWorksApp')
             /**
              * Format javascript date as string (YYYY-mm-dd HH:MM:SS)
              *
-             * @param d date to format
+             * @param javaDate date to format
              * @returns {string} formatted string
              */
             $scope.formatDate = function (javaDate) {
-                var d = new Date(javaDate)
-                var date_format_str = d.getFullYear().toString() + "-" + ((d.getMonth() + 1).toString().length == 2 ? (d.getMonth() + 1).toString() : "0" + (d.getMonth() + 1).toString()) + "-" + (d.getDate().toString().length == 2 ? d.getDate().toString() : "0" + d.getDate().toString()) + " " + (d.getHours().toString().length == 2 ? d.getHours().toString() : "0" + d.getHours().toString()) + ":" + ((parseInt(d.getMinutes() / 5) * 5).toString().length == 2 ? (parseInt(d.getMinutes() / 5) * 5).toString() : "0" + (parseInt(d.getMinutes() / 5) * 5).toString()) + ":00";
-                return date_format_str
-            }
+                var d = new Date(javaDate);
+                return d.getFullYear().toString() + "-" + ((d.getMonth() + 1).toString().length == 2 ? (d.getMonth() + 1).toString() : "0" + (d.getMonth() + 1).toString()) + "-" + (d.getDate().toString().length == 2 ? d.getDate().toString() : "0" + d.getDate().toString()) + " " + (d.getHours().toString().length == 2 ? d.getHours().toString() : "0" + d.getHours().toString()) + ":" + ((parseInt(d.getMinutes() / 5) * 5).toString().length == 2 ? (parseInt(d.getMinutes() / 5) * 5).toString() : "0" + (parseInt(d.getMinutes() / 5) * 5).toString()) + ":00";
+            };
 
             self.init()
         }
