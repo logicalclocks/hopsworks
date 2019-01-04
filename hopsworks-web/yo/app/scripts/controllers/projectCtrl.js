@@ -73,9 +73,9 @@ angular.module('hopsWorksApp')
             // We could instead implement a service to get all the available types but this will do it for now
             if ($rootScope.isDelaEnabled) {
                 // , 'RSTUDIO'
-                self.projectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'DELA', 'SERVING', 'FEATURESTORE'];
+                self.projectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'DELA', 'SERVING', 'FEATURESTORE', 'AIRFLOW'];
             } else {
-                self.projectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'SERVING', 'FEATURESTORE'];
+                self.projectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'SERVING', 'FEATURESTORE', 'AIRFLOW'];
             }
             $scope.activeService = "home";
 
@@ -769,7 +769,7 @@ angular.module('hopsWorksApp')
             self.copyToHdfs = function () {
               AirflowService.copyFromAirflowToHdfs(self.projectId).then(
                       function (success) {
-                        growl.success("Copied from $AIRFLOW_HOME/dags to Resources/airflow/dags", 
+                        growl.success("Copied from $AIRFLOW_HOME/dags to Resources/airflow/dags", // 
                         {title: 'Success', ttl: 1000});
 
                       }, function (error) {
