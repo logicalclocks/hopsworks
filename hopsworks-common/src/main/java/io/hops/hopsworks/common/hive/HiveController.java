@@ -185,8 +185,9 @@ public class HiveController {
 
     dfso.setMetaEnabled(dbPath);
     datasetController.logDataset(dbDataset, OperationType.Add);
-
-    activityFacade.persistActivity(ActivityFacade.NEW_DATA + dbDataset.getName(), project, user);
+  
+    activityFacade.persistActivity(ActivityFacade.NEW_DATA + dbDataset.getName(), project, user,
+      ActivityFacade.ActivityFlag.DATASET);
 
     try {
       // Assign database directory to the user and project group

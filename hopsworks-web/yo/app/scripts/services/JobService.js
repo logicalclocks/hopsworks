@@ -45,6 +45,27 @@ angular.module('hopsWorksApp')
 
         .factory('JobService', ['$http', function ($http) {
             var service = {
+               jobFilter: "",
+
+               /**
+                 * Get the jobFilter
+                 *
+                 * @returns {string}
+                 */
+               getJobFilter: function() {
+                   return this.jobFilter
+               },
+
+               /**
+                 * Update the jobFilter, this method is used by other services that redirect to jobs page and
+                 * wants to set the filter
+                 *
+                 * @param jobFilter
+                */
+               setJobFilter: function(jobFilter) {
+                   this.jobFilter = jobFilter
+               },
+
               /**
                * Get all the jobs defined in the project with given id.
                * @param {int} projectId

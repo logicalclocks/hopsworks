@@ -842,8 +842,8 @@ public class ProjectService {
 
   @Path("{id}/featurestores")
   public FeaturestoreService featurestoreService(@PathParam("id") Integer id, @Context HttpServletRequest req) {
-    this.featurestoreService.setProjectId(id);
-    return this.featurestoreService;
+    featurestoreService.setProjectId(id);
+    return featurestoreService;
   }
 
 }

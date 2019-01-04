@@ -67,16 +67,10 @@ public class ActivityFacade extends AbstractFacade<Activity> {
   public static final String SHARED_DATA = " shared dataset ";
   public static final String UNSHARED_DATA = " unshared dataset ";
   public static final String NEW_MEMBER = " added a member ";
-  public static final String NEW_SAMPLE = " added a new sample ";
   public static final String CHANGE_ROLE = " changed the role of ";
   public static final String REMOVED_MEMBER = " removed team member ";
-  public static final String REMOVED_SAMPLE = " removed a sample ";
-  public static final String REMOVED_FILE = " removed a file ";
-  public static final String REMOVED_PROJECT = " removed project ";
   public static final String RAN_JOB = " ran a job named ";
-  public static final String ADDED_SERVICES = " added new services ";
   public static final String ADDED_SERVICE = " added new service ";
-  public static final String PROJECT_NAME_CHANGED = " changed project name ";
   public static final String PROJECT_DESC_CHANGED = " changed project description ";
   public static final String PROJECT_RETENTION_CHANGED = " changed project retention ";
   public static final String CREATED_JOB = " created a new job named ";
