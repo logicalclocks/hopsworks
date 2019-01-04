@@ -2021,8 +2021,8 @@ public class Settings implements Serializable {
     em.detach(variable);
   }
 
-  public String getProjectPath(String projectname) {
-    return File.separator + DIR_ROOT + File.separator + projectname;
+  public String getProjectPath(String projectName) {
+    return File.separator + DIR_ROOT + File.separator + projectName;
   }
 
   Configuration conf;
