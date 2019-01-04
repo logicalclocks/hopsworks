@@ -91,7 +91,7 @@ public class ExecutionService {
   private YarnProjectsQuotaFacade yarnProjectsQuotaFacade;
   @EJB
   private JWTHelper jWTHelper;
-  
+
   private Jobs job;
 
   ExecutionService setJob(Jobs job) {

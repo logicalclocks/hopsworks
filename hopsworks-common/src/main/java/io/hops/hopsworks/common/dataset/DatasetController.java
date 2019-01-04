@@ -239,7 +239,6 @@ public class DatasetController {
   public void createSubDirectory(Project project, Path dirPath,
       int templateId, String description, boolean searchable,
       DistributedFileSystemOps udfso) throws DatasetException, HopsSecurityException {
-
     if (project == null) {
       throw new NullPointerException(
           "Cannot create a directory under a null project.");
@@ -254,7 +253,8 @@ public class DatasetController {
 
     //Check if the given folder already exists
     if (inodes.existsPath(dirPath.toString())) {
-      throw new IllegalArgumentException("The given path already exists.");
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_SUBDIR_ALREADY_EXISTS, Level.FINE,
+          "The given path: " + dirPath.toString() + " already exists");
     }
 
     // Check if the parent directory exists
@@ -501,6 +501,7 @@ public class DatasetController {
         path = new Path(settings.getProjectPath(owningProject.getName()),
             ds.getInode().getInodePK().getName());
         break;
+      case FEATURESTORE:
       case HIVEDB:
         path = new Path(settings.getHiveWarehouse(),
             ds.getInode().getInodePK().getName());
@@ -524,6 +525,10 @@ public class DatasetController {
         // Project name is the same of database name
         String dbName = ds.getInode().getInodePK().getName();
         return projectFacade.findByName(dbName.substring(0, dbName.lastIndexOf('.')));
+      case FEATURESTORE:
+        // Project name is the same as the database name minus _featurestore.db
+        dbName = ds.getInode().getInodePK().getName();
+        return projectFacade.findByName(dbName.substring(0, dbName.lastIndexOf('_')));
       default:
         return null;
     }

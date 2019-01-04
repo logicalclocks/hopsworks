@@ -41,10 +41,11 @@ package io.hops.hopsworks.common.dao.hdfs.inode;
 
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.util.Settings;
+import org.apache.hadoop.fs.permission.FsPermission;
+
+import javax.xml.bind.annotation.XmlRootElement;
 import java.util.Date;
 import java.util.Objects;
-import javax.xml.bind.annotation.XmlRootElement;
-import org.apache.hadoop.fs.permission.FsPermission;
 
 /**
  * Simplified version of the Inode entity to allow for easier access through web
@@ -138,6 +139,8 @@ public final class InodeView {
           break;
         case HIVEDB:
           this.owningProjectName = this.name.substring(0, this.name.lastIndexOf("."));
+        case FEATURESTORE:
+          this.owningProjectName = this.name.substring(0, this.name.lastIndexOf("_"));
       }
       this.name = this.owningProjectName + Settings.SHARED_FILE_SEPARATOR + this.name;
     }
