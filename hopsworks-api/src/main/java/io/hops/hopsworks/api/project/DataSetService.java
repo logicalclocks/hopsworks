@@ -628,36 +628,11 @@ public class DataSetService {
 
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     Users user = jWTHelper.getUserPrincipal(sc);
-<<<<<<< HEAD
 
-    DsPath dsPath = pathValidator.validatePath(this.project, dataSetName.getName());
-    org.apache.hadoop.fs.Path fullPath = dsPath.getFullPath();
-
-    DistributedFileSystemOps dfso = null;
-    DistributedFileSystemOps udfso = null;
-    try {
-      dfso = dfs.getDfsOps();
-      String username = hdfsUsersController.getHdfsUserName(project, user);
-      if (username != null) {
-        udfso = dfs.getDfsOps(username);
-      }
-      datasetController.createSubDirectory(this.project, fullPath,
-          dataSetName.getTemplate(), dataSetName.getDescription(),
-          dataSetName.isSearchable(), udfso);
-    } finally {
-      if (dfso != null) {
-        dfso.close();
-      }
-      if (udfso != null) {
-        dfs.closeDfsClient(udfso);
-      }
-    }
-=======
     org.apache.hadoop.fs.Path fullPath =
         dsUpdateOperations.createDirectoryInDataset(
             this.project, user, dataSetName.getName(), dataSetName.getDescription(),
         dataSetName.getTemplate(), dataSetName.isSearchable());
->>>>>>> be06b618ccd82b9a75aeb3c7eb03d68d76bcdd65
     json.setSuccessMessage("A directory was created at " + fullPath);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();

@@ -78,7 +78,6 @@ angular.module('hopsWorksApp', [
   'ngFileSaver',
   'ngFileUpload',
   'googlechart'
->>>>>>> be06b618ccd82b9a75aeb3c7eb03d68d76bcdd65
 ])
         .config(['$routeProvider', '$httpProvider', '$compileProvider', 'flowFactoryProvider', 'accordionConfig', 
           function ($routeProvider, $httpProvider, $compileProvider, flowFactoryProvider, accordionConfig) {
