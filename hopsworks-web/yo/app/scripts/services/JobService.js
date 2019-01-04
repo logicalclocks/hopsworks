@@ -81,6 +81,9 @@ angular.module('hopsWorksApp')
                 if (offset === undefined || offset === null) {
                     offset = 0;
                 }
+                if (query === undefined || query === null) {
+                    query = "";
+                }
                 return $http.get('/api/project/' + projectId + '/jobs?limit=' + limit + '&offset=' + offset + query);
               },
               /**

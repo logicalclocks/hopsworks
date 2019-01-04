@@ -39,10 +39,10 @@ angular.module('hopsWorksApp')
             self.showTrainingDatasetsBool = -1;
             self.jobs = [];
             self.pageSize = 10;
-            self.featureSortKey = 'name'
-            self.featuregroupSortKey = 'name'
-            self.trainingDatasetSortKey = 'name'
-            self.reverse = false
+            self.featureSortKey = 'name';
+            self.featuregroupSortKey = 'name';
+            self.trainingDatasetSortKey = 'name';
+            self.reverse = false;
             self.fgFilter = "";
             self.fFilter = "";
             self.dFilter = "";
@@ -51,8 +51,8 @@ angular.module('hopsWorksApp')
             self.trainingDatasetsDictList = [];
             self.loading = false;
             self.loadingText = "";
-            self.featuregroupsLoaded = false
-            self.trainingDatasetsLoaded = false
+            self.featuregroupsLoaded = false;
+            self.trainingDatasetsLoaded = false;
 
             /**
              * Called when clicking the sort-arrow in the UI
@@ -115,11 +115,11 @@ angular.module('hopsWorksApp')
             self.getFeaturestores = function () {
                 FeaturestoreService.getFeaturestores(self.projectId).then(
                     function (success) {
-                        self.featurestores = success.data
+                        self.featurestores = success.data;
                         if (!self.firstPull) {
-                            $scope.selected = {value: self.featurestores[0]}
-                            self.getTrainingDatasets($scope.selected.value)
-                            self.getFeaturegroups($scope.selected.value)
+                            $scope.selected = {value: self.featurestores[0]};
+                            self.getTrainingDatasets($scope.selected.value);
+                            self.getFeaturegroups($scope.selected.value);
                             self.firstPull = true
                         }
                     },
@@ -130,7 +130,7 @@ angular.module('hopsWorksApp')
                         });
                     }
                 );
-            }
+            };
 
             /**
              * Shows the modal for updating an existing feature group.
@@ -159,7 +159,7 @@ angular.module('hopsWorksApp')
                     $scope.selected.value, self.jobs, self.trainingDatasets)
                     .then(
                         function (success) {
-                            self.getTrainingDatasets($scope.selected.value)
+                            self.getTrainingDatasets($scope.selected.value);
                             self.showTrainingDatasets()
                         }, function (error) {
                             self.showTrainingDatasets()
@@ -236,7 +236,7 @@ angular.module('hopsWorksApp')
                 ModalService.createNewFeaturegroupVersion('lg', self.projectId, featuregroups[maxVersion], $scope.selected.value, self.jobs, self.featuregroups)
                     .then(
                         function (success) {
-                            self.getFeaturegroups($scope.selected.value)
+                            self.getFeaturegroups($scope.selected.value);
                             self.showFeaturegroups()
                         }, function (error) {
                             growl.error(error.data.errorMsg, {
@@ -263,7 +263,7 @@ angular.module('hopsWorksApp')
                 ModalService.createNewTrainingDatasetVersion('lg', self.projectId, trainingDatasets[maxVersion], $scope.selected.value, self.jobs, self.trainingDatasets)
                     .then(
                         function (success) {
-                            self.getTrainingDatasets($scope.selected.value)
+                            self.getTrainingDatasets($scope.selected.value);
                             self.showTrainingDatasets()
                         }, function (error) {
                             growl.error(error.data.errorMsg, {
@@ -286,7 +286,7 @@ angular.module('hopsWorksApp')
                     .then(function (success) {
                         FeaturestoreService.clearFeaturegroupContents(self.projectId, $scope.selected.value, featuregroup).then(
                             function (success) {
-                                self.getFeaturegroups($scope.selected.value)
+                                self.getFeaturegroups($scope.selected.value);
                                 growl.success("Feature group contents cleared", {title: 'Success', ttl: 1000});
                             },
                             function (error) {
@@ -333,7 +333,7 @@ angular.module('hopsWorksApp')
             /**
              * Called when the view-training dataset-dependencies button is pressed
              *
-             * @param training dataset
+             * @param trainingDataset dataset
              */
             self.viewTrainingDatasetDependencies = function (trainingDataset) {
                 ModalService.viewTrainingDatasetDependencies('lg', self.projectId, trainingDataset).then(
@@ -371,7 +371,7 @@ angular.module('hopsWorksApp')
              * Called when the launch-job button is pressed
              */
             self.launchJob = function (jobName) {
-                JobService.setJobFilter(jobName)
+                JobService.setJobFilter(jobName);
                 self.goToUrl("jobs")
             };
 
@@ -384,15 +384,15 @@ angular.module('hopsWorksApp')
                 FeaturestoreService.getFeaturegroups(self.projectId, featurestore).then(
                     function (success) {
                         self.featuregroups = success.data;
-                        self.groupFeaturegroupsByVersion()
-                        self.checkFreshnessOfFeaturegroups()
+                        self.groupFeaturegroupsByVersion();
+                        self.checkFreshnessOfFeaturegroups();
                         self.collectAllFeatures();
-                        self.featuregroupsLoaded = true
+                        self.featuregroupsLoaded = true;
                         self.stopLoading()
                     },
                     function (error) {
-                        self.featuregroupsLoaded = true
-                        self.stopLoading()
+                        self.featuregroupsLoaded = true;
+                        self.stopLoading();
                         growl.error(error.data.errorMsg, {
                             title: 'Failed to fetch the featuregroups for the featurestore',
                             ttl: 15000
@@ -410,14 +410,14 @@ angular.module('hopsWorksApp')
                 FeaturestoreService.getTrainingDatasets(self.projectId, featurestore).then(
                     function (success) {
                         self.trainingDatasets = success.data;
-                        self.checkFreshnessOfTrainingDatasets()
-                        self.groupTrainingDatasetsByVersion()
-                        self.trainingDatasetsLoaded = true
+                        self.checkFreshnessOfTrainingDatasets();
+                        self.groupTrainingDatasetsByVersion();
+                        self.trainingDatasetsLoaded = true;
                         self.stopLoading()
                     },
                     function (error) {
-                        self.trainingDatasetsLoaded = true
-                        self.stopLoading()
+                        self.trainingDatasetsLoaded = true;
+                        self.stopLoading();
                         growl.error(error.data.errorMsg, {
                             title: 'Failed to fetch the training datasets for the featurestore',
                             ttl: 15000
@@ -430,11 +430,11 @@ angular.module('hopsWorksApp')
              * single list
              */
             self.collectAllFeatures = function () {
-                var featuresTemp = []
+                var featuresTemp = [];
                 var i;
                 var j;
                 for (i = 0; i < self.featuregroups.length; i++) {
-                    var fgFeatures = []
+                    var fgFeatures = [];
                     for (j = 0; j < self.featuregroups[i].features.length; j++) {
                         fgFeatures.push({
                             name: self.featuregroups[i].features[j].name,
@@ -448,7 +448,7 @@ angular.module('hopsWorksApp')
                     featuresTemp = featuresTemp.concat(fgFeatures)
                 }
                 self.features = featuresTemp;
-            }
+            };
 
             /**
              * Goes through the list of featuregrup and analyzes associated jobs and dependencies to check
@@ -459,17 +459,17 @@ angular.module('hopsWorksApp')
                 var j;
                 for (i = 0; i < self.featuregroups.length; i++) {
                     var outOfDate = false;
-                    var outOfDateReason = "Featuregroup is out-of-date:"
+                    var outOfDateReason = "Featuregroup is out-of-date:";
                     if (self.featuregroups[i].lastComputed !== null) {
-                        var lastComputed = Date.parse(self.featuregroups[i].lastComputed)
+                        var lastComputed = Date.parse(self.featuregroups[i].lastComputed);
                         var jobStatus = self.featuregroups[i].jobStatus
                     } else {
                         lastComputed = -1
                     }
                     for (j = 0; j < self.featuregroups[i].dependencies.length; j++) {
-                        var dependencyModificationDate = Date.parse(self.featuregroups[i].dependencies[j].modification)
+                        var dependencyModificationDate = Date.parse(self.featuregroups[i].dependencies[j].modification);
                         if ((dependencyModificationDate > lastComputed || jobStatus !== 'Succeeded') && self.featuregroups[i].jobId !== null) {
-                            outOfDate = true
+                            outOfDate = true;
                             if (jobStatus === 'Succeeded') {
                                 outOfDateReason = outOfDateReason
                                     + " dataset dependency: "
@@ -478,7 +478,7 @@ angular.module('hopsWorksApp')
                                     + self.featuregroups[i].dependencies[j].modification
                                     + ", which is after the last successful job execution: " + Date.parse(self.featuregroups[i]).lastComputed
                             } else {
-                                var jobFailedstr = " the last feature engineering job did not complete successfully."
+                                var jobFailedstr = " the last feature engineering job did not complete successfully.";
                                 if (outOfDateReason.indexOf(jobFailedstr) === -1) {
                                     outOfDateReason = outOfDateReason
                                         + jobFailedstr
@@ -489,7 +489,7 @@ angular.module('hopsWorksApp')
                     self.featuregroups[i].outOfDate = outOfDate;
                     self.featuregroups[i].outOfDateReason = outOfDateReason
                 }
-            }
+            };
 
             /**
              * Goes through the list of Training Datasets and analyzes associated jobs and dependencies to check
@@ -500,17 +500,17 @@ angular.module('hopsWorksApp')
                 var j;
                 for (i = 0; i < self.trainingDatasets.length; i++) {
                     var outOfDate = false;
-                    var outOfDateReason = "Training Dataset is out-of-date:"
+                    var outOfDateReason = "Training Dataset is out-of-date:";
                     if (self.trainingDatasets[i].lastComputed !== null) {
-                        var lastComputed = Date.parse(self.trainingDatasets[i].lastComputed)
+                        var lastComputed = Date.parse(self.trainingDatasets[i].lastComputed);
                         var jobStatus = self.trainingDatasets[i].jobStatus
                     } else {
                         lastComputed = -1
                     }
                     for (j = 0; j < self.trainingDatasets[i].dependencies.length; j++) {
-                        var dependencyModificationDate = Date.parse(self.trainingDatasets[i].dependencies[j].modification)
+                        var dependencyModificationDate = Date.parse(self.trainingDatasets[i].dependencies[j].modification);
                         if ((dependencyModificationDate > lastComputed || jobStatus !== 'Succeeded') && self.trainingDatasets[i].jobId !== null) {
-                            outOfDate = true
+                            outOfDate = true;
                             if (jobStatus === 'Succeeded') {
                                 outOfDateReason = outOfDateReason
                                     + " dataset dependency: "
@@ -519,7 +519,7 @@ angular.module('hopsWorksApp')
                                     + self.trainingDatasets[i].dependencies[j].modification
                                     + ", which is after the last successful job execution: " + Date.parse(self.trainingDatasets[i]).lastComputed
                             } else {
-                                var jobFailedstr = " the last feature engineering job did not complete successfully."
+                                var jobFailedstr = " the last feature engineering job did not complete successfully.";
                                 if (outOfDateReason.indexOf(jobFailedstr) === -1) {
                                     outOfDateReason = outOfDateReason
                                         + jobFailedstr
@@ -530,69 +530,69 @@ angular.module('hopsWorksApp')
                     self.trainingDatasets[i].outOfDate = outOfDate;
                     self.trainingDatasets[i].outOfDateReason = outOfDateReason
                 }
-            }
+            };
 
             /**
              * Goes through a list of featuregroups and groups them by name so that you get name --> versions mapping
              */
             self.groupFeaturegroupsByVersion = function () {
-                var dict = {}
+                var dict = {};
                 var i;
                 var versionVar;
                 for (i = 0; i < self.featuregroups.length; i++) {
                     if (self.featuregroups[i].name in dict) {
-                        versionVar = self.featuregroups[i].version.toString()
+                        versionVar = self.featuregroups[i].version.toString();
                         dict[self.featuregroups[i].name][versionVar] = self.featuregroups[i]
                     } else {
-                        versionVar = self.featuregroups[i].version.toString()
-                        dict[self.featuregroups[i].name] = {}
+                        versionVar = self.featuregroups[i].version.toString();
+                        dict[self.featuregroups[i].name] = {};
                         dict[self.featuregroups[i].name][versionVar] = self.featuregroups[i]
                     }
                 }
-                var dictList = []
+                var dictList = [];
                 var item;
                 for (var key in dict) {
                     item = {};
                     item.name = key;
                     item.versionToGroups = dict[key];
-                    var versions = Object.keys(item.versionToGroups)
-                    item.versions = versions
+                    var versions = Object.keys(item.versionToGroups);
+                    item.versions = versions;
                     item.activeVersion = versions[versions.length - 1];
                     dictList.push(item);
                 }
                 self.featuregroupsDictList = dictList
-            }
+            };
 
             /**
              * Goes through a list of training datasets and groups them by name so that you get name --> versions mapping
              */
             self.groupTrainingDatasetsByVersion = function () {
-                var dict = {}
+                var dict = {};
                 var i;
                 var versionVar;
                 for (i = 0; i < self.trainingDatasets.length; i++) {
                     if (self.trainingDatasets[i].name in dict) {
-                        versionVar = self.trainingDatasets[i].version.toString()
+                        versionVar = self.trainingDatasets[i].version.toString();
                         dict[self.trainingDatasets[i].name][versionVar] = self.trainingDatasets[i]
                     } else {
-                        versionVar = self.trainingDatasets[i].version.toString()
-                        dict[self.trainingDatasets[i].name] = {}
+                        versionVar = self.trainingDatasets[i].version.toString();
+                        dict[self.trainingDatasets[i].name] = {};
                         dict[self.trainingDatasets[i].name][versionVar] = self.trainingDatasets[i]
                     }
                 }
-                var dictList = []
+                var dictList = [];
                 var item;
                 for (var key in dict) {
                     item = {};
                     item.name = key;
                     item.versionToGroups = dict[key];
-                    var versions = Object.keys(item.versionToGroups)
-                    item.versions = versions
+                    var versions = Object.keys(item.versionToGroups);
+                    item.versions = versions;
                     item.activeVersion = versions[versions.length - 1];
                     dictList.push(item);
                 }
                 self.trainingDatasetsDictList = dictList
-            }
+            };
 
             /**
              * Called when the "features" tab is pressed in the UI
@@ -633,7 +633,7 @@ angular.module('hopsWorksApp')
                     }, function (error) {
                         self.showFeaturegroups()
                     });
-            }
+            };
 
             /**
              * Opens the modal to view a trainingDataset schema
@@ -647,7 +647,7 @@ angular.module('hopsWorksApp')
                     }, function (error) {
                         self.showTrainingDatasets()
                     });
-            }
+            };
 
             /**
              * Opens the modal to view featurestore information
@@ -720,12 +720,11 @@ angular.module('hopsWorksApp')
             /**
              * Called when a new featurestore is selected in the dropdown list in the UI
              *
-             * @param item the selected featurestore
-             * @param model the select-model
+             * @param featurestore the selected featurestore
              */
             self.onSelectFeaturestoreCallback = function (featurestore) {
                 self.startLoading("Loading Feature store data...");
-                self.getTrainingDatasets(featurestore)
+                self.getTrainingDatasets(featurestore);
                 self.getFeaturegroups(featurestore)
             };
 
@@ -734,8 +733,8 @@ angular.module('hopsWorksApp')
              */
             self.init = function () {
                 self.startLoading("Loading Feature store data...");
-                self.getFeaturestores()
-                self.getAllJobs()
+                self.getFeaturestores();
+                self.getAllJobs();
             };
 
 
@@ -759,8 +758,8 @@ angular.module('hopsWorksApp')
              */
             self.isJobLocal = function (jobId) {
                 var i;
-                var jobIds = []
-                var jobFoundBool = false
+                var jobIds = [];
+                var jobFoundBool = false;
                 for (i = 0; i < self.jobs.length; i++) {
                     if (self.jobs[i].id === jobId) {
                         jobFoundBool = true
@@ -773,9 +772,9 @@ angular.module('hopsWorksApp')
              * Gets all jobs for the project
              */
             self.getAllJobs = function () {
-                JobService.getAllJobsInProject(self.projectId).then(
+                JobService.getJobs(self.projectId).then(
                     function (success) {
-                        self.jobs = success.data;
+                        self.jobs = success.data.items;
                     }, function (error) {
                         growl.error(error.data.errorMsg, {title: 'Failed to fetch jobs for the project', ttl: 15000});
                     });
