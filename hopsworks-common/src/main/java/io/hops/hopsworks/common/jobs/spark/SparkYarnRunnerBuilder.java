@@ -261,7 +261,7 @@ public class SparkYarnRunnerBuilder {
     // Add tf-spark-connector for Featurestore
     builder.addLocalResource(new LocalResourceDTO(
         settings.getTfSparkConnectorFilename(), settings.getTfSparkConnectorPath(),
-        LocalResourceVisibility.APPLICATION.toString(),
+        LocalResourceVisibility.PUBLIC.toString(),
         LocalResourceType.FILE.toString(), null), false);
 
     builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH,
