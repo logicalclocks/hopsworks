@@ -40,6 +40,7 @@ package io.hops.hopsworks.api.jupyter;
 
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 
+import java.io.File;
 import java.nio.file.Paths;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
@@ -476,13 +477,14 @@ public class JupyterService {
   public Response convertIPythonNotebook(@PathParam("path") String path,
       @Context SecurityContext sc) throws ServiceException {
     String hdfsUsername = getHdfsUser(sc);
-    String hdfsFilename = "/Projects/" + this.project.getName() + "/" + path;
+    String hdfsFilename = settings.getProjectPath(project.getName()) + File.separator  + path;
 
     String prog = settings.getHopsworksDomainDir() + "/bin/convert-ipython-notebook.sh";
     ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
         .addCommand(prog)
         .addCommand(hdfsFilename)
         .addCommand(hdfsUsername)
+        .addCommand(settings.getAnacondaProjectDir(project))
         .ignoreOutErrStreams(true)
         .build();
     LOGGER.log(Level.FINE, processDescriptor.toString());
