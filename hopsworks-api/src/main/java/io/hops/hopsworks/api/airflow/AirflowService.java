@@ -86,8 +86,39 @@ public class AirflowService {
   @Produces(MediaType.TEXT_PLAIN)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response secretDir(@Context HttpServletRequest req) {
-    String secretDir = "jim";
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(secretDir).build();
+    String secret = DigestUtils.sha256Hex(Integer.toString(this.projectId));
+
+    String baseDir = "/srv/hops/airflow/dags/hopsworks/";
+    String destDir = baseDir + secret;
+    Set<PosixFilePermission> xOnly = new HashSet<>();
+    xOnly.add(PosixFilePermission.OWNER_WRITE);
+    xOnly.add(PosixFilePermission.OWNER_READ);
+    xOnly.add(PosixFilePermission.OWNER_EXECUTE);
+    xOnly.add(PosixFilePermission.GROUP_WRITE);
+    xOnly.add(PosixFilePermission.GROUP_EXECUTE);
+
+    Set<PosixFilePermission> perms = new HashSet<>();
+    //add owners permission
+    perms.add(PosixFilePermission.OWNER_READ);
+    perms.add(PosixFilePermission.OWNER_WRITE);
+    perms.add(PosixFilePermission.OWNER_EXECUTE);
+    //add group permissions
+    perms.add(PosixFilePermission.GROUP_READ);
+    perms.add(PosixFilePermission.GROUP_WRITE);
+    perms.add(PosixFilePermission.GROUP_EXECUTE);
+    //add others permissions
+    perms.add(PosixFilePermission.OTHERS_READ);
+    perms.add(PosixFilePermission.OTHERS_EXECUTE);
+
+    Files.setPosixFilePermissions(baseDir, xOnly);
+    
+    Files.setPosixFilePermissions(destDir, perms);
+
+    new File(baseDir).mkdirs();
+    new File(destDir).mkdirs();
+    
+
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(secret).build();
   }
 
   @GET
