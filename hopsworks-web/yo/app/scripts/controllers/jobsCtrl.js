@@ -55,7 +55,7 @@ angular.module('hopsWorksApp')
                   'STARTING_APP_MASTER', 'AGGREGATING_LOGS'];
             self.buttonArray = [];
             self.workingArray = [];
-            self.jobFilter = "";
+            self.jobFilter = JobService.getJobFilter();
             self.hasSelectJob = false;
 
             self.currentjob = null;

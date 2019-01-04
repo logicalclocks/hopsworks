@@ -55,7 +55,7 @@ module ProjectHelper
 
   def create_project
     with_valid_session
-    new_project = {projectName: "project_#{short_random_id}", description:"", status: 0, services: ["JOBS","JUPYTER","HIVE","KAFKA","SERVING"],
+    new_project = {projectName: "project_#{short_random_id}", description:"", status: 0, services: ["JOBS","JUPYTER","HIVE","KAFKA","SERVING", "FEATURESTORE"],
                    projectTeam:[], retentionPeriod: ""}
     post "#{ENV['HOPSWORKS_API']}/project", new_project
     expect_json(successMessage: regex("Project created successfully.*"))
@@ -65,7 +65,7 @@ module ProjectHelper
 
   def create_project_by_name(projectname)
     with_valid_session
-    new_project = {projectName: projectname, description:"", status: 0, services: ["JOBS","JUPYTER", "HIVE", "KAFKA","SERVING"],
+    new_project = {projectName: projectname, description:"", status: 0, services: ["JOBS","JUPYTER", "HIVE", "KAFKA","SERVING", "FEATURESTORE"],
                    projectTeam:[], retentionPeriod: ""}
     post "#{ENV['HOPSWORKS_API']}/project", new_project
     expect_json(successMessage: regex("Project created successfully.*"))
@@ -86,27 +86,27 @@ module ProjectHelper
     expect_json(successMessage: "The project and all related files were removed successfully.")
     expect_status(200)
   end
-  
+
   def add_member(member, role)
     with_valid_project
     post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers", {projectTeam: [{projectTeamPK: {projectId: @project[:id],teamMember: member},teamRole: role}]}
     expect_json(successMessage: "One member added successfully")
     expect_status(200)
   end
-  
+
   def get_all_projects
     projects = Project.find_by(username: "#{@user.email}")
     projects
   end
-  
+
   def get_project
     @project
   end
- 
+
   def get_project_by_name(name)
     Project.find_by(projectName: "#{name}")
   end
-  
+
   def check_project_limit(limit=0)
     get "#{ENV['HOPSWORKS_API']}/users/profile"
     max_num_projects = json_body[:maxNumProjects]
@@ -115,9 +115,9 @@ module ProjectHelper
       reset_session
       with_valid_project
     end
-    
+
   end
-  
+
   def create_max_num_projects
     get "#{ENV['HOPSWORKS_API']}/users/profile"
     max_num_projects = json_body[:maxNumProjects]
@@ -129,7 +129,7 @@ module ProjectHelper
       num_created_projects = json_body[:numCreatedProjects]
     end
   end
-  
+
   def clean_projects
     with_valid_session
     get "#{ENV['HOPSWORKS_API']}/project/getAll"

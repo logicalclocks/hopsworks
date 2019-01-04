@@ -41,5 +41,6 @@ package io.hops.hopsworks.common.dao.dataset;
 
 public enum DatasetType {
   DATASET,
-  HIVEDB
+  HIVEDB,
+  FEATURESTORE //Note: since we map enum directly to the DB the order is important for upgrades to work!
 }

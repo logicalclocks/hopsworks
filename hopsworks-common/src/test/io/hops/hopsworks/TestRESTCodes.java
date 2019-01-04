@@ -66,6 +66,7 @@ public class TestRESTCodes {
     values.addAll(Arrays.asList(ZeppelinErrorCode.values()));
     values.addAll(Arrays.asList(RESTCodes.ActivitiesErrorCode.values()));
     values.addAll(Arrays.asList(RESTCodes.ResourceErrorCode.values()));
+    values.addAll(Arrays.asList(RESTCodes.FeaturestoreErrorCode.values()));
   }
   
   /**

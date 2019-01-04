@@ -1,0 +1,86 @@
+<!--
+  ~ This file is part of Hopsworks
+  ~ Copyright (C) 2018, Logical Clocks AB. All rights reserved
+  ~
+  ~ Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+  ~ the GNU Affero General Public License as published by the Free Software Foundation,
+  ~ either version 3 of the License, or (at your option) any later version.
+  ~
+  ~ Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+  ~ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+  ~ PURPOSE.  See the GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License along with this program.
+  ~ If not, see <https://www.gnu.org/licenses/>.
+  -->
+
+<div class="modal-header">
+    <button class="close" ng-click="selectFeatureTypeCtrl.close()" data-dismiss="modal" aria-hidden="true"
+            type="button">&times;
+    </button>
+    <h2 class="modal-title">Select a feature type</h2>
+</div>
+<div growl reference="21" class="pull-right"></div>
+<div class="modal-body">
+    <p style="font-weight: bold">Select <span style="text-decoration: underline">either</span> a pre-defined type or a custom type</p>
+    <div class="view-info">
+        <div class="col-md-12">
+            <div class="col-sm-12" style="margin-bottom: 20px">
+                <div class="col-sm-3">
+                    <label class="control-label">Pre-defined types</label>
+                    <i class="fa fa-info-circle" tooltip-placement="auto left"
+                       uib-tooltip='Pre-defined feature types'
+                       style="margin-left: 10px"></i>
+                </div>
+                <div class="col-sm-9">
+                    <ui-select ng-model="selectFeatureTypeCtrl.predefinedType">
+                        <ui-select-match placeholder="Select a pre-defined feature type">
+                            <span>{{$select.selected}}</span>
+                        </ui-select-match>
+                        <ui-select-choices repeat="item in selectFeatureTypeCtrl.hiveDataTypes">
+                            <span ng-bind="item"></span>
+                        </ui-select-choices>
+                    </ui-select>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="view-info">
+        <div class="col-md-12">
+            <div class="col-sm-12" style="margin-bottom: 20px">
+                <div class="col-sm-3">
+                    <label class="control-label">Custom types</label>
+                    <i class="fa fa-info-circle" tooltip-placement="auto left"
+                       uib-tooltip='Enter a custom hive datatype,e.g array<struct<Name:string>>'
+                       style="margin-left: 10px"></i>
+                </div>
+                <div class="col-sm-9">
+                    <input type="text" class="form-control" placeholder="Enter a custom Hive feature type"
+                           ng-model="selectFeatureTypeCtrl.customType">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row"></div>
+    <div class="view-info">
+        <div class="col-md-12">
+            <div class="col-sm-12">
+                <div ng-if="selectFeatureTypeCtrl.duplicateTypeSelection === -1" style="color: red">
+                    {{"Select either a predefined type or a custom type, not both"}}
+                </div>
+                <div ng-if="selectFeatureTypeCtrl.noSelection === -1" style="color: red">
+                    {{"You have not selected a feature type"}}
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--<hr />-->
+    <div class="modal-footer" style="padding-bottom: 1px; padding-right: 1px" id="createFeaturegroupWnd">
+        <button class="btn btn-default" type="button" ng-click="selectFeatureTypeCtrl.close()">Cancel
+        </button>
+        <button class="btn btn-primary" id="createFeaturegroupBtn"
+                ng-click="selectFeatureTypeCtrl.selectFeatureType()">
+            Save
+        </button>
+    </div>
+</div>
