@@ -468,13 +468,6 @@ public class ClusterController {
     }
   }
 
-  private String getAgentName() {
-    String sufix = "" + (userBean.lastUserID() + 1);
-    int end = Settings.USERNAME_LEN - sufix.length();
-    String name = CLUSTER_NAME_PREFIX.toLowerCase().substring(0, end) + (userBean.lastUserID() + 1);
-    return name;
-  }
-
   private Integer extractClusterCertId(String key) {
     if (key == null || key.isEmpty() || key.length() <= VALIDATION_KEY_LEN) {
       throw new IllegalArgumentException("Key not valid.");

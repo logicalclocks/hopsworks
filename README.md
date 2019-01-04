@@ -18,8 +18,9 @@ metadata. Hopsworks lowers the barrier to entry for users getting started with H
 
 ## Installing Hopsworks
 
-Hopsworks is part of the Hops Hadoop platform which you can install by following instructions available in 
-Hops [documentation](http://hops.readthedocs.io) under *Installation Guide*.
+Installation of Hopsworks and all its services is automated with the Karamel software. Instructions on
+ how to install the entire platform are available 
+ [here](http://hopsworks.readthedocs.io).
 
 For a local single-node installation, to access Hopsworks just point your browser at:
 ```

@@ -201,12 +201,16 @@ public class AuthService {
 
   @GET
   @Path("isAdmin")
+  @Produces(MediaType.APPLICATION_JSON)
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response login(@Context SecurityContext sc) {
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
+    json.setData(false);
     if (sc.isUserInRole("HOPS_ADMIN")) {
-      return Response.ok(true).build();
+      json.setData(true);
+      return Response.ok(json).build();
     }
-    return Response.ok(false).build();
+    return Response.ok(json).build();
   }
 
   @POST

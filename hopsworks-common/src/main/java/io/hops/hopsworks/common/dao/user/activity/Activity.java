@@ -66,25 +66,32 @@ import io.hops.hopsworks.common.dao.user.Users;
 @NamedQueries({
   @NamedQuery(name = "Activity.findAll",
           query = "SELECT u FROM Activity u ORDER BY u.timestamp DESC"),
+  @NamedQuery(name = "Activity.findAllAsc",
+          query = "SELECT u FROM Activity u ORDER BY u.timestamp ASC"),
+  @NamedQuery(name = "Activity.findAllOrderById",
+          query = "SELECT u FROM Activity u ORDER BY u.id DESC"),
+  @NamedQuery(name = "Activity.findAllOrderByIdAsc",
+          query = "SELECT u FROM Activity u ORDER BY u.id ASC"),
   @NamedQuery(name = "Activity.findById",
           query = "SELECT u FROM Activity u WHERE u.id = :id"),
+  @NamedQuery(name = "Activity.findByUser",
+          query = "SELECT u FROM Activity u WHERE u.user = :user"),
+  @NamedQuery(name = "Activity.findByProject",
+          query = "SELECT u FROM Activity u WHERE u.project = :project"),
+  @NamedQuery(name = "Activity.findByIdAndUser",
+          query = "SELECT u FROM Activity u WHERE u.id = :id AND u.user = :user"),
+  @NamedQuery(name = "Activity.findByIdAndProject",
+          query = "SELECT u FROM Activity u WHERE u.id = :id AND u.project = :project"),
   @NamedQuery(name = "Activity.findByFlag",
           query = "SELECT u FROM Activity u WHERE u.flag = :flag"),
   @NamedQuery(name = "Activity.findByActivity",
           query = "SELECT u FROM Activity u WHERE u.activity = :activity"),
-  @NamedQuery(name = "Activity.findByUser",
-          query
-          = "SELECT u FROM Activity u WHERE u.user = :user ORDER BY u.timestamp DESC"),
   @NamedQuery(name = "Activity.findByTimestamp",
           query = "SELECT u FROM Activity u WHERE u.timestamp = :timestamp"),
-  @NamedQuery(name = "Activity.findByProject",
-          query
-          = "SELECT u FROM Activity u WHERE u.project = :project ORDER BY u.timestamp DESC"),
   @NamedQuery(name = "Activity.countAll",
           query = "SELECT COUNT(u) FROM Activity u"),
   @NamedQuery(name = "Activity.countPerProject",
-          query
-          = "SELECT COUNT(u) FROM Activity u WHERE u.project = :project")})
+          query = "SELECT COUNT(u) FROM Activity u WHERE u.project = :project")})
 public class Activity implements Serializable {
 
   private static final long serialVersionUID = 1L;
@@ -180,7 +187,7 @@ public class Activity implements Serializable {
 
   @Override
   public String toString() {
-    return "se.kth.bbc.activity.Activity[ id=" + id + " ]";
+    return "Activity[ id=" + id + " ]";
   }
 
   public String getFlag() {

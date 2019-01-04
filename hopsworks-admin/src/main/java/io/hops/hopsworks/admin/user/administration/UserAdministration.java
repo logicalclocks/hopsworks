@@ -39,6 +39,7 @@
 
 package io.hops.hopsworks.admin.user.administration;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.admin.maintenance.ClientSessionState;
 import io.hops.hopsworks.admin.maintenance.MessagesController;
 import io.hops.hopsworks.common.util.EmailBean;
@@ -72,7 +73,6 @@ import io.hops.hopsworks.common.dao.user.security.ua.SecurityUtils;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.FormatUtils;
-import org.elasticsearch.common.Strings;
 
 import javax.faces.bean.RequestScoped;
 

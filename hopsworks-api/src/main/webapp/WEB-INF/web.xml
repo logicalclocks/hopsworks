@@ -255,6 +255,11 @@
     </init-param>
     <load-on-startup>2</load-on-startup>
   </servlet>
+  <servlet>
+    <servlet-name>Bootstrap</servlet-name>
+    <servlet-class>io.hops.hopsworks.rest.application.config.Bootstrap</servlet-class>
+    <load-on-startup>2</load-on-startup>
+  </servlet>
   <security-role>
     <role-name>HOPS_ADMIN</role-name>
   </security-role>

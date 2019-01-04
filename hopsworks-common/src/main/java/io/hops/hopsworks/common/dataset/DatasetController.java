@@ -178,7 +178,7 @@ public class DatasetController {
         }
         datasetFacade.persistDataset(newDS);
         activityFacade.persistActivity(ActivityFacade.NEW_DATA + dataSetName,
-            project, user);
+            project, user, ActivityFacade.ActivityFlag.DATASET);
         // creates a dataset and adds user as owner.
         hdfsUsersBean.addDatasetUsersGroups(user, project, newDS, dfso);
 
