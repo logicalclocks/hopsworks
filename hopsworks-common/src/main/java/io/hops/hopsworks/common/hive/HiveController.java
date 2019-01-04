@@ -164,9 +164,10 @@ public class HiveController {
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public void createDatasetDb(Project project, Users user, DistributedFileSystemOps dfso,
                                String dbName, DatasetType datasetType, Featurestore featurestore) throws IOException {
-    if(datasetType != DatasetType.HIVEDB && datasetType != DatasetType.FEATURESTORE)
+    if(datasetType != DatasetType.HIVEDB && datasetType != DatasetType.FEATURESTORE) {
       throw new IllegalArgumentException("Invalid dataset type for hive database");
-    
+    }
+
     // Hive database names are case insensitive and lower case
     Path dbPath = getDbPath(dbName);
     Inode dbInode = inodeFacade.getInodeAtPath(dbPath.toString());
