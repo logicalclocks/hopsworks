@@ -247,12 +247,6 @@
           <groupId>io.hops.hive</groupId>
           <artifactId>hive-metastore</artifactId>
         </exclusion>
-        <!--
-        Need serde for the feature store
-        <exclusion>
-          <groupId>io.hops.hive</groupId>
-          <artifactId>hive-serde</artifactId>
-        </exclusion> -->
         <exclusion>
           <groupId>io.hops.hive</groupId>
           <artifactId>hive-shims</artifactId>

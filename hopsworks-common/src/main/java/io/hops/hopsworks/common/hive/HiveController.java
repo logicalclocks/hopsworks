@@ -197,8 +197,10 @@ public class HiveController {
       switch (datasetType) {
         case HIVEDB:
           dfso.setHdfsSpaceQuotaInMBs(dbPath, settings.getHiveDbDefaultQuota());
+          break;
         case FEATURESTORE:
           dfso.setHdfsSpaceQuotaInMBs(dbPath, settings.getFeaturestoreDbDefaultQuota());
+          break;
       }
       projectFacade.setTimestampQuotaUpdate(project, new Date());
     } catch (IOException e) {

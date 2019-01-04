@@ -742,6 +742,7 @@ public class ProjectController {
             addKibana(project);
           }
         }
+        break;
     }
 
     // Persist enabled service in the database
