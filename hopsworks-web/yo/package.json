@@ -33,7 +33,8 @@
     "karma-jasmine": "^1.0.2",
     "karma-phantomjs-launcher": "^1.0.0",
     "load-grunt-tasks": "^3.5.0",
-    "time-grunt": "^1.3.0"
+    "time-grunt": "^1.3.0",
+    "bower-npm-resolver": "^0.9.1"
   },
   "engines": {
     "node": ">=0.10.0"

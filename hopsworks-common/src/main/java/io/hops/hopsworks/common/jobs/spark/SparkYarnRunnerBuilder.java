@@ -60,11 +60,9 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -101,7 +99,6 @@ public class SparkYarnRunnerBuilder {
   private final Map<String, String> sysProps = new HashMap<>();
   private String classPath;
   private ServiceProperties serviceProps;
-  final private Set<String> blacklistedProps = new HashSet<>();
 
   public SparkYarnRunnerBuilder(Jobs job) {
     this.job = job;
@@ -626,7 +623,6 @@ public class SparkYarnRunnerBuilder {
 
     //Create a string with system properties from extraJavaOptions
     StringBuilder extraJavaOptionsSb = new StringBuilder();
-    //extraJavaOptionsSb.append("'-D"+Settings.SPARK_EXECUTOR_EXTRA_JAVA_OPTS+"=");
     for (String key : extraJavaOptions.keySet()) {
       extraJavaOptionsSb.append(" -D").append(key).append("=").append(extraJavaOptions.get(key)).append(" ");
     }

@@ -43,9 +43,15 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlSeeAlso;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.hops.hopsworks.common.jobs.configuration.JobConfiguration;
+import io.hops.hopsworks.common.jobs.flink.FlinkJobConfiguration;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
+import io.hops.hopsworks.common.jobs.spark.SparkJobConfiguration;
 import io.hops.hopsworks.common.util.Settings;
 
 /**
@@ -54,6 +60,13 @@ import io.hops.hopsworks.common.util.Settings;
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.NONE)
+@XmlSeeAlso({SparkJobConfiguration.class, FlinkJobConfiguration.class})
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY)
+@JsonSubTypes({
+  @JsonSubTypes.Type(value = FlinkJobConfiguration.class, name = "FlinkJobConfiguration"),
+  @JsonSubTypes.Type(value = SparkJobConfiguration.class, name = "SparkJobConfiguration") }
+)
 public class YarnJobConfiguration extends JobConfiguration {
 
   @XmlElement

@@ -102,7 +102,7 @@ public abstract class FeaturestoreEntityDTO {
   }
 
   private void extractLastComputed(Jobs job) {
-    Collection<Execution> executions = job.getExecutionCollection();
+    Collection<Execution> executions = job.getExecutions();
     this.lastComputed = null;
     this.jobStatus = null;
     if (!executions.isEmpty()) {

@@ -39,6 +39,7 @@
 
 package io.hops.hopsworks.api.project;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jwt.JWTHelper;
@@ -73,7 +74,6 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import org.elasticsearch.common.Strings;
 
 @Path("/message")
 @Stateless

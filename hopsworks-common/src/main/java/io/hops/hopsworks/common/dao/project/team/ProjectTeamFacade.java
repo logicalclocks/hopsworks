@@ -171,10 +171,7 @@ public class ProjectTeamFacade {
   public List<ProjectTeam> findActiveByMember(Users member) {
     Query query = em.createNamedQuery("ProjectTeam.findActiveByTeamMember",
             ProjectTeam.class).setParameter("user", member);
-    List<ProjectTeam> x = query.getResultList();
-
-    //return query.getResultList();
-    return x;
+    return query.getResultList();
   }
 
   /**

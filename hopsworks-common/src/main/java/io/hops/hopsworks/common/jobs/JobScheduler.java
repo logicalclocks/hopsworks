@@ -91,11 +91,11 @@ public class JobScheduler {
     //Valid id?
     if (!(jobId instanceof Integer)) {
       logger.log(Level.WARNING,
-              "Trying to run a scheduled execution, but info is not of integer class.");
+        "Trying to run a scheduled execution, but info is not " + jobId.getClass().getSimpleName());
       return;
     }
     //Valid job?
-    Jobs job = jobFacade.findById((Integer) jobId);
+    Jobs job = jobFacade.find(jobId);
 
     //Make sure the job is valid (still exists in DB and user still in the project where the job is)
     if (job == null) {
@@ -155,20 +155,18 @@ public class JobScheduler {
    * configuration.
    * <p/>
    * @param job
-   * @throws NullPointerException If the job or its contained schedule are null.
    */
   public void scheduleJobPeriodic(Jobs job) {
     //First: parameter checking
     if (job == null) {
-      throw new NullPointerException("Cannot schedule null job.");
+      throw new IllegalArgumentException("Job parameter was null.");
     } else if (job.getJobConfig().getSchedule() == null) {
-      throw new NullPointerException(
-              "Trying to schedule a job with null schedule: " + job);
+      throw new IllegalArgumentException("Trying to schedule a job with null schedule: " + job);
     }
     //Then: set up interval timer
     ScheduleDTO schedule = job.getJobConfig().getSchedule();
-    timerService.createTimer(new Date(schedule.getStart()), schedule.getNumber()
-            * schedule.getUnit().getDuration(), job.getId());
+    timerService.createTimer(new Date(schedule.getStart()), schedule.getNumber() * schedule.getUnit().getDuration(),
+      job.getId());
   }
   /**
    * Unschedule the given job.
@@ -186,5 +184,5 @@ public class JobScheduler {
     }
     return false;
   }
-
+  
 }

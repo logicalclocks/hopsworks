@@ -38,13 +38,14 @@
  */
 package io.hops.hopsworks.api.project;
 
+import io.hops.hopsworks.api.activities.ProjectActivitiesResource;
 import io.hops.hopsworks.api.dela.DelaClusterProjectService;
 import io.hops.hopsworks.api.dela.DelaProjectService;
 import io.hops.hopsworks.api.featurestore.FeaturestoreService;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
-import io.hops.hopsworks.api.jobs.JobService;
+import io.hops.hopsworks.api.jobs.JobsResource;
 import io.hops.hopsworks.api.jobs.KafkaService;
 import io.hops.hopsworks.api.jupyter.JupyterService;
 import io.hops.hopsworks.api.jwt.JWTHelper;
@@ -160,7 +161,7 @@ public class ProjectService {
   @Inject
   private LocalFsService localFs;
   @Inject
-  private JobService jobs;
+  private JobsResource jobs;
   @Inject
   private PythonDepsService pysparkService;
   @Inject
@@ -197,6 +198,8 @@ public class ProjectService {
   private DelaClusterProjectService delaclusterService;
   @Inject
   private InferenceResource inference;
+  @Inject
+  private ProjectActivitiesResource activitiesResource;
   @EJB
   private JWTHelper jWTHelper;
   @Inject
@@ -401,7 +404,7 @@ public class ProjectService {
   @Path("{projectId}/check")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public Response checkProjectAccess(@PathParam("projectId") Integer id) throws ProjectException {
+  public Response checkProjectAccess(@PathParam("projectId") Integer id) {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     json.setData(id);
     return Response.ok(json).build();
@@ -631,7 +634,7 @@ public class ProjectService {
   }
 
   @Path("{projectId}/jobs")
-  public JobService jobs(@PathParam("projectId") Integer projectId) {
+  public JobsResource jobs(@PathParam("projectId") Integer projectId) {
     return this.jobs.setProject(projectId);
   }
 
@@ -707,8 +710,8 @@ public class ProjectService {
     datasetFacade.persistDataset(newDS);
     Users user = jWTHelper.getUserPrincipal(sc);
 
-    activityFacade.persistActivity(ActivityFacade.SHARED_DATA + newDS.toString()
-        + " with project " + destProj.getName(), destProj, user);
+    activityFacade.persistActivity(ActivityFacade.SHARED_DATA + newDS.toString() + " with project " + destProj.getName()
+        , destProj, user, ActivityFacade.ActivityFlag.DATASET);
 
     hdfsUsersBean.shareDataset(destProj, ds);
 
@@ -773,7 +776,8 @@ public class ProjectService {
   }
 
   @Path("{projectId}/serving")
-  public TfServingService tfServingService(@PathParam("projectId") Integer id) {
+  public TfServingService tfServingService(@PathParam("projectId") Integer id, @Context HttpServletRequest req) {
+    Users user = jWTHelper.getUserPrincipal(req);
     this.tfServingService.setProjectId(id);
     return this.tfServingService;
   }
@@ -794,6 +798,12 @@ public class ProjectService {
   public DelaClusterProjectService delacluster(@PathParam("projectId") Integer id) {
     this.delaclusterService.setProjectId(id);
     return this.delaclusterService;
+  }
+  
+  @Path("{projectId}/activities")
+  public ProjectActivitiesResource activities(@PathParam("projectId") Integer id) {
+    this.activitiesResource.setProjectId(id);
+    return this.activitiesResource;
   }
 
   @PUT
@@ -832,8 +842,8 @@ public class ProjectService {
 
   @Path("{id}/featurestores")
   public FeaturestoreService featurestoreService(@PathParam("id") Integer id, @Context HttpServletRequest req) {
-    this.featurestoreService.setProjectId(id);
-    return this.featurestoreService;
+    featurestoreService.setProjectId(id);
+    return featurestoreService;
   }
 
 }

@@ -49,7 +49,7 @@ import java.util.List;
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 public class ProjectUtils {
-
+  
   public boolean isReservedProjectName(String projName) {
     boolean res = false;
     for (String name : getReservedProjectNames()) {
@@ -71,10 +71,10 @@ public class ProjectUtils {
     reservedNames.add("hops-system");
     return reservedNames;
   }
-
+  
   public  String getCurrentCondaEnvironment(Project project) {
     String condaEnv = project.getName();
-
+    
     if (project.getConda() && !project.getCondaEnv()) {
       if (project.getPythonVersion().compareToIgnoreCase("2.7") == 0) {
         condaEnv = "python27";
@@ -84,7 +84,7 @@ public class ProjectUtils {
         throw new IllegalArgumentException("Error. Python has not been enabled for this project.");
       }
     }
-
+    
     return condaEnv;
   }
 }

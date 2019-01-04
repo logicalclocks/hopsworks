@@ -53,11 +53,10 @@ angular.module('hopsWorksApp')
             self.master = {};
             self.masterTwoFactor = {};
             self.user = {
-              firstName: '',
-              lastName: '',
+              firstname: '',
+              lastname: '',
               email: '',
-              telephoneNum: '',
-              registeredon: '',
+              phoneNumber: '',
               twoFactor: ''
             };
 
@@ -76,10 +75,10 @@ angular.module('hopsWorksApp')
               UserService.profile().then(
                       function (success) {
                         self.user = success.data;
-                        console.log("User: ", self.user);
                         self.emailHash = md5.createHash(self.user.email || '');
                         self.master = angular.copy(self.user);
                         self.twoFactorAuth.twoFactor = self.master.twoFactor;
+                        self.user.numRemainingProjects = self.user.maxNumProjects-self.user.numCreatedProjects;
                       },
                       function (error) {
                         self.errorMsg = error.data.errorMsg;
@@ -90,7 +89,7 @@ angular.module('hopsWorksApp')
 
             self.updateProfile = function () {
               self.working = true;
-              UserService.UpdateProfile(self.user).then(
+              UserService.updateProfile(self.user).then(
                       function (success) {
                         self.working = false;
                         self.user = success.data;

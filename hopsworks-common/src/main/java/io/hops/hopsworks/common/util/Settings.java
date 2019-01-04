@@ -1606,7 +1606,7 @@ public class Settings implements Serializable {
   /**
    * Constructs the path to the project environment in Anaconda
    *
-   * @param projectName name
+   * @param project project
    * @return conda dir
    */
   public String getAnacondaProjectDir(Project project) {
@@ -1762,6 +1762,7 @@ public class Settings implements Serializable {
 
   //Filename conventions
   public static final String FILENAME_DISALLOWED_CHARS = " /\\?*:|'\"<>%()&;#öäåÖÅÄàáéèâîïüÜ@${}[]+~^$`";
+  public static final String SUBDIR_DISALLOWED_CHARS = "/\\?*:|'\"<>%()&;#öäåÖÅÄàáéèâîïüÜ@${}[]+~^$`";
   public static final String SHARED_FILE_SEPARATOR = "::";
   public static final String DOUBLE_UNDERSCORE = "__";
 

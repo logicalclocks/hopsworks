@@ -226,10 +226,10 @@ public class FlinkJob extends YarnJob {
       if (projectService.getProjectServicesPK().getService()
           == ProjectServiceEnum.KAFKA) {
         List<Execution> execs = services.getExecutionFacade().
-            findForProjectByType(jobs.getProject(), JobType.FLINK);
+          findByProjectAndType(jobs.getProject(), JobType.FLINK);
         if (execs != null) {
           execs.addAll(services.getExecutionFacade().
-              findForProjectByType(jobs.getProject(),
+            findByProjectAndType(jobs.getProject(),
                   JobType.SPARK));
         }
         //Find if this project has running jobs

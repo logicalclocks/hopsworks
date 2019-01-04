@@ -40,6 +40,8 @@
 package io.hops.hopsworks.common.jobs.jobhistory;
 
 import java.util.EnumSet;
+import java.util.Set;
+
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 
 public enum JobState {
@@ -110,9 +112,14 @@ public enum JobState {
     }
   }
 
-  public static EnumSet<JobState> getRunningStates() {
+  public static Set<JobState> getRunningStates() {
     return EnumSet.
         of(INITIALIZING, RUNNING, ACCEPTED, NEW, NEW_SAVING, SUBMITTED, STARTING_APP_MASTER, AGGREGATING_LOGS);
+  }
+  
+  public static Set<JobState> getFinalStates() {
+    return EnumSet.
+      of(FINISHED, FAILED, KILLED, FRAMEWORK_FAILURE, APP_MASTER_START_FAILED, INITIALIZATION_FAILED);
   }
 
 }
