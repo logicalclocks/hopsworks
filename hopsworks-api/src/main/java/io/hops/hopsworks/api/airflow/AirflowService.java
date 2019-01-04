@@ -25,7 +25,14 @@ import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.util.Settings;
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.attribute.PosixFilePermission;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
@@ -39,6 +46,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import org.apache.commons.codec.digest.DigestUtils;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -110,15 +118,19 @@ public class AirflowService {
     perms.add(PosixFilePermission.OTHERS_READ);
     perms.add(PosixFilePermission.OTHERS_EXECUTE);
 
-    Files.setPosixFilePermissions(baseDir, xOnly);
-    
-    Files.setPosixFilePermissions(destDir, perms);
+    Response.Status response = Response.Status.OK;
+    try {
+      Files.setPosixFilePermissions(Paths.get(baseDir), xOnly);
+      Files.setPosixFilePermissions(Paths.get(destDir), perms);
+      new File(baseDir).mkdirs();
+      new File(destDir).mkdirs();
+    } catch (IOException ex) {
+      Logger.getLogger(AirflowService.class.getName()).
+          log(Level.SEVERE, null, "Could not set permissions on file " + ex);
+      response = Response.Status.INTERNAL_SERVER_ERROR;
+    }
 
-    new File(baseDir).mkdirs();
-    new File(destDir).mkdirs();
-    
-
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(secret).build();
+    return noCacheResponse.getNoCacheResponseBuilder(response).entity(secret).build();
   }
 
   @GET

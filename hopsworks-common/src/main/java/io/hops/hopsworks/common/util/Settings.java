@@ -235,6 +235,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_SUPPORT_EMAIL_ADDR = "support_email_addr";
   private static final String VARIABLE_HOPSUTIL_VERSION = "hopsutil_version";
   private static final String VARIABLE_HOPSEXAMPLES_VERSION = "hopsexamples_version";
+  private static final String VARIABLE_TF_SPARK_CONNECTOR_VERSION = "tf_spark_connector_version";
 
   private static final String VARIABLE_INFLUXDB_IP = "influxdb_ip";
   private static final String VARIABLE_INFLUXDB_PORT = "influxdb_port";
@@ -309,6 +310,10 @@ public class Settings implements Serializable {
   private static final String VARIABLE_JWT_LIFETIME_MS = "jwt_lifetime_ms";
   private static final String VARIABLE_JWT_EXP_LEEWAY_SEC = "jwt_exp_leeway_sec";
   private static final String VARIABLE_JWT_SIGNING_KEY_NAME = "jwt_signing_key_name";
+
+  /* -------------------- Featurestore --------------- */
+  private static final String VARIABLE_FEATURESTORE_DEFAULT_QUOTA = "featurestore_default_quota";
+  private static final String VARIABLE_FEATURESTORE_DEFAULT_STORAGE_FORMAT = "featurestore_default_storage_format";
 
   private String setVar(String varName, String defaultValue) {
     Variables userName = findById(varName);
@@ -441,6 +446,7 @@ public class Settings implements Serializable {
       STAGING_DIR = setDirVar(VARIABLE_STAGING_DIR, STAGING_DIR);
       HOPSUTIL_VERSION = setVar(VARIABLE_HOPSUTIL_VERSION, HOPSUTIL_VERSION);
       HOPS_EXAMPLES_VERSION = setVar(VARIABLE_HOPSEXAMPLES_VERSION, HOPS_EXAMPLES_VERSION);
+      TF_SPARK_CONNECTOR_VERSION = setVar(VARIABLE_TF_SPARK_CONNECTOR_VERSION, TF_SPARK_CONNECTOR_VERSION);
       HIVE_SERVER_HOSTNAME = setStrVar(VARIABLE_HIVE_SERVER_HOSTNAME,
           HIVE_SERVER_HOSTNAME);
       HIVE_SERVER_HOSTNAME_EXT = setStrVar(VARIABLE_HIVE_SERVER_HOSTNAME_EXT,
@@ -605,6 +611,10 @@ public class Settings implements Serializable {
       JWT_LIFETIME_MS = setLongVar(VARIABLE_JWT_LIFETIME_MS, JWT_LIFETIME_MS);
       JWT_EXP_LEEWAY_SEC = setIntVar(VARIABLE_JWT_EXP_LEEWAY_SEC, JWT_EXP_LEEWAY_SEC);
       JWT_SIGNING_KEY_NAME = setStrVar(VARIABLE_JWT_SIGNING_KEY_NAME, JWT_SIGNING_KEY_NAME);
+
+      FEATURESTORE_DB_DEFAULT_QUOTA = setStrVar(VARIABLE_FEATURESTORE_DEFAULT_QUOTA, FEATURESTORE_DB_DEFAULT_QUOTA);
+      FEATURESTORE_DB_DEFAULT_STORAGE_FORMAT =
+          setStrVar(VARIABLE_FEATURESTORE_DEFAULT_STORAGE_FORMAT, FEATURESTORE_DB_DEFAULT_STORAGE_FORMAT);
 
       cached = true;
     }
@@ -1422,7 +1432,7 @@ public class Settings implements Serializable {
     return RM_IP;
   }
 
-  // Resource Manager Port 
+  // Resource Manager Port
   private int RM_PORT = 8088;
 
   public synchronized Integer getRmPort() {
@@ -1437,7 +1447,7 @@ public class Settings implements Serializable {
     return LOGSTASH_IP;
   }
 
-  // Resource Manager Port 
+  // Resource Manager Port
   private int LOGSTASH_PORT = 8088;
 
   public synchronized Integer getLogstashPort() {
@@ -1488,7 +1498,7 @@ public class Settings implements Serializable {
     return "http://" + KIBANA_IP + ":" + KIBANA_PORT;
   }
 
-  // Zookeeper 
+  // Zookeeper
   private String ZK_IP = "10.0.2.15";
 
   public synchronized String getZkConnectStr() {
@@ -1841,7 +1851,8 @@ public class Settings implements Serializable {
   public static final String ELASTIC_DASHBOARD = "dashboard";
   public static final String ELASTIC_INDEX_PATTERN = "index-pattern";
   public static final String ELASTIC_LOG_INDEX_REGEX = ".*_" + ELASTIC_LOGS_INDEX + "-\\d{4}.\\d{2}.\\d{2}";
-  public static final String ELASTIC_SERVING_INDEX_REGEX = ".*_" + ELASTIC_SERVING_INDEX + "-\\d{4}.\\d{2}.\\d{2}";
+
+  public static final String ELASTIC_SERVING_INDEX_REGEX = ".*_" + ELASTIC_SERVING_INDEX+ "-\\d{4}.\\d{2}.\\d{2}";
 
   public String getHopsworksTmpCertDir() {
     return Paths.get(getCertsDir(), "transient").toString();
@@ -1940,7 +1951,8 @@ public class Settings implements Serializable {
     ZEPPELIN("notebook", "Contains Zeppelin notebooks."),
     JUPYTER("Jupyter", "Contains Jupyter notebooks."),
     SERVING("Models", "Contains models to be used for serving."),
-    EXPERIMENTS("Experiments", "Contains experiments from using the hops python api");
+    EXPERIMENTS("Experiments", "Contains experiments from using the hops python api"),
+    TRAININGDATASETS("Training_Datasets", "Contains curated training datasets created from the feature store");
 
     private final String name;
     private final String description;
@@ -2030,8 +2042,8 @@ public class Settings implements Serializable {
     em.detach(variable);
   }
 
-  public String getProjectPath(String projectname) {
-    return File.separator + DIR_ROOT + File.separator + projectname;
+  public String getProjectPath(String projectName) {
+    return File.separator + DIR_ROOT + File.separator + projectName;
   }
 
   Configuration conf;
@@ -2814,8 +2826,8 @@ public class Settings implements Serializable {
   // User upgradable libraries we installed for them
   private Set<String> PROVIDED_PYTHON_LIBRARY_NAMES;
   private static final String VARIABLE_PROVIDED_PYTHON_LIBRARY_NAMES = "provided_python_lib_names";
-  private static final String DEFAULT_PROVIDED_PYTHON_LIBRARY_NAMES
-      = "hops, pandas, tensorflow-serving-api, hopsfacets, mmlspark, numpy";
+  private static final String DEFAULT_PROVIDED_PYTHON_LIBRARY_NAMES =
+      "hops, pandas, tensorflow-serving-api, hopsfacets, mmlspark, numpy";
 
   public synchronized Set<String> getProvidedPythonLibraryNames() {
     checkCache();
@@ -2825,8 +2837,8 @@ public class Settings implements Serializable {
   // Libraries we preinstalled users should not mess with
   private Set<String> PREINSTALLED_PYTHON_LIBRARY_NAMES;
   private static final String VARIABLE_PREINSTALLED_PYTHON_LIBRARY_NAMES = "preinstalled_python_lib_names";
-  private static final String DEFAULT_PREINSTALLED_PYTHON_LIBRARY_NAMES
-      = "tensorflow-gpu, tensorflow, pydoop, pyspark, tensorboard";
+  private static final String DEFAULT_PREINSTALLED_PYTHON_LIBRARY_NAMES =
+      "tensorflow-gpu, tensorflow, pydoop, pyspark, tensorboard";
 
   public synchronized Set<String> getPreinstalledPythonLibraryNames() {
     checkCache();
@@ -3156,6 +3168,31 @@ public class Settings implements Serializable {
 
   public String getHiveSiteSparkHdfsPath() {
     return "hdfs:///user/" + getSparkUser() + "/hive-site.xml";
+  }
+
+  private String FEATURESTORE_DB_DEFAULT_QUOTA = "50000";
+
+  public synchronized Long getFeaturestoreDbDefaultQuota() {
+    checkCache();
+    return Long.parseLong(FEATURESTORE_DB_DEFAULT_QUOTA);
+  }
+
+  private String FEATURESTORE_DB_DEFAULT_STORAGE_FORMAT = "ORC";
+
+  public synchronized String getFeaturestoreDbDefaultStorageFormat() {
+    checkCache();
+    return FEATURESTORE_DB_DEFAULT_STORAGE_FORMAT;
+  }
+
+  private String TF_SPARK_CONNECTOR_VERSION = "2.11-1.12.0";
+
+  public synchronized String getTfSparkConnectorFilename() {
+    checkCache();
+    return "spark-tensorflow-connector_" + TF_SPARK_CONNECTOR_VERSION + ".jar";
+  }
+
+  public String getTfSparkConnectorPath() {
+    return "hdfs:///user/" + getSparkUser() + "/" + getTfSparkConnectorFilename();
   }
 
 }

@@ -43,11 +43,11 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('ProjectCtrl', ['$scope', '$rootScope', '$location', '$routeParams', '$route', '$window', 'UtilsService',
+        .controller('ProjectCtrl', ['$scope', '$rootScope', '$location', '$routeParams', '$route', '$timeout', '$window', 'UtilsService',
           'growl', 'ProjectService', 'ModalService', 'ActivityService', '$cookies', 'DataSetService',
           'UserService', 'TourService', 'PythonDepsService', 'StorageService', 'CertService', 'VariablesService', 'FileSaver', 'Blob',
           'AirflowService',				    
-          function ($scope, $rootScope, $location, $routeParams, $route, $window, UtilsService, growl, ProjectService,
+        function ($scope, $rootScope, $location, $routeParams, $route, $timeout, $window, UtilsService, growl, ProjectService,
                   ModalService, ActivityService, $cookies, DataSetService, UserService, TourService, PythonDepsService,
                     StorageService, CertService, VariablesService, FileSaver, Blob, AirflowService) {
 
@@ -72,10 +72,10 @@ angular.module('hopsWorksApp')
 
             // We could instead implement a service to get all the available types but this will do it for now
             if ($rootScope.isDelaEnabled) {
-              // , 'RSTUDIO'
-              self.projectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'DELA', 'SERVING'];
+                // , 'RSTUDIO'
+                self.projectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'DELA', 'SERVING', 'FEATURESTORE'];
             } else {
-              self.projectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'SERVING'];
+                self.projectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'SERVING', 'FEATURESTORE'];
             }
             $scope.activeService = "home";
 
@@ -182,7 +182,7 @@ angular.module('hopsWorksApp')
                         $cookies.put("projectID", self.projectId);
                         //set the project name under which the search is performed
                         UtilsService.setProjectName(self.currentProject.projectName);
-                        self.getRole();                        
+                        self.getRole();
                       }
               );
 
@@ -208,7 +208,7 @@ angular.module('hopsWorksApp')
             var locationPath = $location.path();
             if (locationPath.substring(locationPath.length - self.projectId.length, locationPath.length) === self.projectId) {
               getAllActivities();
-            }            
+            }
 
             getCurrentProject();
 
@@ -244,7 +244,7 @@ angular.module('hopsWorksApp')
                       }, function (error) {
               });
             };
-           
+
             self.saveProject = function () {
               self.working = true;
               $scope.newProject = {
@@ -375,6 +375,10 @@ angular.module('hopsWorksApp')
               self.goToUrl('serving');
             };
 
+            self.goToFeaturestore = function () {
+                self.goToUrl('featurestore');
+            };
+
             self.goToPython = function () {
               self.goToUrl('python');
             };
@@ -501,7 +505,11 @@ angular.module('hopsWorksApp')
             };
 
             self.showTfServing = function () {
-              return showService("Serving");
+                return showService("Serving");
+            };
+
+            self.showFeaturestore = function () {
+                return showService("Featurestore");
             };
 
             self.showWorkflows = function () {
@@ -581,6 +589,34 @@ angular.module('hopsWorksApp')
                 return self.projectFile.quotas.hiveHdfsNsQuota;
               }
               return null;
+            };
+
+            self.featurestoreHdfsUsage = function () {
+                if (self.projectFile.quotas !== null) {
+                    return convertSize(self.projectFile.quotas.featurestoreHdfsUsageInBytes);
+                }
+                return null;
+            };
+
+            self.featurestoreHdfsQuota = function () {
+                if (self.projectFile.quotas !== null) {
+                    return convertSize(self.projectFile.quotas.featurestoreHdfsQuotaInBytes);
+                }
+                return null;
+            };
+
+            self.featurestoreHdfsNsCount = function () {
+                if (self.projectFile.quotas !== null) {
+                    return self.projectFile.quotas.featurestoreHdfsNsCount;
+                }
+                return null;
+            };
+
+            self.featurestoreHdfsNsQuota = function () {
+                if (self.projectFile.quotas !== null) {
+                    return self.projectFile.quotas.featurestoreHdfsNsQuota;
+                }
+                return null;
             };
 
             /**
@@ -678,7 +714,7 @@ angular.module('hopsWorksApp')
             self.isServiceEnabled = function (service) {
               var idx = self.projectTypes.indexOf(service);
               return idx === -1;
-            };            
+            };
 
 
             self.openWindow = function () {

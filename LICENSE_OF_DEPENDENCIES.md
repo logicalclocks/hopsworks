@@ -79,7 +79,7 @@ Frontend dependencies
 * github.com/alferov/angular-file-saver [MIT](https://github.com/alferov/angular-file-saver/blob/master/license.md)
 * github.com/danialfarid/ng-file-upload [MIT](https://github.com/danialfarid/ng-file-upload/blob/master/README.md)
 * github.com/joni2back/angular-filemanager [MIT](https://github.com/joni2back/angular-filemanager/blob/master/README.md)
-
+* github.com/mmathias01/google-charts [MIT](https://github.com/mmathias01/google-charts/blob/master/LICENSE)
 
 Backend Dependecies
 

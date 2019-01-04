@@ -76,7 +76,9 @@ angular.module('hopsWorksApp', [
   'nvd3',
   'ui.toggle',
   'ngFileSaver',
-  'ngFileUpload'
+  'ngFileUpload',
+  'googlechart'
+>>>>>>> be06b618ccd82b9a75aeb3c7eb03d68d76bcdd65
 ])
         .config(['$routeProvider', '$httpProvider', '$compileProvider', 'flowFactoryProvider', 'accordionConfig', 
           function ($routeProvider, $httpProvider, $compileProvider, flowFactoryProvider, accordionConfig) {
@@ -400,6 +402,26 @@ angular.module('hopsWorksApp', [
                           }]
                       }
                     })
+                .when('/project/:projectID/featurestore', {
+                    templateUrl: 'views/featurestore.html',
+                    controller: 'ProjectCtrl as projectCtrl',
+                    resolve: {
+                        auth: ['$q', '$location', 'AuthService', '$cookies',
+                            function ($q, $location, AuthService, $cookies) {
+                                return AuthService.session().then(
+                                    function (success) {
+                                        $cookies.put("email", success.data.data.value);
+                                    },
+                                    function (err) {
+                                        $cookies.remove("email");
+                                        $cookies.remove("projectID");
+                                        $location.path('/login');
+                                        $location.replace();
+                                        return $q.reject(err);
+                                    });
+                            }]
+                    }
+                })
                     .otherwise({
                       redirectTo: '/'
                     });

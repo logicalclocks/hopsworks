@@ -61,10 +61,10 @@ var convertSize = function (fileSizeInBytes) {
     return "unlimited";
   }
   if (fileSizeInBytes === 0) {
-    return 0;
+    return 0 + 'B';
   }
-  var i = -1;
-  var byteUnits = ['KB', ' MB', ' GB', ' TB', 'PB', 'EB', 'ZB', 'YB'];
+  var i = 0;
+  var byteUnits = ['B', 'KB', ' MB', ' GB', ' TB', 'PB', 'EB', 'ZB', 'YB'];
   do {
     fileSizeInBytes = fileSizeInBytes / 1024;
     i++;

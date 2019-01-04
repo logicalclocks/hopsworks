@@ -108,9 +108,11 @@
                           <button type="button" class="btn btn-default fa fa-file-archive-o" title="Unzip" 
                                   ng-hide="datasetsCtrl.isZippedfile() === false"
                                   ng-click="datasetsCtrl.unzip(datasetsCtrl.selected)"></button>
-                          <button type="button" class="btn btn-default fa fa-bolt" title="ConvertToPython" 
-                                  ng-hide="datasetsCtrl.isIPythonNotebook() === false"
-                                  ng-click="datasetsCtrl.convertIPythonNotebook(datasetsCtrl.selected)"></button>
+                          <button type="button" class="btn btn-default" title="Convert .ipynb file to .py file"
+                                  ng-hide="datasetsCtrl.isIPythonNotebook()===false"
+                                  ng-click="datasetsCtrl.convertIPythonNotebook(datasetsCtrl.selected)">
+                            <img height="17" src="images/convert_ipython.png" style="float:right;"/>
+                          </button>
                         </div>
                         <div class="btn-group" role="group" aria-label="Third group" ng-show="datasetsCtrl.isSelectedFiles() === 1 &&
                                                                           datasetsCtrl.selectedFiles[datasetsCtrl.selected].dir">

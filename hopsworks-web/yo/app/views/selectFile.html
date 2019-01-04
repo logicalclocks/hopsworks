@@ -72,7 +72,8 @@
         </tr>
       </tbody>
     </table>
-    <button ng-click="selectFileCtrl.confirmSelection(false)" class="btn btn-default">Select</button>
+    <button ng-if="selectFileCtrl.dirAllowed" ng-click="selectFileCtrl.confirmSelection(selectFileCtrl.isDir)" class="btn btn-default">Select</button>
+    <button ng-if="!selectFileCtrl.dirAllowed" ng-click="selectFileCtrl.confirmSelection(selectFileCtrl.isDir)" class="btn btn-default">Select</button>
   </div>
 </div>
 

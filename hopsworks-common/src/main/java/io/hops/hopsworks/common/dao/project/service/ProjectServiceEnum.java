@@ -50,7 +50,8 @@ public enum ProjectServiceEnum {
   SERVING("Serving"),
   RSTUDIO("RStudio"),
   AIRFLOW("Airflow"),
-  PYTHON("Python");
+  PYTHON("Python"),
+  FEATURESTORE("Featurestore");
 
   private final String readable;
 
