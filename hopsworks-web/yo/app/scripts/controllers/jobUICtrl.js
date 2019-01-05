@@ -80,6 +80,7 @@ angular.module('hopsWorksApp')
                 JobService.getAllExecutions(self.projectId, self.job.name, '?sort_by=submissiontime:desc&offset=0&limit=1').then(
                         function (success) {
                           self.appId = success.data.items[0].appId;
+                          getTensorBoardUrls();
                           callback();
                         }, function (error) {
 
@@ -341,37 +342,22 @@ angular.module('hopsWorksApp')
               } else if (ifram !== null) {
                 ifram.contentWindow.location.reload();
               }
+              getTensorBoardUrls();
             };
 
             var getTensorBoardUrls = function () {
-                if(self.appId !== undefined && self.appId !== null) {
-                    JobService.getTensorBoardUrls(self.projectId, self.appId).then(
-                        function (success) {
-                            self.tbUrls = success.data;
-                            $interval.cancel(self.poller);
-                        }, function (error) {
-                        });
-                }
+              if (self.appId) {
+              JobService.getTensorBoardUrls(self.projectId, self.appId).then(
+                      function (success) {
+                        self.tbUrls = success.data;
+                      }, function (error) {
+              });
+              }
             };
 
-            var startPolling = function() {
-                self.poller = $interval(function() {
-                    getTensorBoardUrls();
-                }, 20000);
-            };
-
-            startPolling();
-            
-            $scope.$on('$destroy', function () {
-              $interval.cancel(self.poller);
-            });
-
-            $scope.$on('$destroy', function () {
-              $interval.cancel(self.poller);
-            });
-
-            getTensorBoardUrls();
-
+            if(self.isLivy) {
+              getTensorBoardUrls();
+            }
 
             angular.module('hopsWorksApp').directive('bindHtmlUnsafe', function ($parse, $compile) {
               return function ($scope, $element, $attrs) {
