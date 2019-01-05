@@ -73,7 +73,7 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class TensorboardProxyServlet extends ProxyServlet {
+public class TensorBoardProxyServlet extends ProxyServlet {
 
   @EJB
   private YarnApplicationstateFacade yarnApplicationstateFacade;
@@ -86,7 +86,7 @@ public class TensorboardProxyServlet extends ProxyServlet {
   @EJB
   private TensorBoardFacade tensorBoardFacade;
  
-  private final static Logger LOGGER = Logger.getLogger(TensorboardProxyServlet.class.getName());
+  private final static Logger LOGGER = Logger.getLogger(TensorBoardProxyServlet.class.getName());
 
   // A request will come in with the format: 
   // http://127.0.0.1:8080/hopsworks-api/tensorboard/application_1507065031551_0005/hopsworks0:59460/#graphs
@@ -126,6 +126,7 @@ public class TensorboardProxyServlet extends ProxyServlet {
       if(TBList == null) {
         servletResponse.sendError(Response.Status.FORBIDDEN.getStatusCode(),
             "This TensorBoard is not running right now");
+        return;
       }
       boolean foundTB = false;
       for(TensorBoard tb: TBList) {
@@ -245,6 +246,7 @@ public class TensorboardProxyServlet extends ProxyServlet {
     out.println(message);
     out.println("</body>");
     out.println("</html>");
+    out.flush();
   }
 
   /**
