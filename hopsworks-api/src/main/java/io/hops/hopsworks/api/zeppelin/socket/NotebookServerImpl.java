@@ -59,7 +59,6 @@ import io.hops.hopsworks.common.dao.certificates.ProjectGenericUserCerts;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.activity.Activity;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
@@ -869,14 +868,7 @@ public class NotebookServerImpl implements
   
   
   private void logTrashActivity(String activityMsg, Users user) {
-    Activity activity = new Activity();
-    Date now = new Date();
-    activity.setActivity(activityMsg);
-    activity.setFlag(ActivityFacade.FLAG_PROJECT);
-    activity.setProject(project);
-    activity.setTimestamp(now);
-    activity.setUser(user);
-    activityFacade.persistActivity(activity);
+    activityFacade.persistActivity(activityMsg, project, user, ActivityFacade.ActivityFlag.DATASET);
   }
   
   public void moveNoteToTrash(Session conn, HashSet<String> userAndRoles,

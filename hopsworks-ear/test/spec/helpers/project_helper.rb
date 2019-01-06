@@ -45,6 +45,14 @@ module ProjectHelper
     end
   end
 
+  def with_valid_tour_project(type)
+    @project ||= create_project_tour(type)
+    get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent"
+    if response.code != 200 # project and logged in user not the same
+      @project = create_project_tour(type)
+    end
+  end
+
   def create_project
     with_valid_session
     new_project = {projectName: "project_#{short_random_id}", description:"", status: 0, services: ["JOBS","JUPYTER","HIVE","KAFKA","SERVING", "FEATURESTORE"],
@@ -63,6 +71,14 @@ module ProjectHelper
     expect_json(successMessage: regex("Project created successfully.*"))
     expect_status(201)
     get_project_by_name(new_project[:projectName])
+  end
+
+  def create_project_tour(tourtype)
+    with_valid_session
+    post "#{ENV['HOPSWORKS_API']}/project/starterProject/#{tourtype}"
+    expect_json(description: regex("A demo project*"))
+    expect_status(201)
+    get_project_by_name(json_body[:name])
   end
 
   def delete_project(project)
@@ -92,7 +108,7 @@ module ProjectHelper
   end
 
   def check_project_limit(limit=0)
-    get "#{ENV['HOPSWORKS_API']}/user/profile"
+    get "#{ENV['HOPSWORKS_API']}/users/profile"
     max_num_projects = json_body[:maxNumProjects]
     num_created_projects = json_body[:numCreatedProjects]
     if (max_num_projects - num_created_projects) <= limit
@@ -103,12 +119,12 @@ module ProjectHelper
   end
 
   def create_max_num_projects
-    get "#{ENV['HOPSWORKS_API']}/user/profile"
+    get "#{ENV['HOPSWORKS_API']}/users/profile"
     max_num_projects = json_body[:maxNumProjects]
     num_created_projects = json_body[:numCreatedProjects]
     while num_created_projects < max_num_projects
       post "#{ENV['HOPSWORKS_API']}/project", {projectName: "project_#{Time.now.to_i}"}
-      get "#{ENV['HOPSWORKS_API']}/user/profile"
+      get "#{ENV['HOPSWORKS_API']}/users/profile"
       max_num_projects = json_body[:maxNumProjects]
       num_created_projects = json_body[:numCreatedProjects]
     end

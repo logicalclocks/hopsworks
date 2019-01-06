@@ -141,7 +141,7 @@ public class FeaturestoreController {
     featurestore.setHiveDbId(hiveDbId);
     featurestoreFacade.persist(featurestore);
     activityFacade.persistActivity(ActivityFacade.CREATED_FEATURESTORE +
-        featurestoreName, project, project.getOwner());
+        featurestoreName, project, project.getOwner(), ActivityFacade.ActivityFlag.SERVICE);
     return featurestore;
   }
 

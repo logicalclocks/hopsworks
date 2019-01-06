@@ -117,6 +117,7 @@ public class YarnExecutionFinalizer {
           break;
         case YARN:
           defaultOutputPath = Settings.YARN_DEFAULT_OUTPUT_PATH;
+          break;
         default:
           defaultOutputPath = "Logs/";
       }
@@ -245,9 +246,9 @@ public class YarnExecutionFinalizer {
       ProjectServices projectService = iter.next();
       //If the project is of type KAFKA
       if (projectService.getProjectServicesPK().getService() == ProjectServiceEnum.KAFKA) {
-        List<Execution> execs = executionFacade.findForProjectByType(exec.getJob().getProject(), JobType.FLINK);
+        List<Execution> execs = executionFacade.findByProjectAndType(exec.getJob().getProject(), JobType.FLINK);
         if (execs != null) {
-          execs.addAll(executionFacade.findForProjectByType(exec.getJob().getProject(), JobType.SPARK));
+          execs.addAll(executionFacade.findByProjectAndType(exec.getJob().getProject(), JobType.SPARK));
         }
         //Find if this project has running jobs
         if (execs != null && !execs.isEmpty()) {

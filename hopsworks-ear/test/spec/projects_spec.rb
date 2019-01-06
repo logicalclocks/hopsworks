@@ -92,7 +92,7 @@ describe "On #{ENV['OS']}" do
           expect_status(200)
           notebook = json_body.detect { |e| e[:name] == "notebook" }
           expect(notebook[:description]).to eq ("Contains Zeppelin notebooks.")
-          expect(notebook[:permission]).to eq ("rwxrwx--T")
+          expect(notebook[:permission]).to eq ("rwxrwx---")
           expect(notebook[:owner]).to eq ("#{@user[:fname]} #{@user[:lname]}")
         end
 

@@ -158,7 +158,7 @@ public class BbcGroup implements Serializable {
 
   @Override
   public String toString() {
-    return "se.kth.hopsworks.model.BbcGroup[ gid=" + gid + " ]";
+    return "BbcGroup[ gid=" + gid + " ]";
   }
 
 }

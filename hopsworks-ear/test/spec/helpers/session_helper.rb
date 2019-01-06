@@ -105,6 +105,13 @@ module SessionHelper
     
     post "#{ENV['HOPSWORKS_API']}/auth/register", user
   end
+  
+  def create_new_mobile_user(params={})
+    params[:email] = "#{random_id}@email.com" unless params[:email]
+    register_user(params)
+    user = User.find_by(email: params[:email])
+    user
+  end
 
   def create_validated_user(params={})
     params[:email] = "#{random_id}@email.com" unless params[:email]
@@ -112,6 +119,7 @@ module SessionHelper
     user = User.find_by(email: params[:email])
     key = user.username + user.validation_key
     get "#{ENV['HOPSWORKS_ADMIN']}/security/validate_account.xhtml", {params: {key: key}}
+    user
   end
 
   def reset_session
@@ -144,20 +152,44 @@ module SessionHelper
     end
     cookies
   end
-
+  
+  def get_user_roles(user)
+    roles = Array.new
+    user_group = UserGroup.where(uid: user.uid).to_a      
+    user_group.each do | g |
+      group = BbcGroup.find_by(gid: g.gid)
+      roles.push(group.group_name)
+    end
+    roles
+  end
+  
+  def get_roles(email)
+    user = User.find_by(email: email)
+    get_user_roles(user)
+  end
+  
   def create_role(user)
     group = BbcGroup.find_by(group_name: "HOPS_USER")
-    UserGroup.create(uid: user.uid, gid: group.gid)
+    user_mapping = UserGroup.find_by(uid: user.uid, gid: group.gid)
+    if user_mapping.nil?
+      UserGroup.create(uid: user.uid, gid: group.gid)
+    end
   end
   
   def create_admin_role(user)
     group = BbcGroup.find_by(group_name: "HOPS_ADMIN")
-    UserGroup.create(uid: user.uid, gid: group.gid)
+    user_mapping = UserGroup.find_by(uid: user.uid, gid: group.gid)
+    if user_mapping.nil?
+      UserGroup.create(uid: user.uid, gid: group.gid)
+    end
   end
   
   def create_agent_role(user)
     group = BbcGroup.find_by(group_name: "AGENT")
-    UserGroup.create(uid: user.uid, gid: group.gid)
+    user_mapping = UserGroup.find_by(uid: user.uid, gid: group.gid)
+    if user_mapping.nil?
+      UserGroup.create(uid: user.uid, gid: group.gid)
+    end
   end
 
   def create_cluster_agent_role(user)
@@ -166,6 +198,11 @@ module SessionHelper
     if user_mapping.nil?
       UserGroup.create(uid: user.uid, gid: group.gid)
     end
+  end
+  
+  def create_with_role(user, role)
+    group = BbcGroup.find_by(group_name: role)
+    UserGroup.create(uid: user.uid, gid: group.gid)
   end
 
   def create_role_type(role_type)
@@ -180,6 +217,16 @@ module SessionHelper
     create_validated_user(params)
     user = User.find_by(email: params[:email])
     create_role(user)
+    user.status = 2
+    user.save
+    user
+  end
+  
+  def create_user_with_role(params={}, role)
+    params[:email] = "#{random_id}@email.com" unless params[:email]
+    create_validated_user(params)
+    user = User.find_by(email: params[:email])
+    create_with_role(user, role)
     user.status = 2
     user.save
     user
@@ -231,6 +278,16 @@ module SessionHelper
     user
   end
   
+  def create_spam_user(params={})
+    params[:email] = "#{random_id}@email.com" unless params[:email]
+    create_validated_user(params)
+    user = User.find_by(email: params[:email])
+    create_role(user)
+    user.status = 6
+    user.save
+    user
+  end
+  
   def create_deactivated_user(params={})
     params[:email] = "#{random_id}@email.com" unless params[:email]
     create_validated_user(params)
@@ -249,5 +306,79 @@ module SessionHelper
     user.status = 5
     user.save
     user
+  end
+  
+  def set_isonline(user)
+    user.isonline = 1
+    user.save
+    user
+  end
+  
+  def set_false_login(user, val)
+    user.false_login = val
+    user.save
+    user
+  end
+  
+  def create_users()
+    user = {}
+    user[:email]     = "#{random_id}@email.com"
+    user[:first_name] = "New"
+    user[:last_name]  = "Ted"
+    set_false_login(create_new_mobile_user(user), 12)
+    user[:email]     = "#{random_id}@email.com"
+    user[:first_name] = "Validated"
+    user[:last_name]  = "John"
+    set_isonline(create_validated_user(user))
+    user[:email]     = "#{random_id}@email.com"
+    user[:first_name] = "Admin"
+    user[:last_name]  = "Bob"
+    set_false_login(create_user_with_role(user, "HOPS_ADMIN"), 4)
+    user[:email]     = "#{random_id}@email.com"
+    user[:first_name] = "Lostdevice"
+    user[:last_name]  = "Clara"
+    set_false_login(create_lostdevice_user(user), 22)
+    user[:email]     = "#{random_id}@email.com"
+    user[:first_name] = "Admin"
+    user[:last_name]  = "Doe"
+    create_role(set_isonline(create_user_with_role(user, "HOPS_ADMIN")))
+    user[:email]     = "#{random_id}@email.com"
+    user[:first_name] = "User"
+    user[:last_name]  = "Bob"
+    set_false_login(create_user(user), 19)
+    user[:email]     = "#{random_id}@email.com"
+    user[:first_name] = "User"
+    user[:last_name]  = "Admin"
+    set_isonline(create_user(user))
+    user[:email]     = "#{random_id}@email.com"
+    user[:first_name] = "Deactivated"
+    user[:last_name]  = "Admin"
+    set_false_login(create_deactivated_user(user), 2)
+    user[:email]     = "#{random_id}@email.com"
+    user[:first_name] = "User"
+    user[:last_name]  = "Kelly"
+    set_isonline(create_user(user))
+    user[:email]     = "#{random_id}@email.com"
+    user[:first_name] = "Blocked"
+    user[:last_name]  = "Labonte"
+    create_blocked_user(user)
+    user[:email]     = "#{random_id}@email.com"
+    user[:first_name] = "User"
+    user[:last_name]  = "Mason"
+    set_isonline(create_user(user))
+    user[:email]     = "#{random_id}@email.com"
+    user[:first_name] = "Unapproved"
+    user[:last_name]  = "Morris"
+    create_unapproved_user(user)
+    user[:email]     = "#{random_id}@email.com"
+    user[:first_name] = "Spam"
+    user[:last_name]  = "Morris"
+    create_spam_user(user)
+    user[:email]     = "#{random_id}@email.com"
+    user[:first_name] = "Agent"
+    user[:last_name]  = "Morris"
+    create_user_with_role(user, "AGENT")
+    get "#{ENV['HOPSWORKS_API']}/users"
+    json_body[:items]
   end
 end
