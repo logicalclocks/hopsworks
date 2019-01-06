@@ -38,11 +38,8 @@
  */
 package io.hops.hopsworks.api.project;
 
-<<<<<<< HEAD
 import io.hops.hopsworks.api.airflow.AirflowService;
-=======
 import io.hops.hopsworks.api.activities.ProjectActivitiesResource;
->>>>>>> 3d01e83c83712570fce940985d73f6dbda11a642
 import io.hops.hopsworks.api.dela.DelaClusterProjectService;
 import io.hops.hopsworks.api.dela.DelaProjectService;
 import io.hops.hopsworks.api.featurestore.FeaturestoreService;

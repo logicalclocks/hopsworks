@@ -81,10 +81,6 @@ Frontend dependencies
 * github.com/joni2back/angular-filemanager [MIT](https://github.com/joni2back/angular-filemanager/blob/master/README.md)
 * github.com/mmathias01/google-charts [MIT](https://github.com/mmathias01/google-charts/blob/master/LICENSE)
 * github.com/apexcharts/apexcharts.js [MIT](https://github.com/apexcharts/apexcharts.js/blob/master/LICENSE)
-<<<<<<< HEAD
-=======
-
->>>>>>> 3d01e83c83712570fce940985d73f6dbda11a642
 
 Backend Dependecies
 
