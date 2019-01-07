@@ -79,6 +79,7 @@ import io.hops.hopsworks.common.exception.HopsSecurityException;
 import io.hops.hopsworks.common.exception.JobException;
 import io.hops.hopsworks.common.exception.ProjectException;
 import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.exception.UserException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.jobs.execution.ExecutionController;
@@ -272,7 +273,7 @@ public class ApplicationService {
   @ApiOperation(value = "Submit IDs of jobs to start")
   public Response startJobs(
       @Context SecurityContext sc, @Context HttpServletRequest req, JobWorkflowDTO jobsDTO)
-      throws GenericException, UserException, JobException {
+      throws GenericException, UserException, JobException, ServiceException {
     String projectUser = checkAndGetProjectUser(jobsDTO.getKeyStoreBytes(), jobsDTO.getKeyStorePwd().toCharArray());
     Users user = userFacade.findByUsername(hdfsUserBean.getUserName(projectUser));
     Project project = projectFacade.findByName(projectUser.split(Settings.DOUBLE_UNDERSCORE)[0]);

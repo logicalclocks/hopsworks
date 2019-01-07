@@ -15,8 +15,18 @@
 =end
 module JobHelper
 
-  def create_sparktour_job(project, job_name)
-    job_conf = {
+  def create_sparktour_job(project, job_name, type)
+
+    # need to enable python for conversion .ipynb to .py works
+    get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/enabled"
+    if response.code == 503
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/enable/2.7/true"
+        expect_status(200)
+    end
+
+    if type.eql? "jar"
+
+      job_conf = {
         "type":"sparkJobConfiguration",
         "appName":"#{job_name}",
         "amQueue":"default",
@@ -34,25 +44,33 @@ module JobHelper
         "spark.dynamicAllocation.minExecutors":1,
         "spark.dynamicAllocation.maxExecutors":10,
         "spark.dynamicAllocation.initialExecutors":1
-    }
+      }
 
-    post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jobs", job_conf
-    #job_id = json_body[:id]
-    #job = get_job_from_db(job_id)
-    #expect(job[:id]).to eq job_id
-    #expect(job[:name]).to eq job_conf[:appName]
-    #job
-  end
+      post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jobs", job_conf
+      #job_id = json_body[:id]
+      #job = get_job_from_db(job_id)
+      #expect(job[:id]).to eq job_id
+      #expect(job[:name]).to eq job_conf[:appName]
+      #job
 
-  def create_sparkpy_job(project, job_name)
-    job_conf = {
+    elsif type.eql? "py"
+
+      if !test_file("/Projects/#{@project[:projectname]}/Resources/" + job_name + ".ipynb")
+        copy("/user/hdfs/tensorflow_demo/notebooks/Experiment/TensorFlow/minimal_mnist_classifier_on_hops.ipynb",
+              "/Projects/#{@project[:projectname]}/Resources/" + job_name + ".ipynb", @user[:username], "#{@project[:projectname]}__Resources", 750, "#{@project[:projectname]}")
+      end
+
+      get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/convertIPythonNotebook/Resources/" + job_name + ".ipynb"
+      expect_status(200)
+
+      job_conf = {
         "type":"sparkJobConfiguration",
         "appName":"#{job_name}",
         "amQueue":"default",
         "amMemory":1024,
         "amVCores":1,
         "jobType":"PYSPARK",
-        "appPath":"hdfs:///Projects/#{project[:projectname]}/TestJob/pi.py",
+        "appPath":"hdfs:///Projects/#{project[:projectname]}/Resources/" + job_name + ".py",
         "mainClass":"org.apache.spark.deploy.PythonRunner",
         "args":"10",
         "spark.executor.instances":1,
@@ -63,10 +81,42 @@ module JobHelper
         "spark.dynamicAllocation.minExecutors":1,
         "spark.dynamicAllocation.maxExecutors":10,
         "spark.dynamicAllocation.initialExecutors":1
-    }
+      }
 
-    post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jobs", job_conf
+      post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jobs", job_conf
+      expect_status(201)
+
+    else
+        if !test_file("/Projects/#{@project[:projectname]}/Resources/" + job_name + ".ipynb")
+          copy("/user/hdfs/tensorflow_demo/notebooks/Experiment/TensorFlow/minimal_mnist_classifier_on_hops.ipynb",
+          "/Projects/#{@project[:projectname]}/Resources/" + job_name + ".ipynb", @user[:username], "#{@project[:projectname]}__Resources", 750, "#{@project[:projectname]}")
+        end
+
+        job_conf = {
+          "type":"sparkJobConfiguration",
+          "appName":"#{job_name}",
+          "amQueue":"default",
+          "amMemory":1024,
+          "amVCores":1,
+          "jobType":"PYSPARK",
+          "appPath":"hdfs:///Projects/#{project[:projectname]}/Resources/" + job_name + ".ipynb",
+          "mainClass":"org.apache.spark.deploy.PythonRunner",
+          "args":"10",
+          "spark.executor.instances":1,
+          "spark.executor.cores":1,
+          "spark.executor.memory":1024,
+          "spark.executor.gpus":0,
+          "spark.dynamicAllocation.enabled":false,
+          "spark.dynamicAllocation.minExecutors":1,
+          "spark.dynamicAllocation.maxExecutors":10,
+          "spark.dynamicAllocation.initialExecutors":1
+        }
+
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jobs", job_conf
+        expect_status(201)
+    end
   end
+
 
   def get_jobs(project_id, query)
     get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs#{query}"
