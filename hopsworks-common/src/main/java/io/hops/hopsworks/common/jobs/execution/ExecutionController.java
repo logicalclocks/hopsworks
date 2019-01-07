@@ -215,8 +215,8 @@ public class ExecutionController {
           //WORKS FOR NOW BUT SHOULD EVENTUALLY GO THROUGH THE YARN CLIENT API
           Runtime rt = Runtime.getRuntime();
           rt.exec(settings.getHadoopSymbolicLinkDir() + "/bin/yarn application -kill " + appId);
-          return execFacade.findByAppId(appId);
         }
+        return execFacade.findByAppId(appId);
       } catch (IOException ex) {
         LOGGER.log(Level.SEVERE, "Could not remove marker file for job:" + job.getName() + "with appId:" + appId, ex);
       } finally {
