@@ -581,7 +581,7 @@ angular.module('hopsWorksApp')
                                     });
                                     PythonDepsService.enable(self.projectId, "2.7", "true").then(
                                         function(success) {
-
+                                            checkJupyterInstalled();
                                         },
                                         function(error) {
                                             growl.error("Could not enable Anaconda", {
