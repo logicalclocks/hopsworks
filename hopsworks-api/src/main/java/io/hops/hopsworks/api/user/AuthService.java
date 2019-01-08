@@ -308,9 +308,8 @@ public class AuthService {
       req.login(user.getEmail(), password);
       authController.registerLogin(user, req);
     } catch (ServletException e) {
-      LOGGER.log(Level.WARNING, e.getMessage());
       authController.registerAuthenticationFailure(user, req);
-      throw new UserException(RESTCodes.UserErrorCode.AUTHENTICATION_FAILURE, Level.SEVERE, null, e.getMessage(), e);
+      throw new UserException(RESTCodes.UserErrorCode.AUTHENTICATION_FAILURE, Level.FINE, null, e.getMessage(), e);
     }
 
     json.setSessionID(req.getSession().getId());
