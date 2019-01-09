@@ -665,10 +665,18 @@ public class PythonDepsService {
   }
 
   private LibVersions findPipLibPyPi(String libName) {
-    Response resp = ClientBuilder.newClient()
-        .target(settings.getPyPiRESTEndpoint().replaceFirst("\\{package}", libName))
-        .request()
-        .header("Content-Type", "application/json").get();
+
+    Response resp = null;
+    try {
+      resp = ClientBuilder.newClient()
+              .target(settings.getPyPiRESTEndpoint().replaceFirst("\\{package}", libName))
+              .request()
+              .header("Content-Type", "application/json").get();
+    } catch(Exception e) {
+      logger.log(Level.FINE, "PyPi REST endpoint connection failed" +
+              settings.getPyPiRESTEndpoint().replaceFirst("\\{package}", libName), e);
+      return null;
+    }
 
     if (resp.getStatusInfo().getStatusCode() != Response.Status.OK.getStatusCode()) {
       return null;
