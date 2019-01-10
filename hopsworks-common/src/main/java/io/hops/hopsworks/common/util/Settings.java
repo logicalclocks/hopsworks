@@ -170,6 +170,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_ZEPPELIN_SYNC_INTERVAL
       = "zeppelin_sync_interval";
   private static final String VARIABLE_ZEPPELIN_USER = "zeppelin_user";
+  private static final String VARIABLE_AIRFLOW_DIR = "airflow_dir";
   private static final String VARIABLE_JUPYTER_DIR = "jupyter_dir";
   private static final String VARIABLE_SPARK_DIR = "spark_dir";
   private static final String VARIABLE_FLINK_DIR = "flink_dir";
@@ -472,6 +473,7 @@ public class Settings implements Serializable {
       CERTS_DIR = setDirVar(VARIABLE_CERTS_DIRS, CERTS_DIR);
       CERTIFICATE_USER_VALID_DAYS = setStrVar(VARIABLE_CERTIFICATE_USER_VALID_DAYS, CERTIFICATE_USER_VALID_DAYS);
       NDB_DIR = setDirVar(VARIABLE_NDB_DIR, NDB_DIR);
+      AIRFLOW_DIR = setDirVar(VARIABLE_AIRFLOW_DIR, AIRFLOW_DIR);
       ELASTIC_IP = setIpVar(VARIABLE_ELASTIC_IP, ELASTIC_IP);
       ELASTIC_PORT = setIntVar(VARIABLE_ELASTIC_PORT, ELASTIC_PORT);
       ELASTIC_REST_PORT = setIntVar(VARIABLE_ELASTIC_REST_PORT, ELASTIC_REST_PORT);
@@ -852,13 +854,14 @@ public class Settings implements Serializable {
     return NDB_DIR;
   }
 
-  private String ADAM_DIR = "/srv/hops/adam";
 
-  public synchronized String getAdamDir() {
+  private String AIRFLOW_DIR = "/srv/hops/airflow";
+
+  public synchronized String getAirflowDir() {
     checkCache();
-    return ADAM_DIR;
+    return AIRFLOW_DIR;
   }
-
+  
   private String HADOOP_DIR = "/srv/hops/hadoop";
 
   // This returns the unversioned base installation directory for hops-hadoop

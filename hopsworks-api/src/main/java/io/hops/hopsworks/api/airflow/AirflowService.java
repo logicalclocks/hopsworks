@@ -96,7 +96,7 @@ public class AirflowService {
   public Response secretDir(@Context HttpServletRequest req) {
     String secret = DigestUtils.sha256Hex(Integer.toString(this.projectId));
 
-    String baseDir = "/srv/hops/airflow/dags/hopsworks/";
+    String baseDir = settings.getAirflowDir() + "/dags/hopsworks/";
     String destDir = baseDir + secret;
     Set<PosixFilePermission> xOnly = new HashSet<>();
     xOnly.add(PosixFilePermission.OWNER_WRITE);
@@ -120,10 +120,13 @@ public class AirflowService {
 
     Response.Status response = Response.Status.OK;
     try {
-      Files.setPosixFilePermissions(Paths.get(baseDir), xOnly);
-      Files.setPosixFilePermissions(Paths.get(destDir), perms);
-      new File(baseDir).mkdirs();
+      // Instead of checking and setting the permissions, just set them as it is an idempotent operation
+      new File(baseDir).mkdirs();      
+//      Files.setPosixFilePermissions(Paths.get(baseDir), xOnly);
+
+      // Instead of checking and setting the permissions, just set them as it is an idempotent operation
       new File(destDir).mkdirs();
+      Files.setPosixFilePermissions(Paths.get(destDir), perms);
     } catch (IOException ex) {
       Logger.getLogger(AirflowService.class.getName()).
           log(Level.SEVERE, null, "Could not set permissions on file " + ex);
