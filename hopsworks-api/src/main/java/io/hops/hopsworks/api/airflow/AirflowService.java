@@ -29,7 +29,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Paths;
+import java.nio.file.attribute.GroupPrincipal;
+import java.nio.file.attribute.PosixFileAttributeView;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.HashSet;
 import java.util.Set;
@@ -121,12 +124,20 @@ public class AirflowService {
     Response.Status response = Response.Status.OK;
     try {
       // Instead of checking and setting the permissions, just set them as it is an idempotent operation
-      new File(baseDir).mkdirs();      
+//      new File(baseDir).mkdirs();      
 //      Files.setPosixFilePermissions(Paths.get(baseDir), xOnly);
 
       // Instead of checking and setting the permissions, just set them as it is an idempotent operation
       new File(destDir).mkdirs();
       Files.setPosixFilePermissions(Paths.get(destDir), perms);
+      GroupPrincipal group = new GroupPrincipal() {
+        @Override
+        public String getName() {
+          return settings.getAirflowUser();
+        }
+      };
+      Files.getFileAttributeView(Paths.get(destDir), PosixFileAttributeView.class, 
+          LinkOption.NOFOLLOW_LINKS).setGroup(group);
     } catch (IOException ex) {
       Logger.getLogger(AirflowService.class.getName()).
           log(Level.SEVERE, null, "Could not set permissions on file " + ex);

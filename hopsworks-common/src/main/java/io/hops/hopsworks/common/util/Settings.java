@@ -163,6 +163,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_YARN_SUPERUSER = "yarn_user";
   private static final String VARIABLE_HDFS_SUPERUSER = "hdfs_user";
   private static final String VARIABLE_HOPSWORKS_USER = "hopsworks_user";
+  private static final String VARIABLE_AIRFLOW_USER = "airflow_user";
   private static final String VARIABLE_STAGING_DIR = "staging_dir";
   private static final String VARIABLE_ZEPPELIN_DIR = "zeppelin_dir";
   private static final String VARIABLE_ZEPPELIN_PROJECTS_DIR
@@ -437,6 +438,7 @@ public class Settings implements Serializable {
       TWOFACTOR_AUTH = setVar(VARIABLE_TWOFACTOR_AUTH, TWOFACTOR_AUTH);
       TWOFACTOR_EXCLUDE = setVar(VARIABLE_TWOFACTOR_EXCLUD, TWOFACTOR_EXCLUDE);
       HOPSWORKS_USER = setVar(VARIABLE_HOPSWORKS_USER, HOPSWORKS_USER);
+      HOPSWORKS_USER = setVar(VARIABLE_AIRFLOW_USER, AIRFLOW_USER);
       HDFS_SUPERUSER = setVar(VARIABLE_HDFS_SUPERUSER, HDFS_SUPERUSER);
       YARN_SUPERUSER = setVar(VARIABLE_YARN_SUPERUSER, YARN_SUPERUSER);
       SPARK_USER = setVar(VARIABLE_SPARK_USER, SPARK_USER);
@@ -856,12 +858,18 @@ public class Settings implements Serializable {
 
 
   private String AIRFLOW_DIR = "/srv/hops/airflow";
-
   public synchronized String getAirflowDir() {
     checkCache();
     return AIRFLOW_DIR;
   }
   
+  private String AIRFLOW_USER = "airflow";
+  public synchronized String getAirflowUser() {
+    checkCache();
+    return AIRFLOW_USER;
+  }
+
+
   private String HADOOP_DIR = "/srv/hops/hadoop";
 
   // This returns the unversioned base installation directory for hops-hadoop
