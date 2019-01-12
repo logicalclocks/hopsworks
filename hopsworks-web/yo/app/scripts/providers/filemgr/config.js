@@ -21,7 +21,7 @@
             compressUrl: 'filemanager',
             extractUrl: 'filemanager',
             permissionsUrl: 'filemanager',
-            basePath: '/hopsworks',
+            basePath: '/',
 
             searchForm: false,
             sidebar: false,
