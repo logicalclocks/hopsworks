@@ -56,6 +56,7 @@ import java.nio.file.attribute.PosixFilePermissions;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+import javax.ejb.Stateless;
 
 import javax.mail.internet.MimeUtility;
 import javax.servlet.ServletException;
@@ -124,6 +125,7 @@ import org.slf4j.LoggerFactory;
  * Compress and expand are NOT implemented<br>
  * <p>
  */
+@Stateless
 public class AngularFileManagerServlet extends HttpServlet {
 
   private static final Logger LOG = LoggerFactory.getLogger(AngularFileManagerServlet.class);
@@ -245,8 +247,6 @@ public class AngularFileManagerServlet extends HttpServlet {
   @Override
   protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
     try {
-        
-      String secretDir = request.getParameter("dir");        
         
       // if request contains multipart-form-data
       if (ServletFileUpload.isMultipartContent(request)) {
