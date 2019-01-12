@@ -4,23 +4,44 @@
         '$routeParams', '$route', 'apiMiddleware', 'fileManagerConfig', 'item', 'AirflowService', 
         function ($routeParams, $route, ApiMiddleware, fileManagerConfig, Item, AirflowService) {
 
-       self.projectId = $routeParams.projectID;
+
+        self.projectId = $routeParams.projectID;
+//        self.basePath = [];
 	    
         var FileNavigator = function() {
             this.apiMiddleware = new ApiMiddleware();
             this.requesting = false;
             this.fileList = [];
-            this.currentPath = this.getBasePath();
+//            this.currentPath = this.basePath;
             this.history = [];
             this.error = '';
-
             this.onRefresh = function() {};
+	    this.currentPath = [];
+            AirflowService.getSecretPath(self.projectId).then(
+		function (success) {
+                    var subPath = success.data;
+                    var path = (fileManagerConfig.basePath + '/' + subPath  || '').replace(/^\//, '');
+                    FileNavigator.currentPath = path.trim() ? path.split('/') : [];
+
+                }, function (error) {
+                    console.log("Error getting base path");
+            });
+	
         };
 
-        FileNavigator.prototype.getBasePath = function() {
-            var path = (fileManagerConfig.basePath + '/' + AirflowService.getSecretPath(self.projectId)  || '').replace(/^\//, '');
-            return path.trim() ? path.split('/') : [];
-        };
+        // self.init = function() {
+	//     AirflowService.getSecretPath(projectId).then(
+	// 	function (success) {
+        //             var subPath = success.data;
+        //             var path = (fileManagerConfig.basePath + '/' + subPath  || '').replace(/^\//, '');
+        //             self.basePath = path.trim() ? path.split('/') : [];
+	// 	    FileNavigator.prototype.currentPath = self.basePath;
+        //         }, function (error) {
+        //             console.log("Error getting base path");
+        //     });
+
+        // };
+        // self.init();
 
         FileNavigator.prototype.deferredHandler = function(data, deferred, code, defaultMsg) {
             if (!data || typeof data !== 'object') {
@@ -51,23 +72,40 @@
             return this.apiMiddleware.list(this.currentPath, this.deferredHandler.bind(this));
         };
 
-        FileNavigator.prototype.refresh = function() {
+        FileNavigator.prototype.actualRefresh = function() {
             var self = this;
-            if (! self.currentPath.length) {
-                self.currentPath = this.getBasePath();
-            }
-            var path = self.currentPath.join('/');
+            var path = this.currentPath.join('/');
             self.requesting = true;
             self.fileList = [];
             return self.list().then(function(data) {
                 self.fileList = (data.result || []).map(function(file) {
-                    return new Item(file, self.currentPath);
+                    return new Item(file, this.currentPath);
                 });
                 self.buildTree(path);
                 self.onRefresh();
             }).finally(function() {
                 self.requesting = false;
             });
+		
+        };
+	    
+        FileNavigator.prototype.refresh = function() {
+            var self = this;
+            if (self.currentPath == undefined || ! self.currentPath.length) {
+
+              AirflowService.getSecretPath(projectId).then(
+		function (success) {
+                    var subPath = success.data;
+                    var path = (fileManagerConfig.basePath + '/' + subPath  || '').replace(/^\//, '');
+                    self.currentPath = path.trim() ? path.split('/') : [];
+      		    self.actualRefresh();		    
+                }, function (error) {
+                    console.log("Error getting base path");
+              });
+            } else {
+		self.actualRefresh();
+	    }
+	    
         };
         
         FileNavigator.prototype.buildTree = function(path) {
@@ -110,7 +148,7 @@
             }
 
             //!this.history.length && this.history.push({name: '', nodes: []});
-            !this.history.length && this.history.push({ name: this.getBasePath()[0] || '', nodes: [] });
+            !this.history.length && this.history.push({ name: self.basePath[0] || '', nodes: [] });
             flatten(this.history[0], flatNodes);
             selectedNode = findNode(flatNodes, path);
             selectedNode && (selectedNode.nodes = []);
