@@ -98,7 +98,7 @@ public class AirflowService {
   public Response secretDir(@Context HttpServletRequest req) {
     String secret = DigestUtils.sha256Hex(Integer.toString(this.projectId));
 
-    String baseDir = settings.getAirflowDir() + "/dags/hopsworks/";
+    String baseDir = settings.getAirflowDir() + "/dags/";
     String destDir = baseDir + secret;
     Set<PosixFilePermission> xOnly = new HashSet<>();
     xOnly.add(PosixFilePermission.OWNER_WRITE);
