@@ -778,7 +778,7 @@ public class ProjectService {
     return this.tensorboard;
   }
   @Path("{projectId}/airflow")
-  public AirflowService airflow(@PathParam("id") Integer id)  {
+  public AirflowService airflow(@PathParam("projectId") Integer id)  {
     this.airflow.setProjectId(id);
     return this.airflow;
   }
