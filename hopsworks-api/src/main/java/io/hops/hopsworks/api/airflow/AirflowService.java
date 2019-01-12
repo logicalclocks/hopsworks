@@ -30,10 +30,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
-import java.nio.file.LinkOption;
 import java.nio.file.Paths;
 import java.nio.file.attribute.GroupPrincipal;
-import java.nio.file.attribute.PosixFileAttributeView;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.HashSet;
 import java.util.Set;
@@ -95,7 +93,7 @@ public class AirflowService {
 
   @GET
   @Path("secretDir")
-  @Produces(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.TEXT_PLAIN)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response secretDir(@Context HttpServletRequest req) {
     String secret = DigestUtils.sha256Hex(Integer.toString(this.projectId));
@@ -124,7 +122,7 @@ public class AirflowService {
 
     Response.Status response = Response.Status.OK;
     RESTApiJsonResponse json = new RESTApiJsonResponse();
-    
+
     try {
       // Instead of checking and setting the permissions, just set them as it is an idempotent operation
 //      new File(baseDir).mkdirs();      
@@ -139,16 +137,15 @@ public class AirflowService {
           return settings.getAirflowUser();
         }
       };
-      Files.getFileAttributeView(Paths.get(destDir), PosixFileAttributeView.class, 
-          LinkOption.NOFOLLOW_LINKS).setGroup(group);
-      json.setData(secret);
+//      Files.getFileAttributeView(Paths.get(destDir), PosixFileAttributeView.class,
+//          LinkOption.NOFOLLOW_LINKS).setGroup(group);
     } catch (IOException ex) {
       Logger.getLogger(AirflowService.class.getName()).
           log(Level.SEVERE, null, "Could not set permissions on file " + ex);
       response = Response.Status.INTERNAL_SERVER_ERROR;
     }
 
-    return noCacheResponse.getNoCacheResponseBuilder(response).entity(json).build();
+    return noCacheResponse.getNoCacheResponseBuilder(response).entity(secret).build();
   }
 
   @GET
