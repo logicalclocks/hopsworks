@@ -18,6 +18,7 @@ package io.hops.hopsworks.api.airflow;
 
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
+import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
@@ -94,7 +95,7 @@ public class AirflowService {
 
   @GET
   @Path("secretDir")
-  @Produces(MediaType.TEXT_PLAIN)
+  @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response secretDir(@Context HttpServletRequest req) {
     String secret = DigestUtils.sha256Hex(Integer.toString(this.projectId));
@@ -122,6 +123,8 @@ public class AirflowService {
     perms.add(PosixFilePermission.OTHERS_EXECUTE);
 
     Response.Status response = Response.Status.OK;
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
+    
     try {
       // Instead of checking and setting the permissions, just set them as it is an idempotent operation
 //      new File(baseDir).mkdirs();      
@@ -138,13 +141,14 @@ public class AirflowService {
       };
       Files.getFileAttributeView(Paths.get(destDir), PosixFileAttributeView.class, 
           LinkOption.NOFOLLOW_LINKS).setGroup(group);
+      json.setData(secret);
     } catch (IOException ex) {
       Logger.getLogger(AirflowService.class.getName()).
           log(Level.SEVERE, null, "Could not set permissions on file " + ex);
       response = Response.Status.INTERNAL_SERVER_ERROR;
     }
 
-    return noCacheResponse.getNoCacheResponseBuilder(response).entity(secret).build();
+    return noCacheResponse.getNoCacheResponseBuilder(response).entity(json).build();
   }
 
   @GET
