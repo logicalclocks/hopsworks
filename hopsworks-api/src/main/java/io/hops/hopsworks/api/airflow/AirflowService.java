@@ -17,6 +17,7 @@
 package io.hops.hopsworks.api.airflow;
 
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
+import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.common.dao.project.Project;
@@ -25,6 +26,8 @@ import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.swagger.annotations.ApiOperation;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -52,6 +55,8 @@ import org.apache.commons.codec.digest.DigestUtils;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
+@JWTRequired(acceptedTokens = {Audience.API},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
 public class AirflowService {
 
   private final static Logger LOGGER = Logger.getLogger(AirflowService.class.getName());
@@ -95,7 +100,10 @@ public class AirflowService {
   @Path("secretDir")
   @Produces(MediaType.TEXT_PLAIN)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response secretDir(@Context HttpServletRequest req) {
+  @JWTRequired(acceptedTokens = {Audience.API},
+      allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiOperation(value = "Returns 200 if the secret dir for this Project's airflow dags is returned correctly")
+  public Response secretDir() {
     String secret = DigestUtils.sha256Hex(Integer.toString(this.projectId));
 
     String baseDir = settings.getAirflowDir() + "/dags/hopsworks/";
