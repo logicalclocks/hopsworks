@@ -46,6 +46,8 @@
             self.inprocess = true;
             self.error = '';
 
+	    console.log("Running: " + apiUrl + " - " + data.action + " - " + data.path)
+	    
             $http.post(apiUrl, data).then(function(response) {
                 dfHandler(response.data, deferred, response.status);
             }, function(response) {
