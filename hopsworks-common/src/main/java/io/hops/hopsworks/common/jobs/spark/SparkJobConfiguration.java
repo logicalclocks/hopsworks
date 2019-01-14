@@ -43,7 +43,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import io.hops.hopsworks.common.jobs.jobhistory.JobType;
+import io.hops.hopsworks.common.jobs.configuration.JobType;
 import io.hops.hopsworks.common.jobs.yarn.YarnJobConfiguration;
 import io.hops.hopsworks.common.util.Settings;
 
@@ -59,12 +59,21 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
   
   @XmlElement
   private String appPath;
+
   @XmlElement
   private String mainClass;
+
   @XmlElement
   private String args;
+
   @XmlElement
   private String properties;
+
+  @XmlElement
+  private ExperimentType experimentType;
+
+  @XmlElement
+  private DistributionStrategy distributionStrategy;
 
   @XmlElement(name="spark.executor.instances")
   private int executorInstances = 1;
@@ -73,10 +82,13 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
   private int executorCores = 1;
 
   @XmlElement(name="spark.executor.memory")
-  private int executorMemory = 1024;
+  private int executorMemory = 4096;
 
   @XmlElement(name="spark.executor.gpus")
   private int executorGpus = 0;
+
+  @XmlElement(name="spark.tensorflow.num.ps")
+  private int numPs = 0;
 
   @XmlElement(name="spark.dynamicAllocation.enabled")
   private boolean dynamicAllocationEnabled = false;
@@ -89,6 +101,21 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
 
   @XmlElement(name="spark.dynamicAllocation.initialExecutors")
   private int dynamicAllocationInitialExecutors = Settings.SPARK_MIN_EXECS;
+
+  @XmlElement(name="spark.blacklist.enabled")
+  private boolean blacklistingEnabled = false;
+
+  @XmlElement(name="spark.yarn.dist.pyFiles")
+  private String pyFiles;
+
+  @XmlElement(name="spark.yarn.dist.files")
+  private String files;
+
+  @XmlElement(name="spark.yarn.dist.jars")
+  private String jars;
+
+  @XmlElement(name="spark.yarn.dist.archives")
+  private String archives;
 
   public String getAppPath() {
     return appPath;
@@ -154,6 +181,14 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
     this.executorGpus = executorGpus;
   }
 
+  public int getNumPs() {
+    return numPs;
+  }
+
+  public void setNumPs(int numPs) {
+    this.numPs = numPs;
+  }
+
   public boolean isDynamicAllocationEnabled() {
     return dynamicAllocationEnabled;
   }
@@ -186,6 +221,30 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
     this.dynamicAllocationInitialExecutors = dynamicAllocationInitialExecutors;
   }
 
+  public boolean isBlacklistingEnabled() {
+    return blacklistingEnabled;
+  }
+
+  public void setBlacklistingEnabled(boolean blacklistingEnabled) {
+    this.blacklistingEnabled = blacklistingEnabled;
+  }
+
+  public ExperimentType getExperimentType() {
+    return experimentType;
+  }
+
+  public void setExperimentType(ExperimentType experimentType) {
+    this.experimentType = experimentType;
+  }
+
+  public DistributionStrategy getDistributionStrategy() {
+    return distributionStrategy;
+  }
+
+  public void setDistributionStrategy(DistributionStrategy distributionStrategy) {
+    this.distributionStrategy = distributionStrategy;
+  }
+
   @Override
   @XmlElement(name="jobType")
   public JobType getJobType() {
@@ -196,5 +255,37 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
     } else {
       return JobType.SPARK;
     }
+  }
+
+  public String getPyFiles() {
+    return pyFiles;
+  }
+
+  public void setPyFiles(String pyFiles) {
+    this.pyFiles = pyFiles;
+  }
+
+  public String getFiles() {
+    return files;
+  }
+
+  public void setFiles(String files) {
+    this.files = files;
+  }
+
+  public String getJars() {
+    return jars;
+  }
+
+  public void setJars(String jars) {
+    this.jars = jars;
+  }
+
+  public String getArchives() {
+    return archives;
+  }
+
+  public void setArchives(String archives) {
+    this.archives = archives;
   }
 }

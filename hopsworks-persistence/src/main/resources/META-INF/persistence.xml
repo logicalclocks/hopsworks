@@ -127,6 +127,7 @@
     <!-- Converters -->
     <class>io.hops.hopsworks.common.dao.user.cluster.RegistrationStatusConverter</class>
     <class>io.hops.hopsworks.common.jobs.configuration.JobConfigurationConverter</class>
+    <class>io.hops.hopsworks.common.jupyter.JupyterConfigurationConverter</class>
     <class>io.hops.hopsworks.common.dao.featurestore.stats.FeaturestoreStatisticValueConverter</class>
 
     <class>io.hops.hopsworks.common.dao.rstudio.RStudioProject</class>

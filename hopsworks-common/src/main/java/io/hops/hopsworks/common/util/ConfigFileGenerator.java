@@ -94,7 +94,7 @@ public class ConfigFileGenerator {
    * @throws IOException
    */
   public static StringBuilder instantiateFromTemplate(String filePath,
-          Map<String, String> params) throws IOException {
+                                                      Map<String, String> params) throws IOException {
     StringBuilder sb = new StringBuilder();
     String script = IoUtils.readContentFromClasspath(filePath);
     if (params.size() > 0) {
@@ -106,6 +106,8 @@ public class ConfigFileGenerator {
     }
     return sb.append(script);
   }
+
+
 
   public static boolean mkdirs(String path) {
     File cbDir = new File(path);

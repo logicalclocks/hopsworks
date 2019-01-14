@@ -158,7 +158,7 @@
                           Run
                         </button>
                         <button
-                          ng-show="(job.running || jobsCtrl.buttonArray[job.name]) && jobsCtrl.getJobClickStatus(job.name)==='running'"
+                          ng-show="(job.running || jobsCtrl.buttonArray[job.name])"
                           ng-disabled="!job.running ||
                                                   job.state === 'STARTING_APP_MASTER' ||
                                                   job.state === 'INITIALIZING'"
@@ -170,21 +170,6 @@
                           <span class="glyphicon glyphicon-stop" aria-hidden="true" ng-show="jobsCtrl.getJobClickStatus(job.name)==='running'"></span>
                           <span class="fa fa-spinner fa-spin" aria-hidden="true" ng-show="jobsCtrl.getJobClickStatus(job.name)==='stopping'" ></span>
                           Stop
-                        </button>
-                        <button
-                          ng-show="(job.running || jobsCtrl.buttonArray[job.name]) && (jobsCtrl.getJobClickStatus(job.name)==='stopping' || jobsCtrl.getJobClickStatus(job.name)==='killing')"
-                          ng-disabled="!job.running ||
-                                                  job.state === 'STARTING_APP_MASTER' ||
-                                                  job.state === 'INITIALIZING'"
-                          ng-click="jobsCtrl.toggle(job, $index);
-                                          jobsCtrl.killJob(job.name);
-
-                                          $event.stopPropagation();"
-                          class="btn btn-danger btn-sm"
-                          style="min-width: 64px; width: 60%;">
-                          <span class="glyphicon glyphicon-stop" aria-hidden="true" ng-show="jobsCtrl.getJobClickStatus(job.name)==='running'"></span>
-                          <span class="fa fa-spinner fa-spin" aria-hidden="true" ng-show="jobsCtrl.getJobClickStatus(job.name)==='stopping' || jobsCtrl.getJobClickStatus(job.name)==='killing'" ></span>
-                          Kill
                         </button>
                       </td>
                       <td>
@@ -484,8 +469,7 @@
     <!-- /#wrapper -->
   <tour class="ng-scope" step="projectCtrl.tourService.currentStep_TourThree"
         post-tour="closeTour()"
-        ng-if="(projectCtrl.loadedView && projectCtrl.tourService.activeTour === 'spark' ||
-                  projectCtrl.loadedView && projectCtrl.tourService.activeTour === 'tensorflow')
+        ng-if="(projectCtrl.loadedView && projectCtrl.tourService.activeTour === 'spark')
           && (projectCtrl.tourService.informAndTips
               || projectCtrl.tourService.tipsOnly)
           ">

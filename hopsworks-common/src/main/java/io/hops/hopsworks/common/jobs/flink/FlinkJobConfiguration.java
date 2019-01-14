@@ -39,7 +39,7 @@
 
 package io.hops.hopsworks.common.jobs.flink;
 
-import io.hops.hopsworks.common.jobs.jobhistory.JobType;
+import io.hops.hopsworks.common.jobs.configuration.JobType;
 import io.hops.hopsworks.common.jobs.yarn.YarnJobConfiguration;
 import io.hops.hopsworks.common.util.Settings;
 

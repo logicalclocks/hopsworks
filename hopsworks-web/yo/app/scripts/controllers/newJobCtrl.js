@@ -56,90 +56,14 @@ angular.module('hopsWorksApp')
             self.ModalService = ModalService;
             self.growl = growl;
             self.projectId = $routeParams.projectID;
-            ////////////////////////////////////////////////////////////////////
-            //Kafka topics for this project
-            self.topics = [];
-            self.outputTopics = [];
-            self.kafkaSelected = false;
-            self.settingsSelected = false;
-            self.consumerGroups = [{id: 'group1', "name": "default"}];
-            self.groupsSelected = false;
-            self.showAdvanced = false;
-            self.selectedTopics = [];
+
             self.projectName = "";
-            self.tfOnSpark = false;
             self.putAction =  "Create";
             self.showUpdateWarning = false;
             self.updateWarningMsg = "Job already exists. Are you sure you want to update it?";
-            self.getAllTopics = function () {
-              if (self.kafkaSelected) {
-                if (typeof self.runConfig.kafka !== "undefined" &&
-                        typeof self.runConfig.kafka.topics !== "undefined") {
-                  self.selectedTopics = self.runConfig.kafka.topics;
-                }
-
-                return KafkaService.getProjectAndSharedTopics(self.projectId)
-                        .then(
-                                function (success) {
-                                  self.topics = [];
-                                  var topics = success.data;
-                                  for (var i = 0; i < topics.length; i++) {
-                                    if (self.selectedTopics !== "undefined" && self.selectedTopics.length > 0) {
-                                      var found = false;
-                                      for (var j = 0; j < self.selectedTopics.length; j++) {
-                                        if (self.selectedTopics[j]['name'] === topics[i]['name']) {
-                                          found = true;
-                                          break;
-                                        }
-                                      }
-                                      self.topics.push({name: topics[i]['name'], ticked: found});
-                                    } else {
-                                      self.topics.push({name: topics[i]['name'], ticked: false});
-                                    }
-                                  }
-                                }, function (error) {
-                                if (typeof error.data.usrMsg !== 'undefined') {
-                                    growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
-                                } else {
-                                    growl.error("", {title: error.data.errorMsg, ttl: 5000});
-                                }
-                        });
-              }
-            };
-
-            self.addGroup = function () {
-              var newItemNo = self.consumerGroups.length + 1;
-              self.consumerGroups.push({'id': 'group' + newItemNo});
-            };
-
-            self.removeGroup = function () {
-              var lastItem = self.consumerGroups.length - 1;
-              if (lastItem > 0) {
-                self.consumerGroups.splice(lastItem);
-              }
-            };
-
-            self.toggleKafka = function () {
-              self.kafkaSelected = !self.kafkaSelected;
-            };
-            self.toggleSettings = function () {
-              self.settingsSelected = !self.settingsSelected;
-            };
-
-            self.toggleAdvanced = function () {
-              self.runConfig.kafka.advanced = !self.runConfig.kafka.advanced;
-            };
-
-            ////////////////////////////////////////////////////////////////////
-
-
 
             // keep the proposed configurations
             self.autoConfigResult;
-
-            self.setResourceType = function (type) {
-              self.resourceType = type;
-            };
 
             //Set some (semi-)constants
             self.selectFileRegexes = {
@@ -163,49 +87,43 @@ angular.module('hopsWorksApp')
 
             self.phase = 0; //The phase of creation we are in.
             self.runConfig; //Will hold the job configuration
+
             self.sliderVisible = false;
 
-            self.refreshSlider = function () {
-              $timeout(function () {
-                $scope.$broadcast('rzSliderForceRender');
-              });
-            };
+            self.guideKafkaTopics = [];
 
-            self.toggleSlider = function () {
-              self.sliderVisible = !self.sliderVisible;
-              if (self.sliderVisible)
-                self.refreshSlider();
-            };
-
-            self.setInitExecs = function() {
-                if (self.sliderOptions.min >
-                    self.runConfig['spark.dynamicAllocation.initialExecutors']) {
-                    self.runConfig['spark.dynamicAllocation.initialExecutors'] =
-                        parseInt(self.sliderOptions.min);
-                } else if (self.sliderOptions.max <
-                    self.runConfig['spark.dynamicAllocation.initialExecutors']) {
-                    self.runConfig['spark.dynamicAllocation.initialExecutors'] =
-                        parseInt(self.sliderOptions.max);
+            self.populateKafkaTopic = function () {
+              var tipsEnabled = StorageService.get("hopsworks-showtourtips");
+              if (tipsEnabled) {
+                self.getAllTopics(self.projectId).then(
+                        function (success) {
+                          for (var i = 0; i < self.topics.length; i++) {
+                              self.guideKafkaTopics.push(self.topics[i]);
+                              break;
+                          }
+                        }, function (error) {
+                  console.log(">>> Something bad happened:" + error.data.errorMsg);
                 }
-                self.runConfig['spark.dynamicAllocation.minExecutors'] = self.sliderOptions.min;
-                self.runConfig['spark.dynamicAllocation.maxExecutors'] = self.sliderOptions.max;
-            };
-
-            self.dynExecChangeListener = function() {
-                self.setInitExecs();
-            };
-
-            self.sliderOptions = {
-              min: 1,
-              max: 10,
-              options: {
-                floor: 0,
-                ceil: 1500,
-                onChange: self.dynExecChangeListener
-              },
-              getPointerColor: function (value) {
-                return '#4b91ea';
+                );
               }
+            };
+
+            self.getAllTopics = function () {
+              return KafkaService.getProjectAndSharedTopics(self.projectId)
+                .then(
+                  function (success) {
+                    self.topics = [];
+                    var topics = success.data;
+                    for (var i = 0; i < topics.length; i++) {
+                        self.topics.push(topics[i]['name']);
+                    }
+                  }, function (error) {
+                  if (typeof error.data.usrMsg !== 'undefined') {
+                      growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
+                  } else {
+                      growl.error("", {title: error.data.errorMsg, ttl: 5000});
+                  }
+                });
             };
 
             self.sparkState = {//Will hold spark-specific state
@@ -336,11 +254,7 @@ angular.module('hopsWorksApp')
               }
             };
 
-
-
-
             var handleFileSelect = function (evt) {
-              console.log(evt.target.files[0]);
               var file = evt.target.files[0]; // FileList object
 
               var fileType = file.type;
@@ -387,53 +301,13 @@ angular.module('hopsWorksApp')
               }
             };
 
-
-
             /**
              * Create the job.
              * @returns {undefined}
              */
             self.createJob = function () {
-              if (self.kafkaSelected) {
-                if (self.projectIsGuide) {
-                  //If it is the first time the job is created topics will be empty
-                  if (self.runConfig.kafka.topics.length === 0) {
-                    self.runConfig.kafka.topics = self.guideKafkaTopics;
-                  }
-                  if (angular.equals('producer', self.tourService
-                          .kafkaJobCreationState)) {
-                    // Go through again for the consumer. The state is
-                    // toggled in newJob.html virtual step
-                    self.tourService.currentStep_TourSeven = 0;
-                    self.tourService.currentStep_TourSix = 0;
-                    self.kafkaGuideTransition();
-                  } else {
-                    // We are done
-                    self.tourService.currentStep_TourSeven = -1;
-                    self.tourService.currentStep_TourSix = 1;
-                    self.kafkaGuideTransition();
-                  }
-                }
-                if (self.runConfig.kafka.topics === "undefined" || self.runConfig.kafka.topics.length === 0) {
-                  growl.warning("Please select topic(s) first", {title: 'Warning', ttl: 5000});
-                  return;
-                } else {
-                  if (self.runConfig.kafka.advanced) {
-                    self.runConfig.kafka.consumerGroups = self.consumerGroups;
-                  } else {
-                    delete self.runConfig.kafka.consumerGroups;
-                  }
-                }
-              } else {
-                delete self.runConfig.kafka;
-              }
               self.runConfig.appName = self.jobname;
-              self.runConfig.flinkjobtype = self.flinkjobtype;
               self.runConfig.localResources = self.localResources;
-              if (self.getJobType() === "SPARK" || self.getJobType() === "PYSPARK") {
-                self.runConfig['spark.dynamicAllocation.minExecutors'] = self.sliderOptions.min;
-                self.runConfig['spark.dynamicAllocation.maxExecutors']  = self.sliderOptions.max;
-              }
               if (self.getJobType() === "SPARK" || self.getJobType() === "FLINK") {
                 if (typeof self.runConfig.mainClass === 'undefined' || self.runConfig.mainClass === "") {
                   growl.warning("Please specify main class first", {ttl: 5000});
@@ -601,10 +475,6 @@ angular.module('hopsWorksApp')
               if (self.projectIsGuide) {
                 self.tourService.currentStep_TourSeven = 7;
               }
-              if (self.jobtype === 6 && !self.runConfig.args) {
-                self.runConfig.args = '--base_path hdfs://default/Projects/' + self.projectName + '/TestJob --images tfr/train --format tfr --mode train --model mnist_model';
-                self.runConfig['spark.tensorflow.num.ps']  = 1;
-              }
 
               if (self.tourService.currentStep_TourFour > -1) {
                 self.tourService.currentStep_TourFour = 7;
@@ -615,37 +485,11 @@ angular.module('hopsWorksApp')
               self.runConfig.mainClass = 'io.hops.examples.spark.kafka.StructuredStreamingKafka';
               var jobState = self.tourService.kafkaJobCreationState;
               if (angular.equals('producer', jobState)) {
-                self.runConfig.args = 'producer';
+                self.runConfig.args = 'producer ' + self.guideKafkaTopics[0];
               } else if (angular.equals('consumer', jobState)) {
-                self.runConfig.args = "consumer";
+                self.runConfig.args = "consumer " + self.guideKafkaTopics[0];
               } else {
                 self.runConfig.args = "Internal error, something went wrong. Select manually!";
-              }
-            };
-
-            self.guideKafkaTopics = [];
-
-            self.populateKafkaTopic = function () {
-              var tipsEnabled = StorageService.get("hopsworks-showtourtips");
-              if (tipsEnabled) {
-                self.accordion5.isOpen = true;
-                self.accordion5.visible = true;
-
-                self.kafkaSelected = true;
-                self.getAllTopics(self.projectId).then(
-                        function (success) {
-                          for (var i = 0; i < self.topics.length; i++) {
-                            if (angular.equals(self.tourService.kafkaTopicName + "_"
-                                    + self.projectId, self.topics[i]['name'])) {
-                              self.guideKafkaTopics.push(self.topics[i]);
-                              break;
-                            }
-
-                          }
-                        }, function (error) {
-                  console.log(">>> Something bad happened:" + error.data.errorMsg);
-                }
-                );
               }
             };
 
@@ -686,7 +530,7 @@ angular.module('hopsWorksApp')
                     },
                     function (error) {
                       self.jobtype = 0;
-                      growl.error("You need to enable Python before running this job.", {title: 'Error - Python not Enabled Yet.', ttl: 15000});
+                      growl.error("You need to enable Python before running this job.", {title: 'Error - Python not enabled yet.', ttl: 15000});
                 });
               }
 
@@ -697,7 +541,9 @@ angular.module('hopsWorksApp')
                   self.sparkState.selectedJar = filename;
                   JobService.getInspection(self.projectId, reason.toLowerCase(), path).then(
                           function (success) {
-                            self.runConfig = success.data;
+                            $scope.jobConfig = success.data;
+                            self.runConfig = $scope.jobConfig;
+                            $scope.settings = {advanced: true};
 
                             if (self.runConfig.appPath.toLowerCase().endsWith(".py") ||
                             self.runConfig.appPath.toLowerCase().endsWith(".ipynb")) {
@@ -705,18 +551,10 @@ angular.module('hopsWorksApp')
                             } else {
                               self.jobtype = 1;
                             }
-                            //Update the min/max spark executors based on
-                            //backend configuration
-                            if (typeof self.runConfig !== 'undefined') {
-                              self.sliderOptions.options['floor'] = self.runConfig['spark.dynamicAllocation.minExecutors'];
-                              self.sliderOptions.options['ceil'] = self.runConfig['spark.dynamicAllocation.maxExecutors'];
-                            } else {
-                              self.sliderOptions.options['floor'] = 1;
-                              self.sliderOptions.options['ceil'] = 300;
-                            }
                             self.mainFileSelected(filename);
                             // For Kafka tour
                             if (self.projectIsGuide) {
+                              self.runConfig['spark.executor.memory']=2048;
                               self.tourService.currentStep_TourSeven = 6;
                             }
 
@@ -847,66 +685,13 @@ angular.module('hopsWorksApp')
                 self.jobtype = stored.jobtype;
                 self.jobname = stored.jobname;
                 self.templateFormButton();
-                self.localResources = stored.runConfig.localResources;
-                if (typeof self.localResources === "undefined") {
-                  self.localResources = [];
-                }
-
                 self.phase = stored.phase;
+                $scope.jobConfig = stored.runConfig;
+                $scope.settings = {advanced: true};
                 self.runConfig = stored.runConfig;
                 if (self.runConfig) {
                   self.topics = [];
                   self.runConfig.schedule = null;
-                  if (typeof self.runConfig['spark.dynamicAllocation.minExecutors']  !== "undefined") {
-                    self.sliderOptions.options['floor'] = self.runConfig['spark.dynamicAllocation.minExecutors'];
-                  }
-                  if (typeof self.sliderOptions.options['ceil'] !== "undefined") {
-                    self.runConfig['spark.dynamicAllocation.maxExecutors'];
-                  }
-                  if (typeof self.runConfig['spark.dynamicAllocation.minExecutors'] === "undefined") {
-                    self.runConfig['spark.dynamicAllocation.minExecutors'] = self.sliderOptions.min;
-                  } else {
-                    self.sliderOptions.min = self.runConfig['spark.dynamicAllocation.minExecutors'];
-                  }
-                  if (typeof self.runConfig['spark.dynamicAllocation.maxExecutors'] === "undefined") {
-                    self.runConfig['spark.dynamicAllocation.maxExecutors'] = self.sliderOptions.max;
-                  } else {
-                    self.sliderOptions.max = self.runConfig['spark.dynamicAllocation.maxExecutors'];
-                  }
-                  //Load Kafka properties
-                  if (typeof self.runConfig.kafka !== "undefined" && self.runConfig.kafka.topics.length > 0) {
-                    self.kafkaSelected = true;
-                    self.showAdvanced = self.runConfig.kafka.advanced;
-                    if (typeof self.runConfig.kafka.consumerGroups !== "undefined") {
-                      self.groupsSelected = true;
-                      self.consumerGroups = self.runConfig.kafka.consumerGroups;
-                    }
-                    var storedTopics = self.runConfig.kafka.topics;
-                    //Set Kafka topics is selected
-                    KafkaService.getProjectAndSharedTopics(self.projectId).then(
-                            function (success) {
-                              var topics = success.data;
-                              for (var i = 0; i < topics.length; i++) {
-                                self.topics.push({name: topics[i]['name'], ticked: false});
-                              }
-                              if (typeof storedTopics !== "undefined") {
-                                self.runConfig.kafka.topics = storedTopics;
-                                self.guideKafkaTopics = storedTopics;
-                                //Set selected topics
-                                //wait to fetch topics firsts
-                                for (var i = 0; i < self.runConfig.kafka.topics.length; i++) {
-                                  for (var z = 0; z < self.topics.length; z++) {
-                                    if (self.topics[z]['name'] === self.runConfig.kafka.topics[i]['name']) {
-                                      self.topics[z]['ticked'] = true;
-                                      break;
-                                    }
-                                  }
-                                }
-                              }
-                            }, function (error) {
-                      console.log("Error during job init:" + error.data.errorMsg);
-                    });
-                  }
                 }
                 if (self.jobtype === 1 || self.jobtype === 2) {
                   self.sparkState = stored.sparkState;

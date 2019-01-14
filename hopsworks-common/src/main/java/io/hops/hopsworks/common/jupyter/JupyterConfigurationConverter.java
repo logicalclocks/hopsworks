@@ -14,14 +14,14 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.common.jobs.configuration;
+package io.hops.hopsworks.common.jupyter;
 
 import com.google.common.base.Strings;
+import io.hops.hopsworks.common.jobs.configuration.JobConfiguration;
+import io.hops.hopsworks.common.jobs.spark.SparkJobConfiguration;
+import org.eclipse.persistence.jaxb.JAXBContextFactory;
+import org.eclipse.persistence.jaxb.MarshallerProperties;
 
-import java.io.StringReader;
-import java.io.StringWriter;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.persistence.AttributeConverter;
 import javax.persistence.Converter;
 import javax.ws.rs.core.MediaType;
@@ -30,26 +30,20 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.transform.stream.StreamSource;
-
-import io.hops.hopsworks.common.jobs.flink.FlinkJobConfiguration;
-import io.hops.hopsworks.common.jobs.spark.SparkJobConfiguration;
-import org.eclipse.persistence.jaxb.JAXBContextFactory;
-import org.eclipse.persistence.jaxb.MarshallerProperties;
-import org.json.JSONObject;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Converter
-public class JobConfigurationConverter implements AttributeConverter<JobConfiguration, String> {
+public class JupyterConfigurationConverter implements AttributeConverter<JobConfiguration, String> {
 
-  private static final Logger LOGGER = Logger.getLogger(JobConfigurationConverter.class.getName());
-
-
+  private static final Logger LOGGER = Logger.getLogger(JupyterConfigurationConverter.class.getName());
   private static JAXBContext sparkJAXBContext;
-  private static JAXBContext flinkJAXBContext;
 
   static {
     try {
       sparkJAXBContext = JAXBContextFactory.createContext(new Class[] {SparkJobConfiguration.class}, null);
-      flinkJAXBContext = JAXBContextFactory.createContext(new Class[] {FlinkJobConfiguration.class}, null);
     } catch (JAXBException e) {
       LOGGER.log(Level.SEVERE, "An error occurred while initializing JAXBContext", e);
     }
@@ -57,9 +51,11 @@ public class JobConfigurationConverter implements AttributeConverter<JobConfigur
 
   @Override
   public String convertToDatabaseColumn(JobConfiguration config) {
+    if(config == null) {
+      config = new SparkJobConfiguration();
+    }
     try {
-      JAXBContext jc = getJAXBContext(config.getJobType());
-      Marshaller marshaller = jc.createMarshaller();
+      Marshaller marshaller = sparkJAXBContext.createMarshaller();
       marshaller.setProperty(MarshallerProperties.JSON_INCLUDE_ROOT, false);
       marshaller.setProperty(MarshallerProperties.MEDIA_TYPE, MediaType.APPLICATION_JSON);
       StringWriter sw = new StringWriter();
@@ -76,40 +72,17 @@ public class JobConfigurationConverter implements AttributeConverter<JobConfigur
       return null;
     }
     try {
-      JSONObject obj = new JSONObject(jsonConfig);
-      JobType type = JobType.valueOf((((String)obj.get("jobType"))));
-      JAXBContext jc = getJAXBContext(type);
-      return unmarshal(jsonConfig, type, jc);
+      return unmarshal(jsonConfig, sparkJAXBContext);
     } catch (JAXBException e) {
       throw new IllegalStateException(e);
     }
   }
 
-  private JAXBContext getJAXBContext(JobType jobType) {
-    switch(jobType) {
-      case SPARK:
-      case PYSPARK:
-        return sparkJAXBContext;
-      case FLINK:
-        return flinkJAXBContext;
-      default:
-        throw new IllegalArgumentException("Could not find a mapping for JobType " + jobType);
-    }
-  }
-
-  private JobConfiguration unmarshal(String jsonConfig, JobType jobType, JAXBContext jaxbContext) throws JAXBException {
+  private JobConfiguration unmarshal(String jsonConfig, JAXBContext jaxbContext) throws JAXBException {
     Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
     StreamSource json = new StreamSource(new StringReader(jsonConfig));
     unmarshaller.setProperty(MarshallerProperties.JSON_INCLUDE_ROOT, false);
     unmarshaller.setProperty(MarshallerProperties.MEDIA_TYPE, MediaType.APPLICATION_JSON);
-    switch(jobType) {
-      case SPARK:
-      case PYSPARK:
-        return unmarshaller.unmarshal(json, SparkJobConfiguration.class).getValue();
-      case FLINK:
-        return unmarshaller.unmarshal(json, FlinkJobConfiguration.class).getValue();
-      default:
-        throw new IllegalArgumentException("Could not find a mapping for JobType " + jobType);
-    }
+    return unmarshaller.unmarshal(json, SparkJobConfiguration.class).getValue();
   }
 }

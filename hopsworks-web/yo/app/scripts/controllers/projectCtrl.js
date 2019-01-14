@@ -366,10 +366,6 @@ angular.module('hopsWorksApp')
               self.goToUrl('workflows');
             };
 
-            self.goToTensorflow = function () {
-              self.goToUrl('tensorflow');
-            };
-
             self.goToTfServing = function () {
               self.toggleKibanaNavBar();
               self.goToUrl('serving');

@@ -38,9 +38,10 @@
  */
 package io.hops.hopsworks.common.jobs.spark;
 
-import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.exception.JobException;
+import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.Utils;
 import java.io.IOException;
@@ -75,7 +76,7 @@ public class SparkJob extends YarnJob {
   }
 
   @Override
-  protected boolean setupJob(DistributedFileSystemOps dfso, YarnClient yarnClient) {
+  protected boolean setupJob(DistributedFileSystemOps dfso, YarnClient yarnClient) throws JobException {
     super.setupJob(dfso, yarnClient);
     SparkJobConfiguration jobconfig = (SparkJobConfiguration) jobs.getJobConfig();
     //Then: actually get to running.
@@ -92,26 +93,6 @@ public class SparkJob extends YarnJob {
         runnerbuilder.addAllJobArgs(jobArgs);
       }
     }
-
-    if (!Strings.isNullOrEmpty(jobconfig.getProperties())) {
-      runnerbuilder.setProperties(jobconfig.getProperties());
-    }
-    //Set spark runner options
-    runnerbuilder.setExecutorCores(jobconfig.getExecutorCores());
-    runnerbuilder.setExecutorMemory("" + jobconfig.getExecutorMemory() + "m");
-    runnerbuilder.setNumberOfExecutors(jobconfig.getExecutorInstances());
-    runnerbuilder.setExecutorGPUs(jobconfig.getExecutorGpus());
-    if (jobconfig.isDynamicAllocationEnabled()) {
-      runnerbuilder.setDynamicExecutors(jobconfig.isDynamicAllocationEnabled());
-      runnerbuilder.setNumberOfExecutorsMin(jobconfig.getDynamicAllocationMinExecutors());
-      runnerbuilder.setNumberOfExecutorsMax(jobconfig.getDynamicAllocationMaxExecutors());
-      runnerbuilder.setNumberOfExecutorsInit(jobconfig.getDynamicAllocationInitialExecutors());
-    }
-    //Set Yarn running options
-    runnerbuilder.setDriverMemoryMB(jobconfig.getAmMemory());
-    runnerbuilder.setDriverCores(jobconfig.getAmVCores());
-    runnerbuilder.setDriverQueue(jobconfig.getAmQueue());
-
     //Set Kafka params
     runnerbuilder.setServiceProps(serviceProps);
     if(jobconfig.getLocalResources() != null) {
@@ -152,7 +133,7 @@ public class SparkJob extends YarnJob {
               jobUser, usersFullName,
               services, services.getFileOperations(hdfsUser.getUserName()), yarnClient, settings);
 
-    } catch (IOException e) {
+    } catch (ServiceException | IOException e) {
       LOG.log(Level.WARNING,
           "Failed to create YarnRunner.", e);
       try {
