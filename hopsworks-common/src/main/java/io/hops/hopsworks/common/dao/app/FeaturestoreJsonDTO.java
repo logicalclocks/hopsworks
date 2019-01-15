@@ -35,7 +35,7 @@ public class FeaturestoreJsonDTO extends KeystoreDTO {
   String name;
   Integer version;
   String description;
-  Integer jobId;
+  String jobName;
   FeatureCorrelationMatrixDTO featureCorrelationMatrix;
   DescriptiveStatsDTO descriptiveStatistics;
   boolean updateMetadata = false;
@@ -52,16 +52,15 @@ public class FeaturestoreJsonDTO extends KeystoreDTO {
 
   public FeaturestoreJsonDTO(
       String featurestoreName, String name, Integer version, String description,
-      Integer jobId, List<String> dependencies, List<FeatureDTO> features,
+      List<String> dependencies, List<FeatureDTO> features,
       FeatureCorrelationMatrixDTO featureCorrelationMatrix,
       DescriptiveStatsDTO descriptiveStatistics, boolean updateMetadata, boolean updateStats,
       FeatureDistributionsDTO featuresHistogram,
-      String dataFormat, ClusterAnalysisDTO clusterAnalysis) {
+      String dataFormat, ClusterAnalysisDTO clusterAnalysis, String jobName) {
     this.featurestoreName = featurestoreName;
     this.name = name;
     this.version = version;
     this.description = description;
-    this.jobId = jobId;
     this.dependencies = dependencies;
     this.features = features;
     this.featureCorrelationMatrix = featureCorrelationMatrix;
@@ -71,6 +70,7 @@ public class FeaturestoreJsonDTO extends KeystoreDTO {
     this.featuresHistogram = featuresHistogram;
     this.dataFormat = dataFormat;
     this.clusterAnalysis = clusterAnalysis;
+    this.jobName = jobName;
   }
 
   public String getFeaturestoreName() {
@@ -103,14 +103,6 @@ public class FeaturestoreJsonDTO extends KeystoreDTO {
 
   public void setDescription(String description) {
     this.description = description;
-  }
-
-  public Integer getJobId() {
-    return jobId;
-  }
-
-  public void setJobId(Integer jobId) {
-    this.jobId = jobId;
   }
 
   public void setFeatures(List<FeatureDTO> features) {
@@ -185,6 +177,13 @@ public class FeaturestoreJsonDTO extends KeystoreDTO {
     this.clusterAnalysis = clusterAnalysis;
   }
 
+  public String getJobName() {
+    return jobName;
+  }
+
+  public void setJobName(String jobName) {
+    this.jobName = jobName;
+  }
 
   @Override
   public String toString() {
@@ -193,7 +192,6 @@ public class FeaturestoreJsonDTO extends KeystoreDTO {
         ", name='" + name + '\'' +
         ", version=" + version +
         ", description='" + description + '\'' +
-        ", jobId=" + jobId +
         ", featureCorrelationMatrix=" + featureCorrelationMatrix +
         ", descriptiveStatistics=" + descriptiveStatistics +
         ", updateMetadata=" + updateMetadata +
@@ -203,6 +201,7 @@ public class FeaturestoreJsonDTO extends KeystoreDTO {
         ", dataFormat='" + dataFormat + '\'' +
         ", clusterAnalysis=" + clusterAnalysis +
         ", dependencies=" + dependencies +
+        ", jobName=" + jobName +
         '}';
   }
 

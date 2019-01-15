@@ -30,7 +30,7 @@ module FeaturestoreHelper
     json_data = {
         name: featuregroup_name,
         dependencies: [],
-        jobId: nil,
+        jobName: nil,
         features: [
             {
                 type: "INT",
@@ -52,7 +52,7 @@ module FeaturestoreHelper
     json_data = {
         name: featuregroup_name,
         dependencies: [],
-        jobId: nil,
+        jobName: nil,
         features: [
             {
                 type: "INT",
@@ -74,7 +74,7 @@ module FeaturestoreHelper
     json_data = {
         name: "",
         dependencies: [],
-        jobId: nil,
+        jobName: nil,
         features: [
         ],
         description: "",
@@ -90,7 +90,7 @@ module FeaturestoreHelper
     json_data = {
         name: "new_dataset_name",
         dependencies: [],
-        jobId: nil,
+        jobName: nil,
         description: "new_testtrainingdatasetdescription",
         version: training_dataset_version,
         dataFormat: "tfrecords"
@@ -106,7 +106,7 @@ module FeaturestoreHelper
     json_data = {
         name: training_dataset_name,
         dependencies: [],
-        jobId: nil,
+        jobName: nil,
         description: "testtrainingdatasetdescription",
         version: 1,
         dataFormat: "tfrecords"
@@ -121,7 +121,7 @@ module FeaturestoreHelper
     json_data = {
         name: training_dataset_name,
         dependencies: [],
-        jobId: nil,
+        jobName: nil,
         description: "testtrainingdatasetdescription2",
         version: version,
         dataFormat: "parquet"

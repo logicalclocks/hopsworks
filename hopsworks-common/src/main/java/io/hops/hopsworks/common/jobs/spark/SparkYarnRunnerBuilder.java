@@ -321,6 +321,14 @@ public class SparkYarnRunnerBuilder {
       builder.addToAppMasterEnvironment("KAFKA_BROKERS", settings.getKafkaBrokersStr());
     }
 
+    //JobName is used by hops-util
+    builder.addToAppMasterEnvironment("HOPSWORKS_JOB_NAME", jobName);
+    jobHopsworksProps.put(Settings.SPARK_EXECUTORENV_JOB_NAME,
+        new ConfigProperty(
+            Settings.SPARK_EXECUTORENV_JOB_NAME,
+            HopsUtils.IGNORE,
+            jobName));
+
     //Set Spark specific environment variables
     builder.addToAppMasterEnvironment("SPARK_YARN_MODE", "true");
     builder.addToAppMasterEnvironment("SPARK_YARN_STAGING_DIR", stagingPath);

@@ -32,18 +32,19 @@ import java.util.List;
 public class FeaturegroupJsonDTO extends FeaturestoreEntityJsonDTO {
 
   public FeaturegroupJsonDTO() {
-    super(null, null, null, null, null,
+    super(null, null, null, null,
         null, null, null, null,
-        false, false, null);
+        false, false, null, null);
   }
 
   public FeaturegroupJsonDTO(
-      List<FeatureDTO> features, String featuregroupName, Integer jobId,
+      List<FeatureDTO> features, String featuregroupName,
       String description, List<String> dependencies, Integer version,
       FeatureCorrelationMatrixDTO featureCorrelationMatrix, DescriptiveStatsDTO descriptiveStatistics,
       boolean updateMetadata,
-      boolean updateStats, FeatureDistributionsDTO featuresHistogram, ClusterAnalysisDTO clusterAnalysis) {
-    super(jobId, description, dependencies, version, featuregroupName, featureCorrelationMatrix, descriptiveStatistics,
-        featuresHistogram, clusterAnalysis, updateMetadata, updateStats, features);
+      boolean updateStats, FeatureDistributionsDTO featuresHistogram, ClusterAnalysisDTO clusterAnalysis,
+      String jobName) {
+    super(description, dependencies, version, featuregroupName, featureCorrelationMatrix, descriptiveStatistics,
+        featuresHistogram, clusterAnalysis, updateMetadata, updateStats, features, jobName);
   }
 }
