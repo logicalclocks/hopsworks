@@ -2300,7 +2300,8 @@ public class ProjectController {
 
   public void addTourFilesToProject(String username, Project project,
       DistributedFileSystemOps dfso, DistributedFileSystemOps udfso,
-      TourProjectType projectType) throws DatasetException, HopsSecurityException, ProjectException {
+      TourProjectType projectType) throws DatasetException, HopsSecurityException, ProjectException,
+      JobException, GenericException {
 
     Users user = userFacade.findByEmail(username);
     datasetController.createDataset(user, project, Settings.HOPS_TOUR_DATASET,
@@ -2371,7 +2372,7 @@ public class ProjectController {
             List<Inode> children = new ArrayList<>();
             inodes.getAllChildren(parent, children);
             for (Inode child : children) {
-              if (child.getHdfsUser() != null && child.getHdfsUser().getName().equals(settings.getHdfsSuperUser())) {
+              if (child.getHdfsUser() != null && !child.getHdfsUser().getName().equals(userHdfsName)) {
                 Path path = new Path(inodes.getPath(child));
                 udfso.setPermission(path, udfso.getParentPermission(path));
                 udfso.setOwner(path, userHdfsName, datasetGroup);
@@ -2428,7 +2429,7 @@ public class ProjectController {
             List<Inode> children = new ArrayList<>();
             inodes.getAllChildren(parent, children);
             for (Inode child : children) {
-              if (child.getHdfsUser() != null && child.getHdfsUser().getName().equals(settings.getHdfsSuperUser())) {
+              if (child.getHdfsUser() != null && !child.getHdfsUser().getName().equals(userHdfsName)) {
                 Path path = new Path(inodes.getPath(child));
                 udfso.setPermission(path, udfso.getParentPermission(path));
                 udfso.setOwner(path, userHdfsName, datasetGroup);
@@ -2456,34 +2457,29 @@ public class ProjectController {
             throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_TOUR_FILES_ERROR, Level.SEVERE,
                 "project: " + project.getName(), ex.getMessage(), ex);
           }
-          try {
-            SparkJobConfiguration sparkJobConfiguration = new SparkJobConfiguration();
-            sparkJobConfiguration.setAmQueue("default");
-            sparkJobConfiguration.setAmMemory(1024);
-            sparkJobConfiguration.setAmVCores(1);
-            sparkJobConfiguration.setAppPath("hdfs://" + featurestoreExampleJarDst);
-            sparkJobConfiguration.setMainClass(Settings.HOPS_FEATURESTORE_TOUR_JOB_CLASS);
-            sparkJobConfiguration.setExecutorInstances(1);
-            sparkJobConfiguration.setExecutorCores(1);
-            sparkJobConfiguration.setExecutorMemory(1024);
-            sparkJobConfiguration.setExecutorGpus(0);
-            sparkJobConfiguration.setDynamicAllocationEnabled(false);
-            sparkJobConfiguration.setDynamicAllocationMinExecutors(1);
-            sparkJobConfiguration.setDynamicAllocationMinExecutors(1);
-            sparkJobConfiguration.setDynamicAllocationInitialExecutors(1);
-            sparkJobConfiguration.setArgs("");
-            sparkJobConfiguration.setAppName(Settings.HOPS_FEATURESTORE_TOUR_JOB_NAME);
-            sparkJobConfiguration.setLocalResources(new LocalResourceDTO[0]);
-            Jobs job = jobController.createJob(user, project, sparkJobConfiguration);
-            activityFacade.persistActivity(ActivityFacade.CREATED_JOB + job.getName(),
+          SparkJobConfiguration sparkJobConfiguration = new SparkJobConfiguration();
+          sparkJobConfiguration.setAmQueue("default");
+          sparkJobConfiguration.setAmMemory(1024);
+          sparkJobConfiguration.setAmVCores(1);
+          sparkJobConfiguration.setAppPath("hdfs://" + featurestoreExampleJarDst);
+          sparkJobConfiguration.setMainClass(Settings.HOPS_FEATURESTORE_TOUR_JOB_CLASS);
+          sparkJobConfiguration.setExecutorInstances(1);
+          sparkJobConfiguration.setExecutorCores(1);
+          sparkJobConfiguration.setExecutorMemory(1024);
+          sparkJobConfiguration.setExecutorGpus(0);
+          sparkJobConfiguration.setDynamicAllocationEnabled(false);
+          sparkJobConfiguration.setDynamicAllocationMinExecutors(1);
+          sparkJobConfiguration.setDynamicAllocationMinExecutors(1);
+          sparkJobConfiguration.setDynamicAllocationInitialExecutors(1);
+          sparkJobConfiguration.setArgs("");
+          sparkJobConfiguration.setAppName(Settings.HOPS_FEATURESTORE_TOUR_JOB_NAME);
+          sparkJobConfiguration.setLocalResources(new LocalResourceDTO[0]);
+          Jobs job = jobController.createJob(user, project, sparkJobConfiguration);
+          activityFacade.persistActivity(ActivityFacade.CREATED_JOB + job.getName(),
                 project, user, ActivityFacade.ActivityFlag.SERVICE);
-            executionController.start(job, user);
-            activityFacade.persistActivity(ActivityFacade.RAN_JOB + job.getName(),
+          executionController.start(job, user);
+          activityFacade.persistActivity(ActivityFacade.RAN_JOB + job.getName(),
                 project, user, ActivityFacade.ActivityFlag.SERVICE);
-          } catch (JobException | GenericException e) {
-            throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_JOB_ERROR, Level.SEVERE,
-                "project: " + project.getName(), e.getMessage(), e);
-          }
           break;
         default:
           break;

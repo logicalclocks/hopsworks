@@ -627,9 +627,8 @@
             <virtual-step
                     ng-if="featurestoreCtrl.tourService.activeTour === 'featurestore'"
                     class="ng-scope"
-                    tourtip="This is the feature store registry where you can list and search for features/feature groups
-                    and training datasets in the feature store.
-                    You can also edit metadata of features/feature groups and training datasets from here"
+                    tourtip="This is the feature store registry where you can list and search for
+                    features/feature groups/training datasets in the feature store as well as edit their metadata."
                     tourtip-step="0"
                     tourtip-element="#featurestoreTab"
                     tourtip-placement="bottom"
@@ -639,8 +638,8 @@
             <virtual-step
                     ng-if="featurestoreCtrl.tourService.activeTour === 'featurestore'"
                     class="ng-scope"
-                    tourtip="Click here to select a feature store. Each project with the feature store service gets its own feature store.
-                    Feature stores can also be shared across projects. If a feature store have been shared with your project, you can find it in the dropdown list here"
+                    tourtip="Click here to select your project's feature store. A feature store can also be shared across projects.
+                    You can find feature stores that has been shared with your project in the drop-down list here."
                     tourtip-step="1"
                     tourtip-element="#selectFeatureStore"
                     tourtip-placement="bottom"
@@ -650,7 +649,7 @@
             <virtual-step
                     ng-if="featurestoreCtrl.tourService.activeTour === 'featurestore'"
                     class="ng-scope"
-                    tourtip="Click here to view storage/ownership details about the feature store"
+                    tourtip="Click here to view storage/ownership details about the feature store."
                     tourtip-step="2"
                     tourtip-element="#viewFeaturestoreInfo"
                     tourtip-placement="bottom"
@@ -683,7 +682,7 @@
             <virtual-step
                     ng-if="featurestoreCtrl.tourService.activeTour === 'featurestore'"
                     class="ng-scope"
-                    tourtip="You can find the feature store datasets here"
+                    tourtip="You can find the feature store datasets here."
                     tourtip-step="5"
                     tourtip-element="#datasetsTab"
                     tourtip-placement="bottom"

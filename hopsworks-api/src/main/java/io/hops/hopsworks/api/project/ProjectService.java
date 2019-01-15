@@ -78,6 +78,7 @@ import io.hops.hopsworks.common.exception.DatasetException;
 import io.hops.hopsworks.common.exception.FeaturestoreException;
 import io.hops.hopsworks.common.exception.GenericException;
 import io.hops.hopsworks.common.exception.HopsSecurityException;
+import io.hops.hopsworks.common.exception.JobException;
 import io.hops.hopsworks.common.exception.KafkaException;
 import io.hops.hopsworks.common.exception.ProjectException;
 import io.hops.hopsworks.common.exception.RESTCodes;
@@ -511,7 +512,7 @@ public class ProjectService {
   public Response example(@PathParam("type") String type, @Context HttpServletRequest req, @Context SecurityContext sc)
       throws DatasetException,
       GenericException, KafkaException, ProjectException, UserException, ServiceException, HopsSecurityException,
-      FeaturestoreException {
+      FeaturestoreException, JobException {
     if (!Arrays.asList(TourProjectType.values()).contains(TourProjectType.valueOf(type.toUpperCase()))) {
       throw new IllegalArgumentException("Type must be one of: " + Arrays.toString(TourProjectType.values()));
     }
@@ -551,8 +552,8 @@ public class ProjectService {
       demoType = TourProjectType.FEATURESTORE;
       projectDTO.setProjectName("demo_" + TourProjectType.FEATURESTORE.getTourName() + "_" + username);
       populateActiveServices(projectServices, TourProjectType.FEATURESTORE);
-      readMeMessage = "jar file to demonstrate feature engineering and writing to the feature store and " +
-          "Jupyter notebooks to demonstrate how to fetch features from the feature store and use to build models";
+      readMeMessage = "Dataset containing a jar file and data that can be used to run a sample spark-job for " +
+          "inserting data in the feature store.";
     }
     projectDTO.setServices(projectServices);
 
