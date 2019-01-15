@@ -649,9 +649,11 @@ public class ApplicationService {
               -1, true);
     } catch (DatasetException e) {
       if (e.getErrorCode() == RESTCodes.DatasetErrorCode.DATASET_SUBDIR_ALREADY_EXISTS) {
-        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_ALREADY_EXISTS, Level.FINE,
-            "The path to create the dataset already exists: " + trainingDatasetDirectoryName +
-                ", delete the directory and try again.", e.getMessage(), e);
+        dsUpdateOperations.deleteDatasetFile(project, user, trainingDatasetDirectoryName);
+        fullPath =
+            dsUpdateOperations.createDirectoryInDataset(project, user, trainingDatasetDirectoryName,
+                featurestoreJsonDTO.getDescription(),
+                -1, true);
       } else {
         throw e;
       }
