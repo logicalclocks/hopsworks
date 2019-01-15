@@ -97,7 +97,8 @@ public class JupyterConfigFilesGenerator {
 
     try {
       newDir = createJupyterDirs(jP);
-      createConfigFiles(jP.getConfDirPath(), hdfsUser, realName, project, nameNodeEndpoint, port, js);
+      createConfigFiles(jP.getConfDirPath(), jP.getKernelsDir(), hdfsUser,
+          realName, project, nameNodeEndpoint, port, js);
     } catch (Exception e) {
       if (newDir) { // if the folder was newly created delete it
         removeProjectUserDirRecursive(jP);
@@ -146,15 +147,15 @@ public class JupyterConfigFilesGenerator {
     new File(jp.getRunDirPath()).mkdirs();
     new File(jp.getLogDirPath()).mkdirs();
     new File(jp.getCertificatesDir()).mkdirs();
+    new File(jp.getKernelsDir()).mkdirs();
     return true;
   }
 
   // returns true if one of the conf files were created anew 
-  private boolean createConfigFiles(String confDirPath, String hdfsUser, String realName, Project project,
-                                    String nameNodeEndpoint, Integer port, JupyterSettings js)
+  private boolean createConfigFiles(String confDirPath, String kernelsDir, String hdfsUser, String realName,
+                                    Project project, String nameNodeEndpoint, Integer port, JupyterSettings js)
     throws IOException, ServiceException {
     File jupyter_config_file = new File(confDirPath + JUPYTER_NOTEBOOK_CONFIG);
-    File jupyter_kernel_file = new File(confDirPath + JUPYTER_CUSTOM_KERNEL);
     File sparkmagic_config_file = new File(confDirPath + SPARKMAGIC_CONFIG);
     File custom_js = new File(confDirPath + JUPYTER_CUSTOM_JS);
     boolean createdJupyter = false;
@@ -167,10 +168,14 @@ public class JupyterConfigFilesGenerator {
       String nameNodeIp = nn[0];
       String nameNodePort = nn[1];
 
-      String pythonKernel = "";
+      String pythonKernelName = "python-" + hdfsUser;
 
       if (settings.isPythonKernelEnabled() && !project.getPythonVersion().contains("X")) {
-        pythonKernel = ", 'python-" + hdfsUser + "'";
+        String pythonKernelPath = kernelsDir + File.separator + pythonKernelName;
+        File pythonKernelFile = new File(pythonKernelPath + JUPYTER_CUSTOM_KERNEL);
+
+        new File(pythonKernelPath).mkdir();
+        // Create the python kernel
         StringBuilder jupyter_kernel_config = ConfigFileGenerator.
             instantiateFromTemplate(
                 ConfigFileGenerator.JUPYTER_CUSTOM_KERNEL,
@@ -180,7 +185,7 @@ public class JupyterConfigFilesGenerator {
                 "anaconda_home", settings.getAnacondaProjectDir(project),
                 "secret_dir", settings.getStagingDir() + Settings.PRIVATE_DIRS + js.getSecret()
             );
-        ConfigFileGenerator.createConfigFile(jupyter_kernel_file, jupyter_kernel_config.toString());
+        ConfigFileGenerator.createConfigFile(pythonKernelFile, jupyter_kernel_config.toString());
       }
 
       StringBuilder jupyter_notebook_config = ConfigFileGenerator.
@@ -193,7 +198,7 @@ public class JupyterConfigFilesGenerator {
               "base_dir", js.getBaseDir(),
               "hdfs_user", hdfsUser,
               "port", port.toString(),
-              "python-kernel", pythonKernel,
+              "python-kernel", ", '"+ pythonKernelName + "'",
               "umask", js.getUmask(),
               "hadoop_home", this.settings.getHadoopSymbolicLinkDir(),
               "hdfs_home", this.settings.getHadoopSymbolicLinkDir(),
@@ -216,7 +221,10 @@ public class JupyterConfigFilesGenerator {
           .append(settings.getHopsUtilHdfsPath())
           .append(",")
           // Add Hive-site.xml for SparkSQL
-          .append(settings.getHiveSiteSparkHdfsPath());
+          .append(settings.getHiveSiteSparkHdfsPath())
+          .append(",")
+          // Add tf-spark-connector
+          .append(settings.getTfSparkConnectorPath());
 
       if (!js.getFiles().equals("")) {
         //Split the comma-separated string and append it to sparkFiles
@@ -227,7 +235,9 @@ public class JupyterConfigFilesGenerator {
 
       String extraClassPath = settings.getHopsLeaderElectionJarPath()
           + File.pathSeparator
-          + settings.getHopsUtilFilename();
+          + settings.getHopsUtilFilename()
+          + File.pathSeparator
+          + settings.getTfSparkConnectorFilename();
 
       if (!js.getJars().equals("")) {
         //Split the comma-separated string and append the names to the driver and executor classpath

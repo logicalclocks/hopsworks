@@ -90,6 +90,17 @@
                                style="margin-left: 10px"></i></span>
   </div>
 
+
+  <div>
+    <span>
+      <label>Install Jupyter:
+        <input type="checkbox" ng-init="selectEnvYmlCtrl.environmentYmlDef.installJupyter = true"
+                                     ng-model="selectEnvYmlCtrl.environmentYmlDef.installJupyter">
+      </label>
+      <i class="fa" ng-class="fa-info" uib-tooltip="Install Jupyter in your project environment" style="margin-left: 10px"></i>
+    </span>
+  </div>
+
   <button id="createEnvironment" class="btn btn-success" ng-click="selectEnvYmlCtrl.confirmSelection(pythonDepsCtrl, false)" type="submit" style="margin-top:5px; margin-bottom:10px;">
           <span>
             Create environment</span>

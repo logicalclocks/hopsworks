@@ -47,7 +47,8 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import org.elasticsearch.common.Strings;
+
+import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.message.Message;
 import io.hops.hopsworks.common.dao.message.MessageFacade;
 import io.hops.hopsworks.common.dao.user.Users;

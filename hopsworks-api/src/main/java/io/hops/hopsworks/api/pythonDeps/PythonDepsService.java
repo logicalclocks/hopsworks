@@ -71,6 +71,8 @@ import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.json.JSONObject;
 
@@ -173,6 +175,25 @@ public class PythonDepsService {
   }
 
   @GET
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @Path("/installed/{lib}")
+  @JWTRequired(acceptedTokens = {Audience.API},
+      allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiOperation(value = "Returns 200 if a library is installed in the project env")
+  public Response libInstalled(@ApiParam(value = "Name of the library", required = true)
+                                 @PathParam("lib") String library) {
+
+    Collection<PythonDep> pythonDeps = project.getPythonDepCollection();
+    for (PythonDep pd : pythonDeps) {
+      if (pd.getDependency().equals(library)) {
+        return Response.ok().build();
+      }
+    }
+
+    return Response.status(Response.Status.BAD_REQUEST).build();
+  }
+
+  @GET
   @Path("/destroyAnaconda")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API},
@@ -194,7 +215,7 @@ public class PythonDepsService {
       // 'X' indicates that the python kernel should not be enabled in Conda
       version = version + "X";
     }
-    pythonDepsFacade.createProjectInDb(project, version, PythonDepsFacade.MachineType.ALL, null);
+    pythonDepsFacade.createProjectInDb(project, version, PythonDepsFacade.MachineType.ALL, null, false);
     project.setPythonVersion(version);
     projectFacade.update(project);
 
@@ -220,8 +241,7 @@ public class PythonDepsService {
     String username = hdfsUsersController.getHdfsUserName(project, user);
 
     String version = "0.0";
-    Boolean enablePythonKernel = Boolean.parseBoolean(environmentYmlJson.getPythonKernelEnable());
-    if (!enablePythonKernel) {
+    if (!environmentYmlJson.getPythonKernelEnable()) {
       // 'X' indicates that the python kernel should not be enabled in Conda
       version = version + "X";
     }
@@ -234,8 +254,9 @@ public class PythonDepsService {
         throw new ServiceException(RESTCodes.ServiceErrorCode.INVALID_YML, Level.FINE, "wrong allYmlPath length");
       }
       String allYml = getYmlFromPath(allYmlPath, username);
-      pythonDepsFacade.createProjectInDb(project, version, PythonDepsFacade.MachineType.ALL, allYml);
-    } else if (cpuYmlPath != null || gpuYmlPath != null || !cpuYmlPath.isEmpty() || !gpuYmlPath.isEmpty()) {
+      pythonDepsFacade.createProjectInDb(project, version, PythonDepsFacade.MachineType.ALL, allYml,
+          environmentYmlJson.getInstallJupyter());
+    } else if (cpuYmlPath != null && gpuYmlPath != null && !cpuYmlPath.isEmpty() && !gpuYmlPath.isEmpty()) {
 
       if (!cpuYmlPath.substring(cpuYmlPath.length() - 4, cpuYmlPath.length()).equals(".yml") || !gpuYmlPath.substring(
           gpuYmlPath.length() - 4, gpuYmlPath.length()).equals(".yml")) {
@@ -244,10 +265,12 @@ public class PythonDepsService {
       }
 
       String cpuYml = getYmlFromPath(cpuYmlPath, username);
-      pythonDepsFacade.createProjectInDb(project, version, PythonDepsFacade.MachineType.CPU, cpuYml);
+      pythonDepsFacade.createProjectInDb(project, version, PythonDepsFacade.MachineType.CPU, cpuYml,
+          environmentYmlJson.getInstallJupyter());
 
       String gpuYml = getYmlFromPath(gpuYmlPath, username);
-      pythonDepsFacade.createProjectInDb(project, version, PythonDepsFacade.MachineType.GPU, gpuYml);
+      pythonDepsFacade.createProjectInDb(project, version, PythonDepsFacade.MachineType.GPU, gpuYml,
+          environmentYmlJson.getInstallJupyter());
 
     } else {
       throw new ServiceException(RESTCodes.ServiceErrorCode.INVALID_YML, Level.FINE);
@@ -347,9 +370,8 @@ public class PythonDepsService {
 
   private String checkCondaEnvExists(Project project) throws ServiceException {
     String msg = "";
-    if (project.getCondaEnv() == false) {
+    if (!project.getCondaEnv()) {
       pythonDepsFacade.copyOnWriteCondaEnv(project);
-      pythonDepsFacade.recreateAllPythonKernels(project);
       msg = "First, we have to create a new conda environment on all hosts. This will take a few mins.";
     }
     return msg;
@@ -643,10 +665,18 @@ public class PythonDepsService {
   }
 
   private LibVersions findPipLibPyPi(String libName) {
-    Response resp = ClientBuilder.newClient()
-        .target(settings.getPyPiRESTEndpoint().replaceFirst("\\{package}", libName))
-        .request()
-        .header("Content-Type", "application/json").get();
+
+    Response resp = null;
+    try {
+      resp = ClientBuilder.newClient()
+              .target(settings.getPyPiRESTEndpoint().replaceFirst("\\{package}", libName))
+              .request()
+              .header("Content-Type", "application/json").get();
+    } catch(Exception e) {
+      logger.log(Level.FINE, "PyPi REST endpoint connection failed" +
+              settings.getPyPiRESTEndpoint().replaceFirst("\\{package}", libName), e);
+      return null;
+    }
 
     if (resp.getStatusInfo().getStatusCode() != Response.Status.OK.getStatusCode()) {
       return null;
@@ -765,8 +795,16 @@ public class PythonDepsService {
           dis.readFully(ymlFileInBytes, 0, (int) fileSize);
           String ymlFileContents = new String(ymlFileInBytes);
 
+          /* Exclude libraries from being installed.
+            mmlspark because is not distributed on PyPi
+            Jupyter, Sparkmagic and hdfscontents because if users want to use Jupyter they should
+            check the "install jupyter" option
+          */
           ymlFileContents = Arrays.stream(ymlFileContents.split(System.lineSeparator()))
               .filter(line -> !line.contains("mmlspark=="))
+              .filter(line -> !line.contains("jupyter"))
+              .filter(line -> !line.contains("sparkmagic"))
+              .filter(line -> !line.contains("hdfscontents"))
               .collect(Collectors.joining(System.lineSeparator()));
 
           return ymlFileContents;

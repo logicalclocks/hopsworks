@@ -57,7 +57,7 @@
             <label>Starting from {{jobDetailCtrl.availableschedule.start}}</label>
             </div>
             <div class="col-md-6">
-              <button ng-click="jobDetailCtrl.unscheduleJob(jobDetailCtrl.job.id);"
+              <button ng-click="jobDetailCtrl.unscheduleJob(jobDetailCtrl.job.name);"
                       class="btn btn-danger btn-sm"
                       style="min-width: 64px; float:right; margin-left:10px;">
                 <span class="glyphicon glyphicon-stop" aria-hidden="true"></span>
@@ -357,59 +357,6 @@
           <div class="col-md-8">{{jobDetailCtrl.viewTopics(jobDetailCtrl.job.runConfig.kafka.consumerGroups)}}</div>
         </div>
        </div>
-    </div>
-    <div uib-accordion-group  class="panel-default" heading="Execution history">
-      <span ng-show="!jobDetailCtrl.showExecutions">
-        There are no registered executions for this job.
-      </span>
-      <table ng-show="jobDetailCtrl.showExecutions" class="table chrome-table">
-        <thead>
-          <tr>
-            <th>
-              Submission time
-            </th>
-            <th>
-              Current state
-            </th>
-            <th>
-              Execution duration (ms)
-            </th>
-            <th>
-              Stdout
-            </th>
-            <th>
-              Stderr
-            </th>
-            <th>
-              Output files
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr ng-repeat="exec in jobDetailCtrl.job.executions">
-            <td>
-              {{exec.submissionTime| date:'medium'}}
-            </td>
-            <td>
-              {{exec.state}}
-            </td>
-            <td>
-              {{exec.executionDuration}}
-            </td>
-            <td>
-              {{exec.stdoutPath}}
-            </td>
-            <td>
-              {{exec.stderrPath}}
-            </td>
-            <td>
-              <span ng-repeat="output in exec.jobOutputFileCollection">
-                {{output.jobOutputFilePK.name}}
-              </span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
     </div>
   </div>
 

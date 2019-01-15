@@ -78,42 +78,26 @@
               <textarea class="form-control" style="resize:none;" ng-model="projectCreatorCtrl.projectDesc"
                         rows="3" tabindex="2"></textarea>
             </div>
-
-
             <label style="margin-top:20px;" for="projectname" class="control-label">Members</label>
-
-            <div class="controls">
-
-              <ui-select ng-model="projectCreatorCtrl.card.selected" theme="select2"
-                         style="min-width: 300px;" tabindex="3">
-
-                <ui-select-match placeholder="Add members...">{{$select.selected.email}}</ui-select-match>
-                <ui-select-choices
-                  repeat="card in projectCreatorCtrl.cards | cardFilter: {email: $select.search, firstname: $select.search, lastname: $select.search}">
-
-                  <div ng-bind-html="projectCreatorCtrl.card.email | highlight: $select.search"></div>
-                  <small>
-                    <i class="fa fa-user-plus"></i>
-                    <span style="font-size: 14px;;"
-                          ng-bind-html="''+card.email | highlight: $select.search"></span>
-
-                    <br/>
-                    <span ng-bind-html="''+card.firstname | highlight: $select.search"></span>
-                    <span ng-bind-html="''+card.lastname | highlight: $select.search"></span>
-                  </small>
-                </ui-select-choices>
-              </ui-select>
-
-              <div style="margin-top:10px; min-height:50px;" class="thumbnail ui-droppable">
-
-                <button class="animate-repeat btn btn-info" style="margin: 3px;"
-                        ng-repeat="member in projectCreatorCtrl.projectMembers"
-                        ng-click="projectCreatorCtrl.removeMember(member)">
-                  <span style="margin-right:10px;"> {{member}}</span>
-                  <span class="close" style="float: none;">× </span>
-                </button>
-              </div>
-            </div>
+            <ui-select multiple tagging="tagTransform" ng-model="projectCreatorCtrl.selectedUsers" theme="bootstrap" title="Choose a user">
+              <ui-select-match placeholder="Select user...">{{$item.firstname}} {{$item.lastname}}</ui-select-match>
+              <ui-select-choices 
+                refresh="projectCreatorCtrl.fetchAsync($select.search)"
+                refresh-delay="600"
+                repeat="user in projectCreatorCtrl.users">
+                <div>
+                  <span ng-bind-html="user.firstname | highlight: $select.search"></span>
+                  <span ng-bind-html="user.lastname | highlight: $select.search"></span>
+                </div>
+                <small><span ng-bind-html="user.email | highlight: $select.search"></span></small>
+              </ui-select-choices>
+              <ui-select-no-choice>
+                <div style="padding: 3px 10px;">
+                  <span ng-if="projectCreatorCtrl.loadingUsers" class="loading-dots-sm">Searching</span>
+                  <span ng-if="!projectCreatorCtrl.loadingUsers">{{projectCreatorCtrl.selectNoChoice}}</span>
+                </div>
+              </ui-select-no-choice>
+            </ui-select>
           </div>
         </fieldset>
       </div>

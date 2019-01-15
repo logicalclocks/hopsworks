@@ -42,7 +42,9 @@ public abstract class ThrowableMapper implements ExceptionMapper<Throwable> {
   public Response toResponse(Throwable ex) {
     
     //Order is important, check children first
-    if (ex instanceof IllegalArgumentException) {
+    if (ex instanceof InvalidQueryException) {
+      return handleInvalidQueryException((InvalidQueryException) ex);
+    } else if (ex instanceof IllegalArgumentException) {
       return handleIllegalArgumentException((IllegalArgumentException) ex);
     } else if (ex instanceof IllegalStateException) {
       return handleIllegalStateException((IllegalStateException) ex);
@@ -90,6 +92,11 @@ public abstract class ThrowableMapper implements ExceptionMapper<Throwable> {
     } else {
       return handleUnknownException(ex);
     }
+  }
+  
+  public Response handleInvalidQueryException(InvalidQueryException ex) {
+    return handleRESTException(new ResourceException(RESTCodes.ResourceErrorCode.INVALID_QUERY_PARAMETER, Level.FINE,
+        ex.getMessage(), null, ex));
   }
   
   public Response handleIllegalArgumentException(IllegalArgumentException ex) {

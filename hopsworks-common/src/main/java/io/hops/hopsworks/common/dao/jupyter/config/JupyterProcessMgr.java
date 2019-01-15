@@ -44,16 +44,12 @@ import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
 import io.hops.hopsworks.common.dao.jupyter.JupyterSettings;
-import io.hops.hopsworks.common.dao.jupyter.JupyterSettingsFacade;
 import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.exception.ServiceException;
-import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.util.OSProcessExecutor;
 import io.hops.hopsworks.common.util.ProcessDescriptor;
 import io.hops.hopsworks.common.util.ProcessResult;
-import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
 
 import javax.annotation.PostConstruct;
@@ -105,17 +101,11 @@ public class JupyterProcessMgr {
   @EJB
   private HdfsLeDescriptorsFacade hdfsLeFacade;
   @EJB
-  private HdfsUsersController hdfsUsersController;
-  @EJB
   private JupyterFacade jupyterFacade;
-  @EJB
-  private JupyterSettingsFacade jupyterSettingsFacade;
   @EJB
   private JupyterConfigFilesGenerator jupyterConfigFilesGenerator;
   @EJB
   private OSProcessExecutor osProcessExecutor;
-  @EJB
-  private ProjectUtils projectUtils;
 
 
   @PostConstruct
@@ -124,7 +114,6 @@ public class JupyterProcessMgr {
 
   @PreDestroy
   public void preDestroy() {
-
   }
 
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
@@ -153,13 +142,6 @@ public class JupyterProcessMgr {
 
       String secretDir = settings.getStagingDir() + Settings.PRIVATE_DIRS + js.getSecret();
 
-      if (settings.isPythonKernelEnabled()) {
-        int res = createPythonKernelForProjectUser(project, jp.getNotebookPath(), hdfsUser);
-        if (res == 0) {
-          LOGGER.log(Level.SEVERE, "Could not create Python kernel for Jupyter. Exit code: {0}", res);
-        }
-      }
-
       String logfile = jp.getLogDirPath() + "/" + hdfsUser + "-" + port + ".log";
       
       ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
@@ -174,6 +156,7 @@ public class JupyterProcessMgr {
           .addCommand(hdfsUser + "-" + port + ".log")
           .addCommand(secretDir)
           .addCommand(jp.getCertificatesDir())
+          .addCommand(hdfsUser)
           .redirectErrorStream(true)
           .setCurrentWorkingDirectory(new File(jp.getNotebookPath()))
           .setWaitTimeout(20L, TimeUnit.SECONDS)
@@ -351,31 +334,6 @@ public class JupyterProcessMgr {
   public boolean pingServerJupyterUser(Long pid) {
     int exitValue = executeJupyterCommand("ping", pid.toString());
     return exitValue == 0;
-  }
-
-  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-  public int createPythonKernelForProjectUser(Project project, Users user) {
-    String hdfsUser = hdfsUsersController.getHdfsUserName(project, user);
-    JupyterSettings js = jupyterSettingsFacade.findByProjectUser(project.getId(), user.getEmail());
-    String privateDir = this.settings.getJupyterDir()
-        + Settings.DIR_ROOT + File.separator + project.getName()
-        + File.separator + hdfsUser + File.separator + js.getSecret();
-    return createPythonKernelForProjectUser(project, privateDir, hdfsUser);
-  }
-
-  private int createPythonKernelForProjectUser(Project project, String privateDir, String hdfsUser) {
-    String condaEnv = projectUtils.getCurrentCondaEnvironment(project);
-    return executeJupyterCommand("kernel-add", privateDir, hdfsUser, condaEnv);
-  }
-
-  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-  public int removePythonKernelForProjectUser(String hdfsUser) {
-    return executeJupyterCommand("kernel-remove", hdfsUser);
-  }
-
-  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-  public int removePythonKernelsForProject(String projectName) {
-    return executeJupyterCommand("kernel-remove", projectName + "*");
   }
 
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)

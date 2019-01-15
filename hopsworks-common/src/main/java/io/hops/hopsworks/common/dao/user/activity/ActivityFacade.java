@@ -36,28 +36,30 @@
  * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
 package io.hops.hopsworks.common.dao.user.activity;
 
-import java.util.Date;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import io.hops.hopsworks.common.dao.AbstractFacade;
+import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.exception.InvalidQueryException;
+
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
-import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.AbstractFacade;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Stateless
 public class ActivityFacade extends AbstractFacade<Activity> {
 
-  private static final Logger logger = Logger.getLogger(ActivityFacade.class.
-          getName());
+  private static final Logger LOGGER = Logger.getLogger(ActivityFacade.class.getName());
 
   // String constants
   public static final String NEW_PROJECT = " created a new project named ";
@@ -65,28 +67,54 @@ public class ActivityFacade extends AbstractFacade<Activity> {
   public static final String SHARED_DATA = " shared dataset ";
   public static final String UNSHARED_DATA = " unshared dataset ";
   public static final String NEW_MEMBER = " added a member ";
-  public static final String NEW_SAMPLE = " added a new sample ";
   public static final String CHANGE_ROLE = " changed the role of ";
   public static final String REMOVED_MEMBER = " removed team member ";
-  public static final String REMOVED_SAMPLE = " removed a sample ";
-  public static final String REMOVED_FILE = " removed a file ";
-  public static final String REMOVED_PROJECT = " removed project ";
   public static final String RAN_JOB = " ran a job named ";
-  public static final String ADDED_SERVICES = " added new services ";
   public static final String ADDED_SERVICE = " added new service ";
-  public static final String PROJECT_NAME_CHANGED = " changed project name ";
-  public static final String PROJECT_DESC_CHANGED
-          = " changed project description ";
+  public static final String PROJECT_DESC_CHANGED = " changed project description ";
   public static final String PROJECT_RETENTION_CHANGED = " changed project retention ";
   public static final String CREATED_JOB = " created a new job named ";
   public static final String DELETED_JOB = " deleted a job named ";
   public static final String SCHEDULED_JOB = " scheduled a job named ";
   public static final String EXECUTED_JOB = " ran a job used as input file ";
   public static final String TRASH_NOTEBOOK = " moved to Zeppelin Trash ";
+  public static final String CREATED_FEATURESTORE = " created a new feature store named ";
+  public static final String CREATED_FEATUREGROUP = " created a new feature group named ";
+  public static final String CREATED_TRAINING_DATASET = " created a new training dataset named ";
+  public static final String DELETED_FEATUREGROUP = " deleted a feature group named ";
+  public static final String DELETED_TRAINING_DATASET = " deleted a training dataset named ";
+  public static final String CREATED_NEW_VERSION_OF_FEATUREGROUP = " created a new version of a feature group named ";
+  public static final String EDITED_FEATUREGROUP = " edited feature group named ";
+  public static final String EDITED_TRAINING_DATASET = " edited training dataset named ";
   // Flag constants
   public static final String FLAG_PROJECT = "PROJECT";
   public static final String FLAG_DATASET = "DATASET";
 
+  // Flag constants
+  public enum ActivityFlag {
+    MEMBER("MEMBER"),
+    PROJECT("PROJECT"),
+    SERVICE("SERVICE"),
+    DATASET("DATASET"),
+    JOB("JOB");
+
+    private final String value;
+
+    private ActivityFlag(String value) {
+      this.value = value;
+    }
+
+    public String getValue() {
+      return value;
+    }
+
+    @Override
+    public String toString() {
+      return value;
+    }
+
+  }
+  
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
@@ -108,60 +136,61 @@ public class ActivityFacade extends AbstractFacade<Activity> {
   }
 
   public long getTotalCount() {
-    TypedQuery<Long> q = em.
-            createNamedQuery("Activity.countAll", Long.class);
+    TypedQuery<Long> q = em.createNamedQuery("Activity.countAll", Long.class);
     return q.getSingleResult();
   }
 
   public long getProjectCount(Project project) {
-    TypedQuery<Long> q = em.createNamedQuery("Activity.countPerProject",
-            Long.class);
+    TypedQuery<Long> q = em.createNamedQuery("Activity.countPerProject", Long.class);
     q.setParameter("project", project);
     return q.getSingleResult();
   }
 
-  public List<Activity> activityOnID(int id) {
-    Query query = em.createNamedQuery("Activity.findById",
-            Activity.class).setParameter("id", id);
-    return query.getResultList();
+  public Activity activityByID(int id) {
+    TypedQuery<Activity> query = em.createNamedQuery("Activity.findById", Activity.class).setParameter("id", id);
+    Activity activity = null;
+    try {
+      activity = query.getSingleResult();
+    } catch (NoResultException e) {
+      LOGGER.log(Level.FINE, e.getMessage());
+    }
+    return activity;
   }
 
   public Activity lastActivityOnProject(Project project) {
-    TypedQuery<Activity> query = em.createNamedQuery("Activity.findByProject",
-            Activity.class);
+    TypedQuery<Activity> query = em.createNamedQuery("Activity.findByProject", Activity.class);
     query.setParameter("project", project);
     query.setMaxResults(1);
     try {
       return query.getSingleResult();
     } catch (NoResultException e) {
-      logger.log(Level.SEVERE, "No activity returned for project " + project
-              + ", while its creation should always be there!", e);
+      LOGGER.log(Level.SEVERE, "No activity returned for project " + project
+          + ", while its creation should always be there!", e);
       return null;
     }
   }
 
-  public void persistActivity(String activity, Project project, Users user) {
+  public void persistActivity(String activity, Project project, Users user, ActivityFlag flag) {
     Activity a = new Activity();
     a.setActivity(activity);
     a.setProject(project);
-    a.setFlag(FLAG_PROJECT);
+    a.setFlag(flag.getValue());
     a.setUser(user);
     a.setTimestamp(new Date());
     em.persist(a);
   }
 
-  public void persistActivity(String activity, Project project, String email) {
-    TypedQuery<Users> userQuery = em.createNamedQuery("Users.findByEmail",
-            Users.class);
+  public void persistActivity(String activity, Project project, String email, ActivityFlag flag) {
+    TypedQuery<Users> userQuery = em.createNamedQuery("Users.findByEmail", Users.class);
     userQuery.setParameter("email", email);
     Users user;
     try {
       user = userQuery.getSingleResult();
     } catch (NoResultException e) {
       throw new IllegalArgumentException("No user found with email " + email
-              + " when trying to persist activity for that user.", e);
+          + " when trying to persist activity for that user.", e);
     }
-    persistActivity(activity, project, user);
+    persistActivity(activity, project, user, flag);
   }
 
   /**
@@ -170,8 +199,7 @@ public class ActivityFacade extends AbstractFacade<Activity> {
    * @return
    */
   public List<Activity> getAllActivities() {
-    TypedQuery<Activity> q = em.createNamedQuery("Activity.findAll",
-            Activity.class);
+    TypedQuery<Activity> q = em.createNamedQuery("Activity.findAll", Activity.class);
     return q.getResultList();
   }
 
@@ -181,11 +209,23 @@ public class ActivityFacade extends AbstractFacade<Activity> {
    * @param project
    * @return
    */
-  public List<Activity> getAllActivityOnProject(Project project) {
-    TypedQuery<Activity> q = em.createNamedQuery(
-            "Activity.findByProject", Activity.class);
+  public List<Activity> getAllActivityByProject(Project project) {
+    TypedQuery<Activity> q = em.createNamedQuery("Activity.findByProject", Activity.class);
     q.setParameter("project", project);
     return q.getResultList();
+  }
+
+  public Activity getActivityByIdAndProject(Project project, Integer id) {
+    TypedQuery<Activity> q = em.createNamedQuery("Activity.findByIdAndProject", Activity.class);
+    q.setParameter("id", id);
+    q.setParameter("project", project);
+    Activity activity = null;
+    try {
+      activity = q.getSingleResult();
+    } catch (NoResultException e) {
+      LOGGER.log(Level.FINE, e.getMessage());
+    }
+    return activity;
   }
 
   /**
@@ -195,73 +235,206 @@ public class ActivityFacade extends AbstractFacade<Activity> {
    * @return
    */
   public List<Activity> getAllActivityByUser(Users user) {
-    TypedQuery<Activity> q = em.createNamedQuery(
-            "Activity.findByUser", Activity.class);
+    TypedQuery<Activity> q = em.createNamedQuery("Activity.findByUser", Activity.class);
     q.setParameter("user", user);
     return q.getResultList();
+  }
+
+  public Activity getActivityByIdAndUser(Users user, Integer id) {
+    TypedQuery<Activity> q = em.createNamedQuery("Activity.findByIdAndUser", Activity.class);
+    q.setParameter("id", id);
+    q.setParameter("user", user);
+    Activity activity = null;
+    try {
+      activity = q.getSingleResult();
+    } catch (NoResultException e) {
+      LOGGER.log(Level.FINE, e.getMessage());
+    }
+    return activity;
   }
 
   /**
    * Get all the activities performed on by user <i>user</i>.but paginated.Items
    * from
-   * <i>first</i> till
-   * <i>first+pageSize</i> are returned.
+   * <i>offset</i> till
+   * <i>offset+limit</i> are returned.
    * <p/>
-   * @param first
-   * @param pageSize
+   * @param offset
+   * @param limit
    * @param user
    * @return
    */
-  public List<Activity> getPaginatedActivityByUser(int first,
-          int pageSize, Users user) {
-    TypedQuery<Activity> q = em.createNamedQuery(
-            "Activity.findByUser", Activity.class);
+  public List<Activity> getPaginatedActivityByUser(Integer offset, Integer limit, Users user) {
+    TypedQuery<Activity> q = em.createNamedQuery("Activity.findByUser", Activity.class);
     q.setParameter("user", user);
-    q.setFirstResult(first);
-    q.setMaxResults(pageSize);
+    setOffsetAndLim(offset, limit, q);
     return q.getResultList();
   }
 
   /**
-   * Returns all activity, but paginated. Items from <i>first</i> till
-   * <i>first+pageSize</i> are returned.
+   * Returns all activity, but paginated. Items from <i>offset</i> till
+   * <i>offset+limit</i> are returned.
    * <p/>
-   * @param first
-   * @param pageSize
+   * @param offset
+   * @param limit
    * @return
    */
-  public List<Activity> getPaginatedActivity(int first, int pageSize) {
-    TypedQuery<Activity> q = em.createNamedQuery("Activity.findAll",
-            Activity.class);
-    q.setFirstResult(first);
-    q.setMaxResults(pageSize);
+  public List<Activity> getPaginatedActivity(Integer offset, Integer limit) {
+    TypedQuery<Activity> q = em.createNamedQuery("Activity.findAll", Activity.class);
+    setOffsetAndLim(offset, limit, q);
     return q.getResultList();
   }
 
   /**
    * Returns all activities on project <i>projectName</i>, but paginated. Items
    * from
-   * <i>first</i> till
-   * <i>first+pageSize</i> are returned.
+   * <i>offset</i> till
+   * <i>offset+limit</i> are returned.
    * <p/>
-   * @param first
-   * @param pageSize
+   * @param offset
+   * @param limit
    * @param project
    * @return
    */
-  public List<Activity> getPaginatedActivityForProject(int first,
-          int pageSize, Project project) {
-    TypedQuery<Activity> q = em.createNamedQuery(
-            "Activity.findByProject", Activity.class);
+  public List<Activity> getPaginatedActivityForProject(Integer offset, Integer limit, Project project) {
+    TypedQuery<Activity> q = em.createNamedQuery("Activity.findByProject", Activity.class);
     q.setParameter("project", project);
-    q.setFirstResult(first);
-    q.setMaxResults(pageSize);
+    setOffsetAndLim(offset, limit, q);
     return q.getResultList();
   }
 
   public List<Activity> findAllTeamActivity(String flag) {
-    Query query = em.createNamedQuery("Activity.findByFlag",
-            Activity.class).setParameter("flag", flag);
+    Query query = em.createNamedQuery("Activity.findByFlag", Activity.class).setParameter("flag", flag);
     return query.getResultList();
+  }
+
+  public CollectionInfo findAllByProject(Integer offset, Integer limit, Set<? extends AbstractFacade.FilterBy> filter,
+    Set<? extends AbstractFacade.SortBy> sort, Project project) {
+    String queryStr = buildQuery("SELECT u FROM Activity u ", filter, sort, "u.project = :project ");
+    String queryCountStr = buildQuery("SELECT COUNT(u.id) FROM Activity u ", filter, sort, "u.project = :project ");
+    Query query = em.createQuery(queryStr, Activity.class).setParameter("project", project);
+    Query queryCount = em.createQuery(queryCountStr, Activity.class).setParameter("project", project);
+    return findAll(offset, limit, filter, query, queryCount);
+  }
+  
+  public CollectionInfo findAllByUser(Integer offset, Integer limit,
+    Set<? extends AbstractFacade.FilterBy> filter,
+    Set<? extends AbstractFacade.SortBy> sort, Users user) {
+    String queryStr = buildQuery("SELECT u FROM Activity u ", filter, sort, "u.user = :user ");
+    String queryCountStr = buildQuery("SELECT COUNT(u.id) FROM Activity u ", filter, sort, "u.user = :user ");
+    Query query = em.createQuery(queryStr, Activity.class).setParameter("user", user);
+    Query queryCount = em.createQuery(queryCountStr, Activity.class).setParameter("user", user);
+    return findAll(offset, limit, filter, query, queryCount);
+  }
+  
+  private CollectionInfo findAll(Integer offset, Integer limit,
+    Set<? extends AbstractFacade.FilterBy> filter, Query query, Query queryCount) {
+    setFilter(filter, query);
+    setFilter(filter, queryCount);
+    setOffsetAndLim(offset, limit, query);
+    return new CollectionInfo((Long) queryCount.getSingleResult(), query.getResultList());
+  }
+
+  private void setFilter(Set<? extends AbstractFacade.FilterBy> filter, Query q) {
+    if (filter == null || filter.isEmpty()) {
+      return;
+    }
+    for (FilterBy aFilter : filter) {
+      setFilterQuery(aFilter, q);
+    }
+  }
+
+  private void setFilterQuery(AbstractFacade.FilterBy filterBy, Query q) {
+    String[] filterStrs = filterBy.getParam().split(",");
+    List<String> activityFlags = new ArrayList<>();
+    ActivityFacade.ActivityFlag flag;
+    String field = filterBy.getField();
+    for (String filterStr : filterStrs) {
+      try {
+        flag = ActivityFacade.ActivityFlag.valueOf(filterStr);
+      } catch (IllegalArgumentException iae) {
+        throw new InvalidQueryException("Filter value for " + field + " needs to set valid " + field + ", but found: "
+            + filterStr, iae);
+      }
+      activityFlags.add(flag.getValue());
+    }
+    q.setParameter(filterBy.getField(), activityFlags);
+  }
+
+  public enum Sorts {
+    ID("ID", "u.id ", "ASC"),
+    FLAG("FLAG", "u.flag ", "ASC"),
+    DATE_CREATED("DATE_CREATED", "u.timestamp ", "ASC");
+
+    private final String value;
+    private final String sql;
+    private final String defaultParam;
+
+    private Sorts(String value, String sql, String defaultParam) {
+      this.value = value;
+      this.sql = sql;
+      this.defaultParam = defaultParam;
+    }
+
+    public String getValue() {
+      return value;
+    }
+
+    public String getSql() {
+      return sql;
+    }
+
+    public String getDefaultParam() {
+      return defaultParam;
+    }
+    
+    public String getJoin(){
+      return null;
+    }
+
+    @Override
+    public String toString() {
+      return value;
+    }
+
+  }
+
+  public enum Filters {
+    FLAG("FLAG", "u.flag IN :flag ", "flag", "PROJECT"),
+    FLAG_NEQ("FLAG_NEQ", "u.flag NOT IN :flag_neq ", "flag_neq", "PROJECT");
+
+    private final String value;
+    private final String sql;
+    private final String field;
+    private final String defaultParam;
+
+    private Filters(String value, String sql, String field, String defaultParam) {
+      this.value = value;
+      this.sql = sql;
+      this.field = field;
+      this.defaultParam = defaultParam;
+    }
+
+    public String getDefaultParam() {
+      return defaultParam;
+    }
+
+    public String getValue() {
+      return value;
+    }
+
+    public String getSql() {
+      return sql;
+    }
+
+    public String getField() {
+      return field;
+    }
+
+    @Override
+    public String toString() {
+      return value;
+    }
+
   }
 }

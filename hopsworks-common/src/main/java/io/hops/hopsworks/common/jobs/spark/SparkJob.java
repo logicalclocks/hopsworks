@@ -38,6 +38,7 @@
  */
 package io.hops.hopsworks.common.jobs.spark;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
@@ -52,7 +53,6 @@ import io.hops.hopsworks.common.jobs.yarn.YarnJob;
 import io.hops.hopsworks.common.jobs.yarn.YarnJobsMonitor;
 import io.hops.hopsworks.common.util.Settings;
 import org.apache.hadoop.yarn.client.api.YarnClient;
-import org.elasticsearch.common.Strings;
 
 /**
  * Orchestrates the execution of a Spark job: run job, update history object.

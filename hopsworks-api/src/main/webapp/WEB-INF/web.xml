@@ -219,8 +219,8 @@
   </servlet-mapping>
   <!-- tensorboard proxy servlet -->
   <servlet>
-    <servlet-name>TensorboardProxyServlet</servlet-name>
-    <servlet-class>io.hops.hopsworks.api.tensorflow.TensorboardProxyServlet</servlet-class>
+    <servlet-name>TensorBoardProxyServlet</servlet-name>
+    <servlet-class>io.hops.hopsworks.api.tensorflow.TensorBoardProxyServlet</servlet-class>
     <init-param>
       <param-name>targetUri</param-name>
       <param-value>http://localhost:80/</param-value>
@@ -231,11 +231,11 @@
     </init-param>
   </servlet>
   <servlet-mapping>
-    <servlet-name>TensorboardProxyServlet</servlet-name>
+    <servlet-name>TensorBoardProxyServlet</servlet-name>
     <url-pattern>/tensorboard/*</url-pattern>
   </servlet-mapping>
   <servlet-mapping>
-    <servlet-name>TensorboardProxyServlet</servlet-name>
+    <servlet-name>TensorBoardProxyServlet</servlet-name>
     <url-pattern>/tensorboard</url-pattern>
   </servlet-mapping>
   <servlet>
@@ -253,6 +253,11 @@
       <param-name>swagger.api.basepath</param-name>
       <param-value>/hopsworks-api/api</param-value>
     </init-param>
+    <load-on-startup>2</load-on-startup>
+  </servlet>
+  <servlet>
+    <servlet-name>Bootstrap</servlet-name>
+    <servlet-class>io.hops.hopsworks.rest.application.config.Bootstrap</servlet-class>
     <load-on-startup>2</load-on-startup>
   </servlet>
   <security-role>

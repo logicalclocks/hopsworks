@@ -121,8 +121,8 @@ public class YarnJobsMonitor {
       LOGGER.log(Level.SEVERE, null, e);
     }
     if (init) {
-      List<Execution> execs = executionFacade.findAllNotFinished();
-      if (execs != null) {
+      List<Execution> execs = executionFacade.findNotFinished();
+      if (execs != null && !execs.isEmpty()) {
         for (Execution exec : execs) {
           if (exec.getAppId() != null) {
             executions.put(exec.getAppId(), exec);

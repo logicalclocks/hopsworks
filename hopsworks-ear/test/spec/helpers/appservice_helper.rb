@@ -47,7 +47,7 @@ module AppserviceHelper
   end
 
   def get_current_username
-    user_info = get "#{ENV['HOPSWORKS_API']}" + "/user/profile"
+    user_info = get "#{ENV['HOPSWORKS_API']}" + "/users/profile"
     user = User.find_by(email: JSON.parse(user_info)["email"])
     expect_status(200)
     user.username

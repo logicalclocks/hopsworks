@@ -15,6 +15,7 @@
  */
 package io.hops.hopsworks;
 
+import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.exception.RESTCodes.CAErrorCode;
 import io.hops.hopsworks.common.exception.RESTCodes.DatasetErrorCode;
 import io.hops.hopsworks.common.exception.RESTCodes.DelaErrorCode;
@@ -63,7 +64,9 @@ public class TestRESTCodes {
     values.addAll(Arrays.asList(MetadataErrorCode.values()));
     values.addAll(Arrays.asList(UserErrorCode.values()));
     values.addAll(Arrays.asList(ZeppelinErrorCode.values()));
-  
+    values.addAll(Arrays.asList(RESTCodes.ActivitiesErrorCode.values()));
+    values.addAll(Arrays.asList(RESTCodes.ResourceErrorCode.values()));
+    values.addAll(Arrays.asList(RESTCodes.FeaturestoreErrorCode.values()));
   }
   
   /**

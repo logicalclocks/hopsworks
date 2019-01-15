@@ -53,7 +53,10 @@ import io.hops.hopsworks.common.util.Settings;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.NONE)
 public class SparkJobConfiguration extends YarnJobConfiguration {
-
+  
+  public SparkJobConfiguration() {
+  }
+  
   @XmlElement
   private String appPath;
   @XmlElement
