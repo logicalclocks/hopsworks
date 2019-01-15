@@ -527,8 +527,8 @@ public class ApplicationService {
         featurestoreController.getFeaturestoreForProjectWithName(project, featurestoreJsonDTO.getFeaturestoreName());
     Featurestore featurestore = featurestoreController.getFeaturestoreWithId(featurestoreDTO.getFeaturestoreId());
     Jobs job = null;
-    if (featurestoreJsonDTO.getJobId() != null)
-      job = jobFacade.findByProjectAndId(project, featurestoreJsonDTO.getJobId());
+    if(featurestoreJsonDTO.getJobName() != null && !featurestoreJsonDTO.getJobName().isEmpty())
+      job = jobFacade.findByProjectAndName(project, featurestoreJsonDTO.getJobName());
     String featureStr = featurestoreUtil.makeCreateTableColumnsStr(featurestoreJsonDTO.getFeatures());
     try {
       featuregroupController.dropFeaturegroup(featurestoreJsonDTO.getName(),
@@ -587,8 +587,8 @@ public class ApplicationService {
             project, featurestore, featurestoreJsonDTO.getName(),
             featurestoreJsonDTO.getVersion());
     Jobs job = null;
-    if (featurestoreJsonDTO.getJobId() != null)
-      job = jobFacade.findByProjectAndId(project, featurestoreJsonDTO.getJobId());
+    if(featurestoreJsonDTO.getJobName() != null && !featurestoreJsonDTO.getJobName().isEmpty())
+      job = jobFacade.findByProjectAndName(project, featurestoreJsonDTO.getJobName());
     FeaturegroupDTO updatedFeaturegroupDTO = featuregroupController.updateFeaturegroupMetadata(
         featurestore, featuregroupDTO.getId(), job, featurestoreJsonDTO.getDependencies(),
         featurestoreJsonDTO.getFeatureCorrelationMatrix(), featurestoreJsonDTO.getDescriptiveStatistics(),
@@ -635,8 +635,8 @@ public class ApplicationService {
     Featurestore featurestore = featurestoreController.getFeaturestoreWithId(featurestoreDTO.getFeaturestoreId());
 
     Jobs job = null;
-    if (featurestoreJsonDTO.getJobId() != null)
-      job = jobFacade.findByProjectAndId(project, featurestoreJsonDTO.getJobId());
+    if(featurestoreJsonDTO.getJobName() != null && !featurestoreJsonDTO.getJobName().isEmpty())
+      job = jobFacade.findByProjectAndName(project, featurestoreJsonDTO.getJobName());
     Dataset trainingDatasetsFolder = featurestoreUtil.getTrainingDatasetFolder(featurestore.getProject());
     String trainingDatasetDirectoryName = featurestoreUtil.getTrainingDatasetPath(
         inodeFacade.getPath(trainingDatasetsFolder.getInode()),
@@ -708,8 +708,8 @@ public class ApplicationService {
         project, featurestore, featurestoreJsonDTO.getName(), featurestoreJsonDTO.getVersion()
     );
     Jobs job = null;
-    if (featurestoreJsonDTO.getJobId() != null)
-      job = jobFacade.findByProjectAndId(project, featurestoreJsonDTO.getJobId());
+    if(featurestoreJsonDTO.getJobName() != null && !featurestoreJsonDTO.getJobName().isEmpty())
+      job = jobFacade.findByProjectAndName(project, featurestoreJsonDTO.getJobName());
     TrainingDatasetDTO updatedTrainingDataset = trainingDatasetController.updateTrainingDataset(
         featurestore, trainingDatasetDTO.getId(), job, featurestoreJsonDTO.getDependencies(),
         featurestoreJsonDTO.getDataFormat(), featurestoreJsonDTO.getDescription(),
