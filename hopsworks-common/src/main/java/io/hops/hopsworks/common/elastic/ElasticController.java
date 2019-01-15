@@ -41,6 +41,7 @@ package io.hops.hopsworks.common.elastic;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
 import io.hops.hopsworks.common.dao.project.Project;
@@ -70,7 +71,6 @@ import org.elasticsearch.client.AdminClient;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.IndicesAdminClient;
 import org.elasticsearch.cluster.metadata.IndexMetaData;
-import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.collect.ImmutableOpenMap;
 import org.elasticsearch.common.transport.TransportAddress;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -301,7 +301,7 @@ public class ElasticController {
     }
 
     Dataset dataset = datasetFacade.findByNameAndProjectId(project, dsName);
-    final int datasetId = dataset.getInodeId();
+    final long datasetId = dataset.getInodeId();
 
     //hit the indices - execute the queries
     SearchRequestBuilder srb = client.prepareSearch(Settings.META_INDEX);
@@ -478,7 +478,7 @@ public class ElasticController {
         List<Dataset> dss = datasetFacade.findByInode(ds.getInode());
         for (Dataset sh : dss) {
           if (!sh.isShared()) {
-            int datasetId = ds.getInodeId();
+            long datasetId = ds.getInodeId();
             executeProjectSearchQuery(client, searchSpecificDataset(datasetId,
                 searchTerm), elasticHits);
 
@@ -511,13 +511,12 @@ public class ElasticController {
     }
   }
 
-  private QueryBuilder searchSpecificDataset(int datasetId, String searchTerm) {
+  private QueryBuilder searchSpecificDataset(Long datasetId, String searchTerm) {
     QueryBuilder dataset = matchQuery(Settings.META_ID, datasetId);
     QueryBuilder nameDescQuery = getNameDescriptionMetadataQuery(searchTerm);
-    QueryBuilder query = boolQuery()
+    return boolQuery()
         .must(dataset)
         .must(nameDescQuery);
-    return query;
   }
 
   /**
@@ -563,7 +562,7 @@ public class ElasticController {
    * @param searchTerm
    * @return
    */
-  private QueryBuilder datasetSearchQuery(int datasetId, String searchTerm) {
+  private QueryBuilder datasetSearchQuery(long datasetId, String searchTerm) {
     QueryBuilder datasetIdQuery = termQuery(Settings.META_DATASET_ID_FIELD, datasetId);
     QueryBuilder query = getNameDescriptionMetadataQuery(searchTerm);
     QueryBuilder onlyInodes = termQuery(Settings.META_DOC_TYPE_FIELD,
@@ -962,8 +961,9 @@ public class ElasticController {
   public String getLogdirFromElastic(Project project, String elasticId) throws ProjectException {
     Map<String, String> params = new HashMap<>();
     params.put("op", "GET");
+    String projectName = project.getName().toLowerCase();
 
-    String experimentsIndex = project.getName() + "_experiments";
+    String experimentsIndex = projectName + "_experiments";
 
     String templateUrl = "http://"+settings.getElasticRESTEndpoint() + "/" +
         experimentsIndex + "/experiments/" + elasticId;

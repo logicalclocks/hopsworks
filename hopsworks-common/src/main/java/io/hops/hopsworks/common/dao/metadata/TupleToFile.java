@@ -90,7 +90,7 @@ public class TupleToFile implements Serializable, EntityIntf {
   @Basic(optional = false)
   @NotNull
   @Column(name = "inodeid")
-  private Integer inodeid;
+  private Long inodeid;
 
   @JoinColumns({
     @JoinColumn(name = "inode_pid",
@@ -140,11 +140,11 @@ public class TupleToFile implements Serializable, EntityIntf {
     this.tupleid = id;
   }
 
-  public void setInodeId(Integer inodeid) {
+  public void setInodeId(Long inodeid) {
     this.inodeid = inodeid;
   }
 
-  public Integer getInodeId() {
+  public Long getInodeId() {
     return this.inodeid;
   }
 

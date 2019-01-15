@@ -39,8 +39,16 @@
 
 package io.hops.hopsworks.common.dao;
 
-import java.util.List;
+import io.hops.hopsworks.common.exception.InvalidQueryException;
+
 import javax.persistence.EntityManager;
+import javax.persistence.Query;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
 public abstract class AbstractFacade<T> {
 
@@ -89,13 +97,134 @@ public abstract class AbstractFacade<T> {
     return q.getResultList();
   }
 
-  public int count() {
+  public long count() {
     javax.persistence.criteria.CriteriaQuery cq = getEntityManager().
             getCriteriaBuilder().createQuery();
     javax.persistence.criteria.Root<T> rt = cq.from(entityClass);
-    cq.select(getEntityManager().getCriteriaBuilder().count(rt));
+    cq.select(getEntityManager().getCriteriaBuilder().count(rt)).where();
     javax.persistence.Query q = getEntityManager().createQuery(cq);
-    return ((Long) q.getSingleResult()).intValue();
+    return (Long) q.getSingleResult();
+  }
+  
+  public void setOffsetAndLim(Integer offset, Integer limit, Query q) {
+    if (offset != null && offset > 0) {
+      q.setFirstResult(offset);
+    }
+    if (limit != null && limit > 0) {
+      q.setMaxResults(limit);
+    }
+  }
+  
+  public String OrderBy(SortBy sortBy) {
+    return sortBy.getSql() + sortBy.getParam().getSql();
+  }
+  
+  public String buildQuery(String query, Set<? extends AbstractFacade.FilterBy> filters,
+      Set<? extends AbstractFacade.SortBy> sorts, String more) {
+    return query + buildFilterString(filters, more) + buildSortString(sorts);
+  }
+  
+  public String buildSortString(Set<? extends SortBy> sortBy) {
+    if (sortBy == null || sortBy.isEmpty()) {
+      return "";
+    }
+    Iterator<? extends SortBy> sort = sortBy.iterator();
+    if (!sort.hasNext()) {
+      return "";
+    }
+    String c = "ORDER BY " + OrderBy(sort.next());
+    for (;sort.hasNext();) {
+      c += ", " + OrderBy(sort.next());
+    }
+    return c;
+  }
+  
+  public String buildFilterString(Set<? extends FilterBy> filter, String more) {
+    if (filter == null || filter.isEmpty()) {
+      return more == null || more.isEmpty()? "": "WHERE " + more;
+    }
+    Iterator<? extends FilterBy> filterBy = filter.iterator();
+    String c = "WHERE " + filterBy.next().getSql();
+    for (;filterBy.hasNext();) {
+      c += "AND " + filterBy.next().getSql();
+    }
+
+    return c + (more == null || more.isEmpty()? "": "AND " + more);
+  }
+  
+  public Date getDate(String field, String value) {
+    SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+    try {
+      return formatter.parse(value);
+    } catch (ParseException e) {
+      throw new InvalidQueryException(
+        "Filter value for " + field + " needs to set valid format. Expected:yyyy-mm-dd hh:mm:ss but found: " + value);
+    }
+  }
+  
+  public interface SortBy {
+    String getValue();
+    OrderBy getParam();
+    String getSql();
+  }
+  
+  public interface FilterBy {
+    String getValue();
+    String getParam();
+    String getSql();
+    String getField();
   }
 
+  public enum OrderBy {
+    ASC ("ASC", "ASC"),
+    DESC ("DESC", "DESC");
+    
+    private final String value;
+    private final String sql;
+
+    private OrderBy(String value, String sql) {
+      this.value = value;
+      this.sql = sql;
+    }
+
+    public String getValue() {
+      return value;
+    }
+
+    public String getSql() {
+      return sql;
+    }
+
+    @Override
+    public String toString() {
+      return value;
+    }
+
+  }
+  
+  public class CollectionInfo {
+    private Long count;
+    private List<T> items;
+  
+    public CollectionInfo(Long count, List<T> items) {
+      this.count = count;
+      this.items = items;
+    }
+  
+    public Long getCount() {
+      return count;
+    }
+    
+    public List<T> getItems() {
+      return items;
+    }
+    
+    public void setItems(List<T> items) {
+      this.items = items;
+    }
+    
+    public void setCount(Long count) {
+      this.count = count;
+    }
+  }
 }

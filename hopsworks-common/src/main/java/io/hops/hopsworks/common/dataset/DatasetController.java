@@ -131,6 +131,7 @@ public class DatasetController {
    * this DataSet.
    * @param searchable Defines whether the dataset can be indexed or not (i.e.
    * whether it can be visible in the search results or not)
+   * @param stickyBit Whether or not the dataset should have the sticky bit set
    * @param defaultDataset
    * @param dfso
    * folder names, or the folder already exists.
@@ -138,7 +139,7 @@ public class DatasetController {
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public void createDataset(Users user, Project project, String dataSetName,
       String datasetDescription, int templateId, boolean searchable,
-      boolean defaultDataset, DistributedFileSystemOps dfso)
+      boolean stickyBit, boolean defaultDataset, DistributedFileSystemOps dfso)
     throws DatasetException, HopsSecurityException {
     //Parameter checking.
     if (user == null || project == null || dataSetName == null) {
@@ -163,7 +164,7 @@ public class DatasetController {
     FsAction group = (defaultDataset ? FsAction.ALL
         : FsAction.READ_EXECUTE);
     FsPermission fsPermission = new FsPermission(FsAction.ALL,
-        group, global, defaultDataset);
+        group, global, stickyBit);
     success = createFolder(dsPath, templateId, fsPermission, dfso);
     if (success) {
       try {
@@ -177,7 +178,7 @@ public class DatasetController {
         }
         datasetFacade.persistDataset(newDS);
         activityFacade.persistActivity(ActivityFacade.NEW_DATA + dataSetName,
-            project, user);
+            project, user, ActivityFacade.ActivityFlag.DATASET);
         // creates a dataset and adds user as owner.
         hdfsUsersBean.addDatasetUsersGroups(user, project, newDS, dfso);
 
@@ -238,7 +239,6 @@ public class DatasetController {
   public void createSubDirectory(Project project, Path dirPath,
       int templateId, String description, boolean searchable,
       DistributedFileSystemOps udfso) throws DatasetException, HopsSecurityException {
-
     if (project == null) {
       throw new NullPointerException(
           "Cannot create a directory under a null project.");
@@ -253,7 +253,8 @@ public class DatasetController {
 
     //Check if the given folder already exists
     if (inodes.existsPath(dirPath.toString())) {
-      throw new IllegalArgumentException("The given path already exists.");
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_SUBDIR_ALREADY_EXISTS, Level.FINE,
+          "The given path: " + dirPath.toString() + " already exists");
     }
 
     // Check if the parent directory exists
@@ -272,7 +273,7 @@ public class DatasetController {
     //description and searchable attribute
     if (success) {
       //find the corresponding inode
-      int partitionId = HopsUtils.calculatePartitionId(parent.getId(),
+      long partitionId = HopsUtils.calculatePartitionId(parent.getId(),
           folderName, dirPath.depth());
       Inode folder = this.inodes.findByInodePK(parent, folderName, partitionId);
       InodeBasicMetadata basicMeta = new InodeBasicMetadata(folder, description,
@@ -500,6 +501,7 @@ public class DatasetController {
         path = new Path(settings.getProjectPath(owningProject.getName()),
             ds.getInode().getInodePK().getName());
         break;
+      case FEATURESTORE:
       case HIVEDB:
         path = new Path(settings.getHiveWarehouse(),
             ds.getInode().getInodePK().getName());
@@ -523,6 +525,10 @@ public class DatasetController {
         // Project name is the same of database name
         String dbName = ds.getInode().getInodePK().getName();
         return projectFacade.findByName(dbName.substring(0, dbName.lastIndexOf('.')));
+      case FEATURESTORE:
+        // Project name is the same as the database name minus _featurestore.db
+        dbName = ds.getInode().getInodePK().getName();
+        return projectFacade.findByName(dbName.substring(0, dbName.lastIndexOf('_')));
       default:
         return null;
     }

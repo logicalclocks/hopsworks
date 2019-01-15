@@ -92,8 +92,6 @@ public class HDFSUIProxyServlet extends ProxyServlet {
               "Accept-Charset", "accept-charset"));
 
   protected void initTarget() throws ServletException {
-    // TODO - should get the Kibana URI from Settings.java
-//    targetUri = Settings.getKibanaUri();
     targetUri = settings.getHDFSWebUIAddress();
   
     if (targetUri == null) {

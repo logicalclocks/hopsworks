@@ -36,11 +36,10 @@
  * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
 package io.hops.hopsworks.api.admin;
 
-import io.hops.hopsworks.api.admin.dto.ProjectDeletionLog;
 import io.hops.hopsworks.api.admin.dto.ProjectAdminInfoDTO;
+import io.hops.hopsworks.api.admin.dto.ProjectDeletionLog;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jwt.JWTHelper;
@@ -51,6 +50,7 @@ import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.DatasetException;
+import io.hops.hopsworks.common.exception.FeaturestoreException;
 import io.hops.hopsworks.common.exception.GenericException;
 import io.hops.hopsworks.common.exception.HopsSecurityException;
 import io.hops.hopsworks.common.exception.KafkaException;
@@ -60,8 +60,8 @@ import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.exception.UserException;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.project.ProjectDTO;
-import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.project.QuotasDTO;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.Api;
 
@@ -72,8 +72,8 @@ import javax.ejb.TransactionAttributeType;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
-import javax.ws.rs.POST;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -82,6 +82,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -89,12 +90,14 @@ import java.util.logging.Logger;
 
 @Path("/admin")
 @Stateless
-@JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN"})
+@JWTRequired(acceptedTokens = {Audience.API},
+    allowedUserRoles = {"HOPS_ADMIN"})
 @Api(value = "Admin")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ProjectsAdmin {
+
   private static final Logger LOGGER = Logger.getLogger(ProjectsAdmin.class.getName());
-  
+
   @EJB
   private ProjectFacade projectFacade;
   @EJB
@@ -107,7 +110,7 @@ public class ProjectsAdmin {
   private Settings settings;
   @EJB
   private JWTHelper jWTHelper;
-  
+
   @DELETE
   @Produces(MediaType.APPLICATION_JSON)
   @Path("/projects/{id}")
@@ -117,13 +120,13 @@ public class ProjectsAdmin {
     if (project == null) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + id);
     }
-    
+
     String sessionId = req.getSession().getId();
     projectController.removeProject(project.getOwner().getEmail(), id, sessionId);
     LOGGER.log(Level.INFO, "Deleted project with id: " + id);
-  
+
     RESTApiJsonResponse response = new RESTApiJsonResponse();
-    response.setSuccessMessage("Project with id " + id + " has been successfully deleted");
+    response.setSuccessMessage(ResponseMessages.PROJECT_REMOVED);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(response).build();
   }
 
@@ -131,13 +134,13 @@ public class ProjectsAdmin {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @Path("/projects/createas")
-  public Response createProjectAsUser(@Context HttpServletRequest request, ProjectDTO projectDTO)
-    throws DatasetException, GenericException, KafkaException, ProjectException, UserException, ServiceException,
-    HopsSecurityException {
-    Users user = jWTHelper.getUserPrincipal(request);
+  public Response createProjectAsUser(@Context HttpServletRequest request, @Context SecurityContext sc,
+      ProjectDTO projectDTO) throws DatasetException, GenericException, KafkaException, ProjectException, UserException,
+      ServiceException, HopsSecurityException, FeaturestoreException {
+    Users user = jWTHelper.getUserPrincipal(sc);
     if (user == null || !user.getEmail().equals(Settings.SITE_EMAIL)) {
       throw new UserException(RESTCodes.UserErrorCode.AUTHENTICATION_FAILURE, Level.WARNING,
-        "Unauthorized or unknown user tried to create a Project as another user");
+          "Unauthorized or unknown user tried to create a Project as another user");
     }
 
     String ownerEmail = projectDTO.getOwner();
@@ -167,8 +170,7 @@ public class ProjectsAdmin {
 
   /**
    * Returns admin information about all the projects
-   * @param sc
-   * @param req
+   *
    * @return
    */
   @GET
@@ -183,16 +185,16 @@ public class ProjectsAdmin {
           projectController.getQuotasInternal(project)));
     }
 
-    GenericEntity<List<ProjectAdminInfoDTO>> projectsEntity =
-        new GenericEntity<List<ProjectAdminInfoDTO>>(projectAdminInfoDTOList) { };
+    GenericEntity<List<ProjectAdminInfoDTO>> projectsEntity = new GenericEntity<List<ProjectAdminInfoDTO>>(
+        projectAdminInfoDTOList) {
+    };
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(projectsEntity).build();
   }
 
   /**
    * Returns admin information about the requested project
-   * @param sc
-   * @param req
+   *
    * @param projectId
    * @return
    */
@@ -207,22 +209,22 @@ public class ProjectsAdmin {
     ProjectAdminInfoDTO projectAdminInfoDTO = new ProjectAdminInfoDTO(project,
         projectController.getQuotasInternal(project));
 
-    GenericEntity<ProjectAdminInfoDTO> projectEntity =
-        new GenericEntity<ProjectAdminInfoDTO>(projectAdminInfoDTO) { };
+    GenericEntity<ProjectAdminInfoDTO> projectEntity = new GenericEntity<ProjectAdminInfoDTO>(projectAdminInfoDTO) {
+    };
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(projectEntity).build();
   }
 
-
   @PUT
   @Consumes(MediaType.APPLICATION_JSON)
   @Path("/projects")
-  public Response setProjectAdminInfo (ProjectAdminInfoDTO projectAdminInfoDTO) throws ProjectException {
+  public Response setProjectAdminInfo(ProjectAdminInfoDTO projectAdminInfoDTO) throws ProjectException {
     // for changes in space quotas we need to check that both space and ns options are not null
     QuotasDTO quotasDTO = projectAdminInfoDTO.getProjectQuotas();
-    if (quotasDTO != null &&
-        (((quotasDTO.getHdfsQuotaInBytes() == null) != (quotasDTO.getHdfsNsQuota() == null)) ||
-        ((quotasDTO.getHiveHdfsQuotaInBytes() == null) != (quotasDTO.getHiveHdfsNsQuota() == null)))) {
+    if (quotasDTO != null && (((quotasDTO.getHdfsQuotaInBytes() == null) != (quotasDTO.getHdfsNsQuota() == null))
+        || ((quotasDTO.getHiveHdfsQuotaInBytes() == null) != (quotasDTO.getHiveHdfsNsQuota() == null))
+        || ((quotasDTO.getFeaturestoreHdfsQuotaInBytes() == null) !=
+        (quotasDTO.getFeaturestoreHdfsNsQuota() == null)))) {
       throw new IllegalArgumentException("projectAdminInfoDTO did not provide quotasDTO or the latter was incomplete.");
     }
 
@@ -236,16 +238,18 @@ public class ProjectsAdmin {
     projectController.adminProjectUpdate(project, quotasDTO);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
-  
+
   @DELETE
   @Path("/projects/{name}/force")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response forceDeleteProject(@Context HttpServletRequest request, @PathParam("name") String projectName) {
-    Users user = jWTHelper.getUserPrincipal(request);
+  public Response forceDeleteProject(@Context HttpServletRequest request, @Context SecurityContext sc,
+      @PathParam("name") String projectName) {
+    Users user = jWTHelper.getUserPrincipal(sc);
     String[] logs = projectController.forceCleanup(projectName, user.getEmail(), request.getSession().getId());
     ProjectDeletionLog deletionLog = new ProjectDeletionLog(logs[0], logs[1]);
-  
-    GenericEntity<ProjectDeletionLog> response = new GenericEntity<ProjectDeletionLog>(deletionLog) {};
+
+    GenericEntity<ProjectDeletionLog> response = new GenericEntity<ProjectDeletionLog>(deletionLog) {
+    };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(response).build();
   }
 }

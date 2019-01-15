@@ -44,28 +44,29 @@
   <parent>
     <groupId>io.hops</groupId>
     <artifactId>hopsworks</artifactId>
-    <version>0.7.0-SNAPSHOT</version>
+    <version>0.9.0-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
-  
+
   <groupId>io.hops.hopsworks</groupId>
   <artifactId>hopsworks-common</artifactId>
-  <version>0.7.0-SNAPSHOT</version>
+  <version>0.9.0-SNAPSHOT</version>
   <packaging>ejb</packaging>
   <description>Hopsworks common</description>
   <name>hopsworks-common</name>
 
   <properties>
     <tuples.version>1.2</tuples.version>
-  </properties> 
-  
+    <maven.deploy.skip>false</maven.deploy.skip>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>org.javatuples</groupId>
       <artifactId>javatuples</artifactId>
       <version>${tuples.version}</version>
     </dependency>
-    
+
     <dependency>
       <groupId>org.eclipse.persistence</groupId>
       <artifactId>eclipselink</artifactId>
@@ -88,6 +89,11 @@
       <artifactId>kafka-clients</artifactId>
       <version>1.1.0</version>
       <type>jar</type>
+    </dependency>
+    <dependency>
+      <groupId>org.influxdb</groupId>
+      <artifactId>influxdb-java</artifactId>
+      <version>2.5</version>
     </dependency>
     <!-- io.hops -->
     <dependency>
@@ -190,7 +196,7 @@
           <artifactId>netty-all</artifactId>
         </exclusion>
       </exclusions>
-    </dependency> 
+    </dependency>
     <dependency>
       <groupId>org.apache.flink</groupId>
       <artifactId>flink-yarn_2.11</artifactId>
@@ -245,10 +251,6 @@
         <exclusion>
           <groupId>io.hops.hive</groupId>
           <artifactId>hive-metastore</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>io.hops.hive</groupId>
-          <artifactId>hive-serde</artifactId>
         </exclusion>
         <exclusion>
           <groupId>io.hops.hive</groupId>

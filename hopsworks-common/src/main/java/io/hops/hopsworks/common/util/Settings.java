@@ -91,6 +91,7 @@ import java.util.regex.Pattern;
 
 import static io.hops.hopsworks.common.dao.kafka.KafkaFacade.DLIMITER;
 import static io.hops.hopsworks.common.dao.kafka.KafkaFacade.SLASH_SEPARATOR;
+import io.hops.hopsworks.common.dao.project.Project;
 
 @Singleton
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
@@ -101,6 +102,10 @@ public class Settings implements Serializable {
 
   @EJB
   private UserFacade userFacade;
+  @EJB
+  private ProjectUtils projectUtils;
+  @EJB
+  private OSProcessExecutor osProcessExecutor;
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
@@ -230,6 +235,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_SUPPORT_EMAIL_ADDR = "support_email_addr";
   private static final String VARIABLE_HOPSUTIL_VERSION = "hopsutil_version";
   private static final String VARIABLE_HOPSEXAMPLES_VERSION = "hopsexamples_version";
+  private static final String VARIABLE_TF_SPARK_CONNECTOR_VERSION = "tf_spark_connector_version";
 
   private static final String VARIABLE_INFLUXDB_IP = "influxdb_ip";
   private static final String VARIABLE_INFLUXDB_PORT = "influxdb_port";
@@ -272,10 +278,10 @@ public class Settings implements Serializable {
   private static final String VARIABLE_TENSORFLOW_VERSION = "tensorflow_version";
   private static final String VARIABLE_CUDA_VERSION = "cuda_version";
   private static final String VARIABLE_HOPSWORKS_VERSION = "hopsworks_version";
-  
+
   //Used by RESTException to include devMsg or not in response
   private static final String VARIABLE_HOPSWORKS_REST_LOG_LEVEL = "hopsworks_rest_log_level";
-  
+
   /* -------------------- TfServing  --------------- */
   private static final String VARIABLE_TF_SERVING_MONITOR_INT = "tf_serving_monitor_int";
 
@@ -294,12 +300,16 @@ public class Settings implements Serializable {
   private static final String VARIABLE_KUBE_CA_PASSWORD = "kube_ca_password";
   private static final String VARIABLE_KUBE_REGISTRY = "kube_registry";
   private static final String VARIABLE_KUBE_MAX_SERVING = "kube_max_serving_instances";
-  
-    // JWT Variables
+
+  // JWT Variables
   private static final String VARIABLE_JWT_SIGNATURE_ALGORITHM = "jwt_signature_algorithm";
   private static final String VARIABLE_JWT_LIFETIME_MS = "jwt_lifetime_ms";
   private static final String VARIABLE_JWT_EXP_LEEWAY_SEC = "jwt_exp_leeway_sec";
   private static final String VARIABLE_JWT_SIGNING_KEY_NAME = "jwt_signing_key_name";
+
+  /* -------------------- Featurestore --------------- */
+  private static final String VARIABLE_FEATURESTORE_DEFAULT_QUOTA = "featurestore_default_quota";
+  private static final String VARIABLE_FEATURESTORE_DEFAULT_STORAGE_FORMAT = "featurestore_default_storage_format";
 
 
   private String setVar(String varName, String defaultValue) {
@@ -402,7 +412,7 @@ public class Settings implements Serializable {
 
     return defaultValue;
   }
-  
+
   private LOG_LEVEL setLogLevelVar(String varName, LOG_LEVEL defaultValue) {
     Variables var = findById(varName);
     if (var != null && var.getValue() != null) {
@@ -433,6 +443,7 @@ public class Settings implements Serializable {
       STAGING_DIR = setDirVar(VARIABLE_STAGING_DIR, STAGING_DIR);
       HOPSUTIL_VERSION = setVar(VARIABLE_HOPSUTIL_VERSION, HOPSUTIL_VERSION);
       HOPS_EXAMPLES_VERSION = setVar(VARIABLE_HOPSEXAMPLES_VERSION, HOPS_EXAMPLES_VERSION);
+      TF_SPARK_CONNECTOR_VERSION = setVar(VARIABLE_TF_SPARK_CONNECTOR_VERSION, TF_SPARK_CONNECTOR_VERSION);
       HIVE_SERVER_HOSTNAME = setStrVar(VARIABLE_HIVE_SERVER_HOSTNAME,
           HIVE_SERVER_HOSTNAME);
       HIVE_SERVER_HOSTNAME_EXT = setStrVar(VARIABLE_HIVE_SERVER_HOSTNAME_EXT,
@@ -597,6 +608,11 @@ public class Settings implements Serializable {
       JWT_LIFETIME_MS = setLongVar(VARIABLE_JWT_LIFETIME_MS, JWT_LIFETIME_MS);
       JWT_EXP_LEEWAY_SEC = setIntVar(VARIABLE_JWT_EXP_LEEWAY_SEC, JWT_EXP_LEEWAY_SEC);
       JWT_SIGNING_KEY_NAME = setStrVar(VARIABLE_JWT_SIGNING_KEY_NAME, JWT_SIGNING_KEY_NAME);
+
+      FEATURESTORE_DB_DEFAULT_QUOTA = setStrVar(VARIABLE_FEATURESTORE_DEFAULT_QUOTA, FEATURESTORE_DB_DEFAULT_QUOTA);
+      FEATURESTORE_DB_DEFAULT_STORAGE_FORMAT =
+          setStrVar(VARIABLE_FEATURESTORE_DEFAULT_STORAGE_FORMAT, FEATURESTORE_DB_DEFAULT_STORAGE_FORMAT);
+
       cached = true;
     }
   }
@@ -742,6 +758,7 @@ public class Settings implements Serializable {
   public static final String SPARK_EXECUTORENV_PYSPARK_PYTHON = "spark.executorEnv."+SPARK_PYSPARK_PYTHON ;
   //TFSPARK properties
   public static final String SPARK_TF_GPUS_ENV = "spark.executor.gpus";
+  public static final String SPARK_TENSORFLOW_APPLICATION = "spark.tensorflow.application";
 
   //Spark log4j and metrics properties
   public static final String SPARK_LOG4J_CONFIG = "log4j.configuration";
@@ -762,15 +779,17 @@ public class Settings implements Serializable {
   public static final String SPARK_PY_MAINCLASS
       = "org.apache.spark.deploy.PythonRunner";
   public static final String PYSPARK_ZIP = "pyspark.zip";
-  
-  
+
+  //Hive config
+  public static final String HIVE_SITE = "hive-site.xml";
+
   private String PY4J_ARCHIVE = "py4j-0.10.7-src.zip";
-  
+
   public synchronized String getPy4JArchive() {
     checkCache();
     return PY4J_ARCHIVE;
   }
-  
+
   public synchronized String getSparkDir() {
     checkCache();
     return SPARK_DIR;
@@ -1212,6 +1231,50 @@ public class Settings implements Serializable {
   private String sparkDefaultClasspath(String sparkDir) {
     return sparkDir + "/lib/*";
   }
+  
+  private static final String HADOOP_GLASSPATH_GLOB_ENV_VAR_KEY = "HADOOP_GLOB";
+  private volatile String HADOOP_CLASSPATH_GLOB = null;
+  
+  public String getHadoopClasspathGlob() throws IOException {
+    if (HADOOP_CLASSPATH_GLOB == null) {
+      synchronized (Settings.class) {
+        if (HADOOP_CLASSPATH_GLOB == null) {
+          String classpathGlob = System.getenv(HADOOP_GLASSPATH_GLOB_ENV_VAR_KEY);
+          if (classpathGlob == null) {
+            LOGGER.log(Level.WARNING, HADOOP_GLASSPATH_GLOB_ENV_VAR_KEY + " environment variable is not set. " +
+                "Launching a subprocess to discover it");
+            String bin = Paths.get(getHadoopSymbolicLinkDir(), "bin", "hadoop").toString();
+            ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
+                .addCommand(bin)
+                .addCommand("classpath")
+                .addCommand("--glob")
+                .build();
+            ProcessResult result = osProcessExecutor.execute(processDescriptor);
+            if (result.getExitCode() != 0) {
+              throw new IOException("Could not get Hadoop classpath, exit code " + result.getExitCode()
+                + " Error: " + result.getStderr());
+            }
+            classpathGlob = result.getStdout();
+          }
+          //Now we must remove the yarn shuffle library as it creates issues for
+          //Zeppelin Spark Interpreter
+          StringBuilder classpath = new StringBuilder();
+  
+          for (String path : classpathGlob.split(File.pathSeparator)) {
+            if (!path.contains("yarn") && !path.contains("jersey") && !path.contains("servlet")) {
+              classpath.append(path).append(File.pathSeparator);
+            }
+          }
+          if (classpath.length() > 0) {
+            HADOOP_CLASSPATH_GLOB = classpath.toString().substring(0, classpath.length() - 1);
+          } else {
+            throw new IOException("Hadoop classpath appears to be empty");
+          }
+        }
+      }
+    }
+    return HADOOP_CLASSPATH_GLOB;
+  }
 
   /**
    * Constructs the path to the marker file of a streaming job that uses
@@ -1281,7 +1344,7 @@ public class Settings implements Serializable {
     checkCache();
     return ELASTIC_LOGS_INDEX_EXPIRATION;
   }
-  
+
   private static final int JOB_LOGS_EXPIRATION = 604800;
 
   /**
@@ -1360,7 +1423,7 @@ public class Settings implements Serializable {
     return RM_IP;
   }
 
-  // Resource Manager Port 
+  // Resource Manager Port
   private int RM_PORT = 8088;
 
   public synchronized Integer getRmPort() {
@@ -1375,7 +1438,7 @@ public class Settings implements Serializable {
     return LOGSTASH_IP;
   }
 
-  // Resource Manager Port 
+  // Resource Manager Port
   private int LOGSTASH_PORT = 8088;
   public synchronized Integer getLogstashPort() {
     checkCache();
@@ -1424,7 +1487,7 @@ public class Settings implements Serializable {
     return "http://" + KIBANA_IP + ":" + KIBANA_PORT;
   }
 
-  // Zookeeper 
+  // Zookeeper
   private String ZK_IP = "10.0.2.15";
 
   public synchronized String getZkConnectStr() {
@@ -1543,12 +1606,12 @@ public class Settings implements Serializable {
   /**
    * Constructs the path to the project environment in Anaconda
    *
-   * @param projectName name
+   * @param project project
    * @return conda dir
    */
-  public String getAnacondaProjectDir(String projectName) {
-    return getAnacondaDir() + File.separator + "envs" + File.separator
-        + projectName;
+  public String getAnacondaProjectDir(Project project) {
+    String condaEnv = projectUtils.getCurrentCondaEnvironment(project);
+    return getAnacondaDir() + File.separator + "envs" + File.separator + condaEnv;
   }
 
   private String ANACONDA_ENV = "kagent";
@@ -1579,9 +1642,9 @@ public class Settings implements Serializable {
     checkCache();
     return "https://" + HOPSWORKS_REST_ENDPOINT;
   }
-  
+
   private LOG_LEVEL HOPSWORKS_REST_LOG_LEVEL = LOG_LEVEL.PROD;
-  
+
   public synchronized LOG_LEVEL getHopsworksRESTLogLevel() {
     checkCache();
     return HOPSWORKS_REST_LOG_LEVEL;
@@ -1698,14 +1761,8 @@ public class Settings implements Serializable {
   public static final String META_DATA_FIELDS = META_DATA_NESTED_FIELD + ".*";
 
   //Filename conventions
-  public static final String PROJECT_DISALLOWED_CHARS
-      = " -/\\?*:|'\"<>%()&;#öäåÖÅÄàáéèâîïüÜ@${}[]+~^$`";
-  public static final String PRINT_PROJECT_DISALLOWED_CHARS = "__, -, space, "
-      + "/, \\, ?, *, :, |, ', \", <, >, %, (, ), &, ;, #,ö,ä,å,Ö,Å,Ä,à,á,é,è,â,î,ï,ü,Ü,@,$,{,},[,],+,~,^";
   public static final String FILENAME_DISALLOWED_CHARS = " /\\?*:|'\"<>%()&;#öäåÖÅÄàáéèâîïüÜ@${}[]+~^$`";
   public static final String SUBDIR_DISALLOWED_CHARS = "/\\?*:|'\"<>%()&;#öäåÖÅÄàáéèâîïüÜ@${}[]+~^$`";
-  public static final String PRINT_FILENAME_DISALLOWED_CHARS
-      = "__, space, /, \\, ?, *, :, |, ', \", <, >, %, (, ), &, ;, #,ö,ä,å,Ö,Å,Ä,à,á,é,è,â,î,ï,ü,Ü,@,$,{,},[,],+,~,^";
   public static final String SHARED_FILE_SEPARATOR = "::";
   public static final String DOUBLE_UNDERSCORE = "__";
 
@@ -1771,7 +1828,7 @@ public class Settings implements Serializable {
   public static final String FILE_PREVIEW_TEXT_TYPE = "text";
   public static final String FILE_PREVIEW_IMAGE_TYPE = "image";
   public static final String FILE_PREVIEW_MODE_TAIL = "tail";
-  
+
   //Elastic log index pattern
   public static final String ELASTIC_LOGS_INDEX = "logs";
   public static final String ELASTIC_LOGS_INDEX_PATTERN = "_" +Settings.ELASTIC_LOGS_INDEX+ "-*";
@@ -1785,7 +1842,7 @@ public class Settings implements Serializable {
   public static final String ELASTIC_INDEX_PATTERN = "index-pattern";
   public static final String ELASTIC_LOG_INDEX_REGEX = ".*_" + ELASTIC_LOGS_INDEX + "-\\d{4}.\\d{2}.\\d{2}";
   public static final String ELASTIC_SERVING_INDEX_REGEX = ".*_" + ELASTIC_SERVING_INDEX+ "-\\d{4}.\\d{2}.\\d{2}";
-  
+
   public String getHopsworksTmpCertDir() {
     return Paths.get(getCertsDir(), "transient").toString();
   }
@@ -1886,7 +1943,8 @@ public class Settings implements Serializable {
     ZEPPELIN("notebook", "Contains Zeppelin notebooks."),
     JUPYTER("Jupyter", "Contains Jupyter notebooks."),
     SERVING("Models", "Contains models to be used for serving."),
-    EXPERIMENTS("Experiments", "Contains experiments from using the hops python api");
+    EXPERIMENTS("Experiments", "Contains experiments from using the hops python api"),
+    TRAININGDATASETS("Training_Datasets", "Contains curated training datasets created from the feature store");
 
     private final String name;
     private final String description;
@@ -1976,8 +2034,8 @@ public class Settings implements Serializable {
     em.detach(variable);
   }
 
-  public String getProjectPath(String projectname) {
-    return File.separator + DIR_ROOT + File.separator + projectname;
+  public String getProjectPath(String projectName) {
+    return File.separator + DIR_ROOT + File.separator + projectName;
   }
 
   Configuration conf;
@@ -2539,7 +2597,7 @@ public class Settings implements Serializable {
     this.kafkaBrokers.clear();
     this.kafkaBrokers.addAll(kafkaBrokers);
   }
-  
+
   public Set<String> getBrokerEndpoints() throws IOException, KeeperException, InterruptedException {
     Set<String> brokerList = new HashSet<>();
     ZooKeeper zk;
@@ -2710,15 +2768,15 @@ public class Settings implements Serializable {
 
   private static final String APPLICATION_CERTIFICATE_VALIDITY_PERIOD_KEY = "application_certificate_validity_period";
   private String applicationCertificateValidityPeriod = "3d";
-  
+
   public synchronized String getApplicationCertificateValidityPeriod() {
     checkCache();
     return applicationCertificateValidityPeriod;
   }
 
-  // TensorBoard kill rotation interval in milliseconds
+  // TensorBoard kill rotation interval in milliseconds (should be lower than the TensorBoardKillTimer)
   private static final String TENSORBOARD_MAX_LAST_ACCESSED = "tensorboard_max_last_accessed";
-  private int tensorBoardMaxLastAccessed = 1800000;
+  private int tensorBoardMaxLastAccessed = 1140000;
 
   public synchronized int getTensorBoardMaxLastAccessed() {
     checkCache();
@@ -2757,29 +2815,29 @@ public class Settings implements Serializable {
   private Set<String> toSetFromCsv(String csv, String separator) {
     return new HashSet<>(Splitter.on(separator).trimResults().splitToList(csv));
   }
-  
+
   // User upgradable libraries we installed for them
   private Set<String> PROVIDED_PYTHON_LIBRARY_NAMES;
   private static final String VARIABLE_PROVIDED_PYTHON_LIBRARY_NAMES = "provided_python_lib_names";
   private static final String DEFAULT_PROVIDED_PYTHON_LIBRARY_NAMES =
       "hops, pandas, tensorflow-serving-api, hopsfacets, mmlspark, numpy";
-  
+
   public synchronized Set<String> getProvidedPythonLibraryNames() {
     checkCache();
     return PROVIDED_PYTHON_LIBRARY_NAMES;
   }
-  
+
   // Libraries we preinstalled users should not mess with
   private Set<String> PREINSTALLED_PYTHON_LIBRARY_NAMES;
   private static final String VARIABLE_PREINSTALLED_PYTHON_LIBRARY_NAMES = "preinstalled_python_lib_names";
   private static final String DEFAULT_PREINSTALLED_PYTHON_LIBRARY_NAMES =
       "tensorflow-gpu, tensorflow, pydoop, pyspark, tensorboard";
-  
+
   public synchronized Set<String> getPreinstalledPythonLibraryNames() {
     checkCache();
     return PREINSTALLED_PYTHON_LIBRARY_NAMES;
   }
-  
+
   private String HOPSWORKS_VERSION;
 
   public synchronized String getHopsworksVersion() {
@@ -2947,7 +3005,7 @@ public class Settings implements Serializable {
     checkCache();
     return ZOOKEEPER_VERSION;
   }
-  
+
   // -------------------------------- Kubernetes ----------------------------------------------//
   private String KUBE_USER = "hopsworks";
   public synchronized String getKubeUser() {
@@ -3038,29 +3096,29 @@ public class Settings implements Serializable {
     checkCache();
     return TF_SERVING_MONITOR_INT;
   }
-  
+
   public enum LOG_LEVEL {
     DEV(0, "User and Dev messages as well as stack trace are returned to client to client."),
     TEST(1, "User and Dev messages are returned to client to client."),
     PROD(2, "User message is returned to client to client.");
-    
+
     private final int level;
     private final String description;
-    
+
     LOG_LEVEL(int level, String description) {
       this.level = level;
       this.description = description;
     }
-    
+
     public int getLevel() {
       return level;
     }
-    
+
     public String getDescription() {
       return description;
     }
   }
-  
+
   private String JWT_SIGNATURE_ALGORITHM = "HS512";
   private long JWT_LIFETIME_MS = 1800000l;
   private int JWT_EXP_LEEWAY_SEC = 900;
@@ -3070,19 +3128,49 @@ public class Settings implements Serializable {
     checkCache();
     return JWT_SIGNATURE_ALGORITHM;
   }
-  
+
   public synchronized long getJWTLifetimeMs() {
     checkCache();
     return JWT_LIFETIME_MS;
   }
-  
+
   public synchronized int getJWTExpLeewaySec() {
     checkCache();
     return JWT_EXP_LEEWAY_SEC;
   }
-  
+
   public synchronized String getJWTSigningKeyName() {
     checkCache();
     return JWT_SIGNING_KEY_NAME;
   }
+
+  public String getHiveSiteSparkHdfsPath() {
+    return "hdfs:///user/" + getSparkUser() + "/hive-site.xml";
+  }
+
+  private String FEATURESTORE_DB_DEFAULT_QUOTA = "50000";
+
+  public synchronized Long getFeaturestoreDbDefaultQuota() {
+    checkCache();
+    return Long.parseLong(FEATURESTORE_DB_DEFAULT_QUOTA);
+  }
+
+  private String FEATURESTORE_DB_DEFAULT_STORAGE_FORMAT = "ORC";
+
+  public synchronized String getFeaturestoreDbDefaultStorageFormat() {
+    checkCache();
+    return FEATURESTORE_DB_DEFAULT_STORAGE_FORMAT;
+  }
+
+  private String TF_SPARK_CONNECTOR_VERSION = "2.11-1.12.0";
+
+  public synchronized String getTfSparkConnectorFilename() {
+    checkCache();
+    return "spark-tensorflow-connector_" + TF_SPARK_CONNECTOR_VERSION + ".jar";
+  }
+
+  public String getTfSparkConnectorPath() {
+    return "hdfs:///user/" + getSparkUser() + "/" + getTfSparkConnectorFilename();
+  }
+
 }

@@ -45,7 +45,6 @@ import io.hops.hopsworks.api.zeppelin.socket.NotebookServerImplFactory;
 import io.hops.hopsworks.api.zeppelin.util.SecurityUtils;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
 import io.hops.hopsworks.common.util.ConfigFileGenerator;
-import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -123,7 +122,8 @@ public class ZeppelinConfig {
   private final String owner;
 
   public ZeppelinConfig(String projectName, Integer projectId, String owner, Settings settings,
-      String interpreterConf, NotebookServerImpl nbs) throws IOException, RepositoryException, TaskRunnerException {
+      String interpreterConf, NotebookServerImpl nbs)
+    throws IOException, RepositoryException, TaskRunnerException, InterruptedException {
     this.projectName = projectName;
     this.projectId = projectId;
     this.owner = owner;
@@ -179,7 +179,7 @@ public class ZeppelinConfig {
       if(nbs!=null){
         setNotebookServer(nbs);
       }
-    } catch (IOException |RepositoryException|TaskRunnerException e) {
+    } catch (IOException | RepositoryException | TaskRunnerException | InterruptedException e) {
       if (newDir) { // if the folder was newly created delete it
         removeProjectDirRecursive();
       } else if (newFile) { // if the conf files were newly created delete them
@@ -441,7 +441,7 @@ public class ZeppelinConfig {
   }
 
   // returns true if one of the conf files were created anew
-  private boolean createZeppelinConfFiles(String interpreterConf) throws IOException {
+  private boolean createZeppelinConfFiles(String interpreterConf) throws IOException, InterruptedException {
     File zeppelin_env_file = new File(confDirPath + ZEPPELIN_ENV_SH);
     File zeppelin_site_xml_file = new File(confDirPath + ZEPPELIN_SITE_XML);
     File interpreter_file = new File(confDirPath + INTERPRETER_JSON);
@@ -454,8 +454,8 @@ public class ZeppelinConfig {
     boolean createdXml = false;
 
     String log4jPath = settings.getSparkLog4JPath();
-    String zeppelinPythonPath = settings.getAnacondaProjectDir(this.projectName)
-        + File.separator + "bin" + File.separator + "python";
+    String zeppelinPythonPath = settings.getAnacondaDir() + File.separator + "envs" + File.separator
+        + "python27" + File.separator + "bin" + File.separator + "python";
     if (!zeppelin_env_file.exists()) {
 
       String ldLibraryPath = "";
@@ -476,8 +476,7 @@ public class ZeppelinConfig {
           "java_home", javaHome,
           "cuda_dir", settings.getCudaDir(),
           "ld_library_path", ldLibraryPath,
-          "hadoop_classpath", HopsUtils.getHadoopClasspathGlob(settings.getHadoopSymbolicLinkDir() + "/bin/hadoop",
-              "classpath", "--glob"),
+          "hadoop_classpath", settings.getHadoopClasspathGlob(),
           "spark_options", "--files " + log4jPath
       );
       createdSh = ConfigFileGenerator.createConfigFile(zeppelin_env_file,

@@ -36,11 +36,19 @@
  * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
 package io.hops.hopsworks.api.admin;
 
 import io.hops.hopsworks.api.kibana.ProxyServlet;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstate;
+import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
+import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
+import io.hops.hopsworks.common.dao.user.UserFacade;
+import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.exception.ProjectException;
+import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.project.ProjectController;
+import io.hops.hopsworks.common.project.ProjectDTO;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -53,6 +61,8 @@ import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.servlet.ServletException;
@@ -78,15 +88,23 @@ public class YarnUIProxyServlet extends ProxyServlet {
 
   @EJB
   private Settings settings;
+  @EJB
+  private UserFacade userFacade;
+  @EJB
+  private YarnApplicationstateFacade yarnApplicationstateFacade;
+  @EJB
+  private HdfsUsersController hdfsUsersBean;
+  @EJB
+  private ProjectController projectController;
 
   private static final HashSet<String> PASS_THROUGH_HEADERS
       = new HashSet<String>(
           Arrays
-          .asList("User-Agent", "user-agent", "Accept", "accept",
-              "Accept-Encoding", "accept-encoding",
-              "Accept-Language",
-              "accept-language",
-              "Accept-Charset", "accept-charset"));
+              .asList("User-Agent", "user-agent", "Accept", "accept",
+                  "Accept-Encoding", "accept-encoding",
+                  "Accept-Language",
+                  "accept-language",
+                  "Accept-Charset", "accept-charset"));
 
   protected void initTarget() throws ServletException {
     // TODO - should get the Kibana URI from Settings.java
@@ -108,20 +126,84 @@ public class YarnUIProxyServlet extends ProxyServlet {
     targetHost = URIUtils.extractHost(targetUriObj);
   }
 
+  enum Type {
+    application,
+    appAttempt,
+    container;
+  }
+
   @Override
   protected void service(HttpServletRequest servletRequest,
       HttpServletResponse servletResponse)
       throws ServletException, IOException {
 
-    if (servletRequest.getUserPrincipal() == null) {
+    if (servletRequest.getUserPrincipal() == null || (!servletRequest.isUserInRole("HOPS_ADMIN") && !servletRequest.
+        isUserInRole("HOPS_USER"))) {
       servletResponse.sendError(403, "User is not logged in");
       return;
     }
     if (!servletRequest.isUserInRole("HOPS_ADMIN")) {
-      servletResponse.sendError(Response.Status.BAD_REQUEST.getStatusCode(),
-          "You don't have the access right for this service");
-      return;
+      if (servletRequest.getRequestURI().contains("proxy/application") || servletRequest.getRequestURI().contains(
+          "app/application") || servletRequest.getRequestURI().contains("appattempt/appattempt") || servletRequest.
+          getRequestURI().contains("container/container") || servletRequest.getRequestURI().contains(
+          "containerlogs/container") || servletRequest.getRequestURI().contains("history/application")) {
+        String email = servletRequest.getUserPrincipal().getName();
+        Pattern pattern = Pattern.compile("(application_.*?_.\\d*)");
+        Type type = Type.application;
+        if (servletRequest.getRequestURI().contains("appattempt/appattempt")) {
+          pattern = Pattern.compile("(appattempt_.*?_.\\d*)");
+          type = Type.appAttempt;
+        } else if (servletRequest.getRequestURI().contains("container/container") || servletRequest.getRequestURI().
+            contains("containerlogs/container")) {
+          pattern = Pattern.compile("(container_e.*?_.*?_.\\d*)");
+          type = Type.container;
+        }
+        Users user = userFacade.findByEmail(email);
+        Matcher matcher = pattern.matcher(servletRequest.getRequestURI());
+        if (matcher.find()) {
+          String appId = matcher.group(1);
+          if (type.equals(Type.appAttempt)) {
+            appId = appId.replace("appattempt_", "application_");
+          } else if (type.equals(Type.container)) {
+            appId = appId.replaceAll("container_e.*?_", "application_");
+          }
+          YarnApplicationstate appState = yarnApplicationstateFacade.findByAppId(
+              appId);
+          if (appState == null) {
+            servletResponse.sendError(Response.Status.BAD_REQUEST.getStatusCode(),
+                "You don't have the access right for this application");
+            return;
+          }
+          String projectName = hdfsUsersBean.getProjectName(appState.getAppuser());
+          ProjectDTO project;
+          try {
+            project = projectController.getProjectByName(projectName);
+          } catch (ProjectException ex) {
+            throw new ServletException(ex);
+          }
+
+          boolean inTeam = false;
+          for (ProjectTeam pt : project.getProjectTeam()) {
+            if (pt.getUser().equals(user)) {
+              inTeam = true;
+              break;
+            }
+          }
+          if (!inTeam) {
+            servletResponse.sendError(Response.Status.BAD_REQUEST.getStatusCode(),
+                "You don't have the access right for this application");
+            return;
+          }
+        }
+      } else {
+        if (!servletRequest.getRequestURI().contains("/static/")) {
+          servletResponse.sendError(Response.Status.BAD_REQUEST.getStatusCode(),
+              "You don't have the access right for this page");
+          return;
+        }
+      }
     }
+
     if (servletRequest.getAttribute(ATTR_TARGET_URI) == null) {
       servletRequest.setAttribute(ATTR_TARGET_URI, targetUri);
     }
@@ -192,7 +274,7 @@ public class YarnUIProxyServlet extends ProxyServlet {
       copyResponseHeaders(m, servletRequest, servletResponse);
 
       // Send the content to the client
-      copyResponseEntity(m, servletResponse);
+      copyResponseEntity(m, servletResponse, servletRequest.isUserInRole("HOPS_ADMIN"));
 
     } catch (Exception e) {
       if (e instanceof RuntimeException) {
@@ -211,22 +293,22 @@ public class YarnUIProxyServlet extends ProxyServlet {
   }
 
   protected void copyResponseEntity(HttpMethod method,
-      HttpServletResponse servletResponse) throws IOException {
+      HttpServletResponse servletResponse, boolean isAdmin) throws IOException {
     InputStream entity = method.getResponseBodyAsStream();
     if (entity != null) {
       OutputStream servletOutputStream = servletResponse.getOutputStream();
       if (servletResponse.getHeader("Content-Type") == null || servletResponse.getHeader("Content-Type").
-          contains("html")) {
+          contains("html") || servletResponse.getHeader("Content-Type").contains("application/json")) {
         String inputLine;
         BufferedReader br = new BufferedReader(new InputStreamReader(entity));
 
         try {
           int contentSize = 0;
           String source = "http://" + method.getURI().getHost() + ":" + method.getURI().getPort();
-          while ((inputLine = br.readLine()) != null)  {
-            String outputLine = hopify(inputLine, source) + "\n";
+          while ((inputLine = br.readLine()) != null) {
+            String outputLine = hopify(inputLine, source, isAdmin) + "\n";
             byte[] output = outputLine.getBytes(Charset.forName("UTF-8"));
-            servletOutputStream.write(output);
+            servletOutputStream.write(output);       
             contentSize += output.length;
           }
           br.close();
@@ -248,7 +330,8 @@ public class YarnUIProxyServlet extends ProxyServlet {
         continue;
       }
       if (header.getName().equalsIgnoreCase("Content-Length") && (method.getResponseHeader("Content-Type") == null
-          || method.getResponseHeader("Content-Type").getValue().contains("html"))) {
+          || method.getResponseHeader("Content-Type").getValue().contains("html") || servletResponse.getHeader(
+          "Content-Type").contains("application/json"))) {
         continue;
       }
       if (header.getName().
@@ -261,8 +344,11 @@ public class YarnUIProxyServlet extends ProxyServlet {
     }
   }
 
-  private String hopify(String ui, String source) {
-
+  private String hopify(String ui, String source, boolean isAdmin) {
+    if(!isAdmin){
+      ui = removeUnusable(ui);
+    }
+    
     ui = ui.replaceAll("(?<=(href|src)=\")/(?=[a-zA-Z])",
         "/hopsworks-api/yarnui/" + source + "/");
     ui = ui.replaceAll("(?<=(href|src)=\')/(?=[a-zA-Z])",
@@ -274,15 +360,41 @@ public class YarnUIProxyServlet extends ProxyServlet {
     ui = ui.replaceAll("(?<=(href|src)=\')(?=http)",
         "/hopsworks-api/yarnui/");
     ui = ui.replaceAll("(?<=(href|src)=\")(?=[a-zA-Z])",
-        "/hopsworks-api/yarnui/" + source + "/" );
+        "/hopsworks-api/yarnui/" + source + "/");
     ui = ui.replaceAll("(?<=(href|src)=\')(?=[a-zA-Z])",
-        "/hopsworks-api/yarnui/" + source + "/" );
+        "/hopsworks-api/yarnui/" + source + "/");
     ui = ui.replaceAll("(?<=(url: '))/(?=[a-zA-Z])", "/hopsworks-api/yarnui/");
     ui = ui.replaceAll("(?<=(location\\.href = '))/(?=[a-zA-Z])", "/hopsworks-api/yarnui/");
+    ui = ui.replaceAll("(?<=\"(stdout\"|stderr\") : \")(?=[a-zA-Z])",
+        "/hopsworks-api/yarnui/");
+    ui = ui.replaceAll("for full log", "for latest " + settings.getSparkUILogsOffset()
+        + " bytes of logs");
+    ui = ui.replace("/?start=0", "/?start=-" + settings.getSparkUILogsOffset());
     return ui;
 
   }
 
+  String isRemoving = null;
+  private String removeUnusable(String ui){
+    
+    if(ui.contains("<div id=\"user\">") || ui.contains("<tfoot>") || ui.contains("<td id=\"navcell\">")){
+      isRemoving=ui;
+      return "";
+    }
+    if(isRemoving!=null){
+      if(isRemoving.contains("<div id=\"user\">") && ui.contains("<div id=\"logo\">")){
+        isRemoving = null;
+        return ui;
+      } else if(isRemoving.contains("<tfoot>") && ui.contains("</tfoot>")){
+        isRemoving = null;
+      } else if(isRemoving.contains("<td id=\"navcell\">") && ui.contains("</td>")){
+        isRemoving=null;
+      }
+      return "";
+    }
+    return ui;
+  }
+  
   protected String rewriteUrlFromRequest(HttpServletRequest servletRequest) {
     StringBuilder uri = new StringBuilder(500);
     if (servletRequest.getPathInfo() != null && servletRequest.getPathInfo().matches(

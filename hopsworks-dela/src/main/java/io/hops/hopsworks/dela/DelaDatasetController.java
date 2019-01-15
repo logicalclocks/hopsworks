@@ -123,7 +123,7 @@ public class DelaDatasetController {
     return dataset;
   }
 
-  public void delete(Project project, Dataset dataset) throws DelaException {
+  public void delete(Project project, Dataset dataset) throws DelaException, DatasetException {
     if (dataset.isShared()) {
       //remove the entry in the table that represents shared ds
       //but leave the dataset in hdfs b/c the user does not have the right to delete it.
@@ -144,14 +144,10 @@ public class DelaDatasetController {
 
   public Dataset createDataset(Users user, Project project, String name, String description)
     throws DatasetException, HopsSecurityException {
-    int templateId = -1;
-    boolean defaultDataset = false;
-    boolean searchable = true;
 
-    datasetCtrl.createDataset(user, project, name, description, templateId, searchable, defaultDataset, 
+    datasetCtrl.createDataset(user, project, name, description, -1, true, false, false,
       dfs.getDfsOps());
-    Dataset dataset = datasetFacade.findByNameAndProjectId(project, name);
-    return dataset;
+    return datasetFacade.findByNameAndProjectId(project, name);
   }
   
   public List<Dataset> getLocalPublicDatasets() {
@@ -168,7 +164,6 @@ public class DelaDatasetController {
     }
     Path datasetPath = datasetCtrl.getDatasetPath(dataset);
     Path readmePath = new Path(datasetPath, Settings.README_FILE);
-    FilePreviewDTO filePreviewDTO = datasetCtrl.getReadme(readmePath.toString(), dfs.getDfsOps());
-    return filePreviewDTO;
+    return datasetCtrl.getReadme(readmePath.toString(), dfs.getDfsOps());
   }
 }

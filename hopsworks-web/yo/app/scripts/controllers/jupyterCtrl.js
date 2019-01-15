@@ -40,10 +40,10 @@
 
 angular.module('hopsWorksApp')
     .controller('JupyterCtrl', ['$scope', '$routeParams', '$route',
-        'growl', 'ModalService', '$interval', 'JupyterService', 'SparkService', 'StorageService', '$location',
+        'growl', 'ModalService', '$interval', 'JupyterService', 'StorageService', '$location',
         '$timeout', '$window', '$sce', 'PythonDepsService', 'TourService',
         function($scope, $routeParams, $route, growl, ModalService, $interval, JupyterService,
-            SparkService, StorageService, $location, $timeout, $window, $sce, PythonDepsService, TourService) {
+            StorageService, $location, $timeout, $window, $sce, PythonDepsService, TourService) {
 
             var self = this;
             self.connectedStatus = false;
@@ -63,6 +63,7 @@ angular.module('hopsWorksApp')
             self.sparkDynamic = false;
             self.experiment = false;
             self.condaEnabled = true;
+            self.jupyterInstalled = true;
             $scope.sessions = null;
             self.val = {};
             $scope.tgState = true;
@@ -271,7 +272,7 @@ angular.module('hopsWorksApp')
                 self.val.appmasterMemory = 1024;
                 self.val.numExecutorGpus = 0;
                 self.val.numDriverGpus = 0;
-            }
+            };
 
             self.setMultiExecutor = function() {
                 // If leaving TF Driver mode, change default executor memory to 4096
@@ -325,7 +326,7 @@ angular.module('hopsWorksApp')
                                 break;
                             }
                         }
-                        self.checkCondaEnabled()
+                        self.checkCondaEnabled();
                         self.numNotEnabledEnvs = self.tempEnvs;
 
                     },
@@ -337,12 +338,48 @@ angular.module('hopsWorksApp')
 
             getCondaCommands();
 
-            var startPolling = function() {
-                self.poller = $interval(function() {
+            var checkJupyterInstalled = function() {
+                // Use hdfscontents as a proxy to now if jupyter has been installed correctly or not
+                PythonDepsService.libInstalled(self.projectId, "hdfscontents").then(
+                    function(success) {
+                        self.jupyterInstalled = true;
+                    },
+                    function(error) {
+                        self.jupyterInstalled = false;
+                    }
+                );
+            };
+
+            checkJupyterInstalled();
+
+            var condaCommandsPoller = function() {
+                self.condaPoller = $interval(function() {
                     getCondaCommands();
                 }, 5000);
             };
-            startPolling();
+            condaCommandsPoller();
+
+            var jupyterNotebookPoller = function() {
+                self.notebookPoller = $interval(function() {
+                JupyterService.running(self.projectId).then(
+                    function(success) {
+                        self.config = success.data;
+                        self.ui = "/hopsworks-api/jupyter/" + self.config.port + "/?token=" + self.config.token;
+                        timeToShutdown();
+                    },
+                    function(error) {
+                        self.ui = '';
+                    }
+                );
+                }, 20000);
+            };
+            jupyterNotebookPoller();
+
+
+            $scope.$on('$destroy', function () {
+              $interval.cancel(self.condaPoller);
+              $interval.cancel(self.notebookPoller);
+            });
 
             self.sliderVisible = false;
 
@@ -409,7 +446,7 @@ angular.module('hopsWorksApp')
             this.selectFile = function(reason) {
 
                 ModalService.selectFile('lg', self.selectFileRegexes[reason.toUpperCase()],
-                    self.selectFileErrorMsgs[reason.toUpperCase()]).then(
+                    self.selectFileErrorMsgs[reason.toUpperCase()], false).then(
                     function(success) {
                         self.onFileSelected(reason, "hdfs://" + success);
                     },
@@ -533,19 +570,18 @@ angular.module('hopsWorksApp')
                         self.sliderOptions.max = self.val.dynamicMaxExecutors;
                         self.toggleValue = true;
                         if (self.val.project.name.startsWith("demo_deep_learning")) {
-                            self.experiment();
                             self.val.mode = "experiment";
-                            self.advanced = true;
+                            self.experiment();
                             //Activate anaconda
                             PythonDepsService.enabled(self.projectId).then(
                                 function(success) {},
                                 function(error) {
-                                    growl.info("Preparing Python Anaconda environment, please wait...", {
-                                        ttl: 20000
+                                    growl.info("Anaconda environment with python 2.7 was selected for the project", {
+                                        ttl: 10000
                                     });
                                     PythonDepsService.enable(self.projectId, "2.7", "true").then(
                                         function(success) {
-
+                                            checkJupyterInstalled();
                                         },
                                         function(error) {
                                             growl.error("Could not enable Anaconda", {
@@ -556,7 +592,7 @@ angular.module('hopsWorksApp')
                                 });
 
                         } else {
-                            self.val.mode = "sparkDynamic";
+                            self.val.mode = "sparkdynamic";
                         }
                         if (self.val.logLevel === "FINE") {
                             self.logLevelSelected = self.log_levels[0];

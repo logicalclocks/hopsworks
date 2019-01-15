@@ -41,31 +41,35 @@ package io.hops.hopsworks.common.jobs.spark;
 
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.jobhistory.Execution;
+import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
+import io.hops.hopsworks.common.dao.user.UserFacade;
+import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
+import io.hops.hopsworks.common.exception.GenericException;
+import io.hops.hopsworks.common.exception.JobException;
+import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
+import io.hops.hopsworks.common.hdfs.DistributedFsService;
+import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.hdfs.UserGroupInformationService;
+import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
+import io.hops.hopsworks.common.jobs.execution.ExecutionController;
+import io.hops.hopsworks.common.jobs.jobhistory.JobType;
+import io.hops.hopsworks.common.jobs.yarn.YarnJobsMonitor;
+import io.hops.hopsworks.common.util.Settings;
+import org.apache.hadoop.security.UserGroupInformation;
+import org.eclipse.persistence.exceptions.DatabaseException;
+
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
 import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
 import java.util.jar.Attributes;
-import java.util.jar.Attributes.Name;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.ejb.EJB;
-import javax.ejb.Stateless;
-
-import io.hops.hopsworks.common.exception.GenericException;
-import io.hops.hopsworks.common.exception.JobException;
-import io.hops.hopsworks.common.exception.RESTCodes;
-import org.apache.hadoop.security.UserGroupInformation;
-import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
-import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
-import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
-import io.hops.hopsworks.common.hdfs.UserGroupInformationService;
-import io.hops.hopsworks.common.hdfs.HdfsUsersController;
-import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.jobs.jobhistory.JobType;
-import io.hops.hopsworks.common.jobs.yarn.YarnJobsMonitor;
-import io.hops.hopsworks.common.util.Settings;
 
 /**
  * Interaction point between the Spark front- and backend.
@@ -74,8 +78,7 @@ import io.hops.hopsworks.common.util.Settings;
 @Stateless
 public class SparkController {
 
-  private static final Logger LOGGER = Logger.getLogger(SparkController.class.
-      getName());
+  private static final Logger LOGGER = Logger.getLogger(SparkController.class.getName());
   @EJB
   private YarnJobsMonitor jobsMonitor;
   @EJB
@@ -88,6 +91,14 @@ public class SparkController {
   private HdfsUsersController hdfsUsersBean;
   @EJB
   private Settings settings;
+  @EJB
+  private DistributedFsService dfs;
+  @EJB
+  private UserFacade userFacade;
+  @EJB
+  private ExecutionController executionController;
+  @EJB
+  private JobFacade jobFacade;
 
   /**
    * Start the Spark job as the given user.
@@ -130,9 +141,8 @@ public class SparkController {
     }
     Execution jh = sparkjob.requestExecutionId();
     submitter.startExecution(sparkjob);
-    activityFacade.persistActivity(ActivityFacade.RAN_JOB + job.getName(), job.
-        getProject(),
-        user.asUser());
+    activityFacade.persistActivity(ActivityFacade.RAN_JOB + job.getName(), job.getProject(), user.asUser(),
+        ActivityFacade.ActivityFlag.JOB);
     return jh;
   }
 
@@ -145,43 +155,24 @@ public class SparkController {
 
   }
 
-  /**
-   * Inspect the jar or.py on the given path for execution. Returns a
-   * SparkJobConfiguration object with a default
-   * configuration for this job.
-   * <p/>
-   * @param path
-   * @param username the user name in a project (projectName__username)
-   * @param dfso
-   * @return
-   * @throws IOException
-   */
-  public SparkJobConfiguration inspectProgram(String path, String username, DistributedFileSystemOps dfso)
-    throws JobException {
-    LOGGER.log(Level.INFO, "Executing Spark job by {0} at path: {1}",
-        new Object[]{username, path});
-    
-    SparkJobConfiguration config = new SparkJobConfiguration();
-    //If the main program is in a jar, try to set main class from it
-    if (path.endsWith(".jar")) {
-      try (JarInputStream jis = new JarInputStream(dfso.open(path))) {
-        Manifest mf = jis.getManifest();
-        if (mf != null) {
-          Attributes atts = mf.getMainAttributes();
-          if (atts.containsKey(Name.MAIN_CLASS)) {
-            config.setMainClass(atts.getValue(Name.MAIN_CLASS));
-          }
-        }
-      } catch (IOException ex) {
-        throw new JobException(RESTCodes.JobErrorCode.JAR_INSEPCTION_ERROR, Level.SEVERE,
-          "Failed to inspect jar at:" + path, ex.getMessage(), ex);
-      }
-    } else {
-      config.setMainClass(Settings.SPARK_PY_MAINCLASS);
+  
+  
+  
+  public void deleteJob(Jobs job, Users user) throws JobException {
+    //Kill running execution of this job (if any)
+    executionController.kill(job, user);
+    try {
+      LOGGER.log(Level.INFO, "Request to delete job name ={0} job id ={1}",
+        new Object[]{job.getName(), job.getId()});
+      jobFacade.removeJob(job);
+      LOGGER.log(Level.INFO, "Deleted job name ={0} job id ={1}", new Object[]{job.getName(), job.getId()});
+      activityFacade.persistActivity(ActivityFacade.DELETED_JOB + job.getName(), job.getProject(), user.getEmail(), 
+          ActivityFacade.ActivityFlag.JOB);
+    } catch (DatabaseException ex) {
+      LOGGER.log(Level.SEVERE, "Job cannot be deleted job name ={0} job id ={1}",
+        new Object[]{job.getName(), job.getId()});
+      throw new JobException(RESTCodes.JobErrorCode.JOB_DELETION_ERROR, Level.SEVERE, ex.getMessage(), null, ex);
     }
-    config.setAppPath(path);
-    config.setHistoryServerIp(settings.getSparkHistoryServerIp());
-    return config;
   }
   
   private void sanityCheck(Jobs job, Users user) {
@@ -199,6 +190,29 @@ public class SparkController {
     } else if (!Strings.isNullOrEmpty(path) && !path.endsWith(".jar") && !path.endsWith(".py")) {
       throw new IllegalArgumentException("Path does not point to a jar or .py file.");
     }
+  }
+  
+  public SparkJobConfiguration inspectProgram(String path, DistributedFileSystemOps udfso) throws JobException {
+    SparkJobConfiguration config = new SparkJobConfiguration();
+    //If the main program is in a jar, try to set main class from it
+    if (path.endsWith(".jar")) {
+      try (JarInputStream jis = new JarInputStream(udfso.open(path))) {
+        Manifest mf = jis.getManifest();
+        if (mf != null) {
+          Attributes atts = mf.getMainAttributes();
+          if (atts.containsKey(Attributes.Name.MAIN_CLASS)) {
+            config.setMainClass(atts.getValue(Attributes.Name.MAIN_CLASS));
+          }
+        }
+      } catch (IOException ex) {
+        throw new JobException(RESTCodes.JobErrorCode.JAR_INSPECTION_ERROR, Level.SEVERE,
+          "Failed to inspect jar at:" + path, ex.getMessage(), ex);
+      }
+    } else {
+      config.setMainClass(Settings.SPARK_PY_MAINCLASS);
+    }
+    config.setAppPath(path);
+    return config;
   }
 
 }

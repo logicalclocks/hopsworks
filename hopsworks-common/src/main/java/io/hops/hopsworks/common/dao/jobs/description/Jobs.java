@@ -44,7 +44,7 @@ import io.hops.hopsworks.common.dao.jobhistory.Execution;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.jobs.configuration.JobConfiguration;
-import io.hops.hopsworks.common.jobs.configuration.JsonReduceableConverter;
+import io.hops.hopsworks.common.jobs.configuration.JobConfigurationConverter;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
 import org.codehaus.jackson.annotate.JsonIgnore;
 
@@ -98,7 +98,10 @@ import java.util.Date;
   @NamedQuery(name = "Jobs.findByProject",
           query
           = "SELECT j FROM Jobs j WHERE j.project = :project"),
-  @NamedQuery(name = "Jobs.findByNameAndProject",
+  @NamedQuery(name = "Jobs.findByProjectAndId",
+          query
+          = "SELECT j FROM Jobs j WHERE j.id = :id AND j.project = :project"),
+  @NamedQuery(name = "Jobs.findByProjectAndName",
           query
           = "SELECT j FROM Jobs j WHERE j.name = :name AND j.project = :project"),
   @NamedQuery(name = "Jobs.updateConfig",
@@ -106,7 +109,7 @@ import java.util.Date;
           = "UPDATE Jobs j SET j.jobConfig = :jobconfig  WHERE j.id = :id"),
   @NamedQuery(name = "Jobs.findByProjectAndType",
           query
-          = "SELECT j FROM Jobs j WHERE j.project = :project AND j.type = :type")})
+          = "SELECT j FROM Jobs j WHERE j.project = :project AND j.type in :typeList ORDER BY j.id ASC")})
 public class Jobs implements Serializable {
 
   private static final long serialVersionUID = 1L;
@@ -128,7 +131,7 @@ public class Jobs implements Serializable {
   private Date creationTime;
 
   @Column(name = "json_config")
-  @Convert(converter = JsonReduceableConverter.class)
+  @Convert(converter = JobConfigurationConverter.class)
   private JobConfiguration jobConfig;
 
   @Column(name = "type")
@@ -147,9 +150,9 @@ public class Jobs implements Serializable {
 
   @OneToMany(cascade = CascadeType.ALL,
           mappedBy = "job")
-  private Collection<Execution> executionCollection;
+  private Collection<Execution> executions;
 
-  protected Jobs() {
+  public Jobs() {
     this.name = "Hopsworks job";
   }
 
@@ -179,7 +182,7 @@ public class Jobs implements Serializable {
     this.jobConfig = config;
     this.project = project;
     this.creator = creator;
-    this.type = config.getType();
+    this.type = config.getJobType();
   }
 
   public Integer getId() {
@@ -226,13 +229,13 @@ public class Jobs implements Serializable {
 
   @JsonIgnore
   @XmlTransient
-  public Collection<Execution> getExecutionCollection() {
-    return executionCollection;
+  public Collection<Execution> getExecutions() {
+    return executions;
   }
 
-  public void setExecutionCollection(
-          Collection<Execution> executionCollection) {
-    this.executionCollection = executionCollection;
+  public void setExecutions(
+          Collection<Execution> executions) {
+    this.executions = executions;
   }
 
   @Override

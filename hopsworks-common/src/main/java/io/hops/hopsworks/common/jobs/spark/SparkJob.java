@@ -38,6 +38,7 @@
  */
 package io.hops.hopsworks.common.jobs.spark;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
@@ -52,7 +53,6 @@ import io.hops.hopsworks.common.jobs.yarn.YarnJob;
 import io.hops.hopsworks.common.jobs.yarn.YarnJobsMonitor;
 import io.hops.hopsworks.common.util.Settings;
 import org.apache.hadoop.yarn.client.api.YarnClient;
-import org.elasticsearch.common.Strings;
 
 /**
  * Orchestrates the execution of a Spark job: run job, update history object.
@@ -99,14 +99,13 @@ public class SparkJob extends YarnJob {
     //Set spark runner options
     runnerbuilder.setExecutorCores(jobconfig.getExecutorCores());
     runnerbuilder.setExecutorMemory("" + jobconfig.getExecutorMemory() + "m");
-    runnerbuilder.setNumberOfExecutors(jobconfig.getNumberOfExecutors());
-    runnerbuilder.setNumberOfGpusPerExecutor(jobconfig.getNumberOfGpusPerExecutor());
-    if (jobconfig.isDynamicExecutors()) {
-      runnerbuilder.setDynamicExecutors(jobconfig.isDynamicExecutors());
-      runnerbuilder.setNumberOfExecutorsMin(jobconfig.getSelectedMinExecutors());
-      runnerbuilder.setNumberOfExecutorsMax(jobconfig.getSelectedMaxExecutors());
-      runnerbuilder.setNumberOfExecutorsInit(jobconfig.
-          getNumberOfExecutorsInit());
+    runnerbuilder.setNumberOfExecutors(jobconfig.getExecutorInstances());
+    runnerbuilder.setExecutorGPUs(jobconfig.getExecutorGpus());
+    if (jobconfig.isDynamicAllocationEnabled()) {
+      runnerbuilder.setDynamicExecutors(jobconfig.isDynamicAllocationEnabled());
+      runnerbuilder.setNumberOfExecutorsMin(jobconfig.getDynamicAllocationMinExecutors());
+      runnerbuilder.setNumberOfExecutorsMax(jobconfig.getDynamicAllocationMaxExecutors());
+      runnerbuilder.setNumberOfExecutorsInit(jobconfig.getDynamicAllocationInitialExecutors());
     }
     //Set Yarn running options
     runnerbuilder.setDriverMemoryMB(jobconfig.getAmMemory());
@@ -115,7 +114,9 @@ public class SparkJob extends YarnJob {
 
     //Set Kafka params
     runnerbuilder.setServiceProps(serviceProps);
-    runnerbuilder.addExtraFiles(Arrays.asList(jobconfig.getLocalResources()));
+    if(jobconfig.getLocalResources() != null) {
+      runnerbuilder.addExtraFiles(Arrays.asList(jobconfig.getLocalResources()));
+    }
     //Set project specific resources, i.e. Kafka certificates
     runnerbuilder.addExtraFiles(projectLocalResources);
     if (jobSystemProperties != null && !jobSystemProperties.isEmpty()) {
@@ -147,7 +148,7 @@ public class SparkJob extends YarnJob {
       }
 
       runner = runnerbuilder.
-          getYarnRunner(jobs.getProject().getName(),
+          getYarnRunner(jobs.getProject(),
               jobUser, usersFullName,
               services, services.getFileOperations(hdfsUser.getUserName()), yarnClient, settings);
 

@@ -43,10 +43,10 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('ProjectCtrl', ['$scope', '$rootScope', '$location', '$routeParams', '$route', 'UtilsService',
-          'growl', 'ProjectService', 'ModalService', 'ActivityService', '$cookies', 'DataSetService',
-          'UserService', 'TourService', 'PythonDepsService', 'StorageService', 'CertService', 'VariablesService', 'FileSaver', 'Blob',
-          function ($scope, $rootScope, $location, $routeParams, $route, UtilsService, growl, ProjectService,
+    .controller('ProjectCtrl', ['$scope', '$rootScope', '$location', '$routeParams', '$route', '$timeout', 'UtilsService',
+        'growl', 'ProjectService', 'ModalService', 'ActivityService', '$cookies', 'DataSetService',
+        'UserService', 'TourService', 'PythonDepsService', 'StorageService', 'CertService', 'VariablesService', 'FileSaver', 'Blob',
+        function ($scope, $rootScope, $location, $routeParams, $route, $timeout, UtilsService, growl, ProjectService,
                   ModalService, ActivityService, $cookies, DataSetService, UserService, TourService, PythonDepsService,
                   StorageService, CertService, VariablesService, FileSaver, Blob) {
 
@@ -71,9 +71,9 @@ angular.module('hopsWorksApp')
 
             // We could instead implement a service to get all the available types but this will do it for now
             if ($rootScope.isDelaEnabled) {
-              self.projectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'DELA', 'SERVING'];
+                self.projectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'DELA', 'SERVING', 'FEATURESTORE', 'RSTUDIO'];
             } else {
-              self.projectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'SERVING'];
+                self.projectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'SERVING', 'FEATURESTORE', 'RSTUDIO'];
             }
 
             $scope.activeService = "home";
@@ -168,19 +168,18 @@ angular.module('hopsWorksApp')
                         $cookies.put("projectID", self.projectId);
                         //set the project name under which the search is performed
                         UtilsService.setProjectName(self.currentProject.projectName);
-                        self.getRole();                        
+                        self.getRole();
                       }
               );
 
             };
 
-
-            var getAllActivities = function () {
-              ActivityService.getByProjectId(self.projectId).then(function (success) {
-                self.activities = success.data;
-                self.pageSize = 8;
-                self.totalPages = Math.floor(self.activities.length / self.pageSize);
-                self.totalItems = self.activities.length;
+            self.pageSize = 8;
+            self.curentPage = 1;
+            var getAllActivities = function (offset) {
+              ActivityService.getByProjectId(self.projectId, self.pageSize, offset).then(function (success) {
+                self.activities = success.data.items;                
+                self.totalItems = success.data.count;
               }, function (error) {
                   if (typeof error.data.usrMsg !== 'undefined') {
                       growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
@@ -189,11 +188,18 @@ angular.module('hopsWorksApp')
                   }
               });
             };
+            
+            self.getActivitiesNextPage = function () {
+              var offset = self.pageSize * (self.curentPage - 1);
+              if (self.totalItems > offset) {
+                getAllActivities(offset);
+              }
+            };
 
             //we only need to load the activities if the path is project (endswith pId).
             var locationPath = $location.path();
             if (locationPath.substring(locationPath.length - self.projectId.length, locationPath.length) === self.projectId) {
-              getAllActivities();
+              getAllActivities(0);
             }            
 
             getCurrentProject();
@@ -230,7 +236,7 @@ angular.module('hopsWorksApp')
                       }, function (error) {
               });
             };
-           
+
             self.saveProject = function () {
               self.working = true;
               $scope.newProject = {
@@ -288,6 +294,7 @@ angular.module('hopsWorksApp')
             };
 
             self.goToJobs = function () {
+              self.toggleKibanaNavBar();
               self.goToUrl('jobs');
               if (self.tourService.currentStep_TourTwo > -1) {
                 self.tourService.resetTours();
@@ -303,28 +310,39 @@ angular.module('hopsWorksApp')
               // If not running, start a new instance
 
 //              http://localhost:8080/hopsworks/#!/project/1/settings
-             if (self.tourService.currentStep_TourTwo > -1) {
-                self.tourService.resetTours();
+              if (self.tourService.currentStep_TourTwo > -1) {
+                  self.tourService.resetTours();
               }
 
-//              if (self.currentProject.projectName.startsWith("demo_tensorflow")) {
-//                self.goToUrl('jupyter');
-//              } else {
               self.enabling = true;
-              PythonDepsService.enabled(self.projectId).then(function (success) {
-                self.goToUrl('jupyter');
-              }, function (error) {
-                if (self.currentProject.projectName.startsWith("demo_deep_learning")) {
-                  self.goToUrl('jupyter');
-                } else {
-                  ModalService.confirm('sm', 'Enable Anaconda First', 'You need to enable Anaconda before running Jupyter!')
-                          .then(function (success) {
-                            self.goToUrl('python');
-                          }, function (error) {
-                            self.goToUrl('jupyter');
-                          });
-                }
-              });
+              PythonDepsService.enabled(self.projectId).then(
+                  function (success) {
+                      // Check if jupyter is installed
+                      PythonDepsService.libInstalled(self.projectId, "hdfscontents").then(
+                          function(success) {
+                              self.goToUrl('jupyter');
+                          },
+                          function(error) {
+                              ModalService.confirm('sm', 'Install Jupyter first', 'Make sure Jupyter is installed in your project environment')
+                              .then(function (success) {
+                                  self.goToUrl('python');
+                              }, function (error) {
+                                  self.goToUrl('jupyter');
+                              });
+                          }
+                      );
+                  }, function (error) {
+                      if (self.currentProject.projectName.startsWith("demo_deep_learning")) {
+                          self.goToUrl('jupyter');
+                      } else {
+                          ModalService.confirm('sm', 'Enable Anaconda First', 'You need to enable Anaconda before running Jupyter!')
+                              .then(function (success) {
+                                  self.goToUrl('python');
+                              }, function (error) {
+                                  self.goToUrl('jupyter');
+                              });
+                      }
+                  });
             };
 
 
@@ -343,7 +361,12 @@ angular.module('hopsWorksApp')
             };
 
             self.goToTfServing = function () {
+              self.toggleKibanaNavBar();
               self.goToUrl('serving');
+            };
+
+            self.goToFeaturestore = function () {
+                self.goToUrl('featurestore');
             };
 
             self.goToPython = function () {
@@ -351,6 +374,7 @@ angular.module('hopsWorksApp')
             };
 
             self.goToExperiments = function () {
+              self.toggleKibanaNavBar();
               self.goToUrl('experiments');
             };
 
@@ -468,7 +492,11 @@ angular.module('hopsWorksApp')
             };
 
             self.showTfServing = function () {
-              return showService("Serving");
+                return showService("Serving");
+            };
+
+            self.showFeaturestore = function () {
+                return showService("Featurestore");
             };
 
             self.showWorkflows = function () {
@@ -548,6 +576,34 @@ angular.module('hopsWorksApp')
                 return self.projectFile.quotas.hiveHdfsNsQuota;
               }
               return null;
+            };
+
+            self.featurestoreHdfsUsage = function () {
+                if (self.projectFile.quotas !== null) {
+                    return convertSize(self.projectFile.quotas.featurestoreHdfsUsageInBytes);
+                }
+                return null;
+            };
+
+            self.featurestoreHdfsQuota = function () {
+                if (self.projectFile.quotas !== null) {
+                    return convertSize(self.projectFile.quotas.featurestoreHdfsQuotaInBytes);
+                }
+                return null;
+            };
+
+            self.featurestoreHdfsNsCount = function () {
+                if (self.projectFile.quotas !== null) {
+                    return self.projectFile.quotas.featurestoreHdfsNsCount;
+                }
+                return null;
+            };
+
+            self.featurestoreHdfsNsQuota = function () {
+                if (self.projectFile.quotas !== null) {
+                    return self.projectFile.quotas.featurestoreHdfsNsQuota;
+                }
+                return null;
             };
 
             /**
@@ -645,6 +701,15 @@ angular.module('hopsWorksApp')
             self.isServiceEnabled = function (service) {
               var idx = self.projectTypes.indexOf(service);
               return idx === -1;
-            };            
+            };
+
+            var kibanaNavVarInitKey = "hopsworks.kibana.navbar.set";
+            self.toggleKibanaNavBar = function () {
+                var kibanaNavBarInit = StorageService.get(kibanaNavVarInitKey);
+                if(kibanaNavBarInit === false){
+                    StorageService.store(kibanaNavVarInitKey, true);
+                    StorageService.store("kibana.isGlobalNavOpen", false);
+                }
+            };
 
           }]);

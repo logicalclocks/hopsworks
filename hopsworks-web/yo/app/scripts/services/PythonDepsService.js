@@ -138,6 +138,9 @@ angular.module('hopsWorksApp')
                   dataType: "json"
                 };
                 return $http(regReq);
+              },
+              libInstalled: function(projectId, libName) {
+                return $http.get('/api/project/' + projectId + '/pythonDeps/installed/' + libName);
               }
             };
           }]);

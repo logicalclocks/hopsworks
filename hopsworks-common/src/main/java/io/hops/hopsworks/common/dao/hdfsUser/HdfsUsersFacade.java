@@ -40,17 +40,15 @@
 package io.hops.hopsworks.common.dao.hdfsUser;
 
 import javax.ejb.Stateless;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
-import io.hops.hopsworks.common.dao.AbstractFacade;
+import io.hops.hopsworks.common.dao.AbstractReadOnlyFacade;
 import java.util.ArrayList;
 import java.util.List;
 
 @Stateless
-public class HdfsUsersFacade extends AbstractFacade<HdfsUsers> {
+public class HdfsUsersFacade extends AbstractReadOnlyFacade<HdfsUsers> {
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
@@ -79,12 +77,9 @@ public class HdfsUsersFacade extends AbstractFacade<HdfsUsers> {
   }
 
   public List<HdfsUsers> findProjectUsers(String projectName) {
-    List<HdfsUsers> users = null;
-    try {
-      users = em.createNamedQuery("HdfsUsers.findProjectUsers", HdfsUsers.class).setParameter("name",
-          projectName).getResultList();
-    } catch (NoResultException e) {
-    }
+    List<HdfsUsers> users = em.createNamedQuery("HdfsUsers.findProjectUsers", HdfsUsers.class)
+      .setParameter("name", projectName)
+      .getResultList();
     try {
       HdfsUsers user = em.createNamedQuery("HdfsUsers.findByName", HdfsUsers.class).setParameter("name", projectName).
           getSingleResult();
@@ -96,25 +91,6 @@ public class HdfsUsersFacade extends AbstractFacade<HdfsUsers> {
       }
     } catch (NoResultException e) {
     }
-    return users;    
-  }
- 
-  public void persist(HdfsUsers user) {
-    em.persist(user);
-  }
-
-  public void merge(HdfsUsers user) {
-    em.merge(user);
-  }
-
-  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  public void removeHdfsUser(HdfsUsers user) {
-    if (user == null) {
-      return;
-    }
-    HdfsUsers u = em.find(HdfsUsers.class, user.getId());
-    if (u != null) {
-      em.remove(u);
-    }
+    return users;
   }
 }

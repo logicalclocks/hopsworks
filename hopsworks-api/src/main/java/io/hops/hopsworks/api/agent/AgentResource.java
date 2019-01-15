@@ -169,6 +169,7 @@ public class AgentResource {
           .setInstallType(cc.getInstallType())
           .setLib(cc.getLib())
           .setEnvironmentYml(cc.getEnvironmentYml())
+          .setInstallJupyter(cc.getInstallJupyter())
           .build());
     }
     

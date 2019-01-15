@@ -21,7 +21,6 @@ import io.hops.hopsworks.jwt.exception.DuplicateSigningKeyException;
 import io.hops.hopsworks.jwt.exception.InvalidationException;
 import io.hops.hopsworks.jwt.exception.NotRenewableException;
 import io.hops.hopsworks.jwt.exception.SigningKeyNotFoundException;
-import io.swagger.annotations.Api;
 import java.security.NoSuchAlgorithmException;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
@@ -43,10 +42,7 @@ import javax.ws.rs.core.UriInfo;
 @Stateless
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-@Api(value = "JWT Resource",
-    description = "JWT Resource to be used by internal services.")
-@JWTRequired(acceptedTokens = {Audience.SERVICES},
-    allowedUserRoles = {"AGENT"})
+@JWTRequired(acceptedTokens = {Audience.SERVICES}, allowedUserRoles = {"AGENT"})
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class JWTResource {
 

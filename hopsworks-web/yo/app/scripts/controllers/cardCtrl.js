@@ -85,6 +85,7 @@ angular.module('hopsWorksApp')
                 content.datasetHealth["seeders"] = receivedDetails.data.dataset.datasetHealth.seeders;
                 content.datasetHealth["leechers"] = receivedDetails.data.dataset.datasetHealth.leechers;
               };
+
               if (content.localDataset) {
                 if (content.type === "inode") {
                   var request = {id: $routeParams.projectID, type: content.type, inodeId: content.id};

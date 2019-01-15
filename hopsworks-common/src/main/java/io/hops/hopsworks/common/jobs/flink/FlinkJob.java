@@ -156,7 +156,9 @@ public class FlinkJob extends YarnJob {
     flinkBuilder.setAppJarPath(jobconfig.getJarPath());
     //Set Kafka params
     flinkBuilder.setServiceProps(serviceProps);
-    flinkBuilder.addExtraFiles(Arrays.asList(jobconfig.getLocalResources()));
+    if(jobconfig.getLocalResources() != null) {
+      flinkBuilder.addExtraFiles(Arrays.asList(jobconfig.getLocalResources()));
+    }
     //Set project specific resources, i.e. Kafka certificates
     flinkBuilder.addExtraFiles(projectLocalResources);
     if (jobconfig.getArgs() != null && !jobconfig.getArgs().isEmpty()) {
@@ -224,10 +226,10 @@ public class FlinkJob extends YarnJob {
       if (projectService.getProjectServicesPK().getService()
           == ProjectServiceEnum.KAFKA) {
         List<Execution> execs = services.getExecutionFacade().
-            findForProjectByType(jobs.getProject(), JobType.FLINK);
+          findByProjectAndType(jobs.getProject(), JobType.FLINK);
         if (execs != null) {
           execs.addAll(services.getExecutionFacade().
-              findForProjectByType(jobs.getProject(),
+            findByProjectAndType(jobs.getProject(),
                   JobType.SPARK));
         }
         //Find if this project has running jobs

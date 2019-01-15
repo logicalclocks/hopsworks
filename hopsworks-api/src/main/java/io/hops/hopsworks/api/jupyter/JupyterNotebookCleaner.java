@@ -38,9 +38,9 @@
  */
 package io.hops.hopsworks.api.jupyter;
 
-import io.hops.hopsworks.api.util.LivyController;
-import io.hops.hopsworks.api.zeppelin.util.LivyMsg;
-import io.hops.hopsworks.api.zeppelin.util.LivyMsg.Session;
+import io.hops.hopsworks.common.livy.LivyController;
+import io.hops.hopsworks.common.livy.LivyMsg;
+import io.hops.hopsworks.common.livy.LivyMsg.Session;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
@@ -67,6 +67,8 @@ import javax.ejb.EJB;
 import javax.ejb.Schedule;
 import javax.ejb.Singleton;
 import javax.ejb.Timer;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
 import java.nio.file.Paths;
 import java.sql.Date;
 import java.util.List;
@@ -110,7 +112,18 @@ public class JupyterNotebookCleaner {
       minute = "0",
       hour = "*")
   public void execute(Timer timer) {
-
+  
+    //TODO(Theofilos): Remove check for ca module for 0.7.0 onwards
+    try {
+      String applicationName = InitialContext.doLookup("java:app/AppName");
+      String moduleName = InitialContext.doLookup("java:module/ModuleName");
+      if(applicationName.contains("hopsworks-ca") || moduleName.contains("hopsworks-ca")){
+        return;
+      }
+    } catch (NamingException e) {
+      LOGGER.log(Level.SEVERE, null, e);
+    }
+    LOGGER.log(Level.INFO, "Running JupyterNotebookCleaner.");
     // 1. Get all Running Jupyter Notebook Servers
     List<JupyterProject> servers = jupyterFacade.getAllNotebookServers();
 

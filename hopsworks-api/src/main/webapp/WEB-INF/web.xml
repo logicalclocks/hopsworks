@@ -58,7 +58,7 @@
     </init-param>
     <init-param>
       <param-name>log</param-name>
-      <param-value>true</param-value>
+      <param-value>false</param-value>
     </init-param>
   </servlet>
   <servlet-mapping>
@@ -147,7 +147,7 @@
     </init-param>
     <init-param>
       <param-name>log</param-name>
-      <param-value>true</param-value>
+      <param-value>false</param-value>
     </init-param>
   </servlet>
   <servlet-mapping>
@@ -219,23 +219,23 @@
   </servlet-mapping>
   <!-- tensorboard proxy servlet -->
   <servlet>
-    <servlet-name>TensorboardProxyServlet</servlet-name>
-    <servlet-class>io.hops.hopsworks.api.tensorflow.TensorboardProxyServlet</servlet-class>
+    <servlet-name>TensorBoardProxyServlet</servlet-name>
+    <servlet-class>io.hops.hopsworks.api.tensorflow.TensorBoardProxyServlet</servlet-class>
     <init-param>
       <param-name>targetUri</param-name>
       <param-value>http://localhost:80/</param-value>
     </init-param>
     <init-param>
       <param-name>log</param-name>
-      <param-value>true</param-value>
+      <param-value>false</param-value>
     </init-param>
   </servlet>
   <servlet-mapping>
-    <servlet-name>TensorboardProxyServlet</servlet-name>
+    <servlet-name>TensorBoardProxyServlet</servlet-name>
     <url-pattern>/tensorboard/*</url-pattern>
   </servlet-mapping>
   <servlet-mapping>
-    <servlet-name>TensorboardProxyServlet</servlet-name>
+    <servlet-name>TensorBoardProxyServlet</servlet-name>
     <url-pattern>/tensorboard</url-pattern>
   </servlet-mapping>
   <servlet>
@@ -243,7 +243,7 @@
     <servlet-class>io.swagger.jersey.config.JerseyJaxrsConfig</servlet-class>
     <init-param>
       <param-name>api.version</param-name>
-      <param-value>0.1.0</param-value>
+      <param-value>${project.version}</param-value>
     </init-param>
     <init-param>
       <param-name>swagger.api.title</param-name>
@@ -256,7 +256,11 @@
     <load-on-startup>2</load-on-startup>
   </servlet>
 
-<!-- Security Settings -->
+  <servlet>
+    <servlet-name>Bootstrap</servlet-name>
+    <servlet-class>io.hops.hopsworks.rest.application.config.Bootstrap</servlet-class>
+    <load-on-startup>2</load-on-startup>
+  </servlet>
   <security-role>
     <role-name>HOPS_ADMIN</role-name>
   </security-role>

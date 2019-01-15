@@ -39,24 +39,31 @@
 
 package io.hops.hopsworks.common.jobs.jobhistory;
 
-public enum JobType {
+import javax.xml.bind.annotation.XmlEnum;
 
+@XmlEnum
+public enum JobType {
+  
   YARN("Yarn"),
   FLINK("Flink"),
   SPARK("Spark"),
   PYSPARK("PySpark"),
   ERASURE_CODING("ERASURE_CODING");
-
+  
   private final String name;
-
-  private JobType(String name) {
+  
+  JobType(String name) {
     this.name = name;
   }
-
+  
+  public static JobType fromString(String name) {
+    return valueOf(name.toUpperCase());
+  }
+  
   public String getName() {
     return name;
   }
-
+  
   @Override
   public String toString() {
     return name;

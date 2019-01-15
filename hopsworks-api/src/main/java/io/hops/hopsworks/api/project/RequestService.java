@@ -39,6 +39,7 @@
 
 package io.hops.hopsworks.api.project;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
@@ -73,7 +74,6 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.mail.Message.RecipientType;
 import javax.mail.MessagingException;
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -82,6 +82,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.ws.rs.core.SecurityContext;
 
 @Path("/request")
 @Stateless
@@ -118,13 +119,13 @@ public class RequestService {
   @POST
   @Path("/access")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response requestAccess(RequestDTO requestDTO, @Context HttpServletRequest req) throws DatasetException,
+  public Response requestAccess(RequestDTO requestDTO, @Context SecurityContext sc) throws DatasetException,
       ProjectException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     if (requestDTO == null || requestDTO.getInodeId() == null || requestDTO.getProjectId() == null) {
       throw new IllegalArgumentException("requestDTO was not provided or was incomplete!");
     }
-    Users user = jWTHelper.getUserPrincipal(req);
+    Users user = jWTHelper.getUserPrincipal(sc);
     Inode inode = inodes.findById(requestDTO.getInodeId());
     Inode parent = inodes.findParent(inode);
     //requested project
@@ -147,16 +148,20 @@ public class RequestService {
     DatasetRequest dsRequest = datasetRequest.findByProjectAndDataset(
             project, ds);
     //email body
-    String msg = "Hi " + project.getOwner().getFname() + " " + project.
+    String msg = "Hi " + proj.getOwner().getFname() + " " + proj.
             getOwner().getLname() + ", \n\n"
             + user.getFname() + " " + user.getLname()
             + " wants access to a dataset in a project you own. \n\n"
             + "Dataset name: " + ds.getInode().getInodePK().getName() + "\n"
-            + "Project name: " + proj.getName() + "\n"
-            + "Attached message: " + requestDTO.getMessageContent() + "\n"
-            + "After logging in to hopsworks go to : /project/" + proj.getId()
-            + "/datasets "
-            + " if you want to share this dataset. \n";
+            + "Project name: " + proj.getName() + "\n";
+
+    if(!Strings.isNullOrEmpty(requestDTO.getMessageContent())) {
+      msg += "Attached message: " + requestDTO.getMessageContent() + "\n";
+    }
+
+    msg += "After logging in to Hopsworks go to : /project/" + proj.getId()
+        + "/datasets "
+        + " if you want to share this dataset. \n";
 
     //if there is a prior request by a user in the same project with the same role
     // or the prior request is from a data owner do nothing.
@@ -218,13 +223,13 @@ public class RequestService {
   @POST
   @Path("/join")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response requestJoin(RequestDTO requestDTO, @Context HttpServletRequest req) throws ProjectException {
+  public Response requestJoin(RequestDTO requestDTO, @Context SecurityContext sc) throws ProjectException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     if (requestDTO == null || requestDTO.getProjectId() == null) {
       throw new IllegalArgumentException("requestDTO wast not provided or was incomplete.");
     }
     //should be removed when users and user merg.
-    Users user = jWTHelper.getUserPrincipal(req);
+    Users user = jWTHelper.getUserPrincipal(sc);
     Project project = projectFacade.find(requestDTO.getProjectId());
     if(project == null){
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE);
@@ -239,18 +244,26 @@ public class RequestService {
             getOwner().getLname() + ", \n\n"
             + user.getFname() + " " + user.getLname()
             + " wants to join a project you own. \n\n"
-            + "Project name: " + project.getName() + "\n"
-            + "Attached message: " + requestDTO.getMessageContent() + "\n"
-            + "After loging in to hopsworks go to : /project" + project.getId()
-            + " and go to members tab "
-            + "if you want to add this person as a member in your project. \n";
+            + "Project name: " + project.getName() + "\n";
+
+    if(!Strings.isNullOrEmpty(requestDTO.getMessageContent())) {
+      msg += "Attached message: " + requestDTO.getMessageContent() + "\n";
+    }
+
+    msg += "After logging in to Hopsworks go to : /project" + project.getId()
+        + " and go to members tab "
+        + "if you want to add this person as a member in your project. \n";
 
     Users from = user;
     Users to = userFacade.findByEmail(project.getOwner().getEmail());
     String message = "Hi " + to.getFname() + "<br>"
             + "I would like to join a project you own. <br>"
-            + "Project name: " + project.getName() + "<br>"
-            + requestDTO.getMessageContent();
+            + "Project name: " + project.getName() + "<br>";
+
+    if(!Strings.isNullOrEmpty(requestDTO.getMessageContent())) {
+      message += requestDTO.getMessageContent();
+    }
+
     String preview = from.getFname() + " would like to join a project you own.";
     String subject = "Project join request.";
     String path = "project/" + project.getId();

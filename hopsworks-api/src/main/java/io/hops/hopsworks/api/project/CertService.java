@@ -55,7 +55,6 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -63,6 +62,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 
 /**
  *
@@ -89,15 +89,15 @@ public class CertService {
     this.project = projectFacade.find(projectId);
     return this;
   }
-
+  
   @GET
   @Path("/certpw")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response getCertPw(@QueryParam("keyStore") String keyStore, @Context HttpServletRequest req) {
+  public Response getCertPw(@QueryParam("keyStore") String keyStore, @Context SecurityContext sc) {
     //Find user
-    Users user = jWTHelper.getUserPrincipal(req);
+    Users user = jWTHelper.getUserPrincipal(sc);
     try {
       CertPwDTO respDTO = projectController.getProjectSpecificCertPw(user, project.getName(), keyStore);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(respDTO).build();

@@ -39,7 +39,6 @@
 
 package io.hops.hopsworks.common.dao.metadata;
 
-import java.util.Objects;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
@@ -59,17 +58,17 @@ public class SchemalessMetadataPK {
   @Basic(optional = false)
   @NotNull
   @Column(name = "inode_id")
-  private int inodeId;
+  private Long inodeId;
 
   @Basic(optional = false)
   @NotNull
   @Column(name = "inode_parent_id")
-  private int inodeParentId;
+  private long inodeParentId;
 
   public SchemalessMetadataPK() {
   }
 
-  public SchemalessMetadataPK(Integer inodeId, Integer inodeParentId) {
+  public SchemalessMetadataPK(Long inodeId, Long inodeParentId) {
     this.inodeId = inodeId;
     this.inodeParentId = inodeParentId;
   }
@@ -82,15 +81,15 @@ public class SchemalessMetadataPK {
     this.id = id;
   }
 
-  public int getInodeId() {
+  public Long getInodeId() {
     return inodeId;
   }
 
-  public void setInodeId(int inodeId) {
+  public void setInodeId(Long inodeId) {
     this.inodeId = inodeId;
   }
 
-  public int getInodeParentId() {
+  public long getInodeParentId() {
     return inodeParentId;
   }
 
@@ -99,36 +98,23 @@ public class SchemalessMetadataPK {
   }
 
   @Override
-  public int hashCode() {
-    int hash = 3;
-    hash = 47 * hash + Objects.hashCode(this.id);
-    hash = 47 * hash + this.inodeId;
-    hash = 47 * hash + this.inodeParentId;
-    return hash;
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+
+    SchemalessMetadataPK that = (SchemalessMetadataPK) o;
+
+    if (inodeId != that.inodeId) return false;
+    if (inodeParentId != that.inodeParentId) return false;
+    return id != null ? id.equals(that.id) : that.id == null;
   }
 
   @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-    if (obj == null) {
-      return false;
-    }
-    if (getClass() != obj.getClass()) {
-      return false;
-    }
-    final SchemalessMetadataPK other = (SchemalessMetadataPK) obj;
-    if (this.inodeId != other.inodeId) {
-      return false;
-    }
-    if (this.inodeParentId != other.inodeParentId) {
-      return false;
-    }
-    if (!Objects.equals(this.id, other.id)) {
-      return false;
-    }
-    return true;
+  public int hashCode() {
+    int result = id != null ? id.hashCode() : 0;
+    result = 31 * result + (int) (inodeId ^ (inodeId >>> 32));
+    result = 31 * result + (int) (inodeParentId ^ (inodeParentId >>> 32));
+    return result;
   }
 
   @Override

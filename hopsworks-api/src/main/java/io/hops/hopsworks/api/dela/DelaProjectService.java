@@ -53,6 +53,7 @@ import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.exception.DatasetException;
 import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.kafka.KafkaController;
 import io.hops.hopsworks.common.util.Settings;
@@ -90,6 +91,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 
 @RequestScoped
 @Produces(MediaType.APPLICATION_JSON)
@@ -160,10 +162,10 @@ public class DelaProjectService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response publish(@Context HttpServletRequest req, InodeIdDTO inodeId) throws DelaException {
+  public Response publish(@Context SecurityContext sc, InodeIdDTO inodeId) throws DelaException {
     Inode inode = getInode(inodeId.getId());
     Dataset dataset = getDatasetByInode(inode);
-    Users user = jWTHelper.getUserPrincipal(req);
+    Users user = jWTHelper.getUserPrincipal(sc);
     delaWorkerCtrl.shareDatasetWithHops(project, dataset, user);
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     json.setSuccessMessage("Dataset transfer is started - published");
@@ -187,10 +189,12 @@ public class DelaProjectService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response removePublic(@Context HttpServletRequest req, @PathParam("publicDSId") String publicDSId,
-    @ApiParam(value="delete dataset", required = true) @QueryParam("clean") boolean clean) throws DelaException {
+  public Response removePublic(@Context SecurityContext sc, @PathParam("publicDSId") String publicDSId,
+    @ApiParam(value="delete dataset", required = true) @QueryParam("clean") boolean clean)
+      throws DelaException, DatasetException {
+
     Dataset dataset = getDatasetByPublicId(publicDSId);
-    Users user = jWTHelper.getUserPrincipal(req);
+    Users user = jWTHelper.getUserPrincipal(sc);
     if (clean) {
       delaWorkerCtrl.unshareFromHopsAndClean(project, dataset, user);
     } else {
@@ -207,9 +211,9 @@ public class DelaProjectService {
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response startDownload(@Context HttpServletRequest req, @PathParam("publicDSId") String publicDSId,
-    HopsworksTransferDTO.Download downloadDTO) throws DelaException {
-    Users user = jWTHelper.getUserPrincipal(req);
+  public Response startDownload(@Context SecurityContext sc, @PathParam("publicDSId") String publicDSId,
+    HopsworksTransferDTO.Download downloadDTO) throws DelaException, DatasetException {
+    Users user = jWTHelper.getUserPrincipal(sc);
     //dataset not createed yet
 
     ManifestJSON manifest = delaWorkerCtrl.startDownload(project, user, downloadDTO);
@@ -222,9 +226,9 @@ public class DelaProjectService {
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response downloadDatasetHdfs(@Context HttpServletRequest req, @PathParam("publicDSId") String publicDSId,
+  public Response downloadDatasetHdfs(@Context SecurityContext sc, @PathParam("publicDSId") String publicDSId,
     HopsworksTransferDTO.Download downloadDTO) throws DelaException {
-    Users user = jWTHelper.getUserPrincipal(req);
+    Users user = jWTHelper.getUserPrincipal(sc);
     Dataset dataset = getDatasetByPublicId(downloadDTO.getPublicDSId());
 
     delaWorkerCtrl.advanceDownload(project, dataset, user, downloadDTO, null, null);
@@ -237,9 +241,9 @@ public class DelaProjectService {
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response downloadDatasetKafka(@Context HttpServletRequest req,
+  public Response downloadDatasetKafka(@Context HttpServletRequest req, @Context SecurityContext sc,
     @PathParam("publicDSId") String publicDSId, HopsworksTransferDTO.Download downloadDTO) throws DelaException {
-    Users user = jWTHelper.getUserPrincipal(req);
+    Users user = jWTHelper.getUserPrincipal(sc);
     Dataset dataset = getDatasetByPublicId(publicDSId);
 
     String certPath = kafkaController.getKafkaCertPaths(project);
@@ -260,10 +264,10 @@ public class DelaProjectService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response showManifest(@Context HttpServletRequest req, @PathParam("publicDSId") String publicDSId)
+  public Response showManifest(@Context SecurityContext sc, @PathParam("publicDSId") String publicDSId)
     throws DelaException {
     Dataset dataset = getDatasetByPublicId(publicDSId);
-    Users user = jWTHelper.getUserPrincipal(req);
+    Users user = jWTHelper.getUserPrincipal(sc);
     if (!dataset.isPublicDs()) {
       throw new DelaException(RESTCodes.DelaErrorCode.DATASET_NOT_PUBLIC, Level.FINE, DelaException.Source.LOCAL);
     }
@@ -296,7 +300,7 @@ public class DelaProjectService {
     return dataset;
   }
 
-  private Inode getInode(Integer inodeId) throws DelaException {
+  private Inode getInode(Long inodeId) throws DelaException {
     if (inodeId == null) {
       throw new DelaException(RESTCodes.DelaErrorCode.ILLEGAL_ARGUMENT,  Level.FINE, DelaException.Source.LOCAL,
         "inodeId was not provided.");

@@ -41,10 +41,10 @@
 
 angular.module('hopsWorksApp')
         .controller('NewJobCtrl', ['$routeParams', 'growl', 'JobService',
-          '$location', 'ModalService', 'StorageService', '$scope', 'SparkService',
-          'FlinkService', 'TourService', 'HistoryService', 'KafkaService', 'ProjectService', 'PythonDepsService', '$timeout',
+          '$location', 'ModalService', 'StorageService', '$scope', 'TourService', 'HistoryService',
+            'KafkaService', 'ProjectService', 'PythonDepsService', '$timeout',
           function ($routeParams, growl, JobService,
-                  $location, ModalService, StorageService, $scope, SparkService, FlinkService, TourService,
+                  $location, ModalService, StorageService, $scope, TourService,
                   HistoryService, KafkaService, ProjectService, PythonDepsService, $timeout) {
 
             var self = this;
@@ -174,17 +174,18 @@ angular.module('hopsWorksApp')
                 self.refreshSlider();
             };
 
-            self.setInitExecs = function () {
-              if (self.sliderOptions.min >
-                      self.runConfig.numberOfExecutorsInit) {
-                self.runConfig.numberOfExecutorsInit =
+            self.setInitExecs = function() {
+                if (self.sliderOptions.min >
+                    self.runConfig['spark.dynamicAllocation.initialExecutors']) {
+                    self.runConfig['spark.dynamicAllocation.initialExecutors'] =
                         parseInt(self.sliderOptions.min);
-              } else if (self.sliderOptions.max <
-                      self.runConfig.numberOfExecutorsInit) {
-                self.runConfig.numberOfExecutorsInit =
+                } else if (self.sliderOptions.max <
+                    self.runConfig['spark.dynamicAllocation.initialExecutors']) {
+                    self.runConfig['spark.dynamicAllocation.initialExecutors'] =
                         parseInt(self.sliderOptions.max);
-              }
-              self.runConfig.numberOfGpusPerExecutor = 0;
+                }
+                self.runConfig['spark.dynamicAllocation.minExecutors'] = self.sliderOptions.min;
+                self.runConfig['spark.dynamicAllocation.maxExecutors'] = self.sliderOptions.max;
             };
 
             self.dynExecChangeListener = function() {
@@ -367,7 +368,7 @@ angular.module('hopsWorksApp')
             var jobConfigFileImported = function (config) {
               try {
                 var jobConfig = angular.fromJson(config);
-                JobService.createNewJob(self.projectId, jobConfig.type, jobConfig.config).then(
+                JobService.createNewJob(self.projectId, jobConfig.config).then(
                         function (success) {
                           $location.path('project/' + self.projectId + '/jobs');
                           self.removed = true;
@@ -415,9 +416,9 @@ angular.module('hopsWorksApp')
                   return;
                 } else {
                   if (self.runConfig.kafka.advanced) {
-                    self.runConfig.kafka.consumergroups = self.consumerGroups;
+                    self.runConfig.kafka.consumerGroups = self.consumerGroups;
                   } else {
-                    delete self.runConfig.kafka.consumergroups;
+                    delete self.runConfig.kafka.consumerGroups;
                   }
                 }
               } else {
@@ -427,8 +428,8 @@ angular.module('hopsWorksApp')
               self.runConfig.flinkjobtype = self.flinkjobtype;
               self.runConfig.localResources = self.localResources;
               if (self.getJobType() === "SPARK" || self.getJobType() === "PYSPARK") {
-                self.runConfig.selectedMinExecutors = self.sliderOptions.min;
-                self.runConfig.selectedMaxExecutors = self.sliderOptions.max;
+                self.runConfig['spark.dynamicAllocation.minExecutors'] = self.sliderOptions.min;
+                self.runConfig['spark.dynamicAllocation.maxExecutors']  = self.sliderOptions.max;
               }
               if (self.getJobType() === "SPARK" || self.getJobType() === "FLINK") {
                 if (typeof self.runConfig.mainClass === 'undefined' || self.runConfig.mainClass === "") {
@@ -441,7 +442,8 @@ angular.module('hopsWorksApp')
                 self.tourService.currentStep_TourThree = 2;
                 self.tourService.createdJobName = self.jobname;
               }
-              JobService.createNewJob(self.projectId, self.getJobType(), self.runConfig).then(
+
+              JobService.createNewJob(self.projectId, self.runConfig).then(
                       function (success) {
                         $location.path('project/' + self.projectId + '/jobs');
                         StorageService.remove(self.newJobName);
@@ -582,7 +584,7 @@ angular.module('hopsWorksApp')
               }
               if (self.jobtype === 6 && !self.runConfig.args) {
                 self.runConfig.args = '--base_path hdfs://default/Projects/' + self.projectName + '/TestJob --images tfr/train --format tfr --mode train --model mnist_model';
-                self.runConfig.numOfPs = 1;
+                self.runConfig['spark.tensorflow.num.ps']  = 1;
               }
 
               if (self.tourService.currentStep_TourFour > -1) {
@@ -674,7 +676,7 @@ angular.module('hopsWorksApp')
                 case "SPARK":
                 case "PYSPARK":
                   self.sparkState.selectedJar = filename;
-                  SparkService.inspectJar(self.projectId, path).then(
+                  JobService.getInspection(self.projectId, reason.toLowerCase(), path).then(
                           function (success) {
                             self.runConfig = success.data;
 
@@ -686,10 +688,8 @@ angular.module('hopsWorksApp')
                             //Update the min/max spark executors based on
                             //backend configuration
                             if (typeof self.runConfig !== 'undefined') {
-                              self.sliderOptions.options['floor'] = self.runConfig.
-                                      minExecutors;
-                              self.sliderOptions.options['ceil'] = self.runConfig.
-                                      maxExecutors;
+                              self.sliderOptions.options['floor'] = self.runConfig['spark.dynamicAllocation.minExecutors'];
+                              self.sliderOptions.options['ceil'] = self.runConfig['spark.dynamicAllocation.maxExecutors'];
                             } else {
                               self.sliderOptions.options['floor'] = 1;
                               self.sliderOptions.options['ceil'] = 300;
@@ -728,7 +728,7 @@ angular.module('hopsWorksApp')
                   break;
                 case "FLINK":
                   self.flinkState.selectedJar = filename;
-                  FlinkService.inspectJar(self.projectId, path).then(
+                  JobService.getInspection(self.projectId, reason.toLowerCase(), path).then(
                           function (success) {
                             self.runConfig = success.data;
                             self.mainFileSelected(filename);
@@ -753,7 +753,7 @@ angular.module('hopsWorksApp')
              */
             this.selectFile = function (reason, parameter) {
               ModalService.selectFile('lg', self.selectFileRegexes[reason],
-                      self.selectFileErrorMsgs["PYSPARK"]).then(
+                      self.selectFileErrorMsgs["PYSPARK"], false).then(
                       function (success) {
                         self.onFileSelected(reason, "hdfs://" + success);
                       }, function (error) {
@@ -840,29 +840,29 @@ angular.module('hopsWorksApp')
                 if (self.runConfig) {
                   self.topics = [];
                   self.runConfig.schedule = null;
-                  if (typeof self.runConfig.minExecutors !== "undefined") {
-                    self.sliderOptions.options['floor'] = self.runConfig.minExecutors;
+                  if (typeof self.runConfig['spark.dynamicAllocation.minExecutors']  !== "undefined") {
+                    self.sliderOptions.options['floor'] = self.runConfig['spark.dynamicAllocation.minExecutors'];
                   }
                   if (typeof self.sliderOptions.options['ceil'] !== "undefined") {
-                    self.runConfig.maxExecutors;
+                    self.runConfig['spark.dynamicAllocation.maxExecutors'];
                   }
-                  if (typeof self.runConfig.selectedMinExecutors === "undefined") {
-                    self.runConfig.selectedMinExecutors = self.sliderOptions.min;
+                  if (typeof self.runConfig['spark.dynamicAllocation.minExecutors'] === "undefined") {
+                    self.runConfig['spark.dynamicAllocation.minExecutors'] = self.sliderOptions.min;
                   } else {
-                    self.sliderOptions.min = self.runConfig.selectedMinExecutors;
+                    self.sliderOptions.min = self.runConfig['spark.dynamicAllocation.minExecutors'];
                   }
-                  if (typeof self.runConfig.selectedMaxExecutors === "undefined") {
-                    self.runConfig.selectedMaxExecutors = self.sliderOptions.max;
+                  if (typeof self.runConfig['spark.dynamicAllocation.maxExecutors'] === "undefined") {
+                    self.runConfig['spark.dynamicAllocation.maxExecutors'] = self.sliderOptions.max;
                   } else {
-                    self.sliderOptions.max = self.runConfig.selectedMaxExecutors;
+                    self.sliderOptions.max = self.runConfig['spark.dynamicAllocation.maxExecutors'];
                   }
                   //Load Kafka properties
                   if (typeof self.runConfig.kafka !== "undefined" && self.runConfig.kafka.topics.length > 0) {
                     self.kafkaSelected = true;
                     self.showAdvanced = self.runConfig.kafka.advanced;
-                    if (typeof self.runConfig.kafka.consumergroups !== "undefined") {
+                    if (typeof self.runConfig.kafka.consumerGroups !== "undefined") {
                       self.groupsSelected = true;
-                      self.consumerGroups = self.runConfig.kafka.consumergroups;
+                      self.consumerGroups = self.runConfig.kafka.consumerGroups;
                     }
                     var storedTopics = self.runConfig.kafka.topics;
                     //Set Kafka topics is selected

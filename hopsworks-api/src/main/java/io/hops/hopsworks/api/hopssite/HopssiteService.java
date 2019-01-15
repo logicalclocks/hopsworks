@@ -71,7 +71,6 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -83,6 +82,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 
 @Path("/hopssite/")
 @Stateless
@@ -138,8 +138,8 @@ public class HopssiteService {
 
   @GET
   @Path("userId")
-  public Response getUserId(@Context HttpServletRequest req) throws DelaException {
-    Users user = jWTHelper.getUserPrincipal(req);
+  public Response getUserId(@Context SecurityContext sc) throws DelaException {
+    Users user = jWTHelper.getUserPrincipal(sc);
     String id = String.valueOf(hopsSite.getUserId(user.getEmail()));
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(id).build();
   }
@@ -208,11 +208,11 @@ public class HopssiteService {
   @POST
   @Path("datasets/{publicDSId}/issue")
   public Response addDatasetIssue(@PathParam("publicDSId") String publicDSId, DatasetIssueReqDTO datasetIssueReq,
-      @Context HttpServletRequest req) throws DelaException {
+      @Context SecurityContext sc) throws DelaException {
     if (datasetIssueReq == null) {
       throw new IllegalArgumentException("Dataset issue not set.");
     }
-    Users u = jWTHelper.getUserPrincipal(req);
+    Users u = jWTHelper.getUserPrincipal(sc);
     UserDTO.Complete user = hopsSite.getUser(u.getEmail());
     DatasetIssueDTO datasetIssue = new DatasetIssueDTO(publicDSId, user, datasetIssueReq.getType(),
             datasetIssueReq.getMsg());

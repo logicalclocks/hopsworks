@@ -61,13 +61,46 @@ describe "On #{ENV['OS']}" do
         before :all do
           with_valid_project
         end
-        it 'enable anaconda' do
+
+        it 'destroy anaconda should not delete base environments' do
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/enable/2.7/true"
           expect_status(200)
+          if not conda_exists
+            skip "Anaconda is not installed in the machine or test is run locally"
+          end
 
+          # Enabling anaconda will not create an environment yet
+          expect(check_if_env_exists_locally(@project[:projectname])).to be false
+
+          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/destroyAnaconda"
+          expect_status(200)
           wait_for do
             CondaCommands.find_by(proj: @project[:projectname]).nil?
           end
+          expect(check_if_env_exists_locally("python27")).to be true
+          expect(check_if_env_exists_locally("python36")).to be true
+        end
+                
+        it 'enable anaconda' do
+          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/enable/2.7/true"
+          expect_status(200)
+          if not conda_exists
+            skip "Anaconda is not installed in the machine or test is run locally"
+          end
+
+          # Enabling anaconda will not create an environment yet
+          expect(check_if_env_exists_locally(@project[:projectname])).to be false
+          # There should be no CondaCommands in the database
+          expect(CondaCommands.find_by(proj: @project[:projectname])).to be nil
+
+          # Install a library to create the new environment
+          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/install",
+               {lib: "requests", version: "2.20.0", channelUrl: "#{conda_channel}", installType: "CONDA", machineType: "CPU"}
+          expect_status(200)
+          wait_for do
+            CondaCommands.find_by(proj: @project[:projectname]).nil?
+          end
+          expect(check_if_env_exists_locally(@project[:projectname])).to be true
         end
 
         it 'search libraries' do
@@ -87,6 +120,10 @@ describe "On #{ENV['OS']}" do
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/enable/2.7/true"
           expect_status(200)
           
+          # Install a library to create the new environment
+          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/install",
+               {lib: "paramiko", version: "2.4.2", channelUrl: "#{conda_channel}", installType: "CONDA", machineType: "CPU"}
+          expect_status(200)
           wait_for do
             CondaCommands.find_by(proj: @project[:projectname]).nil?
           end
@@ -97,6 +134,10 @@ describe "On #{ENV['OS']}" do
           get "#{ENV['HOPSWORKS_API']}/project/#{project2[:id]}/pythonDeps/enable/2.7/true"
           expect_status(200)
           
+          # Install a library to create the new environment                                                                  
+          post "#{ENV['HOPSWORKS_API']}/project/#{project2[:id]}/pythonDeps/install",
+               {lib: "paramiko", version: "2.4.2", channelUrl: "#{conda_channel}", installType: "CONDA", machineType: "CPU"}
+          expect_status(200)
           wait_for do
             CondaCommands.find_by(proj: project2[:projectname]).nil?
           end
@@ -134,7 +175,6 @@ describe "On #{ENV['OS']}" do
             CondaCommands.find_by(proj: @project[:projectname]).nil?
           end
         end
-
 
         it 'list libraries' do
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/"
@@ -175,12 +215,16 @@ describe "On #{ENV['OS']}" do
         end
 
         it 'remove env' do
-
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/destroyAnaconda"
           expect_status(200)
 
-          # Sleep so Kagent gets time to pickup command
-          sleep(20)
+          wait_for do
+            CondaCommands.find_by(proj: @project[:projectname]).nil?
+          end
+          if not conda_exists
+            skip "Anaconda is not installed in the machine or test is run locally"
+          end
+          expect(check_if_env_exists_locally(@project[:projectname])).to be false
         end
 
         it 'enable environment from yml' do
@@ -239,10 +283,6 @@ describe "On #{ENV['OS']}" do
           create_session(@user[:email], "Pass123")
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/enable/2.7/true"
           expect_status(200)
-
-          wait_for do
-            CondaCommands.find_by(proj: @project[:projectname]).nil?
-          end
         end
 
         it 'should delete the environment from the other machines - multi vm' do
@@ -252,9 +292,6 @@ describe "On #{ENV['OS']}" do
 
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/destroyAnaconda"
           expect_status(200)
-
-          # Sleep so Kagent gets time to pickup command
-          sleep(20)
         end
 
         it 'should be able to re-enable conda on a host' do
@@ -272,10 +309,6 @@ describe "On #{ENV['OS']}" do
           create_session(@user[:email], "Pass123")
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/enable/2.7/true"
           expect_status(200)
-
-          wait_for do
-            CondaCommands.find_by(proj: @project[:projectname]).nil?
-          end
         end
       end
     end
@@ -289,9 +322,6 @@ describe "On #{ENV['OS']}" do
         it 'should create an environment ' do
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/enable/2.7/true"
           expect_status(200)
-          wait_for do
-            CondaCommands.find_by(proj: @project[:projectname]).nil?
-          end
         end
 
         it 'should be able to disable conda on a host' do
@@ -312,7 +342,7 @@ describe "On #{ENV['OS']}" do
 
           if num_hosts == 1
             #  If single VM there are no hosts on which to install the library. Hopsworks returns 412
-            expect_status(412)
+            expect_status(503)
           else
             # If it is a multi vm there are hosts to install the library.
             expect_status(200)
@@ -324,8 +354,10 @@ describe "On #{ENV['OS']}" do
             # For single vm, there should not be any command in the db
             expect(CondaCommands.find_by(proj: @project[:projectname])).to be nil
           else
-            # For multi vm setup there should be num_hosts - 1 commands.
-            expect(CondaCommands.where(proj: @project[:projectname]).count).to eq(num_hosts - 1)
+            # For multi vm setup there should be (num_hosts - 1) * 2 commands.
+            # For each library installation there will be one command for the
+            # environment creation and one for the installation.
+            expect(CondaCommands.where(proj: @project[:projectname]).count).to eq((num_hosts - 1) * 2)
           end
         end
 

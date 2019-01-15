@@ -45,6 +45,7 @@ import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.project.util.DsDTOValidator;
 import io.hops.hopsworks.api.project.util.DsPath;
+import io.hops.hopsworks.api.project.util.DsUpdateOperations;
 import io.hops.hopsworks.api.project.util.PathValidator;
 import io.hops.hopsworks.api.util.DownloadService;
 import io.hops.hopsworks.api.util.FilePreviewImageTypes;
@@ -57,6 +58,7 @@ import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
 import io.hops.hopsworks.common.dao.dataset.DatasetPermissions;
 import io.hops.hopsworks.common.dao.dataset.DatasetRequest;
 import io.hops.hopsworks.common.dao.dataset.DatasetRequestFacade;
+import io.hops.hopsworks.common.dao.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeView;
@@ -88,8 +90,10 @@ import io.hops.hopsworks.common.jobs.erasureCode.ErasureCodeJobConfiguration;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
 import io.hops.hopsworks.common.jobs.yarn.YarnJobsMonitor;
 import io.hops.hopsworks.common.util.HopsUtils;
+import io.hops.hopsworks.common.util.OSProcessExecutor;
+import io.hops.hopsworks.common.util.ProcessDescriptor;
+import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.common.util.Settings;
-import io.hops.hopsworks.common.util.SystemCommandExecutor;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.ApiOperation;
 import org.apache.commons.codec.binary.Base64;
@@ -104,7 +108,6 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -126,6 +129,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.ws.rs.core.SecurityContext;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -176,6 +180,12 @@ public class DataSetService {
   private ProjectTeamFacade projectTeamFacade;
   @EJB
   private JWTHelper jWTHelper;
+  @EJB
+  private OSProcessExecutor osProcessExecutor;
+  @EJB
+  private FeaturestoreController featurestoreController;
+  @EJB
+  private DsUpdateOperations dsUpdateOperations;
 
   private Integer projectId;
   private Project project;
@@ -197,9 +207,8 @@ public class DataSetService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response unzip(@PathParam("path") String path,
-          @Context HttpServletRequest req) throws DatasetException, ProjectException {
-
+  public Response unzip(@PathParam("path") String path, @Context SecurityContext sc) throws DatasetException,
+      ProjectException {
 
     Response.Status resp = Response.Status.OK;
     DsPath dsPath = pathValidator.validatePath(this.project, path);
@@ -213,22 +222,22 @@ public class DataSetService {
     settings.addUnzippingState(fullPath);
 
     // HDFS_USERNAME is the next param to the bash script
-    Users user = jWTHelper.getUserPrincipal(req);
+    Users user = jWTHelper.getUserPrincipal(sc);
     String hdfsUser = hdfsUsersBean.getHdfsUserName(project, user);
 
-    List<String> commands = new ArrayList<>();
 
-    commands.add(settings.getHopsworksDomainDir() + "/bin/unzip-background.sh");
-    commands.add(stagingDir);
-    commands.add(fullPath);
-    commands.add(hdfsUser);
+    ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
+        .addCommand(settings.getHopsworksDomainDir() + "/bin/unzip-background.sh")
+        .addCommand(stagingDir)
+        .addCommand(fullPath)
+        .addCommand(hdfsUser)
+        .ignoreOutErrStreams(true)
+        .build();
 
-    SystemCommandExecutor commandExecutor = new SystemCommandExecutor(commands, false);
-    String stdout = "", stderr = "";
     try {
-      int result = commandExecutor.executeCommand();
-      stdout = commandExecutor.getStandardOutputFromCommand();
-      stderr = commandExecutor.getStandardErrorFromCommand();
+      ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
+
+      int result = processResult.getExitCode();
       if (result == 2) {
         throw new DatasetException(RESTCodes.DatasetErrorCode.COMPRESSION_SIZE_ERROR, Level.WARNING);
       }
@@ -236,7 +245,7 @@ public class DataSetService {
         throw new DatasetException(RESTCodes.DatasetErrorCode.COMPRESSION_ERROR, Level.WARNING,
           "path: " + fullPath + ", result: " + result);
       }
-    } catch (InterruptedException  | IOException ex) {
+    } catch (IOException ex) {
       throw new DatasetException(RESTCodes.DatasetErrorCode.COMPRESSION_ERROR, Level.SEVERE,
         "path: " + fullPath, ex.getMessage(), ex);
     }
@@ -249,7 +258,7 @@ public class DataSetService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response zip(@PathParam("path") String path, @Context HttpServletRequest req) throws DatasetException,
+  public Response zip(@PathParam("path") String path, @Context SecurityContext sc) throws DatasetException,
       ProjectException {
 
     Response.Status resp = Response.Status.OK;
@@ -264,22 +273,20 @@ public class DataSetService {
     settings.addZippingState(fullPath);
 
     // HDFS_USERNAME is the next param to the bash script
-    Users user = jWTHelper.getUserPrincipal(req);
+    Users user = jWTHelper.getUserPrincipal(sc);
     String hdfsUser = hdfsUsersBean.getHdfsUserName(project, user);
 
-    List<String> commands = new ArrayList<>();
+    ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
+        .addCommand(settings.getHopsworksDomainDir() + "/bin/zip-background.sh")
+        .addCommand(stagingDir)
+        .addCommand(fullPath)
+        .addCommand(hdfsUser)
+        .ignoreOutErrStreams(true)
+        .build();
 
-    commands.add(settings.getHopsworksDomainDir() + "/bin/zip-background.sh");
-    commands.add(stagingDir);
-    commands.add(fullPath);
-    commands.add(hdfsUser);
-
-    SystemCommandExecutor commandExecutor = new SystemCommandExecutor(commands, false);
-    String stdout = "", stderr = "";
     try {
-      int result = commandExecutor.executeCommand();
-      stdout = commandExecutor.getStandardOutputFromCommand();
-      stderr = commandExecutor.getStandardErrorFromCommand();
+      ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
+      int result = processResult.getExitCode();
       if (result == 2) {
         throw new DatasetException(RESTCodes.DatasetErrorCode.COMPRESSION_SIZE_ERROR, Level.WARNING);
       }
@@ -287,7 +294,7 @@ public class DataSetService {
         throw new DatasetException(RESTCodes.DatasetErrorCode.COMPRESSION_ERROR, Level.WARNING,
           "path: " + fullPath + ", result: " + result);
       }
-    } catch (InterruptedException | IOException ex) {
+    } catch (IOException ex) {
       throw new DatasetException(RESTCodes.DatasetErrorCode.COMPRESSION_ERROR, Level.SEVERE,
         "path: " + fullPath, ex.getMessage(), ex);
     }
@@ -328,9 +335,9 @@ public class DataSetService {
    * Get the inodes in the given project-relative path.
    * <p/>
    * @param path
-   * @param sc
-   * @param req
    * @return
+   * @throws io.hops.hopsworks.common.exception.DatasetException
+   * @throws io.hops.hopsworks.common.exception.ProjectException
    */
   @GET
   @Path("/getContent/{path: .+}")
@@ -398,9 +405,9 @@ public class DataSetService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response shareDataSet(DataSetDTO dataSet, @Context HttpServletRequest req) throws DatasetException {
+  public Response shareDataSet(DataSetDTO dataSet, @Context SecurityContext sc) throws DatasetException {
 
-    Users user = jWTHelper.getUserPrincipal(req);
+    Users user = jWTHelper.getUserPrincipal(sc);
     Dataset ds = dtoValidator.validateDTO(this.project, dataSet, false);
     RESTApiJsonResponse json = new RESTApiJsonResponse();
 
@@ -433,8 +440,8 @@ public class DataSetService {
       datasetRequest.remove(dsReq);//the dataset is shared so remove the request.
     }
 
-    activityFacade.persistActivity(ActivityFacade.SHARED_DATA + dataSet.
-            getName() + " with project " + proj.getName(), project, user);
+    activityFacade.persistActivity(ActivityFacade.SHARED_DATA + dataSet.getName() + " with project " + proj.getName(), 
+        project, user, ActivityFacade.ActivityFlag.DATASET);
 
     json.setSuccessMessage("The Dataset was successfully shared.");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
@@ -446,9 +453,9 @@ public class DataSetService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response unshareDataSet(DataSetDTO dataSet, @Context HttpServletRequest req) throws DatasetException {
+  public Response unshareDataSet(DataSetDTO dataSet, @Context SecurityContext sc) throws DatasetException {
 
-    Users user = jWTHelper.getUserPrincipal(req);
+    Users user = jWTHelper.getUserPrincipal(sc);
     RESTApiJsonResponse json = new RESTApiJsonResponse();
 
     Dataset ds = dtoValidator.validateDTO(this.project, dataSet, true);
@@ -460,11 +467,10 @@ public class DataSetService {
         throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_SHARED_WITH_PROJECT, Level.FINE,
           "project: " + proj.getName());
       }
-
       hdfsUsersBean.unshareDataset(proj, ds);
       datasetFacade.removeDataset(dst);
-      activityFacade.persistActivity(ActivityFacade.UNSHARED_DATA + dataSet.
-              getName() + " with project " + proj.getName(), project, user);
+      activityFacade.persistActivity(ActivityFacade.UNSHARED_DATA + dataSet.getName() + " with project " + 
+          proj.getName(), project, user, ActivityFacade.ActivityFlag.DATASET);
     }
     json.setSuccessMessage("The Dataset was successfully unshared.");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
@@ -520,7 +526,7 @@ public class DataSetService {
           default:
             break;
         }
-        datasetController.recChangeOwnershipAndPermission(datasetController.getDatasetPath(ds), fsPermission, null, 
+        datasetController.recChangeOwnershipAndPermission(datasetController.getDatasetPath(ds), fsPermission, null,
             null,null, dfso);
         datasetController.changePermissions(ds);
       }
@@ -542,7 +548,7 @@ public class DataSetService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response acceptRequest(@PathParam("inodeId") Integer inodeId) {
+  public Response acceptRequest(@PathParam("inodeId") Long inodeId) throws DatasetException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     if (inodeId == null) {
       throw new IllegalArgumentException("inodeId was not provided");
@@ -562,7 +568,7 @@ public class DataSetService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response rejectRequest(@PathParam("inodeId") Integer inodeId) {
+  public Response rejectRequest(@PathParam("inodeId") Long inodeId) {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     if (inodeId == null) {
       throw new IllegalArgumentException("inodeId was not provided.");
@@ -581,18 +587,18 @@ public class DataSetService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response createTopLevelDataSet(DataSetDTO dataSet, @Context HttpServletRequest req)
+  public Response createTopLevelDataSet(DataSetDTO dataSet, @Context SecurityContext sc)
     throws DatasetException, HopsSecurityException {
 
-    Users user = jWTHelper.getUserPrincipal(req);
+    Users user = jWTHelper.getUserPrincipal(sc);
     DistributedFileSystemOps dfso = dfs.getDfsOps();
     String username = hdfsUsersBean.getHdfsUserName(project, user);
     DistributedFileSystemOps udfso = dfs.getDfsOps(username);
-  
+
     try {
       datasetController.createDataset(user, project, dataSet.getName(),
         dataSet.getDescription(), dataSet.getTemplate(), dataSet.isSearchable(),
-        false, dfso);
+        false, false, dfso);
       //Generate README.md for the dataset if the user requested it
       if (dataSet.isGenerateReadme()) {
         //Persist README.md to hdfs
@@ -618,34 +624,15 @@ public class DataSetService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response createDataSetDir(DataSetDTO dataSetName, @Context HttpServletRequest req) throws DatasetException,
+  public Response createDataSetDir(DataSetDTO dataSetName, @Context SecurityContext sc) throws DatasetException,
       HopsSecurityException, ProjectException {
 
     RESTApiJsonResponse json = new RESTApiJsonResponse();
-    Users user = jWTHelper.getUserPrincipal(req);
-
-    DsPath dsPath = pathValidator.validatePath(this.project, dataSetName.getName());
-    org.apache.hadoop.fs.Path fullPath = dsPath.getFullPath();
-
-    DistributedFileSystemOps dfso = null;
-    DistributedFileSystemOps udfso = null;
-    try {
-      dfso = dfs.getDfsOps();
-      String username = hdfsUsersBean.getHdfsUserName(project, user);
-      if (username != null) {
-        udfso = dfs.getDfsOps(username);
-      }
-      datasetController.createSubDirectory(this.project, fullPath,
-          dataSetName.getTemplate(), dataSetName.getDescription(),
-          dataSetName.isSearchable(), udfso);
-    } finally {
-      if (dfso != null) {
-        dfso.close();
-      }
-      if (udfso != null) {
-        dfs.closeDfsClient(udfso);
-      }
-    }
+    Users user = jWTHelper.getUserPrincipal(sc);
+    org.apache.hadoop.fs.Path fullPath =
+        dsUpdateOperations.createDirectoryInDataset(
+            this.project, user, dataSetName.getName(), dataSetName.getDescription(),
+        dataSetName.getTemplate(), dataSetName.isSearchable());
     json.setSuccessMessage("A directory was created at " + fullPath);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();
@@ -655,17 +642,17 @@ public class DataSetService {
    * This function is used only for deletion of dataset directories
    * as it does not accept a path
    * @param fileName
-   * @param req
-   * @return 
-   * @throws io.hops.hopsworks.common.exception.DatasetException 
-   * @throws io.hops.hopsworks.common.exception.ProjectException 
+   * @param sc
+   * @return
+   * @throws io.hops.hopsworks.common.exception.DatasetException
+   * @throws io.hops.hopsworks.common.exception.ProjectException
    */
   @DELETE
   @Path("/{fileName}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response removedataSetdir(@PathParam("fileName") String fileName, @Context HttpServletRequest req) throws
+  public Response removedataSetdir(@PathParam("fileName") String fileName, @Context SecurityContext sc) throws
       DatasetException, ProjectException {
     boolean success = false;
     RESTApiJsonResponse json = new RESTApiJsonResponse();
@@ -686,7 +673,7 @@ public class DataSetService {
 
     DistributedFileSystemOps dfso = null;
     try {
-      Users user = jWTHelper.getUserPrincipal(req);
+      Users user = jWTHelper.getUserPrincipal(sc);
       String username = hdfsUsersBean.getHdfsUserName(project, user);
       //If a Data Scientist requested it, do it as project user to avoid deleting Data Owner files
       //Find project of dataset as it might be shared
@@ -727,23 +714,25 @@ public class DataSetService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();
   }
-  
+
   /**
    * Removes corrupted files from incomplete downloads.
-   * 
+   *
    * @param fileName
-   * @param req
-   * @return 
+   * @param sc
+   * @return
+   * @throws io.hops.hopsworks.common.exception.DatasetException
+   * @throws io.hops.hopsworks.common.exception.ProjectException
    */
   @DELETE
   @Path("corrupted/{fileName: .+}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response removeCorrupted(@PathParam("fileName") String fileName, @Context HttpServletRequest req) throws
+  public Response removeCorrupted(@PathParam("fileName") String fileName, @Context SecurityContext sc) throws
       DatasetException, ProjectException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
-    Users user = jWTHelper.getUserPrincipal(req);
+    Users user = jWTHelper.getUserPrincipal(sc);
 
     DsPath dsPath = pathValidator.validatePath(this.project, fileName);
     Dataset ds = dsPath.getDs();
@@ -781,7 +770,7 @@ public class DataSetService {
         dfs.closeDfsClient(dfso);
       }
     }
-  
+
     throw new DatasetException(RESTCodes.DatasetErrorCode.INODE_DELETION_ERROR, Level.FINE,
       "path: " + fullPath.toString());
 
@@ -792,23 +781,25 @@ public class DataSetService {
    * If it is used to delete a dataset directory it will throw an exception
    * (line 779)
    * @param fileName
-   * @param req
-   * @return 
+   * @param sc
+   * @return
+   * @throws io.hops.hopsworks.common.exception.DatasetException
+   * @throws io.hops.hopsworks.common.exception.ProjectException
    */
   @DELETE
   @Path("file/{fileName: .+}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response removefile(@PathParam("fileName") String fileName, @Context HttpServletRequest req) throws
+  public Response removefile(@PathParam("fileName") String fileName, @Context SecurityContext sc) throws
       DatasetException, ProjectException {
     boolean success = false;
     RESTApiJsonResponse json = new RESTApiJsonResponse();
-    Users user = jWTHelper.getUserPrincipal(req);
+    Users user = jWTHelper.getUserPrincipal(sc);
 
     DsPath dsPath = pathValidator.validatePath(this.project, fileName);
     Dataset ds = dsPath.getDs();
-    
+
     org.apache.hadoop.fs.Path fullPath = dsPath.getFullPath();
     org.apache.hadoop.fs.Path dsRelativePath = dsPath.getDsRelativePath();
 
@@ -850,9 +841,11 @@ public class DataSetService {
   /**
    * Move and Rename operations handled here
    *
+   * @param sc
    * @param dto
-   * @param req
    * @return
+   * @throws io.hops.hopsworks.common.exception.DatasetException
+   * @throws io.hops.hopsworks.common.exception.ProjectException
    */
   @POST
   @Path("move")
@@ -860,92 +853,27 @@ public class DataSetService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response moveFile(@Context HttpServletRequest req, MoveDTO dto) throws DatasetException, ProjectException {
-    Users user = jWTHelper.getUserPrincipal(req);
+  public Response moveFile(@Context SecurityContext sc, MoveDTO dto) throws DatasetException, ProjectException,
+      HopsSecurityException {
+    Users user = jWTHelper.getUserPrincipal(sc);
     String username = hdfsUsersBean.getHdfsUserName(project, user);
 
     Inode sourceInode = inodes.findById(dto.getInodeId());
-
-    String sourcePathStr = inodes.getPath(sourceInode);
-    DsPath sourceDsPath = pathValidator.validatePath(this.project, sourcePathStr);
-    DsPath destDsPath = pathValidator.validatePath(this.project, dto.getDestPath());
-
-    Dataset sourceDataset = sourceDsPath.getDs();
-
-    // The destination dataset project is already the correct one, as the path is given
-    // (and parsed)
-    Dataset destDataset = destDsPath.getDs();
-
-    if (!datasetController.getOwningProject(sourceDataset).equals(
-        destDataset.getProject())) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OPERATION_FORBIDDEN, Level.FINE,
-        "Cannot copy file/folder from another project.");
-    }
-
-    if (destDataset.isPublicDs()) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OPERATION_FORBIDDEN, Level.FINE,
-        "Can not move to a public dataset.");
-    }
-
-    org.apache.hadoop.fs.Path sourcePath = sourceDsPath.getFullPath();
-    org.apache.hadoop.fs.Path destPath = destDsPath.getFullPath();
-
-    DistributedFileSystemOps udfso = null;
-    //We need super-user to change owner 
-    DistributedFileSystemOps dfso = null;
-    try {
-      //If a Data Scientist requested it, do it as project user to avoid deleting Data Owner files
-      //Find project of dataset as it might be shared
-      Project owning = datasetController.getOwningProject(sourceDataset);
-      boolean isMember = projectTeamFacade.isUserMemberOfProject(owning, user);
-      if (isMember && projectTeamFacade.findCurrentRole(owning, user)
-          .equals(AllowedProjectRoles.DATA_OWNER) && owning.equals(project)) {
-        udfso = dfs.getDfsOps();// do it as super user
-      } else {
-        udfso = dfs.getDfsOps(username);// do it as project user
-      }
-      dfso = dfs.getDfsOps();
-      if (udfso.exists(destPath.toString())) {
-        throw new DatasetException(RESTCodes.DatasetErrorCode.DESTINATION_EXISTS, Level.FINE,
-          "destination: " + destPath.toString());
-      }
-
-      //Get destination folder permissions
-      FsPermission permission = udfso.getFileStatus(destPath.getParent()).getPermission();
-      String group = udfso.getFileStatus(destPath.getParent()).getGroup();
-      String owner = udfso.getFileStatus(sourcePath).getOwner();
-
-      udfso.moveWithinHdfs(sourcePath, destPath);
-
-      // Change permissions recursively
-      datasetController.recChangeOwnershipAndPermission(destPath, permission,
-          owner, group, dfso, udfso);
-
-      RESTApiJsonResponse response = new RESTApiJsonResponse();
-      response.setSuccessMessage("Moved");
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-              entity(response).build();
-
-    } catch (IOException ex) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OPERATION_ERROR, Level.SEVERE,
-        "move operation failed for: " + sourcePathStr, ex.getMessage(), ex);
-    } finally {
-      if (udfso != null) {
-        dfs.closeDfsClient(udfso);
-      }
-      if (dfso != null) {
-        dfso.close();
-      }
-    }
+    dsUpdateOperations.moveDatasetFile(project, user, sourceInode, dto.getDestPath());
+    RESTApiJsonResponse response = new RESTApiJsonResponse();
+    response.setSuccessMessage("Moved");
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+        entity(response).build();
   }
 
   /**
    * Copy operations handled here.
    *
-   * @param req
+   * @param sc
    * @param dto
-   * @param req
    * @return
+   * @throws io.hops.hopsworks.common.exception.DatasetException
+   * @throws io.hops.hopsworks.common.exception.ProjectException
    */
   @POST
   @Path("copy")
@@ -953,8 +881,8 @@ public class DataSetService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response copyFile(@Context HttpServletRequest req, MoveDTO dto) throws DatasetException, ProjectException {
-    Users user = jWTHelper.getUserPrincipal(req);
+  public Response copyFile(@Context SecurityContext sc, MoveDTO dto) throws DatasetException, ProjectException {
+    Users user = jWTHelper.getUserPrincipal(sc);
     String username = hdfsUsersBean.getHdfsUserName(project, user);
 
     Inode sourceInode = inodes.findById(dto.getInodeId());
@@ -1017,9 +945,9 @@ public class DataSetService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response checkFileExists(@PathParam("path") String path, @Context HttpServletRequest req) throws
+  public Response checkFileExists(@PathParam("path") String path, @Context SecurityContext sc) throws
       DatasetException, ProjectException {
-    Users user = jWTHelper.getUserPrincipal(req);
+    Users user = jWTHelper.getUserPrincipal(sc);
     String username = hdfsUsersBean.getHdfsUserName(project, user);
 
     DsPath dsPath = pathValidator.validatePath(this.project, path);
@@ -1058,17 +986,22 @@ public class DataSetService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response checkFileForDownload(@PathParam("path") String path,
-          @Context HttpServletRequest req) throws DatasetException, ProjectException {
-    Users user = jWTHelper.getUserPrincipal(req);
+          @Context SecurityContext sc) throws DatasetException, ProjectException {
+    Users user = jWTHelper.getUserPrincipal(sc);
     DsPath dsPath = pathValidator.validatePath(this.project, path);
     Project owningProject = datasetController.getOwningProject(dsPath.getDs());
+    RESTApiJsonResponse response = new RESTApiJsonResponse();
     //User must be accessing a dataset directly, not by being shared with another project.
     //For example, DS1 of project1 is shared with project2. User must be a member of project1 to download files
     if (owningProject.equals(project) && datasetController.isDownloadAllowed(project, user, dsPath.getFullPath().
         toString())) {
-      return checkFileExists(path, req);
+      checkFileExists(path, sc);
+      String token = jWTHelper.createOneTimeToken(user, dsPath.getFullPath().toString());
+      if (token != null && !token.isEmpty()) {
+        response.setData(token);
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(response).build();
+      }
     }
-    RESTApiJsonResponse response = new RESTApiJsonResponse();
     response.setErrorMsg(ResponseMessages.DOWNLOAD_PERMISSION_ERROR);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.FORBIDDEN).entity(response).build();
   }
@@ -1079,8 +1012,8 @@ public class DataSetService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response filePreview(@PathParam("path") String path, @QueryParam("mode") String mode,
-          @Context HttpServletRequest req) throws DatasetException, ProjectException {
-    Users user = jWTHelper.getUserPrincipal(req);
+          @Context SecurityContext sc) throws DatasetException, ProjectException {
+    Users user = jWTHelper.getUserPrincipal(sc);
     String username = hdfsUsersBean.getHdfsUserName(project, user);
 
     DsPath dsPath = pathValidator.validatePath(this.project, path);
@@ -1098,7 +1031,7 @@ public class DataSetService {
       //tests if the user have permission to access this path
       is = udfso.open(fullPath);
 
-      //Get file type first. If it is not a known image type, display its 
+      //Get file type first. If it is not a known image type, display its
       //binary contents instead
       String fileExtension = "txt"; // default file  type
       //Check if file contains a valid extension
@@ -1111,7 +1044,7 @@ public class DataSetService {
       if (HopsUtils.isInEnum(fileExtension, FilePreviewImageTypes.class)) {
         //If it is an image smaller than 10MB download it otherwise thrown an error
         if (fileSize < settings.getFilePreviewImageSize()) {
-          //Read the image in bytes and convert it to base64 so that is 
+          //Read the image in bytes and convert it to base64 so that is
           //rendered properly in the front-end
           byte[] imageInBytes = new byte[(int) fileSize];
           is.readFully(imageInBytes);
@@ -1211,20 +1144,17 @@ public class DataSetService {
   }
 
   @Path("fileDownload")
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public DownloadService downloadDS(@Context HttpServletRequest req) {
-    Users user = jWTHelper.getUserPrincipal(req);
+  public DownloadService downloadDS() {
     this.downloader.setProject(project);
-    this.downloader.setProjectUsername(hdfsUsersBean.getHdfsUserName(project, user));
-    return downloader;
+    return this.downloader;
   }
-  
+
   @Path("compressFile/{path: .+}")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response compressFile(@PathParam("path") String path, @Context HttpServletRequest req)
+  public Response compressFile(@PathParam("path") String path, @Context SecurityContext sc)
     throws JobException, DatasetException, ProjectException {
-    Users user = jWTHelper.getUserPrincipal(req);
+    Users user = jWTHelper.getUserPrincipal(sc);
 
     DsPath dsPath = pathValidator.validatePath(this.project, path);
     org.apache.hadoop.fs.Path fullPath = dsPath.getFullPath();
@@ -1256,39 +1186,15 @@ public class DataSetService {
   }
 
   /**
-   * Upload methods does not need to go through the filter, hdfs will through the exception and it is propagated to 
-   * the HTTP response.
-   * 
+   * Upload methods
+   *
    * @param path
-   * @param req
    * @param templateId
    * @return
    */
   @Path("upload/{path: .+}")
-  public UploadService upload(@PathParam("path") String path, @QueryParam("templateId") int templateId,
-      @Context HttpServletRequest req) throws DatasetException, ProjectException {
-    Users user = jWTHelper.getUserPrincipal(req);
-    String username = hdfsUsersBean.getHdfsUserName(project, user);
-
-    DsPath dsPath = pathValidator.validatePath(this.project, path);
-    Project owning = datasetController.getOwningProject(dsPath.getDs());
-    //Is user a member of this project? If so get their role
-    boolean isMember = projectTeamFacade.isUserMemberOfProject(owning, user);
-    String role = null;
-    if (isMember) {
-      role = projectTeamFacade.findCurrentRole(owning, user);
-    }
-
-    //Do not allow non-DataOwners to upload to a non-Editable dataset
-    //Do not allow anyone to upload if the dataset is shared and non-Editable
-    if (dsPath.getDs().getEditable() == DatasetPermissions.OWNER_ONLY 
-        && ((role != null && project.equals(owning) && !role.equals(AllowedProjectRoles.DATA_OWNER)) 
-        || !project.equals(owning))) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_EDITABLE, Level.FINE,
-        "dataset: " + dsPath.getDs().getName(), "datasetId: " + dsPath.getDs().getId());
-    }
-     
-    this.uploader.confFileUpload(dsPath, username, templateId, role);
+  public UploadService upload(@PathParam("path") String path, @QueryParam("templateId") int templateId) {
+    this.uploader.setParams(project, path, templateId, false);
     return this.uploader;
   }
 
@@ -1310,7 +1216,7 @@ public class DataSetService {
     Inode inode = inodes.getInodeAtPath(inodePath);
     Template temp = template.findByTemplateId(templateid);
     temp.getInodes().add(inode);
-  
+
     //persist the relationship
     this.template.updateTemplatesInodesMxN(temp);
 

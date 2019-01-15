@@ -28,6 +28,8 @@ import javax.ejb.Schedule;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.ejb.Timer;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
@@ -43,7 +45,7 @@ import java.util.logging.Logger;
 @Startup
 @DependsOn("Settings")
 public class TensorBoardKillTimer {
-  private final static Logger LOG = Logger.getLogger(TensorBoardKillTimer.class.getName());
+  private final static Logger LOGGER = Logger.getLogger(TensorBoardKillTimer.class.getName());
 
   @EJB
   private Settings settings;
@@ -54,23 +56,36 @@ public class TensorBoardKillTimer {
   @EJB
   private TensorBoardController tensorBoardController;
 
+
   @Schedule(persistent = false,
-          minute = "*/20",
+          minute = "*/10",
           hour = "*")
   public void rotate(Timer timer) {
-
+  
+    //TODO(Theofilos): Remove check for ca module for 0.7.0 onwards
+    try {
+      String applicationName = InitialContext.doLookup("java:app/AppName");
+      String moduleName = InitialContext.doLookup("java:module/ModuleName");
+      if(applicationName.contains("hopsworks-ca") || moduleName.contains("hopsworks-ca")){
+        return;
+      }
+    } catch (NamingException e) {
+      LOGGER.log(Level.SEVERE, null, e);
+    }
+    LOGGER.log(Level.INFO, "Running TensorBoardKillTimer.");
+    int tensorBoardMaxLastAccessed = settings.getTensorBoardMaxLastAccessed();
     Collection<TensorBoard> tensorBoardCollection = tensorBoardFacade.findAll();
     for (TensorBoard tensorBoard : tensorBoardCollection) {
       //Standard case, TB have been idle for a given amount of time
       Date accessed = tensorBoard.getLastAccessed();
       Date current = Calendar.getInstance().getTime();
-      if ((current.getTime() - accessed.getTime()) > settings.getTensorBoardMaxLastAccessed()) {
+      if ((current.getTime() - accessed.getTime()) > tensorBoardMaxLastAccessed) {
         try {
           tensorBoardController.cleanup(tensorBoard);
-          LOG.log(Level.INFO, "Killed TensorBoard " + tensorBoard.toString() + " not accessed in the last " +
-              settings.getTensorBoardMaxLastAccessed() + " milliseconds");
+          LOGGER.log(Level.INFO, "Killed TensorBoard " + tensorBoard.toString() + " not accessed in the last " +
+              tensorBoardMaxLastAccessed + " milliseconds");
         } catch (ServiceException ex) {
-          LOG.log(Level.SEVERE, "Failed to clean up running TensorBoard", ex);
+          LOGGER.log(Level.SEVERE, "Failed to clean up running TensorBoard", ex);
         }
       }
     }
@@ -98,7 +113,7 @@ public class TensorBoardKillTimer {
               }
 
               if (!tbExists) {
-                LOG.log(Level.SEVERE, "MANUAL CERTIFICATE CLEANUP NEEDED: Detected a stray TensorBoard with pid "
+                LOGGER.log(Level.SEVERE, "MANUAL CERTIFICATE CLEANUP NEEDED: Detected a stray TensorBoard with pid "
                     + pid.toString() + " in directory " + file.getAbsolutePath() + " killing it for now...");
                 tensorBoardProcessMgr.killTensorBoard(pid);
               }
@@ -107,7 +122,7 @@ public class TensorBoardKillTimer {
         }
       }
     } catch(IOException | NumberFormatException e) {
-      LOG.log(Level.SEVERE, "Exception while reading .pid files", e);
+      LOGGER.log(Level.SEVERE, "Exception while reading .pid files", e);
     }
   }
 }

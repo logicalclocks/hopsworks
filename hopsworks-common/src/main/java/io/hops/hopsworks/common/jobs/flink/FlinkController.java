@@ -147,19 +147,17 @@ public class FlinkController {
     Execution execution = flinkjob.requestExecutionId();
     submitter.startExecution(flinkjob);
     activityFacade.persistActivity(ActivityFacade.RAN_JOB, job.getProject(),
-      user.asUser());
+      user.asUser(), ActivityFacade.ActivityFlag.JOB);
     
     return execution;
   }
 
-  public void stopJob(Jobs job, Users user, String appid, String sessionId) throws
-      IllegalStateException,
-      IOException, NullPointerException, IllegalArgumentException {
+  public void stopJob(Jobs job, Users user, String appid, String sessionId) {
     //First: some parameter checking.
     if (job == null) {
-      throw new NullPointerException("Cannot stop a null job.");
+      throw new IllegalArgumentException("Job parameter was null.");
     } else if (user == null) {
-      throw new NullPointerException("Cannot stop a job as a null user.");
+      throw new IllegalArgumentException("Name parameter was null.");
     } else if (job.getJobType() != JobType.FLINK) {
       throw new IllegalArgumentException(
           "Job configuration is not a Flink job configuration.");
@@ -229,20 +227,10 @@ public class FlinkController {
    * configuration for this job.
    * <p/>
    * @param path
-   * @param username the user name in a project (projectName__username)
    * @param udfso
    * @return
    */
-  public FlinkJobConfiguration inspectJar(String path, String username,
-      DistributedFileSystemOps udfso) throws JobException {
-    LOGGER.log(Level.INFO, "Executing Flink job by {0} at path: {1}", new Object[]{
-      username, path});
-    if (!path.endsWith(".jar")) {
-      throw new IllegalArgumentException("Path does not point to a jar file.");
-    }
-    LOGGER.log(Level.INFO, "Really executing Flink job by {0} at path: {1}",
-        new Object[]{username, path});
-  
+  public FlinkJobConfiguration inspectProgram(String path, DistributedFileSystemOps udfso) throws JobException {
     try (JarInputStream jis = new JarInputStream(udfso.open(path))) {
       Manifest mf = jis.getManifest();
       Attributes atts = mf.getMainAttributes();
@@ -256,7 +244,7 @@ public class FlinkController {
       config.setJarPath(path);
       return config;
     } catch (IOException ex) {
-      throw new JobException(RESTCodes.JobErrorCode.JAR_INSEPCTION_ERROR, Level.SEVERE,
+      throw new JobException(RESTCodes.JobErrorCode.JAR_INSPECTION_ERROR, Level.SEVERE,
         "Failed to inspect jar at:" + path, ex.getMessage(), ex);
     }
   }

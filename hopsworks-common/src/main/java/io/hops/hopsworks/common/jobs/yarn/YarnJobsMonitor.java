@@ -59,6 +59,8 @@ import javax.ejb.EJB;
 import javax.ejb.Schedule;
 import javax.ejb.Singleton;
 import javax.ejb.Timer;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
 
 import io.hops.hopsworks.common.yarn.YarnClientService;
 import io.hops.hopsworks.common.yarn.YarnClientWrapper;
@@ -71,7 +73,7 @@ import org.apache.hadoop.yarn.exceptions.YarnException;
 @DependsOn("Settings")
 public class YarnJobsMonitor {
 
-  private static final Logger LOG = Logger.getLogger(YarnJobsMonitor.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(YarnJobsMonitor.class.getName());
 
   @EJB
   private Settings settings;
@@ -104,13 +106,23 @@ public class YarnJobsMonitor {
   }
 
   @Schedule(persistent = false,
-      second = "*",
+      second = "*/5",
       minute = "*",
       hour = "*")
   synchronized public void monitor(Timer timer) {
+    //TODO(Theofilos): Remove check for ca module for 0.7.0 onwards
+    try {
+      String applicationName = InitialContext.doLookup("java:app/AppName");
+      String moduleName = InitialContext.doLookup("java:module/ModuleName");
+      if(applicationName.contains("hopsworks-ca") || moduleName.contains("hopsworks-ca")){
+        return;
+      }
+    } catch (NamingException e) {
+      LOGGER.log(Level.SEVERE, null, e);
+    }
     if (init) {
-      List<Execution> execs = executionFacade.findAllNotFinished();
-      if (execs != null) {
+      List<Execution> execs = executionFacade.findNotFinished();
+      if (execs != null && !execs.isEmpty()) {
         for (Execution exec : execs) {
           if (exec.getAppId() != null) {
             executions.put(exec.getAppId(), exec);
@@ -156,7 +168,7 @@ public class YarnJobsMonitor {
           execFinalizer.finalize(futureResult.execFuture.get(),
               futureResult.jobState);
         } catch (ExecutionException | InterruptedException ex) {
-          LOG.log(Level.SEVERE, ex.getMessage(), ex);
+          LOGGER.log(Level.SEVERE, ex.getMessage(), ex);
         }
         futureResultIter.remove();
       }
@@ -190,19 +202,19 @@ public class YarnJobsMonitor {
         failure++;
       }
       failures.put(exec.getAppId(), failure);
-      LOG.log(Level.WARNING, "Failed to get application state for execution " + exec + ". Tried " + failures
+      LOGGER.log(Level.WARNING, "Failed to get application state for execution " + exec + ". Tried " + failures
           + " time(s).", ex);
     }
     if (failures.get(exec.getAppId()) != null && failures.get(exec.getAppId()) > maxStatusPollRetry) {
       try {
-        LOG.log(Level.SEVERE, "Killing application, {0}, because unable to poll for status.", exec);
+        LOGGER.log(Level.SEVERE, "Killing application, {0}, because unable to poll for status.", exec);
         monitor.cancelJob(monitor.getApplicationId().toString());
         exec = updateState(JobState.KILLED, exec);
         exec = updateFinalStatus(JobFinalStatus.KILLED, exec);
         exec = updateProgress(0, exec);
         execFinalizer.finalize(exec, JobState.KILLED);
       } catch (YarnException | IOException ex) {
-        LOG.
+        LOGGER.
             log(Level.SEVERE, "Failed to cancel execution, " + exec + " after failing to poll for status.", ex);
         exec = updateState(JobState.FRAMEWORK_FAILURE, exec);
         execFinalizer.finalize(exec, JobState.FRAMEWORK_FAILURE);

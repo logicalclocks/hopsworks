@@ -45,43 +45,57 @@ angular.module('hopsWorksApp')
 
         .factory('JobService', ['$http', function ($http) {
             var service = {
+               jobFilter: "",
+
+               /**
+                 * Get the jobFilter
+                 *
+                 * @returns {string}
+                 */
+               getJobFilter: function() {
+                   return this.jobFilter
+               },
+
+               /**
+                 * Update the jobFilter, this method is used by other services that redirect to jobs page and
+                 * wants to set the filter
+                 *
+                 * @param jobFilter
+                */
+               setJobFilter: function(jobFilter) {
+                   this.jobFilter = jobFilter
+               },
+
               /**
                * Get all the jobs defined in the project with given id.
                * @param {int} projectId
+               * @param {int} limit
+               * @param {int} offset
+               * @param {string} query
                * @returns {unresolved} A list of job objects.
                */
-              getAllJobsInProject: function (projectId) {
-                return $http.get('/api/project/' + projectId + '/jobs');
-              },
-              /**
-               * Get the details of the job with given ID, under the given project.
-               * @param {type} projectId
-               * @param {type} jobId
-               * @returns {unresolved} A complete description of the requested job.
-               */
-              getDetailsForJob: function (projectId, jobId) {
-                return $http.get('/api/project/' + projectId + '/jobs/' + jobId);
-              },
-              /**
-               * Get all the jobs in the current project for the given type.
-               * @param {type} projectId
-               * @param {type} type The name of the job type (e.g. Flink, Spark)
-               * @returns {unresolved} A list of defined jobs in the given project of the requested type.
-               */
-              getByProjectAndType: function (projectId, type) {
-                return $http.get('/api/project/' + projectId + '/jobs/' + type.toLowerCase());
+              getJobs: function (projectId, limit, offset, query) {
+                if (limit === undefined || limit === null) {
+                    limit = 0;
+                }
+                if (offset === undefined || offset === null) {
+                    offset = 0;
+                }
+                if (query === undefined || query === null) {
+                    query = "";
+                }
+                return $http.get('/api/project/' + projectId + '/jobs?limit=' + limit + '&offset=' + offset + query);
               },
               /**
                * Create a new Job in the given project, of the given type. 
                * @param {type} projectId 
-               * @param {type} type
                * @param {type} config The configuration of the newly created job.
                * @returns {undefined} The newly created job object.
                */
-              createNewJob: function (projectId, type, config) {
+              createNewJob: function (projectId, config) {
                 var req = {
                   method: 'POST',
-                  url: '/api/project/' + projectId + '/jobs/' + type.toLowerCase(),
+                  url: '/api/project/' + projectId + '/jobs',
                   headers: {
                     'Content-Type': 'application/json'
                   },
@@ -94,13 +108,13 @@ angular.module('hopsWorksApp')
                * @param {type} projectId 
                * @param {type} type
                * @param {type} schedule
-               * @param {type} jobId
+               * @param {type} name
                * @returns {undefined}
                */
-              updateSchedule: function (projectId, type, schedule, jobId) {
+              updateSchedule: function (projectId, type, schedule, name) {
                 var req = {
-                  method: 'POST',
-                  url: '/api/project/' + projectId + '/jobs/updateschedule/' + jobId,
+                  method: 'PUT',
+                  url: '/api/project/' + projectId + '/jobs/' + name + "/schedule",
                   headers: {
                     'Content-Type': 'application/json'
                   },
@@ -111,11 +125,12 @@ angular.module('hopsWorksApp')
               /**
                * Get all the registered executions for the given job.
                * @param {type} projectId
-               * @param {type} jobId
+               * @param {type} name
+               * @param {string} query
                * @returns {undefined}
                */
-              getAllExecutions: function (projectId, jobId) {
-                return $http.get('/api/project/' + projectId + '/jobs/' + jobId + '/executions');
+              getAllExecutions: function (projectId, name, query) {
+                return $http.get('/api/project/' + projectId + '/jobs/' + name + '/executions' + query);
               },
               /**
                * Get the configuration object for the given job.
@@ -123,8 +138,8 @@ angular.module('hopsWorksApp')
                * @param {type} jobId
                * @returns {unresolved}
                */
-              getConfiguration: function (projectId, jobId) {
-                return $http.get('/api/project/' + projectId + '/jobs/' + jobId + '/config');
+              getJob: function (projectId, name) {
+                return $http.get('/api/project/' + projectId + '/jobs/' + name);
               },
               /**
                * Run the given job, creating a new Execution instance.
@@ -132,21 +147,11 @@ angular.module('hopsWorksApp')
                * @param {type} jobId
                * @returns {undefined} The new Execution instance
                */
-              runJob: function (projectId, jobId) {
-                return $http.post('/api/project/' + projectId + '/jobs/' + jobId + '/executions', {});
+              runJob: function (projectId, name) {
+                return $http.post('/api/project/' + projectId + '/jobs/' + name + '/executions?action=start', {});
               },
-              stopJob: function (projectId, jobId) {
-                return $http.post('/api/project/' + projectId + '/jobs/' + jobId + '/executions/stop', {});
-              },
-              /**
-               * Get the current status of the given execution.
-               * @param {type} projectId
-               * @param {type} jobId
-               * @param {type} executionId
-               * @returns {unresolved} The entire Execution object.
-               */
-              getExecutionStatus: function (projectId, jobId, executionId) {
-                return $http.get('/api/project/' + projectId + '/jobs/' + jobId + '/executions/' + executionId);
+              stopJob: function (projectId, name) {
+                return $http.post('/api/project/' + projectId + '/jobs/' + name + '/executions?action=stop', {});
               },
               /**
                * Get the latest app Id of the given job.
@@ -194,15 +199,6 @@ angular.module('hopsWorksApp')
               getTensorBoardUrls: function (projectId, appId) {
                 return $http.get('/api/project/' + projectId + '/jobs/' + appId + '/tensorboard');
               },
-              /* Get the tensorboard URLs for the appid.
-               * @param {type} projectId
-               * @param {type} appId
-               * @returns {unresolved} The addresses of the tensorboard uis.
-               */
-              getTensorboardUIs: function (projectId, appId) {
-                return $http.get('/api/project/' + projectId + '/jobs/' + appId + '/tensorboard');
-              },              
-              
               /**
                * Get the yarn ui of the given job.
                * @param {type} projectId
@@ -222,43 +218,17 @@ angular.module('hopsWorksApp')
                 return $http.get('/api/project/' + projectId + '/jobs/' + appId + '/appinfo');
               },
               /**
-               * Get the current status of all jobs in the given project.
-               * @param {type} projectId
-               * @returns {unresolved}
-               */
-              getRunStatus: function (projectId) {
-                return $http.get('/api/project/' + projectId + '/jobs/running');
-              },
-              /**
-               * Retrieve the logs associated with a certain job.
-               * @param {type} projectId
-               * @param {type} jobId
-               * @returns {undefined} Log infrormation json.
-               */
-              showLog: function (projectId, jobId) {
-                return $http.get('/api/project/' + projectId + '/jobs/' + jobId + '/showlog');
-              },
-              /**
                * Get the content of log for the appId
                * @param {type} projectId
-               * @param {type} jobId
+               * @param {type} name
+               * @param {type} executionId
                * @param {type} type
                * @returns {unresolved}
                */
-              getLog: function (projectId, jobId, type) {
-                return $http.get('/api/project/' + projectId + '/jobs/getLog/' + jobId + '/' + type);
+              getLog: function (projectId, name, executionId, type) {
+                  return $http.get('/api/project/' + projectId + '/jobs/' + name + '/executions/' + executionId+ '/log/' + type);
               },
-              /**
-               * Get log by job id and submission time if app id not available.
-               * @param {type} projectId
-               * @param {type} jobId
-               * @param {type} submissionTime
-               * @param {type} type
-               * @returns {unresolved}
-               */
-              getLogByJobIdAndSubmissionTime: function (projectId, jobId, submissionTime, type) {
-                return $http.get('/api/project/' + projectId + '/jobs/getLogByJobId/' + jobId + '/' + submissionTime + '/' + type);
-              },
+
               /**
                * Retrieve the logs associated to a certain job.
                * @param {type} projectId
@@ -275,17 +245,26 @@ angular.module('hopsWorksApp')
                * @param {type} jobId
                * @returns {undefined} true if success, false otheriwse
                */
-              deleteJob: function (projectId, jobId) {
-                return $http.delete('/api/project/' + projectId + '/jobs/' + jobId + '/deleteJob');
+              deleteJob: function (projectId, name) {
+                return $http.delete('/api/project/' + projectId + '/jobs/' + name);
               },
               /**
                * Unschedule a job
                * @param {type} projectId
-               * @param {type} jobId
+               * @param {type} name
                * @returns {undefined} true if success, false otheriwse
                */
-              unscheduleJob: function (projectId, jobId) {
-                return $http.delete('/api/project/' + projectId + '/jobs/' + jobId + '/unschedule');
+              unscheduleJob: function (projectId, name) {
+                return $http.delete('/api/project/' + projectId + '/jobs/' + name  + "/schedule");
+              },
+              /**
+               * Get inspection object (it's a subset of a job configuration)
+               * @param projectId
+               * @param path
+               * @returns {*}
+               */
+              getInspection: function (projectId, type, path) {
+                  return $http.get('/api/project/' + projectId + '/jobs/' + type + '/inspection?path=' + path);
               }
 
             };

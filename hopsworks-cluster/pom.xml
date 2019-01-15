@@ -43,13 +43,13 @@
   <parent>
     <groupId>io.hops</groupId>
     <artifactId>hopsworks</artifactId>
-    <version>0.7.0-SNAPSHOT</version>
+    <version>0.9.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
   <groupId>io.hops.hopsworks</groupId>
   <artifactId>hopsworks-cluster</artifactId>
-  <version>0.7.0-SNAPSHOT</version>
+  <version>0.9.0-SNAPSHOT</version>
   <packaging>war</packaging>
   <description>Hopsworks cluster registration api</description>
   <name>hopsworks-cluster</name>
@@ -63,7 +63,7 @@
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-common</artifactId>
-      <version>0.7.0-SNAPSHOT</version>
+      <version>0.9.0-SNAPSHOT</version>
       <type>ejb</type>
       <scope>provided</scope>
     </dependency>
@@ -99,6 +99,17 @@
         <version>3.0.0</version>
         <configuration>
           <failOnMissingWebXml>true</failOnMissingWebXml>
+          <webResources>
+            <resource>
+              <filtering>true</filtering>
+              <directory>src/main/webapp</directory>
+              <includes>
+                <include>**/web.xml</include>
+              </includes>
+            </resource>
+          </webResources>
+          <warSourceDirectory>src/main/webapp</warSourceDirectory>
+          <webXml>src/main/webapp/WEB-INF/web.xml</webXml>
         </configuration>
       </plugin>
       <plugin>

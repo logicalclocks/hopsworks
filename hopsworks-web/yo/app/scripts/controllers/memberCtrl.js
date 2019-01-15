@@ -46,147 +46,128 @@ angular.module('hopsWorksApp')
             self.roles = ["Data scientist", "Data owner"];
             self.newRole = "";
             self.projectId = projectId;
+            self.loadingUsers = false;
+            self.users = [];
+            self.selectedUsers = [];
+            self.selectNoChoice = 'Could not find any user...';
             self.members = [];
             self.projectOwner = "";
-            
-            self.newMember = {
-              'projectTeamPK':
-                      {
-                        'projectId': self.projectId,
-                        'teamMember': ""
-                      },
-              'teamRole': ""
-            };
 
             self.newMembers = {'projectTeam': []};
             self.card = {};
             self.myCard = {};
-            self.cards = [];
+            
+            self.defaultRole = function (role) {
+              return role === self.roles[0]? 'selected' : '';
+            };
+            
+            var inSelectedUsers = function (email) {
+              var len = self.selectedUsers.length;
+              for (var i = 0; i < len; i++) {
+                if (self.selectedUsers[i].email === email) {
+                  return true;
+                }
+              }
+              return false;
+            };
+            
+            var getUsers = function (query) {
+              self.loadingUsers = true;
+              UserService.allValidUsers(query).then(function (success) {
+                  var items = success.data.items;
+                  // remove my own 'card' from the list of members
+                  // remove project owner as well, since he is always a 
+                  // member of the project
+                  var countRemoved = 0;
+                  for (var i = items.length-1; i >= 0; i--) {
+                    if (items[i].email === self.myCard.email 
+                            || items[i].email === self.projectOwner.email
+                            || inSelectedUsers(items[i].email)) {
+                      items.splice(i, 1);
+                      countRemoved++;
+                      if(countRemoved === self.selectedUsers.length + 2){
+                        break;
+                      }
+                    }
+                  }
+                  self.users = items;
+                  self.loadingUsers = false;
+                }, function (error) {
+                  self.errorMsg = error.data.msg;
+                  self.loadingUsers = false;
+              });
+            };
+                        
+            var getCard = function () {
+              UserService.profile().then(
+                function (success) {
+                  self.myCard.email = success.data.email;
+                  self.myCard.firstname = success.data.firstName;
+                  self.myCard.lastname = success.data.lastName;
+                },
+                function (error) {
+                  self.errorMsg = error.data.errorMsg;
+              });
+            };         
+            getCard();
 
             var getMembers = function () {
               MembersService.query({id: self.projectId}).$promise.then(
-                      function (success) {
-                        self.members = success;
-                        if(self.members.length > 0){
-                          self.projectOwner = self.members[0].project.owner;
-                          UserService.allcards().then(
-                                  function (success) {
-                                    self.cards = success.data;
-                                    // remove my own 'card' from the list of members
-                                    // remove project owner as well, since he is always a 
-                                    // member of the project
-                                    var countRemoved = 0;
-                                    var i = self.cards.length;
-                                    while(i--) {
-                                        if (self.cards[i].email === self.myCard.email ||
-                                                self.cards[i].email === self.projectOwner.email ||
-                                                self.cards[i].email === "agent@hops.io") {
-                                          self.cards.splice(i, 1);
-                                          countRemoved++;
-                                          if(countRemoved === 3){
-                                            break;
-                                          }
-                                        }
-                                    }
-                                  }, function (error) {
-                            self.errorMsg = error.data.msg;
-                          }
-                          );
-                          //Get current user team role
-                          self.members.forEach(function (member) {
-                            if (member.user.email === self.myCard.email) {
-                              self.teamRole = member.teamRole;
-                              return;
-                            }
-                          });
-                        }                       
-                      },
-                      function (error) {
-                      });
-            };
+                function (success) {
+                  self.members = success;
+                  if(self.members.length > 0){
+                    self.projectOwner = self.members[0].project.owner;
+                    //Get current user team role
+                    self.members.forEach(function (member) {
+                      if (member.user.email === self.myCard.email) {
+                        self.teamRole = member.teamRole;
+                        return;
+                      }
+                    });
+                  }                       
+                },
+                function (error) {
+                });
+            };            
             getMembers();
             
-            $scope.$watch('memberCtrl.card.selected', function (selected) {
-              if (selected !== undefined) {
-                var index = -1;
-
-                for (var i = 0, len = self.newMembers.projectTeam.length; i < len; i++) {
-                  if (self.newMembers.projectTeam[i].projectTeamPK.teamMember === selected.email) {
-                    index = i;
-                    break;
-                  }
-                }
-
-                if (index == -1) {
-                  self.addNewMember(selected.email, self.roles[0]);
-                }
-                self.card.selected = undefined;
-              }
-            });
+            var addNewMembers = function () {
+              self.selectedUsers.forEach(function (selected) {
+                var projectTeamPK = {'projectId': self.projectId, 'teamMember': ""};
+                var projectTeam = {'projectTeamPK': projectTeamPK, 'teamRole': ""};
+                projectTeamPK.teamMember = selected.email;
+                projectTeam.teamRole = selected.teamRole;
+                self.newMembers.projectTeam.push(projectTeam);
+              });
+              return self.projectTeam;
+            };        
 
 
-           
-            
-            var getCard = function () {
-              UserService.profile().then(
-                      function (success) {
-                        self.myCard.email = success.data.email;
-                        self.myCard.firstname = success.data.firstName;
-                        self.myCard.lastname = success.data.lastName;
-                      },
-                      function (error) {
-                        self.errorMsg = error.data.errorMsg;
-                      });
-            };
-
-            getCard();
-
-
-            self.addNewMember = function (user, role) {
-              self.newMembers.projectTeam.push(
-                      {'projectTeamPK':
-                                {
-                                  'projectId': self.projectId,
-                                  'teamMember': user
-                                },
-                        'teamRole': role
-                      }
-              );
-            };
-
-
-            self.removeMember = function (email) {
-              console.log('Removing; ' + email);
-
+            self.removeMember = function (user) {
               var index = -1;
-
-              for (var i = 0, len = self.newMembers.projectTeam.length; i < len; i++) {
-                if (self.newMembers.projectTeam[i].projectTeamPK.teamMember === email) {
+              for (var i = 0, len = self.selectedUsers.length; i < len; i++) {
+                if (self.selectedUsers[i].email === user.email) {
                   index = i;
                   break;
                 }
               }
-
               if (index !== -1) {
-                self.newMembers.projectTeam.splice(index, 1);
+                self.selectedUsers.splice(index, 1);
               }
-
             };
 
-
-
             self.addMembers = function () {
-              MembersService.save({id: self.projectId}, self.newMembers).$promise.then(
-                      function (success) {
-                        //console.log(success);
-                        self.newMembers = {'projectTeam': []};
-                        getMembers();
-                      }, function (error) {
-                      if (typeof error.data.usrMsg !== 'undefined') {
-                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
-                      } else {
-                          growl.error("", {title: error.data.errorMsg, ttl: 8000});
-                      }
+              addNewMembers();
+              MembersService.save({id: self.projectId}, self.newMembers).$promise.then(function (success) {
+                  self.newMembers.projectTeam.length = 0;
+                  self.selectedUsers.length = 0;
+                  getMembers();
+                }, function (error) {
+                  if (typeof error.data.usrMsg !== 'undefined') {
+                      growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                  } else {
+                      growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                  }
               });
             };
 
@@ -240,6 +221,16 @@ angular.module('hopsWorksApp')
               timeout = $timeout(function () {
                 self.showThisIndex = -1;
               }, secondsToWaitBeforeSave * 4000);
+            };
+            
+            self.fetchAsync = function (query) {
+              if (query) {
+                getUsers(query);
+                self.selectNoChoice = 'Could not find any user...';
+              } else {
+                self.users = undefined;
+                self.selectNoChoice = 'Search for a user...';
+              }
             };
 
             self.close = function () {

@@ -74,7 +74,7 @@ public class ProjectFacade extends AbstractFacade<Project> {
     return em.find(Project.class, id);
   }
 
-  public Project findByInodeId(Integer parentId, String name) {
+  public Project findByInodeId(Long parentId, String name) {
     TypedQuery<Project> query = this.em.
         createNamedQuery("Project.findByInodeId", Project.class).
         setParameter("parentid", parentId).setParameter("name", name);
@@ -230,10 +230,9 @@ public class ProjectFacade extends AbstractFacade<Project> {
    * @return
    */
   public boolean projectExists(String name) {
-    TypedQuery<Project> query = em.createNamedQuery("Project.findByName",
-        Project.class);
-    query.setParameter("name", name);
-    return !query.getResultList().isEmpty();
+    return !(em.createNamedQuery("Project.findByNameCaseInsensitive", Project.class)
+        .setParameter("name", name)
+        .getResultList().isEmpty());
   }
 
   /**

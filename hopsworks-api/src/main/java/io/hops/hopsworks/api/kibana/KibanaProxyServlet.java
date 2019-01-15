@@ -123,7 +123,7 @@ public class KibanaProxyServlet extends ProxyServlet {
       String projectId = servletRequest.getParameterMap().get("projectId")[0];
       try {
         ProjectDTO projectDTO = projectController.getProjectByID(Integer.parseInt(projectId));
-        currentProjects.put(email, projectDTO.getProjectName());
+        currentProjects.put(email, projectDTO.getProjectName().toLowerCase());
       } catch (ProjectException ex) {
         LOG.log(Level.SEVERE, null, ex);
         servletResponse.sendError(403,

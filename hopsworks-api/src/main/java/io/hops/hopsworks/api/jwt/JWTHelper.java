@@ -31,8 +31,11 @@ import io.hops.hopsworks.jwt.exception.DuplicateSigningKeyException;
 import io.hops.hopsworks.jwt.exception.InvalidationException;
 import io.hops.hopsworks.jwt.exception.NotRenewableException;
 import io.hops.hopsworks.jwt.exception.SigningKeyNotFoundException;
+import io.hops.hopsworks.jwt.exception.VerificationException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Date;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -40,6 +43,7 @@ import javax.ejb.TransactionAttributeType;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.container.ContainerRequestContext;
 import static javax.ws.rs.core.HttpHeaders.AUTHORIZATION;
+import javax.ws.rs.core.SecurityContext;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -66,6 +70,16 @@ public class JWTHelper {
     String jwt = getAuthToken(req);
     DecodedJWT djwt = jwtController.decodeToken(jwt);
     Users user = djwt == null ? null : userFacade.findByUsername(djwt.getSubject());
+    return user;
+  }
+  
+  /**
+   * Get the user from SecurityContext
+   * @param sc
+   * @return 
+   */
+  public Users getUserPrincipal(SecurityContext sc) {
+    Users user = sc == null ? null : userFacade.findByUsername(sc.getUserPrincipal().getName());
     return user;
   }
 
@@ -131,6 +145,28 @@ public class JWTHelper {
       audience[1] = Audience.SERVICES;
     }
     return createToken(user, audience, issuer);
+  }
+  
+  /**
+   * One time token 60 sec life
+   * @param user
+   * @param issuer
+   * @return
+   */
+  public String createOneTimeToken(Users user, String issuer) {
+    String[] audience = {};
+    Date now = new Date();
+    Date expiresAt = new Date(now.getTime() + Constants.ONE_TIME_JWT_LIFETIME_MS);
+    SignatureAlgorithm alg = SignatureAlgorithm.valueOf(Constants.ONE_TIME_JWT_SIGNATURE_ALGORITHM);
+    String[] roles = {};
+    String token = null;
+    try {
+      token = jwtController.createToken(Constants.ONE_TIME_JWT_SIGNING_KEY_NAME, false, issuer, audience, expiresAt, 
+          now, user.getUsername(), false, 0, roles, alg);
+    } catch (NoSuchAlgorithmException | SigningKeyNotFoundException | DuplicateSigningKeyException ex) {
+      Logger.getLogger(JWTHelper.class.getName()).log(Level.SEVERE, null, ex);
+    }
+    return token;
   }
 
   /**
@@ -237,6 +273,18 @@ public class JWTHelper {
   public void invalidateToken(HttpServletRequest req) throws InvalidationException {
     jwtController.invalidate(getAuthToken(req));
   }
+  
+  /**
+   * Invalidate token
+   * @param token 
+   */
+  public void invalidateToken(String token) {
+    try {
+      jwtController.invalidate(token);
+    } catch (InvalidationException ex) {
+      Logger.getLogger(JWTHelper.class.getName()).log(Level.SEVERE, null, ex);
+    }
+  }
 
   /**
    * Add jti of the token in the invalid jwt table.
@@ -259,9 +307,34 @@ public class JWTHelper {
     if (keyName == null || keyName.isEmpty()) {
       return;
     }
-    if ( settings.getJWTSigningKeyName().equals(keyName)) {
+    if ( settings.getJWTSigningKeyName().equals(keyName) || Constants.ONE_TIME_JWT_SIGNING_KEY_NAME.equals(keyName)) {
       return; //TODO maybe throw exception here?
     }
     jwtController.deleteSigningKey(keyName);
+  }
+  
+  /**
+   * Verify then invalidate a jwt
+   * @param token
+   * @param issuer
+   * @return
+   * @throws SigningKeyNotFoundException
+   * @throws VerificationException 
+   */
+  public DecodedJWT verifyOneTimeToken(String token, String issuer) throws SigningKeyNotFoundException, 
+      VerificationException {
+    DecodedJWT jwt = null;
+    if (token == null || token.trim().isEmpty()) {
+      throw new VerificationException("Token not provided.");
+    }
+    try {
+      jwt = jwtController.verifyOneTimeToken(token, issuer);
+    } catch (InvalidationException ex) {
+      Logger.getLogger(JWTHelper.class.getName()).log(Level.SEVERE, "Failed to invalidate one time token.", ex);
+    }
+    if (jwt == null) {
+      throw new VerificationException("Failed to verify one time token.");
+    }
+    return jwt;
   }
 }

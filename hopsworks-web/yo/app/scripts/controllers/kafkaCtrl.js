@@ -239,7 +239,7 @@ angular.module('hopsWorksApp')
                 
                ModalService.viewSchemaContent('lg', self.projectId, schemaName, self.schemaVersions[index]).then(
                       function (success) {
-                         
+
                       }, function (error) {
                 //The user changed their mind.
               });

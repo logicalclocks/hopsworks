@@ -63,7 +63,6 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
@@ -79,6 +78,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.ws.rs.core.SecurityContext;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -123,13 +123,13 @@ public class ProjectMembersService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response addMembers(MembersDTO members, @Context HttpServletRequest req) throws KafkaException,
+  public Response addMembers(MembersDTO members, @Context SecurityContext sc) throws KafkaException,
       ProjectException, UserException {
 
     Project project = projectController.findProjectById(this.projectId);
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     List<String> failedMembers = null;
-    Users user = jWTHelper.getUserPrincipal(req);
+    Users user = jWTHelper.getUserPrincipal(sc);
 
     if (members.getProjectTeam() == null || members.getProjectTeam().isEmpty()) {
       throw new IllegalArgumentException("Member was not provided in MembersDTO");
@@ -166,11 +166,11 @@ public class ProjectMembersService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response updateRoleByEmail(@PathParam("email") String email, @FormParam("role") String role,
-      @Context HttpServletRequest req) throws ProjectException, UserException {
+      @Context SecurityContext sc) throws ProjectException, UserException {
 
     Project project = projectController.findProjectById(this.projectId);
     RESTApiJsonResponse json = new RESTApiJsonResponse();
-    Users user = jWTHelper.getUserPrincipal(req);
+    Users user = jWTHelper.getUserPrincipal(sc);
     if (email == null) {
       throw new IllegalArgumentException("Email was not provided.");
     }
@@ -193,31 +193,34 @@ public class ProjectMembersService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response removeMembersByID(@PathParam("email") String email, @Context HttpServletRequest req)
+  public Response removeMembersByID(@PathParam("email") String email, @Context SecurityContext sc)
     throws ProjectException, ServiceException, CAException, UserException, IOException {
 
     Project project = projectController.findProjectById(this.projectId);
     RESTApiJsonResponse json = new RESTApiJsonResponse();
-    Users owner = jWTHelper.getUserPrincipal(req);
+    Users reqUser = jWTHelper.getUserPrincipal(sc);
     if (email == null) {
       throw new IllegalArgumentException("Email was not provided");
     }
-    //Data Scientists are only allowed to remove themselves
+    //Not able to remove members that do not exist
     String userProjectRole = projectTeamFacade.findCurrentRole(project, email);
     if (userProjectRole == null || userProjectRole.isEmpty()) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.TEAM_MEMBER_NOT_FOUND, Level.FINE);
     }
-    if (userProjectRole.equals(AllowedProjectRoles.DATA_SCIENTIST) && !owner.getEmail().equals(email)) {
+
+    //Data scientists can only remove themselves
+    String reqUserProjectRole = projectTeamFacade.findCurrentRole(project, reqUser.getEmail());
+    if (reqUserProjectRole.equals(AllowedProjectRoles.DATA_SCIENTIST) && !reqUser.getEmail().equals(email)) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.MEMBER_REMOVAL_NOT_ALLOWED, Level.FINE);
     }
+
+    //Not able to remove project owner regardless of who is trying to remove the member
     if (project.getOwner().getEmail().equals(email)) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_OWNER_NOT_ALLOWED, Level.FINE);
     }
-    projectController.removeMemberFromTeam(project, owner, email);
-
+    projectController.removeMemberFromTeam(project, reqUser, email);
     json.setSuccessMessage(ResponseMessages.MEMBER_REMOVED_FROM_TEAM);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
-
   }
 
 }

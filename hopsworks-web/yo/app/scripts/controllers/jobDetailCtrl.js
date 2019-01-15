@@ -49,7 +49,6 @@ angular.module('hopsWorksApp')
             this.job = job;
             this.jobtype; //Holds the type of job.
             this.execFile; //Holds the name of the main execution file
-            this.showExecutions = false;
             this.projectId = $routeParams.projectID;
 
             self.unscheduling=false;
@@ -81,44 +80,24 @@ angular.module('hopsWorksApp')
             };
 
             var getConfiguration = function () {
-              JobService.getConfiguration(projectId, job.id).then(
-                      function (success) {
-                        self.job.runConfig = success.data;
-                        self.setupInfo();
-                        initScheduler();
-                      }, function (error) {
-                      if (typeof error.data.usrMsg !== 'undefined') {
-                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
-                      } else {
-                          growl.error("", {title: error.data.errorMsg, ttl: 8000});
-                      }
-              });
+                self.job.runConfig = job.config;
+                self.setupInfo();
+                initScheduler();
             };
 
-            var getExecutions = function () {
-              JobService.getAllExecutions(projectId, job.id).then(
-                      function (success) {
-                        self.job.executions = success.data;
-                        self.showExecutions = success.data.length > 0;
-                      }, function (error) {
-                      if (typeof error.data.usrMsg !== 'undefined') {
-                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
-                      } else {
-                          growl.error("", {title: error.data.errorMsg, ttl: 8000});
-                      }
-              });
-            };
-            
            this.updateNumberOfScheduleUnits = function () {
               self.schedule.addition = self.schedule.number == 1 ? "" : "s";
             };
 
             this.setupInfo = function () {
 
-              if (self.job.runConfig.type === "sparkJobConfiguration") {
+              if (self.job.runConfig.jobType === "SPARK") {
                 self.jobtype = "Spark";
                 self.execFile = getFileName(job.runConfig.appPath);
-              } else if (self.job.runConfig.type === "flinkJobConfiguration") {
+              } else if (self.job.runConfig.jobType === "PYSPARK") {
+                    self.jobtype = "PySpark";
+                    self.execFile = getFileName(job.runConfig.appPath);
+              } else if (self.job.runConfig.jobType === "FLINK") {
                 self.jobtype = "Flink";
                 self.execFile = getFileName(job.runConfig.jarPath);
               }
@@ -131,10 +110,9 @@ angular.module('hopsWorksApp')
                   "unit": self.schedule.unit.toUpperCase(),
                   "number": self.schedule.number};
                 self.job.runConfig.type=self.jobtype.toUpperCase();
-                JobService.updateSchedule(self.projectId, self.jobtype.toUpperCase(), self.job.runConfig.schedule,job.id).then(
+                JobService.updateSchedule(self.projectId, self.jobtype.toUpperCase(), self.job.runConfig.schedule,job.name).then(
                         function (success) {
                           getConfiguration();
-                          getExecutions();
                           self.close()
                           growl.success(success.data.successMessage, {title: 'Success', ttl: 3000});
                         }, function (error) {
@@ -149,12 +127,11 @@ angular.module('hopsWorksApp')
               }
             };
 
-            this.unscheduleJob = function(jobId) {
+            this.unscheduleJob = function(name) {
             self.unscheduling=true;
-                        JobService.unscheduleJob(self.projectId, jobId).then(
+                        JobService.unscheduleJob(self.projectId, name).then(
                                 function (success) {
                                   self.unscheduling=false;
-                                  getExecutions();
                                   self.close()
                                   growl.success(success.data.successMessage, {title: 'Success', ttl: 5000});
                                 }, function (error) {
@@ -168,7 +145,6 @@ angular.module('hopsWorksApp')
             };
 
             getConfiguration();
-            getExecutions();            
 
             /**
              * Close the modal dialog.
@@ -177,17 +153,6 @@ angular.module('hopsWorksApp')
             self.close = function () {
               $uibModalInstance.dismiss('cancel');
             };
-
-            /**
-             * Close the poller if the controller is destroyed.
-             */
-            $scope.$on('$destroy', function () {
-              $interval.cancel(self.poller);
-            });
-
-            self.poller = $interval(function () {
-              getExecutions();
-            }, 3000);
 
             /**
              * Converts the colon-separated list of topics to a nicer human friendly format
@@ -211,7 +176,7 @@ angular.module('hopsWorksApp')
               return false;
             };
             self.hasConsumerGroups = function(){
-              if(typeof self.job.runConfig.kafka.consumergroups !== "undefined"){
+              if(typeof self.job.runConfig.kafka.consumerGroups !== "undefined"){
                 return true;
               }
               return false;

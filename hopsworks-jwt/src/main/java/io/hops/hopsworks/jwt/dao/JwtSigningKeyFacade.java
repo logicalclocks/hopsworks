@@ -55,6 +55,16 @@ public class JwtSigningKeyFacade {
     }
   }
   
+  public void renameSigningKey (String keyName, String newName) {
+    JwtSigningKey signingKey = findByName(keyName);
+    renameSigningKey(signingKey, newName);
+  }
+  
+  public void renameSigningKey (JwtSigningKey signingKey, String newName) {
+    signingKey.setName(newName);
+    em.merge(signingKey);
+  }
+  
   public JwtSigningKey getOrCreateSigningKey(String keyName, SignatureAlgorithm alg) throws NoSuchAlgorithmException {
     JwtSigningKey signingKey = this.findByName(keyName);
     if (signingKey == null) {

@@ -16,7 +16,6 @@
 package io.hops.hopsworks.jwt.cleanup;
 
 import io.hops.hopsworks.jwt.JWTController;
-import io.hops.hopsworks.jwt.dao.InvalidJwtFacade;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -36,8 +35,6 @@ public class InvalidatedJWTCleanup {
 
   private final static Logger LOGGER = Logger.getLogger(InvalidatedJWTCleanup.class.getName());
   private final static long CLEANUP_INTERVAL = 2 * (24 * 60 * 60 * 1000);
-  @EJB
-  private InvalidJwtFacade invalidJwtFacade;
   @EJB
   private JWTController jWTController;
   @Resource
