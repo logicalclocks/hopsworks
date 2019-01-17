@@ -171,11 +171,7 @@ public class SparkController {
     SparkJob sparkjob = new SparkJob(job, submitter, user, settings.getHadoopSymbolicLinkDir(),
         hdfsUsersBean.getHdfsUserName(job.getProject(), job.getCreator()), jobsMonitor, settings);
     submitter.stopExecution(sparkjob, appid);
-
   }
-
-  
-  
   
   public void deleteJob(Jobs job, Users user) throws JobException {
     //Kill running execution of this job (if any)
@@ -195,10 +191,6 @@ public class SparkController {
   }
   
   private void sanityCheck(Jobs job, Users user) {
-    sanityCheck(job, user, null);
-  }
-  
-  private void sanityCheck(Jobs job, Users user, String path) {
     if (job == null) {
       throw new IllegalArgumentException("Trying to start job but job is not provided");
     } else if (user == null) {
@@ -206,8 +198,15 @@ public class SparkController {
     } else if (job.getJobType() != JobType.SPARK && job.getJobType() != JobType.PYSPARK) {
       throw new IllegalArgumentException(
         "Job configuration is not a Spark job configuration. Type: " + job.getJobType());
-    } else if (Strings.isNullOrEmpty(path) || !(path.endsWith(".jar") || path.endsWith(".py")
-        || path.endsWith(".ipynb"))) {
+    }
+    SparkJobConfiguration jobConf = (SparkJobConfiguration) job.getJobConfig();
+    if(jobConf == null) {
+      throw new IllegalArgumentException("Trying to start job but JobConfiguration is null");
+    }
+
+    String path = jobConf.getAppPath();
+    if (Strings.isNullOrEmpty(path) || !(path.endsWith(".jar") || path.endsWith(".py")
+            || path.endsWith(".ipynb"))) {
       throw new IllegalArgumentException("Path does not point to a .jar, .py or .ipynb file.");
     }
   }
