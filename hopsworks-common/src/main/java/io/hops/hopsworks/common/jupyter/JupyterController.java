@@ -44,6 +44,7 @@ public class JupyterController {
   @EJB
   private Settings settings;
 
+  @TransactionAttribute(TransactionAttributeType.REQUIRED)
   public void convertIPythonNotebook(String hdfsUsername, String path, Project project, String outPath)
       throws ServiceException {
 
