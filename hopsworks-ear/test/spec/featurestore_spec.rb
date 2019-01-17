@@ -372,7 +372,7 @@ describe "On #{ENV['OS']}" do
         expect_status(200)
         expect(parsed_json["items"].count == 1).to be true
         execution = parsed_json["items"][0]
-        wait_for_execution(1000) do
+        wait_for_execution(2000) do
           get_execution(project.id, get_featurestore_tour_job_name, execution["id"])
           parsed_json = JSON.parse(response.body)
           parsed_json["state"] == "FINISHED"
