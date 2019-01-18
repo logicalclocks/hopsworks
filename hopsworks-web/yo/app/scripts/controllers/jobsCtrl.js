@@ -58,6 +58,7 @@ angular.module('hopsWorksApp')
             self.workingArray = [];
             self.jobFilter = JobService.getJobFilter();
             self.hasSelectJob = false;
+            self.starting = [];
 
             self.currentjob = null;
             self.currentToggledIndex = -1;
@@ -392,13 +393,16 @@ angular.module('hopsWorksApp')
                       }
                       ModalService.uberPrice('sm', 'Confirm', 'Do you still want to run this job?', generalPrice, gpuPrice).then(
                               function (success) {
+                                self.starting[job.name] = true;
                                 JobService.runJob(self.projectId, job.name).then(
                                         function (success) {
+                                          self.starting[job.name] = false;
                                           self.toggle(job, index);
                                           self.buttonClickedToggle(job.name, true);
                                           StorageService.store(self.projectId + "_jobstopclicked_" + job.name, "running");
                                           self.getAllJobsStatus();
                                         }, function (error) {
+                                          self.starting[job.name] = false;
                                         if (typeof error.data.usrMsg !== 'undefined') {
                                             growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
                                         } else {

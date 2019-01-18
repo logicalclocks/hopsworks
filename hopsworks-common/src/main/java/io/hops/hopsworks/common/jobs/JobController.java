@@ -146,7 +146,7 @@ public class JobController {
   
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public JobConfiguration inspectProgram(String path, Project project, Users user, JobType jobType)
-    throws JobException {
+          throws JobException {
     DistributedFileSystemOps udfso = null;
     try {
       String username = hdfsUsersBean.getHdfsUserName(project, user);

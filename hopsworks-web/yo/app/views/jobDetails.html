@@ -109,11 +109,19 @@
           </div>
         </div>
         <div class="row" ng-show="jobDetailCtrl.job.runConfig.appPath.endsWith('.py')">
-          <div class="text-right col-md-4">Python main class <i class="fa fa-info-circle" uib-tooltip="The name of the main class to run." style="margin-left: 10px"></i></div>
+          <div class="text-right col-md-4">Python file <i class="fa fa-info-circle" uib-tooltip="The path to the python executable to run for this job." style="margin-left: 10px"></i></div>
           <div class="col-md-8">{{jobDetailCtrl.job.runConfig.appPath}}</div>
         </div>
-        <div class="row" ng-show="!jobDetailCtrl.job.runConfig.appPath.endsWith('.py')">
-          <div class="text-right col-md-4">Main class name <i class="fa fa-info-circle" uib-tooltip="The name of the main class to run in the selected JAR file." style="margin-left: 10px"></i></div>
+        <div class="row" ng-show="jobDetailCtrl.job.runConfig.appPath.endsWith('.ipynb')">
+          <div class="text-right col-md-4">Notebook file <i class="fa fa-info-circle" uib-tooltip="The path to the notebook to run as a python executable for this job" style="margin-left: 10px"></i></div>
+          <div class="col-md-8">{{jobDetailCtrl.job.runConfig.appPath}}</div>
+        </div>
+        <div class="row" ng-show="jobDetailCtrl.job.runConfig.appPath.endsWith('.jar')">
+          <div class="text-right col-md-4">Jar file <i class="fa fa-info-circle" uib-tooltip="The path to the .jar file to run for the job." style="margin-left: 10px"></i></div>
+          <div class="col-md-8">{{jobDetailCtrl.job.runConfig.appPath}}</div>
+        </div>
+        <div class="row">
+          <div class="text-right col-md-4">Main class name <i class="fa fa-info-circle" uib-tooltip="The name of the main class to run." style="margin-left: 10px"></i></div>
           <div class="col-md-8">{{jobDetailCtrl.job.runConfig.mainClass}}</div>
         </div>
         <div class="row">

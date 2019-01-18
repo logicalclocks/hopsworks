@@ -291,15 +291,15 @@ describe "On #{ENV['OS']}" do
         end
       end
       describe "Jobs filter" do
-        it "should get three jobs with type spark" do
+        it "should get five jobs with type spark" do
           get_jobs(@project[:id], "?filter_by=jobtype:spark")
           expect_status(200)
           expect(json_body[:items].count).to eq 5
         end
-        it "should get three jobs with type pyspark" do
+        it "should get four jobs with type pyspark" do
           get_jobs(@project[:id], "?filter_by=jobtype:pyspark")
           expect_status(200)
-          expect(json_body[:items].count).to eq 2
+          expect(json_body[:items].count).to eq 4
         end
         it "should fail to find job with type flink" do
           get_jobs(@project[:id], "?filter_by=jobtype:flink")
@@ -309,12 +309,12 @@ describe "On #{ENV['OS']}" do
         it "should find jobs with name like 'demo'" do
           get_jobs(@project[:id], "?filter_by=name:demo")
           expect_status(200)
-          expect(json_body[:items].count).to eq 7
+          expect(json_body[:items].count).to eq 9
         end
         it "should find jobs with name like 'demo_job'" do
           get_jobs(@project[:id], "?filter_by=name:demo")
           expect_status(200)
-          expect(json_body[:items].count).to eq 7
+          expect(json_body[:items].count).to eq 9
         end
         it "should find job with name like" do
           get_jobs(@project[:id], "?filter_by=name:" + $job_spark_1)

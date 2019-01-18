@@ -18,7 +18,6 @@ describe "On #{ENV['OS']}" do
   describe 'execution' do
     after (:all) {clean_projects}
     describe "#create" do
-      $job_name = "demo_job_1"
       context 'without authentication' do
         before :all do
           with_valid_project
@@ -64,34 +63,39 @@ describe "On #{ENV['OS']}" do
               execution_id = json_body[:id]
               expect_status(201)
 
-            #get all executions of job
-            get_executions(@project[:id], $job_name, "")
-            expect(json_body[:items].count).to eq 2
+              #get all executions of job
+              get_executions(@project[:id], $job_name_1, "")
+              expect(json_body[:items].count).to eq 2
 
-            #check database
-            num_executions = count_executions(job_id)
-            expect(num_executions).to eq 2
+              #check database
+              num_executions = count_executions(job_id)
+              expect(num_executions).to eq 2
 
-            wait_for_execution do
-              get_execution(@project[:id], $job_name, execution_id)
-              json_body[:state].eql? "FINISHED"
+              wait_for_execution do
+                get_execution(@project[:id], $job_name_1, execution_id)
+                json_body[:state].eql? "FINISHED"
+              end
             end
           end
           it "should start and stop job" do
-            create_sparktour_job(@project, $job_name)
-            expect_status(201)
-            it "should start and stop job" do
               $job_name_2 = "demo_job_2_" + type
               create_sparktour_job(@project, $job_name_2, type, nil)
               expect_status(201)
 
-            #start execution
-            start_execution(@project[:id], $job_name)
-            execution_id = json_body[:id]
-            expect_status(201)
-            wait_for_execution do
-              get_execution(@project[:id], $job_name, execution_id)
-              json_body[:state].eql? "ACCEPTED"
+              #start execution
+              start_execution(@project[:id], $job_name_2)
+              execution_id = json_body[:id]
+              expect_status(201)
+              wait_for_execution do
+                get_execution(@project[:id], $job_name_2, execution_id)
+                json_body[:state].eql? "ACCEPTED"
+              end
+              stop_execution(@project[:id], $job_name_2)
+              expect_status(200)
+              wait_for_execution do
+                get_execution(@project[:id], $job_name_2, execution_id)
+                json_body[:state].eql? "KILLED"
+              end
             end
             it "should fail to start two executions in parallel" do
               $job_name_3 = "demo_job_3_" + type
@@ -109,52 +113,33 @@ describe "On #{ENV['OS']}" do
               execution_id = json_body[:id]
               expect_status(201)
 
-            stop_execution(@project[:id], $job_name)
-            expect_status(200)
-            wait_for_execution do
-              get_execution(@project[:id], $job_name, execution_id)
-              json_body[:state].eql? "KILLED"
+              wait_for_execution do
+                get_execution(@project[:id], $job_name_4, execution_id)
+                json_body[:state].eql? "FINISHED"
+              end
+
+              #wait for log aggregation
+              wait_for_execution do
+                get_execution_log(@project[:id], $job_name_4, execution_id, "out")
+                json_body[:log] != "No log available"
+              end
+
+              #get out log
+              get_execution_log(@project[:id], $job_name_4, execution_id, "out")
+              expect(json_body[:type]).to eq "OUT"
+              expect(json_body[:log]).to be_present
+
+              #wait for log aggregation
+              wait_for_execution do
+                get_execution_log(@project[:id], $job_name_4, execution_id, "err")
+                json_body[:log] != "No log available"
+              end
+
+              #get err log
+              get_execution_log(@project[:id], $job_name_4, execution_id, "err")
+              expect(json_body[:type]).to eq "ERR"
+              expect(json_body[:log]).to be_present
             end
-          end
-          it "should fail to start two executions in parallel" do
-            create_sparktour_job(@project, $job_name)
-            start_execution(@project[:id], $job_name)
-            start_execution(@project[:id], $job_name)
-            expect_status(400)
-            expect_json(errorCode: 130010)
-          end
-          it "should run job and get out and err logs" do
-            create_sparktour_job(@project, $job_name)
-            start_execution(@project[:id], $job_name)
-            execution_id = json_body[:id]
-            expect_status(201)
-
-            wait_for_execution do
-              get_execution(@project[:id], $job_name, execution_id)
-              json_body[:state].eql? "FINISHED"
-            end
-
-            #wait for log aggregation
-            wait_for_execution do
-              get_execution_log(@project[:id], $job_name, execution_id, "out")
-              json_body[:log] != "No log available"
-            end
-
-            #get out log
-            get_execution_log(@project[:id], $job_name, execution_id, "out")
-            expect(json_body[:type]).to eq "OUT"
-            expect(json_body[:log]).to be_present
-
-            #wait for log aggregation
-            wait_for_execution do
-              get_execution_log(@project[:id], $job_name, execution_id, "err")
-              json_body[:log] != "No log available"
-            end
-
-            #get err log
-            get_execution_log(@project[:id], $job_name, execution_id, "err")
-            expect(json_body[:type]).to eq "ERR"
-            expect(json_body[:log]).to be_present
           end
         end
       end

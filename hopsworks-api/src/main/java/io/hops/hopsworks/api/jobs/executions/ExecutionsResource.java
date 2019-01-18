@@ -28,6 +28,7 @@ import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.GenericException;
 import io.hops.hopsworks.common.exception.JobException;
 import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.jobs.JobLogDTO;
 import io.hops.hopsworks.common.jobs.execution.ExecutionController;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
@@ -127,7 +128,7 @@ public class ExecutionsResource {
   public Response execution(
     @ApiParam(value = "start or stop", required = true) @QueryParam("action") Action action,
     @Context HttpServletRequest req,
-    @Context UriInfo uriInfo) throws JobException, GenericException {
+    @Context UriInfo uriInfo) throws JobException, GenericException, ServiceException {
     
     Users user = jWTHelper.getUserPrincipal(req);
     Execution exec;
