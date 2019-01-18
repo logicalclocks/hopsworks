@@ -225,7 +225,7 @@ public class SparkYarnRunnerBuilder {
           .append(Settings.SPARK_LOCALIZED_PYTHON_DIR)
           .append(File.pathSeparator).append(Settings.PYSPARK_ZIP)
           .append(File.pathSeparator).append(settings.getPy4JArchive());
-      //set app file from path
+
       appExecName = appPath.substring(appPath.lastIndexOf(File.separator) + 1);
 
       jobHopsworksProps.put(Settings.SPARK_APP_NAME_ENV,

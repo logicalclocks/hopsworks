@@ -76,7 +76,7 @@ describe "On #{ENV['OS']}" do
           with_valid_project
 
           mkdir("/Projects/#{@project[:projectname]}/Models/mnist/", @user[:username], "#{@project[:projectname]}__Models", 750)
-          copy(TOUR_FILE_LOCATION, "/Projects/#{@project[:projectname]}/Models/mnist/", @user[:username], "#{@project[:projectname]}__Models", 750)
+          copy(TOUR_FILE_LOCATION, "/Projects/#{@project[:projectname]}/Models/mnist/", @user[:username], "#{@project[:projectname]}__Models", 750, "#{@project[:projectname]}")
         end
 
         it "should create the serving without Kafka topic" do
@@ -376,7 +376,7 @@ describe "On #{ENV['OS']}" do
 
         copy("/Projects/#{@project[:projectname]}/Models/mnist/*",
              "/Projects/#{@project[:projectname]}/Models/newMnist/",
-             @user[:username], "#{@project[:projectname]}__Models", 750)
+             @user[:username], "#{@project[:projectname]}__Models", 750, "#{@project[:projectname]}")
 
         put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
             {id: @serving[:id],
@@ -486,7 +486,7 @@ describe "On #{ENV['OS']}" do
 
 
         mkdir("/Projects/#{@project[:projectname]}/Models/mnist/", @user[:username], "#{@project[:projectname]}__Models", 750)
-        copy(TOUR_FILE_LOCATION, "/Projects/#{@project[:projectname]}/Models/mnist/", @user[:username], "#{@project[:projectname]}__Models", 750)
+        copy(TOUR_FILE_LOCATION, "/Projects/#{@project[:projectname]}/Models/mnist/", @user[:username], "#{@project[:projectname]}__Models", 750, "#{@project[:projectname]}")
       end
 
       before :each do

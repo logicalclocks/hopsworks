@@ -581,11 +581,11 @@ angular.module('hopsWorksApp')
               var filePath = getPath(pathArray);
 
               growl.info("Converting...",
-                      {title: 'Conversion Started', ttl: 2000, referenceId: 4});
+                      {title: 'Conversion running in background, please wait...', ttl: 5000, referenceId: 4});
               JupyterService.convertIPythonNotebook(self.projectId, filePath).then(
                       function (success) {
-                        growl.success("Finished - refresh your browser",
-                                {title: 'Converting in Background', ttl: 3000, referenceId: 4});
+                        growl.success("Finished - refreshing directory contents",
+                                {title: 'Success', ttl: 4000, referenceId: 4});
                         getDirContents();
                       }, function (error) {
                       if (typeof error.data.usrMsg !== 'undefined') {

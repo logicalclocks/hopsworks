@@ -21,7 +21,7 @@ describe "On #{ENV['OS']}" do
         before :all do
           with_valid_project
           @project = get_project
-          create_sparktour_job(@project, "#{@project[:projectname]}_job")
+          create_sparktour_job(@project, "#{@project[:projectname]}_job", "jar")
           member = create_user
           add_member(member[:email], "Data scientist")
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/activities"
