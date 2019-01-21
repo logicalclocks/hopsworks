@@ -2301,7 +2301,7 @@ public class ProjectController {
   public void addTourFilesToProject(String username, Project project,
       DistributedFileSystemOps dfso, DistributedFileSystemOps udfso,
       TourProjectType projectType) throws DatasetException, HopsSecurityException, ProjectException,
-      JobException, GenericException {
+      JobException, GenericException, ServiceException {
 
     Users user = userFacade.findByEmail(username);
     datasetController.createDataset(user, project, Settings.HOPS_TOUR_DATASET,
