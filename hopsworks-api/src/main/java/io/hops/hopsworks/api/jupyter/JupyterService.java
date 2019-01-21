@@ -40,7 +40,6 @@ package io.hops.hopsworks.api.jupyter;
 
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 
-import java.io.File;
 import java.nio.file.Paths;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
@@ -64,6 +63,7 @@ import javax.ws.rs.core.Response;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.common.jupyter.JupyterController;
 import io.hops.hopsworks.common.livy.LivyController;
 import io.hops.hopsworks.common.livy.LivyMsg;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
@@ -94,8 +94,6 @@ import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Ip;
 import io.hops.hopsworks.common.util.OSProcessExecutor;
-import io.hops.hopsworks.common.util.ProcessDescriptor;
-import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -147,6 +145,8 @@ public class JupyterService {
   private JWTHelper jWTHelper;
   @EJB
   private OSProcessExecutor osProcessExecutor;
+  @EJB
+  private JupyterController jupyterController;
 
   private Integer projectId;
   // No @EJB annotation for Project, it's injected explicitly in ProjectService.
@@ -476,30 +476,12 @@ public class JupyterService {
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response convertIPythonNotebook(@PathParam("path") String path,
       @Context SecurityContext sc) throws ServiceException {
+    String ipynbPath = settings.getProjectPath(this.project.getName()) + "/" + path;
+    int extensionIndex = ipynbPath.lastIndexOf(".ipynb");
+    StringBuilder pathBuilder = new StringBuilder(ipynbPath.substring(0, extensionIndex)).append(".py");
+    String pyAppPath = pathBuilder.toString();
     String hdfsUsername = getHdfsUser(sc);
-    String hdfsFilename = settings.getProjectPath(project.getName()) + File.separator  + path;
-
-    String prog = settings.getHopsworksDomainDir() + "/bin/convert-ipython-notebook.sh";
-    ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
-        .addCommand(prog)
-        .addCommand(hdfsFilename)
-        .addCommand(hdfsUsername)
-        .addCommand(settings.getAnacondaProjectDir(project))
-        .ignoreOutErrStreams(true)
-        .build();
-    LOGGER.log(Level.FINE, processDescriptor.toString());
-    try {
-      ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
-      
-      if (!processResult.processExited() || processResult.getExitCode() != 0) {
-        throw new ServiceException(RESTCodes.ServiceErrorCode.IPYTHON_CONVERT_ERROR,  Level.SEVERE,
-          "error code: " + processResult.getExitCode());
-      }
-    } catch (IOException ex) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.IPYTHON_CONVERT_ERROR, Level.SEVERE, null, ex.getMessage(),
-        ex);
-
-    }
+    jupyterController.convertIPythonNotebook(hdfsUsername, ipynbPath, project, pyAppPath);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 

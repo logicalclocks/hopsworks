@@ -186,7 +186,7 @@ angular.module('hopsWorksApp')
                 var featuregroupJson = {
                     "name": self.featuregroupName,
                     "dependencies": self.dependencies,
-                    "jobId": $scope.selected.value.id,
+                    "jobName": $scope.selected.value.name,
                     "description": self.featuregroupDoc,
                     "features": self.features,
                     "version": 1,

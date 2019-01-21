@@ -152,14 +152,15 @@ public class JobController {
   
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public JobConfiguration inspectProgram(String path, Project project, Users user, JobType jobType)
-    throws JobException {
+          throws JobException {
     DistributedFileSystemOps udfso = null;
     try {
       String username = hdfsUsersBean.getHdfsUserName(project, user);
       udfso = dfs.getDfsOps(username);
       LOGGER.log(Level.INFO, "Executing job by {0} at path: {1}", new Object[]{username, path});
-      if (!path.endsWith(".jar") && !path.endsWith(".py")) {
-        throw new IllegalArgumentException("Path does not point to a jar or .py file.");
+      if (Strings.isNullOrEmpty(path) || !(path.endsWith(".jar") || path.endsWith(".py")
+              || path.endsWith(".ipynb"))) {
+        throw new IllegalArgumentException("Path does not point to a .jar, .py or .ipynb file.");
       }
       switch (jobType){
         case SPARK:
