@@ -42,7 +42,9 @@ import javax.ws.rs.core.UriInfo;
 @Stateless
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-@JWTRequired(acceptedTokens = {Audience.SERVICES}, allowedUserRoles = {"AGENT"})
+//@JWTRequired(acceptedTokens = {Audience.SERVICES}, allowedUserRoles = {"AGENT"})
+// TODO(Antonis): Remove JOB audience when we have service JWT for Airflow manager
+@JWTRequired(acceptedTokens = {Audience.SERVICES, Audience.JOB})
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class JWTResource {
 

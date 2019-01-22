@@ -16,23 +16,31 @@
  */
 package io.hops.hopsworks.api.airflow;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
+import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
+import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
+import io.hops.hopsworks.common.airflow.AirflowJWTManager;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.exception.AirflowException;
+import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.util.Settings;
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.nio.file.attribute.GroupPrincipal;
 import java.nio.file.attribute.PosixFilePermission;
+import java.security.NoSuchAlgorithmException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Level;
@@ -43,11 +51,16 @@ import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
+
+import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.hops.hopsworks.jwt.exception.JWTException;
 import org.apache.commons.codec.digest.DigestUtils;
 
 @RequestScoped
@@ -67,6 +80,10 @@ public class AirflowService {
   private UserFacade userFacade;
   @EJB
   private HdfsUsersController hdfsUsersController;
+  @EJB
+  private JWTHelper jwtHelper;
+  @EJB
+  private AirflowJWTManager airflowJWTManager;
 
   private Integer projectId;
   // No @EJB annotation for Project, it's injected explicitly in ProjectService.
@@ -91,6 +108,33 @@ public class AirflowService {
     return projectId;
   }
 
+  @POST
+  @Path("/jwt")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response storeAirflowJWT(@Context SecurityContext sc) throws AirflowException {
+    LOGGER.log(Level.INFO, "Hello Airflow project ID: " + projectId);
+    LOGGER.log(Level.INFO, "Project is: " + project);
+    
+    try {
+      Users user = jwtHelper.getUserPrincipal(sc);
+      String[] audience = new String[]{Audience.JOB};
+      // TODO(Antonis): I should fix the issuer
+      String token = jwtHelper.createToken(user, audience, "hopsworks");
+      DecodedJWT decodedJWT = JWT.decode(token);
+      
+      LocalDateTime expirationDate = decodedJWT.getExpiresAt().toInstant()
+          .atZone(ZoneId.systemDefault()).toLocalDateTime();
+      
+      airflowJWTManager.storeJWT(user, project, token, expirationDate);
+    } catch (NoSuchAlgorithmException | JWTException ex) {
+      throw new AirflowException(RESTCodes.AirflowErrorCode.JWT_NOT_CREATED, Level.SEVERE,
+          "Could not create JWT for Airflow service", ex.getMessage(), ex);
+    }
+    return Response.noContent().build();
+  }
+  
   @GET
   @Path("secretDir")
   @Produces(MediaType.TEXT_PLAIN)
@@ -98,8 +142,7 @@ public class AirflowService {
   public Response secretDir(@Context HttpServletRequest req) {
     String secret = DigestUtils.sha256Hex(Integer.toString(this.projectId));
 
-    String baseDir = settings.getAirflowDir() + "/dags/";
-    String destDir = baseDir + secret;
+    java.nio.file.Path destDir = airflowJWTManager.getSecretProjectDirectory(project);
     Set<PosixFilePermission> xOnly = new HashSet<>();
     xOnly.add(PosixFilePermission.OWNER_WRITE);
     xOnly.add(PosixFilePermission.OWNER_READ);
@@ -129,8 +172,8 @@ public class AirflowService {
 //      Files.setPosixFilePermissions(Paths.get(baseDir), xOnly);
 
       // Instead of checking and setting the permissions, just set them as it is an idempotent operation
-      new File(destDir).mkdirs();
-      Files.setPosixFilePermissions(Paths.get(destDir), perms);
+      destDir.toFile().mkdirs();
+      Files.setPosixFilePermissions(destDir, perms);
       GroupPrincipal group = new GroupPrincipal() {
         @Override
         public String getName() {

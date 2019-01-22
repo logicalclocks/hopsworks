@@ -46,10 +46,10 @@ angular.module('hopsWorksApp')
         .controller('ProjectCtrl', ['$scope', '$rootScope', '$location', '$routeParams', '$route', '$timeout', '$window', 'UtilsService',
           'growl', 'ProjectService', 'ModalService', 'ActivityService', '$cookies', 'DataSetService',
           'UserService', 'TourService', 'PythonDepsService', 'StorageService', 'CertService', 'VariablesService', 'FileSaver', 'Blob',
-          'AirflowService',				    
+          'AirflowService', '$http',				    
         function ($scope, $rootScope, $location, $routeParams, $route, $timeout, $window, UtilsService, growl, ProjectService,
                   ModalService, ActivityService, $cookies, DataSetService, UserService, TourService, PythonDepsService,
-                    StorageService, CertService, VariablesService, FileSaver, Blob, AirflowService) {
+                    StorageService, CertService, VariablesService, FileSaver, Blob, AirflowService, $http) {
 
             var self = this;
             self.loadedView = false;
@@ -729,25 +729,39 @@ angular.module('hopsWorksApp')
               $window.open(self.ui, '_blank');
             }
 
-            self.connectToAirflow = function () {
+          /*self.connectToAirflow = function () {
 
-//              $http.get('http://localhost:12358/hopsworks-api/airflow').then(function (response) {
+            $http.get('http://localhost:12358/hopsworks-api/airflow').then(function (response) {
               // store the token in the local storage for further use
-//                var _csrf_token = response.headers('X-CSRFToken');
-//              var _csrf_token = csrf_token();
+              var _csrf_token = response.headers('X-CSRFToken');
+              var _csrf_token = csrf_token();
               var username = 'admin';
               var password = 'admin';
               self.ui = "/hopsworks-api/airflow/";
-//                login?q=username=" + username +
-//                        "&password=" + password;
-//                + "&_csrf_token=" + _csrf_token;
+              login ? q = username = " + username +
+                        "&password=" + password;
+              + "&_csrf_token=" + _csrf_token;
 
-//                xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token() }}");
+              xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token() }}");
               self.openWindow();
 
-//              });
-            };
+            });
+          };*/
 
+            self.connectToAirflow = function () {
+              AirflowService.storeAirflowJWT(self.projectId).then(
+                function (success) {
+                  // Open airlfow
+                  var newTab = $window.open('about:blank', '_blank');
+                  var endpoint = $location.protocol() + "://" + $location.host() + ":" + $location.port();
+                  $http.get(endpoint + "/hopsworks-api/airflow").then ( function (response) {
+                    newTab.location.href = endpoint + "/hopsworks-api/airflow/admin";
+                  })
+                }, function (error) {
+                  growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                }
+              )
+            };
 
             self.purgeAirflowDagsLocal = function () {
               AirflowService.purgeAirflowDagsLocal(self.projectId).then(

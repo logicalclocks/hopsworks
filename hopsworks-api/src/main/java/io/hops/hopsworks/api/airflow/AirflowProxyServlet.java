@@ -61,9 +61,11 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.httpclient.HttpMethod;
+import org.apache.http.Header;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
+import org.apache.http.HttpResponse;
 
 public class AirflowProxyServlet extends ProxyServlet {
 
@@ -304,4 +306,45 @@ public class AirflowProxyServlet extends ProxyServlet {
     }
   }
 
+  @Override
+  protected boolean doResponseRedirectOrNotModifiedLogic(HttpServletRequest servletRequest,
+      HttpServletResponse servletResponse, HttpResponse proxyResponse, int statusCode)
+    throws ServletException, IOException {
+    // Basically the same as in ProxySevlet, additionally copy response headers
+    
+    // Check if the proxy response is a redirect
+    // The following code is adapted from org.tigris.noodle.filters.CheckForRedirect
+    if (statusCode >= HttpServletResponse.SC_MULTIPLE_CHOICES /*
+         * 300
+         */
+        && statusCode < HttpServletResponse.SC_NOT_MODIFIED /*
+         * 304
+         */) {
+      Header locationHeader = proxyResponse.getLastHeader(HttpHeaders.LOCATION);
+      if (locationHeader == null) {
+        throw new ServletException("Received status code: " + statusCode
+            + " but no " + HttpHeaders.LOCATION
+            + " header was found in the response");
+      }
+      // Modify the redirect to go to this proxy servlet rather that the proxied host
+      String locStr = rewriteUrlFromResponse(servletRequest, locationHeader.
+          getValue());
+    
+      copyResponseHeaders(proxyResponse, servletRequest, servletResponse);
+      servletResponse.sendRedirect(locStr);
+      return true;
+    }
+    // 304 needs special handling.  See:
+    // http://www.ics.uci.edu/pub/ietf/http/rfc1945.html#Code304
+    // We get a 304 whenever passed an 'If-Modified-Since'
+    // header and the data on disk has not changed; server
+    // responds w/ a 304 saying I'm not going to send the
+    // body because the file has not changed.
+    if (statusCode == HttpServletResponse.SC_NOT_MODIFIED) {
+      servletResponse.setIntHeader(HttpHeaders.CONTENT_LENGTH, 0);
+      servletResponse.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
+      return true;
+    }
+    return false;
+  }
 }
