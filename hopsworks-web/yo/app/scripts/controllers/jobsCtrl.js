@@ -68,7 +68,7 @@ angular.module('hopsWorksApp')
             self.executionsCurrentPage = 1;
 
             self.jobsToDate = new Date();
-            self.jobsToDate.setMinutes(self.jobsToDate.getMinutes() + 1);
+            self.jobsToDate.setMinutes(self.jobsToDate.getMinutes() + 70);
             self.jobsFromDate = new Date();
             self.jobsFromDate.setMonth(self.jobsToDate.getMonth() - 1);
 
