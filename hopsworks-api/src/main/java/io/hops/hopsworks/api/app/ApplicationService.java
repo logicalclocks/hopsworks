@@ -79,6 +79,7 @@ import io.hops.hopsworks.common.exception.HopsSecurityException;
 import io.hops.hopsworks.common.exception.JobException;
 import io.hops.hopsworks.common.exception.ProjectException;
 import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.exception.UserException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.jobs.execution.ExecutionController;
@@ -272,7 +273,7 @@ public class ApplicationService {
   @ApiOperation(value = "Submit IDs of jobs to start")
   public Response startJobs(
       @Context SecurityContext sc, @Context HttpServletRequest req, JobWorkflowDTO jobsDTO)
-      throws GenericException, UserException, JobException {
+      throws GenericException, UserException, JobException, ServiceException {
     String projectUser = checkAndGetProjectUser(jobsDTO.getKeyStoreBytes(), jobsDTO.getKeyStorePwd().toCharArray());
     Users user = userFacade.findByUsername(hdfsUserBean.getUserName(projectUser));
     Project project = projectFacade.findByName(projectUser.split(Settings.DOUBLE_UNDERSCORE)[0]);
@@ -527,8 +528,8 @@ public class ApplicationService {
         featurestoreController.getFeaturestoreForProjectWithName(project, featurestoreJsonDTO.getFeaturestoreName());
     Featurestore featurestore = featurestoreController.getFeaturestoreWithId(featurestoreDTO.getFeaturestoreId());
     Jobs job = null;
-    if (featurestoreJsonDTO.getJobId() != null)
-      job = jobFacade.findByProjectAndId(project, featurestoreJsonDTO.getJobId());
+    if(featurestoreJsonDTO.getJobName() != null && !featurestoreJsonDTO.getJobName().isEmpty())
+      job = jobFacade.findByProjectAndName(project, featurestoreJsonDTO.getJobName());
     String featureStr = featurestoreUtil.makeCreateTableColumnsStr(featurestoreJsonDTO.getFeatures());
     try {
       featuregroupController.dropFeaturegroup(featurestoreJsonDTO.getName(),
@@ -587,8 +588,8 @@ public class ApplicationService {
             project, featurestore, featurestoreJsonDTO.getName(),
             featurestoreJsonDTO.getVersion());
     Jobs job = null;
-    if (featurestoreJsonDTO.getJobId() != null)
-      job = jobFacade.findByProjectAndId(project, featurestoreJsonDTO.getJobId());
+    if(featurestoreJsonDTO.getJobName() != null && !featurestoreJsonDTO.getJobName().isEmpty())
+      job = jobFacade.findByProjectAndName(project, featurestoreJsonDTO.getJobName());
     FeaturegroupDTO updatedFeaturegroupDTO = featuregroupController.updateFeaturegroupMetadata(
         featurestore, featuregroupDTO.getId(), job, featurestoreJsonDTO.getDependencies(),
         featurestoreJsonDTO.getFeatureCorrelationMatrix(), featurestoreJsonDTO.getDescriptiveStatistics(),
@@ -635,8 +636,8 @@ public class ApplicationService {
     Featurestore featurestore = featurestoreController.getFeaturestoreWithId(featurestoreDTO.getFeaturestoreId());
 
     Jobs job = null;
-    if (featurestoreJsonDTO.getJobId() != null)
-      job = jobFacade.findByProjectAndId(project, featurestoreJsonDTO.getJobId());
+    if(featurestoreJsonDTO.getJobName() != null && !featurestoreJsonDTO.getJobName().isEmpty())
+      job = jobFacade.findByProjectAndName(project, featurestoreJsonDTO.getJobName());
     Dataset trainingDatasetsFolder = featurestoreUtil.getTrainingDatasetFolder(featurestore.getProject());
     String trainingDatasetDirectoryName = featurestoreUtil.getTrainingDatasetPath(
         inodeFacade.getPath(trainingDatasetsFolder.getInode()),
@@ -649,9 +650,11 @@ public class ApplicationService {
               -1, true);
     } catch (DatasetException e) {
       if (e.getErrorCode() == RESTCodes.DatasetErrorCode.DATASET_SUBDIR_ALREADY_EXISTS) {
-        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_ALREADY_EXISTS, Level.FINE,
-            "The path to create the dataset already exists: " + trainingDatasetDirectoryName +
-                ", delete the directory and try again.", e.getMessage(), e);
+        dsUpdateOperations.deleteDatasetFile(project, user, trainingDatasetDirectoryName);
+        fullPath =
+            dsUpdateOperations.createDirectoryInDataset(project, user, trainingDatasetDirectoryName,
+                featurestoreJsonDTO.getDescription(),
+                -1, true);
       } else {
         throw e;
       }
@@ -708,8 +711,8 @@ public class ApplicationService {
         project, featurestore, featurestoreJsonDTO.getName(), featurestoreJsonDTO.getVersion()
     );
     Jobs job = null;
-    if (featurestoreJsonDTO.getJobId() != null)
-      job = jobFacade.findByProjectAndId(project, featurestoreJsonDTO.getJobId());
+    if(featurestoreJsonDTO.getJobName() != null && !featurestoreJsonDTO.getJobName().isEmpty())
+      job = jobFacade.findByProjectAndName(project, featurestoreJsonDTO.getJobName());
     TrainingDatasetDTO updatedTrainingDataset = trainingDatasetController.updateTrainingDataset(
         featurestore, trainingDatasetDTO.getId(), job, featurestoreJsonDTO.getDependencies(),
         featurestoreJsonDTO.getDataFormat(), featurestoreJsonDTO.getDescription(),

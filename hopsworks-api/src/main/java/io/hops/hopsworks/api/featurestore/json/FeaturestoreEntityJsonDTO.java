@@ -33,7 +33,7 @@ import java.util.List;
 @XmlRootElement
 public abstract class FeaturestoreEntityJsonDTO {
 
-  private Integer jobId;
+  private String jobName;
   private String description;
   private List<String> dependencies;
   private Integer version;
@@ -48,11 +48,10 @@ public abstract class FeaturestoreEntityJsonDTO {
 
 
   public FeaturestoreEntityJsonDTO(
-      Integer jobId, String description, List<String> dependencies, Integer version, String name,
+      String description, List<String> dependencies, Integer version, String name,
       FeatureCorrelationMatrixDTO featureCorrelationMatrix, DescriptiveStatsDTO descriptiveStatistics,
       FeatureDistributionsDTO featuresHistogram, ClusterAnalysisDTO clusterAnalysis,
-      boolean updateMetadata, boolean updateStats, List<FeatureDTO> features) {
-    this.jobId = jobId;
+      boolean updateMetadata, boolean updateStats, List<FeatureDTO> features, String jobName) {
     this.description = description;
     this.dependencies = dependencies;
     this.version = version;
@@ -64,11 +63,7 @@ public abstract class FeaturestoreEntityJsonDTO {
     this.updateMetadata = updateMetadata;
     this.updateStats = updateStats;
     this.features = features;
-  }
-
-  @XmlElement
-  public Integer getJobId() {
-    return jobId;
+    this.jobName = jobName;
   }
 
   @XmlElement
@@ -126,8 +121,9 @@ public abstract class FeaturestoreEntityJsonDTO {
     return features;
   }
 
-  public void setJobId(Integer jobId) {
-    this.jobId = jobId;
+  @XmlElement
+  public String getJobName() {
+    return jobName;
   }
 
   public void setDescription(String description) {
@@ -174,10 +170,14 @@ public abstract class FeaturestoreEntityJsonDTO {
     this.features = features;
   }
 
+  public void setJobName(String jobName) {
+    this.jobName = jobName;
+  }
+
   @Override
   public String toString() {
     return "FeaturestoreEntityJsonDTO{" +
-        "jobId=" + jobId +
+        "jobName=" + jobName +
         ", description='" + description + '\'' +
         ", dependencies='" + dependencies + '\'' +
         ", version=" + version +
@@ -189,6 +189,7 @@ public abstract class FeaturestoreEntityJsonDTO {
         ", updateMetadata=" + updateMetadata +
         ", updateStats=" + updateStats +
         ", features=" + features +
+        ", name=" + name +
         '}';
   }
 }

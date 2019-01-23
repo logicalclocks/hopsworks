@@ -30,7 +30,7 @@ describe "On #{ENV['OS']}" do
 
     it "should convert .ipynb file to .py file" do
 
-      copy("/user/hdfs/tensorflow_demo/notebooks/Experiment/Keras/mnist.ipynb", "/Projects/#{@project[:projectname]}/Resources", @user[:username], "#{@project[:projectname]}__Resources", 750)
+      copy("/user/hdfs/tensorflow_demo/notebooks/Experiment/Keras/mnist.ipynb", "/Projects/#{@project[:projectname]}/Resources", @user[:username], "#{@project[:projectname]}__Resources", 750, "#{@project[:projectname]}")
 
       get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/enable/2.7/true"
       expect_status(200)
