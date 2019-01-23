@@ -68,7 +68,7 @@ angular.module('hopsWorksApp')
             self.executionsCurrentPage = 1;
 
             self.jobsToDate = new Date();
-            self.jobsToDate.setMinutes(self.jobsToDate.getMinutes() + 1);
+            self.jobsToDate.setMinutes(self.jobsToDate.getMinutes() + 60*24);
             self.jobsFromDate = new Date();
             self.jobsFromDate.setMonth(self.jobsToDate.getMonth() - 1);
 
@@ -425,7 +425,7 @@ angular.module('hopsWorksApp')
             self.showLogs = function (jobName) {
                 self.fetchingLogs = 1;
                 var offset = self.executionsPageSize * (self.executionsCurrentPage - 1);
-                JobService.getAllExecutions(self.projectId, jobName, "?offset="+offset+ "&limit="+self.executionsPageSize).then(
+                JobService.getAllExecutions(self.projectId, jobName, "?offset="+offset+ "&limit="+self.executionsPageSize + "&sort_by=id:desc").then(
                     function (success) {
                         self.logset.length = 0;
                         angular.forEach(success.data.items, function (execution, key) {
