@@ -573,7 +573,7 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
             },
-            selectDir: function (size, regex, errorMsg) {
+            selectDir: function (size, regex, errorMsg, dirAllowed) {
                 var modalInstance = $uibModal.open({
                     templateUrl: 'views/selectDir.html',
                     controller: 'SelectFileCtrl as selectFileCtrl',
@@ -595,6 +595,9 @@ angular.module('hopsWorksApp')
                         },
                         errorMsg: function () {
                             return errorMsg;
+                        },
+                        dirAllowed: function () {
+                            return dirAllowed;
                         }
                     }
                 });
@@ -627,7 +630,7 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
             },
-            selectLocalFile: function (size, regex, errorMsg) {
+            selectLocalFile: function (size, regex, errorMsg, dirAllowed) {
                 var modalInstance = $uibModal.open({
                     templateUrl: 'views/selectLocalFile.html',
                     controller: 'SelectFileCtrl as selectFileCtrl',
@@ -649,12 +652,15 @@ angular.module('hopsWorksApp')
                         },
                         errorMsg: function () {
                             return errorMsg;
+                        },
+                        dirAllowed: function () {
+                            return dirAllowed;
                         }
                     }
                 });
                 return modalInstance.result;
             },
-            selectLocalDir: function (size, regex, errorMsg) {
+            selectLocalDir: function (size, regex, errorMsg, dirAllowed) {
                 var modalInstance = $uibModal.open({
                     templateUrl: 'views/selectLocalDir.html',
                     controller: 'SelectFileCtrl as selectFileCtrl',
@@ -676,6 +682,9 @@ angular.module('hopsWorksApp')
                         },
                         errorMsg: function () {
                             return errorMsg;
+                        },
+                        dirAllowed: function () {
+                            return dirAllowed;
                         }
                     }
                 });
