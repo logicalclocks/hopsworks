@@ -50,11 +50,14 @@ angular.module('hopsWorksApp')
                 tourService.kafkaProjectPrefix = "demo_kafka";
                 tourService.sparkProjectPrefix = "demo_spark";
                 tourService.deepLearningProjectPrefix = "demo_deep_learning";
+                tourService.featurestoreProjectPrefix = "demo_featurestore";
+                tourService.featurestoreTourJobName = "featurestore_tour_job"
                 tourService.deepLearningRunTip = "";
                 tourService.informAndTips = true;
                 tourService.tipsOnly = false;
                 tourService.informOnly = false;
                 tourService.showNothing = false;
+                tourService.currentProjectName = '';
 
                 tourService.toursInfoStep = 0;
                 tourService.currentStep_TourOne = -1;
@@ -65,6 +68,7 @@ angular.module('hopsWorksApp')
                 tourService.currentStep_TourSix = -1;
                 tourService.currentStep_TourSeven = -1;
                 tourService.currentStep_TourEight = -1;
+                tourService.currentStep_TourNine = -1;
                 tourService.alive_TourOne = 15;
                 tourService.createdJobName = null;
                 tourService.activeTour = null;
@@ -146,6 +150,7 @@ angular.module('hopsWorksApp')
                     tourService.currentStep_TourSix = -1;
                     tourService.currentStep_TourSeven = -1;
                     tourService.currentStep_TourEight = -1;
+                    tourService.currentStep_TourNine = -1;
                     tourService.createdJobName = null;
                 };
 

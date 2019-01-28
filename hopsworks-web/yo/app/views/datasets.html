@@ -54,7 +54,7 @@
           </div>
           <div ng-if="!mainCtrl.showSearchPage" class="content-wrapper" style="background-color: white; overflow: hidden;" ng-controller="DelaClientCtrl as delaClientCtrl">
             <div growl reference="3" class="pull-right" ></div>
-            <h3>
+            <h3 id="datasetsHeader">
               <div flex="65">
                 Filter: &nbsp;
                 <a ng-click="datasetsCtrl.shared = undefined; datasetsCtrl.status = undefined; datasetsCtrl.isPublic = undefined;" class="file-control active">All</a>
@@ -103,7 +103,9 @@
                         <div ng-init="(iscollapsed$index) = true"
                            class="file-box" ng-class="{disabled: dataset.downloading}"
                            context-menu
-                           data-target="menu-{{ dataset.name}}">
+                           data-target="menu-{{ dataset.name}}"
+                           id="{{dataset.name}}"
+                        > <!-- the id is used in the tours.-->
                         <div class="file" ng-class="{'greyed' : datasetsCtrl.selected === dataset.name,
                                   'notAccepted' : dataset.status === false}">
                           <a>
@@ -379,11 +381,46 @@
                     </md-tabs>
                   </md-content>
                 </div>
-
               </div>
             </div>
           </div>
       </section>
     </div>
+    <tour class="ng-scope" step="datasetsCtrl.tourService.currentStep_TourNine"
+          post-tour="closeTour()"
+          ng-if="datasetsCtrl.tourService.activeTour === 'featurestore'
+          && (datasetsCtrl.tourService.informAndTips
+              || datasetsCtrl.tourService.tipsOnly) && !datasetsCtrl.working">
+      <virtual-step
+              ng-if="datasetsCtrl.tourService.activeTour === 'featurestore'"
+              class="ng-scope"
+              tourtip="The feature groups and features can be found in a dataset called <projectname>_featurestore.db (a Hive database)"
+              tourtip-step="6"
+              tourtip-element="{{'#' + datasetsCtrl.tourService.currentProjectName + '_featurestore\\.db'}}"
+              tourtip-placement="bottom"
+              tourtip-next-label="Next"
+              on-proceed=""
+      ></virtual-step>
+      <virtual-step
+              ng-if="datasetsCtrl.tourService.activeTour === 'featurestore'"
+              class="ng-scope"
+              tourtip="The training datasets can be found in a dataset called <projectname>_Training_Datasets"
+              tourtip-step="7"
+              tourtip-element="{{'#' + datasetsCtrl.tourService.currentProjectName + '_Training_Datasets'}}"
+              tourtip-placement="bottom"
+              tourtip-next-label="Next"
+              on-proceed=""
+      ></virtual-step>
+      <virtual-step
+              ng-if="datasetsCtrl.tourService.activeTour === 'featurestore'"
+              class="ng-scope"
+              tourtip="The tour includes a set of sample notebooks for interacting with the feature store. These notebooks are available in the dataset called 'Jupyter'"
+              tourtip-step="8"
+              tourtip-element="#Jupyter"
+              tourtip-placement="bottom"
+              tourtip-next-label="Next"
+              on-proceed=""
+      ></virtual-step>
+    </tour>
   </div>
 </div>

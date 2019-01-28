@@ -207,7 +207,7 @@
 
 <tour class="ng-scope" step="projectCtrl.tourService.currentStep_TourTwo"
       post-tour="closeTour()"
-      ng-if="projectCtrl.loadedView
+      ng-if="projectCtrl.loadedView && projectCtrl.loadedProjectData
                   && (projectCtrl.tourService.informAndTips
                           || projectCtrl.tourService.tipsOnly)">
   <virtual-step
@@ -248,4 +248,37 @@
     tourtip-offset-vertical="-18"
     tourtip-offset-horizontal="-13"
     ></virtual-step>
+  <virtual-step
+          ng-if="projectCtrl.tourService.activeTour === 'featurestore' && projectCtrl.tourService.currentStep_TourNine === -1"
+          id="TourTwo"
+          class="ng-scope"
+          tourtip="Click Next to navigate to the Feature Store service and follow the Feature Store tour"
+          tourtip-step="0"
+          tourtip-element="#featurestoreTab"
+          tourtip-placement="right"
+          tourtip-next-label="Next"
+          on-proceed="projectCtrl.goToFeaturestore()"
+          tourtip-offset-vertical="-18"
+          tourtip-offset-horizontal="-13"
+  ></virtual-step>
+</tour>
+
+<tour class="ng-scope" step="projectCtrl.tourService.currentStep_TourNine"
+      post-tour="closeTour()"
+      ng-if="projectCtrl.loadedView && projectCtrl.loadedProjectData
+                  && (projectCtrl.tourService.informAndTips
+                          || projectCtrl.tourService.tipsOnly)">
+  <virtual-step
+          ng-if="projectCtrl.tourService.activeTour === 'featurestore'"
+          id="TourTwo"
+          class="ng-scope"
+          tourtip="Features and feature groups are typically computed by jobs. In the 'Jobs' tab you can create and view jobs in your project."
+          tourtip-step="9"
+          tourtip-element="#jobsTab"
+          tourtip-placement="right"
+          tourtip-next-label="Next"
+          on-proceed="projectCtrl.goToJobs()"
+          tourtip-offset-vertical="-18"
+          tourtip-offset-horizontal="-13"
+  ></virtual-step>
 </tour>
