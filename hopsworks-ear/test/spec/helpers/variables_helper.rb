@@ -70,4 +70,17 @@ module VariablesHelper
     variables
   end
 
+  def getVar (id)
+    variables = Variables.find_by(id: id)
+    variables
+  end
+
+  def setVar (id, value)
+    variables = Variables.find_by(id: id)
+    variables.value = value
+    variables.save
+    refresh_variables
+    variables
+  end
+
 end

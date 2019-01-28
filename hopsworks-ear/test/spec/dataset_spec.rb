@@ -578,6 +578,19 @@ describe "On #{ENV['OS']}" do
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/fileDownload/Resources/README.md?token=" + token 
           expect_status(401)
         end
+        it 'should fail to download a file if variable download_allowed is false' do
+          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/checkFileForDownload/Logs/README.md"
+          expect_status(200)
+          token = json_body[:data][:value]
+          setVar("download_allowed", 'false')
+          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/checkFileForDownload/Logs/README.md"
+          expect_status(403)
+          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/fileDownload/Logs/README.md?token=" + token
+          expect_status(403)
+          #set var back to true
+          setVar("download_allowed", "true")
+          expect(getVar("download_allowed").value). to eq "true"
+        end
       end 
     end
   end

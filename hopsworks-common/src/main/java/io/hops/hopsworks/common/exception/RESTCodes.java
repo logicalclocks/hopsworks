@@ -294,7 +294,9 @@ public class RESTCodes {
     COPY_FROM_PROJECT(45, "Cannot copy file/folder from another project", Response.Status.FORBIDDEN),
     COPY_TO_PUBLIC_DS(46, "Can not copy to a public dataset.", Response.Status.FORBIDDEN),
     DATASET_SUBDIR_ALREADY_EXISTS(47, "A sub-directory with the same name already exists.",
-        Response.Status.BAD_REQUEST);
+        Response.Status.BAD_REQUEST),
+    DOWNLOAD_NOT_ALLOWED(48, "Downloading files is not allowed. Please contact the system administrator for further " +
+      "information.", Response.Status.FORBIDDEN);
 
 
     private Integer code;
