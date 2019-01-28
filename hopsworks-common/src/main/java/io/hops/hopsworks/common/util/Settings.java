@@ -1169,6 +1169,11 @@ public class Settings implements Serializable {
   public static final String YARNTF_STAGING_DIR = ".yarntfStaging";
   public static final String HOPS_DEEP_LEARNING_TOUR_DATA = "tensorflow_demo";
 
+  //Featurestore constants
+  public static final String HOPS_FEATURESTORE_TOUR_DATA = "featurestore_demo";
+  public static final String HOPS_FEATURESTORE_TOUR_JOB_CLASS = "io.hops.examples.featurestore.Main";
+  public static final String HOPS_FEATURESTORE_TOUR_JOB_NAME = "featurestore_tour_job";
+
   public String getTensorFlowJarPath(String tfUser) {
     return "hdfs:///user/" + tfUser + "/" + TENSORFLOW_JAR;
   }
@@ -2242,9 +2247,14 @@ public class Settings implements Serializable {
 
   private String HOPS_EXAMPLES_VERSION = "0.3.0";
 
-  public synchronized String getHopsExamplesFilename() {
+  public synchronized String getHopsExamplesSparkFilename() {
     checkCache();
     return "hops-examples-spark-" + HOPS_EXAMPLES_VERSION + ".jar";
+  }
+
+  public synchronized String getHopsExamplesFeaturestoreFilename() {
+    checkCache();
+    return "hops-examples-featurestore-" + HOPS_EXAMPLES_VERSION + ".jar";
   }
 
   private String RECOVERY_PATH = "hopsworks-api/api/auth/recover";

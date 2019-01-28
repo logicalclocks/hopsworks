@@ -34,7 +34,9 @@
                         <div class="col-sm-2">
                             <button type="button"
                                     ng-click="featurestoreCtrl.viewFeaturestoreInfo()" class="btn btn-sm btn-primary"
-                                    uib-tooltip="View feature store info">
+                                    uib-tooltip="View feature store info"
+                                    id="viewFeaturestoreInfo"
+                            >
                                 View Info
                             </button>
                         </div>
@@ -49,7 +51,8 @@
                         <div class="col-sm-8">
                             <ui-select ng-model="selected.value"
                                        on-select="featurestoreCtrl.onSelectFeaturestoreCallback($item)"
-                                       style="z-index: 101">
+                                       style="z-index: 101"
+                                       id="selectFeatureStore">
                                 <ui-select-match placeholder="Select one of your feature stores">
                                     <span>{{$select.selected.featurestoreName}}</span>
                                 </ui-select-match>
@@ -65,6 +68,7 @@
                             <button type="button" ng-click="featurestoreCtrl.showCreateFeaturegroupForm()"
                                     class="btn btn-default btn-success control-label" style="margin-bottom: 10px"
                                     uib-tooltip="Create new feature group"
+                                    id="createNewFg"
                             >
                                 Create New Feature Group<i style="margin-left: 10px" class="glyphicon glyphicon-plus">
                             </i>
@@ -74,7 +78,8 @@
                         <div class="col-sm-2">
                             <button type="button" ng-click="featurestoreCtrl.showCreateTrainingDatasetForm()"
                                     class="btn btn-default btn-success control-label" style="margin-bottom: 10px"
-                                    uib-tooltip="Create new training dataset"
+                                    uib-tooltip="Create new training dataset" ,
+                                    id="createNewTd"
                             >
                                 Create New Training Dataset<i style="margin-left: 10px"
                                                               class="glyphicon glyphicon-plus">
@@ -150,7 +155,8 @@
                                         </div>
                                     </div>
                                 </div>
-                                <table class="table table-hover" style="margin-left:20px; margin-right:20px">
+                                <table class="table table-hover" style="margin-left:20px; margin-right:20px"
+                                       id="fgTable">
                                     <thead style="border:none;">
                                     <th style="width: 5%">
                                     </th>
@@ -182,7 +188,7 @@
                                            uib-tooltip="The version of the feature group"
                                            style="margin-left: 5px"></i>
                                     </th>
-                                    <th style="width: 9%">
+                                    <th style="width: 9%" id="fgActionCol">
                                         Actions
                                         <i class="fa fa-info-circle" tooltip-placement="auto left"
                                            uib-tooltip="Delete/Update/Increment Version/Reload contents/View schema/View Details/View Statistics"
@@ -194,13 +200,13 @@
                                         pagination-id="featuregroupstable">
                                         <td>
                                             <span class="glyphicon glyphicon-warning-sign"
-                                                    uib-tooltip="{{featuregroup.versionToGroups[featuregroup.activeVersion].outOfDateReason}}"
-                                                    ng-if="featuregroup.versionToGroups[featuregroup.activeVersion].outOfDate">
+                                                  uib-tooltip="{{featuregroup.versionToGroups[featuregroup.activeVersion].outOfDateReason}}"
+                                                  ng-if="featuregroup.versionToGroups[featuregroup.activeVersion].outOfDate">
                                             </span>
                                             <span class="glyphicon glyphicon-ok-sign"
-                                                    uib-tooltip="The feature group is up-to-date,
+                                                  uib-tooltip="The feature group is up-to-date,
                                                     no dependencies have been modified since the feature group was last updated"
-                                                    ng-if="!featuregroup.versionToGroups[featuregroup.activeVersion].outOfDate">
+                                                  ng-if="!featuregroup.versionToGroups[featuregroup.activeVersion].outOfDate">
                                             </span>
                                         </td>
                                         <td>{{featuregroup.name}}</td>
@@ -328,7 +334,9 @@
                                     <div class="col-sm-6 col-md-6 col-lg-6 form-group">
                                         <label style="margin-left: 20px">Search: <input class="form-control"
                                                                                         style="margin-left: 10px;"
-                                                                                        ng-model="featurestoreCtrl.fFilter">
+                                                                                        ng-model="featurestoreCtrl.fFilter"
+                                                                                        id="fSearch"
+                                        >
                                         </label>
                                     </div>
                                     <div class="col-sm-6 col-md-6 col-lg-6 form-group">
@@ -370,7 +378,7 @@
                                            uib-tooltip="Version of the feature"
                                            style="margin-left: 10px"></i>
                                     </th>
-                                    <th style="width: 9%">
+                                    <th style="width: 9%" id="fActionCol">
                                         Actions
                                         <i class="fa fa-info-circle" tooltip-placement="auto left"
                                            uib-tooltip="Delete/Update/Increment Version/Reload contents/View schema/View Details/View Statistics"
@@ -425,7 +433,8 @@
                                     <div class="col-sm-6 col-md-6 col-lg-6 form-group">
                                         <label style="margin-left: 20px">Search: <input class="form-control"
                                                                                         style="margin-left: 10px;"
-                                                                                        ng-model="featurestoreCtrl.dFilter">
+                                                                                        ng-model="featurestoreCtrl.dFilter"
+                                        >
                                         </label>
                                     </div>
                                     <div class="col-sm-6 col-md-6 col-lg-6 form-group">
@@ -438,7 +447,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <table class="table table-hover" style="margin-left:20px; margin-right:20px">
+                                <table class="table table-hover" style="margin-left:20px; margin-right:20px" id="tdTable">
                                     <thead style="border:none;">
                                     <th style="width: 5%">
                                     </th>
@@ -476,7 +485,7 @@
                                            uib-tooltip="The version of the training dataset"
                                            style="margin-left: 10px"></i>
                                     </th>
-                                    <th style="width: 9%">
+                                    <th style="width: 9%" id="tdActionCol">
                                         Actions
                                         <i class="fa fa-info-circle" tooltip-placement="auto left"
                                            uib-tooltip="Delete/Update/Increment Version/View details"
@@ -610,5 +619,78 @@
                 </div>
             </div>
         </div>
+        <tour class="ng-scope" step="featurestoreCtrl.tourService.currentStep_TourNine"
+              post-tour="closeTour()"
+              ng-if="featurestoreCtrl.tourService.activeTour === 'featurestore'
+          && (featurestoreCtrl.tourService.informAndTips
+              || featurestoreCtrl.tourService.tipsOnly) && !featurestoreCtrl.loading && !projectCtrl.loading">
+            <virtual-step
+                    ng-if="featurestoreCtrl.tourService.activeTour === 'featurestore'"
+                    class="ng-scope"
+                    tourtip="This is the feature store registry where you can list and search for
+                    features/feature groups/training datasets in the feature store as well as edit their metadata."
+                    tourtip-step="0"
+                    tourtip-element="#featurestoreTab"
+                    tourtip-placement="bottom"
+                    tourtip-next-label="Next"
+                    on-proceed=""
+            ></virtual-step>
+            <virtual-step
+                    ng-if="featurestoreCtrl.tourService.activeTour === 'featurestore'"
+                    class="ng-scope"
+                    tourtip="Click here to select your project's feature store. A feature store can also be shared across projects.
+                    You can find feature stores that has been shared with your project in the drop-down list here."
+                    tourtip-step="1"
+                    tourtip-element="#selectFeatureStore"
+                    tourtip-placement="bottom"
+                    tourtip-next-label="Next"
+                    on-proceed=""
+            ></virtual-step>
+            <virtual-step
+                    ng-if="featurestoreCtrl.tourService.activeTour === 'featurestore'"
+                    class="ng-scope"
+                    tourtip="Click here to view storage/ownership details about the feature store."
+                    tourtip-step="2"
+                    tourtip-element="#viewFeaturestoreInfo"
+                    tourtip-placement="bottom"
+                    tourtip-next-label="Next"
+                    on-proceed=""
+            ></virtual-step>
+            <virtual-step
+                    ng-if="featurestoreCtrl.tourService.activeTour === 'featurestore'"
+                    class="ng-scope"
+                    tourtip="Click here to create a new feature group, this will create a Hive table and metadata about the feature group.
+                    To insert data in the feature group you can use the feature store API in Python or Scala. A feature group is a logical grouping of features.
+                    Typically, all features in the same feature group are computed from the same raw dataset using the same spark-job."
+                    tourtip-step="3"
+                    tourtip-element="#createNewFg"
+                    tourtip-placement="bottom"
+                    tourtip-next-label="Next"
+                    on-proceed=""
+            ></virtual-step>
+            <virtual-step
+                    ng-if="featurestoreCtrl.tourService.activeTour === 'featurestore'"
+                    class="ng-scope"
+                    tourtip="Click here to create a new training dataset, this will create a training dataset of features in a format suitable for training, such as tfrecords, csv, parquet, tsv, hdf5 or npy.
+                    To insert data in the training dataset you can use the feature store API in Python or Scala."
+                    tourtip-step="4"
+                    tourtip-element="#createNewTd"
+                    tourtip-placement="bottom"
+                    tourtip-next-label="Next"
+                    on-proceed=""
+            ></virtual-step>
+            <virtual-step
+                    ng-if="featurestoreCtrl.tourService.activeTour === 'featurestore'"
+                    class="ng-scope"
+                    tourtip="You can find the feature store datasets here."
+                    tourtip-step="5"
+                    tourtip-element="#datasetsTab"
+                    tourtip-placement="bottom"
+                    tourtip-next-label="Next"
+                    on-proceed="featurestoreCtrl.goToUrl('datasets')"
+                    tourtip-offset-vertical="-18"
+                    tourtip-offset-horizontal="-13"
+            ></virtual-step>
+        </tour>
     </div>
 </div>

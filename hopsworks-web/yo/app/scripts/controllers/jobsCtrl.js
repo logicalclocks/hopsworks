@@ -49,6 +49,7 @@ angular.module('hopsWorksApp')
 
             var self = this;
             self.tourService = TourService;
+            self.tourService.currentStep_TourNine = 10; //Feature Store Tour
             self.projectId = $routeParams.projectID;
             self.jobs = []; // Will contain all the jobs.
             self.runningStates = ['INITIALIZING', 'RUNNING', 'ACCEPTED', 'NEW', 'NEW_SAVING', 'SUBMITTED',
@@ -100,6 +101,15 @@ angular.module('hopsWorksApp')
                 $timeout(function () {
                 $scope.$broadcast('rzSliderForceRender');
               });
+            };
+
+            /**
+             * Helper function for redirecting to another project page
+             *
+             * @param serviceName project page
+             */
+            self.goToUrl = function (serviceName) {
+                $location.path('project/' + self.projectId + '/' + serviceName);
             };
 
             self.editAsNew = function (job) {
@@ -286,6 +296,9 @@ angular.module('hopsWorksApp')
                             }
                         });
                         self.getAllJobsStatusIsPending = false;
+                        if(self.tourService.currentStep_TourNine === 10){
+                            self.tourService.currentStep_TourNine = 11 //Feature Store tour
+                        }
                         if(toDimTable !== undefined && toDimTable !== null && toDimTable){
                             self.dimTable = false;
                         }
@@ -294,6 +307,9 @@ angular.module('hopsWorksApp')
                             self.dimTable = false;
                         }
                         self.getAllJobsStatusIsPending = false;
+                        if(self.tourService.currentStep_TourNine === 10){
+                            self.tourService.currentStep_TourNine = 11 //Feature Store tour
+                        }
                         if (typeof error.data.usrMsg !== 'undefined') {
                             growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
                         } else {

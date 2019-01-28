@@ -131,4 +131,8 @@ module FeaturestoreHelper
     return json_result, training_dataset_name
   end
 
+  def get_featurestore_tour_job_name
+    return "featurestore_tour_job"
+  end
+
 end
