@@ -20,6 +20,7 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.util.JsonResponse;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.jwt.AlgorithmFactory;
 import io.hops.hopsworks.jwt.JWTController;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
@@ -42,7 +43,6 @@ import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.Provider;
 
 @Provider
@@ -55,11 +55,11 @@ public class AuthFilter extends JWTFilter {
   private JWTController jwtController;
   @EJB
   private AlgorithmFactory algorithmFactory;
-
+  @EJB
+  private Settings settings;
+  
   @Context
   private ResourceInfo resourceInfo;
-  @Context
-  private UriInfo uriInfo;
 
   @Override
   public Algorithm getAlgorithm(DecodedJWT jwt) throws SigningKeyNotFoundException {
@@ -78,7 +78,7 @@ public class AuthFilter extends JWTFilter {
 
   @Override
   public String getIssuer() {
-    return uriInfo.getBaseUri().getHost();
+    return settings.getJWTIssuer();
   }
 
   @Override
