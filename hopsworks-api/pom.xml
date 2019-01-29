@@ -267,6 +267,7 @@
         <version>3.0.0</version>
         <configuration>
           <failOnMissingWebXml>true</failOnMissingWebXml>
+          <useCache>true</useCache>
           <webResources>
             <resource>
               <filtering>true</filtering>
