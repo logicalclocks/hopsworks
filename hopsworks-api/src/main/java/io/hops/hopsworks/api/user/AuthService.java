@@ -58,6 +58,7 @@ import io.hops.hopsworks.common.user.UserStatusValidator;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.user.ldap.LdapUserController;
 import io.hops.hopsworks.common.user.ldap.LdapUserState;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.jwt.Constants;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.jwt.exception.DuplicateSigningKeyException;
@@ -90,7 +91,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import static javax.ws.rs.core.HttpHeaders.AUTHORIZATION;
 import javax.ws.rs.core.SecurityContext;
-import javax.ws.rs.core.UriInfo;
 
 @Path("/auth")
 @Stateless
@@ -116,9 +116,8 @@ public class AuthService {
   private LdapUserController ldapUserController;
   @EJB
   private JWTHelper jWTHelper;
-
-  @Context
-  private UriInfo uriInfo;
+  @EJB
+  private Settings settings;
 
   @GET
   @Path("session")
@@ -315,7 +314,7 @@ public class AuthService {
 
     json.setSessionID(req.getSession().getId());
     json.setData(user.getEmail());
-    String token = jWTHelper.createToken(user, uriInfo.getBaseUri().getHost());
+    String token = jWTHelper.createToken(user, settings.getJWTIssuer());
     return Response.ok().header(AUTHORIZATION, Constants.BEARER + token).entity(json).build();
   }
 
@@ -355,7 +354,7 @@ public class AuthService {
   private boolean needLogin(HttpServletRequest req, Users user) {
     String remoteUser = req.getRemoteUser();
     Users tokenUser = jWTHelper.getUserPrincipal(req);
-    boolean validToken = jWTHelper.validToken(req, uriInfo.getBaseUri().getHost());
+    boolean validToken = jWTHelper.validToken(req, settings.getJWTIssuer());
 
     if (isUserLoggedIn(remoteUser, tokenUser, validToken, user)) {
       return false;
