@@ -203,7 +203,7 @@ public class UploadService {
   private void configureUploader(SecurityContext sc) throws DatasetException, ProjectException {
     if (!this.isTemplate) {
       Users user = jWTHelper.getUserPrincipal(sc);
-      this.username = hdfsUsersBean.getHdfsUserName(project, user);
+      this.username = hdfsUsersBean.getHdfsUserName(this.project, user);
 
       DsPath dsPath = pathValidator.validatePath(this.project, path);
       Project owning = datasetController.getOwningProject(dsPath.getDs());
@@ -231,7 +231,7 @@ public class UploadService {
 
   /**
    * Configure the uploader to upload a metadata Template.
-   * All the templates are uploaded to /Projects/Uploads
+   * All the templates are uploaded to /Projects/Resources
    * <p/>
    * @throws io.hops.hopsworks.common.exception.DatasetException
    */
