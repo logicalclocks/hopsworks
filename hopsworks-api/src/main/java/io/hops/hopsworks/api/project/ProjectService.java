@@ -79,6 +79,7 @@ import io.hops.hopsworks.common.exception.DatasetException;
 import io.hops.hopsworks.common.exception.FeaturestoreException;
 import io.hops.hopsworks.common.exception.GenericException;
 import io.hops.hopsworks.common.exception.HopsSecurityException;
+import io.hops.hopsworks.common.exception.JobException;
 import io.hops.hopsworks.common.exception.KafkaException;
 import io.hops.hopsworks.common.exception.ProjectException;
 import io.hops.hopsworks.common.exception.RESTCodes;
@@ -514,7 +515,7 @@ public class ProjectService {
   public Response example(@PathParam("type") String type, @Context HttpServletRequest req, @Context SecurityContext sc)
       throws DatasetException,
       GenericException, KafkaException, ProjectException, UserException, ServiceException, HopsSecurityException,
-      FeaturestoreException {
+      FeaturestoreException, JobException {
     if (!Arrays.asList(TourProjectType.values()).contains(TourProjectType.valueOf(type.toUpperCase()))) {
       throw new IllegalArgumentException("Type must be one of: " + Arrays.toString(TourProjectType.values()));
     }
@@ -549,6 +550,13 @@ public class ProjectService {
       projectDTO.setProjectName("demo_" + TourProjectType.DEEP_LEARNING.getTourName() + "_" + username);
       populateActiveServices(projectServices, TourProjectType.DEEP_LEARNING);
       readMeMessage = "Jupyter notebooks and training data for demonstrating how to run Deep Learning";
+    } else if (TourProjectType.FEATURESTORE.getTourName().equalsIgnoreCase(type)) {
+      // It's a Featurestore guide
+      demoType = TourProjectType.FEATURESTORE;
+      projectDTO.setProjectName("demo_" + TourProjectType.FEATURESTORE.getTourName() + "_" + username);
+      populateActiveServices(projectServices, TourProjectType.FEATURESTORE);
+      readMeMessage = "Dataset containing a jar file and data that can be used to run a sample spark-job for " +
+          "inserting data in the feature store.";
     }
     projectDTO.setServices(projectServices);
 

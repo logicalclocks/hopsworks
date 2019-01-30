@@ -16,6 +16,7 @@
 package io.hops.hopsworks.api.jwt;
 
 import io.hops.hopsworks.api.filter.Audience;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.jwt.exception.DuplicateSigningKeyException;
 import io.hops.hopsworks.jwt.exception.InvalidationException;
@@ -33,10 +34,8 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
 
 @Path("/jwt")
 @Stateless
@@ -52,15 +51,14 @@ public class JWTResource {
 
   @EJB
   private JWTHelper jWTHelper;
-
-  @Context
-  private UriInfo uriInfo;
+  @EJB
+  private Settings settings;
 
   @POST
   @Path("/create")
   public Response createToken(JWTRequestDTO jWTRequestDTO) throws NoSuchAlgorithmException, SigningKeyNotFoundException,
       DuplicateSigningKeyException {
-    JWTResponseDTO jWTResponseDTO = jWTHelper.createToken(jWTRequestDTO, uriInfo.getBaseUri().getHost());
+    JWTResponseDTO jWTResponseDTO = jWTHelper.createToken(jWTRequestDTO, settings.getJWTIssuer());
     return Response.ok().entity(jWTResponseDTO).build();
   }
 

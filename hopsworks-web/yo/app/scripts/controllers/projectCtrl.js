@@ -53,6 +53,7 @@ angular.module('hopsWorksApp')
 
             var self = this;
             self.loadedView = false;
+            self.loadedProjectData = false;
             self.working = false;
             self.currentProject = [];
             self.activities = [];
@@ -97,6 +98,7 @@ angular.module('hopsWorksApp')
             });
 
             self.initTour = function () {
+              self.tourService.currentProjectName = self.currentProject.projectName
               if (angular.equals(self.currentProject.projectName.substr(0,
                       self.tourService.sparkProjectPrefix.length),
                       self.tourService.sparkProjectPrefix)) {
@@ -109,6 +111,10 @@ angular.module('hopsWorksApp')
                       .substr(0, self.tourService.deepLearningProjectPrefix.length),
                       self.tourService.deepLearningProjectPrefix)) {
                 self.tourService.setActiveTour('deep_learning');
+              } else if (angular.equals(self.currentProject.projectName
+                      .substr(0, self.tourService.featurestoreProjectPrefix.length),
+                  self.tourService.featurestoreProjectPrefix)) {
+                  self.tourService.setActiveTour('featurestore');
               }
 
               // Angular adds '#' symbol to the url when click on the home logo
@@ -122,6 +128,8 @@ angular.module('hopsWorksApp')
                 }
               } else if (self.loc === "/project/" + self.projectId + "/" + "newjob") {
                 self.tourService.currentStep_TourFour = 0;
+              } else if (self.loc === "/project/" + self.projectId + "/" + "newjob") {
+                  self.tourService.currentStep_TourFour = 0;
               }
             };
 
@@ -183,7 +191,10 @@ angular.module('hopsWorksApp')
                         //set the project name under which the search is performed
                         UtilsService.setProjectName(self.currentProject.projectName);
                         self.getRole();
-                      }
+                        self.loadedProjectData = true
+                      } , function (error) {
+                      self.loadedProjectData = true
+                  }
               );
 
             };

@@ -20,9 +20,10 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-    .controller('featurestoreCtrl', ['$scope', '$routeParams', 'growl', 'FeaturestoreService', '$location', '$interval', '$mdSidenav', 'ModalService',
-        'JobService',
-        function ($scope, $routeParams, growl, FeaturestoreService, $location, $interval, $mdSidenav, ModalService, JobService) {
+    .controller('featurestoreCtrl', ['$scope', '$routeParams', 'growl', 'FeaturestoreService', '$location', '$interval',
+        '$mdSidenav', 'ModalService', 'JobService', 'TourService',
+        function ($scope, $routeParams, growl, FeaturestoreService, $location, $interval, $mdSidenav, ModalService, JobService,
+                  TourService) {
 
 
             /**
@@ -53,6 +54,8 @@ angular.module('hopsWorksApp')
             self.loadingText = "";
             self.featuregroupsLoaded = false;
             self.trainingDatasetsLoaded = false;
+            self.tourService = TourService;
+            self.tourService.currentStep_TourNine = 0; //Feature store tour
 
             /**
              * Called when clicking the sort-arrow in the UI
@@ -104,6 +107,7 @@ angular.module('hopsWorksApp')
                 ModalService.createTrainingDataset('lg', self.projectId, $scope.selected.value, self.jobs, self.trainingDatasets)
                     .then(
                         function (success) {
+                            self.showTrainingDatasets()
                             self.getTrainingDatasets($scope.selected.value)
                         }, function (error) {
                         });
@@ -378,7 +382,7 @@ angular.module('hopsWorksApp')
             /**
              * Retrieves a list of all featuregroups for a given featurestore
              *
-             * @param featurestore
+             * @param featurestore the featurestore to query
              */
             self.getFeaturegroups = function (featurestore) {
                 FeaturestoreService.getFeaturegroups(self.projectId, featurestore).then(
@@ -404,7 +408,7 @@ angular.module('hopsWorksApp')
             /**
              * Retrieves a list of all training datasets for a given featurestore
              *
-             * @param featurestore
+             * @param featurestore the featurestore to query
              */
             self.getTrainingDatasets = function (featurestore) {
                 FeaturestoreService.getTrainingDatasets(self.projectId, featurestore).then(

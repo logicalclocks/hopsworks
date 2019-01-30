@@ -312,6 +312,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_JWT_LIFETIME_MS = "jwt_lifetime_ms";
   private static final String VARIABLE_JWT_EXP_LEEWAY_SEC = "jwt_exp_leeway_sec";
   private static final String VARIABLE_JWT_SIGNING_KEY_NAME = "jwt_signing_key_name";
+  private static final String VARIABLE_JWT_ISSUER_KEY = "jwt_issuer";
 
   /* -------------------- Featurestore --------------- */
   private static final String VARIABLE_FEATURESTORE_DEFAULT_QUOTA = "featurestore_default_quota";
@@ -615,6 +616,7 @@ public class Settings implements Serializable {
       JWT_LIFETIME_MS = setLongVar(VARIABLE_JWT_LIFETIME_MS, JWT_LIFETIME_MS);
       JWT_EXP_LEEWAY_SEC = setIntVar(VARIABLE_JWT_EXP_LEEWAY_SEC, JWT_EXP_LEEWAY_SEC);
       JWT_SIGNING_KEY_NAME = setStrVar(VARIABLE_JWT_SIGNING_KEY_NAME, JWT_SIGNING_KEY_NAME);
+      JWT_ISSUER = setStrVar(VARIABLE_JWT_ISSUER_KEY, JWT_ISSUER);
 
       FEATURESTORE_DB_DEFAULT_QUOTA = setStrVar(VARIABLE_FEATURESTORE_DEFAULT_QUOTA, FEATURESTORE_DB_DEFAULT_QUOTA);
       FEATURESTORE_DB_DEFAULT_STORAGE_FORMAT =
@@ -1194,6 +1196,11 @@ public class Settings implements Serializable {
   public static final String YARNTF_HOME_DIR = "YARNTF_HOME_DIR";
   public static final String YARNTF_STAGING_DIR = ".yarntfStaging";
   public static final String HOPS_DEEP_LEARNING_TOUR_DATA = "tensorflow_demo";
+
+  //Featurestore constants
+  public static final String HOPS_FEATURESTORE_TOUR_DATA = "featurestore_demo";
+  public static final String HOPS_FEATURESTORE_TOUR_JOB_CLASS = "io.hops.examples.featurestore.Main";
+  public static final String HOPS_FEATURESTORE_TOUR_JOB_NAME = "featurestore_tour_job";
 
   public String getTensorFlowJarPath(String tfUser) {
     return "hdfs:///user/" + tfUser + "/" + TENSORFLOW_JAR;
@@ -2265,9 +2272,14 @@ public class Settings implements Serializable {
 
   private String HOPS_EXAMPLES_VERSION = "0.3.0";
 
-  public synchronized String getHopsExamplesFilename() {
+  public synchronized String getHopsExamplesSparkFilename() {
     checkCache();
     return "hops-examples-spark-" + HOPS_EXAMPLES_VERSION + ".jar";
+  }
+
+  public synchronized String getHopsExamplesFeaturestoreFilename() {
+    checkCache();
+    return "hops-examples-featurestore-" + HOPS_EXAMPLES_VERSION + ".jar";
   }
 
   private String RECOVERY_PATH = "hopsworks-api/api/auth/recover";
@@ -3155,9 +3167,10 @@ public class Settings implements Serializable {
   }
 
   private String JWT_SIGNATURE_ALGORITHM = "HS512";
-  private long JWT_LIFETIME_MS = 1800000l;
+  private long JWT_LIFETIME_MS = 1800000L;
   private int JWT_EXP_LEEWAY_SEC = 900;
   private String JWT_SIGNING_KEY_NAME = "apiKey";
+  private String JWT_ISSUER = "hopsworks@logicalclocks.com";
 
   public synchronized String getJWTSignatureAlg() {
     checkCache();
@@ -3177,6 +3190,11 @@ public class Settings implements Serializable {
   public synchronized String getJWTSigningKeyName() {
     checkCache();
     return JWT_SIGNING_KEY_NAME;
+  }
+  
+  public synchronized String getJWTIssuer() {
+    checkCache();
+    return JWT_ISSUER;
   }
 
   public String getHiveSiteSparkHdfsPath() {

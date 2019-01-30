@@ -49,6 +49,7 @@ angular.module('hopsWorksApp')
 
             var self = this;
             self.tourService = TourService;
+            self.tourService.currentStep_TourNine = 10; //Feature Store Tour
             self.projectId = $routeParams.projectID;
             self.jobs = []; // Will contain all the jobs.
             self.runningStates = ['INITIALIZING', 'RUNNING', 'ACCEPTED', 'NEW', 'NEW_SAVING', 'SUBMITTED',
@@ -68,7 +69,7 @@ angular.module('hopsWorksApp')
             self.executionsCurrentPage = 1;
 
             self.jobsToDate = new Date();
-            self.jobsToDate.setMinutes(self.jobsToDate.getMinutes() + 1);
+            self.jobsToDate.setMinutes(self.jobsToDate.getMinutes() + 60*24);
             self.jobsFromDate = new Date();
             self.jobsFromDate.setMonth(self.jobsToDate.getMonth() - 1);
 
@@ -101,6 +102,15 @@ angular.module('hopsWorksApp')
                 $timeout(function () {
                 $scope.$broadcast('rzSliderForceRender');
               });
+            };
+
+            /**
+             * Helper function for redirecting to another project page
+             *
+             * @param serviceName project page
+             */
+            self.goToUrl = function (serviceName) {
+                $location.path('project/' + self.projectId + '/' + serviceName);
             };
 
             self.editAsNew = function (job) {
@@ -287,6 +297,9 @@ angular.module('hopsWorksApp')
                             }
                         });
                         self.getAllJobsStatusIsPending = false;
+                        if(self.tourService.currentStep_TourNine === 10){
+                            self.tourService.currentStep_TourNine = 11 //Feature Store tour
+                        }
                         if(toDimTable !== undefined && toDimTable !== null && toDimTable){
                             self.dimTable = false;
                         }
@@ -295,6 +308,9 @@ angular.module('hopsWorksApp')
                             self.dimTable = false;
                         }
                         self.getAllJobsStatusIsPending = false;
+                        if(self.tourService.currentStep_TourNine === 10){
+                            self.tourService.currentStep_TourNine = 11 //Feature Store tour
+                        }
                         if (typeof error.data.usrMsg !== 'undefined') {
                             growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
                         } else {
@@ -425,7 +441,7 @@ angular.module('hopsWorksApp')
             self.showLogs = function (jobName) {
                 self.fetchingLogs = 1;
                 var offset = self.executionsPageSize * (self.executionsCurrentPage - 1);
-                JobService.getAllExecutions(self.projectId, jobName, "?offset="+offset+ "&limit="+self.executionsPageSize).then(
+                JobService.getAllExecutions(self.projectId, jobName, "?offset="+offset+ "&limit="+self.executionsPageSize + "&sort_by=id:desc").then(
                     function (success) {
                         self.logset.length = 0;
                         angular.forEach(success.data.items, function (execution, key) {
