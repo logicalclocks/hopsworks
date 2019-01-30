@@ -359,6 +359,16 @@ angular.module('hopsWorksApp', [
                           }]
                       }
                     })
+                    .when('/project/:projectID/rstudio', {
+                      templateUrl: 'views/rstudio.html',
+                      controller: 'ProjectCtrl as projectCtrl',
+                      resolve: {
+                        auth: ['$q', '$route', 'AuthGuardService',
+                          function ($q, $route, AuthGuardService) {
+                            return AuthGuardService.guardProject($q, $route.current.params.projectID);
+                          }]
+                      }
+                    })
                     .when('/project/:projectID/zeppelin', {
                       templateUrl: 'views/zeppelinDashboard.html',
                       controller: 'ProjectCtrl as projectCtrl',

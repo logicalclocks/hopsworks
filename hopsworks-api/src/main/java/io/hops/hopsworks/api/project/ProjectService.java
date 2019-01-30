@@ -50,6 +50,7 @@ import io.hops.hopsworks.api.jobs.KafkaService;
 import io.hops.hopsworks.api.jupyter.JupyterService;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.pythonDeps.PythonDepsService;
+import io.hops.hopsworks.api.rstudio.RStudioService;
 import io.hops.hopsworks.api.serving.inference.InferenceResource;
 import io.hops.hopsworks.api.tensorflow.TensorBoardService;
 import io.hops.hopsworks.api.serving.TfServingService;
@@ -204,6 +205,8 @@ public class ProjectService {
   private JWTHelper jWTHelper;
   @Inject
   private FeaturestoreService featurestoreService;
+  @Inject
+  private RStudioService rstudioService;
 
   private final static Logger LOGGER = Logger.getLogger(ProjectService.class.getName());
 
@@ -844,6 +847,12 @@ public class ProjectService {
   public FeaturestoreService featurestoreService(@PathParam("id") Integer id, @Context HttpServletRequest req) {
     featurestoreService.setProjectId(id);
     return featurestoreService;
+  }
+  
+  @Path("{id}/rstudio")
+  public RStudioService rstudioService(@PathParam("id") Integer id, @Context HttpServletRequest req) {
+    rstudioService.setProjectId(id);
+    return rstudioService;
   }
 
 }

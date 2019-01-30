@@ -20,7 +20,7 @@
   <div ng-include="'nav.html'"></div>
 
 
-  <div id="wrapper" class="toggled" ng-controller="JobsCtrl as jobsCtrl">
+  <div id="wrapper" class="toggled" ng-controller="RStudioCtrl as rstudioCtrl">
     <div class="overlay"></div>
 
     <div ng-include="'navProject.html'"></div>
@@ -31,8 +31,11 @@
       <!-- Page Content -->
       <div class="content" style="height:100%; overflow: hidden; margin-top: 50px;" >
 
-        
-        
+        <div ng-if="rstudioCtrl.ui !== ''">
+          <iframe style="overflow-y: auto" id="ui_iframe"  
+                  ng-src="{{rstudioCtrl.ui}}" width="99%" height ="86%"></iframe>
+        </div>
+
       </div>
     </div>
     <!-- /#wrapper -->

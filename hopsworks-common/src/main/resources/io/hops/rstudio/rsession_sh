@@ -1,0 +1,5 @@
+#!/bin/bash
+
+
+HOME=%%scratch_dir%% JAVA_HOME=%%java_home%% HADOOP_HOME=%%hadoop_home%% HADOOP_USER_NAME=%%hadoop_user_name%% \
+MATERIAL_DIRECTORY=%%certs_dir%% exec /usr/lib/rstudio-server/bin/rsession "$@"

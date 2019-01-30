@@ -39,6 +39,7 @@
 
 package io.hops.hopsworks.common.util;
 
+import io.hops.hopsworks.common.dao.rstudio.RStudioConfigFilesGenerator;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -95,6 +96,15 @@ public class ConfigFileGenerator {
   public static final String METRICS_TEMPLATE
           = TEMPLATE_ROOT + File.separator
           + "metrics_template.properties";
+//  public static final String RSTUDIO_SERVER_CONF
+//          = TEMPLATE_ROOT + File.separator + "rstudio" + File.separator
+//          + RStudioConfigFilesGenerator.RSTUDIO_SERVER_CONFIG;
+  public static final String RSTUDIO_SESSION_CONF
+          = TEMPLATE_ROOT + File.separator + "rstudio" + File.separator
+          + RStudioConfigFilesGenerator.RSTUDIO_SESSION_CONFIG;
+  public static final String RSTUDIO_SESSION_SCRIPT
+          = TEMPLATE_ROOT + File.separator + "rstudio" + File.separator
+          + RStudioConfigFilesGenerator.RSTUDIO_SESSION_SCRIPT;
 
   /**
    * @param filePath
