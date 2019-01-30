@@ -284,6 +284,8 @@ public class Settings implements Serializable {
 
   /* -------------------- TfServing  --------------- */
   private static final String VARIABLE_TF_SERVING_MONITOR_INT = "tf_serving_monitor_int";
+  private static final String VARIABLE_TF_SERVING_CONNECTION_POOL_SIZE = "tf_serving_connection_pool_size";
+  private static final String VARIABLE_TF_SERVING_MAX_ROUTE_CONNECTIONS = "tf_serving_max_route_connections";
 
   /* -------------------- Kubernetes --------------- */
   private static final String VARIABLE_KUBEMASTER_URL = "kube_master_url";
@@ -588,6 +590,10 @@ public class Settings implements Serializable {
           ",");
 
       TF_SERVING_MONITOR_INT = setStrVar(VARIABLE_TF_SERVING_MONITOR_INT, TF_SERVING_MONITOR_INT);
+      TF_SERVING_CONNECTION_POOL_SIZE = setIntVar(VARIABLE_TF_SERVING_CONNECTION_POOL_SIZE,
+        TF_SERVING_CONNECTION_POOL_SIZE);
+      TF_SERVING_MAX_ROUTE_CONNECTIONS = setIntVar(VARIABLE_TF_SERVING_MAX_ROUTE_CONNECTIONS,
+        TF_SERVING_MAX_ROUTE_CONNECTIONS);
 
       KUBE_USER = setStrVar(VARIABLE_KUBE_USER, KUBE_USER);
       KUBEMASTER_URL = setStrVar(VARIABLE_KUBEMASTER_URL, KUBEMASTER_URL);
@@ -3105,6 +3111,18 @@ public class Settings implements Serializable {
   public synchronized String getTFServingMonitorInt() {
     checkCache();
     return TF_SERVING_MONITOR_INT;
+  }
+
+  private int TF_SERVING_CONNECTION_POOL_SIZE = 40;
+  public synchronized int getTFServingConnectionPoolSize() {
+    checkCache();
+    return TF_SERVING_CONNECTION_POOL_SIZE;
+  }
+
+  private int TF_SERVING_MAX_ROUTE_CONNECTIONS = 10;
+  public synchronized int getTFServingMaxRouteConnections() {
+    checkCache();
+    return TF_SERVING_MAX_ROUTE_CONNECTIONS;
   }
 
   public enum LOG_LEVEL {

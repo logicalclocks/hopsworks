@@ -60,7 +60,6 @@ public class KafkaInferenceLogger implements InferenceLogger {
 
   public static final String SERVING_MANAGER_USERNAME = "srvmanager";
 
-  private KafkaProducer<String, byte[]> kafkaProducer;
   private Schema schema;
   private Injection<GenericRecord, byte[]> recordSerializer;
   private Properties props;
@@ -92,8 +91,9 @@ public class KafkaInferenceLogger implements InferenceLogger {
     }
 
     // Setup the producer for the given project
+    KafkaProducer <String, byte[]> kafkaProducer = null;
     try {
-      setupProducer(serving.getProject());
+      kafkaProducer = setupProducer(serving.getProject());
     } catch (IOException | CryptoPasswordNotFoundException e) {
       LOGGER.log(Level.FINE, "Failed to setup the produce for the project: "
           + serving.getProject().getName() , e);
@@ -116,11 +116,17 @@ public class KafkaInferenceLogger implements InferenceLogger {
     // Push the record to the topic
     ProducerRecord<String, byte[]> inferenceKakfaRecord = new ProducerRecord<>(
         serving.getKafkaTopic().getTopicName(), inferenceRecordBytes);
+
     try {
       kafkaProducer.send(inferenceKakfaRecord);
     } catch (Exception e) {
       LOGGER.log(Level.FINE, "Cannot write to topic: " + serving.getKafkaTopic().getTopicName(), e);
       // We didn't manage to write the log to Kafka, nothing we can do.
+    } finally {
+      if(kafkaProducer != null) {
+        kafkaProducer.flush();
+        kafkaProducer.close();
+      }
     }
 
     // De-materialize certificate
@@ -128,7 +134,8 @@ public class KafkaInferenceLogger implements InferenceLogger {
   }
 
 
-  private void setupProducer(Project project) throws IOException, CryptoPasswordNotFoundException {
+  private KafkaProducer<String, byte[]> setupProducer(Project project) throws IOException,
+    CryptoPasswordNotFoundException {
     certificateMaterializer.materializeCertificatesLocal(SERVING_MANAGER_USERNAME, project.getName());
     CertificateMaterializer.CryptoMaterial cryptoMaterial =
         certificateMaterializer.getUserMaterial(SERVING_MANAGER_USERNAME, project.getName());
@@ -148,7 +155,7 @@ public class KafkaInferenceLogger implements InferenceLogger {
 
     props.setProperty(SslConfigs.SSL_KEY_PASSWORD_CONFIG, String.valueOf(cryptoMaterial.getPassword()));
 
-    kafkaProducer = new KafkaProducer<>(props);
+    return new KafkaProducer<>(props);
   }
 
   @Override
