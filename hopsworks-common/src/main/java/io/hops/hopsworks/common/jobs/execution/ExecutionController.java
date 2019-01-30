@@ -56,6 +56,7 @@ import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.exception.GenericException;
 import io.hops.hopsworks.common.exception.JobException;
 import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -145,7 +146,7 @@ public class ExecutionController {
         "Accept-Charset", "accept-charset"));
   
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  public Execution start(Jobs job, Users user) throws GenericException, JobException {
+  public Execution start(Jobs job, Users user) throws GenericException, JobException, ServiceException {
     //A job can only have one execution running
     List<Execution> jobExecs = execFacade.findByJob(job);
     if(!jobExecs.isEmpty()) {

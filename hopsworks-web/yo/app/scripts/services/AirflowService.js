@@ -37,7 +37,9 @@ angular.module('hopsWorksApp')
               },
               copyFromAirflowToHdfs: function (projectId) {
                 return $http.get('/api/project/' + projectId + '/airflow/copyFromAirflowToHdfs');
+              },
+              storeAirflowJWT: function (projectId) {
+                return $http.post('/api/project/' + projectId + "/airflow/jwt")
               }
-
             };
           }]);

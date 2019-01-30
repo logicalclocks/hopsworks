@@ -142,12 +142,12 @@ angular.module('hopsWorksApp')
             self.selectFileRegexes = {
               "SPARK": /.jar\b/,
               "FLINK": /.jar\b/,
-              "PYSPARK": /.py\b/
+              "PYSPARK": /(.py|.ipynb)\b/
             };
             self.selectFileErrorMsgs = {
               "SPARK": "Please select a JAR file.",
               "FLINK": "Please select a JAR file.",
-              "PYSPARK": "Please select a file."
+              "PYSPARK": "Please select a .py or .ipynb file."
             };
 
             //Create variables for user-entered information
@@ -510,12 +510,12 @@ angular.module('hopsWorksApp')
               var selectedType;
               switch (self.jobtype) { //Set the panel titles according to job type
                 case 1:
-                  self.accordion3.title = "App file (.jar, .py)";
+                  self.accordion3.title = "App file (.jar, .py or .ipynb)";
                   self.accordion4.title = "Job details";
                   selectedType = "Spark";
                   break;
                 case 2:
-                  self.accordion3.title = "App file (.py)";
+                  self.accordion3.title = "App file (.py or .ipynb)";
                   self.accordion4.title = "Job details";
                   selectedType = "PySpark";
                   break;
@@ -680,7 +680,8 @@ angular.module('hopsWorksApp')
                           function (success) {
                             self.runConfig = success.data;
 
-                            if (self.runConfig.appPath.toLowerCase().endsWith(".py")) {
+                            if (self.runConfig.appPath.toLowerCase().endsWith(".py") ||
+                            self.runConfig.appPath.toLowerCase().endsWith(".ipynb")) {
                               self.jobtype = 2;
                             } else {
                               self.jobtype = 1;

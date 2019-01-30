@@ -76,7 +76,7 @@ public abstract class JWTFilter implements ContainerRequestFilter {
     try {
       Algorithm algorithm = getAlgorithm(jwt);
       JWTVerifier verifier = JWT.require(algorithm)
-          .withIssuer(issuer == null || issuer.isEmpty() ? jwt.getIssuer() : issuer)
+          //.withIssuer(issuer == null || issuer.isEmpty() ? jwt.getIssuer() : issuer)
           .acceptExpiresAt(expLeeway == 0 ? DEFAULT_EXPIRY_LEEWAY : expLeeway)
           .build();
       jwt = verifier.verify(token);

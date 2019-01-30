@@ -34,9 +34,21 @@
             $scope.temp.revert();
         });
 
+	    function sleep(milliseconds) {
+		var start = new Date().getTime();
+		for (var i = 0; i < 1e7; i++) {
+		    if ((new Date().getTime() - start) > milliseconds){
+			break;
+		    }
+		}
+	    }
+	    
         $scope.fileNavigator.onRefresh = function() {
+            console.log("onRefresh FileManagerCtrl")
             $scope.temps = [];
             $scope.query = '';
+            $scope.fileNavigator = new FileNavigator();
+            //sleep(1000);	    
             $rootScope.selectedModalPath = $scope.fileNavigator.currentPath;
         };
 
@@ -172,11 +184,13 @@
 
         $scope.modalWithPathSelector = function(id) {
             $rootScope.selectedModalPath = $scope.fileNavigator.currentPath;
+            console.log("ModalPathSelector: " + $scope.fileNavigator.currentPath)	    
             return $scope.modal(id);
         };
 
         $scope.isInThisPath = function(path) {
             var currentPath = $scope.fileNavigator.currentPath.join('/') + '/';
+            console.log("ModalPathSelector: " + $scope.fileNavigator.currentPath)	    	    
             return currentPath.indexOf(path + '/') !== -1;
         };
 

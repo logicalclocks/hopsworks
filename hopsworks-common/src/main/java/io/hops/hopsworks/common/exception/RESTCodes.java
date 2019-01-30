@@ -59,7 +59,6 @@ public class RESTCodes {
     int getRange();
 
   }
-
   public enum ProjectErrorCode implements RESTErrorCode {
 
     //project error response
@@ -1358,6 +1357,45 @@ public class RESTCodes {
       return range;
     }
   }
-
+  
+  /**
+   * Airflow specific error codes
+   */
+  public enum AirflowErrorCode implements RESTErrorCode {
+    
+    JWT_NOT_CREATED(1, "JWT for Airflow service could not be created", Response.Status.INTERNAL_SERVER_ERROR),
+    JWT_NOT_STORED(2, "JWT for Airflow service could not be stored", Response.Status.INTERNAL_SERVER_ERROR);
+    
+    private Integer code;
+    private String message;
+    private Response.StatusType respStatus;
+    private final int range = 290000;
+    
+    AirflowErrorCode(Integer code, String message, Response.StatusType respStatus) {
+      this.code = range + code;
+      this.message = message;
+      this.respStatus = respStatus;
+    }
+    
+    @Override
+    public Response.StatusType getRespStatus() {
+      return respStatus;
+    }
+    
+    @Override
+    public Integer getCode() {
+      return code;
+    }
+    
+    @Override
+    public String getMessage() {
+      return message;
+    }
+    
+    @Override
+    public int getRange() {
+      return range;
+    }
+  }
 
 }
