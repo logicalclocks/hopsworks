@@ -1305,7 +1305,7 @@ public class Settings implements Serializable {
   public static final String DIR_ROOT = "Projects";
   public static final String DIR_SAMPLES = "Samples";
   public static final String DIR_RESULTS = "Results";
-  public static final String DIR_META_TEMPLATES = File.separator + DIR_ROOT + File.separator + "Uploads"
+  public static final String DIR_META_TEMPLATES = File.separator + DIR_ROOT + File.separator + "Resources"
       + File.separator;
   public static final String PROJECT_STAGING_DIR = "Resources";
 
