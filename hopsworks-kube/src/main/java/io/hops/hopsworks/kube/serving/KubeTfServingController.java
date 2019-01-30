@@ -254,7 +254,7 @@ public class KubeTfServingController implements TfServingController {
 
   @Override
   public int getMaxNumInstances() {
-    return 10; // TODO(Fabio) make this a parameter
+    return settings.getKubeMaxServingInstances();
   }
 
   @Override
