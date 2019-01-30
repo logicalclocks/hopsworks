@@ -47,7 +47,7 @@
 
             multipleDownloadFileName: 'hopsworks-airflow-dags.zip',
             filterFileExtensions: [],
-            showExtensionIcons: true,
+            showExtensionIcons: false,
             showSizeForDirectories: false,
             useBinarySizePrefixes: false,
             downloadFilesByAjax: true,
