@@ -72,7 +72,7 @@ public class LocalhostTfInferenceController implements TfInferenceController {
     int maxRouteConnections = settings.getTFServingMaxRouteConnections();
     cm.setMaxTotal(poolSize);
     cm.setDefaultMaxPerRoute(maxRouteConnections);
-    logger.log(Level.INFO, "Creating connection pool for TF Serving of size " +
+    logger.log(Level.FINE, "Creating connection pool for TF Serving of size " +
       poolSize + " and max connections per route " +
       maxRouteConnections);
 

@@ -91,7 +91,7 @@ public class KafkaInferenceLogger implements InferenceLogger {
     }
 
     // Setup the producer for the given project
-    KafkaProducer kafkaProducer = null;
+    KafkaProducer <String, byte[]> kafkaProducer = null;
     try {
       kafkaProducer = setupProducer(serving.getProject());
     } catch (IOException | CryptoPasswordNotFoundException e) {
@@ -134,7 +134,8 @@ public class KafkaInferenceLogger implements InferenceLogger {
   }
 
 
-  private KafkaProducer setupProducer(Project project) throws IOException, CryptoPasswordNotFoundException {
+  private KafkaProducer<String, byte[]> setupProducer(Project project) throws IOException,
+    CryptoPasswordNotFoundException {
     certificateMaterializer.materializeCertificatesLocal(SERVING_MANAGER_USERNAME, project.getName());
     CertificateMaterializer.CryptoMaterial cryptoMaterial =
         certificateMaterializer.getUserMaterial(SERVING_MANAGER_USERNAME, project.getName());
