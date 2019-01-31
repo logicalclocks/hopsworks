@@ -1040,7 +1040,8 @@ angular.module('hopsWorksApp')
                                     var token = success.data.data.value; 
                                     closeToast();
                                     dataSetService.fileDownload(filePath, token);
-                                  }, function (error) {
+                                  },function (error) {
+                                    closeToast();
                                     growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
                           });
                         }
