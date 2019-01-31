@@ -234,10 +234,7 @@ angular.module('hopsWorksApp')
               var internalTourName = '';
               if(uiTourName === 'Deep Learning') {
                 internalTourName = 'Deep_Learning';
-              } else {
-                internalTourName = uiTourName;
-              }
-              if(uiTourName === 'Feature Store') {
+              } else if(uiTourName === 'Feature Store') {
                 internalTourName = 'featurestore';
               } else {
                 internalTourName = uiTourName;
