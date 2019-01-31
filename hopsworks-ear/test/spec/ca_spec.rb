@@ -140,6 +140,7 @@ describe "On #{ENV['OS']}" do
           # Check that the certificate is on the local fs. this assumes you are running the
           # tests on a proper vm
           check_certificate_exists(@certs_dir + "/intermediate/", "test__SE__1", @subject)
+          check_expiration_date(@certs_dir + "/intermediate/", "test__SE__1")
         end
 
         it 'should succeed to revoke the certificate', vm: true do
@@ -147,7 +148,6 @@ describe "On #{ENV['OS']}" do
           expect_status(200)
 
           check_certificate_revoked(@certs_dir + "/intermediate/", "test__SE__1", @subject)
-          check_expiration_date(@certs_dir + "/intermediate/", "test__SE__1")
         end
 
         it 'should return no-content if the revokation is triggered twice' do
