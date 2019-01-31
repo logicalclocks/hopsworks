@@ -70,6 +70,9 @@ import javax.xml.bind.annotation.XmlRootElement;
   @NamedQuery(name = "JupyterProject.findByPort",
           query
           = "SELECT j FROM JupyterProject j WHERE j.port = :port"),
+  @NamedQuery(name = "JupyterProject.findByHdfsUserIdAndPort",
+    query
+      = "SELECT j FROM JupyterProject j WHERE j.hdfsUserId = :hdfsUserId AND j.port = :port"),
   @NamedQuery(name = "JupyterProject.findByHdfsUserId",
           query
           = "SELECT j FROM JupyterProject j WHERE j.hdfsUserId = :hdfsUserId"),
