@@ -347,7 +347,8 @@ public class OpensslOperations {
       throw ex;
     }
 
-    long valueInDays = pki.getValidityPeriod(certType);
+    // Expiration Date formatted as ASN1 UTCTime
+    String expirationDate = pki.getValidityPeriod(certType);
 
     File signedCertificateFile = pki.getCertPath(caType, fileName).toFile();
   
@@ -359,7 +360,7 @@ public class OpensslOperations {
         .addCommand(effectiveExtension)
         .addCommand(csr.getAbsolutePath())
         .addCommand(signedCertificateFile.getAbsolutePath())
-        .addCommand(String.valueOf(valueInDays))
+        .addCommand(expirationDate)
         .build();
     
     String stdout = executeCommand(processDescriptor);

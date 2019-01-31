@@ -38,6 +38,7 @@
 =end
 
 require 'file/tail'
+require 'openssl'
 
 module CaHelper
   def check_certificate_exists(ca_path, cert_name, subject)
@@ -68,5 +69,35 @@ module CaHelper
         end
       }
     end
+  end
+
+  def check_expiration_date(ca_path, cert_name)
+    expected_validity = get_app_cert_validity
+
+    raw = File.read ca_path + "certs/" + cert_name + ".cert.pem"
+    certificate = OpenSSL::X509::Certificate.new raw
+    certificate_validity = Integer(certificate.not_after - certificate.not_before)
+
+    if certificate_validity != expected_validity
+      raise "Certificate valid for #{certificate_validity}, expected #{expected_validity}"
+    end
+  end
+
+  def get_app_cert_validity()
+    validity_str = Variables.find_by(id: "application_certificate_validity_period").value
+
+    validity = 1
+    case validity_str[-1]
+    when 's'
+      validity = Integer(validity_str[0, validity_str.length-1])
+    when 'm'
+      validity = Integer(validity_str[0, validity_str.length-1]) * 60
+    when 'h'
+      validity = Integer(validity_str[0, validity_str.length-1]) * 3600
+    when 'd'
+      validity = Integer(validity_str[0, validity_str.length-1]) * 86400
+    end
+
+    validity
   end
 end
