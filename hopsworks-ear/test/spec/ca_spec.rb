@@ -147,6 +147,7 @@ describe "On #{ENV['OS']}" do
           expect_status(200)
 
           check_certificate_revoked(@certs_dir + "/intermediate/", "test__SE__1", @subject)
+          check_expiration_date(@certs_dir + "/intermediate/", "test__SE__1")
         end
 
         it 'should return no-content if the revokation is triggered twice' do
