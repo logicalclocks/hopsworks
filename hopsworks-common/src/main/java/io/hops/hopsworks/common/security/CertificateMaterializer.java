@@ -831,11 +831,20 @@ public class CertificateMaterializer {
           CryptoMaterial material = materialCache.get(key);
           if (material == null) {
             material = getMaterialFromDatabase(key);
+            materialCache.put(key, material);
           }
           // 2. Flush buffers to local filesystem
           flushToLocalFileSystem(key, material, localDirectory);
-          // 3. Increment cardinality
-          materializedDirs.add(localDirectory, 1);
+          // 3. Force removal has removed the mapping for materialized certificates
+          // so put it back
+          Bag materialBag = materializedCerts.get(key);
+          if (materialBag != null) {
+            materialBag.add(localDirectory, 1);
+          } else {
+            materialBag = new HashBag();
+            materialBag.add(localDirectory, 1);
+            materializedCerts.put(key, materialBag);
+          }
         }
       } else {
         // Materialization in this Directory has already been requested
@@ -887,6 +896,8 @@ public class CertificateMaterializer {
       return false;
     } else {
       forceRemoveLocalMaterial(key.username, key.projectName, materializationDirectory);
+      // We should put back lock for that key as forceRemoveLocalMaterial removes it
+      materialKeyLocks.putIfAbsent(key, new ReentrantReadWriteLock(true));
       return true;
     }
   }
