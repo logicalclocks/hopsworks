@@ -408,7 +408,7 @@ public class KubeTfServingController implements TfServingController {
     Container tfContainer = new ContainerBuilder()
         .withName("tf-serving")
         .withImage(settings.getKubeRegistry() + "/tf")
-        .withImagePullPolicy("Always")
+        .withImagePullPolicy(settings.getKubeImagePullPolicy())
         .withEnv(tfServingEnv)
         .withVolumeMounts(secretMount, logMount)
         .build();
@@ -416,7 +416,7 @@ public class KubeTfServingController implements TfServingController {
     Container fileBeatContainer = new ContainerBuilder()
         .withName("filebeat")
         .withImage(settings.getKubeRegistry() + "/filebeat")
-        .withImagePullPolicy("Always")
+        .withImagePullPolicy(settings.getKubeImagePullPolicy())
         .withEnv(fileBeatEnv)
         .withVolumeMounts(logMount)
         .build();

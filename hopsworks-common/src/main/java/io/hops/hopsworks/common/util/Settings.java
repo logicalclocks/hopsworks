@@ -301,6 +301,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_KUBE_CA_PATH = "kube_ca_path";
   private static final String VARIABLE_KUBE_CA_PASSWORD = "kube_ca_password";
   private static final String VARIABLE_KUBE_REGISTRY = "kube_registry";
+  private static final String VARIABLE_KUBE_PULL_POLICY = "kube_img_pull_policy";
   private static final String VARIABLE_KUBE_MAX_SERVING = "kube_max_serving_instances";
 
   // JWT Variables
@@ -608,6 +609,7 @@ public class Settings implements Serializable {
       KUBE_CA_PATH = setStrVar(VARIABLE_KUBE_CA_PATH, KUBE_CA_PATH);
       KUBE_CA_PASSWORD = setStrVar(VARIABLE_KUBE_CA_PASSWORD, KUBE_CA_PASSWORD);
       KUBE_REGISTRY = setStrVar(VARIABLE_KUBE_REGISTRY, KUBE_REGISTRY);
+      KUBE_PULL_POLICY = setStrVar(VARIABLE_KUBE_PULL_POLICY, KUBE_PULL_POLICY);
       KUBE_MAX_SERVING_INSTANCES = setIntVar(VARIABLE_KUBE_MAX_SERVING, KUBE_MAX_SERVING_INSTANCES);
 
       JWT_SIGNATURE_ALGORITHM = setStrVar(VARIABLE_JWT_SIGNATURE_ALGORITHM, JWT_SIGNATURE_ALGORITHM);
@@ -3099,6 +3101,12 @@ public class Settings implements Serializable {
   public synchronized String getKubeRegistry() {
     checkCache();
     return KUBE_REGISTRY;
+  }
+
+  private String KUBE_PULL_POLICY = "Always";
+  public synchronized String getKubeImagePullPolicy() {
+    checkCache();
+    return KUBE_PULL_POLICY;
   }
 
   private Integer KUBE_MAX_SERVING_INSTANCES = 10;
