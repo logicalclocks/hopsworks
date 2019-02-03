@@ -27,27 +27,121 @@ describe "On #{ENV['OS']}" do
       ds = json_body.detect { |d| d[:name] == "Jupyter"}
       expect(ds[:permission]).not_to include("t", "T")
     end
+  end
 
-    it "should convert .ipynb file to .py file" do
+  python_versions = ['2.7', '3.6']
+  python_versions.each do |version|
+    describe "Jupyter basic operations - python " + version do
+      before :each do
+        with_valid_project
+      end
 
-      copy("/user/hdfs/tensorflow_demo/notebooks/Experiment/Keras/mnist.ipynb", "/Projects/#{@project[:projectname]}/Resources", @user[:username], "#{@project[:projectname]}__Resources", 750, "#{@project[:projectname]}")
+      it "should start and stop a notebook server" do
 
-      get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/enable/2.7/true"
-      expect_status(200)
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/enable/#{version}/true"
+        expect_status(200)
 
-      get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent/Resources"
-      expect_status(200)
-      notebook_file = json_body.detect { |d| d[:name] == "mnist.ipynb" }
-      expect(notebook_file).to be_present
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/settings"
+        expect_status(200)
 
-      get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/convertIPythonNotebook/Resources/mnist.ipynb"
-      expect_status(200)
+        settings = json_body
+        settings[:distributionStrategy] = ""
 
-      get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent/Resources"
-      expect_status(200)
-      python_file = json_body.detect { |d| d[:name] == "mnist.py" }
-      expect(python_file).to be_present
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/start", JSON(settings)
+        expect_status(200)
+
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/running"
+        expect_status(200)
+
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/stop"
+        expect_status(200)
+
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/running"
+        expect_status(404)
+
+      end
+
+      it "should not allow starting multiple notebook servers" do
+
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/enable/#{version}/true"
+        expect_status(200)
+
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/settings"
+        expect_status(200)
+
+        settings = json_body
+        settings[:distributionStrategy] = ""
+
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/start", JSON(settings)
+        expect_status(200)
+
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/start", JSON(settings)
+        expect_status(400)
+
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/running"
+        expect_status(200)
+
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/stop"
+        expect_status(200)
+
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/running"
+        expect_status(404)
+
+      end
+
+      it "should allow multiple restarts" do
+
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/enable/#{version}/true"
+        expect_status(200)
+
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/settings"
+        expect_status(200)
+
+        settings = json_body
+        settings[:distributionStrategy] = ""
+
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/start", JSON(settings)
+        expect_status(200)
+
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/running"
+        expect_status(200)
+
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/stop"
+        expect_status(200)
+
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/running"
+        expect_status(404)
+
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/start", JSON(settings)
+        expect_status(200)
+
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/stop"
+        expect_status(200)
+
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/running"
+        expect_status(404)
+      end
+
+      it "should convert .ipynb file to .py file" do
+
+        copy("/user/hdfs/tensorflow_demo/notebooks/Experiment/Keras/mnist.ipynb", "/Projects/#{@project[:projectname]}/Resources", @user[:username], "#{@project[:projectname]}__Resources", 750, "#{@project[:projectname]}")
+
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/enable/#{version}/true"
+        expect_status(200)
+
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent/Resources"
+        expect_status(200)
+        notebook_file = json_body.detect { |d| d[:name] == "mnist.ipynb" }
+        expect(notebook_file).to be_present
+
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/convertIPythonNotebook/Resources/mnist.ipynb"
+        expect_status(200)
+
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent/Resources"
+        expect_status(200)
+        python_file = json_body.detect { |d| d[:name] == "mnist.py" }
+        expect(python_file).to be_present
+      end
     end
-
   end
 end
