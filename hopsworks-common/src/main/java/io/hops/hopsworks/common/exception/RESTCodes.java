@@ -293,7 +293,9 @@ public class RESTCodes {
     COPY_FROM_PROJECT(45, "Cannot copy file/folder from another project", Response.Status.FORBIDDEN),
     COPY_TO_PUBLIC_DS(46, "Can not copy to a public dataset.", Response.Status.FORBIDDEN),
     DATASET_SUBDIR_ALREADY_EXISTS(47, "A sub-directory with the same name already exists.",
-        Response.Status.BAD_REQUEST);
+        Response.Status.BAD_REQUEST),
+    DOWNLOAD_NOT_ALLOWED(48, "Downloading files is not allowed. Please contact the system administrator for further " +
+      "information.", Response.Status.FORBIDDEN);
 
 
     private Integer code;
@@ -1114,15 +1116,15 @@ public class RESTCodes {
 
   public enum InferenceErrorCode implements RESTErrorCode {
 
-    SERVINGNOTFOUND(0, "Serving instance not found", Response.Status.NOT_FOUND),
-    SERVINGNOTRUNNING(1, "Serving instance not running", Response.Status.BAD_REQUEST),
-    REQUESTERROR(2, "Error contacting the serving server", Response.Status.INTERNAL_SERVER_ERROR),
-    EMPTYRESPONSE(3, "Empty response from the serving server", Response.Status.INTERNAL_SERVER_ERROR),
-    BADREQUEST(4, "Request malformed", Response.Status.BAD_REQUEST),
+    SERVING_NOT_FOUND(0, "Serving instance not found", Response.Status.NOT_FOUND),
+    SERVING_NOT_RUNNING(1, "Serving instance not running", Response.Status.BAD_REQUEST),
+    REQUEST_ERROR(2, "Error contacting the serving server", Response.Status.INTERNAL_SERVER_ERROR),
+    EMPTY_RESPONSE(3, "Empty response from the serving server", Response.Status.INTERNAL_SERVER_ERROR),
+    BAD_REQUEST(4, "Request malformed", Response.Status.BAD_REQUEST),
     MISSING_VERB(5, "Verb is missing", Response.Status.BAD_REQUEST),
-    ERRORREADINGRESPONSE(6, "Error while reading the response", Response.Status.INTERNAL_SERVER_ERROR),
-    SERVINGINSTANCEINTERNAL(7, "Serving instance internal error", Response.Status.INTERNAL_SERVER_ERROR),
-    SERVINGINSTANCEBADREQUEST(8, "Serving instance bad request error", Response.Status.BAD_REQUEST);
+    ERROR_READING_RESPONSE(6, "Error while reading the response", Response.Status.INTERNAL_SERVER_ERROR),
+    SERVING_INSTANCE_INTERNAL(7, "Serving instance internal error", Response.Status.INTERNAL_SERVER_ERROR),
+    SERVING_INSTANCE_BAD_REQUEST(8, "Serving instance bad request error", Response.Status.BAD_REQUEST);
 
     private int code;
     private String message;

@@ -986,6 +986,9 @@ public class DataSetService {
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response checkFileForDownload(@PathParam("path") String path,
           @Context SecurityContext sc) throws DatasetException, ProjectException {
+    if(!settings.isDownloadAllowed()){
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DOWNLOAD_NOT_ALLOWED, Level.FINEST);
+    }
     Users user = jWTHelper.getUserPrincipal(sc);
     DsPath dsPath = pathValidator.validatePath(this.project, path);
     Project owningProject = datasetController.getOwningProject(dsPath.getDs());

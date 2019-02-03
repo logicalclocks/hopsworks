@@ -54,6 +54,7 @@ import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.jwt.exception.SigningKeyNotFoundException;
 import io.hops.hopsworks.jwt.exception.VerificationException;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -92,6 +93,8 @@ public class DownloadService {
   private HdfsUsersController hdfsUsersBean;
   @EJB
   private JWTHelper jWTHelper;
+  @EJB
+  private Settings settings;
 
   private Project project;
 
@@ -107,6 +110,9 @@ public class DownloadService {
   @Produces(MediaType.APPLICATION_OCTET_STREAM)
   public Response downloadFromHDFS(@PathParam("path") String path, @QueryParam("token") String token)
     throws DatasetException, ProjectException, SigningKeyNotFoundException, VerificationException {
+    if(!settings.isDownloadAllowed()){
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DOWNLOAD_NOT_ALLOWED, Level.FINEST);
+    }
     DsPath dsPath = pathValidator.validatePath(project, path);
     String fullPath = dsPath.getFullPath().toString();
     DecodedJWT djwt = jWTHelper.verifyOneTimeToken(token, fullPath);

@@ -233,7 +233,8 @@ public class Settings implements Serializable {
   private static final String VARIABLE_ANACONDA_DIR = "anaconda_dir";
   private static final String VARIABLE_ANACONDA_ENABLED = "anaconda_enabled";
   private static final String VARIABLE_ANACONDA_DEFAULT_REPO = "conda_default_repo";
-
+  
+  private static final String VARIABLE_DOWNLOAD_ALLOWED = "download_allowed";
   private static final String VARIABLE_SUPPORT_EMAIL_ADDR = "support_email_addr";
   private static final String VARIABLE_HOPSUTIL_VERSION = "hopsutil_version";
   private static final String VARIABLE_HOPSEXAMPLES_VERSION = "hopsexamples_version";
@@ -288,6 +289,8 @@ public class Settings implements Serializable {
    * -------------------- TfServing ---------------
    */
   private static final String VARIABLE_TF_SERVING_MONITOR_INT = "tf_serving_monitor_int";
+  private static final String VARIABLE_TF_SERVING_CONNECTION_POOL_SIZE = "tf_serving_connection_pool_size";
+  private static final String VARIABLE_TF_SERVING_MAX_ROUTE_CONNECTIONS = "tf_serving_max_route_connections";
 
   /*
    * -------------------- Kubernetes ---------------
@@ -534,6 +537,7 @@ public class Settings implements Serializable {
       ANACONDA_DEFAULT_REPO = setStrVar(VARIABLE_ANACONDA_DEFAULT_REPO, ANACONDA_DEFAULT_REPO);
       ANACONDA_ENABLED = Boolean.parseBoolean(setStrVar(
           VARIABLE_ANACONDA_ENABLED, ANACONDA_ENABLED.toString()));
+      DOWNLOAD_ALLOWED = Boolean.parseBoolean(setStrVar(VARIABLE_DOWNLOAD_ALLOWED, DOWNLOAD_ALLOWED.toString()));
       INFLUXDB_IP = setStrVar(VARIABLE_INFLUXDB_IP, INFLUXDB_IP);
       INFLUXDB_PORT = setStrVar(VARIABLE_INFLUXDB_PORT, INFLUXDB_PORT);
       INFLUXDB_USER = setStrVar(VARIABLE_INFLUXDB_USER, INFLUXDB_USER);
@@ -596,6 +600,10 @@ public class Settings implements Serializable {
           ",");
 
       TF_SERVING_MONITOR_INT = setStrVar(VARIABLE_TF_SERVING_MONITOR_INT, TF_SERVING_MONITOR_INT);
+      TF_SERVING_CONNECTION_POOL_SIZE = setIntVar(VARIABLE_TF_SERVING_CONNECTION_POOL_SIZE,
+        TF_SERVING_CONNECTION_POOL_SIZE);
+      TF_SERVING_MAX_ROUTE_CONNECTIONS = setIntVar(VARIABLE_TF_SERVING_MAX_ROUTE_CONNECTIONS,
+        TF_SERVING_MAX_ROUTE_CONNECTIONS);
 
       KUBE_USER = setStrVar(VARIABLE_KUBE_USER, KUBE_USER);
       KUBEMASTER_URL = setStrVar(VARIABLE_KUBEMASTER_URL, KUBEMASTER_URL);
@@ -1657,7 +1665,13 @@ public class Settings implements Serializable {
     checkCache();
     return ANACONDA_ENABLED;
   }
-
+  
+  private Boolean DOWNLOAD_ALLOWED = true;
+  public synchronized Boolean isDownloadAllowed() {
+    checkCache();
+    return DOWNLOAD_ALLOWED;
+  }
+  
 //  private String CONDA_CHANNEL_URL = "https://repo.continuum.io/pkgs/free/linux-64/";
   private String CONDA_CHANNEL_URL = "default";
 
@@ -3142,6 +3156,18 @@ public class Settings implements Serializable {
   public synchronized String getTFServingMonitorInt() {
     checkCache();
     return TF_SERVING_MONITOR_INT;
+  }
+
+  private int TF_SERVING_CONNECTION_POOL_SIZE = 40;
+  public synchronized int getTFServingConnectionPoolSize() {
+    checkCache();
+    return TF_SERVING_CONNECTION_POOL_SIZE;
+  }
+
+  private int TF_SERVING_MAX_ROUTE_CONNECTIONS = 10;
+  public synchronized int getTFServingMaxRouteConnections() {
+    checkCache();
+    return TF_SERVING_MAX_ROUTE_CONNECTIONS;
   }
 
   public enum LOG_LEVEL {

@@ -54,7 +54,7 @@ public class InferenceController {
 
     TfServing tfServing = tfServingFacade.findByProjectModelName(project, modelName);
     if (tfServing == null) {
-      throw new InferenceException(RESTCodes.InferenceErrorCode.SERVINGNOTFOUND, Level.FINE, "name: " + modelName);
+      throw new InferenceException(RESTCodes.InferenceErrorCode.SERVING_NOT_FOUND, Level.FINE, "name: " + modelName);
     }
 
     // TODO(Fabio): ATM all the serving are tfServings. so we just redirect everything to the TfInferenceController
@@ -76,11 +76,11 @@ public class InferenceController {
     // If the inference server returned something different than 200 then throw an exception to the user
     if (inferenceResult.getL() >= 500) {
       logger.log(Level.FINE, "Request error: " + inferenceResult.getL() + " - " + inferenceResult.getR());
-      throw new InferenceException(RESTCodes.InferenceErrorCode.SERVINGINSTANCEINTERNAL, Level.FINE,
+      throw new InferenceException(RESTCodes.InferenceErrorCode.SERVING_INSTANCE_INTERNAL, Level.FINE,
           inferenceResult.getR());
     } else if (inferenceResult.getL() >= 400) {
       logger.log(Level.FINE, "Request error: " + inferenceResult.getL() + " - " + inferenceResult.getR());
-      throw new InferenceException(RESTCodes.InferenceErrorCode.SERVINGINSTANCEBADREQUEST, Level.FINE,
+      throw new InferenceException(RESTCodes.InferenceErrorCode.SERVING_INSTANCE_BAD_REQUEST, Level.FINE,
           inferenceResult.getR());
     }
 
