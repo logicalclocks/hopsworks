@@ -107,41 +107,39 @@ public class JupyterFacade {
     } catch (NoResultException e) {
       return null;
     }
-    JupyterProject res2 = null;
-    TypedQuery<JupyterProject> query2 = em.createNamedQuery(
+    TypedQuery<JupyterProject> jupyterProjectQuery = em.createNamedQuery(
         "JupyterProject.findByHdfsUserIdAndPort", JupyterProject.class);
-    query2.setParameter("hdfsUserId", res.getId());
-    query2.setParameter("port", port);
+    jupyterProjectQuery.setParameter("hdfsUserId", res.getId());
+    jupyterProjectQuery.setParameter("port", port);
     try {
-      res2 = query2.getSingleResult();
+      return jupyterProjectQuery.getSingleResult();
     } catch (NoResultException e) {
       Logger.getLogger(JupyterFacade.class.getName()).log(Level.FINE, null,
           e);
     }
-    return res2;
+    return null;
   }
 
   public JupyterProject findByUser(String hdfsUser) {
     HdfsUsers res = null;
-    TypedQuery<HdfsUsers> query = em.createNamedQuery(
+    TypedQuery<HdfsUsers> hdfsUsersQuery = em.createNamedQuery(
       "HdfsUsers.findByName", HdfsUsers.class);
-    query.setParameter("name", hdfsUser);
+    hdfsUsersQuery.setParameter("name", hdfsUser);
     try {
-      res = query.getSingleResult();
+      res = hdfsUsersQuery.getSingleResult();
     } catch (NoResultException e) {
       return null;
     }
-    JupyterProject res2 = null;
-    TypedQuery<JupyterProject> query2 = em.createNamedQuery(
+    TypedQuery<JupyterProject> jupyterProjectQuery = em.createNamedQuery(
       "JupyterProject.findByHdfsUserId", JupyterProject.class);
-    query2.setParameter("hdfsUserId", res.getId());
+    jupyterProjectQuery.setParameter("hdfsUserId", res.getId());
     try {
-      res2 = query2.getSingleResult();
+      return jupyterProjectQuery.getSingleResult();
     } catch (NoResultException e) {
       Logger.getLogger(JupyterFacade.class.getName()).log(Level.FINE, null,
         e);
     }
-    return res2;
+    return null;
   }
 
   public List<JupyterProject> getAllNotebookServers() {

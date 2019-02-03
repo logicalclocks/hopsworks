@@ -336,6 +336,7 @@ public class JupyterService {
         jp = jupyterFacade.saveServer(externalIp, project, configSecret,
           dto.getPort(), user.getId(), dto.getToken(), dto.getPid());
       } catch(Exception e) {
+        LOGGER.log(Level.SEVERE, "Failed to save Jupyter notebook settings", e);
         stopAllSessions(hdfsUser, hopsworksUser, configSecret, dto.getPid(), dto.getPort());
       }
 

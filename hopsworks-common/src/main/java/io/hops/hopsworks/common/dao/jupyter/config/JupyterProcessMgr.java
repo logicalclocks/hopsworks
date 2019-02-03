@@ -275,19 +275,6 @@ public class JupyterProcessMgr {
 
   }
 
-  public void stopCleanly(String hdfsUser, int port) throws ServiceException {
-    // We need to stop the jupyter notebook server with the PID
-    // If we can't stop the server, delete the Entity bean anyway
-    JupyterProject jp = jupyterFacade.findByUserAndPort(hdfsUser, port);
-    if (jp != null) {
-      String jupyterHomePath = getJupyterHome(hdfsUser, jp.getProjectId(), jp.getSecret());
-      // stop the server, remove the user in this project's local dirs
-      killServerJupyterUser(hdfsUser, jupyterHomePath, jp.getPid(), jp.getPort());
-      // remove the reference to th e server in the DB.
-      jupyterFacade.removeNotebookServer(hdfsUser, jp.getPort());
-    }
-  }
-
   public void stopCleanly(String hdfsUser) throws ServiceException {
     // We need to stop the jupyter notebook server with the PID
     // If we can't stop the server, delete the Entity bean anyway
