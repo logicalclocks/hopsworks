@@ -56,7 +56,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
 
 import static io.hops.hopsworks.common.security.PKI.CAType.ROOT;
 
