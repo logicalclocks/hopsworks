@@ -43,6 +43,7 @@ import io.hops.hopsworks.common.util.Settings;
 import org.apache.commons.io.FileUtils;
 import org.javatuples.Pair;
 
+import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import java.io.File;
@@ -66,10 +67,15 @@ public class PKI {
   private Settings settings;
 
   private Map<CAType, String> caPubCertCache = new HashMap<>();
-
-  final static Logger logger = Logger.getLogger(PKI.class.getName());
+  private SimpleDateFormat dateFormat = null;
 
   private final static long TEN_YEARS = 3650;
+
+  @PostConstruct
+  public void init() {
+    dateFormat = new SimpleDateFormat("yyMMddHHmmssZ");
+    dateFormat.setTimeZone(TimeZone.getDefault());
+  }
 
   public String getCertFileName(CertificateType certType, Map<String, String> subject) {
     switch (certType) {
@@ -123,9 +129,6 @@ public class PKI {
    * Format date ASN1 UTCTime
    */
   private String getExpirationDateASN1(long validityMS) {
-    SimpleDateFormat dateFormat = new SimpleDateFormat("yyMMddHHmmssZ");
-    dateFormat.setTimeZone(TimeZone.getDefault());
-
     return dateFormat.format(new Date(System.currentTimeMillis() + validityMS));
   }
 
