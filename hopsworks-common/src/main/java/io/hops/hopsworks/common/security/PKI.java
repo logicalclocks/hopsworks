@@ -50,10 +50,10 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
@@ -123,10 +123,10 @@ public class PKI {
    * Format date ASN1 UTCTime
    */
   private String getExpirationDateASN1(long validityMS) {
-    SimpleDateFormat dateFormatter = new SimpleDateFormat("yyMMddHHmmssZ");
-    dateFormatter.setTimeZone(Calendar.getInstance().getTimeZone());
+    SimpleDateFormat dateFormat = new SimpleDateFormat("yyMMddHHmmssZ");
+    dateFormat.setTimeZone(TimeZone.getDefault());
 
-    return dateFormatter.format(new Date(System.currentTimeMillis() + validityMS));
+    return dateFormat.format(new Date(System.currentTimeMillis() + validityMS));
   }
 
   public HashMap<String, String> getKeyValuesFromSubject(String subject) {
