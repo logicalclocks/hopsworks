@@ -73,7 +73,8 @@
             <md-input-container  class="md-block">
               <label id="inputJobName" for="jobname" style="color: black;">Job name</label>
               <input name="jobname" type="text" id="jobname"
-                     ng-model="newJobCtrl.jobname" ng-change="newJobCtrl.nameFilledIn()"  autofocus>
+                     ng-model="newJobCtrl.jobname" ng-model-options="{debounce: 500}"
+                     ng-change="newJobCtrl.nameFilledIn()"  autofocus>
             </md-input-container>
           </div>
 
@@ -383,10 +384,15 @@
               </table>
               <div>
                 <!-- Creation button -->
-                <button ng-click="newJobCtrl.createJob()" class="btn btn-warning">
-                  Create job
+                <div>
+                <button ng-click="newJobCtrl.createJob()" ng-class="(newJobCtrl.putAction == 'Create') ? 'btn btn-success' : 'btn btn-warning'">
+                  {{newJobCtrl.putAction}}
                 </button>
+                </div>
               </div>
+              <br>
+              <div  class="col-md-2 alert alert-warning" role="alert" ng-show="newJobCtrl.showUpdateWarning" >
+                {{newJobCtrl.updateWarningMsg}}</div>
             </div>
           </div>
         </div>
@@ -545,7 +551,7 @@
         ></virtual-step>
       <virtual-step
         class="ng-scope"
-        tourtip="Click the 'Pre-Configuration' link for configuration suggestions or the 'Configure and create' link for further configuration, otherwise click Create Job"
+        tourtip="Click the the 'Configure and create' link for further configuration, otherwise click Create Job"
         tourtip-step="7"
         tourtip-element="#moreConfigs"
         tourtip-placement="bottom"
@@ -629,7 +635,7 @@
         ></virtual-step>
       <virtual-step
         class="ng-scope"
-        tourtip="Click the 'Pre-Configuration' link for configuration suggestions or the 'Configure and create' link for further configuration, otherwise click Create Job"
+        tourtip="Click the 'Configure and create' link for further configuration, otherwise click Create Job"
         tourtip-step="7"
         tourtip-element="#moreConfigs"
         tourtip-placement="bottom"
