@@ -569,7 +569,9 @@ public class RESTCodes {
         "We currently do not support this version of TensorFlow. Update to a " +
             "newer version or contact an admin", Response.Status.BAD_REQUEST),
     SERVICE_GENERIC_ERROR(42, "Generic error while enabling the service",
-        Response.Status.INTERNAL_SERVER_ERROR);
+        Response.Status.INTERNAL_SERVER_ERROR),
+    JUPYTER_SERVER_ALREADY_RUNNING(43, "Jupyter Notebook Server is already running",
+      Response.Status.BAD_REQUEST);
 
     private Integer code;
     private String message;
