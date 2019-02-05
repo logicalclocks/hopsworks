@@ -107,13 +107,6 @@ describe "On #{ENV['OS']}" do
     context 'with authentication' do
       before :all do
         with_valid_tour_project("spark")
-        create_sparktour_job(@project, $job_spark_1)
-        create_sparktour_job(@project, "demo_job_2")
-        create_sparkpy_job(@project, "demo_pyjob_1")
-        create_sparktour_job(@project, "demo_job_3")
-        create_sparktour_job(@project, "demo_job_4")
-        create_sparktour_job(@project, "demo_job_5")
-        create_sparkpy_job(@project, "demo_pyjob_2")
         create_sparktour_job(@project, $job_spark_1, "jar", nil)
         create_sparktour_job(@project, $job_spark_2, "jar", nil)
         create_sparktour_job(@project, "demo_py_job_1", "py", nil)
