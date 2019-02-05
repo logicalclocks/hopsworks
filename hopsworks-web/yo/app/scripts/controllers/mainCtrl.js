@@ -47,12 +47,18 @@ angular.module('hopsWorksApp')
           '$http', 'AuthService', 'UtilsService', 'ElasticService', 'DelaProjectService',
           'DelaService', 'md5', 'ModalService', 'ProjectService', 'growl',
           'MessageService', '$routeParams', '$window', 'HopssiteService', 'BannerService',
+          'AirflowService',
           function ($interval, $cookies, $location, $scope, $rootScope, $http, AuthService, UtilsService,
                   ElasticService, DelaProjectService, DelaService, md5, ModalService, 
                   ProjectService, growl,
-                  MessageService, $routeParams, $window, HopssiteService, BannerService) {
+                  MessageService, $routeParams, $window, HopssiteService, BannerService,
+                  AirflowService) {
             const MIN_SEARCH_TERM_LEN = 2;
             var self = this;
+
+
+            self.ui = "/hopsworks-api/airflow/login?q=username=";
+
             self.email = $cookies.get('email');
             self.emailHash = md5.createHash(self.email || '');
             var elasticService = ElasticService();
@@ -64,7 +70,7 @@ angular.module('hopsWorksApp')
             } else {
               self.searchType = "global";
             }
-            
+
             var checkeIsAdmin = function () {
               var isAdmin = sessionStorage.getItem("isAdmin");
               if (isAdmin != 'true' && isAdmin != 'false') {
@@ -90,6 +96,8 @@ angular.module('hopsWorksApp')
             };
 
             self.logout = function () {
+              AirflowService.logout();
+
               AuthService.logout(self.user).then(
                       function (success) {
                         AuthService.cleanSession();
@@ -99,13 +107,13 @@ angular.module('hopsWorksApp')
                 self.errorMessage = error.data.msg;
               });
             };
-            
+
             var checkDelaEnabled = function () {
               
               HopssiteService.getServiceInfo("dela").then(function (success) {
                 console.log("isDelaEnabled", success);
                 self.delaServiceInfo = success.data;
-                if (self.delaServiceInfo.status === 1 ) {
+                if (self.delaServiceInfo.status === 1) {
                   $rootScope['isDelaEnabled'] = true;
                 } else {
                   $rootScope['isDelaEnabled'] = false;
@@ -116,19 +124,18 @@ angular.module('hopsWorksApp')
               });
             };
             //checkDelaEnabled(); // check 
-            
             self.userNotification = '';
             var getUserNotification = function () {
               self.userNotification = '';
               BannerService.findUserBanner().then(
-                function (success) {
-                  console.log(success);
-                  if (success.data.successMessage) {
-                    self.userNotification = success.data.successMessage;
-                  }
-                }, function (error) {
-                  console.log(error);
-                  self.userNotification = '';
+                      function (success) {
+                        console.log(success);
+                        if (success.data.successMessage) {
+                          self.userNotification = success.data.successMessage;
+                        }
+                      }, function (error) {
+                console.log(error);
+                self.userNotification = '';
               });
             };
             getUserNotification();
@@ -290,7 +297,7 @@ angular.module('hopsWorksApp')
                           }
                           self.searching = false;
                           self.resultPages = Math.ceil(self.searchResult.length / self.pageSize);
-                          self.resultItems = self.searchResult.length;                          
+                          self.resultItems = self.searchResult.length;
                         }, function (error) {
                           self.searching = false;
                           growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
@@ -450,4 +457,7 @@ angular.module('hopsWorksApp')
                 ModalService.viewSearchResult('lg', result, result, null);
               }
             };
+
+
+
           }]);

@@ -82,7 +82,6 @@ Frontend dependencies
 * github.com/mmathias01/google-charts [MIT](https://github.com/mmathias01/google-charts/blob/master/LICENSE)
 * github.com/apexcharts/apexcharts.js [MIT](https://github.com/apexcharts/apexcharts.js/blob/master/LICENSE)
 
-
 Backend Dependecies
 
 * com.101tec:zkclient:jar:0.9 [ApacheV2](http://www.apache.org/licenses/LICENSE-2.0)

@@ -38,6 +38,7 @@
  */
 package io.hops.hopsworks.api.project;
 
+import io.hops.hopsworks.api.airflow.AirflowService;
 import io.hops.hopsworks.api.activities.ProjectActivitiesResource;
 import io.hops.hopsworks.api.dela.DelaClusterProjectService;
 import io.hops.hopsworks.api.dela.DelaProjectService;
@@ -153,6 +154,8 @@ public class ProjectService {
   private KafkaService kafka;
   @Inject
   private JupyterService jupyter;
+  @Inject
+  private AirflowService airflow;
   @Inject
   private TensorBoardService tensorboard;
   @Inject
@@ -782,6 +785,11 @@ public class ProjectService {
     this.tensorboard.setProjectId(id);
     return this.tensorboard;
   }
+  @Path("{projectId}/airflow")
+  public AirflowService airflow(@PathParam("projectId") Integer id)  {
+    this.airflow.setProjectId(id);
+    return this.airflow;
+  }
 
   @Path("{projectId}/serving")
   public TfServingService tfServingService(@PathParam("projectId") Integer id, @Context HttpServletRequest req) {
@@ -829,7 +837,6 @@ public class ProjectService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response getPia(@PathParam("projectId") Integer projectId) throws ProjectException {
-
     Project project = projectController.findProjectById(projectId);
     if (project == null) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId);

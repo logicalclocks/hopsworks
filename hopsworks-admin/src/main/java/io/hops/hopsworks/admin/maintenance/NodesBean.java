@@ -294,20 +294,20 @@ public class NodesBean implements Serializable {
   }
 
   public void onDialogAddNewNodeClosed(SelectEvent event) {
-    String newNodeHostname = ((String[]) event.getObject())[0];
+    String newHostname = ((String[]) event.getObject())[0];
     String newNodeHostIp = ((String[]) event.getObject())[1];
-    if (newNodeHostname == null || newNodeHostname.isEmpty()
+    if (newHostname == null || newHostname.isEmpty()
         || newNodeHostIp == null || newNodeHostIp.isEmpty()) {
       MessagesController.addErrorMessage("Host not added", "All fields must be filled");
     } else {
-      Hosts existingNode = hostsFacade.findByHostname(newNodeHostname);
+      Hosts existingNode = hostsFacade.findByHostname(newHostname);
       if (existingNode != null) {
-        logger.log(Level.WARNING, "Tried to add Host with ID " + newNodeHostname + " but a host already exist with the "
+        logger.log(Level.WARNING, "Tried to add Host with ID " + newHostname + " but a host already exists with the "
             + "same ID");
-        MessagesController.addErrorMessage("Host with the same ID already exist!");
+        MessagesController.addErrorMessage("Host with the same ID already exists!");
       } else {
         Hosts newNode = new Hosts();
-        newNode.setHostname(newNodeHostname);
+        newNode.setHostname(newHostname);
         newNode.setHostIp(newNodeHostIp);
         newNode.setCondaEnabled(false);
         allNodes.add(newNode);

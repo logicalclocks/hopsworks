@@ -47,7 +47,7 @@
     color: #fff;
 }
 nav.navbar-sics { background: #2e353d; border-color: #ccc; box-shadow: 0 0 2px 0 #ccc; }
-nav.navbar-sics a { color: #337ab7; }
+nav.navbar-sics a { color: #000; }
 
 nav.navbar-sics ul.navbar-nav a {
     border-color: #fff;
