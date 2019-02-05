@@ -45,6 +45,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
+import java.util.ArrayList;
 import java.util.List;
 
 @Stateless
@@ -119,7 +120,7 @@ public class YarnProjectsQuotaFacade extends
           YarnPriceMultiplicator.class);
       return query.getResultList();
     } catch (NoResultException e) {
-      return null;
+      return new ArrayList<>();
     }
   }
 }

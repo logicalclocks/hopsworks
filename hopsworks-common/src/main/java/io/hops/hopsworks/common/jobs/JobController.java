@@ -85,16 +85,9 @@ public class JobController {
   
   private static final Logger LOGGER = Logger.getLogger(JobController.class.getName());
   
-  public Jobs createJob(Users user, Project project, JobConfiguration config) throws JobException {
-    //Check if job with same name exists and throw error is so
-    if (jobFacade.findByProjectAndName(project, config.getAppName()) != null) {
-      throw new JobException(RESTCodes.JobErrorCode.JOB_NAME_EXISTS, Level.FINE,
-        "Job with name:" + config.getAppName() + " for " + "project:" + project.getName() + " already exists");
-    }
-    
-    Jobs created;
+  public Jobs putJob(Users user, Project project, Jobs job, JobConfiguration config) throws JobException {
     try {
-      created = jobFacade.create(user, project, config);
+      job = jobFacade.put(user, project, config, job);
     } catch (IllegalStateException ise) {
       if (ise.getCause() instanceof JAXBException) {
         throw new JobException(RESTCodes.JobErrorCode.JOB_CONFIGURATION_CONVERT_TO_JSON_ERROR, Level.FINE,
@@ -105,11 +98,11 @@ public class JobController {
     }
     
     if (config.getSchedule() != null) {
-      scheduler.scheduleJobPeriodic(created);
+      scheduler.scheduleJobPeriodic(job);
     }
-    activityFacade.persistActivity(ActivityFacade.CREATED_JOB + created.getName(), project, user, ActivityFacade.
+    activityFacade.persistActivity(ActivityFacade.CREATED_JOB + job.getName(), project, user, ActivityFacade.
           ActivityFlag.JOB);
-    return created;
+    return job;
   }
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public void updateSchedule(Project project, Jobs job, ScheduleDTO schedule, Users user) throws JobException {
@@ -157,7 +150,7 @@ public class JobController {
     try {
       String username = hdfsUsersBean.getHdfsUserName(project, user);
       udfso = dfs.getDfsOps(username);
-      LOGGER.log(Level.INFO, "Executing job by {0} at path: {1}", new Object[]{username, path});
+      LOGGER.log(Level.INFO, "Inspecting executable job program by {0} at path: {1}", new Object[]{username, path});
       if (Strings.isNullOrEmpty(path) || !(path.endsWith(".jar") || path.endsWith(".py")
               || path.endsWith(".ipynb"))) {
         throw new IllegalArgumentException("Path does not point to a .jar, .py or .ipynb file.");
