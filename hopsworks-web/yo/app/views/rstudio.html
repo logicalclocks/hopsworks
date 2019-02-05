@@ -1,0 +1,39 @@
+<!--
+  ~ This file is part of Hopsworks
+  ~ Copyright (C) 2018, Logical Clocks AB. All rights reserved
+  ~
+  ~ Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+  ~ the GNU Affero General Public License as published by the Free Software Foundation,
+  ~ either version 3 of the License, or (at your option) any later version.
+  ~
+  ~ Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+  ~ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+  ~ PURPOSE.  See the GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License along with this program.
+  ~ If not, see <https://www.gnu.org/licenses/>.
+  ~
+-->
+
+<!-- Displays the defined jobs in the current project -->
+<div ng-controller="MainCtrl as mainCtrl">
+  <div ng-include="'nav.html'"></div>
+
+
+  <div id="wrapper" class="toggled" ng-controller="JobsCtrl as jobsCtrl">
+    <div class="overlay"></div>
+
+    <div ng-include="'navProject.html'"></div>
+    <div class="job-content-wrapper">
+      <h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.projectName}} / Jobs</h3>
+    </div>
+    <div class="">
+      <!-- Page Content -->
+      <div class="content" style="height:100%; overflow: hidden; margin-top: 50px;" >
+
+        
+        
+      </div>
+    </div>
+    <!-- /#wrapper -->
+  </div>

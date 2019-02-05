@@ -1,38 +1,18 @@
 package io.hops.hopsworks.api.device;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.logging.Logger;
-import javax.ejb.EJB;
-import javax.ejb.Stateless;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.Produces;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.GenericEntity;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-
 import com.google.common.io.ByteStreams;
-import io.hops.hopsworks.common.dao.certificates.CertsFacade;
+import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.common.dao.device.AckRecordDTO;
 import io.hops.hopsworks.common.dao.device.AuthDeviceDTO;
 import io.hops.hopsworks.common.dao.device.DeviceFacade;
 import io.hops.hopsworks.common.dao.device.ProjectDevice;
+import io.hops.hopsworks.common.dao.kafka.KafkaFacade;
+import io.hops.hopsworks.common.dao.kafka.SchemaDTO;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.cert.CertPwDTO;
+import io.hops.hopsworks.common.dao.user.UserFacade;
+import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.device.DeviceResponseBuilder;
 import io.hops.hopsworks.common.exception.DeviceServiceException;
 import io.hops.hopsworks.common.project.ProjectController;
@@ -52,12 +32,29 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import io.hops.hopsworks.api.filter.NoCacheResponse;
-import io.hops.hopsworks.common.dao.kafka.KafkaFacade;
-import io.hops.hopsworks.common.dao.kafka.SchemaDTO;
-import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
-import io.hops.hopsworks.common.exception.AppException;
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.GenericEntity;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Logger;
 
 @Path("/devices-api")
 @Api(value = "Device Service",
@@ -81,16 +78,13 @@ public class DeviceService {
   private KafkaFacade kafkaFacade;
 
   @EJB
-  private CertsFacade userCerts; // Only used for the produce endpoint
-
-  @EJB
   private CertificateMaterializer certificateMaterializer; // Only used for the produce endpoint
 
   @EJB
   private Settings settings; // Only used for the produce endpoint
 
   @EJB
-  private UserManager userManager; // Only used for the produce endpoint
+  private UserFacade userFacade; // Only used for the produce endpoint
 
   @EJB
   private ProjectController projectController; // Only used for the produce endpoint
@@ -184,7 +178,7 @@ public class DeviceService {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   public Response postRegisterEndpoint(@PathParam("projectName") String projectName,
-    @Context HttpServletRequest req, AuthDeviceDTO deviceDTO) throws AppException {
+    @Context HttpServletRequest req, AuthDeviceDTO deviceDTO) {
     try {
       validate(deviceDTO);
       try {
@@ -208,7 +202,7 @@ public class DeviceService {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   public Response postLoginEndpoint(@PathParam("projectName") String projectName, @Context HttpServletRequest req,
-                                    AuthDeviceDTO deviceDTO) throws AppException {
+                                    AuthDeviceDTO deviceDTO) {
     try {
       validate(deviceDTO);
       Project project = projectFacade.findByName(projectName);
@@ -249,7 +243,7 @@ public class DeviceService {
   @DeviceJwtTokenRequired
   @Produces(MediaType.APPLICATION_JSON)
   public Response postVerifyTokenEndpoint(
-    @PathParam("projectName") String projectName, @Context HttpServletRequest req) throws AppException {
+    @PathParam("projectName") String projectName, @Context HttpServletRequest req) {
     return DeviceResponseBuilder.successfulJsonResponse(Status.OK);
   }
 
@@ -262,7 +256,7 @@ public class DeviceService {
   @DeviceJwtTokenRequired
   @Produces(MediaType.APPLICATION_JSON)
   public Response getTopicSchemaEndpoint(
-    @PathParam("projectName") String projectName, @Context HttpServletRequest req) throws AppException {
+    @PathParam("projectName") String projectName, @Context HttpServletRequest req) {
 
     Integer projectId = (Integer) req.getAttribute(DeviceServiceSecurity.PROJECT_ID);
     String topicName = req.getParameter("topic");
@@ -287,7 +281,7 @@ public class DeviceService {
   @Produces(MediaType.APPLICATION_JSON)
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public Response postProduceEndpoint(@PathParam("projectName") String projectName, @Context HttpServletRequest req,
-                                      String jsonString) throws AppException {
+                                      String jsonString) {
 
     Users user = null;
     Project project = null;
@@ -303,7 +297,7 @@ public class DeviceService {
       JSONArray records = json.getJSONArray("records");
 
       // Extracts the default device-user from the database
-      user = userManager.getUserByEmail(DeviceServiceSecurity.DEFAULT_DEVICE_USER_EMAIL);
+      user = userFacade.findByEmail(DeviceServiceSecurity.DEFAULT_DEVICE_USER_EMAIL);
 
       // Extracts the project from the database
       project = projectFacade.find(projectId);
@@ -317,7 +311,7 @@ public class DeviceService {
       }
 
 
-      HopsUtils.copyUserKafkaCerts(userCerts, project,  user.getUsername(), settings.getHopsworksTmpCertDir(),
+      HopsUtils.copyProjectUserCerts(project,  user.getUsername(), settings.getHopsworksTmpCertDir(),
         settings.getHdfsTmpCertDir(), certificateMaterializer, settings.getHopsRpcTls());
 
       String keyStoreFilePath = settings.getHopsworksTmpCertDir() + File.separator +
@@ -345,7 +339,7 @@ public class DeviceService {
       return new DeviceResponseBuilder().UNEXPECTED_ERROR;
     }finally {
       if (user != null && project != null) {
-        certificateMaterializer.removeCertificate(user.getUsername(), project.getName());
+        certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());
       }
     }
 

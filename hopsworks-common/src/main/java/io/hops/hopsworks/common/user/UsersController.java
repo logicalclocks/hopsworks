@@ -1,8 +1,45 @@
+/*
+ * Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
+ * This file is part of Hopsworks
+ * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ *
+ * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU Affero General Public License as published by the Free Software Foundation,
+ * either version 3 of the License, or (at your option) any later version.
+ *
+ * Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
+ * Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this
+ * software and associated documentation files (the "Software"), to deal in the Software
+ * without restriction, including without limitation the rights to use, copy, modify, merge,
+ * publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+ * persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or
+ * substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  OR IMPLIED, INCLUDING
+ * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+ * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package io.hops.hopsworks.common.user;
 
 import com.google.zxing.WriterException;
-import io.hops.hopsworks.common.constants.auth.AuthenticationConstants;
-import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.user.BbcGroup;
 import io.hops.hopsworks.common.dao.user.BbcGroupFacade;
 import io.hops.hopsworks.common.dao.user.UserDTO;
@@ -10,29 +47,39 @@ import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.security.Address;
 import io.hops.hopsworks.common.dao.user.security.Organization;
-import io.hops.hopsworks.common.dao.user.security.Yubikey;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountAudit;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountsAuditActions;
 import io.hops.hopsworks.common.dao.user.security.audit.RolesAudit;
+import io.hops.hopsworks.common.dao.user.security.audit.RolesAuditAction;
 import io.hops.hopsworks.common.dao.user.security.audit.RolesAuditFacade;
-import io.hops.hopsworks.common.dao.user.security.ua.PeopleAccountStatus;
-import io.hops.hopsworks.common.dao.user.security.ua.PeopleAccountType;
+import io.hops.hopsworks.common.dao.user.security.audit.UserAuditActions;
 import io.hops.hopsworks.common.dao.user.security.ua.SecurityQuestion;
 import io.hops.hopsworks.common.dao.user.security.ua.SecurityUtils;
+import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
+import io.hops.hopsworks.common.dao.user.security.ua.UserAccountType;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
 import io.hops.hopsworks.common.dao.user.sshkey.SshKeyDTO;
 import io.hops.hopsworks.common.dao.user.sshkey.SshKeys;
 import io.hops.hopsworks.common.dao.user.sshkey.SshKeysPK;
 import io.hops.hopsworks.common.dao.user.sshkey.SshkeysFacade;
-import io.hops.hopsworks.common.exception.AppException;
-import io.hops.hopsworks.common.metadata.exception.ApplicationException;
-import io.hops.hopsworks.common.util.AuditUtil;
+import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.exception.ServiceException;
+import io.hops.hopsworks.common.exception.UserException;
 import io.hops.hopsworks.common.util.EmailBean;
+import io.hops.hopsworks.common.util.FormatUtils;
 import io.hops.hopsworks.common.util.QRCodeGenerator;
 import io.hops.hopsworks.common.util.Settings;
+import org.apache.commons.lang3.StringUtils;
+
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import javax.mail.Message.RecipientType;
+import javax.mail.MessagingException;
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
-import java.net.SocketException;
 import java.security.NoSuchAlgorithmException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -42,15 +89,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.ejb.EJB;
-import javax.ejb.Stateless;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-import javax.mail.Message.RecipientType;
-import javax.mail.MessagingException;
-import javax.persistence.TransactionRequiredException;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.Response;
 
 @Stateless
 //the operations in this method does not need any transaction
@@ -58,7 +96,7 @@ import javax.ws.rs.core.Response;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class UsersController {
 
-  private final static Logger LOGGER = Logger.getLogger(UsersController.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(UsersController.class.getName());
   @EJB
   private UserFacade userFacade;
   @EJB
@@ -77,14 +115,16 @@ public class UsersController {
   private Settings settings;
   @EJB
   private AuthController authController;
+  @EJB
+  private AccountAuditFacade auditManager;
 
   // To send the user the QR code image
   private byte[] qrCode;
 
-  public byte[] registerUser(UserDTO newUser, HttpServletRequest req) throws AppException, SocketException,
-      NoSuchAlgorithmException {
+  public byte[] registerUser(UserDTO newUser, HttpServletRequest req) throws
+    NoSuchAlgorithmException, UserException {
     userValidator.isValidNewUser(newUser);
-    Users user = createNewUser(newUser, PeopleAccountStatus.NEW_MOBILE_ACCOUNT, PeopleAccountType.M_ACCOUNT_TYPE);
+    Users user = createNewUser(newUser, UserAccountStatus.NEW_MOBILE_ACCOUNT, UserAccountType.M_ACCOUNT_TYPE);
     addAddress(user);
     addOrg(user);
     //to privent sending email for test user emails
@@ -92,12 +132,12 @@ public class UsersController {
       if (!newUser.isTestUser()) {
         // Notify user about the request if not test user.
         emailBean.sendEmail(newUser.getEmail(), RecipientType.TO, UserAccountsEmailMessages.ACCOUNT_REQUEST_SUBJECT,
-            UserAccountsEmailMessages.buildMobileRequestMessage(AuditUtil.getUserURL(req), user.getUsername() + user.
+            UserAccountsEmailMessages.buildMobileRequestMessage(FormatUtils.getUserURL(req), user.getUsername() + user.
                 getValidationKey()));
       }
       // Only register the user if i can send the email
       userFacade.persist(user);
-      qrCode = QRCodeGenerator.getQRCodeBytes(newUser.getEmail(), AuthenticationConstants.ISSUER, user.getSecret());
+      qrCode = QRCodeGenerator.getQRCodeBytes(newUser.getEmail(), Settings.ISSUER, user.getSecret());
       accountAuditFacade.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
           AccountsAuditActions.SUCCESS.name(), "", user, req);
       accountAuditFacade.registerAccountChange(user, AccountsAuditActions.QRCODE.name(),
@@ -109,46 +149,45 @@ public class UsersController {
       accountAuditFacade.registerAccountChange(user, AccountsAuditActions.QRCODE.name(),
           AccountsAuditActions.FAILED.name(), "", user, req);
 
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
-          "Cannot register now due to email service problems");
+      throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_REGISTRATION_ERROR, Level.SEVERE,
+        "user: " + newUser.getUsername(), ex.getMessage(), ex);
     }
     return qrCode;
   }
-
-  public boolean registerYubikeyUser(UserDTO newUser, HttpServletRequest req)
-      throws AppException, SocketException, NoSuchAlgorithmException {
-
-    userValidator.isValidNewUser(newUser);
-    Users user = createNewUser(newUser, PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT, PeopleAccountType.Y_ACCOUNT_TYPE);
-    addAddress(user);
-    addOrg(user);
-
-    Yubikey yk = new Yubikey();
-    yk.setUid(user);
-    yk.setStatus(PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT);
-    user.setYubikey(yk);
-
-    try {
-      // Notify user about the request
-      emailBean.sendEmail(newUser.getEmail(), RecipientType.TO, UserAccountsEmailMessages.ACCOUNT_REQUEST_SUBJECT,
-          UserAccountsEmailMessages.buildYubikeyRequestMessage(AuditUtil.getUserURL(req), user.getUsername() + user.
-              getValidationKey()));
-      // only register the user if i can send the email to the user
-      userFacade.persist(user);
-      accountAuditFacade.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
-          AccountsAuditActions.SUCCESS.name(), "", user, req);
-    } catch (MessagingException ex) {
-
-      accountAuditFacade.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
-          AccountsAuditActions.FAILED.name(), "", user, req);
-
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
-          "Cannot register now due to email service problems");
-
+  
+  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+  public String activateUser(String role, Users user1, Users loggedInUser, HttpServletRequest httpServletRequest) {
+    BbcGroup bbcGroup = bbcGroupFacade.findByGroupName(role);
+    if (bbcGroup != null) {
+      registerGroup(user1, bbcGroup.getGid());
+      auditManager.registerRoleChange(loggedInUser,
+          RolesAuditAction.ROLE_ADDED.name(),
+          RolesAuditAction.SUCCESS.name(), bbcGroup.getGroupName(),
+          user1, httpServletRequest);
+    } else {
+      auditManager.registerAccountChange(loggedInUser,
+          UserAccountStatus.ACTIVATED_ACCOUNT.name(),
+          RolesAuditAction.FAILED.name(), "Role could not be granted.",
+          user1, httpServletRequest);
+      return "Role could not be granted.";
     }
-    return true;
+    
+    try {
+      updateStatus(user1, UserAccountStatus.ACTIVATED_ACCOUNT);
+      auditManager.registerAccountChange(loggedInUser,
+          UserAccountStatus.ACTIVATED_ACCOUNT.name(),
+          UserAuditActions.SUCCESS.name(), "", user1, httpServletRequest);
+    } catch (IllegalArgumentException ex) {
+      auditManager.registerAccountChange(loggedInUser,
+          UserAccountStatus.ACTIVATED_ACCOUNT.name(),
+          RolesAuditAction.FAILED.name(), "User could not be activated.",
+          user1, httpServletRequest);
+      return "User could not be activated.";
+    }
+    
+    return null;
   }
-
+  
   /**
    * Create a new user
    *
@@ -158,8 +197,8 @@ public class UsersController {
    * @return
    * @throws NoSuchAlgorithmException
    */
-  public Users createNewUser(UserDTO newUser, PeopleAccountStatus accountStatus, PeopleAccountType accountType) throws
-      NoSuchAlgorithmException {
+  public Users createNewUser(UserDTO newUser, UserAccountStatus accountStatus, UserAccountType accountType)
+    throws NoSuchAlgorithmException {
     String otpSecret = SecurityUtils.calculateSecretKey();
     String activationKey = SecurityUtils.getRandomPassword(64);
     String uname = generateUsername(newUser.getEmail());
@@ -193,30 +232,30 @@ public class UsersController {
     List<BbcGroup> groups = new ArrayList<>();
     String salt = authController.generateSalt();
     String password = authController.getPasswordHash(pwd, salt);
-
-    Users user = new Users(uname, password, email, fname, lname, title, "-", PeopleAccountStatus.NEW_MOBILE_ACCOUNT,
-        PeopleAccountType.M_ACCOUNT_TYPE, 0, salt);
+    Users user = new Users(uname, password, email, fname, lname, title, "-", UserAccountStatus.NEW_MOBILE_ACCOUNT,
+        UserAccountType.M_ACCOUNT_TYPE, 0, salt);
     user.setBbcGroupCollection(groups);
     return user;
   }
 
   /**
    * Create ldap user
+   *
    * @param email
    * @param fname
    * @param lname
    * @param pwd
    * @param accStatus
-   * @return 
+   * @return
    */
-  public Users createNewLdapUser(String email, String fname, String lname, String pwd, PeopleAccountStatus accStatus) {
+  public Users createNewLdapUser(String email, String fname, String lname, String pwd, UserAccountStatus accStatus) {
     String uname = generateUsername(email);
     List<BbcGroup> groups = new ArrayList<>();
     String salt = authController.generateSalt();
     String password = authController.getPasswordHash(pwd, salt);
 
-    Users user = new Users(uname, password, email, fname, lname, "-", "-", accStatus, 
-        PeopleAccountType.LDAP_ACCOUNT_TYPE, settings.getMaxNumProjPerUser(), salt);
+    Users user = new Users(uname, password, email, fname, lname, "-", "-", accStatus,
+        UserAccountType.LDAP_ACCOUNT_TYPE, settings.getMaxNumProjPerUser(), salt);
     user.setBbcGroupCollection(groups);
     addAddress(user);
     addOrg(user);
@@ -251,51 +290,45 @@ public class UsersController {
   }
 
   public void recoverPassword(String email, String securityQuestion, String securityAnswer, HttpServletRequest req)
-      throws AppException, Exception {
+    throws UserException, ServiceException {
     if (userValidator.isValidEmail(email) && userValidator.isValidsecurityQA(securityQuestion, securityAnswer)) {
       Users user = userFacade.findByEmail(email);
       if (user == null) {
-        throw new AppException(Response.Status.NOT_FOUND.getStatusCode(), ResponseMessages.USER_DOES_NOT_EXIST);
+        throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
       }
       if (!authController.validateSecurityQA(user, securityQuestion, securityAnswer, req)) {
-        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), ResponseMessages.SEC_QA_INCORRECT);
+        throw new UserException(RESTCodes.UserErrorCode.SEC_QA_INCORRECT, Level.FINE);
       }
       authController.resetPassword(user, req);
     }
   }
 
-  public void changePassword(String email, String oldPassword, String newPassword, String confirmedPassword,
-      HttpServletRequest req) throws AppException {
-    Users user = userFacade.findByEmail(email);
+  public void changePassword(Users user, String oldPassword, String newPassword, String confirmedPassword,
+      HttpServletRequest req) throws UserException {
 
-    if (user == null) {
-      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(), ResponseMessages.USER_WAS_NOT_FOUND);
-    }
     if (!authController.validatePassword(user, oldPassword, req)) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), ResponseMessages.PASSWORD_INCORRECT);
+      throw new UserException(RESTCodes.UserErrorCode.PASSWORD_INCORRECT, Level.FINE);
     }
     if (userValidator.isValidPassword(newPassword, confirmedPassword)) {
       try {
         authController.changePassword(user, newPassword, req);
       } catch (Exception ex) {
-        LOGGER.log(Level.SEVERE, "Error while changing password: ", ex);
-        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
-            ResponseMessages.PASSWORD_RESET_UNSUCCESSFUL);
+        throw new UserException(RESTCodes.UserErrorCode.PASSWORD_RESET_UNSUCCESSFUL, Level.SEVERE, null,
+          ex.getMessage(), ex);
       }
       accountAuditFacade.registerAccountChange(user, AccountsAuditActions.PASSWORDCHANGE.name(),
           AccountsAuditActions.SUCCESS.name(), "Changed password.", user, req);
+      if (user.getEmail().compareTo("admin@kth.se") == 0) {
+        settings.setAdminPasswordChanged();
+      }
+
     }
   }
 
-  public void changeSecQA(String email, String oldPassword, String securityQuestion, String securityAnswer,
-      HttpServletRequest req) throws AppException {
-    Users user = userFacade.findByEmail(email);
-
-    if (user == null) {
-      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(), ResponseMessages.USER_WAS_NOT_FOUND);
-    }
+  public void changeSecQA(Users user, String oldPassword, String securityQuestion, String securityAnswer,
+      HttpServletRequest req) throws UserException {
     if (!authController.validatePassword(user, oldPassword, req)) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), ResponseMessages.PASSWORD_INCORRECT);
+      throw new UserException(RESTCodes.UserErrorCode.PASSWORD_INCORRECT, Level.FINE);
     }
 
     if (userValidator.isValidsecurityQA(securityQuestion, securityAnswer)) {
@@ -303,13 +336,13 @@ public class UsersController {
     }
   }
 
-  public Users updateProfile(String email, String firstName, String lastName, String telephoneNum, Integer toursState,
-      HttpServletRequest req) throws AppException {
-    Users user = userFacade.findByEmail(email);
+  public Users updateProfile(Users user, String firstName, String lastName, String telephoneNum, Integer toursState,
+      HttpServletRequest req) throws UserException {
 
     if (user == null) {
-      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(), ResponseMessages.USER_WAS_NOT_FOUND);
+      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
     }
+
     if (firstName != null) {
       user.setFname(firstName);
     }
@@ -351,46 +384,42 @@ public class UsersController {
   }
 
   public String generateUsername(String email) {
-    Integer count = 0;
-    String uname = getUsernameFromEmail(email);
-    Users user = userFacade.findByUsername(uname);
-    String suffix = "";
+    if (email == null) {
+      throw new IllegalArgumentException("Email is null");
+    }
+
+    String emailUsername = email.substring(0, email.lastIndexOf("@")).toLowerCase();
+
+    // Remove all special chars from the string
+    String baseUsername = emailUsername.replaceAll("[^a-z0-9]", "");
+
+    if (baseUsername.length() <= Settings.USERNAME_LEN) {
+      baseUsername = baseUsername + StringUtils.repeat( "0", Settings.USERNAME_LEN - baseUsername.length());
+    } else {
+      baseUsername = baseUsername.substring(0, Settings.USERNAME_LEN);
+    }
+
+    Users user = userFacade.findByUsername(baseUsername);
     if (user == null) {
-      return uname;
+      return baseUsername;
     }
 
     String testUname = "";
-    while (user != null && count < 100) {
-      suffix = count.toString();
-      testUname = uname.substring(0, (Settings.USERNAME_LEN - suffix.length()));
+    String suffix = "";
+    int count = 1;
+    while (user != null && count < 1000) {
+      suffix = String.valueOf(count);
+      testUname = baseUsername.substring(0, (Settings.USERNAME_LEN - suffix.length()));
       user = userFacade.findByUsername(testUname + suffix);
       count++;
     }
-    if (count == 100) {
-      throw new IllegalStateException(
-          "You cannot register with this email address. Pick another.");
+
+    if (count == 1000) {
+      throw new IllegalStateException("You cannot register with this email address. Pick another.");
     }
     return testUname + suffix;
   }
 
-  private String getUsernameFromEmail(String email) {
-    String username = email.substring(0, email.lastIndexOf("@"));
-    if (username.contains(".")) {
-      username = username.replace(".", "_");
-    }
-    if (username.contains("__")) {
-      username = username.replace("__", "_");
-    }
-    if (username.length() > Settings.USERNAME_LEN) {
-      username = username.substring(0, Settings.USERNAME_LEN);
-    }
-    if (username.length() < Settings.USERNAME_LEN) {
-      while (username.length() < Settings.USERNAME_LEN) {
-        username += "0";
-      }
-    }
-    return username;
-  }
 
   /**
    * Enables or disables two factor authentication.
@@ -401,18 +430,16 @@ public class UsersController {
    * @param password
    * @param req
    * @return qrCode if tow factor is enabled null if disabled.
-   * @throws AppException
    */
-  public byte[] changeTwoFactor(Users user, String password, HttpServletRequest req) throws AppException {
+  public byte[] changeTwoFactor(Users user, String password, HttpServletRequest req) throws UserException {
     if (user == null) {
-      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(), ResponseMessages.USER_WAS_NOT_FOUND);
+      throw new IllegalArgumentException("User was not provided.");
     }
     if (!authController.validatePassword(user, password, req)) {
       accountAuditFacade.registerAccountChange(user, AccountsAuditActions.TWO_FACTOR.name(),
           AccountsAuditActions.FAILED.name(), "Incorrect password", user,
           req);
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.PASSWORD_INCORRECT);
+      throw new UserException(RESTCodes.UserErrorCode.PASSWORD_INCORRECT, Level.FINE);
     }
     byte[] qr_code = null;
     if (user.getTwoFactor()) {
@@ -426,7 +453,7 @@ public class UsersController {
         user.setTwoFactor(true);
         userFacade.update(user);
         qr_code = QRCodeGenerator.getQRCodeBytes(user.getEmail(),
-            AuthenticationConstants.ISSUER, user.getSecret());
+            Settings.ISSUER, user.getSecret());
         accountAuditFacade.registerAccountChange(user, AccountsAuditActions.TWO_FACTOR.name(),
             AccountsAuditActions.SUCCESS.name(), "Enabled 2-factor", user,
             req);
@@ -441,9 +468,8 @@ public class UsersController {
         accountAuditFacade.registerAccountChange(user, AccountsAuditActions.QRCODE.name(),
             AccountsAuditActions.FAILED.name(), "Enabled 2-factor", user,
             req);
-        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-            getStatusCode(),
-            "Cannot enable 2-factor authentication.");
+        throw new UserException(RESTCodes.UserErrorCode.TWO_FA_ENABLE_ERROR, Level.SEVERE,
+          "user: " + user.getUsername(), ex.getMessage(), ex);
       }
     }
     return qr_code;
@@ -456,19 +482,18 @@ public class UsersController {
    * @param password
    * @param req
    * @return null if two factor is disabled.
-   * @throws AppException
    */
-  public byte[] getQRCode(Users user, String password, HttpServletRequest req) throws AppException {
-    byte[] qr_code = null;
+  public byte[] getQRCode(Users user, String password, HttpServletRequest req) throws UserException {
     if (user == null) {
-      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(), ResponseMessages.USER_WAS_NOT_FOUND);
+      throw new IllegalArgumentException("User was not provided");
     }
     if (!authController.validatePassword(user, password, req)) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), ResponseMessages.PASSWORD_INCORRECT);
+      throw new UserException(RESTCodes.UserErrorCode.PASSWORD_INCORRECT, Level.FINE);
     }
+    byte[] qr_code = null;
     if (user.getTwoFactor()) {
       try {
-        qr_code = QRCodeGenerator.getQRCodeBytes(user.getEmail(), AuthenticationConstants.ISSUER, user.getSecret());
+        qr_code = QRCodeGenerator.getQRCodeBytes(user.getEmail(), Settings.ISSUER, user.getSecret());
       } catch (IOException | WriterException ex) {
         LOGGER.log(Level.SEVERE, null, ex);
       }
@@ -522,7 +547,7 @@ public class UsersController {
 
   }
 
-  public void changeAccountStatus(int id, String note, PeopleAccountStatus status) {
+  public void changeAccountStatus(int id, String note, UserAccountStatus status) {
     Users p = userFacade.find(id);
     if (p != null) {
       p.setNotes(note);
@@ -547,13 +572,9 @@ public class UsersController {
 
   }
 
-  public void updateStatus(Users id, PeopleAccountStatus stat) throws ApplicationException {
+  public void updateStatus(Users id, UserAccountStatus stat) {
     id.setStatus(stat);
-    try {
-      userFacade.update(id);
-    } catch (TransactionRequiredException ex) {
-      throw new ApplicationException("Need a transaction to update the user status");
-    }
+    userFacade.update(id);
   }
 
   public void updateSecret(int id, String sec) {
@@ -577,7 +598,7 @@ public class UsersController {
       userFacade.update(u);
     }
   }
-  
+
   public void decrementNumActiveProjects(int id) {
     Users u = userFacade.find(id);
     int n = u.getNumActiveProjects();

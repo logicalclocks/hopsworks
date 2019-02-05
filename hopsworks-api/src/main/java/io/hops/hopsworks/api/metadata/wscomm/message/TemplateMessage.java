@@ -1,3 +1,42 @@
+/*
+ * Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
+ * This file is part of Hopsworks
+ * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ *
+ * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU Affero General Public License as published by the Free Software Foundation,
+ * either version 3 of the License, or (at your option) any later version.
+ *
+ * Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
+ * Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this
+ * software and associated documentation files (the "Software"), to deal in the Software
+ * without restriction, including without limitation the rights to use, copy, modify, merge,
+ * publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+ * persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or
+ * substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  OR IMPLIED, INCLUDING
+ * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+ * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package io.hops.hopsworks.api.metadata.wscomm.message;
 
 import io.hops.hopsworks.common.dao.metadata.EntityIntf;
@@ -6,12 +45,11 @@ import io.hops.hopsworks.common.dao.metadata.FieldPredefinedValue;
 import io.hops.hopsworks.common.dao.metadata.FieldType;
 import io.hops.hopsworks.common.dao.metadata.MTable;
 import io.hops.hopsworks.common.dao.metadata.Template;
-import io.hops.hopsworks.common.metadata.exception.ApplicationException;
+import io.hops.hopsworks.common.exception.GenericException;
+import io.hops.hopsworks.common.exception.RESTCodes;
 import java.io.StringReader;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.json.Json;
@@ -25,7 +63,7 @@ import javax.json.JsonValue;
  */
 public class TemplateMessage extends ContentMessage {
 
-  private static final Logger logger = Logger.getLogger(TemplateMessage.class.
+  private static final Logger LOGGER = Logger.getLogger(TemplateMessage.class.
           getName());
 
   private final String TYPE = "TemplateMessage";
@@ -55,7 +93,7 @@ public class TemplateMessage extends ContentMessage {
       super.setTemplateid(object.getInt("tempid"));
     } catch (NullPointerException e) {
       // TODO: - Never catch a NPE!! Re-write.
-      logger.log(Level.SEVERE, "Error while retrieving the templateid."
+      LOGGER.log(Level.SEVERE, "Error while retrieving the templateid."
               + " Probably fetching the templates");
     }
   }
@@ -84,37 +122,28 @@ public class TemplateMessage extends ContentMessage {
    * or the template id depending on the desired action.
    *
    * @return the template to be added in the database
-   * @throws ApplicationException
    */
   @Override
-  public Template getTemplate() throws ApplicationException {
-    Template temp = null;
-    JsonObject object = Json.createReader(new StringReader(this.message)).
-            readObject();
-
-    try {
-      switch (Command.valueOf(this.action.toUpperCase())) {
-
-        case ADD_NEW_TEMPLATE:
-          temp = new Template(-1, object.getString("templateName"));
-          break;
-        case REMOVE_TEMPLATE:
-          temp = new Template(object.getInt("templateId"));
-          break;
-        case UPDATE_TEMPLATE_NAME:
-          temp = new Template(object.getInt("templateId"), object.getString(
-                  "templateName"));
-          break;
-        default:
-          throw new ApplicationException("Unknown command in received message");
-      }
-    } catch (NullPointerException e) {
-      logger.log(Level.SEVERE,
-              "Error while retrieving the template attributes.");
-      throw new ApplicationException(
-              "Error while retrieving the template attributes.");
+  public Template getTemplate() throws GenericException {
+    Template temp;
+    JsonObject object = Json.createReader(new StringReader(this.message)).readObject();
+  
+    switch (Command.valueOf(this.action.toUpperCase())) {
+    
+      case ADD_NEW_TEMPLATE:
+        temp = new Template(-1, object.getString("templateName"));
+        break;
+      case REMOVE_TEMPLATE:
+        temp = new Template(object.getInt("templateId"));
+        break;
+      case UPDATE_TEMPLATE_NAME:
+        temp = new Template(object.getInt("templateId"), object.getString(
+          "templateName"));
+        break;
+      default:
+        throw new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ACTION, Level.FINE, "Action:" + this.action);
     }
-
+  
     return temp;
   }
 
@@ -124,7 +153,6 @@ public class TemplateMessage extends ContentMessage {
             readObject();
     JsonObject board = obj.getJsonObject("bd");
 
-    Map<String, String[][]> schema = new HashMap<>();
     List<EntityIntf> tlist = new LinkedList<>();
 
     //get the prospective tables
@@ -155,7 +183,6 @@ public class TemplateMessage extends ContentMessage {
 
       //get the table attributes/fields
       JsonArray fields = item.getJsonArray("cards");
-      int noofFields = fields.size();
 
       int fieldId = -1;
       String fieldName;
@@ -229,8 +256,10 @@ public class TemplateMessage extends ContentMessage {
           table.addField(f);
 
         } catch (NullPointerException e) {
+          LOGGER.log(Level.SEVERE, null, e);
           searchable = false;
           required = false;
+          
         }
       }
       tlist.add(table);

@@ -1,15 +1,68 @@
+/*
+ * Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
+ * This file is part of Hopsworks
+ * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ *
+ * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU Affero General Public License as published by the Free Software Foundation,
+ * either version 3 of the License, or (at your option) any later version.
+ *
+ * Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
+ * Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this
+ * software and associated documentation files (the "Software"), to deal in the Software
+ * without restriction, including without limitation the rights to use, copy, modify, merge,
+ * publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+ * persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or
+ * substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  OR IMPLIED, INCLUDING
+ * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+ * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package io.hops.hopsworks.api.project;
 
+import io.hops.hopsworks.api.filter.AllowedProjectRoles;
+import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
-import java.io.IOException;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.api.util.RESTApiJsonResponse;
+import io.hops.hopsworks.common.constants.message.ResponseMessages;
+import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
+import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
+import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.exception.KafkaException;
+import io.hops.hopsworks.common.exception.ProjectException;
+import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.exception.ServiceException;
+import io.hops.hopsworks.common.exception.UserException;
+import io.hops.hopsworks.common.project.MembersDTO;
+import io.hops.hopsworks.common.project.ProjectController;
+import io.hops.hopsworks.common.security.CAException;
+import io.hops.hopsworks.jwt.annotation.JWTRequired;
+
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
@@ -21,15 +74,11 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.io.IOException;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.ws.rs.core.SecurityContext;
-import io.hops.hopsworks.api.filter.AllowedProjectRoles;
-import io.hops.hopsworks.api.util.JsonResponse;
-import io.hops.hopsworks.common.constants.message.ResponseMessages;
-import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
-import io.hops.hopsworks.common.exception.AppException;
-import io.hops.hopsworks.common.project.MembersDTO;
-import io.hops.hopsworks.common.project.ProjectController;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -38,7 +87,11 @@ public class ProjectMembersService {
   @EJB
   private ProjectController projectController;
   @EJB
+  private ProjectTeamFacade projectTeamFacade;
+  @EJB
   private NoCacheResponse noCacheResponse;
+  @EJB
+  private JWTHelper jWTHelper;
   private Integer projectId;
 
   public ProjectMembersService() {
@@ -59,40 +112,31 @@ public class ProjectMembersService {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public Response findMembersByProjectID(
-          @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
-
-    List<ProjectTeam> list = projectController.findProjectTeamById(
-            this.projectId);
-    GenericEntity<List<ProjectTeam>> projects
-            = new GenericEntity<List<ProjectTeam>>(list) {};
-
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            projects).build();
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response findMembersByProjectID() {
+    List<ProjectTeam> list = projectController.findProjectTeamById(this.projectId);
+    GenericEntity<List<ProjectTeam>> projects = new GenericEntity<List<ProjectTeam>>(list) {};
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(projects).build();
   }
 
   @POST
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  public Response addMembers(
-          MembersDTO members,
-          @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response addMembers(MembersDTO members, @Context SecurityContext sc) throws KafkaException,
+      ProjectException, UserException {
 
     Project project = projectController.findProjectById(this.projectId);
-    JsonResponse json = new JsonResponse();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     List<String> failedMembers = null;
-    String owner = sc.getUserPrincipal().getName();
+    Users user = jWTHelper.getUserPrincipal(sc);
 
     if (members.getProjectTeam() == null || members.getProjectTeam().isEmpty()) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              ResponseMessages.NO_MEMBER_TO_ADD);
+      throw new IllegalArgumentException("Member was not provided in MembersDTO");
     }
     if (project != null) {
       //add new members of the project
-      failedMembers = projectController.addMembers(project, owner, members.
-              getProjectTeam());
+      failedMembers = projectController.addMembers(project, user, members.getProjectTeam());
     }
 
     if (members.getProjectTeam().size() > 1) {
@@ -120,28 +164,23 @@ public class ProjectMembersService {
   @Path("/{email}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  public Response updateRoleByEmail(
-          @PathParam("email") String email,
-          @FormParam("role") String role,
-          @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response updateRoleByEmail(@PathParam("email") String email, @FormParam("role") String role,
+      @Context SecurityContext sc) throws ProjectException, UserException {
 
     Project project = projectController.findProjectById(this.projectId);
-    JsonResponse json = new JsonResponse();
-    String owner = sc.getUserPrincipal().getName();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
+    Users user = jWTHelper.getUserPrincipal(sc);
     if (email == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              ResponseMessages.EMAIL_EMPTY);
+      throw new IllegalArgumentException("Email was not provided.");
     }
     if (role == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              ResponseMessages.ROLE_NOT_SET);
+      throw new IllegalArgumentException("Role was not provided.");
     }
     if (project.getOwner().getEmail().equals(email)) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              ResponseMessages.PROJECT_OWNER_ROLE_NOT_ALLOWED);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_OWNER_ROLE_NOT_ALLOWED, Level.FINE);
     }
-    projectController.updateMemberRole(project, owner, email, role);
+    projectController.updateMemberRole(project, user, email, role);
 
     json.setSuccessMessage(ResponseMessages.MEMBER_ROLE_UPDATED);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
@@ -152,40 +191,36 @@ public class ProjectMembersService {
   @DELETE
   @Path("/{email}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  public Response removeMembersByID(
-          @PathParam("email") String email,
-          @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException, Exception {
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response removeMembersByID(@PathParam("email") String email, @Context SecurityContext sc)
+    throws ProjectException, ServiceException, CAException, UserException, IOException {
 
     Project project = projectController.findProjectById(this.projectId);
-    JsonResponse json = new JsonResponse();
-    String owner = sc.getUserPrincipal().getName();
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
+    Users reqUser = jWTHelper.getUserPrincipal(sc);
     if (email == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              ResponseMessages.EMAIL_EMPTY);
+      throw new IllegalArgumentException("Email was not provided");
     }
-    //Data Scientists are only allowed to remove themselves
-    if (sc.isUserInRole(AllowedProjectRoles.DATA_SCIENTIST) && !owner.equals(email)) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              ResponseMessages.MEMBER_REMOVAL_NOT_ALLOWED);
+    //Not able to remove members that do not exist
+    String userProjectRole = projectTeamFacade.findCurrentRole(project, email);
+    if (userProjectRole == null || userProjectRole.isEmpty()) {
+      throw new ProjectException(RESTCodes.ProjectErrorCode.TEAM_MEMBER_NOT_FOUND, Level.FINE);
     }
+
+    //Data scientists can only remove themselves
+    String reqUserProjectRole = projectTeamFacade.findCurrentRole(project, reqUser.getEmail());
+    if (reqUserProjectRole.equals(AllowedProjectRoles.DATA_SCIENTIST) && !reqUser.getEmail().equals(email)) {
+      throw new ProjectException(RESTCodes.ProjectErrorCode.MEMBER_REMOVAL_NOT_ALLOWED, Level.FINE);
+    }
+
+    //Not able to remove project owner regardless of who is trying to remove the member
     if (project.getOwner().getEmail().equals(email)) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              ResponseMessages.PROJECT_OWNER_NOT_ALLOWED);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_OWNER_NOT_ALLOWED, Level.FINE);
     }
-    try {
-      projectController.removeMemberFromTeam(project, owner, email, req.getSession().getId());
-    } catch (IOException ex) {
-      //FIXME: take an action?
-      logger.log(Level.WARNING,
-              "Error while trying to delete a member from team", ex);
-    }
-
+    projectController.removeMemberFromTeam(project, reqUser, email);
     json.setSuccessMessage(ResponseMessages.MEMBER_REMOVED_FROM_TEAM);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            json).build();
-
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }
 
 }

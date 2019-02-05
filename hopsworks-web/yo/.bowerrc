@@ -1,0 +1,6 @@
+{
+  "registry": "https://registry.bower.io",
+  "resolvers": [
+    "bower-npm-resolver"
+  ]
+}

@@ -1,6 +1,46 @@
+=begin
+ Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ are released under the following license:
+
+ This file is part of Hopsworks
+ Copyright (C) 2018, Logical Clocks AB. All rights reserved
+
+ Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ the GNU Affero General Public License as published by the Free Software Foundation,
+ either version 3 of the License, or (at your option) any later version.
+
+ Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ PURPOSE.  See the GNU Affero General Public License for more details.
+
+ You should have received a copy of the GNU Affero General Public License along with this program.
+ If not, see <https://www.gnu.org/licenses/>.
+
+ Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ are released under the following license:
+
+ Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
+
+ Permission is hereby granted, free of charge, to any person obtaining a copy of this
+ software and associated documentation files (the "Software"), to deal in the Software
+ without restriction, including without limitation the rights to use, copy, modify, merge,
+ publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+ persons to whom the Software is furnished to do so, subject to the following conditions:
+
+ The above copyright notice and this permission notice shall be included in all copies or
+ substantial portions of the Software.
+
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  OR IMPLIED, INCLUDING
+ BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+ DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+=end
+
 require 'airborne'
 require 'byebug'
 require 'active_record'
+
 #require 'launchy'
 
 require 'dotenv'
@@ -12,10 +52,12 @@ if RUBY_PLATFORM == "java"
 end
 
 begin
+  mysql_socket = ENV.fetch('MYSQL_SOCKET', '/tmp/mysql.sock')
   ActiveRecord::Base.establish_connection ({
     :adapter => "#{mysql_adapter}",
     :host => ENV['DB_HOST'],
     :port => ENV['DB_PORT'],
+    :socket => mysql_socket,
     :database => "hopsworks",
     :username => "kthfs",
     :password => "kthfs"})
@@ -36,11 +78,21 @@ RSpec.configure do |config|
   config.include FactoryHelper
   config.include DatasetHelper
   config.include VariablesHelper
+  config.include CondaHelper
+  config.include CaHelper
+  config.include HostsHelper
+  config.include KafkaHelper
+  config.include AppserviceHelper
+  config.include ServingHelper
+  config.include HopsFSHelper
+  config.include JobHelper
+  config.include ExecutionHelper
+  config.include FeaturestoreHelper
   # uncomment next line if you need to clean hdfs and hopsworks db before test.
   # config.before(:suite) { clean_test_data }
   config.after(:suite) {
     # If we are not using Jenkins, then clean the data
-    if ARGV.grep(/spec\.rb/).empty? && (!ENV['JENKINS'] || ENV['JENKINS'] == "false") 
+    if ARGV.grep(/spec\.rb/).empty? && (!ENV['JENKINS'] || ENV['JENKINS'] == "false")
       clean_test_data
     end
 
@@ -48,6 +100,9 @@ RSpec.configure do |config|
 #       Launchy.open("#{ENV['PROJECT_DIR']}#{ENV['RSPEC_REPORT']}")
 #    end
   }
+  if ENV['SKIP_VM_TEST'] == "true" # Skip tests tagged with vm: true
+    config.filter_run_excluding vm: true
+  end
 end
 
 Airborne.configure do |config|
@@ -66,16 +121,15 @@ def clean_test_data
         sh.execute("vagrant ssh -c 'sudo -u #{ENV['RSPEC_VAGRANT_HDFS_USER']} -H sh -c \" /srv/hops/hadoop/bin/hadoop fs -rm -f -R -skipTrash /Projects \" ' ")
         puts "Remote HDFS Clean-up finished."
 
-        puts "DataBase Clean-up starting..."
-        sh.execute("vagrant ssh -c  'sudo -u #{ENV['RSPEC_VAGRANT_MYSQL_USER']} -H sh -c \" /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh -e \\\" DROP DATABASE IF EXISTS hopsworks \\\" \" ' ")
+        puts "Database Clean-up starting..."
+        sh.execute("vagrant ssh -c  'sudo -u #{ENV['RSPEC_VAGRANT_MYSQL_USER']} -H sh -c \" /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh -e \\\" DROP DATABASE IF EXISTS hopsworks \\\" \" ' ")       
         sh.execute("vagrant ssh -c  'sudo -u #{ENV['RSPEC_VAGRANT_MYSQL_USER']} -H sh -c \" /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh -e \\\" CREATE DATABASE IF NOT EXISTS hopsworks CHARACTER SET latin1 \\\" \" ' ")
-        sh.execute("vagrant ssh -c  'sudo -u root -H sh -c \" cat /srv/hops/domains/tables.sql | /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks \" ' ")
-        sh.execute("vagrant ssh -c  'sudo -u root -H sh -c \" cat /srv/hops/domains/rows.sql   | /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks \" ' ")
-        sh.execute("vagrant ssh -c  'sudo -u root -H sh -c \" cat /srv/hops/domains/views.sql  | /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks \" ' ")
-        sh.execute("vagrant ssh -c  'sudo -u root -H sh -c \" /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks -e \\\" UPDATE hosts SET registered=1 WHERE id=1; \\\" \" ' ")
+        sh.execute("vagrant ssh -c  'sudo -u root -H sh -c \" /srv/hops/domains/domain1/flyway/flyway migrate \" ' ")
+        sh.execute("vagrant ssh -c  'sudo -u root -H sh -c \" cat /srv/hops/domains/domain1/flyway/dml/*.sql | /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks \" ' ")
+        sh.execute("vagrant ssh -c  'sudo -u root -H sh -c \" /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks -e \\\" UPDATE hosts SET registered=1; \\\" \" ' ")
         res = sh.execute("exit")
         res.on_finish do |val1, val2|
-        puts "DataBase Clean-up finished."
+        puts "Database Clean-up finished."
         end
       end
     end
@@ -84,13 +138,12 @@ def clean_test_data
     system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c '/srv/hops/hadoop/bin/hadoop fs -rm -f -R -skipTrash /Projects ' ")
     puts "Vagrant HDFS Clean-up finished."
 
-    puts "DataBase Clean-up starting..."
+    puts "Database Clean-up starting..."
     system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c 'sudo -u #{ENV['RSPEC_VAGRANT_MYSQL_USER']} -H sh -c \" /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh -e \\\" DROP DATABASE IF EXISTS hopsworks \\\" \" ' ")
     system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c 'sudo -u #{ENV['RSPEC_VAGRANT_MYSQL_USER']} -H sh -c \" /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh -e \\\" CREATE DATABASE IF NOT EXISTS hopsworks CHARACTER SET latin1 \\\" \" ' ")
-    system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c 'sudo -u root -H sh -c \" cat /srv/hops/domains/tables.sql | /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks \" ' ")
-    system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c 'sudo -u root -H sh -c \" cat /srv/hops/domains/rows.sql   | /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks \" ' ")
-    system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c 'sudo -u root -H sh -c \" cat /srv/hops/domains/views.sql  | /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks \" ' ")
+    system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c 'sudo -u root -H sh -c \" /srv/hops/domains/domain1/flyway/flyway migrate \" ' ")
+    system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c 'sudo -u root -H sh -c \" cat /srv/hops/domains/domain1/flyway/dml/*.sql | /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks \" ' ")
     system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c 'sudo -u root -H sh -c \" /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks -e \\\" UPDATE hosts SET registered=1 WHERE id=1; \\\" \" ' ")
-    puts "DataBase Clean-up finished."
+    puts "Database Clean-up finished."
   end
 end

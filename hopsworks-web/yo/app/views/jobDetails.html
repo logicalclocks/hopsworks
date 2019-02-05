@@ -1,3 +1,42 @@
+<!--
+  ~ Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+  ~ are released under the following license:
+  ~
+  ~ This file is part of Hopsworks
+  ~ Copyright (C) 2018, Logical Clocks AB. All rights reserved
+  ~
+  ~ Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+  ~ the GNU Affero General Public License as published by the Free Software Foundation,
+  ~ either version 3 of the License, or (at your option) any later version.
+  ~
+  ~ Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+  ~ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+  ~ PURPOSE.  See the GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License along with this program.
+  ~ If not, see <https://www.gnu.org/licenses/>.
+  ~
+  ~ Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+  ~ are released under the following license:
+  ~
+  ~ Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
+  ~
+  ~ Permission is hereby granted, free of charge, to any person obtaining a copy of this
+  ~ software and associated documentation files (the "Software"), to deal in the Software
+  ~ without restriction, including without limitation the rights to use, copy, modify, merge,
+  ~ publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+  ~ persons to whom the Software is furnished to do so, subject to the following conditions:
+  ~
+  ~ The above copyright notice and this permission notice shall be included in all copies or
+  ~ substantial portions of the Software.
+  ~
+  ~ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  OR IMPLIED, INCLUDING
+  ~ BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+  ~ NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+  ~ DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  ~ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+  -->
+
 <!-- A dialog presenting job details. -->
 
 <div class="modal-header">
@@ -12,8 +51,22 @@
     
     <div>
         <div ng-show="jobDetailCtrl.hasJobScheduled">
+          <div class="row">
+            <div class="col-md-6">
             <label>Job runs in every {{jobDetailCtrl.availableschedule.number}} {{jobDetailCtrl.availableschedule.unit}}</label><br>
             <label>Starting from {{jobDetailCtrl.availableschedule.start}}</label>
+            </div>
+            <div class="col-md-6">
+              <button ng-click="jobDetailCtrl.unscheduleJob(jobDetailCtrl.job.name);"
+                      class="btn btn-danger btn-sm"
+                      style="min-width: 64px; float:right; margin-left:10px;">
+                <span class="glyphicon glyphicon-stop" aria-hidden="true"></span>
+                Remove Schedule
+                <span class="fa fa-spinner fa-spin" aria-hidden="true" ng-show="jobDetailCtrl.unscheduling" ></span>
+              </button>
+
+          </div>
+          </div>
         </div>
         <div ng-hide="jobDetailCtrl.hasJobScheduled">
             <div>
@@ -56,11 +109,19 @@
           </div>
         </div>
         <div class="row" ng-show="jobDetailCtrl.job.runConfig.appPath.endsWith('.py')">
-          <div class="text-right col-md-4">Python main class <i class="fa fa-info-circle" uib-tooltip="The name of the main class to run." style="margin-left: 10px"></i></div>
+          <div class="text-right col-md-4">Python file <i class="fa fa-info-circle" uib-tooltip="The path to the python executable to run for this job." style="margin-left: 10px"></i></div>
           <div class="col-md-8">{{jobDetailCtrl.job.runConfig.appPath}}</div>
         </div>
-        <div class="row" ng-show="!jobDetailCtrl.job.runConfig.appPath.endsWith('.py')">
-          <div class="text-right col-md-4">Main class name <i class="fa fa-info-circle" uib-tooltip="The name of the main class to run in the selected JAR file." style="margin-left: 10px"></i></div>
+        <div class="row" ng-show="jobDetailCtrl.job.runConfig.appPath.endsWith('.ipynb')">
+          <div class="text-right col-md-4">Notebook file <i class="fa fa-info-circle" uib-tooltip="The path to the notebook to run as a python executable for this job" style="margin-left: 10px"></i></div>
+          <div class="col-md-8">{{jobDetailCtrl.job.runConfig.appPath}}</div>
+        </div>
+        <div class="row" ng-show="jobDetailCtrl.job.runConfig.appPath.endsWith('.jar')">
+          <div class="text-right col-md-4">Jar file <i class="fa fa-info-circle" uib-tooltip="The path to the .jar file to run for the job." style="margin-left: 10px"></i></div>
+          <div class="col-md-8">{{jobDetailCtrl.job.runConfig.appPath}}</div>
+        </div>
+        <div class="row">
+          <div class="text-right col-md-4">Main class name <i class="fa fa-info-circle" uib-tooltip="The name of the main class to run." style="margin-left: 10px"></i></div>
           <div class="col-md-8">{{jobDetailCtrl.job.runConfig.mainClass}}</div>
         </div>
         <div class="row">
@@ -92,31 +153,31 @@
         </div>
         <div class="row">
           <div class="text-right col-md-4">Dynamic Executors<i class="fa fa-info-circle" uib-tooltip="Enable Spark Dynamic Executors." style="margin-left: 10px"></i></div>
-          <div class="col-md-8">{{jobDetailCtrl.job.runConfig.dynamicExecutors}}</div>
+          <div class="col-md-8">{{jobDetailCtrl.job.runConfig['spark.dynamicAllocation.enabled']}}</div>
         </div>
         <div class="row" ng-show="jobDetailCtrl.job.runConfig.dynamicExecutors">
           <div class="text-right col-md-4">Minimum number of executors<i class="fa fa-info-circle" uib-tooltip="Minimum number of Spark executors that should be requested for this job." style="margin-left: 10px"></i></div>
-          <div class="col-md-8">{{jobDetailCtrl.job.runConfig.selectedMinExecutors}}</div>
+          <div class="col-md-8">{{jobDetailCtrl.job.runConfig['spark.dynamicAllocation.minExecutors']}}</div>
         </div>
         <div class="row" ng-show="jobDetailCtrl.job.runConfig.dynamicExecutors">
           <div class="text-right col-md-4">Maximum number of executors <i class="fa fa-info-circle" uib-tooltip="Maximum number of Spark executors that should be requested for this job." style="margin-left: 10px"></i></div>
-          <div class="col-md-8">{{jobDetailCtrl.job.runConfig.selectedMaxExecutors}}</div>
+          <div class="col-md-8">{{jobDetailCtrl.job.runConfig['spark.dynamicAllocation.maxExecutors']}}</div>
         </div>
         <div class="row" ng-show="jobDetailCtrl.job.runConfig.dynamicExecutors">
           <div class="text-right col-md-4">Initial number of executors <i class="fa fa-info-circle" uib-tooltip="Initial number of Spark executors that should be requested for this job. Must be greate that the minimum and smaller than the maximum number of executors." style="margin-left: 10px"></i></div>
-          <div class="col-md-8">{{jobDetailCtrl.job.runConfig.numberOfExecutorsInit}}</div>
+          <div class="col-md-8">{{jobDetailCtrl.job.runConfig['spark.dynamicAllocation.initialExecutors']}}</div>
         </div>
           <div class="row" ng-show="!jobDetailCtrl.job.runConfig.dynamicExecutors">
           <div class="text-right col-md-4">Number of executors <i class="fa fa-info-circle" uib-tooltip="The number of Spark executors that should be requested for this job." style="margin-left: 10px"></i></div>
-          <div class="col-md-8">{{jobDetailCtrl.job.runConfig.numberOfExecutors}}</div>
+          <div class="col-md-8">{{jobDetailCtrl.job.runConfig['spark.executor.instances']}}</div>
         </div>
         <div class="row">
           <div class="text-right col-md-4">Number of executor cores <i class="fa fa-info-circle" uib-tooltip="The number of cores that should be requested for each Spark executor in this job." style="margin-left: 10px"></i></div>
-          <div class="col-md-8">{{jobDetailCtrl.job.runConfig.executorCores}}</div>
+          <div class="col-md-8">{{jobDetailCtrl.job.runConfig['spark.executor.cores']}}</div>
         </div>
         <div class="row">
           <div class="text-right col-md-4">Executor memory (MB)<i class="fa fa-info-circle" uib-tooltip="The amount of memory, in MB, that should be requested for each Spark executor in this job." style="margin-left: 10px"></i></div>
-          <div class="col-md-8">{{jobDetailCtrl.job.runConfig.executorMemory}}</div>
+          <div class="col-md-8">{{jobDetailCtrl.job.runConfig['spark.executor.memory']}}</div>
         </div>
         <div class="row" ng-show="jobDetailCtrl.job.runConfig.properties !== undefined && jobDetailCtrl.job.runConfig.properties!== ''">
           <div class="text-right col-md-4">Properties <i class="fa fa-info-circle" uib-tooltip="Job properties." style="margin-left: 10px"></i></div>
@@ -301,62 +362,9 @@
         </div>
         <div class="row" ng-if="jobDetailCtrl.hasConsumerGroups()">
           <div class="text-right col-md-4">Kafka consumer groups <i class="fa fa-info-circle" uib-tooltip="List of consumer groups available for this job." style="margin-left: 10px"></i></div>
-          <div class="col-md-8">{{jobDetailCtrl.viewTopics(jobDetailCtrl.job.runConfig.kafka.consumergroups)}}</div>
+          <div class="col-md-8">{{jobDetailCtrl.viewTopics(jobDetailCtrl.job.runConfig.kafka.consumerGroups)}}</div>
         </div>
        </div>
-    </div>
-    <div uib-accordion-group  class="panel-default" heading="Execution history">
-      <span ng-show="!jobDetailCtrl.showExecutions">
-        There are no registered executions for this job.
-      </span>
-      <table ng-show="jobDetailCtrl.showExecutions" class="table chrome-table">
-        <thead>
-          <tr>
-            <th>
-              Submission time
-            </th>
-            <th>
-              Current state
-            </th>
-            <th>
-              Execution duration (ms)
-            </th>
-            <th>
-              Stdout
-            </th>
-            <th>
-              Stderr
-            </th>
-            <th>
-              Output files
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr ng-repeat="exec in jobDetailCtrl.job.executions">
-            <td>
-              {{exec.submissionTime| date:'medium'}}
-            </td>
-            <td>
-              {{exec.state}}
-            </td>
-            <td>
-              {{exec.executionDuration}}
-            </td>
-            <td>
-              {{exec.stdoutPath}}
-            </td>
-            <td>
-              {{exec.stderrPath}}
-            </td>
-            <td>
-              <span ng-repeat="output in exec.jobOutputFileCollection">
-                {{output.jobOutputFilePK.name}}
-              </span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
     </div>
   </div>
 

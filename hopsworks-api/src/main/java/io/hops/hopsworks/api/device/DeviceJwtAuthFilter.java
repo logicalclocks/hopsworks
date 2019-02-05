@@ -2,7 +2,6 @@ package io.hops.hopsworks.api.device;
 
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import io.hops.hopsworks.api.filter.RequestAuthFilter;
 import io.hops.hopsworks.common.dao.device.DeviceFacade;
 import io.hops.hopsworks.common.dao.device.ProjectDevice;
 import io.hops.hopsworks.common.dao.device.ProjectDevicesSettings;
@@ -20,7 +19,6 @@ import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.ext.Provider;
-import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -38,10 +36,10 @@ public class DeviceJwtAuthFilter implements ContainerRequestFilter {
   @Context
   private ResourceInfo resourceInfo;
 
-  private final static Logger log = Logger.getLogger(RequestAuthFilter.class.getName());
+  private final static Logger log = Logger.getLogger(DeviceJwtAuthFilter.class.getName());
 
   @Override
-  public void filter(ContainerRequestContext requestContext) throws IOException {
+  public void filter(ContainerRequestContext requestContext) {
 
     String path = requestContext.getUriInfo().getPath();
     Method method = resourceInfo.getResourceMethod();

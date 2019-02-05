@@ -1,3 +1,42 @@
+/*
+ * Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
+ * This file is part of Hopsworks
+ * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ *
+ * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU Affero General Public License as published by the Free Software Foundation,
+ * either version 3 of the License, or (at your option) any later version.
+ *
+ * Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
+ * Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this
+ * software and associated documentation files (the "Software"), to deal in the Software
+ * without restriction, including without limitation the rights to use, copy, modify, merge,
+ * publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+ * persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or
+ * substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  OR IMPLIED, INCLUDING
+ * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+ * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package io.hops.hopsworks.api.metadata.wscomm;
 
 import io.hops.hopsworks.api.metadata.wscomm.message.Command;
@@ -11,14 +50,16 @@ import io.hops.hopsworks.common.dao.metadata.Field;
 import io.hops.hopsworks.common.dao.metadata.InodeTableComposite;
 import io.hops.hopsworks.common.dao.metadata.MTable;
 import io.hops.hopsworks.common.dao.metadata.Metadata;
-import io.hops.hopsworks.common.metadata.exception.ApplicationException;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import io.hops.hopsworks.common.exception.GenericException;
+import io.hops.hopsworks.common.exception.MetadataException;
+
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Constructs responses depending on the incoming message requests. Maintains
@@ -46,17 +87,8 @@ public class MetadataProtocol {
    * @param message the incoming message
    * @return a new response message or an error message
    */
-  public Message GFR(Message message) {
-
-    Message msg;
-    try {
-      msg = this.processMessage(message);
-    } catch (ApplicationException e) {
-      TextMessage response = new TextMessage("Server", e.getMessage());
-      response.setStatus("ERROR");
-      return response;
-    }
-    return msg;
+  public Message GFR(Message message) throws GenericException, MetadataException {
+    return this.processMessage(message);
   }
 
   /**
@@ -66,11 +98,10 @@ public class MetadataProtocol {
    * 'create_meta_log', and these two must be atomic. Hence the
    * TransactionAttribute annotation
    * <p/>
-   * @param message
-   * @return
-   * @throws ApplicationException
+   * @param message The incoming message
+   * @return Message
    */
-  private Message processMessage(Message message) throws ApplicationException {
+  private Message processMessage(Message message) throws GenericException, MetadataException {
 
     Command action = Command.valueOf(message.getAction().toUpperCase());
 
@@ -93,20 +124,18 @@ public class MetadataProtocol {
    * indexed inode, but this time along with its attached metadata.
    * Those two actions have to be executed atomically (either all or nothing)
    * <p/>
-   * @param message. The incoming message
-   * @return
-   * @throws ApplicationException
+   * @param message The incoming message
+   * @return Message
    */
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  private Message processStoreMetadataMessageCm(Message message) throws
-          ApplicationException {
+  private Message processStoreMetadataMessageCm(Message message) {
 
     List<EntityIntf> composite = ((StoreMetadataMessage) message).
             superParseSchema();
 
     //variables not set in the json message
     if (composite == null) {
-      throw new ApplicationException("Incorrect json message/Missing values");
+      throw new IllegalArgumentException("Composite value missing from json");
     }
     List<EntityIntf> rawData = message.parseSchema();
 
@@ -121,18 +150,17 @@ public class MetadataProtocol {
    * followed by an inode mutation (i.e. add an entry to hdfs_metadata_log
    * table) so that elastic rivers will pick up the already indexed inode
    * <p/>
-   * @param message
-   * @return
+   * @param message The incoming message
+   * @return Message
    */
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  private Message processUpdateMetadataMessageCm(Message message) throws
-          ApplicationException {
+  private Message processUpdateMetadataMessageCm(Message message) {
 
     List<EntityIntf> composite = ((UpdateMetadataMessage) message).
             superParseSchema();
 
     if (composite == null) {
-      throw new ApplicationException("Incorrect json message/Missing values");
+      throw new IllegalArgumentException("Composite value missing from json");
     }
     //update metadata
     Metadata metadata = (Metadata) message.parseSchema().get(0);
@@ -148,18 +176,17 @@ public class MetadataProtocol {
    * This will delete the metadata from the table only.
    * This will not remove the elastic index of this record.
    * <p/>
-   * @param message
-   * @return
+   * @param message The incoming message
+   * @return Message
    */
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  private Message processRemoveMetadataMessageCm(Message message) throws
-          ApplicationException {
+  private Message processRemoveMetadataMessageCm(Message message) {
 
     List<EntityIntf> composite = ((RemoveMetadataMessage) message).
             superParseSchema();
 
     if (composite == null) {
-      throw new ApplicationException("Incorrect json message/Missing values");
+      throw new IllegalArgumentException("Composite value missing from json");
     }
     //delete metadata
     Metadata metadata = (Metadata) message.parseSchema().get(0);
@@ -173,11 +200,10 @@ public class MetadataProtocol {
    * Processes incoming messages according to the command they carry, and
    * produces the appropriate message response
    * <p/>
-   * @param message. The incoming message
-   * @return
-   * @throws ApplicationException
+   * @param message The incoming message
+   * @return Message
    */
-  private Message processMessageNm(Message message) throws ApplicationException {
+  private Message processMessageNm(Message message) throws MetadataException, GenericException {
 
     Command action = Command.valueOf(message.getAction().toUpperCase());
 

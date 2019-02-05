@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+  ~ are released under the following license:
+  ~
+  ~ This file is part of Hopsworks
+  ~ Copyright (C) 2018, Logical Clocks AB. All rights reserved
+  ~
+  ~ Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+  ~ the GNU Affero General Public License as published by the Free Software Foundation,
+  ~ either version 3 of the License, or (at your option) any later version.
+  ~
+  ~ Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+  ~ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+  ~ PURPOSE.  See the GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License along with this program.
+  ~ If not, see <https://www.gnu.org/licenses/>.
+  ~
+  ~ Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+  ~ are released under the following license:
+  ~
+  ~ Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
+  ~
+  ~ Permission is hereby granted, free of charge, to any person obtaining a copy of this
+  ~ software and associated documentation files (the "Software"), to deal in the Software
+  ~ without restriction, including without limitation the rights to use, copy, modify, merge,
+  ~ publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+  ~ persons to whom the Software is furnished to do so, subject to the following conditions:
+  ~
+  ~ The above copyright notice and this permission notice shall be included in all copies or
+  ~ substantial portions of the Software.
+  ~
+  ~ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  OR IMPLIED, INCLUDING
+  ~ BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+  ~ NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+  ~ DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  ~ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+  -->
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"   
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      >
+
+  <ui:composition template="layout.xhtml">
+
+    <ui:define name="title">
+      #{settingsController.name} - Anaconda
+    </ui:define>
+    <ui:define name="content">
+
+
+
+      <!-- Progress Dialog -->
+      <p:ajaxStatus onstart="PF('dlgAction').show()" onsuccess="PF('dlgAction').hide()" />
+
+      <p:dialog widgetVar="dlgAction" header="Ongoing Operation" modal="true" draggable="false" closable="false" resizable="false" showHeader="false">
+        <p:graphicImage library="images"  name="ajaxloadingbar.gif" />
+      </p:dialog>           
+
+      <!-- Progress Dialog - End -->
+
+      <!--      <h:form id="select_op_type" styleClass="services-header">
+              <h:panelGrid columns="4" cellpadding="10" styleClass="iconsTable">
+                <p:column >
+                  Show All <p:selectBooleanCheckbox value="#{condaController.setShowAll(!condaController.getShowAll())}" >
+                    <p:ajax update="select_op_type panelOngoing panelFailed panelNew"/>
+                  </p:selectBooleanCheckbox>
+                </p:column>
+                <p:column >
+                  Show Failed <p:selectBooleanCheckbox value="#{condaController.setShowFailed(!condaController.showFailed)}" >
+                    <p:ajax update="select_op_type panelFailed"/>
+                  </p:selectBooleanCheckbox>
+                </p:column>
+                <p:column >
+                  Show Ongoing <p:selectBooleanCheckbox value="#{condaController.setShowOngoing(condaController.showOngoing)}">
+                    <p:ajax update="select_op_type panelOngoing"/>
+                  </p:selectBooleanCheckbox>
+      
+                </p:column>
+                <p:column >
+                  Show New <p:selectBooleanCheckbox value="#{condaController.setShowNew(condaController.showNew)}">
+                    <p:ajax update="select_op_type panelNew"/>
+                  </p:selectBooleanCheckbox>
+      
+                </p:column>
+              </h:panelGrid>
+            </h:form>-->
+      <h:form>
+        <h:panelGrid columns="3" cellpadding="10" styleClass="iconsTable">
+          <p:column >
+            <h:outputText value="Disk usage: #{condaController.diskUsage}" />
+          </p:column>
+          <p:column>
+            <p:commandButton value="Recalculate Disk Usage for Anaconda"
+                             style="float:center" 
+                             actionListener="#{condaController.calculateDiskUsage()}" ajax ="true" update="@all">
+            </p:commandButton>              
+          </p:column>
+          <p:column>
+                        <p:commandButton value="Cleanup Conda"
+                             style="float:center" 
+                             actionListener="#{condaController.cleanupConda()}" ajax ="true" update="@all">
+            </p:commandButton>              
+
+          </p:column>
+
+        </h:panelGrid>
+      </h:form>
+
+
+      <h:panelGrid id="commandButtons" columns="3" cellpadding="10" styleClass="iconsTable">
+        <p:column >
+          <h:form id="failed_conda_count" styleClass="services-header">
+            <p:commandButton value="Delete All #{condaController.failedCommands.size()} Failed Commands"
+                             style="float:center" disabled="#{condaController.failedCommands.size() == 0}"
+                             actionListener="#{condaController.deleteAllFailedCommands()}" ajax ="true" update="@all">
+            </p:commandButton>              
+          </h:form>
+        </p:column>
+        <p:column >
+          <h:form id="ongoing_conda_count" styleClass="services-header">
+            <p:commandButton value="Delete All #{condaController.ongoingCommands.size()} Ongoing Commands"
+                             style="float:center" disabled="#{condaController.ongoingCommands.size() == 0}"
+                             actionListener="#{condaController.deleteAllOngoingCommands()}" ajax ="true" update="@all">
+            </p:commandButton>              
+          </h:form>
+        </p:column>
+        <p:column >
+          <h:form id="new_conda_count" styleClass="services-header">
+            <p:commandButton value="Delete All #{condaController.newCommands.size()} New Commands"
+                             style="float:center" disabled="#{condaController.newCommands.size() == 0}"
+                             actionListener="#{condaController.deleteAllNewCommands()}" ajax ="true" update="@all">
+            </p:commandButton>              
+          </h:form>
+        </p:column>
+      </h:panelGrid>
+
+      <h:form rendered="#{condaController.isOutput()}">
+        <p:outputPanel style="margin-left: 10px;">
+          <h3>Logs</h3>
+          <h:inputTextarea readonly="#{condaController.isOutput()}" 
+                           value="#{condaController.getOutput()}" class="form-control" 
+                           style="margin-left: 30px; min-width: 80%" rows="6"></h:inputTextarea>
+        </p:outputPanel>
+      </h:form>
+
+      <p:panel id="panelFailed" rendered="#{condaController.showFailed}" header="Failed Commands">  
+        <h:form id="failed_conda_commands">  
+          <p:dataTable id="command_failed" var="command" value="#{condaController.failedCommands}" style="background">
+
+            <p:column headerText="Hostname">  
+              <h:outputText value="#{command.hostId}" />
+            </p:column>
+            <p:column headerText="Operation"><h:outputText value="#{command.op}"/></p:column>
+            <p:column headerText="Status"><h:outputText value="#{command.status}"/></p:column>                  
+            <p:column headerText="Command"  style="width:750px;"><h:outputText value="#{command.toString()}"/></p:column>
+            <p:column headerText="Retry Command">
+              <p:commandButton value="Execute"
+                               style="float:center" 
+                               actionListener="#{condaController.execCommand(command)}" ajax ="true" update="@all">
+              </p:commandButton>              
+            </p:column>  
+            <p:column headerText="Delete Command">
+              <p:commandButton value="Delete"
+                               style="float:center" 
+                               actionListener="#{condaController.deleteCommand(command)}" ajax ="true" update="@all">
+              </p:commandButton>              
+            </p:column>  
+          </p:dataTable>  
+        </h:form> 
+      </p:panel>
+
+      <p:separator/>
+      <p:panel id="panelOngoing" rendered="#{condaController.showOngoing}" header="Ongoing Commands">  
+        <h:form id="ongoing_conda_commands">  
+          <p:dataTable id="commannd_ongoing" var="command" value="#{condaController.ongoingCommands}">
+
+            <p:column headerText="Hostname">  
+              <h:outputText value="#{command.hostId}" />
+            </p:column>
+            <p:column headerText="Operation"><h:outputText value="#{command.op}"/></p:column>
+            <p:column headerText="Status"><h:outputText value="#{command.status}"/></p:column>                  
+            <p:column headerText="Command"  style="width:750px;"><h:outputText value="#{command.toString()}"/></p:column>
+            <p:column headerText="Retry">
+              <p:commandButton value="Execute"
+                               style="float:center" 
+                               actionListener="#{condaController.execCommand(command)}" ajax ="true" update="@all">
+              </p:commandButton>              
+            </p:column>  
+            <p:column headerText="Delete">
+              <p:commandButton value="Delete"
+                               style="float:center" 
+                               actionListener="#{condaController.deleteCommand(command)}" ajax ="true" update="@all">
+              </p:commandButton>              
+            </p:column>  
+          </p:dataTable>  
+        </h:form> 
+      </p:panel>
+
+      <p:separator/>
+      <p:panel id="panelNew" rendered="#{condaController.showNew}" header="Queued Commands">  
+        <h:form id="new_conda_commands">  
+          <p:dataTable id="command_new" var="command" value="#{condaController.newCommands}">
+
+            <p:column headerText="Hostname">  
+              <h:outputText value="#{command.hostId}" />
+            </p:column>
+            <p:column headerText="Timestamp" sortBy="#{command.created}"><h:outputText value="#{command.created}"/></p:column>
+            <p:column headerText="Operation"><h:outputText value="#{command.op}"/></p:column>
+            <p:column headerText="Status"><h:outputText value="#{command.status}"/></p:column>                  
+            <p:column headerText="Command"  style="width:750px;"><h:outputText value="#{command.toString()}"/></p:column>
+            <p:column headerText="Retry">
+              <p:commandButton value="Execute"
+                               style="float:center" 
+                               actionListener="#{condaController.execCommand(command)}" ajax ="true" update="@all">
+              </p:commandButton>              
+            </p:column>  
+            <p:column headerText="Delete">
+              <p:commandButton value="Delete"
+                               style="float:center" 
+                               actionListener="#{condaController.deleteCommand(command)}" ajax ="true" update="@all">
+              </p:commandButton>              
+            </p:column>  
+          </p:dataTable>  
+        </h:form> 
+      </p:panel>
+
+    </ui:define>
+
+  </ui:composition>
+
+</html>
+

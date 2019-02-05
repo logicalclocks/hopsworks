@@ -1,5 +1,44 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+<!--
+  ~ Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+  ~ are released under the following license:
+  ~
+  ~ This file is part of Hopsworks
+  ~ Copyright (C) 2018, Logical Clocks AB. All rights reserved
+  ~
+  ~ Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+  ~ the GNU Affero General Public License as published by the Free Software Foundation,
+  ~ either version 3 of the License, or (at your option) any later version.
+  ~
+  ~ Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+  ~ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+  ~ PURPOSE.  See the GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License along with this program.
+  ~ If not, see <https://www.gnu.org/licenses/>.
+  ~
+  ~ Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+  ~ are released under the following license:
+  ~
+  ~ Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
+  ~
+  ~ Permission is hereby granted, free of charge, to any person obtaining a copy of this
+  ~ software and associated documentation files (the "Software"), to deal in the Software
+  ~ without restriction, including without limitation the rights to use, copy, modify, merge,
+  ~ publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+  ~ persons to whom the Software is furnished to do so, subject to the following conditions:
+  ~
+  ~ The above copyright notice and this permission notice shall be included in all copies or
+  ~ substantial portions of the Software.
+  ~
+  ~ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  OR IMPLIED, INCLUDING
+  ~ BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+  ~ NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+  ~ DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  ~ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+  -->
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml"   
       xmlns:f="http://java.sun.com/jsf/core"
@@ -21,7 +60,7 @@
         <p:panelGrid>  
           <p:row>  
             <p:column>
-              <p:commandLink id="services" action="clusters" ajax="false">  
+              <p:commandLink id="groups" action="clusters" ajax="false">  
                 <h:outputText value="Clusters" />
               </p:commandLink> 
               <h:outputText value=" &raquo; "/>
@@ -82,8 +121,9 @@
                 <h:outputText value="#{clusterInfo.clusterHealth}"/>
               </p:column>                    
 
-              <p:column headerText="Hosts"><h:outputText value="#{clusterInfo.numberOfMachines}"/></p:column>
+              <p:column headerText="Hosts"><h:outputText value="#{clusterInfo.numberOfHosts}"/></p:column>
               <p:column headerText="Cores"><h:outputText value="#{clusterInfo.totalCores}"/></p:column>
+              <p:column headerText="GPUs"><h:outputText value="#{clusterInfo.totalGPUs}"/></p:column>
               <p:column headerText="Disk Capacity"><h:outputText value="#{clusterInfo.totalDiskCapacity}"/></p:column>
               <p:column headerText="Memory Capacity"><h:outputText value="#{clusterInfo.totalMemoryCapacity}"/></p:column> 
 
@@ -93,37 +133,37 @@
           <p:spacer width="1" height="20" />
 
           <p:panel header="Services">
-            <p:dataTable id="service" var="service" value="#{clusterStatusController.services}">
-              <p:column headerText="Service">
-                <p:commandLink action="#{urlController.serviceStatus}" ajax="false" styleClass="Health-#{service.health}">
-                  <h:outputText value="#{service.name}"/>
+            <p:dataTable id="group" var="group" value="#{clusterStatusController.group}">
+              <p:column headerText="Group">
+                <p:commandLink action="#{urlController.groupStatus}" ajax="false" styleClass="Health-#{group.health}">
+                  <h:outputText value="#{group.name}"/>
                   <f:param name="cluster" value="#{clusterStatusController.cluster}"/>
-                  <f:param name="service" value="#{service.name}"/>
+                  <f:param name="group" value="#{group.name}"/>
                 </p:commandLink>                         
               </p:column>
 
-              <p:column headerText="Roles">
-                <ui:repeat value="#{service.roles}" var="role" varStatus="status">
-                  <p:commandLink styleClass="Health-#{service.roleHealth(role)}" 
-                                 action="#{urlController.serviceInstances}" ajax="false">
-                    <h:outputText value="${service.roleCount(role)} ${role}"/>
+              <p:column headerText="Services">
+                <ui:repeat value="#{group.services}" var="service" varStatus="status">
+                  <p:commandLink styleClass="Health-#{group.serviceHealth(service)}" 
+                                 action="#{urlController.groupInstances}" ajax="false">
+                    <h:outputText value="${group.serviceCount(service)} ${service}"/>
                     <f:param name="cluster" value="#{clusterStatusController.cluster}"/>
-                    <f:param name="role" value="#{role}"/>
-                    <f:param name="service" value="#{service.name}"/>
+                    <f:param name="service" value="#{service}"/>
+                    <f:param name="group" value="#{group.name}"/>
                   </p:commandLink>
                   <p:spacer width="6" height="0" rendered="#{!status.last}"/>
                 </ui:repeat>
               </p:column>                   
 
-              <p:column headerText="Roles Status">
-                <ui:repeat value="#{service.status.entrySet().toArray()}" var="item" varStatus="status">
+              <p:column headerText="Services Status">
+                <ui:repeat value="#{group.status.entrySet().toArray()}" var="item" varStatus="status">
                   <h:outputText value="${item.value} ${item.key}" styleClass="Status-${item.key}"/>
                   <h:outputText value=", " rendered="#{!status.last}"/>
                 </ui:repeat>
               </p:column>                   
 
-              <p:column headerText="Health" styleClass="Health-#{service.health}">
-                <h:outputText value="#{service.health}"/>
+              <p:column headerText="Health" styleClass="Health-#{group.health}">
+                <h:outputText value="#{group.health}"/>
               </p:column> 
 
             </p:dataTable>  

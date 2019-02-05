@@ -1,15 +1,58 @@
+/*
+ * Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
+ * This file is part of Hopsworks
+ * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ *
+ * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU Affero General Public License as published by the Free Software Foundation,
+ * either version 3 of the License, or (at your option) any later version.
+ *
+ * Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
+ * Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this
+ * software and associated documentation files (the "Software"), to deal in the Software
+ * without restriction, including without limitation the rights to use, copy, modify, merge,
+ * publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+ * persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or
+ * substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  OR IMPLIED, INCLUDING
+ * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+ * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package io.hops.hopsworks.common.hive;
 
 import io.hops.hopsworks.common.dao.dataset.Dataset;
-import io.hops.hopsworks.common.dao.dataset.DatasetPermissions;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
+import io.hops.hopsworks.common.dao.dataset.DatasetPermissions;
 import io.hops.hopsworks.common.dao.dataset.DatasetType;
+import io.hops.hopsworks.common.dao.featurestore.Featurestore;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
+import io.hops.hopsworks.common.dao.log.operation.OperationType;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
+import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.security.BaseHadoopClientsService;
@@ -26,8 +69,8 @@ import javax.ejb.TransactionAttributeType;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.Statement;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -47,6 +90,10 @@ public class HiveController {
   private BaseHadoopClientsService bhcs;
   @EJB
   private ProjectFacade projectFacade;
+  @EJB
+  private DatasetController datasetController;
+  @EJB
+  private ActivityFacade activityFacade;
 
   private final static String driver = "org.apache.hive.jdbc.HiveDriver";
   private final static Logger logger = Logger.getLogger(HiveController.class.getName());
@@ -54,7 +101,7 @@ public class HiveController {
   private Connection conn;
   private String jdbcString = null;
 
-  private void initConnection() throws SQLException{
+  private void initConnection() throws SQLException {
     try {
       // Load Hive JDBC Driver
       Class.forName(driver);
@@ -71,53 +118,76 @@ public class HiveController {
       conn = DriverManager.getConnection(jdbcString);
     } catch (ClassNotFoundException e) {
       logger.log(Level.SEVERE, "Error opening Hive JDBC connection: " +
-        e);
+          e);
     }
   }
 
   @PreDestroy
   public void close() {
     try {
-      if (conn != null && !conn.isClosed()){
+      if (conn != null && !conn.isClosed()) {
         conn.close();
       }
     } catch (SQLException e) {
       logger.log(Level.WARNING, "Error closing Hive JDBC connection: " +
-        e);
+          e);
     }
   }
 
+  /**
+   * Creates a Hopsworks dataset of a Hive database
+   *
+   * @param project the project of the hive database and the place where the dataset will reside
+   * @param user the user making the request
+   * @param dfso dfso
+   * @param dbName name of the hive database
+   * @throws IOException
+   */
   @TransactionAttribute(TransactionAttributeType.NEVER)
-  public void createDatabase(Project project, Users user, DistributedFileSystemOps dfso)
-      throws SQLException, IOException {
-    if (conn == null || conn.isClosed()) {
-      initConnection();
-    }
+  public void createDatasetDb(Project project, Users user, DistributedFileSystemOps dfso,
+                              String dbName) throws IOException {
+    createDatasetDb(project, user, dfso, dbName, DatasetType.HIVEDB, null);
+  }
 
-    Statement stmt = null;
-    try {
-      // Create database
-      stmt = conn.createStatement();
-      // Project name cannot include any spacial character or space.
-      stmt.executeUpdate("create database " + project.getName());
-    } finally {
-      if (stmt != null) {
-        stmt.close();
-      }
+  /**
+   * Creates a Hopsworks dataset of a Hive database
+   *
+   * @param project the project of the hive database and the place where the dataset will reside
+   * @param user the user making the request
+   * @param dfso dfso
+   * @param dbName name of the hive database
+   * @param datasetType the type of database (regular HiveDB or a FeaturestoreDB)
+   * @param featurestore the featurestore with extended metadata of the dataset in case of type featurestoreDB,
+   *                     defaults to null.
+   * @throws IOException
+   */
+  @TransactionAttribute(TransactionAttributeType.NEVER)
+  public void createDatasetDb(Project project, Users user, DistributedFileSystemOps dfso,
+                               String dbName, DatasetType datasetType, Featurestore featurestore) throws IOException {
+    if(datasetType != DatasetType.HIVEDB && datasetType != DatasetType.FEATURESTORE) {
+      throw new IllegalArgumentException("Invalid dataset type for hive database");
     }
 
     // Hive database names are case insensitive and lower case
-    Path dbPath = getDbPath(project.getName());
+    Path dbPath = getDbPath(dbName);
     Inode dbInode = inodeFacade.getInodeAtPath(dbPath.toString());
 
-    // Persist Hive db as dataset in the HopsWorks database
+    // Persist Hive db as dataset in the Hopsworks database
     Dataset dbDataset = new Dataset(dbInode, project);
-    dbDataset.setType(DatasetType.HIVEDB);
+    dbDataset.setType(datasetType);
     // As we are running Zeppelin as projectGenericUser, we have to make
     // the directory editable by default
     dbDataset.setEditable(DatasetPermissions.GROUP_WRITABLE_SB);
-    dbDataset.setDescription(buildDescription(project.getName()));
+    dbDataset.setDescription(buildDescription(dbName));
+    dbDataset.setSearchable(true);
+    dbDataset.setFeaturestore(featurestore);
     datasetFacade.persistDataset(dbDataset);
+
+    dfso.setMetaEnabled(dbPath);
+    datasetController.logDataset(dbDataset, OperationType.Add);
+  
+    activityFacade.persistActivity(ActivityFacade.NEW_DATA + dbDataset.getName(), project, user,
+      ActivityFacade.ActivityFlag.DATASET);
 
     try {
       // Assign database directory to the user and project group
@@ -129,7 +199,14 @@ public class HiveController {
       dfso.setPermission(dbPath, fsPermission);
 
       // Set the default quota
-      dfso.setHdfsSpaceQuotaInMBs(dbPath, settings.getHiveDbDefaultQuota());
+      switch (datasetType) {
+        case HIVEDB:
+          dfso.setHdfsSpaceQuotaInMBs(dbPath, settings.getHiveDbDefaultQuota());
+          break;
+        case FEATURESTORE:
+          dfso.setHdfsSpaceQuotaInMBs(dbPath, settings.getFeaturestoreDbDefaultQuota());
+          break;
+      }
       projectFacade.setTimestampQuotaUpdate(project, new Date());
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Cannot assign Hive database directory " + dbPath.toString() +
@@ -141,34 +218,70 @@ public class HiveController {
       } catch (IOException rmEx) {
         // Nothing we can really do here
         logger.log(Level.SEVERE, "Cannot delete Hive database directory: " + dbPath.toString() +
-          " Trace: " + rmEx);
+            " Trace: " + rmEx);
       }
-
       throw new IOException(e);
     }
   }
 
-  public void dropDatabase(Project project, DistributedFileSystemOps dfso, boolean forceCleanup)
-      throws IOException {
-    // To avoid case sensitive bugs, check if the project has a Hive database
-    Dataset ds = datasetFacade.findByNameAndProjectId(project, project.getName().toLowerCase() + ".db");
-    
-    if ((ds == null || ds.getType() != DatasetType.HIVEDB)
-        && !forceCleanup)  {
-      return;
+  /**
+   * Creates the Hive Database
+   *
+   * @param dbName name of the database
+   * @param dbComment description of the database
+   * @throws SQLException
+   * @throws IOException
+   */
+  @TransactionAttribute(TransactionAttributeType.NEVER)
+  public void createDatabase(String dbName, String dbComment)
+      throws SQLException, IOException {
+    if (conn == null || conn.isClosed()) {
+      initConnection();
     }
 
-    // Delete HopsFs db directory -- will automatically clean up all the related Hive's metadata
-    dfso.rm(getDbPath(project.getName()), true);
+    Statement stmt = null;
+    try {
+      // Create database
+      stmt = conn.createStatement();
+      // Project name cannot include any spacial character or space.
+      stmt.executeUpdate("create database " + dbName + " COMMENT '" + dbComment + "'");
+    } finally {
+      if (stmt != null) {
+        stmt.close();
+      }
+    }
+  }
 
+  public void dropDatabases(Project project, DistributedFileSystemOps dfso, boolean forceCleanup)
+      throws IOException {
+    // To avoid case sensitive bugs, check if the project has a Hive database
+    Dataset projectDs = datasetFacade.findByNameAndProjectId(project,
+        project.getName().toLowerCase() + ".db");
+    Dataset featurestoreDs = datasetFacade.findByNameAndProjectId(project,
+        project.getName().toLowerCase() + "_featurestore.db");
+
+    if ((projectDs != null && projectDs.getType() == DatasetType.HIVEDB)
+        || forceCleanup) {
+      dropDatabase(project, dfso, project.getName());
+    }
+
+    if ((featurestoreDs != null && featurestoreDs.getType() == DatasetType.FEATURESTORE)
+        || forceCleanup) {
+      dropDatabase(project, dfso, project.getName() + "_featurestore");
+    }
+  }
+
+  private void dropDatabase(Project project, DistributedFileSystemOps dfso, String dbName) throws IOException {
+    // Delete HopsFs db directory -- will automatically clean up all the related Hive's metadata
+    dfso.rm(getDbPath(dbName), true);
     // Delete all the scratchdirs
     for (HdfsUsers u : hdfsUsersBean.getAllProjectHdfsUsers(project.getName())) {
       dfso.rm(new Path(settings.getHiveScratchdir(), u.getName()), true);
     }
   }
 
-  public Path getDbPath(String projectName) {
-    return new Path(settings.getHiveWarehouse(), projectName.toLowerCase() + ".db");
+  public Path getDbPath(String dbName) {
+    return new Path(settings.getHiveWarehouse(), dbName.toLowerCase() + ".db");
   }
 
   private String buildDescription(String projectName) {
@@ -176,8 +289,8 @@ public class HiveController {
         "Url: jdbc:hive2://" + settings.getHiveServerHostName(true) + "/" + projectName + "<br>" +
         "Authentication: noSasl<br>" +
         "SSL: enabled - TrustStore and its password<br>" +
-        "Username: your HopsWorks email address<br>" +
-        "Password: your HopsWorks password";
+        "Username: your Hopsworks email address<br>" +
+        "Password: your Hopsworks password";
   }
 
 

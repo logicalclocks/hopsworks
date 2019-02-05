@@ -1,95 +1,137 @@
+/*
+ * Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
+ * This file is part of Hopsworks
+ * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ *
+ * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU Affero General Public License as published by the Free Software Foundation,
+ * either version 3 of the License, or (at your option) any later version.
+ *
+ * Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
+ * Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this
+ * software and associated documentation files (the "Software"), to deal in the Software
+ * without restriction, including without limitation the rights to use, copy, modify, merge,
+ * publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+ * persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or
+ * substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  OR IMPLIED, INCLUDING
+ * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+ * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package io.hops.hopsworks.api.cluster;
 
+import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
-import io.hops.hopsworks.api.util.JsonResponse;
+import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.common.dao.host.Hosts;
-import io.hops.hopsworks.common.dao.host.HostEJB;
-import io.hops.hopsworks.common.dao.role.Roles;
-import io.hops.hopsworks.common.dao.role.RoleEJB;
-import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.dao.host.HostsFacade;
+import io.hops.hopsworks.common.dao.kagent.HostServices;
+import io.hops.hopsworks.common.dao.kagent.HostServicesFacade;
+import io.hops.hopsworks.common.dao.kagent.ServiceStatusDTO;
+import io.hops.hopsworks.common.exception.GenericException;
+import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.Api;
-import java.util.List;
+
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
+import java.util.ArrayList;
+import java.util.List;
 
 @Path("/kmon")
-@RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
-@Api(value = "Monitor Cluster Service")
-@Produces(MediaType.APPLICATION_JSON)
 @Stateless
+@JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+@Produces(MediaType.APPLICATION_JSON)
+@Api(value = "Monitor Cluster Service")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class Monitor {
 
   @EJB
-  private RoleEJB roleEjb;
+  private HostServicesFacade hostServicesFacade;
   @EJB
-  private HostEJB hostEjb;
+  private HostsFacade hostEjb;
   @EJB
   private NoCacheResponse noCacheResponse;
 
   @GET
-  @Path("/roles")
+  @Path("/services")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getAllRoles(@Context SecurityContext sc, @Context HttpServletRequest req) {
-    List<Roles> list = roleEjb.findAll();
-    GenericEntity<List<Roles>> roles = new GenericEntity<List<Roles>>(list) {
+  public Response getAllRoles() {
+    List<HostServices> list = hostServicesFacade.findAll();
+    GenericEntity<List<HostServices>> services = new GenericEntity<List<HostServices>>(list) {
     };
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(roles).build();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(services).build();
   }
 
   @GET
-  @Path("/services/{serviceName}")
+  @Path("/groups/{groupName}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getServiceRoles(@PathParam("serviceName") String serviceName, @Context SecurityContext sc,
-      @Context HttpServletRequest req) {
-    List<Roles> list = roleEjb.findServiceRoles(serviceName);
-    GenericEntity<List<Roles>> roles = new GenericEntity<List<Roles>>(list) {
-    };
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(roles).build();
+  public Response getServiceRoles(@PathParam("groupName") String groupName) {
+    List<HostServices> list = hostServicesFacade.findGroupServices(groupName);
+    // Do not leak Host data back to clients!
+    List<ServiceStatusDTO> groupStatus = new ArrayList<>();
+    for (HostServices h : list) {
+      groupStatus.add(new ServiceStatusDTO(h.getGroup(), h.getService(), h.getStatus()));
+    }
+    GenericEntity<List<ServiceStatusDTO>> services = new GenericEntity<List<ServiceStatusDTO>>(groupStatus) { };
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(services).build();
   }
 
   @GET
-  @Path("/hosts/{hostId}/roles")
+  @Path("/hosts/{hostId}/services")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getHostRoles(@PathParam("hostId") String hostId, @Context SecurityContext sc,
-      @Context HttpServletRequest req) {
-    List<Roles> list = roleEjb.findHostRoles(hostId);
-    GenericEntity<List<Roles>> roles = new GenericEntity<List<Roles>>(list) {
+  public Response getHostRoles(@PathParam("hostId") String hostname) {
+    List<HostServices> list = hostServicesFacade.findHostServiceByHostname(hostname);
+    GenericEntity<List<HostServices>> services = new GenericEntity<List<HostServices>>(list) {
     };
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(roles).build();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(services).build();
   }
 
   @GET
-  @Path("/services/{serviceName}/roles/{roleName}")
+  @Path("/groups/{groupName}/services/{serviceName}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getRoles(@PathParam("serviceName") String serviceName, @PathParam("roleName") String roleName,
-      @Context SecurityContext sc, @Context HttpServletRequest req) {
-    List<Roles> list = roleEjb.findRoles(serviceName, roleName);
-    GenericEntity<List<Roles>> roles = new GenericEntity<List<Roles>>(list) {
+  public Response getRoles(@PathParam("groupName") String groupName, @PathParam("serviceName") String serviceName) {
+    List<HostServices> list = hostServicesFacade.findGroups(groupName, serviceName);
+    GenericEntity<List<HostServices>> services = new GenericEntity<List<HostServices>>(list) {
     };
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(roles).build();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(services).build();
   }
 
   @GET
   @Path("/hosts")
   @RolesAllowed({"HOPS_ADMIN"}) //return the password in the host object
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getHosts(@Context SecurityContext sc, @Context HttpServletRequest req) {
+  public Response getHosts() {
     List<Hosts> list = hostEjb.find();
     GenericEntity<List<Hosts>> hosts = new GenericEntity<List<Hosts>>(list) {
     };
@@ -100,8 +142,7 @@ public class Monitor {
   @Path("/hosts/{hostId}")
   @RolesAllowed({"HOPS_ADMIN"}) //return the password in the host object
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getHosts(@PathParam("hostId") String hostId, @Context SecurityContext sc,
-      @Context HttpServletRequest req) {
+  public Response getHosts(@PathParam("hostId") String hostId) {
     Hosts h = hostEjb.findByHostname(hostId);
     if (h != null) {
       GenericEntity<Hosts> host = new GenericEntity<Hosts>(h) {
@@ -112,42 +153,43 @@ public class Monitor {
     }
 
   }
-  
+
   @POST
-  @Path("/services/{serviceName}")
+  @Path("/groups/{groupName}")
   @RolesAllowed({"HOPS_ADMIN"})
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  public Response serviceOp(@PathParam("serviceName") String serviceName, @Context SecurityContext sc,
-      @Context HttpServletRequest req, RolesActionDTO action) throws AppException {
-    String result = roleEjb.serviceOp(serviceName, action.getAction());
-    JsonResponse json = new JsonResponse();
+  public Response serviceOp(@PathParam("groupName") String groupName, ServicesActionDTO action) throws 
+      GenericException {
+    String result = hostServicesFacade.serviceOp(groupName, action.getAction());
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     json.setSuccessMessage(result);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }
-  
+
   @POST
-  @Path("/services/{serviceName}/roles/{roleName}")
+  @Path("/groups/{groupName}/services/{serviceName}")
   @RolesAllowed({"HOPS_ADMIN"})
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  public Response roleOp(@PathParam("serviceName") String serviceName, @PathParam("roleName") String roleName,
-      @Context SecurityContext sc, @Context HttpServletRequest req, RolesActionDTO action) throws AppException {
-    JsonResponse json = new JsonResponse();
-    json.setSuccessMessage(roleEjb.roleOp(serviceName, roleName, action.getAction()));
+  public Response serviceOp(@PathParam("groupName") String groupName, @PathParam("serviceName") String serviceName,
+      ServicesActionDTO action) throws GenericException {
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
+    json.setSuccessMessage(hostServicesFacade.serviceOp(groupName, serviceName, action.getAction()));
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }
-  
+
   @POST
-  @Path("/services/{serviceName}/roles/{roleName}/hosts/{hostId}")
+  @Path("/groups/{groupName}/services/{serviceName}/hosts/{hostId}")
   @RolesAllowed({"HOPS_ADMIN"})
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  public Response roleOnHostOp(@PathParam("serviceName") String serviceName, @PathParam("roleName") String roleName,
-      @PathParam("hostId") String hostId, @Context SecurityContext sc, @Context HttpServletRequest req,
-      RolesActionDTO action) throws AppException {
-    JsonResponse json = new JsonResponse();
-    json.setSuccessMessage(roleEjb.roleOnHostOp(serviceName, roleName, hostId, action.getAction()));
+  public Response serviceOnHostOp(@PathParam("groupName") String groupName,
+      @PathParam("serviceName") String serviceName,
+      @PathParam("hostId") String hostId,
+      ServicesActionDTO action) throws GenericException {
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
+    json.setSuccessMessage(hostServicesFacade.serviceOnHostOp(groupName, serviceName, hostId, action.getAction()));
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }
 }

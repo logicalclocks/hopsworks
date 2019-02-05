@@ -1,23 +1,51 @@
-/**
- * Created by stig on 2015-07-27.
- * Controller for the jobs creation page.
+/*
+ * Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
  *
- * As it stands, self controller contains a lot of logic concerning all different
- * job types. It would be nicer to have these as Mixins in a different file.
- * Guess that's a TODO.a
+ * This file is part of Hopsworks
+ * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ *
+ * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU Affero General Public License as published by the Free Software Foundation,
+ * either version 3 of the License, or (at your option) any later version.
+ *
+ * Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
+ * Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this
+ * software and associated documentation files (the "Software"), to deal in the Software
+ * without restriction, including without limitation the rights to use, copy, modify, merge,
+ * publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+ * persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or
+ * substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  OR IMPLIED, INCLUDING
+ * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+ * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 'use strict';
 
 angular.module('hopsWorksApp')
         .controller('NewJobCtrl', ['$routeParams', 'growl', 'JobService',
-          '$location', 'ModalService', 'StorageService', '$scope', 'SparkService',
-          'AdamService', 'FlinkService', 'TensorFlowService', 'TourService',
-          'HistoryService', 'KafkaService', 'ProjectService', '$timeout',
+          '$location', 'ModalService', 'StorageService', '$scope', 'TourService', 'HistoryService',
+            'KafkaService', 'ProjectService', 'PythonDepsService', '$timeout',
           function ($routeParams, growl, JobService,
-                  $location, ModalService, StorageService, $scope, SparkService,
-                  AdamService, FlinkService, TensorFlowService, TourService,
-                  HistoryService, KafkaService, ProjectService, $timeout) {
+                  $location, ModalService, StorageService, $scope, TourService,
+                  HistoryService, KafkaService, ProjectService, PythonDepsService, $timeout) {
 
             var self = this;
             self.tourService = TourService;
@@ -48,27 +76,31 @@ angular.module('hopsWorksApp')
                 }
 
                 return KafkaService.getProjectAndSharedTopics(self.projectId)
-                .then(
-                        function (success) {
-                          self.topics = [];
-                          var topics = success.data;
-                          for (var i = 0; i < topics.length; i++) {
-                            if (self.selectedTopics!== "undefined" && self.selectedTopics.length > 0) {
-                              var found = false;
-                              for (var j = 0; j < self.selectedTopics.length; j++) {
-                                if (self.selectedTopics[j]['name'] === topics[i]['name']) {
-                                  found = true;
-                                  break;
+                        .then(
+                                function (success) {
+                                  self.topics = [];
+                                  var topics = success.data;
+                                  for (var i = 0; i < topics.length; i++) {
+                                    if (self.selectedTopics !== "undefined" && self.selectedTopics.length > 0) {
+                                      var found = false;
+                                      for (var j = 0; j < self.selectedTopics.length; j++) {
+                                        if (self.selectedTopics[j]['name'] === topics[i]['name']) {
+                                          found = true;
+                                          break;
+                                        }
+                                      }
+                                      self.topics.push({name: topics[i]['name'], ticked: found});
+                                    } else {
+                                      self.topics.push({name: topics[i]['name'], ticked: false});
+                                    }
+                                  }
+                                }, function (error) {
+                                if (typeof error.data.usrMsg !== 'undefined') {
+                                    growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
+                                } else {
+                                    growl.error("", {title: error.data.errorMsg, ttl: 5000});
                                 }
-                              }
-                              self.topics.push({name: topics[i]['name'], ticked: found});
-                            } else {
-                              self.topics.push({name: topics[i]['name'], ticked: false});
-                            }
-                          }
-                        }, function (error) {
-                    growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
-                });
+                        });
               }
             };
 
@@ -110,17 +142,12 @@ angular.module('hopsWorksApp')
             self.selectFileRegexes = {
               "SPARK": /.jar\b/,
               "FLINK": /.jar\b/,
-              "TENSORFLOW": /.py\b/,
-              "LIBRARY": /.jar\b/,
-              "ADAM": /[^]*/
+              "PYSPARK": /(.py|.ipynb)\b/
             };
             self.selectFileErrorMsgs = {
               "SPARK": "Please select a JAR file.",
               "FLINK": "Please select a JAR file.",
-              "TENSORFLOW": "Please select a Python file.",
-              "LIBRARY": "Please select a JAR file.",
-              "ADAM-FILE": "Please select a file.",
-              "ADAM-FOLDER": "Please select a folder."
+              "PYSPARK": "Please select a .py or .ipynb file."
             };
 
             //Create variables for user-entered information
@@ -135,19 +162,6 @@ angular.module('hopsWorksApp')
             self.runConfig; //Will hold the job configuration
             self.sliderVisible = false;
 
-            self.sliderOptions = {
-              min: 1,
-              max: 10,
-              options: {
-                floor: 0,
-                ceil: 500
-              },
-              getPointerColor: function (value) {
-                return '#4b91ea';
-              }
-
-            };
-
             self.refreshSlider = function () {
               $timeout(function () {
                 $scope.$broadcast('rzSliderForceRender');
@@ -160,15 +174,34 @@ angular.module('hopsWorksApp')
                 self.refreshSlider();
             };
 
-            self.setInitExecs = function () {
-              if (self.sliderOptions.min >
-                      self.runConfig.numberOfExecutorsInit) {
-                self.runConfig.numberOfExecutorsInit =
+            self.setInitExecs = function() {
+                if (self.sliderOptions.min >
+                    self.runConfig['spark.dynamicAllocation.initialExecutors']) {
+                    self.runConfig['spark.dynamicAllocation.initialExecutors'] =
                         parseInt(self.sliderOptions.min);
-              } else if (self.sliderOptions.max <
-                      self.runConfig.numberOfExecutorsInit) {
-                self.runConfig.numberOfExecutorsInit =
+                } else if (self.sliderOptions.max <
+                    self.runConfig['spark.dynamicAllocation.initialExecutors']) {
+                    self.runConfig['spark.dynamicAllocation.initialExecutors'] =
                         parseInt(self.sliderOptions.max);
+                }
+                self.runConfig['spark.dynamicAllocation.minExecutors'] = self.sliderOptions.min;
+                self.runConfig['spark.dynamicAllocation.maxExecutors'] = self.sliderOptions.max;
+            };
+
+            self.dynExecChangeListener = function() {
+                self.setInitExecs();
+            };
+
+            self.sliderOptions = {
+              min: 1,
+              max: 10,
+              options: {
+                floor: 0,
+                ceil: 1500,
+                onChange: self.dynExecChangeListener
+              },
+              getPointerColor: function (value) {
+                return '#4b91ea';
               }
             };
 
@@ -177,14 +210,6 @@ angular.module('hopsWorksApp')
             };
             self.flinkState = {//Will hold flink-specific state
               "selectedJar": null //The path to the selected jar
-            };
-            self.tensorflowState = {//Will hold flink-specific state
-              "selectedJar": null //The path to the selected jar
-            };
-            self.adamState = {//Will hold ADAM-specific state
-              "processparameter": null, //The parameter currently being processed
-              "commandList": null, //The ADAM command list.
-              "selectedCommand": null //The selected ADAM command
             };
 
             //Variables for front-end magic
@@ -212,12 +237,8 @@ angular.module('hopsWorksApp')
               "isOpen": false,
               "visible": false,
               "value": "",
-              "title": "Configure and create"};
-            this.accordion6 = {//Contains the pre-configuration and proposals for auto-configuration
-              "isOpen": false,
-              "visible": false,
-              "value": "",
-              "title": "Pre-Configuration"};
+              "title": "Configure and create"
+            };
 
             this.undoable = false; //Signify if a clear operation can be undone.
 
@@ -234,9 +255,7 @@ angular.module('hopsWorksApp')
                 "runConfig": self.runConfig,
                 "sparkState": self.sparkState,
                 "flinkState": self.flinkState,
-                "tensorflowState" : self.tensorflowState,
-                "adamState": self.adamState,
-                "accordions": [self.accordion1, self.accordion2, self.accordion3, self.accordion4, self.accordion5, self.accordion6]
+                "accordions": [self.accordion1, self.accordion2, self.accordion3, self.accordion4, self.accordion5]
               };
               self.undoneState = state;
               self.undoable = true;
@@ -250,14 +269,6 @@ angular.module('hopsWorksApp')
               };
               self.flinkState = {
                 "selectedJar": null //The path to the selected jar
-              };
-              self.tensorflowState = {
-                "selectedJar": null //The path to the selected jar
-              };
-              self.adamState = {//Will hold ADAM-specific state
-                "processparameter": null, //The parameter currently being processed
-                "commandList": null, //The ADAM command list.
-                "selectedCommand": null //The selected ADAM command
               };
               //Variables for front-end magic
               self.accordion1 = {//Contains the job name
@@ -285,11 +296,6 @@ angular.module('hopsWorksApp')
                 "visible": false,
                 "value": "",
                 "title": "Configure and create"};
-              self.accordion6 = {//Contains the pre-configuration and proposals for auto-configuration
-                "isOpen": false,
-                "visible": false,
-                "value": "",
-                "title": "Pre-Configuration"};
             };
 
             self.exitToJobs = function () {
@@ -308,14 +314,11 @@ angular.module('hopsWorksApp')
                 self.runConfig = self.undoneState.runConfig;
                 self.sparkState = self.undoneState.sparkState;
                 self.flinkState = self.undoneState.flinkState;
-                self.tensorflowState = self.undoneState.tensorflowState;
-                self.adamState = self.undoneState.adamState;
                 self.accordion1 = self.undoneState.accordions[0];
                 self.accordion2 = self.undoneState.accordions[1];
                 self.accordion3 = self.undoneState.accordions[2];
                 self.accordion4 = self.undoneState.accordions[3];
                 self.accordion5 = self.undoneState.accordions[4];
-                self.accordion6 = self.undoneState.accordions[4];
               }
               self.unodeState = null;
               self.undoable = false;
@@ -323,8 +326,8 @@ angular.module('hopsWorksApp')
 
             self.kafkaGuideTransition = function () {
               if (angular.equals('producer', self.tourService
-                .kafkaJobCreationState)) {
-                  self.tourService.kafkaJobCreationState = "consumer";
+                      .kafkaJobCreationState)) {
+                self.tourService.kafkaJobCreationState = "consumer";
               } else {
                 self.tourService.kafkaJobCreationState = "producer";
               }
@@ -350,8 +353,8 @@ angular.module('hopsWorksApp')
                 growl.error("Error reading file", {title: reader.error.code, ttl: 7000})
               };
 
-              reader.onload = (function(theFile) {
-                return function(e) {
+              reader.onload = (function (theFile) {
+                return function (e) {
                   // Render thumbnail.
                   var content = e.target.result;
                   jobConfigFileImported(content);
@@ -365,13 +368,17 @@ angular.module('hopsWorksApp')
             var jobConfigFileImported = function (config) {
               try {
                 var jobConfig = angular.fromJson(config);
-                JobService.createNewJob(self.projectId, jobConfig.type, jobConfig.config).then(
-                  function (success) {
-                    $location.path('project/' + self.projectId + '/jobs');
-                    self.removed = true;
-                  }, function (error) {
-                    growl.error(error.data.errorMsg, {title: 'Error parsing job configuration file', ttl: 7000});
-                  });
+                JobService.createNewJob(self.projectId, jobConfig.config).then(
+                        function (success) {
+                          $location.path('project/' + self.projectId + '/jobs');
+                          self.removed = true;
+                        }, function (error) {
+                        if (typeof error.data.usrMsg !== 'undefined') {
+                            growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                        } else {
+                            growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                        }
+                });
               } catch (e) {
                 growl.error("Error parsing JSON file", {title: 'Error parsing job configuration file', ttl: 7000});
               }
@@ -387,11 +394,11 @@ angular.module('hopsWorksApp')
               if (self.kafkaSelected) {
                 if (self.projectIsGuide) {
                   //If it is the first time the job is created topics will be empty
-                  if(self.runConfig.kafka.topics.length === 0){
+                  if (self.runConfig.kafka.topics.length === 0) {
                     self.runConfig.kafka.topics = self.guideKafkaTopics;
                   }
                   if (angular.equals('producer', self.tourService
-                  .kafkaJobCreationState)) {
+                          .kafkaJobCreationState)) {
                     // Go through again for the consumer. The state is
                     // toggled in newJob.html virtual step
                     self.tourService.currentStep_TourSeven = 0;
@@ -409,9 +416,9 @@ angular.module('hopsWorksApp')
                   return;
                 } else {
                   if (self.runConfig.kafka.advanced) {
-                    self.runConfig.kafka.consumergroups = self.consumerGroups;
+                    self.runConfig.kafka.consumerGroups = self.consumerGroups;
                   } else {
-                    delete self.runConfig.kafka.consumergroups;
+                    delete self.runConfig.kafka.consumerGroups;
                   }
                 }
               } else {
@@ -420,41 +427,33 @@ angular.module('hopsWorksApp')
               self.runConfig.appName = self.jobname;
               self.runConfig.flinkjobtype = self.flinkjobtype;
               self.runConfig.localResources = self.localResources;
-              if (self.getJobType() === "SPARK" || self.getJobType() === "PYSPARK" || self.getJobType() === "ADAM") {
-                self.runConfig.selectedMinExecutors = self.sliderOptions.min;
-                self.runConfig.selectedMaxExecutors = self.sliderOptions.max;
+              if (self.getJobType() === "SPARK" || self.getJobType() === "PYSPARK") {
+                self.runConfig['spark.dynamicAllocation.minExecutors'] = self.sliderOptions.min;
+                self.runConfig['spark.dynamicAllocation.maxExecutors']  = self.sliderOptions.max;
               }
-              if(self.getJobType() === "TFSPARK" && self.tfOnSpark === true){
-                self.runConfig.tfOnSpark = true;
+              if (self.getJobType() === "SPARK" || self.getJobType() === "FLINK") {
+                if (typeof self.runConfig.mainClass === 'undefined' || self.runConfig.mainClass === "") {
+                  growl.warning("Please specify main class first", {ttl: 5000});
+                  return;
+                }
               }
               if (self.tourService.currentStep_TourFour > -1) {
                 //self.tourService.resetTours();
                 self.tourService.currentStep_TourThree = 2;
                 self.tourService.createdJobName = self.jobname;
               }
-              JobService.createNewJob(self.projectId, self.getJobType(), self.runConfig).then(
+
+              JobService.createNewJob(self.projectId, self.runConfig).then(
                       function (success) {
-                        if (self.projectIsGuide && self.getJobType() === "TENSORFLOW" && !StorageService.contains(self.projectId+"-tftour-finished")) {
-                          var inferenceJob = self.runConfig;
-                          inferenceJob.args = '--base_path hdfs://default/Projects/' + self.projectName + '/TestJob --images tfr/test --format tfr --mode inference --model mnist_model --output mnist_predictions';
-                          inferenceJob.appName = "Mnist-inference-QueueRunners";
-                          JobService.createNewJob(self.projectId, self.getJobType(), inferenceJob).then(
-                                  function (success) {
-                                    $location.path('project/' + self.projectId + '/jobs');
-                                    StorageService.remove(self.newJobName);
-                                    self.removed = true;
-                                    //Remember that the initial jobs were created to avoid creating them the next time
-                                    StorageService.store(self.projectId+"-tftour-finished", "true");
-                                  }, function (error) {
-                            growl.error(error.data.errorMsg, {title: 'Error', ttl: 10000});
-                          });
-                        } else {
-                          $location.path('project/' + self.projectId + '/jobs');
-                          StorageService.remove(self.newJobName);
-                          self.removed = true;
-                        }
+                        $location.path('project/' + self.projectId + '/jobs');
+                        StorageService.remove(self.newJobName);
+                        self.removed = true;
                       }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Error', ttl: 10000});
+                      if (typeof error.data.usrMsg !== 'undefined') {
+                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                      } else {
+                          growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                      }
               });
             };
 
@@ -470,13 +469,7 @@ angular.module('hopsWorksApp')
               }
               if (self.phase === 0) {
                 if (!self.jobname) {
-                  //If it's the tensorflow tour, set proper name
-                  if(self.projectName.startsWith("demo_tensorflow")){
-                    self.jobname = "Mnist-training-QueueRunners";
-                  } else {
-                    var date = new Date().getTime() / 1000;
-                    self.jobname = "Job-" + date;
-                  }
+                  self.jobname = "Job-" + Math.round(new Date().getTime() / 1000);
                 }
                 self.phase = 1;
                 self.accordion2.isOpen = true; //Open type selection
@@ -493,10 +486,12 @@ angular.module('hopsWorksApp')
 
             self.guideSetJobName = function () {
               var jobState = self.tourService.kafkaJobCreationState;
-              if (angular.equals('producer', jobState)) {
-                self.jobname = "KafkaDemoProducer";
-              } else {
-                self.jobname = "KafkaDemoConsumer";
+              if ((typeof self.jobname === 'undefined' || self.jobname === '')) {
+                if (angular.equals('producer', jobState)) {
+                  self.jobname = "KafkaDemoProducer";
+                } else {
+                  self.jobname = "KafkaDemoConsumer";
+                }
               }
             };
 
@@ -506,7 +501,7 @@ angular.module('hopsWorksApp')
              * @returns {undefined}
              */
             self.jobTypeChosen = function () {
-            // For Kafka tour
+              // For Kafka tour
               if (self.projectIsGuide) {
                 self.tourService.currentStep_TourSeven = 4;
               }
@@ -515,35 +510,19 @@ angular.module('hopsWorksApp')
               var selectedType;
               switch (self.jobtype) { //Set the panel titles according to job type
                 case 1:
-                  self.accordion3.title = "App file (.jar, .py)";
+                  self.accordion3.title = "App file (.jar, .py or .ipynb)";
                   self.accordion4.title = "Job details";
                   selectedType = "Spark";
                   break;
-                case 4:
-                  self.accordion3.title = "App file (.py)";
+                case 2:
+                  self.accordion3.title = "App file (.py or .ipynb)";
                   self.accordion4.title = "Job details";
                   selectedType = "PySpark";
                   break;
-                case 5:
-                  self.accordion3.title = "App file (.py)";
-                  self.accordion4.title = "Job details";
-                  selectedType = "TensorFlowOnSpark";
-                  self.tfOnSpark = true;
-                  break;
-                case 2:
-                  self.accordion3.title = "ADAM command";
-                  self.accordion4.title = "Job arguments";
-                  selectedType = "ADAM";
-                  break;
                 case 3:
-                  self.accordion3.title = "JAR file";
+                  self.accordion3.title = "App file (.jar)";
                   self.accordion4.title = "Job details";
                   selectedType = "Flink";
-                  break;
-                case 6:
-                  self.accordion3.title = "Python file";
-                  self.accordion4.title = "Job details";
-                  selectedType = "TensorFlow";
                   break;
                 default:
                   break;
@@ -556,7 +535,6 @@ angular.module('hopsWorksApp')
               self.accordion4.isOpen = false; //Close job setup
               self.accordion4.visible = false; //Hide job setup
               self.accordion5.visible = false; // Hide job configuration
-              self.accordion6.visible = false; // Hide job pre-configuration
               self.accordion3.value = ""; //Reset selected file
               if (self.tourService.currentStep_TourFour > -1) {
                 self.tourService.currentStep_TourFour = 4;
@@ -573,15 +551,9 @@ angular.module('hopsWorksApp')
                 case 1:
                   return "SPARK";
                 case 2:
-                  return "ADAM";
+                  return "PYSPARK";
                 case 3:
                   return "FLINK";
-                case 4:
-                  return "PYSPARK";
-                case 5:
-                  return "TFSPARK";
-                case 6:
-                  return "TENSORFLOW";
                 default:
                   return null;
               }
@@ -598,17 +570,21 @@ angular.module('hopsWorksApp')
             };
 
             self.chooseParameters = function () {
-              if (self.jobtype === 1 && !self.runConfig.mainClass && !self.runConfig.args) {
-                  self.runConfig.mainClass = 'org.apache.spark.examples.SparkPi';
-                  self.runConfig.args = '10';
+              if (self.jobtype === 1 && self.projectIsGuide &&
+                      (typeof self.runConfig.mainClass === 'undefined' || self.runConfig.mainClass === '')) {
+                self.runConfig.mainClass = 'org.apache.spark.examples.SparkPi';
+              }
+              if (self.jobtype === 1 && self.projectIsGuide &&
+                      (typeof self.runConfig.args === 'undefined' || self.runConfig.args === '')) {
+                self.runConfig.args = '10';
               }
               // For Kafka tour
               if (self.projectIsGuide) {
                 self.tourService.currentStep_TourSeven = 7;
               }
-              if(self.jobtype === 6 && !self.runConfig.args){
-                self.runConfig.args = '--base_path hdfs://default/Projects/'+self.projectName+'/TestJob --images tfr/train --format tfr --mode train --model mnist_model';
-                self.runConfig.numOfPs = 1;
+              if (self.jobtype === 6 && !self.runConfig.args) {
+                self.runConfig.args = '--base_path hdfs://default/Projects/' + self.projectName + '/TestJob --images tfr/train --format tfr --mode train --model mnist_model';
+                self.runConfig['spark.tensorflow.num.ps']  = 1;
               }
 
               if (self.tourService.currentStep_TourFour > -1) {
@@ -632,24 +608,24 @@ angular.module('hopsWorksApp')
 
             self.populateKafkaTopic = function () {
               var tipsEnabled = StorageService.get("hopsworks-showtourtips");
-              if(tipsEnabled){
+              if (tipsEnabled) {
                 self.accordion5.isOpen = true;
                 self.accordion5.visible = true;
 
                 self.kafkaSelected = true;
                 self.getAllTopics(self.projectId).then(
-                  function(success) {
-                    for (var i = 0; i < self.topics.length; i++) {
-                      if (angular.equals(self.tourService.kafkaTopicName + "_"
-                          + self.projectId, self.topics[i]['name'])) {
-                        self.guideKafkaTopics.push(self.topics[i]);
-                        break;
-                      }
+                        function (success) {
+                          for (var i = 0; i < self.topics.length; i++) {
+                            if (angular.equals(self.tourService.kafkaTopicName + "_"
+                                    + self.projectId, self.topics[i]['name'])) {
+                              self.guideKafkaTopics.push(self.topics[i]);
+                              break;
+                            }
 
-                    }
-                  }, function(error) {
-                    console.log(">>> Something bad happened:"+error.data.errorMsg);
-                  }
+                          }
+                        }, function (error) {
+                  console.log(">>> Something bad happened:" + error.data.errorMsg);
+                }
                 );
               }
             };
@@ -664,7 +640,6 @@ angular.module('hopsWorksApp')
               self.accordion4.isOpen = true; // Open job setup
               self.accordion4.visible = true; // Show job setup
               self.accordion5.visible = true; // Show job config
-              self.accordion6.visible = true; // Show job config
               self.accordion3.value = " - " + path; // Set file selection title
               self.accordion3.isOpen = false; //Close file selection
             };
@@ -685,30 +660,37 @@ angular.module('hopsWorksApp')
              */
             self.onFileSelected = function (reason, path) {
               var filename = getFileName(path);
+
+              if (reason.toUpperCase() === "PYSPARK") {
+                PythonDepsService.enabled(self.projectId).then(
+                    function (success) {
+                    },
+                    function (error) {
+                      self.jobtype = 0;
+                      growl.error("You need to enable Python before running this job.", {title: 'Error - Python not Enabled Yet.', ttl: 15000});
+                });
+              }
+
+
               switch (reason.toUpperCase()) {
                 case "SPARK":
                 case "PYSPARK":
-                case "TFSPARK":
                   self.sparkState.selectedJar = filename;
-                  SparkService.inspectJar(self.projectId, path).then(
+                  JobService.getInspection(self.projectId, reason.toLowerCase(), path).then(
                           function (success) {
                             self.runConfig = success.data;
-                            if(reason.toUpperCase() === "TFSPARK"){
-                              self.jobtype = 5;
+
+                            if (self.runConfig.appPath.toLowerCase().endsWith(".py") ||
+                            self.runConfig.appPath.toLowerCase().endsWith(".ipynb")) {
+                              self.jobtype = 2;
                             } else {
-                              if(self.runConfig.appPath.toLowerCase().endsWith(".py")){
-                                self.jobtype = 4;
-                              } else {
-                                self.jobtype = 1;
-                              }
+                              self.jobtype = 1;
                             }
                             //Update the min/max spark executors based on
                             //backend configuration
                             if (typeof self.runConfig !== 'undefined') {
-                              self.sliderOptions.options['floor'] = self.runConfig.
-                                      minExecutors;
-                              self.sliderOptions.options['ceil'] = self.runConfig.
-                                      maxExecutors;
+                              self.sliderOptions.options['floor'] = self.runConfig['spark.dynamicAllocation.minExecutors'];
+                              self.sliderOptions.options['ceil'] = self.runConfig['spark.dynamicAllocation.maxExecutors'];
                             } else {
                               self.sliderOptions.options['floor'] = 1;
                               self.sliderOptions.options['ceil'] = 300;
@@ -724,13 +706,17 @@ angular.module('hopsWorksApp')
                             }
 
                           }, function (error) {
-                    growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
+                          if (typeof error.data.usrMsg !== 'undefined') {
+                              growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                          } else {
+                              growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                          }
                   });
                   break;
                 case "LIBRARY":
                   //Push the new library into the localresources array
                   var libType = 'file';
-                  if(path.endsWith(".zip") || path.endsWith(".tar") || path.endsWith(".gz")){
+                  if (path.endsWith(".zip") || path.endsWith(".tar") || path.endsWith(".gz")) {
                     libType = 'archive';
                   }
                   self.localResources.push({
@@ -741,38 +727,18 @@ angular.module('hopsWorksApp')
                     'pattern': null
                   });
                   break;
-                case "ADAM":
-                  self.adamState.processparameter.value = path;
-                  if (typeof runConfig !== 'undefined') {
-                    self.sliderOptions.options['floor'] = self.runConfig.minExecutors;
-                    self.sliderOptions.options['ceil'] = self.runConfig.
-                            maxExecutors;
-                  } else {
-                    self.sliderOptions.options['floor'] = 1;
-                    self.sliderOptions.options['ceil'] = 300;
-                  }
-                  break;
                 case "FLINK":
                   self.flinkState.selectedJar = filename;
-                  FlinkService.inspectJar(self.projectId, path).then(
+                  JobService.getInspection(self.projectId, reason.toLowerCase(), path).then(
                           function (success) {
                             self.runConfig = success.data;
                             self.mainFileSelected(filename);
                           }, function (error) {
-                    growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
-                  });
-                  break;
-                case "TENSORFLOW":
-                  self.tensorflowState.selectedJar = filename;
-                  TensorFlowService.inspectProgram(self.projectId, path).then(
-                          function (success) {
-                            self.runConfig = success.data;
-                            self.mainFileSelected(filename);
-                            if (self.tourService.currentStep_TourFour > -1) {
-                              self.tourService.currentStep_TourFour = 6;
-                            }
-                          }, function (error) {
-                    growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
+                          if (typeof error.data.usrMsg !== 'undefined') {
+                              growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                          } else {
+                              growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                          }
                   });
                   break;
                 default:
@@ -783,17 +749,12 @@ angular.module('hopsWorksApp')
             /**
              * Open a dialog for file selection.
              * @param {String} reason Goal for which the file is selected. (JobType or "LIBRARY").
-             * @param {Object} parameter The Adam parameter to bind.
+             * @param {Object} parameter The  parameter to bind.
              * @returns {undefined}
              */
             this.selectFile = function (reason, parameter) {
-              self.accordion6.visible = false;
-              self.accordion6.isOpen = false;
-              if (reason.toUpperCase() === "ADAM") {
-                self.adamState.processparameter = parameter;
-              }
               ModalService.selectFile('lg', self.selectFileRegexes[reason],
-                      self.selectFileErrorMsgs["ADAM-FILE"]).then(
+                      self.selectFileErrorMsgs["PYSPARK"], false).then(
                       function (success) {
                         self.onFileSelected(reason, "hdfs://" + success);
                       }, function (error) {
@@ -803,38 +764,19 @@ angular.module('hopsWorksApp')
             /**
              * Open a dialog for directory selection.
              * @param {String} reason Goal for which the file is selected. (JobType or "LIBRARY").
-             * @param {Object} parameter The Adam parameter to bind.
+             * @param {Object} parameter The parameter to bind.
              * @returns {undefined}
              */
             this.selectDir = function (reason, parameter) {
-              if (reason.toUpperCase() === "ADAM") {
-                self.adamState.processparameter = parameter;
-              }
               ModalService.selectDir('lg', self.selectFileRegexes[reason],
-                      self.selectFileErrorMsgs["ADAM-FOLDER"]).then(
+                      self.selectFileErrorMsgs["PYSPARK"]).then(
                       function (success) {
                         self.onFileSelected(reason, "hdfs://" + success);
-                        if (reason.toUpperCase() === "ADAM") {
-                          growl.info("Insert output file name", {title: 'Required', ttl: 5000});
-                        }
                       }, function (error) {
                 //The user changed their mind.
               });
             };
 
-
-            /**
-             * Get a list of ADAM commands from the server.
-             * @returns {undefined}
-             */
-            this.getCommandList = function () {
-              AdamService.getCommandList(self.projectId).then(
-                      function (success) {
-                        self.adamState.commandList = success.data;
-                      }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
-              });
-            };
 
             /**
              * Remove the given entry from the localResources list.
@@ -866,15 +808,12 @@ angular.module('hopsWorksApp')
                 "phase": self.phase,
                 "runConfig": self.runConfig,
                 "sparkState": self.sparkState,
-                "adamState": self.adamState,
                 "flinkState": self.flinkState,
-                "tensorflowState" : self.tensorflowState,
                 "accordion1": self.accordion1,
                 "accordion2": self.accordion2,
                 "accordion3": self.accordion3,
                 "accordion4": self.accordion4,
                 "accordion5": self.accordion5,
-                "accordion6": self.accordion6
               };
               StorageService.store(self.newJobName, state);
             });
@@ -887,12 +826,13 @@ angular.module('hopsWorksApp')
               if (stored) {
                 //Job information
                 self.jobtype = stored.jobtype;
-                if(self.getJobType() === "TFSPARK"){
-                  self.tfOnSpark = true;
-                }
                 self.jobname = stored.jobname;
+                if (typeof self.jobname !== "undefined") {
+                  self.jobname = self.jobname + "." + Math.floor(Math.random() * 10);
+                  stored.accordion1.value = " - " + self.jobname;
+                }
                 self.localResources = stored.runConfig.localResources;
-                if(typeof self.localResources === "undefined"){
+                if (typeof self.localResources === "undefined") {
                   self.localResources = [];
                 }
 
@@ -901,29 +841,29 @@ angular.module('hopsWorksApp')
                 if (self.runConfig) {
                   self.topics = [];
                   self.runConfig.schedule = null;
-                  if(typeof self.runConfig.minExecutors !== "undefined") {
-                    self.sliderOptions.options['floor'] = self.runConfig.minExecutors;
+                  if (typeof self.runConfig['spark.dynamicAllocation.minExecutors']  !== "undefined") {
+                    self.sliderOptions.options['floor'] = self.runConfig['spark.dynamicAllocation.minExecutors'];
                   }
-                  if(typeof self.sliderOptions.options['ceil'] !== "undefined") {
-                    self.runConfig.maxExecutors;
+                  if (typeof self.sliderOptions.options['ceil'] !== "undefined") {
+                    self.runConfig['spark.dynamicAllocation.maxExecutors'];
                   }
-                  if (typeof self.runConfig.selectedMinExecutors === "undefined") {
-                    self.runConfig.selectedMinExecutors = self.sliderOptions.min;
+                  if (typeof self.runConfig['spark.dynamicAllocation.minExecutors'] === "undefined") {
+                    self.runConfig['spark.dynamicAllocation.minExecutors'] = self.sliderOptions.min;
                   } else {
-                    self.sliderOptions.min = self.runConfig.selectedMinExecutors;
+                    self.sliderOptions.min = self.runConfig['spark.dynamicAllocation.minExecutors'];
                   }
-                  if (typeof self.runConfig.selectedMaxExecutors === "undefined") {
-                    self.runConfig.selectedMaxExecutors = self.sliderOptions.max;
+                  if (typeof self.runConfig['spark.dynamicAllocation.maxExecutors'] === "undefined") {
+                    self.runConfig['spark.dynamicAllocation.maxExecutors'] = self.sliderOptions.max;
                   } else {
-                    self.sliderOptions.max = self.runConfig.selectedMaxExecutors;
+                    self.sliderOptions.max = self.runConfig['spark.dynamicAllocation.maxExecutors'];
                   }
                   //Load Kafka properties
                   if (typeof self.runConfig.kafka !== "undefined" && self.runConfig.kafka.topics.length > 0) {
                     self.kafkaSelected = true;
                     self.showAdvanced = self.runConfig.kafka.advanced;
-                    if (typeof self.runConfig.kafka.consumergroups !== "undefined") {
+                    if (typeof self.runConfig.kafka.consumerGroups !== "undefined") {
                       self.groupsSelected = true;
-                      self.consumerGroups = self.runConfig.kafka.consumergroups;
+                      self.consumerGroups = self.runConfig.kafka.consumerGroups;
                     }
                     var storedTopics = self.runConfig.kafka.topics;
                     //Set Kafka topics is selected
@@ -948,18 +888,14 @@ angular.module('hopsWorksApp')
                                 }
                               }
                             }, function (error) {
-                              console.log("Error during job init:"+error.data.errorMsg);
+                      console.log("Error during job init:" + error.data.errorMsg);
                     });
                   }
                 }
-                if (self.jobtype === 1 || self.jobtype === 4 || self.jobtype === 5) {
+                if (self.jobtype === 1 || self.jobtype === 2) {
                   self.sparkState = stored.sparkState;
-                } else if (self.jobtype === 2) {
-                  self.adamState = stored.adamState;
                 } else if (self.jobtype === 3) {
                   self.flinkState = stored.flinkState;
-                } else if (self.jobtype === 6) {
-                  self.tensorflowState = stored.tensorflowState;
                 }
                 //GUI state
                 self.accordion1 = stored.accordion1;
@@ -967,43 +903,23 @@ angular.module('hopsWorksApp')
                 self.accordion3 = stored.accordion3;
                 self.accordion4 = stored.accordion4;
                 self.accordion5 = stored.accordion5;
-                self.accordion6 = stored.accordion6;
               }
 
               // Check if it's a guide project
               ProjectService.get({}, {'id': self.projectId}).$promise.then(
-                function (success) {
-                  self.projectName = success.projectName;
-                  if (angular.equals(self.projectName.substr(0, 5), 'demo_')) {
-                    self.tourService.currentStep_TourSeven = 0;
-                    self.projectIsGuide = true;
-                  }
-                }, function (error) {
-                  $location.path('/');
-                });
+                      function (success) {
+                        self.projectName = success.projectName;
+                        if (angular.equals(self.projectName.substr(0, 5), 'demo_')) {
+                          self.tourService.currentStep_TourSeven = 0;
+                          self.projectIsGuide = true;
+                        }
+                      }, function (error) {
+                $location.path('/');
+              });
 
-              if (self.adamState.commandList === null) {
-                self.getCommandList();
-              }
             };
 
             init(); //Call upon create;
-            /**
-             * Select an ADAM command by sending the name to the server, gets an
-             * AdamJobConfiguration back.
-             * @param {string} command
-             * @returns {undefined}
-             */
-            this.selectCommand = function (command) {
-              self.adamState.selectedCommand = command;
-              AdamService.getCommand(self.projectId, self.adamState.selectedCommand).then(
-                      function (success) {
-                        self.runConfig = success.data;
-                        self.mainFileSelected(self.adamState.selectedCommand);
-                      }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
-              });
-            };
 
             /**
              * Creates a jobDetails object with the arguments typed by the user and send
@@ -1051,26 +967,6 @@ angular.module('hopsWorksApp')
                 return true;
               } else
                 return false;
-            };
-
-            /**
-             * When the user changes configutaion (using the radio button) the
-             * runConfig values change.
-             * @param {type} value
-             * @returns {undefined}
-             */
-            $scope.selectConfig = function (value) {
-              for (var i = 0; i < self.autoConfigResult.jobProposedConfig.length; i++) {
-                var obj = self.autoConfigResult.jobProposedConfig[i];
-                if (obj.configType === value) {
-                  self.runConfig.amMemory = obj.amMemory;
-                  self.runConfig.amVCores = obj.amVcores;
-                  self.runConfig.amQueue = "default";
-                  self.runConfig.numberOfExecutors = obj.numOfExecutors;
-                  self.runConfig.executorCores = obj.executorCores;
-                  self.runConfig.executorMemory = obj.executorMemory;
-                }
-              }
             };
 
           }]);

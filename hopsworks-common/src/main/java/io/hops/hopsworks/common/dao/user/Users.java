@@ -1,11 +1,50 @@
+/*
+ * Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
+ * This file is part of Hopsworks
+ * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ *
+ * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU Affero General Public License as published by the Free Software Foundation,
+ * either version 3 of the License, or (at your option) any later version.
+ *
+ * Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
+ * Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this
+ * software and associated documentation files (the "Software"), to deal in the Software
+ * without restriction, including without limitation the rights to use, copy, modify, merge,
+ * publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+ * persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or
+ * substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  OR IMPLIED, INCLUDING
+ * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+ * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package io.hops.hopsworks.common.dao.user;
 
 import io.hops.hopsworks.common.dao.jupyter.JupyterSettings;
+import io.hops.hopsworks.common.dao.tensorflow.TensorBoard;
 import io.hops.hopsworks.common.dao.user.security.Address;
 import io.hops.hopsworks.common.dao.user.security.Organization;
-import io.hops.hopsworks.common.dao.user.security.Yubikey;
-import io.hops.hopsworks.common.dao.user.security.ua.PeopleAccountStatus;
-import io.hops.hopsworks.common.dao.user.security.ua.PeopleAccountType;
+import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
+import io.hops.hopsworks.common.dao.user.security.ua.UserAccountType;
 import io.hops.hopsworks.common.dao.user.security.ua.SecurityQuestion;
 import java.io.Serializable;
 import java.util.Collection;
@@ -110,7 +149,11 @@ import org.codehaus.jackson.annotate.JsonIgnore;
   ,
   @NamedQuery(name = "Users.findByTwoFactor",
       query
-      = "SELECT u FROM Users u WHERE u.twoFactor = :twoFactor")})
+      = "SELECT u FROM Users u WHERE u.twoFactor = :twoFactor")
+  ,
+  @NamedQuery(name = "Users.findAllInGroup",
+      query
+      = "SELECT u.uid FROM Users u WHERE u.bbcGroupCollection IN :roles")})
 public class Users implements Serializable {
 
   private static final long serialVersionUID = 1L;
@@ -163,7 +206,7 @@ public class Users implements Serializable {
   @NotNull
   @Enumerated(EnumType.ORDINAL)
   @Column(name = "status")
-  private PeopleAccountStatus status;
+  private UserAccountStatus status;
   @Basic(optional = false)
   @NotNull
   @Column(name = "isonline")
@@ -184,7 +227,7 @@ public class Users implements Serializable {
   @NotNull
   @Enumerated(EnumType.ORDINAL)
   @Column(name = "mode")
-  private PeopleAccountType mode;
+  private UserAccountType mode;
   @Basic(optional = false)
   @NotNull
   @Column(name = "password_changed")
@@ -220,7 +263,7 @@ public class Users implements Serializable {
   @Column(name = "tours_state")
   private int toursState;
 
-  @JoinTable(name = "hopsworks.people_group",
+  @JoinTable(name = "hopsworks.user_group",
       joinColumns = {
         @JoinColumn(name = "uid",
             referencedColumnName = "uid")},
@@ -238,20 +281,20 @@ public class Users implements Serializable {
       mappedBy = "uid")
   private Organization organization;
 
-  @OneToOne(cascade = CascadeType.ALL,
-      mappedBy = "uid")
-  private Yubikey yubikey;
-
   @OneToMany(cascade = CascadeType.ALL,
       mappedBy = "users")
   private Collection<JupyterSettings> jupyterSettingsCollection;
+
+  @OneToMany(cascade = CascadeType.ALL,
+      mappedBy = "users")
+  private Collection<TensorBoard> tensorBoardCollection;
 
 
   public Users() {
   }
 
   public Users(Integer uid, String username, String password, Date activated,
-      int falseLogin, PeopleAccountStatus status, int isonline, int maxNumProjects, int numCreatedProjects,
+      int falseLogin, UserAccountStatus status, int isonline, int maxNumProjects, int numCreatedProjects,
       int numActiveProjects) {
     this.uid = uid;
     this.username = username;
@@ -270,8 +313,8 @@ public class Users implements Serializable {
   }
 
   public Users(Integer uid, String username, String password, Date activated,
-      int falseLogin, int isonline, PeopleAccountType mode,
-      Date passwordChanged, PeopleAccountStatus status, int maxNumProjects) {
+      int falseLogin, int isonline, UserAccountType mode,
+      Date passwordChanged, UserAccountStatus status, int maxNumProjects) {
     this.uid = uid;
     this.username = username;
     this.password = password;
@@ -287,8 +330,8 @@ public class Users implements Serializable {
   }
 
   public Users(String username, String password, String email, String fname, String lname, Date activated, String title,
-      String orcid, PeopleAccountStatus status, String secret, String validationKey, SecurityQuestion securityQuestion,
-      String securityAnswer, PeopleAccountType mode, Date passwordChanged, String mobile, Integer maxNumProjects,
+      String orcid, UserAccountStatus status, String secret, String validationKey, SecurityQuestion securityQuestion,
+      String securityAnswer, UserAccountType mode, Date passwordChanged, String mobile, Integer maxNumProjects,
       boolean twoFactor, String salt, int toursState) {
     this.username = username;
     this.password = password;
@@ -314,8 +357,9 @@ public class Users implements Serializable {
     this.numActiveProjects = 0;
   }
 
+
   public Users(String username, String password, String email, String fname, String lname, String title, String orcid,
-      PeopleAccountStatus status, PeopleAccountType mode, Integer maxNumProjects, String salt) {
+      UserAccountStatus status, UserAccountType mode, Integer maxNumProjects, String salt) {
     this.username = username;
     this.password = password;
     this.email = email;
@@ -329,15 +373,6 @@ public class Users implements Serializable {
     this.salt = salt;
     this.numCreatedProjects = 0;
     this.numActiveProjects = 0;
-  }
-  
-
-  public Yubikey getYubikey() {
-    return yubikey;
-  }
-
-  public void setYubikey(Yubikey yubikey) {
-    this.yubikey = yubikey;
   }
 
   public Integer getUid() {
@@ -501,11 +536,11 @@ public class Users implements Serializable {
     this.securityAnswer = securityAnswer;
   }
 
-  public PeopleAccountType getMode() {
+  public UserAccountType getMode() {
     return mode;
   }
 
-  public void setMode(PeopleAccountType mode) {
+  public void setMode(UserAccountType mode) {
     this.mode = mode;
   }
 
@@ -533,7 +568,7 @@ public class Users implements Serializable {
     this.mobile = mobile;
   }
 
-  public PeopleAccountStatus getStatus() {
+  public UserAccountStatus getStatus() {
     return status;
   }
 
@@ -541,7 +576,7 @@ public class Users implements Serializable {
     return status.name();
   }
 
-  public void setStatus(PeopleAccountStatus status) {
+  public void setStatus(UserAccountStatus status) {
     this.status = status;
   }
 
@@ -593,6 +628,17 @@ public class Users implements Serializable {
 
   public void setToursState(int toursState) {
     this.toursState = toursState;
+  }
+
+  @XmlTransient
+  @JsonIgnore
+  public Collection<TensorBoard> getTensorBoardCollection() {
+    return tensorBoardCollection;
+  }
+
+  public void setTensorBoardCollection(
+      Collection<TensorBoard> tensorBoardCollection) {
+    this.tensorBoardCollection = tensorBoardCollection;
   }
 
   @XmlTransient

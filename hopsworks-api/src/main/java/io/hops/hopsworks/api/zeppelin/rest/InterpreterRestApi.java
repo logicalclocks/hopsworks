@@ -16,40 +16,9 @@
  */
 package io.hops.hopsworks.api.zeppelin.rest;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import javax.ejb.EJB;
-import javax.enterprise.context.RequestScoped;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-
-import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
-import io.hops.hopsworks.common.hdfs.DistributedFsService;
-import io.hops.hopsworks.common.security.CertificateMaterializer;
-import io.hops.hopsworks.common.util.HopsUtils;
-import io.hops.hopsworks.common.util.Settings;
-import org.apache.commons.lang.exception.ExceptionUtils;
-import org.apache.zeppelin.conf.ZeppelinConfiguration;
-import org.apache.zeppelin.interpreter.InterpreterSetting;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.gson.Gson;
-import org.apache.zeppelin.dep.Repository;
-import org.apache.zeppelin.interpreter.InterpreterException;
-import org.sonatype.aether.repository.RemoteRepository;
-import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstate;
-import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
-import io.hops.hopsworks.api.util.LivyController;
+import io.hops.hopsworks.common.livy.LivyController;
 import io.hops.hopsworks.api.zeppelin.rest.message.NewInterpreterSettingRequest;
 import io.hops.hopsworks.api.zeppelin.rest.message.RestartInterpreterRequest;
 import io.hops.hopsworks.api.zeppelin.rest.message.UpdateInterpreterSettingRequest;
@@ -58,23 +27,54 @@ import io.hops.hopsworks.api.zeppelin.server.ZeppelinConfig;
 import io.hops.hopsworks.api.zeppelin.server.ZeppelinConfigFactory;
 import io.hops.hopsworks.api.zeppelin.socket.NotebookServerImpl;
 import io.hops.hopsworks.api.zeppelin.socket.NotebookServerImplFactory;
-import io.hops.hopsworks.api.zeppelin.util.LivyMsg;
+import io.hops.hopsworks.common.livy.LivyMsg;
 import io.hops.hopsworks.api.zeppelin.util.SecurityUtils;
 import io.hops.hopsworks.api.zeppelin.util.TicketContainer;
 import io.hops.hopsworks.api.zeppelin.util.ZeppelinResource;
+import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstate;
+import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.service.ProjectServiceEnum;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.exception.ZeppelinException;
+import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
+import io.hops.hopsworks.common.security.CertificateMaterializer;
+import io.hops.hopsworks.common.util.HopsUtils;
+import io.hops.hopsworks.common.util.Settings;
+import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.zeppelin.conf.ZeppelinConfiguration;
+import org.apache.zeppelin.dep.Repository;
+import org.apache.zeppelin.interpreter.InterpreterException;
 import org.apache.zeppelin.interpreter.InterpreterPropertyType;
+import org.apache.zeppelin.interpreter.InterpreterSetting;
 import org.apache.zeppelin.interpreter.InterpreterSettingManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.sonatype.aether.repository.RemoteRepository;
+
+import javax.ejb.EJB;
+import javax.enterprise.context.RequestScoped;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
 
 /**
  * Interpreter Rest API
@@ -264,37 +264,15 @@ public class InterpreterRestApi {
   }
   
   private void cleanUserCertificates(Project project) {
-    DistributedFileSystemOps dfso = null;
-    try {
-      if (!areRunningInterpretersForProject(project)) {
-        
-        dfso = dfsService.getDfsOps();
-        HopsUtils
-            .cleanupCertificatesForProject(project.getName(),
-                settings.getHdfsTmpCertDir(), dfso, certificateMaterializer);
-        certificateMaterializer.closedInterpreter(project.getId());
-      }
-    } catch (IOException ex) {
-      logger.warn("Could not remove materialized certificates for user " + project.getOwner().getUsername(), ex);
-    } catch (AppException ex) {
-      logger.error("Exception while trying to get running interpreters for project: " + project.getName()
-          + " Cleaning certificates...", ex);
-      dfso = dfsService.getDfsOps();
-      try {
-        certificateMaterializer.closedInterpreter(project.getId());
-        HopsUtils.cleanupCertificatesForProject(project.getName(), settings.getHdfsTmpCertDir(), dfso,
-            certificateMaterializer);
-      } catch (IOException ex1) {
-        logger.error("Could not clean certificates!", ex1);
-      }
-    } finally {
-      if (null != dfso) {
-        dfso.close();
-      }
+    if (!areRunningInterpretersForProject(project)) {
+      HopsUtils.cleanupCertificatesForProject(project.getName(), settings.getHdfsTmpCertDir(),
+        certificateMaterializer, settings);
+      certificateMaterializer.closedInterpreter(project.getId());
     }
+    
   }
 
-  private boolean areRunningInterpretersForProject(Project project) throws AppException {
+  private boolean areRunningInterpretersForProject(Project project) {
     Map<String, InterpreterDTO> interpreters = interpreters(project);
     boolean running = false;
     for (Map.Entry<String, InterpreterDTO> interpreter : interpreters.entrySet()) {
@@ -312,12 +290,11 @@ public class InterpreterRestApi {
    *
    * @param sessionId
    * @return
-   * @throws AppException
    */
   @GET
   @Path("/livy/sessions/appId/{sessionId}")
   @Produces(MediaType.TEXT_PLAIN)
-  public Response getLivySessionAppId(@PathParam("sessionId") int sessionId) throws AppException {
+  public Response getLivySessionAppId(@PathParam("sessionId") int sessionId) throws ZeppelinException {
     LivyMsg.Session session = livyService.getLivySession(sessionId);
     if (session == null) {
       return new JsonResponse(Response.Status.NOT_FOUND, "Session '" + sessionId + "' not found.").build();
@@ -325,7 +302,7 @@ public class InterpreterRestApi {
     String projName = hdfsUsersController.getProjectName(session.getProxyUser());
 
     if (!this.project.getName().equals(projName)) {
-      throw new AppException(Status.BAD_REQUEST.getStatusCode(), "You can't stop sessions in another project.");
+      throw new ZeppelinException(RESTCodes.ZeppelinErrorCode.STOP_SESSIONS_FORBIDDEN, Level.FINE);
     }
 
     List<YarnApplicationstate> appStates = appStateBean.findByAppname("livy-session-" + sessionId);
@@ -342,13 +319,11 @@ public class InterpreterRestApi {
    * Get spark interpreter Yarn AppId
    *
    * @return
-   * @throws AppException
    */
   @GET
   @Path("/spark/appId")
   @Produces(MediaType.TEXT_PLAIN)
-  public Response getSparkSessionAppId()
-      throws AppException {
+  public Response getSparkSessionAppId() {
     List<YarnApplicationstate> appStates = appStateBean.findByAppname(this.project.getName() + "-Zeppelin");
     if (appStates == null || appStates.isEmpty()) {
       return new JsonResponse(Response.Status.NOT_FOUND, "Zeppelin not running for project " + this.project.getName()).
@@ -364,12 +339,11 @@ public class InterpreterRestApi {
    * @param sessionId
    * @param settingId
    * @return
-   * @throws AppException
    */
   @DELETE
   @Path("/livy/sessions/delete/{settingId}/{sessionId}")
-  public Response stopSession(@PathParam("settingId") String settingId, @PathParam("sessionId") int sessionId) throws
-      AppException {
+  public Response stopSession(@PathParam("settingId") String settingId, @PathParam("sessionId") int sessionId)
+    throws ZeppelinException {
     logger.info("Restart interpreterSetting {}", settingId);
     InterpreterSetting setting = interpreterSettingManager.get(settingId);
     LivyMsg.Session session = livyService.getLivySession(sessionId);
@@ -378,7 +352,7 @@ public class InterpreterRestApi {
     }
     String projName = hdfsUsersController.getProjectName(session.getProxyUser());
     if (!this.project.getName().equals(projName)) {
-      throw new AppException(Status.BAD_REQUEST.getStatusCode(), "You can't stop sessions in another project.");
+      throw new ZeppelinException(RESTCodes.ZeppelinErrorCode.STOP_SESSIONS_FORBIDDEN, Level.FINE);
     }
     List<LivyMsg.Session> sessions = livyService.getLivySessionsForProjectUser(this.project, this.user,
         ProjectServiceEnum.ZEPPELIN);
@@ -391,9 +365,7 @@ public class InterpreterRestApi {
         }
       }
     } catch (InterpreterException e) {
-      logger.warn("Could not close interpreter.", e);
-      throw new AppException(Status.BAD_REQUEST.getStatusCode(),
-          "Could not close interpreter. Make sure it is not running.");
+      throw new ZeppelinException(RESTCodes.ZeppelinErrorCode.INTERPRETER_CLOSE_ERROR, Level.SEVERE);
     }
 
     int timeout = zeppelinConf.getConf().getInt(ZeppelinConfiguration.ConfVars.ZEPPELIN_INTERPRETER_CONNECT_TIMEOUT);
@@ -506,16 +478,15 @@ public class InterpreterRestApi {
    * list interpreters with status(running or not).
    * <p/>
    * @return nothing if successful.
-   * @throws AppException
    */
   @GET
   @Path("interpretersWithStatus")
-  public Response getinterpretersWithStatus() throws AppException {
+  public Response getinterpretersWithStatus() {
     Map<String, InterpreterDTO> interpreters = interpreters(project);
     return new JsonResponse(Status.OK, "", interpreters).build();
   }
 
-  private Map<String, InterpreterDTO> interpreters(Project project) throws AppException {
+  private Map<String, InterpreterDTO> interpreters(Project project) {
     Map<String, InterpreterDTO> interpreterDTOs = new HashMap<>();
     List<InterpreterSetting> interpreterSettings;
     interpreterSettings = interpreterSettingManager.get();
@@ -538,18 +509,16 @@ public class InterpreterRestApi {
    * and project
    *
    * @return
-   * @throws AppException
    */
   @GET
   @Path("restart")
-  public Response restart() throws AppException {
+  public Response restart() throws ZeppelinException {
     Long timeSinceLastRestart;
     Long lastRestartTime = zeppelinConfFactory.getLastRestartTime(this.project.getName());
     if (lastRestartTime != null) {
       timeSinceLastRestart = System.currentTimeMillis() - lastRestartTime;
       if (timeSinceLastRestart < 60000 * 1) {
-        throw new AppException(Status.BAD_REQUEST.getStatusCode(), "This service has been restarted recently. "
-            + "Please wait a few minutes before trying again.");
+        throw new ZeppelinException(RESTCodes.ZeppelinErrorCode.RESTART_ERROR, Level.FINE);
       }
     }
     Map<String, InterpreterDTO> interpreterDTOMap = interpreters(this.project);

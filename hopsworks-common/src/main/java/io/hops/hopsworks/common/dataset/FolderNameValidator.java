@@ -1,20 +1,52 @@
+/*
+ * Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
+ * This file is part of Hopsworks
+ * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ *
+ * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU Affero General Public License as published by the Free Software Foundation,
+ * either version 3 of the License, or (at your option) any later version.
+ *
+ * Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
+ * Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this
+ * software and associated documentation files (the "Software"), to deal in the Software
+ * without restriction, including without limitation the rights to use, copy, modify, merge,
+ * publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+ * persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or
+ * substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  OR IMPLIED, INCLUDING
+ * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+ * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
 package io.hops.hopsworks.common.dataset;
 
-import io.hops.hopsworks.common.constants.message.ResponseMessages;
-import javax.validation.ValidationException;
-import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.common.exception.DatasetException;
+import io.hops.hopsworks.common.exception.ProjectException;
+import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.util.ProjectUtils;
 
-/**
- * Validator for folder names. A folder name is valid if:
- * <ul>
- * <li> It is not empty. </li>
- * <li> It is not longer than 24 characters.</li>
- * <li> It does not end with a dot.</li>
- * <li> It does not contain any of the disallowed characters space (only for Dataset and Project dirs), /, \, ?, *,
- * :, |, ', \", &lt;, &gt; >, %, (, ), &, ;, #, __</li>
- * </ul>
- * <p/>
- */
+import java.util.logging.Level;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class FolderNameValidator {
 
   /**
@@ -22,77 +54,48 @@ public class FolderNameValidator {
    * <p/>
    * @param name
    * @param subdir Indicates a directory under a top-level dataset
-   * @return
-   * @throws ValidationException If the given String is not a valid folder name.
    */
-  public static boolean isValidName(String name, boolean subdir) {
-    String reason = "";
-    boolean valid = true;
-    if (name == null || name.isEmpty()) {
-      valid = false;
-      reason = ResponseMessages.FOLDER_NAME_NOT_SET;
-    } else if (name.length() > 88) {
-      valid = false;
-      reason = ResponseMessages.FOLDER_NAME_TOO_LONG;
-    } else if (name.endsWith(".")) {
-      valid = false;
-      reason = ResponseMessages.FOLDER_NAME_ENDS_WITH_DOT;
-    } else if (name.contains("" + Settings.DOUBLE_UNDERSCORE)) {
-      valid = false;
-      reason = ResponseMessages.FOLDER_NAME_CONTAIN_DISALLOWED_CHARS
-              + Settings.FILENAME_DISALLOWED_CHARS + Settings.DOUBLE_UNDERSCORE;
+  private static Pattern datasetNameRegex = Pattern.compile("^((?!__)[-_a-zA-Z0-9\\.]){1,87}[-_a-zA-Z0-9]$");
+  private static Pattern subDirNameRegex = Pattern.compile("^((?!__)[-_a-zA-Z0-9 \\.]){0,87}[-_a-zA-Z0-9]$");
+
+  public static void isValidName(String name, boolean subdir) throws DatasetException {
+    if (name == null) {
+      throw new IllegalArgumentException("Dataset name is null");
+    }
+
+    Matcher m;
+    if (subdir) {
+      m = subDirNameRegex.matcher(name);
     } else {
-      char[] disallowedChars = Settings.FILENAME_DISALLOWED_CHARS.toCharArray();
-      if (subdir) {
-        disallowedChars = Settings.SUBDIR_DISALLOWED_CHARS.toCharArray();
-      }
-      for (char c : disallowedChars ) {
-        if (name.contains("" + c)) {
-          valid = false;
-          reason = ResponseMessages.FOLDER_NAME_CONTAIN_DISALLOWED_CHARS
-                  + Settings.FILENAME_DISALLOWED_CHARS
-                  + Settings.DOUBLE_UNDERSCORE;
-        }
-      }
+      m = datasetNameRegex.matcher(name);
     }
-    if (!valid) {
-      throw new ValidationException(reason);
+
+    if (!m.find()) {
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NAME_INVALID, Level.FINE);
     }
-    return valid;
   }
-  
-  public static boolean isValidProjectName(String name, boolean subdir) {
-    String reason = "";
-    boolean valid = true;
-    if (name == null || name.isEmpty()) {
-      valid = false;
-      reason = ResponseMessages.FOLDER_NAME_NOT_SET;
-    } else if (name.length() > 88) {
-      valid = false;
-      reason = ResponseMessages.FOLDER_NAME_TOO_LONG;
-    } else if (name.endsWith(".")) {
-      valid = false;
-      reason = ResponseMessages.FOLDER_NAME_ENDS_WITH_DOT;
-    } else if (name.contains("" + Settings.DOUBLE_UNDERSCORE)) {
-      valid = false;
-      reason = ResponseMessages.FOLDER_NAME_CONTAIN_DISALLOWED_CHARS
-              + Settings.PRINT_PROJECT_DISALLOWED_CHARS + Settings.DOUBLE_UNDERSCORE;
-    } else {
-      char[] disallowedChars = Settings.PROJECT_DISALLOWED_CHARS.toCharArray();
-      if (subdir) {
-        disallowedChars = Settings.SUBDIR_DISALLOWED_CHARS.toCharArray();
-      }
-      for (char c : disallowedChars ) {
-        if (name.contains("" + c)) {
-          valid = false;
-          reason = ResponseMessages.FOLDER_NAME_CONTAIN_DISALLOWED_CHARS + Settings.PRINT_PROJECT_DISALLOWED_CHARS
-                  + Settings.DOUBLE_UNDERSCORE;
-        }
+
+  private static Pattern projectNameRegexValidator = Pattern.compile(
+      "^[a-zA-Z0-9]((?!__)[_a-zA-Z0-9]){0,61}[a-zA-Z0-9]$");
+
+  /**
+   * Check if the given String is a valid Project name.
+   * <p/>
+   * @param name
+   */
+  public static void isValidProjectName(ProjectUtils projectUtils, String name) throws ProjectException {
+    if (name == null) {
+      throw new IllegalArgumentException("Project name is null");
+    }
+
+    for (String reservedName : projectUtils.getReservedProjectNames()) {
+      if (name.compareToIgnoreCase(reservedName) == 0) {
+        throw new ProjectException(RESTCodes.ProjectErrorCode.RESERVED_PROJECT_NAME, Level.FINE);
       }
     }
-    if (!valid) {
-      throw new ValidationException(reason);
+    Matcher m = projectNameRegexValidator.matcher(name);
+    if (!m.find()) {
+      throw new ProjectException(RESTCodes.ProjectErrorCode.INVALID_PROJECT_NAME, Level.FINE);
     }
-    return valid;
   }
 }

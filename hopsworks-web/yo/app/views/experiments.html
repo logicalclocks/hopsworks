@@ -1,0 +1,94 @@
+<!--
+  ~ This file is part of Hopsworks
+  ~ Copyright (C) 2018, Logical Clocks AB. All rights reserved
+  ~
+  ~ Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+  ~ the GNU Affero General Public License as published by the Free Software Foundation,
+  ~ either version 3 of the License, or (at your option) any later version.
+  ~
+  ~ Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+  ~ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+  ~ PURPOSE.  See the GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License along with this program.
+  ~ If not, see <https://www.gnu.org/licenses/>.
+  -->
+<div ng-controller="MainCtrl as mainCtrl">
+    <div ng-controller="ProjectCtrl as projectCtrl">
+        <div ng-include="'nav.html'"></div>
+        <div id="wrapper" class="toggled">
+            <div class="overlay"></div>
+            <div ng-include="'navProject.html'"></div>
+            <div class="">
+                <section ng-controller="ExperimentsCtrl as experimentsCtrl">
+                    <!-- Page Content -->
+                    <div class="content-wrapper hide-border" style="margin-left: 2px;">
+                        <div ng-if="experimentsCtrl.loading" class="loadingwrap">
+                            <div class="loading-content">
+                                <div class="loader-in-wrap"></div>
+                                {{experimentsCtrl.loadingText}}
+                            </div>
+                        </div>
+                        <div class="row" style="margin-left: 5px;">
+                            <div class="row" style="padding-bottom:3px">
+                                <div class="col-md-12" ng-if="experimentsCtrl.tb === ''">
+                           <span class="col-md-3" style="margin-left:-15px;">
+                           <button ng-click="experimentsCtrl.kibanaUI();
+                              $event.stopPropagation();"
+                                   class="btn btn-primary btn-md fa fa-table" style="font-size:0.9em; padding:7px 10px; background-color:#005571;"
+                                   onmouseover="this.style.backgroundColor='#004159'" onmouseout="this.style.backgroundColor='#005571'"> Experiments Summary
+                           </button>
+                           </span>
+                                    <div class="col-md-1">
+                                        <img height="30" src="images/tf-175x200.png" style="float:right;"/>
+                                    </div>
+                                    <span class="field-info input-group col-md-4" ng-if="experimentsCtrl.tb === ''" uib-tooltip="Search for specific experiment given id" style="padding-left:3px;">
+                              <input type="text" class="form-control" style="height: 32px;" placeholder="Start TensorBoard for given experiment _id" ng-model="experimentsCtrl.id" ng-keyup="experimentsCtrl.hitEnter($event);">
+                              <div class="input-group-btn" style="width: 54px;">
+                                 <button class="btn btn-default" style="color: #028e9b; padding: 6px 12px; height:32px;"
+                                         ng-click="experimentsCtrl.startTB(); $event.stopPropagation();" type="button">
+                                 <i class="fa fa-line-chart"></i>
+                                 </button>
+                              </div>
+                           </span>
+                                </div>
+                                <div class="col-md-12" ng-if="experimentsCtrl.tb !== ''">
+                           <span class="col-md-4" style="margin-left:-15px; padding-bottom:1px;">
+                           <button style="font-size:0.9em; padding:7px 10px; background-color:#005571;"
+                                   ng-click="experimentsCtrl.kibanaUI();
+                              $event.stopPropagation();"
+                                   class="btn btn-primary btn-md fa fa-table"
+                                   onmouseover="this.style.backgroundColor='#004159'" onmouseout="this.style.backgroundColor='#005571'"> Experiments Summary
+                           </button>
+                               <button uib-tooltip="View TensorBoard"
+                                       tooltip-placement="auto top"
+                                       ng-click="experimentsCtrl.viewTB();
+                              $event.stopPropagation();"
+                                       type="button" class="btn btn-md" style="padding:2px 5px; border:1px solid gray;"
+                                       onmouseover="this.style.backgroundColor='lightgray'" onmouseout="this.style.backgroundColor='white'">
+                                   <img src="images/tf-175x200.png" height="29" />
+                           </button>
+                               <button uib-tooltip="Shutdown TensorBoard"
+                                       tooltip-placement="auto top"
+                                       ng-click="experimentsCtrl.stopTB();"
+                                       type="button" class="btn btn-danger btn-md glyphicon glyphicon-off" style="padding:6px 11px; margin-bottom:1px;">
+                           </button>
+                           </span>
+                                    <span style="font-size:16px; margin-right:45px; float:right; padding-top:5px;">
+                                        <span>
+                                        Showing TensorBoard for experiment   <b>{{experimentsCtrl.tb.elasticId}}</b>
+                                            </span>
+                           </span>
+                                </div>
+                            </div>
+                            <div ng-if="experimentsCtrl.ui !== ''">
+                                <iframe style="overflow-y: auto" id="ui_iframe"  ng-src="{{experimentsCtrl.ui}}" width="99%" height ="86%"></iframe>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+</div>
+

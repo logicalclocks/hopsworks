@@ -1,3 +1,41 @@
+/*
+ * Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
+ * This file is part of Hopsworks
+ * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ *
+ * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU Affero General Public License as published by the Free Software Foundation,
+ * either version 3 of the License, or (at your option) any later version.
+ *
+ * Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
+ * Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this
+ * software and associated documentation files (the "Software"), to deal in the Software
+ * without restriction, including without limitation the rights to use, copy, modify, merge,
+ * publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+ * persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or
+ * substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  OR IMPLIED, INCLUDING
+ * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+ * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
 package io.hops.hopsworks.common.dao.project;
 
 import java.util.Date;
@@ -6,7 +44,6 @@ import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
-import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.AbstractFacade;
@@ -37,7 +74,7 @@ public class ProjectFacade extends AbstractFacade<Project> {
     return em.find(Project.class, id);
   }
 
-  public Project findByInodeId(Integer parentId, String name) {
+  public Project findByInodeId(Long parentId, String name) {
     TypedQuery<Project> query = this.em.
         createNamedQuery("Project.findByInodeId", Project.class).
         setParameter("parentid", parentId).setParameter("name", name);
@@ -117,48 +154,6 @@ public class ProjectFacade extends AbstractFacade<Project> {
   }
 
   /**
-   * Count the number of studies for which the given user is owner.
-   * <p/>
-   * @param owner
-   * @return
-   */
-  public int countOwnedStudies(Users owner) {
-    TypedQuery<Long> query = em.createNamedQuery("Project.countProjectByOwner",
-        Long.class);
-    query.setParameter("owner", owner);
-    return query.getSingleResult().intValue();
-  }
-
-  /**
-   * Count the number of studies for which the owner has the given email.
-   * <p/>
-   * @param email
-   * @return The number of studies.
-   * @deprecated Use countOwnedStudies(User owner) instead.
-   */
-  public int countOwnedStudies(String email) {
-    TypedQuery<Users> query = em.createNamedQuery("Users.findByEmail",
-        Users.class);
-    query.setParameter("email", email);
-    //TODO: may throw an exception
-    Users user = query.getSingleResult();
-    return countOwnedStudies(user);
-  }
-
-  /**
-   * Find all the studies owned by the given user.
-   * <p/>
-   * @param user
-   * @return
-   */
-  public List<Project> findOwnedStudies(Users user) {
-    TypedQuery<Project> query = em.createNamedQuery("Project.findByOwner",
-        Project.class);
-    query.setParameter("owner", user);
-    return query.getResultList();
-  }
-
-  /**
    * Get the owner of the given project.
    * <p/>
    * @param project The project for which to get the current owner.
@@ -235,10 +230,9 @@ public class ProjectFacade extends AbstractFacade<Project> {
    * @return
    */
   public boolean projectExists(String name) {
-    TypedQuery<Project> query = em.createNamedQuery("Project.findByName",
-        Project.class);
-    query.setParameter("name", name);
-    return !query.getResultList().isEmpty();
+    return !(em.createNamedQuery("Project.findByNameCaseInsensitive", Project.class)
+        .setParameter("name", name)
+        .getResultList().isEmpty());
   }
 
   /**
@@ -318,29 +312,6 @@ public class ProjectFacade extends AbstractFacade<Project> {
     }
   }
 
-  public List<Project> findAllExpiredStudies() {
-
-    Query q = em.createNativeQuery(
-        "SELECT * FROM hopsworks.project WHERE ethical_status='APPROVED' AND retention_period < NOW()",
-        Project.class);
-
-    List<Project> st = q.getResultList();
-    if (st == null) {
-      return null;
-    }
-    return st;
-  }
-
-  public boolean updateStudyStatus(Project st, String name) {
-
-    if (st != null) {
-      st.setEthicalStatus(name);
-      em.merge(st);
-      return true;
-    }
-    return false;
-  }
-
   public boolean numProjectsLimitReached(Users user) {
     if (user.getMaxNumProjects() > 0 && user.getNumCreatedProjects() >= user.getMaxNumProjects()) {
       return true;
@@ -352,5 +323,20 @@ public class ProjectFacade extends AbstractFacade<Project> {
     project.setLastQuotaUpdate(timestamp);
     em.merge(project);
     em.flush();
+  }
+
+  public void changeKafkaQuota(Project project, int numTopics) {
+    project.setKafkaMaxNumTopics(numTopics);
+    em.merge(project);
+  }
+  
+  /**
+   * Find all Projects which are Conda enabled
+   *
+   * @return list of Conda enabled projects
+   */
+  public List<Project> findAllCondaEnabled() {
+    TypedQuery<Project> query = em.createNamedQuery("Project.findAllCondaEnabled", Project.class);
+    return query.getResultList();
   }
 }

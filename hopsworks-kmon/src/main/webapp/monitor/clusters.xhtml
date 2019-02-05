@@ -1,5 +1,44 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+<!--
+  ~ Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+  ~ are released under the following license:
+  ~
+  ~ This file is part of Hopsworks
+  ~ Copyright (C) 2018, Logical Clocks AB. All rights reserved
+  ~
+  ~ Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+  ~ the GNU Affero General Public License as published by the Free Software Foundation,
+  ~ either version 3 of the License, or (at your option) any later version.
+  ~
+  ~ Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+  ~ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+  ~ PURPOSE.  See the GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License along with this program.
+  ~ If not, see <https://www.gnu.org/licenses/>.
+  ~
+  ~ Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+  ~ are released under the following license:
+  ~
+  ~ Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
+  ~
+  ~ Permission is hereby granted, free of charge, to any person obtaining a copy of this
+  ~ software and associated documentation files (the "Software"), to deal in the Software
+  ~ without restriction, including without limitation the rights to use, copy, modify, merge,
+  ~ publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+  ~ persons to whom the Software is furnished to do so, subject to the following conditions:
+  ~
+  ~ The above copyright notice and this permission notice shall be included in all copies or
+  ~ substantial portions of the Software.
+  ~
+  ~ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  OR IMPLIED, INCLUDING
+  ~ BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+  ~ NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+  ~ DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  ~ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+  -->
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml"   
       xmlns:f="http://java.sun.com/jsf/core"
@@ -28,9 +67,10 @@
       </h:form>
       <!--Navigation Bar - End-->
 
-      <div class="services-header">#{clustersController.clusters.size()} Cluster<h:outputText value ="s" rendered="#{clustersController.clusters.size()>1}"/> Under Management:</div>
+      <div class="services-header">#{clustersController.clusters.size()} Cluster
+        <h:outputText value ="s" rendered="#{clustersController.clusters.size()>1}"/> Under Management:</div>
 
-      <p:panel header="Clusters">  
+        <p:panel header="Clusters" class="cluster-contener">  
         <h:form id="formServices">  
 
           <p:growl id="messages"/>  
@@ -44,32 +84,32 @@
               </p:commandLink> 
             </p:column> 
 
-            <p:column headerText="Services">
-              <ui:repeat value="#{cluster.services}" var="service" varStatus="status">
-                <p:commandLink styleClass="Health-#{cluster.serviceHealth(service)}" 
-                               action="#{urlController.serviceStatus}" ajax="false">
-                  <h:outputText value="#{service}"/>
+            <p:column headerText="Groups">
+              <ui:repeat value="#{cluster.groups}" var="group" varStatus="status">
+                <p:commandLink styleClass="Health-#{cluster.groupHealth(group)}" 
+                               action="#{urlController.groupStatus}" ajax="false">
+                  <h:outputText value="#{group}"/>
                   <f:param name="cluster" value="#{cluster.name}"/>
-                  <f:param name="service" value="#{service}"/>
+                  <f:param name="group" value="#{group}"/>
                 </p:commandLink>
                 <p:spacer width="6" height="0" rendered="#{!status.last}"/>
               </ui:repeat>
             </p:column>
 
-            <p:column headerText="Roles">
-              <ui:repeat value="#{cluster.roles}" var="role" varStatus="status">
-                <p:commandLink styleClass="Health-#{cluster.roleHealth(role)}" 
-                               action="#{urlController.serviceInstances()}" ajax="false">
-                  <h:outputText value="${cluster.roleCount(role)} ${role}" style="white-space: nowrap"/>
+            <p:column headerText="Services">
+              <ui:repeat value="#{cluster.services}" var="service" varStatus="status">
+                <p:commandLink styleClass="Health-#{cluster.serviceHealth(service)}" 
+                               action="#{urlController.groupInstances()}" ajax="false">
+                  <h:outputText value="${cluster.serviceCount(service)} ${service}" style="white-space: nowrap"/>
                   <f:param name="cluster" value="#{cluster.name}"/>
-                  <f:param name="role" value="#{role}"/>
-                  <f:param name="service" value="#{cluster.roleService(role)}"/>
+                  <f:param name="group" value="#{cluster.serviceGroup(service)}"/>
+                  <f:param name="service" value="#{service}"/>
                 </p:commandLink>
                 <p:spacer width="6" height="0" rendered="#{!status.last}"/>
               </ui:repeat>
             </p:column>                                    
 
-            <p:column headerText="Roles Status">
+            <p:column headerText="Service Status">
               <ui:repeat value="#{cluster.status.entrySet().toArray()}" var="item" varStatus="status">
                 <h:outputText value="${item.value} ${item.key}" styleClass="Status-${item.key}" style="white-space: nowrap"/>
                 <h:outputText value=", " rendered="#{!status.last}"/>
@@ -80,22 +120,13 @@
               <h:outputText value="#{cluster.clusterHealth}"/>
             </p:column>                    
 
-            <p:column headerText="Hosts"><h:outputText value="#{cluster.numberOfMachines}"/></p:column>
+            <p:column headerText="Hosts"><h:outputText value="#{cluster.numberOfHosts}"/></p:column>
             <p:column headerText="Cores"><h:outputText value="#{cluster.totalCores}"/></p:column>
+            <p:column headerText="GPUs"><h:outputText value="#{cluster.totalGPUs}"/></p:column>
             <p:column headerText="Disk Capacity"><h:outputText value="#{cluster.totalDiskCapacity}"/></p:column>
             <p:column headerText="Memory Capacity"><h:outputText value="#{cluster.totalMemoryCapacity}"/></p:column> 
 
-            <!--                        <p:column headerText="Actions" style="width:10%">
-                                        <p:menuButton value="Actions" disabled="true">  
-                                            <p:menuitem disabled="true" value="Delete cluster" 
-                                                        update=":formServices:messages" 
-                                                        actionListener="#{serviceController.stopService()}" />  
-                                            <p:menuitem disabled="true" value="Restart..." update=":formServices:messages" actionListener="#{serviceController.restartService()}"/>  
-                                            <p:separator />  
-                                            <p:menuitem disabled="true" value="Delete..." update=":formServices:messages" actionListener="#{serviceController.deleteService()}"/>  
-                                        </p:menuButton>  
-                                    </p:column>-->
-          </p:dataTable>  
+          </p:dataTable>
 
           <p:panel>
             <iframe id="grafana_iframe"  src="/hopsworks-api/grafana/dashboard/script/admin.js?hostname=#{clustersController.nameNodesString}&amp;services=HDFS,YARN" width="98%" height="1500px" align="middle"></iframe> 

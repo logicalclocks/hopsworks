@@ -1,3 +1,42 @@
+/*
+ * Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
+ * This file is part of Hopsworks
+ * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ *
+ * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU Affero General Public License as published by the Free Software Foundation,
+ * either version 3 of the License, or (at your option) any later version.
+ *
+ * Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
+ * Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this
+ * software and associated documentation files (the "Software"), to deal in the Software
+ * without restriction, including without limitation the rights to use, copy, modify, merge,
+ * publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+ * persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or
+ * substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  OR IMPLIED, INCLUDING
+ * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+ * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package io.hops.hopsworks.admin.security.ua;
 
 import java.io.Serializable;
@@ -8,7 +47,7 @@ import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
 import io.hops.hopsworks.common.dao.user.UserFacade;
-import io.hops.hopsworks.common.dao.user.security.ua.PeopleAccountStatus;
+import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.user.AuthController;
 import io.hops.hopsworks.common.user.UsersController;
@@ -28,17 +67,8 @@ public class RoleEnforcementPoint implements Serializable {
   @EJB
   private UserFacade userFacade;
 
-  private boolean open_requests = false;
   private int tabIndex;
   private Users user;
-
-  public boolean isOpen_requests() {
-    return checkForRequests();
-  }
-
-  public void setOpen_requests(boolean open_reauests) {
-    this.open_requests = open_reauests;
-  }
 
   public Users getUserFromSession() {
     if (user == null) {
@@ -86,17 +116,6 @@ public class RoleEnforcementPoint implements Serializable {
     return usersController.isUserInRole(p, "HOPS_USER");
   }
 
-  public boolean isAuditorRole() {
-
-    Users p = userFacade.findByEmail(getRequest().getRemoteUser());
-    return (usersController.isUserInRole(p, "AUDITOR") || !usersController.isUserInRole(p, "HOPS_ADMIN"));
-  }
-
-  public boolean isAgentRole() {
-    Users p = userFacade.findByEmail(getRequest().getRemoteUser());
-    return (usersController.isUserInRole(p,"AGENT"));
-  }
-
   public boolean isOnlyAuditorRole() {
     Users p = userFacade.findByEmail(getRequest().getRemoteUser());
     return (usersController.isUserInRole(p,"AUDITOR") && !usersController.isUserInRole(p,"HOPS_ADMIN"));
@@ -109,11 +128,10 @@ public class RoleEnforcementPoint implements Serializable {
   public boolean checkForRequests() {
     if (isAdmin()) {
       //return false if no requests
-      open_requests = !(userFacade.findAllByStatus(PeopleAccountStatus.NEW_MOBILE_ACCOUNT).isEmpty())
-              || !(userFacade.findAllByStatus(PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT).isEmpty()
-              || !(userFacade.findAllByStatus(PeopleAccountStatus.VERIFIED_ACCOUNT).isEmpty()));
+      return !(userFacade.findAllByStatus(UserAccountStatus.NEW_MOBILE_ACCOUNT).isEmpty())
+              || !(userFacade.findAllByStatus(UserAccountStatus.VERIFIED_ACCOUNT).isEmpty());
     }
-    return open_requests;
+    return false;
   }
 
   public boolean isLoggedIn() {
@@ -123,17 +141,13 @@ public class RoleEnforcementPoint implements Serializable {
   public String openRequests() {
     this.tabIndex = 1;
     if (!userFacade.findAllMobileRequests().isEmpty()) {
-      return "mobUsers";
-    } else if (!userFacade.findYubikeyRequests().isEmpty()) {
-      return "yubikeyUsers";
-    } else if (!userFacade.findAllByStatus(PeopleAccountStatus.SPAM_ACCOUNT).isEmpty()) {
+      return "newUsers";
+    } else if (!userFacade.findAllByStatus(UserAccountStatus.SPAM_ACCOUNT).isEmpty()) {
       return "spamUsers";
     }
-
-    return "mobUsers";
+    return "newUsers";
   }
 
-  // MOVE OUT THIS
   public String logOut() {
     try {
       this.user = getUserFromSession();

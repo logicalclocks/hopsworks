@@ -1,10 +1,52 @@
+=begin
+ Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ are released under the following license:
+
+ This file is part of Hopsworks
+ Copyright (C) 2018, Logical Clocks AB. All rights reserved
+
+ Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ the GNU Affero General Public License as published by the Free Software Foundation,
+ either version 3 of the License, or (at your option) any later version.
+
+ Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ PURPOSE.  See the GNU Affero General Public License for more details.
+
+ You should have received a copy of the GNU Affero General Public License along with this program.
+ If not, see <https://www.gnu.org/licenses/>.
+
+ Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ are released under the following license:
+
+ Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
+
+ Permission is hereby granted, free of charge, to any person obtaining a copy of this
+ software and associated documentation files (the "Software"), to deal in the Software
+ without restriction, including without limitation the rights to use, copy, modify, merge,
+ publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+ persons to whom the Software is furnished to do so, subject to the following conditions:
+
+ The above copyright notice and this permission notice shall be included in all copies or
+ substantial portions of the Software.
+
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  OR IMPLIED, INCLUDING
+ BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+ DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+=end
 module SessionHelper
   def with_valid_session
     unless @cookies
       reset_and_create_session
     end
     get "#{ENV['HOPSWORKS_API']}/auth/session"
-    if json_body[:status] != "SUCCESS"
+    if response.code != 200
+      reset_and_create_session
+    end
+    get "#{ENV['HOPSWORKS_API']}/auth/jwt/session"
+    if response.code != 200
       reset_and_create_session
     end
   end
@@ -14,23 +56,37 @@ module SessionHelper
     create_admin_role(user)
     create_session(user.email, "Pass123")
   end
-  
+
+  def with_agent_session
+    create_session("agent@hops.io", "admin")
+  end
+
+  def with_cluster_agent_session
+    create_role_type("CLUSTER_AGENT")
+    create_cluster_agent_role(User.find_by(email: "agent@hops.io"))
+    create_session("agent@hops.io", "admin")
+  end
+
   def reset_and_create_session()
     reset_session
     user = create_user
     post "#{ENV['HOPSWORKS_API']}/auth/login", URI.encode_www_form({ email: user.email, password: "Pass123"}), { content_type: 'application/x-www-form-urlencoded'}
     expect_json(sessionID: ->(value){ expect(value).not_to be_empty})
-    expect_json(status: "SUCCESS")
+    expect(response.code).to eq(200)
     if !headers["set_cookie"][1].nil?
       cookie = headers["set_cookie"][1].split(';')[0].split('=')
       @cookies = {"SESSIONID"=> json_body[:sessionID], cookie[0] => cookie[1]}
     else 
       @cookies = {"SESSIONID"=> json_body[:sessionID]}
     end
+    if !headers["authorization"].nil?
+      @token = headers["authorization"]
+    end
     @user = user
     Airborne.configure do |config|
       config.headers = {:cookies => @cookies, content_type: 'application/json' }
-    end    
+      config.headers["Authorization"] = @token
+    end  
   end
   
   def register_user(params={})
@@ -49,6 +105,13 @@ module SessionHelper
     
     post "#{ENV['HOPSWORKS_API']}/auth/register", user
   end
+  
+  def create_new_mobile_user(params={})
+    params[:email] = "#{random_id}@email.com" unless params[:email]
+    register_user(params)
+    user = User.find_by(email: params[:email])
+    user
+  end
 
   def create_validated_user(params={})
     params[:email] = "#{random_id}@email.com" unless params[:email]
@@ -56,14 +119,17 @@ module SessionHelper
     user = User.find_by(email: params[:email])
     key = user.username + user.validation_key
     get "#{ENV['HOPSWORKS_ADMIN']}/security/validate_account.xhtml", {params: {key: key}}
+    user
   end
 
   def reset_session
     get "#{ENV['HOPSWORKS_API']}/auth/logout"
     @cookies = nil
+    @token = nil
     @user = nil
     Airborne.configure do |config|
       config.headers = {:cookies => {}, content_type: 'application/json' }
+      config.headers["Authorization"] = ""
     end
   end
 
@@ -76,25 +142,74 @@ module SessionHelper
     else 
       cookies = {"SESSIONID"=> json_body[:sessionID]}
     end
+    token = ''
+    if !headers["authorization"].nil?
+      token = headers["authorization"]
+    end
     Airborne.configure do |config|
       config.headers = {:cookies => cookies, content_type: 'application/json' }
+      config.headers["Authorization"] = token
     end
     cookies
   end
-
+  
+  def get_user_roles(user)
+    roles = Array.new
+    user_group = UserGroup.where(uid: user.uid).to_a      
+    user_group.each do | g |
+      group = BbcGroup.find_by(gid: g.gid)
+      roles.push(group.group_name)
+    end
+    roles
+  end
+  
+  def get_roles(email)
+    user = User.find_by(email: email)
+    get_user_roles(user)
+  end
+  
   def create_role(user)
     group = BbcGroup.find_by(group_name: "HOPS_USER")
-    PeopleGroup.create(uid: user.uid, gid: group.gid)
+    user_mapping = UserGroup.find_by(uid: user.uid, gid: group.gid)
+    if user_mapping.nil?
+      UserGroup.create(uid: user.uid, gid: group.gid)
+    end
   end
   
   def create_admin_role(user)
     group = BbcGroup.find_by(group_name: "HOPS_ADMIN")
-    PeopleGroup.create(uid: user.uid, gid: group.gid)
+    user_mapping = UserGroup.find_by(uid: user.uid, gid: group.gid)
+    if user_mapping.nil?
+      UserGroup.create(uid: user.uid, gid: group.gid)
+    end
   end
   
   def create_agent_role(user)
     group = BbcGroup.find_by(group_name: "AGENT")
-    PeopleGroup.create(uid: user.uid, gid: group.gid)
+    user_mapping = UserGroup.find_by(uid: user.uid, gid: group.gid)
+    if user_mapping.nil?
+      UserGroup.create(uid: user.uid, gid: group.gid)
+    end
+  end
+
+  def create_cluster_agent_role(user)
+    group = BbcGroup.find_by(group_name: "CLUSTER_AGENT")
+    user_mapping = UserGroup.find_by(uid: user.uid, gid: group.gid)
+    if user_mapping.nil?
+      UserGroup.create(uid: user.uid, gid: group.gid)
+    end
+  end
+  
+  def create_with_role(user, role)
+    group = BbcGroup.find_by(group_name: role)
+    UserGroup.create(uid: user.uid, gid: group.gid)
+  end
+
+  def create_role_type(role_type)
+    type = BbcGroup.find_by(group_name: role_type)
+    if type.nil?
+      BbcGroup.create(group_name: role_type, gid: Random.rand(1000))
+    end
   end
   
   def create_user(params={})
@@ -102,7 +217,17 @@ module SessionHelper
     create_validated_user(params)
     user = User.find_by(email: params[:email])
     create_role(user)
-    user.status = 4
+    user.status = 2
+    user.save
+    user
+  end
+  
+  def create_user_with_role(params={}, role)
+    params[:email] = "#{random_id}@email.com" unless params[:email]
+    create_validated_user(params)
+    user = User.find_by(email: params[:email])
+    create_with_role(user, role)
+    user.status = 2
     user.save
     user
   end
@@ -119,7 +244,7 @@ module SessionHelper
     params[:email] = "#{random_id}@email.com" unless params[:email]
     create_validated_user(params)
     user = User.find_by(email: params[:email])
-    user.status = 4
+    user.status = 2
     user.save
     user
   end
@@ -138,12 +263,22 @@ module SessionHelper
     create_validated_user(params)
     user = User.find_by(email: params[:email])
     create_agent_role(user)
-    user.status = 4
+    user.status = 2
     user.save
     user
   end
   
   def create_blocked_user(params={})
+    params[:email] = "#{random_id}@email.com" unless params[:email]
+    create_validated_user(params)
+    user = User.find_by(email: params[:email])
+    create_role(user)
+    user.status = 4
+    user.save
+    user
+  end
+  
+  def create_spam_user(params={})
     params[:email] = "#{random_id}@email.com" unless params[:email]
     create_validated_user(params)
     user = User.find_by(email: params[:email])
@@ -158,7 +293,7 @@ module SessionHelper
     create_validated_user(params)
     user = User.find_by(email: params[:email])
     create_role(user)
-    user.status = 5
+    user.status = 3
     user.save
     user
   end
@@ -168,8 +303,82 @@ module SessionHelper
     create_validated_user(params)
     user = User.find_by(email: params[:email])
     create_role(user)
-    user.status = 7
+    user.status = 5
     user.save
     user
+  end
+  
+  def set_isonline(user)
+    user.isonline = 1
+    user.save
+    user
+  end
+  
+  def set_false_login(user, val)
+    user.false_login = val
+    user.save
+    user
+  end
+  
+  def create_users()
+    user = {}
+    user[:email]     = "#{random_id}@email.com"
+    user[:first_name] = "New"
+    user[:last_name]  = "Ted"
+    set_false_login(create_new_mobile_user(user), 12)
+    user[:email]     = "#{random_id}@email.com"
+    user[:first_name] = "Validated"
+    user[:last_name]  = "John"
+    set_isonline(create_validated_user(user))
+    user[:email]     = "#{random_id}@email.com"
+    user[:first_name] = "Admin"
+    user[:last_name]  = "Bob"
+    set_false_login(create_user_with_role(user, "HOPS_ADMIN"), 4)
+    user[:email]     = "#{random_id}@email.com"
+    user[:first_name] = "Lostdevice"
+    user[:last_name]  = "Clara"
+    set_false_login(create_lostdevice_user(user), 22)
+    user[:email]     = "#{random_id}@email.com"
+    user[:first_name] = "Admin"
+    user[:last_name]  = "Doe"
+    create_role(set_isonline(create_user_with_role(user, "HOPS_ADMIN")))
+    user[:email]     = "#{random_id}@email.com"
+    user[:first_name] = "User"
+    user[:last_name]  = "Bob"
+    set_false_login(create_user(user), 19)
+    user[:email]     = "#{random_id}@email.com"
+    user[:first_name] = "User"
+    user[:last_name]  = "Admin"
+    set_isonline(create_user(user))
+    user[:email]     = "#{random_id}@email.com"
+    user[:first_name] = "Deactivated"
+    user[:last_name]  = "Admin"
+    set_false_login(create_deactivated_user(user), 2)
+    user[:email]     = "#{random_id}@email.com"
+    user[:first_name] = "User"
+    user[:last_name]  = "Kelly"
+    set_isonline(create_user(user))
+    user[:email]     = "#{random_id}@email.com"
+    user[:first_name] = "Blocked"
+    user[:last_name]  = "Labonte"
+    create_blocked_user(user)
+    user[:email]     = "#{random_id}@email.com"
+    user[:first_name] = "User"
+    user[:last_name]  = "Mason"
+    set_isonline(create_user(user))
+    user[:email]     = "#{random_id}@email.com"
+    user[:first_name] = "Unapproved"
+    user[:last_name]  = "Morris"
+    create_unapproved_user(user)
+    user[:email]     = "#{random_id}@email.com"
+    user[:first_name] = "Spam"
+    user[:last_name]  = "Morris"
+    create_spam_user(user)
+    user[:email]     = "#{random_id}@email.com"
+    user[:first_name] = "Agent"
+    user[:last_name]  = "Morris"
+    create_user_with_role(user, "AGENT")
+    get "#{ENV['HOPSWORKS_API']}/users"
+    json_body[:items]
   end
 end

@@ -1,3 +1,42 @@
+/*
+ * Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
+ * This file is part of Hopsworks
+ * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ *
+ * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU Affero General Public License as published by the Free Software Foundation,
+ * either version 3 of the License, or (at your option) any later version.
+ *
+ * Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
+ * Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this
+ * software and associated documentation files (the "Software"), to deal in the Software
+ * without restriction, including without limitation the rights to use, copy, modify, merge,
+ * publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+ * persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or
+ * substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  OR IMPLIED, INCLUDING
+ * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+ * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package io.hops.hopsworks.common.dao.hdfs.inode;
 
 import io.hops.common.Pair;
@@ -22,7 +61,7 @@ import io.hops.hopsworks.common.dao.AbstractFacade;
 @Stateless
 public class InodeFacade extends AbstractFacade<Inode> {
 
-  private final static Logger logger = Logger.getLogger(InodeFacade.class.
+  private static final Logger logger = Logger.getLogger(InodeFacade.class.
           getName());
 
   @PersistenceContext(unitName = "kthfsPU")
@@ -53,7 +92,6 @@ public class InodeFacade extends AbstractFacade<Inode> {
   /**
    * Find all the Inodes that have <i>userId</i> as userId.
    * <p/>
-   * @param userId
    * @return
    */
   public List<Inode> findByHdfsUser(HdfsUsers hdfsUser) {
@@ -147,7 +185,10 @@ public class InodeFacade extends AbstractFacade<Inode> {
    */
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   public Inode findParent(Inode i) {
-    int id = i.getInodePK().getParentId();
+    if(i == null){
+      throw new IllegalArgumentException("Inode must be provided.");
+    }
+    long id = i.getInodePK().getParentId();
     TypedQuery<Inode> q = em.createNamedQuery("Inode.findById", Inode.class);
     q.setParameter("id", id);
     try {
@@ -163,7 +204,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
    * @param id
    * @return
    */
-  public Inode findById(Integer id) {
+  public Inode findById(Long id) {
     TypedQuery<Inode> q = em.createNamedQuery("Inode.findById", Inode.class);
     q.setParameter("id", id);
     try {
@@ -201,7 +242,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
     }
     //Move down the path
     for (int i = 1; i < p.length; i++) {
-      int partitionId = HopsUtils.
+      long partitionId = HopsUtils.
               calculatePartitionId(curr.getId(), p[i], i + 1);
       Inode next = findByInodePK(curr, p[i], partitionId);
       if (next == null) {
@@ -218,7 +259,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   private Inode getRootNode(String name) {
-    int partitionId = HopsUtils.calculatePartitionId(HopsUtils.ROOT_INODE_ID, name, HopsUtils.ROOT_DIR_DEPTH + 1);
+    long partitionId = HopsUtils.calculatePartitionId(HopsUtils.ROOT_INODE_ID, name, HopsUtils.ROOT_DIR_DEPTH + 1);
     TypedQuery<Inode> query = em.createNamedQuery("Inode.findRootByName",
             Inode.class);
     query.setParameter("name", name);
@@ -278,7 +319,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
    * @return
    */
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  public Inode findByInodePK(Inode parent, String name, int partitionId) {
+  public Inode findByInodePK(Inode parent, String name, long partitionId) {
 
     TypedQuery<Inode> q = em.createNamedQuery("Inode.findByPrimaryKey",
             Inode.class);
@@ -379,6 +420,9 @@ public class InodeFacade extends AbstractFacade<Inode> {
    */
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public String getPath(Inode i) {
+    if(i == null) {
+      throw new IllegalArgumentException("Inode was not provided.");
+    }
     List<String> pathComponents = new ArrayList<>();
     Inode parent = i;
     while (parent.getId() != 1) {
@@ -440,7 +484,6 @@ public class InodeFacade extends AbstractFacade<Inode> {
    * Find all the Inodes that have <i>userId</i> as userId and correspond to an
    * history file.
    * <p/>
-   * @param userId
    * @return
    */
   public List<Inode> findHistoryFileByHdfsUser(HdfsUsers hdfsUser) {

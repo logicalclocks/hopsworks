@@ -1,3 +1,42 @@
+/*
+ * Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
+ * This file is part of Hopsworks
+ * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ *
+ * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU Affero General Public License as published by the Free Software Foundation,
+ * either version 3 of the License, or (at your option) any later version.
+ *
+ * Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
+ * Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this
+ * software and associated documentation files (the "Software"), to deal in the Software
+ * without restriction, including without limitation the rights to use, copy, modify, merge,
+ * publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+ * persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or
+ * substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  OR IMPLIED, INCLUDING
+ * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+ * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 /*jshint undef: false, unused: false, indent: 2*/
 /*global angular: false */
 
@@ -36,7 +75,8 @@ angular.module('hopsWorksApp', [
   'isteven-multi-select',
   'nvd3',
   'ui.toggle',
-  'ngFileSaver'
+  'ngFileSaver',
+  'googlechart'
 ])
         .config(['$routeProvider', '$httpProvider', '$compileProvider', 'flowFactoryProvider', 'accordionConfig',
           function ($routeProvider, $httpProvider, $compileProvider, flowFactoryProvider, accordionConfig) {
@@ -58,7 +98,12 @@ angular.module('hopsWorksApp', [
               permanentErrors: [400, 401, 403, 409, 415, 500, 501],
               maxChunkRetries: 1,
               chunkRetryInterval: 5000,
-              simultaneousUploads: 4
+              simultaneousUploads: 4,
+              headers: function (file, chunk, isTest) {
+                  return {
+                      'Authorization': localStorage.getItem("token")
+                  };
+              }
             };
             flowFactoryProvider.on('catchAll', function (event) {
               console.log('catchAll', arguments);
@@ -69,19 +114,9 @@ angular.module('hopsWorksApp', [
                       templateUrl: 'views/home.html',
                       controller: 'HomeCtrl as homeCtrl',
                       resolve: {
-                        auth: ['$q', '$location', 'AuthService', '$cookies',
-                          function ($q, $location, AuthService, $cookies) {
-                            return AuthService.session().then(
-                                    function (success) {
-                                      $cookies.put("email", success.data.data.value);
-                                    },
-                                    function (err) {
-                                      $cookies.remove("email");
-                                      $cookies.remove("projectID");
-                                      $location.path('/login');
-                                      $location.replace();
-                                      return $q.reject(err);
-                                    });
+                        auth: ['$q','AuthGuardService',
+                          function ($q, AuthGuardService) {
+                            return AuthGuardService.guardSession($q);
                           }]
                       }
                     })
@@ -89,43 +124,18 @@ angular.module('hopsWorksApp', [
                       templateUrl: 'views/delahopsDataset.html',
                       controller: 'HopsDatasetCtrl as publicDataset',
                       resolve: {
-                        auth: ['$rootScope', '$q', '$location', '$cookies', 'HopssiteService',
-                          function ($rootScope, $q, $location, $cookies, HopssiteService) {
-                            return HopssiteService.getServiceInfo("dela").then(function (success) {
-                              if (success.data.status === 1 ) {
-                                $rootScope['isDelaEnabled'] = true;
-                              } else {
-                                $rootScope['isDelaEnabled'] = false;
-                                $location.path('/');
-                                return $q.reject();
-                              }
-                            }, function (error) {
-                              $rootScope['isDelaEnabled'] = false;
-                              $cookies.remove("email");
-                              $cookies.remove("projectID");
-                              $location.path('/login');
-                              $location.replace();
-                              return $q.reject(error);
-                            });
+                        auth: ['$q', 'AuthGuardService',
+                          function ($q, AuthGuardService) {
+                            return AuthGuardService.guardHopssite($q);
                           }]}
                     })
                     .when('/delaclusterDataset', {
                       templateUrl: 'views/delaclusterDataset.html',
                       controller: 'ClusterDatasetCtrl as publicDataset',
                       resolve: {
-                        auth: ['$q', '$location', 'AuthService', '$cookies',
-                          function ($q, $location, AuthService, $cookies) {
-                            return AuthService.session().then(
-                                    function (success) {
-                                      $cookies.put("email", success.data.data.value);
-                                    },
-                                    function (err) {
-                                      $cookies.remove("email");
-                                      $cookies.remove("projectID");
-                                      $location.path('/login');
-                                      $location.replace();
-                                      return $q.reject(err);
-                                    });
+                        auth: ['$q','AuthGuardService',
+                          function ($q, AuthGuardService) {
+                            return AuthGuardService.guardSession($q);
                           }]
                       }
                     })
@@ -133,23 +143,9 @@ angular.module('hopsWorksApp', [
                       templateUrl: 'views/login.html',
                       controller: 'LoginCtrl as loginCtrl',
                       resolve: {
-                        auth: ['$q', '$location', 'AuthService', '$cookies', 'VariablesService',
-                          function ($q, $location, AuthService, $cookies, VariablesService) {
-                            return AuthService.session().then(
-                              function (success) {
-                                $cookies.put("email", success.data.data.value);
-                                $location.path('/');
-                                $location.replace();
-                                return $q.when(success);
-                              },
-                              function (err) {
-                                VariablesService.getAuthStatus().then(
-                                  function (success) {
-                                    $cookies.put("otp", success.data.twofactor);
-                                    $cookies.put("ldap", success.data.ldap);
-                                  }, function (error) {
-                                });
-                              });
+                        auth: ['$q','AuthGuardService',
+                          function ($q, AuthGuardService) {
+                            return AuthGuardService.noGuard($q);
                           }]
                       }
                     })
@@ -157,23 +153,9 @@ angular.module('hopsWorksApp', [
                       templateUrl: 'views/ldapLogin.html',
                       controller: 'LdapLoginCtrl as loginCtrl',
                       resolve: {
-                        auth: ['$q', '$location', 'AuthService', '$cookies', 'VariablesService',
-                          function ($q, $location, AuthService, $cookies, VariablesService) {
-                            return AuthService.session().then(
-                              function (success) {
-                                $cookies.put("email", success.data.data.value);
-                                $location.path('/');
-                                $location.replace();
-                                return $q.when(success);
-                              },
-                              function (err) {
-                                VariablesService.getAuthStatus().then(
-                                  function (success) {
-                                    $cookies.put("otp", success.data.twofactor);
-                                    $cookies.put("ldap", success.data.ldap);
-                                  }, function (error) {
-                                });
-                              });
+                        auth: ['$q','AuthGuardService',
+                          function ($q, AuthGuardService) {
+                            return AuthGuardService.noGuard($q);
                           }]
                       }
                     })
@@ -181,23 +163,9 @@ angular.module('hopsWorksApp', [
                       templateUrl: 'views/register.html',
                       controller: 'RegCtrl as regCtrl',
                       resolve: {
-                        auth: ['$q', '$location', 'AuthService', '$cookies', 'VariablesService',
-                          function ($q, $location, AuthService, $cookies, VariablesService) {
-                            return AuthService.session().then(
-                                    function (success) {
-                                      $cookies.put("email", success.data.data.value);
-                                      $location.path('/');
-                                      $location.replace();
-                                      return $q.when(success);
-                                    },
-                                    function (err) {
-                                      VariablesService.getTwofactor().then(
-                                              function (success) {
-                                                $cookies.put("otp", success.data.successMessage);
-                                              }, function (error) {
-
-                                      });
-                                    });
+                        auth: ['$q','AuthGuardService',
+                          function ($q, AuthGuardService) {
+                            return AuthGuardService.noGuard($q);
                           }]
                       }
                     })
@@ -205,30 +173,17 @@ angular.module('hopsWorksApp', [
                       templateUrl: 'views/recover.html',
                       controller: 'RecoverCtrl as recoverCtrl'
                     })
-                    .when('/qrCode/:QR*', {
+                    .when('/qrCode/:mode/:QR*', {
                       templateUrl: 'views/qrCode.html',
                       controller: 'RegCtrl as regCtrl'
-                    })
-                    .when('/yubikey', {
-                      templateUrl: 'views/yubikey.html',
                     })
                     .when('/project/:projectID', {
                       templateUrl: 'views/project.html',
                       controller: 'ProjectCtrl as projectCtrl',
                       resolve: {
-                        auth: ['$q', '$location', 'AuthService', '$cookies',
-                          function ($q, $location, AuthService, $cookies) {
-                            return AuthService.session().then(
-                                    function (success) {
-                                      $cookies.put("email", success.data.data.value);
-                                    },
-                                    function (err) {
-                                      $cookies.remove("email");
-                                      $cookies.remove("projectID");
-                                      $location.path('/login');
-                                      $location.replace();
-                                      return $q.reject(err);
-                                    });
+                        auth: ['$q', '$route', 'AuthGuardService',
+                          function ($q, $route, AuthGuardService) {
+                            return AuthGuardService.guardProject($q, $route.current.params.projectID);
                           }]
                       }
                     })
@@ -237,144 +192,9 @@ angular.module('hopsWorksApp', [
                       templateUrl: 'views/datasets.html',
                       controller: 'ProjectCtrl as projectCtrl',
                       resolve: {
-                        auth: ['$q', '$location', 'AuthService', '$cookies',
-                          function ($q, $location, AuthService, $cookies) {
-                            return AuthService.session().then(
-                                    function (success) {
-                                      $cookies.put("email", success.data.data.value);
-                                    },
-                                    function (err) {
-                                      $cookies.remove("email");
-                                      $cookies.remove("projectID");
-                                      $location.path('/login');
-                                      $location.replace();
-                                      return $q.reject(err);
-                                    });
-                          }]
-                      }
-                    })
-
-                    .when('/project/:projectID/workflows', {
-                      templateUrl: 'views/workflows.html',
-                      controller: 'WorkflowCtrl as workflowCtrl',
-                      resolve: {
-                        auth: ['$q', '$location', 'AuthService', '$cookies',
-                          function ($q, $location, AuthService, $cookies) {
-                            return AuthService.session().then(
-                                    function (success) {
-                                      $cookies.put("email", success.data.data.value);
-                                    },
-                                    function (err) {
-                                      $cookies.remove("email");
-                                      $cookies.remove("projectID");
-                                      $location.path('/login');
-                                      $location.replace();
-                                      return $q.reject(err);
-                                    });
-                          }]
-                      }
-                    })
-                    .when('/project/:projectID/workflows/:workflowID', {
-                      templateUrl: 'views/workflow.html',
-                      controller: 'WorkflowCtrl as workflowCtrl',
-                      resolve: {
-                        auth: ['$q', '$location', 'AuthService', '$cookies',
-                          function ($q, $location, AuthService, $cookies) {
-                            return AuthService.session().then(
-                                    function (success) {
-                                      $cookies.put("email", success.data.data.value);
-                                    },
-                                    function (err) {
-                                      $cookies.remove("email");
-                                      $cookies.remove("projectID");
-                                      $location.path('/login');
-                                      $location.replace();
-                                      return $q.reject(err);
-                                    });
-                          }]
-                      }
-                    })
-
-                    .when('/project/:projectID/workflows/:workflowID/executions', {
-                      templateUrl: 'views/workflowExecutions.html',
-                      controller: 'WorkflowExecutionCtrl as workflowExecutionCtrl',
-                      resolve: {
-                        auth: ['$q', '$location', 'AuthService', '$cookies',
-                          function ($q, $location, AuthService, $cookies) {
-                            return AuthService.session().then(
-                                    function (success) {
-                                      $cookies.put("email", success.data.data.value);
-                                    },
-                                    function (err) {
-                                      $cookies.remove("email");
-                                      $cookies.remove("projectID");
-                                      $location.path('/login');
-                                      $location.replace();
-                                      return $q.reject(err);
-                                    });
-                          }]
-                      }
-                    })
-
-                    .when('/project/:projectID/workflows/:workflowID/executions/:executionID', {
-                      templateUrl: 'views/workflowExecution.html',
-                      controller: 'WorkflowExecutionCtrl as workflowExecutionCtrl',
-                      resolve: {
-                        auth: ['$q', '$location', 'AuthService', '$cookies',
-                          function ($q, $location, AuthService, $cookies) {
-                            return AuthService.session().then(
-                                    function (success) {
-                                      $cookies.put("email", success.data.data.value);
-                                    },
-                                    function (err) {
-                                      $cookies.remove("email");
-                                      $cookies.remove("projectID");
-                                      $location.path('/login');
-                                      $location.replace();
-                                      return $q.reject(err);
-                                    });
-                          }]
-                      }
-                    })
-
-                    .when('/project/:projectID/workflows/:workflowID/executions/:executionID/jobs', {
-                      templateUrl: 'views/workflowJobs.html',
-                      controller: 'WorkflowJobCtrl as workflowJobCtrl',
-                      resolve: {
-                        auth: ['$q', '$location', 'AuthService', '$cookies',
-                          function ($q, $location, AuthService, $cookies) {
-                            return AuthService.session().then(
-                                    function (success) {
-                                      $cookies.put("email", success.data.data.value);
-                                    },
-                                    function (err) {
-                                      $cookies.remove("email");
-                                      $cookies.remove("projectID");
-                                      $location.path('/login');
-                                      $location.replace();
-                                      return $q.reject(err);
-                                    });
-                          }]
-                      }
-                    })
-
-                    .when('/project/:projectID/workflows/:workflowID/executions/:executionID/jobs/:jobID', {
-                      templateUrl: 'views/workflowJob.html',
-                      controller: 'WorkflowJobCtrl as workflowJobCtrl',
-                      resolve: {
-                        auth: ['$q', '$location', 'AuthService', '$cookies',
-                          function ($q, $location, AuthService, $cookies) {
-                            return AuthService.session().then(
-                                    function (success) {
-                                      $cookies.put("email", success.data.data.value);
-                                    },
-                                    function (err) {
-                                      $cookies.remove("email");
-                                      $cookies.remove("projectID");
-                                      $location.path('/login');
-                                      $location.replace();
-                                      return $q.reject(err);
-                                    });
+                        auth: ['$q', '$route', 'AuthGuardService',
+                          function ($q, $route, AuthGuardService) {
+                            return AuthGuardService.guardProject($q, $route.current.params.projectID);
                           }]
                       }
                     })
@@ -383,19 +203,9 @@ angular.module('hopsWorksApp', [
                       templateUrl: 'views/datasetsBrowser.html',
                       controller: 'ProjectCtrl as projectCtrl',
                       resolve: {
-                        auth: ['$q', '$location', 'AuthService', '$cookies',
-                          function ($q, $location, AuthService, $cookies) {
-                            return AuthService.session().then(
-                                    function (success) {
-                                      $cookies.put("email", success.data.data.value);
-                                    },
-                                    function (err) {
-                                      $cookies.remove("email");
-                                      $cookies.remove("projectID");
-                                      $location.path('/login');
-                                      $location.replace();
-                                      return $q.reject(err);
-                                    });
+                        auth: ['$q', '$route', 'AuthGuardService',
+                          function ($q, $route, AuthGuardService) {
+                            return AuthGuardService.guardProject($q, $route.current.params.projectID);
                           }]
                       }
                     })
@@ -403,19 +213,9 @@ angular.module('hopsWorksApp', [
                       templateUrl: 'views/spark.html',
                       controller: 'ProjectCtrl as projectCtrl',
                       resolve: {
-                        auth: ['$q', '$location', 'AuthService', '$cookies',
-                          function ($q, $location, AuthService, $cookies) {
-                            return AuthService.session().then(
-                                    function (success) {
-                                      $cookies.put("email", success.data.data.value);
-                                    },
-                                    function (err) {
-                                      $cookies.remove("email");
-                                      $cookies.remove("projectID");
-                                      $location.path('/login');
-                                      $location.replace();
-                                      return $q.reject(err);
-                                    });
+                        auth: ['$q', '$route', 'AuthGuardService',
+                          function ($q, $route, AuthGuardService) {
+                            return AuthGuardService.guardProject($q, $route.current.params.projectID);
                           }]
                       }
                     })
@@ -423,19 +223,19 @@ angular.module('hopsWorksApp', [
                       templateUrl: 'views/jobs.html',
                       controller: 'ProjectCtrl as projectCtrl',
                       resolve: {
-                        auth: ['$q', '$location', 'AuthService', '$cookies',
-                          function ($q, $location, AuthService, $cookies) {
-                            return AuthService.session().then(
-                                    function (success) {
-                                      $cookies.put("email", success.data.data.value);
-                                    },
-                                    function (err) {
-                                      $cookies.remove("email");
-                                      $cookies.remove("projectID");
-                                      $location.path('/login');
-                                      $location.replace();
-                                      return $q.reject(err);
-                                    });
+                        auth: ['$q', '$route', 'AuthGuardService',
+                          function ($q, $route, AuthGuardService) {
+                            return AuthGuardService.guardProject($q, $route.current.params.projectID);
+                          }]
+                      }
+                    })
+                    .when('/project/:projectID/rstudio', {
+                      templateUrl: 'views/rstudio.html',
+                      controller: 'ProjectCtrl as projectCtrl',
+                      resolve: {
+                        auth: ['$q', '$route', 'AuthGuardService',
+                          function ($q, $route, AuthGuardService) {
+                            return AuthGuardService.guardProject($q, $route.current.params.projectID);
                           }]
                       }
                     })
@@ -443,19 +243,9 @@ angular.module('hopsWorksApp', [
                       templateUrl: 'views/newJob.html',
                       controller: 'ProjectCtrl as projectCtrl',
                       resolve: {
-                        auth: ['$q', '$location', 'AuthService', '$cookies',
-                          function ($q, $location, AuthService, $cookies) {
-                            return AuthService.session().then(
-                                    function (success) {
-                                      $cookies.put("email", success.data.data.value);
-                                    },
-                                    function (err) {
-                                      $cookies.remove("email");
-                                      $cookies.remove("projectID");
-                                      $location.path('/login');
-                                      $location.replace();
-                                      return $q.reject(err);
-                                    });
+                        auth: ['$q', '$route', 'AuthGuardService',
+                          function ($q, $route, AuthGuardService) {
+                            return AuthGuardService.guardProject($q, $route.current.params.projectID);
                           }]
                       }
                     })
@@ -463,19 +253,9 @@ angular.module('hopsWorksApp', [
                       templateUrl: 'views/jobMonitor.html',
                       controller: 'JobUICtrl as jobUICtrl',
                       resolve: {
-                        auth: ['$q', '$location', 'AuthService', '$cookies',
-                          function ($q, $location, AuthService, $cookies) {
-                            return AuthService.session().then(
-                                    function (success) {
-                                      $cookies.put("email", success.data.data.value);
-                                    },
-                                    function (err) {
-                                      $cookies.remove("email");
-                                      $cookies.remove("projectID");
-                                      $location.path('/login');
-                                      $location.replace();
-                                      return $q.reject(err);
-                                    });
+                        auth: ['$q', '$route', 'AuthGuardService',
+                          function ($q, $route, AuthGuardService) {
+                            return AuthGuardService.guardProject($q, $route.current.params.projectID);
                           }]
                       }
                     })
@@ -483,19 +263,9 @@ angular.module('hopsWorksApp', [
                       templateUrl: 'views/jobMonitor.html',
                       controller: 'JobUICtrl as jobUICtrl',
                       resolve: {
-                        auth: ['$q', '$location', 'AuthService', '$cookies',
-                          function ($q, $location, AuthService, $cookies) {
-                            return AuthService.session().then(
-                                    function (success) {
-                                      $cookies.put("email", success.data.data.value);
-                                    },
-                                    function (err) {
-                                      $cookies.remove("email");
-                                      $cookies.remove("projectID");
-                                      $location.path('/login');
-                                      $location.replace();
-                                      return $q.reject(err);
-                                    });
+                        auth: ['$q', '$route', 'AuthGuardService',
+                          function ($q, $route, AuthGuardService) {
+                            return AuthGuardService.guardProject($q, $route.current.params.projectID);
                           }]
                       }
                     })
@@ -503,39 +273,9 @@ angular.module('hopsWorksApp', [
                       templateUrl: 'views/jobMonitor.html',
                       controller: 'JobUICtrl as jobUICtrl',
                       resolve: {
-                        auth: ['$q', '$location', 'AuthService', '$cookies',
-                          function ($q, $location, AuthService, $cookies) {
-                            return AuthService.session().then(
-                                    function (success) {
-                                      $cookies.put("email", success.data.data.value);
-                                    },
-                                    function (err) {
-                                      $cookies.remove("email");
-                                      $cookies.remove("projectID");
-                                      $location.path('/login');
-                                      $location.replace();
-                                      return $q.reject(err);
-                                    });
-                          }]
-                      }
-                    })
-                    .when('/project/:projectID/biobanking', {
-                      templateUrl: 'views/biobanking.html',
-                      controller: 'ProjectCtrl as projectCtrl',
-                      resolve: {
-                        auth: ['$q', '$location', 'AuthService', '$cookies',
-                          function ($q, $location, AuthService, $cookies) {
-                            return AuthService.session().then(
-                                    function (success) {
-                                      $cookies.put("email", success.data.data.value);
-                                    },
-                                    function (err) {
-                                      $cookies.remove("email");
-                                      $cookies.remove("projectID");
-                                      $location.path('/login');
-                                      $location.replace();
-                                      return $q.reject(err);
-                                    });
+                        auth: ['$q', '$route', 'AuthGuardService',
+                          function ($q, $route, AuthGuardService) {
+                            return AuthGuardService.guardProject($q, $route.current.params.projectID);
                           }]
                       }
                     })
@@ -543,19 +283,9 @@ angular.module('hopsWorksApp', [
                       templateUrl: 'views/kafka.html',
                       controller: 'ProjectCtrl as projectCtrl',
                       resolve: {
-                        auth: ['$q', '$location', 'AuthService', '$cookies',
-                          function ($q, $location, AuthService, $cookies) {
-                            return AuthService.session().then(
-                                    function (success) {
-                                      $cookies.put("email", success.data.data.value);
-                                    },
-                                    function (err) {
-                                      $cookies.remove("email");
-                                      $cookies.remove("projectID");
-                                      $location.path('/login');
-                                      $location.replace();
-                                      return $q.reject(err);
-                                    });
+                        auth: ['$q', '$route', 'AuthGuardService',
+                          function ($q, $route, AuthGuardService) {
+                            return AuthGuardService.guardProject($q, $route.current.params.projectID);
                           }]
                       }
                     })
@@ -563,19 +293,9 @@ angular.module('hopsWorksApp', [
                       templateUrl: 'views/dela.html',
                       controller: 'ProjectCtrl as projectCtrl',
                         resolve: {
-                        auth: ['$q', '$location', 'AuthService', '$cookies',
-                          function ($q, $location, AuthService, $cookies) {
-                            return AuthService.session().then(
-                                    function (success) {
-                                      $cookies.put("email", success.data.data.value);
-                                    },
-                                    function (err) {
-                                      $cookies.remove("email");
-                                      $cookies.remove("projectID");
-                                      $location.path('/login');
-                                      $location.replace();
-                                      return $q.reject(err);
-                                    });
+                        auth: ['$q', '$route', 'AuthGuardService',
+                          function ($q, $route, AuthGuardService) {
+                            return AuthGuardService.guardProject($q, $route.current.params.projectID);
                           }]
                       }
                     })
@@ -583,39 +303,39 @@ angular.module('hopsWorksApp', [
                       templateUrl: 'views/projectSettings.html',
                       controller: 'ProjectSettingsCtrl as projectSettingsCtrl',
                       resolve: {
-                        auth: ['$q', '$location', 'AuthService', '$cookies',
-                          function ($q, $location, AuthService, $cookies) {
-                            return AuthService.session().then(
-                                    function (success) {
-                                      $cookies.put("email", success.data.data.value);
-                                    },
-                                    function (err) {
-                                      $cookies.remove("email");
-                                      $cookies.remove("projectID");
-                                      $location.path('/login');
-                                      $location.replace();
-                                      return $q.reject(err);
-                                    });
+                        auth: ['$q', '$route', 'AuthGuardService',
+                          function ($q, $route, AuthGuardService) {
+                            return AuthGuardService.guardProject($q, $route.current.params.projectID);
                           }]
                       }
                     })
-                    .when('/project/:projectID/tfserving', {
-                      templateUrl: 'views/tfServing.html',
+                    .when('/project/:projectID/serving', {
+                      templateUrl: 'views/serving.html',
                       controller: 'ProjectCtrl as projectCtrl',
                       resolve: {
-                        auth: ['$q', '$location', 'AuthService', '$cookies',
-                          function ($q, $location, AuthService, $cookies) {
-                            return AuthService.session().then(
-                                    function (success) {
-                                      $cookies.put("email", success.data.data.value);
-                                    },
-                                    function (err) {
-                                      $cookies.remove("email");
-                                      $cookies.remove("projectID");
-                                      $location.path('/login');
-                                      $location.replace();
-                                      return $q.reject(err);
-                                    });
+                        auth: ['$q', '$route', 'AuthGuardService',
+                          function ($q, $route, AuthGuardService) {
+                            return AuthGuardService.guardProject($q, $route.current.params.projectID);
+                          }]
+                      }
+                    })
+                    .when('/project/:projectID/python', {
+                      templateUrl: 'views/python.html',
+                      controller: 'ProjectCtrl as projectCtrl',
+                      resolve: {
+                        auth: ['$q', '$route', 'AuthGuardService',
+                          function ($q, $route, AuthGuardService) {
+                            return AuthGuardService.guardProject($q, $route.current.params.projectID);
+                          }]
+                      }
+                    })
+                    .when('/project/:projectID/experiments', {
+                      templateUrl: 'views/experiments.html',
+                      controller: 'ProjectCtrl as projectCtrl',
+                      resolve: {
+                        auth: ['$q', '$route', 'AuthGuardService',
+                          function ($q, $route, AuthGuardService) {
+                            return AuthGuardService.guardProject($q, $route.current.params.projectID);
                           }]
                       }
                     })
@@ -623,19 +343,9 @@ angular.module('hopsWorksApp', [
                       templateUrl: 'views/metadata.html',
                       controller: 'ProjectCtrl as projectCtrl',
                       resolve: {
-                        auth: ['$q', '$location', 'AuthService', '$cookies',
-                          function ($q, $location, AuthService, $cookies) {
-                            return AuthService.session().then(
-                                    function (success) {
-                                      $cookies.put("email", success.data.data.value);
-                                    },
-                                    function (err) {
-                                      $cookies.remove("email");
-                                      $cookies.remove("projectID");
-                                      $location.path('/login');
-                                      $location.replace();
-                                      return $q.reject(err);
-                                    });
+                        auth: ['$q', '$route', 'AuthGuardService',
+                          function ($q, $route, AuthGuardService) {
+                            return AuthGuardService.guardProject($q, $route.current.params.projectID);
                           }]
                       }
                     })
@@ -643,19 +353,9 @@ angular.module('hopsWorksApp', [
                       templateUrl: 'views/jupyterDashboard.html',
                       controller: 'ProjectCtrl as projectCtrl',
                       resolve: {
-                        auth: ['$q', '$location', 'AuthService', '$cookies',
-                          function ($q, $location, AuthService, $cookies) {
-                            return AuthService.session().then(
-                                    function (success) {
-                                      $cookies.put("email", success.data.data.value);
-                                    },
-                                    function (err) {
-                                      $cookies.remove("email");
-                                      $cookies.remove("projectID");
-                                      $location.path('/login');
-                                      $location.replace();
-                                      return $q.reject(err);
-                                    });
+                        auth: ['$q', '$route', 'AuthGuardService',
+                          function ($q, $route, AuthGuardService) {
+                            return AuthGuardService.guardProject($q, $route.current.params.projectID);
                           }]
                       }
                     })
@@ -663,19 +363,9 @@ angular.module('hopsWorksApp', [
                       templateUrl: 'views/zeppelinDashboard.html',
                       controller: 'ProjectCtrl as projectCtrl',
                       resolve: {
-                        auth: ['$q', '$location', 'AuthService', '$cookies',
-                          function ($q, $location, AuthService, $cookies) {
-                            return AuthService.session().then(
-                                    function (success) {
-                                      $cookies.put("email", success.data.data.value);
-                                    },
-                                    function (err) {
-                                      $cookies.remove("email");
-                                      $cookies.remove("projectID");
-                                      $location.path('/login');
-                                      $location.replace();
-                                      return $q.reject(err);
-                                    });
+                        auth: ['$q', '$route', 'AuthGuardService',
+                          function ($q, $route, AuthGuardService) {
+                            return AuthGuardService.guardProject($q, $route.current.params.projectID);
                           }]
                       }
                     })
@@ -683,22 +373,32 @@ angular.module('hopsWorksApp', [
                       templateUrl: 'views/history.html',
                       controller: 'ProjectCtrl as projectCtrl',
                       resolve: {
-                        auth: ['$q', '$location', 'AuthService', '$cookies',
-                          function ($q, $location, AuthService, $cookies) {
-                            return AuthService.session().then(
-                                    function (success) {
-                                      $cookies.put("email", success.data.data.value);
-                                    },
-                                    function (err) {
-                                      $cookies.remove("email");
-                                      $cookies.remove("projectID");
-                                      $location.path('/login');
-                                      $location.replace();
-                                      return $q.reject(err);
-                                    });
+                        auth: ['$q', '$route', 'AuthGuardService',
+                          function ($q, $route, AuthGuardService) {
+                            return AuthGuardService.guardProject($q, $route.current.params.projectID);
                           }]
                       }
                     })
+                .when('/project/:projectID/featurestore', {
+                    templateUrl: 'views/featurestore.html',
+                    controller: 'ProjectCtrl as projectCtrl',
+                    resolve: {
+                        auth: ['$q', '$location', 'AuthService', '$cookies',
+                            function ($q, $location, AuthService, $cookies) {
+                                return AuthService.session().then(
+                                    function (success) {
+                                        $cookies.put("email", success.data.data.value);
+                                    },
+                                    function (err) {
+                                        $cookies.remove("email");
+                                        $cookies.remove("projectID");
+                                        $location.path('/login');
+                                        $location.replace();
+                                        return $q.reject(err);
+                                    });
+                            }]
+                    }
+                })
                     .otherwise({
                       redirectTo: '/'
                     });
@@ -743,14 +443,14 @@ angular.module('hopsWorksApp', [
             return out;
           };
         })
-        
+
         .filter('unique', function () {
           return function (arr, field) {
             return _.uniq(arr, function (a) {
               return a[field];
             });
           };
-        })  
+        })
         // Filter that highlight @username.
         .filter('highlightUsername', function () {
           return function (text) {
@@ -784,7 +484,11 @@ angular.module('hopsWorksApp', [
             return value + (tail || ' …');
           };
         })
-        .run(['$rootScope', '$routeParams', function ($rootScope, $routeParams) {
+        .run(['$rootScope', '$routeParams', '$http', function ($rootScope, $routeParams, $http) {
+            var token = localStorage.getItem("token");
+            if (token) {
+              $http.defaults.headers.common.Authorization = token;
+            }
             $rootScope.$on('$routeChangeSuccess',
               function (e, current, pre) {
                 if ($routeParams.projectID === undefined) {

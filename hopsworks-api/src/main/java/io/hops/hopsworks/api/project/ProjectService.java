@@ -1,29 +1,73 @@
+/*
+ * Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
+ * This file is part of Hopsworks
+ * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ *
+ * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU Affero General Public License as published by the Free Software Foundation,
+ * either version 3 of the License, or (at your option) any later version.
+ *
+ * Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
+ * Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this
+ * software and associated documentation files (the "Software"), to deal in the Software
+ * without restriction, including without limitation the rights to use, copy, modify, merge,
+ * publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+ * persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or
+ * substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  OR IMPLIED, INCLUDING
+ * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+ * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
 package io.hops.hopsworks.api.project;
 
+import io.hops.hopsworks.api.activities.ProjectActivitiesResource;
 import io.hops.hopsworks.api.dela.DelaClusterProjectService;
 import io.hops.hopsworks.api.dela.DelaProjectService;
 import io.hops.hopsworks.api.device.DeviceManagementService;
+import io.hops.hopsworks.api.featurestore.FeaturestoreService;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
+import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
-import io.hops.hopsworks.api.jobs.BiobankingService;
-import io.hops.hopsworks.api.jobs.JobService;
+import io.hops.hopsworks.api.jobs.JobsResource;
 import io.hops.hopsworks.api.jobs.KafkaService;
 import io.hops.hopsworks.api.jupyter.JupyterService;
+import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.pythonDeps.PythonDepsService;
-import io.hops.hopsworks.api.tensorflow.TfServingService;
-import io.hops.hopsworks.api.util.JsonResponse;
+import io.hops.hopsworks.api.serving.inference.InferenceResource;
+import io.hops.hopsworks.api.tensorflow.TensorBoardService;
+import io.hops.hopsworks.api.serving.TfServingService;
+import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.api.util.LocalFsService;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
-import io.hops.hopsworks.common.dao.certificates.CertsFacade;
 import io.hops.hopsworks.common.dao.dataset.DataSetDTO;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
-import io.hops.hopsworks.common.dao.dataset.DatasetPermissions;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
+import io.hops.hopsworks.common.dao.dataset.DatasetPermissions;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.jobs.quota.YarnPriceMultiplicator;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
+import io.hops.hopsworks.common.dao.project.pia.Pia;
+import io.hops.hopsworks.common.dao.project.pia.PiaFacade;
 import io.hops.hopsworks.common.dao.project.service.ProjectServiceEnum;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.user.UserFacade;
@@ -31,7 +75,16 @@ import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.FilePreviewDTO;
-import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.exception.DatasetException;
+import io.hops.hopsworks.common.exception.FeaturestoreException;
+import io.hops.hopsworks.common.exception.GenericException;
+import io.hops.hopsworks.common.exception.HopsSecurityException;
+import io.hops.hopsworks.common.exception.JobException;
+import io.hops.hopsworks.common.exception.KafkaException;
+import io.hops.hopsworks.common.exception.ProjectException;
+import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.exception.ServiceException;
+import io.hops.hopsworks.common.exception.UserException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -45,18 +98,12 @@ import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.user.AuthController;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.EmailBean;
-import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.Api;
-import java.io.File;
-import java.nio.file.Files;
-import java.io.IOException;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.annotation.security.RolesAllowed;
+import io.swagger.annotations.ApiOperation;
+import org.apache.commons.net.util.Base64;
+
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -76,16 +123,22 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.ws.rs.core.SecurityContext;
-import javax.xml.rpc.ServiceException;
-import org.apache.commons.net.util.Base64;
-import org.apache.hadoop.security.AccessControlException;
 
 @Path("/project")
-@RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
-@Api(value = "Project Service", description = "Project Service")
-@Produces(MediaType.APPLICATION_JSON)
 @Stateless
+@JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+@Produces(MediaType.APPLICATION_JSON)
+@Api(value = "Project Service",
+    description = "Project Service")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ProjectService {
 
@@ -104,15 +157,15 @@ public class ProjectService {
   @Inject
   private JupyterService jupyter;
   @Inject
+  private TensorBoardService tensorboard;
+  @Inject
   private TfServingService tfServingService;
   @Inject
   private DataSetService dataSet;
   @Inject
   private LocalFsService localFs;
   @Inject
-  private JobService jobs;
-  @Inject
-  private BiobankingService biobanking;
+  private JobsResource jobs;
   @Inject
   private PythonDepsService pysparkService;
   @Inject
@@ -127,7 +180,6 @@ public class ProjectService {
   private InodeFacade inodes;
   @EJB
   private HdfsUsersController hdfsUsersBean;
-
   @EJB
   private UsersController usersController;
   @EJB
@@ -137,156 +189,124 @@ public class ProjectService {
   @EJB
   private CertificateMaterializer certificateMaterializer;
   @EJB
-  private Settings settings;
-  @EJB
-  private CertsFacade certsFacade;
-  @EJB
   private MessageController messageController;
   @EJB
   private EmailBean emailBean;
   @EJB
   private AuthController authController;
+  @EJB
+  private PiaFacade piaFacade;
   @Inject
   private DelaProjectService delaService;
   @Inject
   private DelaClusterProjectService delaclusterService;
+  @Inject
+  private InferenceResource inference;
+  @Inject
+  private ProjectActivitiesResource activitiesResource;
+  @EJB
+  private JWTHelper jWTHelper;
+  @Inject
+  private FeaturestoreService featurestoreService;
 
-  private final static Logger logger = Logger.getLogger(ProjectService.class.
-      getName());
+  private final static Logger LOGGER = Logger.getLogger(ProjectService.class.getName());
 
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.ANYONE})
-  public Response findAllByUser(@Context SecurityContext sc,
-      @Context HttpServletRequest req) {
-
+  public Response findAllByUser(@Context SecurityContext sc) {
     // Get the user according to current session and then get all its projects
-    String email = sc.getUserPrincipal().getName();
-    List<ProjectTeam> list = projectController.findProjectByUser(email);
-    GenericEntity<List<ProjectTeam>> projects
-        = new GenericEntity<List<ProjectTeam>>(list) {};
-
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-        projects).build();
+    Users user = jWTHelper.getUserPrincipal(sc);
+    List<ProjectTeam> list = projectController.findProjectByUser(user.getEmail());
+    GenericEntity<List<ProjectTeam>> projects = new GenericEntity<List<ProjectTeam>>(list) {
+    };
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(projects).build();
   }
 
   @GET
   @Path("/getAll")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.ANYONE})
-  public Response getAllProjects(@Context SecurityContext sc,
-      @Context HttpServletRequest req) {
-
+  public Response getAllProjects() {
     List<Project> list = projectFacade.findAll();
-    GenericEntity<List<Project>> projects = new GenericEntity<List<Project>>(list) {};
-
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-        projects).build();
+    GenericEntity<List<Project>> projects = new GenericEntity<List<Project>>(list) {
+    };
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(projects).build();
   }
 
   @GET
   @Path("/getProjectInfo/{projectName}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.ANYONE})
-  public Response getProjectByName(@PathParam("projectName") String projectName,
-      @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException {
-
+  public Response getProjectByName(@PathParam("projectName") String projectName) throws ProjectException {
     ProjectDTO proj = projectController.getProjectByName(projectName);
-    
-
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-        proj).build();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(proj).build();
   }
 
   @GET
-  @Path("/getMoreInfo/{type}/{id}")
+  @Path("/getMoreInfo/proj/{projectId}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getMoreInfo(@PathParam("type") String type,
-      @PathParam("id") Integer id) throws AppException {
+  public Response getMoreInfo(@PathParam("projectId") Integer projectId) throws
+      ProjectException {
+    MoreInfoDTO info = null;
+
+    if (projectId != null) {
+      Project proj = projectFacade.find(projectId);
+      if (proj == null) {
+        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId);
+      }
+      info = new MoreInfoDTO(proj);
+    }
+
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+        info).build();
+  }
+
+  @GET
+  @Path("/getMoreInfo/{type: (ds|inode)}/{inodeId}")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response getMoreInfo(@PathParam("inodeId") Long inodeId) throws
+      DatasetException {
+    MoreInfoDTO info = null;
+
+    if (inodeId != null) {
+      info = datasetInfo(inodeId);
+      if (info == null) {
+        throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_FOUND, Level.FINE, "datasetId: " + inodeId);
+      }
+    }
+
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+        info).build();
+  }
+
+
+  @GET
+  @Path("{projectId}/getMoreInfo/{type: (ds|inode)}/{inodeId}")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response getMoreInfo(@PathParam("projectId") Integer projectId, @PathParam("inodeId") Long id)
+      throws DatasetException {
     MoreInfoDTO info = null;
     if (id != null) {
-      String errorMsg;
-      switch (type){
-        case "proj":
-          Project proj = projectFacade.find(id);
-          if (proj == null) {
-            errorMsg = "Project with id <" + id
-                + "> could not be found";
-            logger.log(Level.WARNING, errorMsg);
-            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                errorMsg);
-          }
-          info = new MoreInfoDTO(proj);
-          break;
-        case "ds":
-          info = datasetInfo(id);
-          if (info == null) {
-            errorMsg = "Dataset with id <" + id
-              + "> could not be found";
-            logger.log(Level.WARNING, errorMsg);
-            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                errorMsg);
-          }
-          break;
+      info = inodeInfo(id, projectId);
+      if (info == null) {
+        throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_FOUND, Level.FINE, "datasetId: " + id);
       }
     }
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
         info).build();
   }
 
-  @GET
-  @Path("{id}/getMoreInfo/{type}/{inodeId}")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.ANYONE})
-  public Response getMoreInfo(@PathParam("id") Integer projectId, @PathParam("type") String type,
-      @PathParam("inodeId") Integer id) throws AppException {
-    MoreInfoDTO info = null;
-    if (id != null) {
-      String errorMsg;
-      switch (type){
-        case "proj":
-          Project proj = projectFacade.find(id);
-          if (proj == null) {
-            errorMsg = "Project with id <" + id
-                + "> could not be found";
-            logger.log(Level.WARNING, errorMsg);
-            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                "Project with id <" + id + "> could not be found");
-          }
-          info = new MoreInfoDTO(proj);
-          break;
-        case "ds":
-        case "inode":
-          info = inodeInfo(id, projectId);
-          if (info == null) {
-            errorMsg = "Dataset/INode with id <" + id
-                + "> could not be found";
-            logger.log(Level.WARNING, errorMsg);
-            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                errorMsg);
-          }
-          break;
-      }
-    }
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-        info).build();
-  }
-  
   @GET
   @Path("/readme/byInodeId/{inodeId}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getReadmeByInodeId(@PathParam("inodeId") Integer inodeId) throws AppException {
+  public Response getReadmeByInodeId(@PathParam("inodeId") Long inodeId) throws DatasetException {
     if (inodeId == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          "No path given.");
+      throw new IllegalArgumentException("No inodeId provided.");
     }
     Inode inode = inodes.findById(inodeId);
     Inode parent = inodes.findParent(inode);
     Project proj = projectFacade.findByName(parent.getInodePK().getName());
     Dataset ds = datasetFacade.findByProjectAndInode(proj, inode);
     if (ds != null && !ds.isSearchable()) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "Readme not accessable.");
+      throw new DatasetException(RESTCodes.DatasetErrorCode.README_NOT_ACCESSIBLE, Level.FINE);
     }
     DistributedFileSystemOps dfso = dfs.getDfsOps();
     FilePreviewDTO filePreviewDTO;
@@ -304,13 +324,13 @@ public class ProjectService {
         filePreviewDTO).build();
   }
 
-  private MoreInfoDTO datasetInfo(Integer inodeId) {
+  private MoreInfoDTO datasetInfo(Long inodeId) {
     Inode inode = inodes.findById(inodeId);
     if (inode == null) {
       return null;
     }
     List<Dataset> ds = datasetFacade.findByInode(inode);
-    if(ds !=null && !ds.isEmpty() && !ds.get(0).isSearchable()){
+    if (ds != null && !ds.isEmpty() && !ds.get(0).isSearchable()) {
       return null;
     }
     MoreInfoDTO info = new MoreInfoDTO(inode);
@@ -320,15 +340,15 @@ public class ProjectService {
     info.setPath(inodes.getPath(inode));
     return info;
   }
-  
-  private MoreInfoDTO inodeInfo(Integer inodeId, Integer projectId) {
+
+  private MoreInfoDTO inodeInfo(Long inodeId, Integer projectId) {
     Inode inode = inodes.findById(inodeId);
     if (inode == null) {
       return null;
     }
     String group = inode.getHdfsGroup().getName();
     Project project = projectFacade.find(projectId);
-    if(project!=null && !project.getName().equals(hdfsUsersBean.getProjectName(group))){
+    if (project != null && !project.getName().equals(hdfsUsersBean.getProjectName(group))) {
       return null;
     }
     MoreInfoDTO info = new MoreInfoDTO(inode);
@@ -338,28 +358,18 @@ public class ProjectService {
     info.setPath(inodes.getPath(inode));
     return info;
   }
-  
+
   @GET
   @Path("getDatasetInfo/{inodeId}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.ANYONE})
-  public Response getDatasetInfo(
-      @PathParam("inodeId") Integer inodeId,
-      @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException {
+  public Response getDatasetInfo(@PathParam("inodeId") Long inodeId) throws DatasetException {
     Inode inode = inodes.findById(inodeId);
-    if (inode == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.DATASET_NOT_FOUND);
-    }
-
     Inode parent = inodes.findParent(inode);
     Project proj = projectFacade.findByName(parent.getInodePK().getName());
     Dataset ds = datasetFacade.findByProjectAndInode(proj, inode);
 
     if (ds == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.DATASET_NOT_FOUND);
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_FOUND, Level.FINE, "inodeId: " + inodeId);
     }
 
     List<Dataset> projectsContainingInode = datasetFacade.findByInode(inode);
@@ -375,42 +385,43 @@ public class ProjectService {
   }
 
   @GET
-  @Path("{id}/getInodeInfo/{inodeId}")
+  @Path("{projectId}/getInodeInfo/{inodeId}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.ANYONE})
-  public Response getDatasetInfo(
-      @PathParam("id") Integer projectId,
-      @PathParam("inodeId") Integer inodeId,
-      @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException {
+  public Response getDatasetInfo(@PathParam("projectId") Integer projectId, @PathParam("inodeId") Long inodeId)
+      throws ProjectException, DatasetException {
     Inode inode = inodes.findById(inodeId);
     if (inode == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.DATASET_NOT_FOUND);
+      throw new DatasetException(RESTCodes.DatasetErrorCode.INODE_NOT_FOUND, Level.FINE, "inodeId: " + inodeId);
     }
-    String group = inode.getHdfsGroup().getName();
     Project project = projectFacade.find(projectId);
-    if(project!=null && !project.getName().equals(hdfsUsersBean.getProjectName(group))){
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.DATASET_NOT_PUBLIC);
+    if (project == null) {
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId);
     }
 
     DataSetDTO dataset = new DataSetDTO(inode.getInodePK().getName(), inodeId, project);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
         dataset).build();
   }
-  
+
   @GET
-  @Path("{id}")
+  @Path("{projectId}/check")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public Response findByProjectID(
-      @PathParam("id") Integer id,
-      @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException {
+  public Response checkProjectAccess(@PathParam("projectId") Integer id) {
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
+    json.setData(id);
+    return Response.ok(json).build();
+  }
 
-    // Get a specific project based on the id, Annotated so that 
-    // only the user with the allowed role is able to see it 
+  @GET
+  @Path("{projectId}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  public Response findByProjectID(@PathParam("projectId") Integer id) throws ProjectException {
+
+    // Get a specific project based on the id, Annotated so that
+    // only the user with the allowed role is able to see it
     ProjectDTO proj = projectController.getProjectByID(id);
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
@@ -418,33 +429,30 @@ public class ProjectService {
   }
 
   @PUT
-  @Path("{id}")
+  @Path("{projectId}")
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response updateProject(
-      ProjectDTO projectDTO,
-      @PathParam("id") Integer id,
-      @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException {
+      ProjectDTO projectDTO, @PathParam("projectId") Integer id,
+      @Context SecurityContext sc) throws ProjectException, DatasetException, HopsSecurityException,
+      ServiceException, FeaturestoreException, UserException {
 
-    JsonResponse json = new JsonResponse();
-    String userEmail = sc.getUserPrincipal().getName();
-    Users user = userFacade.findByEmail(userEmail);
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
+    Users user = jWTHelper.getUserPrincipal(sc);
     Project project = projectController.findProjectById(id);
 
     boolean updated = false;
 
     if (projectController.updateProjectDescription(project,
-        projectDTO.getDescription(), user)){
+        projectDTO.getDescription(), user)) {
       json.setSuccessMessage(ResponseMessages.PROJECT_DESCRIPTION_CHANGED);
       updated = true;
     }
 
     if (projectController.updateProjectRetention(project,
-        projectDTO.getRetentionPeriod(), user)){
-      json.setSuccessMessage(json.getSuccessMessage() + "\n" +
-          ResponseMessages.PROJECT_RETENTON_CHANGED);
+        projectDTO.getRetentionPeriod(), user)) {
+      json.setSuccessMessage(json.getSuccessMessage() + "\n" + ResponseMessages.PROJECT_RETENTON_CHANGED);
       updated = true;
     }
 
@@ -455,38 +463,25 @@ public class ProjectService {
 
       for (String s : projectDTO.getServices()) {
         ProjectServiceEnum se = null;
-        try {
-          se = ProjectServiceEnum.valueOf(s.toUpperCase());
-          if (projectController.addService(project, se, user, dfso, udfso)) {
-            // Service successfully enabled
-            json.setSuccessMessage(json.getSuccessMessage() + "\n"
-                + ResponseMessages.PROJECT_SERVICE_ADDED
-                + s
-            );
-            updated = true;
+        se = ProjectServiceEnum.valueOf(s.toUpperCase());
+        List<Future<?>> serviceFutureList = projectController.addService(project, se, user, dfso, udfso);
+        if (serviceFutureList != null) {
+          // Wait for the futures
+          for (Future f : serviceFutureList) {
+            try {
+              f.get();
+            } catch (InterruptedException | ExecutionException e) {
+              throw new ServiceException(RESTCodes.ServiceErrorCode.SERVICE_GENERIC_ERROR,
+                  Level.SEVERE, "service: " + s, e.getMessage(), e);
+            }
           }
-        } catch (IllegalArgumentException iex) {
-          logger.log(Level.SEVERE,
-              ResponseMessages.PROJECT_SERVICE_NOT_FOUND);
-          json.setErrorMsg(s + ResponseMessages.PROJECT_SERVICE_NOT_FOUND + "\n "
-              + json.getErrorMsg());
-        } catch (ServiceException sex) {
-          // Error enabling the service
-          String error = null;
-          switch (se) {
-            case ZEPPELIN:
-              error = ResponseMessages.ZEPPELIN_ADD_FAILURE + Settings.ServiceDataset.ZEPPELIN.getName();
-              break;
-            case JUPYTER:
-              error = ResponseMessages.JUPYTER_ADD_FAILURE + Settings.ServiceDataset.JUPYTER.getName();
-              break;
-            case HIVE:
-              error = ResponseMessages.HIVE_ADD_FAILURE;
-              break;
-            default:
-              error = ResponseMessages.PROJECT_SERVICE_ADD_FAILURE;
-          }
-          json.setErrorMsg(json.getErrorMsg() + "\n" + error);
+
+          // Service successfully enabled
+          json.setSuccessMessage(json.getSuccessMessage() + "\n"
+              + ResponseMessages.PROJECT_SERVICE_ADDED
+              + s
+          );
+          updated = true;
         }
       }
 
@@ -508,33 +503,30 @@ public class ProjectService {
   }
 
   private void populateActiveServices(List<String> projectServices,
-      TourProjectType tourType) {
+                                      TourProjectType tourType) {
     for (ProjectServiceEnum service : tourType.getActiveServices()) {
       projectServices.add(service.name());
     }
   }
-  
+
   @POST
   @Path("starterProject/{type}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.ANYONE})
-  public Response starterProject(
-      @PathParam("type") String type,
-      @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException {
+  public Response example(@PathParam("type") String type, @Context HttpServletRequest req, @Context SecurityContext sc)
+      throws DatasetException,
+      GenericException, KafkaException, ProjectException, UserException, ServiceException, HopsSecurityException,
+      FeaturestoreException, JobException {
+    if (!Arrays.asList(TourProjectType.values()).contains(TourProjectType.valueOf(type.toUpperCase()))) {
+      throw new IllegalArgumentException("Type must be one of: " + Arrays.toString(TourProjectType.values()));
+    }
+
     ProjectDTO projectDTO = new ProjectDTO();
     Project project = null;
     projectDTO.setDescription("A demo project for getting started with " + type);
 
-    String owner = sc.getUserPrincipal().getName();
-    String username = usersController.generateUsername(owner);
+    Users user = jWTHelper.getUserPrincipal(sc);
+    String username = usersController.generateUsername(user.getEmail());
     List<String> projectServices = new ArrayList<>();
-    Users user = userFacade.findByEmail(owner);
-    if (user == null) {
-      logger.log(Level.SEVERE, "Problem finding the user {} ", owner);
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.PROJECT_FOLDER_NOT_CREATED);
-    }
     //save the project
     List<String> failedMembers = new ArrayList<>();
 
@@ -552,21 +544,19 @@ public class ProjectService {
       projectDTO.setProjectName("demo_" + TourProjectType.KAFKA.getTourName() + "_" + username);
       populateActiveServices(projectServices, TourProjectType.KAFKA);
       readMeMessage = "jar file to demonstrate Kafka streaming";
-    } else if (TourProjectType.DISTRIBUTED_TENSORFLOW.getTourName().replace("_", " ").equalsIgnoreCase(type)) {
-      // It's a Distributed TensorFlow guide
-      demoType = TourProjectType.DISTRIBUTED_TENSORFLOW;
-      projectDTO.setProjectName("demo_" + TourProjectType.DISTRIBUTED_TENSORFLOW.getTourName() + "_" + username);
-      populateActiveServices(projectServices, TourProjectType.DISTRIBUTED_TENSORFLOW);
-      readMeMessage = "Mnist data to demonstrate the creation of a distributed TensorFlow job";
-    } else if (TourProjectType.TENSORFLOW.getTourName().equalsIgnoreCase(type)) {
+    } else if (TourProjectType.DEEP_LEARNING.getTourName().equalsIgnoreCase(type)) {
       // It's a TensorFlow guide
-      demoType = TourProjectType.TENSORFLOW;
-      projectDTO.setProjectName("demo_" + TourProjectType.TENSORFLOW.getTourName() + "_" + username);
-      populateActiveServices(projectServices, TourProjectType.TENSORFLOW);
-      readMeMessage = "Mnist data and python files to demonstrate running TensorFlow noteooks";
-    } else {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.STARTER_PROJECT_BAD_REQUEST);
+      demoType = TourProjectType.DEEP_LEARNING;
+      projectDTO.setProjectName("demo_" + TourProjectType.DEEP_LEARNING.getTourName() + "_" + username);
+      populateActiveServices(projectServices, TourProjectType.DEEP_LEARNING);
+      readMeMessage = "Jupyter notebooks and training data for demonstrating how to run Deep Learning";
+    } else if (TourProjectType.FEATURESTORE.getTourName().equalsIgnoreCase(type)) {
+      // It's a Featurestore guide
+      demoType = TourProjectType.FEATURESTORE;
+      projectDTO.setProjectName("demo_" + TourProjectType.FEATURESTORE.getTourName() + "_" + username);
+      populateActiveServices(projectServices, TourProjectType.FEATURESTORE);
+      readMeMessage = "Dataset containing a jar file and data that can be used to run a sample spark-job for " +
+          "inserting data in the feature store.";
     }
     projectDTO.setServices(projectServices);
 
@@ -577,13 +567,9 @@ public class ProjectService {
       dfso = dfs.getDfsOps();
       username = hdfsUsersBean.getHdfsUserName(project, user);
       udfso = dfs.getDfsOps(username);
-      projectController.addTourFilesToProject(owner, project, dfso, dfso, demoType);
+      projectController.addTourFilesToProject(user.getEmail(), project, dfso, dfso, demoType);
       //TestJob dataset
       datasetController.generateReadme(udfso, "TestJob", readMeMessage, project.getName());
-      //Activate Anaconda and install numppy
-//      if (TourProjectType.TENSORFLOW.getTourName().equalsIgnoreCase(type)){
-//        projectController.initAnacondaForTFDemo(project, req.getSession().getId());
-//      }
     } catch (Exception ex) {
       projectController.cleanup(project, req.getSession().getId());
       throw ex;
@@ -598,34 +584,23 @@ public class ProjectService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).
         entity(project).build();
   }
-  
 
   @POST
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.ANYONE})
-  public Response createProject(
-          ProjectDTO projectDTO,
-          @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+  public Response createProject(ProjectDTO projectDTO, @Context HttpServletRequest req, @Context SecurityContext sc)
+      throws DatasetException,
+      GenericException, KafkaException, ProjectException, UserException, ServiceException, HopsSecurityException,
+      FeaturestoreException {
 
-    //check the user
-    String owner = sc.getUserPrincipal().getName();
-    Users user = userFacade.findByEmail(owner);
-    if (user == null) {
-      logger.log(Level.SEVERE, "Problem finding the user {} ", owner);
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              ResponseMessages.PROJECT_FOLDER_NOT_CREATED);
-    }
-    
+    Users user = jWTHelper.getUserPrincipal(sc);
     List<String> failedMembers = null;
     projectController.createProject(projectDTO, user, failedMembers, req.getSession().getId());
 
-    JsonResponse json = new JsonResponse();
-    json.setStatus("201");// Created
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     StringBuilder message = new StringBuilder();
     message.append(ResponseMessages.PROJECT_CREATED);
-    message.append("<br>You have ").append(user.getMaxNumProjects()- user.getNumCreatedProjects()).
+    message.append("<br>You have ").append(user.getMaxNumProjects() - user.getNumCreatedProjects()).
         append(" project(s) left that you can create");
     json.setSuccessMessage(message.toString());
 
@@ -633,140 +608,74 @@ public class ProjectService {
       json.setFieldErrors(failedMembers);
     }
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).
-            entity(json).build();
+        entity(json).build();
   }
-  
+
   @POST
-  @Path("{id}/delete")
+  @Path("{projectId}/delete")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  public Response removeProjectAndFiles(
-          @PathParam("id") Integer id,
-          @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException,
-          AccessControlException {
+  public Response removeProjectAndFiles(@PathParam("projectId") Integer id, @Context HttpServletRequest req,
+      @Context SecurityContext sc) throws ProjectException, GenericException {
 
-    String userMail = sc.getUserPrincipal().getName();
-    JsonResponse json = new JsonResponse();
-
-    try {
-//      String jsessionId = "";
-//      if (req.getCookies() != null && req.getCookies().length > 0) {
-//        for (Cookie cookie : req.getCookies()) {
-//          if (cookie.getName().equalsIgnoreCase("JSESSIONIDSSO")) {
-//            jsessionId = cookie.getValue();
-//          }
-//        }
-//      } 
-      projectController.removeProject(userMail, id, req.getSession().getId());
-    } catch (AppException ex) {
-      json.setErrorMsg(ex.getMessage());
-      return noCacheResponse.getNoCacheResponseBuilder(
-          Response.Status.BAD_REQUEST).entity(
-              json).build();
-    }
-
+    Users user = jWTHelper.getUserPrincipal(sc);
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
+    projectController.removeProject(user.getEmail(), id, req.getSession().getId());
     json.setSuccessMessage(ResponseMessages.PROJECT_REMOVED);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-            entity(json).build();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
 
   }
 
-  @Path("{id}/projectMembers")
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public ProjectMembersService projectMembers(
-      @PathParam("id") Integer id) throws AppException {
+  @Path("{projectId}/projectMembers")
+  public ProjectMembersService projectMembers(@PathParam("projectId") Integer id) {
     this.projectMembers.setProjectId(id);
-
     return this.projectMembers;
   }
 
-  @Path("{id}/dataset")
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public DataSetService datasets(
-      @PathParam("id") Integer id) throws AppException {
-    Project project = projectController.findProjectById(id);
-    if (project == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.PROJECT_NOT_FOUND);
-    }
+  @Path("{projectId}/dataset")
+  public DataSetService datasets(@PathParam("projectId") Integer id) {
     this.dataSet.setProjectId(id);
-
     return this.dataSet;
   }
 
-  @Path("{id}/localfs")
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public LocalFsService localFs(
-      @PathParam("id") Integer id) throws AppException {
+  @Path("{projectId}/localfs")
+  public LocalFsService localFs(@PathParam("projectId") Integer id) {
     this.localFs.setProjectId(id);
-
     return this.localFs;
   }
 
   @Path("{projectId}/jobs")
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public JobService jobs(@PathParam("projectId") Integer projectId) throws
-      AppException {
-    Project project = projectController.findProjectById(projectId);
-    if (project == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.PROJECT_NOT_FOUND);
-    }
-    return this.jobs.setProject(project);
+  public JobsResource jobs(@PathParam("projectId") Integer projectId) {
+    return this.jobs.setProject(projectId);
   }
 
-  @Path("{projectId}/biobanking")
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public BiobankingService biobanking(@PathParam("projectId") Integer projectId)
-      throws
-      AppException {
-    Project project = projectController.findProjectById(projectId);
-    return this.biobanking.setProject(project);
-  }
-  
   @Path("{projectId}/certs")
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public CertService certs(@PathParam("projectId") Integer projectId) throws
-      AppException {
-    Project project = projectController.findProjectById(projectId);
-    if (project == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.PROJECT_NOT_FOUND);
-    }
-    return this.certs.setProject(project);
+  public CertService certs(@PathParam("projectId") Integer projectId) {
+    return this.certs.setProjectId(projectId);
   }
 
   @GET
-  @Path("{id}/quotas")
+  @Path("{projectId}/quotas")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public Response quotasByProjectID(
-      @PathParam("id") Integer id,
-      @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException {
+  public Response quotasByProjectID(@PathParam("projectId") Integer id) throws ProjectException {
 
     QuotasDTO quotas = projectController.getQuotas(id);
 
     // If YARN quota or HDFS quota for project directory is null, something is wrong with the project
-    // throw an APPException
+    // throw a ProjectException
     if (quotas.getHdfsQuotaInBytes() == null || quotas.getYarnQuotaInSecs() == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.QUOTA_NOT_FOUND);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.QUOTA_NOT_FOUND, Level.FINE, "projectId: " + id);
     }
 
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-        quotas).build();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(quotas).build();
   }
 
   @GET
-  @Path("{id}/multiplicators")
+  @Path("{projectId}/multiplicators")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public Response getCurrentMultiplicator(
-      @PathParam("id") Integer id,
-      @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException {
+  public Response getCurrentMultiplicator(@PathParam("projectId") Integer id) {
 
     List<YarnPriceMultiplicator> multiplicatorsList = projectController.getYarnMultiplicators();
 
@@ -777,36 +686,26 @@ public class ProjectService {
   }
 
   @GET
-  @Path("{id}/importPublicDataset/{projectName}/{inodeId}")
+  @Path("{projectId}/importPublicDataset/{projectName}/{inodeId}")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response quotasByProjectID(
-      @PathParam("id") Integer id,
+      @PathParam("projectId") Integer id,
       @PathParam("projectName") String projectName,
-      @PathParam("inodeId") Integer dsId,
-      @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException {
+      @PathParam("inodeId") Long dsId,
+      @Context SecurityContext sc) throws ProjectException, DatasetException {
 
     Project destProj = projectController.findProjectById(id);
     Project dsProject = projectFacade.findByName(projectName);
 
-    if (dsProject == null || destProj == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          "Could not find the project or dataset.");
-    }
     Inode inode = inodes.findById(dsId);
-    if (inode == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          "Could not find the dataset.");
-    }
     Dataset ds = datasetFacade.findByProjectAndInode(dsProject, inode);
     if (ds == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          "Could not find the dataset.");
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_FOUND, Level.FINE, "project: " + projectName
+          + ", inodeId:" + dsId);
     }
 
-    if (ds.isPublicDs() == false) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.DATASET_NOT_PUBLIC);
+    if (!ds.isPublicDs()) {
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_PUBLIC, Level.FINE, "datasetId: " + ds.getId());
     }
 
     Dataset newDS = new Dataset(inode, destProj);
@@ -820,10 +719,10 @@ public class ProjectService {
     }
     newDS.setEditable(DatasetPermissions.OWNER_ONLY);
     datasetFacade.persistDataset(newDS);
-    Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
+    Users user = jWTHelper.getUserPrincipal(sc);
 
-    activityFacade.persistActivity(ActivityFacade.SHARED_DATA + newDS.toString()
-        + " with project " + destProj.getName(), destProj, user);
+    activityFacade.persistActivity(ActivityFacade.SHARED_DATA + newDS.toString() + " with project " + destProj.getName()
+        , destProj, user, ActivityFacade.ActivityFlag.DATASET);
 
     hdfsUsersBean.shareDataset(destProj, ds);
 
@@ -831,161 +730,139 @@ public class ProjectService {
   }
 
   @POST
-  @Path("{id}/logs/enable")
-  @Produces(MediaType.TEXT_PLAIN)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response enableLogs(@PathParam("id") Integer id) throws AppException {
-    Project project = projectController.findProjectById(id);
-    if (!project.getLogs()) {
-      projectFacade.enableLogs(project);
-      try {
-        projectController.addElasticsearch(project.getName());
-      } catch (IOException ex) {
-        logger.log(Level.SEVERE, ex.getMessage());
-        return noCacheResponse.getNoCacheResponseBuilder(
-            Response.Status.SERVICE_UNAVAILABLE).build();
-      }
-    }
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity("").build();
-  }
-  
-  @POST
-  @Path("{id}/downloadCert")
+  @Path("{projectId}/downloadCert")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  public Response downloadCerts(@PathParam("id") Integer id, @FormParam("password") String password,
-      @Context HttpServletRequest req) throws AppException {
-    Users user = userFacade.findByEmail(req.getRemoteUser());
-    if (user == null || user.getEmail().equals(Settings.AGENT_EMAIL) || !authController.validatePwd(user, password, req)
-        ) {
-      throw new AppException(Response.Status.FORBIDDEN.getStatusCode(), "Access to the certificat has been forbidden.");
+  public Response downloadCerts(@PathParam("projectId") Integer id, @FormParam("password") String password,
+      @Context HttpServletRequest req, @Context SecurityContext sc) throws ProjectException, HopsSecurityException,
+      DatasetException {
+    Users user = jWTHelper.getUserPrincipal(sc);
+    if (user.getEmail().equals(Settings.AGENT_EMAIL) || !authController.validatePwd(user, password, req)) {
+      throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_ACCESS_DENIED, Level.FINE);
     }
     Project project = projectController.findProjectById(id);
-    String keyStorePath;
-    String trustStorePath;
     String keyStore = "";
     String trustStore = "";
     try {
       //Read certs from database and stream them out
-      certificateMaterializer.materializeCertificates(user.getUsername(), project.getName());
-      keyStorePath = settings.getHopsworksTmpCertDir() + File.separator + HopsUtils.getProjectKeystoreName(project.
-          getName(), user.getUsername());
-      trustStorePath = settings.getHopsworksTmpCertDir() + File.separator + HopsUtils.
-          getProjectTruststoreName(project.getName(), user.getUsername());
-      keyStore = Base64.encodeBase64String(Files.readAllBytes(Paths.get(keyStorePath)));
-      trustStore = Base64.encodeBase64String(Files.readAllBytes(Paths.get(trustStorePath)));
-      //Send email with decrypted password to user
-      String certPwd = projectController.getProjectSpecificCertPw(user, project.getName(),
-          Base64.encodeBase64String(certsFacade.findUserCert(project.getName(), user.getUsername()).getUserKey()))
-          .getKeyPw();
+      certificateMaterializer.materializeCertificatesLocal(user.getUsername(), project.getName());
+      CertificateMaterializer.CryptoMaterial material = certificateMaterializer.getUserMaterial(user.getUsername(),
+          project.getName());
+      keyStore = Base64.encodeBase64String(material.getKeyStore().array());
+      trustStore = Base64.encodeBase64String(material.getTrustStore().array());
+      String certPwd = new String(material.getPassword());
       //Pop-up a message from admin
       messageController.send(user, userFacade.findByEmail(Settings.SITE_EMAIL), "Certificate Info", "",
           "An email was sent with the password for your project's certificates. If an email does not arrive shortly, "
-          + "please check spam first and then contact the HopsWorks administrator.", "");
+          + "please check spam first and then contact the administrator.", "");
       emailBean.sendEmail(user.getEmail(), Message.RecipientType.TO, "Hopsworks certificate information",
           "The password for keystore and truststore is:" + certPwd);
-    } catch (IOException ioe) {
-      logger.log(Level.SEVERE, ioe.getMessage());
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), ResponseMessages.DOWNLOAD_ERROR);
     } catch (Exception ex) {
-      logger.log(Level.SEVERE, null, ex);
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), ResponseMessages.DOWNLOAD_ERROR);
+      LOGGER.log(Level.SEVERE, null, ex);
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DOWNLOAD_ERROR, Level.SEVERE, "projectId: " + id,
+          ex.getMessage(), ex);
+    } finally {
+      certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());
     }
     CertsDTO certsDTO = new CertsDTO("jks", keyStore, trustStore);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(certsDTO).build();
   }
 
-  @Path("{id}/kafka")
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public KafkaService kafka(
-      @PathParam("id") Integer id) throws AppException {
-    Project project = projectController.findProjectById(id);
-    if (project == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.PROJECT_NOT_FOUND);
-    }
+  @Path("{projectId}/kafka")
+  public KafkaService kafka(@PathParam("projectId") Integer id) {
     this.kafka.setProjectId(id);
-
     return this.kafka;
   }
   
-  @Path("{id}/deviceManagement")
+  @Path("{projectId}/deviceManagement")
   public DeviceManagementService deviceManagement(
-      @PathParam("id") Integer id) throws AppException {
-    Project project = projectController.findProjectById(id);
-    if (project == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.PROJECT_NOT_FOUND);
-    }
-    this.deviceManagementService.setProjectId(id);
-
+    @PathParam("projectId") Integer projectId) {
+    this.deviceManagementService.setProject(projectId);
     return this.deviceManagementService;
   }
   
-  @Path("{id}/jupyter")
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public JupyterService jupyter(
-      @PathParam("id") Integer id) throws AppException {
-    Project project = projectController.findProjectById(id);
-    if (project == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.PROJECT_NOT_FOUND);
-    }
+  
+  @Path("{projectId}/jupyter")
+  public JupyterService jupyter(@PathParam("projectId") Integer id) {
     this.jupyter.setProjectId(id);
-
     return this.jupyter;
   }
 
-  @Path("{id}/tfserving")
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public TfServingService tfServingService(
-          @PathParam("id") Integer id) throws AppException {
-    Project project = projectController.findProjectById(id);
-    if (project == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              ResponseMessages.PROJECT_NOT_FOUND);
-    }
-    this.tfServingService.setProjectId(id);
+  @Path("{projectId}/tensorboard")
+  public TensorBoardService tensorboard(@PathParam("projectId") Integer id) {
+    this.tensorboard.setProjectId(id);
+    return this.tensorboard;
+  }
 
+  @Path("{projectId}/serving")
+  public TfServingService tfServingService(@PathParam("projectId") Integer id, @Context HttpServletRequest req) {
+    Users user = jWTHelper.getUserPrincipal(req);
+    this.tfServingService.setProjectId(id);
     return this.tfServingService;
   }
 
-  @Path("{id}/pythonDeps")
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public PythonDepsService pysparkDeps(@PathParam("id") Integer id) throws
-      AppException {
-    Project project = projectController.findProjectById(id);
-    if (project == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.PROJECT_NOT_FOUND);
-    }
-    this.pysparkService.setProject(project);
+  @Path("{projectId}/pythonDeps")
+  public PythonDepsService pysparkDeps(@PathParam("projectId") Integer id) {
+    this.pysparkService.setProjectId(id);
     return pysparkService;
   }
 
-  @Path("{id}/dela")
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public DelaProjectService dela(@PathParam("id") Integer id) throws AppException {
-    Project project = projectController.findProjectById(id);
-    if (project == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-        ResponseMessages.PROJECT_NOT_FOUND);
-    }
+  @Path("{projectId}/dela")
+  public DelaProjectService dela(@PathParam("projectId") Integer id) {
     this.delaService.setProjectId(id);
-
     return this.delaService;
   }
-  
-  @Path("{id}/delacluster")
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public DelaClusterProjectService delacluster(@PathParam("id") Integer id) throws AppException {
-    Project project = projectController.findProjectById(id);
-    if (project == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-        ResponseMessages.PROJECT_NOT_FOUND);
-    }
-    this.delaclusterService.setProjectId(id);
 
+  @Path("{projectId}/delacluster")
+  public DelaClusterProjectService delacluster(@PathParam("projectId") Integer id) {
+    this.delaclusterService.setProjectId(id);
     return this.delaclusterService;
   }
+  
+  @Path("{projectId}/activities")
+  public ProjectActivitiesResource activities(@PathParam("projectId") Integer id) {
+    this.activitiesResource.setProjectId(id);
+    return this.activitiesResource;
+  }
+
+  @PUT
+  @Path("{projectId}/pia")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
+  public Response updatePia(Pia pia, @PathParam("projectId") Integer projectId) {
+    piaFacade.mergeUpdate(pia, projectId);
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
+  }
+
+
+  @GET
+  @Path("{projectId}/pia")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  public Response getPia(@PathParam("projectId") Integer projectId) throws ProjectException {
+
+    Project project = projectController.findProjectById(projectId);
+    if (project == null) {
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId);
+    }
+    Pia pia = piaFacade.findByProject(projectId);
+    GenericEntity<Pia> genericPia = new GenericEntity<Pia>(pia) {
+    };
+
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(genericPia).build();
+  }
+
+  @ApiOperation(value = "Model inference sub-resource", tags = {"Inference"})
+  @Path("/{projectId}/inference")
+  public InferenceResource infer(@PathParam("projectId") Integer projectId) {
+    inference.setProjectId(projectId);
+    return inference;
+  }
+
+  @Path("{id}/featurestores")
+  public FeaturestoreService featurestoreService(@PathParam("id") Integer id, @Context HttpServletRequest req) {
+    featurestoreService.setProjectId(id);
+    return featurestoreService;
+  }
+
 }

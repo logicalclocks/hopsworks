@@ -1,6 +1,48 @@
+/*
+ * Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
+ * This file is part of Hopsworks
+ * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ *
+ * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU Affero General Public License as published by the Free Software Foundation,
+ * either version 3 of the License, or (at your option) any later version.
+ *
+ * Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
+ * Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this
+ * software and associated documentation files (the "Software"), to deal in the Software
+ * without restriction, including without limitation the rights to use, copy, modify, merge,
+ * publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+ * persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or
+ * substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  OR IMPLIED, INCLUDING
+ * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+ * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package io.hops.hopsworks.rest.application.config;
 
-import io.hops.hopsworks.api.device.DeviceJwtAuthFilter;
+import io.hops.hopsworks.api.exception.mapper.RESTApiThrowableMapper;
+import io.hops.hopsworks.api.jobs.JobsResource;
+import io.hops.hopsworks.api.jobs.executions.ExecutionsResource;
+import io.hops.hopsworks.api.user.UsersResource;
 import io.swagger.annotations.Api;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -16,23 +58,17 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.api.device.DeviceManagementService.class);
     register(io.hops.hopsworks.api.device.DeviceService.class);
     register(io.hops.hopsworks.api.elastic.ElasticService.class);
-    register(io.hops.hopsworks.api.exception.mapper.AccessControlExceptionMapper.class);
-    register(io.hops.hopsworks.api.exception.mapper.AppExceptionMapper.class);
-    register(io.hops.hopsworks.api.exception.mapper.AuthExceptionMapper.class);
-    register(io.hops.hopsworks.api.exception.mapper.LoginExceptionMapper.class);
-    register(io.hops.hopsworks.api.exception.mapper.ThrowableExceptionMapper.class);
-    register(io.hops.hopsworks.api.exception.mapper.TransactionExceptionMapper.class);
-    register(io.hops.hopsworks.api.filter.RequestAuthFilter.class);
-    register(DeviceJwtAuthFilter.class);
-    register(io.hops.hopsworks.api.jobs.AdamService.class);
-    register(io.hops.hopsworks.api.jobs.BiobankingService.class);
-    register(io.hops.hopsworks.api.jobs.ExecutionService.class);
-    register(io.hops.hopsworks.api.jobs.FlinkService.class);
-    register(io.hops.hopsworks.api.jobs.JobService.class);
+    register(RESTApiThrowableMapper.class);
+    register(io.hops.hopsworks.api.filter.ProjectAuthFilter.class);
+    register(io.hops.hopsworks.api.filter.AuthFilter.class);
+    register(io.hops.hopsworks.api.filter.JWTAutoRenewFilter.class);
+    register(io.hops.hopsworks.api.jwt.JWTResource.class);
+    register(ExecutionsResource.class);
+    register(JobsResource.class);
     register(io.hops.hopsworks.api.jupyter.JupyterService.class);
-    register(io.hops.hopsworks.api.tensorflow.TfServingService.class);
+    register(io.hops.hopsworks.api.serving.TfServingService.class);
+    register(io.hops.hopsworks.api.serving.inference.InferenceResource.class);
     register(io.hops.hopsworks.api.jobs.KafkaService.class);
-    register(io.hops.hopsworks.api.jobs.SparkService.class);
     register(io.hops.hopsworks.api.project.DataSetService.class);
     register(io.hops.hopsworks.api.project.HistoryService.class);
     register(io.hops.hopsworks.api.project.MessageService.class);
@@ -42,9 +78,9 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.api.project.RequestService.class);
     register(io.hops.hopsworks.api.project.CertService.class);
     register(io.hops.hopsworks.api.pythonDeps.PythonDepsService.class);
-    register(io.hops.hopsworks.api.user.ActivityService.class);
+    register(io.hops.hopsworks.api.activities.ProjectActivitiesResource.class);
     register(io.hops.hopsworks.api.user.AuthService.class);
-    register(io.hops.hopsworks.api.user.UserService.class);
+    register(UsersResource.class);
     register(io.hops.hopsworks.api.util.BannerService.class);
     register(io.hops.hopsworks.api.util.ClusterUtilisationService.class);
     register(io.hops.hopsworks.api.util.DownloadService.class);
@@ -64,8 +100,12 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.api.zeppelin.rest.ZeppelinRestApi.class);
     register(io.hops.hopsworks.api.app.ApplicationService.class);
     register(io.hops.hopsworks.api.cluster.Monitor.class);
-
-    // admin
+    register(io.hops.hopsworks.api.serving.ServingConfResource.class);
+    register(io.hops.hopsworks.api.featurestore.FeaturestoreService.class);
+    register(io.hops.hopsworks.api.device.DeviceJwtAuthFilter.class);
+    
+    
+      // admin
     register(io.hops.hopsworks.api.admin.UsersAdmin.class);
     register(io.hops.hopsworks.api.admin.SystemAdminService.class);
     register(io.hops.hopsworks.api.admin.ProjectsAdmin.class);
@@ -73,7 +113,7 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.api.admin.CertificateMaterializerAdmin.class);
 
     register(org.glassfish.jersey.media.multipart.MultiPartFeature.class);
-    
+
     //dela
     register(io.hops.hopsworks.api.dela.DelaClusterService.class);
     register(io.hops.hopsworks.api.dela.DelaClusterProjectService.class);

@@ -1,3 +1,42 @@
+/*
+ * Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
+ * This file is part of Hopsworks
+ * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ *
+ * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU Affero General Public License as published by the Free Software Foundation,
+ * either version 3 of the License, or (at your option) any later version.
+ *
+ * Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
+ * Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this
+ * software and associated documentation files (the "Software"), to deal in the Software
+ * without restriction, including without limitation the rights to use, copy, modify, merge,
+ * publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+ * persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or
+ * substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  OR IMPLIED, INCLUDING
+ * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+ * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package io.hops.hopsworks.common.dao.user.security.audit;
 
 import java.io.Serializable;
@@ -34,19 +73,15 @@ import io.hops.hopsworks.common.dao.user.Users;
   @NamedQuery(name = "RolesAudit.findByAction",
           query = "SELECT r FROM RolesAudit r WHERE r.action = :action"),
   @NamedQuery(name = "RolesAudit.findByTime",
-          query = "SELECT r FROM RolesAudit r WHERE r.time = :time"),
+          query = "SELECT r FROM RolesAudit r WHERE r.actionTimestamp = :actionTimestamp"),
   @NamedQuery(name = "RolesAudit.findByMessage",
           query = "SELECT r FROM RolesAudit r WHERE r.message = :message"),
   @NamedQuery(name = "RolesAudit.findByIp",
           query = "SELECT r FROM RolesAudit r WHERE r.ip = :ip"),
-  @NamedQuery(name = "RolesAudit.findByOs",
-          query = "SELECT r FROM RolesAudit r WHERE r.os = :os"),
+  @NamedQuery(name = "RolesAudit.findByUserAgent",
+        query = "SELECT r FROM RolesAudit r WHERE r.userAgent = :userAgent"),
   @NamedQuery(name = "RolesAudit.findByOutcome",
-          query = "SELECT r FROM RolesAudit r WHERE r.outcome = :outcome"),
-  @NamedQuery(name = "RolesAudit.findByBrowser",
-          query = "SELECT r FROM RolesAudit r WHERE r.browser = :browser"),
-  @NamedQuery(name = "RolesAudit.findByMac",
-          query = "SELECT r FROM RolesAudit r WHERE r.mac = :mac")})
+          query = "SELECT r FROM RolesAudit r WHERE r.outcome = :outcome")})
 public class RolesAudit implements Serializable {
 
   private static final long serialVersionUID = 1L;
@@ -58,30 +93,21 @@ public class RolesAudit implements Serializable {
   @Size(max = 45)
   @Column(name = "action")
   private String action;
-  @Column(name = "time")
+  @Column(name = "action_timestamp")
   @Temporal(TemporalType.TIMESTAMP)
-  private Date time;
+  private Date actionTimestamp;
   @Size(max = 45)
   @Column(name = "message")
   private String message;
+  @Size(max = 255)
+  @Column(name = "useragent")
+  private String userAgent;
   @Size(max = 45)
   @Column(name = "ip")
   private String ip;
   @Size(max = 45)
   @Column(name = "outcome")
   private String outcome;
-  @Size(max = 45)
-  @Column(name = "browser")
-  private String browser;
-  @Size(max = 45)
-  @Column(name = "os")
-  private String os;
-  @Size(max = 254)
-  @Column(name = "email")
-  private String email;
-  @Size(max = 45)
-  @Column(name = "mac")
-  private String mac;
   @JoinColumn(name = "target",
           referencedColumnName = "uid")
   @ManyToOne
@@ -95,105 +121,55 @@ public class RolesAudit implements Serializable {
   public RolesAudit() {
   }
 
-  public RolesAudit(Long logId) {
-    this.logId = logId;
-  }
-
-  public Long getLogId() {
-    return logId;
-  }
-
-  public void setLogId(Long logId) {
-    this.logId = logId;
-  }
-
-  public Users getInitiator() {
-    return initiator;
-  }
-
-  public void setInitiator(Users initiator) {
+  public RolesAudit(String action, Date time, String message, String userAgent, String ip,
+                    String outcome, Users target, Users initiator) {
+    this.action = action;
+    this.actionTimestamp = time;
+    this.message = message;
+    this.userAgent = userAgent;
+    this.ip = ip;
+    this.outcome = outcome;
+    this.target = target;
     this.initiator = initiator;
   }
 
-  public String getAction() {
-    return action;
-  }
+  public RolesAudit(Long logId) { this.logId = logId; }
 
-  public void setAction(String action) {
-    this.action = action;
-  }
+  public Long getLogId() { return logId; }
 
-  public Date getTime() {
-    return time;
-  }
+  public void setLogId(Long logId) { this.logId = logId; }
 
-  public void setTime(Date time) {
-    this.time = time;
-  }
+  public Users getInitiator() { return initiator; }
 
-  public String getMessage() {
-    return message;
-  }
+  public void setInitiator(Users initiator) { this.initiator = initiator; }
 
-  public void setMessage(String message) {
-    this.message = message;
-  }
+  public String getAction() { return action; }
 
-  public String getIp() {
-    return ip;
-  }
+  public void setAction(String action) { this.action = action; }
 
-  public void setIp(String ip) {
-    this.ip = ip;
-  }
+  public Date getActionTimestamp() { return actionTimestamp; }
 
-  public String getOutcome() {
-    return outcome;
-  }
+  public void setActionTimestamp(Date time) { this.actionTimestamp = time; }
 
-  public void setOutcome(String outcome) {
-    this.outcome = outcome;
-  }
+  public String getMessage() { return message; }
 
-  public String getBrowser() {
-    return browser;
-  }
+  public void setMessage(String message) { this.message = message; }
 
-  public void setBrowser(String browser) {
-    this.browser = browser;
-  }
+  public String getIp() { return ip; }
 
-  public String getMac() {
-    return mac;
-  }
+  public void setIp(String ip) { this.ip = ip; }
 
-  public void setMac(String mac) {
-    this.mac = mac;
-  }
+  public String getOutcome() { return outcome; }
 
-  public Users getTarget() {
-    return target;
-  }
+  public void setOutcome(String outcome) { this.outcome = outcome; }
 
-  public void setTarget(Users target) {
-    this.target = target;
-  }
+  public String getUserAgent() { return userAgent; }
 
-  public String getOs() {
-    return os;
-  }
+  public void setUserAgent(String userAgent) { this.userAgent = userAgent; }
 
-  public void setOs(String os) {
-    this.os = os;
-  }
+  public Users getTarget() { return target; }
 
-  public String getEmail() {
-    return email;
-  }
-
-  public void setEmail(String email) {
-    this.email = email;
-  }
+  public void setTarget(Users target) { this.target = target; }
 
   @Override
   public int hashCode() {
@@ -201,6 +177,7 @@ public class RolesAudit implements Serializable {
     hash += (logId != null ? logId.hashCode() : 0);
     return hash;
   }
+
 
   @Override
   public boolean equals(Object object) {
@@ -218,7 +195,16 @@ public class RolesAudit implements Serializable {
 
   @Override
   public String toString() {
-    return "se.kth.bb.security.audit.model.RolesAudit[ logId=" + logId + " ]";
+    return "RolesAudit{" +
+        "logId=" + logId +
+        ", action='" + action + '\'' +
+        ", time=" + actionTimestamp +
+        ", message='" + message + '\'' +
+        ", userAgent='" + userAgent + '\'' +
+        ", ip='" + ip + '\'' +
+        ", outcome='" + outcome + '\'' +
+        ", target=" + target +
+        ", initiator=" + initiator +
+        '}';
   }
-
 }
