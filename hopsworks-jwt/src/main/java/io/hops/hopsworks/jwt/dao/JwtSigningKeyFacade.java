@@ -88,8 +88,8 @@ public class JwtSigningKeyFacade {
     String base64Encoded = signingKeyGenerator.getSigningKey(alg.getJcaName());
     signingKey = new JwtSigningKey(base64Encoded, keyName);
     persist(signingKey);
-    signingKey = findByName(keyName);
-    return signingKey;
+    JwtSigningKey newSigningKey = findByName(keyName);
+    return newSigningKey;
   }
 
   public void persist(JwtSigningKey invalidJwt) {

@@ -1,0 +1,203 @@
+<!--  
+ ~ The MIT License (MIT)
+ ~
+ ~ Copyright (c) 2013 joni2back
+ ~
+ ~ Permission is hereby granted, free of charge, to any person obtaining a copy of
+ ~ this software and associated documentation files (the "Software"), to deal in
+ ~ the Software without restriction, including without limitation the rights to
+ ~ use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+ ~ the Software, and to permit persons to whom the Software is furnished to do so,
+ ~ subject to the following conditions:
+ ~
+ ~ The above copyright notice and this permission notice shall be included in all
+ ~ copies or substantial portions of the Software.
+ ~
+ ~ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ ~ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+ ~ FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ ~ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ ~ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ ~ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ -->
+<table class="table mb0 table-files noselect">
+    <thead>
+        <tr>
+            <th>
+                <a href="" ng-click="order('model.name')">
+                    {{"name"}}
+                    <span class="sortorder" ng-show="predicate[1] === 'model.name'" ng-class="{reverse:reverse}"></span>
+                </a>
+            </th>
+            <th class="hidden-xs" ng-hide="config.hideSize">
+                <a href="" ng-click="order('model.size')">
+                    {{"size"}}
+                    <span class="sortorder" ng-show="predicate[1] === 'model.size'" ng-class="{reverse:reverse}"></span>
+                </a>
+            </th>
+            <th class="hidden-sm hidden-xs" ng-hide="config.hideDate">
+                <a href="" ng-click="order('model.date')">
+                    {{"date"}}
+                    <span class="sortorder" ng-show="predicate[1] === 'model.date'" ng-class="{reverse:reverse}"></span>
+                </a>
+            </th>
+            <th class="hidden-sm hidden-xs" ng-hide="config.hidePermissions">
+                <a href="" ng-click="order('model.permissions')">
+                    {{"permissions"}}
+                    <span class="sortorder" ng-show="predicate[1] === 'model.permissions'" ng-class="{reverse:reverse}"></span>
+                </a>
+            </th>
+        </tr>
+    </thead>
+    <tbody class="file-item">
+        <tr ng-show="fileNavigator.requesting">
+            <td colspan="5">
+                <div ng-include="config.tplPath + '/spinner.html'"></div>
+            </td>
+        </tr>
+        <tr ng-show="!fileNavigator.requesting &amp;&amp; fileNavigator.fileList.length < 1 &amp;&amp; !fileNavigator.error">
+            <td colspan="5">
+                {{"no_files_in_folder"}}...
+            </td>
+        </tr>
+        <tr ng-show="!fileNavigator.requesting &amp;&amp; fileNavigator.error">
+            <td colspan="5">
+                {{ fileNavigator.error }}
+            </td>
+        </tr>
+        
+<!--ng-right-click="selectOrUnselect(item, $event)"-->         
+        <tr class="item-list" 
+            ng-repeat="item in $parent.fileList = (fileNavigator.fileList | filter: {model:{name: query}} | orderBy:predicate:reverse)" 
+            ng-show="!fileNavigator.requesting" 
+            context-menu
+            data-target="menu-{{ $index}}"
+            ng-click="selectOrUnselect(item, $event)" ng-dblclick="smartClick(item)" 
+            ng-class="{selected: isSelected(item)}">
+            <td>
+                <a href="" title="{{item.model.name}} ({{item.model.size | humanReadableFileSize}})">
+                    <i class="glyphicon glyphicon-folder-close" ng-show="item.model.type === 'dir'"></i>
+                    <i class="glyphicon glyphicon-file" ng-show="item.model.type === 'file'"></i>
+                    {{item.model.name | limitTo : 64}}
+                </a>
+            </td>
+            <td class="hidden-xs">
+                <span ng-show="item.model.type !== 'dir' || config.showSizeForDirectories">
+                    {{item.model.size | humanReadableFileSize}}
+                </span>
+            </td>
+            <td class="hidden-sm hidden-xs" ng-hide="config.hideDate">
+                {{item.model.date | formatDate }}
+            </td>
+            <td class="hidden-sm hidden-xs" ng-hide="config.hidePermissions">
+                {{item.model.perms.toCode(item.model.type === 'dir'?'d':'-')}}
+            </td>
+            
+      <td uib-dropdown class="position-fixed" id="menu-{{$index}}" style="border-top: none">
+
+        <!--<div id="context-menu" uib-dropdown class="dropdown clearfix animated fast fadeIn">-->
+        <ul uib-dropdown-menu class="dropdown-menu dropdown-menu-right" role="menu" aria-labelledby="simple-btn-keyboard-nav" ng-show="temps.length">
+
+          <li role="menuitem" ng-show="singleSelection() && singleSelection().isFolder()">
+            <a href="" tabindex="1" ng-click="smartClick(singleSelection())">
+              <i class="glyphicon glyphicon-folder-open"></i> {{'open'}}
+            </a>
+          </li>
+
+          <li role="menuitem" ng-show="config.pickCallback && singleSelection() && singleSelection().isSelectable()">
+            <a href="" tabindex="2" ng-click="config.pickCallback(singleSelection().model)">
+              <i class="glyphicon glyphicon-hand-up"></i> {{'select_this'}}
+            </a>
+          </li>
+
+          <!--<li ng-show="config.allowedActions.download && !selectionHas('dir') && singleSelection()">-->
+          <li role="menuitem" >
+            <a href="" tabindex="3" ng-click="download()">
+              <i class="glyphicon glyphicon-cloud-download"></i> {{'download'}}
+            </a>
+          </li>
+
+          <li role="menuitem" ng-show="config.allowedActions.downloadMultiple && !selectionHas('dir') && !singleSelection()">
+            <a href="" tabindex="4" ng-click="download()">
+              <i class="glyphicon glyphicon-cloud-download"></i> {{'download_as_zip'}}
+            </a>
+          </li>
+
+          <li role="menuitem" ng-show="config.allowedActions.preview && singleSelection().isImage() && singleSelection()">
+            <a href="" tabindex="5" ng-click="openImagePreview()">
+              <i class="glyphicon glyphicon-picture"></i> {{'view_item'}}
+            </a>
+          </li>
+
+          <li role="menuitem" ng-show="config.allowedActions.rename && singleSelection()">
+            <a href="" tabindex="6" ng-click="modal('rename')">
+              <i class="glyphicon glyphicon-edit"></i> {{'rename'}}
+            </a>
+          </li>
+
+          <li role="menuitem" ng-show="config.allowedActions.move">
+            <a href="" tabindex="7" ng-click="modalWithPathSelector('move')">
+              <i class="glyphicon glyphicon-arrow-right"></i> {{'move'}}
+            </a>
+          </li>
+
+          <li role="menuitem" ng-show="config.allowedActions.copy && !selectionHas('dir')">
+            <a href="" tabindex="8" ng-click="modalWithPathSelector('copy')">
+              <i class="glyphicon glyphicon-log-out"></i> {{'copy'}}
+            </a>
+          </li>
+
+          <li role="menuitem" ng-show="config.allowedActions.edit && singleSelection() && singleSelection().isEditable()">
+            <a href="" tabindex="9" ng-click="openEditItem()">
+              <i class="glyphicon glyphicon-pencil"></i> {{'edit'}}
+            </a>
+          </li>
+
+          <li role="menuitem" ng-show="config.allowedActions.changePermissions">
+            <a href="" tabindex="10" ng-click="modal('changepermissions')">
+              <i class="glyphicon glyphicon-lock"></i> {{'permissions'}}
+            </a>
+          </li>
+
+          <li role="menuitem" ng-show="config.allowedActions.compress && (!singleSelection() || selectionHas('dir'))">
+            <a href="" tabindex="11" ng-click="modal('compress')">
+              <i class="glyphicon glyphicon-compressed"></i> {{'compress'}}
+            </a>
+          </li>
+
+          <li role="menuitem" ng-show="config.allowedActions.extract && singleSelection() && singleSelection().isExtractable()">
+            <a href="" tabindex="12" ng-click="modal('extract')">
+              <i class="glyphicon glyphicon-export"></i> {{'extract'}}
+            </a>
+          </li>
+
+          <li class="divider" ng-show="config.allowedActions.remove"></li>
+
+          <li role="menuitem" ng-show="config.allowedActions.remove">
+            <a href="" tabindex="13" ng-click="modal('remove')">
+              <i class="glyphicon glyphicon-trash"></i> {{'remove'}}
+            </a>
+          </li>
+
+        </ul>
+
+        <ul uib-dropdown-menu class="dropdown-menu dropdown-menu-right" role="menu" aria-labelledby="dropdownMenu" ng-show="!temps.length">
+          <li role="menuitem" ng-show="config.allowedActions.createFolder">
+            <a href="" tabindex="1" ng-click="modal('newfolder') && prepareNewFolder()">
+              <i class="glyphicon glyphicon-plus"></i> {{'new_folder'}}
+            </a>
+          </li>
+          <li role="menuitem" ng-show="config.allowedActions.upload">
+            <a href="" tabindex="2" ng-click="modal('uploadfile')">
+              <i class="glyphicon glyphicon-cloud-upload"></i> {{'upload_files'}}
+            </a>
+          </li>
+        </ul>
+        <!--</div>-->              
+
+
+      </td>            
+            
+        </tr>
+    </tbody>
+</table>
