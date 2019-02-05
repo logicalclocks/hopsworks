@@ -381,7 +381,6 @@ public class RESTCodes {
     JOB_STOP_FAILED(1, "An error occurred while trying to stop this job.", Response.Status.BAD_REQUEST),
     JOB_TYPE_UNSUPPORTED(2, "Unsupported job type.", Response.Status.BAD_REQUEST),
     JOB_ACTION_UNSUPPORTED(3, "Unsupported action type.", Response.Status.BAD_REQUEST),
-    JOB_NAME_EXISTS(4, "Job with same name already exists.", Response.Status.CONFLICT),
     JOB_NAME_EMPTY(5, "Job name is not set.", Response.Status.BAD_REQUEST),
     JOB_NAME_INVALID(6, "Job name is invalid. Invalid charater(s) in job name, the following characters "
         + "(including space) are now allowed:" + Settings.FILENAME_DISALLOWED_CHARS, Response.Status.BAD_REQUEST),

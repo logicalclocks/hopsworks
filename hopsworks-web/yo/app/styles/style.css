@@ -146,6 +146,10 @@ a:focus {
   opacity: 0.5;
 }
 
+.modal-title {
+  word-wrap:  anywhere;
+}
+
 .modal-content {
   background-color: #fafafa;
 }

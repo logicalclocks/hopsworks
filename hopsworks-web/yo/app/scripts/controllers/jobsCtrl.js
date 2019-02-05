@@ -78,6 +78,8 @@ angular.module('hopsWorksApp')
             self.getAllJobsStatusIsPending = false;
             self.dimTable = false;
             self.sort = function (keyname) {
+                //Untoggle current job
+                self.untoggle(self.jobs[self.selectedIndex], self.selectedIndex);
                 if(self.sortKey !== keyname){
                     self.reverse = true;
                 } else {
@@ -119,7 +121,28 @@ angular.module('hopsWorksApp')
                 self.copy();
             };
 
-            self.buttonClickedToggle = function (name, display) {
+            self.makeACopy = function (job){
+                job.config.appName = "Copy-of-" + job.config.appName;
+                JobService.getJob(self.projectId, job.config.appName).then(
+                    function (success) {
+                        growl.warning("Job already exists", {title: "", ttl: 8000});
+                    }, function (error) {
+                        JobService.putJob(self.projectId, job.config).then(
+                            function (success) {
+                                self.getAllJobsStatus();
+                                // $location.path('project/' + self.projectId + '/jobs');
+                            }, function (error) {
+                                if (typeof error.data.usrMsg !== 'undefined') {
+                                    growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                                } else {
+                                    growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                                }
+                            });
+                    });
+
+            }
+
+              self.buttonClickedToggle = function (name, display) {
               self.buttonArray[name] = display;
               self.workingArray[name] = "true";
             };
@@ -200,12 +223,12 @@ angular.module('hopsWorksApp')
                   "value": " - " + mainFileVal,
                   "title": mainFileTxt},
                 "accordion4": {// Contains the job setup (main class, input variables,...)
-                  "isOpen": false,
+                  "isOpen": true,
                   "visible": true,
                   "value": "",
                   "title": jobDetailsTxt},
                 "accordion5": {//Contains the configuration and creation
-                  "isOpen": false,
+                  "isOpen": true,
                   "visible": true,
                   "value": "",
                   "title": "Configure and create"}
@@ -283,12 +306,15 @@ angular.module('hopsWorksApp')
 
                             jobsTemp.push(tempJob);
                         });
+
                         self.jobs.length = 0;
+                        //Overwrite all rows, update selected row
+                        self.jobs = jobsTemp;
                         self.totalItems = 0;
                         if(success.data.count !== undefined && success.data.count !== null) {
                             self.totalItems = success.data.count;
                         }
-                        self.jobs = JSON.parse(JSON.stringify(jobsTemp));
+                        // self.jobs = JSON.parse(JSON.stringify(jobsTemp));
 
                         angular.forEach(self.jobs, function (job, key) {
                             if (!job.running) {
@@ -319,6 +345,7 @@ angular.module('hopsWorksApp')
             };
 
             self.getJobsNextPage = function () {
+                self.untoggle(self.currentjob, self.selectedIndex);
                 var offset = self.pageSize * (self.currentPage - 1);
                 if (self.totalItems > offset) {
                     self.getAllJobsStatus(true, null, offset);
@@ -522,7 +549,12 @@ angular.module('hopsWorksApp')
                       .then(function (success) {
                         JobService.deleteJob(self.projectId, jobName).then(
                                 function (success) {
-                                  self.getAllJobsStatus();
+                                  //Iterate jobs array and remove job
+                                  for(var i = self.jobs.length -1; i >= 0 ; i--){
+                                    if(self.jobs[i].name === jobName){
+                                       self.jobs.splice(i, 1);
+                                    }
+                                  }
                                   self.hasSelectJob = false;
                                   StorageService.remove(self.projectId + "_jobui_" + jobName);
                                   growl.success("Job was deleted.", {title: 'Success', ttl: 5000});
@@ -539,7 +571,6 @@ angular.module('hopsWorksApp')
             };
 
 
-            //Called when clicking on a job row
             self.toggle = function (job, index) {
               //reset all jobs showing flag
               angular.forEach(self.jobs, function (job, key) {
@@ -562,26 +593,24 @@ angular.module('hopsWorksApp')
 
             ////////////////////////////////////////////////////////////////////
             self.untoggle = function (job, index) {
-              if(job === undefined || job === null){
+              if((job === undefined || job === null) && self.currentjob !== undefined && self.currentjob !== null) {
                   job = self.currentjob;
+              } else  {
+                  return;
               }
-              StorageService.remove(self.projectId + "_jobui_" + job.name)
+              StorageService.remove(self.projectId + "_jobui_" + job.name);
               //reset all jobs showing flag
-              angular.forEach(self.jobs, function (job, key) {
-                  job.showing = false;
-              });
+              for (var i = 0; i < self.jobs.length; i++) {
+                  self.jobs[i].showing = false;
+              }
 
-              if (index === undefined || index === null || self.currentToggledIndex !== index) {
                 self.hasSelectJob = false;
                 self.selectedIndex = -1;
                 self.currentToggledIndex = -1;
-              } else {
-                job.showing = true;
-              }
             };
             ////////////////////////////////////////////////////////////////////
 
-            $scope.$watch('jobsCtrl.jobFilter', function (val) {
+              $scope.$watch('jobsCtrl.jobFilter', function (val) {
                 self.getAllJobsStatus(true);
             });
 
@@ -599,7 +628,7 @@ angular.module('hopsWorksApp')
                     return;
                 }
                 self.getAllJobsStatus(false);
-              }, 5000);
+              }, 10000);
             };
             startPolling();
 

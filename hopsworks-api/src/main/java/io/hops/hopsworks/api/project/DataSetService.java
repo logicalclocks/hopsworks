@@ -1171,7 +1171,7 @@ public class DataSetService {
 
     //persist the job in the database
     Jobs jobdesc = null;
-    jobdesc = this.jobcontroller.createJob(user, project, ecConfig);
+    jobdesc = this.jobcontroller.putJob(user, project, null, ecConfig);
     //instantiate the job
     ErasureCodeJob encodeJob = new ErasureCodeJob(jobdesc, this.async, user,
             settings.getHadoopSymbolicLinkDir(), jobsMonitor);

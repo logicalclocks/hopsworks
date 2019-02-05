@@ -99,17 +99,20 @@ public class JobFacade extends AbstractFacade<Jobs> {
   //This seems to ensure that the entity is actually created and can later 
   //be found using em.find().
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  public Jobs create(Users creator, Project project,
-    JobConfiguration config) {
+  public Jobs put(Users creator, Project project,
+    JobConfiguration config, Jobs job) {
     //Argument checking
     if (creator == null || project == null || config == null) {
       throw new IllegalArgumentException("Owner, project and config must be non-null.");
     }
-    //First: create a job object
-    Jobs job = new Jobs(config, project, creator, config.
-      getAppName());
+    if(job == null) {
+      //First: create a job object
+      job = new Jobs(config, project, creator, config.getAppName());
+    } else {
+      job.setJobConfig(config);
+    }
     //Finally: persist it, getting the assigned id.
-    em.persist(job);
+    job = em.merge(job);
     em.flush(); //To get the id.
     return job;
   }

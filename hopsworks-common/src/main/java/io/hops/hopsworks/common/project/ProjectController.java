@@ -2474,7 +2474,7 @@ public class ProjectController {
           sparkJobConfiguration.setArgs("");
           sparkJobConfiguration.setAppName(Settings.HOPS_FEATURESTORE_TOUR_JOB_NAME);
           sparkJobConfiguration.setLocalResources(new LocalResourceDTO[0]);
-          Jobs job = jobController.createJob(user, project, sparkJobConfiguration);
+          Jobs job = jobController.putJob(user, project, null, sparkJobConfiguration);
           activityFacade.persistActivity(ActivityFacade.CREATED_JOB + job.getName(),
                 project, user, ActivityFacade.ActivityFlag.SERVICE);
           executionController.start(job, user);
@@ -2488,8 +2488,8 @@ public class ProjectController {
   }
 
   public List<YarnPriceMultiplicator> getYarnMultiplicators() {
-    List<YarnPriceMultiplicator> multiplicators = yarnProjectsQuotaFacade.getMultiplicators();
-    if (multiplicators == null || multiplicators.isEmpty()) {
+    List<YarnPriceMultiplicator> multiplicators = new ArrayList<>(yarnProjectsQuotaFacade.getMultiplicators());
+    if (multiplicators.isEmpty()) {
       YarnPriceMultiplicator multiplicator = new YarnPriceMultiplicator();
       multiplicator.setMultiplicator(Settings.DEFAULT_YARN_MULTIPLICATOR);
       multiplicator.setId("-1");

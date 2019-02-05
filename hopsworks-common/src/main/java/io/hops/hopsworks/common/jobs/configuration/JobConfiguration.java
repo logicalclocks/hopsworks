@@ -53,6 +53,8 @@ import io.hops.hopsworks.common.jobs.jobhistory.JobType;
 import io.hops.hopsworks.common.jobs.spark.SparkJobConfiguration;
 import io.hops.hopsworks.common.jobs.yarn.YarnJobConfiguration;
 
+import java.util.concurrent.ThreadLocalRandom;
+
 /**
  * Represents the persistable configuration of a runnable job.
  */
@@ -111,20 +113,16 @@ public abstract class JobConfiguration {
     this.kafka = kafka;
   }
 
-  /**
-   * As found in Effective Java, the equals contract cannot be satisfied for
-   * inheritance hierarchies that add fields in subclasses. Since this is the
-   * main goal of extension of this class, these objects should not be compared.
-   * <p/>
-   * @param o
-   * @return
-   */
   @Override
   public final boolean equals(Object o) {
-    throw new UnsupportedOperationException(
-            "JobConfiguration objects cannot be compared.");
+    return false;
   }
-
+  
+  @Override
+  public int hashCode() {
+    return ThreadLocalRandom.current().nextInt(0, 999999999 + 1);
+  }
+  
   public static class JobConfigurationFactory {
 
     /**

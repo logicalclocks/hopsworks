@@ -25,41 +25,44 @@ describe "On #{ENV['OS']}" do
           reset_session
         end
         it "should fail" do
-          create_sparktour_job(@project, $job_name)
+          create_sparktour_job(@project, "demo_job", 'jar', nil)
           expect_json(errorCode: 200003)
           expect_status(401)
         end
       end
-      context 'with authentication' do
-        before :all do
-          with_valid_tour_project("spark")
-        end
-        after :each do
-          clean_jobs(@project[:id])
-        end
-        describe 'create, get, delete executions' do
-          it "should start a job and get its executions" do
-            #create job
-            create_sparktour_job(@project, $job_name)
-            job_id = json_body[:id]
-            #start execution
-            start_execution(@project[:id], $job_name)
-            execution_id = json_body[:id]
-            expect_status(201)
-            expect(json_body[:state]).to eq "INITIALIZING"
-            #get execution
-            get_execution(@project[:id], $job_name, json_body[:id])
-            expect_status(200)
-            expect(json_body[:id]).to eq(execution_id)
-            #wait till it's finished and start second execution
-            wait_for_execution do
-              get_execution(@project[:id], $job_name, json_body[:id])
-              json_body[:state].eql? "FINISHED"
-            end
-            #start execution
-            start_execution(@project[:id], $job_name)
-            execution_id = json_body[:id]
-            expect_status(201)
+      job_types = ['py', 'jar', 'ipynb']
+      job_types.each do |type|
+        context 'with authentication and executable ' + type do
+          before :all do
+            with_valid_tour_project("spark")
+          end
+          after :each do
+            clean_jobs(@project[:id])
+          end
+          describe 'create, get, delete executions' do
+            it "should start a job and get its executions" do
+              #create job
+              $job_name_1 = "demo_job_1_" + type
+              create_sparktour_job(@project, $job_name_1, type, nil)
+              job_id = json_body[:id]
+              #start execution
+              start_execution(@project[:id], $job_name_1)
+              execution_id = json_body[:id]
+              expect_status(201)
+              expect(json_body[:state]).to eq "INITIALIZING"
+              #get execution
+              get_execution(@project[:id], $job_name_1, json_body[:id])
+              expect_status(200)
+              expect(json_body[:id]).to eq(execution_id)
+              #wait till it's finished and start second execution
+              wait_for_execution do
+                get_execution(@project[:id], $job_name_1, json_body[:id])
+                json_body[:state].eql? "FINISHED"
+              end
+              #start execution
+              start_execution(@project[:id], $job_name_1)
+              execution_id = json_body[:id]
+              expect_status(201)
 
             #get all executions of job
             get_executions(@project[:id], $job_name, "")
@@ -77,6 +80,10 @@ describe "On #{ENV['OS']}" do
           it "should start and stop job" do
             create_sparktour_job(@project, $job_name)
             expect_status(201)
+            it "should start and stop job" do
+              $job_name_2 = "demo_job_2_" + type
+              create_sparktour_job(@project, $job_name_2, type, nil)
+              expect_status(201)
 
             #start execution
             start_execution(@project[:id], $job_name)
@@ -86,6 +93,21 @@ describe "On #{ENV['OS']}" do
               get_execution(@project[:id], $job_name, execution_id)
               json_body[:state].eql? "ACCEPTED"
             end
+            it "should fail to start two executions in parallel" do
+              $job_name_3 = "demo_job_3_" + type
+              create_sparktour_job(@project, $job_name_3, type, nil)
+              start_execution(@project[:id], $job_name_3)
+              start_execution(@project[:id], $job_name_3)
+              expect_status(400)
+              expect_json(errorCode: 130010)
+              stop_execution(@project[:id], $job_name_3)
+            end
+            it "should run job and get out and err logs" do
+              $job_name_4 = "demo_job_4_" + type
+              create_sparktour_job(@project, $job_name_4, type, nil)
+              start_execution(@project[:id], $job_name_4)
+              execution_id = json_body[:id]
+              expect_status(201)
 
             stop_execution(@project[:id], $job_name)
             expect_status(200)
@@ -142,7 +164,7 @@ describe "On #{ENV['OS']}" do
         context 'with authentication' do
           before :all do
             with_valid_tour_project("spark")
-            create_sparktour_job(@project, $job_spark_1)
+            create_sparktour_job(@project, $job_spark_1, 'jar', nil)
             #start 3 executions
             for i in 0..2 do
               start_execution(@project[:id], $job_spark_1)
