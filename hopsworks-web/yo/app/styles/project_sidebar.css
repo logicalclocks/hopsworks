@@ -157,6 +157,16 @@
 .sidebar-nav li:nth-child(10):before {
   background-color: #ffa43d;
 }
+.sidebar-nav li:nth-child(11):before {
+  background-color: #ec1b5a;
+}
+.sidebar-nav li:nth-child(12):before {
+  background-color: #79aefe;
+}
+.sidebar-nav li:nth-child(13):before {
+  background-color: #314190;
+}
+
 .sidebar-nav li:hover:before,
 .sidebar-nav li.open:hover:before {
   width: 100%;

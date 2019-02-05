@@ -109,6 +109,7 @@
       <type>war</type>
     </dependency>
   </dependencies>
+
   <profiles>
     <profile>
       <id>jruby-tests</id>
