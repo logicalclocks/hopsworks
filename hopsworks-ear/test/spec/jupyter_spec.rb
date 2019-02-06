@@ -122,7 +122,7 @@ describe "On #{ENV['OS']}" do
         expect_status(404)
       end
 
-      it "should kill jupyter by timer" do
+      it "should be killed by timer" do
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/enable/#{version}/true"
         expect_status(200)
 
@@ -148,7 +148,7 @@ describe "On #{ENV['OS']}" do
         expect_status(404)
       end
 
-      it "should not kill jupyter by timer" do
+      it "should not be killed by timer" do
 
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/enable/#{version}/true"
         expect_status(200)
