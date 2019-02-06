@@ -162,21 +162,10 @@ angular.module('hopsWorksApp')
 
                         // Remove already choosen services from the service selection
                         // Check if airflow there already.
-                        var foundAirflow = false;
                         self.alreadyChoosenServices.forEach(function (entry) {
                           var index = self.projectTypes.indexOf(entry.toUpperCase());
                           self.projectTypes.splice(index, 1);
-                          if (entry.toUpperCase() === "AIRFLOW") {
-                            foundAirflow = true;
-                          }
                         });
-                        if (!foundAirflow) {
-                          AuthService.isAdmin().then(
-                                  function (success) {
-                                    self.projectTypes.push('AIRFLOW');
-                                  }, function (error) {
-                          });
-                        }
 
 
                         $cookies.put("projectID", self.projectId);
@@ -727,7 +716,7 @@ angular.module('hopsWorksApp')
 
             self.openWindow = function () {
               $window.open(self.ui, '_blank');
-            }
+            };
 
             self.connectToAirflow = function () {
               AirflowService.storeAirflowJWT(self.projectId).then(

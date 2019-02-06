@@ -100,8 +100,9 @@ public class JobController {
     if (config.getSchedule() != null) {
       scheduler.scheduleJobPeriodic(job);
     }
-    activityFacade.persistActivity(ActivityFacade.CREATED_JOB + job.getName(), project, user, ActivityFacade.
-          ActivityFlag.JOB);
+  
+    activityFacade.persistActivity(ActivityFacade.CREATED_JOB + getJobNameForActivity(job.getName()), project, user,
+      ActivityFacade.ActivityFlag.JOB);
     return job;
   }
   @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -110,8 +111,8 @@ public class JobController {
     if (isScheduleUpdated) {
       job.getJobConfig().setSchedule(schedule);
       scheduler.scheduleJobPeriodic(job);
-      activityFacade.persistActivity(ActivityFacade.SCHEDULED_JOB + job.getName(), project, user, ActivityFacade.
-          ActivityFlag.JOB);
+      activityFacade.persistActivity(ActivityFacade.SCHEDULED_JOB + getJobNameForActivity(job.getName()), project, user,
+        ActivityFacade.ActivityFlag.JOB);
     } else {
       throw new JobException(RESTCodes.JobErrorCode.JOB_SCHEDULE_UPDATE, Level.WARNING,
         "Schedule is not updated in the database for jobid: " + job.getId());
@@ -169,5 +170,13 @@ public class JobController {
         dfs.closeDfsClient(udfso);
       }
     }
+  }
+  
+  private String getJobNameForActivity(String jobName) {
+    String activityJobMsg = jobName;
+    if (jobName.length() > 60) {
+      activityJobMsg = jobName.substring(0, 60) + "...";
+    }
+    return activityJobMsg;
   }
 }
