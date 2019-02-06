@@ -78,6 +78,7 @@ angular.module('hopsWorksApp')
             self.reverse = true;
             self.getAllJobsStatusIsPending = false;
             self.dimTable = false;
+
             self.sort = function (keyname) {
                 //Untoggle current job
                 self.untoggle(self.jobs[self.selectedIndex], self.selectedIndex);
@@ -89,7 +90,7 @@ angular.module('hopsWorksApp')
                 self.sortKey = keyname;   //set the sortKey to the param passed
                 self.order();
                 //We need to fetch all the jobs for these
-                self.getAllJobsStatus(true);
+                self.getAllJobsStatus(true, true);
             };
 
             self.order = function () {
@@ -122,26 +123,28 @@ angular.module('hopsWorksApp')
                 self.copy();
             };
 
-            self.makeACopy = function (job){
-                job.config.appName = "Copy-of-" + job.config.appName;
-                JobService.getJob(self.projectId, job.config.appName).then(
+            self.makeACopy = function (config, i){
+                //Try to find latest available copy of doc
+                JobService.getJob(self.projectId, config.appName + "-Copy" + i).then(
                     function (success) {
-                        growl.warning("Job already exists", {title: "", ttl: 8000});
+                        i++;
+                        self.makeACopy(config, i);
                     }, function (error) {
-                        JobService.putJob(self.projectId, job.config).then(
+                        config.appName = config.appName + "-Copy" + i;
+                        JobService.putJob(self.projectId, config).then(
                             function (success) {
-                                self.getAllJobsStatus();
-                                // $location.path('project/' + self.projectId + '/jobs');
+                                self.getAllJobsStatus(true, true);
+                                return;
                             }, function (error) {
                                 if (typeof error.data.usrMsg !== 'undefined') {
                                     growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
                                 } else {
                                     growl.error("", {title: error.data.errorMsg, ttl: 8000});
                                 }
+                                return;
                             });
                     });
-
-            }
+            };
 
               self.buttonClickedToggle = function (name, display) {
               self.buttonArray[name] = display;
@@ -242,7 +245,7 @@ angular.module('hopsWorksApp')
             self.pageSize = 8;
             self.currentPage = 1;
 
-            self.getAllJobsStatus = function (toDimTable, limit, offset, sortBy, expansion) {
+            self.getAllJobsStatus = function (toDimTable, overwriteJobs, limit, offset, sortBy, expansion) {
                 if(self.getAllJobsStatusIsPending === true){
                     return;
                 }
@@ -252,7 +255,7 @@ angular.module('hopsWorksApp')
                 } else {
                     self.dimTable = false;
                 }
-                var jobsTemp = [];
+                //var jobsTemp = [];
                 if(limit === undefined || limit === null){
                     limit = self.pageSize;
                 }
@@ -276,27 +279,33 @@ angular.module('hopsWorksApp')
 
                 JobService.getJobs(self.projectId, limit, offset, sortBy + filterBy + expansion).then(
                     function (success) {
-
+                        //If jobs fetched from Hopsworks are non the same count as in browser, reset jobs table
+                        //Otherwise just set values, we do this to avoid unfocusing the job dropdown menu
+                        if(overwriteJobs || self.jobs.length !== success.data.items.length ){
+                            self.jobs.length = 0;
+                        }
+                        var i=0;
                         //Construct an array of jobs and their latest execution info
                         angular.forEach(success.data.items, function (job, key) {
-                            var tempJob = {
-                                "name": job.name,
-                                "id": job.id,
-                                "creationTime": job.creationTime,
-                                "jobType": job.jobType,
-                                "creator": {"firstname": job.creator.firstname, "lastname": job.creator.lastname},
-                                "config": job.config
-                            };
+                            if(self.jobs[i] === undefined){
+                                self.jobs[i] = {};
+                            }
+                            self.jobs[i].name = job.name;
+                            self.jobs[i].id = job.id;
+                            self.jobs[i].creationTime = job.creationTime;
+                            self.jobs[i].jobType = job.jobType;
+                            self.jobs[i].creator = job.creator;
+                            self.jobs[i].config = job.config;
 
                             if(job.executions.items !== undefined && job.executions.items !== null) {
-                                tempJob.running =  self.runningStates.includes(job.executions.items[0].state);
-                                tempJob.showing = false;
-                                tempJob.state = job.executions.items[0].state;
-                                tempJob.finalStatus = job.executions.items[0].finalStatus;
-                                tempJob.progress = job.executions.items[0].progress;
-                                tempJob.duration = job.executions.items[0].duration;
-                                tempJob.submissionTime = job.executions.items[0].submissionTime;
-                                //Loop through existing jobs
+                                self.jobs[i].running = self.runningStates.includes(job.executions.items[0].state);
+                                self.jobs[i].showing = false;
+                                self.jobs[i].state = job.executions.items[0].state;
+                                self.jobs[i].finalStatus = job.executions.items[0].finalStatus;
+                                self.jobs[i].progress = job.executions.items[0].progress;
+                                self.jobs[i].duration = job.executions.items[0].duration;
+                                self.jobs[i].submissionTime = job.executions.items[0].submissionTime;
+
                                 if (self.currentjob != null
                                     && self.currentjob.name === job.name
                                     && job.executions.items[0].state !== self.currentjob.state
@@ -304,18 +313,13 @@ angular.module('hopsWorksApp')
                                     self.showLogs(job.name);
                                 }
                             }
-
-                            jobsTemp.push(tempJob);
+                            i++;
                         });
 
-                        self.jobs.length = 0;
-                        //Overwrite all rows, update selected row
-                        self.jobs = jobsTemp;
                         self.totalItems = 0;
                         if(success.data.count !== undefined && success.data.count !== null) {
                             self.totalItems = success.data.count;
                         }
-                        // self.jobs = JSON.parse(JSON.stringify(jobsTemp));
 
                         angular.forEach(self.jobs, function (job, key) {
                             if (!job.running) {
@@ -349,7 +353,7 @@ angular.module('hopsWorksApp')
                 self.untoggle(self.currentjob, self.selectedIndex);
                 var offset = self.pageSize * (self.currentPage - 1);
                 if (self.totalItems > offset) {
-                    self.getAllJobsStatus(true, null, offset);
+                    self.getAllJobsStatus(true, true, null, offset);
                 }
             };
 
@@ -361,6 +365,7 @@ angular.module('hopsWorksApp')
                     return self.executionTotalItems;
                 }
               }
+              return 0;
             };
 
             self.getAllJobsStatus();
@@ -559,7 +564,9 @@ angular.module('hopsWorksApp')
                                        self.jobs.splice(i, 1);
                                     }
                                   }
-                                  self.hasSelectJob = false;
+                                  self.untoggle(self.currentjob, self.selectedIndex);
+                                  self.logset.length = 0;
+
                                   StorageService.remove(self.projectId + "_jobui_" + jobName);
                                   growl.success("Job was deleted.", {title: 'Success', ttl: 5000});
                                 }, function (error) {
@@ -615,7 +622,7 @@ angular.module('hopsWorksApp')
             ////////////////////////////////////////////////////////////////////
 
               $scope.$watch('jobsCtrl.jobFilter', function (val) {
-                self.getAllJobsStatus(true);
+                self.getAllJobsStatus(true, true);
             });
 
 
@@ -631,8 +638,8 @@ angular.module('hopsWorksApp')
                 if (self.getAllJobsStatusIsPending){
                     return;
                 }
-                self.getAllJobsStatus(false);
-              }, 10000);
+                self.getAllJobsStatus(false, false);
+              }, 5000);
             };
             startPolling();
 
