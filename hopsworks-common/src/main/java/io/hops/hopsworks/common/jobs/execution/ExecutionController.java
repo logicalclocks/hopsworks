@@ -68,6 +68,7 @@ import io.hops.hopsworks.common.jobs.spark.SparkController;
 import io.hops.hopsworks.common.jobs.spark.SparkJobConfiguration;
 import io.hops.hopsworks.common.jobs.yarn.YarnLogUtil;
 import io.hops.hopsworks.common.jobs.yarn.YarnMonitor;
+import io.hops.hopsworks.common.util.OSProcessExecutor;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.yarn.YarnClientService;
 import io.hops.hopsworks.common.yarn.YarnClientWrapper;
@@ -75,6 +76,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
+import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.util.ConverterUtils;
 import org.influxdb.InfluxDB;
@@ -133,6 +135,8 @@ public class ExecutionController {
   private YarnApplicationAttemptStateFacade appAttemptStateFacade;
   @EJB
   private YarnApplicationstateFacade yarnApplicationstateFacade;
+  @EJB
+  private OSProcessExecutor osProcessExecutor;
 
   private static final Logger LOGGER = Logger.getLogger(ExecutionController.class.getName());
   private static final String REMOTE_PROTOCOL = "hdfs://";
@@ -197,7 +201,7 @@ public class ExecutionController {
     return exec;
   }
   
-  public Execution kill(Jobs job, Users user) {
+  public Execution kill(Jobs job, Users user) throws JobException {
     //Get the last appId for the job, a job cannot have two concurrent applications running.
     List<Execution> jobExecs = execFacade.findByJob(job);
     if(!jobExecs.isEmpty()) {
@@ -213,9 +217,16 @@ public class ExecutionController {
         if (udfso.exists(marker)) {
           udfso.rm(new org.apache.hadoop.fs.Path(marker), false);
         } else {
-          //WORKS FOR NOW BUT SHOULD EVENTUALLY GO THROUGH THE YARN CLIENT API
-          Runtime rt = Runtime.getRuntime();
-          rt.exec(settings.getHadoopSymbolicLinkDir() + "/bin/yarn application -kill " + appId);
+  
+          YarnClientWrapper yarnClientWrapper = ycs.getYarnClientSuper(settings.getConfiguration());
+          try {
+            YarnClient client = yarnClientWrapper.getYarnClient();
+            client.killApplication(ApplicationId.fromString(appId));
+          } catch (YarnException e) {
+            throw new JobException(RESTCodes.JobErrorCode.JOB_STOP_FAILED, Level.WARNING, e.getMessage(), null, e);
+          } finally {
+            ycs.closeYarnClient(yarnClientWrapper);
+          }
         }
         return execFacade.findByAppId(appId);
       } catch (IOException ex) {

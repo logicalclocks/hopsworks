@@ -333,7 +333,8 @@
                               <li><a role="menuitem" ng-click="jobsCtrl.toggle(job, $index);
                                               jobsCtrl.editAsNew(job); $event.stopPropagation();" >Edit</a></li>
                               <li><a role="menuitem" ng-click="jobsCtrl.toggle(job, $index);
-                                              jobsCtrl.makeACopy(job); $event.stopPropagation();" >Make a copy</a></li>
+                                              jobsCtrl.makeACopy(job.config, 1); $event.stopPropagation();" >Make a
+                                copy</a></li>
                               <li><a ng-href="{{ downloadLink }}" role="menuitem"
                                      ng-click="jobsCtrl.toggle(job, $index);
                                               jobsCtrl.exportJob(job); $event.stopPropagation();" >Export Job</a></li>
