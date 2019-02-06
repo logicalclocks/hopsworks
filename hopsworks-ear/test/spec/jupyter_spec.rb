@@ -140,7 +140,7 @@ describe "On #{ENV['OS']}" do
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/running"
         expect_status(200)
 
-        json_body[:minutesUntilExpiration].should eq 0
+        json_body[:minutesUntilExpiration].should be < 2
 
         sleep(90)
 
