@@ -58,6 +58,7 @@
     <module>hopsworks-ca</module>
     <module>hopsworks-dela</module>
     <module>hopsworks-jwt</module>
+    <module>hopsworks-persistence</module>
   </modules>
 
   <profiles>
