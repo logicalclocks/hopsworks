@@ -35,8 +35,7 @@ module ExecutionHelper
     get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs/#{job_name}/executions/#{execution_id}/log/#{type}"
   end
 
-  def wait_for_execution
-    timeout = 480
+  def wait_for_execution(timeout=480)
     start = Time.now
     x = yield
     until x

@@ -59,7 +59,6 @@ public class RESTCodes {
     int getRange();
 
   }
-
   public enum ProjectErrorCode implements RESTErrorCode {
 
     //project error response
@@ -294,7 +293,9 @@ public class RESTCodes {
     COPY_FROM_PROJECT(45, "Cannot copy file/folder from another project", Response.Status.FORBIDDEN),
     COPY_TO_PUBLIC_DS(46, "Can not copy to a public dataset.", Response.Status.FORBIDDEN),
     DATASET_SUBDIR_ALREADY_EXISTS(47, "A sub-directory with the same name already exists.",
-        Response.Status.BAD_REQUEST);
+        Response.Status.BAD_REQUEST),
+    DOWNLOAD_NOT_ALLOWED(48, "Downloading files is not allowed. Please contact the system administrator for further " +
+      "information.", Response.Status.FORBIDDEN);
 
 
     private Integer code;
@@ -380,7 +381,6 @@ public class RESTCodes {
     JOB_STOP_FAILED(1, "An error occurred while trying to stop this job.", Response.Status.BAD_REQUEST),
     JOB_TYPE_UNSUPPORTED(2, "Unsupported job type.", Response.Status.BAD_REQUEST),
     JOB_ACTION_UNSUPPORTED(3, "Unsupported action type.", Response.Status.BAD_REQUEST),
-    JOB_NAME_EXISTS(4, "Job with same name already exists.", Response.Status.CONFLICT),
     JOB_NAME_EMPTY(5, "Job name is not set.", Response.Status.BAD_REQUEST),
     JOB_NAME_INVALID(6, "Job name is invalid. Invalid charater(s) in job name, the following characters "
         + "(including space) are now allowed:" + Settings.FILENAME_DISALLOWED_CHARS, Response.Status.BAD_REQUEST),
@@ -568,7 +568,9 @@ public class RESTCodes {
         "We currently do not support this version of TensorFlow. Update to a " +
             "newer version or contact an admin", Response.Status.BAD_REQUEST),
     SERVICE_GENERIC_ERROR(42, "Generic error while enabling the service",
-        Response.Status.INTERNAL_SERVER_ERROR);
+        Response.Status.INTERNAL_SERVER_ERROR),
+    JUPYTER_SERVER_ALREADY_RUNNING(43, "Jupyter Notebook Server is already running",
+      Response.Status.BAD_REQUEST);
 
     private Integer code;
     private String message;
@@ -1115,15 +1117,15 @@ public class RESTCodes {
 
   public enum InferenceErrorCode implements RESTErrorCode {
 
-    SERVINGNOTFOUND(0, "Serving instance not found", Response.Status.NOT_FOUND),
-    SERVINGNOTRUNNING(1, "Serving instance not running", Response.Status.BAD_REQUEST),
-    REQUESTERROR(2, "Error contacting the serving server", Response.Status.INTERNAL_SERVER_ERROR),
-    EMPTYRESPONSE(3, "Empty response from the serving server", Response.Status.INTERNAL_SERVER_ERROR),
-    BADREQUEST(4, "Request malformed", Response.Status.BAD_REQUEST),
+    SERVING_NOT_FOUND(0, "Serving instance not found", Response.Status.NOT_FOUND),
+    SERVING_NOT_RUNNING(1, "Serving instance not running", Response.Status.BAD_REQUEST),
+    REQUEST_ERROR(2, "Error contacting the serving server", Response.Status.INTERNAL_SERVER_ERROR),
+    EMPTY_RESPONSE(3, "Empty response from the serving server", Response.Status.INTERNAL_SERVER_ERROR),
+    BAD_REQUEST(4, "Request malformed", Response.Status.BAD_REQUEST),
     MISSING_VERB(5, "Verb is missing", Response.Status.BAD_REQUEST),
-    ERRORREADINGRESPONSE(6, "Error while reading the response", Response.Status.INTERNAL_SERVER_ERROR),
-    SERVINGINSTANCEINTERNAL(7, "Serving instance internal error", Response.Status.INTERNAL_SERVER_ERROR),
-    SERVINGINSTANCEBADREQUEST(8, "Serving instance bad request error", Response.Status.BAD_REQUEST);
+    ERROR_READING_RESPONSE(6, "Error while reading the response", Response.Status.INTERNAL_SERVER_ERROR),
+    SERVING_INSTANCE_INTERNAL(7, "Serving instance internal error", Response.Status.INTERNAL_SERVER_ERROR),
+    SERVING_INSTANCE_BAD_REQUEST(8, "Serving instance bad request error", Response.Status.BAD_REQUEST);
 
     private int code;
     private String message;
@@ -1358,6 +1360,47 @@ public class RESTCodes {
       return range;
     }
   }
-
+  
+  /**
+   * Airflow specific error codes
+   */
+  public enum AirflowErrorCode implements RESTErrorCode {
+    
+    JWT_NOT_CREATED(1, "JWT for Airflow service could not be created", Response.Status.INTERNAL_SERVER_ERROR),
+    JWT_NOT_STORED(2, "JWT for Airflow service could not be stored", Response.Status.INTERNAL_SERVER_ERROR),
+    AIRFLOW_DIRS_NOT_CREATED(3, "Airflow internal directories could not be created",
+        Response.Status.INTERNAL_SERVER_ERROR);
+    
+    private Integer code;
+    private String message;
+    private Response.StatusType respStatus;
+    private final int range = 290000;
+    
+    AirflowErrorCode(Integer code, String message, Response.StatusType respStatus) {
+      this.code = range + code;
+      this.message = message;
+      this.respStatus = respStatus;
+    }
+    
+    @Override
+    public Response.StatusType getRespStatus() {
+      return respStatus;
+    }
+    
+    @Override
+    public Integer getCode() {
+      return code;
+    }
+    
+    @Override
+    public String getMessage() {
+      return message;
+    }
+    
+    @Override
+    public int getRange() {
+      return range;
+    }
+  }
 
 }

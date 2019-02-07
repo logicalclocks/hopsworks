@@ -20,44 +20,71 @@ import com.google.common.base.Strings;
 import io.hops.common.Pair;
 import io.hops.hopsworks.common.dao.serving.TfServing;
 import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.util.Settings;
 import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 
 import javax.annotation.PostConstruct;
-import javax.ejb.Stateless;
+import javax.annotation.PreDestroy;
+import javax.ejb.ConcurrencyManagement;
+import javax.ejb.ConcurrencyManagementType;
+import javax.ejb.EJB;
+import javax.ejb.Singleton;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.inject.Alternative;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static io.hops.hopsworks.common.serving.tf.LocalhostTfServingController.PID_STOPPED;
 
 @Alternative
-@Stateless
+@Singleton
 @TransactionAttribute(TransactionAttributeType.NEVER)
+@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class LocalhostTfInferenceController implements TfInferenceController {
 
-  HttpClient httpClient = null;
+  @EJB
+  private Settings settings;
+
+  private static final Logger logger = Logger.getLogger(LocalhostTfInferenceController.class.getName());
+
+  CloseableHttpClient httpClient = null;
+  PoolingHttpClientConnectionManager cm = null;
 
   @PostConstruct
   public void init() {
-    httpClient = HttpClientBuilder.create().build();
+    cm = new PoolingHttpClientConnectionManager(30l, TimeUnit.SECONDS);
+    int poolSize = settings.getTFServingConnectionPoolSize();
+    int maxRouteConnections = settings.getTFServingMaxRouteConnections();
+    cm.setMaxTotal(poolSize);
+    cm.setDefaultMaxPerRoute(maxRouteConnections);
+    logger.log(Level.FINE, "Creating connection pool for TF Serving of size " +
+      poolSize + " and max connections per route " +
+      maxRouteConnections);
+
+    httpClient = HttpClients.custom()
+      .setConnectionManager(cm)
+      .build();
   }
 
   public Pair<Integer, String> infer(TfServing tfServing, Integer modelVersion,
                                      String verb, String inferenceRequestJson) throws InferenceException {
-
     if (tfServing.getLocalPid().equals(PID_STOPPED)) {
-      throw new InferenceException(RESTCodes.InferenceErrorCode.SERVINGNOTRUNNING, Level.FINE);
+      throw new InferenceException(RESTCodes.InferenceErrorCode.SERVING_NOT_RUNNING, Level.FINE);
     }
 
     if (Strings.isNullOrEmpty(verb)) {
@@ -77,8 +104,7 @@ public class LocalhostTfInferenceController implements TfInferenceController {
 
     pathBuilder.append(verb);
 
-
-    HttpResponse response = null;
+    CloseableHttpResponse response = null;
     // Send request
     try {
       URI uri = new URIBuilder()
@@ -91,30 +117,46 @@ public class LocalhostTfInferenceController implements TfInferenceController {
       HttpPost request = new HttpPost(uri);
       request.addHeader("content-type", "application/json; charset=utf-8");
       request.setEntity(new StringEntity(inferenceRequestJson));
-      response = httpClient.execute(request);
-    } catch (URISyntaxException e) {
-      throw new InferenceException(RESTCodes.InferenceErrorCode.REQUESTERROR, Level.SEVERE, null, e.getMessage(), e);
-    } catch (IOException e) {
-      throw new InferenceException(RESTCodes.InferenceErrorCode.REQUESTERROR, Level.INFO, null, e.getMessage(), e);
-    }
+      HttpContext context = HttpClientContext.create();
+      response = httpClient.execute(request, context);
+      // Handle response
+      if (response == null) {
+        throw new InferenceException(RESTCodes.InferenceErrorCode.EMPTY_RESPONSE, Level.INFO, "Received null response");
+      }
 
-    // Handle response
-    if (response == null) {
-      throw new InferenceException(RESTCodes.InferenceErrorCode.EMPTYRESPONSE, Level.INFO, "Received null response");
-    }
+      HttpEntity httpEntity = response.getEntity();
+      if (httpEntity == null) {
+        throw new InferenceException(RESTCodes.InferenceErrorCode.EMPTY_RESPONSE, Level.INFO, "Received null response");
+      }
 
-    HttpEntity httpEntity = response.getEntity();
-    if (httpEntity == null) {
-      throw new InferenceException(RESTCodes.InferenceErrorCode.EMPTYRESPONSE, Level.INFO, "Received null response");
-    }
-
-    try {
-      // Return prediction
-      String responseStr = EntityUtils.toString(httpEntity);
-      return new Pair<>(response.getStatusLine().getStatusCode(), responseStr);
-    } catch (IOException e) {
-      throw new InferenceException(RESTCodes.InferenceErrorCode.ERRORREADINGRESPONSE, Level.INFO,
+      try {
+        // Return prediction
+        String responseStr = EntityUtils.toString(httpEntity);
+        EntityUtils.consume(httpEntity);
+        return new Pair<>(response.getStatusLine().getStatusCode(), responseStr);
+      } catch (IOException e) {
+        throw new InferenceException(RESTCodes.InferenceErrorCode.ERROR_READING_RESPONSE, Level.INFO,
           "", e.getMessage(), e);
+      }
+    } catch (URISyntaxException e) {
+      throw new InferenceException(RESTCodes.InferenceErrorCode.REQUEST_ERROR, Level.SEVERE, null, e.getMessage(), e);
+    } catch (IOException e) {
+      throw new InferenceException(RESTCodes.InferenceErrorCode.REQUEST_ERROR, Level.INFO, null, e.getMessage(), e);
+    } finally {
+      try {
+        if(response != null) {
+          response.close();
+        }
+      } catch (IOException ioe) {
+        logger.log(Level.FINE, "Error closing response" , ioe);
+      }
+    }
+  }
+
+  @PreDestroy
+  public void preDestroy() {
+    if(cm != null) {
+      cm.close();
     }
   }
 }

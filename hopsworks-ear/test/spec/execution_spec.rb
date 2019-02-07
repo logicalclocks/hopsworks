@@ -24,7 +24,7 @@ describe "On #{ENV['OS']}" do
           reset_session
         end
         it "should fail" do
-          create_sparktour_job(@project, "demo_job", 'jar')
+          create_sparktour_job(@project, "demo_job", 'jar', nil)
           expect_json(errorCode: 200003)
           expect_status(401)
         end
@@ -42,7 +42,7 @@ describe "On #{ENV['OS']}" do
             it "should start a job and get its executions" do
               #create job
               $job_name_1 = "demo_job_1_" + type
-              create_sparktour_job(@project, $job_name_1, type)
+              create_sparktour_job(@project, $job_name_1, type, nil)
               job_id = json_body[:id]
               #start execution
               start_execution(@project[:id], $job_name_1)
@@ -78,7 +78,7 @@ describe "On #{ENV['OS']}" do
             end
             it "should start and stop job" do
               $job_name_2 = "demo_job_2_" + type
-              create_sparktour_job(@project, $job_name_2, type)
+              create_sparktour_job(@project, $job_name_2, type, nil)
               expect_status(201)
 
               #start execution
@@ -98,7 +98,7 @@ describe "On #{ENV['OS']}" do
             end
             it "should fail to start two executions in parallel" do
               $job_name_3 = "demo_job_3_" + type
-              create_sparktour_job(@project, $job_name_3, type)
+              create_sparktour_job(@project, $job_name_3, type, nil)
               start_execution(@project[:id], $job_name_3)
               start_execution(@project[:id], $job_name_3)
               expect_status(400)
@@ -107,7 +107,7 @@ describe "On #{ENV['OS']}" do
             end
             it "should run job and get out and err logs" do
               $job_name_4 = "demo_job_4_" + type
-              create_sparktour_job(@project, $job_name_4, type)
+              create_sparktour_job(@project, $job_name_4, type, nil)
               start_execution(@project[:id], $job_name_4)
               execution_id = json_body[:id]
               expect_status(201)
@@ -148,7 +148,7 @@ describe "On #{ENV['OS']}" do
         context 'with authentication' do
           before :all do
             with_valid_tour_project("spark")
-            create_sparktour_job(@project, $job_spark_1, 'jar')
+            create_sparktour_job(@project, $job_spark_1, 'jar', nil)
             #start 3 executions
             for i in 0..2 do
               start_execution(@project[:id], $job_spark_1)

@@ -78,6 +78,7 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.api.pythonDeps.PythonDepsService.class);
     register(io.hops.hopsworks.api.activities.ProjectActivitiesResource.class);
     register(io.hops.hopsworks.api.user.AuthService.class);
+    register(io.hops.hopsworks.api.airflow.AirflowService.class);
     register(UsersResource.class);
     register(io.hops.hopsworks.api.util.BannerService.class);
     register(io.hops.hopsworks.api.util.ClusterUtilisationService.class);

@@ -94,7 +94,7 @@
               </div>
               <div style="height:85%; overflow: auto;" >
                 <table class="table table-hover"
-                       ng-style="(jobsCtrl.dimTable) ? {'opacity': 0.3} : {}">
+                       ng-style="(jobsCtrl.dimTable) ? {'opacity': 0.3} : {}" id="jobsTable">
                   <thead>
                   <th style="width: 5%">
                   </th>
@@ -145,7 +145,7 @@
                       current-page="jobsCtrl.currentPage"
                       total-items="jobsCtrl.totalItems"
                       ng-class="{'active':$index === jobsCtrl.selectedIndex}" ng-click="jobsCtrl.toggle(job, $index);jobsCtrl.showLogs(job.name);">
-                      <td id="{{job.name === projectCtrl.tourService.createdJobName}}">
+                      <td id="{{job.name}}">
                         <button style="border-color: #20AD28; min-width: 64px; width:60%;"
                                 ng-disabled="jobsCtrl.starting[job.name]"
                                 ng-click="jobsCtrl.runJob(job, $index);$event.stopPropagation();"
@@ -303,7 +303,7 @@
                         {{convertMS(job.duration)}}
                       </td>
                       <td>
-                        <div class="btn-group" role="group">
+                        <div class="btn-group"  role="group">
                           <button
                             uib-tooltip="Delete"
                             ng-click="jobsCtrl.toggle(job, $index);
@@ -317,7 +317,8 @@
                                   ng-click="jobsCtrl.toggle(job, $index);jobsCtrl.showUI(job);
                                                   $event.stopPropagation();">
                           </button>
-                          <div uib-dropdown class="btn-group" role="group" style="z-index: auto;">
+                          <div uib-dropdown class="btn-group" role="group"
+                               style="z-index: auto;">
                             <button type="button"
                                     uib-dropdown-toggle class="btn btn-default glyphicon"
                                     style="font-family: sans-serif;"
@@ -325,11 +326,15 @@
                               More
                               <span class="caret"></span>
                             </button>
-                            <ul uib-dropdown-menu class="dropdown-menu dropdown-menu-right" style="font-family: sans-serif;">
+                            <ul uib-dropdown-menu class="dropdown-menu dropdown-menu-right" style="font-family:
+                            sans-serif;">
                               <li><a role="menuitem" ng-click="jobsCtrl.toggle(job, $index);
                                               jobsCtrl.showDetails(job);$event.stopPropagation();" >Job Details</a></li>
                               <li><a role="menuitem" ng-click="jobsCtrl.toggle(job, $index);
-                                              jobsCtrl.editAsNew(job); $event.stopPropagation();" >Edit as new</a></li>
+                                              jobsCtrl.editAsNew(job); $event.stopPropagation();" >Edit</a></li>
+                              <li><a role="menuitem" ng-click="jobsCtrl.toggle(job, $index);
+                                              jobsCtrl.makeACopy(job.config, 1); $event.stopPropagation();" >Make a
+                                copy</a></li>
                               <li><a ng-href="{{ downloadLink }}" role="menuitem"
                                      ng-click="jobsCtrl.toggle(job, $index);
                                               jobsCtrl.exportJob(job); $event.stopPropagation();" >Export Job</a></li>
@@ -467,7 +472,6 @@
       </div>
     </div>
     <!-- /#wrapper -->
-  </div>
   <tour class="ng-scope" step="projectCtrl.tourService.currentStep_TourThree"
         post-tour="closeTour()"
         ng-if="(projectCtrl.loadedView && projectCtrl.tourService.activeTour === 'spark' ||
@@ -528,3 +532,23 @@
       on-proceed="closeTour(); projectCtrl.tourService.resetTours();"
       ></virtual-step>
   </tour>
+    <tour class="ng-scope" step="jobsCtrl.tourService.currentStep_TourNine"
+          post-tour="closeTour()"
+          ng-if="jobsCtrl.tourService.activeTour === 'featurestore'
+          && (jobsCtrl.tourService.informAndTips
+              || jobsCtrl.tourService.tipsOnly) && !projectCtrl.loading && !getAllJobsStatusIsPending ">
+      <virtual-step
+              ng-if="jobsCtrl.tourService.activeTour === 'featurestore'"
+              class="ng-scope"
+              tourtip="The tour includes a sample job that does feature engineering and creates some example feature groups,
+            this job typically takes 5-15 minutes depending on how busy the cluster is.
+            When this job is completed, you can view the feature groups in the feature registry and you can open Jupyter and run some notebooks to query the sample feature groups."
+              tourtip-step="11"
+              tourtip-element="{{'#' + projectCtrl.tourService.featurestoreTourJobName}}"
+              tourtip-placement="bottom"
+              tourtip-next-label="Finish the Tour"
+              on-proceed=""
+      ></virtual-step>
+    </tour>
+  </div>
+</div>

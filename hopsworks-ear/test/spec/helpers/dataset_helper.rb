@@ -97,4 +97,13 @@ module DatasetHelper
   def request_dataset_access(project, inode)
     post "#{ENV['HOPSWORKS_API']}/request/access", {inodeId: inode, projectId: project[:id]}
   end
+
+  def find_inode_in_dataset(inode_list, inode_substring_name)
+    inode_list.each do |inode|
+      if inode["name"].include?(inode_substring_name)
+        return true
+      end
+    end
+    return false
+  end
 end

@@ -61,18 +61,16 @@
         </a>
       </li>
 
-      <li ng-click="projectCtrl.goToZeppelin()" ng-show="projectCtrl.showZeppelin()">
-        <a>
-          Zeppelin 
-          <img class="pull-right" style="margin-right:5px" width="30" src="images/zeppelin_logo.png"/>
-          <i class=" pull-left fa " 
-             uib-tooltip="Orange triangle: jobs are encountering problems. Red means Jobs cannot be run just now." 
-             tooltip-placement="auto right"
-             ng-class="{'fa-ban text-danger': clusterUtilCtrl.YarnBan, 'fa-exclamation-triangle text-warning': clusterUtilCtrl.YarnWarn }" aria-hidden="true" style="margin-top: 3px"></i>                    
-        </a>
-      </li>
-      
-      
+      <!--<li ng-click="projectCtrl.goToZeppelin()" ng-show="projectCtrl.showZeppelin()">-->
+        <!--<a>-->
+          <!--Zeppelin -->
+          <!--<img class="pull-right" style="margin-right:5px" width="30" src="images/zeppelin_logo.png"/>-->
+          <!--<i class=" pull-left fa " -->
+             <!--uib-tooltip="Orange triangle: jobs are encountering problems. Red means Jobs cannot be run just now." -->
+             <!--tooltip-placement="auto right"-->
+             <!--ng-class="{'fa-ban text-danger': clusterUtilCtrl.YarnBan, 'fa-exclamation-triangle text-warning': clusterUtilCtrl.YarnWarn }" aria-hidden="true" style="margin-top: 3px"></i>                    -->
+        <!--</a>-->
+      <!--</li>-->
 
       <li ng-click="projectCtrl.goToJobs()" ng-show="projectCtrl.showJobs()" id="jobsTab">
         <a>
@@ -128,13 +126,23 @@
         </a>
       </li>
 
+      <li ng-click="projectCtrl.goToAirflow()" ng-show="projectCtrl.showAirflow()">
+        <a>
+          Airflow
+          <img ng-show="projectCtrl.activeService !== 'airflow'" class="pull-right" style="margin-left:10px; margin-right:10px" height="25" 
+               src="images/airflow-200x198-bw.png"/>
+          <img ng-show="projectCtrl.activeService === 'airflow'" class="pull-right" style="margin-left:10px; margin-right:10px" height="25" 
+               src="images/airflow-200x198.png"/>
+        </a>
+      </li>
+
       <li ng-click="projectCtrl.goToFeaturestore()" ng-show="projectCtrl.showFeaturestore()" id="featurestoreTab">
         <a>
           Feature Store<span class="sub_icon fa fa-database fa-lg pull-right"></span>
         </a>
       </li>
       
-      <li ng-click="projectCtrl.goToDatasets()" style="margin-top:40px;" ng-show="projectCtrl.cloak" id="datasetsTab">
+      <li ng-click="projectCtrl.goToDatasets()" style="margin-top:20px; margin-bottom:20px;" ng-show="projectCtrl.cloak" id="datasetsTab">
         <a>
           Data Sets <span class="sub_icon fa fa-folder-open fa-lg pull-right"></span>
           <i class=" pull-left fa " 
@@ -144,7 +152,7 @@
         </a>
       </li>
 
-      <li ng-click="projectCtrl.goToSettings()" style="margin-top:40px;" ng-show="projectCtrl.cloak">
+      <li ng-click="projectCtrl.goToSettings()" ng-show="projectCtrl.cloak">
         <a>
           Settings<span class="sub_icon fa fa-dashboard fa-lg pull-right" id="settingsTab"></span>
         </a>
@@ -209,7 +217,7 @@
 
 <tour class="ng-scope" step="projectCtrl.tourService.currentStep_TourTwo"
       post-tour="closeTour()"
-      ng-if="projectCtrl.loadedView
+      ng-if="projectCtrl.loadedView && projectCtrl.loadedProjectData
                   && (projectCtrl.tourService.informAndTips
                           || projectCtrl.tourService.tipsOnly)">
   <virtual-step
@@ -250,4 +258,37 @@
     tourtip-offset-vertical="-18"
     tourtip-offset-horizontal="-13"
     ></virtual-step>
+  <virtual-step
+          ng-if="projectCtrl.tourService.activeTour === 'featurestore' && projectCtrl.tourService.currentStep_TourNine === -1"
+          id="TourTwo"
+          class="ng-scope"
+          tourtip="Click Next to navigate to the Feature Store service and follow the Feature Store tour"
+          tourtip-step="0"
+          tourtip-element="#featurestoreTab"
+          tourtip-placement="right"
+          tourtip-next-label="Next"
+          on-proceed="projectCtrl.goToFeaturestore()"
+          tourtip-offset-vertical="-18"
+          tourtip-offset-horizontal="-13"
+  ></virtual-step>
+</tour>
+
+<tour class="ng-scope" step="projectCtrl.tourService.currentStep_TourNine"
+      post-tour="closeTour()"
+      ng-if="projectCtrl.loadedView && projectCtrl.loadedProjectData
+                  && (projectCtrl.tourService.informAndTips
+                          || projectCtrl.tourService.tipsOnly)">
+  <virtual-step
+          ng-if="projectCtrl.tourService.activeTour === 'featurestore'"
+          id="TourTwo"
+          class="ng-scope"
+          tourtip="Features and feature groups are typically computed by jobs. In the 'Jobs' tab you can create and view jobs in your project."
+          tourtip-step="9"
+          tourtip-element="#jobsTab"
+          tourtip-placement="right"
+          tourtip-next-label="Next"
+          on-proceed="projectCtrl.goToJobs()"
+          tourtip-offset-vertical="-18"
+          tourtip-offset-horizontal="-13"
+  ></virtual-step>
 </tour>

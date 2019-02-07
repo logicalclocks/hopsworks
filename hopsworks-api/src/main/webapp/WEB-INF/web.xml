@@ -238,6 +238,37 @@
     <servlet-name>TensorBoardProxyServlet</servlet-name>
     <url-pattern>/tensorboard</url-pattern>
   </servlet-mapping>
+
+  <!-- Airflow proxy servlet -->
+  <servlet>
+    <servlet-name>AirflowProxyServlet</servlet-name>
+    <servlet-class>io.hops.hopsworks.api.airflow.AirflowProxyServlet</servlet-class>
+    <init-param>
+      <param-name>targetUri</param-name>
+      <param-value>http://localhost:12358/hopsworks-api/airflow</param-value>
+    </init-param>
+    <init-param>
+      <param-name>log</param-name>
+      <param-value>false</param-value>
+    </init-param>
+    <init-param>
+      <param-name>http.protocol.handle-redirects</param-name>
+      <param-value>false</param-value>
+    </init-param>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>AirflowProxyServlet</servlet-name>
+    <url-pattern>/airflow/*</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>AirflowProxyServlet</servlet-name>
+    <url-pattern>/airflow</url-pattern>
+  </servlet-mapping>
+  
+
+
+  <!-- Other servlets -->
+
   <servlet>
     <servlet-name>Jersey2Config</servlet-name>
     <servlet-class>io.swagger.jersey.config.JerseyJaxrsConfig</servlet-class>

@@ -163,7 +163,7 @@ public class DataSetService {
   @EJB
   private JobController jobcontroller;
   @EJB
-  private HdfsUsersController hdfsUsersBean;
+  private HdfsUsersController hdfsUsersController;
   @EJB
   private DistributedFsService dfs;
   @EJB
@@ -223,8 +223,7 @@ public class DataSetService {
 
     // HDFS_USERNAME is the next param to the bash script
     Users user = jWTHelper.getUserPrincipal(sc);
-    String hdfsUser = hdfsUsersBean.getHdfsUserName(project, user);
-
+    String hdfsUser = hdfsUsersController.getHdfsUserName(project, user);
 
     ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
         .addCommand(settings.getHopsworksDomainDir() + "/bin/unzip-background.sh")
@@ -274,7 +273,7 @@ public class DataSetService {
 
     // HDFS_USERNAME is the next param to the bash script
     Users user = jWTHelper.getUserPrincipal(sc);
-    String hdfsUser = hdfsUsersBean.getHdfsUserName(project, user);
+    String hdfsUser = hdfsUsersController.getHdfsUserName(project, user);
 
     ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
         .addCommand(settings.getHopsworksDomainDir() + "/bin/zip-background.sh")
@@ -355,7 +354,7 @@ public class DataSetService {
       InodeView inodeView = new InodeView(i, fullPath + "/" + i.getInodePK().getName());
       if (dsPath.getDs().isShared()) {
         //Get project of project__user the inode is owned by
-        inodeView.setOwningProjectName(hdfsUsersBean.getProjectName(i.getHdfsUser().getName()));
+        inodeView.setOwningProjectName(hdfsUsersController.getProjectName(i.getHdfsUser().getName()));
       }
       inodeView.setZipState(settings.getZipState(
               fullPath + "/" + i.getInodePK().getName()));
@@ -431,7 +430,7 @@ public class DataSetService {
             AllowedProjectRoles.DATA_SCIENTIST)) {
       newDS.setStatus(Dataset.PENDING);
     } else {
-      hdfsUsersBean.shareDataset(proj, ds);
+      hdfsUsersController.shareDataset(proj, ds);
     }
 
     datasetFacade.persistDataset(newDS);
@@ -467,7 +466,7 @@ public class DataSetService {
         throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_SHARED_WITH_PROJECT, Level.FINE,
           "project: " + proj.getName());
       }
-      hdfsUsersBean.unshareDataset(proj, ds);
+      hdfsUsersController.unshareDataset(proj, ds);
       datasetFacade.removeDataset(dst);
       activityFacade.persistActivity(ActivityFacade.UNSHARED_DATA + dataSet.getName() + " with project " + 
           proj.getName(), project, user, ActivityFacade.ActivityFlag.DATASET);
@@ -555,7 +554,7 @@ public class DataSetService {
     }
     Inode inode = inodes.findById(inodeId);
     Dataset ds = datasetFacade.findByProjectAndInode(this.project, inode);
-    hdfsUsersBean.shareDataset(this.project, ds);
+    hdfsUsersController.shareDataset(this.project, ds);
     ds.setStatus(Dataset.ACCEPTED);
     datasetFacade.merge(ds);
     json.setSuccessMessage("The Dataset is now accessable.");
@@ -592,7 +591,7 @@ public class DataSetService {
 
     Users user = jWTHelper.getUserPrincipal(sc);
     DistributedFileSystemOps dfso = dfs.getDfsOps();
-    String username = hdfsUsersBean.getHdfsUserName(project, user);
+    String username = hdfsUsersController.getHdfsUserName(project, user);
     DistributedFileSystemOps udfso = dfs.getDfsOps(username);
 
     try {
@@ -629,6 +628,7 @@ public class DataSetService {
 
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     Users user = jWTHelper.getUserPrincipal(sc);
+
     org.apache.hadoop.fs.Path fullPath =
         dsUpdateOperations.createDirectoryInDataset(
             this.project, user, dataSetName.getName(), dataSetName.getDescription(),
@@ -664,7 +664,7 @@ public class DataSetService {
     if (ds.isShared()) {
       // The user is trying to delete a dataset. Drop it from the table
       // But leave it in hopsfs because the user doesn't have the right to delete it
-      hdfsUsersBean.unShareDataset(project, ds);
+      hdfsUsersController.unShareDataset(project, ds);
       datasetFacade.removeDataset(ds);
       json.setSuccessMessage(ResponseMessages.SHARED_DATASET_REMOVED);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
@@ -674,7 +674,7 @@ public class DataSetService {
     DistributedFileSystemOps dfso = null;
     try {
       Users user = jWTHelper.getUserPrincipal(sc);
-      String username = hdfsUsersBean.getHdfsUserName(project, user);
+      String username = hdfsUsersController.getHdfsUserName(project, user);
       //If a Data Scientist requested it, do it as project user to avoid deleting Data Owner files
       //Find project of dataset as it might be shared
       Project owning = datasetController.getOwningProject(ds);
@@ -704,7 +704,7 @@ public class DataSetService {
 
     //remove the group associated with this dataset as it is a toplevel ds
     try {
-      hdfsUsersBean.deleteDatasetGroup(ds);
+      hdfsUsersController.deleteDatasetGroup(ds);
     } catch (IOException ex) {
       //FIXME: take an action?
       LOGGER.log(Level.WARNING,
@@ -809,7 +809,7 @@ public class DataSetService {
 
     DistributedFileSystemOps dfso = null;
     try {
-      String username = hdfsUsersBean.getHdfsUserName(project, user);
+      String username = hdfsUsersController.getHdfsUserName(project, user);
       //If a Data Scientist requested it, do it as project user to avoid deleting Data Owner files
       //Find project of dataset as it might be shared
       Project owning = datasetController.getOwningProject(ds);
@@ -856,7 +856,7 @@ public class DataSetService {
   public Response moveFile(@Context SecurityContext sc, MoveDTO dto) throws DatasetException, ProjectException,
       HopsSecurityException {
     Users user = jWTHelper.getUserPrincipal(sc);
-    String username = hdfsUsersBean.getHdfsUserName(project, user);
+    String username = hdfsUsersController.getHdfsUserName(project, user);
 
     Inode sourceInode = inodes.findById(dto.getInodeId());
     dsUpdateOperations.moveDatasetFile(project, user, sourceInode, dto.getDestPath());
@@ -883,8 +883,7 @@ public class DataSetService {
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response copyFile(@Context SecurityContext sc, MoveDTO dto) throws DatasetException, ProjectException {
     Users user = jWTHelper.getUserPrincipal(sc);
-    String username = hdfsUsersBean.getHdfsUserName(project, user);
-
+    String username = hdfsUsersController.getHdfsUserName(project, user);
     Inode sourceInode = inodes.findById(dto.getInodeId());
     String sourcePathStr = inodes.getPath(sourceInode);
 
@@ -948,7 +947,7 @@ public class DataSetService {
   public Response checkFileExists(@PathParam("path") String path, @Context SecurityContext sc) throws
       DatasetException, ProjectException {
     Users user = jWTHelper.getUserPrincipal(sc);
-    String username = hdfsUsersBean.getHdfsUserName(project, user);
+    String username = hdfsUsersController.getHdfsUserName(project, user);
 
     DsPath dsPath = pathValidator.validatePath(this.project, path);
     dsPath.validatePathExists(inodes, false);
@@ -987,6 +986,9 @@ public class DataSetService {
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response checkFileForDownload(@PathParam("path") String path,
           @Context SecurityContext sc) throws DatasetException, ProjectException {
+    if(!settings.isDownloadAllowed()){
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DOWNLOAD_NOT_ALLOWED, Level.FINEST);
+    }
     Users user = jWTHelper.getUserPrincipal(sc);
     DsPath dsPath = pathValidator.validatePath(this.project, path);
     Project owningProject = datasetController.getOwningProject(dsPath.getDs());
@@ -1014,7 +1016,7 @@ public class DataSetService {
   public Response filePreview(@PathParam("path") String path, @QueryParam("mode") String mode,
           @Context SecurityContext sc) throws DatasetException, ProjectException {
     Users user = jWTHelper.getUserPrincipal(sc);
-    String username = hdfsUsersBean.getHdfsUserName(project, user);
+    String username = hdfsUsersController.getHdfsUserName(project, user);
 
     DsPath dsPath = pathValidator.validatePath(this.project, path);
     dsPath.validatePathExists(inodes,false);
@@ -1169,7 +1171,7 @@ public class DataSetService {
 
     //persist the job in the database
     Jobs jobdesc = null;
-    jobdesc = this.jobcontroller.createJob(user, project, ecConfig);
+    jobdesc = this.jobcontroller.putJob(user, project, null, ecConfig);
     //instantiate the job
     ErasureCodeJob encodeJob = new ErasureCodeJob(jobdesc, this.async, user,
             settings.getHadoopSymbolicLinkDir(), jobsMonitor);

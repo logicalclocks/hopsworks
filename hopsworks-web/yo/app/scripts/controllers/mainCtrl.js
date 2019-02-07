@@ -47,12 +47,18 @@ angular.module('hopsWorksApp')
           '$http', 'AuthService', 'UtilsService', 'ElasticService', 'DelaProjectService',
           'DelaService', 'md5', 'ModalService', 'ProjectService', 'growl',
           'MessageService', '$routeParams', '$window', 'HopssiteService', 'BannerService',
+          'AirflowService',
           function ($interval, $cookies, $location, $scope, $rootScope, $http, AuthService, UtilsService,
                   ElasticService, DelaProjectService, DelaService, md5, ModalService, 
                   ProjectService, growl,
-                  MessageService, $routeParams, $window, HopssiteService, BannerService) {
+                  MessageService, $routeParams, $window, HopssiteService, BannerService,
+                  AirflowService) {
             const MIN_SEARCH_TERM_LEN = 2;
             var self = this;
+
+
+            self.ui = "/hopsworks-api/airflow/login?q=username=";
+
             self.email = $cookies.get('email');
             self.emailHash = md5.createHash(self.email || '');
             var elasticService = ElasticService();
@@ -90,6 +96,8 @@ angular.module('hopsWorksApp')
             };
 
             self.logout = function () {
+              AirflowService.logout();
+
               AuthService.logout(self.user).then(
                       function (success) {
                         AuthService.cleanSession();
@@ -127,7 +135,6 @@ angular.module('hopsWorksApp')
             init();
 
             //checkDelaEnabled(); // check 
-            
             self.userNotification = '';
             var getUserNotification = function () {
               self.userNotification = '';
@@ -461,4 +468,7 @@ angular.module('hopsWorksApp')
                 ModalService.viewSearchResult('lg', result, result, null);
               }
             };
+
+
+
           }]);
