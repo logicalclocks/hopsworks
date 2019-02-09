@@ -425,6 +425,17 @@ public class SparkYarnRunnerBuilder {
               Integer.toString(numberOfExecutors)));
     }
 
+    //Prepare spark maven packages
+    StringBuilder sparkPackages = new StringBuilder();
+    //avro data source used in Feature Store
+    sparkPackages.append(settings.getSparkAvroPackageName());
+
+    jobHopsworksProps.put(Settings.SPARK_PACKAGES,
+        new ConfigProperty(
+            Settings.SPARK_PACKAGES,
+            HopsUtils.IGNORE,
+            "true"));
+
     List<String> jobSpecificProperties = new ArrayList<>();
     jobSpecificProperties.add(Settings.SPARK_NUMBER_EXECUTORS_ENV);
     jobSpecificProperties.add(Settings.SPARK_DRIVER_MEMORY_ENV);

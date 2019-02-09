@@ -45,7 +45,7 @@ angular.module('hopsWorksApp')
             self.dependenciesNotUnique = 1
             self.working = false;
             self.dataFormats = [
-                "csv", "tfrecords", "parquet", "tsv", "hdf5", "npy"
+                "csv", "tfrecords", "parquet", "tsv", "hdf5", "npy", "orc", "avro", "image"
             ]
             self.trainingDatasetName = trainingDataset.name
             self.trainingDatasetDescription = trainingDataset.description
