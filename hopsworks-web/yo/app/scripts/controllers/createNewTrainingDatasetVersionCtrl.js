@@ -91,7 +91,8 @@ angular.module('hopsWorksApp')
                         self.dependenciesWrongValue[i] = 1
                     }
                 }
-                if (!self.trainingDatasetName || self.trainingDatasetName.search(self.trainingDatasetNameRegexp) == -1 || self.trainingDatasetName.length > 256) {
+                if (!self.trainingDatasetName || self.trainingDatasetName.search(self.trainingDatasetNameRegexp) == -1 || self.trainingDatasetName.length > 256
+                    || self.trainingDatasetName.includes("-")) {
                     self.trainingDatasetNameWrongValue = -1;
                     self.wrong_values = -1;
                 } else {

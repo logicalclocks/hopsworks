@@ -39,7 +39,8 @@
             </div>
         </div>
         <div ng-if="createFeaturegroupCtrl.featuregroupNameWrongValue === -1" style="color: red">{{"Feature Group
-            Name shouldn't be empty and can only contain alphanumeric characters and underscores, maximum length is 256 characters"}}
+            Name shouldn't be empty and can only contain alphanumeric characters and underscores, maximum length is 256 characters.
+            Hyphens are now allowed in the name."}}
         </div>
     </div>
     <div class="view-info">
@@ -164,7 +165,8 @@
                 </div>
             </div>
             <div ng-if="createFeaturegroupCtrl.featuresNameWrongValue[$index] === -1" style="color: red">{{"Feature
-                Name shouldn't be empty and can only contain alphanumeric characters and underscores and max length 767 characters"}}
+                Name shouldn't be empty and can only contain alphanumeric characters and underscores and max length 767 characters.
+                Hyphens are not allowed in the feature name."}}
             </div>
         </div>
         <div class="view-info">
