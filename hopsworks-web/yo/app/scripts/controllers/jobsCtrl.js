@@ -279,6 +279,11 @@ angular.module('hopsWorksApp')
 
                 JobService.getJobs(self.projectId, limit, offset, sortBy + filterBy + expansion).then(
                     function (success) {
+                        if(success.data.count === 0){
+                          self.getAllJobsStatusIsPending = false;
+                          self.jobs.length = 0;
+                          return;
+                        }
                         //If jobs fetched from Hopsworks are non the same count as in browser, reset jobs table
                         //Otherwise just set values, we do this to avoid unfocusing the job dropdown menu
                         if(overwriteJobs || self.jobs.length !== success.data.items.length ){
