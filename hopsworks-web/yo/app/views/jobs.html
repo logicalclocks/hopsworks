@@ -269,6 +269,11 @@
                            style="color: #880000 ">
                           {{jobsCtrl.toTitleCase(job.state)}}
                         </span>
+                        <span
+                           ng-if="job.state === 'GENERATING_CERTS'"
+                           style="color: #880000 ">
+                           {{jobsCtrl.toTitleCase(job.state)}}
+                        </span>
                       </td>
                       <td>
                         <span
