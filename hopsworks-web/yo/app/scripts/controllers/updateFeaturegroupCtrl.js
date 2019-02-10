@@ -49,7 +49,7 @@ angular.module('hopsWorksApp')
             }
             $scope.selected = {value: selectedJob}
             self.features = featuregroup.features;
-            self.hiveRegexp = /^[a-zA-Z0-9-_]+$/;
+            self.hiveRegexp = /^[a-zA-Z0-9_]+$/;
 
             self.featuregroupNameWrongValue = 1;
             self.featuregroupDocWrongValue = 1;
@@ -118,8 +118,7 @@ angular.module('hopsWorksApp')
                     self.featuresDocWrongValue[i] = 1
                 }
 
-                if (!self.featuregroupName || self.featuregroupName.search(self.hiveRegexp) == -1 || self.featuregroupName.length > 256
-                    || self.featuregroupName.includes("-")) {
+                if (!self.featuregroupName || self.featuregroupName.search(self.hiveRegexp) == -1 || self.featuregroupName.length > 256) {
                     self.featuregroupNameWrongValue = -1;
                     self.wrong_values = -1;
                 }
@@ -151,8 +150,7 @@ angular.module('hopsWorksApp')
                 var numberOfPrimary = 0
                 for (i = 0; i < self.features.length; i++) {
                     featureNames.push(self.features[i].name)
-                    if (self.features[i].name === "" || self.features[i].name.search(self.hiveRegexp) == -1 || self.features[i].name.length > 767
-                        || self.features[i].name.includes("-")) {
+                    if (self.features[i].name === "" || self.features[i].name.search(self.hiveRegexp) == -1 || self.features[i].name.length > 767) {
                         self.featuresNameWrongValue[i] = -1
                         self.wrong_values = -1;
                     }
