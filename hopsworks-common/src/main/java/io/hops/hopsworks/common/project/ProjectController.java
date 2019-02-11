@@ -731,8 +731,6 @@ public class ProjectController {
         break;
       case HIVE:
         addServiceHive(project, user, dfso);
-        //HOPSWORKS-198: Enable Zeppelin at the same time as Hive
-        addServiceDataset(project, user, Settings.ServiceDataset.ZEPPELIN, dfso, udfso);
         break;
       case SERVING:
         futureList.add(addServiceServing(project, user, dfso, udfso));
@@ -760,11 +758,6 @@ public class ProjectController {
     projectServicesFacade.addServiceForProject(project, service);
     logActivity(ActivityFacade.ADDED_SERVICE + service.toString(), user, project, ActivityFacade.
         ActivityFlag.SERVICE);
-    if (service == ProjectServiceEnum.HIVE) {
-      projectServicesFacade.addServiceForProject(project, ProjectServiceEnum.ZEPPELIN);
-      logActivity(ActivityFacade.ADDED_SERVICE + ProjectServiceEnum.ZEPPELIN.toString(), user, project, 
-          ActivityFacade.ActivityFlag.SERVICE);
-    }
     return futureList;
   }
 
