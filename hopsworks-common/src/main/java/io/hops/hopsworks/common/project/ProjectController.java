@@ -117,6 +117,7 @@ import io.hops.hopsworks.common.serving.inference.logger.KafkaInferenceLogger;
 import io.hops.hopsworks.common.serving.tf.TfServingController;
 import io.hops.hopsworks.common.serving.tf.TfServingException;
 import io.hops.hopsworks.common.user.UsersController;
+import io.hops.hopsworks.common.util.EmailBean;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
@@ -179,6 +180,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.mail.Message;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -267,6 +269,8 @@ public class ProjectController {
   protected ExecutionController executionController;
   @EJB
   protected FeaturegroupController featuregroupController;
+  @EJB
+  private EmailBean emailBean;
 
 
   /**
@@ -2702,6 +2706,34 @@ public class ProjectController {
       throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_ERROR, Level.SEVERE,
         "projectUser:" + projectUser);
     }
+  }
+  
+  public CertsDTO downloadCert(Integer projectId, Users user) throws ProjectException, DatasetException {
+    Project project = findProjectById(projectId);
+    String keyStore = "";
+    String trustStore = "";
+    try {
+      //Read certs from database and stream them out
+      certificateMaterializer.materializeCertificatesLocal(user.getUsername(), project.getName());
+      CertificateMaterializer.CryptoMaterial material = certificateMaterializer.getUserMaterial(user.getUsername(),
+          project.getName());
+      keyStore = org.apache.commons.net.util.Base64.encodeBase64String(material.getKeyStore().array());
+      trustStore = org.apache.commons.net.util.Base64.encodeBase64String(material.getTrustStore().array());
+      String certPwd = new String(material.getPassword());
+      //Pop-up a message from admin
+      messageController.send(user, userFacade.findByEmail(Settings.SITE_EMAIL), "Certificate Info", "",
+          "An email was sent with the password for your project's certificates. If an email does not arrive shortly, "
+          + "please check spam first and then contact the administrator.", "");
+      emailBean.sendEmail(user.getEmail(), Message.RecipientType.TO, "Hopsworks certificate information",
+          "The password for keystore and truststore is:" + certPwd);
+    } catch (Exception ex) {
+      LOGGER.log(Level.SEVERE, null, ex);
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DOWNLOAD_ERROR, Level.SEVERE, "projectId: " + projectId,
+          ex.getMessage(), ex);
+    } finally {
+      certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());
+    }
+    return new CertsDTO("jks", keyStore, trustStore);
   }
 
   /**
