@@ -34,17 +34,22 @@ module HopsFSHelper
   end
 
   def test_dir(path)
-    system "sudo su #{@@hdfs_user} /bin/bash -c \"#{@@hadoop_home}/bin/hdfs dfs test -d #{path}\""
+    system "sudo su #{@@hdfs_user} /bin/bash -c \"#{@@hadoop_home}/bin/hdfs dfs -test -d #{path}\""
     return $?.exitstatus == 0
   end
 
-  def copy(src, dest, owner, group, mode)
+  def test_file(path)
+    system "sudo su #{@@hdfs_user} /bin/bash -c \"#{@@hadoop_home}/bin/hdfs dfs -test -e #{path}\""
+    return $?.exitstatus == 0
+  end
+
+  def copy(src, dest, owner, group, mode, name)
     system "sudo su #{@@hdfs_user} /bin/bash -c \"#{@@hadoop_home}/bin/hdfs dfs -cp #{src} #{dest}\""
     if $?.exitstatus > 0
       raise "Failed to chmod directory: #{dest} "
     end
 
-    system "sudo su #{@@hdfs_user} /bin/bash -c \"#{@@hadoop_home}/bin/hdfs dfs -chown -R #{owner}:#{group} #{dest}\""
+    system "sudo su #{@@hdfs_user} /bin/bash -c \"#{@@hadoop_home}/bin/hdfs dfs -chown -R #{name}__#{owner}:#{group} #{dest}\""
     if $?.exitstatus > 0
       raise "Failed to chown directory: #{dest} to #{owner}:#{group}"
     end

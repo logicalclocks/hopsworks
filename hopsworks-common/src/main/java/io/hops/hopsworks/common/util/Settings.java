@@ -40,6 +40,7 @@ package io.hops.hopsworks.common.util;
 
 import com.google.common.base.Splitter;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
+import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
@@ -91,7 +92,6 @@ import java.util.regex.Pattern;
 
 import static io.hops.hopsworks.common.dao.kafka.KafkaFacade.DLIMITER;
 import static io.hops.hopsworks.common.dao.kafka.KafkaFacade.SLASH_SEPARATOR;
-import io.hops.hopsworks.common.dao.project.Project;
 
 @Singleton
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
@@ -163,6 +163,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_YARN_SUPERUSER = "yarn_user";
   private static final String VARIABLE_HDFS_SUPERUSER = "hdfs_user";
   private static final String VARIABLE_HOPSWORKS_USER = "hopsworks_user";
+  private static final String VARIABLE_AIRFLOW_USER = "airflow_user";
   private static final String VARIABLE_STAGING_DIR = "staging_dir";
   private static final String VARIABLE_ZEPPELIN_DIR = "zeppelin_dir";
   private static final String VARIABLE_ZEPPELIN_PROJECTS_DIR
@@ -170,6 +171,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_ZEPPELIN_SYNC_INTERVAL
       = "zeppelin_sync_interval";
   private static final String VARIABLE_ZEPPELIN_USER = "zeppelin_user";
+  private static final String VARIABLE_AIRFLOW_DIR = "airflow_dir";
   private static final String VARIABLE_JUPYTER_DIR = "jupyter_dir";
   private static final String VARIABLE_SPARK_DIR = "spark_dir";
   private static final String VARIABLE_FLINK_DIR = "flink_dir";
@@ -231,7 +233,8 @@ public class Settings implements Serializable {
   private static final String VARIABLE_ANACONDA_DIR = "anaconda_dir";
   private static final String VARIABLE_ANACONDA_ENABLED = "anaconda_enabled";
   private static final String VARIABLE_ANACONDA_DEFAULT_REPO = "conda_default_repo";
-
+  
+  private static final String VARIABLE_DOWNLOAD_ALLOWED = "download_allowed";
   private static final String VARIABLE_SUPPORT_EMAIL_ADDR = "support_email_addr";
   private static final String VARIABLE_HOPSUTIL_VERSION = "hopsutil_version";
   private static final String VARIABLE_HOPSEXAMPLES_VERSION = "hopsexamples_version";
@@ -282,10 +285,16 @@ public class Settings implements Serializable {
   //Used by RESTException to include devMsg or not in response
   private static final String VARIABLE_HOPSWORKS_REST_LOG_LEVEL = "hopsworks_rest_log_level";
 
-  /* -------------------- TfServing  --------------- */
+  /*
+   * -------------------- TfServing ---------------
+   */
   private static final String VARIABLE_TF_SERVING_MONITOR_INT = "tf_serving_monitor_int";
+  private static final String VARIABLE_TF_SERVING_CONNECTION_POOL_SIZE = "tf_serving_connection_pool_size";
+  private static final String VARIABLE_TF_SERVING_MAX_ROUTE_CONNECTIONS = "tf_serving_max_route_connections";
 
-  /* -------------------- Kubernetes --------------- */
+  /*
+   * -------------------- Kubernetes ---------------
+   */
   private static final String VARIABLE_KUBEMASTER_URL = "kube_master_url";
   private static final String VARIABLE_KUBE_USER = "kube_user";
   private static final String VARIABLE_KUBE_CA_CERTFILE = "kube_ca_certfile";
@@ -306,11 +315,11 @@ public class Settings implements Serializable {
   private static final String VARIABLE_JWT_LIFETIME_MS = "jwt_lifetime_ms";
   private static final String VARIABLE_JWT_EXP_LEEWAY_SEC = "jwt_exp_leeway_sec";
   private static final String VARIABLE_JWT_SIGNING_KEY_NAME = "jwt_signing_key_name";
+  private static final String VARIABLE_JWT_ISSUER_KEY = "jwt_issuer";
 
   /* -------------------- Featurestore --------------- */
   private static final String VARIABLE_FEATURESTORE_DEFAULT_QUOTA = "featurestore_default_quota";
   private static final String VARIABLE_FEATURESTORE_DEFAULT_STORAGE_FORMAT = "featurestore_default_storage_format";
-
 
   private String setVar(String varName, String defaultValue) {
     Variables userName = findById(varName);
@@ -433,6 +442,7 @@ public class Settings implements Serializable {
       TWOFACTOR_AUTH = setVar(VARIABLE_TWOFACTOR_AUTH, TWOFACTOR_AUTH);
       TWOFACTOR_EXCLUDE = setVar(VARIABLE_TWOFACTOR_EXCLUD, TWOFACTOR_EXCLUDE);
       HOPSWORKS_USER = setVar(VARIABLE_HOPSWORKS_USER, HOPSWORKS_USER);
+      AIRFLOW_USER = setVar(VARIABLE_AIRFLOW_USER, AIRFLOW_USER);
       HDFS_SUPERUSER = setVar(VARIABLE_HDFS_SUPERUSER, HDFS_SUPERUSER);
       YARN_SUPERUSER = setVar(VARIABLE_YARN_SUPERUSER, YARN_SUPERUSER);
       SPARK_USER = setVar(VARIABLE_SPARK_USER, SPARK_USER);
@@ -469,6 +479,7 @@ public class Settings implements Serializable {
       CERTS_DIR = setDirVar(VARIABLE_CERTS_DIRS, CERTS_DIR);
       CERTIFICATE_USER_VALID_DAYS = setStrVar(VARIABLE_CERTIFICATE_USER_VALID_DAYS, CERTIFICATE_USER_VALID_DAYS);
       NDB_DIR = setDirVar(VARIABLE_NDB_DIR, NDB_DIR);
+      AIRFLOW_DIR = setDirVar(VARIABLE_AIRFLOW_DIR, AIRFLOW_DIR);
       ELASTIC_IP = setIpVar(VARIABLE_ELASTIC_IP, ELASTIC_IP);
       ELASTIC_PORT = setIntVar(VARIABLE_ELASTIC_PORT, ELASTIC_PORT);
       ELASTIC_REST_PORT = setIntVar(VARIABLE_ELASTIC_REST_PORT, ELASTIC_REST_PORT);
@@ -526,6 +537,7 @@ public class Settings implements Serializable {
       ANACONDA_DEFAULT_REPO = setStrVar(VARIABLE_ANACONDA_DEFAULT_REPO, ANACONDA_DEFAULT_REPO);
       ANACONDA_ENABLED = Boolean.parseBoolean(setStrVar(
           VARIABLE_ANACONDA_ENABLED, ANACONDA_ENABLED.toString()));
+      DOWNLOAD_ALLOWED = Boolean.parseBoolean(setStrVar(VARIABLE_DOWNLOAD_ALLOWED, DOWNLOAD_ALLOWED.toString()));
       INFLUXDB_IP = setStrVar(VARIABLE_INFLUXDB_IP, INFLUXDB_IP);
       INFLUXDB_PORT = setStrVar(VARIABLE_INFLUXDB_PORT, INFLUXDB_PORT);
       INFLUXDB_USER = setStrVar(VARIABLE_INFLUXDB_USER, INFLUXDB_USER);
@@ -582,12 +594,16 @@ public class Settings implements Serializable {
 
       PYPI_REST_ENDPOINT = setStrVar(VARIABLE_PYPI_REST_ENDPOINT, PYPI_REST_ENDPOINT);
       PROVIDED_PYTHON_LIBRARY_NAMES = toSetFromCsv(
-          setStrVar(VARIABLE_PROVIDED_PYTHON_LIBRARY_NAMES, DEFAULT_PROVIDED_PYTHON_LIBRARY_NAMES),",");
+          setStrVar(VARIABLE_PROVIDED_PYTHON_LIBRARY_NAMES, DEFAULT_PROVIDED_PYTHON_LIBRARY_NAMES), ",");
       PREINSTALLED_PYTHON_LIBRARY_NAMES = toSetFromCsv(
           setStrVar(VARIABLE_PREINSTALLED_PYTHON_LIBRARY_NAMES, DEFAULT_PREINSTALLED_PYTHON_LIBRARY_NAMES),
           ",");
 
       TF_SERVING_MONITOR_INT = setStrVar(VARIABLE_TF_SERVING_MONITOR_INT, TF_SERVING_MONITOR_INT);
+      TF_SERVING_CONNECTION_POOL_SIZE = setIntVar(VARIABLE_TF_SERVING_CONNECTION_POOL_SIZE,
+        TF_SERVING_CONNECTION_POOL_SIZE);
+      TF_SERVING_MAX_ROUTE_CONNECTIONS = setIntVar(VARIABLE_TF_SERVING_MAX_ROUTE_CONNECTIONS,
+        TF_SERVING_MAX_ROUTE_CONNECTIONS);
 
       KUBE_USER = setStrVar(VARIABLE_KUBE_USER, KUBE_USER);
       KUBEMASTER_URL = setStrVar(VARIABLE_KUBEMASTER_URL, KUBEMASTER_URL);
@@ -596,7 +612,7 @@ public class Settings implements Serializable {
       KUBE_CLIENT_CERTFILE = setStrVar(VARIABLE_KUBE_CLIENT_CERTFILE, KUBE_CLIENT_CERTFILE);
       KUBE_CLIENT_KEYPASS = setStrVar(VARIABLE_KUBE_CLIENT_KEYPASS, KUBE_CLIENT_KEYPASS);
       KUBE_TRUSTSTORE_PATH = setStrVar(VARIABLE_KUBE_TRUSTSTORE_PATH, KUBE_TRUSTSTORE_PATH);
-      KUBE_TRUSTSTORE_KEY = setStrVar(VARIABLE_KUBE_TRUSTSTORE_KEY,  KUBE_TRUSTSTORE_KEY);
+      KUBE_TRUSTSTORE_KEY = setStrVar(VARIABLE_KUBE_TRUSTSTORE_KEY, KUBE_TRUSTSTORE_KEY);
       KUBE_KEYSTORE_PATH = setStrVar(VARIABLE_KUBE_KEYSTORE_PATH, KUBE_KEYSTORE_PATH);
       KUBE_KEYSTORE_KEY = setStrVar(VARIABLE_KUBE_KEYSTORE_KEY, KUBE_KEYSTORE_KEY);
       KUBE_CA_PATH = setStrVar(VARIABLE_KUBE_CA_PATH, KUBE_CA_PATH);
@@ -608,6 +624,7 @@ public class Settings implements Serializable {
       JWT_LIFETIME_MS = setLongVar(VARIABLE_JWT_LIFETIME_MS, JWT_LIFETIME_MS);
       JWT_EXP_LEEWAY_SEC = setIntVar(VARIABLE_JWT_EXP_LEEWAY_SEC, JWT_EXP_LEEWAY_SEC);
       JWT_SIGNING_KEY_NAME = setStrVar(VARIABLE_JWT_SIGNING_KEY_NAME, JWT_SIGNING_KEY_NAME);
+      JWT_ISSUER = setStrVar(VARIABLE_JWT_ISSUER_KEY, JWT_ISSUER);
 
       FEATURESTORE_DB_DEFAULT_QUOTA = setStrVar(VARIABLE_FEATURESTORE_DEFAULT_QUOTA, FEATURESTORE_DB_DEFAULT_QUOTA);
       FEATURESTORE_DB_DEFAULT_STORAGE_FORMAT =
@@ -632,6 +649,7 @@ public class Settings implements Serializable {
     updateVariableInternal(variableName, variableValue);
     refreshCache();
   }
+
   public synchronized void updateVariable(String variableName, Long variableValue) {
     updateVariableInternal(variableName, variableValue.toString());
     refreshCache();
@@ -645,9 +663,8 @@ public class Settings implements Serializable {
   }
 
   /**
-   * This method will invalidate the cache of variables.
-   * The next call to read a variable after invalidateCache() will trigger a read of all variables
-   * from the database.
+   * This method will invalidate the cache of variables. The next call to read a variable after invalidateCache() will
+   * trigger a read of all variables from the database.
    */
   public synchronized void invalidateCache() {
     cached = false;
@@ -737,12 +754,12 @@ public class Settings implements Serializable {
   public static final String SPARK_JAVA_LIBRARY_PROP = "java.library.path";
   public static final String SPARK_MAX_APP_ATTEMPTS = "spark.yarn.maxAppAttempts";
   public static final String SPARK_EXECUTOR_EXTRA_JAVA_OPTS = "spark.executor.extraJavaOptions";
-  public static final String SPARK_EXECUTORENV_PATH="spark.executorEnv.PATH";
-  public static final String SPARK_YARN_APPMASTERENV_LD_LIBRARY_PATH="spark.yarn.appMasterEnv.LD_LIBRARY_PATH";
-  public static final String SPARK_YARN_APPMASTERENV_LIBHDFS_OPTS="spark.yarn.appMasterEnv.LIBHDFS_OPTS";
-  public static final String SPARK_EXECUTORENV_LIBHDFS_OPTS="spark.executorEnv.LIBHDFS_OPTS";
-  public static final String SPARK_DRIVER_EXTRALIBRARYPATH="spark.driver.extraLibraryPath";
-  public static final String SPARK_DRIVER_EXTRAJAVAOPTIONS="spark.driver.extraJavaOptions";
+  public static final String SPARK_EXECUTORENV_PATH = "spark.executorEnv.PATH";
+  public static final String SPARK_YARN_APPMASTERENV_LD_LIBRARY_PATH = "spark.yarn.appMasterEnv.LD_LIBRARY_PATH";
+  public static final String SPARK_YARN_APPMASTERENV_LIBHDFS_OPTS = "spark.yarn.appMasterEnv.LIBHDFS_OPTS";
+  public static final String SPARK_EXECUTORENV_LIBHDFS_OPTS = "spark.executorEnv.LIBHDFS_OPTS";
+  public static final String SPARK_DRIVER_EXTRALIBRARYPATH = "spark.driver.extraLibraryPath";
+  public static final String SPARK_DRIVER_EXTRAJAVAOPTIONS = "spark.driver.extraJavaOptions";
 
   //PySpark properties
   public static final String SPARK_APP_NAME_ENV = "spark.app.name";
@@ -750,12 +767,13 @@ public class Settings implements Serializable {
   public static final String SPARK_EXECUTORENV_LD_LIBRARY_PATH = "spark.executorEnv.LD_LIBRARY_PATH";
   public static final String SPARK_EXECUTORENV_HDFS_USER = "spark.executorEnv.HDFS_USER";
   public static final String SPARK_EXECUTORENV_HADOOP_USER_NAME = "spark.executorEnv.HADOOP_USER_NAME";
+  public static final String SPARK_EXECUTORENV_JOB_NAME = "spark.executorEnv.JOB_NAME";
   public static final String SPARK_YARN_IS_PYTHON_ENV = "spark.yarn.isPython";
   public static final String SPARK_YARN_SECONDARY_JARS = "spark.yarn.secondary.jars";
 
   public static final String SPARK_PYTHONPATH = "PYTHONPATH";
   public static final String SPARK_PYSPARK_PYTHON = "PYSPARK_PYTHON";
-  public static final String SPARK_EXECUTORENV_PYSPARK_PYTHON = "spark.executorEnv."+SPARK_PYSPARK_PYTHON ;
+  public static final String SPARK_EXECUTORENV_PYSPARK_PYTHON = "spark.executorEnv." + SPARK_PYSPARK_PYTHON;
   //TFSPARK properties
   public static final String SPARK_TF_GPUS_ENV = "spark.executor.gpus";
   public static final String SPARK_TENSORFLOW_APPLICATION = "spark.tensorflow.application";
@@ -849,12 +867,19 @@ public class Settings implements Serializable {
     return NDB_DIR;
   }
 
-  private String ADAM_DIR = "/srv/hops/adam";
 
-  public synchronized String getAdamDir() {
+  private String AIRFLOW_DIR = "/srv/hops/airflow";
+  public synchronized String getAirflowDir() {
     checkCache();
-    return ADAM_DIR;
+    return AIRFLOW_DIR;
   }
+  
+  private String AIRFLOW_USER = "airflow";
+  public synchronized String getAirflowUser() {
+    checkCache();
+    return AIRFLOW_USER;
+  }
+
 
   private String HADOOP_DIR = "/srv/hops/hadoop";
 
@@ -1066,6 +1091,14 @@ public class Settings implements Serializable {
     return Long.parseLong(HDFS_DEFAULT_QUOTA_MBs);
   }
 
+  private String AIRFLOW_WEB_UI_IP = "127.0.0.1";
+  private int AIRFLOW_WEB_UI_PORT = 12358;
+
+  public synchronized String getAirflowWebUIAddress() {
+    checkCache();
+    return AIRFLOW_WEB_UI_IP + ":" + AIRFLOW_WEB_UI_PORT + "/hopsworks-api/airflow";
+  }
+
   private String MAX_NUM_PROJ_PER_USER = "5";
 
   public synchronized Integer getMaxNumProjPerUser() {
@@ -1172,6 +1205,11 @@ public class Settings implements Serializable {
   public static final String YARNTF_STAGING_DIR = ".yarntfStaging";
   public static final String HOPS_DEEP_LEARNING_TOUR_DATA = "tensorflow_demo";
 
+  //Featurestore constants
+  public static final String HOPS_FEATURESTORE_TOUR_DATA = "featurestore_demo";
+  public static final String HOPS_FEATURESTORE_TOUR_JOB_CLASS = "io.hops.examples.featurestore.Main";
+  public static final String HOPS_FEATURESTORE_TOUR_JOB_NAME = "featurestore_tour_job";
+
   public String getTensorFlowJarPath(String tfUser) {
     return "hdfs:///user/" + tfUser + "/" + TENSORFLOW_JAR;
   }
@@ -1231,18 +1269,18 @@ public class Settings implements Serializable {
   private String sparkDefaultClasspath(String sparkDir) {
     return sparkDir + "/lib/*";
   }
-  
+
   private static final String HADOOP_GLASSPATH_GLOB_ENV_VAR_KEY = "HADOOP_GLOB";
   private volatile String HADOOP_CLASSPATH_GLOB = null;
-  
+
   public String getHadoopClasspathGlob() throws IOException {
     if (HADOOP_CLASSPATH_GLOB == null) {
       synchronized (Settings.class) {
         if (HADOOP_CLASSPATH_GLOB == null) {
           String classpathGlob = System.getenv(HADOOP_GLASSPATH_GLOB_ENV_VAR_KEY);
           if (classpathGlob == null) {
-            LOGGER.log(Level.WARNING, HADOOP_GLASSPATH_GLOB_ENV_VAR_KEY + " environment variable is not set. " +
-                "Launching a subprocess to discover it");
+            LOGGER.log(Level.WARNING, HADOOP_GLASSPATH_GLOB_ENV_VAR_KEY + " environment variable is not set. "
+                + "Launching a subprocess to discover it");
             String bin = Paths.get(getHadoopSymbolicLinkDir(), "bin", "hadoop").toString();
             ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
                 .addCommand(bin)
@@ -1252,14 +1290,14 @@ public class Settings implements Serializable {
             ProcessResult result = osProcessExecutor.execute(processDescriptor);
             if (result.getExitCode() != 0) {
               throw new IOException("Could not get Hadoop classpath, exit code " + result.getExitCode()
-                + " Error: " + result.getStderr());
+                  + " Error: " + result.getStderr());
             }
             classpathGlob = result.getStdout();
           }
           //Now we must remove the yarn shuffle library as it creates issues for
           //Zeppelin Spark Interpreter
           StringBuilder classpath = new StringBuilder();
-  
+
           for (String path : classpathGlob.split(File.pathSeparator)) {
             if (!path.contains("yarn") && !path.contains("jersey") && !path.contains("servlet")) {
               classpath.append(path).append(File.pathSeparator);
@@ -1277,8 +1315,7 @@ public class Settings implements Serializable {
   }
 
   /**
-   * Constructs the path to the marker file of a streaming job that uses
-   * HopsUtil.
+   * Constructs the path to the marker file of a streaming job that uses HopsUtil.
    *
    * @param job job
    * @param appId yarn appId
@@ -1299,7 +1336,6 @@ public class Settings implements Serializable {
    * Static final fields are allowed in session beans:
    * http://stackoverflow.com/questions/9141673/static-variables-restriction-in-session-beans
    */
-
   //Directory names in HDFS
   public static final String DIR_ROOT = "Projects";
   public static final String DIR_SAMPLES = "Samples";
@@ -1440,12 +1476,14 @@ public class Settings implements Serializable {
 
   // Resource Manager Port
   private int LOGSTASH_PORT = 8088;
+
   public synchronized Integer getLogstashPort() {
     checkCache();
     return LOGSTASH_PORT;
   }
 
   private int LOGSTASH_PORT_SERVING = 5045;
+
   public synchronized Integer getLogstashPortServing() {
     checkCache();
     return LOGSTASH_PORT_SERVING;
@@ -1627,7 +1665,13 @@ public class Settings implements Serializable {
     checkCache();
     return ANACONDA_ENABLED;
   }
-
+  
+  private Boolean DOWNLOAD_ALLOWED = true;
+  public synchronized Boolean isDownloadAllowed() {
+    checkCache();
+    return DOWNLOAD_ALLOWED;
+  }
+  
 //  private String CONDA_CHANNEL_URL = "https://repo.continuum.io/pkgs/free/linux-64/";
   private String CONDA_CHANNEL_URL = "default";
 
@@ -1802,7 +1846,7 @@ public class Settings implements Serializable {
   //Glassfish truststore, used by hopsutil to initialize https connection to Hopsworks
   public static final String CRYPTO_MATERIAL_PASSWORD = "material_passwd";
 
-  //Used to retrieve schema by HopsUtil
+  //Used by HopsUtil
   public static final String HOPSWORKS_PROJECTID_PROPERTY = "hopsworks.projectid";
   public static final String HOPSWORKS_PROJECTNAME_PROPERTY = "hopsworks.projectname";
   public static final String HOPSWORKS_PROJECTUSER_PROPERTY = "hopsworks.projectuser";
@@ -1831,7 +1875,7 @@ public class Settings implements Serializable {
 
   //Elastic log index pattern
   public static final String ELASTIC_LOGS_INDEX = "logs";
-  public static final String ELASTIC_LOGS_INDEX_PATTERN = "_" +Settings.ELASTIC_LOGS_INDEX+ "-*";
+  public static final String ELASTIC_LOGS_INDEX_PATTERN = "_" + Settings.ELASTIC_LOGS_INDEX + "-*";
   public static final String ELASTIC_SERVING_INDEX = "serving";
   public static final String ELASTIC_SERVING_INDEX_PATTERN = "_" + ELASTIC_SERVING_INDEX + "-*";
   public static final String ELASTIC_EXPERIMENTS_INDEX = "experiments";
@@ -1841,6 +1885,7 @@ public class Settings implements Serializable {
   public static final String ELASTIC_DASHBOARD = "dashboard";
   public static final String ELASTIC_INDEX_PATTERN = "index-pattern";
   public static final String ELASTIC_LOG_INDEX_REGEX = ".*_" + ELASTIC_LOGS_INDEX + "-\\d{4}.\\d{2}.\\d{2}";
+
   public static final String ELASTIC_SERVING_INDEX_REGEX = ".*_" + ELASTIC_SERVING_INDEX+ "-\\d{4}.\\d{2}.\\d{2}";
 
   public String getHopsworksTmpCertDir() {
@@ -1873,8 +1918,7 @@ public class Settings implements Serializable {
   public static final float DEFAULT_YARN_MULTIPLICATOR = 1.0f;
 
   /**
-   * Returns the maximum image size in bytes that can be previewed in the
-   * browser.
+   * Returns the maximum image size in bytes that can be previewed in the browser.
    *
    * @return file size
    */
@@ -1884,9 +1928,7 @@ public class Settings implements Serializable {
   }
 
   /**
-   * Returns the maximum number of lines of the file that can be previewed in
-   * the
-   * browser.
+   * Returns the maximum number of lines of the file that can be previewed in the browser.
    *
    * @return file size
    */
@@ -2126,8 +2168,7 @@ public class Settings implements Serializable {
   }
 
   /**
-   * Returns aggregated log dir path for an application with the the given
-   * appId.
+   * Returns aggregated log dir path for an application with the the given appId.
    *
    * @param hdfsUser user
    * @param appId appId
@@ -2245,9 +2286,14 @@ public class Settings implements Serializable {
 
   private String HOPS_EXAMPLES_VERSION = "0.3.0";
 
-  public synchronized String getHopsExamplesFilename() {
+  public synchronized String getHopsExamplesSparkFilename() {
     checkCache();
     return "hops-examples-spark-" + HOPS_EXAMPLES_VERSION + ".jar";
+  }
+
+  public synchronized String getHopsExamplesFeaturestoreFilename() {
+    checkCache();
+    return "hops-examples-featurestore-" + HOPS_EXAMPLES_VERSION + ".jar";
   }
 
   private String RECOVERY_PATH = "hopsworks-api/api/auth/recover";
@@ -2602,12 +2648,12 @@ public class Settings implements Serializable {
     Set<String> brokerList = new HashSet<>();
     ZooKeeper zk;
     zk = new ZooKeeper(getZkConnectStr(),
-      Settings.ZOOKEEPER_SESSION_TIMEOUT_MS, new ZookeeperWatcher());
+        Settings.ZOOKEEPER_SESSION_TIMEOUT_MS, new ZookeeperWatcher());
     try {
       List<String> ids = zk.getChildren("/brokers/ids", false);
       for (String id : ids) {
         String brokerInfo = new String(zk.getData("/brokers/ids/" + id,
-          false, null));
+            false, null));
         String[] tokens = brokerInfo.split(DLIMITER);
         for (String str : tokens) {
           if (str.contains(SLASH_SEPARATOR) && str.startsWith(KAFKA_BROKER_PROTOCOL)) {
@@ -3008,93 +3054,120 @@ public class Settings implements Serializable {
 
   // -------------------------------- Kubernetes ----------------------------------------------//
   private String KUBE_USER = "hopsworks";
+
   public synchronized String getKubeUser() {
     checkCache();
     return KUBE_USER;
   }
 
   private String KUBEMASTER_URL = "https://192.168.68.102:6443";
+
   public synchronized String getKubeMasterUrl() {
     checkCache();
     return KUBEMASTER_URL;
   }
 
   private String KUBE_CA_CERTFILE = "/srv/hops/certs-dir/certs/ca.cert.pem";
+
   public synchronized String getKubeCaCertfile() {
     checkCache();
     return KUBE_CA_CERTFILE;
   }
 
   private String KUBE_CLIENT_KEYFILE = "/srv/hops/certs-dir/kube/hopsworks/hopsworks.key.pem";
+
   public synchronized String getKubeClientKeyfile() {
     checkCache();
     return KUBE_CLIENT_KEYFILE;
   }
 
   private String KUBE_CLIENT_CERTFILE = "/srv/hops/certs-dir/kube/hopsworks/hopsworks.cert.pem";
+
   public synchronized String getKubeClientCertfile() {
     checkCache();
     return KUBE_CLIENT_CERTFILE;
   }
 
   private String KUBE_CLIENT_KEYPASS = "adminpw";
+
   public synchronized String getKubeClientKeypass() {
     checkCache();
     return KUBE_CLIENT_KEYPASS;
   }
 
   private String KUBE_TRUSTSTORE_PATH = "/srv/hops/certs-dir/kube/hopsworks/hopsworks__tstore.jks";
+
   public synchronized String getKubeTruststorePath() {
     checkCache();
     return KUBE_TRUSTSTORE_PATH;
   }
 
   private String KUBE_TRUSTSTORE_KEY = "adminpw";
+
   public synchronized String getKubeTruststoreKey() {
     checkCache();
     return KUBE_TRUSTSTORE_KEY;
   }
 
   private String KUBE_KEYSTORE_PATH = "/srv/hops/certs-dir/kube/hopsworks/hopsworks__kstore.jks";
+
   public synchronized String getKubeKeystorePath() {
     checkCache();
     return KUBE_KEYSTORE_PATH;
   }
 
   private String KUBE_KEYSTORE_KEY = "adminpw";
+
   public synchronized String getKubeKeystoreKey() {
     checkCache();
     return KUBE_KEYSTORE_KEY;
   }
 
   private String KUBE_CA_PATH = "/srv/hops/certs-dir/kube";
+
   public synchronized String getKubeCAPath() {
     checkCache();
     return KUBE_CA_PATH;
   }
 
   private String KUBE_CA_PASSWORD = "adminpw";
+
   public synchronized String getKubeCAPassword() {
     checkCache();
     return KUBE_CA_PASSWORD;
   }
 
   private String KUBE_REGISTRY = "registry.docker-registry.svc.cluster.local";
+
   public synchronized String getKubeRegistry() {
     checkCache();
     return KUBE_REGISTRY;
   }
 
   private Integer KUBE_MAX_SERVING_INSTANCES = 10;
+
   public synchronized Integer getKubeMaxServingInstances() {
     checkCache();
     return KUBE_MAX_SERVING_INSTANCES;
   }
 
   private String TF_SERVING_MONITOR_INT = "30s";
+
   public synchronized String getTFServingMonitorInt() {
     checkCache();
     return TF_SERVING_MONITOR_INT;
+  }
+
+  private int TF_SERVING_CONNECTION_POOL_SIZE = 40;
+  public synchronized int getTFServingConnectionPoolSize() {
+    checkCache();
+    return TF_SERVING_CONNECTION_POOL_SIZE;
+  }
+
+  private int TF_SERVING_MAX_ROUTE_CONNECTIONS = 10;
+  public synchronized int getTFServingMaxRouteConnections() {
+    checkCache();
+    return TF_SERVING_MAX_ROUTE_CONNECTIONS;
   }
 
   public enum LOG_LEVEL {
@@ -3120,9 +3193,10 @@ public class Settings implements Serializable {
   }
 
   private String JWT_SIGNATURE_ALGORITHM = "HS512";
-  private long JWT_LIFETIME_MS = 1800000l;
+  private long JWT_LIFETIME_MS = 1800000L;
   private int JWT_EXP_LEEWAY_SEC = 900;
   private String JWT_SIGNING_KEY_NAME = "apiKey";
+  private String JWT_ISSUER = "hopsworks@logicalclocks.com";
 
   public synchronized String getJWTSignatureAlg() {
     checkCache();
@@ -3142,6 +3216,11 @@ public class Settings implements Serializable {
   public synchronized String getJWTSigningKeyName() {
     checkCache();
     return JWT_SIGNING_KEY_NAME;
+  }
+  
+  public synchronized String getJWTIssuer() {
+    checkCache();
+    return JWT_ISSUER;
   }
 
   public String getHiveSiteSparkHdfsPath() {

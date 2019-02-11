@@ -43,12 +43,13 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-    .controller('ProjectCtrl', ['$scope', '$rootScope', '$location', '$routeParams', '$route', '$timeout', 'UtilsService',
-        'growl', 'ProjectService', 'ModalService', 'ActivityService', '$cookies', 'DataSetService',
-        'UserService', 'TourService', 'PythonDepsService', 'StorageService', 'CertService', 'VariablesService', 'FileSaver', 'Blob',
-        function ($scope, $rootScope, $location, $routeParams, $route, $timeout, UtilsService, growl, ProjectService,
+        .controller('ProjectCtrl', ['$scope', '$rootScope', '$location', '$routeParams', '$route', '$timeout', '$window', 'UtilsService',
+          'growl', 'ProjectService', 'ModalService', 'ActivityService', '$cookies', 'DataSetService',
+          'UserService', 'TourService', 'PythonDepsService', 'StorageService', 'CertService', 'VariablesService', 'FileSaver', 'Blob',
+          'AirflowService', '$http',				    
+        function ($scope, $rootScope, $location, $routeParams, $route, $timeout, $window, UtilsService, growl, ProjectService,
                   ModalService, ActivityService, $cookies, DataSetService, UserService, TourService, PythonDepsService,
-                  StorageService, CertService, VariablesService, FileSaver, Blob) {
+                    StorageService, CertService, VariablesService, FileSaver, Blob, AirflowService, $http) {
 
             var self = this;
             self.loadedView = false;
@@ -72,11 +73,10 @@ angular.module('hopsWorksApp')
             // We could instead implement a service to get all the available types but this will do it for now
             if ($rootScope.isDelaEnabled) {
                 // , 'RSTUDIO'
-                self.projectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'DELA', 'SERVING', 'FEATURESTORE'];
+                self.projectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'DELA', 'SERVING', 'FEATURESTORE', 'AIRFLOW'];
             } else {
-                self.projectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'SERVING', 'FEATURESTORE'];
+                self.projectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'SERVING', 'FEATURESTORE', 'AIRFLOW'];
             }
-
             $scope.activeService = "home";
 
             self.alreadyChoosenServices = [];
@@ -161,10 +161,12 @@ angular.module('hopsWorksApp')
                         });
 
                         // Remove already choosen services from the service selection
+                        // Check if airflow there already.
                         self.alreadyChoosenServices.forEach(function (entry) {
                           var index = self.projectTypes.indexOf(entry.toUpperCase());
                           self.projectTypes.splice(index, 1);
                         });
+
 
                         $cookies.put("projectID", self.projectId);
                         //set the project name under which the search is performed
@@ -292,6 +294,10 @@ angular.module('hopsWorksApp')
 
             self.goToRStudio = function () {
               self.goToUrl('rstudio');
+            };
+
+            self.goToAirflow = function () {
+              self.goToUrl('airflow');
             };
 
             self.goToJobs = function () {
@@ -485,6 +491,10 @@ angular.module('hopsWorksApp')
 
             self.showTensorflow = function () {
               return showService("Tensorflow");
+            };
+
+            self.showAirflow = function () {
+              return showService("Airflow");
             };
 
             self.showRStudio = function () {
@@ -703,6 +713,76 @@ angular.module('hopsWorksApp')
               var idx = self.projectTypes.indexOf(service);
               return idx === -1;
             };
+
+            self.openWindow = function () {
+              $window.open(self.ui, '_blank');
+            };
+
+            self.connectToAirflow = function () {
+              AirflowService.storeAirflowJWT(self.projectId).then(
+                function (success) {
+                  // Open airlfow
+                  var newTab = $window.open('about:blank', '_blank');
+                  $http.get(getApiLocationBase() + "/airflow").then ( function (response) {
+                    newTab.location.href = getApiLocationBase() + "/airflow/admin";
+                  })
+                }, function (error) {
+                  growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                }
+              )
+            };
+
+            self.purgeAirflowDagsLocal = function () {
+              AirflowService.purgeAirflowDagsLocal(self.projectId).then(
+                      function (success) {
+                        growl.success(success.data.successMessage,
+                                {title: 'Success', ttl: 1000});
+
+                      }, function (error) {
+                growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+
+              });              
+            };
+            
+            self.copyFromHdfs = function () {
+              
+              AirflowService.copyFromHdfsToAirflow(self.projectId).then(
+                      function (success) {
+                        growl.success(success.data.successMessage,
+                                {title: 'Success', ttl: 1000});
+
+                      }, function (error) {
+                growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+
+              });
+            };
+
+            self.copyToHdfs = function () {
+              AirflowService.copyFromAirflowToHdfs(self.projectId).then(
+                      function (success) {
+                        growl.success("Copied from $AIRFLOW_HOME/dags to Resources/airflow/dags", // 
+                        {title: 'Success', ttl: 1000});
+
+                      }, function (error) {
+                growl.error("Problem copying from $AIRFLOW_HOME/dags to Resources/airflow/dags", 
+                {title: 'Error', ttl: 5000});
+
+              });
+            };
+
+            self.restartAirflow = function () {
+              AirflowService.restartAirflow(self.projectId).then(
+                      function (success) {
+                        growl.success("Restarted the Airflow webserver.", 
+                        {title: 'Success', ttl: 3000});
+
+                      }, function (error) {
+                growl.error("Problem restarting Airflow webserver", 
+                {title: 'Error', ttl: 5000});
+
+              });
+            };
+
 
             var kibanaNavVarInitKey = "hopsworks.kibana.navbar.set";
             self.toggleKibanaNavBar = function () {

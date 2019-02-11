@@ -35,7 +35,7 @@
   ~ NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
   ~ DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
   ~ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-  -->
+-->
 
 <div ng-controller="MainCtrl as mainCtrl">
   <div ng-include="'nav.html'"></div>
@@ -97,7 +97,7 @@
                           <button type="button" class="btn btn-default fa fa-trash-o" title="Delete" 
                                   ng-disabled="datasetsCtrl.parentDS.publicDs !== 0 && isDelaEnabled"
                                   ng-click="datasetsCtrl.deleteSelected();"></button>
-                          
+
                         </div>
                         <div class="btn-group" role="group" aria-label="Third group" ng-show="datasetsCtrl.isSelectedFiles() === 1 &&
                                                                           !datasetsCtrl.selectedFiles[datasetsCtrl.selected].dir">
@@ -106,7 +106,7 @@
                           <button type="button" class="btn btn-default fa fa-camera" title="Preview"
                                   ng-click="datasetsCtrl.filePreview(datasetsCtrl.selected, true, false)"></button>
                           <button type="button" class="btn btn-default fa fa-file-archive-o" title="Unzip" 
-                                  ng-hide="datasetsCtrl.isZippedfile()===false"
+                                  ng-hide="datasetsCtrl.isZippedfile() === false"
                                   ng-click="datasetsCtrl.unzip(datasetsCtrl.selected)"></button>
                           <button type="button" class="btn btn-default" title="Convert .ipynb file to .py file"
                                   ng-hide="datasetsCtrl.isIPythonNotebook()===false"
@@ -251,7 +251,7 @@
                       <td uib-dropdown class="position-fixed" id="menu-{{ $index}}" style="border-top: none">
                         <ul uib-dropdown-menu class="dropdown-amore" role="menu">
                           <li ng-show="datasetsCtrl.isSelectedFiles() <= 1" 
-                              ng-hide="datasetsCtrl.isZippedfile()===false">
+                              ng-hide="datasetsCtrl.isZippedfile() === false">
                             <a class="pointer"
                                role="menuitem"
                                tabindex="10"
@@ -270,7 +270,7 @@
                                ng-click="datasetsCtrl.zip(datasetsCtrl.selected)"
                                data-toggle="uib-tooltip" title="Compress this directory using the staging directory
                                on the scratch disk of the webserver."
-                            >
+                               >
                               <span><i class="fa fa-file-archive-o" ></i>
                                 Zip directory here</span>
                             </a>
@@ -382,11 +382,10 @@
                           </li>
                         </ul>
                       </td>
-                      </td>
                       <td style="margin:0px;width:25px;" 
                           ng-if="(file.zipState !== 'NONE') ||
-                                  (file.underConstruction && !datasetsCtrl.working) ||
-                                  (file.dir && datasetsCtrl.working && ($index === datasetsCtrl.selected))">
+                                                                            (file.underConstruction && !datasetsCtrl.working) ||
+                                                                            (file.dir && datasetsCtrl.working && ($index === datasetsCtrl.selected))">
                         <!--<i ng-if="$index >= 5 && (!file.underConstruction && !datasetsCtrl.working)"
                               title="This file is compressed"
                               style="color: lightgrey; margin-top:3px;"

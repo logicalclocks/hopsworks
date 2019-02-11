@@ -133,7 +133,7 @@ angular.module('hopsWorksApp')
                 var trainingDatasetJson = {
                     "name": self.trainingDatasetName,
                     "dependencies": self.dependencies,
-                    "jobId": $scope.selected.value.id,
+                    "jobName": $scope.selected.value.name,
                     "version": 1,
                     "description": self.trainingDatasetDescription,
                     "dataFormat": self.trainingDatasetFormat,

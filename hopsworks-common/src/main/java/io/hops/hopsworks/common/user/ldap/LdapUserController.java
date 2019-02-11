@@ -130,7 +130,7 @@ public class LdapUserController {
     String email = userDTO.getEmail().size() == 1 ? userDTO.getEmail().get(0) : chosenEmail;
     Users u = userFacade.findByEmail(email);
     if (u != null) {
-      throw new LoginException("Failed to login. User with the chosen email already exist in the system.");
+      throw new LoginException("Failed to login. User with the chosen email already exists in the system.");
     }
     String authKey = SecurityUtils.getRandomPassword(16);
     Users user = userController.createNewLdapUser(email, userDTO.getGivenName(), userDTO.getSn(), authKey,

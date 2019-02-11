@@ -40,7 +40,6 @@ package io.hops.hopsworks.api.jupyter;
 
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 
-import java.io.File;
 import java.nio.file.Paths;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
@@ -64,6 +63,7 @@ import javax.ws.rs.core.Response;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.common.jupyter.JupyterController;
 import io.hops.hopsworks.common.livy.LivyController;
 import io.hops.hopsworks.common.livy.LivyMsg;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
@@ -94,8 +94,6 @@ import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Ip;
 import io.hops.hopsworks.common.util.OSProcessExecutor;
-import io.hops.hopsworks.common.util.ProcessDescriptor;
-import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -147,6 +145,8 @@ public class JupyterService {
   private JWTHelper jWTHelper;
   @EJB
   private OSProcessExecutor osProcessExecutor;
+  @EJB
+  private JupyterController jupyterController;
 
   private Integer projectId;
   // No @EJB annotation for Project, it's injected explicitly in ProjectService.
@@ -257,7 +257,7 @@ public class JupyterService {
     // if the notebook is not running but we have a database entry for it,
     // we should remove the DB entry (and restart the notebook server).
     if (!running) {
-      jupyterFacade.removeNotebookServer(hdfsUser);
+      jupyterFacade.removeNotebookServer(hdfsUser, jp.getPort());
       throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_SERVERS_NOT_RUNNING, Level.FINE);
     }
     String externalIp = Ip.getHost(req.getRequestURL().toString());
@@ -332,12 +332,19 @@ public class JupyterService {
 
       String externalIp = Ip.getHost(req.getRequestURL().toString());
 
-      jp = jupyterFacade.saveServer(externalIp, project, configSecret,
+      try {
+        jp = jupyterFacade.saveServer(externalIp, project, configSecret,
           dto.getPort(), user.getId(), dto.getToken(), dto.getPid());
+      } catch(Exception e) {
+        LOGGER.log(Level.SEVERE, "Failed to save Jupyter notebook settings", e);
+        stopAllSessions(hdfsUser, hopsworksUser, configSecret, dto.getPid(), dto.getPort());
+      }
 
       if (jp == null) {
         throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_SAVE_SETTINGS_ERROR, Level.SEVERE);
       }
+    } else {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_SERVER_ALREADY_RUNNING, Level.FINE);
     }
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
         jp).build();
@@ -360,7 +367,8 @@ public class JupyterService {
   public Response stopDataOwner(@PathParam("hdfsUsername") String hdfsUsername, @Context SecurityContext sc) throws
       ServiceException, ProjectException {
     Users user = jWTHelper.getUserPrincipal(sc);
-    stopAllSessions(hdfsUsername, user);
+    JupyterProject jp = jupyterFacade.findByUser(hdfsUsername);
+    stopAllSessions(hdfsUsername, user, jp.getSecret(), jp.getPid(), jp.getPort());
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 
@@ -372,18 +380,18 @@ public class JupyterService {
   public Response stopNotebookServer(@Context SecurityContext sc) throws ProjectException, ServiceException {
     Users user = jWTHelper.getUserPrincipal(sc);
     String hdfsUsername = hdfsUsersController.getHdfsUserName(project, user);
-    stopAllSessions(hdfsUsername, user);
+    JupyterProject jp = jupyterFacade.findByUser(hdfsUsername);
+    if (jp == null) {
+      throw new ProjectException(RESTCodes.ProjectErrorCode.JUPYTER_SERVER_NOT_FOUND, Level.FINE,
+        "hdfsUser: " + hdfsUsername);
+    }
+    stopAllSessions(hdfsUsername, user, jp.getSecret(), jp.getPid(), jp.getPort());
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 
-  private void stopAllSessions(String hdfsUser, Users user) throws ServiceException, ProjectException {
+  private void stopAllSessions(String hdfsUser, Users user, String secret, long pid, int port) throws ServiceException {
     // We need to stop the jupyter notebook server with the PID
     // If we can't stop the server, delete the Entity bean anyway
-    JupyterProject jp = jupyterFacade.findByUser(hdfsUser);
-    if (jp == null) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.JUPYTER_SERVER_NOT_FOUND, Level.FINE,
-        "hdfsUser: " + hdfsUser);
-    }
 
     List<LivyMsg.Session> sessions = livyController.
         getLivySessionsForProjectUser(project, user, ProjectServiceEnum.JUPYTER);
@@ -404,12 +412,11 @@ public class JupyterService {
       }
       retries--;
     }
-    String jupyterHomePath = jupyterProcessFacade.getJupyterHome(hdfsUser, jp);
+    String jupyterHomePath = jupyterProcessFacade.getJupyterHome(hdfsUser, project, secret);
 
     // stop the server, remove the user in this project's local dirs
     // This method also removes the corresponding row for the Notebook process in the JupyterProject table.
-    jupyterProcessFacade.killServerJupyterUser(hdfsUser, jupyterHomePath, jp.getPid(), jp.
-        getPort());
+    jupyterProcessFacade.killServerJupyterUser(hdfsUser, jupyterHomePath, pid, port);
 
     String[] project_user = hdfsUser.split(HdfsUsersController.USER_NAME_DELIMITER);
     DistributedFileSystemOps dfso = dfsService.getDfsOps();
@@ -476,30 +483,12 @@ public class JupyterService {
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response convertIPythonNotebook(@PathParam("path") String path,
       @Context SecurityContext sc) throws ServiceException {
+    String ipynbPath = settings.getProjectPath(this.project.getName()) + "/" + path;
+    int extensionIndex = ipynbPath.lastIndexOf(".ipynb");
+    StringBuilder pathBuilder = new StringBuilder(ipynbPath.substring(0, extensionIndex)).append(".py");
+    String pyAppPath = pathBuilder.toString();
     String hdfsUsername = getHdfsUser(sc);
-    String hdfsFilename = settings.getProjectPath(project.getName()) + File.separator  + path;
-
-    String prog = settings.getHopsworksDomainDir() + "/bin/convert-ipython-notebook.sh";
-    ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
-        .addCommand(prog)
-        .addCommand(hdfsFilename)
-        .addCommand(hdfsUsername)
-        .addCommand(settings.getAnacondaProjectDir(project))
-        .ignoreOutErrStreams(true)
-        .build();
-    LOGGER.log(Level.FINE, processDescriptor.toString());
-    try {
-      ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
-      
-      if (!processResult.processExited() || processResult.getExitCode() != 0) {
-        throw new ServiceException(RESTCodes.ServiceErrorCode.IPYTHON_CONVERT_ERROR,  Level.SEVERE,
-          "error code: " + processResult.getExitCode());
-      }
-    } catch (IOException ex) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.IPYTHON_CONVERT_ERROR, Level.SEVERE, null, ex.getMessage(),
-        ex);
-
-    }
+    jupyterController.convertIPythonNotebook(hdfsUsername, ipynbPath, project, pyAppPath);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 

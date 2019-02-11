@@ -164,7 +164,8 @@ public class JupyterNotebookCleaner {
           String jupyterHomePath = null;
 
           try {
-            jupyterHomePath = jupyterProcessFacade.getJupyterHome(hdfsUser.getName(), jp);
+            jupyterHomePath = jupyterProcessFacade.getJupyterHome(hdfsUser.getName(), jp.getProjectId(),
+              jp.getSecret());
 
             // stop the server, remove the user in this project's local dirs
             // This method also removes the corresponding row for the Notebook process in the JupyterProject table.
@@ -214,7 +215,6 @@ public class JupyterNotebookCleaner {
           } catch(Exception e) {
             LOGGER.log(Level.WARNING, "Exception while updating RUNNING status to KILLED on experiments", e);
           }
-
         }
       }
 

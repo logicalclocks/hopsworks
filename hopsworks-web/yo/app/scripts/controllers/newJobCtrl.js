@@ -68,6 +68,9 @@ angular.module('hopsWorksApp')
             self.selectedTopics = [];
             self.projectName = "";
             self.tfOnSpark = false;
+            self.putAction =  "Create";
+            self.showUpdateWarning = false;
+            self.updateWarningMsg = "Job already exists. Are you sure you want to update it?";
             self.getAllTopics = function () {
               if (self.kafkaSelected) {
                 if (typeof self.runConfig.kafka !== "undefined" &&
@@ -142,12 +145,12 @@ angular.module('hopsWorksApp')
             self.selectFileRegexes = {
               "SPARK": /.jar\b/,
               "FLINK": /.jar\b/,
-              "PYSPARK": /.py\b/
+              "PYSPARK": /(.py|.ipynb)\b/
             };
             self.selectFileErrorMsgs = {
               "SPARK": "Please select a JAR file.",
               "FLINK": "Please select a JAR file.",
-              "PYSPARK": "Please select a file."
+              "PYSPARK": "Please select a .py or .ipynb file."
             };
 
             //Create variables for user-entered information
@@ -368,7 +371,7 @@ angular.module('hopsWorksApp')
             var jobConfigFileImported = function (config) {
               try {
                 var jobConfig = angular.fromJson(config);
-                JobService.createNewJob(self.projectId, jobConfig.config).then(
+                JobService.putJob(self.projectId, jobConfig.config).then(
                         function (success) {
                           $location.path('project/' + self.projectId + '/jobs');
                           self.removed = true;
@@ -443,7 +446,7 @@ angular.module('hopsWorksApp')
                 self.tourService.createdJobName = self.jobname;
               }
 
-              JobService.createNewJob(self.projectId, self.runConfig).then(
+              JobService.putJob(self.projectId, self.runConfig).then(
                       function (success) {
                         $location.path('project/' + self.projectId + '/jobs');
                         StorageService.remove(self.newJobName);
@@ -463,6 +466,8 @@ angular.module('hopsWorksApp')
              * @returns {undefined}
              */
             self.nameFilledIn = function () {
+              self.templateFormButton();
+
               // For Kafka tour
               if (self.projectIsGuide) {
                 self.tourService.currentStep_TourSeven = 2;
@@ -470,6 +475,7 @@ angular.module('hopsWorksApp')
               if (self.phase === 0) {
                 if (!self.jobname) {
                   self.jobname = "Job-" + Math.round(new Date().getTime() / 1000);
+                  self.putAction = "Create";
                 }
                 self.phase = 1;
                 self.accordion2.isOpen = true; //Open type selection
@@ -482,6 +488,19 @@ angular.module('hopsWorksApp')
               if (self.tourService.currentStep_TourFour > -1) {
                 self.tourService.currentStep_TourFour = 2;
               }
+            };
+
+            self.templateFormButton = function(){
+              JobService.getJob(self.projectId, self.jobname).then(
+                  function (success) {
+                    //growl.warning("Job already exists. Are you sure you want to update it?", {title: "Warning",
+                    // ttl: 15000});
+                    self.showUpdateWarning = true;
+                    self.putAction = "Update";
+                  }, function (error) {
+                    self.putAction = "Create";
+                    self.showUpdateWarning = false;
+                  });
             };
 
             self.guideSetJobName = function () {
@@ -510,12 +529,12 @@ angular.module('hopsWorksApp')
               var selectedType;
               switch (self.jobtype) { //Set the panel titles according to job type
                 case 1:
-                  self.accordion3.title = "App file (.jar, .py)";
+                  self.accordion3.title = "App file (.jar, .py or .ipynb)";
                   self.accordion4.title = "Job details";
                   selectedType = "Spark";
                   break;
                 case 2:
-                  self.accordion3.title = "App file (.py)";
+                  self.accordion3.title = "App file (.py or .ipynb)";
                   self.accordion4.title = "Job details";
                   selectedType = "PySpark";
                   break;
@@ -680,7 +699,8 @@ angular.module('hopsWorksApp')
                           function (success) {
                             self.runConfig = success.data;
 
-                            if (self.runConfig.appPath.toLowerCase().endsWith(".py")) {
+                            if (self.runConfig.appPath.toLowerCase().endsWith(".py") ||
+                            self.runConfig.appPath.toLowerCase().endsWith(".ipynb")) {
                               self.jobtype = 2;
                             } else {
                               self.jobtype = 1;
@@ -826,10 +846,7 @@ angular.module('hopsWorksApp')
                 //Job information
                 self.jobtype = stored.jobtype;
                 self.jobname = stored.jobname;
-                if (typeof self.jobname !== "undefined") {
-                  self.jobname = self.jobname + "." + Math.floor(Math.random() * 10);
-                  stored.accordion1.value = " - " + self.jobname;
-                }
+                self.templateFormButton();
                 self.localResources = stored.runConfig.localResources;
                 if (typeof self.localResources === "undefined") {
                   self.localResources = [];

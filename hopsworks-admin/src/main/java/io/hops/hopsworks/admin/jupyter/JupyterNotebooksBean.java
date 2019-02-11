@@ -120,7 +120,7 @@ public class JupyterNotebooksBean {
       if (hdfsUser.compareTo("Orphaned") == 0) {
         jupyterHomePath = "";
       } else {
-        jupyterHomePath = jupyterProcessFacade.getJupyterHome(hdfsUser, notebook);
+        jupyterHomePath = jupyterProcessFacade.getJupyterHome(hdfsUser, notebook.getProjectId(), notebook.getSecret());
       }
       jupyterProcessFacade.killServerJupyterUser(hdfsUser, jupyterHomePath, notebook.getPid(), notebook.getPort());
       FacesContext context = FacesContext.getCurrentInstance();

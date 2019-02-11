@@ -76,9 +76,10 @@ angular.module('hopsWorksApp', [
   'nvd3',
   'ui.toggle',
   'ngFileSaver',
+  'ngFileUpload',
   'googlechart'
 ])
-        .config(['$routeProvider', '$httpProvider', '$compileProvider', 'flowFactoryProvider', 'accordionConfig',
+        .config(['$routeProvider', '$httpProvider', '$compileProvider', 'flowFactoryProvider', 'accordionConfig', 
           function ($routeProvider, $httpProvider, $compileProvider, flowFactoryProvider, accordionConfig) {
 
             // tensorflow cluster panes should expand faster than default 0.5s
@@ -92,6 +93,7 @@ angular.module('hopsWorksApp', [
 
             // Set the content type to be FORM type for all general post requests and override them explicit if needed
             $httpProvider.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded';
+
 
             flowFactoryProvider.defaults = {
               //if [400, 401, 403, 409, 415, 500, 501] error codes are sent from the server do not retry.
@@ -236,6 +238,26 @@ angular.module('hopsWorksApp', [
                         auth: ['$q', '$route', 'AuthGuardService',
                           function ($q, $route, AuthGuardService) {
                             return AuthGuardService.guardProject($q, $route.current.params.projectID);
+                          }]
+                      }
+                    })
+                    .when('/project/:projectID/airflow', {
+                      templateUrl: 'views/airflow.html',
+                      controller: 'ProjectCtrl as projectCtrl',
+                      resolve: {
+                        auth: ['$q', '$location', 'AuthService', '$cookies',
+                          function ($q, $location, AuthService, $cookies) {
+                            return AuthService.session().then(
+                                    function (success) {
+                                      $cookies.put("email", success.data.data.value);
+                                    },
+                                    function (err) {
+                                      $cookies.remove("email");
+                                      $cookies.remove("projectID");
+                                      $location.path('/login');
+                                      $location.replace();
+                                      return $q.reject(err);
+                                    });
                           }]
                       }
                     })
@@ -404,6 +426,7 @@ angular.module('hopsWorksApp', [
                     });
 
             $compileProvider.aHrefSanitizationWhitelist(/^\s*(https?|ftp|mailto|tel|file|blob):/);
+
           }])
 
         //We already have a limitTo filter built-in to angular,
@@ -484,17 +507,57 @@ angular.module('hopsWorksApp', [
             return value + (tail || ' …');
           };
         })
+        .filter('strLimit', ['$filter', function($filter) {
+            return function(input, limit, more) {
+                if (input.length <= limit) {
+                    return input;
+                }
+                return $filter('limitTo')(input, limit) + (more || '...');
+            };
+        }])
+        .filter('fileExtension', ['$filter', function($filter) {
+            return function(input) {
+                return /\./.test(input) && $filter('strLimit')(input.split('.').pop(), 3, '..') || '';
+            };
+        }])
+        .filter('formatDate', ['$filter', function() {
+            return function(input) {
+                return input instanceof Date ?
+                    input.toISOString().substring(0, 19).replace('T', ' ') :
+                    (input.toLocaleString || input.toString).apply(input);
+            };
+        }])
+        .filter('humanReadableFileSize', ['$filter', 'fileManagerConfig', function($filter, fileManagerConfig) {
+          // See https://en.wikipedia.org/wiki/Binary_prefix
+          var decimalByteUnits = [' kB', ' MB', ' GB', ' TB', 'PB', 'EB', 'ZB', 'YB'];
+          var binaryByteUnits = ['KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB'];
+
+          return function(input) {
+            var i = -1;
+            var fileSizeInBytes = input;
+
+            do {
+              fileSizeInBytes = fileSizeInBytes / 1024;
+              i++;
+            } while (fileSizeInBytes > 1024);
+
+            var result = fileManagerConfig.useBinarySizePrefixes ? binaryByteUnits[i] : decimalByteUnits[i];
+            return Math.max(fileSizeInBytes, 0.1).toFixed(1) + ' ' + result;
+          };
+        }])        
         .run(['$rootScope', '$routeParams', '$http', function ($rootScope, $routeParams, $http) {
             var token = localStorage.getItem("token");
             if (token) {
               $http.defaults.headers.common.Authorization = token;
             }
             $rootScope.$on('$routeChangeSuccess',
-              function (e, current, pre) {
-                if ($routeParams.projectID === undefined) {
-                  $rootScope.projectView = false;
-                } else {
-                  $rootScope.projectView = true;
-                }
-              });
-  }]);
+                    function (e, current, pre) {
+                      if ($routeParams.projectID === undefined) {
+                        $rootScope.projectView = false;
+                      } else {
+                        $rootScope.projectView = true;
+                      }
+                    });
+
+
+          }]);

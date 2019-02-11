@@ -54,26 +54,29 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class JwtSigningKey implements Serializable {
 
   private static final long serialVersionUID = 1L;
+
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Basic(optional = false)
   @Column(name = "id")
   private Integer id;
+
   @Basic(optional = false)
   @NotNull
   @Size(min = 1,
       max = 128)
   @Column(name = "secret")
   private String secret;
+
   @Basic(optional = false)
   @NotNull
   @Size(min = 1,
       max = 45)
   @Column(name = "name")
   private String name;
-  @Basic(optional = false)
-  @NotNull
-  @Column(name = "created_on")
+
+  @Basic(optional = true)
+  @Column(name = "created_on", updatable= false, insertable=false)
   @Temporal(TemporalType.TIMESTAMP)
   private Date createdOn;
 
@@ -87,6 +90,7 @@ public class JwtSigningKey implements Serializable {
   public JwtSigningKey(String secret, String name) {
     this.secret = secret;
     this.name = name;
+//    this.createdOn = java.sql.Date.valueOf(java.time.LocalDate.now());
   }
 
   public Integer getId() {

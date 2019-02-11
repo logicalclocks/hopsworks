@@ -92,10 +92,10 @@ angular.module('hopsWorksApp')
                * @param {type} config The configuration of the newly created job.
                * @returns {undefined} The newly created job object.
                */
-              createNewJob: function (projectId, config) {
+              putJob: function (projectId, config) {
                 var req = {
-                  method: 'POST',
-                  url: '/api/project/' + projectId + '/jobs',
+                  method: 'PUT',
+                  url: '/api/project/' + projectId + '/jobs/' + config.appName,
                   headers: {
                     'Content-Type': 'application/json'
                   },

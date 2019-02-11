@@ -231,8 +231,8 @@ public class FeaturestoreService {
     FeaturestoreDTO featurestoreDTO = featurestoreController.getFeaturestoreForProjectWithId(project, featurestoreId);
     Featurestore featurestore = featurestoreController.getFeaturestoreWithId(featurestoreDTO.getFeaturestoreId());
     Jobs job = null;
-    if (featuregroupJsonDTO.getJobId() != null)
-      job = jobFacade.findByProjectAndId(project, featuregroupJsonDTO.getJobId());
+    if (featuregroupJsonDTO.getJobName() != null)
+      job = jobFacade.findByProjectAndName(project, featuregroupJsonDTO.getJobName());
     String featureStr = featurestoreUtil.makeCreateTableColumnsStr(featuregroupJsonDTO.getFeatures());
     try {
       featuregroupController.dropFeaturegroup(featuregroupJsonDTO.getName(),
@@ -559,8 +559,8 @@ public class FeaturestoreService {
     FeaturestoreDTO featurestoreDTO = featurestoreController.getFeaturestoreForProjectWithId(project, featurestoreId);
     Featurestore featurestore = featurestoreController.getFeaturestoreWithId(featurestoreDTO.getFeaturestoreId());
     Jobs job = null;
-    if (featuregroupJsonDTO.getJobId() != null)
-      job = jobFacade.findByProjectAndId(project, featuregroupJsonDTO.getJobId());
+    if (featuregroupJsonDTO.getJobName() != null && !featuregroupJsonDTO.getJobName().isEmpty())
+      job = jobFacade.findByProjectAndName(project, featuregroupJsonDTO.getJobName());
     FeaturegroupDTO updatedFeaturegroupDTO = featuregroupController.updateFeaturegroupMetadata(
         featurestore, featuregroupId, job, featuregroupJsonDTO.getDependencies(),
         featuregroupJsonDTO.getFeatureCorrelationMatrix(), featuregroupJsonDTO.getDescriptiveStatistics(),
@@ -682,8 +682,8 @@ public class FeaturestoreService {
     FeaturestoreDTO featurestoreDTO = featurestoreController.getFeaturestoreForProjectWithId(project, featurestoreId);
     Featurestore featurestore = featurestoreController.getFeaturestoreWithId(featurestoreDTO.getFeaturestoreId());
     Jobs job = null;
-    if (trainingDatasetJsonDTO.getJobId() != null)
-      job = jobFacade.findByProjectAndId(project, trainingDatasetJsonDTO.getJobId());
+    if (trainingDatasetJsonDTO.getJobName() != null && !trainingDatasetJsonDTO.getJobName().isEmpty())
+      job = jobFacade.findByProjectAndName(project, trainingDatasetJsonDTO.getJobName());
     Dataset trainingDatasetsFolder = featurestoreUtil.getTrainingDatasetFolder(featurestore.getProject());
     String trainingDatasetDirectoryName = featurestoreUtil.getTrainingDatasetPath(
         inodeFacade.getPath(trainingDatasetsFolder.getInode()),
@@ -696,9 +696,11 @@ public class FeaturestoreService {
               -1, true);
     } catch (DatasetException e) {
       if (e.getErrorCode() == RESTCodes.DatasetErrorCode.DATASET_SUBDIR_ALREADY_EXISTS) {
-        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_ALREADY_EXISTS, Level.FINE,
-            "The path to create the dataset already exists: " + trainingDatasetDirectoryName +
-                ", delete the directory and try again.", e.getMessage(), e);
+        dsUpdateOperations.deleteDatasetFile(project, user, trainingDatasetDirectoryName);
+        fullPath =
+            dsUpdateOperations.createDirectoryInDataset(project, user, trainingDatasetDirectoryName,
+                trainingDatasetJsonDTO.getDescription(),
+                -1, true);
       } else {
         throw e;
       }
@@ -813,8 +815,8 @@ public class FeaturestoreService {
     Featurestore featurestore = featurestoreController.getFeaturestoreWithId(featurestoreDTO.getFeaturestoreId());
 
     Jobs job = null;
-    if (trainingDatasetJsonDTO.getJobId() != null)
-      job = jobFacade.findByProjectAndId(project, trainingDatasetJsonDTO.getJobId());
+    if (trainingDatasetJsonDTO.getJobName() != null && !trainingDatasetJsonDTO.getJobName().isEmpty())
+      job = jobFacade.findByProjectAndName(project, trainingDatasetJsonDTO.getJobName());
     TrainingDatasetDTO oldTrainingDatasetDTO =
         trainingDatasetController.getTrainingDatasetWithIdAndFeaturestore(featurestore, trainingdatasetid);
     if (!oldTrainingDatasetDTO.getName().equals(trainingDatasetJsonDTO.getName())) {

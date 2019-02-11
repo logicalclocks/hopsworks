@@ -35,25 +35,33 @@ describe "On #{ENV['OS']}" do
         clean_jobs(@project[:id])
       end
       it "should create three spark jobs" do
-        create_sparktour_job(@project, "demo_job_1")
+        create_sparktour_job(@project, "demo_job_1", "jar", nil)
         expect_status(201)
-        create_sparktour_job(@project, "demo_job_2")
+        create_sparktour_job(@project, "demo_job_2", "jar", nil)
         expect_status(201)
-        create_sparktour_job(@project, "demo_job_3")
+        create_sparktour_job(@project, "demo_job_3", "jar", nil)
         expect_status(201)
       end
-      it "should fail to create two jobs with same name" do
-        create_sparktour_job(@project, "demo_job_1")
-        create_sparktour_job(@project, "demo_job_1")
-        expect_status(409)
+      it "should update a job with different job_config" do
+        create_sparktour_job(@project, "demo_job_1", "jar", nil)
+        #get job, change args and config params and put it
+        get_job(@project[:id], "demo_job_1", nil)
+        config = json_body[:config]
+        config[:args] = '100'
+        config[:'spark.executor.memory'] = '2048'
+        create_sparktour_job(@project, "demo_job_1", "jar", config)
+        expect_status(200)
+        get_job(@project[:id], "demo_job_1", nil)
+        expect(json_body[:config][:args]).to eq "100"
+        expect(json_body[:config][:'spark.executor.memory']).to eq 2048
       end
       it "should get a single spark job" do
-        create_sparktour_job(@project, "demo_job_1")
+        create_sparktour_job(@project, "demo_job_1", "jar", nil)
         get_job(@project[:id], "demo_job_1", nil)
         expect_status(200)
       end
       it "should get spark job dto with href" do
-        create_sparktour_job(@project, "demo_job_1")
+        create_sparktour_job(@project, "demo_job_1", "jar", nil)
         get_job(@project[:id], "demo_job_1", nil)
         expect_status(200)
         #validate href
@@ -62,9 +70,9 @@ describe "On #{ENV['OS']}" do
         expect(json_body[:jobType]).to eq "SPARK"
       end
       it "should get three jobs" do
-        create_sparktour_job(@project, "demo_job_1")
-        create_sparktour_job(@project, "demo_job_2")
-        create_sparktour_job(@project, "demo_job_3")
+        create_sparktour_job(@project, "demo_job_1", "jar", nil)
+        create_sparktour_job(@project, "demo_job_2", "jar", nil)
+        create_sparktour_job(@project, "demo_job_3", "jar", nil)
         get_jobs(@project[:id], nil)
         expect_status(200)
         expect(json_body[:items].count).to eq 3
@@ -76,7 +84,7 @@ describe "On #{ENV['OS']}" do
         expect(json_body[:type]).to eq ("sparkJobConfiguration")
       end
       it "should delete created job" do
-        create_sparktour_job(@project, "demo_job_1")
+        create_sparktour_job(@project, "demo_job_1", "jar", nil)
         delete_job(@project[:id], "demo_job_1")
         expect_status(204)
       end
@@ -85,7 +93,7 @@ describe "On #{ENV['OS']}" do
         expect_status(404)
       end
       it "should fail to delete job as Data Scientist" do
-        create_sparktour_job(@project, "demo_job_1")
+        create_sparktour_job(@project, "demo_job_1", "jar", nil)
         member = create_user
         add_member(member[:email], "Data scientist")
         create_session(member[:email], "Pass123")
@@ -99,13 +107,15 @@ describe "On #{ENV['OS']}" do
     context 'with authentication' do
       before :all do
         with_valid_tour_project("spark")
-        create_sparktour_job(@project, $job_spark_1)
-        create_sparktour_job(@project, "demo_job_2")
-        create_sparkpy_job(@project, "demo_pyjob_1")
-        create_sparktour_job(@project, "demo_job_3")
-        create_sparktour_job(@project, "demo_job_4")
-        create_sparktour_job(@project, "demo_job_5")
-        create_sparkpy_job(@project, "demo_pyjob_2")
+        create_sparktour_job(@project, $job_spark_1, "jar", nil)
+        create_sparktour_job(@project, $job_spark_2, "jar", nil)
+        create_sparktour_job(@project, "demo_py_job_1", "py", nil)
+        create_sparktour_job(@project, "demo_job_3", "jar", nil)
+        create_sparktour_job(@project, "demo_ipynb_job_1", "ipynb", nil)
+        create_sparktour_job(@project, "demo_job_4", "jar", nil)
+        create_sparktour_job(@project, "demo_job_5", "jar", nil)
+        create_sparktour_job(@project, "demo_py_job_2", "py", nil)
+        create_sparktour_job(@project, "demo_ipynb_job_2", "ipynb", nil)
       end
       after :all do
         clean_jobs(@project[:id])
@@ -281,15 +291,15 @@ describe "On #{ENV['OS']}" do
         end
       end
       describe "Jobs filter" do
-        it "should get three jobs with type spark" do
+        it "should get five jobs with type spark" do
           get_jobs(@project[:id], "?filter_by=jobtype:spark")
           expect_status(200)
           expect(json_body[:items].count).to eq 5
         end
-        it "should get three jobs with type pyspark" do
+        it "should get four jobs with type pyspark" do
           get_jobs(@project[:id], "?filter_by=jobtype:pyspark")
           expect_status(200)
-          expect(json_body[:items].count).to eq 2
+          expect(json_body[:items].count).to eq 4
         end
         it "should fail to find job with type flink" do
           get_jobs(@project[:id], "?filter_by=jobtype:flink")
@@ -299,12 +309,12 @@ describe "On #{ENV['OS']}" do
         it "should find jobs with name like 'demo'" do
           get_jobs(@project[:id], "?filter_by=name:demo")
           expect_status(200)
-          expect(json_body[:items].count).to eq 7
+          expect(json_body[:items].count).to eq 9
         end
         it "should find jobs with name like 'demo_job'" do
           get_jobs(@project[:id], "?filter_by=name:demo")
           expect_status(200)
-          expect(json_body[:items].count).to eq 7
+          expect(json_body[:items].count).to eq 9
         end
         it "should find job with name like" do
           get_jobs(@project[:id], "?filter_by=name:" + $job_spark_1)

@@ -43,9 +43,10 @@ angular.module('hopsWorksApp')
         .controller('DatasetsCtrl', ['$scope', '$mdSidenav', '$mdUtil',
           'DataSetService', 'JupyterService', '$routeParams', 'ModalService', 'growl', '$location',
           'MetadataHelperService', '$rootScope', 'DelaProjectService', 'DelaClusterProjectService', 'UtilsService', 'UserService', '$mdToast',
+          'TourService',
           function ($scope, $mdSidenav, $mdUtil, DataSetService, JupyterService, $routeParams,
                   ModalService, growl, $location, MetadataHelperService,
-                  $rootScope, DelaProjectService, DelaClusterProjectService, UtilsService, UserService, $mdToast) {
+                  $rootScope, DelaProjectService, DelaClusterProjectService, UtilsService, UserService, $mdToast, TourService) {
 
             var self = this;
             self.itemsPerPage = 14;
@@ -57,7 +58,8 @@ angular.module('hopsWorksApp')
             self.sharedPathArray; //An array containing all the path components of a path in a shared dataset 
             self.highlighted;
             self.parentDS = $rootScope.parentDS;
-            
+            self.tourService = TourService;
+            self.tourService.currentStep_TourNine = 6; //Feature store Tour
 
             // Details of the currently selecte file/dir
             self.selected = null; //The index of the selected file in the files array.
@@ -131,7 +133,9 @@ angular.module('hopsWorksApp')
               }
             });
 
-
+            self.goToUrl = function (serviceName) {
+                $location.path('project/' + self.projectId + '/' + serviceName);
+            }
             self.isSharedDs = function (name) {
               var top = name.split("::");
               if (top.length === 1) {
@@ -581,11 +585,11 @@ angular.module('hopsWorksApp')
               var filePath = getPath(pathArray);
 
               growl.info("Converting...",
-                      {title: 'Conversion Started', ttl: 2000, referenceId: 4});
+                      {title: 'Conversion running in background, please wait...', ttl: 5000, referenceId: 4});
               JupyterService.convertIPythonNotebook(self.projectId, filePath).then(
                       function (success) {
-                        growl.success("Finished - refresh your browser",
-                                {title: 'Converting in Background', ttl: 3000, referenceId: 4});
+                        growl.success("Finished - refreshing directory contents",
+                                {title: 'Success', ttl: 4000, referenceId: 4});
                         getDirContents();
                       }, function (error) {
                       if (typeof error.data.usrMsg !== 'undefined') {
@@ -1036,7 +1040,8 @@ angular.module('hopsWorksApp')
                                     var token = success.data.data.value; 
                                     closeToast();
                                     dataSetService.fileDownload(filePath, token);
-                                  }, function (error) {
+                                  },function (error) {
+                                    closeToast();
                                     growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
                           });
                         }

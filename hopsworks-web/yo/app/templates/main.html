@@ -1,0 +1,40 @@
+<!--  
+ ~ The MIT License (MIT)
+ ~
+ ~ Copyright (c) 2013 joni2back
+ ~
+ ~ Permission is hereby granted, free of charge, to any person obtaining a copy of
+ ~ this software and associated documentation files (the "Software"), to deal in
+ ~ the Software without restriction, including without limitation the rights to
+ ~ use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+ ~ the Software, and to permit persons to whom the Software is furnished to do so,
+ ~ subject to the following conditions:
+ ~
+ ~ The above copyright notice and this permission notice shall be included in all
+ ~ copies or substantial portions of the Software.
+ ~
+ ~ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ ~ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+ ~ FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ ~ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ ~ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ ~ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ -->
+<div ng-controller="FileManagerCtrl" id="filemgr">
+    <div ng-include="config.tplPath + '/navbar.html'"></div>
+
+    <div class="container-fluid">
+        <div class="row">
+
+            <div class="col-sm-4 col-md-3 sidebar file-tree animated slow fadeIn" ng-include="config.tplPath + '/sidebar.html'" ng-show="config.sidebar &amp;&amp; fileNavigator.history[0]">
+            </div>
+
+            <div class="main" ng-class="config.sidebar &amp;&amp; fileNavigator.history[0] &amp;&amp; 'col-sm-8 col-md-9'" ngf-model-options="{updateOn: 'drop', allowInvalid: false, debounce: 0}" ngf-drop="addForUpload($files)" ngf-drag-over-class="'upload-dragover'" ngf-multiple="true">
+                <div ng-include="config.tplPath + '/' + viewTemplate" class="main-navigation clearfix"></div>
+            </div>
+        </div>
+    </div>
+
+    <div ng-include="config.tplPath + '/modals.html'"></div>
+    <!--<div ng-include="config.tplPath + '/item-context-menu.html'"></div>-->
+</div>
