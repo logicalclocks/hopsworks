@@ -50,7 +50,9 @@ public enum UserAccountType {
   @XmlEnumValue("M_ACCOUNT_TYPE")
   M_ACCOUNT_TYPE(0),
   @XmlEnumValue("LDAP_ACCOUNT")
-  LDAP_ACCOUNT_TYPE(1);
+  LDAP_ACCOUNT_TYPE(1),
+  @XmlEnumValue("KRB_ACCOUNT")
+  KRB_ACCOUNT_TYPE(2);
 
   private final int value;
 
