@@ -109,6 +109,7 @@ module ProjectHelper
   end
 
   def check_project_limit(limit=0)
+    with_valid_session
     get "#{ENV['HOPSWORKS_API']}/users/profile"
     max_num_projects = json_body[:maxNumProjects]
     num_created_projects = json_body[:numCreatedProjects]

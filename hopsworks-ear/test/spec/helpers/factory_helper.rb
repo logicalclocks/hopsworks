@@ -42,11 +42,7 @@ module FactoryHelper
   end
 
   def short_random_id
-    SecureRandom.hex(4)
-  end
-
-  def random_id
-    SecureRandom.hex(2)
+    SecureRandom.hex(8)
   end
 
   def pr(res)
