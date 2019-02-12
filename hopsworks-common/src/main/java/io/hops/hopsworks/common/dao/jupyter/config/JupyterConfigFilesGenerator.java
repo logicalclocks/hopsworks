@@ -279,17 +279,22 @@ public class JupyterConfigFilesGenerator {
         }
       }
 
-      //Prepare spark maven packages
-      StringBuilder sparkPackages = new StringBuilder();
-      //avro data source used in Feature Store
-      sparkPackages.append(settings.getSparkAvroPackageName());
-
       String sparkProps = js.getSparkParams();
 
       // Spark properties user has defined in the jupyter dashboard
       Map<String, String> userSparkProperties = HopsUtils.validateUserProperties(sparkProps, settings.getSparkDir());
 
       LOGGER.info("SparkProps are: " + System.lineSeparator() + sparkProps);
+
+      //Prepare spark maven packages
+      StringBuilder sparkPackages = new StringBuilder();
+      //avro data source used in Feature Store
+      sparkPackages.append(settings.getSparkAvroPackageName());
+      //user-defined packages
+      if(userSparkProperties.containsKey(Settings.SPARK_PACKAGES)){
+        sparkPackages.append(",");
+        sparkPackages.append(userSparkProperties.get(Settings.SPARK_PACKAGES));
+      }
 
       boolean isExperiment = js.getMode().compareToIgnoreCase("experiment") == 0;
       boolean isParallelExperiment = js.getMode().compareToIgnoreCase("parallelexperiments") == 0;
