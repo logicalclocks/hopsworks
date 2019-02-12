@@ -43,16 +43,19 @@ import io.hops.hopsworks.common.util.Settings;
 import org.apache.commons.io.FileUtils;
 import org.javatuples.Pair;
 
+import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
 
 import static io.hops.hopsworks.common.security.PKI.CAType.ROOT;
 
@@ -63,10 +66,15 @@ public class PKI {
   private Settings settings;
 
   private Map<CAType, String> caPubCertCache = new HashMap<>();
-
-  final static Logger logger = Logger.getLogger(PKI.class.getName());
+  private SimpleDateFormat dateFormat = null;
 
   private final static long TEN_YEARS = 3650;
+
+  @PostConstruct
+  public void init() {
+    dateFormat = new SimpleDateFormat("yyMMddHHmmssZ");
+    dateFormat.setTimeZone(TimeZone.getDefault());
+  }
 
   public String getCertFileName(CertificateType certType, Map<String, String> subject) {
     switch (certType) {
@@ -79,36 +87,48 @@ public class PKI {
     }
   }
 
-  public long getValidityPeriod(CertificateType certType) {
+  public String getValidityPeriod(CertificateType certType) {
     switch (certType) {
       case APP:
         return getAppCertificateValidityPeriod();
       case HOST:
         return getServiceCertificateValidityPeriod();
       case DELA: case KUBE:
-        return TEN_YEARS;
+        return getExpirationDateASN1(TimeUnit.MILLISECONDS.convert(TEN_YEARS, TimeUnit.DAYS));
       default:
         throw new IllegalArgumentException("Certificate type not recognized");
     }
   }
 
-  private long getServiceCertificateValidityPeriod() {
+  private String getServiceCertificateValidityPeriod() {
+    long validityMs = -1;
     if (!settings.isServiceKeyRotationEnabled()) {
-      return TEN_YEARS;
+      validityMs = TimeUnit.MILLISECONDS.convert(TEN_YEARS, TimeUnit.DAYS);
+    } else {
+      // Add 4 days just to be sure.
+      validityMs = getCertificateValidityInMS(settings.getServiceKeyRotationInterval()) +
+        TimeUnit.MILLISECONDS.convert(4, TimeUnit.DAYS);
     }
 
-    // Add 4 days just to be sure.
-    return getCertificateValidityInDays(settings.getServiceKeyRotationInterval())+ 4;
+    return getExpirationDateASN1(validityMs);
   }
 
-  private long getAppCertificateValidityPeriod() {
-    return getCertificateValidityInDays(settings.getApplicationCertificateValidityPeriod());
+  private String getAppCertificateValidityPeriod() {
+    return getExpirationDateASN1(
+        getCertificateValidityInMS(settings.getApplicationCertificateValidityPeriod()));
   }
 
-  private long getCertificateValidityInDays(String rawConfigurationProperty) {
+  private long getCertificateValidityInMS(String rawConfigurationProperty) {
     Long timeValue = settings.getConfTimeValue(rawConfigurationProperty);
     TimeUnit unitValue = settings.getConfTimeTimeUnit(rawConfigurationProperty);
-    return TimeUnit.DAYS.convert(timeValue, unitValue);
+    return TimeUnit.MILLISECONDS.convert(timeValue, unitValue);
+  }
+
+  /**
+   * Format date ASN1 UTCTime
+   */
+  private String getExpirationDateASN1(long validityMS) {
+    return dateFormat.format(new Date(System.currentTimeMillis() + validityMS));
   }
 
   public HashMap<String, String> getKeyValuesFromSubject(String subject) {
