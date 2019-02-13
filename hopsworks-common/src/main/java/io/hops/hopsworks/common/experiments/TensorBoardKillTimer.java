@@ -82,7 +82,7 @@ public class TensorBoardKillTimer {
       if ((current.getTime() - accessed.getTime()) > tensorBoardMaxLastAccessed) {
         try {
           tensorBoardController.cleanup(tensorBoard);
-          LOGGER.log(Level.INFO, "Killed TensorBoard " + tensorBoard.toString() + " not accessed in the last " +
+          LOGGER.log(Level.FINE, "Killed TensorBoard " + tensorBoard.toString() + " not accessed in the last " +
               tensorBoardMaxLastAccessed + " milliseconds");
         } catch (ServiceException ex) {
           LOGGER.log(Level.SEVERE, "Failed to clean up running TensorBoard", ex);
