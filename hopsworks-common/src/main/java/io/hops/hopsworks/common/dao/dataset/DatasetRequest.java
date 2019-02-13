@@ -144,6 +144,7 @@ public class DatasetRequest implements Serializable {
     this.messageContent = messageContent;
     this.dataset = dataset;
     this.projectTeam = projectTeam;
+    this.requested = new Date();
   }
 
   public DatasetRequest(Dataset dataset, ProjectTeam projectTeam,
@@ -152,6 +153,7 @@ public class DatasetRequest implements Serializable {
     this.message = message;
     this.dataset = dataset;
     this.projectTeam = projectTeam;
+    this.requested = new Date();
   }
 
   public Integer getId() {
