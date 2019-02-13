@@ -40,7 +40,6 @@
 package io.hops.hopsworks.common.dao.jupyter.config;
 
 import io.hops.hopsworks.common.dao.hdfs.HdfsLeDescriptorsFacade;
-import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
 import io.hops.hopsworks.common.dao.jupyter.JupyterSettings;
@@ -68,9 +67,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
-import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.ThreadLocalRandom;
@@ -234,7 +231,7 @@ public class JupyterProcessMgr {
     }
     // 1. Remove jupyter settings from the DB for this notebook first. If this fails, keep going to kill the notebook
     try {
-      jupyterFacade.removeNotebookServer(hdfsUsername, port);
+      jupyterFacade.remove(hdfsUsername, port);
     } catch (Exception e) {
       LOGGER.severe("Problem when removing jupyter notebook entry from jupyter_project table: " + jupyterHomePath);
     }
@@ -242,7 +239,7 @@ public class JupyterProcessMgr {
     // 2. Then kill the jupyter notebook server. If this step isn't 
     String prog = settings.getHopsworksDomainDir() + "/bin/jupyter.sh";
     if (jupyterHomePath.isEmpty()) {
-      jupyterHomePath = " ";
+      jupyterHomePath = "''";
     }
     int exitValue = 0;
     Integer id = 1;
@@ -275,35 +272,8 @@ public class JupyterProcessMgr {
 
   }
 
-  public void stopCleanly(String hdfsUser) throws ServiceException {
-    // We need to stop the jupyter notebook server with the PID
-    // If we can't stop the server, delete the Entity bean anyway
-    JupyterProject jp = jupyterFacade.findByUser(hdfsUser);
-    if (jp != null) {
-      String jupyterHomePath = getJupyterHome(hdfsUser, jp.getProjectId(), jp.getSecret());
-      // stop the server, remove the user in this project's local dirs
-      killServerJupyterUser(hdfsUser, jupyterHomePath, jp.getPid(), jp.getPort());
-      // remove the reference to th e server in the DB.
-      jupyterFacade.removeNotebookServer(hdfsUser, jp.getPort());
-    }
-  }
-
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-  public void stopProject(Project project) throws ServiceException {
-    String jupyterHomePath = "";
-    for (JupyterProject jp : project.getJupyterProjectCollection()) {
-      HdfsUsers hdfsUser = hdfsUsersFacade.find(jp.getHdfsUserId());
-      if(hdfsUser != null) {
-        String hdfsUsername = hdfsUser.getName();
-        jupyterHomePath = getJupyterHome(hdfsUser.getName(), jp.getProjectId(), jp.getSecret());
-        killServerJupyterUser(hdfsUsername, jupyterHomePath, jp.getPid(), jp.getPort());
-      }
-    }
-    projectCleanup(project);
-  }
-
-  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-  private void projectCleanup(Project project) {
+  public void projectCleanup(Project project) {
     String prog = settings.getHopsworksDomainDir() + "/bin/jupyter-project-cleanup.sh";
     int exitValue;
     ProcessDescriptor.Builder pdBuilder = new ProcessDescriptor.Builder()
@@ -374,7 +344,6 @@ public class JupyterProcessMgr {
       JupyterProject jp = new JupyterProject();
       jp.setPid(pid);
       jp.setPort(0);
-      jp.setLastAccessed(Date.from(Instant.now()));
       jp.setHdfsUserId(-1);
       allNotebooks.add(jp);
     }

@@ -62,6 +62,8 @@ import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.jobs.quota.YarnPriceMultiplicator;
 import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuota;
 import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuotaFacade;
+import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
+import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterProcessMgr;
 import io.hops.hopsworks.common.dao.kafka.KafkaFacade;
 import io.hops.hopsworks.common.dao.log.operation.OperationType;
@@ -105,6 +107,7 @@ import io.hops.hopsworks.common.jobs.execution.ExecutionController;
 import io.hops.hopsworks.common.jobs.spark.SparkJobConfiguration;
 import io.hops.hopsworks.common.jobs.yarn.LocalResourceDTO;
 import io.hops.hopsworks.common.jobs.yarn.YarnLogUtil;
+import io.hops.hopsworks.common.jupyter.JupyterController;
 import io.hops.hopsworks.common.kafka.KafkaController;
 import io.hops.hopsworks.common.livy.LivyController;
 import io.hops.hopsworks.common.message.MessageController;
@@ -267,6 +270,12 @@ public class ProjectController {
   protected ExecutionController executionController;
   @EJB
   protected FeaturegroupController featuregroupController;
+  @EJB
+  private EmailBean emailBean;
+  @EJB
+  private JupyterController jupyterController;
+  @EJB
+  private JupyterFacade jupyterFacade;
 
 
   /**
@@ -1050,22 +1059,21 @@ public class ProjectController {
           LOGGER.log(Level.SEVERE, "Error when killing Zeppelin during project cleanup", ex);
           cleanupLogger.logError(ex.getMessage());
         }
-
-        // Stop Jupyter
-        try {
-          jupyterProcessFacade.stopProject(project);
-          cleanupLogger.logSuccess("Stopped Jupyter");
-        } catch (Exception ex) {
-          cleanupLogger.logError("Error when killing Jupyter during project cleanup");
-          cleanupLogger.logError(ex.getMessage());
-        }
-
         // Kill Yarn Jobs
         try {
           killYarnJobs(project);
           cleanupLogger.logSuccess("Killed Yarn jobs");
         } catch (Exception ex) {
           cleanupLogger.logError("Error when killing YARN jobs during project cleanup");
+          cleanupLogger.logError(ex.getMessage());
+        }
+
+        // jupyter notebook server and sessions
+        try {
+          removeJupyter(project);
+          cleanupLogger.logSuccess("Removed Jupyter");
+        } catch (Exception ex) {
+          cleanupLogger.logError("Error when removing Anaconda during project cleanup");
           cleanupLogger.logError(ex.getMessage());
         }
 
@@ -1187,15 +1195,6 @@ public class ProjectController {
           cleanupLogger.logError(ex.getMessage());
         }
 
-        // remove anaconda repos
-        try {
-          removeJupyter(project);
-          cleanupLogger.logSuccess("Removed Jupyter");
-        } catch (Exception ex) {
-          cleanupLogger.logError("Error when removing Anaconda during project cleanup");
-          cleanupLogger.logError(ex.getMessage());
-        }
-
         // remove running tensorboards repos
         try {
           removeTensorBoard(project);
@@ -1277,14 +1276,6 @@ public class ProjectController {
           List<ApplicationReport> projectApps = getYarnApplications(hdfsUsersStr, yarnClientWrapper.getYarnClient());
           waitForJobLogs(projectApps, yarnClientWrapper.getYarnClient());
           cleanupLogger.logSuccess("Killed all Yarn Applications");
-        } catch (Exception ex) {
-          cleanupLogger.logError(ex.getMessage());
-        }
-
-        // Cleanup Jupyter project
-        try {
-          jupyterProcessFacade.stopProject(toDeleteProject);
-          cleanupLogger.logSuccess("Cleaned Jupyter environment");
         } catch (Exception ex) {
           cleanupLogger.logError(ex.getMessage());
         }
@@ -1549,7 +1540,7 @@ public class ProjectController {
         killZeppelin(project.getId(), sessionId);
 
         // try and close all the jupyter jobs
-        jupyterProcessFacade.stopProject(project);
+        removeJupyter(project);
 
         removeAnacondaEnv(project);
 
@@ -1639,6 +1630,9 @@ public class ProjectController {
         throw ex;
       }
 
+      //remove jupyter
+      removeJupyter(project);
+
       removeProjectRelatedFiles(usersToClean, dfso);
 
       //remove quota
@@ -1658,9 +1652,6 @@ public class ProjectController {
 
       //remove dumy Inode
       dfso.rm(dumy, true);
-
-      //remove anaconda repos
-      removeJupyter(project);
 
       //remove running tensorboards
       removeTensorBoard(project);
@@ -2108,8 +2099,12 @@ public class ProjectController {
           YarnApplicationState.ACCEPTED, YarnApplicationState.NEW, YarnApplicationState.NEW_SAVING,
           YarnApplicationState.RUNNING, YarnApplicationState.SUBMITTED));
       //kill jupyter for this user
-      jupyterProcessFacade.stopCleanly(hdfsUser);
-      livyController.deleteAllLivySessions(hdfsUser, ProjectServiceEnum.JUPYTER);
+
+      JupyterProject jupyterProject = jupyterFacade.findByUser(hdfsUser);
+      if(jupyterProject != null) {
+        jupyterController.shutdown(project, hdfsUser, user, jupyterProject.getSecret(), jupyterProject.getPid(),
+          jupyterProject.getPort());
+      }
 
       //kill running TB if any
       tensorBoardController.cleanup(project, user);
@@ -2502,8 +2497,7 @@ public class ProjectController {
 
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public void removeJupyter(Project project) throws ServiceException {
-    livyController.deleteAllLivySessionsForProject(project);
-    jupyterProcessFacade.stopProject(project);
+    jupyterController.removeJupyter(project);
   }
 
   @TransactionAttribute(TransactionAttributeType.NEVER)

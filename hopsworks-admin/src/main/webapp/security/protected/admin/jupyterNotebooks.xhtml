@@ -116,12 +116,12 @@
                     <h:outputText value="#{JupyterNotebooks.getHdfsUser(notebookServer)}" />
                   </p:column>                  
                   <p:column id="jupyterTimestampColumn"
-                            filterBy="#{notebookServer.getLastAccessed()}"
-                            sortBy="#{notebookServer.getLastAccessed()}"
+                            filterBy="#{notebookServer.getExpires()}"
+                            sortBy="#{notebookServer.getExpires()}"
                             filterMatchMode="contains"
-                            headerText="LastAccessed"
+                            headerText="Expires"
                             style=" font-size: 12px; text-align: left;">
-                    <h:outputText value="#{notebookServer.getLastAccessed()}" />
+                    <h:outputText value="#{notebookServer.getExpires()}" />
                   </p:column>
                   <p:column id="jupyterPid"
                             filterBy="#{notebookServer.getPid()}"

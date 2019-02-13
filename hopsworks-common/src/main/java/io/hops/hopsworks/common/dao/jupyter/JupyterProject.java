@@ -40,8 +40,8 @@
 package io.hops.hopsworks.common.dao.jupyter;
 
 import io.hops.hopsworks.common.dao.project.Project;
+
 import java.io.Serializable;
-import java.time.Instant;
 import java.util.Date;
 import javax.persistence.Basic;
 import javax.persistence.Column;
@@ -54,6 +54,7 @@ import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -108,9 +109,9 @@ public class JupyterProject implements Serializable {
   private Date created;
   @Basic(optional = false)
   @NotNull
-  @Column(name = "last_accessed")
+  @Column(name = "expires")
   @Temporal(TemporalType.TIMESTAMP)
-  private Date lastAccessed;
+  private Date expires;
   @Basic(optional = false)
   @NotNull
   @Size(min = 1,
@@ -138,17 +139,21 @@ public class JupyterProject implements Serializable {
   @Column(name = "hdfs_user_id")
   private int hdfsUserId;
 
+  @Transient
+  private long minutesUntilExpiration;
+
+
   public JupyterProject() {
   }
 
   public JupyterProject(Project project, String secret, Integer port,
-          int hdfsUserId, String hostIp, String token, Long pid) {
+                        int hdfsUserId, String hostIp, String token, Long pid, Date expires) {
     this.projectId = project;
     this.secret = secret;
     this.port = port;
     this.hdfsUserId = hdfsUserId;
-    this.created = Date.from(Instant.now());
-    this.lastAccessed = Date.from(Instant.now());
+    this.created = new Date();
+    this.expires = expires;
     this.hostIp = hostIp;
     this.token = token;
     this.pid = pid;
@@ -186,12 +191,12 @@ public class JupyterProject implements Serializable {
     this.created = created;
   }
 
-  public Date getLastAccessed() {
-    return lastAccessed;
+  public Date getExpires() {
+    return expires;
   }
 
-  public void setLastAccessed(Date lastAccessed) {
-    this.lastAccessed = lastAccessed;
+  public void setExpires(Date expires) {
+    this.expires = expires;
   }
 
   public String getHostIp() {
@@ -217,6 +222,14 @@ public class JupyterProject implements Serializable {
 
   public void setProjectId(Project projectId) {
     this.projectId = projectId;
+  }
+
+  public long getMinutesUntilExpiration() {
+    return this.minutesUntilExpiration;
+  }
+
+  public void setMinutesUntilExpiration(long minutesUntilExpiration) {
+    this.minutesUntilExpiration = minutesUntilExpiration;
   }
 
   @Override

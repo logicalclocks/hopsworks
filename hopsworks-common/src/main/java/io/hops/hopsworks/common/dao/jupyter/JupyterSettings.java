@@ -214,7 +214,7 @@ public class JupyterSettings implements Serializable {
 
   @Basic(optional = false)
   @Column(name = "shutdown_level")
-  private int shutdownLevel = 4;
+  private int shutdownLevel = 6;
 
   @Basic(optional = false)
   @NotNull
