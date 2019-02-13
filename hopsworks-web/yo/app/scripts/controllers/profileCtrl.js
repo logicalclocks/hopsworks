@@ -112,8 +112,8 @@ angular.module('hopsWorksApp')
                           growl.success("Your password is now updated.", {title: 'Success', ttl: 5000, referenceId: 1});
                         }, function (error) {
                           self.credentialWorking = false;
-                          self.errorMsg = error.data.errorMsg;
-                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 1});
+                          self.errorMsg = error.data.usrMsg;
+                          growl.error(error.data.usrMsg, {title: 'Error', ttl: 5000, referenceId: 1});
                 });
               }
             };
@@ -161,6 +161,10 @@ angular.module('hopsWorksApp')
                           self.errorMsg = error.data.errorMsg;
                           growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 1});
                 });
+            };
+            
+            self.externalAccountType = function () {
+              return self.user.accountType === 'LDAP_ACCOUNT_TYPE' || self.user.accountType === 'KRB_ACCOUNT_TYPE';
             };
 
             self.reset = function () {

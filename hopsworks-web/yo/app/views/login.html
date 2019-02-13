@@ -88,10 +88,13 @@
               </button>{{loginCtrl.errorMessage}}
           </div>
           <p></p>
-          <a class="btn btn-block btn-default" href="#!/register">Register</a>
           <a ng-if="loginCtrl.ldapEnabled" class="btn btn-block btn-default" href="#!/ldapLogin">
             Login with LDAP
           </a>
+          <button ng-if="loginCtrl.krbEnabled" class="btn btn-block btn-default" ng-click="loginCtrl.krbLogin()">
+            Login with Kerberos
+          </button>
+          <a class="btn btn-block btn-default" href="#!/register">Register</a>
         </div>
       </div>
 

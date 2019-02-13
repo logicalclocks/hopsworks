@@ -46,13 +46,15 @@ public class AuthStatus {
   
   private String twofactor;
   private String ldap;
+  private String krb;
 
   public AuthStatus() {
   }
 
-  public AuthStatus(String twofactor, String ldap) {
+  public AuthStatus(String twofactor, String ldap, String krb) {
     this.twofactor = twofactor;
     this.ldap = ldap;
+    this.krb = krb;
   }
 
   public String getTwofactor() {
@@ -70,5 +72,14 @@ public class AuthStatus {
   public void setLdap(String ldap) {
     this.ldap = ldap;
   }
+
+  public String getKrb() {
+    return krb;
+  }
+
+  public void setKrb(String krb) {
+    this.krb = krb;
+  }
+  
   
 }

@@ -105,6 +105,7 @@ public class UsersBuilder {
       dto.setEmail(user.getEmail());
       dto.setUsername(user.getUsername());
       dto.setPhoneNumber(user.getMobile());
+      dto.setAccountType(user.getMode().toString());
       dto.setMaxNumProjects(user.getMaxNumProjects());
       dto.setNumCreatedProjects(user.getNumCreatedProjects());
       dto.setNumActiveProjects(user.getNumActiveProjects());

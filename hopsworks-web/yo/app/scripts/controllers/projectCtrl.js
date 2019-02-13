@@ -676,23 +676,51 @@ angular.module('hopsWorksApp')
             };
 
             self.getCerts = function () {
-              ModalService.certs('sm', 'Certificates Download', 'Please type your password', self.projectId)
-                      .then(function (successPwd) {
-                        CertService.downloadProjectCert(self.currentProject.projectId, successPwd)
-                                .then(function (success) {
-                                  var certs = success.data;
-                                  download(atob(certs.kStore), 'keyStore.' + certs.fileExtension);
-                                  download(atob(certs.tStore), 'trustStore.' + certs.fileExtension);
-                                }, function (error) {
-                                    if (typeof error.data.usrMsg !== 'undefined') {
-                                        growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
-                                    } else {
-                                        growl.error("", {title: error.data.errorMsg, ttl: 5000});
-                                    }
-                                });
-                      }, function (error) {
+              UserService.profile().then(
+                function (success) {
+                  var user = success.data;
+                  downloadCerts(user.accountType);
+                }, function (error) {
+                  downloadCerts();
+              });
+            };
+            
+            var downloadCerts = function (accountType) {
+              if (accountType === 'KRB_ACCOUNT_TYPE') {
+                CertService.downloadProjectCertKrb(self.currentProject.projectId)
+                  .then(function (success) {
+                    var certs = success.data;
+                    download(atob(certs.kStore), 'keyStore.' + certs.fileExtension);
+                    download(atob(certs.tStore), 'trustStore.' + certs.fileExtension);
+                  }, function (error) {
+                    growl.error(error.data.errorMsg, {title: 'Failed', ttl: 5000});
+                });
+              } else {
+                ModalService.certs('sm', 'Certificates Download', 'Please type your password', self.projectId)
+                  .then(function (successPwd) {
+                    if (accountType === 'LDAP_ACCOUNT_TYPE') {
+                      CertService.downloadProjectCertLdap(self.currentProject.projectId, successPwd)
+                        .then(function (success) {
+                          var certs = success.data;
+                          download(atob(certs.kStore), 'keyStore.' + certs.fileExtension);
+                          download(atob(certs.tStore), 'trustStore.' + certs.fileExtension);
+                        }, function (error) {
+                          growl.error(error.data.errorMsg, {title: 'Failed', ttl: 5000});
+                        });
+                    } else {
+                      CertService.downloadProjectCert(self.currentProject.projectId, successPwd)
+                        .then(function (success) {
+                          var certs = success.data;
+                          download(atob(certs.kStore), 'keyStore.' + certs.fileExtension);
+                          download(atob(certs.tStore), 'trustStore.' + certs.fileExtension);
+                        }, function (error) {
+                          growl.error(error.data.errorMsg, {title: 'Failed', ttl: 5000});
+                        });
+                    }
+                  }, function (error) {
 
-                      });
+                  });
+              }
             };
 
             var download = function (text, fileName) {

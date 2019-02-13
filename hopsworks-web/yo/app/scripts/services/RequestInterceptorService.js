@@ -46,6 +46,11 @@ angular.module('hopsWorksApp')
               request: function (config) {
 
                 var RESOURCE_SERVER = getApiLocationBase(); 
+                //remove Authorization header for kerberos
+                if(config.url.indexOf('/api/remote/user/auth/krb') !== -1){
+                  delete config.headers['Authorization'];
+                  RESOURCE_SERVER = getRemoteUserAuthApiLocationBase();
+                }
                 var RESOURCE_NAME = 'api';
                 var KIBANA_NAME = "kibana";
 

@@ -2686,7 +2686,8 @@ public class Settings implements Serializable {
   }
   //Kafka END
 
-  //-------------------------LDAP----------------------------
+  //-------------------------KRB & LDAP----------------------------
+  private static final String VARIABLE_KRB_AUTH = "kerberos_auth";
   private static final String VARIABLE_LDAP_AUTH = "ldap_auth";
   private static final String VARIABLE_LDAP_GROUP_MAPPING = "ldap_group_mapping";
   private static final String VARIABLE_LDAP_USER_ID = "ldap_user_id";
@@ -2695,6 +2696,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_LDAP_USER_EMAIL = "ldap_user_email";
   private static final String VARIABLE_LDAP_USER_SEARCH_FILTER = "ldap_user_search_filter";
   private static final String VARIABLE_LDAP_GROUP_SEARCH_FILTER = "ldap_group_search_filter";
+  private static final String VARIABLE_LDAP_KRB_USER_SEARCH_FILTER = "ldap_krb_search_filter";
   private static final String VARIABLE_LDAP_ATTR_BINARY = "ldap_attr_binary";
   private static final String VARIABLE_LDAP_GROUP_TARGET = "ldap_group_target";
   private static final String VARIABLE_LDAP_DYNAMIC_GROUP_TARGET = "ldap_dyn_group_target";
@@ -2702,7 +2704,10 @@ public class Settings implements Serializable {
   private static final String VARIABLE_LDAP_GROUPDN = "ldap_group_dn";
   private static final String VARIABLE_LDAP_ACCOUNT_STATUS = "ldap_account_status";
 
+  private String KRB_AUTH = "false";
   private String LDAP_AUTH = "false";
+  private boolean IS_KRB_ENABLED = false;
+  private boolean IS_LDAP_ENABLED = false;
   private String LDAP_GROUP_MAPPING = "";
   private String LDAP_USER_ID = "uid"; //login name
   private String LDAP_USER_GIVEN_NAME = "givenName";
@@ -2710,6 +2715,7 @@ public class Settings implements Serializable {
   private String LDAP_USER_EMAIL = "mail";
   private String LDAP_USER_SEARCH_FILTER = "uid=%s";
   private String LDAP_GROUP_SEARCH_FILTER = "member=%d";
+  private String LDAP_KRB_USER_SEARCH_FILTER = "krbPrincipalName=%s";
   private String LDAP_ATTR_BINARY = "java.naming.ldap.attributes.binary";
   private String LDAP_GROUP_TARGET = "cn";
   private String LDAP_DYNAMIC_GROUP_TARGET = "memberOf";
@@ -2718,7 +2724,10 @@ public class Settings implements Serializable {
   private int LDAP_ACCOUNT_STATUS = 4;
 
   private void populateLDAPCache() {
+    KRB_AUTH = setVar(VARIABLE_KRB_AUTH, KRB_AUTH);
     LDAP_AUTH = setVar(VARIABLE_LDAP_AUTH, LDAP_AUTH);
+    IS_KRB_ENABLED = setBoolVar(VARIABLE_KRB_AUTH, IS_KRB_ENABLED);
+    IS_LDAP_ENABLED = setBoolVar(VARIABLE_LDAP_AUTH, IS_LDAP_ENABLED);
     LDAP_GROUP_MAPPING = setVar(VARIABLE_LDAP_GROUP_MAPPING, LDAP_GROUP_MAPPING);
     LDAP_USER_ID = setVar(VARIABLE_LDAP_USER_ID, LDAP_USER_ID);
     LDAP_USER_GIVEN_NAME = setVar(VARIABLE_LDAP_USER_GIVEN_NAME, LDAP_USER_GIVEN_NAME);
@@ -2726,6 +2735,7 @@ public class Settings implements Serializable {
     LDAP_USER_EMAIL = setVar(VARIABLE_LDAP_USER_EMAIL, LDAP_USER_EMAIL);
     LDAP_USER_SEARCH_FILTER = setVar(VARIABLE_LDAP_USER_SEARCH_FILTER, LDAP_USER_SEARCH_FILTER);
     LDAP_GROUP_SEARCH_FILTER = setVar(VARIABLE_LDAP_GROUP_SEARCH_FILTER, LDAP_GROUP_SEARCH_FILTER);
+    LDAP_KRB_USER_SEARCH_FILTER = setVar(VARIABLE_LDAP_KRB_USER_SEARCH_FILTER, LDAP_KRB_USER_SEARCH_FILTER);
     LDAP_ATTR_BINARY = setVar(VARIABLE_LDAP_ATTR_BINARY, LDAP_ATTR_BINARY);
     LDAP_GROUP_TARGET = setVar(VARIABLE_LDAP_GROUP_TARGET, LDAP_GROUP_TARGET);
     LDAP_DYNAMIC_GROUP_TARGET = setVar(VARIABLE_LDAP_DYNAMIC_GROUP_TARGET, LDAP_DYNAMIC_GROUP_TARGET);
@@ -2734,9 +2744,24 @@ public class Settings implements Serializable {
     LDAP_ACCOUNT_STATUS = setIntVar(VARIABLE_LDAP_ACCOUNT_STATUS, LDAP_ACCOUNT_STATUS);
   }
 
+  public synchronized String getKRBAuthStatus() {
+    checkCache();
+    return KRB_AUTH;
+  }
+
   public synchronized String getLDAPAuthStatus() {
     checkCache();
     return LDAP_AUTH;
+  }
+  
+  public synchronized  boolean isKrbEnabled() {
+    checkCache();
+    return IS_KRB_ENABLED;
+  }
+  
+  public synchronized  boolean isLdapEnabled() {
+    checkCache();
+    return IS_LDAP_ENABLED;
   }
 
   public synchronized String getLdapGroupMapping() {
@@ -2773,7 +2798,12 @@ public class Settings implements Serializable {
     checkCache();
     return LDAP_GROUP_SEARCH_FILTER;
   }
-
+  
+  public synchronized String getKrbUserSearchFilter() {
+    checkCache();
+    return LDAP_KRB_USER_SEARCH_FILTER;
+  }
+  
   public synchronized String getLdapAttrBinary() {
     checkCache();
     return LDAP_ATTR_BINARY;

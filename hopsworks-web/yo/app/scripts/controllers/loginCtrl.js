@@ -40,8 +40,8 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('LoginCtrl', ['$location', '$cookies', '$http','growl', 'TourService', 'AuthService', 'BannerService', 'md5', 
-          function ($location, $cookies, $http, growl, TourService, AuthService, BannerService, md5) {
+        .controller('LoginCtrl', ['$location', '$cookies', '$http','growl', 'TourService', 'AuthService', 'BannerService', 'md5', 'ModalService', 'VariablesService',
+          function ($location, $cookies, $http, growl, TourService, AuthService, BannerService, md5, ModalService, VariablesService) {
 
             var self = this;
 
@@ -144,6 +144,55 @@ angular.module('hopsWorksApp')
               }
               });
             };
+            
+            var krbLogin = function (user) {
+              self.working = true;
+              self.errorMessage = '';
+              AuthService.krbLogin(user).then(function (success) {
+                  self.working = false;
+                  $cookies.put("email", success.data.data.value);
+                  $location.path('/');
+                }, function (error) {
+                  self.working = false;
+                  console.log("Login error: ", error);
+                  if (error !== undefined && error.status === 412) {
+                    self.errorMessage = '';
+                    ModalService.ldapUserConsent('sm', error.data).then(function (success) {
+                      if (success.val.consent) {
+                        user.chosenEmail = success.val.chosenEmail;
+                        user.consent = success.val.consent;
+                        krbLogin(user);
+                      } else {
+                        user = {chosenEmail: '', consent: ''};
+                      }
+                    }, function (error) {
+                      user = {chosenEmail: '', consent: ''};
+                    });
+                  } else if (error.data !== undefined && error.data !== null && 
+                             error.data.errorMsg !== undefined && error.data.errorMsg !== null) {
+                    self.errorMessage = 'Sorry, could not log you in with Kerberos. ' + error.data.errorMsg;
+                  }
+                  self.errorMessage = self.errorMessage === ''? 'Sorry, could not log you in with Kerberos. ': self.errorMessage;
+              });
+            };
+            
+            self.krbLogin = function () {
+              var user = {chosenEmail: '', consent: ''};
+              krbLogin(user);
+            };
+            
+            var checkKrb = function () {
+              VariablesService.getAuthStatus().then(
+                function (success) {
+                  $cookies.put("otp", success.data.twofactor);
+                  $cookies.put("ldap", success.data.ldap);
+                  $cookies.put("krb", success.data.krb);
+                  self.ldapEnabled = $cookies.get("ldap") === 'true';
+                  self.krbEnabled = $cookies.get("krb") === 'true';  
+                }, function (error) {
+              });
+            };
+            checkKrb();
 
             isAdminPasswordChanged();
             isFirstTime();
