@@ -209,7 +209,7 @@ describe "On #{ENV['OS']}" do
           end
         end
 
-        it 'export environment' do
+        xit 'export environment' do #skipped till pythonservice api v2 so we can only test python36
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/export"
           expect_status(200)
         end

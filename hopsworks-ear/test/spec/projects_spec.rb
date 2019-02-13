@@ -81,7 +81,7 @@ describe "On #{ENV['OS']}" do
           expect(resources[:owner]).to eq ("#{@user[:fname]} #{@user[:lname]}")
         end
 
-        it 'should create JUPYTER and ZEPPELIN notebook datasets with right permissions and owner' do
+        it 'should create JUPYTER dataset with right permissions and owner' do
           projectname = "project_#{Time.now.to_i}"
           post "#{ENV['HOPSWORKS_API']}/project", {projectName: projectname, description: "", status: 0, services: ["JOBS","HIVE", "JUPYTER"], projectTeam:[], retentionPeriod: ""}
           expect_json(successMessage: regex("Project created successfully.*"))
@@ -90,10 +90,10 @@ describe "On #{ENV['OS']}" do
           project_id = json_body[:projectId]
           get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/dataset/getContent"
           expect_status(200)
-          notebook = json_body.detect { |e| e[:name] == "notebook" }
-          expect(notebook[:description]).to eq ("Contains Zeppelin notebooks.")
-          expect(notebook[:permission]).to eq ("rwxrwx---")
-          expect(notebook[:owner]).to eq ("#{@user[:fname]} #{@user[:lname]}")
+          notebook = json_body.detect { |e| e[:name] == "Jupyter" }
+          expect(notebook[:description]).to eq("Contains Jupyter notebooks.")
+          expect(notebook[:permission]).to eq("rwxrwx---")
+          expect(notebook[:owner]).to eq("#{@user[:fname]} #{@user[:lname]}")
         end
 
         it 'should fail to create a project with an existing name' do
@@ -106,7 +106,7 @@ describe "On #{ENV['OS']}" do
 
         it 'Should fail to create two projects with the same name but different capitalization - HOPSWORKS-256' do
           check_project_limit(2)
-          projectName = "HOPSWORKS256#{random_id}"
+          projectName = "HOPSWORKS256#{short_random_id}"
           post "#{ENV['HOPSWORKS_API']}/project", {projectName: projectName, description: "", status: 0, services: [], projectTeam:[], retentionPeriod: ""}
           expect_status(201)
           expect_json(successMessage: regex("Project created successfully.*"))
@@ -118,7 +118,7 @@ describe "On #{ENV['OS']}" do
 
         it 'Should fail to create two projects with the same name but different capitalization - HOPSWORKS-256' do
           check_project_limit(2)
-          projectName = "hopsworks256#{random_id}"
+          projectName = "hopsworks256#{short_random_id}"
           post "#{ENV['HOPSWORKS_API']}/project", {projectName: projectName, description: "", status: 0, services: [], projectTeam:[], retentionPeriod: ""}
           expect_status(201)
           expect_json(successMessage: regex("Project created successfully.*"))

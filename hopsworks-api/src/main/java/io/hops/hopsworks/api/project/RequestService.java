@@ -175,7 +175,6 @@ public class RequestService {
       dsRequest.setMessageContent(requestDTO.getMessageContent());
       datasetRequest.merge(dsRequest);
     } else {
-      Users from = user;
       Users to = userFacade.findByEmail(proj.getOwner().getEmail());
       String message = "Hi " + to.getFname() + "<br>"
               + "I would like to request access to a dataset in a project you own. <br>"
@@ -184,12 +183,12 @@ public class RequestService {
               + "To be shared with my project: " + project.getName() + ".<br>"
               + "Thank you in advance.";
 
-      String preview = from.getFname()
+      String preview = user.getFname()
               + " would like to have access to a dataset in a project you own.";
       String subject = Settings.MESSAGE_DS_REQ_SUBJECT;
       String path = "project/" + proj.getId() + "/datasets";
       // to, from, msg, requested path
-      Message newMsg = new Message(from, to, null, message, true, false);
+      Message newMsg = new Message(user, to, null, message, true, false);
       newMsg.setPath(path);
       newMsg.setSubject(subject);
       newMsg.setPreview(preview);
@@ -199,8 +198,9 @@ public class RequestService {
       try {
         datasetRequest.persistDataset(dsRequest);
       } catch (Exception ex) {
-        logger.log(Level.SEVERE, "Could not persist dataset request", ex);
         messageBean.remove(newMsg);
+        throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_REQUEST_ERROR, Level.WARNING, ex.getMessage(),
+          null, ex);
       }
     }
 
