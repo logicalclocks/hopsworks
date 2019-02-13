@@ -278,6 +278,25 @@
                     <h:outputText value="#{ProjectQuotas.hiveUsedHdfsNsQuota}" />
                   </p:column>
 
+                  <p:column id="featurestoreHdfsquotaColumn"
+                            headerText="FeaturestoreDB Quota"
+                            filterBy="#{ProjectQuotas.featurestoreHdfsQuota}"
+                            filterMatchMode="contains"
+                            style=" font-size: 12px; text-align: center;">
+                    <p:cellEditor>
+                      <f:facet name="output">
+                        <h:outputText
+                                value="#{ProjectQuotas.featurestoreHdfsQuota}" />
+                      </f:facet>
+                      <f:facet name="input">
+                        <p:inputText
+                                value="#{ProjectQuotas.featurestoreHdfsQuota}" style="width:100%">
+                          <f:validateRegex pattern = "(\-?[0-9]+([GMT]B)*)"/>
+                        </p:inputText>
+                      </f:facet>
+                    </p:cellEditor>
+                  </p:column>
+
                   <p:column id="featurestoreDiskUsedColumn"
                             headerText="FeaturestoreDB Used"
                             filterBy="#{ProjectQuotas.featurestoreUsedHdfsQuota}"
