@@ -2818,6 +2818,17 @@ public class ProjectController {
               quotas.getHiveHdfsNsQuota(), quotas.getHiveHdfsQuotaInBytes());
           quotaChanged = true;
         }
+
+        // If Featurestore quota has changed and the Featurestore service is enabled, persist the changes in the db.
+        if (quotas.getFeaturestoreHdfsQuotaInBytes() != null && quotas.getFeaturestoreHdfsNsQuota() != null
+            && projectServicesFacade.isServiceEnabledForProject(currentProject, ProjectServiceEnum.FEATURESTORE) &&
+            (!quotas.getFeaturestoreHdfsQuotaInBytes().equals(currentQuotas.getFeaturestoreHdfsQuotaInBytes()) ||
+            !quotas.getFeaturestoreHdfsNsQuota().equals(currentQuotas.getFeaturestoreHdfsNsQuota()))) {
+
+          dfso.setHdfsQuotaBytes(hiveController.getDbPath(featurestoreController.getFeaturestoreDbName(newProjectState))
+              , quotas.getFeaturestoreHdfsNsQuota(), quotas.getFeaturestoreHdfsQuotaInBytes());
+          quotaChanged = true;
+        }
       } catch (IOException e) {
         throw new ProjectException(RESTCodes.ProjectErrorCode.QUOTA_ERROR,
           Level.SEVERE, "project: " + currentProject.getName(), e.getMessage(), e);
