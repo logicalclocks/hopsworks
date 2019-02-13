@@ -295,7 +295,8 @@ public class RESTCodes {
     DATASET_SUBDIR_ALREADY_EXISTS(47, "A sub-directory with the same name already exists.",
         Response.Status.BAD_REQUEST),
     DOWNLOAD_NOT_ALLOWED(48, "Downloading files is not allowed. Please contact the system administrator for further " +
-      "information.", Response.Status.FORBIDDEN);
+      "information.", Response.Status.FORBIDDEN),
+    DATASET_REQUEST_ERROR(49, "Could not send dataset request", Response.Status.INTERNAL_SERVER_ERROR);
 
 
     private Integer code;
@@ -544,7 +545,7 @@ public class RESTCodes {
     ANACONDA_DEP_REMOVE_FORBIDDEN(27, "Could not uninstall library, it is a mandatory dependency",
         Response.Status.BAD_REQUEST),
     ANACONDA_DEP_INSTALL_FORBIDDEN(28, "Library is already installed", Response.Status.CONFLICT),
-    ANACONDA_EXPORT_ERROR(29, "Failed to export Anaconda environment as .yml",
+    ANACONDA_EXPORT_ERROR(29, "Failed to export Anaconda environment.",
         Response.Status.INTERNAL_SERVER_ERROR),
     ANACONDA_LIST_LIB_NOT_FOUND(30, "No results found", Response.Status.NO_CONTENT),
     ELASTIC_INDEX_NOT_FOUND(31, "Elastic index was not found in elasticsearch",
