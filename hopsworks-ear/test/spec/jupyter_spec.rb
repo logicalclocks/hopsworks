@@ -122,6 +122,61 @@ describe "On #{ENV['OS']}" do
         expect_status(404)
       end
 
+      it "should be killed by timer" do
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/enable/#{version}/true"
+        expect_status(200)
+
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/settings"
+        expect_status(200)
+
+        settings = json_body
+        settings[:distributionStrategy] = ""
+        settings[:shutdownLevel] = 0
+
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/start", JSON(settings)
+        expect_status(200)
+
+        # There is a potential race condition here if the timer runs just before this call
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/running"
+        expect_status(200)
+
+        json_body[:minutesUntilExpiration].should be < 2
+
+        sleep(90)
+
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/running"
+        expect_status(404)
+      end
+
+      it "should not be killed by timer" do
+
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/enable/#{version}/true"
+        expect_status(200)
+
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/settings"
+        expect_status(200)
+
+        settings = json_body
+        settings[:distributionStrategy] = ""
+        settings[:shutdownLevel] = 6
+
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/start", JSON(settings)
+        expect_status(200)
+
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/running"
+        expect_status(200)
+
+        initial_minutes_left = ((((settings[:shutdownLevel]))*60)-1)
+        json_body[:minutesUntilExpiration].should be > initial_minutes_left-3
+
+        sleep(90)
+
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/running"
+        expect_status(200)
+
+        json_body[:minutesUntilExpiration].should be < initial_minutes_left
+      end
+
       it "should convert .ipynb file to .py file" do
 
         copy("/user/hdfs/tensorflow_demo/notebooks/Experiment/Keras/mnist.ipynb", "/Projects/#{@project[:projectname]}/Resources", @user[:username], "#{@project[:projectname]}__Resources", 750, "#{@project[:projectname]}")

@@ -44,7 +44,7 @@ angular.module('hopsWorksApp')
                 codeStr = codeStr + "featurestore.get_featuregroup(\n"
                 codeStr = codeStr + "'" + featuregroup.name + "'"
                 codeStr = codeStr + ",\nfeaturestore="
-                codeStr = codeStr + "'" + featurestore.name + "'"
+                codeStr = codeStr + "'" + featurestore.featurestoreName + "'"
                 codeStr = codeStr + ",\nfeaturegroup_version="
                 codeStr = codeStr + featuregroup.version
                 codeStr = codeStr + ")"

@@ -44,7 +44,11 @@ import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
 import io.hops.hopsworks.common.dao.jupyter.JupyterSettingsFacade;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterProcessMgr;
+import io.hops.hopsworks.common.dao.user.UserFacade;
+import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.ServiceException;
+import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.jupyter.JupyterController;
 import io.hops.hopsworks.common.util.Settings;
 
 import javax.ejb.EJB;
@@ -52,13 +56,14 @@ import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
+import java.io.Serializable;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @ManagedBean(name = "JupyterNotebooks")
 @ViewScoped
-public class JupyterNotebooksBean {
+public class JupyterNotebooksBean implements Serializable {
 
   private static final Logger LOGGER = Logger.getLogger(JupyterNotebooksBean.class.getName());
 
@@ -72,6 +77,12 @@ public class JupyterNotebooksBean {
   private HdfsUsersFacade hdfsUsersFacade;
   @EJB
   private Settings settings;
+  @EJB
+  private JupyterController jupyterController;
+  @EJB
+  private HdfsUsersController hdfsUsersController;
+  @EJB
+  private UserFacade userFacade;
 
   public String action;
 
@@ -114,15 +125,16 @@ public class JupyterNotebooksBean {
   }
 
   public String kill(JupyterProject notebook) {
-    String jupyterHomePath;
     String hdfsUser = getHdfsUser(notebook);
     try {
       if (hdfsUser.compareTo("Orphaned") == 0) {
-        jupyterHomePath = "";
+        jupyterProcessFacade.killServerJupyterUser(hdfsUser, "", notebook.getPid(), notebook.getPort());
       } else {
-        jupyterHomePath = jupyterProcessFacade.getJupyterHome(hdfsUser, notebook.getProjectId(), notebook.getSecret());
+        String username = hdfsUsersController.getUserName(hdfsUser);
+        Users user = userFacade.findByUsername(username);
+        jupyterController.shutdown(notebook.getProjectId(), hdfsUser, user, notebook.getSecret(),
+          notebook.getPid(), notebook.getPort());
       }
-      jupyterProcessFacade.killServerJupyterUser(hdfsUser, jupyterHomePath, notebook.getPid(), notebook.getPort());
       FacesContext context = FacesContext.getCurrentInstance();
       context.addMessage(null, new FacesMessage("Successful", "Successfully killed Jupyter Notebook Server."));
     } catch (ServiceException ex) {

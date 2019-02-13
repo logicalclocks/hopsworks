@@ -47,7 +47,6 @@ import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.user.UserDTO;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.ldap.LdapUser;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
 import io.hops.hopsworks.common.dao.user.security.audit.UserAuditActions;
 import io.hops.hopsworks.common.exception.RESTCodes;
@@ -56,8 +55,6 @@ import io.hops.hopsworks.common.exception.UserException;
 import io.hops.hopsworks.common.user.AuthController;
 import io.hops.hopsworks.common.user.UserStatusValidator;
 import io.hops.hopsworks.common.user.UsersController;
-import io.hops.hopsworks.common.user.ldap.LdapUserController;
-import io.hops.hopsworks.common.user.ldap.LdapUserState;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.jwt.Constants;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
@@ -112,8 +109,6 @@ public class AuthService {
   private AccountAuditFacade accountAuditFacade;
   @EJB
   private AuthController authController;
-  @EJB
-  private LdapUserController ldapUserController;
   @EJB
   private JWTHelper jWTHelper;
   @EJB
@@ -174,26 +169,6 @@ public class AuthService {
     String passwordWithSaltPlusOtp = authController.preCustomRealmLoginCheck(user, password, otp, req);
 
     return login(user, passwordWithSaltPlusOtp, req);
-  }
-
-  @POST
-  @Path("ldapLogin")
-  @Produces(MediaType.APPLICATION_JSON)
-  public Response ldapLogin(@FormParam("username") String username, @FormParam("password") String password,
-      @FormParam("chosenEmail") String chosenEmail, @FormParam("consent") boolean consent,
-      @Context HttpServletRequest req) throws LoginException, UserException, NoSuchAlgorithmException,
-      SigningKeyNotFoundException, DuplicateSigningKeyException {
-    if (username == null || username.isEmpty()) {
-      throw new IllegalArgumentException("Username can not be empty.");
-    }
-    if (password == null || password.isEmpty()) {
-      throw new IllegalArgumentException("Password can not be empty.");
-    }
-    LdapUserState ldapUserState = ldapUserController.login(username, password, consent, chosenEmail);
-    if (!needLogin(req, ldapUserState.getLdapUser().getUid())) {
-      return Response.ok().build();
-    }
-    return ldapUserLogin(ldapUserState, req);
   }
 
   @GET
@@ -322,21 +297,6 @@ public class AuthService {
     json.setData(user.getEmail());
     String token = jWTHelper.createToken(user, settings.getJWTIssuer());
     return Response.ok().header(AUTHORIZATION, Constants.BEARER + token).entity(json).build();
-  }
-
-  private Response ldapUserLogin(LdapUserState ldapUserState, HttpServletRequest req) throws LoginException,
-      NoSuchAlgorithmException, SigningKeyNotFoundException, UserException, DuplicateSigningKeyException {
-    if (!ldapUserState.isSaved()) {
-      return Response.status(Response.Status.PRECONDITION_FAILED).entity(ldapUserState.getUserDTO()).build();
-    }
-    LdapUser ladpUser = ldapUserState.getLdapUser();
-    if (ladpUser == null || ladpUser.getUid() == null) {
-      throw new LoginException("Failed to get ldap user from table.");
-    }
-    Users user = ladpUser.getUid();
-    // Do pre cauth realm check 
-    String passwordWithSalt = authController.preLdapLoginCheck(user, ladpUser.getAuthKey());
-    return login(user, passwordWithSalt, req);
   }
 
   private boolean isUserLoggedIn(String remoteUser, Users tokenUser, boolean validToken, Users user) {

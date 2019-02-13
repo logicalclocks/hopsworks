@@ -250,6 +250,7 @@ public class Project implements Serializable {
     this.created = timestamp;
     this.archived = false;
     this.paymentType = paymentType;
+    this.lastQuotaUpdate = timestamp;
   }
 
   public Date getCreated() {

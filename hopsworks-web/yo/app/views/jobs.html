@@ -269,6 +269,11 @@
                            style="color: #880000 ">
                           {{jobsCtrl.toTitleCase(job.state)}}
                         </span>
+                        <span
+                           ng-if="job.state === 'GENERATING_CERTS'"
+                           style="color: #880000 ">
+                           {{jobsCtrl.toTitleCase(job.state)}}
+                        </span>
                       </td>
                       <td>
                         <span
@@ -303,7 +308,7 @@
                         {{convertMS(job.duration)}}
                       </td>
                       <td>
-                        <div class="btn-group" role="group">
+                        <div class="btn-group"  role="group">
                           <button
                             uib-tooltip="Delete"
                             ng-click="jobsCtrl.toggle(job, $index);
@@ -317,7 +322,8 @@
                                   ng-click="jobsCtrl.toggle(job, $index);jobsCtrl.showUI(job);
                                                   $event.stopPropagation();">
                           </button>
-                          <div uib-dropdown class="btn-group" role="group" style="z-index: auto;">
+                          <div uib-dropdown class="btn-group" role="group"
+                               style="z-index: auto;">
                             <button type="button"
                                     uib-dropdown-toggle class="btn btn-default glyphicon"
                                     style="font-family: sans-serif;"
@@ -325,11 +331,15 @@
                               More
                               <span class="caret"></span>
                             </button>
-                            <ul uib-dropdown-menu class="dropdown-menu dropdown-menu-right" style="font-family: sans-serif;">
+                            <ul uib-dropdown-menu class="dropdown-menu dropdown-menu-right" style="font-family:
+                            sans-serif;">
                               <li><a role="menuitem" ng-click="jobsCtrl.toggle(job, $index);
                                               jobsCtrl.showDetails(job);$event.stopPropagation();" >Job Details</a></li>
                               <li><a role="menuitem" ng-click="jobsCtrl.toggle(job, $index);
-                                              jobsCtrl.editAsNew(job); $event.stopPropagation();" >Edit as new</a></li>
+                                              jobsCtrl.editAsNew(job); $event.stopPropagation();" >Edit</a></li>
+                              <li><a role="menuitem" ng-click="jobsCtrl.toggle(job, $index);
+                                              jobsCtrl.makeACopy(job.config, 1); $event.stopPropagation();" >Make a
+                                copy</a></li>
                               <li><a ng-href="{{ downloadLink }}" role="menuitem"
                                      ng-click="jobsCtrl.toggle(job, $index);
                                               jobsCtrl.exportJob(job); $event.stopPropagation();" >Export Job</a></li>

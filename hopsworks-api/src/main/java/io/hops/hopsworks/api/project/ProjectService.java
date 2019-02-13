@@ -38,6 +38,8 @@
  */
 package io.hops.hopsworks.api.project;
 
+import io.hops.hopsworks.common.project.CertsDTO;
+import io.hops.hopsworks.api.airflow.AirflowService;
 import io.hops.hopsworks.api.activities.ProjectActivitiesResource;
 import io.hops.hopsworks.api.dela.DelaClusterProjectService;
 import io.hops.hopsworks.api.dela.DelaProjectService;
@@ -102,14 +104,12 @@ import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import org.apache.commons.net.util.Base64;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
-import javax.mail.Message;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
@@ -156,6 +156,8 @@ public class ProjectService {
   private DeviceManagementService deviceManagementService;
   @Inject
   private JupyterService jupyter;
+  @Inject
+  private AirflowService airflow;
   @Inject
   private TensorBoardService tensorboard;
   @Inject
@@ -737,34 +739,10 @@ public class ProjectService {
       @Context HttpServletRequest req, @Context SecurityContext sc) throws ProjectException, HopsSecurityException,
       DatasetException {
     Users user = jWTHelper.getUserPrincipal(sc);
-    if (user.getEmail().equals(Settings.AGENT_EMAIL) || !authController.validatePwd(user, password, req)) {
+    if (user.getEmail().equals(Settings.AGENT_EMAIL) || !authController.validatePassword(user, password, req)) {
       throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_ACCESS_DENIED, Level.FINE);
     }
-    Project project = projectController.findProjectById(id);
-    String keyStore = "";
-    String trustStore = "";
-    try {
-      //Read certs from database and stream them out
-      certificateMaterializer.materializeCertificatesLocal(user.getUsername(), project.getName());
-      CertificateMaterializer.CryptoMaterial material = certificateMaterializer.getUserMaterial(user.getUsername(),
-          project.getName());
-      keyStore = Base64.encodeBase64String(material.getKeyStore().array());
-      trustStore = Base64.encodeBase64String(material.getTrustStore().array());
-      String certPwd = new String(material.getPassword());
-      //Pop-up a message from admin
-      messageController.send(user, userFacade.findByEmail(Settings.SITE_EMAIL), "Certificate Info", "",
-          "An email was sent with the password for your project's certificates. If an email does not arrive shortly, "
-          + "please check spam first and then contact the administrator.", "");
-      emailBean.sendEmail(user.getEmail(), Message.RecipientType.TO, "Hopsworks certificate information",
-          "The password for keystore and truststore is:" + certPwd);
-    } catch (Exception ex) {
-      LOGGER.log(Level.SEVERE, null, ex);
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DOWNLOAD_ERROR, Level.SEVERE, "projectId: " + id,
-          ex.getMessage(), ex);
-    } finally {
-      certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());
-    }
-    CertsDTO certsDTO = new CertsDTO("jks", keyStore, trustStore);
+    CertsDTO certsDTO = projectController.downloadCert(id, user);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(certsDTO).build();
   }
 
@@ -792,6 +770,11 @@ public class ProjectService {
   public TensorBoardService tensorboard(@PathParam("projectId") Integer id) {
     this.tensorboard.setProjectId(id);
     return this.tensorboard;
+  }
+  @Path("{projectId}/airflow")
+  public AirflowService airflow(@PathParam("projectId") Integer id)  {
+    this.airflow.setProjectId(id);
+    return this.airflow;
   }
 
   @Path("{projectId}/serving")
@@ -840,7 +823,6 @@ public class ProjectService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response getPia(@PathParam("projectId") Integer projectId) throws ProjectException {
-
     Project project = projectController.findProjectById(projectId);
     if (project == null) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId);

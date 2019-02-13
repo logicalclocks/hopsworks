@@ -270,17 +270,14 @@ public class JupyterConfigFilesGenerator {
       }
 
       //Prepare pyfiles
+
       StringBuilder pyFilesBuilder = new StringBuilder();
       if (!Strings.isNullOrEmpty(js.getPyFiles())) {
-        pyFilesBuilder= new StringBuilder();
         for (String file : js.getPyFiles().split(",")) {
-          file += "#" + file.substring(file.lastIndexOf("/")+1);
-          pyFilesBuilder.append(file).append(",");
+          sparkFiles.append(",").append(file);
+          pyFilesBuilder.append("{{PWD}}/" + file.substring(file.lastIndexOf("/")+1) + File.pathSeparator);
         }
-        //Remove last comma character
-        pyFilesBuilder.deleteCharAt(pyFilesBuilder.length()-1);
       }
-
 
       String sparkProps = js.getSparkParams();
 
@@ -343,6 +340,14 @@ public class JupyterConfigFilesGenerator {
           "remotesparkmagics-jupyter-" + js.getMode()));
       sparkMagicParams.put("queue", new ConfigProperty("yarn_queue", HopsUtils.IGNORE, "default"));
 
+
+      // Spark properties
+      sparkMagicParams.put(Settings.SPARK_EXECUTORENV_PYTHONPATH, new ConfigProperty("spark_executorEnv_PYTHONPATH",
+        HopsUtils.APPEND_PATH, pyFilesBuilder.toString()));
+
+      sparkMagicParams.put(Settings.SPARK_APPMASTERENV_PYTHONPATH, new ConfigProperty("spark_driverEnv_PYTHONPATH",
+        HopsUtils.APPEND_PATH, pyFilesBuilder.toString()));
+
       // Export versions of software
 
       sparkMagicParams.put("spark.yarn.appMasterEnv.LIVY_VERSION", new ConfigProperty("livy_version",
@@ -378,7 +383,11 @@ public class JupyterConfigFilesGenerator {
       // Spark properties
       sparkMagicParams.put(Settings.SPARK_EXECUTORENV_PATH, new ConfigProperty("spark_executorEnv_PATH",
           HopsUtils.APPEND_PATH, this.settings.getAnacondaProjectDir(project)
-          + "/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"));
+          + "/bin:{{PWD}}:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"));
+
+      sparkMagicParams.put(Settings.SPARK_APPMASTERENV_PATH, new ConfigProperty("spark_driverEnv_PATH",
+        HopsUtils.APPEND_PATH, this.settings.getAnacondaProjectDir(project)
+        + "/bin:{{PWD}}:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"));
 
       sparkMagicParams.put("spark.yarn.appMasterEnv.PYSPARK_PYTHON", new ConfigProperty("pyspark_bin",
           HopsUtils.IGNORE, this.settings.getAnacondaProjectDir(project) + "/bin/python"));
@@ -426,10 +435,6 @@ public class JupyterConfigFilesGenerator {
       sparkMagicParams.put("spark.yarn.dist.archives", new ConfigProperty(
           "spark_yarn_dist_archives", HopsUtils.IGNORE,
           js.getArchives()));
-
-      sparkMagicParams.put("spark.yarn.dist.pyFiles", new ConfigProperty(
-          "spark_yarn_dist_pyFiles", HopsUtils.IGNORE,
-          pyFilesBuilder.toString()));
 
       sparkMagicParams.put(Settings.SPARK_DRIVER_EXTRALIBRARYPATH, new ConfigProperty(
           "spark_driver_extraLibraryPath", HopsUtils.APPEND_PATH,

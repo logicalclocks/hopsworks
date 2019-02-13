@@ -62,6 +62,8 @@ import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.jobs.quota.YarnPriceMultiplicator;
 import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuota;
 import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuotaFacade;
+import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
+import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterProcessMgr;
 import io.hops.hopsworks.common.dao.kafka.KafkaFacade;
 import io.hops.hopsworks.common.dao.log.operation.OperationType;
@@ -105,6 +107,7 @@ import io.hops.hopsworks.common.jobs.execution.ExecutionController;
 import io.hops.hopsworks.common.jobs.spark.SparkJobConfiguration;
 import io.hops.hopsworks.common.jobs.yarn.LocalResourceDTO;
 import io.hops.hopsworks.common.jobs.yarn.YarnLogUtil;
+import io.hops.hopsworks.common.jupyter.JupyterController;
 import io.hops.hopsworks.common.kafka.KafkaController;
 import io.hops.hopsworks.common.livy.LivyController;
 import io.hops.hopsworks.common.message.MessageController;
@@ -117,6 +120,7 @@ import io.hops.hopsworks.common.serving.inference.logger.KafkaInferenceLogger;
 import io.hops.hopsworks.common.serving.tf.TfServingController;
 import io.hops.hopsworks.common.serving.tf.TfServingException;
 import io.hops.hopsworks.common.user.UsersController;
+import io.hops.hopsworks.common.util.EmailBean;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
@@ -179,6 +183,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.mail.Message;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -267,6 +272,12 @@ public class ProjectController {
   protected ExecutionController executionController;
   @EJB
   protected FeaturegroupController featuregroupController;
+  @EJB
+  private EmailBean emailBean;
+  @EJB
+  private JupyterController jupyterController;
+  @EJB
+  private JupyterFacade jupyterFacade;
 
 
   /**
@@ -476,7 +487,7 @@ public class ProjectController {
     //proceed to all the verifications and set up local variable
     //  verify that the project folder does not exist
     //  verify that users and groups corresponding to this project name does not already exist in HDFS
-    //  verify that Quota for this project name does not already exist in YARN
+    //  verify that Quota for this project name does not already exists in YARN
     //  verify that There is no logs folders corresponding to this project name
     //  verify that There is no certificates corresponding to this project name in the certificate generator
     final String severity = "Possible inconsistency,  Please contact the administrator.";
@@ -731,8 +742,6 @@ public class ProjectController {
         break;
       case HIVE:
         addServiceHive(project, user, dfso);
-        //HOPSWORKS-198: Enable Zeppelin at the same time as Hive
-        addServiceDataset(project, user, Settings.ServiceDataset.ZEPPELIN, dfso, udfso);
         break;
       case SERVING:
         futureList.add(addServiceServing(project, user, dfso, udfso));
@@ -760,11 +769,6 @@ public class ProjectController {
     projectServicesFacade.addServiceForProject(project, service);
     logActivity(ActivityFacade.ADDED_SERVICE + service.toString(), user, project, ActivityFacade.
         ActivityFlag.SERVICE);
-    if (service == ProjectServiceEnum.HIVE) {
-      projectServicesFacade.addServiceForProject(project, ProjectServiceEnum.ZEPPELIN);
-      logActivity(ActivityFacade.ADDED_SERVICE + ProjectServiceEnum.ZEPPELIN.toString(), user, project, 
-          ActivityFacade.ActivityFlag.SERVICE);
-    }
     return futureList;
   }
 
@@ -1057,22 +1061,21 @@ public class ProjectController {
           LOGGER.log(Level.SEVERE, "Error when killing Zeppelin during project cleanup", ex);
           cleanupLogger.logError(ex.getMessage());
         }
-
-        // Stop Jupyter
-        try {
-          jupyterProcessFacade.stopProject(project);
-          cleanupLogger.logSuccess("Stopped Jupyter");
-        } catch (Exception ex) {
-          cleanupLogger.logError("Error when killing Jupyter during project cleanup");
-          cleanupLogger.logError(ex.getMessage());
-        }
-
         // Kill Yarn Jobs
         try {
           killYarnJobs(project);
           cleanupLogger.logSuccess("Killed Yarn jobs");
         } catch (Exception ex) {
           cleanupLogger.logError("Error when killing YARN jobs during project cleanup");
+          cleanupLogger.logError(ex.getMessage());
+        }
+
+        // jupyter notebook server and sessions
+        try {
+          removeJupyter(project);
+          cleanupLogger.logSuccess("Removed Jupyter");
+        } catch (Exception ex) {
+          cleanupLogger.logError("Error when removing Anaconda during project cleanup");
           cleanupLogger.logError(ex.getMessage());
         }
 
@@ -1194,15 +1197,6 @@ public class ProjectController {
           cleanupLogger.logError(ex.getMessage());
         }
 
-        // remove anaconda repos
-        try {
-          removeJupyter(project);
-          cleanupLogger.logSuccess("Removed Jupyter");
-        } catch (Exception ex) {
-          cleanupLogger.logError("Error when removing Anaconda during project cleanup");
-          cleanupLogger.logError(ex.getMessage());
-        }
-
         // remove running tensorboards repos
         try {
           removeTensorBoard(project);
@@ -1284,14 +1278,6 @@ public class ProjectController {
           List<ApplicationReport> projectApps = getYarnApplications(hdfsUsersStr, yarnClientWrapper.getYarnClient());
           waitForJobLogs(projectApps, yarnClientWrapper.getYarnClient());
           cleanupLogger.logSuccess("Killed all Yarn Applications");
-        } catch (Exception ex) {
-          cleanupLogger.logError(ex.getMessage());
-        }
-
-        // Cleanup Jupyter project
-        try {
-          jupyterProcessFacade.stopProject(toDeleteProject);
-          cleanupLogger.logSuccess("Cleaned Jupyter environment");
         } catch (Exception ex) {
           cleanupLogger.logError(ex.getMessage());
         }
@@ -1556,7 +1542,7 @@ public class ProjectController {
         killZeppelin(project.getId(), sessionId);
 
         // try and close all the jupyter jobs
-        jupyterProcessFacade.stopProject(project);
+        removeJupyter(project);
 
         removeAnacondaEnv(project);
 
@@ -1646,6 +1632,9 @@ public class ProjectController {
         throw ex;
       }
 
+      //remove jupyter
+      removeJupyter(project);
+
       removeProjectRelatedFiles(usersToClean, dfso);
 
       //remove quota
@@ -1665,9 +1654,6 @@ public class ProjectController {
 
       //remove dumy Inode
       dfso.rm(dumy, true);
-
-      //remove anaconda repos
-      removeJupyter(project);
 
       //remove running tensorboards
       removeTensorBoard(project);
@@ -2115,8 +2101,12 @@ public class ProjectController {
           YarnApplicationState.ACCEPTED, YarnApplicationState.NEW, YarnApplicationState.NEW_SAVING,
           YarnApplicationState.RUNNING, YarnApplicationState.SUBMITTED));
       //kill jupyter for this user
-      jupyterProcessFacade.stopCleanly(hdfsUser);
-      livyController.deleteAllLivySessions(hdfsUser, ProjectServiceEnum.JUPYTER);
+
+      JupyterProject jupyterProject = jupyterFacade.findByUser(hdfsUser);
+      if(jupyterProject != null) {
+        jupyterController.shutdown(project, hdfsUser, user, jupyterProject.getSecret(), jupyterProject.getPid(),
+          jupyterProject.getPort());
+      }
 
       //kill running TB if any
       tensorBoardController.cleanup(project, user);
@@ -2474,7 +2464,7 @@ public class ProjectController {
           sparkJobConfiguration.setArgs("");
           sparkJobConfiguration.setAppName(Settings.HOPS_FEATURESTORE_TOUR_JOB_NAME);
           sparkJobConfiguration.setLocalResources(new LocalResourceDTO[0]);
-          Jobs job = jobController.createJob(user, project, sparkJobConfiguration);
+          Jobs job = jobController.putJob(user, project, null, sparkJobConfiguration);
           activityFacade.persistActivity(ActivityFacade.CREATED_JOB + job.getName(),
                 project, user, ActivityFacade.ActivityFlag.SERVICE);
           executionController.start(job, user);
@@ -2488,8 +2478,8 @@ public class ProjectController {
   }
 
   public List<YarnPriceMultiplicator> getYarnMultiplicators() {
-    List<YarnPriceMultiplicator> multiplicators = yarnProjectsQuotaFacade.getMultiplicators();
-    if (multiplicators == null || multiplicators.isEmpty()) {
+    List<YarnPriceMultiplicator> multiplicators = new ArrayList<>(yarnProjectsQuotaFacade.getMultiplicators());
+    if (multiplicators.isEmpty()) {
       YarnPriceMultiplicator multiplicator = new YarnPriceMultiplicator();
       multiplicator.setMultiplicator(Settings.DEFAULT_YARN_MULTIPLICATOR);
       multiplicator.setId("-1");
@@ -2509,8 +2499,7 @@ public class ProjectController {
 
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public void removeJupyter(Project project) throws ServiceException {
-    livyController.deleteAllLivySessionsForProject(project);
-    jupyterProcessFacade.stopProject(project);
+    jupyterController.removeJupyter(project);
   }
 
   @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -2703,6 +2692,34 @@ public class ProjectController {
         "projectUser:" + projectUser);
     }
   }
+  
+  public CertsDTO downloadCert(Integer projectId, Users user) throws ProjectException, DatasetException {
+    Project project = findProjectById(projectId);
+    String keyStore = "";
+    String trustStore = "";
+    try {
+      //Read certs from database and stream them out
+      certificateMaterializer.materializeCertificatesLocal(user.getUsername(), project.getName());
+      CertificateMaterializer.CryptoMaterial material = certificateMaterializer.getUserMaterial(user.getUsername(),
+          project.getName());
+      keyStore = org.apache.commons.net.util.Base64.encodeBase64String(material.getKeyStore().array());
+      trustStore = org.apache.commons.net.util.Base64.encodeBase64String(material.getTrustStore().array());
+      String certPwd = new String(material.getPassword());
+      //Pop-up a message from admin
+      messageController.send(user, userFacade.findByEmail(Settings.SITE_EMAIL), "Certificate Info", "",
+          "An email was sent with the password for your project's certificates. If an email does not arrive shortly, "
+          + "please check spam first and then contact the administrator.", "");
+      emailBean.sendEmail(user.getEmail(), Message.RecipientType.TO, "Hopsworks certificate information",
+          "The password for keystore and truststore is:" + certPwd);
+    } catch (Exception ex) {
+      LOGGER.log(Level.SEVERE, null, ex);
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DOWNLOAD_ERROR, Level.SEVERE, "projectId: " + projectId,
+          ex.getMessage(), ex);
+    } finally {
+      certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());
+    }
+    return new CertsDTO("jks", keyStore, trustStore);
+  }
 
   /**
    * Helper class to log force cleanup operations
@@ -2799,6 +2816,17 @@ public class ProjectController {
 
           dfso.setHdfsQuotaBytes(hiveController.getDbPath(currentProject.getName()),
               quotas.getHiveHdfsNsQuota(), quotas.getHiveHdfsQuotaInBytes());
+          quotaChanged = true;
+        }
+
+        // If Featurestore quota has changed and the Featurestore service is enabled, persist the changes in the db.
+        if (quotas.getFeaturestoreHdfsQuotaInBytes() != null && quotas.getFeaturestoreHdfsNsQuota() != null
+            && projectServicesFacade.isServiceEnabledForProject(currentProject, ProjectServiceEnum.FEATURESTORE) &&
+            (!quotas.getFeaturestoreHdfsQuotaInBytes().equals(currentQuotas.getFeaturestoreHdfsQuotaInBytes()) ||
+            !quotas.getFeaturestoreHdfsNsQuota().equals(currentQuotas.getFeaturestoreHdfsNsQuota()))) {
+
+          dfso.setHdfsQuotaBytes(hiveController.getDbPath(featurestoreController.getFeaturestoreDbName(newProjectState))
+              , quotas.getFeaturestoreHdfsNsQuota(), quotas.getFeaturestoreHdfsQuotaInBytes());
           quotaChanged = true;
         }
       } catch (IOException e) {

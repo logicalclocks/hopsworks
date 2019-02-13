@@ -65,7 +65,6 @@ import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
-import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -169,13 +168,14 @@ public class JobsResource {
   }
   
   
-  @ApiOperation( value = "Create a Job", response = JobDTO.class)
-  @POST
+  @ApiOperation( value = "Create or Update a Job.", response = JobDTO.class)
+  @PUT
+  @Path("{name}")
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response create (
+  public Response put (
     YarnJobConfiguration config,
     @Context HttpServletRequest req,
     @Context UriInfo uriInfo) throws JobException {
@@ -189,11 +189,20 @@ public class JobsResource {
     } else if (!HopsUtils.jobNameValidator(config.getAppName(), Settings.FILENAME_DISALLOWED_CHARS)) {
       throw new JobException(RESTCodes.JobErrorCode.JOB_NAME_INVALID, Level.FINE, "job name: " + config.getAppName());
     }
-    
-    Jobs job = jobController.createJob(user, project, config);
+    //Check if job with same name exists so we update it instead of creating it
+    Response.Status status = Response.Status.CREATED;
+    Jobs job = jobFacade.findByProjectAndName(project, config.getAppName());
+    if(job != null) {
+      status = Response.Status.OK;
+    }
+    job = jobController.putJob(user, project, job, config);
     JobDTO dto = jobsBuilder.build(uriInfo, new ResourceRequest(ResourceRequest.Name.JOBS), job);
     UriBuilder builder = uriInfo.getAbsolutePathBuilder().path(Integer.toString(dto.getId()));
-    return Response.created(builder.build()).entity(dto).build();
+    if(status == Response.Status.CREATED) {
+      return Response.created(builder.build()).entity(dto).build();
+    } else {
+      return Response.ok(builder.build()).entity(dto).build();
+    }
   }
   
   @ApiOperation(value = "Delete the job with the given ID")

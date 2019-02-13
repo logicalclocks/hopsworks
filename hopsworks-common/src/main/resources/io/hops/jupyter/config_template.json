@@ -54,7 +54,10 @@
     "queue": "%%yarn_queue%%",
     "conf": {
       "spark.executorEnv.PATH": "%%spark_executorEnv_PATH%%",
+      "spark.executorEnv.PYTHONPATH": "%%spark_executorEnv_PYTHONPATH%%",
+      "spark.yarn.appMasterEnv.PYTHONPATH": "%%spark_driverEnv_PYTHONPATH%%",
       "spark.yarn.appMasterEnv.PYSPARK_PYTHON": "%%pyspark_bin%%",
+      "spark.yarn.appMasterEnv.PATH": "%%spark_driverEnv_PATH%%",
       "spark.yarn.appMasterEnv.PYSPARK_DRIVER_PYTHON": "%%pyspark_bin%%",
       "spark.yarn.appMasterEnv.PYSPARK3_PYTHON": "%%pyspark_bin%%",
       "spark.yarn.appMasterEnv.LD_LIBRARY_PATH": "%%spark_yarn_appMaster_LD_LIBRARY_PATH%%",
@@ -78,7 +81,6 @@
       "spark.yarn.stagingDir": "%%spark_yarn_stagingDir%%",
       "spark.yarn.dist.files": "%%spark_yarn_dist_files%%",
       "spark.yarn.dist.archives": "%%spark_yarn_dist_archives%%",
-      "spark.yarn.dist.pyFiles": "%%spark_yarn_dist_pyFiles%%",
       "spark.driver.extraLibraryPath": "%%spark_driver_extraLibraryPath%%",
       "spark.driver.extraJavaOptions": "%%spark_driver_extraJavaOptions%%",
       "spark.driver.extraClassPath" : "%%spark_driver_extraClassPath%%",

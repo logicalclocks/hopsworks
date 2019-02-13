@@ -59,7 +59,6 @@ public class RESTCodes {
     int getRange();
 
   }
-
   public enum ProjectErrorCode implements RESTErrorCode {
 
     //project error response
@@ -297,7 +296,8 @@ public class RESTCodes {
     DATASET_SUBDIR_ALREADY_EXISTS(47, "A sub-directory with the same name already exists.",
         Response.Status.BAD_REQUEST),
     DOWNLOAD_NOT_ALLOWED(48, "Downloading files is not allowed. Please contact the system administrator for further " +
-      "information.", Response.Status.FORBIDDEN);
+      "information.", Response.Status.FORBIDDEN),
+    DATASET_REQUEST_ERROR(49, "Could not send dataset request", Response.Status.INTERNAL_SERVER_ERROR);
 
 
     private Integer code;
@@ -383,7 +383,6 @@ public class RESTCodes {
     JOB_STOP_FAILED(1, "An error occurred while trying to stop this job.", Response.Status.BAD_REQUEST),
     JOB_TYPE_UNSUPPORTED(2, "Unsupported job type.", Response.Status.BAD_REQUEST),
     JOB_ACTION_UNSUPPORTED(3, "Unsupported action type.", Response.Status.BAD_REQUEST),
-    JOB_NAME_EXISTS(4, "Job with same name already exists.", Response.Status.CONFLICT),
     JOB_NAME_EMPTY(5, "Job name is not set.", Response.Status.BAD_REQUEST),
     JOB_NAME_INVALID(6, "Job name is invalid. Invalid charater(s) in job name, the following characters "
         + "(including space) are now allowed:" + Settings.FILENAME_DISALLOWED_CHARS, Response.Status.BAD_REQUEST),
@@ -547,7 +546,7 @@ public class RESTCodes {
     ANACONDA_DEP_REMOVE_FORBIDDEN(27, "Could not uninstall library, it is a mandatory dependency",
         Response.Status.BAD_REQUEST),
     ANACONDA_DEP_INSTALL_FORBIDDEN(28, "Library is already installed", Response.Status.CONFLICT),
-    ANACONDA_EXPORT_ERROR(29, "Failed to export Anaconda environment as .yml",
+    ANACONDA_EXPORT_ERROR(29, "Failed to export Anaconda environment.",
         Response.Status.INTERNAL_SERVER_ERROR),
     ANACONDA_LIST_LIB_NOT_FOUND(30, "No results found", Response.Status.NO_CONTENT),
     ELASTIC_INDEX_NOT_FOUND(31, "Elastic index was not found in elasticsearch",
@@ -1363,6 +1362,47 @@ public class RESTCodes {
       return range;
     }
   }
-
+  
+  /**
+   * Airflow specific error codes
+   */
+  public enum AirflowErrorCode implements RESTErrorCode {
+    
+    JWT_NOT_CREATED(1, "JWT for Airflow service could not be created", Response.Status.INTERNAL_SERVER_ERROR),
+    JWT_NOT_STORED(2, "JWT for Airflow service could not be stored", Response.Status.INTERNAL_SERVER_ERROR),
+    AIRFLOW_DIRS_NOT_CREATED(3, "Airflow internal directories could not be created",
+        Response.Status.INTERNAL_SERVER_ERROR);
+    
+    private Integer code;
+    private String message;
+    private Response.StatusType respStatus;
+    private final int range = 290000;
+    
+    AirflowErrorCode(Integer code, String message, Response.StatusType respStatus) {
+      this.code = range + code;
+      this.message = message;
+      this.respStatus = respStatus;
+    }
+    
+    @Override
+    public Response.StatusType getRespStatus() {
+      return respStatus;
+    }
+    
+    @Override
+    public Integer getCode() {
+      return code;
+    }
+    
+    @Override
+    public String getMessage() {
+      return message;
+    }
+    
+    @Override
+    public int getRange() {
+      return range;
+    }
+  }
 
 }
