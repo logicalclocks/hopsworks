@@ -425,17 +425,6 @@ public class SparkYarnRunnerBuilder {
               Integer.toString(numberOfExecutors)));
     }
 
-    //Prepare spark maven packages
-    StringBuilder sparkPackages = new StringBuilder();
-    //avro data source used in Feature Store
-    sparkPackages.append(settings.getSparkAvroPackageName());
-
-    jobHopsworksProps.put(Settings.SPARK_PACKAGES,
-        new ConfigProperty(
-            Settings.SPARK_PACKAGES,
-            HopsUtils.IGNORE,
-            "true"));
-
     List<String> jobSpecificProperties = new ArrayList<>();
     jobSpecificProperties.add(Settings.SPARK_NUMBER_EXECUTORS_ENV);
     jobSpecificProperties.add(Settings.SPARK_DRIVER_MEMORY_ENV);
@@ -662,6 +651,21 @@ public class SparkYarnRunnerBuilder {
           "There was an error while setting user-provided Spark properties. Please check that the values conform to"
           + " the requested input format or that the property is allowed:" + ex.getMessage());
     }
+
+    //Prepare spark maven packages
+    StringBuilder sparkPackages = new StringBuilder();
+    //avro data source used in Feature Store
+    sparkPackages.append(settings.getSparkAvroPackageName());
+    //user-defined packages
+    if(userSparkProperties.containsKey(Settings.SPARK_PACKAGES)){
+      sparkPackages.append(",");
+      sparkPackages.append(userSparkProperties.get(Settings.SPARK_PACKAGES));
+    }
+    jobHopsworksProps.put(Settings.SPARK_PACKAGES,
+        new ConfigProperty(
+            Settings.SPARK_PACKAGES,
+            HopsUtils.IGNORE,
+            "true"));
 
     Map<String, String> finalJobProps = HopsUtils.mergeHopsworksAndUserParams(jobHopsworksProps, userSparkProperties,
         true);
