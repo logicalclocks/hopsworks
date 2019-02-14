@@ -42,6 +42,7 @@ import io.hops.hopsworks.common.dao.host.Hosts;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
+import io.hops.hopsworks.common.elastic.ElasticController;
 import io.hops.hopsworks.common.exception.GenericException;
 import io.hops.hopsworks.common.exception.ProjectException;
 import io.hops.hopsworks.common.exception.RESTCodes;
@@ -102,6 +103,8 @@ public class PythonDepsFacade {
   private JupyterProcessMgr jupyterProcessMgr;
   @EJB
   private ProjectUtils projectUtils;
+  @EJB
+  private ElasticController elasticController;
 
   @Resource(lookup = "concurrent/kagentExecutorService")
   ManagedExecutorService kagentExecutorService;
@@ -517,6 +520,11 @@ public class PythonDepsFacade {
     if (proj.getCondaEnv()) {
       condaEnvironmentRemove(proj);
       setCondaEnv(proj, false);
+      elasticController.deleteIndex(proj.getName() + Settings.ELASTIC_KAGENT_INDEX_PATTERN);
+      Map<String, String> params = new HashMap<>(1);
+      params.put("op", "DELETE");
+      elasticController.sendKibanaReq(params, "index-pattern",
+          proj.getName() + Settings.ELASTIC_KAGENT_INDEX_PATTERN);
     }
     removePythonForProject(proj);
   }
