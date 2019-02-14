@@ -843,17 +843,22 @@ public class PythonDepsService {
         .addCommand(environmentFile)
         .addCommand(hdfsUser)
         .setWaitTimeout(180L, TimeUnit.SECONDS)
-        .ignoreOutErrStreams(true)
+        .ignoreOutErrStreams(false)
         .build();
+    ProcessResult processResult = null;
     try {
-      ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
-
-      if (processResult.getExitCode() != 0) {
-        throw new IOException("A problem occurred when exporting the environment. ");
+      processResult = osProcessExecutor.execute(processDescriptor);
+    
+      if (processResult != null && processResult.getExitCode() != 0) {
+        throw new IOException("A problem occurred when exporting the environment.");
       }
     } catch (IOException ex) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_EXPORT_ERROR, Level.SEVERE, "host: " + host + ","
-          + " environmentFile: " + environmentFile + ", " + "hdfsUser: " + hdfsUser, ex.getMessage(), ex);
+      String msg = null;
+      if (processResult != null) {
+        msg = processResult.getStderr();
+      }
+      throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_EXPORT_ERROR, Level.SEVERE, msg, ex.getMessage(),
+        ex);
     }
   }
 }

@@ -95,6 +95,12 @@ public class ProjectQuotas {
     this.hiveHdfsNsQuota = String.valueOf(quotas.getHiveHdfsNsQuota());
     this.hiveUsedHdfsNsQuota = String.valueOf(quotas.getHiveHdfsNsCount());
 
+    // Project Featurestore quota
+    this.featurestoreHdfsQuota = HopsUtils.spaceQuotaToString(quotas.getFeaturestoreHdfsQuotaInBytes());
+    this.featurestoreUsedHdfsQuota = HopsUtils.spaceQuotaToString(quotas.getFeaturestoreHdfsUsageInBytes());
+    this.featurestoreHdfsNsQuota = String.valueOf(quotas.getFeaturestoreHdfsNsQuota());
+    this.featurestoreUsedHdfsNsQuota = String.valueOf(quotas.getFeaturestoreHdfsNsCount());
+
     // Yarn quota
     this.yarnQuota = HopsUtils.procQuotaToString(quotas.getYarnQuotaInSecs());
     this.yarnTotalQuota = HopsUtils.procQuotaToString(quotas.getYarnUsedQuotaInSecs());

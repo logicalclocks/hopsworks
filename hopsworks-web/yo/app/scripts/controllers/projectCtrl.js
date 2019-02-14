@@ -160,10 +160,11 @@ angular.module('hopsWorksApp')
                         });
 
                         // Remove already choosen services from the service selection
-                        // Check if airflow there already.
                         self.alreadyChoosenServices.forEach(function (entry) {
                           var index = self.projectTypes.indexOf(entry.toUpperCase());
-                          self.projectTypes.splice(index, 1);
+                          if (index >= 0) {
+                            self.projectTypes.splice(index, 1);
+                          }
                         });
 
 

@@ -53,7 +53,7 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import java.io.File;
-import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -76,7 +76,7 @@ public class JupyterFacade {
     return em;
   }
 
-  public boolean removeNotebookServer(String hdfsUsername, int port) {
+  public boolean remove(String hdfsUsername, int port) {
 
     if (hdfsUsername == null || hdfsUsername.isEmpty()) {
       return false;
@@ -156,19 +156,14 @@ public class JupyterFacade {
     return res;
   }
 
-  public void stopServers(Project project) {
-
-    // delete JupyterProject entity bean
-  }
-
   public JupyterProject saveServer(String host,
       Project project, String secretConfig, int port,
-      int hdfsUserId, String token, long pid) {
+      int hdfsUserId, String token, long pid, Date expires) {
     JupyterProject jp = null;
     String ip;
     ip = host + ":" + settings.getHopsworksPort();
     jp = new JupyterProject(project, secretConfig, port, hdfsUserId, ip, token,
-        pid);
+        pid, expires);
 
     persist(jp);
     return jp;
@@ -184,29 +179,6 @@ public class JupyterFacade {
     if (jp != null) {
       em.merge(jp);
     }
-  }
-
-  private void remove(JupyterProject jp) {
-    if (jp != null) {
-      em.remove(jp);
-    }
-  }
-
-  public void removeProject(Project project) {
-    // Find any active jupyter servers
-
-    Collection<JupyterProject> instances = project.getJupyterProjectCollection();
-    if (instances != null) {
-      for (JupyterProject jp : instances) {
-        HdfsUsers hdfsUser = hdfsUsersFacade.find(jp.getHdfsUserId());
-        if (hdfsUser != null) {
-          String user = hdfsUser.getUsername();
-        }
-        remove(jp);
-      }
-    }
-    // Kill any processes
-
   }
 
   public String getProjectPath(JupyterProject jp, String projectName,

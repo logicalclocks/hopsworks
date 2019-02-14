@@ -566,6 +566,7 @@ public class Settings implements Serializable {
           applicationCertificateValidityPeriod);
       tensorBoardMaxLastAccessed = setIntVar(TENSORBOARD_MAX_LAST_ACCESSED, tensorBoardMaxLastAccessed);
       sparkUILogsOffset = setIntVar(SPARK_UI_LOGS_OFFSET, sparkUILogsOffset);
+      jupyterShutdownTimerInterval = setStrVar(JUPYTER_SHUTDOWN_TIMER_INTERVAL, jupyterShutdownTimerInterval);
 
       populateDelaCache();
       populateLDAPCache();
@@ -774,7 +775,10 @@ public class Settings implements Serializable {
   //PySpark properties
   public static final String SPARK_APP_NAME_ENV = "spark.app.name";
   public static final String SPARK_EXECUTORENV_PYTHONPATH = "spark.executorEnv.PYTHONPATH";
+  public static final String SPARK_APPMASTERENV_PATH = "spark.yarn.appMasterEnv.PATH";
+  public static final String SPARK_APPMASTERENV_PYTHONPATH = "spark.yarn.appMasterEnv.PYTHONPATH";
   public static final String SPARK_EXECUTORENV_LD_LIBRARY_PATH = "spark.executorEnv.LD_LIBRARY_PATH";
+  public static final String SPARK_EXECUTORENV_LD_LIBRARY_PYTHONPATH = "spark.executorEnv.PYTHONPATH";
   public static final String SPARK_EXECUTORENV_HDFS_USER = "spark.executorEnv.HDFS_USER";
   public static final String SPARK_EXECUTORENV_HADOOP_USER_NAME = "spark.executorEnv.HADOOP_USER_NAME";
   public static final String SPARK_EXECUTORENV_JOB_NAME = "spark.executorEnv.JOB_NAME";
@@ -1606,14 +1610,21 @@ public class Settings implements Serializable {
     return ZEPPELIN_SYNC_INTERVAL;
   }
 
-  public static final int JUPYTER_PORT = 8888;
-
   // Jupyter
   private String JUPYTER_DIR = "/srv/hops/jupyter";
 
   public synchronized String getJupyterDir() {
     checkCache();
     return JUPYTER_DIR;
+  }
+
+  // Service key rotation interval
+  private static final String JUPYTER_SHUTDOWN_TIMER_INTERVAL = "jupyter_shutdown_timer_interval";
+  private String jupyterShutdownTimerInterval = "30m";
+
+  public synchronized String getJupyterShutdownTimerInterval() {
+    checkCache();
+    return jupyterShutdownTimerInterval;
   }
 
   private String KAFKA_USER = "kafka";

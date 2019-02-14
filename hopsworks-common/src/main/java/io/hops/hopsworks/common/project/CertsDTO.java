@@ -37,56 +37,48 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package io.hops.hopsworks.common.user.ldap;
+package io.hops.hopsworks.common.project;
 
-import io.hops.hopsworks.common.dao.user.ldap.LdapUser;
-import io.hops.hopsworks.common.dao.user.ldap.LdapUserDTO;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
-public class LdapUserState {
+public class CertsDTO {
+  private String fileExtension;
+  private String kStore;
+  private String tStore;
+
+  public CertsDTO() {
+  }
+
+  public CertsDTO(String fileExtension, String kStore, String tStore) {
+    this.fileExtension = fileExtension;
+    this.kStore = kStore;
+    this.tStore = tStore;
+  }
+
+  public String getFileExtension() {
+    return fileExtension;
+  }
+
+  public void setFileExtension(String fileExtension) {
+    this.fileExtension = fileExtension;
+  }
+
+  public String getkStore() {
+    return kStore;
+  }
+
+  public void setkStore(String kStore) {
+    this.kStore = kStore;
+  }
+
+  public String gettStore() {
+    return tStore;
+  }
+
+  public void settStore(String tStore) {
+    this.tStore = tStore;
+  }
   
-  private boolean saved;
-  private LdapUser ldapUser;
-  private LdapUserDTO userDTO;
-
-  public LdapUserState(LdapUser ldapUser) {
-    this.ldapUser = ldapUser;
-  }
-
-  public LdapUserState(boolean saved, LdapUser ldapUser) {
-    this.saved = saved;
-    this.ldapUser = ldapUser;
-  }
-
-  public LdapUserState(boolean saved, LdapUser ldapUser, LdapUserDTO userDTO) {
-    this.saved = saved;
-    this.ldapUser = ldapUser;
-    this.userDTO = userDTO;
-  }
-
-  public boolean isSaved() {
-    return saved;
-  }
-
-  public void setSaved(boolean saved) {
-    this.saved = saved;
-  }
-
-  public LdapUser getLdapUser() {
-    return ldapUser;
-  }
-
-  public void setLdapUser(LdapUser ldapUser) {
-    this.ldapUser = ldapUser;
-  }
-
-  public LdapUserDTO getUserDTO() {
-    return userDTO;
-  }
-
-  public void setUserDTO(LdapUserDTO userDTO) {
-    this.userDTO = userDTO;
-  }
   
 }
