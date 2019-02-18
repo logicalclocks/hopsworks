@@ -82,6 +82,7 @@ public class ProjectDevice implements Serializable{
     this.password = password;
     this.state = deviceState.ordinal();
     this.alias = alias;
+    this.createdAt = new Date();
   }
 
   public ProjectDevicePK getProjectDevicePK() {
