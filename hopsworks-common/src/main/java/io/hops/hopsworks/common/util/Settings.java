@@ -1597,6 +1597,8 @@ public class Settings implements Serializable {
     return ZEPPELIN_SYNC_INTERVAL;
   }
 
+  public static final int JUPYTER_PORT = 8888;
+
   // Jupyter
   private String JUPYTER_DIR = "/srv/hops/jupyter";
 
@@ -1604,7 +1606,7 @@ public class Settings implements Serializable {
     checkCache();
     return JUPYTER_DIR;
   }
-  
+ 
   private String KAFKA_USER = "kafka";
 
   public synchronized String getKafkaUser() {
