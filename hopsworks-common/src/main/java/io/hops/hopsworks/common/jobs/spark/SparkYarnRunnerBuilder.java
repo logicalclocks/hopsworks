@@ -255,28 +255,10 @@ public class SparkYarnRunnerBuilder {
         LocalResourceVisibility.APPLICATION.toString(),
         LocalResourceType.FILE.toString(), null), false);
 
-    // Add tf-spark-connector for Featurestore
-    builder.addLocalResource(new LocalResourceDTO(
-        settings.getTfSparkConnectorFilename(), settings.getTfSparkConnectorPath(),
-        LocalResourceVisibility.PUBLIC.toString(),
-        LocalResourceType.FILE.toString(), null), false);
-
-    // Add spark-avro for Featurestore
-    builder.addLocalResource(new LocalResourceDTO(
-        settings.getSparkAvroFilename(), settings.getSparkAvroPath(),
-        LocalResourceVisibility.PUBLIC.toString(),
-        LocalResourceType.FILE.toString(), null), false);
-
     builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH,
         settings.getHopsUtilFilename());
-    builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH,
-        settings.getTfSparkConnectorFilename());
-    builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH,
-        settings.getSparkAvroFilename());
     extraClassPathFiles.append(settings.getHopsUtilFilename()).append(File.pathSeparator).
-        append(settings.getHopsLeaderElectionJarPath()).append(File.pathSeparator).
-        append(settings.getTfSparkConnectorFilename()).append(File.pathSeparator).
-        append(settings.getSparkAvroFilename()).append(File.pathSeparator);
+        append(settings.getHopsLeaderElectionJarPath()).append(File.pathSeparator);
     builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH,
         "$PWD/" + Settings.SPARK_LOCALIZED_CONF_DIR + File.pathSeparator
         + Settings.SPARK_LOCALIZED_CONF_DIR
