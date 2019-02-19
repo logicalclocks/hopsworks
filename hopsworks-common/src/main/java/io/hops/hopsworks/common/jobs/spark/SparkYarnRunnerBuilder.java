@@ -261,13 +261,22 @@ public class SparkYarnRunnerBuilder {
         LocalResourceVisibility.PUBLIC.toString(),
         LocalResourceType.FILE.toString(), null), false);
 
+    // Add spark-avro for Featurestore
+    builder.addLocalResource(new LocalResourceDTO(
+        settings.getSparkAvroFilename(), settings.getSparkAvroPath(),
+        LocalResourceVisibility.PUBLIC.toString(),
+        LocalResourceType.FILE.toString(), null), false);
+
     builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH,
         settings.getHopsUtilFilename());
     builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH,
         settings.getTfSparkConnectorFilename());
+    builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH,
+        settings.getSparkAvroFilename());
     extraClassPathFiles.append(settings.getHopsUtilFilename()).append(File.pathSeparator).
         append(settings.getHopsLeaderElectionJarPath()).append(File.pathSeparator).
-        append(settings.getTfSparkConnectorFilename()).append(File.pathSeparator);
+        append(settings.getTfSparkConnectorFilename()).append(File.pathSeparator).
+        append(settings.getSparkAvroFilename()).append(File.pathSeparator);
     builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH,
         "$PWD/" + Settings.SPARK_LOCALIZED_CONF_DIR + File.pathSeparator
         + Settings.SPARK_LOCALIZED_CONF_DIR
@@ -651,21 +660,6 @@ public class SparkYarnRunnerBuilder {
           "There was an error while setting user-provided Spark properties. Please check that the values conform to"
           + " the requested input format or that the property is allowed:" + ex.getMessage());
     }
-
-    //Prepare spark maven packages
-    StringBuilder sparkPackages = new StringBuilder();
-    //avro data source used in Feature Store
-    sparkPackages.append(settings.getSparkAvroPackageName());
-    //user-defined packages
-    if(userSparkProperties.containsKey(Settings.SPARK_PACKAGES)){
-      sparkPackages.append(",");
-      sparkPackages.append(userSparkProperties.get(Settings.SPARK_PACKAGES));
-    }
-    jobHopsworksProps.put(Settings.SPARK_PACKAGES,
-        new ConfigProperty(
-            Settings.SPARK_PACKAGES,
-            HopsUtils.IGNORE,
-            "true"));
 
     Map<String, String> finalJobProps = HopsUtils.mergeHopsworksAndUserParams(jobHopsworksProps, userSparkProperties,
         true);

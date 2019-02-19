@@ -763,7 +763,6 @@ public class Settings implements Serializable {
   public static final String SPARK_EXECUTORENV_LIBHDFS_OPTS = "spark.executorEnv.LIBHDFS_OPTS";
   public static final String SPARK_DRIVER_EXTRALIBRARYPATH = "spark.driver.extraLibraryPath";
   public static final String SPARK_DRIVER_EXTRAJAVAOPTIONS = "spark.driver.extraJavaOptions";
-  public static final String SPARK_PACKAGES = "spark.jars.packages";
 
   //PySpark properties
   public static final String SPARK_APP_NAME_ENV = "spark.app.name";
@@ -3268,8 +3267,12 @@ public class Settings implements Serializable {
 
   private String SPARK_AVRO_PACKAGE_VERSION = "2.11:2.4.0";
 
-  public synchronized String getSparkAvroPackageName() {
+  public synchronized String getSparkAvroFilename() {
     checkCache();
-    return "org.apache.spark:spark-avro_" + SPARK_AVRO_PACKAGE_VERSION;
+    return "spark-avro_" + SPARK_AVRO_PACKAGE_VERSION + ".jar";
+  }
+
+  public String getSparkAvroPath() {
+    return "hdfs:///user/" + getSparkUser() + "/" + getSparkAvroFilename();
   }
 }

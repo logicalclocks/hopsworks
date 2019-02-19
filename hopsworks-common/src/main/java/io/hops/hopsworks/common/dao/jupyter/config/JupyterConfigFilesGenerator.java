@@ -151,7 +151,7 @@ public class JupyterConfigFilesGenerator {
     return true;
   }
 
-  // returns true if one of the conf files were created anew
+  // returns true if one of the conf files were created anew 
   private boolean createConfigFiles(String confDirPath, String kernelsDir, String hdfsUser, String realName,
                                     Project project, String nameNodeEndpoint, Integer port, JupyterSettings js)
     throws IOException, ServiceException {
@@ -224,7 +224,10 @@ public class JupyterConfigFilesGenerator {
           .append(settings.getHiveSiteSparkHdfsPath())
           .append(",")
           // Add tf-spark-connector
-          .append(settings.getTfSparkConnectorPath());
+          .append(settings.getTfSparkConnectorPath())
+          .append(",")
+          // Add spark-avro
+          .append(settings.getSparkAvroPath());
 
       if (!js.getFiles().equals("")) {
         //Split the comma-separated string and append it to sparkFiles
@@ -237,7 +240,9 @@ public class JupyterConfigFilesGenerator {
           + File.pathSeparator
           + settings.getHopsUtilFilename()
           + File.pathSeparator
-          + settings.getTfSparkConnectorFilename();
+          + settings.getTfSparkConnectorFilename()
+          + File.pathSeparator
+          + settings.getSparkAvroFilename();
 
       if (!js.getJars().equals("")) {
         //Split the comma-separated string and append the names to the driver and executor classpath
@@ -285,16 +290,6 @@ public class JupyterConfigFilesGenerator {
       Map<String, String> userSparkProperties = HopsUtils.validateUserProperties(sparkProps, settings.getSparkDir());
 
       LOGGER.info("SparkProps are: " + System.lineSeparator() + sparkProps);
-
-      //Prepare spark maven packages
-      StringBuilder sparkPackages = new StringBuilder();
-      //avro data source used in Feature Store
-      sparkPackages.append(settings.getSparkAvroPackageName());
-      //user-defined packages
-      if(userSparkProperties.containsKey(Settings.SPARK_PACKAGES)){
-        sparkPackages.append(",");
-        sparkPackages.append(userSparkProperties.get(Settings.SPARK_PACKAGES));
-      }
 
       boolean isExperiment = js.getMode().compareToIgnoreCase("experiment") == 0;
       boolean isParallelExperiment = js.getMode().compareToIgnoreCase("parallelexperiments") == 0;
@@ -458,10 +453,6 @@ public class JupyterConfigFilesGenerator {
   
       sparkMagicParams.put(Settings.SPARK_EXECUTOR_EXTRACLASSPATH, new ConfigProperty(
           "spark_executor_extraClassPath", HopsUtils.APPEND_PATH, extraClassPath));
-
-      sparkMagicParams.put(Settings.SPARK_PACKAGES, new ConfigProperty(
-          "spark_jars_packages", HopsUtils.IGNORE,
-          sparkPackages.toString()));
 
       sparkMagicParams.put("spark.executorEnv.REST_ENDPOINT", new ConfigProperty(
               "rest_endpoint", HopsUtils.IGNORE, settings.getRestEndpoint()));

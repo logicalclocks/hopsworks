@@ -81,7 +81,6 @@
       "spark.yarn.stagingDir": "%%spark_yarn_stagingDir%%",
       "spark.yarn.dist.files": "%%spark_yarn_dist_files%%",
       "spark.yarn.dist.archives": "%%spark_yarn_dist_archives%%",
-      "spark.jars.packages": "%%spark_jars_packages%%",
       "spark.driver.extraLibraryPath": "%%spark_driver_extraLibraryPath%%",
       "spark.driver.extraJavaOptions": "%%spark_driver_extraJavaOptions%%",
       "spark.driver.extraClassPath" : "%%spark_driver_extraClassPath%%",
@@ -143,3 +142,4 @@
     "HADOOP_VERSION": "%%hadoop_version%%"
   }
 }
+
