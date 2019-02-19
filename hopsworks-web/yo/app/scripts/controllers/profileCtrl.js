@@ -112,8 +112,8 @@ angular.module('hopsWorksApp')
                           growl.success("Your password is now updated.", {title: 'Success', ttl: 5000, referenceId: 1});
                         }, function (error) {
                           self.credentialWorking = false;
-                          self.errorMsg = error.data.usrMsg;
-                          growl.error(error.data.usrMsg, {title: 'Error', ttl: 5000, referenceId: 1});
+                          self.errorMsg = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : "";
+                          growl.error(self.errorMsg, {title: 'Error', ttl: 5000, referenceId: 1});
                 });
               }
             };
