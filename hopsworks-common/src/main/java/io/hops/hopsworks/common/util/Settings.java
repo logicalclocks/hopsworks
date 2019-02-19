@@ -558,7 +558,6 @@ public class Settings implements Serializable {
           applicationCertificateValidityPeriod);
       tensorBoardMaxLastAccessed = setIntVar(TENSORBOARD_MAX_LAST_ACCESSED, tensorBoardMaxLastAccessed);
       sparkUILogsOffset = setIntVar(SPARK_UI_LOGS_OFFSET, sparkUILogsOffset);
-      jupyterShutdownTimerInterval = setStrVar(JUPYTER_SHUTDOWN_TIMER_INTERVAL, jupyterShutdownTimerInterval);
 
       populateDelaCache();
       populateLDAPCache();
@@ -1605,16 +1604,7 @@ public class Settings implements Serializable {
     checkCache();
     return JUPYTER_DIR;
   }
-
-  // Service key rotation interval
-  private static final String JUPYTER_SHUTDOWN_TIMER_INTERVAL = "jupyter_shutdown_timer_interval";
-  private String jupyterShutdownTimerInterval = "30m";
-
-  public synchronized String getJupyterShutdownTimerInterval() {
-    checkCache();
-    return jupyterShutdownTimerInterval;
-  }
-
+  
   private String KAFKA_USER = "kafka";
 
   public synchronized String getKafkaUser() {
