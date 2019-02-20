@@ -208,10 +208,6 @@ public class FlinkJob extends YarnJob {
   @Override
   protected void cleanup() {
     LOG.log(Level.INFO, "Job finished performing cleanup...");
-    if (monitor != null) {
-      monitor.close();
-      monitor = null;
-    }
     //Remove local files required for the job (Kafka certs etc.)
     //Search for other jobs using Kafka in the same project. If any active
     //ones are found
@@ -262,19 +258,6 @@ public class FlinkJob extends YarnJob {
       }
     }
 
-  }
-
-  @Override
-  protected void stopJob(String appid) {
-    //Stop flink cluster first
-    try {
-      Runtime rt = Runtime.getRuntime();
-      Process pr = rt.exec(this.hadoopDir + "/bin/yarn application -kill "
-          + appid);
-    } catch (IOException ex1) {
-      LOG.log(Level.SEVERE, "Unable to stop flink cluster with appID:"
-          + appid, ex1);
-    }
   }
 
 }

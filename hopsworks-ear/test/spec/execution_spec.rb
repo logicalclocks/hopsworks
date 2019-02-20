@@ -16,7 +16,7 @@
 
 describe "On #{ENV['OS']}" do
   describe 'execution' do
-    after (:all) {clean_projects}
+    after(:all) {clean_projects}
     describe "#create" do
       context 'without authentication' do
         before :all do

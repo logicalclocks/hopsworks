@@ -319,7 +319,8 @@ public class JupyterService {
         certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());
         HopsUtils.cleanupCertificatesForUserCustomDir(user.getUsername(), project.getName(),
             settings.getHdfsTmpCertDir(), certificateMaterializer, dto.getCertificatesDir(), settings);
-        throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_MATERIALIZATION_ERROR, Level.SEVERE);
+        throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_MATERIALIZATION_ERROR, Level.SEVERE,
+          ex.getMessage(), null, ex);
       } finally {
         if (dfso != null) {
           dfsService.closeDfsClient(dfso);

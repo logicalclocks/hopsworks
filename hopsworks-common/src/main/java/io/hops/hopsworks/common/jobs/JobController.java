@@ -61,9 +61,11 @@ import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.jobs.configuration.JobConfiguration;
 import io.hops.hopsworks.common.jobs.configuration.ScheduleDTO;
+import io.hops.hopsworks.common.jobs.execution.ExecutionController;
 import io.hops.hopsworks.common.jobs.flink.FlinkController;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
 import io.hops.hopsworks.common.jobs.spark.SparkController;
+import org.eclipse.persistence.exceptions.DatabaseException;
 
 @Stateless
 public class JobController {
@@ -82,6 +84,9 @@ public class JobController {
   private SparkController sparkController;
   @EJB
   private FlinkController flinkController;
+  @EJB
+  private ExecutionController executionController;
+
   
   private static final Logger LOGGER = Logger.getLogger(JobController.class.getName());
   
@@ -132,6 +137,23 @@ public class JobController {
     return scheduler.unscheduleJob(job);
   }
   
+  @TransactionAttribute(TransactionAttributeType.NEVER)
+  public void deleteJob(Jobs job, Users user) throws JobException {
+    //Kill running execution of this job (if any)
+    executionController.stop(job);
+    try {
+      LOGGER.log(Level.FINE, "Request to delete job name ={0} job id ={1}",
+        new Object[]{job.getName(), job.getId()});
+      jobFacade.removeJob(job);
+      LOGGER.log(Level.FINE, "Deleted job name ={0} job id ={1}", new Object[]{job.getName(), job.getId()});
+      activityFacade.persistActivity(ActivityFacade.DELETED_JOB + job.getName(), job.getProject(), user.getEmail(),
+        ActivityFacade.ActivityFlag.JOB);
+    } catch (DatabaseException ex) {
+      LOGGER.log(Level.SEVERE, "Job cannot be deleted job name ={0} job id ={1}",
+        new Object[]{job.getName(), job.getId()});
+      throw new JobException(RESTCodes.JobErrorCode.JOB_DELETION_ERROR, Level.SEVERE, ex.getMessage(), null, ex);
+    }
+  }
   
   public Jobs getJob(Project project, String name) throws JobException {
     if(Strings.isNullOrEmpty(name)) {

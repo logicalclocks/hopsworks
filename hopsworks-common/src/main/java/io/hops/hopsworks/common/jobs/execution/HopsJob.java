@@ -150,7 +150,7 @@ public abstract class HopsJob {
    * <p/>
    * @throws IllegalStateException If no Execution id has been requested yet.
    */
-  public final void execute() throws IllegalStateException {
+  public final void execute() {
     if (!initialized) {
       throw new IllegalStateException(
               "Cannot execute before acquiring an Execution id.");
@@ -174,13 +174,9 @@ public abstract class HopsJob {
               services.getExecutionFacade().updateState(execution, JobState.INITIALIZATION_FAILED);
               cleanup();
               return null;
-            } else {
-              updateState(JobState.STARTING_APP_MASTER);
             }
             runJob(udfso, dfso);
             return null;
-          } catch (IOException e) {
-            logger.log(Level.SEVERE, "Exception while trying to get hdfsUser name for execution " + execution, e);
           } finally {
             if (dfso != null) {
               dfso.close();
@@ -192,16 +188,11 @@ public abstract class HopsJob {
               services.getYarnClientService().closeYarnClient(yarnClientWrapper);
             }
           }
-          return null;
         }
       });
     } catch (IOException | InterruptedException ex) {
       logger.log(Level.SEVERE, null, ex);
     }
-  }
-
-  public final void stop(String appid) throws IllegalStateException {
-    stopJob(appid);
   }
 
   /**
@@ -227,8 +218,6 @@ public abstract class HopsJob {
    */
   protected abstract void runJob(DistributedFileSystemOps udfso,
           DistributedFileSystemOps dfso);
-
-  protected abstract void stopJob(String appid);
 
   /**
    * Called after runJob() completes, allows the job to perform some cleanup, if

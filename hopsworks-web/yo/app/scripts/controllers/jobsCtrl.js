@@ -611,8 +611,6 @@ angular.module('hopsWorksApp')
             self.untoggle = function (job, index) {
               if((job === undefined || job === null) && self.currentjob !== undefined && self.currentjob !== null) {
                   job = self.currentjob;
-              } else  {
-                  return;
               }
               StorageService.remove(self.projectId + "_jobui_" + job.name);
               //reset all jobs showing flag
