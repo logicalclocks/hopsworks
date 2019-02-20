@@ -16,8 +16,6 @@
  */
 package io.hops.hopsworks.api.airflow;
 
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.interfaces.DecodedJWT;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
@@ -36,12 +34,7 @@ import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.common.util.Settings;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.LinkOption;
-import java.nio.file.attribute.PosixFileAttributeView;
 import java.nio.file.attribute.PosixFilePermission;
-import java.security.NoSuchAlgorithmException;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Level;
@@ -61,7 +54,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
-import io.hops.hopsworks.jwt.exception.JWTException;
 import org.apache.commons.codec.digest.DigestUtils;
 
 @RequestScoped
@@ -100,7 +92,6 @@ public class AirflowService {
   };
   
   private static final Set<PosixFilePermission> DAGS_PERM = new HashSet<>(8);
-  private static final Set<PosixFilePermission> SECRETS_PERM = new HashSet<>();
   static {
     //add owners permission
     DAGS_PERM.add(PosixFilePermission.OWNER_READ);
@@ -113,14 +104,10 @@ public class AirflowService {
     //add others permissions
     DAGS_PERM.add(PosixFilePermission.OTHERS_READ);
     DAGS_PERM.add(PosixFilePermission.OTHERS_EXECUTE);
-    
-    SECRETS_PERM.add(PosixFilePermission.OWNER_READ);
-    SECRETS_PERM.add(PosixFilePermission.OWNER_WRITE);
-    SECRETS_PERM.add(PosixFilePermission.OWNER_EXECUTE);
-    
-    SECRETS_PERM.add(PosixFilePermission.GROUP_READ);
-    SECRETS_PERM.add(PosixFilePermission.GROUP_EXECUTE);
   }
+  
+  // Audience for Airflow JWTs
+  private static final String[] JWT_AUDIENCE = new String[]{Audience.JOB};
   
   public AirflowService() {
   }
@@ -140,20 +127,8 @@ public class AirflowService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response storeAirflowJWT(@Context SecurityContext sc) throws AirflowException {
-    try {
-      Users user = jwtHelper.getUserPrincipal(sc);
-      String[] audience = new String[]{Audience.JOB};
-      String token = jwtHelper.createToken(user, audience, settings.getJWTIssuer());
-      DecodedJWT decodedJWT = JWT.decode(token);
-      
-      LocalDateTime expirationDate = decodedJWT.getExpiresAt().toInstant()
-          .atZone(ZoneId.systemDefault()).toLocalDateTime();
-      
-      airflowJWTManager.storeJWT(user, project, token, expirationDate);
-    } catch (NoSuchAlgorithmException | JWTException ex) {
-      throw new AirflowException(RESTCodes.AirflowErrorCode.JWT_NOT_CREATED, Level.SEVERE,
-          "Could not create JWT for Airflow service", ex.getMessage(), ex);
-    }
+    Users user = jwtHelper.getUserPrincipal(sc);
+    airflowJWTManager.generateJWT(user, project, JWT_AUDIENCE);
     return Response.noContent().build();
   }
   
@@ -166,17 +141,10 @@ public class AirflowService {
 
     java.nio.file.Path dagsDir = airflowJWTManager.getProjectDagDirectory(project);
   
-    java.nio.file.Path secretsDir = airflowJWTManager.getProjectSecretsDirectory(project);
-    
     try {
       // Instead of checking and setting the permissions, just set them as it is an idempotent operation
       dagsDir.toFile().mkdirs();
       Files.setPosixFilePermissions(dagsDir, DAGS_PERM);
-      
-      secretsDir.toFile().mkdirs();
-      Files.getFileAttributeView(secretsDir, PosixFileAttributeView.class, LinkOption.NOFOLLOW_LINKS)
-          .setGroup(airflowJWTManager.getAirflowGroup());
-      Files.setPosixFilePermissions(secretsDir, SECRETS_PERM);
     } catch (IOException ex) {
       throw new AirflowException(RESTCodes.AirflowErrorCode.AIRFLOW_DIRS_NOT_CREATED, Level.SEVERE,
           "Could not create Airlflow directories", ex.getMessage(), ex);
