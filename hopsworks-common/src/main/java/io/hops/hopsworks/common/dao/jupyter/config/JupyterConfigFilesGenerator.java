@@ -221,10 +221,7 @@ public class JupyterConfigFilesGenerator {
           .append(settings.getHopsUtilHdfsPath())
           .append(",")
           // Add Hive-site.xml for SparkSQL
-          .append(settings.getHiveSiteSparkHdfsPath())
-          .append(",")
-          // Add tf-spark-connector
-          .append(settings.getTfSparkConnectorPath());
+          .append(settings.getHiveSiteSparkHdfsPath());
 
       if (!js.getFiles().equals("")) {
         //Split the comma-separated string and append it to sparkFiles
@@ -235,9 +232,7 @@ public class JupyterConfigFilesGenerator {
 
       String extraClassPath = settings.getHopsLeaderElectionJarPath()
           + File.pathSeparator
-          + settings.getHopsUtilFilename()
-          + File.pathSeparator
-          + settings.getTfSparkConnectorFilename();
+          + settings.getHopsUtilFilename();
 
       if (!js.getJars().equals("")) {
         //Split the comma-separated string and append the names to the driver and executor classpath
