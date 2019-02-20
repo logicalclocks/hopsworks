@@ -290,7 +290,7 @@ describe "On #{ENV['OS']}" do
         index = get "#{ENV['ELASTIC_API']}/#{@project[:projectname]}_serving*/_search?q=modelname:#{@serving[:model_name]}"
 
         Airborne.configure do |config|
-          config.base_url = "http://#{ENV['WEB_HOST']}:#{ENV['WEB_PORT']}"
+          config.base_url = "https://#{ENV['WEB_HOST']}:#{ENV['WEB_PORT']}"
         end
 
         parsed_index = JSON.parse(index)
