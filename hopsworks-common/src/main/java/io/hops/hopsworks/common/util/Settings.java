@@ -238,7 +238,6 @@ public class Settings implements Serializable {
   private static final String VARIABLE_SUPPORT_EMAIL_ADDR = "support_email_addr";
   private static final String VARIABLE_HOPSUTIL_VERSION = "hopsutil_version";
   private static final String VARIABLE_HOPSEXAMPLES_VERSION = "hopsexamples_version";
-  private static final String VARIABLE_TF_SPARK_CONNECTOR_VERSION = "tf_spark_connector_version";
 
   private static final String VARIABLE_INFLUXDB_IP = "influxdb_ip";
   private static final String VARIABLE_INFLUXDB_PORT = "influxdb_port";
@@ -454,7 +453,6 @@ public class Settings implements Serializable {
       STAGING_DIR = setDirVar(VARIABLE_STAGING_DIR, STAGING_DIR);
       HOPSUTIL_VERSION = setVar(VARIABLE_HOPSUTIL_VERSION, HOPSUTIL_VERSION);
       HOPS_EXAMPLES_VERSION = setVar(VARIABLE_HOPSEXAMPLES_VERSION, HOPS_EXAMPLES_VERSION);
-      TF_SPARK_CONNECTOR_VERSION = setVar(VARIABLE_TF_SPARK_CONNECTOR_VERSION, TF_SPARK_CONNECTOR_VERSION);
       HIVE_SERVER_HOSTNAME = setStrVar(VARIABLE_HIVE_SERVER_HOSTNAME,
           HIVE_SERVER_HOSTNAME);
       HIVE_SERVER_HOSTNAME_EXT = setStrVar(VARIABLE_HIVE_SERVER_HOSTNAME_EXT,
@@ -3256,17 +3254,6 @@ public class Settings implements Serializable {
   public synchronized String getFeaturestoreDbDefaultStorageFormat() {
     checkCache();
     return FEATURESTORE_DB_DEFAULT_STORAGE_FORMAT;
-  }
-
-  private String TF_SPARK_CONNECTOR_VERSION = "2.11-1.12.0";
-
-  public synchronized String getTfSparkConnectorFilename() {
-    checkCache();
-    return "spark-tensorflow-connector_" + TF_SPARK_CONNECTOR_VERSION + ".jar";
-  }
-
-  public String getTfSparkConnectorPath() {
-    return "hdfs:///user/" + getSparkUser() + "/" + getTfSparkConnectorFilename();
   }
 
 }

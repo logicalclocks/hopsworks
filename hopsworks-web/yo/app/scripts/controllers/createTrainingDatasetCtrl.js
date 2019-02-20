@@ -55,7 +55,7 @@ angular.module('hopsWorksApp')
             self.trainingDatasetFormat;
 
             self.dataFormats = [
-                "csv", "tfrecords", "parquet", "tsv", "hdf5", "npy"
+                "csv", "tfrecords", "parquet", "tsv", "hdf5", "npy", "orc", "avro", "image"
             ]
             var i;
             self.trainingDatasetNames = []
