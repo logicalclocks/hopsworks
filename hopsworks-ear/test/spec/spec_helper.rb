@@ -37,7 +37,7 @@
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 =end
 
-require 'airborne'
+require 'hops-airborne'
 require 'byebug'
 require 'active_record'
 
@@ -106,7 +106,7 @@ RSpec.configure do |config|
 end
 
 Airborne.configure do |config|
-  config.base_url = "http://#{ENV['WEB_HOST']}:#{ENV['WEB_PORT']}"
+  config.base_url = "https://#{ENV['WEB_HOST']}:#{ENV['WEB_PORT']}"
 end
 
 def clean_test_data
