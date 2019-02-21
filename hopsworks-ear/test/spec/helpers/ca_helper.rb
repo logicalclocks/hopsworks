@@ -78,8 +78,9 @@ module CaHelper
     certificate = OpenSSL::X509::Certificate.new raw
     certificate_validity = Integer(certificate.not_after - certificate.not_before)
 
-    if certificate_validity != expected_validity
-      raise "Certificate valid for #{certificate_validity}, expected #{expected_validity}"
+    # Validity should be within expected validity +/- 20 seconds to account for slowness in the tests
+    if (certificate_validity < (expected_validity - 20)) or (certificate_validity > (expected_validity + 20))
+      raise "Certificate valid for #{certificate_validity}, expected #{expected_validity} +/- 20"
     end
   end
 
