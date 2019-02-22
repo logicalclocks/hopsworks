@@ -57,7 +57,10 @@ angular.module('hopsWorksApp')
                 return $http.post('/api/auth/login', TransformRequest.jQueryStyle(user));
               },
               ldapLogin: function (user) {
-                return $http.post('/api/auth/ldapLogin', TransformRequest.jQueryStyle(user));
+                return $http.post('/api/remote/user/auth/ldap/login', TransformRequest.jQueryStyle(user));
+              },
+              krbLogin: function (user) {
+                return $http.post('/api/remote/user/auth/krb/login', TransformRequest.jQueryStyle(user));
               },
               validatePassword: function (user) {
                 return $http.post('/api/auth/validatePassword', TransformRequest.jQueryStyle(user));

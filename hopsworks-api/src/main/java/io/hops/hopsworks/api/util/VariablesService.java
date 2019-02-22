@@ -98,8 +98,9 @@ public class VariablesService {
   @GET
   @Path("authStatus")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getAuthStatus(){
-    AuthStatus authStatus = new AuthStatus(settings.getTwoFactorAuth(), settings.getLDAPAuthStatus());
+  public Response getAuthStatus() {
+    AuthStatus authStatus = new AuthStatus(settings.getTwoFactorAuth(), settings.getLDAPAuthStatus(), settings.
+        getKRBAuthStatus());
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(authStatus).build();
   }
 
