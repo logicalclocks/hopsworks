@@ -93,14 +93,32 @@ describe "On #{ENV['OS']}" do
           # There should be no CondaCommands in the database
           expect(CondaCommands.find_by(proj: @project[:projectname])).to be nil
 
+          lib_name = "requests"
+          lib_version = "2.20.0"
           # Install a library to create the new environment
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/install",
-               {lib: "requests", version: "2.20.0", channelUrl: "#{conda_channel}", installType: "CONDA", machineType: "CPU"}
+               {lib: "#{lib_name}", version: "#{lib_version}", channelUrl: "#{conda_channel}", installType: "CONDA", machineType: "CPU"}
           expect_status(200)
+          es_index_date_suffix = Time.now.strftime("%Y.%m.%e")
+          
           wait_for do
             CondaCommands.find_by(proj: @project[:projectname]).nil?
           end
           expect(check_if_env_exists_locally(@project[:projectname])).to be true
+
+          Airborne.configure do |config|
+            config.base_url = ''
+          end
+          
+          # Elasticsearch index should have been created for this project
+          index_name = "#{@project[:projectname]}_kagent-#{es_index_date_suffix}"
+          head "#{ENV['ELASTIC_API']}/#{index_name}"
+          
+          Airborne.configure do |config|
+            config.base_url = "https://#{ENV['WEB_HOST']}:#{ENV['WEB_PORT']}"
+          end
+          
+          expect_status(200)
         end
 
         it 'search libraries' do
@@ -221,6 +239,22 @@ describe "On #{ENV['OS']}" do
           wait_for do
             CondaCommands.find_by(proj: @project[:projectname]).nil?
           end
+
+          Airborne.configure do |config|
+            config.base_url = ''
+          end
+          
+          # Elasticsearch index should have been deleted
+          index_name = "#{@project[:projectname]}_kagent-*"
+          response = head "#{ENV['ELASTIC_API']}/_cat/indices/#{index_name}"
+          
+          Airborne.configure do |config|
+            config.base_url = "https://#{ENV['WEB_HOST']}:#{ENV['WEB_PORT']}"
+          end
+          
+          expect(response).to  eq("")
+
+          
           if not conda_exists
             skip "Anaconda is not installed in the machine or test is run locally"
           end

@@ -433,9 +433,9 @@ public class ProjectController {
           throw ex;
         }
       }
-
-      //add members of the project
+      
       try {
+        //add members of the project
         failedMembers = new ArrayList<>();
         failedMembers.addAll(addMembers(project, owner, projectDTO.getProjectTeam()));
       } catch (KafkaException | UserException | ProjectException | EJBException ex) {
@@ -2600,7 +2600,10 @@ public class ProjectController {
       //2. Delete Kibana Index
       JSONObject resp = elasticController.sendKibanaReq(params, "index-pattern", projectName + "_logs-*");
       LOGGER.log(Level.FINE, resp.toString(4));
-
+      resp = elasticController.sendKibanaReq(params, "index-pattern",
+          projectName + Settings.ELASTIC_KAGENT_INDEX_PATTERN);
+      LOGGER.log(Level.FINE, resp.toString(4));
+      
       // 3. Cleanup Experiment related Kibana stuff
       String experimentsIndex = projectName + "_" + Settings.ELASTIC_EXPERIMENTS_INDEX;
       elasticController.sendKibanaReq(params, "index-pattern", experimentsIndex, false);
