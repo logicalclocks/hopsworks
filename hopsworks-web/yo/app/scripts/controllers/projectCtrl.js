@@ -693,7 +693,8 @@ angular.module('hopsWorksApp')
                     download(atob(certs.kStore), 'keyStore.' + certs.fileExtension);
                     download(atob(certs.tStore), 'trustStore.' + certs.fileExtension);
                   }, function (error) {
-                    growl.error(error.data.errorMsg, {title: 'Failed', ttl: 5000});
+                    var errorMsg = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : "";
+                    growl.error(errorMsg, {title: error.data.errorMsg, ttl: 5000});
                 });
               } else {
                 ModalService.certs('sm', 'Certificates Download', 'Please type your password', self.projectId)
@@ -705,7 +706,8 @@ angular.module('hopsWorksApp')
                           download(atob(certs.kStore), 'keyStore.' + certs.fileExtension);
                           download(atob(certs.tStore), 'trustStore.' + certs.fileExtension);
                         }, function (error) {
-                          growl.error(error.data.errorMsg, {title: 'Failed', ttl: 5000});
+                          var errorMsg = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : "";
+                          growl.error(errorMsg, {title: error.data.errorMsg, ttl: 5000});
                         });
                     } else {
                       CertService.downloadProjectCert(self.currentProject.projectId, successPwd)
@@ -714,7 +716,8 @@ angular.module('hopsWorksApp')
                           download(atob(certs.kStore), 'keyStore.' + certs.fileExtension);
                           download(atob(certs.tStore), 'trustStore.' + certs.fileExtension);
                         }, function (error) {
-                          growl.error(error.data.errorMsg, {title: 'Failed', ttl: 5000});
+                          var errorMsg = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : "";
+                          growl.error(errorMsg, {title: error.data.errorMsg, ttl: 5000});
                         });
                     }
                   }, function (error) {
