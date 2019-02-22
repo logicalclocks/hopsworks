@@ -47,7 +47,6 @@ import io.hops.hopsworks.common.dao.user.BbcGroup;
 import io.hops.hopsworks.common.dao.user.BbcGroupFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.ldap.LdapUserFacade;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountsAuditActions;
 import io.hops.hopsworks.common.dao.user.security.audit.RolesAuditAction;
@@ -112,8 +111,6 @@ public class AuthController {
   private ProjectFacade projectFacade;
   @EJB
   private CertificatesMgmService certificatesMgmService;
-  @EJB
-  private LdapUserFacade ldapUserFacade;
 
   private void validateUser(Users user) {
     if (user == null) {
@@ -555,7 +552,7 @@ public class AuthController {
     LOGGER.log(Level.INFO, "Authentication failure user: {0}. ", user.getEmail());
   }
 
-  private void resetFalseLogin(Users user) {
+  public void resetFalseLogin(Users user) {
     if (user != null) {
       user.setFalseLogin(0);
       userFacade.update(user);

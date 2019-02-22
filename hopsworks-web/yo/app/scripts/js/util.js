@@ -163,6 +163,10 @@ function getPathname() {
   return "/hopsworks-api";
 }
 
+function getRemoteUserAuthPathname() {
+  return "/hopsworks-remote-user-auth";
+}
+
 function getApiPath() {
   return "/hopsworks-api/api";
 }
@@ -173,6 +177,10 @@ function getLocationBase() {
 
 function getApiLocationBase() {
   return location.protocol + "//" + location.hostname +":" + getPort() + getPathname();
+};
+
+function getRemoteUserAuthApiLocationBase() {
+  return location.protocol + "//" + location.hostname +":" + getPort() + getRemoteUserAuthPathname();
 };
 
 function getWsProtocol() {

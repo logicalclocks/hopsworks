@@ -53,6 +53,23 @@ angular.module('hopsWorksApp')
             data: $.param({password: password})
           };
           return $http(req);
+        },
+        downloadProjectCertKrb: function (id) {
+          var req = {
+            method: 'POST',
+            url: '/api/remote/user/auth/krb/downloadCert/' + id,
+            headers: {"Content-Type": "application/x-www-form-urlencoded"}
+          };
+          return $http(req);
+        },
+        downloadProjectCertLdap: function (id, password) {
+          var req = {
+            method: 'POST',
+            url: '/api/remote/user/auth/ldap/downloadCert/' + id,
+            headers: {"Content-Type": "application/x-www-form-urlencoded"},
+            data: $.param({password: password})
+          };
+          return $http(req);
         }
       };
       return services;

@@ -89,16 +89,13 @@ import io.hops.hopsworks.common.exception.UserException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
-import io.hops.hopsworks.common.message.MessageController;
 import io.hops.hopsworks.common.project.MoreInfoDTO;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.project.ProjectDTO;
 import io.hops.hopsworks.common.project.QuotasDTO;
 import io.hops.hopsworks.common.project.TourProjectType;
-import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.user.AuthController;
 import io.hops.hopsworks.common.user.UsersController;
-import io.hops.hopsworks.common.util.EmailBean;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.Api;
@@ -185,12 +182,6 @@ public class ProjectService {
   private UserFacade userFacade;
   @EJB
   private DistributedFsService dfs;
-  @EJB
-  private CertificateMaterializer certificateMaterializer;
-  @EJB
-  private MessageController messageController;
-  @EJB
-  private EmailBean emailBean;
   @EJB
   private AuthController authController;
   @EJB

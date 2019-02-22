@@ -98,8 +98,8 @@ angular.module('hopsWorksApp')
                         $scope.profileForm.$setPristine();
                       }, function (error) {
                         self.working = false;
-                        self.errorMsg = error.data.errorMsg;
-                        growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 1});
+                        self.errorMsg = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : "";
+                        growl.error(self.errorMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 1});
               });
             };
 
@@ -112,8 +112,8 @@ angular.module('hopsWorksApp')
                           growl.success("Your password is now updated.", {title: 'Success', ttl: 5000, referenceId: 1});
                         }, function (error) {
                           self.credentialWorking = false;
-                          self.errorMsg = error.data.errorMsg;
-                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 1});
+                          self.errorMsg = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : "";
+                          growl.error(self.errorMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 1});
                 });
               }
             };
@@ -134,8 +134,8 @@ angular.module('hopsWorksApp')
                           }
                         }, function (error) {
                           self.twoFactorWorking = false;
-                          self.errorMsg = error.data.errorMsg;
-                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 1});
+                          self.errorMsg = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : "";
+                          growl.error(self.errorMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 1});
                 });
               }
             };
@@ -158,9 +158,13 @@ angular.module('hopsWorksApp')
                           } 
                         }, function (error) {
                           self.twoFactorWorking = false;
-                          self.errorMsg = error.data.errorMsg;
-                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 1});
+                          self.errorMsg = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : "";
+                          growl.error(self.errorMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 1});
                 });
+            };
+            
+            self.externalAccountType = function () {
+              return self.user.accountType === 'LDAP_ACCOUNT_TYPE' || self.user.accountType === 'KRB_ACCOUNT_TYPE';
             };
 
             self.reset = function () {
