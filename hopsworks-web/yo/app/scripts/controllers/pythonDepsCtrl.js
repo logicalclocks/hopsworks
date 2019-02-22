@@ -43,8 +43,9 @@
 
 angular.module('hopsWorksApp')
         .controller('PythonDepsCtrl', ['$scope', '$route', '$routeParams', 'growl', '$location', 'PythonDepsService',
-          'ModalService', '$interval', '$mdDialog',
-          function ($scope, $route, $routeParams, growl, $location, PythonDepsService, ModalService, $interval, $mdDialog) {
+          'ModalService', '$interval', '$mdDialog', 'UtilsService',
+          function ($scope, $route, $routeParams, growl, $location, PythonDepsService, ModalService, $interval, $mdDialog,
+            UtilsService) {
 
 
             var self = this;
@@ -68,6 +69,8 @@ angular.module('hopsWorksApp')
             self.pythonVersionOpen = false;
 
             self.exporting = false;
+            self.kibanaUI = "";
+            self.showLogs = false;
 
             $scope.sortType = 'preinstalled';
 
@@ -353,23 +356,29 @@ angular.module('hopsWorksApp')
                       });
             };
 
-            self.failedHosts = function (opStatus) {
-
-              var hostsJson = JSON.stringify(opStatus.hosts);
-
-              if (hostsJson === '') {
-                if (typeof error.data.usrMsg !== 'undefined') {
-                  growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
-                } else {
-                  growl.error("", {title: error.data.errorMsg, ttl: 5000});
-                }
+            self.showCommandsLogs = function (condaCommand, inProgress) {
+              var projectName = UtilsService.getProjectName();
+              var query = ""
+              if (condaCommand.installType == 'ENVIRONMENT') {
+                query = "operation:%20\"" + condaCommand.op + "\"" + "%20%26%26%20artifact:%20\"" + projectName + "\""
+                  + "%20%26%26%20artifact_version:%20\"" + condaCommand.lib + "\"";
               } else {
-                ModalService.viewJson('md', 'Problematic Hosts for Conda Operations',
-                        hostsJson)
-                        .then(function (success) {}, function (error) {
-
-                        });
+                query = "operation:%20\"" + condaCommand.op + "\"" + "%20%26%26%20artifact:%20\"" + condaCommand.lib + "\""
+                  + "%20%26%26%20artifact_version:%20\"" + condaCommand.version + "\"";
               }
+              if (inProgress) {
+                // Return code -1 to 1 - INSTALLING -> SUCCEED/FAILED
+                query += "%20%26%26%20return_code:%5B-1%20TO%201%5D";
+              }
+              self.kibanaUI = "/hopsworks-api/kibana/app/kibana?projectId=" + self.projectId
+                  + "#/discover?_g=()&_a=(columns:!('@timestamp',host,operation,artifact,artifact_version,return_code,return_message)"
+                  + ",index:'" + projectName.toLowerCase() + "_kagent-*',interval:auto,"
+                  + "query:(language:lucene,query:'" + query + "'),sort:!('@timestamp',desc))";
+              self.showLogs = true;
+            };
+
+            self.showMainUI = function() {
+              self.showLogs = false;
             };
 
             self.exportEnvironment = function () {

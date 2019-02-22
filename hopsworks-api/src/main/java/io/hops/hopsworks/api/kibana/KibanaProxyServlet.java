@@ -99,6 +99,7 @@ public class KibanaProxyServlet extends ProxyServlet {
       add("_experiments");
       add("_experiments_summary-search");
       add("_experiments_summary-dashboard");
+      add("_kagent");
     }
   };
 
