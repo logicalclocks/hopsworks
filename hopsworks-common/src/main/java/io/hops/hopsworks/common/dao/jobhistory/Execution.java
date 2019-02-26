@@ -100,6 +100,9 @@ import java.util.List;
   @NamedQuery(name = "Execution.findByStates",
           query
           = "SELECT e FROM Execution e WHERE e.state in :states"),
+  @NamedQuery(name = "Execution.findByJobAndStates",
+          query
+          = "SELECT e FROM Execution e WHERE e.job = :job AND e.state in :states ORDER BY e.submissionTime DESC"),
   @NamedQuery(name = "Execution.findByStdoutPath",
           query
           = "SELECT e FROM Execution e WHERE e.stdoutPath = :stdoutPath"),

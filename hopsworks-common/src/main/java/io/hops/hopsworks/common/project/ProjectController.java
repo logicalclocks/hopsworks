@@ -55,7 +55,6 @@ import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeView;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsGroups;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
-import io.hops.hopsworks.common.dao.jobhistory.Execution;
 import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
 import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
@@ -149,6 +148,7 @@ import javax.ejb.TransactionAttributeType;
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
+import javax.mail.Message;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSession;
 import javax.ws.rs.client.Client;
@@ -169,8 +169,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -1389,36 +1387,18 @@ public class ProjectController {
 
   private List<ApplicationReport> getYarnApplications(Set<String> hdfsUsers, YarnClient yarnClient)
       throws YarnException, IOException {
-    List<ApplicationReport> projectApplications = yarnClient.getApplications(null, hdfsUsers, null,
+    return yarnClient.getApplications(null, hdfsUsers, null,
         EnumSet.of(
             YarnApplicationState.ACCEPTED, YarnApplicationState.NEW, YarnApplicationState.NEW_SAVING,
             YarnApplicationState.RUNNING, YarnApplicationState.SUBMITTED));
-    return projectApplications;
   }
-
-  private void killYarnJobs(Project project) {
+  
+  private void killYarnJobs(Project project) throws JobException {
     List<Jobs> running = jobFacade.getRunningJobs(project);
     if (running != null && !running.isEmpty()) {
-      Runtime rt = Runtime.getRuntime();
       for (Jobs job : running) {
         //Get the appId of the running app
-        List<Execution> jobExecs = execFacade.findByJob(job);
-        //Sort descending based on jobId because therie might be two
-        // jobs with the same name and we want the latest
-        Collections.sort(jobExecs, new Comparator<Execution>() {
-          @Override
-          public int compare(Execution lhs, Execution rhs) {
-            return lhs.getId() > rhs.getId() ? -1 : (lhs.getId() < rhs.
-                getId()) ? 1 : 0;
-          }
-        });
-        try {
-          rt.exec(settings.getHadoopSymbolicLinkDir() + "/bin/yarn application -kill "
-              + jobExecs.get(0).getAppId());
-        } catch (IOException ex) {
-          Logger.getLogger(ProjectController.class.getName()).
-              log(Level.SEVERE, null, ex);
-        }
+        executionController.stop(job);
       }
     }
   }
@@ -2063,21 +2043,9 @@ public class ProjectController {
         dbhdfsQuota, dbhdfsUsage, dbhdfsNsQuota, dbhdfsNsCount, fshdfsQuota, fshdfsUsage, fshdfsNsQuota,
         fshdfsNsCount, kafkaQuota);
   }
-
-  /**
-   * Deletes a member from a project
-   *
-   * @param project
-   * @param user
-   * @param toRemoveEmail
-   * @throws io.hops.hopsworks.common.exception.UserException
-   * @throws io.hops.hopsworks.common.exception.ProjectException
-   * @throws io.hops.hopsworks.common.exception.ServiceException
-   * @throws java.io.IOException
-   * @throws io.hops.hopsworks.common.security.CAException
-   */
+  
   public void removeMemberFromTeam(Project project, Users user, String toRemoveEmail) throws UserException,
-      ProjectException, ServiceException, IOException, CAException {
+    ProjectException, ServiceException, IOException, CAException, JobException {
     Users userToBeRemoved = userFacade.findByEmail(toRemoveEmail);
     if (userToBeRemoved == null) {
       throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE, "user: " + user.getEmail());
@@ -2113,26 +2081,8 @@ public class ProjectController {
       //kill jobs
       List<Jobs> running = jobFacade.getRunningJobs(project, hdfsUser);
       if (running != null && !running.isEmpty()) {
-        Runtime rt = Runtime.getRuntime();
         for (Jobs job : running) {
-          //Get the appId of the running app
-          List<Execution> jobExecs = execFacade.findByJob(job);
-          //Sort descending based on jobId because there might be two 
-          // jobs with the same name and we want the latest
-          Collections.sort(jobExecs, new Comparator<Execution>() {
-            @Override
-            public int compare(Execution lhs, Execution rhs) {
-              return lhs.getId() > rhs.getId() ? -1 : (lhs.getId() < rhs.
-                  getId()) ? 1 : 0;
-            }
-          });
-          try {
-            rt.exec(settings.getHadoopSymbolicLinkDir() + "/bin/yarn application -kill "
-                + jobExecs.get(0).getAppId());
-          } catch (IOException ex) {
-            Logger.getLogger(ProjectController.class.getName()).
-                log(Level.SEVERE, null, ex);
-          }
+          executionController.stop(job);
         }
       }
 

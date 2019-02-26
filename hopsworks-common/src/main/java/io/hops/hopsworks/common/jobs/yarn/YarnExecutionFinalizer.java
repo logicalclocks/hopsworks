@@ -41,7 +41,6 @@ package io.hops.hopsworks.common.jobs.yarn;
 
 import io.hops.hopsworks.common.dao.jobhistory.Execution;
 import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
-import io.hops.hopsworks.common.dao.jobs.JobsHistoryFacade;
 import io.hops.hopsworks.common.dao.project.service.ProjectServiceEnum;
 import io.hops.hopsworks.common.dao.project.service.ProjectServices;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
@@ -50,6 +49,17 @@ import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.jobs.jobhistory.JobState;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.common.yarn.YarnClientService;
+import io.hops.hopsworks.common.yarn.YarnClientWrapper;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.yarn.api.records.ApplicationId;
+import org.apache.hadoop.yarn.exceptions.YarnException;
+
+import javax.ejb.AsyncResult;
+import javax.ejb.Asynchronous;
+import javax.ejb.DependsOn;
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -59,17 +69,6 @@ import java.util.List;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.ejb.AsyncResult;
-import javax.ejb.Asynchronous;
-import javax.ejb.DependsOn;
-import javax.ejb.EJB;
-import javax.ejb.Stateless;
-
-import io.hops.hopsworks.common.yarn.YarnClientService;
-import io.hops.hopsworks.common.yarn.YarnClientWrapper;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.yarn.api.records.ApplicationId;
-import org.apache.hadoop.yarn.exceptions.YarnException;
 
 @Stateless
 @DependsOn("Settings")
@@ -79,8 +78,6 @@ public class YarnExecutionFinalizer {
 
   @EJB
   private ExecutionFacade executionFacade;
-  @EJB
-  private JobsHistoryFacade jobsHistoryFacade;
   @EJB
   private Settings settings;
   @EJB
@@ -131,26 +128,21 @@ public class YarnExecutionFinalizer {
       String stdOutPath =
           settings.getAggregatedLogPath(exec.getHdfsUser(), exec.getAppId());
       try {
-        if (stdOutFinalDestination != null &&
-            !stdOutFinalDestination.isEmpty()) {
-          stdOutFinalDestination =
-              stdOutFinalDestination + exec.getAppId() + File.separator +
-                  "stdout.log";
-          String[] desiredLogTypes = {"out"};
-          YarnLogUtil
-              .copyAggregatedYarnLogs(udfso, stdOutPath, stdOutFinalDestination,
-                  desiredLogTypes, monitor);
-        }
-        if (stdErrFinalDestination != null &&
-            !stdErrFinalDestination.isEmpty()) {
-          stdErrFinalDestination =
-              stdErrFinalDestination + exec.getAppId() + File.separator +
-                  "stderr.log";
-          String[] desiredLogTypes = {"err", ".log"};
-          YarnLogUtil
-              .copyAggregatedYarnLogs(udfso, stdOutPath, stdErrFinalDestination,
-                  desiredLogTypes, monitor);
-        }
+        stdOutFinalDestination =
+          stdOutFinalDestination + exec.getAppId() + File.separator +
+            "stdout.log";
+        String[] desiredOutLogTypes = {"out"};
+        YarnLogUtil
+          .copyAggregatedYarnLogs(udfso, stdOutPath, stdOutFinalDestination,
+            desiredOutLogTypes, monitor);
+  
+        stdErrFinalDestination =
+          stdErrFinalDestination + exec.getAppId() + File.separator +
+            "stderr.log";
+        String[] desiredErrLogTypes = {"err", ".log"};
+        YarnLogUtil
+          .copyAggregatedYarnLogs(udfso, stdOutPath, stdErrFinalDestination,
+            desiredErrLogTypes, monitor);
       } catch (IOException | InterruptedException | YarnException ex) {
         LOG.severe("error while aggregation logs" + ex.toString());
       }
@@ -180,26 +172,26 @@ public class YarnExecutionFinalizer {
 
   @Asynchronous
   public void finalize(Execution exec, JobState jobState) {
-    long executionStop = System.currentTimeMillis();
-    exec = executionFacade.updateExecutionStop(exec, executionStop);
-    updateJobHistoryApp(exec.getExecutionDuration(), exec);
+    //The execution won't exist in the database, if the job has been deleting
+    if (executionFacade.findById(exec.getId()) != null) {
+      long executionStop = System.currentTimeMillis();
+      exec = executionFacade.updateExecutionStop(exec, executionStop);
+    }
     try {
       // TODO(Antonis) In the future this call should be async as well
       // Network traffic in a transaction is not good
       removeAllNecessary(exec);
     } catch (IOException ex) {
       LOG.log(Level.WARNING,
-          "Exception while cleaning after job:{0}, with appId:{1}, some cleanning is probably needed {2}", new Object[]{
+          "Exception while cleaning after job:{0}, with appId:{1}, some cleaning is probably needed {2}", new Object[]{
             exec.getJob().getName(), exec.getAppId(), ex.getMessage()});
     }
     if (exec.getJob().getJobType().equals(JobType.FLINK)) {
       cleanCerts(exec);
     }
-    updateState(jobState, exec);
-  }
-
-  private void updateJobHistoryApp(long executiontime, Execution execution) {
-    jobsHistoryFacade.updateJobHistory(execution, executiontime);
+    if (executionFacade.findById(exec.getId()) != null) {
+      updateState(jobState, exec);
+    }
   }
 
   private Execution updateExecutionSTDPaths(String stdoutPath, String stderrPath, Execution exec) {
