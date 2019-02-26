@@ -166,18 +166,8 @@ public class SparkJob extends YarnJob {
     return true;
   }
 
-  @Override
   protected void cleanup() {
     LOG.log(Level.INFO, "Job finished performing cleanup...");
-    if (monitor != null) {
-      monitor.close();
-      monitor = null;
-    }
-  }
-
-  @Override
-  protected void stopJob(String appid) {
-    super.stopJob(appid);
   }
 
 }

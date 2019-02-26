@@ -101,11 +101,6 @@ public class ErasureCodeJob extends HopsJob {
   }
 
   @Override
-  protected void stopJob(String appid) {
-
-  }
-
-  @Override
   protected void cleanup() {
   }
 
