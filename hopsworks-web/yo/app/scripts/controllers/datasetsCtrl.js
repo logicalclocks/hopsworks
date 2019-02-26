@@ -181,10 +181,10 @@ angular.module('hopsWorksApp')
                       function (success) {
                         self.files = success.data;
                         self.pathArray = [];
-                        console.log(success);
+                        //console.log(success);
                       }, function (error) {
-                console.log("Error getting all datasets in project " + self.projectId);
-                console.log(error);
+                        console.log("Error getting all datasets in project " + self.projectId);
+                        console.log(error);
               });
             };
 
@@ -221,9 +221,9 @@ angular.module('hopsWorksApp')
                         //Set the current files and path
                         self.files = success.data;
                         self.pathArray = newPathArray;
-                        console.log(success);
+//                        console.log(success);
 //                        alert('Execution time: ' + (new Date().getTime() - self.dir_timing)); 
-                        console.log('Execution time: ' + (new Date().getTime() - self.dir_timing));
+//                        console.log('Execution time: ' + (new Date().getTime() - self.dir_timing));
                         if ($rootScope.selectedFile) {
                           var filePathArray = self.pathArray.concat($rootScope.selectedFile);
                           self.getFile(filePathArray);
@@ -232,7 +232,7 @@ angular.module('hopsWorksApp')
                       }, function (error) {
                 if (error.data.errorMsg.indexOf("Path is not a directory.") > -1) {
                   var popped = newPathArray.pop();
-                  console.log(popped);
+                  //console.log(popped);
                   self.openDir({name: popped, dir: false, underConstruction: false});
                   self.pathArray = newPathArray;
                   self.routeParamArray = [];
@@ -249,8 +249,7 @@ angular.module('hopsWorksApp')
                   getDirContents();
                 }
                 self.working = false;
-                console.log("Error getting the contents of the path "
-                        + getPath(newPathArray));
+                console.log("Error getting the contents of the path " + getPath(newPathArray));
                 console.log(error);
               });
             };
@@ -1140,12 +1139,25 @@ angular.module('hopsWorksApp')
               return false;
             };
 
+            self.curentPage = 1;
+            self.pageChange = function (newPageNumber) {
+              self.curentPage = newPageNumber;
+              self.resetSelected();
+            };
+
+            self.search = '';
+            function getFilteredResults() {
+              var filtered = $scope.$eval("datasetsCtrl.files | orderBy:sortKey:reverse | filter:datasetsCtrl.search");
+              var total = filtered.length;
+              var start = (self.curentPage - 1) * self.itemsPerPage;
+              var end = Math.min(start + self.itemsPerPage, total);
+              return filtered.slice(start, end);
+            }
 
             self.selectAll = function () {
-              var i = 0;
-              var min = Math.min(self.itemsPerPage, self.files.length);
-              for (i = 0; i < min; i++) {
-                var f = self.files[i];
+              var filtered = getFilteredResults();
+              for (var i = 0; i < filtered.length; i++) {
+                var f = filtered[i];
                 self.selectedFiles[f.name] = f;
                 self.selectedFiles[f.name].selectedIndex = i;
               }
@@ -1222,6 +1234,12 @@ angular.module('hopsWorksApp')
               self.selected = null;
               self.sharedPath = null;
               self.menustyle.opacity = 0.2;
+            };
+
+            self.resetSelected = function () {
+              self.deselectAll();
+              self.all_selected = false;
+              self.tgState = false;
             };
 
             self.toggleLeft = buildToggler('left');
