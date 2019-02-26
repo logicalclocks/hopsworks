@@ -49,18 +49,13 @@ import io.hops.hopsworks.common.jobs.execution.HopsJob;
 import io.hops.hopsworks.common.jobs.jobhistory.JobState;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
 import io.hops.hopsworks.common.util.Settings;
-import io.hops.hopsworks.common.yarn.YarnClientWrapper;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.hadoop.yarn.client.api.YarnClient;
-import org.apache.hadoop.yarn.exceptions.YarnException;
-import org.apache.hadoop.yarn.util.ConverterUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -77,9 +72,6 @@ public abstract class YarnJob extends HopsJob {
   private static final Logger LOG = Logger.getLogger(YarnJob.class.getName());
 
   protected YarnRunner runner;
-
-  protected YarnMonitor monitor = null;
-  private final Configuration conf = new Configuration();
 
   private String stdOutFinalDestination, stdErrFinalDestination;
   protected List<LocalResourceDTO> projectLocalResources;
@@ -172,25 +164,23 @@ public abstract class YarnJob extends HopsJob {
    * @return True if the AM was started, false otherwise.
    * @throws IllegalStateException If the YarnRunner has not been set yet.
    */
-  protected final boolean startApplicationMaster(DistributedFileSystemOps udfso,
-      DistributedFileSystemOps dfso) {
+  private boolean startApplicationMaster(DistributedFileSystemOps udfso, DistributedFileSystemOps dfso) {
     if (runner == null) {
       throw new IllegalArgumentException(
           "The YarnRunner has not been initialized yet.");
     }
     try {
-      updateState(JobState.STARTING_APP_MASTER);
-      monitor = runner.startAppMaster(services.getYarnClientService(),
+      ApplicationId appId = runner.startAppMaster(services.getYarnClientService(),
           hdfsUser.getUserName(), jobs.getProject(), dfso,
           user.getUsername());
       execution = services.getExecutionFacade().updateFilesToRemove(execution, runner.getFilesToRemove());
-      execution = services.getExecutionFacade().updateAppId(execution, monitor.getApplicationId().toString());
+      execution = services.getExecutionFacade().updateAppId(execution, appId.toString());
       return true;
     } catch (AccessControlException ex) {
       LOG.log(Level.SEVERE, "Permission denied:- {0}", ex.getMessage());
       updateState(JobState.APP_MASTER_START_FAILED);
       return false;
-    } catch (YarnException | IOException | URISyntaxException | InterruptedException e) {
+    } catch (Exception e) {
       LOG.log(Level.SEVERE, "Failed to start application master for execution " + execution
           + ". Aborting execution", e);
       writeLog("Failed to start application master for execution " + execution + ". Aborting execution", e, udfso);
@@ -211,7 +201,7 @@ public abstract class YarnJob extends HopsJob {
 
   @Override
   protected boolean setupJob(DistributedFileSystemOps dfso, YarnClient yarnClient) {
-    //Check if this job is using Kakfa, and include certificate
+    //Check if this job is using Kafka, and include certificate
     //in local resources
     serviceProps = new ServiceProperties(jobs.getProject().getId(), jobs.getProject().getName(),
         services.getSettings().getRestEndpoint(), jobs.getName(), new ElasticProperties(
@@ -253,7 +243,7 @@ public abstract class YarnJob extends HopsJob {
       YarnApplicationState.FINISHED, YarnApplicationState.FAILED,
       YarnApplicationState.KILLED);
 
-  protected void writeLog(String message, Exception exception, DistributedFileSystemOps udfso) {
+  private void writeLog(String message, Exception exception, DistributedFileSystemOps udfso) {
 
     Date date = new Date();
     String dateString = date.toString();
@@ -290,24 +280,7 @@ public abstract class YarnJob extends HopsJob {
     if (!proceed) {
       return;
     }
-    jobsMonitor.addToMonitor(execution.getAppId(), execution, monitor);
 
   }
 
-  @Override
-  //DOESN'T WORK FOR NOW
-  protected void stopJob(String appid) {
-    YarnClientWrapper yarnClientWrapper = services.getYarnClientService()
-        .getYarnClient(jobUser);
-    try {
-      ApplicationId applicationId = ConverterUtils.toApplicationId(appid);
-      yarnClientWrapper.getYarnClient().killApplication(applicationId);
-    } catch (YarnException | IOException e) {
-      LOG.log(Level.SEVERE, "Could not close yarn client for killing yarn job with appId: " + appid);
-    } finally {
-      if (yarnClientWrapper != null) {
-        services.getYarnClientService().closeYarnClient(yarnClientWrapper);
-      }
-    }
-  }
 }

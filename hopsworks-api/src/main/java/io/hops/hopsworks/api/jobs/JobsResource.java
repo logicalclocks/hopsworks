@@ -26,7 +26,6 @@ import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.jobhistory.Execution;
 import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationAttemptStateFacade;
-import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
 import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.jobs.description.YarnAppUrlsDTO;
@@ -35,14 +34,12 @@ import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.JobException;
 import io.hops.hopsworks.common.exception.RESTCodes;
-import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.jobs.AppInfoDTO;
 import io.hops.hopsworks.common.jobs.JobController;
 import io.hops.hopsworks.common.jobs.configuration.JobConfiguration;
 import io.hops.hopsworks.common.jobs.configuration.ScheduleDTO;
 import io.hops.hopsworks.common.jobs.execution.ExecutionController;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
-import io.hops.hopsworks.common.jobs.spark.SparkController;
 import io.hops.hopsworks.common.jobs.spark.SparkJobConfiguration;
 import io.hops.hopsworks.common.jobs.yarn.YarnJobConfiguration;
 import io.hops.hopsworks.common.util.HopsUtils;
@@ -106,15 +103,9 @@ public class JobsResource {
   @EJB
   private ExecutionFacade executionFacade;
   @EJB
-  private HdfsUsersController hdfsUsersBean;
-  @EJB
   private YarnApplicationAttemptStateFacade yarnApplicationAttemptStateFacade;
   @EJB
-  private YarnApplicationstateFacade yarnApplicationstateFacade;
-  @EJB
   private Settings settings;
-  @EJB
-  private SparkController sparkController;
   @EJB
   private ProjectFacade projectFacade;
   @EJB
@@ -224,7 +215,8 @@ public class JobsResource {
     switch (job.getJobType()) {
       case SPARK:
       case PYSPARK:
-        sparkController.deleteJob(job, user);
+      case FLINK:
+        jobController.deleteJob(job, user);
         break;
       default:
         throw new JobException(RESTCodes.JobErrorCode.JOB_TYPE_UNSUPPORTED, Level.FINEST, job.getJobType().toString());

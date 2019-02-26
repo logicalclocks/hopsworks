@@ -141,7 +141,7 @@ public class ExecutionsResource {
         return Response.created(uriBuilder.build()).entity(executionsBuilder.build(uriInfo, resourceRequest, exec))
           .build();
       case STOP:
-        exec = executionController.kill(job, user);
+        exec = executionController.stop(job);
         resourceRequest = new ResourceRequest(ResourceRequest.Name.EXECUTIONS);
         return Response.ok().entity(executionsBuilder.build(uriInfo, resourceRequest, exec)).build();
       default:

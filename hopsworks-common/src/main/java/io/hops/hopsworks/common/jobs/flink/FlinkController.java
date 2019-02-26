@@ -152,30 +152,6 @@ public class FlinkController {
     return execution;
   }
 
-  public void stopJob(Jobs job, Users user, String appid, String sessionId) {
-    //First: some parameter checking.
-    if (job == null) {
-      throw new IllegalArgumentException("Job parameter was null.");
-    } else if (user == null) {
-      throw new IllegalArgumentException("Name parameter was null.");
-    } else if (job.getJobType() != JobType.FLINK) {
-      throw new IllegalArgumentException(
-          "Job configuration is not a Flink job configuration.");
-    } else if (!isFlinkJarAvailable()) {
-      throw new IllegalStateException("Flink is not installed on this system.");
-    }
-
-    FlinkJob flinkJob = new FlinkJob(job, submitter, user,
-        settings.getHadoopSymbolicLinkDir(), settings.getFlinkDir(),
-        settings.getFlinkConfDir(), settings.getFlinkConfFile(),
-        settings.getFlinkUser(),
-        job.getProject().getName() + "__" + user.getUsername(),
-        settings.getHopsworksDomainDir(), jobsMonitor, settings, sessionId);
-
-    submitter.stopExecution(flinkJob, appid);
-
-  }
-
   /**
    * Check if the Flink jar is in HDFS. If it's not, try and copy it there
    * from the local filesystem. If it's still not there, then return false.
