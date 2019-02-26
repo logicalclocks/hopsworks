@@ -35,8 +35,7 @@ angular.module('hopsWorksApp')
             self.trainingDatasets = trainingDatasets
             self.trainingDataset=trainingDataset
             self.trainingDatasetId = trainingDataset.id
-            self.trainingDatasetNameRegexp = /^[a-zA-Z0-9_]+$/;
-
+            self.trainingDatasetNameRegexp = FeaturestoreService.trainingDatasetRegExp();
             self.trainingDatasetNameWrongValue = 1
             self.trainingDatasetNameNotUnique = 1
             self.trainingDatasetDescriptionWrongValue = 1;
@@ -44,9 +43,7 @@ angular.module('hopsWorksApp')
             self.wrong_values = 1;
             self.dependenciesNotUnique = 1
             self.working = false;
-            self.dataFormats = [
-                "csv", "tfrecords", "parquet", "tsv", "hdf5", "npy", "orc", "avro", "image"
-            ]
+            self.dataFormats = FeaturestoreService.dataFormats()
             self.trainingDatasetName = trainingDataset.name
             self.trainingDatasetDescription = trainingDataset.description
             self.dependencies = []

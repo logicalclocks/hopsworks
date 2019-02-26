@@ -39,8 +39,7 @@ angular.module('hopsWorksApp')
             self.featuregroups = featuregroups;
             $scope.selected = {value: self.jobs[0]}
             self.features = featuregroup.features;
-            self.hiveRegexp = /^[a-zA-Z0-9_]+$/;
-
+            self.hiveRegexp = FeaturestoreService.hiveRegExp();
             self.featuregroupNameWrongValue = 1;
             self.featuregroupDocWrongValue = 1;
             self.featuresNameWrongValue = [];
