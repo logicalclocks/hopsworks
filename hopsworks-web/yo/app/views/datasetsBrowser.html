@@ -164,7 +164,7 @@
                       <md-button class="md-icon-button md-primary" 
                                  ng-show="datasetsCtrl.isSelectedFiles() > 0 && !datasetsCtrl.all_selected" 
                                  aria-label="De-Select All" 
-                                 ng-click="datasetsCtrl.all_selected = false; datasetsCtrl.deselectAll();"
+                                 ng-click="datasetsCtrl.resetSelected();"
                                  style="margin-bottom: -10px">
                         <md-tooltip md-direction="right">
                           De-Select All
@@ -174,7 +174,7 @@
                       <md-button class="md-icon-button md-primary" 
                                  ng-show="datasetsCtrl.all_selected" 
                                  aria-label="De-Select All" 
-                                 ng-click="datasetsCtrl.all_selected = false; datasetsCtrl.deselectAll();"
+                                 ng-click="datasetsCtrl.resetSelected();"
                                  style="margin-bottom: -10px">
                         <md-tooltip md-direction="right">
                           De-Select All
