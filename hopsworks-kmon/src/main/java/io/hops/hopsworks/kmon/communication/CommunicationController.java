@@ -39,6 +39,7 @@
 
 package io.hops.hopsworks.kmon.communication;
 
+import io.hops.hopsworks.common.exception.GenericException;
 import io.hops.hopsworks.common.util.WebCommunication;
 import java.util.ArrayList;
 import java.util.List;
@@ -165,6 +166,8 @@ public class CommunicationController {
       String ip = h.getPublicOrPrivateIp();
       String agentPassword = h.getAgentPassword();
       return web.getServiceLog(ip, agentPassword, cluster, group, service, lines);
+    } catch (GenericException ex) {
+      return ex.getDevMsg();
     } catch (Exception ex) {
       return ex.getMessage();
     }
