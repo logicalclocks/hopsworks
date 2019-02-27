@@ -23,6 +23,7 @@ import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.AirflowException;
 import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.jwt.JWTController;
@@ -117,6 +118,8 @@ public class AirflowJWTManager {
   private AirflowDagFacade airflowDagFacade;
   @EJB
   private UsersController usersController;
+  @EJB
+  private CertificateMaterializer certificateMaterializer;
   @Resource
   private TimerService timerService;
   
@@ -135,11 +138,12 @@ public class AirflowJWTManager {
     timerService.createIntervalTimer(10L, interval, new TimerConfig("Airflow JWT renewal", false));
   }
   
-  @Lock(LockType.WRITE)
+  @Lock(LockType.READ)
   @AccessTimeout(value = 1, unit = TimeUnit.SECONDS)
-  public void generateJWT(Users user, Project project, String[] audience) throws AirflowException {
+  public void prepareSecurityMaterial(Users user, Project project, String[] audience) throws AirflowException {
     LocalDateTime expirationDate = getNow().plus(settings.getJWTLifetimeMs(), ChronoUnit.MILLIS);
-    AirflowJWT airflowJWT = new AirflowJWT(user.getUsername(), project.getId(), expirationDate);
+    AirflowJWT airflowJWT = new AirflowJWT(user.getUsername(), project.getId(), project.getName(), expirationDate);
+    // We use AirflowJWT references to check both for JWT and X.509
     if (!airflowJWTs.contains(airflowJWT)) {
       try {
         String[] roles = usersController.getUserRoles(user).toArray(new String[1]);
@@ -147,11 +151,13 @@ public class AirflowJWTManager {
             audience, localDateTime2Date(expirationDate), localDateTime2Date(getNow()), user.getUsername(),
             false, settings.getJWTExpLeewaySec(), roles,
             SignatureAlgorithm.valueOf(settings.getJWTSignatureAlg()));
-        airflowJWT.tokenFile = Paths.get(getProjectSecretsDirectory(project).toString(),
-            user.getUsername() + TOKEN_FILE_SUFFIX);
+        String projectAirflowDir = getProjectSecretsDirectory(user.getUsername()).toString();
+        airflowJWT.tokenFile = Paths.get(projectAirflowDir,getTokenFileName(project.getName(), user.getUsername()));
         
         airflowJWT.token = token;
         writeTokenToFile(airflowJWT);
+        certificateMaterializer.materializeCertificatesLocalCustomDir(user.getUsername(), project.getName(),
+            projectAirflowDir);
         airflowJWTs.add(airflowJWT);
       } catch (GeneralSecurityException | JWTException ex) {
         throw new AirflowException(RESTCodes.AirflowErrorCode.JWT_NOT_CREATED, Level.SEVERE,
@@ -171,11 +177,15 @@ public class AirflowJWTManager {
     }
   }
   
+  private String getTokenFileName(String projectName, String username) {
+    return projectName + "__" + username + TOKEN_FILE_SUFFIX;
+  }
+  
   @Lock(LockType.WRITE)
   @AccessTimeout(value = 500)
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   @Timeout
-  public void renewJWTMonitor(Timer timer) {
+  public void monitorSecurityMaterial(Timer timer) {
     try {
       String applicationName = InitialContext.doLookup("java:app/AppName");
       String moduleName = InitialContext.doLookup("java:module/ModuleName");
@@ -186,8 +196,8 @@ public class AirflowJWTManager {
       LOG.log(Level.SEVERE, null, e);
     }
     LocalDateTime now = getNow();
-    // Clean unused token files
-    cleanUnusedTokenFiles();
+    // Clean unused token files and X.509 certificates
+    cleanStaleSecurityMaterial();
   
     // Renew them
     Set<AirflowJWT> newTokens2Add = new HashSet<>();
@@ -203,7 +213,8 @@ public class AirflowJWTManager {
           String token = jwtController.renewToken(airflowJWT.token, expirationDate,
               Date.from(now.toInstant(ZoneOffset.UTC)));
           
-          AirflowJWT renewedJWT = new AirflowJWT(airflowJWT.username, airflowJWT.projectId, expirationDateTime);
+          AirflowJWT renewedJWT = new AirflowJWT(airflowJWT.username, airflowJWT.projectId, airflowJWT.projectName,
+              expirationDateTime);
           renewedJWT.tokenFile = airflowJWT.tokenFile;
           renewedJWT.token = token;
           
@@ -237,16 +248,20 @@ public class AirflowJWTManager {
     return Date.from(time.toInstant(ZoneOffset.UTC));
   }
   
-  public Path getProjectDagDirectory(Project project) {
-    return Paths.get(settings.getAirflowDir(), "dags", generateProjectSecret(project));
+  public Path getProjectDagDirectory(Integer projectID) {
+    return Paths.get(settings.getAirflowDir(), "dags", generateProjectSecret(projectID));
   }
   
-  public Path getProjectSecretsDirectory(Project project) {
-    return Paths.get(settings.getAirflowDir(), "secrets", generateProjectSecret(project));
+  public Path getProjectSecretsDirectory(String username) {
+    return Paths.get(settings.getAirflowDir(), "secrets", generateOwnerSecret(username));
   }
   
-  private String generateProjectSecret(Project project) {
-    return DigestUtils.sha256Hex(Integer.toString(project.getId()));
+  private String generateProjectSecret(Integer projectID) {
+    return DigestUtils.sha256Hex(Integer.toString(projectID));
+  }
+  
+  private String generateOwnerSecret(String username) {
+    return DigestUtils.sha256Hex(username);
   }
   
   private void writeTokenToFile(AirflowJWT airflowJWT) throws IOException {
@@ -263,7 +278,7 @@ public class AirflowJWTManager {
         LinkOption.NOFOLLOW_LINKS).setGroup(airflowGroup);
   }
   
-  private void cleanUnusedTokenFiles() {
+  private void cleanStaleSecurityMaterial() {
     Iterator<AirflowJWT> airflowJWTsIt = airflowJWTs.iterator();
     while (airflowJWTsIt.hasNext()) {
       AirflowJWT nextElement = airflowJWTsIt.next();
@@ -277,6 +292,9 @@ public class AirflowJWTManager {
           }
         }
         if (shouldDelete) {
+          certificateMaterializer.removeCertificatesLocalCustomDir(nextElement.username, nextElement.projectName,
+              getProjectSecretsDirectory(nextElement.username).toString());
+          
           FileUtils.deleteQuietly(nextElement.tokenFile.toFile());
           airflowJWTsIt.remove();
           File[] content = nextElement.tokenFile.getParent().toFile().listFiles();
@@ -295,14 +313,16 @@ public class AirflowJWTManager {
   private class AirflowJWT {
     private final String username;
     private final Integer projectId;
+    private final String projectName;
     private final LocalDateTime expiration;
     
     private String token;
     private Path tokenFile;
     
-    private AirflowJWT(String username, Integer projectId, LocalDateTime expiration) {
+    private AirflowJWT(String username, Integer projectId, String projectName, LocalDateTime expiration) {
       this.username = username;
       this.projectId = projectId;
+      this.projectName = projectName;
       this.expiration = expiration;
     }
     
