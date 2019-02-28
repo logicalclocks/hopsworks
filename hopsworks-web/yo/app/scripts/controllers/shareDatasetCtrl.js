@@ -50,10 +50,9 @@ angular.module('hopsWorksApp')
             var defaultPermissions = 'OWNER_ONLY';
             
             self.ownerOnlyMsg = "Sets default permissions setting of a Dataset. " +
-                    "Only Data Owners will be able to upload/remove files, either via the Dataset Browser or via Jobs and Jupyter notebooks. "+
-                    "To allow Zeppelin notebooks to write in this Dataset, select a less strict setting.";
+                    "Only Data Owners will be able to upload/remove files, either via the Dataset Browser or via Jobs and Jupyter notebooks.";
             self.groupWritableAndStickyBitSet = "Allow Data Owners to upload/remove files, Data Scientists are allowed to upload files but only remove files/dirs they own, via the Dataset Browser. "+
-                    "Zeppelin notebooks can write into the Dataset.<br> Are you sure you want to proceed?";
+                    "<br> Are you sure you want to proceed?";
             self.groupWritable = "This is the least strict setting. It allows both Data Owners and Data Scientists to upload/remove files either via the Dataset Browser or via Jobs/Notebooks. <br> Are you sure you want to proceed?";
 
             ProjectService.getAll().$promise.then(

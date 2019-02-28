@@ -66,7 +66,6 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import io.hops.hopsworks.common.dao.tensorflow.TensorBoard;
 import io.hops.hopsworks.common.dao.serving.TfServing;
-import io.hops.hopsworks.common.util.Settings;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.project.service.ProjectServices;
@@ -502,10 +501,6 @@ public class Project implements Serializable {
 
   public void setTensorBoardCollection(Collection<TensorBoard> tensorBoardCollection) {
     this.tensorBoardCollection = tensorBoardCollection;
-  }
-
-  public String getProjectGenericUser() {
-    return name + Settings.PROJECT_GENERIC_USER_SUFFIX;
   }
 
   public Date getLastQuotaUpdate() {

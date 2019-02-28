@@ -39,7 +39,6 @@
 package io.hops.hopsworks.common.security;
 
 import io.hops.hopsworks.common.dao.certificates.CertsFacade;
-import io.hops.hopsworks.common.dao.certificates.ProjectGenericUserCerts;
 import io.hops.hopsworks.common.dao.certificates.UserCerts;
 import io.hops.hopsworks.common.dao.command.SystemCommand;
 import io.hops.hopsworks.common.dao.command.SystemCommandFacade;
@@ -178,11 +177,7 @@ public class CertificatesMgmService {
     MasterPasswordChangeHandler<CertsFacade> psUserCertsHandler = new PSUserCertsMasterPasswordHandler(userFacade);
     psUserCertsHandler.setFacade(certsFacade);
     registerMasterPasswordChangeHandler(UserCerts.class, psUserCertsHandler);
-    
-    MasterPasswordChangeHandler<CertsFacade> pgUserCertsHandler = new PGUserCertsMasterPasswordHandler(projectFacade);
-    pgUserCertsHandler.setFacade(certsFacade);
-    registerMasterPasswordChangeHandler(ProjectGenericUserCerts.class, pgUserCertsHandler);
-    
+
     MasterPasswordChangeHandler<ClusterCertificateFacade> delaClusterCertsHandler =
         new DelaCertsMasterPasswordHandler(settings);
     delaClusterCertsHandler.setFacade(clusterCertificateFacade);

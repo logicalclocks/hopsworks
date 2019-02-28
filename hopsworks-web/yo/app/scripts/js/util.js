@@ -191,10 +191,6 @@ function getMetaDataWsBaseURL() {
   return getWsProtocol() +"//" + location.hostname + ":" + getPort() + getPathname() + "/wspoint/";
 }
 
-function getZeppelinWsBaseURL() {
-  return getWsProtocol() +"//" + location.hostname + ":" + getPort() + getPathname() + "/zeppelin/ws/";
-};
-
 function skipTrailingSlash(path) {
   return path.slice(-1) === "/" ? path.substring(0, path.length-1) : path;
 };

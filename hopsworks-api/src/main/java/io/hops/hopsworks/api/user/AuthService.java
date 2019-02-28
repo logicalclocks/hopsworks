@@ -42,7 +42,6 @@ import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
-import io.hops.hopsworks.api.zeppelin.util.TicketContainer;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.user.UserDTO;
 import io.hops.hopsworks.common.dao.user.UserFacade;
@@ -261,8 +260,6 @@ public class AuthService {
       req.logout();
       if (user != null) {
         authController.registerLogout(user, req);
-        //remove zeppelin ticket for user
-        TicketContainer.instance.invalidate(user.getEmail());
       }
     } catch (ServletException e) {
       accountAuditFacade.registerLoginInfo(user, UserAuditActions.LOGOUT.name(), UserAuditActions.FAILED.name(), req);

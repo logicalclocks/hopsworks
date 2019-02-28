@@ -43,7 +43,6 @@ import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstate;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.common.dao.project.service.ProjectServiceEnum;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
@@ -88,52 +87,33 @@ public class LivyController {
    * Get Livy sessions for project, depending on service type.
    *
    * @param project
-   * @param service
    * @return
    */
-  public List<LivyMsg.Session> getLivySessions(Project project, ProjectServiceEnum service) {
+  public List<LivyMsg.Session> getLivySessions(Project project) {
     List<LivyMsg.Session> sessions = new ArrayList<>();
     LivyMsg sessionList = getLivySessions();
     if (sessionList == null || sessionList.getSessions() == null || sessionList.getSessions().length == 0) {
       return sessions;
     }
 
-    switch (service) {
-      case JUPYTER:
-        List<ProjectTeam> projectTeam;
-        projectTeam = teambean.findMembersByProject(project);
-        String hdfsUsername;
-        YarnApplicationstate appStates;
-        for (ProjectTeam member : projectTeam) {
-          hdfsUsername = hdfsUserBean.getHdfsUserName(project, member.getUser());
-          for (LivyMsg.Session s : sessionList.getSessions()) {
-            if (hdfsUsername != null && hdfsUsername.equals(s.getProxyUser())) {
-              appStates = appStateBean.findByAppId(s.getAppId());
-              if (appStates == null || !appStates.getAppname().startsWith(JUPYTER_SESSION_NAME)) {
-                continue;
-              }
-              s.setOwner(member.getUser().getEmail());
-              sessions.add(s);
-            }
+    List<ProjectTeam> projectTeam;
+    projectTeam = teambean.findMembersByProject(project);
+    String hdfsUsername;
+    YarnApplicationstate appStates;
+    for (ProjectTeam member : projectTeam) {
+      hdfsUsername = hdfsUserBean.getHdfsUserName(project, member.getUser());
+      for (LivyMsg.Session s : sessionList.getSessions()) {
+        if (hdfsUsername != null && hdfsUsername.equals(s.getProxyUser())) {
+          appStates = appStateBean.findByAppId(s.getAppId());
+          if (appStates == null || !appStates.getAppname().startsWith(JUPYTER_SESSION_NAME)) {
+            continue;
           }
+          s.setOwner(member.getUser().getEmail());
+          sessions.add(s);
         }
-        break;
-      case ZEPPELIN:
-        hdfsUsername = project.getProjectGenericUser();
-        for (LivyMsg.Session s : sessionList.getSessions()) {
-          if (hdfsUsername.equals(s.getProxyUser())) {
-            appStates = appStateBean.findByAppId(s.getAppId());
-            if (appStates == null || appStates.getAppname().startsWith(JUPYTER_SESSION_NAME)) {
-              continue;
-            }
-            s.setOwner(hdfsUsername);
-            sessions.add(s);
-          }
-        }
-        break;
-      default:
-        break;
+      }
     }
+
     return sessions;
   }
 
@@ -148,7 +128,7 @@ public class LivyController {
     String hdfsUsername;
     for (ProjectTeam member : projectTeam) {
       hdfsUsername = hdfsUserBean.getHdfsUserName(project, member.getUser());
-      deleteAllLivySessions(hdfsUsername, ProjectServiceEnum.JUPYTER);
+      deleteAllLivySessions(hdfsUsername);
     }
   }
 
@@ -157,36 +137,21 @@ public class LivyController {
    *
    * @param project
    * @param user
-   * @param service
    * @return
    */
-  public List<LivyMsg.Session> getLivySessionsForProjectUser(Project project, Users user, ProjectServiceEnum service) {
+  public List<LivyMsg.Session> getLivySessionsForProjectUser(Project project, Users user) {
     List<LivyMsg.Session> sessions = new ArrayList<>();
     LivyMsg sessionList = getLivySessions();
     if (sessionList == null || sessionList.getSessions() == null || sessionList.getSessions().length == 0) {
       return sessions;
     }
     YarnApplicationstate appStates;
-    String hdfsUsername = null;
-    switch (service) {
-      case JUPYTER:
-        hdfsUsername = hdfsUserBean.getHdfsUserName(project, user);
-        break;
-      case ZEPPELIN:
-        hdfsUsername = project.getProjectGenericUser();
-        break;
-      default:
-        break;
-    }
+    String hdfsUsername = hdfsUserBean.getHdfsUserName(project, user);
+
     for (LivyMsg.Session s : sessionList.getSessions()) {
       if (hdfsUsername != null && hdfsUsername.equals(s.getProxyUser())) {
         appStates = appStateBean.findByAppId(s.getAppId());
-        if (service != ProjectServiceEnum.JUPYTER && (appStates == null || appStates.getAppname().startsWith(
-            JUPYTER_SESSION_NAME))) {
-          continue;
-        }
-        if (service == ProjectServiceEnum.JUPYTER && (appStates == null || !appStates.getAppname().startsWith(
-            JUPYTER_SESSION_NAME))) {
+        if (appStates == null || !appStates.getAppname().startsWith(JUPYTER_SESSION_NAME)) {
           continue;
         }
         s.setOwner(user.getEmail());
@@ -261,15 +226,14 @@ public class LivyController {
    * Delete all Livy sessions.
    *
    * @param hdfsUser
-   * @param service
    */
-  public void deleteAllLivySessions(String hdfsUser, ProjectServiceEnum service) {
+  public void deleteAllLivySessions(String hdfsUser) {
     String username = hdfsUsersController.getUserName(hdfsUser);
     String projectname = hdfsUsersController.getProjectName(hdfsUser);
     Users user = userFacade.findByUsername(username);
     Project project = projectFacade.findByName(projectname);
     List<LivyMsg.Session> sessions;
-    sessions = getLivySessionsForProjectUser(project, user, service);
+    sessions = getLivySessionsForProjectUser(project, user);
     for (LivyMsg.Session session : sessions) {
       deleteLivySession(session.getId());
     }

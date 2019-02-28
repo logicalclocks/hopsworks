@@ -42,7 +42,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Class that represents a configuration property for Jupyter or Zeppelin configuration template.
+ * Class that represents a configuration property for Jupyter configuration template.
  */
 public class ConfigProperty {
   private static final Logger LOG = Logger.getLogger(ConfigProperty.class.getName());
