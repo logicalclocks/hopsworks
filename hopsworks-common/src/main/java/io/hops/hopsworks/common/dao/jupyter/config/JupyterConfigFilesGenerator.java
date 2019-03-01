@@ -183,7 +183,9 @@ public class JupyterConfigFilesGenerator {
                 "hadoop_home", settings.getHadoopSymbolicLinkDir(),
                 "hadoop_version", settings.getHadoopVersion(),
                 "anaconda_home", settings.getAnacondaProjectDir(project),
-                "secret_dir", settings.getStagingDir() + Settings.PRIVATE_DIRS + js.getSecret()
+                "secret_dir", settings.getStagingDir() + Settings.PRIVATE_DIRS + js.getSecret(),
+                "project_name", project.getName(),
+                "hive_endpoint", settings.getHiveServerHostName(false)
             );
         ConfigFileGenerator.createConfigFile(pythonKernelFile, jupyter_kernel_config.toString());
       }
