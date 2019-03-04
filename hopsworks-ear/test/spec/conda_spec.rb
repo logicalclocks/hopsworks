@@ -99,7 +99,7 @@ describe "On #{ENV['OS']}" do
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/install",
                {lib: "#{lib_name}", version: "#{lib_version}", channelUrl: "#{conda_channel}", installType: "CONDA", machineType: "CPU"}
           expect_status(200)
-          es_index_date_suffix = Time.now.strftime("%Y.%m.%e")
+          es_index_date_suffix = Time.now.strftime("%Y.%m.%d")
           
           wait_for do
             CondaCommands.find_by(proj: @project[:projectname]).nil?
