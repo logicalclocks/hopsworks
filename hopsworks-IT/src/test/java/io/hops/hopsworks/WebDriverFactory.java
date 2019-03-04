@@ -127,7 +127,8 @@ public class WebDriverFactory {
       File chromeDriver = new File(downloadPath + CHROMEDRIVER);
       File chromeDriverZip = new File(downloadPath + CHROMEDRIVER + ".zip");
       downloadDriver(chromeDriver, chromeDriverZip, new File(downloadPath), chromeDriverUrl);
-    } else if (firefoxVersion >= SUPPORTED_FIREFOX_VERSION) {
+    }
+    if (firefoxVersion >= SUPPORTED_FIREFOX_VERSION) {
       File geekoDriver = new File(downloadPath + GECKODRIVER);
       File geekoDriverZip = new File(downloadPath + GECKODRIVER + ".tar");
       downloadDriver(geekoDriver, geekoDriverZip, new File(downloadPath), geekoDriverUrl);
