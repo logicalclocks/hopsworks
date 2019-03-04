@@ -134,3 +134,5 @@ Backend Dependecies
 * org.sonatype.sisu:sisu-inject-plexus:jar:2.6.0 [EPL](https://github.com/eclipse/sisu.inject/blob/master/LICENSE.txt)
 * xalan:xalan:jar:2.7.2 [ApacheV2](https://github.com/apache/xalan-j/blob/trunk/LICENSE.txt)
 * github.com/mitre/HTTP-Proxy-Servlet [ApacheV2](https://github.com/mitre/HTTP-Proxy-Servlet/blob/master/LICENSE.txt)
+* org.rauschig:jarchivelib:jar:0.7.1 [ApacheV2](https://github.com/thrau/jarchivelib/blob/master/LICENSE)
+* org.seleniumhq.selenium:selenium-java:jar:3.14.0 [ApacheV2](https://github.com/SeleniumHQ/selenium/blob/master/LICENSE)

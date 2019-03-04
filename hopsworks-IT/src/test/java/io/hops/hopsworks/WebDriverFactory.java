@@ -80,6 +80,8 @@ public class WebDriverFactory {
         ChromeOptions chromeOptions = new ChromeOptions();
         if ("true".equals(System.getenv(BROWSER_UI_ENV))) {
           chromeOptions.addArguments("--headless");
+          chromeOptions.addArguments("--no-sandbox");
+          chromeOptions.addArguments("--disable-dev-shm-usage");
         }
         driver = new ChromeDriver(chromeOptions);
       }
