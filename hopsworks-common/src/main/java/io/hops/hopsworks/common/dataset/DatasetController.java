@@ -542,7 +542,7 @@ public class DatasetController {
    * @return
    */
   public boolean isDownloadAllowed(Project project, Users user, String path) {
-    //Data Scientists are allowed to download their own data and those of PROJECTGENERICUSER
+    //Data Scientists are allowed to download their own data
     String role = projectTeamFacade.findCurrentRole(project, user);
     if (role.equals(AllowedRoles.DATA_OWNER)) {
       return true;
