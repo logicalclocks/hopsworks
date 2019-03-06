@@ -22,12 +22,13 @@
  */
 (function(angular) {
     'use strict';
-    angular.module('hopsWorksApp').controller('ModalFileManagerCtrl', 
-        ['$scope', '$rootScope', 'fileNavigator', function($scope, $rootScope, FileNavigator) {
+    angular.module('hopsWorksApp').controller('ModalFileManagerCtrl',
+        ['$scope', '$rootScope', 'fileNavigator', '$routeParams',
+        function($scope, $rootScope, FileNavigator, $routeParams) {
 
         $scope.reverse = false;
         $scope.predicate = ['model.type', 'model.name'];
-        $scope.fileNavigator = new FileNavigator();
+        $scope.fileNavigator = new FileNavigator($routeParams.projectID);
         $rootScope.selectedModalPath = [];
 
         $scope.order = function(predicate) {
