@@ -76,9 +76,11 @@
                            ng-model-options="{debounce: 700}" ng-change="jobsCtrl.untoggle(job, $index)">
                     <i class="fa fa-info-circle"
                        uib-tooltip="Case sensitive search name, type, owner. Select date range to search based on jobs creation date."></i>
-                    <md-datepicker ng-change="jobsCtrl.getAllJobsStatus()" ng-model="jobsCtrl.jobsFromDate"
+                    <md-datepicker ng-change="jobsCtrl.storeDates('jobsFromDate');jobsCtrl.getAllJobsStatus()"
+                                   ng-model="jobsCtrl.jobsFromDate"
                                    md-placeholder="From"></md-datepicker>
-                    <md-datepicker ng-change="jobsCtrl.getAllJobsStatus()" ng-model="jobsCtrl.jobsToDate"
+                    <md-datepicker ng-change="jobsCtrl.storeDates('jobsToDate');jobsCtrl.getAllJobsStatus()"
+                                   ng-model="jobsCtrl.jobsToDate"
                                    md-placeholder="To"></md-datepicker>
                   </label>
                 </div>
@@ -87,7 +89,8 @@
                     <label>jobs per page:
                       <input type="number" min="1"
                              max="50"
-                             class="form-control" ng-model="jobsCtrl.pageSize" ng-model-options="{debounce: 300}">
+                             class="form-control" ng-change="jobsCtrl.storePageSize()" ng-model="jobsCtrl.pageSize"
+                             ng-model-options="{debounce: 300}">
                     </label>
                   </div>
                 </div>
@@ -142,6 +145,7 @@
                   <tbody>
                     <tr
                       dir-paginate="job in jobsCtrl.jobs| itemsPerPage:jobsCtrl.pageSize"
+                      pagination-id="jobs_pagination"
                       current-page="jobsCtrl.currentPage"
                       total-items="jobsCtrl.totalItems"
                       ng-class="{'active':$index === jobsCtrl.selectedIndex}" ng-click="jobsCtrl.toggle(job, $index);jobsCtrl.showLogs(job.name);">
@@ -353,6 +357,7 @@
                 <dir-pagination-controls
                   class="pull-right"
                   max-size="jobsCtrl.pageSize"
+                  pagination-id="jobs_pagination"
                   direction-links="true"
                   boundary-links="true"
                   on-page-change="jobsCtrl.getJobsNextPage()">
