@@ -109,8 +109,6 @@ Backend Dependecies
 * org.apache.kafka:kafka-clients:jar:0.11.0.1 [ApacheV2](https://github.com/apache/kafka/blob/trunk/LICENSE)
 * org.apache.portals.applications:apa-webcontent2-content-rewriter:jar:2.0 [ApacheV2](https://portals.apache.org/applications/license.html)
 * org.apache.portals.applications:apa-webcontent2-reverse-proxy:jar:2.0 [ApacheV2](https://portals.apache.org/applications/license.html)
-* org.apache.shiro:shiro-core:jar:1.2.3 [ApacheV2](https://github.com/apache/shiro/blob/master/LICENSE)
-* org.apache.shiro:shiro-web:jar:1.2.3 [ApacheV2](https://github.com/apache/shiro/blob/master/LICENSE)
 * org.apache.thrift:libfb303:jar:0.9.3 [ApacheV2](https://github.com/apache/thrift/blob/master/LICENSE)
 * org.apache.thrift:libthrift:jar:0.9.3 [ApacheV2](https://github.com/apache/thrift/blob/master/LICENSE)
 * org.apache.zookeeper:zookeeper:jar:3.4.7 [ApacheV2](https://github.com/apache/zookeeper)
