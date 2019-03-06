@@ -24,7 +24,8 @@
     'use strict';
     angular.module('hopsWorksApp').controller('FileManagerCtrl', [
         '$scope', '$rootScope', '$window', 'fileManagerConfig', 'item', 'fileNavigator', 'apiMiddleware',
-        function($scope, $rootScope, $window, fileManagerConfig, Item, FileNavigator, ApiMiddleware) {
+        '$routeParams',
+        function($scope, $rootScope, $window, fileManagerConfig, Item, FileNavigator, ApiMiddleware, $routeParams) {
 
         var $storage = $window.localStorage;
         $scope.config = fileManagerConfig;
@@ -35,7 +36,7 @@
             $scope.predicate[1] = predicate;
         };
         $scope.query = '';
-        $scope.fileNavigator = new FileNavigator();
+        $scope.fileNavigator = new FileNavigator($routeParams.projectID);
         $scope.apiMiddleware = new ApiMiddleware();
         $scope.uploadFileList = [];
         $scope.viewTemplate = $storage.getItem('viewTemplate') || 'main-icons.html';
@@ -56,21 +57,10 @@
             $scope.temp.revert();
         });
 
-	    function sleep(milliseconds) {
-		var start = new Date().getTime();
-		for (var i = 0; i < 1e7; i++) {
-		    if ((new Date().getTime() - start) > milliseconds){
-			break;
-		    }
-		}
-	    }
-	    
         $scope.fileNavigator.onRefresh = function() {
             console.log("onRefresh FileManagerCtrl")
             $scope.temps = [];
-            $scope.query = '';
-            $scope.fileNavigator = new FileNavigator();
-            //sleep(1000);	    
+            $scope.query = '';	    
             $rootScope.selectedModalPath = $scope.fileNavigator.currentPath;
         };
 
