@@ -1,22 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-~
-~ This file is part of Hopsworks
-~ Copyright (C) 2019, Logical Clocks AB. All rights reserved
-~
-~ Hopsworks is free software: you can redistribute it and/or modify it under the terms of
-~ the GNU Affero General Public License as published by the Free Software Foundation,
-~ either version 3 of the License, or (at your option) any later version.
-~
-~ Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
-~ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-~ PURPOSE.  See the GNU Affero General Public License for more details.
-~
-~ You should have received a copy of the GNU Affero General Public License along with this program.
-~ If not, see <https://www.gnu.org/licenses/>.
-~
--->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+ ~
+ ~ This file is part of Hopsworks
+ ~ Copyright (C) 2019, Logical Clocks AB. All rights reserved
+ ~
+ ~ Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ ~ the GNU Affero General Public License as published by the Free Software Foundation,
+ ~ either version 3 of the License, or (at your option) any later version.
+ ~
+ ~ Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ ~ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ ~ PURPOSE.  See the GNU Affero General Public License for more details.
+ ~
+ ~ You should have received a copy of the GNU Affero General Public License along with this program.
+ ~ If not, see <https://www.gnu.org/licenses/>.
+ ~
+ -->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>io.hops</groupId>
@@ -104,7 +105,7 @@
       <id>deploy-ear</id>
       <activation>
         <activeByDefault>false</activeByDefault>
-      </activation> 
+      </activation>
       <build>
         <plugins>
           <!-- Doesn't work if the deployment client and the server are on different OS types. 
@@ -142,7 +143,7 @@
                   <cargo.hostname>${glassfish.hostname}</cargo.hostname>
                   <cargo.remote.username>${glassfish.admin}</cargo.remote.username>
                   <cargo.remote.password>${glassfish.passwd}</cargo.remote.password>
-                  <cargo.servlet.port>${glassfish.port}</cargo.servlet.port> 
+                  <cargo.servlet.port>${glassfish.port}</cargo.servlet.port>
                   <cargo.glassfish.domain.name>${glassfish.domain}</cargo.glassfish.domain.name>
                   <cargo.glassfish.admin.port>${glassfish.admin_port}</cargo.glassfish.admin.port>
                   <cargo.runtime.args>force=true</cargo.runtime.args>
@@ -163,7 +164,7 @@
                 <groupId>org.glassfish.main.deployment</groupId>
                 <artifactId>deployment-client</artifactId>
                 <version>${glassfish.version}</version>
-              </dependency>            
+              </dependency>
             </dependencies>
           </plugin>
         </plugins>
@@ -173,7 +174,7 @@
       <id>deploy-web</id>
       <activation>
         <activeByDefault>false</activeByDefault>
-      </activation> 
+      </activation>
       <build>
         <plugins>
           <!-- Doesn't work if the deployment client and the server are on different OS types. 
@@ -211,7 +212,7 @@
                   <cargo.hostname>${glassfish.hostname}</cargo.hostname>
                   <cargo.remote.username>${glassfish.admin}</cargo.remote.username>
                   <cargo.remote.password>${glassfish.passwd}</cargo.remote.password>
-                  <cargo.servlet.port>${glassfish.port}</cargo.servlet.port> 
+                  <cargo.servlet.port>${glassfish.port}</cargo.servlet.port>
                   <cargo.glassfish.domain.name>${glassfish.domain}</cargo.glassfish.domain.name>
                   <cargo.glassfish.admin.port>${glassfish.admin_port}</cargo.glassfish.admin.port>
                   <cargo.runtime.args>force=true</cargo.runtime.args>
@@ -232,7 +233,7 @@
                 <groupId>org.glassfish.main.deployment</groupId>
                 <artifactId>deployment-client</artifactId>
                 <version>${glassfish.version}</version>
-              </dependency>            
+              </dependency>
             </dependencies>
           </plugin>
         </plugins>
@@ -242,8 +243,8 @@
       <id>jruby-tests</id>
       <activation>
         <activeByDefault>false</activeByDefault>
-      </activation> 
-      <dependencies>  
+      </activation>
+      <dependencies>
         <dependency>
           <groupId>rubygems</groupId>
           <artifactId>rspec-core</artifactId>
@@ -365,11 +366,11 @@
       </build>
     </profile>
   </profiles>
-  
+
   <repositories>
     <repository>
       <id>rubygems-release</id>
       <url>http://rubygems-proxy.torquebox.org/releases</url>
-    </repository> 
+    </repository>
   </repositories>
 </project>
