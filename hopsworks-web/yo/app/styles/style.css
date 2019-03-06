@@ -531,10 +531,10 @@ th:focus {
   outline: none !important;
 }
 
-tbody > tr > td {
-  padding: 6px !important;
-  vertical-align: middle !important;
-}
+/*tbody > tr > td {*/
+  /*padding: 6px !important;*/
+  /*vertical-align: middle !important;*/
+/*}*/
 
 md-input-container {
   margin-bottom: 0px !important;
