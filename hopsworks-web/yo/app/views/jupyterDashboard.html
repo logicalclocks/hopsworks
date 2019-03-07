@@ -853,7 +853,7 @@
                 tourtip-placement="right"
                 tourtip-next-label="Finish The Tour"
                 tourtip-offset-vertical="-15"
-                on-proceed=""
+                on-proceed="closeTour(); projectCtrl.tourService.resetTours();projectCtrl.disableTours();"
         ></virtual-step>
       </tour>
   </div>
