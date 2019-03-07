@@ -60,23 +60,6 @@ public class UserProfileDTO extends RestDTO<UserDTO> {
   public UserProfileDTO() {
   }
 
-  public UserProfileDTO(String firstname, String lastname, String email, String username, String phoneNumber,
-      String accountType, Boolean twoFactor, Integer toursState, Integer status, Integer maxNumProjects,
-      Integer numCreatedProjects, Integer numActiveProjects) {
-    this.firstname = firstname;
-    this.lastname = lastname;
-    this.email = email;
-    this.username = username;
-    this.phoneNumber = phoneNumber;
-    this.accountType = accountType;
-    this.twoFactor = twoFactor;
-    this.toursState = toursState;
-    this.status = status;
-    this.maxNumProjects = maxNumProjects;
-    this.numCreatedProjects = numCreatedProjects;
-    this.numActiveProjects = numActiveProjects;
-  }
-
   public String getFirstname() {
     return firstname;
   }
