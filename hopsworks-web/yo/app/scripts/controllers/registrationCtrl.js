@@ -65,7 +65,8 @@ angular.module('hopsWorksApp')
               street: '',
               city: '',
               postCode: '',
-              country: ''
+              country: '',
+              testUser: false
             };
             
             self.userEmail ='';

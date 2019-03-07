@@ -126,3 +126,5 @@ Backend Dependecies
 * org.slf4j:slf4j-api:jar:1.7.21 [MIT](https://www.slf4j.org/license.html)
 * xalan:xalan:jar:2.7.2 [ApacheV2](https://github.com/apache/xalan-j/blob/trunk/LICENSE.txt)
 * github.com/mitre/HTTP-Proxy-Servlet [ApacheV2](https://github.com/mitre/HTTP-Proxy-Servlet/blob/master/LICENSE.txt)
+* org.rauschig:jarchivelib:jar:0.7.1 [ApacheV2](https://github.com/thrau/jarchivelib/blob/master/LICENSE)
+* org.seleniumhq.selenium:selenium-java:jar:3.14.0 [ApacheV2](https://github.com/SeleniumHQ/selenium/blob/master/LICENSE)
