@@ -81,8 +81,8 @@ public class UserFacade extends AbstractFacade<Users> {
 
   public CollectionInfo findAll(Integer offset, Integer limit, Set<? extends AbstractFacade.FilterBy> filter,
       Set<? extends AbstractFacade.SortBy> sort) {
-    String queryStr = buildQuery("SELECT u FROM Users u ", filter, sort, "");
-    String queryCountStr = buildQuery("SELECT COUNT(u.uid) FROM Users u ", filter, sort, "");
+    String queryStr = buildQuery("SELECT DISTINCT u FROM Users u ", filter, sort, "");
+    String queryCountStr = buildQuery("SELECT COUNT(DISTINCT u.uid) FROM Users u ", filter, sort, "");
     Query query = em.createQuery(queryStr, Users.class);
     Query queryCount = em.createQuery(queryCountStr, Users.class);
     setFilter(filter, query);
