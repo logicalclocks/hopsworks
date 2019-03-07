@@ -128,7 +128,7 @@ public class AirflowService {
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response storeAirflowJWT(@Context SecurityContext sc) throws AirflowException {
     Users user = jwtHelper.getUserPrincipal(sc);
-    airflowJWTManager.generateJWT(user, project, JWT_AUDIENCE);
+    airflowJWTManager.prepareSecurityMaterial(user, project, JWT_AUDIENCE);
     return Response.noContent().build();
   }
   
@@ -139,7 +139,7 @@ public class AirflowService {
   public Response secretDir(@Context HttpServletRequest req) throws AirflowException {
     String secret = DigestUtils.sha256Hex(Integer.toString(this.projectId));
 
-    java.nio.file.Path dagsDir = airflowJWTManager.getProjectDagDirectory(project);
+    java.nio.file.Path dagsDir = airflowJWTManager.getProjectDagDirectory(project.getId());
   
     try {
       // Instead of checking and setting the permissions, just set them as it is an idempotent operation
