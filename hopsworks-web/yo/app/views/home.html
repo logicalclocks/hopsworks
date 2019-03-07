@@ -57,29 +57,28 @@
         <div class="list-group">
           <a href="" class="list-group-item active">Help</a>
           <a href=""
-             ng-click="homeCtrl.showTours = !homeCtrl.showTours; homeCtrl.getTours();" class="list-group-item"
+             ng-click="homeCtrl.showTours = !homeCtrl.showTours" class="list-group-item"
              ng-class="{'tour-highlight': homeCtrl.showGettingStarted()}">
             <span class="glyphicon" ng-class="{'glyphicon-triangle-right':!homeCtrl.showTours, 'glyphicon-triangle-bottom':homeCtrl.showTours}"></span>
             Tours
-
             <span class="glyphicon glyphicon-expand pull-right"></span>
-
             <div ng-show="homeCtrl.showTours" ng-init="homeCtrl.initCheckBox()" style="margin-top: 10px">
               <md-checkbox md-no-ink aria-label="Tour tips" class="md-primary"
-                ng-model="homeCtrl.showTourTips" ng-change="homeCtrl.toggleTourTips()"
+                ng-model="$root.showTourTips" ng-change="toggleTourTips()"
                 ng-click="homeCtrl.showTours = !homeCtrl.showTours">
-                        Tour tips
+                Tour tips: {{homeCtrl.tourTipsText}}
               </md-checkbox>
             </div>
+            <div ng-show="homeCtrl.showTours"><i>Click on a tour to get started!</i></div>
             <div ng-show="homeCtrl.showTours" ng-repeat="tour in homeCtrl.tours">
-              <button style="margin: 0px; padding-bottom: 5px; padding-top: 5px; padding-left: 0px; padding-right: 0px;" uib-popover="Take a tour of Hopsworks by creating a project and running a Spark job!"
-                      type="button" class="btn btn-default btn-block" ng-click="homeCtrl.showTours = !homeCtrl.showTours; homeCtrl.createExampleProject(tour.name)">
+              <button style="margin: 0px; padding-bottom: 5px; padding-top: 5px; padding-left: 0px; padding-right: 0px;"
+                      type="button" class="btn btn-default btn-block"
+                      ng-click="homeCtrl.showTours = !homeCtrl.showTours;$root.showTourTips=true;homeCtrl.createExampleProject(tour.name)">
                 <span style="margin-right: 5px" class="glyphicon glyphicon-play-circle pull-right" ng-hide="isCreating(tour.name) === true"></span>
                 <span style="margin-right: 5px" class="fa fa-spinner fa-spin pull-right" ng-hide="isCreating(tour.name) === false"></span>
                 <span class="button-text">{{tour.name}}</span>
               </button>
             </div>
-
           </a>
           <a ng-if="isDelaEnabled" href="#!/delahopsDataset" class="list-group-item">
             <span class="fa fa-globe"></span>

@@ -42,9 +42,9 @@
 angular.module('hopsWorksApp')
         .controller('HomeCtrl', ['ProjectService', 'UserService',
         'ModalService', 'growl', 'ActivityService', '$q', 'TourService', 
-        'StorageService', '$location', '$scope',
+        'StorageService', '$location', '$scope', '$rootScope',
           function (ProjectService, UserService, ModalService, growl,
-          ActivityService, $q, TourService, StorageService, $location, $scope) {
+          ActivityService, $q, TourService, StorageService, $location, $scope, $rootScope) {
 
             var self = this;
 
@@ -53,23 +53,23 @@ angular.module('hopsWorksApp')
             self.tourService = TourService;
             self.projects = [];
             self.currentPage = 1;
-            self.showTours = false;
-            $scope.creating = {"spark" : false};
+            self.showTours = true;
+
+            $scope.creating = {"spark" : false, "zeppelin" : false};
             self.exampleProjectID;
-            self.tours = [];
-            self.tutorials = [];
-            self.working = [];
-            self.user = {};
-            self.showTourTips = true;
-            self.sortBy='-project.created';
-            self.getTours = function () {
-              self.tours = [
+            self.tours = [
                 {'name': 'Deep Learning', 'tip': 'Take a tour by creating a project and running a Deep Learning notebook!'},
                 {'name': 'Spark', 'tip': 'Take a tour of Hopsworks by creating a project and running a Spark job!'},
                 {'name': 'Kafka', 'tip': 'Take a tour of Hopsworks by creating a project and running a Kafka job!'},
                 {'name': 'Feature Store', 'tip': 'Take a tour of Hopsworks by creating a project and creating/reading features from your own Feature Store!'}
-              ];
-            };
+            ];
+            self.tutorials = [];
+            self.working = [];
+            self.user = {};
+            $rootScope.showTourTips = false;
+            self.tourTipsText = "off";
+            self.sortBy='-project.created';
+
 
             $scope.$on('$viewContentLoaded', function () {
               self.loadedView = true;
@@ -118,13 +118,13 @@ angular.module('hopsWorksApp')
               self.loadToursState().then(
                 function(success) {
                   if (self.tourService.informAndTips || self.tourService.tipsOnly) {
-                    self.showTourTips = true;
+                    $rootScope.showTourTips = true;
                   } else {
-                    self.showTourTips = false;
+                    $rootScope.showTourTips = false;
                   }
-                  StorageService.store("hopsworks-showtourtips",self.showTourTips);
+                  StorageService.store("hopsworks-showtourtips",$rootScope.showTourTips);
                 }, function(error) {
-                  console.log("error");
+                  console.log(error);
                 }
               );
             };
@@ -164,13 +164,13 @@ angular.module('hopsWorksApp')
               }
             };
 
-            self.toggleTourTips = function () {
-              if (self.showTourTips) {
+            $rootScope.toggleTourTips = function () {
+              if ($rootScope.showTourTips) {
                 self.enableTourTips();
               } else {
                 self.disableTourTips();
               }
-              StorageService.store("hopsworks-showtourtips",self.showTourTips);
+              StorageService.store("hopsworks-showtourtips",$rootScope.showTourTips);
             };
 
             self.disableTourTips = function () {
@@ -181,6 +181,8 @@ angular.module('hopsWorksApp')
                 self.user.toursState = 3;
                 self.updateProfile(self.tourService.setShowNothingState);
               }
+              $rootScope.showTourTips = false;
+              self.tourTipsText = self.getTourTipsText();
             };
 
             self.enableTourTips = function () {
@@ -191,8 +193,17 @@ angular.module('hopsWorksApp')
                 self.user.toursState = 1;
                 self.updateProfile(self.tourService.setTipsOnlyState);
               }
+              $rootScope.showTourTips = true;
+              self.tourTipsText = self.getTourTipsText();
             };
 
+            self.getTourTipsText = function () {
+                if ($rootScope.showTourTips) {
+                    return "on";
+                } else {
+                    return "off";
+                }
+            };
             self.updateProfile = function (fun) {
               UserService.updateProfile(self.user).then (
                 function (success) {
@@ -239,9 +250,10 @@ angular.module('hopsWorksApp')
                 internalTourName = uiTourName;
               }
 
-              if (self.showTourTips === false) {
-                self.toggleTourTips();
-              }
+              $rootScope.showTourTips = true;
+              self.tourTipsText = self.getTourTipsText();
+              $rootScope.toggleTourTips();
+
 
               ProjectService.example({type: internalTourName}).$promise.then(
                       function (success) {
@@ -250,8 +262,6 @@ angular.module('hopsWorksApp')
                         growl.success("Created Tour Project", {title: 'Success', ttl: 5000});
                         self.exampleProjectID = success.id;
                         updateUIAfterChange(true);
-                        // To make sure the new project is refreshed
-//                        self.showTours = false;
                         if (success.errorMsg) {
                           $scope.creating[uiTourName] = false;
                           growl.warning("some problem", {title: 'Error', ttl: 10000});
