@@ -54,11 +54,6 @@ angular.module('hopsWorksApp')
             self.otp = $cookies.get('otp');
             self.user = {email: '', password: '', otp: ''};
             self.emailHash = md5.createHash(self.user.email || '');
-            self.getTours = function () {
-              self.tours = [
-                {'name': 'Login', 'tip': 'The password for the admin account is: admin'},
-              ];
-            };
             self.ldapEnabled = $cookies.get('ldap') === 'true';
 
 

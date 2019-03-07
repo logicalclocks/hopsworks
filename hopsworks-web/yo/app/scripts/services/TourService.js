@@ -51,7 +51,7 @@ angular.module('hopsWorksApp')
                 tourService.sparkProjectPrefix = "demo_spark";
                 tourService.deepLearningProjectPrefix = "demo_deep_learning";
                 tourService.featurestoreProjectPrefix = "demo_featurestore";
-                tourService.featurestoreTourJobName = "featurestore_tour_job"
+                tourService.featurestoreTourJobName = "featurestore_tour_job";
                 tourService.deepLearningRunTip = "";
                 tourService.informAndTips = true;
                 tourService.tipsOnly = false;
