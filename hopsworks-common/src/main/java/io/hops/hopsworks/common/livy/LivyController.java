@@ -149,12 +149,8 @@ public class LivyController {
     for (LivyMsg.Session s : sessionList.getSessions()) {
       if (hdfsUsername != null && hdfsUsername.equals(s.getProxyUser())) {
         appStates = appStateBean.findByAppId(s.getAppId());
-        if ((appStates == null ||
-          appStates.getAppname().startsWith(Settings.JUPYTER_SPARKMAGIC_PREFIX))) {
-          continue;
-        }
-        if ((appStates == null ||
-          !appStates.getAppname().startsWith(Settings.JUPYTER_SPARKMAGIC_PREFIX))) {
+        if (appStates == null ||
+          !appStates.getAppname().startsWith(Settings.JUPYTER_SPARKMAGIC_PREFIX)) {
           continue;
         }
         s.setOwner(user.getEmail());
