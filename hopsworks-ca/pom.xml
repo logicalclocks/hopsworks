@@ -93,7 +93,6 @@
       <version>${project.version}</version>
     </dependency>
 
-    <!--End of Zeppelin dependencies -->
     <!-- jersey dependencies -->
     <dependency>
       <groupId>org.glassfish.jersey.core</groupId>

@@ -38,16 +38,12 @@
  */
 package io.hops.hopsworks.common.security;
 
-import io.hops.hopsworks.common.dao.certificates.CertsFacade;
-import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.exception.CryptoPasswordNotFoundException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.util.Settings;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.net.HopsSSLSocketFactory;
-import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.ssl.FileBasedKeyStoresFactory;
 import org.apache.hadoop.security.ssl.SSLFactory;
 
@@ -59,20 +55,12 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Stateless
 public class BaseHadoopClientsService {
   
   @EJB
   private CertificateMaterializer certificateMaterializer;
-  @EJB
-  private UserFacade userFacade;
-  @EJB
-  private ProjectFacade projectFacade;
-  @EJB
-  private CertsFacade certsFacade;
   @EJB
   protected Settings settings;
   
@@ -81,10 +69,7 @@ public class BaseHadoopClientsService {
   private String superKeystorePassword;
   private String superTrustStorePath;
   private String superTrustStorePassword;
-  private String superuser;
-  private final Pattern projectGenericUserPatter =
-      Pattern.compile("(\\w*)" + Settings.PROJECT_GENERIC_USER_SUFFIX);
-  
+
   private final Logger LOG = Logger.getLogger(
       BaseHadoopClientsService.class.getName());
   
@@ -119,11 +104,6 @@ public class BaseHadoopClientsService {
     superTrustStorePassword = sslConf.get(
         FileBasedKeyStoresFactory.resolvePropertyName(SSLFactory.Mode.SERVER,
             FileBasedKeyStoresFactory.SSL_TRUSTSTORE_PASSWORD_TPL_KEY));
-    try {
-      superuser = UserGroupInformation.getLoginUser().getUserName();
-    } catch (IOException ex) {
-      throw new IllegalStateException("Could not identify login user");
-    }
   }
   
   public String getSuperKeystorePath() {
@@ -141,28 +121,17 @@ public class BaseHadoopClientsService {
   public String getSuperTrustStorePassword() {
     return superTrustStorePassword;
   }
-  
-  public String getProjectSpecificUserCertPassword(String username)
-    throws CryptoPasswordNotFoundException {
+
+  public String getProjectSpecificUserCertPassword(String username) throws CryptoPasswordNotFoundException {
     if (username != null) {
-      CertificateMaterializer.CryptoMaterial cryptoMaterial;
-      Matcher pguMatcher = projectGenericUserPatter.matcher(username);
-      if (pguMatcher.matches()) {
-        String pguUsername = pguMatcher.group(1);
-        cryptoMaterial = certificateMaterializer.getUserMaterial(pguUsername);
-      } else if (username.matches(HopsSSLSocketFactory.USERNAME_PATTERN)) {
-        String[] project_username = username.split(HdfsUsersController
-            .USER_NAME_DELIMITER, 2);
-        cryptoMaterial = certificateMaterializer
-            .getUserMaterial(project_username[1], project_username[0]);
-      } else {
-        throw new RuntimeException("User <" + username +"> is neither project" +
-            " specific, nor project generic!");
-      }
-      
+      String[] project_username = username.split(HdfsUsersController
+          .USER_NAME_DELIMITER, 2);
+      CertificateMaterializer.CryptoMaterial cryptoMaterial = certificateMaterializer
+          .getUserMaterial(project_username[1], project_username[0]);
+
       return new String(cryptoMaterial.getPassword());
     }
-    
+
     throw new RuntimeException("Username cannot be null!");
   }
   
@@ -180,46 +149,23 @@ public class BaseHadoopClientsService {
   public void materializeCertsForNonSuperUser(String username) {
     // Make sure it's a normal, non superuser
     if (username != null) {
-      Matcher pguMatcher = projectGenericUserPatter.matcher(username);
-      if (pguMatcher.matches()) {
-        String pguUsername = pguMatcher.group(1);
+      String[] tokens = username.split(HdfsUsersController.USER_NAME_DELIMITER, 2);
+      if (tokens.length == 2) {
         try {
-          certificateMaterializer.materializeCertificatesLocal(pguUsername);
+          certificateMaterializer.materializeCertificatesLocal(tokens[1], tokens[0]);
         } catch (IOException ex) {
-          throw new RuntimeException("Error while materializing project " +
-              "generic user certificates " + ex.getMessage(), ex);
+          throw new RuntimeException("Error while materializing " +
+              "user certificates " + ex.getMessage(), ex);
         }
-      } else if (username.matches(HopsSSLSocketFactory.USERNAME_PATTERN)) {
-        String[] tokens = username.split(HdfsUsersController.USER_NAME_DELIMITER, 2);
-        if (tokens.length == 2) {
-          try {
-            certificateMaterializer.materializeCertificatesLocal(tokens[1], tokens[0]);
-          } catch (IOException ex) {
-            throw new RuntimeException("Error while materializing " +
-                "user certificates " + ex.getMessage(), ex);
-          }
-        }
-      } else {
-        throw new RuntimeException("User <" + username +"> is neither project" +
-            " specific, nor project generic!");
       }
     }
   }
   
   public void removeNonSuperUserCertificate(String username) {
     if (username != null) {
-      Matcher pguMatcher = projectGenericUserPatter.matcher(username);
-      if (pguMatcher.matches()) {
-        String pguUsername = pguMatcher.group(1);
-        certificateMaterializer.removeCertificatesLocal(pguUsername);
-      } else if (username.matches(HopsSSLSocketFactory.USERNAME_PATTERN)) {
-        String[] tokens = username.split(HdfsUsersController.USER_NAME_DELIMITER, 2);
-        if (tokens.length == 2) {
-          certificateMaterializer.removeCertificatesLocal(tokens[1], tokens[0]);
-        }
-      } else {
-        throw new RuntimeException("User <" + username +"> is neither project" +
-            " specific, nor project generic!");
+      String[] tokens = username.split(HdfsUsersController.USER_NAME_DELIMITER, 2);
+      if (tokens.length == 2) {
+        certificateMaterializer.removeCertificatesLocal(tokens[1], tokens[0]);
       }
     }
   }

@@ -354,12 +354,6 @@ angular.module('hopsWorksApp')
             };
 
 
-            self.goToZeppelin = function () {
-              self.enabling = true;
-              self.goToUrl('zeppelin');
-            };
-
-
             self.goToWorklows = function () {
               self.goToUrl('workflows');
             };
@@ -457,10 +451,6 @@ angular.module('hopsWorksApp')
 
             self.showJupyter = function () {
               return showService("Jupyter");
-            };
-
-            self.showZeppelin = function () {
-              return showService("Zeppelin");
             };
 
             self.showJobs = function () {

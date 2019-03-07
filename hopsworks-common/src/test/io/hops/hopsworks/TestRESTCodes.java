@@ -31,7 +31,6 @@ import io.hops.hopsworks.common.exception.RESTCodes.SecurityErrorCode;
 import io.hops.hopsworks.common.exception.RESTCodes.ServiceErrorCode;
 import io.hops.hopsworks.common.exception.RESTCodes.TfServingErrorCode;
 import io.hops.hopsworks.common.exception.RESTCodes.UserErrorCode;
-import io.hops.hopsworks.common.exception.RESTCodes.ZeppelinErrorCode;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -63,7 +62,6 @@ public class TestRESTCodes {
     values.addAll(Arrays.asList(JobErrorCode.values()));
     values.addAll(Arrays.asList(MetadataErrorCode.values()));
     values.addAll(Arrays.asList(UserErrorCode.values()));
-    values.addAll(Arrays.asList(ZeppelinErrorCode.values()));
     values.addAll(Arrays.asList(RESTCodes.ActivitiesErrorCode.values()));
     values.addAll(Arrays.asList(RESTCodes.ResourceErrorCode.values()));
     values.addAll(Arrays.asList(RESTCodes.FeaturestoreErrorCode.values()));

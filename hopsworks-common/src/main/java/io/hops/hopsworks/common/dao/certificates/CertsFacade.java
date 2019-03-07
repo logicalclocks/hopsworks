@@ -40,12 +40,10 @@
 package io.hops.hopsworks.common.dao.certificates;
 
 import com.google.common.io.ByteStreams;
-import io.hops.hopsworks.common.util.Settings;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -133,46 +131,6 @@ public class CertsFacade {
     em.persist(uc);
   }
   
-  /**
-   * Persist ProjectGenericUser certificates.
-   *
-   * @param pgu
-   */
-  public void persistPGUCert(ProjectGenericUserCerts pgu) {
-    em.persist(pgu);
-  }
-  
-  public void updatePGUCert(ProjectGenericUserCerts pgu) {
-    em.merge(pgu);
-  }
-
-  public ProjectGenericUserCerts findProjectGenericUserCerts(String projectGenericUsername) {
-    TypedQuery<ProjectGenericUserCerts> query = em.createNamedQuery(
-        "ProjectGenericUserCerts.findByProjectGenericUsername",
-        ProjectGenericUserCerts.class);
-    query.setParameter("projectGenericUsername", projectGenericUsername);
-
-    try {
-      return query.getSingleResult();
-    } catch ( NoResultException e ) {
-      return null;
-    }
-  }
-
-  public List<ProjectGenericUserCerts> findAllProjectGenericUserCerts() {
-    TypedQuery<ProjectGenericUserCerts> query = em.createNamedQuery("ProjectGenericUserCerts.findAll",
-        ProjectGenericUserCerts.class);
-    
-    try {
-      return query.getResultList();
-    } catch (EntityNotFoundException ex) {
-      LOG.log(Level.SEVERE, ex.getMessage(), ex);
-    } catch (NoResultException ex) {
-    
-    }
-    return new ArrayList<>();
-  }
-  
   public UserCerts putUserCerts(String projectname, String username, String userKeyPwd)
       throws IOException {
     File kFile = new File("/tmp/" + projectname + "__"
@@ -198,39 +156,6 @@ public class CertsFacade {
     return uc;
   }
 
-  public void putProjectGenericUserCerts(String projectGenericUsername,
-    String certificatePassword) {
-
-    File kFile = new File("/tmp/" + projectGenericUsername + "__kstore.jks");
-    File tFile = new File("/tmp/" + projectGenericUsername + "__tstore.jks");
-    try (FileInputStream kfin = new FileInputStream(kFile);
-            FileInputStream tfin = new FileInputStream(tFile)) {
-
-      byte[] kStoreBlob = ByteStreams.toByteArray(kfin);
-      byte[] tStoreBlob = ByteStreams.toByteArray(tfin);
-
-      ProjectGenericUserCerts sc = new ProjectGenericUserCerts(projectGenericUsername);
-      sc.setKey(kStoreBlob);
-      sc.setCert(tStoreBlob);
-      sc.setCertificatePassword(certificatePassword);
-      em.persist(sc);
-      em.flush();
-
-      // TODO - DO NOT SWALLOW EXCEPTIONS!!!
-    } catch (FileNotFoundException e) {
-      Logger.getLogger(CertsFacade.class.getName()).log(Level.SEVERE, null,
-          e);
-    } catch (IOException ex) {
-      Logger.getLogger(CertsFacade.class.getName()).log(Level.SEVERE, null,
-          ex);
-    } catch (Throwable ex) {
-      Logger.getLogger(CertsFacade.class.getName()).log(Level.SEVERE, null,
-              ex);
-    } finally {
-      FileUtils.deleteQuietly(kFile);
-      FileUtils.deleteQuietly(tFile);
-    }
-  }
 
   public void update(UserCerts uc) {
     em.merge(uc);
@@ -263,15 +188,8 @@ public class CertsFacade {
   public void removeAllCertsOfAProject(String projectname) {
     List<UserCerts> items = findUserCertsByProjectId(projectname);
     removeCerts(items);
-    
-    removeProjectGenericCertificates(projectname +
-          Settings.PROJECT_GENERIC_USER_SUFFIX);
   }
-  
-  public void removeProjectGenericCertificates(String projectGenericUser) {
-    remove(findProjectGenericUserCerts(projectGenericUser));
-  }
-  
+
   private <T> void removeCerts(List<T> items) {
     if (items != null) {
       for (T item : items) {

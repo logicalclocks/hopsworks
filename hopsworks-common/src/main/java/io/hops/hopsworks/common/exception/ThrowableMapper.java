@@ -28,7 +28,6 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
-import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -85,10 +84,6 @@ public abstract class ThrowableMapper implements ExceptionMapper<Throwable> {
         return handleRESTException(new GenericException(RESTCodes.GenericErrorCode.PERSISTENCE_ERROR, Level.SEVERE,
           e.getMessage(), null, e));
       }
-    } else if (ex instanceof IOException
-      && ex.getMessage().contains("Requested storage index 0 isn't initialized, repository count is 0")) {
-      return handleRESTException(new ServiceException(RESTCodes.ServiceErrorCode.ZEPPELIN_ADD_FAILURE, Level.SEVERE,
-        ex.getMessage(), null, ex));
     } else {
       return handleUnknownException(ex);
     }

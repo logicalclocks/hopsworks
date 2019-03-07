@@ -58,7 +58,6 @@ angular.module('hopsWorksApp')
             self.appIds = [];
             self.ui = "";
             self.isLivy = $routeParams.isLivy;
-            self.dashboardType = $routeParams.type; //zeppelin or jupyter
             self.current = "";
             self.loading = false;
             self.loadingText = "";

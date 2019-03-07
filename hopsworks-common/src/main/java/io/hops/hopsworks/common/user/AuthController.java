@@ -39,7 +39,6 @@
 package io.hops.hopsworks.common.user;
 
 import io.hops.hopsworks.common.dao.certificates.CertsFacade;
-import io.hops.hopsworks.common.dao.certificates.ProjectGenericUserCerts;
 import io.hops.hopsworks.common.dao.certificates.UserCerts;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
@@ -76,7 +75,6 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.UnsupportedEncodingException;
 import java.security.SecureRandom;
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
 import java.util.List;
@@ -431,7 +429,6 @@ public class AuthController {
     //For every project, change the certificate secret in the database
     //Get cert password by decrypting it with old password
     List<Project> projects = projectFacade.findAllMemberStudies(p);
-    List<ProjectGenericUserCerts> pguCerts = null;
     try {
       for (Project project : projects) {
         UserCerts userCert = userCertsFacade.findUserCert(project.getName(), p.getUsername());
@@ -441,23 +438,6 @@ public class AuthController {
         String newSecret = HopsUtils.encrypt(p.getPassword(), certPassword, masterEncryptionPassword);
         userCert.setUserKeyPwd(newSecret);
         userCertsFacade.update(userCert);
-
-        //If user is owner of the project, update projectgenericuser certs as well
-        if (project.getOwner().equals(p)) {
-          if (pguCerts == null) {
-            pguCerts = new ArrayList<>();
-          }
-          ProjectGenericUserCerts pguCert = userCertsFacade.findProjectGenericUserCerts(project.getName()
-              + Settings.PROJECT_GENERIC_USER_SUFFIX);
-          pguCerts.add(userCertsFacade.findProjectGenericUserCerts(project.getName()
-              + Settings.PROJECT_GENERIC_USER_SUFFIX));
-          String pguCertPassword = HopsUtils.decrypt(oldPass, pguCert.getCertificatePassword(),
-              masterEncryptionPassword);
-          //Encrypt it with new password and store it in the db
-          String newPguSecret = HopsUtils.encrypt(p.getPassword(), pguCertPassword, masterEncryptionPassword);
-          pguCert.setCertificatePassword(newPguSecret);
-          userCertsFacade.updatePGUCert(pguCert);
-        }
       }
     } catch (Exception ex) {
       LOGGER.log(Level.SEVERE, null, ex);

@@ -174,36 +174,6 @@ public class HopsUtils {
         null, null, null, null, null, null, certMat, isRpcTlsEnabled);
   }
 
-  public static void copyProjectUserCerts(Project project, String username,
-      String localTmpDir, String remoteTmpDir, JobType jobType,
-      DistributedFileSystemOps dfso,
-      List<LocalResourceDTO> projectLocalResources,
-      Map<String, String> jobSystemProperties,
-      String applicationId, CertificateMaterializer certMat,
-      boolean isRpcTlsEnabled) {
-    copyProjectUserCerts(project, username, localTmpDir, remoteTmpDir,
-        jobType, dfso, projectLocalResources, jobSystemProperties,
-        null, applicationId, certMat, isRpcTlsEnabled);
-  }
-
-  /**
-   * Remote user generic project certificates materialized both from the local
-   * filesystem and from HDFS
-   * @param projectName
-   * @param remoteFSDir
-   * @param certificateMaterializer
-   */
-  public static void cleanupCertificatesForProject(String projectName,
-      String remoteFSDir, CertificateMaterializer certificateMaterializer, Settings settings) {
-    
-    certificateMaterializer.removeCertificatesLocal(projectName);
-    
-    // If Hops RPC TLS is enabled then we haven't put them in HDFS, so we should not delete them
-    if (!settings.getHopsRpcTls()) {
-      String remoteDirectory = remoteFSDir + Path.SEPARATOR + projectName + Settings.PROJECT_GENERIC_USER_SUFFIX;
-      certificateMaterializer.removeCertificatesRemote(null, projectName, remoteDirectory);
-    }
-  }
 
   /**
    * Remote user certificates materialized both from the local
@@ -226,11 +196,7 @@ public class HopsUtils {
     }
   }
   
-  public static void cleanupCertificatesForUser(String username, String projectName, String remoteFSDir,
-      CertificateMaterializer certificateMaterializer, Settings settings) throws IOException {
-    cleanupCertificatesForUserCustomDir(username, projectName, remoteFSDir, certificateMaterializer, null, settings);
-  }
-  
+
   /**
    * Utility method that materializes user certificates in the local
    * filesystem and in HDFS
@@ -258,45 +224,8 @@ public class HopsUtils {
           projectSpecificUsername, materialPermissions, remoteDirectory);
     }
   }
-  
-  public static void materializeCertificatesForUser(String projectName, String userName, String remoteFSDir,
-      DistributedFileSystemOps dfso, CertificateMaterializer certificateMaterializer, Settings settings)
-    throws IOException {
-    materializeCertificatesForUserCustomDir(projectName, userName, remoteFSDir, dfso, certificateMaterializer,
-        settings, null);
-  }
-  
-  /**
-   * Utility method that materializes user certificates in the local
-   * filesystem and in HDFS
-   *
-   * @param projectName
-   * @param remoteFSDir
-   * @param dfso
-   * @param certificateMaterializer
-   * @param settings
-   * @throws IOException
-   */
-  public static void materializeCertificatesForProject(String projectName, String remoteFSDir,
-      DistributedFileSystemOps dfso, CertificateMaterializer certificateMaterializer, Settings settings)
-      throws IOException {
-    
-    
-    certificateMaterializer.materializeCertificatesLocal(projectName);
-    
-    
-    String projectGenericUser = projectName + Settings.PROJECT_GENERIC_USER_SUFFIX;
-  
-    // When Hops RPC TLS is enabled, Yarn will take care of application certificate
-    // so we don't need them in HDFS
-    if (!settings.getHopsRpcTls()) {
-      String remoteDirectory = createRemoteDirectory(remoteFSDir, projectGenericUser, projectGenericUser, dfso);
-  
-      certificateMaterializer.materializeCertificatesRemote(null, projectName, projectGenericUser,
-          projectGenericUser, materialPermissions, remoteDirectory);
-    }
-  }
-  
+
+
   private static String createRemoteDirectory(String remoteFSDir, String certsSpecificDir, String owner,
       DistributedFileSystemOps dfso) throws IOException {
     boolean createdDir = false;
