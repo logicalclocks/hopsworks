@@ -59,6 +59,7 @@
     <module>hopsworks-dela</module>
     <module>hopsworks-jwt</module>
     <module>hopsworks-persistence</module>
+    <module>hopsworks-IT</module>
   </modules>
 
   <profiles>
@@ -89,13 +90,6 @@
     <endorsed.dir>${project.build.directory}/endorsed</endorsed.dir>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.deploy.skip>true</maven.deploy.skip>
-
-    <glassfish.hostname>localhost</glassfish.hostname>
-    <glassfish.admin>adminuser</glassfish.admin>
-    <glassfish.passwd>adminpw</glassfish.passwd>
-    <glassfish.port>8080</glassfish.port>
-    <glassfish.admin_port>4848</glassfish.admin_port>
-    <glassfish.domain>domain1</glassfish.domain>
   </properties>
 
   <dependencies>
