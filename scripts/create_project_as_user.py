@@ -25,7 +25,7 @@ def create_project(endpoint, user, password, owner, project_name):
 	        "description": "",
 	        "retentionPeriod": "",
 	        "status": 0,
-	        "services": ["JOBS","ZEPPELIN","KAFKA","JUPYTER","HIVE"],
+	        "services": ["JOBS","KAFKA","JUPYTER","HIVE"],
 	        "projectTeam": []
             }
 

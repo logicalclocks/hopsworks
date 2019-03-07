@@ -47,7 +47,6 @@ import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
 import io.hops.hopsworks.common.dao.util.Variables;
 import io.hops.hopsworks.common.dela.AddressJSON;
 import io.hops.hopsworks.common.dela.DelaClientType;
-import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -144,8 +143,6 @@ public class Settings implements Serializable {
   private static final String VARIABLE_HOPSWORKS_PORT = "hopsworks_port";
   private static final String VARIABLE_KIBANA_IP = "kibana_ip";
   private static final String VARIABLE_LIVY_IP = "livy_ip";
-  private static final String VARIABLE_LIVY_ZEPPELIN_SESSION_TIMEOUT = "livy_zeppelin_session_timeout";
-  private static final String VARIABLE_ZEPPELIN_INTERPRETERS = "zeppelin_interpreters";
   private static final String VARIABLE_JHS_IP = "jhs_ip";
   private static final String VARIABLE_RM_IP = "rm_ip";
   private static final String VARIABLE_RM_PORT = "rm_port";
@@ -165,12 +162,6 @@ public class Settings implements Serializable {
   private static final String VARIABLE_HOPSWORKS_USER = "hopsworks_user";
   private static final String VARIABLE_AIRFLOW_USER = "airflow_user";
   private static final String VARIABLE_STAGING_DIR = "staging_dir";
-  private static final String VARIABLE_ZEPPELIN_DIR = "zeppelin_dir";
-  private static final String VARIABLE_ZEPPELIN_PROJECTS_DIR
-      = "zeppelin_projects_dir";
-  private static final String VARIABLE_ZEPPELIN_SYNC_INTERVAL
-      = "zeppelin_sync_interval";
-  private static final String VARIABLE_ZEPPELIN_USER = "zeppelin_user";
   private static final String VARIABLE_AIRFLOW_DIR = "airflow_dir";
   private static final String VARIABLE_JUPYTER_DIR = "jupyter_dir";
   private static final String VARIABLE_SPARK_DIR = "spark_dir";
@@ -265,7 +256,6 @@ public class Settings implements Serializable {
   private static final String VARIABLE_FILEBEAT_VERSION = "filebeat_version";
   private static final String VARIABLE_NDB_VERSION = "ndb_version";
   private static final String VARIABLE_LIVY_VERSION = "livy_version";
-  private static final String VARIABLE_ZEPPELIN_VERSION = "zeppelin_version";
   private static final String VARIABLE_HIVE2_VERSION = "hive2_version";
   private static final String VARIABLE_TEZ_VERSION = "tez_version";
   private static final String VARIABLE_SLIDER_VERSION = "slider_version";
@@ -463,11 +453,6 @@ public class Settings implements Serializable {
       HIVE_SCRATCHDIR = setStrVar(VARIABLE_HIVE_SCRATCHDIR, HIVE_SCRATCHDIR);
       HIVE_DB_DEFAULT_QUOTA = setStrVar(VARIABLE_HIVE_DEFAULT_QUOTA, HIVE_DB_DEFAULT_QUOTA);
       ALERT_EMAIL_ADDRS = setStrVar(VARIABLE_ALERT_EMAIL_ADDRS, "");
-      ZEPPELIN_USER = setVar(VARIABLE_ZEPPELIN_USER, ZEPPELIN_USER);
-      ZEPPELIN_DIR = setDirVar(VARIABLE_ZEPPELIN_DIR, ZEPPELIN_DIR);
-      ZEPPELIN_PROJECTS_DIR = setDirVar(VARIABLE_ZEPPELIN_PROJECTS_DIR,
-          ZEPPELIN_PROJECTS_DIR);
-      ZEPPELIN_SYNC_INTERVAL = setLongVar(VARIABLE_ZEPPELIN_SYNC_INTERVAL, ZEPPELIN_SYNC_INTERVAL);
       HADOOP_VERSION = setVar(VARIABLE_HADOOP_VERSION, HADOOP_VERSION);
       JUPYTER_DIR = setDirVar(VARIABLE_JUPYTER_DIR, JUPYTER_DIR);
       MYSQL_DIR = setDirVar(VARIABLE_MYSQL_DIR, MYSQL_DIR);
@@ -491,8 +476,6 @@ public class Settings implements Serializable {
       LOGSTASH_PORT_SERVING = setIntVar(VARIABLE_LOGSTASH_PORT_SERVING, LOGSTASH_PORT_SERVING);
       JHS_IP = setIpVar(VARIABLE_JHS_IP, JHS_IP);
       LIVY_IP = setIpVar(VARIABLE_LIVY_IP, LIVY_IP);
-      LIVY_ZEPPELIN_SESSION_TIMEOUT = setVar(VARIABLE_LIVY_ZEPPELIN_SESSION_TIMEOUT, LIVY_ZEPPELIN_SESSION_TIMEOUT);
-      ZEPPELIN_INTERPRETERS = setVar(VARIABLE_ZEPPELIN_INTERPRETERS, ZEPPELIN_INTERPRETERS);
       OOZIE_IP = setIpVar(VARIABLE_OOZIE_IP, OOZIE_IP);
       SPARK_HISTORY_SERVER_IP = setIpVar(VARIABLE_SPARK_HISTORY_SERVER_IP,
           SPARK_HISTORY_SERVER_IP);
@@ -562,8 +545,6 @@ public class Settings implements Serializable {
 
       populateDelaCache();
       populateLDAPCache();
-      //Set Zeppelin Default Interpreter
-      zeppelinDefaultInterpreter = getZeppelinDefaultInterpreter(ZEPPELIN_INTERPRETERS);
 
       ZOOKEEPER_VERSION = setStrVar(VARIABLE_ZOOKEEPER_VERSION, ZOOKEEPER_VERSION);
       INFLUXDB_VERSION = setStrVar(VARIABLE_INFLUXDB_VERSION, INFLUXDB_VERSION);
@@ -575,7 +556,6 @@ public class Settings implements Serializable {
       FILEBEAT_VERSION = setStrVar(VARIABLE_FILEBEAT_VERSION, FILEBEAT_VERSION);
       NDB_VERSION = setStrVar(VARIABLE_NDB_VERSION, NDB_VERSION);
       LIVY_VERSION = setStrVar(VARIABLE_LIVY_VERSION, LIVY_VERSION);
-      ZEPPELIN_VERSION = setStrVar(VARIABLE_ZEPPELIN_VERSION, ZEPPELIN_VERSION);
       HIVE2_VERSION = setStrVar(VARIABLE_HIVE2_VERSION, HIVE2_VERSION);
       TEZ_VERSION = setStrVar(VARIABLE_TEZ_VERSION, TEZ_VERSION);
       SLIDER_VERSION = setStrVar(VARIABLE_SLIDER_VERSION, SLIDER_VERSION);
@@ -1056,13 +1036,6 @@ public class Settings implements Serializable {
     return FLINK_USER;
   }
 
-  private String ZEPPELIN_USER = "spark";
-
-  public synchronized String getZeppelinUser() {
-    checkCache();
-    return ZEPPELIN_USER;
-  }
-
   private Integer YARN_DEFAULT_QUOTA = 60000;
 
   public synchronized Integer getYarnDefaultQuota() {
@@ -1294,21 +1267,7 @@ public class Settings implements Serializable {
               throw new IOException("Could not get Hadoop classpath, exit code " + result.getExitCode()
                   + " Error: " + result.getStderr());
             }
-            classpathGlob = result.getStdout();
-          }
-          //Now we must remove the yarn shuffle library as it creates issues for
-          //Zeppelin Spark Interpreter
-          StringBuilder classpath = new StringBuilder();
-
-          for (String path : classpathGlob.split(File.pathSeparator)) {
-            if (!path.contains("yarn") && !path.contains("jersey") && !path.contains("servlet")) {
-              classpath.append(path).append(File.pathSeparator);
-            }
-          }
-          if (classpath.length() > 0) {
-            HADOOP_CLASSPATH_GLOB = classpath.toString().substring(0, classpath.length() - 1);
-          } else {
-            throw new IOException("Hadoop classpath appears to be empty");
+            HADOOP_CLASSPATH_GLOB = result.getStdout();
           }
         }
       }
@@ -1494,7 +1453,6 @@ public class Settings implements Serializable {
   // Livy Server`
   private String LIVY_IP = "127.0.0.1";
   private final String LIVY_YARN_MODE = "yarn";
-  private String LIVY_ZEPPELIN_SESSION_TIMEOUT = "3600";
 
   public synchronized String getLivyIp() {
     checkCache();
@@ -1508,11 +1466,6 @@ public class Settings implements Serializable {
   public synchronized String getLivyYarnMode() {
     checkCache();
     return LIVY_YARN_MODE;
-  }
-
-  public synchronized String getLivyZeppelinSessionTimeout() {
-    checkCache();
-    return LIVY_ZEPPELIN_SESSION_TIMEOUT;
   }
 
   private static final int ZK_PORT = 2181;
@@ -1552,50 +1505,6 @@ public class Settings implements Serializable {
   public synchronized String getWhitelistUsersLogin() {
     checkCache();
     return WHITELIST_USERS_LOGIN;
-  }
-
-  // Zeppelin
-  private String ZEPPELIN_DIR = "/srv/hops/zeppelin";
-  private String ZEPPELIN_INTERPRETERS = "org.apache.zeppelin.hopshive.HopsHiveInterpreter";
-
-  private String zeppelinDefaultInterpreter;
-
-  public synchronized String getZeppelinInterpreters() {
-    checkCache();
-    return ZEPPELIN_INTERPRETERS;
-  }
-
-  public synchronized String getZeppelinDefaultInterpreter() {
-    return zeppelinDefaultInterpreter;
-  }
-
-  /**
-   * Extract default interpreter from zeppelin interpreters.
-   *
-   * @return default interpreter name
-   */
-  private String getZeppelinDefaultInterpreter(String interpreters) {
-    //Split interpreters
-    return interpreters.split(",")[0].split("\\.")[3];
-  }
-
-  public synchronized String getZeppelinDir() {
-    checkCache();
-    return ZEPPELIN_DIR;
-  }
-
-  private String ZEPPELIN_PROJECTS_DIR = "/srv/hops/zeppelin/Projects";
-
-  public synchronized String getZeppelinProjectsDir() {
-    checkCache();
-    return ZEPPELIN_PROJECTS_DIR;
-  }
-
-  private long ZEPPELIN_SYNC_INTERVAL = 24 * 60 * 60 * 1000;
-
-  public synchronized long getZeppelinSyncInterval() {
-    checkCache();
-    return ZEPPELIN_SYNC_INTERVAL;
   }
 
   // Jupyter
@@ -1993,7 +1902,6 @@ public class Settings implements Serializable {
   }
 
   public static enum ServiceDataset {
-    ZEPPELIN("notebook", "Contains Zeppelin notebooks."),
     JUPYTER("Jupyter", "Contains Jupyter notebooks."),
     SERVING("Models", "Contains models to be used for serving."),
     EXPERIMENTS("Experiments", "Contains experiments from using the hops python api"),
@@ -2513,10 +2421,6 @@ public class Settings implements Serializable {
     }
     return null;
   }
-  //********************************************************************************************************************
-
-  public final static String PROJECT_GENERIC_USER_SUFFIX = HdfsUsersController.USER_NAME_DELIMITER
-      + "PROJECTGENERICUSER";
 
   //************************************************CERTIFICATES********************************************************
   private static final String HOPS_SITE_CA_DIR = "hops-site-certs";
@@ -3014,13 +2918,6 @@ public class Settings implements Serializable {
   public synchronized String getHive2Version() {
     checkCache();
     return HIVE2_VERSION;
-  }
-
-  private String ZEPPELIN_VERSION;
-
-  public synchronized String getZeppelinVersion() {
-    checkCache();
-    return ZEPPELIN_VERSION;
   }
 
   private String LIVY_VERSION;

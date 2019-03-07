@@ -61,7 +61,6 @@
     <class>io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuota</class>
     <class>io.hops.hopsworks.common.dao.util.Variables</class>
     <class>io.hops.hopsworks.common.dao.alert.Alert</class>
-    <class>io.hops.hopsworks.common.dao.certificates.ProjectGenericUserCerts</class>
     <class>io.hops.hopsworks.common.dao.certificates.UserCerts</class>
     <class>io.hops.hopsworks.common.dao.command.Command</class>
     <class>io.hops.hopsworks.common.dao.dataset.Dataset</class>
@@ -101,7 +100,6 @@
     <class>io.hops.hopsworks.common.dao.user.sshkey.AuthorizedSshkeys</class>
     <class>io.hops.hopsworks.common.dao.user.sshkey.SshKeys</class>
     <class>io.hops.hopsworks.common.dao.user.ldap.LdapUser</class>
-    <class>io.hops.hopsworks.common.dao.zeppelin.ZeppelinInterpreterConfs</class>
     <class>io.hops.hopsworks.common.dao.pythonDeps.PythonDep</class>
     <class>io.hops.hopsworks.common.dao.pythonDeps.AnacondaRepo</class>
     <class>io.hops.hopsworks.common.dao.pythonDeps.CondaCommands</class>

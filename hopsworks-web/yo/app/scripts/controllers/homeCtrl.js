@@ -50,12 +50,11 @@ angular.module('hopsWorksApp')
 
             self.histories = [];
             self.loadedView = false;
-            self.loadedZeppelin = false;
             self.tourService = TourService;
             self.projects = [];
             self.currentPage = 1;
             self.showTours = false;
-            $scope.creating = {"spark" : false, "zeppelin" : false};
+            $scope.creating = {"spark" : false};
             self.exampleProjectID;
             self.tours = [];
             self.tutorials = [];

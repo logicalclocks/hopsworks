@@ -78,7 +78,6 @@ import io.hops.hopsworks.common.dao.jupyter.config.JupyterProcessMgr;
 import io.hops.hopsworks.common.dao.project.PaymentType;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.common.dao.project.service.ProjectServiceEnum;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.HopsSecurityException;
 import io.hops.hopsworks.common.exception.ProjectException;
@@ -189,8 +188,7 @@ public class JupyterService {
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response livySessions(@Context SecurityContext sc) {
     Users user = jWTHelper.getUserPrincipal(sc);
-    List<LivyMsg.Session> sessions = livyController.getLivySessionsForProjectUser(this.project, user,
-        ProjectServiceEnum.JUPYTER);
+    List<LivyMsg.Session> sessions = livyController.getLivySessionsForProjectUser(this.project, user);
     GenericEntity<List<LivyMsg.Session>> livyActive = new GenericEntity<List<LivyMsg.Session>>(sessions) {
     };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(livyActive).build();

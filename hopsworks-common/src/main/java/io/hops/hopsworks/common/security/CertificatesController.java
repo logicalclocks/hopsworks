@@ -90,16 +90,11 @@ public class CertificatesController {
    * Creates x509 certificates for a project specific user and project generic
    * @param project Associated project
    * @param user Hopsworks user
-   * @param generateProjectWideCerts Flag controlling whether it should create
-   *                               project wide certificates in addition to
-   *                               project specific user's. When adding a new
-   *                               member to a project the flag should be false.
    * @return
    */
   @Asynchronous
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  public Future<CertsResult> generateCertificates(Project project, Users user,
-      boolean generateProjectWideCerts) throws Exception {
+  public Future<CertsResult> generateCertificates(Project project, Users user) throws Exception {
     String userKeyPwd = HopsUtils.randomString(64);
     String encryptedKey = HopsUtils.encrypt(user.getPassword(), userKeyPwd,
         certificatesMgmService.getMasterEncryptionPassword());
@@ -119,26 +114,6 @@ public class CertificatesController {
           + project.getName() + "__" + user.getUsername());
     } finally {
       lock.unlock();
-    }
-  
-    // Project-wide certificates are needed because Zeppelin submits
-    // requests as user: ProjectName__PROJECTGENERICUSER
-    if (generateProjectWideCerts) {
-      try {
-        lock.lock();
-        opensslOperations.createServiceCertificate(project.getProjectGenericUser(),
-            user.getAddress().getCountry(),
-            user.getAddress().getCity(),
-            user.getOrganization().getOrgName(),
-            user.getEmail(),
-            user.getOrcid(),
-            userKeyPwd);
-      } finally {
-        lock.unlock();
-      }
-      certsFacade.putProjectGenericUserCerts(project.getProjectGenericUser(), encryptedKey);
-      LOG.log(Level.FINE, "Created project generic certificates for project: "
-          + project.getName());
     }
 
     UserCerts uc = certsFacade.putUserCerts(project.getName(), user.getUsername(), encryptedKey);
@@ -173,18 +148,11 @@ public class CertificatesController {
           certificateHandler.revoke(project, team.getUser());
         }
       }
-      opensslOperations.revokeCertificate(project.getProjectGenericUser(), CertificateType.PROJECT_USER,
-          false, false);
       opensslOperations.deleteProjectCertificate(projectName);
     } finally {
       opensslOperations.createCRL(PKI.CAType.INTERMEDIATE);
       lock.unlock();
     }
-    
-    // Remove project generic certificates used by Spark interpreter in
-    // Zeppelin. User specific certificates are removed by the foreign key
-    // constraint in the DB
-    certsFacade.removeProjectGenericCertificates(project.getProjectGenericUser());
   }
   
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)

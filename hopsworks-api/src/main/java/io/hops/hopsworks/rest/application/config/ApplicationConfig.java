@@ -87,16 +87,6 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.api.util.LocalFsService.class);
     register(io.hops.hopsworks.api.util.UploadService.class);
     register(io.hops.hopsworks.api.util.VariablesService.class);
-    register(io.hops.hopsworks.api.zeppelin.rest.ConfigurationsRestApi.class);
-    register(io.hops.hopsworks.api.zeppelin.rest.HeliumService.class);
-    register(io.hops.hopsworks.api.zeppelin.rest.HeliumRestApi.class);
-    register(io.hops.hopsworks.api.zeppelin.rest.InterpreterRestApi.class);
-    register(io.hops.hopsworks.api.zeppelin.rest.InterpreterService.class);
-    register(io.hops.hopsworks.api.zeppelin.rest.LoginRestApi.class);
-    register(io.hops.hopsworks.api.zeppelin.rest.NotebookRestApi.class);
-    register(io.hops.hopsworks.api.zeppelin.rest.NotebookService.class);
-    register(io.hops.hopsworks.api.zeppelin.rest.SecurityRestApi.class);
-    register(io.hops.hopsworks.api.zeppelin.rest.ZeppelinRestApi.class);
     register(io.hops.hopsworks.api.app.ApplicationService.class);
     register(io.hops.hopsworks.api.cluster.Monitor.class);
     register(io.hops.hopsworks.api.serving.ServingConfResource.class);

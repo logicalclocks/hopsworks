@@ -77,7 +77,6 @@ public class ActivityFacade extends AbstractFacade<Activity> {
   public static final String DELETED_JOB = " deleted a job named ";
   public static final String SCHEDULED_JOB = " scheduled a job named ";
   public static final String EXECUTED_JOB = " ran a job used as input file ";
-  public static final String TRASH_NOTEBOOK = " moved to Zeppelin Trash ";
   public static final String CREATED_FEATURESTORE = " created a new feature store named ";
   public static final String CREATED_FEATUREGROUP = " created a new feature group named ";
   public static final String CREATED_TRAINING_DATASET = " created a new training dataset named ";
