@@ -306,6 +306,21 @@ angular.module('hopsWorksApp')
              * @returns {undefined}
              */
             self.createJob = function () {
+              if (self.projectIsGuide) {
+                if (angular.equals('producer', self.tourService
+                        .kafkaJobCreationState)) {
+                  // Go through again for the consumer. The state is
+                  // toggled in newJob.html virtual step
+                  self.tourService.currentStep_TourSeven = 0;
+                  self.tourService.currentStep_TourSix = 0;
+                  self.kafkaGuideTransition();
+                } else {
+                  // We are done
+                  self.tourService.currentStep_TourSeven = -1;
+                  self.tourService.currentStep_TourSix = 1;
+                  self.kafkaGuideTransition();
+                }
+              }
               self.runConfig.appName = self.jobname;
               self.runConfig.localResources = self.localResources;
               if (self.getJobType() === "SPARK" || self.getJobType() === "FLINK") {
