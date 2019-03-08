@@ -17,9 +17,9 @@
 package io.hops.hopsworks.common.util;
 
 import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.exception.JobException;
 import io.hops.hopsworks.common.jobs.configuration.JobConfiguration;
 
+import java.io.IOException;
 import java.util.Map;
 
 public abstract class ConfigurationUtil {
@@ -27,7 +27,7 @@ public abstract class ConfigurationUtil {
   public abstract Map<String, String> setFrameworkProperties(Project project, JobConfiguration jobConfiguration,
                                                                     Settings settings, String hdfsUser,
                                                                      String usersFullName, String tfLibraryPath)
-                                                                      throws JobException;
+                                                                      throws IOException;
 
   public abstract Map<String, String> setJVMProperties(Project project, JobConfiguration jobConfiguration,
                                                       Settings settings, String hdfsUser);

@@ -17,9 +17,7 @@
 package io.hops.hopsworks.common.util;
 
 import com.google.common.base.Strings;
-import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.exception.JobException;
-import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.dao.project.Project;;
 import io.hops.hopsworks.common.jobs.configuration.JobConfiguration;
 import io.hops.hopsworks.common.jobs.configuration.JobType;
 import io.hops.hopsworks.common.jobs.spark.DistributionStrategy;
@@ -31,13 +29,12 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
 
 public class SparkConfigurationUtil extends ConfigurationUtil {
 
   public Map<String, String> setFrameworkProperties(Project project, JobConfiguration jobConfiguration,
                                                             Settings settings, String hdfsUser, String usersFullName,
-                                                            String tfLdLibraryPath) throws JobException{
+                                                            String tfLdLibraryPath) throws IOException {
     SparkJobConfiguration sparkJobConfiguration = (SparkJobConfiguration)jobConfiguration;
     ExperimentType experimentType = sparkJobConfiguration.getExperimentType();
     DistributionStrategy distributionStrategy = sparkJobConfiguration.getDistributionStrategy();
@@ -447,19 +444,15 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
       }
     }
 
-    try {
-      String userSparkProperties = sparkJobConfiguration.getProperties();
-      Map<String, String> validatedSparkProperties = HopsUtils.validateUserProperties(userSparkProperties,
-        settings.getSparkDir());
-      // Merge system and user defined properties
-      Map<String, String> sparkParamsAfterMerge = HopsUtils.mergeHopsworksAndUserParams(sparkProps,
-        validatedSparkProperties);
-      return sparkParamsAfterMerge;
-    } catch (IOException ioe) {
-      throw new JobException(RESTCodes.JobErrorCode.JOB_CONFIGURATION_ERROR, Level.SEVERE, null,
-        ioe.getMessage(), ioe);
 
-    }
+    String userSparkProperties = sparkJobConfiguration.getProperties();
+    Map<String, String> validatedSparkProperties = HopsUtils.validateUserProperties(userSparkProperties,
+      settings.getSparkDir());
+    // Merge system and user defined properties
+    Map<String, String> sparkParamsAfterMerge = HopsUtils.mergeHopsworksAndUserParams(sparkProps,
+      validatedSparkProperties);
+    return sparkParamsAfterMerge;
+
   }
 
   public Map<String, String> setJVMProperties(Project project, JobConfiguration jobConfiguration,

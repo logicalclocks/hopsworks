@@ -41,7 +41,6 @@ package io.hops.hopsworks.common.dao.jupyter.config;
 
 import io.hops.hopsworks.common.dao.jupyter.JupyterSettings;
 import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.exception.JobException;
 import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.jobs.spark.SparkJobConfiguration;
@@ -49,7 +48,6 @@ import io.hops.hopsworks.common.tensorflow.TfLibMappingUtil;
 import io.hops.hopsworks.common.util.ConfigFileGenerator;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.util.SparkConfigurationUtil;
-import io.hops.hopsworks.common.util.templates.ConfigProperty;
 import org.apache.commons.io.FileUtils;
 
 import javax.ejb.EJB;
@@ -153,7 +151,7 @@ public class JupyterConfigFilesGenerator {
   // returns true if one of the conf files were created anew 
   private boolean createConfigFiles(String confDirPath, String kernelsDir, String hdfsUser, String usersFullName,
                                     Project project, String nameNodeEndpoint, Integer port, JupyterSettings js)
-    throws IOException, ServiceException, JobException {
+    throws IOException, ServiceException {
     File jupyter_config_file = new File(confDirPath + JUPYTER_NOTEBOOK_CONFIG);
     File sparkmagic_config_file = new File(confDirPath + SPARKMAGIC_CONFIG);
     File custom_js = new File(confDirPath + JUPYTER_CUSTOM_JS);
@@ -210,8 +208,6 @@ public class JupyterConfigFilesGenerator {
           jupyter_notebook_config.toString());
     }
     if (!sparkmagic_config_file.exists()) {
-
-      Map<String, ConfigProperty> sparkConf = new HashMap<>();
 
       // Get information about which version of TensorFlow the user is running
       String tfLdLibraryPath = tfLibMappingUtil.getTfLdLibraryPath(project);
