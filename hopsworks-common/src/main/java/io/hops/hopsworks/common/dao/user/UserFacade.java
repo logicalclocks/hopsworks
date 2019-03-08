@@ -117,6 +117,26 @@ public class UserFacade extends AbstractFacade<Users> {
     return val;
   }
   
+  private UserAccountType getTypeValue(String field, String value) {
+    if (value == null || value.isEmpty()) {
+      throw new InvalidQueryException("Filter value for " + field + " needs to set an Integer or a valid " + field
+        + ", but found: " + value);
+    }
+    UserAccountType val;
+    try {
+      int v = Integer.parseInt(value);
+      val = UserAccountType.fromValue(v);
+    } catch (IllegalArgumentException e) {
+      try {
+        val = UserAccountType.valueOf(value);
+      } catch (IllegalArgumentException ie) {
+        throw new InvalidQueryException("Filter value for " + field + " needs to set an Integer or a valid " + field
+          + ", but found: " + value);
+      }
+    }
+    return val;
+  }
+  
   private UserAccountStatus getStatusValue(String field, String value) {
     if (value == null || value.isEmpty()) {
       throw new InvalidQueryException("Filter value for " + field + " needs to set an Integer or a valid " + field
@@ -152,6 +172,9 @@ public class UserFacade extends AbstractFacade<Users> {
       case ROLE_NEQ:
         List<BbcGroup> roles = getGroups(filterBy.getField(), filterBy.getParam());
         q.setParameter(filterBy.getField(), roles);
+        break;
+      case TYPE:
+        q.setParameter(filterBy.getField(), getTypeValue(filterBy.getField(), filterBy.getParam()));
         break;
       case STATUS:
       case STATUS_GT:
@@ -218,6 +241,7 @@ public class UserFacade extends AbstractFacade<Users> {
   public enum Filters {
     ROLE("ROLE", "u.bbcGroupCollection IN :roles ", "roles", "HOPS_ADMIN,HOPS_USER"),
     ROLE_NEQ("ROLE_NEQ", "u.bbcGroupCollection NOT IN :roles_neq ", "roles_neq", "AGENT,AUDITOR"),
+    TYPE("TYPE", "u.mode = :mode ", "mode", "0"),
     STATUS("STATUS", "u.status = :status ", "status", "2"),
     STATUS_LT("STATUS_LT", "u.status < :status_lt ", "status_lt", "2"),
     STATUS_GT("STATUS_GT", "u.status > :status_gt ", "status_gt", "2"),

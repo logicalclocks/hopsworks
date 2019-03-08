@@ -31,10 +31,11 @@ public class UsersBeanParam {
   @QueryParam("filter_by")
   @ApiParam(value = "ex. filter_by=role:hops_admin,hops_user&filter_by=status:2",
       allowableValues = "role:hops_admin,role_neq:hops_admin,role:hops_user,role_neq:hops_user,role:agent, "
-      + "role_neq:agent, status=new_mobile_account, status=verified_account, status=activated_account, "
-      + "status=deactivated_account, status=blocked_account, status=lost_mobile, status=spam_account, "
-      + "status_gt=2, status_gt=2, status_lt=2, is_online=0, is_online=1, false_login=10, false_login_gt=20, "
-      + "false_login_lt=20, user_name=a, user_first_name=b, user_last_name=c, user_email=d, user_like=e",
+      + "role_neq:agent, type:mobile_account, status:new_mobile_account, status:verified_account, " +
+        "status:activated_account, "
+      + "status:deactivated_account, status:blocked_account, status:lost_mobile, status:spam_account, "
+      + "status_gt:2, status_gt:2, status_lt:2, is_online:0, is_online:1, false_login:10, false_login_gt:20, "
+      + "false_login_lt:20, user_name:a, user_first_name:b, user_last_name:c, user_email:d, user_like:e",
       allowMultiple = true)
   private Set<FilterBy> filter;
 

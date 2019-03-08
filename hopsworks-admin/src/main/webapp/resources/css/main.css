@@ -72,6 +72,16 @@ body {
   max-width: 1200px;
 }
 
+.container-lg{
+  display: block;
+  height: auto !important;
+  padding-top: 0;
+  z-index: 5;
+  margin-right: auto;
+  margin-left: auto;
+  max-width: 1600px;
+}
+
 .container:before, .container:after {
   display: table;
   content: "";
@@ -114,7 +124,6 @@ body {
 .user-profile .ui-widget-content {
   border-width: 0px;  
   overflow-y: hidden;
-  overflow-x: hidden;
 }
 
 .ui-panelgrid .ui-panelgrid-cell {
