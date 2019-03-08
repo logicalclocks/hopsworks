@@ -24,7 +24,7 @@
       xmlns:p="http://primefaces.org/ui" xmlns:f="http://xmlns.jcp.org/jsf/core">
 
 <h:head>
-    <title>Hopsworks - OAuth2 client registration</title>
+    <title>Hopsworks - User Administration</title>
     <link rel="icon" type="image/png" href="#{resource['images/hops-black.png']}"/>
     <link rel="stylesheet" type="text/css" href="#{resource['/css/main.css']}"/>
     <link rel="stylesheet" type="text/css" href="#{resource['/css/theme.css']}"/>
@@ -54,7 +54,7 @@
                              rows="25"
                              paginator="true"
                              paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
-                             rowsPerPageTemplate="10,25,50,100,250" lazy="true">
+                             rowsPerPageTemplate="10,25,50,100,250" lazy="true" selectionMode="single">
                     <p:column id="nameColumn" filterBy="#{user.fname}" headerText="First Name" style="width:125px;">
                         <h:outputText value="#{user.fname}"/>
                     </p:column>

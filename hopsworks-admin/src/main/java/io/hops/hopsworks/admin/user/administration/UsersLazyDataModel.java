@@ -26,7 +26,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class UsersLazyDataModel extends LazyDataModel<Users> {
@@ -44,14 +43,17 @@ public class UsersLazyDataModel extends LazyDataModel<Users> {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.USERS);
     resourceRequest.setOffset(first);
     resourceRequest.setLimit(pageSize);
-    LOGGER.log(Level.INFO, "first: {0}, pageSize: {1}, sortField: {2}, sortOrder: {3}, filters: {4}",
-      new Object[]{first, pageSize, sortField, sortOrder, filters});
     resourceRequest.setFilter(getFilters(filters));
     Set<UserFacade.SortBy> sort = new HashSet<>();
     AbstractFacade.CollectionInfo collectionInfo =
       userFacade.findAll(first, pageSize, resourceRequest.getFilter(), sort);
     this.setRowCount(collectionInfo.getCount().intValue());
     return collectionInfo.getItems();
+  }
+  
+  @Override
+  public Users getRowData(String rowKey) {
+    return userFacade.findByEmail(rowKey);
   }
   
   private Set<UserFacade.FilterBy> getFilters(Map<String, Object> filters) {
