@@ -348,9 +348,6 @@ angular.module('hopsWorksApp')
             self.openWindow = function() {
                 $window.open(self.ui, '_blank');
                 timeToShutdown();
-                if (self.tourService.currentStep_TourEight == 8) {
-                    self.tourService.currentStep_TourEight = 9;
-                }
             }
 
             var startLoading = function(label) {
