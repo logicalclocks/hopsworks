@@ -387,7 +387,6 @@
       </build>
     </profile>
   </profiles>
-
   <repositories>
     <repository>
       <id>rubygems-release</id>

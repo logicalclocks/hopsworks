@@ -111,22 +111,32 @@ The following steps must be taken to run Hopsworks integration tests:
 
 First create a .env file by copying the .env.example file. Then edit the .env file by providing your specific configuration. 
 ```sh
-   cd hopsworks/hopsworks-ear/test
+   cd hopsworks/hopsworks-IT/src/test/ruby/
    cp .env.example .env
 ```
 
 
-Then change the properties in Hopsworks parent pom.xml to match the server you are deploying to:
+Then export environments to match the server you are deploying to:
+```
+   GLASSFISH_HOST_NAME=localhost
+   GLASSFISH_HTTP_PORT=8181
+   GLASSFISH_ADMIN_PORT=4848
+```
+Change the server login credentials in hopsworks-IT/pom.xml
 ```xml
   <properties>
     ...
-    <glassfish.hostname>{hostname}</glassfish.hostname>
     <glassfish.admin>{username}</glassfish.admin>
     <glassfish.passwd>{password}</glassfish.passwd>
-    <glassfish.port>{http-port}</glassfish.port>
-    <glassfish.admin_port>{admin-ui-port}</glassfish.admin_port>
-    <glassfish.domain>{domain}</glassfish.domain>
+    ...
   </properties>
+```
+
+Export environments for Selenium integration test:
+```
+   HOPSWORKS_URL=http://localhost:8181/hopsworks
+   HEADLESS=[true|false]
+   BROWSER=[chrome|firefox]
 ```
 
 To compile, deploy and run the integration test:
@@ -138,18 +148,18 @@ To compile, deploy and run the integration test:
 If you have already deployed hopsworks-ear and just want to run the integration test:
 
 ```sh
-   cd hopsworks/hopsworks-ear/test
+   cd hopsworks/hopsworks-IT/src/test/ruby/
    bundle install
    rspec --format html --out ../target/test-report.html
 ```
 To run a single test 
 ```sh
-   cd hopsworks/hopsworks-ear/test
+   cd hopsworks/hopsworks-IT/src/test/ruby/
    rspec ./spec/session_spec.rb:60
 ```
 To skip tests that need to run inside a vm 
 ```sh
-   cd hopsworks/hopsworks-ear/test
+   cd hopsworks/hopsworks-IT/src/test/ruby/
    rspec --format html --out ../target/test-report.html --tag ~vm:true
 ```
 When the test is done if `LAUNCH_BROWSER` is set to true in `.env`, it will open the test report in a browser.
