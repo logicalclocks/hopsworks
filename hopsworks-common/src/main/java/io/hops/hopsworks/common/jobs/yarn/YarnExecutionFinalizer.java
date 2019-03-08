@@ -47,7 +47,7 @@ import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.jobs.jobhistory.JobState;
-import io.hops.hopsworks.common.jobs.jobhistory.JobType;
+import io.hops.hopsworks.common.jobs.configuration.JobType;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.yarn.YarnClientService;
 import io.hops.hopsworks.common.yarn.YarnClientWrapper;
@@ -155,21 +155,6 @@ public class YarnExecutionFinalizer {
     }
   }
 
-  /**
-   * Removes the marker file for streaming jobs if it exists, after a non FINISHED/SUCCEEDED job.
-   */
-  private void removeMarkerFile(Execution exec, DistributedFileSystemOps dfso) {
-    String marker = settings.getJobMarkerFile(exec.getJob(), exec.getAppId());
-    try {
-      if (dfso.exists(marker)) {
-        dfso.rm(new org.apache.hadoop.fs.Path(marker), false);
-      }
-    } catch (IOException ex) {
-      LOG.log(Level.WARNING, "Could not remove marker file for job:{0}, with appId:{1}, {2}", new Object[]{
-        exec.getJob().getName(), exec.getAppId(), ex.getMessage()});
-    }
-  }
-
   @Asynchronous
   public void finalize(Execution exec, JobState jobState) {
     //The execution won't exist in the database, if the job has been deleting
@@ -205,10 +190,6 @@ public class YarnExecutionFinalizer {
     String appDir = "hdfs://" + settings.getHdfsTmpCertDir() + "/" + exec.getHdfsUser() + File.separator + exec.
         getAppId();
     filesToRemove.add(appDir);
-    String tensorboardFile = "hdfs://" + File.separator + Settings.DIR_ROOT + File.separator + exec.getJob().
-        getProject().getName() + File.separator + Settings.PROJECT_STAGING_DIR + File.separator + ".tensorboard."
-        + exec.getAppId();
-    filesToRemove.add(tensorboardFile);
     String certsAppDir = Paths.get(settings.getFlinkKafkaCertDir(), exec.getAppId()).toString();
     filesToRemove.add(certsAppDir);
     DistributedFileSystemOps dfso = dfs.getDfsOps();
@@ -220,7 +201,6 @@ public class YarnExecutionFinalizer {
           org.apache.commons.io.FileUtils.deleteQuietly(new File(s));
         }
       }
-      removeMarkerFile(exec, dfso);
     } finally {
       dfs.closeDfsClient(dfso);
     }

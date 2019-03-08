@@ -56,7 +56,7 @@ import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.UserGroupInformationService;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.jobs.execution.ExecutionController;
-import io.hops.hopsworks.common.jobs.jobhistory.JobType;
+import io.hops.hopsworks.common.jobs.configuration.JobType;
 import io.hops.hopsworks.common.jobs.yarn.YarnJobsMonitor;
 import io.hops.hopsworks.common.jupyter.JupyterController;
 import io.hops.hopsworks.common.util.Settings;

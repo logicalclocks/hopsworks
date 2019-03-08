@@ -223,31 +223,17 @@ public class ExecutionController {
   }
   
   public void killExecution(Jobs job, Execution execution) throws JobException {
-    DistributedFileSystemOps dfso = null;
+    YarnClientWrapper yarnClientWrapper = null;
     try {
-      dfso = dfs.getDfsOps();
-      //Look for unique marker file which means it is a streaming job. Otherwise proceed with normal kill.
-      String marker = settings.getJobMarkerFile(job, execution.getAppId());
-      if (dfso.exists(marker)) {
-        dfso.rm(new org.apache.hadoop.fs.Path(marker), false);
-      } else {
-        YarnClientWrapper yarnClientWrapper = null;
-        try {
-          yarnClientWrapper = ycs.getYarnClientSuper(settings.getConfiguration());
-          yarnClientWrapper.getYarnClient().killApplication(ApplicationId.fromString(execution.getAppId()));
-          async.getYarnExecutionFinalizer().removeAllNecessary(execution);
-        } finally {
-          ycs.closeYarnClient(yarnClientWrapper);
-        }
-      }
+      yarnClientWrapper = ycs.getYarnClientSuper(settings.getConfiguration());
+      yarnClientWrapper.getYarnClient().killApplication(ApplicationId.fromString(execution.getAppId()));
+      async.getYarnExecutionFinalizer().removeAllNecessary(execution);
     } catch (IOException | YarnException ex) {
       LOGGER.log(Level.SEVERE,
         "Could not kill job for job:" + job.getName() + "with appId:" + execution.getAppId(), ex);
       throw new JobException(RESTCodes.JobErrorCode.JOB_STOP_FAILED, Level.WARNING, ex.getMessage(), null, ex);
     } finally {
-      if (dfso != null) {
-        dfs.closeDfsClient(dfso);
-      }
+      ycs.closeYarnClient(yarnClientWrapper);
     }
   }
   

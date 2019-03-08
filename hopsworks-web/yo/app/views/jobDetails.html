@@ -128,6 +128,15 @@
           <div class="text-right col-md-4">Job arguments <i class="fa fa-info-circle" uib-tooltip="The arguments to be passed to the main method of the class entered above." style="margin-left: 10px"></i></div>
           <div class="col-md-8">{{jobDetailCtrl.job.runConfig.args}}</div>
         </div>
+        <div class="row" ng-show="jobDetailCtrl.job.runConfig.experimentType === 'EXPERIMENT' || jobDetailCtrl.job.runConfig.experimentType === 'PARALLEL_EXPERIMENTS' || jobDetailCtrl.job.runConfig.experimentType === 'DISTRIBUTED_TRAINING'">
+          <div class="text-right col-md-4">Experiment Type <i class="fa fa-info-circle" uib-tooltip="The type of Machine Learning experiment" style="margin-left: 10px"></i></div>
+          <div class="col-md-8">{{jobDetailCtrl.job.runConfig.experimentType}}</div>
+
+        <div ng-show="jobDetailCtrl.job.runConfig.experimentType === 'DISTRIBUTED_TRAINING'">
+          <div class="text-right col-md-4">Distribution Strategy <i class="fa fa-info-circle" uib-tooltip="The type of Machine Learning experiment" style="margin-left: 10px"></i></div>
+          <div class="col-md-8">{{jobDetailCtrl.job.runConfig.distributionStrategy}}</div>
+        </div>
+        </div>
         <div class="row">
           <div>
             <strong>Configuration parameters</strong>
@@ -155,19 +164,19 @@
           <div class="text-right col-md-4">Dynamic Executors<i class="fa fa-info-circle" uib-tooltip="Enable Spark Dynamic Executors." style="margin-left: 10px"></i></div>
           <div class="col-md-8">{{jobDetailCtrl.job.runConfig['spark.dynamicAllocation.enabled']}}</div>
         </div>
-        <div class="row" ng-show="jobDetailCtrl.job.runConfig.dynamicExecutors">
+        <div class="row" ng-show="jobDetailCtrl.job.runConfig['spark.dynamicAllocation.enabled']">
           <div class="text-right col-md-4">Minimum number of executors<i class="fa fa-info-circle" uib-tooltip="Minimum number of Spark executors that should be requested for this job." style="margin-left: 10px"></i></div>
           <div class="col-md-8">{{jobDetailCtrl.job.runConfig['spark.dynamicAllocation.minExecutors']}}</div>
         </div>
-        <div class="row" ng-show="jobDetailCtrl.job.runConfig.dynamicExecutors">
+        <div class="row" ng-show="jobDetailCtrl.job.runConfig['spark.dynamicAllocation.enabled']">
           <div class="text-right col-md-4">Maximum number of executors <i class="fa fa-info-circle" uib-tooltip="Maximum number of Spark executors that should be requested for this job." style="margin-left: 10px"></i></div>
           <div class="col-md-8">{{jobDetailCtrl.job.runConfig['spark.dynamicAllocation.maxExecutors']}}</div>
         </div>
-        <div class="row" ng-show="jobDetailCtrl.job.runConfig.dynamicExecutors">
+        <div class="row" ng-show="jobDetailCtrl.job.runConfig['spark.dynamicAllocation.enabled']">
           <div class="text-right col-md-4">Initial number of executors <i class="fa fa-info-circle" uib-tooltip="Initial number of Spark executors that should be requested for this job. Must be greate that the minimum and smaller than the maximum number of executors." style="margin-left: 10px"></i></div>
           <div class="col-md-8">{{jobDetailCtrl.job.runConfig['spark.dynamicAllocation.initialExecutors']}}</div>
         </div>
-          <div class="row" ng-show="!jobDetailCtrl.job.runConfig.dynamicExecutors">
+          <div class="row" ng-show="!jobDetailCtrl.job.runConfig['spark.dynamicAllocation.enabled']">
           <div class="text-right col-md-4">Number of executors <i class="fa fa-info-circle" uib-tooltip="The number of Spark executors that should be requested for this job." style="margin-left: 10px"></i></div>
           <div class="col-md-8">{{jobDetailCtrl.job.runConfig['spark.executor.instances']}}</div>
         </div>
@@ -354,17 +363,6 @@
           </div>
         </div>
       </div>
-      <!-- Config for Kafka -->
-       <div ng-if="jobDetailCtrl.hasKafka()">
-        <div class="row">
-          <div class="text-right col-md-4">Kafka Topics: <i class="fa fa-info-circle" uib-tooltip="Kafka topics this job uses." style="margin-left: 10px"></i></div>
-          <div class="col-md-8">{{jobDetailCtrl.viewTopics(jobDetailCtrl.job.runConfig.kafka.topics)}}</div>
-        </div>
-        <div class="row" ng-if="jobDetailCtrl.hasConsumerGroups()">
-          <div class="text-right col-md-4">Kafka consumer groups <i class="fa fa-info-circle" uib-tooltip="List of consumer groups available for this job." style="margin-left: 10px"></i></div>
-          <div class="col-md-8">{{jobDetailCtrl.viewTopics(jobDetailCtrl.job.runConfig.kafka.consumerGroups)}}</div>
-        </div>
-       </div>
     </div>
   </div>
 

@@ -220,7 +220,7 @@ public class JupyterService {
 
     Users user = jWTHelper.getUserPrincipal(sc);
     String loggedinemail = user.getEmail();
-    JupyterSettings js = jupyterSettingsFacade.findByProjectUser(projectId,loggedinemail);
+    JupyterSettings js = jupyterSettingsFacade.findByProjectUser(projectId, loggedinemail);
     if (js.getProject() == null) {
       js.setProject(project);
     }

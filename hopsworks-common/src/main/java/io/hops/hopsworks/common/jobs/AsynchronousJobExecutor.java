@@ -49,6 +49,7 @@ import io.hops.hopsworks.common.jobs.execution.HopsJob;
 import io.hops.hopsworks.common.jobs.yarn.YarnExecutionFinalizer;
 import io.hops.hopsworks.common.security.BaseHadoopClientsService;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
+import io.hops.hopsworks.common.tensorflow.TfLibMappingUtil;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.yarn.YarnClientService;
 
@@ -89,6 +90,8 @@ public class AsynchronousJobExecutor {
   private CertificateMaterializer certificateMaterializer;
   @EJB
   private BaseHadoopClientsService baseHadoopClientsService;
+  @EJB
+  private TfLibMappingUtil tfLibMappingUtil;
 
   @Asynchronous
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
@@ -138,5 +141,13 @@ public class AsynchronousJobExecutor {
   
   public BaseHadoopClientsService getBaseHadoopClientsService() {
     return baseHadoopClientsService;
+  }
+
+  public TfLibMappingUtil getTfLibMappingUtil() {
+    return tfLibMappingUtil;
+  }
+
+  public void setTfLibMappingUtil(TfLibMappingUtil tfLibMappingUtil) {
+    this.tfLibMappingUtil = tfLibMappingUtil;
   }
 }

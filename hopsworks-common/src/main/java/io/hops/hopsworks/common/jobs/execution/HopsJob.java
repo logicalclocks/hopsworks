@@ -45,6 +45,7 @@ import java.security.PrivilegedExceptionAction;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import io.hops.hopsworks.common.exception.JobException;
 import io.hops.hopsworks.common.yarn.YarnClientWrapper;
 import org.apache.hadoop.security.UserGroupInformation;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
@@ -99,12 +100,10 @@ public abstract class HopsJob {
    * @param user The user executing this job.
    * @param hadoopDir base Hadoop installation directory
    * @param jobsMonitor
-   * @throws NullPointerException If either of the given arguments is null.
    */
   protected HopsJob(Jobs jobs,
           AsynchronousJobExecutor services, Users user, String hadoopDir,
-          YarnJobsMonitor jobsMonitor) throws
-          NullPointerException {
+          YarnJobsMonitor jobsMonitor) {
     //Check validity
     if (jobs == null) {
       throw new NullPointerException("Cannot run a null Job.");
@@ -166,9 +165,13 @@ public abstract class HopsJob {
             execution = services.getExecutionFacade().updateExecutionStart(execution, System.currentTimeMillis());
             dfso = services.getFsService().getDfsOps();
             udfso = services.getFileOperations(hdfsUser.getUserName());
-            yarnClientWrapper = services.getYarnClientService()
-                .getYarnClient(hdfsUser.getUserName());
-            boolean proceed = setupJob(dfso, yarnClientWrapper.getYarnClient());
+            yarnClientWrapper = services.getYarnClientService().getYarnClient(hdfsUser.getUserName());
+            boolean proceed = false;
+            try {
+              proceed = setupJob(dfso, yarnClientWrapper.getYarnClient());
+            } catch(Exception ex) {
+              logger.log(Level.SEVERE, "Job Initialization Failed", ex);
+            }
             if (!proceed) {
               execution = services.getExecutionFacade().updateExecutionStop(execution, System.currentTimeMillis());
               services.getExecutionFacade().updateState(execution, JobState.INITIALIZATION_FAILED);
@@ -204,7 +207,7 @@ public abstract class HopsJob {
    * in that case.
    */
   protected abstract boolean setupJob(DistributedFileSystemOps dfso,
-      YarnClient yarnClient);
+      YarnClient yarnClient) throws JobException;
 
   /**
    * Takes care of the execution of the job. Called by execute() after
