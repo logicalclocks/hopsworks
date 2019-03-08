@@ -40,9 +40,13 @@ package io.hops.hopsworks.common.dao.jupyter;
 
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.jobs.configuration.JobConfiguration;
+import io.hops.hopsworks.common.jupyter.JupyterConfigurationConverter;
+
 import java.io.Serializable;
 import javax.persistence.Basic;
 import javax.persistence.Column;
+import javax.persistence.Convert;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
@@ -72,134 +76,18 @@ import javax.xml.bind.annotation.XmlRootElement;
       query
       = "SELECT j FROM JupyterSettings j WHERE j.jupyterSettingsPK.email = :email")
   ,
-    @NamedQuery(name = "JupyterSettings.findByNumTfPs",
-      query
-      = "SELECT j FROM JupyterSettings j WHERE j.numTfPs = :numTfPs")
-  ,
-    @NamedQuery(name = "JupyterSettings.findByNumExecutorGpus",
-      query
-      = "SELECT j FROM JupyterSettings j WHERE j.numExecutorGpus = :numExecutorGpus")
-  ,
-    @NamedQuery(name = "JupyterSettings.findByNumMpiNp",
-      query
-      = "SELECT j FROM JupyterSettings j WHERE j.numMpiNp = :numMpiNp")
-  ,
-    @NamedQuery(name = "JupyterSettings.findByAppmasterCores",
-      query
-      = "SELECT j FROM JupyterSettings j WHERE j.appmasterCores = :appmasterCores")
-  ,
-    @NamedQuery(name = "JupyterSettings.findByAppmasterMemory",
-      query
-      = "SELECT j FROM JupyterSettings j WHERE j.appmasterMemory = :appmasterMemory")
-  ,
-    @NamedQuery(name = "JupyterSettings.findByNumExecutors",
-      query
-      = "SELECT j FROM JupyterSettings j WHERE j.numExecutors = :numExecutors")
-  ,
-    @NamedQuery(name = "JupyterSettings.findByNumExecutorCores",
-      query
-      = "SELECT j FROM JupyterSettings j WHERE j.numExecutorCores = :numExecutorCores")
-  ,
-    @NamedQuery(name = "JupyterSettings.findByExecutorMemory",
-      query
-      = "SELECT j FROM JupyterSettings j WHERE j.executorMemory = :executorMemory")
-  ,
-    @NamedQuery(name = "JupyterSettings.findByDynamicInitialExecutors",
-      query
-      = "SELECT j FROM JupyterSettings j WHERE j.dynamicInitialExecutors = :dynamicInitialExecutors")
-  ,
-    @NamedQuery(name = "JupyterSettings.findByDynamicMinExecutors",
-      query
-      = "SELECT j FROM JupyterSettings j WHERE j.dynamicMinExecutors = :dynamicMinExecutors")
-  ,
-    @NamedQuery(name = "JupyterSettings.findByDynamicMaxExecutors",
-      query
-      = "SELECT j FROM JupyterSettings j WHERE j.dynamicMaxExecutors = :dynamicMaxExecutors")
-  ,
     @NamedQuery(name = "JupyterSettings.findBySecret",
       query
       = "SELECT j FROM JupyterSettings j WHERE j.secret = :secret")
   ,
-    @NamedQuery(name = "JupyterSettings.findByLogLevel",
-      query
-      = "SELECT j FROM JupyterSettings j WHERE j.logLevel = :logLevel")
-  ,
-    @NamedQuery(name = "JupyterSettings.findByMode",
-      query = "SELECT j FROM JupyterSettings j WHERE j.mode = :mode")
-  ,
     @NamedQuery(name = "JupyterSettings.findByAdvanced",
       query
-      = "SELECT j FROM JupyterSettings j WHERE j.advanced = :advanced")
-  ,
-    @NamedQuery(name = "JupyterSettings.findByArchives",
-      query
-      = "SELECT j FROM JupyterSettings j WHERE j.archives = :archives")
-  ,
-    @NamedQuery(name = "JupyterSettings.findByJars",
-      query = "SELECT j FROM JupyterSettings j WHERE j.jars = :jars")
-  ,
-    @NamedQuery(name = "JupyterSettings.findByFiles",
-      query = "SELECT j FROM JupyterSettings j WHERE j.files = :files")
-  ,
-    @NamedQuery(name = "JupyterSettings.findByPyFiles",
-      query
-      = "SELECT j FROM JupyterSettings j WHERE j.pyFiles = :pyFiles")
-  ,
-    @NamedQuery(name = "JupyterSettings.findBySparkParams",
-      query
-      = "SELECT j FROM JupyterSettings j WHERE j.sparkParams = :sparkParams")
-  ,
-    @NamedQuery(name = "JupyterSettings.findByUmask",
-      query = "SELECT j FROM JupyterSettings j WHERE j.umask = :umask")})
+      = "SELECT j FROM JupyterSettings j WHERE j.advanced = :advanced")})
 public class JupyterSettings implements Serializable {
 
   private static final long serialVersionUID = 1L;
   @EmbeddedId
   protected JupyterSettingsPK jupyterSettingsPK;
-
-  @Basic(optional = false)
-  @Column(name = "num_tf_ps")
-  private int numTfPs = 1;
-
-  @Basic(optional = false)
-  @Column(name = "num_tf_gpus")
-  private int numExecutorGpus = 0;
-
-  @Basic(optional = false)
-  @Column(name = "num_mpi_np")
-  private int numMpiNp = 1;
-
-  @Basic(optional = false)
-  @Column(name = "appmaster_cores")
-  private int appmasterCores = 1;
-
-  @Basic(optional = false)
-  @Column(name = "appmaster_memory")
-  private int appmasterMemory = 1024;
-
-  @Basic(optional = false)
-  @Column(name = "num_executors")
-  private int numExecutors = 1;
-
-  @Basic(optional = false)
-  @Column(name = "num_executor_cores")
-  private int numExecutorCores = 1;
-
-  @Basic(optional = false)
-  @Column(name = "executor_memory")
-  private int executorMemory = 4096;
-
-  @Basic(optional = false)
-  @Column(name = "dynamic_initial_executors")
-  private int dynamicInitialExecutors = 1;
-
-  @Basic(optional = false)
-  @Column(name = "dynamic_min_executors")
-  private int dynamicMinExecutors = 1;
-
-  @Basic(optional = false)
-  @Column(name = "dynamic_max_executors")
-  private int dynamicMaxExecutors = 100;
 
   @Basic(optional = false)
   @NotNull
@@ -208,65 +96,13 @@ public class JupyterSettings implements Serializable {
   @Column(name = "secret")
   private String secret;
 
-  @Size(max = 32)
-  @Column(name = "log_level")
-  private String logLevel = "INFO";
-
   @Basic(optional = false)
   @Column(name = "shutdown_level")
   private int shutdownLevel = 6;
 
   @Basic(optional = false)
-  @NotNull
-  @Size(min = 1,
-      max = 32)
-  @Column(name = "mode")
-  private String mode = "dynamicspark";
-
-  @Basic(optional = false)
   @Column(name = "advanced")
   private boolean advanced = false;
-
-  @Basic(optional = false)
-  @Size(min = 0,
-      max = 1500)
-  @Column(name = "archives")
-  private String archives = "";
-
-  @Basic(optional = false)
-  @Size(min = 0,
-      max = 1500)
-  @Column(name = "jars")
-  private String jars = "";
-
-  @Basic(optional = false)
-  @Size(min = 0,
-      max = 1500)
-  @Column(name = "files")
-  private String files = "";
-
-  @Basic(optional = false)
-  @Size(min = 0,
-      max = 1500)
-  @Column(name = "py_files")
-  private String pyFiles = "";
-
-  @Basic(optional = false)
-  @Size(min = 0,
-      max = 6500)
-  @Column(name = "spark_params")
-  private String sparkParams = "";
-
-  @Basic(optional = false)
-  @Size(min = 3,
-      max = 4)
-  @Column(name = "umask")
-  private String umask = "022";
-
-  @Basic(optional = false)
-  @NotNull
-  @Column(name = "fault_tolerant")
-  private boolean faultTolerant;
 
   @JoinColumn(name = "team_member",
       referencedColumnName = "email",
@@ -281,15 +117,18 @@ public class JupyterSettings implements Serializable {
       updatable = false)
   @ManyToOne(optional = false)
   private Project project;
+  @Basic(optional = false)
+  @NotNull
+  @Size(min = 1,
+          max = 255)
+  @Column(name = "base_dir")
+  private String baseDir = "/Jupyter/";
+  @Column(name = "json_config")
+  @Convert(converter = JupyterConfigurationConverter.class)
+  private JobConfiguration jobConfig;
 
   @Transient
   private String privateDir = "";
-
-  @Transient  
-  private String baseDir = "/Jupyter/";
-
-  @Transient
-  private String distributionStrategy;
 
   public JupyterSettings() {
   }
@@ -298,33 +137,10 @@ public class JupyterSettings implements Serializable {
     this.jupyterSettingsPK = jupyterSettingsPK;
   }
 
-  public JupyterSettings(JupyterSettingsPK jupyterSettingsPK, int numTfPs, int numExecutorGpus, int numMpiNp,
-      int appmasterCores, int appmasterMemory, int numExecutors, int numExecutorCores, int executorMemory,
-      int dynamicInitialExecutors, int dynamicMinExecutors, int dynamicMaxExecutors, String secret, String mode,
-      boolean advanced, String archives, String jars, String files, String pyFiles, String sparkParams, String umask,
-      boolean faultTolerant) {
+  public JupyterSettings(JupyterSettingsPK jupyterSettingsPK, String secret, boolean advanced) {
     this.jupyterSettingsPK = jupyterSettingsPK;
-    this.numTfPs = numTfPs;
-    this.numExecutorGpus = numExecutorGpus;
-    this.numMpiNp = numMpiNp;
-    this.appmasterCores = appmasterCores;
-    this.appmasterMemory = appmasterMemory;
-    this.numExecutors = numExecutors;
-    this.numExecutorCores = numExecutorCores;
-    this.executorMemory = executorMemory;
-    this.dynamicInitialExecutors = dynamicInitialExecutors;
-    this.dynamicMinExecutors = dynamicMinExecutors;
-    this.dynamicMaxExecutors = dynamicMaxExecutors;
     this.secret = secret;
-    this.mode = mode;
-    this.advanced = advanced;
-    this.archives = archives;
-    this.jars = jars;
-    this.files = files;
-    this.pyFiles = pyFiles;
-    this.sparkParams = sparkParams;
-    this.umask = umask;
-    this.faultTolerant = faultTolerant;
+    this.setAdvanced(advanced);
   }
 
   public JupyterSettings(int projectId, String email) {
@@ -339,94 +155,6 @@ public class JupyterSettings implements Serializable {
     this.jupyterSettingsPK = jupyterSettingsPK;
   }
 
-  public int getNumTfPs() {
-    return numTfPs;
-  }
-
-  public void setNumTfPs(int numTfPs) {
-    this.numTfPs = numTfPs;
-  }
-
-  public int getNumExecutorGpus() {
-    return numExecutorGpus;
-  }
-
-  public void setNumExecutorGpus(int numExecutorGpus) {
-    this.numExecutorGpus = numExecutorGpus;
-  }
-
-  public int getNumMpiNp() {
-    return numMpiNp;
-  }
-
-  public void setNumMpiNp(int numMpiNp) {
-    this.numMpiNp = numMpiNp;
-  }
-
-  public int getAppmasterCores() {
-    return appmasterCores;
-  }
-
-  public void setAppmasterCores(int appmasterCores) {
-    this.appmasterCores = appmasterCores;
-  }
-
-  public int getAppmasterMemory() {
-    return appmasterMemory;
-  }
-
-  public void setAppmasterMemory(int appmasterMemory) {
-    this.appmasterMemory = appmasterMemory;
-  }
-
-  public int getNumExecutors() {
-    return numExecutors;
-  }
-
-  public void setNumExecutors(int numExecutors) {
-    this.numExecutors = numExecutors;
-  }
-
-  public int getNumExecutorCores() {
-    return numExecutorCores;
-  }
-
-  public void setNumExecutorCores(int numExecutorCores) {
-    this.numExecutorCores = numExecutorCores;
-  }
-
-  public int getExecutorMemory() {
-    return executorMemory;
-  }
-
-  public void setExecutorMemory(int executorMemory) {
-    this.executorMemory = executorMemory;
-  }
-
-  public int getDynamicInitialExecutors() {
-    return dynamicInitialExecutors;
-  }
-
-  public void setDynamicInitialExecutors(int dynamicInitialExecutors) {
-    this.dynamicInitialExecutors = dynamicInitialExecutors;
-  }
-
-  public int getDynamicMinExecutors() {
-    return dynamicMinExecutors;
-  }
-
-  public void setDynamicMinExecutors(int dynamicMinExecutors) {
-    this.dynamicMinExecutors = dynamicMinExecutors;
-  }
-
-  public int getDynamicMaxExecutors() {
-    return dynamicMaxExecutors;
-  }
-
-  public void setDynamicMaxExecutors(int dynamicMaxExecutors) {
-    this.dynamicMaxExecutors = dynamicMaxExecutors;
-  }
-
   public String getSecret() {
     return secret;
   }
@@ -435,76 +163,12 @@ public class JupyterSettings implements Serializable {
     this.secret = secret;
   }
 
-  public String getLogLevel() {
-    return logLevel;
-  }
-
-  public void setLogLevel(String logLevel) {
-    this.logLevel = logLevel;
-  }
-
-  public String getMode() {
-    return mode;
-  }
-
-  public void setMode(String mode) {
-    this.mode = mode;
-  }
-
   public boolean getAdvanced() {
-    return advanced;
+    return isAdvanced();
   }
 
   public void setAdvanced(boolean advanced) {
     this.advanced = advanced;
-  }
-
-  public String getArchives() {
-    return archives;
-  }
-
-  public void setArchives(String archives) {
-    this.archives = archives;
-  }
-
-  public String getJars() {
-    return jars;
-  }
-
-  public void setJars(String jars) {
-    this.jars = jars;
-  }
-
-  public String getFiles() {
-    return files;
-  }
-
-  public void setFiles(String files) {
-    this.files = files;
-  }
-
-  public String getPyFiles() {
-    return pyFiles;
-  }
-
-  public void setPyFiles(String pyFiles) {
-    this.pyFiles = pyFiles;
-  }
-
-  public String getSparkParams() {
-    return sparkParams;
-  }
-
-  public void setSparkParams(String sparkParams) {
-    this.sparkParams = sparkParams;
-  }
-
-  public String getUmask() {
-    return umask;
-  }
-
-  public void setUmask(String umask) {
-    this.umask = umask;
   }
 
   public Users getUsers() {
@@ -574,19 +238,15 @@ public class JupyterSettings implements Serializable {
     this.shutdownLevel = shutdownLevel;
   }
 
-  public boolean getFaultTolerant() {
-    return faultTolerant;
+  public boolean isAdvanced() {
+    return advanced;
   }
 
-  public void setFaultTolerant(boolean faultTolerant) {
-    this.faultTolerant = faultTolerant;
+  public JobConfiguration getJobConfig() {
+    return jobConfig;
   }
 
-  public String getDistributionStrategy() {
-    return distributionStrategy;
-  }
-
-  public void setDistributionStrategy(String distributionStrategy) {
-    this.distributionStrategy = distributionStrategy;
+  public void setJobConfig(JobConfiguration jobConfig) {
+    this.jobConfig = jobConfig;
   }
 }

@@ -50,7 +50,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.hops.hopsworks.common.jobs.configuration.JobConfiguration;
 import io.hops.hopsworks.common.jobs.flink.FlinkJobConfiguration;
-import io.hops.hopsworks.common.jobs.jobhistory.JobType;
+import io.hops.hopsworks.common.jobs.configuration.JobType;
 import io.hops.hopsworks.common.jobs.spark.SparkJobConfiguration;
 import io.hops.hopsworks.common.util.Settings;
 

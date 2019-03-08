@@ -46,12 +46,11 @@ import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.jobs.flink.YarnClusterClient;
 import io.hops.hopsworks.common.jobs.flink.YarnClusterDescriptor;
-import io.hops.hopsworks.common.jobs.jobhistory.JobType;
+import io.hops.hopsworks.common.jobs.configuration.JobType;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.IoUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.yarn.YarnClientService;
-import io.hops.tensorflow.Client;
 import org.apache.flink.client.program.PackagedProgram;
 import org.apache.flink.client.program.ProgramInvocationException;
 import org.apache.hadoop.conf.Configuration;
@@ -108,7 +107,6 @@ public class YarnRunner {
   //The parallelism parameter of Flink
   private int parallelism;
   private YarnClusterDescriptor flinkCluster;
-  private Client tfClient;
   private String appJarPath;
   private final String amJarLocalName;
   private final String amJarPath;
@@ -639,7 +637,6 @@ public class YarnRunner {
     this.jobType = builder.jobType;
     this.parallelism = builder.parallelism;
     this.flinkCluster = builder.flinkCluster;
-    this.tfClient = builder.tfClient;
     this.appJarPath = builder.appJarPath;
     this.amQueue = builder.amQueue;
     this.amMemory = builder.amMemory;
@@ -703,8 +700,6 @@ public class YarnRunner {
     private int parallelism;
     private YarnClusterDescriptor flinkCluster;
     private String appJarPath;
-    //TensorFlow client
-    private Client tfClient;
     //Optional attributes
     // Queue for App master
     private String amQueue = "default"; //TODO(Theofilos): enable changing this, or infer from user data
@@ -863,10 +858,6 @@ public class YarnRunner {
 
     public void setFlinkCluster(YarnClusterDescriptor flinkCluster) {
       this.flinkCluster = flinkCluster;
-    }
-
-    public void setTfClient(Client tfClient) {
-      this.tfClient = tfClient;
     }
     
     public void setAppJarPath(String path) {

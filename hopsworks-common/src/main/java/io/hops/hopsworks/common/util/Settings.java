@@ -39,7 +39,6 @@
 package io.hops.hopsworks.common.util;
 
 import com.google.common.base.Splitter;
-import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
@@ -723,6 +722,7 @@ public class Settings implements Serializable {
       = "spark.dynamicAllocation.initialExecutors";
   public static final String SPARK_SHUFFLE_SERVICE
       = "spark.shuffle.service.enabled";
+  public static final String SPARK_SUBMIT_DEPLOYMODE = "spark.submit.deployMode";
   public static final String SPARK_DRIVER_MEMORY_ENV = "spark.driver.memory";
   public static final String SPARK_DRIVER_CORES_ENV = "spark.driver.cores";
   public static final String SPARK_DRIVER_EXTRACLASSPATH = "spark.driver.extraClassPath";
@@ -731,14 +731,34 @@ public class Settings implements Serializable {
   public static final String SPARK_EXECUTOR_EXTRACLASSPATH = "spark.executor.extraClassPath";
   public static final String SPARK_DRIVER_STAGINGDIR_ENV = "spark.yarn.stagingDir";
   public static final String SPARK_JAVA_LIBRARY_PROP = "java.library.path";
-  public static final String SPARK_MAX_APP_ATTEMPTS = "spark.yarn.maxAppAttempts";
   public static final String SPARK_EXECUTOR_EXTRA_JAVA_OPTS = "spark.executor.extraJavaOptions";
-  public static final String SPARK_EXECUTORENV_PATH = "spark.executorEnv.PATH";
-  public static final String SPARK_YARN_APPMASTERENV_LD_LIBRARY_PATH = "spark.yarn.appMasterEnv.LD_LIBRARY_PATH";
-  public static final String SPARK_YARN_APPMASTERENV_LIBHDFS_OPTS = "spark.yarn.appMasterEnv.LIBHDFS_OPTS";
-  public static final String SPARK_EXECUTORENV_LIBHDFS_OPTS = "spark.executorEnv.LIBHDFS_OPTS";
-  public static final String SPARK_DRIVER_EXTRALIBRARYPATH = "spark.driver.extraLibraryPath";
-  public static final String SPARK_DRIVER_EXTRAJAVAOPTIONS = "spark.driver.extraJavaOptions";
+  public static final String SPARK_DRIVER_EXTRA_JAVA_OPTIONS="spark.driver.extraJavaOptions";
+
+  public static final String SPARK_YARN_DIST_PYFILES = "spark.yarn.dist.pyFiles";
+  public static final String SPARK_YARN_DIST_FILES = "spark.yarn.dist.files";
+  public static final String SPARK_YARN_DIST_ARCHIVES = "spark.yarn.dist.archives";
+  public static final String SPARK_YARN_JARS = "spark.yarn.jars";
+
+
+  //Blacklisting properties
+  public static final String SPARK_BLACKLIST_ENABLED = "spark.blacklist.enabled";
+  public static final String SPARK_BLACKLIST_MAX_TASK_ATTEMPTS_PER_EXECUTOR =
+    "spark.blacklist.task.maxTaskAttemptsPerExecutor";
+  public static final String SPARK_BLACKLIST_MAX_TASK_ATTEMPTS_PER_NODE =
+    "spark.blacklist.task.maxTaskAttemptsPerNode";
+  public static final String SPARK_BLACKLIST_STAGE_MAX_FAILED_TASKS_PER_EXECUTOR =
+    "spark.blacklist.stage.maxFailedTasksPerExecutor";
+  public static final String SPARK_BLACKLIST_STAGE_MAX_FAILED_TASKS_PER_NODE =
+    "spark.blacklist.stage.maxFailedExecutorsPerNode";
+  public static final String SPARK_BLACKLIST_APPLICATION_MAX_FAILED_TASKS_PER_EXECUTOR =
+    "spark.blacklist.application.maxFailedTasksPerExecutor";
+  public static final String SPARK_BLACKLIST_APPLICATION_MAX_FAILED_TASKS_PER_NODE =
+    "spark.blacklist.application.maxFailedExecutorsPerNode";
+  public static final String SPARK_BLACKLIST_KILL_BLACKLISTED_EXECUTORS =
+    "spark.blacklist.killBlacklistedExecutors";
+  public static final String SPARK_TASK_MAX_FAILURES = "spark.task.maxFailures";
+  public static final String SPARK_YARN_APPMASTER_ENV = "spark.yarn.appMasterEnv.";
+  public static final String SPARK_EXECUTOR_ENV = "spark.executorEnv.";
 
   //PySpark properties
   public static final String SPARK_APP_NAME_ENV = "spark.app.name";
@@ -750,15 +770,17 @@ public class Settings implements Serializable {
   public static final String SPARK_EXECUTORENV_HDFS_USER = "spark.executorEnv.HDFS_USER";
   public static final String SPARK_EXECUTORENV_HADOOP_USER_NAME = "spark.executorEnv.HADOOP_USER_NAME";
   public static final String SPARK_EXECUTORENV_JOB_NAME = "spark.executorEnv.JOB_NAME";
-  public static final String SPARK_YARN_IS_PYTHON_ENV = "spark.yarn.isPython";
-  public static final String SPARK_YARN_SECONDARY_JARS = "spark.yarn.secondary.jars";
 
-  public static final String SPARK_PYTHONPATH = "PYTHONPATH";
+  public static final String SPARK_YARN_IS_PYTHON_ENV = "spark.yarn.isPython";
+
   public static final String SPARK_PYSPARK_PYTHON = "PYSPARK_PYTHON";
-  public static final String SPARK_EXECUTORENV_PYSPARK_PYTHON = "spark.executorEnv." + SPARK_PYSPARK_PYTHON;
+
+  public static final String SPARK_PYSPARK_PYTHON_OPTION = "spark.pyspark.python";
+
   //TFSPARK properties
   public static final String SPARK_TF_GPUS_ENV = "spark.executor.gpus";
   public static final String SPARK_TENSORFLOW_APPLICATION = "spark.tensorflow.application";
+  public static final String SPARK_TENSORFLOW_NUM_PS = "spark.tensorflow.num.ps";
 
   //Spark log4j and metrics properties
   public static final String SPARK_LOG4J_CONFIG = "log4j.configuration";
@@ -1153,6 +1175,7 @@ public class Settings implements Serializable {
 
   public static final String HOPS_TOUR_DATASET = "TestJob";
   public static final String HOPS_TOUR_DATASET_JUPYTER = "Jupyter";
+  public static final String JUPYTER_SPARKMAGIC_PREFIX = "jupyter-sparkmagic-session-";
   // Distribution-defined classpath to add to processes
   public static final String SPARK_AM_MAIN
       = "org.apache.spark.deploy.yarn.ApplicationMaster";
@@ -1161,8 +1184,7 @@ public class Settings implements Serializable {
   public static final String SPARK_BLACKLISTED_PROPS
       = "conf/spark-blacklisted-properties.txt";
   public static final int SPARK_MIN_EXECS = 1;
-  public static final int SPARK_MAX_EXECS = 1500;
-  public static final int SPARK_INIT_EXECS = 1;
+  public static final int SPARK_MAX_EXECS = 2;
 
   //Flink constants
   public static final String FLINK_DEFAULT_OUTPUT_PATH = "Logs/Flink/";
@@ -1226,7 +1248,7 @@ public class Settings implements Serializable {
   }
 
   public String getPySparkLibsPath() {
-    return "hdfs:///user/" + getSparkUser();
+    return getSparkDir() + "/python/lib/";
   }
 
   public String getSparkLog4JPath() {
@@ -1273,20 +1295,6 @@ public class Settings implements Serializable {
       }
     }
     return HADOOP_CLASSPATH_GLOB;
-  }
-
-  /**
-   * Constructs the path to the marker file of a streaming job that uses HopsUtil.
-   *
-   * @param job job
-   * @param appId yarn appId
-   * @return marker file path
-   */
-  public String getJobMarkerFile(Jobs job, String appId) {
-    return getHdfsRootPath(job.getProject().getName()) + "/Resources/.marker-"
-        + job.getJobType().getName().toLowerCase()
-        + "-" + job.getName()
-        + "-" + appId;
   }
 
   public String getHdfsRootPath(String projectName) {

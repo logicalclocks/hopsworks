@@ -48,28 +48,23 @@ angular.module('hopsWorksApp')
             var self = this;
             self.connectedStatus = false;
             self.loading = false;
-            self.advanced = true;
-            self.details = true;
             self.loadingText = "";
             self.jupyterServer;
             self.projectName;
-            self.toggleValue = false;
             self.tourService = TourService;
             self.tourService.currentStep_TourEight = -1;
             self.projectId = $routeParams.projectID;
             var statusMsgs = ['stopped    ', "running    ", 'stopping...', 'restarting...'];
             self.ui = "";
-            self.sparkStatic = false;
-            self.sparkDynamic = false;
-            self.experiment = false;
             self.condaEnabled = true;
             self.jupyterInstalled = true;
             $scope.sessions = null;
-            self.val = {};
+            self.jupyterSettings = {};
             $scope.tgState = true;
             self.config = {};
             self.numNotEnabledEnvs = 0;
             self.opsStatus = {};
+
             self.dirs = [{
                 id: 1,
                 name: '/'
@@ -79,86 +74,10 @@ angular.module('hopsWorksApp')
             }];
             self.selected = self.dirs[1];
 
-            self.log_levels = [{
-                id: 1,
-                name: 'FINE'
-            }, {
-                id: 2,
-                name: 'DEBUG'
-            }, {
-                id: 3,
-                name: 'INFO'
-            }, {
-                id: 4,
-                name: 'WARN'
-            }, {
-                id: 5,
-                name: 'ERROR'
-            }];
-            self.logLevelSelected;
 
-            self.distribution_strategies = [{
-                id: 1,
-                name: 'MirroredStrategy'
-            }, {
-                id: 2,
-                name: 'CollectiveAllReduceStrategy'
-            }, {
-                id: 3,
-                name: 'ParameterServerStrategy'
-            }];
-
-            self.distributionStrategySelected;
-
-            self.shutdown_levels = [{
-                id: 1,
-                name: '1'
-            }, {
-                id: 2,
-                name: '6'
-            }, {
-                id: 3,
-                name: '12'
-            }, {
-                id: 4,
-                name: '24'
-            }, {
-                id: 5,
-                name: '72'
-            }, {
-                id: 6,
-                name: '168'
-            }, {
-                id: 7,
-                name: '1000'
-            }];
             self.shutdownLevelSelected;
             self.timeLeftInMinutes = 0;
             self.addShutdownHours;
-
-            //  (Group/World readable, not writable)
-            //  (Group readable and writable)
-            //  (Not Group readable or writable)
-            self.umasks = [{
-                id: 1,
-                name: '022'
-            }, {
-                id: 2,
-                name: '007'
-            }, {
-                id: 3,
-                name: '077'
-            }];
-            self.umask = self.umasks[1];
-
-            self.availableLibs = [{
-                'maven': 'Azure:mmlspark:0.13',
-                'pip': '' // mmlspark is a .whl file that is already installed in the base conda env
-            }, {
-                'maven': 'ch.cern.sparkmeasure:spark-measure_2.11:0.13',
-                'pip': 'sparkmeasure:0.13.4'
-            }];
-            self.libs = [];
 
             self.job = {
                 'type': '',
@@ -170,25 +89,17 @@ angular.module('hopsWorksApp')
                 }
             };
 
-            self.changeLogLevel = function() {
-                self.val.logLevel = self.logLevelSelected.name;
-            };
-
-            self.changeDistributionStrategy = function() {
-                self.val.distributionStrategy = self.distributionStrategySelected.name;
-            };
-
             self.changeShutdownLevel = function() {
-                self.val.shutdownLevel = self.shutdownLevelSelected.name;
+                self.jupyterSettings.shutdownLevel = self.shutdownLevelSelected.name;
             };
 
             self.updateShutdownLevel = function() {
-                var currentHours = self.val.shutdownLevel;
+                var currentHours = self.jupyterSettings.shutdownLevel;
 
-                self.val.shutdownLevel = Number(self.shutdownLevelSelected.name);
+                self.jupyterSettings.shutdownLevel = Number(self.shutdownLevelSelected.name);
 
                 self.loadingText = "Updating Jupyter Shutdown Time";
-                JupyterService.update(self.projectId, self.val).then(
+                JupyterService.update(self.projectId, self.jupyterSettings).then(
                     function(success) {
                         JupyterService.running(self.projectId).then(
                             function(success) {
@@ -198,11 +109,7 @@ angular.module('hopsWorksApp')
                             function(error) {
                             }
                         );
-                        self.val.shutdownLevel = success.data.shutdownLevel;
-                        growl.info("Updated... notebook will close automatically in " + Math.round(self.config.minutesUntilExpiration/60) + " hours.", {
-                            title: 'Info',
-                            ttl: 3000
-                        });
+                        self.jupyterSettings.shutdownLevel = success.data.shutdownLevel;
                     },
                     function(error) {
                         growl.error("Could not update shutdown time for Jupyter notebook. If this problem persists please contact your system administrator.");
@@ -220,15 +127,10 @@ angular.module('hopsWorksApp')
                 }
             };
 
-            self.changeUmask = function() {
-                self.val.umask = self.umask.name;
-            };
 
             self.changeBaseDir = function() {
-                self.val.baseDir = self.selected.name;
+                self.jupyterSettings.baseDir = self.selected.name;
             };
-
-            self.deselect = function() {};
 
             window.onfocus = function() {
                 self.livySessions(self.projectId);
@@ -254,35 +156,6 @@ angular.module('hopsWorksApp')
                     }
                 );
 
-            };
-
-            self.setNormalSpark = function() {
-                self.val.executorMemory = 2048;
-                self.val.appmasterMemory = 1024;
-                self.val.numExecutorGpus = 0;
-                self.val.numDriverGpus = 0;
-            };
-
-            self.setMultiExecutor = function() {
-                // If leaving TF Driver mode, change default executor memory to 4096
-                self.val.executorMemory = 4096;
-                self.val.appmasterMemory = 1024;
-                self.val.numExecutorGpus = 0;
-                self.val.numDriverGpus = 0;
-                self.val.numExecutors = 2;
-            };
-
-            self.setSingleExecutor = function() {
-                // For TF in Driver mode, we set the minimal number of executors and
-                // minimal amount of memory and fix a single core for the Driver.
-                self.val.appmasterMemory = 1024;
-                self.val.appmasterCores = 1;
-                self.val.numExecutorCores = 1;
-                self.val.numExecutorGpus = 0;
-                self.val.numDriverGpus = 0;
-                self.val.numExecutors = 1;
-                // 128MB is hard-coded in hops-hadoop/templates/../yarn-site.xml
-                self.val.executorMemory = 4096;
             };
             self.showLivyUI = function(appId) {
                 self.job.type = "TENSORFLOW";
@@ -355,6 +228,7 @@ angular.module('hopsWorksApp')
                         self.config = success.data;
                         self.ui = "/hopsworks-api/jupyter/" + self.config.port + "/?token=" + self.config.token;
                         timeToShutdown();
+                        self.livySessions(self.projectId);
                     },
                     function(error) {
                         self.ui = '';
@@ -370,149 +244,27 @@ angular.module('hopsWorksApp')
               $interval.cancel(self.notebookPoller);
             });
 
-            self.sliderVisible = false;
+            self.shutdown_levels = [
+              {
+                  id: 1,
+                  name: '6'
+              }, {
+                  id: 2,
+                  name: '12'
+              }, {
+                  id: 3,
+                  name: '24'
+              }, {
+                  id: 4,
+                  name: '72'
+              }, {
+                  id: 5,
+                  name: '168'
+              }, {
+                  id: 6,
+                  name: '1000'
+            }];
 
-            self.setInitExecs = function() {
-                if (self.sliderOptions.min >
-                    self.val.dynamicInitialExecutors) {
-                    self.val.dynamicInitialExecutors =
-                        parseInt(self.sliderOptions.min);
-                } else if (self.sliderOptions.max <
-                    self.val.dynamicInitialExecutors) {
-                    self.val.dynamicInitialExecutors =
-                        parseInt(self.sliderOptions.max);
-                }
-                self.val.dynamicMinExecutors = self.sliderOptions.min;
-                self.val.dynamicMaxExecutors = self.sliderOptions.max;
-            };
-
-            self.dynExecChangeListener = function() {
-                self.setInitExecs();
-            };
-
-            self.sliderOptions = {
-                min: 1,
-                max: 10,
-                options: {
-                    floor: 0,
-                    ceil: 1000,
-                    onChange: self.dynExecChangeListener,
-                    getPointerColor: function(value) {
-                        return '#4b91ea';
-                    }
-                }
-            };
-
-            self.refreshSlider = function() {
-                $timeout(function() {
-                    $scope.$broadcast('rzSliderForceRender');
-                });
-            };
-
-            self.toggleSlider = function() {
-                self.sliderVisible = !self.sliderVisible;
-                if (self.sliderVisible)
-                    self.refreshSlider();
-            };
-
-            //Set some (semi-)constants
-            self.selectFileRegexes = {
-                "JAR": /.jar\b/,
-                "PY": /.py\b/,
-                "FILES": /[^]*/,
-                "ZIP": /.zip\b/,
-                "TGZ": /.zip\b/
-            };
-            self.selectFileErrorMsgs = {
-                "JAR": "Please select a JAR file.",
-                "PY": "Please select a Python file.",
-                "ZIP": "Please select a zip file.",
-                "TGZ": "Please select a tgz file.",
-                "FILES": "Please select a file."
-            };
-
-
-            this.selectFile = function(reason) {
-
-                ModalService.selectFile('lg', self.selectFileRegexes[reason.toUpperCase()],
-                    self.selectFileErrorMsgs[reason.toUpperCase()], false).then(
-                    function(success) {
-                        self.onFileSelected(reason, "hdfs://" + success);
-                    },
-                    function(error) {
-                        //The user changed their mind.
-                    });
-            };
-
-            /**
-             * Callback for when the user selected a file.
-             * @param {String} reason
-             * @param {String} path
-             * @returns {undefined}
-             */
-            self.onFileSelected = function(reason, path) {
-                var re = /(?:\.([^.]+))?$/;
-                var extension = re.exec(path)[1];
-                var file = path.replace(/^.*[\\\/]/, '')
-                var fileName = file.substr(0, file.lastIndexOf('.'))
-                switch (reason.toUpperCase()) {
-                    case "PYFILES":
-                        if (extension.toUpperCase() === "PY" ||
-                            extension.toUpperCase() === "ZIP" ||
-                            extension.toUpperCase() === "EGG") {
-                            if (self.val.pyFiles === "") {
-                                self.val.pyFiles = path;
-                            } else {
-                                self.val.pyFiles = self.val.pyFiles.concat(",").concat(path);
-                            }
-                        } else {
-                            growl.error("Invalid file type selected. Expecting .py, .zip or .egg - Found: " + extension, {
-                                ttl: 10000
-                            });
-                        }
-                        break;
-                    case "JARS":
-                        if (extension.toUpperCase() === "JAR") {
-                            if (self.val.jars === "") {
-                                self.val.jars = path;
-                            } else {
-                                self.val.jars = self.val.jars.concat(",").concat(path);
-                            }
-                        } else {
-                            growl.error("Invalid file type selected. Expecting .jar - Found: " + extension, {
-                                ttl: 10000
-                            });
-                        }
-                        break;
-                    case "ARCHIVES":
-                        if (extension.toUpperCase() === "ZIP" || extension.toUpperCase() === "TGZ") {
-                            path = path + "#" + fileName
-                            if (self.val.archives === "") {
-                                self.val.archives = path;
-                            } else {
-                                self.val.archives = self.val.archives.concat(",").concat(path);
-                            }
-                        } else {
-                            growl.error("Invalid file type selected. Expecting .zip Found: " + extension, {
-                                ttl: 10000
-                            });
-                        }
-                        break;
-                    case "FILES":
-                        path = path + "#" + file
-                        if (self.val.files === "") {
-                            self.val.files = path;
-                        } else {
-                            self.val.files = self.val.files.concat(",").concat(path);
-                        }
-                        break;
-                    default:
-                        growl.error("Invalid file type selected: " + reason, {
-                            ttl: 10000
-                        });
-                        break;
-                }
-            };
 
             $window.uploadDone = function() {
                 stopLoading();
@@ -520,14 +272,6 @@ angular.module('hopsWorksApp')
 
             $scope.trustSrc = function(src) {
                 return $sce.trustAsResourceUrl(self.ui);
-            };
-
-            self.experiment = function() {
-                $scope.mode = "experiment";
-            };
-
-            self.spark = function() {
-                $scope.mode = "spark";
             };
 
             self.restart = function() {
@@ -539,28 +283,21 @@ angular.module('hopsWorksApp')
                     function(success) {
                         self.config = success.data;
                         self.ui = "/hopsworks-api/jupyter/" + self.config.port + "/?token=" + self.config.token;
-                        self.toggleValue = true;
                         timeToShutdown();
                     },
                     function(error) {
-                        self.val.shutdownLevel = 1;
                         self.tourService.currentStep_TourEight = 0;
                         // nothing to do
                     }
                 );
                 JupyterService.settings(self.projectId).then(
                     function(success) {
-                        self.val = success.data;
-                        self.projectName = self.val.project.name;
-                        if (self.val.dynamicMinExecutors < 1) {
-                            self.val.dynamicMinExecutors = 1;
-                        }
-                        self.sliderOptions.min = self.val.dynamicMinExecutors;
-                        self.sliderOptions.max = self.val.dynamicMaxExecutors;
-                        self.toggleValue = true;
-                        if (self.val.project.name.startsWith("demo_deep_learning")) {
-                            self.val.mode = "experiment";
-                            self.experiment();
+                        self.jupyterSettings = success.data;
+                        $scope.settings = self.jupyterSettings;
+                        $scope.jobConfig = self.jupyterSettings.jobConfig;
+                        self.projectName = self.jupyterSettings.project.name;
+
+                        if (self.jupyterSettings.project.name.startsWith("demo_deep_learning")) {
                             //Activate anaconda
                             PythonDepsService.enabled(self.projectId).then(
                                 function(success) {},
@@ -580,64 +317,23 @@ angular.module('hopsWorksApp')
                                         });
                                 });
 
-                        } else {
-                            self.val.mode = "sparkdynamic";
-                        }
-                        if (self.val.logLevel === "FINE") {
-                            self.logLevelSelected = self.log_levels[0];
-                        } else if (self.val.logLevel === "DEBUG") {
-                            self.logLevelSelected = self.log_levels[1];
-                        } else if (self.val.logLevel === "INFO") {
-                            self.logLevelSelected = self.log_levels[2];
-                        } else if (self.val.logLevel === "WARN") {
-                            self.logLevelSelected = self.log_levels[3];
-                        } else if (self.val.logLevel === "ERROR") {
-                            self.logLevelSelected = self.log_levels[4];
-                        } else {
-                            self.logLevelSelected = self.log_levels[2];
                         }
 
-                        self.distributionStrategySelected = self.distribution_strategies[0];
-                        self.val.distributionStrategy = self.distributionStrategySelected.name;
-
-                        if(self.val.shutdownLevel <= 1) {
-                          self.val.shutdownLevel = self.shutdown_levels[1].name;
-                        }
-
-                        if (self.val.shutdownLevel <= "6") {
+                        if (self.jupyterSettings.shutdownLevel <= "6") {
+                            self.shutdownLevelSelected = self.shutdown_levels[0];
+                        } else if (self.jupyterSettings.shutdownLevel <= "12") {
                             self.shutdownLevelSelected = self.shutdown_levels[1];
-                        } else if (self.val.shutdownLevel <= "12") {
+                        } else if (self.jupyterSettings.shutdownLevel <= "24") {
                             self.shutdownLevelSelected = self.shutdown_levels[2];
-                        } else if (self.val.shutdownLevel <= "24") {
+                        } else if (self.jupyterSettings.shutdownLevel <= "72") {
                             self.shutdownLevelSelected = self.shutdown_levels[3];
-                        } else if (self.val.shutdownLevel <= "72") {
+                        } else if (self.jupyterSettings.shutdownLevel <= "168") {
                             self.shutdownLevelSelected = self.shutdown_levels[4];
-                        } else if (self.val.shutdownLevel <= "168") {
-                            self.shutdownLevelSelected = self.shutdown_levels[5];
                         } else {
-                            self.shutdownLevelSelected = self.shutdown_levels[1];
+                            self.shutdownLevelSelected = self.shutdown_levels[0];
                         }
-
-                        if (self.val.umask === "022") {
-                            self.umask = self.umasks[0];
-                        } else if (self.val.umask === "007") {
-                            self.umask = self.umasks[1];
-                        } else if (self.val.umask === "077") {
-                            self.umask = self.umasks[2];
-                        } else {
-                            self.umask = self.umasks[0];
-                        }
-
-
-                        if (self.val.libs === undefined || self.val.libs.length === 0) {
-                            self.libs = [];
-                        } else {
-                            self.libs = self.val.libs;
-                        }
-
 
                         timeToShutdown();
-
                     },
                     function(error) {
                         growl.error("Could not get Jupyter Notebook Server Settings.");
@@ -652,18 +348,13 @@ angular.module('hopsWorksApp')
             self.openWindow = function() {
                 $window.open(self.ui, '_blank');
                 timeToShutdown();
-                if (self.tourService.currentStep_TourEight == 8) {
-                    self.tourService.currentStep_TourEight = 9;
-                }
             }
 
-
-
             var startLoading = function(label) {
-                self.advanced = false;
                 self.loading = true;
                 self.loadingText = label;
             };
+
             var stopLoading = function() {
                 self.loading = false;
                 self.loadingText = "";
@@ -677,14 +368,16 @@ angular.module('hopsWorksApp')
                 self.tourService.currentStep_TourEight = 0;
                 startLoading("Stopping Jupyter...");
 
+                $scope.tgState = false;
+
                 JupyterService.stop(self.projectId).then(
                     function(success) {
                         self.ui = "";
                         stopLoading();
                         self.mode = "dynamicSpark";
                         $scope.sessions = null;
-                        self.val.shutdownLevel = self.shutdown_levels[1].name;
-                        self.shutdownLevelSelected = self.shutdown_levels[1];
+                        self.jupyterSettings.shutdownLevel = self.shutdown_levels[0].name;
+                        self.shutdownLevelSelected = self.shutdown_levels[0];
                     },
                     function(error) {
                         growl.error("Could not stop the Jupyter Notebook Server.");
@@ -708,34 +401,6 @@ angular.module('hopsWorksApp')
                 );
             };
 
-            self.stopDataOwner = function(hdfsUsername) {
-                startLoading("Stopping Jupyter...");
-                JupyterService.stopDataOwner(self.projectId, hdfsUsername).then(
-                    function(success) {
-                        self.ui = ""
-                        stopLoading();
-                    },
-                    function(error) {
-                        growl.error("Could not stop the Jupyter Notebook Server.");
-                        stopLoading();
-                    }
-                );
-            };
-            self.stopAdmin = function(hdfsUsername) {
-                startLoading("Stopping Jupyter...");
-                self.advanced = true;
-                JupyterService.stopAdmin(self.projectId, hdfsUsername).then(
-                    function(success) {
-                        self.ui = ""
-                        stopLoading();
-                    },
-                    function(error) {
-                        growl.error("Could not stop the Jupyter Notebook Server.");
-                        stopLoading();
-                    }
-                );
-            };
-
             var load = function() {
                 $scope.tgState = true;
             };
@@ -749,109 +414,9 @@ angular.module('hopsWorksApp')
             self.start = function() {
                 startLoading("Connecting to Jupyter...");
                 $scope.tgState = true;
-                self.setInitExecs();
 
-                // if quick-select libraries have been added, we need to add them as
-                // maven packages.
-                var azureRepo = false;
-                if (self.libs.length > 0) {
-                    var packages = "";
-                    var foundRepos = self.val.sparkParams.includes("spark.jars.repositories");
-                    for (var i = 0; i < self.libs.length; i++) {
-                        packages = packages + self.libs[i].maven;
-                        if (i < self.libs.length - 1) {
-                            packages = packages + ",";
-                        }
-
-                        if (self.libs[i].maven.includes("mmlspark")) {
-                            if (self.val.sparkParams.includes("mmlspark") === false) {
-                                azureRepo = true;
-                            }
-                        }
-                    }
-                    var existsPackages = true;
-                    if (self.val.sparkParams.includes("spark.jars.packages") === false) {
-                        existsPackages = false;
-                        if (self.val.sparkParams) {
-                            self.val.sparkParams = self.val.sparkParams.concat('\n' + "spark.jars.packages=");
-                        } else {
-                            self.val.sparkParams = "spark.jars.packages=";
-                        }
-                    }
-                    if (azureRepo) {
-                        var repo = "spark.jars.repositories=" + "http://dl.bintray.com/spark-packages/maven";
-                        if (foundRepos) {
-                            self.val.sparkParams = self.val.sparkParams.replace("spark.jars.repositories=", repo + ",");
-                        } else {
-                            self.val.sparkParams = self.val.sparkParams.concat('\n' + repo);
-                        }
-                    }
-
-                    // First add all the maven coordinates to spark.jars.packages
-                    for (var i = 0; i < self.libs.length; i++) {
-                        var entry = "spark.jars.packages=" + self.libs[i].maven;
-                        if (existsPackages) {
-                            self.val.sparkParams = self.val.sparkParams.replace("spark.jars.packages=", entry + ",");
-                        } else {
-                            existsPackages = true;
-                            self.val.sparkParams = self.val.sparkParams.replace("spark.jars.packages=", entry);
-                        }
-                    }
-
-
-                    // If PySpark selected, add the pip libraries for preselected libraries
-                    PythonDepsService.index(self.projectId).then(
-                        function(success) {
-                            if (success.status !== 204) { // if some libraries were found, continue
-                                var installedPip = success.data;
-
-                                for (var i = 0; i < self.libs.length; i++) {
-                                    // Some selected packages dont have pip libraries.
-                                    if (self.libs[i].pip !== undefined && self.libs[i].pip !== "") {
-                                        var pipLibAlreadyInstalled = false;
-                                        var splitPip = self.libs[i].pip.split(":");
-                                        var pipLibName = splitPip[0];
-                                        var pipLibVersion = splitPip[1];
-                                        for (var j = 0; j < installedPip.length; j++) {
-                                            if (installedPip[j].lib === pipLibName) {
-                                                pipLibAlreadyInstalled = true;
-                                                break;
-                                            }
-                                        }
-                                        if (pipLibAlreadyInstalled === false) {
-                                            var data = {
-                                                "channelUrl": "PyPi",
-                                                "installType": 'PIP',
-                                                "machineType": "ALL",
-                                                "lib": pipLibName,
-                                                "version": pipLibVersion
-                                            };
-                                            PythonDepsService.install(self.projectId, data).then(
-                                                function(success) {
-                                                    growl.info("Installing library: " + self.libs[i].pip, {
-                                                        title: "PIP",
-                                                        ttl: 5000
-                                                    });
-                                                },
-                                                function(error) {
-                                                    growl.error(error.data.errorMsg, {
-                                                        title: 'Error installing pip library: ' + self.libs[i].pip,
-                                                        ttl: 5000
-                                                    });
-                                                });
-                                        }
-                                    }
-                                }
-                            }
-                        },
-                        function(error) {
-                            // Don't need to print to the user
-                        });
-                }
-
-                JupyterService.start(self.projectId, self.val).then(
+                JupyterService.start(self.projectId, self.jupyterSettings).then(
                     function(success) {
-                        self.toggleValue = true;
                         self.config = success.data;
                         growl.info("Started Notebook server! Will shut down the notebook server and any running applications in  " + self.shutdownLevelSelected.name + " hours.", {
                             title: 'Info',
@@ -879,7 +444,6 @@ angular.module('hopsWorksApp')
                             growl.error("", {title: error.data.errorMsg, ttl: 8000});
                         }
                         stopLoading();
-                        self.toggleValue = true;
                     }
                 );
 

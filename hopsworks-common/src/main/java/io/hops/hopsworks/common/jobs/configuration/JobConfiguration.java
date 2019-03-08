@@ -49,7 +49,6 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.hops.hopsworks.common.jobs.erasureCode.ErasureCodeJobConfiguration;
 import io.hops.hopsworks.common.jobs.flink.FlinkJobConfiguration;
-import io.hops.hopsworks.common.jobs.jobhistory.JobType;
 import io.hops.hopsworks.common.jobs.spark.SparkJobConfiguration;
 import io.hops.hopsworks.common.jobs.yarn.YarnJobConfiguration;
 
@@ -122,7 +121,7 @@ public abstract class JobConfiguration {
   public int hashCode() {
     return ThreadLocalRandom.current().nextInt(0, 999999999 + 1);
   }
-  
+
   public static class JobConfigurationFactory {
 
     /**

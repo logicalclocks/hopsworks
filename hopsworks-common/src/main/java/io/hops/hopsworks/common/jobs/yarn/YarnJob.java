@@ -40,14 +40,12 @@
 package io.hops.hopsworks.common.jobs.yarn;
 
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
-import io.hops.hopsworks.common.dao.project.service.ProjectServiceEnum;
-import io.hops.hopsworks.common.dao.project.service.ProjectServices;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.exception.JobException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.jobs.execution.HopsJob;
 import io.hops.hopsworks.common.jobs.jobhistory.JobState;
-import io.hops.hopsworks.common.jobs.jobhistory.JobType;
 import io.hops.hopsworks.common.util.Settings;
 import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
@@ -57,11 +55,9 @@ import org.apache.hadoop.yarn.client.api.YarnClient;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -200,8 +196,8 @@ public abstract class YarnJob extends HopsJob {
   }
 
   @Override
-  protected boolean setupJob(DistributedFileSystemOps dfso, YarnClient yarnClient) {
-    //Check if this job is using Kafka, and include certificate
+  protected boolean setupJob(DistributedFileSystemOps dfso, YarnClient yarnClient) throws JobException {
+    //Check if this job is using Kakfa, and include certificate
     //in local resources
     serviceProps = new ServiceProperties(jobs.getProject().getId(), jobs.getProject().getName(),
         services.getSettings().getRestEndpoint(), jobs.getName(), new ElasticProperties(
@@ -210,31 +206,6 @@ public abstract class YarnJob extends HopsJob {
     if (jobs.getProject().getConda()) {
       serviceProps.initAnaconda(services.getSettings().getAnacondaProjectDir(jobs.getProject())
           + File.separator + "bin" + File.separator + "python");
-    }
-    Collection<ProjectServices> projectServices = jobs.getProject().
-        getProjectServicesCollection();
-    if (projectServices != null && !projectServices.isEmpty()) {
-      Iterator<ProjectServices> iter = projectServices.iterator();
-      while (iter.hasNext()) {
-        ProjectServices projectService = iter.next();
-        //If the project is of type KAFKA
-        if (projectService.getProjectServicesPK().getService()
-            == ProjectServiceEnum.KAFKA && (jobs.getJobType()
-            == JobType.FLINK || jobs.getJobType() == JobType.SPARK)
-            && jobs.getJobConfig() instanceof YarnJobConfiguration
-            && jobs.getJobConfig().getKafka() != null) {
-          serviceProps.initKafka();
-          //Set sessionId to be used by HopsUtil
-          serviceProps.getKafka().setSessionId(sessionId);
-          //Set Kafka specific properties to serviceProps
-          serviceProps.getKafka().setBrokerAddresses(services.getSettings().getKafkaBrokersStr());
-          serviceProps.getKafka().setRestEndpoint(services.getSettings().getRestEndpoint());
-          serviceProps.getKafka().setTopics(jobs.getJobConfig().getKafka().getTopics());
-          serviceProps.getKafka().setProjectConsumerGroups(jobs.getProject().getName(),
-              jobs.getJobConfig().getKafka().getConsumergroups());
-          return true;
-        }
-      }
     }
     return true;
   }

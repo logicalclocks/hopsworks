@@ -45,7 +45,7 @@ import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.jobs.configuration.JobConfiguration;
 import io.hops.hopsworks.common.jobs.configuration.JobConfigurationConverter;
-import io.hops.hopsworks.common.jobs.jobhistory.JobType;
+import io.hops.hopsworks.common.jobs.configuration.JobType;
 import org.codehaus.jackson.annotate.JsonIgnore;
 
 import javax.persistence.Basic;

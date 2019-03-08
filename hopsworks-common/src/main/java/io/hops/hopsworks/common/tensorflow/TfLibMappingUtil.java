@@ -16,10 +16,16 @@
 
 package io.hops.hopsworks.common.tensorflow;
 
+import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.tensorflow.TfLibMapping;
+import io.hops.hopsworks.common.dao.tensorflow.TfLibMappingFacade;
+import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.exception.ServiceException;
 
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import java.io.File;
+import java.util.logging.Level;
 
 /**
  * Obs! This code is here as it should be used both for Jupyter and for running
@@ -32,8 +38,10 @@ public class TfLibMappingUtil {
   private static final String CUDA_BASE_PATH = LIB_PATH + "/cuda-";
   private static final String CUDNN_BASE_PATH = LIB_PATH + "/cudnn-";
   private static final String NCCL_BASE_PATH = LIB_PATH + "/nccl";
+  @EJB
+  private TfLibMappingFacade tfLibMappingFacade;
 
-  public String buildTfLdLibraryPath(TfLibMapping tfLibMapping) {
+  private String buildTfLdLibraryPath(TfLibMapping tfLibMapping) {
 
     // Add cuDnn dependency
     String ldPathBuilder = CUDNN_BASE_PATH + tfLibMapping.getCudnnVersion() + "/lib64" + File.pathSeparator;
@@ -47,7 +55,13 @@ public class TfLibMappingUtil {
     return ldPathBuilder;
   }
 
-  public String buildCudaHome(TfLibMapping tfLibMapping) {
-    return CUDA_BASE_PATH + tfLibMapping.getCudaVersion() + File.pathSeparator;
+  public String getTfLdLibraryPath(Project project) throws ServiceException {
+    // Get information about which version of TensorFlow the user is running
+    TfLibMapping tfLibMapping = tfLibMappingFacade.findTfMappingForProject(project);
+    if (tfLibMapping == null) {
+      // We are not supporting this version.
+      throw new ServiceException(RESTCodes.ServiceErrorCode.TENSORFLOW_VERSION_NOT_SUPPORTED, Level.INFO);
+    }
+    return  buildTfLdLibraryPath(tfLibMapping);
   }
 }

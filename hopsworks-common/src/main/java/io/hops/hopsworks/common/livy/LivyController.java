@@ -66,8 +66,6 @@ public class LivyController {
 
   private static final Logger LOGGER = Logger.getLogger(LivyController.class.getName());
 
-  private static final String JUPYTER_SESSION_NAME = "remotesparkmagics-jupyter";
-
   @EJB
   private Settings settings;
   @EJB
@@ -105,7 +103,7 @@ public class LivyController {
       for (LivyMsg.Session s : sessionList.getSessions()) {
         if (hdfsUsername != null && hdfsUsername.equals(s.getProxyUser())) {
           appStates = appStateBean.findByAppId(s.getAppId());
-          if (appStates == null || !appStates.getAppname().startsWith(JUPYTER_SESSION_NAME)) {
+          if (appStates == null || !appStates.getAppname().startsWith(Settings.JUPYTER_SPARKMAGIC_PREFIX)) {
             continue;
           }
           s.setOwner(member.getUser().getEmail());
@@ -151,7 +149,8 @@ public class LivyController {
     for (LivyMsg.Session s : sessionList.getSessions()) {
       if (hdfsUsername != null && hdfsUsername.equals(s.getProxyUser())) {
         appStates = appStateBean.findByAppId(s.getAppId());
-        if (appStates == null || !appStates.getAppname().startsWith(JUPYTER_SESSION_NAME)) {
+        if (appStates == null ||
+          !appStates.getAppname().startsWith(Settings.JUPYTER_SPARKMAGIC_PREFIX)) {
           continue;
         }
         s.setOwner(user.getEmail());

@@ -41,7 +41,7 @@ package io.hops.hopsworks.common.jobs.flink;
 
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
-import io.hops.hopsworks.common.jobs.jobhistory.JobType;
+import io.hops.hopsworks.common.jobs.configuration.JobType;
 import io.hops.hopsworks.common.jobs.yarn.LocalResourceDTO;
 import io.hops.hopsworks.common.jobs.yarn.ServiceProperties;
 import io.hops.hopsworks.common.jobs.yarn.YarnRunner;
@@ -412,15 +412,8 @@ public class FlinkYarnRunnerBuilder {
       }
     }
     addSystemProperty(Settings.HOPSWORKS_REST_ENDPOINT_PROPERTY, serviceProps.getRestEndpoint());
-    if (serviceProps.getKafka() != null) {
-      
-      addSystemProperty(Settings.KAFKA_BROKERADDR_PROPERTY, serviceProps.getKafka().getBrokerAddresses());
-      addSystemProperty(Settings.KAFKA_JOB_TOPICS_PROPERTY, serviceProps.getKafka().getTopics());
-      addSystemProperty(Settings.HOPSWORKS_PROJECTID_PROPERTY, Integer.toString(serviceProps.getProjectId()));
-      if (serviceProps.getKafka().getConsumerGroups() != null) {
-        addSystemProperty(Settings.KAFKA_CONSUMER_GROUPS,serviceProps.getKafka().getConsumerGroups());
-      }
-    }
+    addSystemProperty(Settings.HOPSWORKS_PROJECTID_PROPERTY, Integer.toString(serviceProps.getProjectId()));
+
     if (!sysProps.isEmpty()) {
       dynamicPropertiesEncoded = new StringBuilder();
       for (String s : sysProps.keySet()) {

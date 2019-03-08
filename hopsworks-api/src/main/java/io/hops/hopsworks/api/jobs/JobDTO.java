@@ -19,7 +19,7 @@ import io.hops.hopsworks.api.jobs.executions.ExecutionDTO;
 import io.hops.hopsworks.api.user.UserDTO;
 import io.hops.hopsworks.common.api.RestDTO;
 import io.hops.hopsworks.common.jobs.configuration.JobConfiguration;
-import io.hops.hopsworks.common.jobs.jobhistory.JobType;
+import io.hops.hopsworks.common.jobs.configuration.JobType;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.Date;

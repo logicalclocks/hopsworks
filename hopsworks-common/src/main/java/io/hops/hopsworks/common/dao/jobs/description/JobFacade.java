@@ -46,7 +46,7 @@ import io.hops.hopsworks.common.exception.InvalidQueryException;
 import io.hops.hopsworks.common.jobs.configuration.JobConfiguration;
 import io.hops.hopsworks.common.jobs.configuration.ScheduleDTO;
 import io.hops.hopsworks.common.jobs.jobhistory.JobState;
-import io.hops.hopsworks.common.jobs.jobhistory.JobType;
+import io.hops.hopsworks.common.jobs.configuration.JobType;
 
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;

@@ -46,7 +46,7 @@ import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.exception.CryptoPasswordNotFoundException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
-import io.hops.hopsworks.common.jobs.jobhistory.JobType;
+import io.hops.hopsworks.common.jobs.configuration.JobType;
 import io.hops.hopsworks.common.jobs.yarn.LocalResourceDTO;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.util.templates.AppendConfigReplacementPolicy;
@@ -675,7 +675,7 @@ public class HopsUtils {
    * @return A map with the replacement pattern and value for each property
    */
   public static Map<String, String> mergeHopsworksAndUserParams(Map<String, ConfigProperty> hopsworksParams,
-      Map<String, String> userParameters, boolean isJob) {
+      Map<String, String> userParameters) {
     Map<String, String> finalParams = new HashMap<>();
     Set<String> notReplacedUserParams = new HashSet<>();
     
@@ -685,10 +685,7 @@ public class HopsUtils {
         prop.replaceValue(userParam.getValue());
         finalParams.put(prop.getReplacementPattern(), prop.getValue());
       } else {
-        notReplacedUserParams.add(userParam.getKey());
-        if(isJob){
-          finalParams.put(userParam.getKey(), userParam.getValue());
-        }
+        finalParams.put(userParam.getKey(), userParam.getValue());
       }
     }
     
@@ -705,7 +702,6 @@ public class HopsUtils {
       // Remove last comma and add a new line char
       userParamsStr = userParamsStr.trim().substring(0, userParamsStr.length() - 2) + "\n";
     }
-    finalParams.put("spark_user_defined_properties", userParamsStr);
     
     for (ConfigProperty configProperty : hopsworksParams.values()) {
       finalParams.putIfAbsent(configProperty.getReplacementPattern(), configProperty.getValue());

@@ -73,7 +73,7 @@ angular.module('hopsWorksApp')
             self.jobsToDate = new Date();
             self.jobsToDate.setMinutes(self.jobsToDate.getMinutes() + 60*24);
             self.jobsFromDate = new Date();
-            self.jobsFromDate.setMonth(self.jobsToDate.getMonth() - 1);
+            self.jobsFromDate.setMinutes(self.jobsToDate.getMinutes() - 60*24*30);
 
             self.sortKey = 'date_created';
             self.orderBy = "desc";
@@ -156,21 +156,15 @@ angular.module('hopsWorksApp')
 
             self.stopButtonClickedToggle = function (name, display) {
               self.workingArray[name] = display;
-              var jobClickStatus = StorageService.recover(self.projectId + "_jobstopclicked_"+name);
-              StorageService.store(self.projectId + "_jobstopclicked_"+name, jobClickStatus);
-              if(jobClickStatus === "stopping"){
-                StorageService.store(self.projectId + "_jobstopclicked_"+name, "killing");
-              } else {
-                StorageService.store(self.projectId + "_jobstopclicked_"+name, "stopping");
-              }
+              StorageService.store(self.projectId + "_jobstopclicked_"+name, "stopping");
             };
 
             self.getJobClickStatus = function(name){
               var status = StorageService.recover(self.projectId + "_jobstopclicked_"+name);
-              if(status === "stopping" || status === "killing"){
+              if(status === "stopping"){
                 StorageService.store(self.projectId + "_jobstopclicked_"+name, status);
               }
-              if(status !== "stopping" && status !== "killing"){
+              if(status !== "stopping"){
                 status = "running";
               }
               return status;
@@ -440,13 +434,6 @@ angular.module('hopsWorksApp')
               });
             };
 
-            self.killJob = function (name) {
-              ModalService.confirm('sm', 'Confirm', 'Attemping to stop your job. For streaming jobs this operation can take a few minutes... Do you really want to kill this job and risk losing streaming events?').then(
-                function (success) {
-                  self.stopJob(name);
-                }
-              );
-            };
             /**
              * Navigate to the new job page.
              * @returns {undefined}

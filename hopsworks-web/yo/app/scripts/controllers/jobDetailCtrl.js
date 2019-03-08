@@ -154,32 +154,4 @@ angular.module('hopsWorksApp')
               $uibModalInstance.dismiss('cancel');
             };
 
-            /**
-             * Converts the colon-separated list of topics to a nicer human friendly format
-             * @returns comma-separated list of topics
-             */
-            self.viewTopics = function(topics){
-              var view = "";
-              for(var i=0; i<topics.length;i++){
-                view+=topics[i]['name']+", ";
-              }
-              if(view.length>1){
-                view = view.substr(0, view.length-2);
-              }
-              return view;
-            };
-            
-            self.hasKafka = function(){
-              if(typeof self.job.runConfig !== "undefined" && typeof self.job.runConfig.kafka !== "undefined"){
-                return true;
-              }
-              return false;
-            };
-            self.hasConsumerGroups = function(){
-              if(typeof self.job.runConfig.kafka.consumerGroups !== "undefined"){
-                return true;
-              }
-              return false;
-            };
-
           }]);

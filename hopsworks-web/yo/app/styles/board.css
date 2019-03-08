@@ -286,6 +286,12 @@ div.story h3, div.task h3 {
     margin-bottom: 5px;
 }
 
+.uneditable {
+  cursor: not-allowed;
+  opacity: 0.8;
+  pointer-events: none;
+}
+
 
 .ui-select-bootstrap {
   .ui-select-toggle > .caret {
@@ -309,6 +315,23 @@ div.story h3, div.task h3 {
   }
 }
 
+.animate-if {
+  padding:10px;
+}
+
+.animate-if.ng-enter, .animate-if.ng-leave {
+  transition:all cubic-bezier(0.250, 0.460, 0.450, 0.940) 0.5s;
+}
+
+.animate-if.ng-enter,
+.animate-if.ng-leave.ng-leave-active {
+  opacity:0;
+}
+
+.animate-if.ng-leave,
+.animate-if.ng-enter.ng-enter-active {
+  opacity:1;
+}
 
 .textarea {
   height:auto;
@@ -324,4 +347,20 @@ div.story h3, div.task h3 {
   border:none;
   box-shadow:0px 0px 5px 1px rgba(0,0,0,0.1);
   padding:30px;
+}
+
+.resource-ul {
+  padding-left:0;
+}
+
+.resource {
+  list-style: none;
+  color: #fff;
+  padding: 0 0.5em;
+  overflow: hidden;
+  margin: 2px 0;
+}
+
+.unset {
+  opacity: 0.6;
 }

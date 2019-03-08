@@ -63,7 +63,7 @@ import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.UserGroupInformationService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.jobs.jobhistory.JobType;
+import io.hops.hopsworks.common.jobs.configuration.JobType;
 import io.hops.hopsworks.common.jobs.yarn.YarnJobsMonitor;
 import io.hops.hopsworks.common.util.Settings;
 
