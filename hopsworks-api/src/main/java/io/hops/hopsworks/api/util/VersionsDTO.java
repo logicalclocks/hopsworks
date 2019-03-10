@@ -87,7 +87,6 @@ public class VersionsDTO {
     versions.add(new Version("filebeat", settings.getFilebeatVersion()));
     versions.add(new Version("ndb", settings.getNdbVersion()));
     versions.add(new Version("livy", settings.getLivyVersion()));
-    versions.add(new Version("zeppelin", settings.getZeppelinVersion()));
     versions.add(new Version("hive2", settings.getHive2Version()));
     versions.add(new Version("tez", settings.getTezVersion()));
     versions.add(new Version("slider", settings.getSliderVersion()));

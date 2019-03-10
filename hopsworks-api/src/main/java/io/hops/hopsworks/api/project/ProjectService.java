@@ -90,16 +90,13 @@ import io.hops.hopsworks.common.exception.UserException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
-import io.hops.hopsworks.common.message.MessageController;
 import io.hops.hopsworks.common.project.MoreInfoDTO;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.project.ProjectDTO;
 import io.hops.hopsworks.common.project.QuotasDTO;
 import io.hops.hopsworks.common.project.TourProjectType;
-import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.user.AuthController;
 import io.hops.hopsworks.common.user.UsersController;
-import io.hops.hopsworks.common.util.EmailBean;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.Api;
@@ -187,12 +184,6 @@ public class ProjectService {
   @EJB
   private DistributedFsService dfs;
   @EJB
-  private CertificateMaterializer certificateMaterializer;
-  @EJB
-  private MessageController messageController;
-  @EJB
-  private EmailBean emailBean;
-  @EJB
   private AuthController authController;
   @EJB
   private PiaFacade piaFacade;
@@ -236,6 +227,8 @@ public class ProjectService {
 
   @GET
   @Path("/getProjectInfo/{projectName}")
+  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @Produces(MediaType.APPLICATION_JSON)
   public Response getProjectByName(@PathParam("projectName") String projectName) throws ProjectException {
     ProjectDTO proj = projectController.getProjectByName(projectName);
@@ -419,6 +412,7 @@ public class ProjectService {
   @GET
   @Path("{projectId}")
   @Produces(MediaType.APPLICATION_JSON)
+  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response findByProjectID(@PathParam("projectId") Integer id) throws ProjectException {
 

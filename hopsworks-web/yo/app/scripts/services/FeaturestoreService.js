@@ -23,6 +23,34 @@ angular.module('hopsWorksApp')
             return {
 
                 /**
+                 * Utility function that returns the supported data formats in the feature store
+                 * @returns list of supported data formats for training datasets
+                 */
+                dataFormats: function() {
+                    return [
+                        "csv", "tfrecords", "parquet", "tsv", "hdf5", "npy", "orc", "avro", "image", "petastorm"
+                    ]
+                },
+
+                /**
+                 * Utility function that returns the regexp for training dataset names
+                 *
+                 * @returns {RegExp} for training datasets
+                 */
+                trainingDatasetRegExp: function() {
+                    return /^[a-zA-Z0-9_]+$/
+                },
+
+                /**
+                 * Utility function that returns the regexp hive table and column names
+                 *
+                 * @returns {RegExp} for hive
+                 */
+                hiveRegExp: function() {
+                    return /^[a-zA-Z0-9_]+$/;
+                },
+
+                /**
                  * Sends a POST request to the backend for creating a feature group
                  *
                  * @param projectId project where the featuregroup will be created

@@ -157,11 +157,8 @@ public class UploadService {
    * Sets the upload path for the file to be uploaded.
    * <p/>
    * @param dsPath the dsPath object built by the DatasetService.java
-   * @param username the username of the user uploading the file
    * @param templateId the template to associate the the uploaded file
-   * @param role
-   * is not valid
-   * @throws io.hops.hopsworks.common.exception.DatasetException
+   * @throws io.hops.hopsworks.common.exception.DatasetException DatasetException
    */
   private void confFileUpload(DsPath dsPath, int templateId) throws DatasetException {
     if (dsPath.getDsRelativePath() != null) {

@@ -40,7 +40,7 @@ package io.hops.hopsworks.common.jobs.flink;
 
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
-import io.hops.hopsworks.common.jobs.jobhistory.JobType;
+import io.hops.hopsworks.common.jobs.configuration.JobType;
 import io.hops.hopsworks.common.jobs.yarn.YarnRunner;
 import io.hops.hopsworks.common.util.HopsUtils;
 import org.apache.flink.client.CliFrontend;

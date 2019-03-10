@@ -163,6 +163,10 @@ function getPathname() {
   return "/hopsworks-api";
 }
 
+function getRemoteUserAuthPathname() {
+  return "/hopsworks-remote-user-auth";
+}
+
 function getApiPath() {
   return "/hopsworks-api/api";
 }
@@ -175,6 +179,10 @@ function getApiLocationBase() {
   return location.protocol + "//" + location.hostname +":" + getPort() + getPathname();
 };
 
+function getRemoteUserAuthApiLocationBase() {
+  return location.protocol + "//" + location.hostname +":" + getPort() + getRemoteUserAuthPathname();
+};
+
 function getWsProtocol() {
   return location.protocol === 'https:' ? 'wss:' : 'ws:';
 };
@@ -182,10 +190,6 @@ function getWsProtocol() {
 function getMetaDataWsBaseURL() {
   return getWsProtocol() +"//" + location.hostname + ":" + getPort() + getPathname() + "/wspoint/";
 }
-
-function getZeppelinWsBaseURL() {
-  return getWsProtocol() +"//" + location.hostname + ":" + getPort() + getPathname() + "/zeppelin/ws/";
-};
 
 function skipTrailingSlash(path) {
   return path.slice(-1) === "/" ? path.substring(0, path.length-1) : path;

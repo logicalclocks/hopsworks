@@ -261,6 +261,29 @@ public class UsersController {
     addOrg(user);
     return user;
   }
+     
+  /**
+   * Create Kerberos user
+   * @param email
+   * @param fname
+   * @param lname
+   * @param pwd
+   * @param accStatus
+   * @return 
+   */
+  public Users createNewKrbLdapUser(String email, String fname, String lname, String pwd, UserAccountStatus accStatus) {
+    String uname = generateUsername(email);
+    List<BbcGroup> groups = new ArrayList<>();
+    String salt = authController.generateSalt();
+    String password = authController.getPasswordHash(pwd, salt);
+
+    Users user = new Users(uname, password, email, fname, lname, "-", "-", accStatus, UserAccountType.KRB_ACCOUNT_TYPE, 
+        settings.getMaxNumProjPerUser(), salt);
+    user.setBbcGroupCollection(groups);
+    addAddress(user);
+    addOrg(user);
+    return user;
+  }
 
   public void addAddress(Users user) {
     Address a = new Address();

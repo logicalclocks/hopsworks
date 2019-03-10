@@ -45,6 +45,7 @@ import java.security.PrivilegedExceptionAction;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import io.hops.hopsworks.common.exception.JobException;
 import io.hops.hopsworks.common.yarn.YarnClientWrapper;
 import org.apache.hadoop.security.UserGroupInformation;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
@@ -99,12 +100,10 @@ public abstract class HopsJob {
    * @param user The user executing this job.
    * @param hadoopDir base Hadoop installation directory
    * @param jobsMonitor
-   * @throws NullPointerException If either of the given arguments is null.
    */
   protected HopsJob(Jobs jobs,
           AsynchronousJobExecutor services, Users user, String hadoopDir,
-          YarnJobsMonitor jobsMonitor) throws
-          NullPointerException {
+          YarnJobsMonitor jobsMonitor) {
     //Check validity
     if (jobs == null) {
       throw new NullPointerException("Cannot run a null Job.");
@@ -150,7 +149,7 @@ public abstract class HopsJob {
    * <p/>
    * @throws IllegalStateException If no Execution id has been requested yet.
    */
-  public final void execute() throws IllegalStateException {
+  public final void execute() {
     if (!initialized) {
       throw new IllegalStateException(
               "Cannot execute before acquiring an Execution id.");
@@ -166,21 +165,21 @@ public abstract class HopsJob {
             execution = services.getExecutionFacade().updateExecutionStart(execution, System.currentTimeMillis());
             dfso = services.getFsService().getDfsOps();
             udfso = services.getFileOperations(hdfsUser.getUserName());
-            yarnClientWrapper = services.getYarnClientService()
-                .getYarnClient(hdfsUser.getUserName());
-            boolean proceed = setupJob(dfso, yarnClientWrapper.getYarnClient());
+            yarnClientWrapper = services.getYarnClientService().getYarnClient(hdfsUser.getUserName());
+            boolean proceed = false;
+            try {
+              proceed = setupJob(dfso, yarnClientWrapper.getYarnClient());
+            } catch(Exception ex) {
+              logger.log(Level.SEVERE, "Job Initialization Failed", ex);
+            }
             if (!proceed) {
               execution = services.getExecutionFacade().updateExecutionStop(execution, System.currentTimeMillis());
               services.getExecutionFacade().updateState(execution, JobState.INITIALIZATION_FAILED);
               cleanup();
               return null;
-            } else {
-              updateState(JobState.STARTING_APP_MASTER);
             }
             runJob(udfso, dfso);
             return null;
-          } catch (IOException e) {
-            logger.log(Level.SEVERE, "Exception while trying to get hdfsUser name for execution " + execution, e);
           } finally {
             if (dfso != null) {
               dfso.close();
@@ -192,16 +191,11 @@ public abstract class HopsJob {
               services.getYarnClientService().closeYarnClient(yarnClientWrapper);
             }
           }
-          return null;
         }
       });
     } catch (IOException | InterruptedException ex) {
       logger.log(Level.SEVERE, null, ex);
     }
-  }
-
-  public final void stop(String appid) throws IllegalStateException {
-    stopJob(appid);
   }
 
   /**
@@ -213,7 +207,7 @@ public abstract class HopsJob {
    * in that case.
    */
   protected abstract boolean setupJob(DistributedFileSystemOps dfso,
-      YarnClient yarnClient);
+      YarnClient yarnClient) throws JobException;
 
   /**
    * Takes care of the execution of the job. Called by execute() after
@@ -227,8 +221,6 @@ public abstract class HopsJob {
    */
   protected abstract void runJob(DistributedFileSystemOps udfso,
           DistributedFileSystemOps dfso);
-
-  protected abstract void stopJob(String appid);
 
   /**
    * Called after runJob() completes, allows the job to perform some cleanup, if

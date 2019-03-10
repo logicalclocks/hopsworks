@@ -46,6 +46,8 @@ import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
+
+import io.hops.hopsworks.common.jobs.spark.SparkJobConfiguration;
 import org.apache.commons.codec.digest.DigestUtils;
 
 /**
@@ -81,18 +83,19 @@ public class JupyterSettingsFacade {
   public JupyterSettings findByProjectUser(int projectId, String email) {
 
     JupyterSettingsPK pk = new JupyterSettingsPK(projectId, email);
-    JupyterSettings js = null;
+    JupyterSettings js;
     js = em.find(JupyterSettings.class, pk);
     if (js == null) {
       String secret = DigestUtils.sha256Hex(Integer.toString(
               ThreadLocalRandom.current().nextInt()));
       js = new JupyterSettings(pk);
       js.setSecret(secret);
-      js.setMode("sparkDynamic");
+      js.setJobConfig(new SparkJobConfiguration());
       persist(js);
+    } else if(js.getJobConfig() == null) {
+      js.setJobConfig(new SparkJobConfiguration());
     }
     return js;
-
   }
 
   private void persist(JupyterSettings js) {

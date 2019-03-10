@@ -72,8 +72,8 @@ public class PKI {
 
   @PostConstruct
   public void init() {
-    dateFormat = new SimpleDateFormat("yyMMddHHmmssZ");
-    dateFormat.setTimeZone(TimeZone.getDefault());
+    dateFormat = new SimpleDateFormat("yyMMddHHmmss");
+    dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
   }
 
   public String getCertFileName(CertificateType certType, Map<String, String> subject) {
@@ -128,7 +128,7 @@ public class PKI {
    * Format date ASN1 UTCTime
    */
   private String getExpirationDateASN1(long validityMS) {
-    return dateFormat.format(new Date(System.currentTimeMillis() + validityMS));
+    return dateFormat.format(new Date(System.currentTimeMillis() + validityMS)) + 'Z';
   }
 
   public HashMap<String, String> getKeyValuesFromSubject(String subject) {

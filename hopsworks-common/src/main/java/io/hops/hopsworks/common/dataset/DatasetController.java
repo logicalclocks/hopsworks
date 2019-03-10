@@ -542,7 +542,7 @@ public class DatasetController {
    * @return
    */
   public boolean isDownloadAllowed(Project project, Users user, String path) {
-    //Data Scientists are allowed to download their own data and those of PROJECTGENERICUSER
+    //Data Scientists are allowed to download their own data
     String role = projectTeamFacade.findCurrentRole(project, user);
     if (role.equals(AllowedRoles.DATA_OWNER)) {
       return true;
@@ -552,9 +552,6 @@ public class DatasetController {
         String username = hdfsUsersBean.getHdfsUserName(project, user);
         udfso = dfs.getDfsOps(username);
         String owner = udfso.getFileStatus(new org.apache.hadoop.fs.Path(path)).getOwner();
-        if (owner.equals(project.getProjectGenericUser())) {
-          return true;
-        }
         //Find hdfs user for this project
         String projectUser = hdfsUsersBean.getHdfsUserName(project, user);
         //If user requesting the download is the owner, approve the request

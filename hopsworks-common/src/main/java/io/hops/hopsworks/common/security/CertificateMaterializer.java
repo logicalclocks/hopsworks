@@ -39,10 +39,7 @@
 package io.hops.hopsworks.common.security;
 
 import io.hops.hopsworks.common.dao.certificates.CertsFacade;
-import io.hops.hopsworks.common.dao.certificates.ProjectGenericUserCerts;
 import io.hops.hopsworks.common.dao.certificates.UserCerts;
-import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.CryptoPasswordNotFoundException;
@@ -88,7 +85,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -114,7 +110,6 @@ public class CertificateMaterializer {
   private final Map<MaterialKey, Bag> materializedCerts;
   private final Map<MaterialKey, CryptoMaterial> materialCache;
   private final Map<MaterialKey, Map<String, LocalFileRemover>> fileRemovers;
-  private final Set<Integer> projectsWithOpenInterpreters;
   private final Map<MaterialKey, ReentrantReadWriteLock> materialKeyLocks = new ConcurrentHashMap<>();
   
   private String lock_id;
@@ -127,8 +122,6 @@ public class CertificateMaterializer {
   private Settings settings;
   @EJB
   private CertsFacade certsFacade;
-  @EJB
-  private ProjectFacade projectFacade;
   @EJB
   private HdfsUsersController hdfsUsersController;
   @EJB
@@ -146,7 +139,6 @@ public class CertificateMaterializer {
     materializedCerts = new HashMap<>();
     materialCache = new HashMap<>();
     fileRemovers = new HashMap<>();
-    projectsWithOpenInterpreters = new ConcurrentSkipListSet<>();
   }
   
   @PostConstruct
@@ -238,17 +230,7 @@ public class CertificateMaterializer {
   /*
    * Start of Certificate materializer API
    */
-  
-  /**
-   * Materialize project *generic* certificates in *local* filesystem in the *standard* directory
-   *
-   * @param projectName Name of the Project
-   * @throws IOException
-   */
-  public void materializeCertificatesLocal(String projectName) throws IOException {
-    materializeCertificatesLocal(null, projectName);
-  }
-  
+
   /**
    * Materialize project *specific* certificates in *local* filesystem in the *standard* directory
    *
@@ -768,29 +750,7 @@ public class CertificateMaterializer {
       return materialKeyLocks;
     }
   }
-  
-  
-  /*
-   * Methods to keep track of open interpreters and when to materialize certificates
-   */
-  /**
-   * It is called every time a paragraph is executed in Zeppelin. If the certificates for a Project has already been
-   * materialized, this method will return false and they will not be materialized again.
-   * @param projectId
-   * @return True if it is the first time a paragraph is executed for that project. Otherwise false
-   */
-  public boolean openedInterpreter(Integer projectId) {
-    return projectsWithOpenInterpreters.add(projectId);
-  }
-  
-  /**
-   * It is called only when a project has not running interpreters, thus it is safe to remove the certificates.
-   * @param projectId ID of the project
-   */
-  public void closedInterpreter(Integer projectId) {
-    projectsWithOpenInterpreters.remove(projectId);
-  }
-  
+
   /*
    * Materialize local section
    */
@@ -1186,59 +1146,26 @@ public class CertificateMaterializer {
    * Utility methods
    */
   private CryptoMaterial getMaterialFromDatabase(MaterialKey key) throws IOException {
-    if (key.isProjectUser()) {
-      ProjectGenericUserCerts projectGenericUserCerts = certsFacade.findProjectGenericUserCerts(key
-          .getExtendedUsername());
-      if (projectGenericUserCerts == null) {
-        String msg = "Could not find certificates in the database for user <" + key.getExtendedUsername() + ">";
-        LOG.log(Level.SEVERE, msg);
-        throw new IOException(msg);
-      }
-      ByteBuffer keyStore = ByteBuffer.wrap(projectGenericUserCerts.getKey());
-      ByteBuffer trustStore = ByteBuffer.wrap(projectGenericUserCerts.getCert());
-      char[] password = decryptMaterialPassword(key.projectName, projectGenericUserCerts
-          .getCertificatePassword(), ProjectGenericUserCerts.class);
-      return new CryptoMaterial(keyStore, trustStore, password);
-    }
-  
     UserCerts projectSpecificCerts = certsFacade.findUserCert(key.projectName, key.username);
     ByteBuffer keyStore = ByteBuffer.wrap(projectSpecificCerts.getUserKey());
     ByteBuffer trustStore = ByteBuffer.wrap(projectSpecificCerts.getUserCert());
-    char[] password = decryptMaterialPassword(key.getExtendedUsername(), projectSpecificCerts.getUserKeyPwd(),
-        UserCerts.class);
+    char[] password = decryptMaterialPassword(key.getExtendedUsername(), projectSpecificCerts.getUserKeyPwd());
     return new CryptoMaterial(keyStore, trustStore, password);
   }
   
-  private <T> char[] decryptMaterialPassword(String certificateIdentifier, String encryptedPassword, Class<T> cls)
-      throws IOException {
-    String userPassword;
-    if (ProjectGenericUserCerts.class == cls) {
-      // Project generic certificates
-      // Certificate Identifier will be the name of the Project
-      Project project = projectFacade.findByName(certificateIdentifier);
-      if (project == null) {
-        String msg = "Project <" + certificateIdentifier + "> could not be found in the system";
-        LOG.log(Level.SEVERE, msg);
-        throw new IOException(msg);
-      }
-      Users owner = project.getOwner();
-      userPassword = owner.getPassword();
-    } else if (UserCerts.class == cls) {
-      // Project specific certificates
-      // Certificates Identifier will be the project specific username
-      String username = hdfsUsersController.getUserName(certificateIdentifier);
-      Users user = userFacade.findByUsername(username);
-      if (user == null) {
-        String msg = "Could not find user <" + certificateIdentifier + "> in the system";
-        LOG.log(Level.SEVERE, msg);
-        throw new IOException(msg);
-      }
-      userPassword = user.getPassword();
-    } else {
-      String msg = "Unknown certificate type: " + cls.getName();
+  private char[] decryptMaterialPassword(String certificateIdentifier, String encryptedPassword) throws IOException {
+
+    // Project specific certificates
+    // Certificates Identifier will be the project specific username
+    String username = hdfsUsersController.getUserName(certificateIdentifier);
+    Users user = userFacade.findByUsername(username);
+    if (user == null) {
+      String msg = "Could not find user <" + certificateIdentifier + "> in the system";
       LOG.log(Level.SEVERE, msg);
-      throw new IllegalArgumentException(msg);
+      throw new IOException(msg);
     }
+    String userPassword = user.getPassword();
+
     try {
       String decryptedPassword = HopsUtils.decrypt(userPassword, encryptedPassword, certificatesMgmService
           .getMasterEncryptionPassword());
@@ -1283,26 +1210,13 @@ public class CertificateMaterializer {
   private class MaterialKey {
     private final String username;
     private final String projectName;
-    private final boolean isProjectUser;
-    
+
     private MaterialKey(String username, String projectName) {
       this.username = username;
-      if (username == null) {
-        this.isProjectUser = true;
-      } else {
-        this.isProjectUser = false;
-      }
       this.projectName = projectName;
     }
     
-    private boolean isProjectUser() {
-      return isProjectUser;
-    }
-    
     private String getExtendedUsername() {
-      if (isProjectUser) {
-        return projectName + Settings.PROJECT_GENERIC_USER_SUFFIX;
-      }
       return projectName + HdfsUsersController.USER_NAME_DELIMITER + username;
     }
   

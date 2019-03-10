@@ -40,7 +40,6 @@ package io.hops.hopsworks.common.dao.project.service;
 
 public enum ProjectServiceEnum {
 
-  ZEPPELIN("Zeppelin"),
   KAFKA("Kafka"),
   HISTORY("History"),
   DELA("Dela"),

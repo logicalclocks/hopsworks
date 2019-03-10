@@ -34,9 +34,7 @@ angular.module('hopsWorksApp')
             self.jobs = self.jobs.concat(jobs);
             self.trainingDatasets = trainingDatasets
             $scope.selected = {value: self.jobs[0]}
-
-            self.trainingDatasetNameRegexp = /^[a-zA-Z0-9_]+$/;
-
+            self.trainingDatasetNameRegexp = FeaturestoreService.trainingDatasetRegExp();
             self.trainingDatasetNameWrongValue = 1
             self.trainingDatasetNameNotUnique = 1
             self.trainingDatasetDescriptionWrongValue = 1;
@@ -54,9 +52,7 @@ angular.module('hopsWorksApp')
             }
             self.trainingDatasetFormat;
 
-            self.dataFormats = [
-                "csv", "tfrecords", "parquet", "tsv", "hdf5", "npy", "orc", "avro", "image"
-            ]
+            self.dataFormats = FeaturestoreService.dataFormats()
             var i;
             self.trainingDatasetNames = []
             for (i = 0; i < self.trainingDatasets.length; i++) {

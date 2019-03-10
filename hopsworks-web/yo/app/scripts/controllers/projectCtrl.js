@@ -46,13 +46,14 @@ angular.module('hopsWorksApp')
         .controller('ProjectCtrl', ['$scope', '$rootScope', '$location', '$routeParams', '$route', '$timeout', '$window', 'UtilsService',
           'growl', 'ProjectService', 'ModalService', 'ActivityService', '$cookies', 'DataSetService',
           'UserService', 'TourService', 'PythonDepsService', 'StorageService', 'CertService', 'VariablesService', 'FileSaver', 'Blob',
-          'AirflowService', '$http',				    
+          'AirflowService', '$http',
         function ($scope, $rootScope, $location, $routeParams, $route, $timeout, $window, UtilsService, growl, ProjectService,
                   ModalService, ActivityService, $cookies, DataSetService, UserService, TourService, PythonDepsService,
                     StorageService, CertService, VariablesService, FileSaver, Blob, AirflowService, $http) {
 
             var self = this;
             self.loadedView = false;
+            self.loadedProjectData = false;
             self.working = false;
             self.currentProject = [];
             self.activities = [];
@@ -69,6 +70,11 @@ angular.module('hopsWorksApp')
             self.role = "";
 
             self.endpoint = '...';
+
+            self.disableTours = function() {
+                $rootScope.showTourTips = false;
+                $rootScope.toggleTourTips();
+            };
 
             // We could instead implement a service to get all the available types but this will do it for now
             if ($rootScope.isDelaEnabled) {
@@ -96,6 +102,7 @@ angular.module('hopsWorksApp')
             });
 
             self.initTour = function () {
+              self.tourService.currentProjectName = self.currentProject.projectName;
               if (angular.equals(self.currentProject.projectName.substr(0,
                       self.tourService.sparkProjectPrefix.length),
                       self.tourService.sparkProjectPrefix)) {
@@ -108,6 +115,10 @@ angular.module('hopsWorksApp')
                       .substr(0, self.tourService.deepLearningProjectPrefix.length),
                       self.tourService.deepLearningProjectPrefix)) {
                 self.tourService.setActiveTour('deep_learning');
+              } else if (angular.equals(self.currentProject.projectName
+                      .substr(0, self.tourService.featurestoreProjectPrefix.length),
+                  self.tourService.featurestoreProjectPrefix)) {
+                  self.tourService.setActiveTour('featurestore');
               }
 
               // Angular adds '#' symbol to the url when click on the home logo
@@ -124,12 +135,6 @@ angular.module('hopsWorksApp')
               }
             };
 
-
-            self.activeTensorflow = function () {
-              if ($location.url().indexOf("") !== -1) {
-              }
-              return false;
-            };
 
             var getCurrentProject = function () {
               ProjectService.get({}, {'id': self.projectId}).$promise.then(
@@ -172,7 +177,10 @@ angular.module('hopsWorksApp')
                         //set the project name under which the search is performed
                         UtilsService.setProjectName(self.currentProject.projectName);
                         self.getRole();
-                      }
+                        self.loadedProjectData = true
+                      }, function (error) {
+                      self.loadedProjectData = true
+                  }
               );
 
             };
@@ -353,18 +361,8 @@ angular.module('hopsWorksApp')
             };
 
 
-            self.goToZeppelin = function () {
-              self.enabling = true;
-              self.goToUrl('zeppelin');
-            };
-
-
             self.goToWorklows = function () {
               self.goToUrl('workflows');
-            };
-
-            self.goToTensorflow = function () {
-              self.goToUrl('tensorflow');
             };
 
             self.goToTfServing = function () {
@@ -456,10 +454,6 @@ angular.module('hopsWorksApp')
 
             self.showJupyter = function () {
               return showService("Jupyter");
-            };
-
-            self.showZeppelin = function () {
-              return showService("Zeppelin");
             };
 
             self.showJobs = function () {
@@ -675,23 +669,54 @@ angular.module('hopsWorksApp')
             };
 
             self.getCerts = function () {
-              ModalService.certs('sm', 'Certificates Download', 'Please type your password', self.projectId)
-                      .then(function (successPwd) {
-                        CertService.downloadProjectCert(self.currentProject.projectId, successPwd)
-                                .then(function (success) {
-                                  var certs = success.data;
-                                  download(atob(certs.kStore), 'keyStore.' + certs.fileExtension);
-                                  download(atob(certs.tStore), 'trustStore.' + certs.fileExtension);
-                                }, function (error) {
-                                    if (typeof error.data.usrMsg !== 'undefined') {
-                                        growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
-                                    } else {
-                                        growl.error("", {title: error.data.errorMsg, ttl: 5000});
-                                    }
-                                });
-                      }, function (error) {
+              UserService.profile().then(
+                function (success) {
+                  var user = success.data;
+                  downloadCerts(user.accountType);
+                }, function (error) {
+                  downloadCerts();
+              });
+            };
+            
+            var downloadCerts = function (accountType) {
+              if (accountType === 'KRB_ACCOUNT_TYPE') {
+                CertService.downloadProjectCertKrb(self.currentProject.projectId)
+                  .then(function (success) {
+                    var certs = success.data;
+                    download(atob(certs.kStore), 'keyStore.' + certs.fileExtension);
+                    download(atob(certs.tStore), 'trustStore.' + certs.fileExtension);
+                  }, function (error) {
+                    var errorMsg = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : "";
+                    growl.error(errorMsg, {title: error.data.errorMsg, ttl: 5000});
+                });
+              } else {
+                ModalService.certs('sm', 'Certificates Download', 'Please type your password', self.projectId)
+                  .then(function (successPwd) {
+                    if (accountType === 'LDAP_ACCOUNT_TYPE') {
+                      CertService.downloadProjectCertLdap(self.currentProject.projectId, successPwd)
+                        .then(function (success) {
+                          var certs = success.data;
+                          download(atob(certs.kStore), 'keyStore.' + certs.fileExtension);
+                          download(atob(certs.tStore), 'trustStore.' + certs.fileExtension);
+                        }, function (error) {
+                          var errorMsg = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : "";
+                          growl.error(errorMsg, {title: error.data.errorMsg, ttl: 5000});
+                        });
+                    } else {
+                      CertService.downloadProjectCert(self.currentProject.projectId, successPwd)
+                        .then(function (success) {
+                          var certs = success.data;
+                          download(atob(certs.kStore), 'keyStore.' + certs.fileExtension);
+                          download(atob(certs.tStore), 'trustStore.' + certs.fileExtension);
+                        }, function (error) {
+                          var errorMsg = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : "";
+                          growl.error(errorMsg, {title: error.data.errorMsg, ttl: 5000});
+                        });
+                    }
+                  }, function (error) {
 
-                      });
+                  });
+              }
             };
 
             var download = function (text, fileName) {

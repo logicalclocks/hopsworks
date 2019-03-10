@@ -57,6 +57,7 @@ import io.hops.hopsworks.common.dao.pythonDeps.PythonDepJson;
 import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade;
 import io.hops.hopsworks.common.dao.pythonDeps.Version;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.elastic.ElasticController;
 import io.hops.hopsworks.common.exception.DatasetException;
 import io.hops.hopsworks.common.exception.GenericException;
 import io.hops.hopsworks.common.exception.ProjectException;
@@ -98,6 +99,8 @@ import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -116,7 +119,8 @@ public class PythonDepsService {
 
   private static final Logger logger = Logger.getLogger(PythonDepsService.class.
       getName());
-
+  private static final DateTimeFormatter ELASTIC_INDEX_FORMATTER = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+  
   @EJB
   private PythonDepsFacade pythonDepsFacade;
   @EJB
@@ -145,6 +149,8 @@ public class PythonDepsService {
   private AgentController agentController;
   @EJB
   private ProjectUtils projectUtils;
+  @EJB
+  private ElasticController elasticController;
 
   public void setProjectId(Integer projectId) {
     this.project = projectFacade.find(projectId);
@@ -352,7 +358,7 @@ public class PythonDepsService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API},
       allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response uninstall(PythonDepJson library) throws ServiceException, GenericException {
+  public Response uninstall(PythonDepJson library) throws ServiceException, ProjectException, GenericException {
 
     String msg = checkCondaEnvExists(project);
 
@@ -368,9 +374,17 @@ public class PythonDepsService {
         .entity(msg).build();
   }
 
-  private String checkCondaEnvExists(Project project) throws ServiceException {
+  private String checkCondaEnvExists(Project project) throws ServiceException, ProjectException {
     String msg = "";
     if (!project.getCondaEnv()) {
+      String indexName = project.getName() + Settings.ELASTIC_KAGENT_INDEX_PATTERN.replace("*",
+          LocalDateTime.now().format(ELASTIC_INDEX_FORMATTER));
+      if (!elasticController.indexExists(indexName)) {
+        elasticController.createIndex(indexName);
+      }
+      // Kibana index pattern for conda commands logs
+      elasticController.createIndexPattern(project,
+          project.getName().toLowerCase() + Settings.ELASTIC_KAGENT_INDEX_PATTERN);
       pythonDepsFacade.copyOnWriteCondaEnv(project);
       msg = "First, we have to create a new conda environment on all hosts. This will take a few mins.";
     }
@@ -396,7 +410,7 @@ public class PythonDepsService {
   @JWTRequired(acceptedTokens = {Audience.API},
       allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @TransactionAttribute(TransactionAttributeType.REQUIRED)
-  public Response install(PythonDepJson library) throws ServiceException, GenericException {
+  public Response install(PythonDepJson library) throws ServiceException, ProjectException, GenericException {
 
     String msg = checkCondaEnvExists(project);
 

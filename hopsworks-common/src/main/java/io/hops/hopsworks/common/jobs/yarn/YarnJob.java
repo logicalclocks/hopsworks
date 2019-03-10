@@ -40,33 +40,24 @@
 package io.hops.hopsworks.common.jobs.yarn;
 
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
-import io.hops.hopsworks.common.dao.project.service.ProjectServiceEnum;
-import io.hops.hopsworks.common.dao.project.service.ProjectServices;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.exception.JobException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.jobs.execution.HopsJob;
 import io.hops.hopsworks.common.jobs.jobhistory.JobState;
-import io.hops.hopsworks.common.jobs.jobhistory.JobType;
 import io.hops.hopsworks.common.util.Settings;
-import io.hops.hopsworks.common.yarn.YarnClientWrapper;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.hadoop.yarn.client.api.YarnClient;
-import org.apache.hadoop.yarn.exceptions.YarnException;
-import org.apache.hadoop.yarn.util.ConverterUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -77,9 +68,6 @@ public abstract class YarnJob extends HopsJob {
   private static final Logger LOG = Logger.getLogger(YarnJob.class.getName());
 
   protected YarnRunner runner;
-
-  protected YarnMonitor monitor = null;
-  private final Configuration conf = new Configuration();
 
   private String stdOutFinalDestination, stdErrFinalDestination;
   protected List<LocalResourceDTO> projectLocalResources;
@@ -172,25 +160,23 @@ public abstract class YarnJob extends HopsJob {
    * @return True if the AM was started, false otherwise.
    * @throws IllegalStateException If the YarnRunner has not been set yet.
    */
-  protected final boolean startApplicationMaster(DistributedFileSystemOps udfso,
-      DistributedFileSystemOps dfso) {
+  private boolean startApplicationMaster(DistributedFileSystemOps udfso, DistributedFileSystemOps dfso) {
     if (runner == null) {
       throw new IllegalArgumentException(
           "The YarnRunner has not been initialized yet.");
     }
     try {
-      updateState(JobState.STARTING_APP_MASTER);
-      monitor = runner.startAppMaster(services.getYarnClientService(),
+      ApplicationId appId = runner.startAppMaster(services.getYarnClientService(),
           hdfsUser.getUserName(), jobs.getProject(), dfso,
           user.getUsername());
       execution = services.getExecutionFacade().updateFilesToRemove(execution, runner.getFilesToRemove());
-      execution = services.getExecutionFacade().updateAppId(execution, monitor.getApplicationId().toString());
+      execution = services.getExecutionFacade().updateAppId(execution, appId.toString());
       return true;
     } catch (AccessControlException ex) {
       LOG.log(Level.SEVERE, "Permission denied:- {0}", ex.getMessage());
       updateState(JobState.APP_MASTER_START_FAILED);
       return false;
-    } catch (YarnException | IOException | URISyntaxException | InterruptedException e) {
+    } catch (Exception e) {
       LOG.log(Level.SEVERE, "Failed to start application master for execution " + execution
           + ". Aborting execution", e);
       writeLog("Failed to start application master for execution " + execution + ". Aborting execution", e, udfso);
@@ -210,7 +196,7 @@ public abstract class YarnJob extends HopsJob {
   }
 
   @Override
-  protected boolean setupJob(DistributedFileSystemOps dfso, YarnClient yarnClient) {
+  protected boolean setupJob(DistributedFileSystemOps dfso, YarnClient yarnClient) throws JobException {
     //Check if this job is using Kakfa, and include certificate
     //in local resources
     serviceProps = new ServiceProperties(jobs.getProject().getId(), jobs.getProject().getName(),
@@ -221,31 +207,6 @@ public abstract class YarnJob extends HopsJob {
       serviceProps.initAnaconda(services.getSettings().getAnacondaProjectDir(jobs.getProject())
           + File.separator + "bin" + File.separator + "python");
     }
-    Collection<ProjectServices> projectServices = jobs.getProject().
-        getProjectServicesCollection();
-    if (projectServices != null && !projectServices.isEmpty()) {
-      Iterator<ProjectServices> iter = projectServices.iterator();
-      while (iter.hasNext()) {
-        ProjectServices projectService = iter.next();
-        //If the project is of type KAFKA
-        if (projectService.getProjectServicesPK().getService()
-            == ProjectServiceEnum.KAFKA && (jobs.getJobType()
-            == JobType.FLINK || jobs.getJobType() == JobType.SPARK)
-            && jobs.getJobConfig() instanceof YarnJobConfiguration
-            && jobs.getJobConfig().getKafka() != null) {
-          serviceProps.initKafka();
-          //Set sessionId to be used by HopsUtil
-          serviceProps.getKafka().setSessionId(sessionId);
-          //Set Kafka specific properties to serviceProps
-          serviceProps.getKafka().setBrokerAddresses(services.getSettings().getKafkaBrokersStr());
-          serviceProps.getKafka().setRestEndpoint(services.getSettings().getRestEndpoint());
-          serviceProps.getKafka().setTopics(jobs.getJobConfig().getKafka().getTopics());
-          serviceProps.getKafka().setProjectConsumerGroups(jobs.getProject().getName(),
-              jobs.getJobConfig().getKafka().getConsumergroups());
-          return true;
-        }
-      }
-    }
     return true;
   }
 
@@ -253,7 +214,7 @@ public abstract class YarnJob extends HopsJob {
       YarnApplicationState.FINISHED, YarnApplicationState.FAILED,
       YarnApplicationState.KILLED);
 
-  protected void writeLog(String message, Exception exception, DistributedFileSystemOps udfso) {
+  private void writeLog(String message, Exception exception, DistributedFileSystemOps udfso) {
 
     Date date = new Date();
     String dateString = date.toString();
@@ -290,24 +251,7 @@ public abstract class YarnJob extends HopsJob {
     if (!proceed) {
       return;
     }
-    jobsMonitor.addToMonitor(execution.getAppId(), execution, monitor);
 
   }
 
-  @Override
-  //DOESN'T WORK FOR NOW
-  protected void stopJob(String appid) {
-    YarnClientWrapper yarnClientWrapper = services.getYarnClientService()
-        .getYarnClient(jobUser);
-    try {
-      ApplicationId applicationId = ConverterUtils.toApplicationId(appid);
-      yarnClientWrapper.getYarnClient().killApplication(applicationId);
-    } catch (YarnException | IOException e) {
-      LOG.log(Level.SEVERE, "Could not close yarn client for killing yarn job with appId: " + appid);
-    } finally {
-      if (yarnClientWrapper != null) {
-        services.getYarnClientService().closeYarnClient(yarnClientWrapper);
-      }
-    }
-  }
 }

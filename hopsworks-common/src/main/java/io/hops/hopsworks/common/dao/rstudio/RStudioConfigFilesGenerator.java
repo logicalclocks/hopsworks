@@ -1,7 +1,7 @@
 /*
  * This file is part of Hopsworks
  * Copyright (C) 2019, Logical Clocks AB. All rights reserved
-
+ *
  * Hopsworks is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
@@ -15,18 +15,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package io.hops.hopsworks.common.dao.rstudio;
 
-import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.exception.ServiceException;
-import io.hops.hopsworks.common.jobs.jobhistory.JobType;
 import io.hops.hopsworks.common.util.ConfigFileGenerator;
-import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
-import io.hops.hopsworks.common.util.templates.ConfigProperty;
 import org.apache.commons.io.FileUtils;
 
 import javax.ejb.EJB;
@@ -36,9 +31,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -58,16 +51,15 @@ public class RStudioConfigFilesGenerator {
   private Settings settings;
 
   public RStudioPaths generateConfiguration(Project project, String secretConfig, String hdfsUser, String realName,
-    String nameNodeEndpoint, RStudioSettings js, Integer port)
-    throws ServiceException {
+      String nameNodeEndpoint, RStudioSettings rs, Integer port)
+      throws ServiceException {
     boolean newDir = false;
 
     RStudioPaths jP = new RStudioPaths(settings.getJupyterDir(), project.getName(), hdfsUser, secretConfig);
 
     try {
       newDir = createRStudioDirs(jP);
-      createConfigFiles(jP.getConfDirPath(), jP.getKernelsDir(), hdfsUser,
-          realName, project, nameNodeEndpoint, port, js);
+      createConfigFiles(jP.getConfDirPath(), jP.getKernelsDir(), hdfsUser, realName, port, rs);
     } catch (Exception e) {
       if (newDir) { // if the folder was newly created delete it
         removeProjectUserDirRecursive(jP);
@@ -75,7 +67,7 @@ public class RStudioConfigFilesGenerator {
       LOGGER.log(Level.SEVERE,
           "Error in initializing RStudioConfig for project: {0}. {1}",
           new Object[]{project.getName(), e});
-      
+
       throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_ADD_FAILURE, Level.SEVERE, null, e.getMessage(), e);
     }
 
@@ -123,7 +115,7 @@ public class RStudioConfigFilesGenerator {
   // returns true if one of the conf files were created anew 
   private boolean createConfigFiles(String confDirPath, String certsDir, String hdfsUser, String realName,
       Integer port, RStudioSettings rs)
-    throws IOException, ServiceException {
+      throws IOException, ServiceException {
 //    File rstudio_conf = new File(confDirPath + RSTUDIO_SERVER_CONFIG);
     File rsession_conf = new File(confDirPath + RSTUDIO_SESSION_CONFIG);
     File rsessionSh = new File(confDirPath + RSTUDIO_SESSION_SCRIPT);
@@ -134,18 +126,18 @@ public class RStudioConfigFilesGenerator {
     if (!rsession_conf.exists()) {
 
       StringBuilder rstudioSessionConf = ConfigFileGenerator.instantiateFromTemplate(
-              ConfigFileGenerator.RSTUDIO_SESSION_CONF,
-              "rstudio_session_timeout", new String("10000"),
-              "scratch_dir", rs.getBaseDir(),
-              "hdfs_user", hdfsUser,
-              "port", port.toString(),
-              "hadoop_home", this.settings.getHadoopSymbolicLinkDir(),
-              "hdfs_home", this.settings.getHadoopSymbolicLinkDir(),
-              "secret_dir", this.settings.getStagingDir() + Settings.PRIVATE_DIRS + rs.getSecret()
-          );
+          ConfigFileGenerator.RSTUDIO_SESSION_CONF,
+          "rstudio_session_timeout", new String("10000"),
+          "scratch_dir", rs.getBaseDir(),
+          "hdfs_user", hdfsUser,
+          "port", port.toString(),
+          "hadoop_home", this.settings.getHadoopSymbolicLinkDir(),
+          "hdfs_home", this.settings.getHadoopSymbolicLinkDir(),
+          "secret_dir", this.settings.getStagingDir() + Settings.PRIVATE_DIRS + rs.getSecret()
+      );
       createdRStudio = ConfigFileGenerator.createConfigFile(rsession_conf, rstudioSessionConf.toString());
     }
-   if (!rsessionSh.exists()) {
+    if (!rsessionSh.exists()) {
 
       StringBuilder ressionShellScript = ConfigFileGenerator.
           instantiateFromTemplate(
@@ -162,7 +154,6 @@ public class RStudioConfigFilesGenerator {
     // Add this local file to 'spark: file' to copy it to hdfs and localize it.
     return createdRStudio || rsessionConf || createdRsessionScript;
   }
-  
 
   private void removeProjectUserDirRecursive(RStudioPaths jp) {
     try {

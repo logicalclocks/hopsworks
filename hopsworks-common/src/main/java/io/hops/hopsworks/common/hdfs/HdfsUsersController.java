@@ -204,9 +204,6 @@ public class HdfsUsersController {
     //when this method is invoked, hence we explicitly add them to the group.
     addUserToGroup(dfso, dsOwner, hdfsGroup);
 
-    //add project generic user as a user
-    addUserToGroup(dfso, project.getProjectGenericUser(), hdfsGroup);
-
     //add every member to the new ds group
     for (ProjectTeam member : project.getProjectTeamCollection()) {
       String hdfsUsername = getHdfsUserName(project, member.getUser());
@@ -299,9 +296,6 @@ public class HdfsUsersController {
     DistributedFileSystemOps dfso = null;
     try {
       dfso = dfsService.getDfsOps();
-
-      //add project generic user to hdfsGroup
-      addUserToGroup(dfso, project.getProjectGenericUser(), hdfsGroup);
 
       Collection<ProjectTeam> projectTeam = projectTeamFacade.
           findMembersByProject(project);
@@ -456,7 +450,9 @@ public class HdfsUsersController {
 
       dfso = dfsService.getDfsOps();
 
-      removeUserFromGroup(dfso, project.getProjectGenericUser(), hdfsGroup);
+      // For old installations, the PROJECTGENERICUSER might still be in the
+      // group. So if it exists, we remove it.
+      removeUserFromGroup(dfso, project.getName() + "__PROJECTGENERICUSER", hdfsGroup);
 
       //every member of the project the ds is going to be unshard from is
       //removed from the dataset group.

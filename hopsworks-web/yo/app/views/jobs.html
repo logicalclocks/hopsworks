@@ -41,7 +41,6 @@
 <div ng-controller="MainCtrl as mainCtrl">
   <div ng-include="'nav.html'"></div>
 
-
   <div id="wrapper" class="toggled" ng-controller="JobsCtrl as jobsCtrl">
     <div class="overlay"></div>
 
@@ -76,9 +75,11 @@
                            ng-model-options="{debounce: 700}" ng-change="jobsCtrl.untoggle(job, $index)">
                     <i class="fa fa-info-circle"
                        uib-tooltip="Case sensitive search name, type, owner. Select date range to search based on jobs creation date."></i>
-                    <md-datepicker ng-change="jobsCtrl.getAllJobsStatus()" ng-model="jobsCtrl.jobsFromDate"
+                    <md-datepicker ng-change="jobsCtrl.storeDates('jobsFromDate');jobsCtrl.getAllJobsStatus()"
+                                   ng-model="jobsCtrl.jobsFromDate"
                                    md-placeholder="From"></md-datepicker>
-                    <md-datepicker ng-change="jobsCtrl.getAllJobsStatus()" ng-model="jobsCtrl.jobsToDate"
+                    <md-datepicker ng-change="jobsCtrl.storeDates('jobsToDate');jobsCtrl.getAllJobsStatus()"
+                                   ng-model="jobsCtrl.jobsToDate"
                                    md-placeholder="To"></md-datepicker>
                   </label>
                 </div>
@@ -87,7 +88,8 @@
                     <label>jobs per page:
                       <input type="number" min="1"
                              max="50"
-                             class="form-control" ng-model="jobsCtrl.pageSize" ng-model-options="{debounce: 300}">
+                             class="form-control" ng-change="jobsCtrl.storePageSize()" ng-model="jobsCtrl.pageSize"
+                             ng-model-options="{debounce: 300}">
                     </label>
                   </div>
                 </div>
@@ -142,6 +144,7 @@
                   <tbody>
                     <tr
                       dir-paginate="job in jobsCtrl.jobs| itemsPerPage:jobsCtrl.pageSize"
+                      pagination-id="jobs_pagination"
                       current-page="jobsCtrl.currentPage"
                       total-items="jobsCtrl.totalItems"
                       ng-class="{'active':$index === jobsCtrl.selectedIndex}" ng-click="jobsCtrl.toggle(job, $index);jobsCtrl.showLogs(job.name);">
@@ -149,12 +152,13 @@
                         <button style="border-color: #20AD28; min-width: 64px; width:60%;"
                                 ng-disabled="jobsCtrl.starting[job.name]"
                                 ng-click="jobsCtrl.runJob(job, $index);$event.stopPropagation();"
-                                class="btn btn-default btn-sm" ng-hide="job.running || jobsCtrl.buttonArray[job.name]">
+                                class="btn btn-default btn-sm" ng-hide="job.running || jobsCtrl.buttonArray[job.name]"
+                                id="buttonRunJob">
                           <span style="color: #20AD28" class="glyphicon glyphicon-play" aria-hidden="true"></span>
                           Run
                         </button>
                         <button
-                          ng-show="(job.running || jobsCtrl.buttonArray[job.name]) && jobsCtrl.getJobClickStatus(job.name)==='running'"
+                          ng-show="(job.running || jobsCtrl.buttonArray[job.name])"
                           ng-disabled="!job.running ||
                                                   job.state === 'STARTING_APP_MASTER' ||
                                                   job.state === 'INITIALIZING'"
@@ -166,21 +170,6 @@
                           <span class="glyphicon glyphicon-stop" aria-hidden="true" ng-show="jobsCtrl.getJobClickStatus(job.name)==='running'"></span>
                           <span class="fa fa-spinner fa-spin" aria-hidden="true" ng-show="jobsCtrl.getJobClickStatus(job.name)==='stopping'" ></span>
                           Stop
-                        </button>
-                        <button
-                          ng-show="(job.running || jobsCtrl.buttonArray[job.name]) && (jobsCtrl.getJobClickStatus(job.name)==='stopping' || jobsCtrl.getJobClickStatus(job.name)==='killing')"
-                          ng-disabled="!job.running ||
-                                                  job.state === 'STARTING_APP_MASTER' ||
-                                                  job.state === 'INITIALIZING'"
-                          ng-click="jobsCtrl.toggle(job, $index);
-                                          jobsCtrl.killJob(job.name);
-
-                                          $event.stopPropagation();"
-                          class="btn btn-danger btn-sm"
-                          style="min-width: 64px; width: 60%;">
-                          <span class="glyphicon glyphicon-stop" aria-hidden="true" ng-show="jobsCtrl.getJobClickStatus(job.name)==='running'"></span>
-                          <span class="fa fa-spinner fa-spin" aria-hidden="true" ng-show="jobsCtrl.getJobClickStatus(job.name)==='stopping' || jobsCtrl.getJobClickStatus(job.name)==='killing'" ></span>
-                          Kill
                         </button>
                       </td>
                       <td>
@@ -353,6 +342,7 @@
                 <dir-pagination-controls
                   class="pull-right"
                   max-size="jobsCtrl.pageSize"
+                  pagination-id="jobs_pagination"
                   direction-links="true"
                   boundary-links="true"
                   on-page-change="jobsCtrl.getJobsNextPage()">
@@ -479,8 +469,7 @@
     <!-- /#wrapper -->
   <tour class="ng-scope" step="projectCtrl.tourService.currentStep_TourThree"
         post-tour="closeTour()"
-        ng-if="(projectCtrl.loadedView && projectCtrl.tourService.activeTour === 'spark' ||
-                  projectCtrl.loadedView && projectCtrl.tourService.activeTour === 'tensorflow')
+        ng-if="(projectCtrl.loadedView && projectCtrl.tourService.activeTour === 'spark')
           && (projectCtrl.tourService.informAndTips
               || projectCtrl.tourService.tipsOnly)
           ">
@@ -503,12 +492,12 @@
       ></virtual-step>
     <virtual-step
       class="ng-scope"
-      tourtip="Click Run to run your job! {{projectCtrl.tourService.getTensorFlowJobTip()}}"
+      tourtip="Click Run to run your job!"
       tourtip-step="2"
-      tourtip-element="#true"
+      tourtip-element="#buttonRunJob"
       tourtip-placement="bottom"
       tourtip-next-label="Done"
-      on-proceed="closeTour(); projectCtrl.tourService.resetTours();"
+      on-proceed="closeTour(); projectCtrl.tourService.resetTours();projectCtrl.disableTours();"
       tourtip-offset-vertical="-15"
       ></virtual-step>
   </tour>
@@ -531,10 +520,10 @@
       class="ng-scope"
       tourtip="Click Run to run your job!"
       tourtip-step="1"
-      tourtip-element="#true"
+      tourtip-element="#buttonRunJob"
       tourtip-placement="bottom"
       tourtip-next-label="Done"
-      on-proceed="closeTour(); projectCtrl.tourService.resetTours();"
+      on-proceed="closeTour(); projectCtrl.tourService.resetTours();projectCtrl.disableTours();"
       ></virtual-step>
   </tour>
     <tour class="ng-scope" step="jobsCtrl.tourService.currentStep_TourNine"
@@ -552,7 +541,7 @@
               tourtip-element="{{'#' + projectCtrl.tourService.featurestoreTourJobName}}"
               tourtip-placement="bottom"
               tourtip-next-label="Finish the Tour"
-              on-proceed=""
+              on-proceed="closeTour(); projectCtrl.tourService.resetTours();projectCtrl.disableTours();"
       ></virtual-step>
     </tour>
   </div>

@@ -45,7 +45,6 @@ package io.hops.hopsworks.common.jobs.yarn;
  */
 public class ServiceProperties {
 
-  private KafkaProperties kafka;
   private AnacondaProperties anaconda;
   private ElasticProperties elastic;
 
@@ -64,22 +63,6 @@ public class ServiceProperties {
     this.restEndpoint = restEndPoint;
     this.jobName = jobName;
     this.elastic = elastic;
-  }
-
-  public KafkaProperties getKafka() {
-    return kafka;
-  }
-
-  public boolean isKafkaEnabled() {
-    return kafka != null;
-  }
-
-  public void setKafka(KafkaProperties kafka) {
-    this.kafka = kafka;
-  }
-
-  public void initKafka() {
-    kafka = new KafkaProperties();
   }
 
   public boolean isAnacondaEnabled() {
@@ -124,10 +107,6 @@ public class ServiceProperties {
 
   public String getRestEndpoint() {
     return restEndpoint;
-  }
-
-  public void setRestEndpoint(String restEndPoint) {
-    this.restEndpoint = restEndPoint;
   }
 
   public String getJobName() {

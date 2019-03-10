@@ -59,13 +59,6 @@ public class UsersBuilder {
     return dto;
   }
 
-  public UserDTO uriItems(UserDTO dto, UriInfo uriInfo, Users user) {
-    dto.setHref(uriInfo.getAbsolutePathBuilder()
-        .path(Integer.toString(user.getUid()))
-        .build());
-    return dto;
-  }
-
   public UserProfileDTO expand(UserProfileDTO dto, ResourceRequest resourceRequest) {
     if (resourceRequest != null && resourceRequest.contains(ResourceRequest.Name.USERS)) {
       dto.setExpand(true);
@@ -105,9 +98,11 @@ public class UsersBuilder {
       dto.setEmail(user.getEmail());
       dto.setUsername(user.getUsername());
       dto.setPhoneNumber(user.getMobile());
+      dto.setAccountType(user.getMode().toString());
       dto.setMaxNumProjects(user.getMaxNumProjects());
       dto.setNumCreatedProjects(user.getNumCreatedProjects());
       dto.setNumActiveProjects(user.getNumActiveProjects());
+      dto.setToursState(user.getToursState());
     }
     return dto;
   }

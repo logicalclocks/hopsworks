@@ -44,6 +44,7 @@ import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.project.service.ProjectServiceEnum;
 import io.hops.hopsworks.common.dao.project.service.ProjectServices;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.exception.JobException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.Utils;
 import java.io.File;
@@ -57,7 +58,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.hadoop.fs.Path;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
-import io.hops.hopsworks.common.jobs.jobhistory.JobType;
+import io.hops.hopsworks.common.jobs.configuration.JobType;
 import io.hops.hopsworks.common.jobs.yarn.YarnJob;
 import io.hops.hopsworks.common.jobs.yarn.YarnJobsMonitor;
 import io.hops.hopsworks.common.util.Settings;
@@ -118,7 +119,7 @@ public class FlinkJob extends YarnJob {
   }
 
   @Override
-  protected boolean setupJob(DistributedFileSystemOps dfso, YarnClient yarnClient) {
+  protected boolean setupJob(DistributedFileSystemOps dfso, YarnClient yarnClient) throws JobException {
     super.setupJob(dfso, yarnClient);
     
     //Then: actually get to running.
@@ -208,10 +209,6 @@ public class FlinkJob extends YarnJob {
   @Override
   protected void cleanup() {
     LOG.log(Level.INFO, "Job finished performing cleanup...");
-    if (monitor != null) {
-      monitor.close();
-      monitor = null;
-    }
     //Remove local files required for the job (Kafka certs etc.)
     //Search for other jobs using Kafka in the same project. If any active
     //ones are found
@@ -262,19 +259,6 @@ public class FlinkJob extends YarnJob {
       }
     }
 
-  }
-
-  @Override
-  protected void stopJob(String appid) {
-    //Stop flink cluster first
-    try {
-      Runtime rt = Runtime.getRuntime();
-      Process pr = rt.exec(this.hadoopDir + "/bin/yarn application -kill "
-          + appid);
-    } catch (IOException ex1) {
-      LOG.log(Level.SEVERE, "Unable to stop flink cluster with appID:"
-          + appid, ex1);
-    }
   }
 
 }

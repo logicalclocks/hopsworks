@@ -46,13 +46,11 @@ import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.jobs.flink.YarnClusterClient;
 import io.hops.hopsworks.common.jobs.flink.YarnClusterDescriptor;
-import io.hops.hopsworks.common.jobs.jobhistory.JobType;
+import io.hops.hopsworks.common.jobs.configuration.JobType;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.IoUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.yarn.YarnClientService;
-import io.hops.hopsworks.common.yarn.YarnClientWrapper;
-import io.hops.tensorflow.Client;
 import org.apache.flink.client.program.PackagedProgram;
 import org.apache.flink.client.program.ProgramInvocationException;
 import org.apache.hadoop.conf.Configuration;
@@ -109,7 +107,6 @@ public class YarnRunner {
   //The parallelism parameter of Flink
   private int parallelism;
   private YarnClusterDescriptor flinkCluster;
-  private Client tfClient;
   private String appJarPath;
   private final String amJarLocalName;
   private final String amJarPath;
@@ -220,14 +217,10 @@ public class YarnRunner {
    * files.
    * @throws java.net.URISyntaxException
    */
-  public YarnMonitor startAppMaster(YarnClientService ycs, String dfsUsername,
+  ApplicationId startAppMaster(YarnClientService ycs, String dfsUsername,
       Project project, DistributedFileSystemOps dfso, String username) throws
     YarnException, IOException, URISyntaxException, InterruptedException {
     logger.info("Starting application master.");
-    // Create a new client for monitoring
-    YarnClientWrapper newYarnClientWrapper = ycs.getYarnClient(dfsUsername);
-    
-    YarnMonitor monitor = null;
     if (jobType == JobType.SPARK || jobType == JobType.PYSPARK) {
       //Get application id
       
@@ -258,12 +251,10 @@ public class YarnRunner {
       copyAllToHDFS();
       
       //Set up environment
-      Map<String, String> env = new HashMap<>();
-      env.putAll(amEnvironment);
+      Map<String, String> env = new HashMap<>(amEnvironment);
       setUpClassPath(env);
 
       //Set up commands
-      String hdfsUser = project.getName() + "__" + username;
       List<String> amCommands = setUpCommands();
       //Set up container launch context
       ContainerLaunchContext amContainer = ContainerLaunchContext.newInstance(
@@ -286,7 +277,6 @@ public class YarnRunner {
       logger.log(Level.INFO,
           "Submitting application {0} to applications manager.", appId);
       yarnClient.submitApplication(appContext);
-      monitor = new YarnMonitor(appId, newYarnClientWrapper, ycs);
 
     } else if (jobType == JobType.FLINK) {
       // Objects needed for materializing user certificates
@@ -296,7 +286,6 @@ public class YarnRunner {
       appId = client.getApplicationId();
 
       fillInAppid(appId.toString());
-      monitor = new YarnMonitor(appId, newYarnClientWrapper, ycs);
       String[] args = {};
       if (amArgs != null) {
         if (!javaOptions.isEmpty()) {
@@ -358,7 +347,7 @@ public class YarnRunner {
       }
 
     }
-    return monitor;
+    return appId;
   }
 
   //---------------------------------------------------------------------------
@@ -401,7 +390,6 @@ public class YarnRunner {
       entry.getValue().setName(entry.getValue().getName().
           replace(APPID_PLACEHOLDER, id));
     }
-    //TODO(Theofilos): thread-safety?
     for (Entry<String, String> entry : amEnvironment.entrySet()) {
       entry.setValue(entry.getValue().replace(APPID_PLACEHOLDER, id));
     }
@@ -649,7 +637,6 @@ public class YarnRunner {
     this.jobType = builder.jobType;
     this.parallelism = builder.parallelism;
     this.flinkCluster = builder.flinkCluster;
-    this.tfClient = builder.tfClient;
     this.appJarPath = builder.appJarPath;
     this.amQueue = builder.amQueue;
     this.amMemory = builder.amMemory;
@@ -713,8 +700,6 @@ public class YarnRunner {
     private int parallelism;
     private YarnClusterDescriptor flinkCluster;
     private String appJarPath;
-    //TensorFlow client
-    private Client tfClient;
     //Optional attributes
     // Queue for App master
     private String amQueue = "default"; //TODO(Theofilos): enable changing this, or infer from user data
@@ -873,10 +858,6 @@ public class YarnRunner {
 
     public void setFlinkCluster(YarnClusterDescriptor flinkCluster) {
       this.flinkCluster = flinkCluster;
-    }
-
-    public void setTfClient(Client tfClient) {
-      this.tfClient = tfClient;
     }
     
     public void setAppJarPath(String path) {

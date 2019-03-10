@@ -41,7 +41,7 @@
   <div class="row-fluid">
     <div class="col-md-offset-2 col-md-8">
       <!-- START panel-->
-      <div class="panel">
+      <div id="qr_code_panel" class="panel">
         <div class="panel-heading text-center">
           <a style="text-decoration:none; font-family: Lobster; font-size: 30px; margin-left: 5px; color: #fff;">Hopsworks
             <img alt="" style="margin-left:10px"
@@ -56,7 +56,7 @@
               <h1 ng-if="regCtrl.mode === 'profile'" class="text-center">Three steps, and you're there...</h1>
             </div>
             <div class="col-md-4">
-              <img alt="QR example" src="images/qrExample.png" style="width: 100%"/>             
+              <img id="qr_code_img" alt="QR example" src="images/qrExample.png" style="width: 100%"/>             
             </div>
           </div>
           <hr>

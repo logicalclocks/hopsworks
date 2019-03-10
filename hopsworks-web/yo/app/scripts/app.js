@@ -391,16 +391,6 @@ angular.module('hopsWorksApp', [
                           }]
                       }
                     })
-                    .when('/project/:projectID/zeppelin', {
-                      templateUrl: 'views/zeppelinDashboard.html',
-                      controller: 'ProjectCtrl as projectCtrl',
-                      resolve: {
-                        auth: ['$q', '$route', 'AuthGuardService',
-                          function ($q, $route, AuthGuardService) {
-                            return AuthGuardService.guardProject($q, $route.current.params.projectID);
-                          }]
-                      }
-                    })
                     .when('/history/:projectID/history', {
                       templateUrl: 'views/history.html',
                       controller: 'ProjectCtrl as projectCtrl',

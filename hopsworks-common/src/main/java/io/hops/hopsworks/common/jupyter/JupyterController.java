@@ -24,7 +24,6 @@ import io.hops.hopsworks.common.dao.jupyter.JupyterSettingsFacade;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterProcessMgr;
 import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.project.service.ProjectServiceEnum;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
@@ -127,14 +126,14 @@ public class JupyterController {
     // If we can't stop the server, delete the Entity bean anyway
 
     List<LivyMsg.Session> sessions = livyController.
-      getLivySessionsForProjectUser(project, user, ProjectServiceEnum.JUPYTER);
+      getLivySessionsForProjectUser(project, user);
 
     int retries = 3;
     while(retries > 0 &&
-      livyController.getLivySessionsForProjectUser(project, user, ProjectServiceEnum.JUPYTER).size() > 0) {
+      livyController.getLivySessionsForProjectUser(project, user).size() > 0) {
       LOGGER.log(Level.SEVERE, "Failed previous attempt to delete livy sessions for project " + project.getName() +
         " user " + hdfsUser + ", retrying...");
-      livyController.deleteAllLivySessions(hdfsUser, ProjectServiceEnum.JUPYTER);
+      livyController.deleteAllLivySessions(hdfsUser);
 
       try {
         Thread.sleep(200);
@@ -164,13 +163,12 @@ public class JupyterController {
     for(LivyMsg.Session session: sessions) {
       updateRunningExperimentAsKilled(project, session);
     }
-    livyController.deleteAllLivySessions(hdfsUser, ProjectServiceEnum.JUPYTER);
+    livyController.deleteAllLivySessions(hdfsUser);
   }
 
   public void stopSession(Project project, Users user, String appId) {
 
-    List<LivyMsg.Session> sessions = livyController.getLivySessionsForProjectUser(project, user,
-      ProjectServiceEnum.JUPYTER);
+    List<LivyMsg.Session> sessions = livyController.getLivySessionsForProjectUser(project, user);
 
     for(LivyMsg.Session session: sessions) {
       if(session.getAppId().equalsIgnoreCase(appId)) {

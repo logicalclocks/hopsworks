@@ -23,45 +23,33 @@
 (function(angular) {
     'use strict';
     angular.module('hopsWorksApp').service('fileNavigator', [
-        '$routeParams', '$route', 'apiMiddleware', 'fileManagerConfig', 'item', 'AirflowService', 
-        function ($routeParams, $route, ApiMiddleware, fileManagerConfig, Item, AirflowService) {
-
-
-        self.projectId = $routeParams.projectID;
+        '$route', 'apiMiddleware', 'fileManagerConfig', 'item', 'AirflowService', 
+        function ($route, ApiMiddleware, fileManagerConfig, Item, AirflowService) {
 	    
-        var FileNavigator = function() {
+        var FileNavigator = function(projectId) {
             this.apiMiddleware = new ApiMiddleware();
             this.requesting = false;
             this.fileList = [];
             this.history = [];
             this.error = '';
+            this.projectId = projectId;
             this.onRefresh = function() {};
-	    this.currentPath = [];
-            AirflowService.getSecretPath(self.projectId).then(
-		function (success) {
-                    var subPath = success.data;
-                    var path = (fileManagerConfig.basePath + '/' + subPath  || '').replace(/^\//, '');
-                    FileNavigator.currentPath = path.trim() ? path.split('/') : [];
-                    console.log("Set current path FileNavigator: " + path);
+            this.currentPath = [];
+            var self = this;
+            AirflowService.getSecretPath(this.projectId).then(
+		        function (success) {
+                    self.currentPath = constructCurrentPath(success.data);
+                    console.log("Set current path FileNavigator: " + self.currentPath);
                 }, function (error) {
                     console.log("Error getting base path");
             });
             	
         };
 
-        var init = function() {
-            AirflowService.getSecretPath(self.projectId).then(
-		function (success) {
-                    var subPath = success.data;
-                    var path = (fileManagerConfig.basePath + '/' + subPath  || '').replace(/^\//, '');
-                    FileNavigator.currentPath = path.trim() ? path.split('/') : [];
-                    console.log("Set current path init: " + path);
-                }, function (error) {
-                    console.log("Error getting base path in init method");
-            });
-		
-        };
-        init();
+        function constructCurrentPath(secretSubPath) {
+            var path = (fileManagerConfig.basePath + '/' + secretSubPath  || '').replace(/^\//, '');
+            return path.trim() ? path.split('/') : [];
+        }
 
         FileNavigator.prototype.deferredHandler = function(data, deferred, code, defaultMsg) {
             if (!data || typeof data !== 'object') {
@@ -110,35 +98,21 @@
 		
         };
 
-
-	    function sleep(milliseconds) {
-		var start = new Date().getTime();
-		for (var i = 0; i < 1e7; i++) {
-		    if ((new Date().getTime() - start) > milliseconds){
-			break;
-		    }
-		}
-	    }
-	    
         FileNavigator.prototype.refresh = function() {
             var self = this;
             if (self.currentPath == undefined || self.currentPath == null || !self.currentPath.length ) {
 
-              AirflowService.getSecretPath(projectId).then(
-		function (success) {
-                    var subPath = success.data;
-		    console.log("secret path returned: " + subPath);
-                    var path = (fileManagerConfig.basePath + '/' + subPath  || '').replace(/^\//, '');
-		    console.log("path is now: " + path);
-                    self.currentPath = path.trim() ? path.split('/') : [];
-                    console.log("Set current path refresh: " + path);
-      		    self.actualRefresh();		    
-                }, function (error) {
-                    console.log("Error getting base path");
-              });
+              AirflowService.getSecretPath(this.projectId).then(
+		            function (success) {
+                        self.currentPath = constructCurrentPath(success.data);
+                        console.log("Set current path refresh: " + self.currentPath);
+      		            self.actualRefresh();		    
+                    }, function (error) {
+                        console.log("Error getting base path");
+                });
             } else {
-		self.actualRefresh();
-	    }
+		        self.actualRefresh();
+	        }
         };
         
         FileNavigator.prototype.buildTree = function(path) {
@@ -182,7 +156,7 @@
             }
 
             //!this.history.length && this.history.push({name: '', nodes: []});
-            !this.history.length && this.history.push({ name: self.basePath[0] || '', nodes: [] });
+            !this.history.length && this.history.push({ name: this.currentPath[0] || '', nodes: [] });
             flatten(this.history[0], flatNodes);
             selectedNode = findNode(flatNodes, path);
             selectedNode && (selectedNode.nodes = []);
@@ -198,13 +172,13 @@
             if (item && item.isFolder()) {
                 this.currentPath = item.model.fullPath().split('/').splice(1);
             }
-            this.refresh();
+            this.refresh(this.projectId);
         };
 
         FileNavigator.prototype.upDir = function() {
             if (this.currentPath[0]) {
                 this.currentPath = this.currentPath.slice(0, -1);
-                this.refresh();
+                this.refresh(this.projectId);
             }
         };
 
@@ -212,7 +186,7 @@
             console.log("goTo: " + index);
             console.log("current foldername: " + this.getCurrentFolderName());
             this.currentPath = this.currentPath.slice(0, index + 1);
-            this.refresh();
+            this.refresh(this.projectId);
         };
 
         FileNavigator.prototype.fileNameExists = function(fileName) {

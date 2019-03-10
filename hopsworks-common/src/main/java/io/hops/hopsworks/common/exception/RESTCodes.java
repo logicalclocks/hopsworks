@@ -36,7 +36,6 @@ import javax.xml.bind.annotation.XmlRootElement;
  * 10. Kafka error codes start with "19"
  * 11. User error codes start with "20"
  * 12. Security error codes start  with "20".
- * 13. Zeppelin error codes start with "21".
  * 14. CA error codes start with "22".
  * 15. DelaCSR error codes start with "23".
  * 16. TfServing error codes start with "24".
@@ -489,9 +488,6 @@ public class RESTCodes {
 
   public enum ServiceErrorCode implements RESTErrorCode {
 
-    // Zeppelin
-    ZEPPELIN_ADD_FAILURE(0, "Failed to create Zeppelin notebook dir. Zeppelin will not work properly. "
-        + "Try recreating the following dir manually:", Response.Status.SERVICE_UNAVAILABLE),
     JUPYTER_ADD_FAILURE(1, "Failed to create Jupyter notebook dir. Jupyter will not work properly. "
         + "Try recreating the following dir manually.", Response.Status.BAD_REQUEST),
     ELASTIC_SERVER_NOT_AVAILABLE(2, "The Elasticsearch Server is either down or misconfigured.",
@@ -520,8 +516,6 @@ public class RESTCodes {
         "Problem listing libraries. Did conda get upgraded and change its output format?",
         Response.Status.INTERNAL_SERVER_ERROR),
     ANACONDA_LIST_LIB_ERROR(14, "Problem listing libraries. Please contact the Administrator",
-        Response.Status.INTERNAL_SERVER_ERROR),
-    ZEPPELIN_KILL_ERROR(15, "Could not close zeppelin interpreters, please wait 60 seconds to retry",
         Response.Status.INTERNAL_SERVER_ERROR),
     JUPYTER_HOME_ERROR(16, "Couldn't resolve JUPYTER_HOME using DB.",
         Response.Status.INTERNAL_SERVER_ERROR),
@@ -608,7 +602,6 @@ public class RESTCodes {
 
   public enum KafkaErrorCode implements RESTErrorCode {
 
-    // Zeppelin
     TOPIC_NOT_FOUND(0, "No topics found", Response.Status.NOT_FOUND),
     BROKER_METADATA_ERROR(1, "An error occurred while retrieving topic metadata from broker",
         Response.Status.INTERNAL_SERVER_ERROR),
@@ -923,56 +916,6 @@ public class RESTCodes {
       return message;
     }
 
-    public Response.StatusType getRespStatus() {
-      return respStatus;
-    }
-
-    @Override
-    public int getRange() {
-      return range;
-    }
-  }
-
-
-  public enum ZeppelinErrorCode implements RESTErrorCode {
-
-    // Zeppelin
-    PROJECT_NOT_FOUND(0, "Could not find project. Make sure cookies are enabled.", Response.Status.FORBIDDEN),
-    ROLE_NOT_FOUND(1, "No role in this project.", Response.Status.FORBIDDEN),
-    WEB_SOCKET_ERROR(2, "Could not connect to websocket", Response.Status.BAD_REQUEST),
-    USER_NOT_FOUND(3, "Could not find remote user", Response.Status.FORBIDDEN),
-    INTERPRETER_CLOSE_ERROR(4, "Could not close interpreter. Make sure it is not running.",
-        Response.Status.BAD_REQUEST),
-    RESTART_ERROR(5,
-        "This service has been restarted recently. Please wait a few minutes before trying again.",
-        Response.Status.BAD_REQUEST),
-    STOP_SESSIONS_FORBIDDEN(6, "You can't stop sessions in another project.", Response.Status.BAD_REQUEST),
-    CREATE_NOTEBOOK_ERROR(7, "Could not create notebook.", Response.Status.BAD_REQUEST);
-
-
-    private Integer code;
-    private String message;
-    private Response.StatusType respStatus;
-    public final int range = 210000;
-
-
-    ZeppelinErrorCode(Integer code, String message, Response.StatusType respStatus) {
-      this.code = range + code;
-      this.message = message;
-      this.respStatus = respStatus;
-    }
-
-    @Override
-    public Integer getCode() {
-      return code;
-    }
-
-    @Override
-    public String getMessage() {
-      return message;
-    }
-
-    @Override
     public Response.StatusType getRespStatus() {
       return respStatus;
     }

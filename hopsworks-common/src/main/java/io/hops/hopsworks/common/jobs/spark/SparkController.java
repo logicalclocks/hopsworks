@@ -56,12 +56,11 @@ import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.UserGroupInformationService;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.jobs.execution.ExecutionController;
-import io.hops.hopsworks.common.jobs.jobhistory.JobType;
+import io.hops.hopsworks.common.jobs.configuration.JobType;
 import io.hops.hopsworks.common.jobs.yarn.YarnJobsMonitor;
 import io.hops.hopsworks.common.jupyter.JupyterController;
 import io.hops.hopsworks.common.util.Settings;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.eclipse.persistence.exceptions.DatabaseException;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -163,31 +162,6 @@ public class SparkController {
     activityFacade.persistActivity(ActivityFacade.RAN_JOB + job.getName(), job.getProject(), user.asUser(),
         ActivityFacade.ActivityFlag.JOB);
     return jh;
-  }
-
-  public void stopJob(Jobs job, Users user, String appid) {
-    //First: some parameter checking.
-    sanityCheck(job, user);
-    SparkJob sparkjob = new SparkJob(job, submitter, user, settings.getHadoopSymbolicLinkDir(),
-        hdfsUsersBean.getHdfsUserName(job.getProject(), job.getCreator()), jobsMonitor, settings);
-    submitter.stopExecution(sparkjob, appid);
-  }
-  
-  public void deleteJob(Jobs job, Users user) throws JobException {
-    //Kill running execution of this job (if any)
-    executionController.kill(job, user);
-    try {
-      LOGGER.log(Level.INFO, "Request to delete job name ={0} job id ={1}",
-        new Object[]{job.getName(), job.getId()});
-      jobFacade.removeJob(job);
-      LOGGER.log(Level.INFO, "Deleted job name ={0} job id ={1}", new Object[]{job.getName(), job.getId()});
-      activityFacade.persistActivity(ActivityFacade.DELETED_JOB + job.getName(), job.getProject(), user.getEmail(), 
-          ActivityFacade.ActivityFlag.JOB);
-    } catch (DatabaseException ex) {
-      LOGGER.log(Level.SEVERE, "Job cannot be deleted job name ={0} job id ={1}",
-        new Object[]{job.getName(), job.getId()});
-      throw new JobException(RESTCodes.JobErrorCode.JOB_DELETION_ERROR, Level.SEVERE, ex.getMessage(), null, ex);
-    }
   }
   
   private void sanityCheck(Jobs job, Users user) {

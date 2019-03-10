@@ -48,7 +48,7 @@ import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.InvalidQueryException;
 import io.hops.hopsworks.common.jobs.jobhistory.JobFinalStatus;
 import io.hops.hopsworks.common.jobs.jobhistory.JobState;
-import io.hops.hopsworks.common.jobs.jobhistory.JobType;
+import io.hops.hopsworks.common.jobs.configuration.JobType;
 
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -123,6 +123,19 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
     TypedQuery<Execution> q = em.createNamedQuery("Execution.findByJob",
       Execution.class);
     q.setParameter("job", job);
+    return q.getResultList();
+  }
+  
+  /**
+   * A job can have only one execution in a non-final state.
+   * @param job job
+   * @return the current job execution.
+   */
+  public List<Execution> findByJobAndNotFinished(Jobs job) {
+    TypedQuery<Execution> q = em.createNamedQuery("Execution.findByJobAndStates",
+      Execution.class);
+    q.setParameter("job", job);
+    q.setParameter("states", JobState.getRunningStates());
     return q.getResultList();
   }
 

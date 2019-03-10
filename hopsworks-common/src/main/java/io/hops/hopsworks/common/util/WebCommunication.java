@@ -271,18 +271,18 @@ public class WebCommunication {
       Response response = getWebResource(url, agentPassword);
       int code = response.getStatus();
       Family res = Response.Status.Family.familyOf(code);
+      content = response.readEntity(String.class);
       if (res == Response.Status.Family.SUCCESSFUL) {
-        content = response.readEntity(String.class);
+        return content;
       } else {
         throw new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR,
           Level.SEVERE, "response status: " + response.getStatus(),
-          response + ", reason: " + response.getStatusInfo().getReasonPhrase());
+          "Error code:" + code + " Reason: " + content);
       }
     } catch (KeyManagementException | NoSuchAlgorithmException e) {
       logger.log(Level.SEVERE, null, e);
       throw new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR, Level.SEVERE, null, e.getMessage(), e);
     }
-    return content;
   }
 
   private String fetchLog(String url, String agentPassword) throws GenericException {
@@ -309,7 +309,7 @@ public class WebCommunication {
         webResource = webResource.queryParam(key, args.get(key));
       }
     }
-    logger.log(Level.INFO,
+    logger.log(Level.FINEST,
             "WebCommunication: Requesting url: {0} with password {1}",
             new Object[]{url, agentPassword});
     

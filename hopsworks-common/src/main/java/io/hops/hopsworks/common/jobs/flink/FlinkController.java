@@ -63,7 +63,7 @@ import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.UserGroupInformationService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.jobs.jobhistory.JobType;
+import io.hops.hopsworks.common.jobs.configuration.JobType;
 import io.hops.hopsworks.common.jobs.yarn.YarnJobsMonitor;
 import io.hops.hopsworks.common.util.Settings;
 
@@ -150,30 +150,6 @@ public class FlinkController {
       user.asUser(), ActivityFacade.ActivityFlag.JOB);
     
     return execution;
-  }
-
-  public void stopJob(Jobs job, Users user, String appid, String sessionId) {
-    //First: some parameter checking.
-    if (job == null) {
-      throw new IllegalArgumentException("Job parameter was null.");
-    } else if (user == null) {
-      throw new IllegalArgumentException("Name parameter was null.");
-    } else if (job.getJobType() != JobType.FLINK) {
-      throw new IllegalArgumentException(
-          "Job configuration is not a Flink job configuration.");
-    } else if (!isFlinkJarAvailable()) {
-      throw new IllegalStateException("Flink is not installed on this system.");
-    }
-
-    FlinkJob flinkJob = new FlinkJob(job, submitter, user,
-        settings.getHadoopSymbolicLinkDir(), settings.getFlinkDir(),
-        settings.getFlinkConfDir(), settings.getFlinkConfFile(),
-        settings.getFlinkUser(),
-        job.getProject().getName() + "__" + user.getUsername(),
-        settings.getHopsworksDomainDir(), jobsMonitor, settings, sessionId);
-
-    submitter.stopExecution(flinkJob, appid);
-
   }
 
   /**

@@ -41,7 +41,6 @@ package io.hops.hopsworks.common.project;
 
 import io.hops.hopsworks.common.constants.auth.AllowedRoles;
 import io.hops.hopsworks.common.dao.certificates.CertsFacade;
-import io.hops.hopsworks.common.dao.certificates.ProjectGenericUserCerts;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
 import io.hops.hopsworks.common.dao.dataset.DatasetType;
@@ -55,7 +54,6 @@ import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeView;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsGroups;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
-import io.hops.hopsworks.common.dao.jobhistory.Execution;
 import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
 import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
@@ -150,18 +148,11 @@ import javax.ejb.TransactionAttributeType;
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
+import javax.mail.Message;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSession;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.core.Response;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -170,8 +161,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -183,7 +172,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.mail.Message;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -363,8 +351,7 @@ public class ProjectController {
       // This is an async call
       List<Future<?>> projectCreationFutures = new ArrayList<>();
       try {
-        projectCreationFutures.add(certificatesController
-            .generateCertificates(project, owner, true));
+        projectCreationFutures.add(certificatesController.generateCertificates(project, owner));
       } catch (Exception ex) {
         cleanup(project, sessionId, projectCreationFutures);
         throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_CREATION_ERROR, Level.SEVERE,
@@ -433,9 +420,9 @@ public class ProjectController {
           throw ex;
         }
       }
-
-      //add members of the project
+      
       try {
+        //add members of the project
         failedMembers = new ArrayList<>();
         failedMembers.addAll(addMembers(project, owner, projectDTO.getProjectTeam()));
       } catch (KafkaException | UserException | ProjectException | EJBException ex) {
@@ -848,7 +835,7 @@ public class ProjectController {
     // Create the certificate for this project user
     Future<CertificatesController.CertsResult> certsResultFuture = null;
     try {
-      certsResultFuture = certificatesController.generateCertificates(project, servingManagerUser, false);
+      certsResultFuture = certificatesController.generateCertificates(project, servingManagerUser);
     } catch (Exception e) {
       throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_CREATION_ERROR, Level.SEVERE,
           "project: " + project.getName() + "owner: servingmanager" , e.getMessage(), e);
@@ -1044,7 +1031,6 @@ public class ProjectController {
                 getUser());
             hdfsUsers.add(hdfsUsername);
           }
-          hdfsUsers.add(project.getProjectGenericUser());
 
           projectApps = getYarnApplications(hdfsUsers, yarnClientWrapper.getYarnClient());
           cleanupLogger.logSuccess("Gotten Yarn applications");
@@ -1053,14 +1039,6 @@ public class ProjectController {
           cleanupLogger.logError(ex.getMessage());
         }
 
-        // Kill Zeppelin jobs
-        try {
-          killZeppelin(project.getId(), sessionId);
-          cleanupLogger.logSuccess("Killed Zeppelin");
-        } catch (Exception ex) {
-          LOGGER.log(Level.SEVERE, "Error when killing Zeppelin during project cleanup", ex);
-          cleanupLogger.logError(ex.getMessage());
-        }
         // Kill Yarn Jobs
         try {
           killYarnJobs(project);
@@ -1273,7 +1251,6 @@ public class ProjectController {
           for (HdfsUsers hdfsUser : projectHdfsUsers) {
             hdfsUsersStr.add(hdfsUser.getName());
           }
-          hdfsUsersStr.add(projectName + "__" + Settings.PROJECT_GENERIC_USER_SUFFIX);
 
           List<ApplicationReport> projectApps = getYarnApplications(hdfsUsersStr, yarnClientWrapper.getYarnClient());
           waitForJobLogs(projectApps, yarnClientWrapper.getYarnClient());
@@ -1391,36 +1368,18 @@ public class ProjectController {
 
   private List<ApplicationReport> getYarnApplications(Set<String> hdfsUsers, YarnClient yarnClient)
       throws YarnException, IOException {
-    List<ApplicationReport> projectApplications = yarnClient.getApplications(null, hdfsUsers, null,
+    return yarnClient.getApplications(null, hdfsUsers, null,
         EnumSet.of(
             YarnApplicationState.ACCEPTED, YarnApplicationState.NEW, YarnApplicationState.NEW_SAVING,
             YarnApplicationState.RUNNING, YarnApplicationState.SUBMITTED));
-    return projectApplications;
   }
-
-  private void killYarnJobs(Project project) {
+  
+  private void killYarnJobs(Project project) throws JobException {
     List<Jobs> running = jobFacade.getRunningJobs(project);
     if (running != null && !running.isEmpty()) {
-      Runtime rt = Runtime.getRuntime();
       for (Jobs job : running) {
         //Get the appId of the running app
-        List<Execution> jobExecs = execFacade.findByJob(job);
-        //Sort descending based on jobId because therie might be two
-        // jobs with the same name and we want the latest
-        Collections.sort(jobExecs, new Comparator<Execution>() {
-          @Override
-          public int compare(Execution lhs, Execution rhs) {
-            return lhs.getId() > rhs.getId() ? -1 : (lhs.getId() < rhs.
-                getId()) ? 1 : 0;
-          }
-        });
-        try {
-          rt.exec(settings.getHadoopSymbolicLinkDir() + "/bin/yarn application -kill "
-              + jobExecs.get(0).getAppId());
-        } catch (IOException ex) {
-          Logger.getLogger(ProjectController.class.getName()).
-              log(Level.SEVERE, null, ex);
-        }
+        executionController.stop(job);
       }
     }
   }
@@ -1452,41 +1411,6 @@ public class ProjectController {
     @Override
     public boolean verify(String string, SSLSession ssls) {
       return true;
-    }
-  }
-
-  private void killZeppelin(Integer projectId, String sessionId) throws ServiceException {
-    Client client;
-    Response resp;
-    try (FileInputStream trustStoreIS = new FileInputStream(settings.getGlassfishTrustStore())) {
-      KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
-      trustStore.load(trustStoreIS, null);
-
-      client = ClientBuilder.newBuilder()
-          .trustStore(trustStore)
-          .hostnameVerifier(InsecureHostnameVerifier.INSTANCE)
-          .build();
-
-      resp = client
-          .target(settings.getRestEndpoint())
-          .path("/hopsworks-api/api/zeppelin/" + projectId + "/interpreter/check")
-          .request()
-          .cookie("SESSION", sessionId)
-          .method("GET");
-      LOGGER.log(Level.FINE, "Zeppelin check resp:{0}", resp.getStatus());
-    } catch (CertificateException | NoSuchAlgorithmException | IOException | KeyStoreException e) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.ZEPPELIN_KILL_ERROR, Level.SEVERE, null, e.getMessage(), e);
-    }
-    if (resp.getStatus() == 200) {
-      resp = client
-          .target(settings.getRestEndpoint() + "/hopsworks-api/api/zeppelin/" + projectId + "/interpreter/restart")
-          .request()
-          .cookie("SESSION", sessionId)
-          .method("GET");
-      LOGGER.log(Level.FINE, "Zeppelin restart resp:{0}", resp.getStatus());
-      if (resp.getStatus() != 200) {
-        throw new ServiceException(RESTCodes.ServiceErrorCode.ZEPPELIN_KILL_ERROR, Level.SEVERE);
-      }
     }
   }
 
@@ -1534,12 +1458,7 @@ public class ProjectController {
               getUser());
           hdfsUsers.add(hdfsUsername);
         }
-        hdfsUsers.add(project.getProjectGenericUser());
-
         List<ApplicationReport> projectsApps = getYarnApplications(hdfsUsers, client);
-
-        //Restart zeppelin so interpreters shut down
-        killZeppelin(project.getId(), sessionId);
 
         // try and close all the jupyter jobs
         removeJupyter(project);
@@ -1821,7 +1740,7 @@ public class ProjectController {
             // TODO: This should now be a REST call
             Future<CertificatesController.CertsResult> certsResultFuture = null;
             try {
-              certsResultFuture = certificatesController.generateCertificates(project, newMember, false);
+              certsResultFuture = certificatesController.generateCertificates(project, newMember);
               certsResultFuture.get();
             } catch (Exception ex) {
               try {
@@ -2065,21 +1984,9 @@ public class ProjectController {
         dbhdfsQuota, dbhdfsUsage, dbhdfsNsQuota, dbhdfsNsCount, fshdfsQuota, fshdfsUsage, fshdfsNsQuota,
         fshdfsNsCount, kafkaQuota);
   }
-
-  /**
-   * Deletes a member from a project
-   *
-   * @param project
-   * @param user
-   * @param toRemoveEmail
-   * @throws io.hops.hopsworks.common.exception.UserException
-   * @throws io.hops.hopsworks.common.exception.ProjectException
-   * @throws io.hops.hopsworks.common.exception.ServiceException
-   * @throws java.io.IOException
-   * @throws io.hops.hopsworks.common.security.CAException
-   */
+  
   public void removeMemberFromTeam(Project project, Users user, String toRemoveEmail) throws UserException,
-      ProjectException, ServiceException, IOException, CAException {
+    ProjectException, ServiceException, IOException, CAException, JobException {
     Users userToBeRemoved = userFacade.findByEmail(toRemoveEmail);
     if (userToBeRemoved == null) {
       throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE, "user: " + user.getEmail());
@@ -2115,26 +2022,8 @@ public class ProjectController {
       //kill jobs
       List<Jobs> running = jobFacade.getRunningJobs(project, hdfsUser);
       if (running != null && !running.isEmpty()) {
-        Runtime rt = Runtime.getRuntime();
         for (Jobs job : running) {
-          //Get the appId of the running app
-          List<Execution> jobExecs = execFacade.findByJob(job);
-          //Sort descending based on jobId because there might be two 
-          // jobs with the same name and we want the latest
-          Collections.sort(jobExecs, new Comparator<Execution>() {
-            @Override
-            public int compare(Execution lhs, Execution rhs) {
-              return lhs.getId() > rhs.getId() ? -1 : (lhs.getId() < rhs.
-                  getId()) ? 1 : 0;
-            }
-          });
-          try {
-            rt.exec(settings.getHadoopSymbolicLinkDir() + "/bin/yarn application -kill "
-                + jobExecs.get(0).getAppId());
-          } catch (IOException ex) {
-            Logger.getLogger(ProjectController.class.getName()).
-                log(Level.SEVERE, null, ex);
-          }
+          executionController.stop(job);
         }
       }
 
@@ -2600,7 +2489,10 @@ public class ProjectController {
       //2. Delete Kibana Index
       JSONObject resp = elasticController.sendKibanaReq(params, "index-pattern", projectName + "_logs-*");
       LOGGER.log(Level.FINE, resp.toString(4));
-
+      resp = elasticController.sendKibanaReq(params, "index-pattern",
+          projectName + Settings.ELASTIC_KAGENT_INDEX_PATTERN);
+      LOGGER.log(Level.FINE, resp.toString(4));
+      
       // 3. Cleanup Experiment related Kibana stuff
       String experimentsIndex = projectName + "_" + Settings.ELASTIC_EXPERIMENTS_INDEX;
       elasticController.sendKibanaReq(params, "index-pattern", experimentsIndex, false);
@@ -2623,33 +2515,11 @@ public class ProjectController {
         getUserKeyPwd(), certificatesMgmService.getMasterEncryptionPassword());
     String projectUser = projectName + HdfsUsersController.USER_NAME_DELIMITER
         + user.getUsername();
-    validateCert(Base64.decodeBase64(keyStore), keypw.toCharArray(),
-        projectUser, true);
+    validateCert(Base64.decodeBase64(keyStore), keypw.toCharArray(), projectUser);
 
     CertPwDTO respDTO = new CertPwDTO();
     respDTO.setKeyPw(keypw);
     respDTO.setTrustPw(keypw);
-    return respDTO;
-  }
-
-  public CertPwDTO getProjectWideCertPw(Users user, String projectGenericUsername,
-      String keyStore) throws Exception {
-    ProjectGenericUserCerts projectGenericUserCerts = userCertsFacade.
-        findProjectGenericUserCerts(projectGenericUsername);
-    if (projectGenericUserCerts == null) {
-      throw new Exception("Found more than one or none project-wide " + "certificates for project "
-          + projectGenericUsername);
-    }
-
-    String keypw = HopsUtils.decrypt(user.getPassword(), projectGenericUserCerts.getCertificatePassword(),
-        certificatesMgmService.getMasterEncryptionPassword());
-    validateCert(Base64.decodeBase64(keyStore), keypw.toCharArray(),
-        projectGenericUsername, false);
-
-    CertPwDTO respDTO = new CertPwDTO();
-    respDTO.setKeyPw(keypw);
-    respDTO.setTrustPw(keypw);
-
     return respDTO;
   }
 
@@ -2660,7 +2530,7 @@ public class ProjectController {
    * @param keyStorePwd
    * @return
    */
-  public void validateCert(byte[] keyStore, char[] keyStorePwd, String projectUser, boolean isProjectSpecific)
+  public void validateCert(byte[] keyStore, char[] keyStorePwd, String projectUser)
     throws UserException, HopsSecurityException {
     String commonName = certificatesController.extractCNFromCertificate(keyStore, keyStorePwd, projectUser);
 
@@ -2669,23 +2539,9 @@ public class ProjectController {
         "projectUser:" + projectUser);
     }
 
-    byte[] userKey;
-
-    if (isProjectSpecific) {
-      userKey = userCertsFacade.findUserCert(hdfsUsersController.
+    byte[] userKey = userCertsFacade.findUserCert(hdfsUsersController.
           getProjectName(commonName),
           hdfsUsersController.getUserName(commonName)).getUserKey();
-    } else {
-      // In that case projectUser is the name of the Project, see Spark
-      // interpreter in Zeppelin
-      ProjectGenericUserCerts projectGenericUserCerts = userCertsFacade
-          .findProjectGenericUserCerts(projectUser);
-      if (projectGenericUserCerts == null) {
-        throw new UserException(RESTCodes.UserErrorCode.PROJECT_USER_CERT_NOT_FOUND, Level.SEVERE,
-          "Could not find exactly one certificate for " + projectUser);
-      }
-      userKey = projectGenericUserCerts.getKey();
-    }
 
     if (!Arrays.equals(userKey, keyStore)) {
       throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_ERROR, Level.SEVERE,

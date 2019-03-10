@@ -41,24 +41,24 @@ package io.hops.hopsworks.common.jobs;
 
 import io.hops.hopsworks.common.dao.certificates.CertsFacade;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
-import javax.ejb.Asynchronous;
-import javax.ejb.EJB;
-import javax.ejb.LocalBean;
-import javax.ejb.Stateless;
-import io.hops.hopsworks.common.jobs.execution.HopsJob;
 import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
 import io.hops.hopsworks.common.dao.jobs.JobsHistoryFacade;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
+import io.hops.hopsworks.common.jobs.execution.HopsJob;
 import io.hops.hopsworks.common.jobs.yarn.YarnExecutionFinalizer;
-import java.io.IOException;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-
 import io.hops.hopsworks.common.security.BaseHadoopClientsService;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
+import io.hops.hopsworks.common.tensorflow.TfLibMappingUtil;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.yarn.YarnClientService;
+
+import javax.ejb.Asynchronous;
+import javax.ejb.EJB;
+import javax.ejb.LocalBean;
+import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 
 /**
  * Utility class for executing a HopsJob asynchronously. Passing the Hopsjob to
@@ -90,15 +90,13 @@ public class AsynchronousJobExecutor {
   private CertificateMaterializer certificateMaterializer;
   @EJB
   private BaseHadoopClientsService baseHadoopClientsService;
+  @EJB
+  private TfLibMappingUtil tfLibMappingUtil;
 
   @Asynchronous
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public void startExecution(HopsJob job) {
     job.execute();
-  }
-
-  public void stopExecution(HopsJob job, String appid) {
-    job.stop(appid);
   }
 
   public ExecutionFacade getExecutionFacade() {
@@ -121,8 +119,7 @@ public class AsynchronousJobExecutor {
     return yarnClientService;
   }
   
-  public DistributedFileSystemOps getFileOperations(String hdfsUser) throws
-          IOException {
+  public DistributedFileSystemOps getFileOperations(String hdfsUser) {
     return dfs.getDfsOps(hdfsUser);
   }
 
@@ -144,5 +141,13 @@ public class AsynchronousJobExecutor {
   
   public BaseHadoopClientsService getBaseHadoopClientsService() {
     return baseHadoopClientsService;
+  }
+
+  public TfLibMappingUtil getTfLibMappingUtil() {
+    return tfLibMappingUtil;
+  }
+
+  public void setTfLibMappingUtil(TfLibMappingUtil tfLibMappingUtil) {
+    this.tfLibMappingUtil = tfLibMappingUtil;
   }
 }

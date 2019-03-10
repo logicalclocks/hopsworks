@@ -39,7 +39,6 @@
 package io.hops.hopsworks.common.util;
 
 import com.google.common.base.Splitter;
-import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
@@ -47,7 +46,6 @@ import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
 import io.hops.hopsworks.common.dao.util.Variables;
 import io.hops.hopsworks.common.dela.AddressJSON;
 import io.hops.hopsworks.common.dela.DelaClientType;
-import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -144,8 +142,6 @@ public class Settings implements Serializable {
   private static final String VARIABLE_HOPSWORKS_PORT = "hopsworks_port";
   private static final String VARIABLE_KIBANA_IP = "kibana_ip";
   private static final String VARIABLE_LIVY_IP = "livy_ip";
-  private static final String VARIABLE_LIVY_ZEPPELIN_SESSION_TIMEOUT = "livy_zeppelin_session_timeout";
-  private static final String VARIABLE_ZEPPELIN_INTERPRETERS = "zeppelin_interpreters";
   private static final String VARIABLE_JHS_IP = "jhs_ip";
   private static final String VARIABLE_RM_IP = "rm_ip";
   private static final String VARIABLE_RM_PORT = "rm_port";
@@ -165,12 +161,6 @@ public class Settings implements Serializable {
   private static final String VARIABLE_HOPSWORKS_USER = "hopsworks_user";
   private static final String VARIABLE_AIRFLOW_USER = "airflow_user";
   private static final String VARIABLE_STAGING_DIR = "staging_dir";
-  private static final String VARIABLE_ZEPPELIN_DIR = "zeppelin_dir";
-  private static final String VARIABLE_ZEPPELIN_PROJECTS_DIR
-      = "zeppelin_projects_dir";
-  private static final String VARIABLE_ZEPPELIN_SYNC_INTERVAL
-      = "zeppelin_sync_interval";
-  private static final String VARIABLE_ZEPPELIN_USER = "zeppelin_user";
   private static final String VARIABLE_AIRFLOW_DIR = "airflow_dir";
   private static final String VARIABLE_JUPYTER_DIR = "jupyter_dir";
   private static final String VARIABLE_SPARK_DIR = "spark_dir";
@@ -265,7 +255,6 @@ public class Settings implements Serializable {
   private static final String VARIABLE_FILEBEAT_VERSION = "filebeat_version";
   private static final String VARIABLE_NDB_VERSION = "ndb_version";
   private static final String VARIABLE_LIVY_VERSION = "livy_version";
-  private static final String VARIABLE_ZEPPELIN_VERSION = "zeppelin_version";
   private static final String VARIABLE_HIVE2_VERSION = "hive2_version";
   private static final String VARIABLE_TEZ_VERSION = "tez_version";
   private static final String VARIABLE_SLIDER_VERSION = "slider_version";
@@ -469,11 +458,6 @@ public class Settings implements Serializable {
       HIVE_SCRATCHDIR = setStrVar(VARIABLE_HIVE_SCRATCHDIR, HIVE_SCRATCHDIR);
       HIVE_DB_DEFAULT_QUOTA = setStrVar(VARIABLE_HIVE_DEFAULT_QUOTA, HIVE_DB_DEFAULT_QUOTA);
       ALERT_EMAIL_ADDRS = setStrVar(VARIABLE_ALERT_EMAIL_ADDRS, "");
-      ZEPPELIN_USER = setVar(VARIABLE_ZEPPELIN_USER, ZEPPELIN_USER);
-      ZEPPELIN_DIR = setDirVar(VARIABLE_ZEPPELIN_DIR, ZEPPELIN_DIR);
-      ZEPPELIN_PROJECTS_DIR = setDirVar(VARIABLE_ZEPPELIN_PROJECTS_DIR,
-          ZEPPELIN_PROJECTS_DIR);
-      ZEPPELIN_SYNC_INTERVAL = setLongVar(VARIABLE_ZEPPELIN_SYNC_INTERVAL, ZEPPELIN_SYNC_INTERVAL);
       HADOOP_VERSION = setVar(VARIABLE_HADOOP_VERSION, HADOOP_VERSION);
       JUPYTER_DIR = setDirVar(VARIABLE_JUPYTER_DIR, JUPYTER_DIR);
       MYSQL_DIR = setDirVar(VARIABLE_MYSQL_DIR, MYSQL_DIR);
@@ -497,8 +481,6 @@ public class Settings implements Serializable {
       LOGSTASH_PORT_SERVING = setIntVar(VARIABLE_LOGSTASH_PORT_SERVING, LOGSTASH_PORT_SERVING);
       JHS_IP = setIpVar(VARIABLE_JHS_IP, JHS_IP);
       LIVY_IP = setIpVar(VARIABLE_LIVY_IP, LIVY_IP);
-      LIVY_ZEPPELIN_SESSION_TIMEOUT = setVar(VARIABLE_LIVY_ZEPPELIN_SESSION_TIMEOUT, LIVY_ZEPPELIN_SESSION_TIMEOUT);
-      ZEPPELIN_INTERPRETERS = setVar(VARIABLE_ZEPPELIN_INTERPRETERS, ZEPPELIN_INTERPRETERS);
       OOZIE_IP = setIpVar(VARIABLE_OOZIE_IP, OOZIE_IP);
       SPARK_HISTORY_SERVER_IP = setIpVar(VARIABLE_SPARK_HISTORY_SERVER_IP,
           SPARK_HISTORY_SERVER_IP);
@@ -568,8 +550,6 @@ public class Settings implements Serializable {
 
       populateDelaCache();
       populateLDAPCache();
-      //Set Zeppelin Default Interpreter
-      zeppelinDefaultInterpreter = getZeppelinDefaultInterpreter(ZEPPELIN_INTERPRETERS);
 
       ZOOKEEPER_VERSION = setStrVar(VARIABLE_ZOOKEEPER_VERSION, ZOOKEEPER_VERSION);
       INFLUXDB_VERSION = setStrVar(VARIABLE_INFLUXDB_VERSION, INFLUXDB_VERSION);
@@ -581,7 +561,6 @@ public class Settings implements Serializable {
       FILEBEAT_VERSION = setStrVar(VARIABLE_FILEBEAT_VERSION, FILEBEAT_VERSION);
       NDB_VERSION = setStrVar(VARIABLE_NDB_VERSION, NDB_VERSION);
       LIVY_VERSION = setStrVar(VARIABLE_LIVY_VERSION, LIVY_VERSION);
-      ZEPPELIN_VERSION = setStrVar(VARIABLE_ZEPPELIN_VERSION, ZEPPELIN_VERSION);
       HIVE2_VERSION = setStrVar(VARIABLE_HIVE2_VERSION, HIVE2_VERSION);
       TEZ_VERSION = setStrVar(VARIABLE_TEZ_VERSION, TEZ_VERSION);
       SLIDER_VERSION = setStrVar(VARIABLE_SLIDER_VERSION, SLIDER_VERSION);
@@ -753,6 +732,7 @@ public class Settings implements Serializable {
       = "spark.dynamicAllocation.initialExecutors";
   public static final String SPARK_SHUFFLE_SERVICE
       = "spark.shuffle.service.enabled";
+  public static final String SPARK_SUBMIT_DEPLOYMODE = "spark.submit.deployMode";
   public static final String SPARK_DRIVER_MEMORY_ENV = "spark.driver.memory";
   public static final String SPARK_DRIVER_CORES_ENV = "spark.driver.cores";
   public static final String SPARK_DRIVER_EXTRACLASSPATH = "spark.driver.extraClassPath";
@@ -761,14 +741,34 @@ public class Settings implements Serializable {
   public static final String SPARK_EXECUTOR_EXTRACLASSPATH = "spark.executor.extraClassPath";
   public static final String SPARK_DRIVER_STAGINGDIR_ENV = "spark.yarn.stagingDir";
   public static final String SPARK_JAVA_LIBRARY_PROP = "java.library.path";
-  public static final String SPARK_MAX_APP_ATTEMPTS = "spark.yarn.maxAppAttempts";
   public static final String SPARK_EXECUTOR_EXTRA_JAVA_OPTS = "spark.executor.extraJavaOptions";
-  public static final String SPARK_EXECUTORENV_PATH = "spark.executorEnv.PATH";
-  public static final String SPARK_YARN_APPMASTERENV_LD_LIBRARY_PATH = "spark.yarn.appMasterEnv.LD_LIBRARY_PATH";
-  public static final String SPARK_YARN_APPMASTERENV_LIBHDFS_OPTS = "spark.yarn.appMasterEnv.LIBHDFS_OPTS";
-  public static final String SPARK_EXECUTORENV_LIBHDFS_OPTS = "spark.executorEnv.LIBHDFS_OPTS";
-  public static final String SPARK_DRIVER_EXTRALIBRARYPATH = "spark.driver.extraLibraryPath";
-  public static final String SPARK_DRIVER_EXTRAJAVAOPTIONS = "spark.driver.extraJavaOptions";
+  public static final String SPARK_DRIVER_EXTRA_JAVA_OPTIONS="spark.driver.extraJavaOptions";
+
+  public static final String SPARK_YARN_DIST_PYFILES = "spark.yarn.dist.pyFiles";
+  public static final String SPARK_YARN_DIST_FILES = "spark.yarn.dist.files";
+  public static final String SPARK_YARN_DIST_ARCHIVES = "spark.yarn.dist.archives";
+  public static final String SPARK_YARN_JARS = "spark.yarn.jars";
+
+
+  //Blacklisting properties
+  public static final String SPARK_BLACKLIST_ENABLED = "spark.blacklist.enabled";
+  public static final String SPARK_BLACKLIST_MAX_TASK_ATTEMPTS_PER_EXECUTOR =
+    "spark.blacklist.task.maxTaskAttemptsPerExecutor";
+  public static final String SPARK_BLACKLIST_MAX_TASK_ATTEMPTS_PER_NODE =
+    "spark.blacklist.task.maxTaskAttemptsPerNode";
+  public static final String SPARK_BLACKLIST_STAGE_MAX_FAILED_TASKS_PER_EXECUTOR =
+    "spark.blacklist.stage.maxFailedTasksPerExecutor";
+  public static final String SPARK_BLACKLIST_STAGE_MAX_FAILED_TASKS_PER_NODE =
+    "spark.blacklist.stage.maxFailedExecutorsPerNode";
+  public static final String SPARK_BLACKLIST_APPLICATION_MAX_FAILED_TASKS_PER_EXECUTOR =
+    "spark.blacklist.application.maxFailedTasksPerExecutor";
+  public static final String SPARK_BLACKLIST_APPLICATION_MAX_FAILED_TASKS_PER_NODE =
+    "spark.blacklist.application.maxFailedExecutorsPerNode";
+  public static final String SPARK_BLACKLIST_KILL_BLACKLISTED_EXECUTORS =
+    "spark.blacklist.killBlacklistedExecutors";
+  public static final String SPARK_TASK_MAX_FAILURES = "spark.task.maxFailures";
+  public static final String SPARK_YARN_APPMASTER_ENV = "spark.yarn.appMasterEnv.";
+  public static final String SPARK_EXECUTOR_ENV = "spark.executorEnv.";
 
   //PySpark properties
   public static final String SPARK_APP_NAME_ENV = "spark.app.name";
@@ -780,15 +780,17 @@ public class Settings implements Serializable {
   public static final String SPARK_EXECUTORENV_HDFS_USER = "spark.executorEnv.HDFS_USER";
   public static final String SPARK_EXECUTORENV_HADOOP_USER_NAME = "spark.executorEnv.HADOOP_USER_NAME";
   public static final String SPARK_EXECUTORENV_JOB_NAME = "spark.executorEnv.JOB_NAME";
-  public static final String SPARK_YARN_IS_PYTHON_ENV = "spark.yarn.isPython";
-  public static final String SPARK_YARN_SECONDARY_JARS = "spark.yarn.secondary.jars";
 
-  public static final String SPARK_PYTHONPATH = "PYTHONPATH";
+  public static final String SPARK_YARN_IS_PYTHON_ENV = "spark.yarn.isPython";
+
   public static final String SPARK_PYSPARK_PYTHON = "PYSPARK_PYTHON";
-  public static final String SPARK_EXECUTORENV_PYSPARK_PYTHON = "spark.executorEnv." + SPARK_PYSPARK_PYTHON;
+
+  public static final String SPARK_PYSPARK_PYTHON_OPTION = "spark.pyspark.python";
+
   //TFSPARK properties
   public static final String SPARK_TF_GPUS_ENV = "spark.executor.gpus";
   public static final String SPARK_TENSORFLOW_APPLICATION = "spark.tensorflow.application";
+  public static final String SPARK_TENSORFLOW_NUM_PS = "spark.tensorflow.num.ps";
 
   //Spark log4j and metrics properties
   public static final String SPARK_LOG4J_CONFIG = "log4j.configuration";
@@ -1066,13 +1068,6 @@ public class Settings implements Serializable {
     return FLINK_USER;
   }
 
-  private String ZEPPELIN_USER = "spark";
-
-  public synchronized String getZeppelinUser() {
-    checkCache();
-    return ZEPPELIN_USER;
-  }
-
   private Integer YARN_DEFAULT_QUOTA = 60000;
 
   public synchronized Integer getYarnDefaultQuota() {
@@ -1190,6 +1185,7 @@ public class Settings implements Serializable {
 
   public static final String HOPS_TOUR_DATASET = "TestJob";
   public static final String HOPS_TOUR_DATASET_JUPYTER = "Jupyter";
+  public static final String JUPYTER_SPARKMAGIC_PREFIX = "jupyter-sparkmagic-session-";
   // Distribution-defined classpath to add to processes
   public static final String SPARK_AM_MAIN
       = "org.apache.spark.deploy.yarn.ApplicationMaster";
@@ -1198,8 +1194,7 @@ public class Settings implements Serializable {
   public static final String SPARK_BLACKLISTED_PROPS
       = "conf/spark-blacklisted-properties.txt";
   public static final int SPARK_MIN_EXECS = 1;
-  public static final int SPARK_MAX_EXECS = 1500;
-  public static final int SPARK_INIT_EXECS = 1;
+  public static final int SPARK_MAX_EXECS = 2;
 
   //Flink constants
   public static final String FLINK_DEFAULT_OUTPUT_PATH = "Logs/Flink/";
@@ -1263,7 +1258,7 @@ public class Settings implements Serializable {
   }
 
   public String getPySparkLibsPath() {
-    return "hdfs:///user/" + getSparkUser();
+    return getSparkDir() + "/python/lib/";
   }
 
   public String getSparkLog4JPath() {
@@ -1304,40 +1299,12 @@ public class Settings implements Serializable {
               throw new IOException("Could not get Hadoop classpath, exit code " + result.getExitCode()
                   + " Error: " + result.getStderr());
             }
-            classpathGlob = result.getStdout();
-          }
-          //Now we must remove the yarn shuffle library as it creates issues for
-          //Zeppelin Spark Interpreter
-          StringBuilder classpath = new StringBuilder();
-
-          for (String path : classpathGlob.split(File.pathSeparator)) {
-            if (!path.contains("yarn") && !path.contains("jersey") && !path.contains("servlet")) {
-              classpath.append(path).append(File.pathSeparator);
-            }
-          }
-          if (classpath.length() > 0) {
-            HADOOP_CLASSPATH_GLOB = classpath.toString().substring(0, classpath.length() - 1);
-          } else {
-            throw new IOException("Hadoop classpath appears to be empty");
+            HADOOP_CLASSPATH_GLOB = result.getStdout();
           }
         }
       }
     }
     return HADOOP_CLASSPATH_GLOB;
-  }
-
-  /**
-   * Constructs the path to the marker file of a streaming job that uses HopsUtil.
-   *
-   * @param job job
-   * @param appId yarn appId
-   * @return marker file path
-   */
-  public String getJobMarkerFile(Jobs job, String appId) {
-    return getHdfsRootPath(job.getProject().getName()) + "/Resources/.marker-"
-        + job.getJobType().getName().toLowerCase()
-        + "-" + job.getName()
-        + "-" + appId;
   }
 
   public String getHdfsRootPath(String projectName) {
@@ -1504,7 +1471,6 @@ public class Settings implements Serializable {
   // Livy Server`
   private String LIVY_IP = "127.0.0.1";
   private final String LIVY_YARN_MODE = "yarn";
-  private String LIVY_ZEPPELIN_SESSION_TIMEOUT = "3600";
 
   public synchronized String getLivyIp() {
     checkCache();
@@ -1518,11 +1484,6 @@ public class Settings implements Serializable {
   public synchronized String getLivyYarnMode() {
     checkCache();
     return LIVY_YARN_MODE;
-  }
-
-  public synchronized String getLivyZeppelinSessionTimeout() {
-    checkCache();
-    return LIVY_ZEPPELIN_SESSION_TIMEOUT;
   }
 
   private static final int ZK_PORT = 2181;
@@ -1562,50 +1523,6 @@ public class Settings implements Serializable {
   public synchronized String getWhitelistUsersLogin() {
     checkCache();
     return WHITELIST_USERS_LOGIN;
-  }
-
-  // Zeppelin
-  private String ZEPPELIN_DIR = "/srv/hops/zeppelin";
-  private String ZEPPELIN_INTERPRETERS = "org.apache.zeppelin.hopshive.HopsHiveInterpreter";
-
-  private String zeppelinDefaultInterpreter;
-
-  public synchronized String getZeppelinInterpreters() {
-    checkCache();
-    return ZEPPELIN_INTERPRETERS;
-  }
-
-  public synchronized String getZeppelinDefaultInterpreter() {
-    return zeppelinDefaultInterpreter;
-  }
-
-  /**
-   * Extract default interpreter from zeppelin interpreters.
-   *
-   * @return default interpreter name
-   */
-  private String getZeppelinDefaultInterpreter(String interpreters) {
-    //Split interpreters
-    return interpreters.split(",")[0].split("\\.")[3];
-  }
-
-  public synchronized String getZeppelinDir() {
-    checkCache();
-    return ZEPPELIN_DIR;
-  }
-
-  private String ZEPPELIN_PROJECTS_DIR = "/srv/hops/zeppelin/Projects";
-
-  public synchronized String getZeppelinProjectsDir() {
-    checkCache();
-    return ZEPPELIN_PROJECTS_DIR;
-  }
-
-  private long ZEPPELIN_SYNC_INTERVAL = 24 * 60 * 60 * 1000;
-
-  public synchronized long getZeppelinSyncInterval() {
-    checkCache();
-    return ZEPPELIN_SYNC_INTERVAL;
   }
 
   // Jupyter
@@ -1896,7 +1813,9 @@ public class Settings implements Serializable {
   public static final String ELASTIC_LOGS_INDEX = "logs";
   public static final String ELASTIC_LOGS_INDEX_PATTERN = "_" + Settings.ELASTIC_LOGS_INDEX + "-*";
   public static final String ELASTIC_SERVING_INDEX = "serving";
+  public static final String ELASTIC_KAGENT_INDEX = "kagent";
   public static final String ELASTIC_SERVING_INDEX_PATTERN = "_" + ELASTIC_SERVING_INDEX + "-*";
+  public static final String ELASTIC_KAGENT_INDEX_PATTERN = "_" + ELASTIC_KAGENT_INDEX + "-*";
   public static final String ELASTIC_EXPERIMENTS_INDEX = "experiments";
   public static final String ELASTIC_SAVED_OBJECTS = "saved_objects";
   public static final String ELASTIC_VISUALIZATION = "visualization";
@@ -1904,8 +1823,8 @@ public class Settings implements Serializable {
   public static final String ELASTIC_DASHBOARD = "dashboard";
   public static final String ELASTIC_INDEX_PATTERN = "index-pattern";
   public static final String ELASTIC_LOG_INDEX_REGEX = ".*_" + ELASTIC_LOGS_INDEX + "-\\d{4}.\\d{2}.\\d{2}";
-
   public static final String ELASTIC_SERVING_INDEX_REGEX = ".*_" + ELASTIC_SERVING_INDEX+ "-\\d{4}.\\d{2}.\\d{2}";
+  public static final String ELASTIC_KAGENT_INDEX_REGEX = ".*_" + ELASTIC_KAGENT_INDEX + "-\\d{4}.\\d{2}.\\d{2}";
 
   public String getHopsworksTmpCertDir() {
     return Paths.get(getCertsDir(), "transient").toString();
@@ -2001,7 +1920,6 @@ public class Settings implements Serializable {
   }
 
   public static enum ServiceDataset {
-    ZEPPELIN("notebook", "Contains Zeppelin notebooks."),
     JUPYTER("Jupyter", "Contains Jupyter notebooks."),
     SERVING("Models", "Contains models to be used for serving."),
     EXPERIMENTS("Experiments", "Contains experiments from using the hops python api"),
@@ -2521,10 +2439,6 @@ public class Settings implements Serializable {
     }
     return null;
   }
-  //********************************************************************************************************************
-
-  public final static String PROJECT_GENERIC_USER_SUFFIX = HdfsUsersController.USER_NAME_DELIMITER
-      + "PROJECTGENERICUSER";
 
   //************************************************CERTIFICATES********************************************************
   private static final String HOPS_SITE_CA_DIR = "hops-site-certs";
@@ -2694,7 +2608,8 @@ public class Settings implements Serializable {
   }
   //Kafka END
 
-  //-------------------------LDAP----------------------------
+  //-------------------------KRB & LDAP----------------------------
+  private static final String VARIABLE_KRB_AUTH = "kerberos_auth";
   private static final String VARIABLE_LDAP_AUTH = "ldap_auth";
   private static final String VARIABLE_LDAP_GROUP_MAPPING = "ldap_group_mapping";
   private static final String VARIABLE_LDAP_USER_ID = "ldap_user_id";
@@ -2703,6 +2618,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_LDAP_USER_EMAIL = "ldap_user_email";
   private static final String VARIABLE_LDAP_USER_SEARCH_FILTER = "ldap_user_search_filter";
   private static final String VARIABLE_LDAP_GROUP_SEARCH_FILTER = "ldap_group_search_filter";
+  private static final String VARIABLE_LDAP_KRB_USER_SEARCH_FILTER = "ldap_krb_search_filter";
   private static final String VARIABLE_LDAP_ATTR_BINARY = "ldap_attr_binary";
   private static final String VARIABLE_LDAP_GROUP_TARGET = "ldap_group_target";
   private static final String VARIABLE_LDAP_DYNAMIC_GROUP_TARGET = "ldap_dyn_group_target";
@@ -2710,7 +2626,10 @@ public class Settings implements Serializable {
   private static final String VARIABLE_LDAP_GROUPDN = "ldap_group_dn";
   private static final String VARIABLE_LDAP_ACCOUNT_STATUS = "ldap_account_status";
 
+  private String KRB_AUTH = "false";
   private String LDAP_AUTH = "false";
+  private boolean IS_KRB_ENABLED = false;
+  private boolean IS_LDAP_ENABLED = false;
   private String LDAP_GROUP_MAPPING = "";
   private String LDAP_USER_ID = "uid"; //login name
   private String LDAP_USER_GIVEN_NAME = "givenName";
@@ -2718,6 +2637,7 @@ public class Settings implements Serializable {
   private String LDAP_USER_EMAIL = "mail";
   private String LDAP_USER_SEARCH_FILTER = "uid=%s";
   private String LDAP_GROUP_SEARCH_FILTER = "member=%d";
+  private String LDAP_KRB_USER_SEARCH_FILTER = "krbPrincipalName=%s";
   private String LDAP_ATTR_BINARY = "java.naming.ldap.attributes.binary";
   private String LDAP_GROUP_TARGET = "cn";
   private String LDAP_DYNAMIC_GROUP_TARGET = "memberOf";
@@ -2726,7 +2646,10 @@ public class Settings implements Serializable {
   private int LDAP_ACCOUNT_STATUS = 4;
 
   private void populateLDAPCache() {
+    KRB_AUTH = setVar(VARIABLE_KRB_AUTH, KRB_AUTH);
     LDAP_AUTH = setVar(VARIABLE_LDAP_AUTH, LDAP_AUTH);
+    IS_KRB_ENABLED = setBoolVar(VARIABLE_KRB_AUTH, IS_KRB_ENABLED);
+    IS_LDAP_ENABLED = setBoolVar(VARIABLE_LDAP_AUTH, IS_LDAP_ENABLED);
     LDAP_GROUP_MAPPING = setVar(VARIABLE_LDAP_GROUP_MAPPING, LDAP_GROUP_MAPPING);
     LDAP_USER_ID = setVar(VARIABLE_LDAP_USER_ID, LDAP_USER_ID);
     LDAP_USER_GIVEN_NAME = setVar(VARIABLE_LDAP_USER_GIVEN_NAME, LDAP_USER_GIVEN_NAME);
@@ -2734,6 +2657,7 @@ public class Settings implements Serializable {
     LDAP_USER_EMAIL = setVar(VARIABLE_LDAP_USER_EMAIL, LDAP_USER_EMAIL);
     LDAP_USER_SEARCH_FILTER = setVar(VARIABLE_LDAP_USER_SEARCH_FILTER, LDAP_USER_SEARCH_FILTER);
     LDAP_GROUP_SEARCH_FILTER = setVar(VARIABLE_LDAP_GROUP_SEARCH_FILTER, LDAP_GROUP_SEARCH_FILTER);
+    LDAP_KRB_USER_SEARCH_FILTER = setVar(VARIABLE_LDAP_KRB_USER_SEARCH_FILTER, LDAP_KRB_USER_SEARCH_FILTER);
     LDAP_ATTR_BINARY = setVar(VARIABLE_LDAP_ATTR_BINARY, LDAP_ATTR_BINARY);
     LDAP_GROUP_TARGET = setVar(VARIABLE_LDAP_GROUP_TARGET, LDAP_GROUP_TARGET);
     LDAP_DYNAMIC_GROUP_TARGET = setVar(VARIABLE_LDAP_DYNAMIC_GROUP_TARGET, LDAP_DYNAMIC_GROUP_TARGET);
@@ -2742,9 +2666,24 @@ public class Settings implements Serializable {
     LDAP_ACCOUNT_STATUS = setIntVar(VARIABLE_LDAP_ACCOUNT_STATUS, LDAP_ACCOUNT_STATUS);
   }
 
+  public synchronized String getKRBAuthStatus() {
+    checkCache();
+    return KRB_AUTH;
+  }
+
   public synchronized String getLDAPAuthStatus() {
     checkCache();
     return LDAP_AUTH;
+  }
+  
+  public synchronized  boolean isKrbEnabled() {
+    checkCache();
+    return IS_KRB_ENABLED;
+  }
+  
+  public synchronized  boolean isLdapEnabled() {
+    checkCache();
+    return IS_LDAP_ENABLED;
   }
 
   public synchronized String getLdapGroupMapping() {
@@ -2781,7 +2720,12 @@ public class Settings implements Serializable {
     checkCache();
     return LDAP_GROUP_SEARCH_FILTER;
   }
-
+  
+  public synchronized String getKrbUserSearchFilter() {
+    checkCache();
+    return LDAP_KRB_USER_SEARCH_FILTER;
+  }
+  
   public synchronized String getLdapAttrBinary() {
     checkCache();
     return LDAP_ATTR_BINARY;
@@ -2992,13 +2936,6 @@ public class Settings implements Serializable {
   public synchronized String getHive2Version() {
     checkCache();
     return HIVE2_VERSION;
-  }
-
-  private String ZEPPELIN_VERSION;
-
-  public synchronized String getZeppelinVersion() {
-    checkCache();
-    return ZEPPELIN_VERSION;
   }
 
   private String LIVY_VERSION;
