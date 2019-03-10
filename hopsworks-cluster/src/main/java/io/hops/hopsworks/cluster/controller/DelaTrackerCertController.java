@@ -55,6 +55,8 @@ import org.bouncycastle.asn1.x500.style.IETFUtils;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import java.io.IOException;
 import java.security.cert.CertificateException;
 import java.util.logging.Level;
@@ -70,6 +72,7 @@ import static io.hops.hopsworks.restutils.RESTCodes.DelaCSRErrorCode.O;
 import static io.hops.hopsworks.restutils.RESTCodes.DelaCSRErrorCode.SERIALNUMBER;
 
 @Stateless
+@TransactionAttribute(TransactionAttributeType.NEVER)
 public class DelaTrackerCertController {
 
   @EJB
@@ -81,7 +84,6 @@ public class DelaTrackerCertController {
 
   public CSR signCsr(String userEmail, CSR csr)
       throws IOException, HopsSecurityException, GenericException, DelaCSRCheckException {
-    // TODO this is really dangerous to do within a single transaction.
     ClusterCert clusterCert = checkCSR(userEmail, csr);
 
     CSR signedCert = certificatesController.signDelaClusterCertificate(csr);
@@ -107,10 +109,10 @@ public class DelaTrackerCertController {
 
     //subject=/C=se/CN=bbc.sics.se/ST=stockholm/L=kista/O=hopsworks/OU=hs/emailAddress=dela1@kth.se
     X500Name subject = certificatesController.extractSubjectFromCSR(csrDTO.getCsr());
-    String email = IETFUtils.valueToString(subject.getRDNs(BCStyle.EmailAddress)[0].getFirst().getType());
-    String commonName = IETFUtils.valueToString(subject.getRDNs(BCStyle.CN)[0].getFirst().getType());
-    String organizationName = IETFUtils.valueToString(subject.getRDNs(BCStyle.O)[0].getFirst().getType());
-    String organizationalUnitName = IETFUtils.valueToString(subject.getRDNs(BCStyle.OU)[0].getFirst().getType());
+    String email = IETFUtils.valueToString(subject.getRDNs(BCStyle.EmailAddress)[0].getFirst().getValue());
+    String commonName = IETFUtils.valueToString(subject.getRDNs(BCStyle.CN)[0].getFirst().getValue());
+    String organizationName = IETFUtils.valueToString(subject.getRDNs(BCStyle.O)[0].getFirst().getValue());
+    String organizationalUnitName = IETFUtils.valueToString(subject.getRDNs(BCStyle.OU)[0].getFirst().getValue());
     if (email.isEmpty() || !email.equals(user.getEmail())) {
       throw new DelaCSRCheckException(EMAIL, Level.FINE);
     }

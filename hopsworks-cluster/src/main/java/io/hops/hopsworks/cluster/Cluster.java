@@ -63,7 +63,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
 import java.io.IOException;
 import java.util.List;
 import java.util.logging.Level;
@@ -178,9 +177,9 @@ public class Cluster {
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
   @RolesAllowed({"CLUSTER_AGENT"})
-  public Response singCertificate(CSR csr, @Context SecurityContext sc)
+  public Response singCertificate(CSR csr, @Context HttpServletRequest req)
       throws HopsSecurityException, GenericException, DelaCSRCheckException, IOException {
-    String userEmail = sc.getUserPrincipal().getName();
+    String userEmail = req.getUserPrincipal().getName();
     CSR signedCSR = delaTrackerCertController.signCsr(userEmail, csr);
     return Response.ok().entity(signedCSR).build();
   }
