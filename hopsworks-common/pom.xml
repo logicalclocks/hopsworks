@@ -256,6 +256,12 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
+      <groupId>javax.mail</groupId>
+      <artifactId>mail</artifactId>
+      <version>1.4.7</version>
+    </dependency>
+
+    <dependency>
       <groupId>io.hops</groupId>
       <artifactId>hadoop-common</artifactId>
       <version>${hops.version}</version>
@@ -277,11 +283,6 @@
           <artifactId>*</artifactId>
         </exclusion>
       </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>io.hops.metadata</groupId>
-      <artifactId>hops-metadata-dal</artifactId>
-      <version>${hops.version}</version>
     </dependency>
 
     <!-- Hops Hive dependecies -->

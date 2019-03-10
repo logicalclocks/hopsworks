@@ -45,6 +45,12 @@ describe "On #{ENV['OS']}" do
       ClusterCert.destroy_all
     end
 
+    it 'should fail to sign the certificate with empty csr' do
+      post "#{ENV['HOPSWORKS_DELA_TRACKER']}/cluster/certificate", {csr: @csr}
+      expect_status(422)
+    end
+
+
     it 'should fail to sign the certificate with no db entry in the db' do
       post "#{ENV['HOPSWORKS_DELA_TRACKER']}/cluster/certificate", {csr: @csr}
       expect_status(400)
@@ -80,6 +86,17 @@ describe "On #{ENV['OS']}" do
     it 'should fail to sign twice a certificate for the same cluster' do
       post "#{ENV['HOPSWORKS_DELA_TRACKER']}/cluster/certificate", {csr: @csr}
       expect_status(400)
+    end
+
+    context 'with User login' do
+      before :all do
+        with_valid_project
+      end
+
+      it 'should fail to sign the certificate' do
+        post "#{ENV['HOPSWORKS_DELA_TRACKER']}/cluster/certificate", {csr: @csr}
+        expect_status(403)
+      end
     end
   end
 end

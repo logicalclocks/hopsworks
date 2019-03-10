@@ -228,55 +228,5 @@ describe "On #{ENV['OS']}" do
         end
       end
     end
-
-    describe "# Dela certificates" do
-      context 'with User login' do
-        before :all do
-          with_valid_project
-        end
-
-        it 'should fail to sign the certificate' do
-          post "#{ENV['HOPSWORKS_CA']}/certificate/dela", {csr: @csr}
-          expect_status(403)
-        end
-      end
-
-      context 'with cluster agent login' do
-        before :all do
-          with_agent_session
-        end
-
-        it 'should fail to sign the certificate with empty csr' do
-          post "#{ENV['HOPSWORKS_CA']}/certificate/dela", {}
-          expect_status(422)
-        end
-
-        it 'should sign the dela certificate', vm: true do
-          post "#{ENV['HOPSWORKS_CA']}/certificate/dela", {csr: @csr}
-          expect_status(200)
-
-          # Check that the certificate is on the local fs. this assumes you are running the
-          # tests on a proper vm
-          check_certificate_exists(@certs_dir + "/intermediate/", "test", @subject)
-        end
-
-        it 'should fail to sign the certificate for the same cluster twice' do
-          post "#{ENV['HOPSWORKS_CA']}/certificate/dela", {csr: @csr}
-          expect_status(400)
-        end
-
-        it 'should succeed to revoke the certificate', vm: true do
-          delete "#{ENV['HOPSWORKS_CA']}/certificate/dela?certId=test"
-          expect_status(200)
-
-          check_certificate_revoked(@certs_dir + "/intermediate/", "test", @subject)
-        end
-
-        it 'should return no-content if the revokation is triggered twice' do
-          delete "#{ENV['HOPSWORKS_CA']}/certificate/dela?certId=test"
-          expect_status(204)
-        end
-      end
-    end
   end
 end

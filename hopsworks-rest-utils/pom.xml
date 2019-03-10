@@ -55,7 +55,19 @@
             <version>${hops.version}</version>
             <exclusions>
                 <exclusion>
-                    <groupId>*</groupId>
+                    <groupId>com.nimbusds</groupId>
+                    <artifactId>nimbus-jose-jwt</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.bouncycastle</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.sun.jersey</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>javax.servlet</groupId>
                     <artifactId>*</artifactId>
                 </exclusion>
             </exclusions>
