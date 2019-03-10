@@ -97,7 +97,7 @@ public class WebDriverFactory {
     if (System.getenv(HOPSWORKS_URL_ENV) != null) {
       url = System.getenv(HOPSWORKS_URL_ENV);
     } else {
-      url = "http://localhost:8080/hopsworks/";
+      url = "https://localhost:8181/hopsworks/";
     }
 
     driver.manage().timeouts().implicitlyWait(60, TimeUnit.SECONDS);
