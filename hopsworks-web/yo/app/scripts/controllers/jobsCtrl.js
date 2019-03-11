@@ -594,6 +594,7 @@ angular.module('hopsWorksApp')
             self.toggle = function (job, index) {
               //reset all jobs showing flag
               angular.forEach(self.jobs, function (job, key) {
+                StorageService.remove(self.projectId + "_jobui_" + job.name);
                 if (job.name !== job.name) {
                     job.showing = false;
                 }
@@ -605,8 +606,7 @@ angular.module('hopsWorksApp')
               self.selectedIndex = index;
               self.currentToggledIndex = index;
               self.currentjob = job;
-              StorageService.remove(self.projectId + "_jobui_" + job.name)
-              StorageService.store(self.projectId + "_jobui_" + job.name, job)
+              StorageService.store(self.projectId + "_jobui_" + job.name, job);
 
             };
 
