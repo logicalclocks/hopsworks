@@ -197,7 +197,7 @@
                       <th></th>
                       </tr>
                       </thead>
-                      <tbody>
+                      <tbody class="datasets-browser">
                         <tr dir-paginate="file in datasetsCtrl.files | orderBy:sortKey:reverse | filter:datasetsCtrl.search | itemsPerPage:datasetsCtrl.itemsPerPage"
                             pagination-id="dataset_browser_pagination"
                             context-menu
@@ -230,9 +230,9 @@
                         <div>
                           <i uib-tooltip="Click on folder icon to enter folder" tooltip-placement="right" ng-show="file.dir" class="glyphicon"
                              ng-class="{ 'glyphicon-folder-close': datasetsCtrl.selected === file.name,  'glyphicon-folder-open': datasetsCtrl.selected !== file.name}"
-                             style="padding-right: 5px; color: #757575; float: left;margin-top: 4px;"></i>
+                             style="padding-right: 5px; color: #757575; float: left;"></i>
                           <i uib-tooltip="Download file" tooltip-placement="right" ng-show="!file.dir" class="glyphicon glyphicon-cloud-download" 
-                             style="padding-right: 5px; color: #757575;float: left;margin-top: 4px;"></i>
+                             style="padding-right: 5px; color: #757575;float: left;"></i>
                         </div>
                       </td>
                       <td ng-click="datasetsCtrl.openDir(file)">
@@ -426,7 +426,7 @@
                         </i>
                       </td>
                       </tr>
-                      </tbody>
+                      </>
                       <tfoot><tr><td colspan="100"><div class="loader loader-sm" ng-show="datasetsCtrl.working"></div></td></tr></tfoot>
                     </table>
                     <dir-pagination-controls
