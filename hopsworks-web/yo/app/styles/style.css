@@ -531,8 +531,6 @@ th:focus {
   outline: none !important;
 }
 
-.datasets-browser tbody,
-.datasets-browser tr,
 .datasets-browser td {
   padding: 6px !important; vertical-align: middle !important;
 }
