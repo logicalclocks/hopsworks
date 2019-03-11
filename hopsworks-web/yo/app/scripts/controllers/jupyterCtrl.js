@@ -296,6 +296,11 @@ angular.module('hopsWorksApp')
                         $scope.settings = self.jupyterSettings;
                         $scope.jobConfig = self.jupyterSettings.jobConfig;
                         self.projectName = self.jupyterSettings.project.name;
+                        for(var i = 0; i < self.dirs.length; i++) {
+                          if(self.jupyterSettings.baseDir === self.dirs[i].name) {
+                            self.selected = self.dirs[i];
+                          }
+                        }
 
                         if (self.jupyterSettings.project.name.startsWith("demo_deep_learning")) {
                             //Activate anaconda
