@@ -986,8 +986,6 @@ public class ProjectController {
     }
 
     cleanup(project, sessionId);
-
-    certificateMaterializer.forceRemoveLocalMaterial(user.getUsername(), project.getName(), null, true);
   }
 
   public String[] forceCleanup(String projectName, String userEmail, String sessionId) {
@@ -1401,6 +1399,29 @@ public class ProjectController {
       }
     }
   }
+  
+  /**
+   * Safety-net method to delete certificate references from {@link CertificateMaterializer}
+   * Individual services who request material should de-reference them during cleanup, but just
+   * to be on the safe side force remove them too
+   *
+   * @param project Project to be deleted
+   * @param teams Members of the project
+   */
+  private void removeCertificatesFromMaterializer(Project project, Collection<ProjectTeam> teams) {
+    for (ProjectTeam team : teams) {
+      certificateMaterializer.forceRemoveLocalMaterial(team.getUser().getUsername(), project.getName(), null, true);
+      String remoteCertsDirectory = settings.getHdfsTmpCertDir() + Path.SEPARATOR +
+          hdfsUsersController.getHdfsUserName(project, team.getUser());
+      if (remoteCertsDirectory.equals(settings.getHdfsTmpCertDir())) {
+        LOGGER.log(Level.WARNING, "Programming error! Tried to delete " + settings.getHdfsTmpCertDir()
+            + " while deleting project " + project + " but this operation is not allowed.");
+      } else {
+        certificateMaterializer.forceRemoveRemoteMaterial(team.getUser().getUsername(), project.getName(),
+            remoteCertsDirectory, false);
+      }
+    }
+  }
 
   private static class InsecureHostnameVerifier implements HostnameVerifier {
     static InsecureHostnameVerifier INSTANCE = new InsecureHostnameVerifier();
@@ -1473,6 +1494,8 @@ public class ProjectController {
         List<HdfsUsers> usersToClean = getUsersToClean(project);
         List<HdfsGroups> groupsToClean = getGroupsToClean(project);
         removeProjectInt(project, usersToClean, groupsToClean, projectCreationFutures, decreaseCreatedProj);
+        
+        removeCertificatesFromMaterializer(project, team);
         break;
       } catch (Exception ex) {
         nbTry++;
@@ -1490,7 +1513,7 @@ public class ProjectController {
       }
     }
   }
-
+  
   private void removeProjectInt(Project project, List<HdfsUsers> usersToClean,
       List<HdfsGroups> groupsToClean, List<Future<?>> projectCreationFutures,
       boolean decreaseCreatedProj)
