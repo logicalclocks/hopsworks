@@ -97,10 +97,11 @@ angular.module('hopsWorksApp', [
 
             flowFactoryProvider.defaults = {
               //if [400, 401, 403, 409, 415, 500, 501] error codes are sent from the server do not retry.
-              permanentErrors: [403, 500, 501],
+              permanentErrors: [403, 404, 500, 501],
               maxChunkRetries: 2,
               chunkRetryInterval: 5000,
-              simultaneousUploads: 4,
+              simultaneousUploads: 3,
+              progressCallbacksInterval: 0,
               headers: function (file, chunk, isTest) {
                   return {
                       'Authorization': localStorage.getItem("token")
@@ -108,7 +109,7 @@ angular.module('hopsWorksApp', [
               }
             };
             flowFactoryProvider.on('catchAll', function (event) {
-              //console.log('catchAll', arguments);
+                // console.log('catchAll arguments:', arguments);
             });
 
             $routeProvider

@@ -29,7 +29,7 @@ angular.module('hopsWorksApp')
               $location.path('/login');
               $location.replace();
             };
-            var checkeIsAdmin = function () {
+            var checkIsAdmin = function () {
               var isAdmin = sessionStorage.getItem("isAdmin");
               if (isAdmin != 'true' && isAdmin != 'false') {
                 AuthService.isAdmin().then(
@@ -45,7 +45,7 @@ angular.module('hopsWorksApp')
                 AuthService.session().then(
                     function (success) {
                       saveEmail(success.data.data.value);
-                      checkeIsAdmin();
+                      checkIsAdmin();
                       return $q.promise
                     },
                     function (err) {

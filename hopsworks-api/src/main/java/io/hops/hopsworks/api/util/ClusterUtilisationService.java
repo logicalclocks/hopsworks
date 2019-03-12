@@ -44,6 +44,7 @@ import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.Api;
+
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -60,18 +61,18 @@ import javax.ws.rs.core.Response;
 
 @Stateless
 @Path("/clusterUtilisation")
-@JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+@JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
 @Api(value = "Cluster Utilisation Service",
-    description = "Cluster Utilisation Service")
+  description = "Cluster Utilisation Service")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ClusterUtilisationService {
-
+  
   private final static Logger LOGGER = Logger.getLogger(ClusterUtilisationService.class.getName());
   @EJB
   private NoCacheResponse noCacheResponse;
   @EJB
   private Settings settings;
-
+  
   @GET
   @Path("/metrics")
   @Produces(MediaType.APPLICATION_JSON)
@@ -89,5 +90,5 @@ public class ClusterUtilisationService {
     }
     return response;
   }
-
+  
 }
