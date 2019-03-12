@@ -90,7 +90,6 @@ angular.module('hopsWorksApp')
               var msg = JSON.parse(message);
               self.errorMsg = msg.errorMsg;
               self.files[file.name] = msg.errorMsg;
-              console.log("fileErrorHandler ", file, message, flow);
             };
 
             self.errorHandler = function (file, message, flow) {
