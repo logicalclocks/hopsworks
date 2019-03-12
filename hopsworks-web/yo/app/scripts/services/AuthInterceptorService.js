@@ -44,7 +44,7 @@ angular.module('hopsWorksApp')
 
             return {
               response: function (response) {
-                //console.log('From server: ', response);
+                // console.log('From server: ', response);
                 var token = response.headers('Authorization');
                 if (token) {
                   var authService = $injector.get('AuthService');
@@ -54,16 +54,22 @@ angular.module('hopsWorksApp')
                 return response || $q.when(response);
               },
               responseError: function (responseRejection) {
-                console.log('Error in response: ', responseRejection);
-                
+                var redirect = true;
+                // console.log('Error in response:', responseRejection);
                 if (responseRejection.status === 401) {
+                  // Authorization issue, check if token ues different from token in local storage
+                  var headerToken = responseRejection.config.headers.Authorization;
+                  if (headerToken) {
+                    var authService = $injector.get('AuthService');
+                    var localStorageToken = authService.getToken();
+                    if (headerToken !== localStorageToken) {
+                      authService.refreshToken();
+                      redirect = false;
+                    }
+                  }
                   // Authorization issue, unauthorized, login required
-
-                  console.log('Error in response ', responseRejection + 'Login required.');
-
                   var url = $location.url();
-
-                  if (url != '/login' && url != '/ldapLogin' && url != '/register' && url != '/recover') {
+                  if (redirect && url != '/login' && url != '/ldapLogin' && url != '/register' && url != '/recover') {
                     $location.url('/login');
                     $location.replace();
                   }

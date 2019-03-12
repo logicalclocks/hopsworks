@@ -46,6 +46,7 @@ angular.module('hopsWorksApp')
                     function (success) {
                       saveEmail(success.data.data.value);
                       checkeIsAdmin();
+                      return $q.promise
                     },
                     function (err) {
                       AuthService.cleanSession();
