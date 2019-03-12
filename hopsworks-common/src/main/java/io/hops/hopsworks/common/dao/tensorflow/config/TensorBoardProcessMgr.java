@@ -87,7 +87,8 @@ public class TensorBoardProcessMgr {
    * @throws IOException
    */
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-  public TensorBoardDTO startTensorBoard(Project project, Users user, HdfsUsers hdfsUser, String hdfsLogdir)
+  public TensorBoardDTO startTensorBoard(Project project, Users user, HdfsUsers hdfsUser, String hdfsLogdir,
+                                         String tfLdLibraryPath)
           throws IOException {
 
     String prog = settings.getHopsworksDomainDir() + "/bin/tensorboard.sh";
@@ -165,6 +166,7 @@ public class TensorBoardProcessMgr {
           .addCommand(settings.getHadoopVersion())
           .addCommand(certsPath)
           .addCommand(settings.getJavaHome())
+          .addCommand(tfLdLibraryPath)
           .ignoreOutErrStreams(true)
           .build();
         LOGGER.log(Level.FINE, processDescriptor.toString());
