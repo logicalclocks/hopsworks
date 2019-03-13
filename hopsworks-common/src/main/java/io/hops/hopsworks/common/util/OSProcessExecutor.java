@@ -111,12 +111,17 @@ public class OSProcessExecutor {
       return new ProcessResult(process.exitValue(), true, stringifyStream(outStream, ignoreStreams),
           stringifyStream(errStream, ignoreStreams));
     } else {
-      process.destroyForcibly();
+      // It could be the case that destroyForcibly does not destroy the process right away
+      exited = process.destroyForcibly().waitFor(1, TimeUnit.SECONDS);
       stdoutGobblerFuture.cancel(true);
       if (stderrGobblerFuture != null) {
         stderrGobblerFuture.cancel(true);
       }
-      return new ProcessResult(process.exitValue(), false, stringifyStream(outStream, ignoreStreams),
+      int returnValue = 200;
+      if (exited) {
+        returnValue = process.exitValue();
+      }
+      return new ProcessResult(returnValue, false, stringifyStream(outStream, ignoreStreams),
           "Process timed-out");
     }
   }
