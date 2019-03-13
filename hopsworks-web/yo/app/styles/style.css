@@ -531,7 +531,7 @@ th:focus {
   outline: none !important;
 }
 
-.datasets-browser td {
+.datasets-jobs-table td {
   padding: 6px !important; vertical-align: middle !important;
 }
 
