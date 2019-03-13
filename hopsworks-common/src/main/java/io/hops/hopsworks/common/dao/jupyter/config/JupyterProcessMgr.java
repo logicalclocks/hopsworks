@@ -112,35 +112,30 @@ public class JupyterProcessMgr {
   @PreDestroy
   public void preDestroy() {
   }
-
+  
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public JupyterDTO startServerAsJupyterUser(Project project, String secretConfig, String hdfsUser, String realName,
       JupyterSettings js) throws ServiceException {
-
+    
     String prog = settings.getHopsworksDomainDir() + "/bin/jupyter.sh";
-
-    JupyterPaths jp = null;
+    
+    Integer port = ThreadLocalRandom.current().nextInt(40000, 59999);
+    JupyterPaths jp = jupyterConfigFilesGenerator.generateConfiguration(project, secretConfig, hdfsUser, realName,
+        hdfsLeFacade.getSingleEndpoint(), js, port);
+    String secretDir = settings.getStagingDir() + Settings.PRIVATE_DIRS + js.getSecret();
+    String logfile = jp.getLogDirPath() + "/" + hdfsUser + "-" + port + ".log";
+    
     String token = null;
     Long pid = 0l;
-
+    
     // The Jupyter Notebook is running at: http://localhost:8888/?token=c8de56fa4deed24899803e93c227592aef6538f93025fe01
     boolean foundToken = false;
     int maxTries = 5;
-    Process process = null;
-    Integer port = 0;
-
+    
     // kill any running servers for this user, clear cached entries
     while (!foundToken && maxTries > 0) {
-      // use pidfile to kill any running servers
-      port = ThreadLocalRandom.current().nextInt(40000, 59999);
-
-      jp = jupyterConfigFilesGenerator.generateConfiguration(project, secretConfig, hdfsUser, realName,
-          hdfsLeFacade.getSingleEndpoint(), js, port);
-
-      String secretDir = settings.getStagingDir() + Settings.PRIVATE_DIRS + js.getSecret();
-
-      String logfile = jp.getLogDirPath() + "/" + hdfsUser + "-" + port + ".log";
       
+      // use pidfile to kill any running servers
       ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
           .addCommand("/usr/bin/sudo")
           .addCommand(prog)
@@ -166,19 +161,18 @@ public class JupyterProcessMgr {
         if (processResult.getExitCode() != 0) {
           String errorMsg = "Could not start Jupyter server. Exit code: " + processResult.getExitCode()
               + " Error: " + processResult.getStdout();
-          LOGGER.log(Level.SEVERE, "Could not start Jupyter server. Exit code: " + processResult.getExitCode()
-              + " Error: " + processResult.getStdout());
+          LOGGER.log(Level.SEVERE, errorMsg);
           throw new IOException(errorMsg);
         }
         // The logfile should now contain the token we need to read and save.
         final BufferedReader br = new BufferedReader(new InputStreamReader(
             new FileInputStream(logfile), Charset.forName("UTF8")));
         String line;
-// [I 11:59:16.597 NotebookApp] The Jupyter Notebook is running at: 
-// http://localhost:8888/?token=c8de56fa4deed24899803e93c227592aef6538f93025fe01
+        // [I 11:59:16.597 NotebookApp] The Jupyter Notebook is running at:
+        // http://localhost:8888/?token=c8de56fa4deed24899803e93c227592aef6538f93025fe01
         String pattern = "(.*)token=(.*)";
         Pattern r = Pattern.compile(pattern);
-
+        
         int linesRead = 0;
         while (((line = br.readLine()) != null) && !foundToken && linesRead
             < 10000) {
@@ -191,25 +185,24 @@ public class JupyterProcessMgr {
           }
         }
         br.close();
-
+        
         // Read the pid for Jupyter Notebook
         String pidContents = com.google.common.io.Files.readFirstLine(
             new File(pidfile), Charset.defaultCharset());
         pid = Long.parseLong(pidContents);
-
+        
       } catch (Exception ex) {
-        LOGGER.log(Level.SEVERE, "Problem starting a jupyter server: {0}", ex);
-        if (process != null) {
-          process.destroyForcibly();
-        }
+        LOGGER.log(Level.SEVERE, "Problem executing shell script to start Jupyter server", ex);
+        maxTries--;
       }
-      maxTries--;
     }
-
+    
     if (!foundToken) {
-      return null;
+      String errorMsg = "Could not read Jupyter token";
+      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_START_ERROR, Level.SEVERE, errorMsg,
+          errorMsg + " for project " + project);
     }
-
+    
     return new JupyterDTO(port, token, pid, secretConfig, jp.getCertificatesDir());
   }
 
