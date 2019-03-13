@@ -43,8 +43,8 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('FileUploadCtrl', ['$uibModalInstance', '$scope', 'projectId', 'path', 'templateId', 'growl', 'flowFactory', 'DataSetService',
-          function ($uibModalInstance, $scope, projectId, path, templateId, growl, flowFactory, DataSetService) {
+        .controller('FileUploadCtrl', ['$uibModalInstance', '$scope', 'projectId', 'path', 'templateId', 'growl', 'flowFactory', 'DataSetService', 'AuthService',
+          function ($uibModalInstance, $scope, projectId, path, templateId, growl, flowFactory, DataSetService, AuthService) {
 
             var self = this;
             self.model = {};
@@ -78,6 +78,14 @@ angular.module('hopsWorksApp')
               return getApiPath() + '/project/' + self.projectId + '/dataset/upload/' + self.path + '/' + self.selectedTemplate.id;
             };
 
+            self.existingFlowObject.on('fileProgress', function (file, chunk) {
+              var token = chunk.xhr.getResponseHeader('Authorization');
+              if (token) {
+                console.log("xhr: Authorization header updated.");
+                AuthService.saveToken(token);
+              }
+            });
+
             self.fileErrorHandler = function (file, message, flow) {
               var msg = JSON.parse(message);
               self.errorMsg = msg.errorMsg;
@@ -94,7 +102,6 @@ angular.module('hopsWorksApp')
             };
 
             self.fileAddedHandler = function (file, flow) {
-              console.log(file.name);
               self.files[file.name] = '';
             };
             

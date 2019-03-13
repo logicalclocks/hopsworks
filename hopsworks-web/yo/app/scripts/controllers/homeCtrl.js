@@ -109,7 +109,7 @@ angular.module('hopsWorksApp')
                   loadProjects(result);
                 },
                 function (error) {
-                  growl.info(error, {title: 'Info', ttl: 2000});
+                  growl.info(error.data.errorMsg, {title: error.data.errorMsg, ttl: 2000});
                 });
             };
             
