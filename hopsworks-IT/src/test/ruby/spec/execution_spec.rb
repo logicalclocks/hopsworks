@@ -25,8 +25,8 @@ describe "On #{ENV['OS']}" do
         end
         it "should fail" do
           create_sparktour_job(@project, "demo_job", 'jar', nil)
-          expect_json(errorCode: 200003)
           expect_status(401)
+          expect_json(errorCode: 200003)
         end
       end
       job_types = ['py', 'jar', 'ipynb']

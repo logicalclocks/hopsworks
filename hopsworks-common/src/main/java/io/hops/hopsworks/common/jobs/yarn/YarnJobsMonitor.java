@@ -88,7 +88,7 @@ public class YarnJobsMonitor {
 
   Map<String, YarnMonitor> monitors = new HashMap<>();
   Map<String, Integer> failures = new HashMap<>();
-  private List<CopyLogsFutureResult> copyLogsFutures = new ArrayList<>();
+  private final Map<ApplicationId, CopyLogsFutureResult> copyLogsFutures = new HashMap<>();
 
   @Schedule(persistent = false,
       second = "*/5",
@@ -147,13 +147,14 @@ public class YarnJobsMonitor {
           monitors.remove(appID);
         }
   
-        Iterator<CopyLogsFutureResult> futureResultIter = copyLogsFutures.iterator();
+        Iterator<Map.Entry<ApplicationId, CopyLogsFutureResult>> futureResultIter =
+            copyLogsFutures.entrySet().iterator();
         while (futureResultIter.hasNext()) {
-          CopyLogsFutureResult futureResult = futureResultIter.next();
-          if (futureResult.execFuture.isDone()) {
+          Map.Entry<ApplicationId, CopyLogsFutureResult> futureResult = futureResultIter.next();
+          if (futureResult.getValue().execFuture.isDone()) {
             try {
-              execFinalizer.finalize(futureResult.execFuture.get(),
-                futureResult.jobState);
+              execFinalizer.finalize(futureResult.getValue().execFuture.get(),
+                futureResult.getValue().jobState);
             } catch (ExecutionException | InterruptedException ex) {
               LOGGER.log(Level.SEVERE, ex.getMessage(), ex);
             }
@@ -174,15 +175,17 @@ public class YarnJobsMonitor {
       exec = updateProgress(progress, exec);
       exec = updateState(JobState.getJobState(appState), exec);
       exec = updateFinalStatus(JobFinalStatus.getJobFinalStatus(finalAppStatus), exec);
-
-      if (appState == YarnApplicationState.FAILED || appState == YarnApplicationState.FINISHED || appState
-          == YarnApplicationState.KILLED) {
+      
+      if ((appState == YarnApplicationState.FAILED
+          || appState == YarnApplicationState.FINISHED
+          || appState == YarnApplicationState.KILLED)
+          && !copyLogsFutures.containsKey(monitor.getApplicationId())) {
+        
         exec = executionFacade.updateState(exec, JobState.AGGREGATING_LOGS);
         // Async call
         Future<Execution> futureResult = execFinalizer.copyLogs(exec);
-        copyLogsFutures.add(new CopyLogsFutureResult(futureResult,
-            JobState.getJobState(appState)));
-        
+        copyLogsFutures.put(monitor.getApplicationId(),
+            new CopyLogsFutureResult(futureResult, JobState.getJobState(appState)));
         return null;
       }
     } catch (IOException | YarnException ex) {
