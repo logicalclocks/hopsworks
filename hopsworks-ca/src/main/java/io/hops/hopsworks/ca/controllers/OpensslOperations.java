@@ -215,7 +215,7 @@ public class OpensslOperations {
     command.add(expirationDate);
 
     executeCommand(command, false);
-    LOGGER.log(Level.INFO, "Signed CSR");
+    LOGGER.log(Level.FINE, "Signed CSR");
 
     return FileUtils.readFileToString(signedCertificateFile);
   }

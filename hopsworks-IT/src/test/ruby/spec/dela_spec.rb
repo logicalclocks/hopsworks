@@ -46,10 +46,9 @@ describe "On #{ENV['OS']}" do
     end
 
     it 'should fail to sign the certificate with empty csr' do
-      post "#{ENV['HOPSWORKS_DELA_TRACKER']}/cluster/certificate", {csr: @csr}
+      post "#{ENV['HOPSWORKS_DELA_TRACKER']}/cluster/certificate", {}
       expect_status(422)
     end
-
 
     it 'should fail to sign the certificate with no db entry in the db' do
       post "#{ENV['HOPSWORKS_DELA_TRACKER']}/cluster/certificate", {csr: @csr}
@@ -88,15 +87,9 @@ describe "On #{ENV['OS']}" do
       expect_status(400)
     end
 
-    context 'with User login' do
-      before :all do
-        with_valid_project
-      end
-
-      it 'should fail to sign the certificate' do
-        post "#{ENV['HOPSWORKS_DELA_TRACKER']}/cluster/certificate", {csr: @csr}
-        expect_status(403)
-      end
+    it 'should revoke the certificate' do
+      delete "#{ENV['HOPSWORKS_DELA_TRACKER']}/cluster/certificate?certId=test"
+      expect_status(200)
     end
   end
 end

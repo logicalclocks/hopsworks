@@ -42,23 +42,27 @@ import io.hops.hopsworks.cluster.controller.ClusterController;
 import io.hops.hopsworks.common.dao.user.cluster.ClusterCert;
 import io.hops.hopsworks.common.security.CSR;
 import io.hops.hopsworks.cluster.controller.DelaTrackerCertController;
+import io.hops.hopsworks.common.security.CertificatesController;
 import io.hops.hopsworks.exceptions.DelaCSRCheckException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiParam;
 
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
@@ -80,6 +84,8 @@ public class Cluster {
   private ClusterState clusterState;
   @EJB
   private DelaTrackerCertController delaTrackerCertController;
+  @EJB
+  private CertificatesController certificatesController;
   
   @POST
   @Path("register")
@@ -182,5 +188,20 @@ public class Cluster {
     String userEmail = req.getUserPrincipal().getName();
     CSR signedCSR = delaTrackerCertController.signCsr(userEmail, csr);
     return Response.ok().entity(signedCSR).build();
+  }
+
+  @DELETE
+  @Path("certificate")
+  @RolesAllowed({"CLUSTER_AGENT"})
+  public Response revokeCertificate(@ApiParam(value = "Identifier of the certificate to revoke", required = true)
+                                      @QueryParam("certId") String certId)
+      throws GenericException, HopsSecurityException{
+
+    if (certId == null || certId.isEmpty()) {
+      throw new IllegalArgumentException("Empty certificate identifier");
+    }
+
+    certificatesController.revokeDelaClusterCertificate(certId);
+    return Response.ok().build();
   }
 }

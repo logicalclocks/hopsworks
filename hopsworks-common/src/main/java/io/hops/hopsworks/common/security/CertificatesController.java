@@ -50,6 +50,7 @@ import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.common.util.HopsUtils;
+import io.hops.hopsworks.restutils.RESTException;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpStatus;
@@ -69,7 +70,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.protocol.HttpContext;
-import org.apache.http.ssl.SSLContextBuilder;
+import org.apache.http.ssl.SSLContexts;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.X500NameBuilder;
 import org.bouncycastle.asn1.x500.style.BCStyle;
@@ -106,6 +107,8 @@ import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.Key;
 import java.security.KeyManagementException;
 import java.security.KeyPair;
@@ -179,13 +182,16 @@ public class CertificatesController {
     }
 
     // Custom SSL Registry to skip hostname verification
-    SSLContext sslContext = null;
+    Path trustStore = Paths.get(settings.getHopsworksDomainDir(), "config", "cacerts.jks");
+    char[] trustStorePassword = settings.getHopsworksMasterPasswordSsl().toCharArray();
+    SSLContext sslContext;
     try {
-      sslContext = new SSLContextBuilder()
-          // For VMs.
-          .loadTrustMaterial(null, new TrustSelfSignedStrategy())
+      sslContext = SSLContexts.custom()
+          .loadTrustMaterial(trustStore.toFile(), trustStorePassword,
+              new TrustSelfSignedStrategy())
           .build();
-    } catch (KeyStoreException | NoSuchAlgorithmException | KeyManagementException e) {
+    } catch (IOException | KeyStoreException | NoSuchAlgorithmException | CertificateException |
+        KeyManagementException e) {
       LOGGER.log(Level.SEVERE, "Could not initialize the https client", e);
       return;
     }
@@ -385,7 +391,6 @@ public class CertificatesController {
     }
 
     CloseableHttpResponse response = null;
-    HttpEntity responseEntity = null;
     CSR signedCert = null;
     int nRetries = 3;
     long timeout = 1000L;
@@ -399,15 +404,20 @@ public class CertificatesController {
         if ((response.getStatusLine().getStatusCode() / 100) == 2) {
           // The HTTP status is of the 2xx family. Check the headers for the new JWT token.
           checkToken(response);
+        } else if ((response.getStatusLine().getStatusCode() / 100) == 4) {
+          // Bad request, notify the user they sent us a bad request
+          RESTException exception = objectMapper.readValue(response.getEntity().getContent(), RESTException.class);
+          throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERTIFICATE_SIGN_USER_ERR, Level.FINE,
+              exception.getUsrMsg(), exception.getDevMsg());
         } else {
-          // Retry
+          // Internal error, retry
           Thread.sleep(timeout);
           timeout *= 2;
           nRetries--;
           continue;
         }
 
-        responseEntity = response.getEntity();
+        HttpEntity responseEntity = response.getEntity();
         signedCert = objectMapper.readValue(responseEntity.getContent(), CSR.class);
         break;
       } catch (IOException | InterruptedException e) {
@@ -497,6 +507,13 @@ public class CertificatesController {
             // Check the header and throw the not found exception upstream.
             checkToken(response);
             throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERTIFICATE_NOT_FOUND, Level.SEVERE);
+          case HttpStatus.SC_BAD_REQUEST:
+            // Notify the user that they sent us a bad request
+            // Extract the error message from the HTTP response and wrap it in a HopsSecurityException
+            ObjectMapper objectMapper = new ObjectMapper();
+            RESTException exception = objectMapper.readValue(response.getEntity().getContent(), RESTException.class);
+            throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERTIFICATE_REVOKATION_USER_ERR,
+                Level.FINE, exception.getUsrMsg(), exception.getDevMsg());
           default:
             // Retry this error with an exponentially increasing timeout
             Thread.sleep(timeout);

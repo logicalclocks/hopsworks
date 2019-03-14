@@ -728,7 +728,9 @@ public class RESTCodes {
     REST_ACCESS_CONTROL(14, "Client not authorized for this invocation.", Response.Status.FORBIDDEN),
     DUPLICATE_KEY_ERROR(15, "A signing key with the same name already exists.", Response.Status.CONFLICT),
     CERTIFICATE_REVOKATION_ERROR(16, "Error revoking the certificate", Response.Status.INTERNAL_SERVER_ERROR),
-    CERTIFICATE_NOT_FOUND(17, "Could not find the certificate", Response.Status.BAD_REQUEST);
+    CERTIFICATE_NOT_FOUND(17, "Could not find the certificate", Response.Status.BAD_REQUEST),
+    CERTIFICATE_REVOKATION_USER_ERR(18, "Error revoking the certificate", Response.Status.BAD_REQUEST),
+    CERTIFICATE_SIGN_USER_ERR(19, "Error signing the certificate", Response.Status.BAD_REQUEST);
 
     private Integer code;
     private String message;

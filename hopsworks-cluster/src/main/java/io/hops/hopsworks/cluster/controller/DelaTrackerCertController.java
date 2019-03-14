@@ -62,7 +62,6 @@ import java.security.cert.CertificateException;
 import java.util.logging.Level;
 
 import static io.hops.hopsworks.restutils.RESTCodes.DelaCSRErrorCode.AGENTIDNOTFOUND;
-import static io.hops.hopsworks.restutils.RESTCodes.DelaCSRErrorCode.BADREQUEST;
 import static io.hops.hopsworks.restutils.RESTCodes.DelaCSRErrorCode.CN;
 import static io.hops.hopsworks.restutils.RESTCodes.DelaCSRErrorCode.CNNOTFOUND;
 import static io.hops.hopsworks.restutils.RESTCodes.DelaCSRErrorCode.EMAIL;
@@ -104,7 +103,7 @@ public class DelaTrackerCertController {
     Users user = userFacade.findByEmail(userEmail);
     String csr = csrDTO.getCsr();
     if (user == null || user.getEmail() == null || csr == null || csr.isEmpty()) {
-      throw new DelaCSRCheckException(BADREQUEST, Level.FINE);
+      throw new IllegalArgumentException("User or CSR is empty");
     }
 
     //subject=/C=se/CN=bbc.sics.se/ST=stockholm/L=kista/O=hopsworks/OU=hs/emailAddress=dela1@kth.se
