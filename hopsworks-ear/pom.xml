@@ -44,16 +44,16 @@
   <parent>
     <groupId>io.hops</groupId>
     <artifactId>hopsworks</artifactId>
-    <version>0.9.0</version>
+    <version>0.9.1-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
   
   <groupId>io.hops.hopsworks</groupId>
   <artifactId>hopsworks-ear</artifactId>
-  <version>0.9.0</version>
+  <version>0.9.1-SNAPSHOT</version>
   <packaging>ear</packaging>
 
-  <name>hopsworks-ear:0.9.0</name>
+  <name>hopsworks-ear:0.9.1-SNAPSHOT</name>
   
   <build>
     <plugins>
@@ -311,7 +311,7 @@
         <dependency>
           <groupId>io.hops.hopsworks</groupId>
           <artifactId>hopsworks-cluster</artifactId>
-          <version>0.9.0</version>
+          <version>0.9.1-SNAPSHOT</version>
           <type>war</type>
         </dependency>
       </dependencies>
