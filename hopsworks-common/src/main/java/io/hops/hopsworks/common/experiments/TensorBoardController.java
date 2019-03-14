@@ -30,6 +30,7 @@ import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.elastic.ElasticController;
 import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.tensorflow.TfLibMappingUtil;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -55,6 +56,8 @@ public class TensorBoardController {
   HdfsUsersFacade hdfsUsersFacade;
   @EJB
   HdfsUsersController hdfsUsersController;
+  @EJB
+  private TfLibMappingUtil tfLibMappingUtil;
 
   private static final Logger LOGGER = Logger.getLogger(TensorBoardController.class.getName());
 
@@ -99,7 +102,9 @@ public class TensorBoardController {
       String hdfsUsername = hdfsUsersController.getHdfsUserName(project, user);
       HdfsUsers hdfsUser = hdfsUsersFacade.findByName(hdfsUsername);
 
-      tensorBoardDTO = tensorBoardProcessMgr.startTensorBoard(project, user, hdfsUser, hdfsLogdir);
+      String tfLdLibraryPath = tfLibMappingUtil.getTfLdLibraryPath(project);
+
+      tensorBoardDTO = tensorBoardProcessMgr.startTensorBoard(project, user, hdfsUser, hdfsLogdir, tfLdLibraryPath);
       Date lastAccessed = new Date();
       tensorBoardDTO.setElasticId(elasticId);
       tensorBoardDTO.setLastAccessed(lastAccessed);
