@@ -162,7 +162,7 @@ describe "On #{ENV['OS']}" do
         end
 
         it 'should succeed to revoke the certificate', vm: true do
-          delete "#{ENV['HOPSWORKS_CA']}/certificate/app?CertId=test__SE__1"
+          delete "#{ENV['HOPSWORKS_CA']}/certificate/app?certId=test__SE__1"
           expect_status(200)
 
           check_certificate_revoked(@certs_dir + "/intermediate/", "test__SE__1", @subject)
