@@ -20,7 +20,7 @@ import io.hops.common.Pair;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.serving.TfServing;
 import io.hops.hopsworks.common.dao.serving.TfServingFacade;
-import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.common.serving.inference.logger.InferenceLogger;
 
 import javax.ejb.EJB;

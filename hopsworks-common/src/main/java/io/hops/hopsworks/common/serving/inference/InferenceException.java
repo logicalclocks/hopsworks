@@ -16,8 +16,8 @@
 
 package io.hops.hopsworks.common.serving.inference;
 
-import io.hops.hopsworks.common.exception.RESTCodes;
-import io.hops.hopsworks.common.exception.RESTException;
+import io.hops.hopsworks.restutils.RESTCodes;
+import io.hops.hopsworks.restutils.RESTException;
 
 import java.util.logging.Level;
 

@@ -21,13 +21,13 @@ package io.hops.hopsworks.kmon.conda;
 import io.hops.hopsworks.common.dao.pythonDeps.CondaCommands;
 import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade;
 import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade.CondaStatus;
-import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.LocalhostServices;
 import io.hops.hopsworks.common.util.OSProcessExecutor;
 import io.hops.hopsworks.common.util.ProcessDescriptor;
 import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.ServiceException;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;

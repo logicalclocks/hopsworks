@@ -73,7 +73,7 @@ describe "On #{ENV['OS']}" do
 
         it 'should fail to sign the certificate' do
           post "#{ENV['HOPSWORKS_CA']}/certificate/host", {csr: @csr}
-          expect_status(401)
+          expect_status(403)
         end
       end
 
@@ -84,7 +84,7 @@ describe "On #{ENV['OS']}" do
 
         it 'should fail to sign the certificate with empty csr' do
           post "#{ENV['HOPSWORKS_CA']}/certificate/host", {}
-          expect_status(400)
+          expect_status(422)
         end
 
         it 'should sign the host certificate', vm: true do
@@ -94,6 +94,15 @@ describe "On #{ENV['OS']}" do
           # Check that the certificate is on the local fs. this assumes you are running the
           # tests on a proper vm
           check_certificate_exists(@certs_dir + "/intermediate/", "test__1", @subject)
+        end
+
+        it 'should fail to sign the same host certificate twice', vm: true do
+          post "#{ENV['HOPSWORKS_CA']}/certificate/host", {csr: @csr}
+          expect_status(400)
+
+          # Check that the certificate is on the local fs. this assumes you are running the
+          # tests on a proper vm
+          check_certificate_not_empty(@certs_dir + "/intermediate/", "test__1")
         end
 
         it 'should succeed to revoke the certificate', vm: true do
@@ -119,7 +128,7 @@ describe "On #{ENV['OS']}" do
 
         it 'should fail to sign the certificate' do
           post "#{ENV['HOPSWORKS_CA']}/certificate/app", {csr: @csr}
-          expect_status(401)
+          expect_status(403)
         end
       end
 
@@ -130,7 +139,7 @@ describe "On #{ENV['OS']}" do
 
         it 'should fail to sign the certificate with empty csr' do
           post "#{ENV['HOPSWORKS_CA']}/certificate/app", {}
-          expect_status(400)
+          expect_status(422)
         end
 
         it 'should sign the app certificate', vm: true do
@@ -141,6 +150,15 @@ describe "On #{ENV['OS']}" do
           # tests on a proper vm
           check_certificate_exists(@certs_dir + "/intermediate/", "test__SE__1", @subject)
           check_expiration_date(@certs_dir + "/intermediate/", "test__SE__1")
+        end
+
+        it 'should fail to sign the same app certificate twice', vm: true do
+          post "#{ENV['HOPSWORKS_CA']}/certificate/app", {csr: @csr}
+          expect_status(400)
+
+          # Check that the certificate is on the local fs. this assumes you are running the
+          # tests on a proper vm
+          check_certificate_not_empty(@certs_dir + "/intermediate/", "test__SE__1")
         end
 
         it 'should succeed to revoke the certificate', vm: true do
@@ -157,56 +175,30 @@ describe "On #{ENV['OS']}" do
       end
     end
 
-    describe "# Dela certificates" do
+    describe "# Project certificates" do
       context 'with User login' do
         before :all do
           with_valid_project
         end
 
         it 'should fail to sign the certificate' do
-          post "#{ENV['HOPSWORKS_CA']}/certificate/dela", {csr: @csr}
-          expect_status(401)
+          post "#{ENV['HOPSWORKS_CA']}/certificate/project", {csr: @csr}
+          expect_status(403)
         end
       end
 
-      context 'with cluster agent login' do
+      context 'with Agent login' do
         before :all do
-          with_cluster_agent_session
-
-          # Remove entries from previous executions
-          ClusterCert.destroy_all
+          with_agent_session
         end
 
         it 'should fail to sign the certificate with empty csr' do
-          post "#{ENV['HOPSWORKS_CA']}/certificate/dela", {}
-          expect_status(400)
+          post "#{ENV['HOPSWORKS_CA']}/certificate/project", {}
+          expect_status(422)
         end
 
-        it 'should fail to sign the certificate without entry in the db' do
-          post "#{ENV['HOPSWORKS_CA']}/certificate/dela", {csr: @csr}
-          expect_status(400)
-        end
-
-        it 'should sign the dela certificate', vm: true do
-          # Add entry in the database
-          #   `id` int(11) NOT NULL AUTO_INCREMENT,
-          #   `agent_id` int(11) NOT NULL,
-          #   `common_name` varchar(64) COLLATE latin1_general_cs NOT NULL,
-          #   `organization_name` varchar(64) COLLATE latin1_general_cs NOT NULL,
-          #   `organizational_unit_name` varchar(64) COLLATE latin1_general_cs NOT NULL,
-          #   `serial_number` varchar(45) COLLATE latin1_general_cs DEFAULT NULL,
-          #   `registration_status` varchar(45) COLLATE latin1_general_cs NOT NULL,
-          #   `validation_key` varchar(128) COLLATE latin1_general_cs DEFAULT NULL,
-          #   `validation_key_date` timestamp NULL DEFAULT NULL,
-          #   `registration_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-          #
-          # "/C=SE/ST=Stockholm/L=SE/OU=1/O=SE/CN=test/emailAddress=agent@hops.io"
-          ClusterCert.create(agent_id: 10001,
-                             common_name: "test",
-                             organization_name: "SE",
-                             organizational_unit_name: "1",
-                             registration_status: "Registered")
-          post "#{ENV['HOPSWORKS_CA']}/certificate/dela", {csr: @csr}
+        it 'should sign the project certificate', vm: true do
+          post "#{ENV['HOPSWORKS_CA']}/certificate/project", {csr: @csr}
           expect_status(200)
 
           # Check that the certificate is on the local fs. this assumes you are running the
@@ -214,20 +206,24 @@ describe "On #{ENV['OS']}" do
           check_certificate_exists(@certs_dir + "/intermediate/", "test", @subject)
         end
 
-        it 'should fail to sign the certificate for the same cluster twice' do
-          post "#{ENV['HOPSWORKS_CA']}/certificate/dela", {csr: @csr}
+        it 'should fail to sign the same project certificate twice', vm: true do
+          post "#{ENV['HOPSWORKS_CA']}/certificate/project", {csr: @csr}
           expect_status(400)
+
+          # Check that the certificate is on the local fs. this assumes you are running the
+          # tests on a proper vm
+          check_certificate_not_empty(@certs_dir + "/intermediate/", "test")
         end
 
         it 'should succeed to revoke the certificate', vm: true do
-          delete "#{ENV['HOPSWORKS_CA']}/certificate/dela?certId=test"
+          delete "#{ENV['HOPSWORKS_CA']}/certificate/project?certId=test"
           expect_status(200)
 
           check_certificate_revoked(@certs_dir + "/intermediate/", "test", @subject)
         end
 
         it 'should return no-content if the revokation is triggered twice' do
-          delete "#{ENV['HOPSWORKS_CA']}/certificate/dela?certId=test"
+          delete "#{ENV['HOPSWORKS_CA']}/certificate/project?certId=test"
           expect_status(204)
         end
       end

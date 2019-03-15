@@ -39,7 +39,7 @@
 
 package io.hops.hopsworks.api.util;
 
-import io.hops.hopsworks.common.util.JsonResponse;
+import io.hops.hopsworks.restutils.JsonResponse;
 
 import java.util.List;
 import javax.xml.bind.annotation.XmlElement;

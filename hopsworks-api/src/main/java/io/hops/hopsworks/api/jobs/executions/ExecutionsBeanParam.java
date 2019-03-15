@@ -32,7 +32,7 @@ public class ExecutionsBeanParam {
   @QueryParam("filter_by")
   @ApiParam(value = "state and finalstatus accept also neq (not equals) ex. " +
     "filter_by=state:running&filter_by=state_neq:new&filter_by=submissiontime:2018-12-25T17:12:10.058",
-    allowableValues = "state:initializing, state:initilization_failed, state:finished, state:running, " +
+    allowableValues = "state:initializing, state:initialization_failed, state:finished, state:running, " +
       "state:accepted, state:failed, state:killed, state:new, state:new_saving, state:submitted, " +
       "state:aggregating_logs, state:framework_failure, state:starting_app_master, state:app_master_start_failed," +
       "finalstatus:undefined, finalstatus:succeeded, finalstatus:failed, finalstatus:killed, " +

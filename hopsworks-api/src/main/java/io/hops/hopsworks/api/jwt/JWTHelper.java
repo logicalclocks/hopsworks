@@ -69,8 +69,7 @@ public class JWTHelper {
   public Users getUserPrincipal(HttpServletRequest req) {
     String jwt = getAuthToken(req);
     DecodedJWT djwt = jwtController.decodeToken(jwt);
-    Users user = djwt == null ? null : userFacade.findByUsername(djwt.getSubject());
-    return user;
+    return djwt == null ? null : userFacade.findByUsername(djwt.getSubject());
   }
   
   /**
@@ -79,8 +78,7 @@ public class JWTHelper {
    * @return 
    */
   public Users getUserPrincipal(SecurityContext sc) {
-    Users user = sc == null ? null : userFacade.findByUsername(sc.getUserPrincipal().getName());
-    return user;
+    return sc == null ? null : userFacade.findByUsername(sc.getUserPrincipal().getName());
   }
 
   /**
@@ -91,8 +89,7 @@ public class JWTHelper {
   public Users getUserPrincipal(ContainerRequestContext req) {
     String jwt = getAuthToken(req);
     DecodedJWT djwt = jwtController.decodeToken(jwt);
-    Users user = djwt == null ? null : userFacade.findByUsername(djwt.getSubject());
-    return user;
+    return djwt == null ? null : userFacade.findByUsername(djwt.getSubject());
   }
 
   /**
@@ -137,15 +134,47 @@ public class JWTHelper {
    */
   public String createToken(Users user, String issuer) throws NoSuchAlgorithmException, SigningKeyNotFoundException,
       DuplicateSigningKeyException {
-    String[] audience = {Audience.API};
+    String[] audience = null;
+    Date expiresAt = null;
+    int leewaySec;
+
     BbcGroup group = bbcGroupFacade.findByGroupName("AGENT");
     if (user.getBbcGroupCollection().contains(group)) {
       audience = new String[2];
       audience[0] = Audience.API;
       audience[1] = Audience.SERVICES;
+      expiresAt = new Date(System.currentTimeMillis() + settings.getServiceJWTLifetimeMS());
+      leewaySec = settings.getServiceJWTExpLeewaySec();
+    } else {
+      audience = new String[1];
+      audience[0] = Audience.API;
+      expiresAt = new Date(System.currentTimeMillis() + settings.getJWTLifetimeMs());
+      leewaySec = settings.getJWTExpLeewaySec();
     }
-    return createToken(user, audience, issuer);
+
+    return createToken(user, audience, issuer, expiresAt, leewaySec);
   }
+
+  /**
+   * Create a new jwt for the given user.
+   *
+   * @param user
+   * @param issuer
+   * @return
+   * @throws NoSuchAlgorithmException
+   * @throws SigningKeyNotFoundException
+   * @throws DuplicateSigningKeyException
+   */
+  public String createToken(Users user, String[] audience, String issuer) throws NoSuchAlgorithmException,
+      SigningKeyNotFoundException, DuplicateSigningKeyException {
+    Date now = new Date();
+    Date expiresAt = new Date(now.getTime() + settings.getJWTLifetimeMs());
+    SignatureAlgorithm alg = SignatureAlgorithm.valueOf(settings.getJWTSignatureAlg());
+    String[] roles = userController.getUserRoles(user).toArray(new String[0]);
+    return jwtController.createToken(settings.getJWTSigningKeyName(), false, issuer, audience, expiresAt,
+        new Date(), user.getUsername(), true, settings.getJWTExpLeewaySec(), roles, alg);
+  }
+
   
   /**
    * One time token 60 sec life
@@ -180,15 +209,12 @@ public class JWTHelper {
    * @throws SigningKeyNotFoundException
    * @throws DuplicateSigningKeyException
    */
-  public String createToken(Users user, String[] audience, String issuer) throws NoSuchAlgorithmException,
-      SigningKeyNotFoundException, DuplicateSigningKeyException {
-    Date now = new Date();
-    Date expiresAt = new Date(now.getTime() + settings.getJWTLifetimeMs());
+  public String createToken(Users user, String[] audience, String issuer, Date expiresAt, int leeway)
+      throws NoSuchAlgorithmException, SigningKeyNotFoundException, DuplicateSigningKeyException {
     SignatureAlgorithm alg = SignatureAlgorithm.valueOf(settings.getJWTSignatureAlg());
     String[] roles = userController.getUserRoles(user).toArray(new String[0]);
-    String token = jwtController.createToken(settings.getJWTSigningKeyName(), false, issuer, audience, expiresAt,
-        new Date(), user.getUsername(), true, settings.getJWTExpLeewaySec(), roles, alg);
-    return token;
+    return jwtController.createToken(settings.getJWTSigningKeyName(), false, issuer, audience, expiresAt,
+        new Date(), user.getUsername(), true, leeway, roles, alg);
   }
 
   /**

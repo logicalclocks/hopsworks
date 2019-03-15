@@ -36,11 +36,15 @@
  * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 package io.hops.hopsworks.ca.api.exception.mapper;
 
-import io.hops.hopsworks.common.exception.RESTException;
-import io.hops.hopsworks.common.exception.ThrowableMapper;
-import io.hops.hopsworks.common.util.Settings;
+
+import io.hops.hopsworks.ca.controllers.CAConf;
+import io.hops.hopsworks.ca.controllers.CAConf.CAConfKeys;
+import io.hops.hopsworks.restutils.RESTException;
+import io.hops.hopsworks.restutils.RESTLogLevel;
+import io.hops.hopsworks.restutils.ThrowableMapper;
 
 import javax.ejb.EJB;
 import javax.ws.rs.core.MediaType;
@@ -49,14 +53,15 @@ import javax.ws.rs.ext.Provider;
 
 @Provider
 public class CAThrowableMapper extends ThrowableMapper {
-  
+
   @EJB
-  Settings settings;
-  
+  private CAConf CAConf;
+
   @Override
   public Response handleRESTException(Response.StatusType status, RESTException ex) {
     return Response.status(status)
-      .entity(ex.buildJsonResponse(new CAJsonResponse(), settings.getHopsworksRESTLogLevel()))
+      .entity(ex.buildJsonResponse(new CAJsonResponse(),
+          RESTLogLevel.valueOf(CAConf.getString(CAConfKeys.HOPSWORKS_REST_LOGLEVEL))))
       .type(MediaType.APPLICATION_JSON)
       .build();
   }

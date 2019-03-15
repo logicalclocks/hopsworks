@@ -45,9 +45,7 @@ import java.security.PrivilegedExceptionAction;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import io.hops.hopsworks.common.exception.JobException;
 import io.hops.hopsworks.common.yarn.YarnClientWrapper;
-import org.apache.hadoop.security.UserGroupInformation;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.user.Users;
@@ -55,7 +53,9 @@ import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.jobs.jobhistory.JobState;
 import io.hops.hopsworks.common.jobs.yarn.ServiceProperties;
 import io.hops.hopsworks.common.jobs.yarn.YarnJobsMonitor;
+import io.hops.hopsworks.exceptions.JobException;
 import org.apache.hadoop.yarn.client.api.YarnClient;
+import org.apache.hadoop.security.UserGroupInformation;
 
 /**
  * Contains the execution logic of a Hops job. This class takes care of the main

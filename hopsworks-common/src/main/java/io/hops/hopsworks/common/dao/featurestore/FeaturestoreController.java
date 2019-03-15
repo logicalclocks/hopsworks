@@ -20,8 +20,8 @@ import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetType;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
-import io.hops.hopsworks.common.exception.FeaturestoreException;
-import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;

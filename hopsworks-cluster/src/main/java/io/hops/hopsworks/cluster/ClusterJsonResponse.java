@@ -37,7 +37,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 package io.hops.hopsworks.cluster;
-import io.hops.hopsworks.common.util.JsonResponse;
+
+import io.hops.hopsworks.restutils.JsonResponse;
 
 import javax.xml.bind.annotation.XmlRootElement;
 

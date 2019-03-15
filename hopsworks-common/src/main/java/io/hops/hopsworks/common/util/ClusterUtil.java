@@ -43,9 +43,9 @@ import javax.ejb.EJB;
 import javax.ejb.Singleton;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+
 import io.hops.hopsworks.common.dao.jobs.quota.YarnPriceMultiplicator;
 import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuotaFacade;
-import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.metadata.yarn.entity.quota.PriceMultiplicator;
 
 /**
@@ -60,8 +60,6 @@ public class ClusterUtil {
   private YarnPriceMultiplicator multiplicator;
   private long lastUpdated = 0l;
 
-  @EJB
-  private ProjectController projectController;
   @EJB
   private YarnProjectsQuotaFacade yarnProjectsQuotaFacade;
 

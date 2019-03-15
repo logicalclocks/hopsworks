@@ -39,7 +39,8 @@
 
 package io.hops.hopsworks.kmon.user;
 
-import io.hops.hopsworks.common.util.JsonResponse;
+
+import io.hops.hopsworks.restutils.JsonResponse;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.Map;

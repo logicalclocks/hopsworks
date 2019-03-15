@@ -60,8 +60,8 @@ import io.hops.hopsworks.common.dao.metadata.db.FieldTypeFacade;
 import io.hops.hopsworks.common.dao.metadata.db.MTableFacade;
 import io.hops.hopsworks.common.dao.metadata.db.TemplateFacade;
 import io.hops.hopsworks.common.dao.metadata.db.TupleToFileFacade;
-import io.hops.hopsworks.common.exception.GenericException;
-import io.hops.hopsworks.common.exception.MetadataException;
+import io.hops.hopsworks.exceptions.GenericException;
+import io.hops.hopsworks.exceptions.MetadataException;
 
 import java.util.Collections;
 import java.util.HashMap;

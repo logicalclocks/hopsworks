@@ -43,6 +43,7 @@ require 'openssl'
 module CaHelper
   def check_certificate_exists(ca_path, cert_name, subject)
     expect(File.exist?(ca_path + "certs/" + cert_name + ".cert.pem")).to be true
+    expect(File.zero?(ca_path + "certs/" + cert_name + ".cert.pem")).to be false
 
     File.open(ca_path + "index.txt") do |index|
       index.extend(File::Tail)
@@ -54,6 +55,10 @@ module CaHelper
         end
       }
     end
+  end
+
+  def check_certificate_not_empty(ca_path, cert_name)
+    expect(File.zero?(ca_path + "certs/" + cert_name + ".cert.pem")).to be false
   end
 
   def check_certificate_revoked(ca_path, cert_name, subject)

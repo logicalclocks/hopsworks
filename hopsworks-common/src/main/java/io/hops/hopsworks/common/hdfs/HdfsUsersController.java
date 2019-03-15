@@ -52,11 +52,11 @@ import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dataset.DatasetController;
-import io.hops.hopsworks.common.exception.DatasetException;
-import io.hops.hopsworks.common.exception.ProjectException;
-import io.hops.hopsworks.common.exception.RESTCodes;
-import io.hops.hopsworks.common.exception.UserException;
+import io.hops.hopsworks.exceptions.DatasetException;
+import io.hops.hopsworks.exceptions.ProjectException;
+import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
@@ -128,7 +128,7 @@ public class HdfsUsersController {
    * <p>
    * @param project
    * @param member
-   * @throws io.hops.hopsworks.common.exception.UserException
+   * @throws io.hops.hopsworks.exceptions.UserException
    */
   public void addNewProjectMember(Project project, ProjectTeam member) throws UserException {
     DistributedFileSystemOps dfso = null;
@@ -152,7 +152,7 @@ public class HdfsUsersController {
    * <p>
    * @param project
    * @param member
-   * @throws io.hops.hopsworks.common.exception.UserException
+   * @throws io.hops.hopsworks.exceptions.UserException
    */
   public void addUserToProjectGroup(Project project, ProjectTeam member) throws UserException {
     DistributedFileSystemOps dfso = null;
@@ -218,7 +218,7 @@ public class HdfsUsersController {
    * <p>
    * @param user
    * @param project
-   * @throws io.hops.hopsworks.common.exception.ProjectException
+   * @throws io.hops.hopsworks.exceptions.ProjectException
    */
   public void removeProjectMember(Users user, Project project) throws ProjectException {
     if (user == null || project == null) {
@@ -281,7 +281,7 @@ public class HdfsUsersController {
    * <p>
    * @param project
    * @param dataset
-   * @throws io.hops.hopsworks.common.exception.DatasetException
+   * @throws io.hops.hopsworks.exceptions.DatasetException
    */
   public void shareDataset(Project project, Dataset dataset) throws DatasetException {
     if (project == null || dataset == null) {
@@ -322,7 +322,7 @@ public class HdfsUsersController {
    * <p>
    * @param project
    * @param dataset
-   * @throws io.hops.hopsworks.common.exception.DatasetException
+   * @throws io.hops.hopsworks.exceptions.DatasetException
    */
   public void unshareDataset(Project project, Dataset dataset) throws DatasetException {
     if (project == null || dataset == null) {

@@ -32,12 +32,12 @@ import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.exception.FeaturestoreException;
-import io.hops.hopsworks.common.exception.HopsSecurityException;
-import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.HopsSecurityException;
+import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.ejb.EJB;

@@ -44,8 +44,8 @@ import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dataset.DatasetController;
-import io.hops.hopsworks.common.exception.DatasetException;
-import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.exceptions.DatasetException;
+import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;

@@ -48,9 +48,9 @@ import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
 import io.hops.hopsworks.common.dao.user.security.audit.UserAuditActions;
-import io.hops.hopsworks.common.exception.RESTCodes;
-import io.hops.hopsworks.common.exception.ServiceException;
-import io.hops.hopsworks.common.exception.UserException;
+import io.hops.hopsworks.restutils.RESTCodes;
+import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.common.user.AuthController;
 import io.hops.hopsworks.common.user.UserStatusValidator;
 import io.hops.hopsworks.common.user.UsersController;
@@ -279,9 +279,8 @@ public class AuthService {
       req.login(user.getEmail(), password);
       authController.registerLogin(user, req);
     } catch (ServletException e) {
-      LOGGER.log(Level.WARNING, e.getMessage());
       authController.registerAuthenticationFailure(user, req);
-      throw new UserException(RESTCodes.UserErrorCode.AUTHENTICATION_FAILURE, Level.SEVERE, null, e.getMessage(), e);
+      throw new UserException(RESTCodes.UserErrorCode.AUTHENTICATION_FAILURE, Level.FINE, null, e.getMessage(), e);
     }
 
     json.setSessionID(req.getSession().getId());

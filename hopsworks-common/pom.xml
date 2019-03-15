@@ -61,10 +61,19 @@
   </properties>
 
   <dependencies>
+
+    <dependency>
+      <groupId>io.hops.hopsworks</groupId>
+      <artifactId>hopsworks-rest-utils</artifactId>
+      <version>${project.version}</version>
+      <scope>provided</scope>
+    </dependency>
+
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-jwt</artifactId>
       <version>${project.version}</version>
+      <scope>provided</scope>
     </dependency>
 
     <dependency>
@@ -122,6 +131,10 @@
         <exclusion>
           <groupId>com.sun.jersey</groupId>
           <artifactId>jersey-core</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>io.netty</groupId>
+          <artifactId>netty-all</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -227,10 +240,49 @@
       <version>4.5.2</version>
     </dependency>
     <dependency>
+      <groupId>org.bouncycastle</groupId>
+      <artifactId>bcprov-jdk15on</artifactId>
+      <version>1.60</version>
+    </dependency>
+    <dependency>
+      <groupId>org.bouncycastle</groupId>
+      <artifactId>bcpkix-jdk15on</artifactId>
+      <version>1.60</version>
+    </dependency>
+    <dependency>
       <groupId>javax</groupId>
       <artifactId>javaee-api</artifactId>
       <version>7.0</version>
       <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>javax.mail</groupId>
+      <artifactId>mail</artifactId>
+      <version>1.4.7</version>
+    </dependency>
+
+    <dependency>
+      <groupId>io.hops</groupId>
+      <artifactId>hadoop-common</artifactId>
+      <version>${hops.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>com.nimbusds</groupId>
+          <artifactId>nimbus-jose-jwt</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.bouncycastle</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.sun.jersey</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>javax.servlet</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <!-- Hops Hive dependecies -->
@@ -252,6 +304,10 @@
         <exclusion>
           <groupId>com.sun.jersey</groupId>
           <artifactId>jersey-core</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>javax.servlet</groupId>
+          <artifactId>*</artifactId>
         </exclusion>
         <exclusion>
           <groupId>com.squareup.okhttp3</groupId>

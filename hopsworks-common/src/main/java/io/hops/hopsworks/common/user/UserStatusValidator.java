@@ -41,8 +41,8 @@ package io.hops.hopsworks.common.user;
 
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
-import io.hops.hopsworks.common.exception.RESTCodes;
-import io.hops.hopsworks.common.exception.UserException;
+import io.hops.hopsworks.restutils.RESTCodes;
+import io.hops.hopsworks.exceptions.UserException;
 
 import javax.ejb.Stateless;
 import java.util.logging.Level;

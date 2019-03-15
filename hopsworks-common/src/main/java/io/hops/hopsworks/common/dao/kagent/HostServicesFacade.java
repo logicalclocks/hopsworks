@@ -43,9 +43,9 @@ import io.hops.hopsworks.common.agent.AgentController;
 import io.hops.hopsworks.common.dao.host.Hosts;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.dao.host.Status;
-import io.hops.hopsworks.common.exception.GenericException;
-import io.hops.hopsworks.common.exception.RESTCodes;
-import io.hops.hopsworks.common.exception.ServiceException;
+import io.hops.hopsworks.exceptions.GenericException;
+import io.hops.hopsworks.restutils.RESTCodes;
+import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.common.util.WebCommunication;
 
 import java.util.ArrayList;

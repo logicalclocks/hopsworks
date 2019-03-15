@@ -38,11 +38,17 @@
  */
 package io.hops.hopsworks.ca.api.exception.mapper;
 
-import io.hops.hopsworks.common.util.JsonResponse;
+import io.hops.hopsworks.ca.controllers.CertificateType;
+import io.hops.hopsworks.restutils.JsonResponse;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
 public class CAJsonResponse extends JsonResponse {
-  
+
+  private CertificateType certificateType;
+
+  public void setCertificateType(CertificateType certificateType) {
+    this.certificateType = certificateType;
+  }
 }
