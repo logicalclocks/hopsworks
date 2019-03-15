@@ -48,8 +48,6 @@ import javax.ejb.TimerConfig;
 import javax.ejb.TimerService;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -186,15 +184,6 @@ public class AirflowJWTManager {
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   @Timeout
   public void monitorSecurityMaterial(Timer timer) {
-    try {
-      String applicationName = InitialContext.doLookup("java:app/AppName");
-      String moduleName = InitialContext.doLookup("java:module/ModuleName");
-      if(applicationName.contains("hopsworks-ca") || moduleName.contains("hopsworks-ca")){
-        return;
-      }
-    } catch (NamingException e) {
-      LOG.log(Level.SEVERE, null, e);
-    }
     LocalDateTime now = getNow();
     // Clean unused token files and X.509 certificates
     cleanStaleSecurityMaterial();
