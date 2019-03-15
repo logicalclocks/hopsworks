@@ -41,8 +41,8 @@ package io.hops.hopsworks.dela.util;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import io.hops.hopsworks.common.exception.RESTCodes;
-import io.hops.hopsworks.common.exception.DelaException;
+import io.hops.hopsworks.restutils.RESTCodes;
+import io.hops.hopsworks.exceptions.DelaException;
 import io.hops.hopsworks.dela.old_dto.ManifestJSON;
 
 import java.io.UnsupportedEncodingException;

@@ -41,7 +41,7 @@ package io.hops.hopsworks.common.kafka;
 
 import io.hops.hopsworks.common.dao.kafka.KafkaFacade;
 import io.hops.hopsworks.common.dao.kafka.ProjectTopics;
-import io.hops.hopsworks.common.exception.ServiceException;
+import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.common.util.Settings;
 import kafka.admin.AdminUtils;
 import kafka.common.TopicAlreadyMarkedForDeletionException;
@@ -58,8 +58,6 @@ import javax.ejb.EJB;
 import javax.ejb.Schedule;
 import javax.ejb.Singleton;
 import javax.ejb.Timer;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import java.io.IOException;
@@ -96,17 +94,6 @@ public class ZookeeprTopicCleanerTimer {
       minute = "0",
       hour = "*")
   public void execute(Timer timer) {
-  
-    //TODO(Theofilos): Remove check for ca module for 0.7.0 onwards
-    try {
-      String applicationName = InitialContext.doLookup("java:app/AppName");
-      String moduleName = InitialContext.doLookup("java:module/ModuleName");
-      if(applicationName.contains("hopsworks-ca") || moduleName.contains("hopsworks-ca")){
-        return;
-      }
-    } catch (NamingException e) {
-      LOGGER.log(Level.SEVERE, null, e);
-    }
     LOGGER.log(Level.INFO, "Running ZookeeprTopicCleanerTimer.");
     Set<String> zkTopics = new HashSet<>();
     //30 seconds

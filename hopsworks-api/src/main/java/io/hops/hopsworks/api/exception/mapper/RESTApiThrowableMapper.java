@@ -40,10 +40,10 @@ package io.hops.hopsworks.api.exception.mapper;
 
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
-import io.hops.hopsworks.common.exception.GenericException;
-import io.hops.hopsworks.common.exception.HopsSecurityException;
-import io.hops.hopsworks.common.exception.RESTCodes;
-import io.hops.hopsworks.common.exception.RESTException;
+import io.hops.hopsworks.exceptions.GenericException;
+import io.hops.hopsworks.exceptions.HopsSecurityException;
+import io.hops.hopsworks.restutils.RESTCodes;
+import io.hops.hopsworks.restutils.RESTException;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.jwt.exception.AccessException;
 import io.hops.hopsworks.jwt.exception.DuplicateSigningKeyException;
@@ -52,6 +52,8 @@ import io.hops.hopsworks.jwt.exception.JWTException;
 import io.hops.hopsworks.jwt.exception.NotRenewableException;
 import io.hops.hopsworks.jwt.exception.SigningKeyNotFoundException;
 import io.hops.hopsworks.jwt.exception.VerificationException;
+import io.hops.hopsworks.restutils.ThrowableMapper;
+
 import java.util.logging.Level;
 
 import javax.ejb.EJB;
@@ -60,7 +62,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
 
 @Provider
-public class RESTApiThrowableMapper extends io.hops.hopsworks.common.exception.ThrowableMapper {
+public class RESTApiThrowableMapper extends ThrowableMapper {
 
   @EJB
   Settings settings;

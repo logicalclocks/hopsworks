@@ -18,11 +18,11 @@ package io.hops.hopsworks.common.serving.tf;
 
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.exception.CryptoPasswordNotFoundException;
-import io.hops.hopsworks.common.exception.KafkaException;
-import io.hops.hopsworks.common.exception.ProjectException;
-import io.hops.hopsworks.common.exception.ServiceException;
-import io.hops.hopsworks.common.exception.UserException;
+import io.hops.hopsworks.exceptions.CryptoPasswordNotFoundException;
+import io.hops.hopsworks.exceptions.KafkaException;
+import io.hops.hopsworks.exceptions.ProjectException;
+import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.exceptions.UserException;
 
 import java.util.List;
 

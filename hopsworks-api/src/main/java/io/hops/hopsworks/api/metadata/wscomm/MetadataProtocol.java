@@ -50,8 +50,8 @@ import io.hops.hopsworks.common.dao.metadata.Field;
 import io.hops.hopsworks.common.dao.metadata.InodeTableComposite;
 import io.hops.hopsworks.common.dao.metadata.MTable;
 import io.hops.hopsworks.common.dao.metadata.Metadata;
-import io.hops.hopsworks.common.exception.GenericException;
-import io.hops.hopsworks.common.exception.MetadataException;
+import io.hops.hopsworks.exceptions.GenericException;
+import io.hops.hopsworks.exceptions.MetadataException;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;

@@ -17,7 +17,7 @@
 package io.hops.hopsworks.common.dao.serving;
 
 import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.common.serving.tf.TfServingException;
 
 import javax.annotation.PostConstruct;

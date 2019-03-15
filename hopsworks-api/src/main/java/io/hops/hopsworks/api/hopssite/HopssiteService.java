@@ -55,7 +55,7 @@ import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.dela.dto.common.UserDTO;
 import io.hops.hopsworks.dela.dto.hopssite.DatasetDTO;
 import io.hops.hopsworks.dela.dto.hopssite.HopsSiteDatasetDTO;
-import io.hops.hopsworks.common.exception.DelaException;
+import io.hops.hopsworks.exceptions.DelaException;
 import io.hops.hopsworks.dela.hopssite.HopssiteController;
 import io.hops.hopsworks.dela.old_hopssite_dto.DatasetIssueDTO;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;

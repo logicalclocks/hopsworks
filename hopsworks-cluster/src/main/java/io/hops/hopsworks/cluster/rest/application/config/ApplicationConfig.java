@@ -38,6 +38,7 @@
  */
 package io.hops.hopsworks.cluster.rest.application.config;
 
+import io.hops.hopsworks.cluster.exception.mapper.ClusterThrowableMapper;
 import io.swagger.annotations.Api;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -50,8 +51,9 @@ public class ApplicationConfig extends ResourceConfig {
    */
   public ApplicationConfig() {
     register(io.hops.hopsworks.cluster.Cluster.class);
-    register(io.hops.hopsworks.cluster.exception.mapper.EJBExceptionMapper.class);
     register(io.hops.hopsworks.cluster.response.filter.CORSFilter.class);
+
+    register(ClusterThrowableMapper.class);
     
     //swagger
     register(io.swagger.jaxrs.listing.ApiListingResource.class);

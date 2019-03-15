@@ -21,8 +21,8 @@ import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.exception.RESTCodes;
-import io.hops.hopsworks.common.util.JsonResponse;
+import io.hops.hopsworks.restutils.JsonResponse;
+import io.hops.hopsworks.restutils.RESTCodes;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;

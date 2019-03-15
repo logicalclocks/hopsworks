@@ -70,10 +70,9 @@ public class JWTController {
    * @throws io.hops.hopsworks.jwt.exception.SigningKeyNotFoundException
    */
   public String createToken(JsonWebToken jwt) throws SigningKeyNotFoundException {
-    String token = createToken(jwt.getKeyId(), jwt.getIssuer(), jwt.getAudience().toArray(new String[0]), jwt.
+    return createToken(jwt.getKeyId(), jwt.getIssuer(), jwt.getAudience().toArray(new String[0]), jwt.
         getExpiresAt(), jwt.getNotBefore(), jwt.getSubject(), jwt.isRenewable(), jwt.getExpLeeway(), jwt.
         getRole().toArray(new String[0]), jwt.getAlgorithm());
-    return token;
   }
 
   /**
@@ -95,7 +94,7 @@ public class JWTController {
   public String createToken(String keyId, String issuer, String[] audience, Date expiresAt, Date notBefore,
       String subject, boolean isRenewable, int expLeeway, String[] roles, SignatureAlgorithm algorithm) throws
       SigningKeyNotFoundException {
-    String token = JWT.create()
+    return JWT.create()
         .withKeyId(keyId)
         .withIssuer(issuer)
         .withAudience(audience)
@@ -108,7 +107,6 @@ public class JWTController {
         .withClaim(EXPIRY_LEEWAY, getExpLeewayOrDefault(expLeeway))
         .withArrayClaim(ROLES, roles)
         .sign(algorithmFactory.getAlgorithm(algorithm, keyId));
-    return token;
   }
 
   /**
@@ -141,9 +139,8 @@ public class JWTController {
     } else {
       signingKey = getOrCreateSigningKey(keyName, algorithm);
     }
-    String token = createToken(signingKey.getId().toString(), issuer, audience, expiresAt, notBefore, subject,
+    return createToken(signingKey.getId().toString(), issuer, audience, expiresAt, notBefore, subject,
         isRenewable, expLeeway, roles, algorithm);
-    return token;
   }
 
   /**
@@ -337,14 +334,12 @@ public class JWTController {
    * Renews a jwt if it is renewable, not invalidated, and expired but within the renewal period.
    *
    * @param token
-   * @param newExp expiry date of the new token
-   * @param notBefore
    * @return
    * @throws SigningKeyNotFoundException
    * @throws NotRenewableException
    * @throws InvalidationException
    */
-  public String autoRenewToken(String token, Date newExp, Date notBefore) throws SigningKeyNotFoundException,
+  public String autoRenewToken(String token) throws SigningKeyNotFoundException,
       NotRenewableException, InvalidationException {
     DecodedJWT jwt = verifyTokenForRenewal(token);
     boolean isRenewable = getRenewableClaim(jwt);
@@ -356,9 +351,12 @@ public class JWTController {
       throw new NotRenewableException("Token not expired.");
     }
 
+    // Keep the same lifetime of the current token
+    long lifetimeMs = jwt.getExpiresAt().getTime() - jwt.getIssuedAt().getTime();
+
     JsonWebToken _jwt = new JsonWebToken(jwt);
-    _jwt.setExpiresAt(newExp);
-    _jwt.setNotBefore(notBefore);
+    _jwt.setExpiresAt(new Date(System.currentTimeMillis() + lifetimeMs));
+    _jwt.setNotBefore(new Date());
     String renewedToken = createToken(_jwt);
 
     invalidateJWT(jwt.getId(), jwt.getExpiresAt(), _jwt.getExpLeeway());
@@ -391,7 +389,7 @@ public class JWTController {
     invalidateJWT(jwt.getId(), jwt.getExpiresAt(), _jwt.getExpLeeway());
     return renewedToken;
   }
-  
+
   private DecodedJWT verifyTokenForRenewal(String token) throws SigningKeyNotFoundException, NotRenewableException {
     DecodedJWT jwt;
     try {

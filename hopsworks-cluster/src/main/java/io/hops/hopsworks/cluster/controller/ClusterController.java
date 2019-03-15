@@ -51,16 +51,14 @@ import io.hops.hopsworks.common.dao.user.security.audit.AccountsAuditActions;
 import io.hops.hopsworks.common.dao.user.security.ua.SecurityUtils;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
-import io.hops.hopsworks.common.exception.RESTCodes;
-import io.hops.hopsworks.common.exception.UserException;
-import io.hops.hopsworks.common.security.CAException;
-import io.hops.hopsworks.common.security.CertificateType;
-import io.hops.hopsworks.common.security.OpensslOperations;
+import io.hops.hopsworks.common.security.CertificatesController;
+import io.hops.hopsworks.exceptions.GenericException;
+import io.hops.hopsworks.exceptions.HopsSecurityException;
+import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.common.user.AuthController;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.EmailBean;
 import io.hops.hopsworks.common.util.FormatUtils;
-import io.hops.hopsworks.common.util.Settings;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -69,7 +67,6 @@ import javax.ejb.TransactionAttributeType;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -103,13 +100,11 @@ public class ClusterController {
   @EJB
   private EmailBean emailBean;
   @EJB
-  private Settings settings;
-  @EJB
   private AuthController authController;
   @EJB
   private UsersController usersCtrl;
   @EJB
-  private OpensslOperations opensslOperations;
+  private CertificatesController certificatesController;
 
   public void registerClusterNewUser(ClusterDTO cluster, HttpServletRequest req, boolean autoValidate)
     throws MessagingException, UserException {
@@ -249,7 +244,9 @@ public class ClusterController {
     LOGGER.log(Level.INFO, "Unregistering cluster with email: {0}", clusterAgent.getEmail());
   }
 
-  public void validateRequest(String key, HttpServletRequest req, OP_TYPE type) throws IOException {
+  public void validateRequest(String key, HttpServletRequest req, OP_TYPE type)
+      throws HopsSecurityException, GenericException {
+
     Integer clusterCertId = extractClusterCertId(key);
     ClusterCert clusterCert = clusterCertFacade.find(clusterCertId);
     if (clusterCert == null) {
@@ -496,19 +493,11 @@ public class ClusterController {
     return TimeUnit.MILLISECONDS.toHours(diff);
   }
 
-  private void revokeCert(ClusterCert clusterCert) throws IOException {
+  private void revokeCert(ClusterCert clusterCert) throws HopsSecurityException, GenericException {
     if (clusterCert == null || clusterCert.getSerialNumber() == null) {
       return;
     }
 
-    try {
-      opensslOperations.revokeCertificate(clusterCert.getCommonName(), CertificateType.DELA,
-          true, true);
-    } catch (CAException cae){
-      if (cae.getErrorCode() == RESTCodes.CAErrorCode.CERTNOTFOUND) {
-        LOGGER.log(Level.WARNING, "Could not find certificate with CN: " +
-            clusterCert.getCommonName() + " to be revoked");
-      }
-    }
+    certificatesController.revokeDelaClusterCertificate(clusterCert.getCommonName());
   }
 }

@@ -41,11 +41,11 @@ package io.hops.hopsworks.dela;
 
 import com.google.gson.Gson;
 import io.hops.hopsworks.common.dela.AddressJSON;
-import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.common.util.ClientWrapper;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.dela.dto.common.ClusterAddressDTO;
-import io.hops.hopsworks.common.exception.DelaException;
+import io.hops.hopsworks.exceptions.DelaException;
 import io.hops.hopsworks.dela.old_dto.ElementSummaryJSON;
 import io.hops.hopsworks.dela.old_dto.ExtendedDetails;
 import io.hops.hopsworks.dela.old_dto.HDFSEndpoint;

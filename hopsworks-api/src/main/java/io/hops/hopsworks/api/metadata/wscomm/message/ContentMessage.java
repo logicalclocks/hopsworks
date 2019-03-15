@@ -44,7 +44,7 @@ import io.hops.hopsworks.common.dao.metadata.Field;
 import io.hops.hopsworks.common.dao.metadata.FieldPredefinedValue;
 import io.hops.hopsworks.common.dao.metadata.MTable;
 import io.hops.hopsworks.common.dao.metadata.Template;
-import io.hops.hopsworks.common.exception.GenericException;
+import io.hops.hopsworks.exceptions.GenericException;
 
 import java.util.List;
 import java.util.logging.Logger;

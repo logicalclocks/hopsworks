@@ -39,7 +39,7 @@
 
 package io.hops.hopsworks.admin.user.account;
 
-import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.common.user.UsersController;
 
 import javax.ejb.EJB;

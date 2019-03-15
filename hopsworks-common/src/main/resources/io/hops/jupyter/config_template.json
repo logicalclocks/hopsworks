@@ -54,7 +54,6 @@
     "queue": "%%yarn_queue%%",
     "conf": {
 %%spark_configuration%%
-
     }
   },
   "use_auto_viz": true,

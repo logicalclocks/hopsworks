@@ -46,6 +46,7 @@ import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
 import io.hops.hopsworks.common.dao.util.Variables;
 import io.hops.hopsworks.common.dela.AddressJSON;
 import io.hops.hopsworks.common.dela.DelaClientType;
+import io.hops.hopsworks.restutils.RESTLogLevel;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -209,15 +210,13 @@ public class Settings implements Serializable {
       = "file_preview_txt_size";
   private static final String VARIABLE_HOPSWORKS_REST_ENDPOINT
       = "hopsworks_endpoint";
-  private static final String VARIABLE_REST_PORT = "rest_port";
   private static final String VARIABLE_HOPS_RPC_TLS = "hops_rpc_tls";
   public static final String ERASURE_CODING_CONFIG = "erasure-coding-site.xml";
 
   private static final String VARIABLE_KAFKA_NUM_PARTITIONS
       = "kafka_num_partitions";
   private static final String VARIABLE_KAFKA_NUM_REPLICAS = "kafka_num_replicas";
-  private static final String VARIABLE_HOPSWORKS_SSL_MASTER_PASSWORD
-      = "hopsworks_master_password";
+  private static final String VARIABLE_HOPSWORKS_SSL_MASTER_PASSWORD = "hopsworks_master_password";
   private static final String VARIABLE_CUDA_DIR = "conda_dir";
   private static final String VARIABLE_ANACONDA_USER = "anaconda_user";
   private static final String VARIABLE_ANACONDA_DIR = "anaconda_dir";
@@ -293,8 +292,6 @@ public class Settings implements Serializable {
   private static final String VARIABLE_KUBE_TRUSTSTORE_KEY = "kube_truststore_key";
   private static final String VARIABLE_KUBE_KEYSTORE_PATH = "kube_keystore_path";
   private static final String VARIABLE_KUBE_KEYSTORE_KEY = "kube_keystore_key";
-  private static final String VARIABLE_KUBE_CA_PATH = "kube_ca_path";
-  private static final String VARIABLE_KUBE_CA_PASSWORD = "kube_ca_password";
   private static final String VARIABLE_KUBE_REGISTRY = "kube_registry";
   private static final String VARIABLE_KUBE_MAX_SERVING = "kube_max_serving_instances";
 
@@ -304,6 +301,12 @@ public class Settings implements Serializable {
   private static final String VARIABLE_JWT_EXP_LEEWAY_SEC = "jwt_exp_leeway_sec";
   private static final String VARIABLE_JWT_SIGNING_KEY_NAME = "jwt_signing_key_name";
   private static final String VARIABLE_JWT_ISSUER_KEY = "jwt_issuer";
+
+  private static final String VARIABLE_SERVICE_JWT = "service_jwt";
+  private static final String VARIABLE_SERVICE_JWT_LIFETIME_MS = "service_jwt_lifetime_ms";
+  private static final String VARIABLE_SERVICE_JWT_EXP_LEEWAY_SEC = "service_jwt_exp_leeway_sec";
+
+  private static final String VARIABLE_CONNECTION_KEEPALIVE_TIMEOUT = "keepalive_timeout";
 
   /* -------------------- Featurestore --------------- */
   private static final String VARIABLE_FEATURESTORE_DEFAULT_QUOTA = "featurestore_default_quota";
@@ -410,12 +413,12 @@ public class Settings implements Serializable {
     return defaultValue;
   }
 
-  private LOG_LEVEL setLogLevelVar(String varName, LOG_LEVEL defaultValue) {
+  private RESTLogLevel setLogLevelVar(String varName, RESTLogLevel defaultValue) {
     Variables var = findById(varName);
     if (var != null && var.getValue() != null) {
       String val = var.getValue();
       if (val != null && !val.isEmpty()) {
-        return LOG_LEVEL.valueOf(val);
+        return RESTLogLevel.valueOf(val);
       }
     }
     return defaultValue;
@@ -486,6 +489,8 @@ public class Settings implements Serializable {
       DRELEPHANT_DB = setDbVar(VARIABLE_DRELEPHANT_DB, DRELEPHANT_DB);
       KIBANA_IP = setIpVar(VARIABLE_KIBANA_IP, KIBANA_IP);
       KAFKA_MAX_NUM_TOPICS = setIntVar(VARIABLE_KAFKA_MAX_NUM_TOPICS, KAFKA_MAX_NUM_TOPICS);
+      HOPSWORKS_DEFAULT_SSL_MASTER_PASSWORD = setVar(VARIABLE_HOPSWORKS_SSL_MASTER_PASSWORD,
+          HOPSWORKS_DEFAULT_SSL_MASTER_PASSWORD);
       KAFKA_USER = setVar(VARIABLE_KAFKA_USER, KAFKA_USER);
       KAFKA_DIR = setDirVar(VARIABLE_KAFKA_DIR, KAFKA_DIR);
       KAFKA_DEFAULT_NUM_PARTITIONS = setIntVar(VARIABLE_KAFKA_NUM_PARTITIONS,
@@ -502,9 +507,6 @@ public class Settings implements Serializable {
           HDFS_DEFAULT_QUOTA_MBs);
       MAX_NUM_PROJ_PER_USER = setDirVar(VARIABLE_MAX_NUM_PROJ_PER_USER,
           MAX_NUM_PROJ_PER_USER);
-      HOPSWORKS_DEFAULT_SSL_MASTER_PASSWORD = setVar(
-          VARIABLE_HOPSWORKS_SSL_MASTER_PASSWORD,
-          HOPSWORKS_DEFAULT_SSL_MASTER_PASSWORD);
       CLUSTER_CERT = setVar(VARIABLE_CLUSTER_CERT, CLUSTER_CERT);
       FILE_PREVIEW_IMAGE_SIZE = setIntVar(VARIABLE_FILE_PREVIEW_IMAGE_SIZE, 10000000);
       FILE_PREVIEW_TXT_SIZE = setIntVar(VARIABLE_FILE_PREVIEW_TXT_SIZE, 100);
@@ -536,8 +538,6 @@ public class Settings implements Serializable {
       VERIFICATION_PATH = setStrVar(VARIABLE_VERIFICATION_PATH, VERIFICATION_PATH);
       serviceKeyRotationEnabled = setBoolVar(SERVICE_KEY_ROTATION_ENABLED_KEY, serviceKeyRotationEnabled);
       serviceKeyRotationInterval = setStrVar(SERVICE_KEY_ROTATION_INTERVAL_KEY, serviceKeyRotationInterval);
-      applicationCertificateValidityPeriod = setStrVar(APPLICATION_CERTIFICATE_VALIDITY_PERIOD_KEY,
-          applicationCertificateValidityPeriod);
       tensorBoardMaxLastAccessed = setIntVar(TENSORBOARD_MAX_LAST_ACCESSED, tensorBoardMaxLastAccessed);
       sparkUILogsOffset = setIntVar(SPARK_UI_LOGS_OFFSET, sparkUILogsOffset);
       jupyterShutdownTimerInterval = setStrVar(JUPYTER_SHUTDOWN_TIMER_INTERVAL, jupyterShutdownTimerInterval);
@@ -593,8 +593,6 @@ public class Settings implements Serializable {
       KUBE_TRUSTSTORE_KEY = setStrVar(VARIABLE_KUBE_TRUSTSTORE_KEY, KUBE_TRUSTSTORE_KEY);
       KUBE_KEYSTORE_PATH = setStrVar(VARIABLE_KUBE_KEYSTORE_PATH, KUBE_KEYSTORE_PATH);
       KUBE_KEYSTORE_KEY = setStrVar(VARIABLE_KUBE_KEYSTORE_KEY, KUBE_KEYSTORE_KEY);
-      KUBE_CA_PATH = setStrVar(VARIABLE_KUBE_CA_PATH, KUBE_CA_PATH);
-      KUBE_CA_PASSWORD = setStrVar(VARIABLE_KUBE_CA_PASSWORD, KUBE_CA_PASSWORD);
       KUBE_REGISTRY = setStrVar(VARIABLE_KUBE_REGISTRY, KUBE_REGISTRY);
       KUBE_MAX_SERVING_INSTANCES = setIntVar(VARIABLE_KUBE_MAX_SERVING, KUBE_MAX_SERVING_INSTANCES);
 
@@ -603,6 +601,12 @@ public class Settings implements Serializable {
       JWT_EXP_LEEWAY_SEC = setIntVar(VARIABLE_JWT_EXP_LEEWAY_SEC, JWT_EXP_LEEWAY_SEC);
       JWT_SIGNING_KEY_NAME = setStrVar(VARIABLE_JWT_SIGNING_KEY_NAME, JWT_SIGNING_KEY_NAME);
       JWT_ISSUER = setStrVar(VARIABLE_JWT_ISSUER_KEY, JWT_ISSUER);
+
+      SERVICE_JWT = setStrVar(VARIABLE_SERVICE_JWT, SERVICE_JWT);
+      SERVICE_JWT_LIFETIME_MS = setLongVar(VARIABLE_SERVICE_JWT_LIFETIME_MS, SERVICE_JWT_LIFETIME_MS);
+      SERVICE_JWT_EXP_LEEWAY_SEC = setIntVar(VARIABLE_SERVICE_JWT_EXP_LEEWAY_SEC, SERVICE_JWT_EXP_LEEWAY_SEC);
+
+      CONNECTION_KEEPALIVE_TIMEOUT = setIntVar(VARIABLE_CONNECTION_KEEPALIVE_TIMEOUT, CONNECTION_KEEPALIVE_TIMEOUT);
 
       FEATURESTORE_DB_DEFAULT_QUOTA = setStrVar(VARIABLE_FEATURESTORE_DEFAULT_QUOTA, FEATURESTORE_DB_DEFAULT_QUOTA);
       FEATURESTORE_DB_DEFAULT_STORAGE_FORMAT =
@@ -996,26 +1000,11 @@ public class Settings implements Serializable {
     return getCertsDir() + File.separator + "encryption_master_password";
   }
 
-  private String HOPSWORKS_INSTALL_DIR = "/srv/hops/domains";
-
-  public synchronized String getHopsworksInstallDir() {
-    checkCache();
-    return HOPSWORKS_INSTALL_DIR;
-  }
+  private String HOPSWORKS_INSTALL_DIR = "/srv/hops/domains/domain1";
 
   public synchronized String getHopsworksDomainDir() {
     checkCache();
-    return HOPSWORKS_INSTALL_DIR + "/domain1";
-  }
-
-  public synchronized String getIntermediateCaDir() {
-    checkCache();
-    return getCertsDir() + Settings.INTERMEDIATE_CA_DIR;
-  }
-
-  public synchronized String getCaDir() {
-    checkCache();
-    return getCertsDir();
+    return HOPSWORKS_INSTALL_DIR;
   }
 
   //User under which yarn is run
@@ -1044,7 +1033,7 @@ public class Settings implements Serializable {
     return SPARK_USER;
   }
 
-  public static String JAVA_HOME = "/usr/lib/jvm/default-java";
+  public String JAVA_HOME = "/usr/lib/jvm/default-java";
 
   public synchronized String getJavaHome() {
     checkCache();
@@ -1613,9 +1602,9 @@ public class Settings implements Serializable {
     return "https://" + HOPSWORKS_REST_ENDPOINT;
   }
 
-  private LOG_LEVEL HOPSWORKS_REST_LOG_LEVEL = LOG_LEVEL.PROD;
-
-  public synchronized LOG_LEVEL getHopsworksRESTLogLevel() {
+  private RESTLogLevel HOPSWORKS_REST_LOG_LEVEL = RESTLogLevel.PROD;
+  
+  public synchronized RESTLogLevel getHopsworksRESTLogLevel() {
     checkCache();
     return HOPSWORKS_REST_LOG_LEVEL;
   }
@@ -1706,12 +1695,7 @@ public class Settings implements Serializable {
   public static final Charset ENCODING = StandardCharsets.UTF_8;
   public static final String HOPS_USERS_HOMEDIR = "/home/";
   public static final String HOPS_USERNAME_SEPARATOR = "__";
-  private static final String CA_DIR = "";
-  private static final String INTERMEDIATE_CA_DIR = CA_DIR + "/intermediate";
-  public static final String SSL_CREATE_CERT_SCRIPTNAME = "createusercerts.sh";
-  public static final String SSL_DELETE_CERT_SCRIPTNAME = "deleteusercerts.sh";
-  public static final String SSL_DELETE_PROJECT_CERTS_SCRIPTNAME
-      = "deleteprojectcerts.sh";
+
   public static final String UNZIP_FILES_SCRIPTNAME = "unzip-hdfs-files.sh";
   public static final int USERNAME_LEN = 8;
   public static final int MAX_USERNAME_SUFFIX = 99;
@@ -2765,15 +2749,7 @@ public class Settings implements Serializable {
     return serviceKeyRotationInterval;
   }
 
-  private static final String APPLICATION_CERTIFICATE_VALIDITY_PERIOD_KEY = "application_certificate_validity_period";
-  private String applicationCertificateValidityPeriod = "3d";
-
-  public synchronized String getApplicationCertificateValidityPeriod() {
-    checkCache();
-    return applicationCertificateValidityPeriod;
-  }
-
-  // TensorBoard kill rotation interval in milliseconds (should be lower than the TensorBoardKillTimer)
+ // TensorBoard kill rotation interval in milliseconds (should be lower than the TensorBoardKillTimer)
   private static final String TENSORBOARD_MAX_LAST_ACCESSED = "tensorboard_max_last_accessed";
   private int tensorBoardMaxLastAccessed = 1140000;
 
@@ -3069,20 +3045,6 @@ public class Settings implements Serializable {
     return KUBE_KEYSTORE_KEY;
   }
 
-  private String KUBE_CA_PATH = "/srv/hops/certs-dir/kube";
-
-  public synchronized String getKubeCAPath() {
-    checkCache();
-    return KUBE_CA_PATH;
-  }
-
-  private String KUBE_CA_PASSWORD = "adminpw";
-
-  public synchronized String getKubeCAPassword() {
-    checkCache();
-    return KUBE_CA_PASSWORD;
-  }
-
   private String KUBE_REGISTRY = "registry.docker-registry.svc.cluster.local";
 
   public synchronized String getKubeRegistry() {
@@ -3116,33 +3078,15 @@ public class Settings implements Serializable {
     return TF_SERVING_MAX_ROUTE_CONNECTIONS;
   }
 
-  public enum LOG_LEVEL {
-    DEV(0, "User and Dev messages as well as stack trace are returned to client to client."),
-    TEST(1, "User and Dev messages are returned to client to client."),
-    PROD(2, "User message is returned to client to client.");
-
-    private final int level;
-    private final String description;
-
-    LOG_LEVEL(int level, String description) {
-      this.level = level;
-      this.description = description;
-    }
-
-    public int getLevel() {
-      return level;
-    }
-
-    public String getDescription() {
-      return description;
-    }
-  }
-
   private String JWT_SIGNATURE_ALGORITHM = "HS512";
-  private long JWT_LIFETIME_MS = 1800000L;
-  private int JWT_EXP_LEEWAY_SEC = 900;
   private String JWT_SIGNING_KEY_NAME = "apiKey";
   private String JWT_ISSUER = "hopsworks@logicalclocks.com";
+
+  private long JWT_LIFETIME_MS = 1800000l;
+  private int JWT_EXP_LEEWAY_SEC = 900;
+
+  private long SERVICE_JWT_LIFETIME_MS = 86400000l;
+  private int SERVICE_JWT_EXP_LEEWAY_SEC = 43200;
 
   public synchronized String getJWTSignatureAlg() {
     checkCache();
@@ -3159,6 +3103,16 @@ public class Settings implements Serializable {
     return JWT_EXP_LEEWAY_SEC;
   }
 
+  public synchronized long getServiceJWTLifetimeMS() {
+    checkCache();
+    return SERVICE_JWT_LIFETIME_MS;
+  }
+
+  public synchronized int getServiceJWTExpLeewaySec() {
+    checkCache();
+    return SERVICE_JWT_EXP_LEEWAY_SEC;
+  }
+
   public synchronized String getJWTSigningKeyName() {
     checkCache();
     return JWT_SIGNING_KEY_NAME;
@@ -3167,6 +3121,24 @@ public class Settings implements Serializable {
   public synchronized String getJWTIssuer() {
     checkCache();
     return JWT_ISSUER;
+  }
+
+  private String SERVICE_JWT = "";
+  public synchronized String getServiceJWT(){
+    checkCache();
+    return SERVICE_JWT;
+  }
+
+  public synchronized void setServiceJWT(String JWT) {
+    updateVariableInternal(VARIABLE_SERVICE_JWT, JWT);
+    em.flush();
+    SERVICE_JWT = JWT;
+  }
+
+  private int CONNECTION_KEEPALIVE_TIMEOUT = 30;
+  public synchronized int getConnectionKeepAliveTimeout() {
+    checkCache();
+    return CONNECTION_KEEPALIVE_TIMEOUT;
   }
 
   public String getHiveSiteSparkHdfsPath() {

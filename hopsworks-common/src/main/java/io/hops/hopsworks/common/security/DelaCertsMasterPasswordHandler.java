@@ -40,7 +40,7 @@ package io.hops.hopsworks.common.security;
 
 import io.hops.hopsworks.common.dao.dela.certs.ClusterCertificate;
 import io.hops.hopsworks.common.dao.dela.certs.ClusterCertificateFacade;
-import io.hops.hopsworks.common.exception.EncryptionMasterPasswordException;
+import io.hops.hopsworks.exceptions.EncryptionMasterPasswordException;
 import io.hops.hopsworks.common.util.Settings;
 
 import java.util.ArrayList;

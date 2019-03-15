@@ -43,15 +43,9 @@ import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.jobhistory.Execution;
 import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
-import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
-import io.hops.hopsworks.common.exception.GenericException;
-import io.hops.hopsworks.common.exception.JobException;
-import io.hops.hopsworks.common.exception.RESTCodes;
-import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
-import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.UserGroupInformationService;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
@@ -60,6 +54,10 @@ import io.hops.hopsworks.common.jobs.configuration.JobType;
 import io.hops.hopsworks.common.jobs.yarn.YarnJobsMonitor;
 import io.hops.hopsworks.common.jupyter.JupyterController;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.GenericException;
+import io.hops.hopsworks.exceptions.JobException;
+import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.hadoop.security.UserGroupInformation;
 
 import javax.ejb.EJB;
@@ -93,10 +91,6 @@ public class SparkController {
   @EJB
   private Settings settings;
   @EJB
-  private DistributedFsService dfs;
-  @EJB
-  private UserFacade userFacade;
-  @EJB
   private ExecutionController executionController;
   @EJB
   private JupyterController jupyterController;
@@ -113,7 +107,8 @@ public class SparkController {
    * @throws IOException If starting the job fails.
    * Spark job.
    */
-  public Execution startJob(final Jobs job, final Users user) throws GenericException, JobException, ServiceException {
+  public Execution startJob(final Jobs job, final Users user)
+      throws ServiceException, GenericException, JobException {
     //First: some parameter checking.
     sanityCheck(job, user);
     String username = hdfsUsersBean.getHdfsUserName(job.getProject(), user);

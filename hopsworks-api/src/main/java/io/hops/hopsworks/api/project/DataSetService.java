@@ -74,11 +74,11 @@ import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.FilePreviewDTO;
-import io.hops.hopsworks.common.exception.DatasetException;
-import io.hops.hopsworks.common.exception.HopsSecurityException;
-import io.hops.hopsworks.common.exception.JobException;
-import io.hops.hopsworks.common.exception.ProjectException;
-import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.exceptions.DatasetException;
+import io.hops.hopsworks.exceptions.HopsSecurityException;
+import io.hops.hopsworks.exceptions.JobException;
+import io.hops.hopsworks.exceptions.ProjectException;
+import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -644,8 +644,9 @@ public class DataSetService {
    * @param fileName
    * @param sc
    * @return
-   * @throws io.hops.hopsworks.common.exception.DatasetException
-   * @throws io.hops.hopsworks.common.exception.ProjectException
+   * @return
+   * @throws DatasetException
+   * @throws ProjectException
    */
   @DELETE
   @Path("/{fileName}")
@@ -720,9 +721,13 @@ public class DataSetService {
    *
    * @param fileName
    * @param sc
+<<<<<<< HEAD
    * @return
    * @throws io.hops.hopsworks.common.exception.DatasetException
    * @throws io.hops.hopsworks.common.exception.ProjectException
+=======
+   * @return 
+>>>>>>> [HOPSWORKS-715] Hopsworks singletons are not single
    */
   @DELETE
   @Path("corrupted/{fileName: .+}")
@@ -1063,7 +1068,8 @@ public class DataSetService {
               && mode.equals(Settings.FILE_PREVIEW_MODE_TAIL)) {
             dis.skipBytes((int) (fileSize - sizeThreshold));
           } else if (fileName.endsWith(Settings.README_FILE) && fileSize > Settings.FILE_PREVIEW_TXT_SIZE_BYTES) {
-            throw new DatasetException(RESTCodes.DatasetErrorCode.FILE_PREVIEW_ERROR, Level.FINE);
+            throw new DatasetException(RESTCodes.DatasetErrorCode.FILE_PREVIEW_ERROR, Level.FINE,
+                "File must be smaller than " + Settings.FILE_PREVIEW_TXT_SIZE_BYTES / 1024 + " KB to be previewed");
           } else if ((int) fileSize < sizeThreshold) {
             sizeThreshold = (int) fileSize;
           }

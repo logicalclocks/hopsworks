@@ -42,7 +42,7 @@ package io.hops.hopsworks.common.dao.jobs.description;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.exception.InvalidQueryException;
+import io.hops.hopsworks.exceptions.InvalidQueryException;
 import io.hops.hopsworks.common.jobs.configuration.JobConfiguration;
 import io.hops.hopsworks.common.jobs.configuration.ScheduleDTO;
 import io.hops.hopsworks.common.jobs.jobhistory.JobState;

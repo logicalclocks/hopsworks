@@ -39,12 +39,6 @@
 
 package io.hops.hopsworks.common.dao.certificates;
 
-import com.google.common.io.ByteStreams;
-import org.apache.commons.io.FileUtils;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -131,17 +125,9 @@ public class CertsFacade {
     em.persist(uc);
   }
   
-  public UserCerts putUserCerts(String projectname, String username, String userKeyPwd)
-      throws IOException {
-    File kFile = new File("/tmp/" + projectname + "__"
-        + username + "__kstore.jks");
-    FileInputStream kfin = new FileInputStream(kFile);
-    File tFile = new File("/tmp/" + projectname + "__"
-        + username + "__tstore.jks");
-    FileInputStream tfin = new FileInputStream(tFile);
 
-    byte[] kStoreBlob = ByteStreams.toByteArray(kfin);
-    byte[] tStoreBlob = ByteStreams.toByteArray(tfin);
+  public UserCerts putUserCerts(String projectname, String username, byte[] kStoreBlob,
+                                byte[] tStoreBlob, String userKeyPwd) {
 
     UserCerts uc = new UserCerts(projectname, username);
     uc.setUserKey(kStoreBlob);
@@ -149,13 +135,9 @@ public class CertsFacade {
     uc.setUserKeyPwd(userKeyPwd);
     em.persist(uc);
     em.flush();
-  
-    FileUtils.deleteQuietly(kFile);
-    FileUtils.deleteQuietly(tFile);
 
     return uc;
   }
-
 
   public void update(UserCerts uc) {
     em.merge(uc);

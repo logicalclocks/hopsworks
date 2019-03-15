@@ -50,10 +50,10 @@ import io.hops.hopsworks.common.dao.host.Hosts;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.util.Variables;
-import io.hops.hopsworks.common.exception.EncryptionMasterPasswordException;
-import io.hops.hopsworks.common.exception.HopsSecurityException;
-import io.hops.hopsworks.common.exception.RESTCodes;
-import io.hops.hopsworks.common.exception.ServiceException;
+import io.hops.hopsworks.exceptions.EncryptionMasterPasswordException;
+import io.hops.hopsworks.exceptions.HopsSecurityException;
+import io.hops.hopsworks.restutils.RESTCodes;
+import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.common.security.CertificatesMgmService;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
@@ -113,7 +113,7 @@ public class SystemAdminService {
    * @param oldPassword Current password
    * @param newPassword New password
    * @return
-   * @throws io.hops.hopsworks.common.exception.HopsSecurityException
+   * @throws HopsSecurityException
    */
   @PUT
   @Path("/encryptionPass")
