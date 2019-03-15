@@ -175,7 +175,7 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
             new ConfigProperty(
               Settings.SPARK_DYNAMIC_ALLOC_MIN_EXECS_ENV,
               HopsUtils.OVERWRITE,
-              String.valueOf(sparkJobConfiguration.getDynamicAllocationMaxExecutors())));
+              "0"));
           sparkProps.put(Settings.SPARK_DYNAMIC_ALLOC_MAX_EXECS_ENV,
             new ConfigProperty(
               Settings.SPARK_DYNAMIC_ALLOC_MAX_EXECS_ENV,
@@ -196,8 +196,7 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
             new ConfigProperty(
               Settings.SPARK_DYNAMIC_ALLOC_MIN_EXECS_ENV,
               HopsUtils.OVERWRITE,
-              String.valueOf(sparkJobConfiguration.getDynamicAllocationMaxExecutors() +
-                sparkJobConfiguration.getNumPs())));
+              "0"));
           sparkProps.put(Settings.SPARK_DYNAMIC_ALLOC_MAX_EXECS_ENV,
             new ConfigProperty(
               Settings.SPARK_DYNAMIC_ALLOC_MAX_EXECS_ENV,
