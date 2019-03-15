@@ -456,7 +456,7 @@ public class CertificateMaterializer {
     boolean deletedMaterial = false;
     try {
       lock = getWriteLockForKey(key);
-      lock.unlock();
+      lock.lock();
       deletedMaterial = removeRemoteInternal(key, remoteDirectory, true);
       if (bothProjectAndUser) {
         ReentrantReadWriteLock.WriteLock projectLock = null;

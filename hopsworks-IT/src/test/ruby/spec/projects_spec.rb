@@ -249,9 +249,26 @@ describe "On #{ENV['OS']}" do
           with_valid_project
         end
         it "should delete project" do
+          # Start Jupyter to put X.509 to HDFS
+          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/enable/3.6/true"
+          expect_status(200)
+          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/settings"
+          expect_status(200)
+          settings = json_body
+          settings[:distributionStrategy] = ""
+          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/start", JSON(settings)
+          expect_status(200)
+          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/running"
+          expect_status(200)
+
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/delete"
           expect_status(200)
           expect_json(successMessage: "The project and all related files were removed successfully.")
+
+          # Deleting a project even with Jupyter running should leave no references behind
+          user = User.find_by(email: @project[:username])
+          project_username = @project[:projectname] + "__" + user.username
+          expect(RemoteMaterialReferences.find_by(username: @project[:projectname])).to be_nil
         end
       end
     end
