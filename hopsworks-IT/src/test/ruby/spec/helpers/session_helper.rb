@@ -381,4 +381,8 @@ module SessionHelper
     get "#{ENV['HOPSWORKS_API']}/users"
     json_body[:items]
   end
+
+  def get_user
+    @user
+  end
 end
