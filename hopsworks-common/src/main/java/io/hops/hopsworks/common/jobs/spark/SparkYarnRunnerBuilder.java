@@ -201,11 +201,6 @@ public class SparkYarnRunnerBuilder {
 
     String tfLibraryPath = services.getTfLibMappingUtil().getTfLdLibraryPath(project);
 
-    jobHopsworksProps.put(Settings.SPARK_YARN_APPMASTER_ENV + "SPARK_YARN_MODE", new ConfigProperty(
-      Settings.SPARK_YARN_APPMASTER_ENV + "SPARK_YARN_MODE",
-      HopsUtils.IGNORE,
-      "true"));
-
     Map<String, String> finalJobProps = new HashMap<>();
     finalJobProps.putAll(sparkConfigurationUtil.setFrameworkProperties(project, job.getJobConfig(), settings,
       jobUser, usersFullName, tfLibraryPath));
@@ -214,6 +209,8 @@ public class SparkYarnRunnerBuilder {
     
     finalJobProps.put(Settings.SPARK_YARN_APPMASTER_ENV + "SPARK_USER", jobUser);
     finalJobProps.put(Settings.SPARK_EXECUTOR_ENV + "SPARK_USER", jobUser);
+    finalJobProps.put(Settings.SPARK_YARN_APPMASTER_ENV + "SPARK_YARN_MODE", "true");
+    finalJobProps.put(Settings.SPARK_YARN_APPMASTER_ENV + "SPARK_YARN_STAGING_DIR", stagingPath);
 
     //Parse properties from Spark config file
     Properties sparkProperties = new Properties();
