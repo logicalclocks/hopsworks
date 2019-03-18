@@ -155,23 +155,8 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
           "true"));
       //To avoid deadlock in resource allocation this configuration is needed
       if(experimentType == ExperimentType.DISTRIBUTED_TRAINING) {
-        if(distributionStrategy == DistributionStrategy.MIRRORED) {
-          sparkProps.put(Settings.SPARK_DYNAMIC_ALLOC_MIN_EXECS_ENV,
-            new ConfigProperty(
-              Settings.SPARK_DYNAMIC_ALLOC_MIN_EXECS_ENV,
-              HopsUtils.OVERWRITE,
-              "0"));
-          sparkProps.put(Settings.SPARK_DYNAMIC_ALLOC_MAX_EXECS_ENV,
-            new ConfigProperty(
-              Settings.SPARK_DYNAMIC_ALLOC_MAX_EXECS_ENV,
-              HopsUtils.OVERWRITE,
-              "1"));
-          sparkProps.put(Settings.SPARK_DYNAMIC_ALLOC_INIT_EXECS_ENV,
-            new ConfigProperty(
-              Settings.SPARK_DYNAMIC_ALLOC_INIT_EXECS_ENV,
-              HopsUtils.OVERWRITE,
-              "0"));
-        } else if(distributionStrategy == DistributionStrategy.COLLECTIVE_ALL_REDUCE) {
+        if(distributionStrategy == DistributionStrategy.COLLECTIVE_ALL_REDUCE ||
+          distributionStrategy == DistributionStrategy.MIRRORED) {
           sparkProps.put(Settings.SPARK_DYNAMIC_ALLOC_MIN_EXECS_ENV,
             new ConfigProperty(
               Settings.SPARK_DYNAMIC_ALLOC_MIN_EXECS_ENV,
