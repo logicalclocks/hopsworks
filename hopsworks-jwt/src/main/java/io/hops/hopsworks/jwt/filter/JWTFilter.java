@@ -54,14 +54,14 @@ public abstract class JWTFilter implements ContainerRequestFilter {
     String authorizationHeader = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
     Object responseEntity;
     if (authorizationHeader == null) {
-      LOGGER.log(Level.INFO, "Token not provided.");
+      LOGGER.log(Level.FINEST, "Token not provided.");
       responseEntity = responseEntity(Response.Status.UNAUTHORIZED, "Token not provided.");
       requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).header(HttpHeaders.WWW_AUTHENTICATE,
           WWW_AUTHENTICATE_VALUE).entity(responseEntity).build());
       return;
     }
     if (!authorizationHeader.startsWith(BEARER)) {
-      LOGGER.log(Level.INFO, "Invalid token. AuthorizationHeader : {0}", authorizationHeader);
+      LOGGER.log(Level.FINEST, "Invalid token. AuthorizationHeader : {0}", authorizationHeader);
       responseEntity = responseEntity(Response.Status.UNAUTHORIZED, "Invalidated token.");
       requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).header(HttpHeaders.WWW_AUTHENTICATE,
           WWW_AUTHENTICATE_VALUE).entity(responseEntity).build());
@@ -89,7 +89,7 @@ public abstract class JWTFilter implements ContainerRequestFilter {
     }
 
     if (!isTokenValid(jwt)) {
-      LOGGER.log(Level.INFO, "JWT Verification Exception: Invalidated token.");
+      LOGGER.log(Level.FINEST, "JWT Verification Exception: Invalidated token.");
       responseEntity = responseEntity(Response.Status.UNAUTHORIZED, "Invalidated token.");
       requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).header(HttpHeaders.WWW_AUTHENTICATE,
           WWW_AUTHENTICATE_VALUE).entity(responseEntity).build());

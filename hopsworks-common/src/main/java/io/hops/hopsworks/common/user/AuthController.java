@@ -177,7 +177,7 @@ public class AuthController {
     String pwdHash = getPasswordHash(password, user.getSalt());
     if (!userPwdHash.equals(pwdHash)) {
       registerFalseLogin(user, req);
-      LOGGER.log(Level.WARNING, "False login attempt by user: {0}", user.getEmail());
+      LOGGER.log(Level.FINEST, "False login attempt by user: {0}", user.getEmail());
       return false;
     }
     resetFalseLogin(user);
@@ -201,7 +201,7 @@ public class AuthController {
     if (!user.getSecurityQuestion().getValue().equalsIgnoreCase(securityQ)
         || !user.getSecurityAnswer().equals(DigestUtils.sha256Hex(securityAnswer.toLowerCase()))) {
       registerFalseLogin(user, req);
-      LOGGER.log(Level.WARNING, "False Security Question attempt by user: {0}", user.getEmail());
+      LOGGER.log(Level.FINEST, "False Security Question attempt by user: {0}", user.getEmail());
       return false;
     }
     return true;
@@ -505,7 +505,7 @@ public class AuthController {
     resetFalseLogin(user);
     setUserOnlineStatus(user, Settings.IS_ONLINE);
     accountAuditFacade.registerLoginInfo(user, UserAuditActions.LOGIN.name(), UserAuditActions.SUCCESS.name(), req);
-    LOGGER.log(Level.INFO, "Logged in user: {0}. ", user.getEmail());
+    LOGGER.log(Level.FINEST, "Logged in user: {0}. ", user.getEmail());
   }
 
   /**
@@ -517,7 +517,7 @@ public class AuthController {
   public void registerLogout(Users user, HttpServletRequest req) {
     setUserOnlineStatus(user, Settings.IS_OFFLINE);
     accountAuditFacade.registerLoginInfo(user, UserAuditActions.LOGOUT.name(), UserAuditActions.SUCCESS.name(), req);
-    LOGGER.log(Level.INFO, "Logged out user: {0}. ", user.getEmail());
+    LOGGER.log(Level.FINEST, "Logged out user: {0}. ", user.getEmail());
   }
 
   /**
@@ -529,7 +529,7 @@ public class AuthController {
   public void registerAuthenticationFailure(Users user, HttpServletRequest req) {
     registerFalseLogin(user, req);
     accountAuditFacade.registerLoginInfo(user, UserAuditActions.LOGIN.name(), UserAuditActions.FAILED.name(), req);
-    LOGGER.log(Level.INFO, "Authentication failure user: {0}. ", user.getEmail());
+    LOGGER.log(Level.FINEST, "Authentication failure user: {0}. ", user.getEmail());
   }
 
   public void resetFalseLogin(Users user) {
