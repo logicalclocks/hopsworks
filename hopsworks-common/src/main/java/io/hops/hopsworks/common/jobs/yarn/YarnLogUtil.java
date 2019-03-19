@@ -131,7 +131,8 @@ public class YarnLogUtil {
           }
           break;
         default :
-          writer.print("Something went wrong during log aggregation phase!");
+          writer.print("Something went wrong during log aggregation phase! Log aggregation status is: "
+              + logAggregationStatus.name());
       }
     } catch (Exception ex) {
       if (writer != null) {
@@ -162,7 +163,6 @@ public class YarnLogUtil {
     switch(status){
       case RUNNING:
       case RUNNING_WITH_FAILURE:
-      case NOT_START:
         return false;
       default :
         return true;

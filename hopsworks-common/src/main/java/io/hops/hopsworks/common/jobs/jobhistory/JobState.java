@@ -113,8 +113,10 @@ public enum JobState {
   }
 
   public static Set<JobState> getRunningStates() {
+    
     return EnumSet.
-        of(INITIALIZING, RUNNING, ACCEPTED, NEW, NEW_SAVING, SUBMITTED, STARTING_APP_MASTER, AGGREGATING_LOGS);
+        of(INITIALIZING, NEW, NEW_SAVING, GENERATING_CERTS, SUBMITTED, ACCEPTED, STARTING_APP_MASTER, RUNNING,
+            AGGREGATING_LOGS);
   }
   
   public static Set<JobState> getFinalStates() {
