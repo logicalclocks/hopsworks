@@ -134,6 +134,7 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
     addToSparkEnvironment(sparkProps,"HOPSWORKS_USER", usersFullName, settings);
     addToSparkEnvironment(sparkProps,
       Settings.SPARK_PYSPARK_PYTHON, settings.getAnacondaProjectDir(project) + "/bin/python", settings);
+    addToSparkEnvironment(sparkProps, "HOPSWORKS_PROJECT_ID", Integer.toString(project.getId()), settings);
     //If DynamicExecutors are not enabled, set the user defined number
     //of executors
 
@@ -467,6 +468,7 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
     extraJavaOptions.put(Settings.SPARK_JAVA_LIBRARY_PROP, settings.getHadoopSymbolicLinkDir() + "/lib/native/");
     extraJavaOptions.put(Settings.HOPSWORKS_PROJECTUSER_PROPERTY, hdfsUser);
     extraJavaOptions.put(Settings.KAFKA_BROKERADDR_PROPERTY, settings.getKafkaBrokersStr());
+    extraJavaOptions.put(Settings.HOPSWORKS_JOBTYPE_PROPERTY, JobType.SPARK.name());
     if(jobConfiguration.getAppName() != null) {
       extraJavaOptions.put(Settings.HOPSWORKS_JOBNAME_PROPERTY, jobConfiguration.getAppName());
     }
