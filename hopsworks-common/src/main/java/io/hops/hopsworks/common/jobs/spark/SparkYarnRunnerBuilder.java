@@ -183,8 +183,6 @@ public class SparkYarnRunnerBuilder {
     extraJavaOptions.put(Settings.LOGSTASH_JOB_INFO,
             project.getName().toLowerCase() + "," + jobName + "," + job.getId() + ","
                     + YarnRunner.APPID_PLACEHOLDER);
-    extraJavaOptions.put(Settings.HOPSWORKS_JOBTYPE_PROPERTY, jobType.getName().toLowerCase());
-
     //Set up command
     StringBuilder amargs = new StringBuilder("--class ");
     amargs.append(((SparkJobConfiguration) job.getJobConfig()).

@@ -220,8 +220,6 @@ public class JupyterConfigFilesGenerator {
       extraJavaOptions.putAll(sparkConfigurationUtil.setJVMProperties(project, sparkJobConfiguration,
         settings, hdfsUser));
 
-      extraJavaOptions.put(Settings.HOPSWORKS_JOBTYPE_PROPERTY, "jupyter");
-
       StringBuilder extraJavaOptionsSb = new StringBuilder();
       for (String key : extraJavaOptions.keySet()) {
         extraJavaOptionsSb.append(" -D").append(key).append("=").append(extraJavaOptions.get(key));
