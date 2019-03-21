@@ -24,9 +24,8 @@ import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.project.util.DsUpdateOperations;
-import io.hops.hopsworks.common.dao.app.FeaturestoreJsonDTO;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
-import io.hops.hopsworks.common.dao.featurestore.FeaturegroupsAndTrainingDatasetsDTO;
+import io.hops.hopsworks.common.dao.featurestore.app.FeaturestoreMetadataDTO;
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
 import io.hops.hopsworks.common.dao.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.dao.featurestore.FeaturestoreDTO;
@@ -47,8 +46,8 @@ import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.ProjectException;
-import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -240,7 +239,7 @@ public class FeaturestoreService {
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Create feature group for a featurestore",
       response = FeaturegroupDTO.class,
       responseContainer = "List")
@@ -563,10 +562,10 @@ public class FeaturestoreService {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Delete featuregroup contents",
       response = FeaturegroupDTO.class)
-  public Response updateFeaturegroupMetadata(
+  public Response updateFeaturegroup(
       @Context SecurityContext sc,
       @ApiParam(value = "Id of the featurestore", required = true)
       @PathParam("featurestoreId") Integer featurestoreId,
@@ -608,7 +607,7 @@ public class FeaturestoreService {
    * Endpoint for getting a list of all training datasets in the feature store.
    *
    * @param featurestoreId id of the featurestore to query
-   * @return
+   * @return a JSON representation of the training datasets in the features store
    * @throws FeaturestoreException
    */
   @GET
@@ -642,7 +641,7 @@ public class FeaturestoreService {
    *
    * @param featurestoreId    id of the featurestorelinked to the training dataset
    * @param trainingdatasetid id of the training dataset to get
-   * @return
+   * @return return a JSON representation of the training dataset with the given id
    * @throws FeaturestoreException
    */
   @GET
@@ -692,7 +691,7 @@ public class FeaturestoreService {
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Create training dataset for a featurestore",
       response = TrainingDatasetDTO.class)
   public Response createTrainingDataset(
@@ -818,7 +817,7 @@ public class FeaturestoreService {
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Get a training datasets with a specific id from a featurestore",
       response = TrainingDatasetDTO.class)
   public Response updateTrainingDataset(
@@ -893,339 +892,37 @@ public class FeaturestoreService {
     }
   }
   
-    //******************************************************************************************************************
-    // Moved methods from applicationservice
-    //******************************************************************************************************************
-  
   /**
-   * Used by featurestore clients (hops-util-py and hops-util) from inside jobs or notebooks to
-   * get featurestore metadata
+   * Endpoint for getting all metadata for a feature store. This is a convenience endpoint only used by program-clients
+   * that needs feature store metadata for query planning. This endpoint means that the client do not have to do
+   * 3 requests to get all metadata (featurestore, featuregroups, training datasets)
    *
    * @param featurestoreName featurestoreName
-   * @return
+   * @return a JSON representation of the featurestore metadata
    * @throws FeaturestoreException
    */
   @GET
-  @Path("featurestore/{featurestoreName}")
+  @Path("/{featurestoreName}/metadata")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getFeaturestore(@PathParam("featurestoreName") String featurestoreName) throws FeaturestoreException {
-    //This call verifies that the project have access to the featurestoreId provided
+  @JWTRequired(acceptedTokens = {Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  public Response getFeaturestoreId(@PathParam("featurestoreName") String featurestoreName)
+    throws FeaturestoreException {
+    if (Strings.isNullOrEmpty(featurestoreName)) {
+      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_NAME_NOT_PROVIDED.getMessage());
+    }
     FeaturestoreDTO featurestoreDTO =
       featurestoreController.getFeaturestoreForProjectWithName(project, featurestoreName);
     Featurestore featurestore = featurestoreController.getFeaturestoreWithId(featurestoreDTO.getFeaturestoreId());
     List<FeaturegroupDTO> featuregroups = featuregroupController.getFeaturegroupsForFeaturestore(featurestore);
     List<TrainingDatasetDTO> trainingDatasets =
       trainingDatasetController.getTrainingDatasetsForFeaturestore(featurestore);
-    FeaturegroupsAndTrainingDatasetsDTO featuregroupsAndTrainingDatasetsDTO =
-      new FeaturegroupsAndTrainingDatasetsDTO(featuregroups, trainingDatasets);
-    GenericEntity<FeaturegroupsAndTrainingDatasetsDTO> fgAndTdGeneric =
-      new GenericEntity<FeaturegroupsAndTrainingDatasetsDTO>(featuregroupsAndTrainingDatasetsDTO) {};
+    FeaturestoreMetadataDTO featurestoreMetadataDTO =
+      new FeaturestoreMetadataDTO(featurestoreDTO, featuregroups, trainingDatasets);
+    GenericEntity<FeaturestoreMetadataDTO> featurestoreMetadataGeneric =
+      new GenericEntity<FeaturestoreMetadataDTO>(featurestoreMetadataDTO) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK)
-      .entity(fgAndTdGeneric)
-      .build();
-  }
-  
-  /**
-   * Used by featurestore clients (hops-util-py and hops-util) from inside jobs or notebooks to
-   * get all featurestores for a project
-   *
-   * @param sc
-   * @param featurestoreJsonDTO
-   * @return
-   */
-  @GET
-  @Path("featurestores")
-  @Produces(MediaType.APPLICATION_JSON)
-  @Consumes(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getFeaturestoresForProject(@Context SecurityContext sc,
-    FeaturestoreJsonDTO featurestoreJsonDTO) {
-    List<FeaturestoreDTO> featurestoreDTOS = featurestoreController.getFeaturestoresForProject(project);
-    GenericEntity<List<FeaturestoreDTO>> featuregroupsGeneric =
-      new GenericEntity<List<FeaturestoreDTO>>(featurestoreDTOS) {};
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK)
-      .entity(featuregroupsGeneric)
-      .build();
-  }
-  
-  /**
-   * Used by featurestore clients (hops-util-py and hops-util) from inside jobs or notebooks to
-   * clear featuregroup data (since ACID transactions are not supported on hops hive, to support "overwrite" mode
-   * we need to drop featuregroup table and recreate it with the same metadata
-   *
-   * @param sc
-   * @param featurestoreJsonDTO
-   * @return
-   * @throws FeaturestoreException
-   * @throws HopsSecurityException
-   */
-  @POST
-  @Path("featurestore/featuregroup/clear")
-  @Produces(MediaType.APPLICATION_JSON)
-  @Consumes(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response clearFeaturegroup(@Context SecurityContext sc,
-    FeaturestoreJsonDTO featurestoreJsonDTO)
-    throws FeaturestoreException, HopsSecurityException {
-    Users user = jWTHelper.getUserPrincipal(sc);
-    //This call verifies that the project have access to the featurestoreId provided
-    FeaturestoreDTO featurestoreDTO =
-      featurestoreController.getFeaturestoreForProjectWithName(project, featurestoreJsonDTO.getFeaturestoreName());
-    Featurestore featurestore = featurestoreController.getFeaturestoreWithId(featurestoreDTO.getFeaturestoreId());
-    FeaturegroupDTO featuregroupDTO =
-      featuregroupController.getFeaturegroupByFeaturestoreAndName(
-        project, featurestore, featurestoreJsonDTO.getName(),
-        featurestoreJsonDTO.getVersion());
-    Jobs job = null;
-    if (featuregroupDTO.getJobId() != null)
-      job = jobFacade.findByProjectAndId(project, featuregroupDTO.getJobId());
-    String featureStr = featurestoreUtil.makeCreateTableColumnsStr(featuregroupDTO.getFeatures());
-    try {
-      featuregroupController.deleteFeaturegroupWithIdAndFeaturestore(
-        featurestore, featuregroupDTO.getId(), project, user);
-    } catch (IOException | SQLException e) {
-      LOGGER.log(Level.SEVERE, RESTCodes.FeaturestoreErrorCode.COULD_NOT_DELETE_FEATUREGROUP.getMessage(), e);
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_DELETE_FEATUREGROUP, Level.SEVERE,
-        "project: " + project.getName() + ", featurestoreId: " + featurestore.getId() +
-          ", featuregroupId: " + featuregroupDTO.getId(), e.getMessage(), e);
-    }
-    try {
-      List<String> dependencies = featuregroupDTO.getDependencies().stream().map(d ->
-        d.getPath()).collect(Collectors.toList());
-      FeaturegroupDTO newFeaturegroupDTO = featuregroupController.createFeaturegroup(project, user, featurestore,
-        featuregroupDTO.getName(), featureStr, featuregroupDTO.getDescription(),
-        dependencies,
-        job, featuregroupDTO.getVersion(), featuregroupDTO.getFeatureCorrelationMatrix(),
-        featuregroupDTO.getDescriptiveStatistics(), featuregroupDTO.getFeaturesHistogram(),
-        featuregroupDTO.getClusterAnalysis());
-      GenericEntity<FeaturegroupDTO> featuregroupGeneric =
-        new GenericEntity<FeaturegroupDTO>(newFeaturegroupDTO) {};
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featuregroupGeneric).build();
-    } catch (IOException | SQLException e) {
-      LOGGER.log(Level.SEVERE, RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATUREGROUP.getMessage(), e);
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATUREGROUP, Level.SEVERE,
-        "project: " + project.getName() + ", featurestoreId: " + featurestore.getId() +
-          ", featuregroupId: " + featuregroupDTO.getId(), e.getMessage(), e);
-    }
-  }
-  
-  /**
-   * Used by featurestore clients (hops-util-py and hops-util) from inside jobs or notebooks to create new
-   * featuregroups
-   *
-   * @param sc
-   * @param featurestoreJsonDTO
-   * @return
-   * @throws FeaturestoreException
-   * @throws HopsSecurityException
-   */
-  @POST
-  @Path("featurestore/featuregroups")
-  @Produces(MediaType.APPLICATION_JSON)
-  @Consumes(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response createFeaturegroup(@Context SecurityContext sc,
-    FeaturestoreJsonDTO featurestoreJsonDTO) throws FeaturestoreException, HopsSecurityException {
-    if (featurestoreJsonDTO.getFeatureCorrelationMatrix() != null &&
-      featurestoreJsonDTO.getFeatureCorrelationMatrix().getFeatureCorrelations().size() > 50) {
-      throw new IllegalArgumentException(
-        RESTCodes.FeaturestoreErrorCode.CORRELATION_MATRIX_EXCEED_MAX_SIZE.getMessage());
-    }
-    Users user = jWTHelper.getUserPrincipal(sc);
-    //This call verifies that the project have access to the featurestoreId provided
-    FeaturestoreDTO featurestoreDTO =
-      featurestoreController.getFeaturestoreForProjectWithName(project, featurestoreJsonDTO.getFeaturestoreName());
-    Featurestore featurestore = featurestoreController.getFeaturestoreWithId(featurestoreDTO.getFeaturestoreId());
-    Jobs job = null;
-    if(featurestoreJsonDTO.getJobName() != null && !featurestoreJsonDTO.getJobName().isEmpty())
-      job = jobFacade.findByProjectAndName(project, featurestoreJsonDTO.getJobName());
-    String featureStr = featurestoreUtil.makeCreateTableColumnsStr(featurestoreJsonDTO.getFeatures());
-    try {
-      featuregroupController.dropFeaturegroup(featurestoreJsonDTO.getName(),
-        featurestoreJsonDTO.getVersion(), project, user, featurestore);
-      FeaturegroupDTO featuregroupDTO = featuregroupController.createFeaturegroup(project, user, featurestore,
-        featurestoreJsonDTO.getName(), featureStr, featurestoreJsonDTO.getDescription(),
-        featurestoreJsonDTO.getDependencies(), job, featurestoreJsonDTO.getVersion(),
-        featurestoreJsonDTO.getFeatureCorrelationMatrix(), featurestoreJsonDTO.getDescriptiveStatistics(),
-        featurestoreJsonDTO.getFeaturesHistogram(), featurestoreJsonDTO.getClusterAnalysis());
-      activityFacade.persistActivity(ActivityFacade.CREATED_FEATUREGROUP + featuregroupDTO.getName(),
-        project, user, ActivityFacade.ActivityFlag.SERVICE);
-      GenericEntity<FeaturegroupDTO> featuregroupGeneric =
-        new GenericEntity<FeaturegroupDTO>(featuregroupDTO) {};
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).entity(featuregroupGeneric).build();
-    } catch (IOException | SQLException e) {
-      LOGGER.log(Level.SEVERE, RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATUREGROUP.getMessage(), e);
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATUREGROUP, Level.SEVERE,
-        "project: " + project.getName() + ", featurestoreId: " + featurestoreDTO.getFeaturestoreId(),
-        e.getMessage(), e);
-    }
-  }
-  
-  /**
-   * Used by featurestore clients (hops-util-py and hops-util) from inside jobs or notebooks to update featuregroups
-   *
-   * @param sc
-   * @param featurestoreJsonDTO
-   * @return
-   * @throws FeaturestoreException
-   */
-  @PUT
-  @Path("featurestore/featuregroup")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response updateFeaturegroupMetadata(@Context SecurityContext sc,
-    FeaturestoreJsonDTO featurestoreJsonDTO) throws FeaturestoreException {
-    if (featurestoreJsonDTO.isUpdateStats() &&
-      featurestoreJsonDTO.getFeatureCorrelationMatrix() != null &&
-      featurestoreJsonDTO.getFeatureCorrelationMatrix().getFeatureCorrelations().size() > 50) {
-      throw new IllegalArgumentException(
-        RESTCodes.FeaturestoreErrorCode.CORRELATION_MATRIX_EXCEED_MAX_SIZE.getMessage());
-    }
-    Users user = jWTHelper.getUserPrincipal(sc);
-    //This call verifies that the project have access to the featurestoreId provided
-    FeaturestoreDTO featurestoreDTO =
-      featurestoreController.getFeaturestoreForProjectWithName(project, featurestoreJsonDTO.getFeaturestoreName());
-    Featurestore featurestore = featurestoreController.getFeaturestoreWithId(featurestoreDTO.getFeaturestoreId());
-    FeaturegroupDTO featuregroupDTO =
-      featuregroupController.getFeaturegroupByFeaturestoreAndName(
-        project, featurestore, featurestoreJsonDTO.getName(),
-        featurestoreJsonDTO.getVersion());
-    Jobs job = null;
-    if(featurestoreJsonDTO.getJobName() != null && !featurestoreJsonDTO.getJobName().isEmpty())
-      job = jobFacade.findByProjectAndName(project, featurestoreJsonDTO.getJobName());
-    FeaturegroupDTO updatedFeaturegroupDTO = featuregroupController.updateFeaturegroupMetadata(
-      featurestore, featuregroupDTO.getId(), job, featurestoreJsonDTO.getDependencies(),
-      featurestoreJsonDTO.getFeatureCorrelationMatrix(), featurestoreJsonDTO.getDescriptiveStatistics(),
-      featurestoreJsonDTO.isUpdateMetadata(), featurestoreJsonDTO.isUpdateStats(),
-      featurestoreJsonDTO.getFeaturesHistogram(), featurestoreJsonDTO.getClusterAnalysis());
-    activityFacade.persistActivity(ActivityFacade.EDITED_FEATUREGROUP + updatedFeaturegroupDTO.getName(), project,
-      user, ActivityFacade.ActivityFlag.SERVICE);
-    GenericEntity<FeaturegroupDTO> featuregroupGeneric =
-      new GenericEntity<FeaturegroupDTO>(updatedFeaturegroupDTO) {};
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featuregroupGeneric).build();
-  }
-  
-  /**
-   * Used by featurestore clients (hops-util-py and hops-util) from inside jobs or notebooks to
-   * create new training datasets
-   *
-   * @param sc
-   * @param featurestoreJsonDTO
-   * @return
-   * @throws FeaturestoreException
-   */
-  @POST
-  @Path("featurestore/trainingdatasets")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getTrainingDatasets(
-    @Context SecurityContext sc,
-    FeaturestoreJsonDTO featurestoreJsonDTO)
-    throws FeaturestoreException, DatasetException, HopsSecurityException, ProjectException {
-    if (featurestoreJsonDTO.getFeatureCorrelationMatrix() != null &&
-      featurestoreJsonDTO.getFeatureCorrelationMatrix().getFeatureCorrelations().size() > 50) {
-      throw new IllegalArgumentException(
-        RESTCodes.FeaturestoreErrorCode.CORRELATION_MATRIX_EXCEED_MAX_SIZE.getMessage());
-    }
-    Users user = jWTHelper.getUserPrincipal(sc);
-    //This call verifies that the project have access to the featurestoreId provided
-    FeaturestoreDTO featurestoreDTO =
-      featurestoreController.getFeaturestoreForProjectWithName(project, featurestoreJsonDTO.getFeaturestoreName());
-    Featurestore featurestore = featurestoreController.getFeaturestoreWithId(featurestoreDTO.getFeaturestoreId());
-    
-    Jobs job = null;
-    if(featurestoreJsonDTO.getJobName() != null && !featurestoreJsonDTO.getJobName().isEmpty())
-      job = jobFacade.findByProjectAndName(project, featurestoreJsonDTO.getJobName());
-    Dataset trainingDatasetsFolder = featurestoreUtil.getTrainingDatasetFolder(featurestore.getProject());
-    String trainingDatasetDirectoryName = featurestoreUtil.getTrainingDatasetPath(
-      inodeFacade.getPath(trainingDatasetsFolder.getInode()),
-      featurestoreJsonDTO.getName(), featurestoreJsonDTO.getVersion());
-    org.apache.hadoop.fs.Path fullPath = null;
-    try {
-      fullPath =
-        dsUpdateOperations.createDirectoryInDataset(project, user, trainingDatasetDirectoryName,
-          featurestoreJsonDTO.getDescription(),
-          -1, true);
-    } catch (DatasetException e) {
-      if (e.getErrorCode() == RESTCodes.DatasetErrorCode.DATASET_SUBDIR_ALREADY_EXISTS) {
-        dsUpdateOperations.deleteDatasetFile(project, user, trainingDatasetDirectoryName);
-        fullPath =
-          dsUpdateOperations.createDirectoryInDataset(project, user, trainingDatasetDirectoryName,
-            featurestoreJsonDTO.getDescription(),
-            -1, true);
-      } else {
-        throw e;
-      }
-    }
-    Inode inode = inodeFacade.getInodeAtPath(fullPath.toString());
-    TrainingDatasetDTO trainingDatasetDTO =
-      trainingDatasetController.createTrainingDataset(project, user, featurestore,
-        featurestoreJsonDTO.getDependencies(), job, featurestoreJsonDTO.getVersion(),
-        featurestoreJsonDTO.getDataFormat(), inode, trainingDatasetsFolder,
-        featurestoreJsonDTO.getDescription(), featurestoreJsonDTO.getFeatureCorrelationMatrix(),
-        featurestoreJsonDTO.getDescriptiveStatistics(), featurestoreJsonDTO.getFeaturesHistogram(),
-        featurestoreJsonDTO.getFeatures(), featurestoreJsonDTO.getClusterAnalysis());
-    activityFacade.persistActivity(ActivityFacade.CREATED_TRAINING_DATASET + trainingDatasetDTO.getName(), project,
-      user, ActivityFacade.ActivityFlag.SERVICE);
-    GenericEntity<TrainingDatasetDTO> trainingDatasetDTOGeneric =
-      new GenericEntity<TrainingDatasetDTO>(trainingDatasetDTO) {};
-    return noCacheResponse.getNoCacheResponseBuilder
-      (Response.Status.CREATED).entity(trainingDatasetDTOGeneric).build();
-  }
-  
-  /**
-   * Used by featurestore clients (hops-util-py and hops-util) from inside jobs or notebooks to update training
-   * datasets
-   *
-   * @param sc
-   * @param featurestoreJsonDTO
-   * @return
-   * @throws FeaturestoreException
-   */
-  @PUT
-  @Path("featurestore/trainingdataset")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response updateTrainingDatasetMetadata(@Context SecurityContext sc,
-    FeaturestoreJsonDTO featurestoreJsonDTO)throws FeaturestoreException {
-    if (featurestoreJsonDTO.isUpdateStats() &&
-      featurestoreJsonDTO.getFeatureCorrelationMatrix() != null &&
-      featurestoreJsonDTO.getFeatureCorrelationMatrix().getFeatureCorrelations().size() > 50) {
-      throw new IllegalArgumentException(
-        RESTCodes.FeaturestoreErrorCode.CORRELATION_MATRIX_EXCEED_MAX_SIZE.getMessage());
-    }
-    Users user = jWTHelper.getUserPrincipal(sc);
-    //This call verifies that the project have access to the featurestoreId provided
-    FeaturestoreDTO featurestoreDTO =
-      featurestoreController.getFeaturestoreForProjectWithName(project, featurestoreJsonDTO.getFeaturestoreName());
-    Featurestore featurestore = featurestoreController.getFeaturestoreWithId(featurestoreDTO.getFeaturestoreId());
-    TrainingDatasetDTO trainingDatasetDTO = trainingDatasetController.getTrainingDatasetByFeaturestoreAndName(
-      project, featurestore, featurestoreJsonDTO.getName(), featurestoreJsonDTO.getVersion()
-    );
-    Jobs job = null;
-    if(featurestoreJsonDTO.getJobName() != null && !featurestoreJsonDTO.getJobName().isEmpty())
-      job = jobFacade.findByProjectAndName(project, featurestoreJsonDTO.getJobName());
-    TrainingDatasetDTO updatedTrainingDataset = trainingDatasetController.updateTrainingDataset(
-      featurestore, trainingDatasetDTO.getId(), job, featurestoreJsonDTO.getDependencies(),
-      featurestoreJsonDTO.getDataFormat(), featurestoreJsonDTO.getDescription(),
-      featurestoreJsonDTO.getFeatureCorrelationMatrix(), featurestoreJsonDTO.getDescriptiveStatistics(),
-      featurestoreJsonDTO.getFeaturesHistogram(), featurestoreJsonDTO.getFeatures(),
-      featurestoreJsonDTO.isUpdateMetadata(), featurestoreJsonDTO.isUpdateStats(),
-      featurestoreJsonDTO.getClusterAnalysis());
-    activityFacade.persistActivity(ActivityFacade.EDITED_TRAINING_DATASET + updatedTrainingDataset.getName(),
-      project, user, ActivityFacade.ActivityFlag.SERVICE);
-    GenericEntity<TrainingDatasetDTO> trainingDatasetGeneric =
-      new GenericEntity<TrainingDatasetDTO>(updatedTrainingDataset) {};
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK)
-      .entity(trainingDatasetGeneric)
+      .entity(featurestoreMetadataGeneric)
       .build();
   }
     

@@ -133,7 +133,7 @@ angular.module('hopsWorksApp')
                     "version": 1,
                     "description": self.trainingDatasetDescription,
                     "dataFormat": self.trainingDatasetFormat,
-                    "featureCorrelationMatrixBase64": null,
+                    "featureCorrelationMatrix": null,
                     "descriptiveStatistics": null,
                     "featuresHistogram": null,
                     "features": []
