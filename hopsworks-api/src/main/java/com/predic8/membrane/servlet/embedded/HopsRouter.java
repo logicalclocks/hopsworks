@@ -33,20 +33,12 @@ import java.net.URI;
 
 public class HopsRouter extends Router {
 
-  public HopsRouter() throws Exception {
-    this(null);
-  }
-
   public HopsRouter(URI targetUri) throws Exception {
     this.exchangeStore = new LimitedMemoryExchangeStore();
     transport = createTransport(targetUri);
   }
 
-  /**
-   * Same as the default config from monitor-beans.xml
-   */
   private Transport createTransport(URI targetUri) throws Exception {
-//		Transport transport = new ServletTransport();
     Transport transport = new HopsTransport(targetUri);
     List<Interceptor> interceptors = new ArrayList<>();
     interceptors.add(new RuleMatchingInterceptor());
@@ -67,10 +59,4 @@ public class HopsRouter extends Router {
   public HopsTransport getTransport() {
     return (HopsTransport) transport;
   }
-
-  public void addUserFeatureInterceptor(Interceptor i) {
-    List<Interceptor> is = getTransport().getInterceptors();
-    is.add(is.size() - 2, i);
-  }
-
 }
