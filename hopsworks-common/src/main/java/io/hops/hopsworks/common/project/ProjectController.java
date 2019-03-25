@@ -47,8 +47,8 @@ import io.hops.hopsworks.common.dao.dataset.DatasetType;
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
 import io.hops.hopsworks.common.dao.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.FeaturegroupController;
-import io.hops.hopsworks.common.dao.hdfs.HdfsInodeAttributes;
-import io.hops.hopsworks.common.dao.hdfs.HdfsInodeAttributesFacade;
+import io.hops.hopsworks.common.dao.hdfs.HdfsDirectoryWithQuotaFeature;
+import io.hops.hopsworks.common.dao.hdfs.HdfsDirectoryWithQuotaFeatureFacade;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeView;
@@ -232,7 +232,7 @@ public class ProjectController {
   @EJB
   private MessageController messageController;
   @EJB
-  private HdfsInodeAttributesFacade hdfsInodeAttributesFacade;
+  private HdfsDirectoryWithQuotaFeatureFacade hdfsDirectoryWithQuotaFeatureFacade;
   @EJB
   private FeaturestoreController featurestoreController;
   @Inject
@@ -1934,8 +1934,8 @@ public class ProjectController {
     }
 
     // HDFS project directory quota
-    HdfsInodeAttributes projectInodeAttrs = hdfsInodeAttributesFacade.
-        getInodeAttributes(project.getInode().getId());
+    HdfsDirectoryWithQuotaFeature projectInodeAttrs = hdfsDirectoryWithQuotaFeatureFacade.
+      getByInodeId(project.getInode().getId());
     if (projectInodeAttrs == null) {
       LOGGER.log(Level.SEVERE, "Cannot find HDFS quota information for project: " + project.getName());
     } else {
@@ -1950,7 +1950,8 @@ public class ProjectController {
       List<Dataset> datasets = (List<Dataset>) project.getDatasetCollection();
       for (Dataset ds : datasets) {
         if (ds.getType() == DatasetType.HIVEDB) {
-          HdfsInodeAttributes dbInodeAttrs = hdfsInodeAttributesFacade.getInodeAttributes(ds.getInodeId());
+          HdfsDirectoryWithQuotaFeature dbInodeAttrs = hdfsDirectoryWithQuotaFeatureFacade
+            .getByInodeId(ds.getInodeId());
           if (dbInodeAttrs == null) {
             LOGGER.log(Level.SEVERE, "Cannot find HiveDB quota information for project: " + project.getName());
           } else {
@@ -1968,7 +1969,8 @@ public class ProjectController {
       List<Dataset> datasets = (List<Dataset>) project.getDatasetCollection();
       for (Dataset ds : datasets) {
         if (ds.getType() == DatasetType.FEATURESTORE) {
-          HdfsInodeAttributes dbInodeAttrs = hdfsInodeAttributesFacade.getInodeAttributes(ds.getInodeId());
+          HdfsDirectoryWithQuotaFeature dbInodeAttrs = hdfsDirectoryWithQuotaFeatureFacade
+            .getByInodeId(ds.getInodeId());
           if (dbInodeAttrs == null) {
             LOGGER.log(Level.SEVERE, "Cannot find FeaturestoreDb quota information for project: " + project.getName());
           } else {

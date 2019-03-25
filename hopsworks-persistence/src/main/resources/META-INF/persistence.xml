@@ -42,7 +42,7 @@
   <persistence-unit name="kthfsPU" transaction-type="JTA">
     <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
     <jta-data-source>jdbc/hopsworks</jta-data-source>
-    <class>io.hops.hopsworks.common.dao.hdfs.HdfsInodeAttributes</class>
+    <class>io.hops.hopsworks.common.dao.hdfs.HdfsDirectoryWithQuotaFeature</class>
     <class>io.hops.hopsworks.common.dao.hdfs.HdfsLeDescriptors</class>
     <class>io.hops.hopsworks.common.dao.hdfsUser.HdfsGroups</class>
     <class>io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers</class>
