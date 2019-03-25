@@ -133,7 +133,7 @@ public class WebSocketEndpoint {
 
   @OnClose
   public void onClose(Session session) {
-    logger.log(Level.INFO,
+    logger.log(Level.FINEST,
             "HOPSWORKS: USER {0} SESSION DESTROYED sessions {1}",
             new Object[]{this.sender, session.getOpenSessions().size()});
     Message message = new TextMessage(this.sender, " Left");
