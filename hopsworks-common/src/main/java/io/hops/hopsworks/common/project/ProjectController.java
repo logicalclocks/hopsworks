@@ -148,7 +148,6 @@ import javax.ejb.TransactionAttributeType;
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
-import javax.mail.Message;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSession;
 import javax.ws.rs.client.Client;
@@ -268,8 +267,6 @@ public class ProjectController {
   protected ExecutionController executionController;
   @EJB
   protected FeaturegroupController featuregroupController;
-  @EJB
-  private EmailBean emailBean;
   @EJB
   private JupyterController jupyterController;
   @EJB
