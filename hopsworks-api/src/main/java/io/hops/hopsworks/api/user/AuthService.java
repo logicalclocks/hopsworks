@@ -145,10 +145,6 @@ public class AuthService {
       @FormParam("otp") String otp, @Context HttpServletRequest req) throws UserException, SigningKeyNotFoundException,
       NoSuchAlgorithmException, LoginException, DuplicateSigningKeyException {
 
-    if (LOGGER.isLoggable(Level.FINEST)) {
-      logUserLogin(req);
-    }
-
     if (email == null || email.isEmpty()) {
       throw new IllegalArgumentException("Email was not provided");
     }
@@ -162,10 +158,18 @@ public class AuthService {
     if (!needLogin(req, user)) {
       return Response.ok().build();
     }
+
     // Do pre cauth realm check
     String passwordWithSaltPlusOtp = authController.preCustomRealmLoginCheck(user, password, otp, req);
 
-    return login(user, passwordWithSaltPlusOtp, req);
+    // Do login
+    Response response = login(user, passwordWithSaltPlusOtp, req);
+
+    if (LOGGER.isLoggable(Level.FINEST)) {
+      logUserLogin(req);
+    }
+
+    return response;
   }
 
   @GET
@@ -280,6 +284,8 @@ public class AuthService {
 
     statusValidator.checkStatus(user.getStatus());
     try {
+      // A session needs to be create explicitly before doing to the login operation
+      req.getSession();
       req.login(user.getEmail(), password);
       authController.registerLogin(user, req);
     } catch (ServletException e) {
