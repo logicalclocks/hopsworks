@@ -159,6 +159,9 @@ public class AuthService {
       return Response.ok().build();
     }
 
+    // A session needs to be create explicitly before doing to the login operation
+    req.getSession();
+
     // Do pre cauth realm check
     String passwordWithSaltPlusOtp = authController.preCustomRealmLoginCheck(user, password, otp, req);
 
@@ -284,8 +287,6 @@ public class AuthService {
 
     statusValidator.checkStatus(user.getStatus());
     try {
-      // A session needs to be create explicitly before doing to the login operation
-      req.getSession();
       req.login(user.getEmail(), password);
       authController.registerLogin(user, req);
     } catch (ServletException e) {
