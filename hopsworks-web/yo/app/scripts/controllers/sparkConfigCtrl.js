@@ -52,7 +52,7 @@ angular.module('hopsWorksApp')
             });
 
             $scope.$watch('settings', function(settings, oldSettings) {
-              self.settings = {advanced: true};
+              self.settings = settings;
             });
 
             self.setConf = function() {
@@ -134,7 +134,7 @@ angular.module('hopsWorksApp')
                     self.jobConfig['spark.dynamicAllocation.minExecutors'] = 0;
                 }
 
-                if (mode === 'EXPERIMENT' || (self.jobConfig.distributionStrategy === 'MIRRORED' && mode === 'DISTRIBUTED_TRAINING')) {
+                if (mode === 'EXPERIMENT') {
                     self.jobConfig['spark.dynamicAllocation.initialExecutors'] = 0;
                     self.jobConfig['spark.dynamicAllocation.minExecutors'] = 0;
                     self.jobConfig['spark.dynamicAllocation.maxExecutors'] = 1;
