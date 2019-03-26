@@ -58,9 +58,14 @@ describe "On #{ENV['OS']}" do
           check_project_limit
         end
         it 'should work with valid params' do
-          post "#{ENV['HOPSWORKS_API']}/project", {projectName: "project_#{Time.now.to_i}", description: "", status: 0, services: ["JOBS","HIVE"], projectTeam:[], retentionPeriod: ""}
+          projectname = "project_#{Time.now.to_i}"
+          post "#{ENV['HOPSWORKS_API']}/project", {projectName: "#{projectname}", description: "", status: 0, services: ["JOBS","HIVE"], projectTeam:[], retentionPeriod: ""}
           expect_json(successMessage: regex("Project created successfully.*"))
           expect_status(201)
+          get "#{ENV['HOPSWORKS_API']}/project/getProjectInfo/#{projectname}"
+          project_id = json_body[:projectId]
+          get "#{ENV['HOPSWORKS_API']}/project/#{project_id}"
+          expect_status(200)
         end
         it 'should create resources and logs datasets with right permissions and owner' do
           projectname = "project_#{Time.now.to_i}"

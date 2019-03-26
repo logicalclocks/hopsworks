@@ -50,9 +50,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Stateless
-public class HdfsInodeAttributesFacade extends AbstractFacade<HdfsInodeAttributes> {
+public class HdfsDirectoryWithQuotaFeatureFacade extends AbstractFacade<HdfsDirectoryWithQuotaFeature> {
 
-  private final static Logger logger = Logger.getLogger(HdfsInodeAttributes.class.getName());
+  private final static Logger logger = Logger.getLogger(HdfsDirectoryWithQuotaFeature.class.getName());
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
@@ -62,11 +62,11 @@ public class HdfsInodeAttributesFacade extends AbstractFacade<HdfsInodeAttribute
     return em;
   }
 
-  public HdfsInodeAttributesFacade() { super(HdfsInodeAttributes.class); }
+  public HdfsDirectoryWithQuotaFeatureFacade() { super(HdfsDirectoryWithQuotaFeature.class); }
 
-  public HdfsInodeAttributes getInodeAttributes(Long inodeId) {
-    TypedQuery<HdfsInodeAttributes> query = em.createNamedQuery(
-        "HdfsInodeAttributes.findByInodeId", HdfsInodeAttributes.class)
+  public HdfsDirectoryWithQuotaFeature getByInodeId(Long inodeId) {
+    TypedQuery<HdfsDirectoryWithQuotaFeature> query = em.createNamedQuery(
+        "HdfsDirectoryWithQuotaFeature.findByInodeId", HdfsDirectoryWithQuotaFeature.class)
         .setParameter("inodeId", inodeId);
     try {
       return query.getSingleResult();
