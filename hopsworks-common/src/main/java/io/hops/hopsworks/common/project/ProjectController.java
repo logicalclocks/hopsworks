@@ -39,6 +39,7 @@
 
 package io.hops.hopsworks.common.project;
 
+import io.hops.hopsworks.common.airflow.AirflowManager;
 import io.hops.hopsworks.common.constants.auth.AllowedRoles;
 import io.hops.hopsworks.common.dao.certificates.CertsFacade;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
@@ -256,6 +257,8 @@ public class ProjectController {
   private JupyterController jupyterController;
   @EJB
   private JupyterFacade jupyterFacade;
+  @EJB
+  private AirflowManager airflowManager;
 
 
   /**
@@ -973,7 +976,7 @@ public class ProjectController {
       yarnClientWrapper = ycs.getYarnClientSuper(settings.getConfiguration());
       Project project = projectFacade.findByName(projectName);
       if (project != null) {
-        cleanupLogger.logSuccess("Project not found in the database");
+        cleanupLogger.logSuccess("Project found in the database");
 
         // Run custom handler for project deletion
         for (ProjectHandler projectHandler : projectHandlers) {
@@ -1166,6 +1169,24 @@ public class ProjectController {
           cleanupLogger.logError(ex.getMessage());
         }
 
+        // Remove project DAGs, JWT monitors and free X.509 certificates
+        try {
+          airflowManager.onProjectRemoval(project);
+          cleanupLogger.logSuccess("Removed Airflow DAGs and security references");
+        } catch (Exception ex) {
+          cleanupLogger.logError("Error while cleaning Airflow DAGs and security references");
+          cleanupLogger.logError(ex.getMessage());
+        }
+  
+        try {
+          removeCertificatesFromMaterializer(project);
+          cleanupLogger.logSuccess("Removed all X.509 certificates related to the Project from " +
+              "CertificateMaterializer");
+        } catch (Exception ex) {
+          cleanupLogger.logError("Error while force removing Project certificates from CertificateMaterializer");
+          cleanupLogger.logError(ex.getMessage());
+        }
+        
         // remove dumy Inode
         try {
           dfso.rm(dummy, true);
@@ -1183,7 +1204,7 @@ public class ProjectController {
           cleanupLogger.logError("Error when removing root Project dir during project cleanup");
           cleanupLogger.logError(ex.getMessage());
         }
-
+        
         // Run custom handler for project deletion
         for (ProjectHandler projectHandler : projectHandlers) {
           try {
@@ -1252,7 +1273,7 @@ public class ProjectController {
 
         // Remove ElasticSearch index
         try {
-          removeElasticsearch(project);
+          removeElasticsearch(toDeleteProject);
           cleanupLogger.logSuccess("Removed ElasticSearch");
         } catch (Exception ex) {
           cleanupLogger.logError(ex.getMessage());
@@ -1275,6 +1296,36 @@ public class ProjectController {
           cleanupLogger.logError(ex.getMessage());
         }
 
+        
+        List<ProjectTeam> reconstructedProjectTeam = new ArrayList<>();
+        try {
+          for (HdfsUsers hdfsUser : hdfsUsersController.getAllProjectHdfsUsers(projectName)) {
+            Users foundUser = userFacade.findByUsername(hdfsUser.getUsername());
+            if (foundUser != null) {
+              reconstructedProjectTeam.add(new ProjectTeam(toDeleteProject, foundUser));
+            }
+          }
+        } catch (Exception ex) {
+          // NOOP
+        }
+        toDeleteProject.setProjectTeamCollection(reconstructedProjectTeam);
+        
+        try {
+          airflowManager.onProjectRemoval(toDeleteProject);
+          cleanupLogger.logSuccess("Removed Airflow DAGs and security references");
+        } catch (Exception ex) {
+          cleanupLogger.logError("Failed to remove Airflow DAGs and security references");
+          cleanupLogger.logError(ex.getMessage());
+        }
+        
+        try {
+          removeCertificatesFromMaterializer(toDeleteProject);
+          cleanupLogger.logSuccess("Freed all x.509 references from CertificateMaterializer");
+        } catch (Exception ex) {
+          cleanupLogger.logError("Failed to free all X.509 references from CertificateMaterializer");
+          cleanupLogger.logError(ex.getMessage());
+        }
+        
         // Remove Certificates
         try {
           certificatesController.revokeProjectCertificates(project);
@@ -1304,7 +1355,10 @@ public class ProjectController {
       dfs.closeDfsClient(dfso);
       ycs.closeYarnClient(yarnClientWrapper);
       LOGGER.log(Level.INFO, cleanupLogger.getSuccessLog().toString());
-      LOGGER.log(Level.SEVERE, cleanupLogger.getErrorLog().toString());
+      String errorLog = cleanupLogger.getErrorLog().toString();
+      if (!errorLog.isEmpty()) {
+        LOGGER.log(Level.SEVERE, errorLog);
+      }
       sendInbox(cleanupLogger.getSuccessLog().append("\n")
           .append(cleanupLogger.getErrorLog()).append("\n").toString(), userEmail);
     }
@@ -1383,10 +1437,9 @@ public class ProjectController {
    * to be on the safe side force remove them too
    *
    * @param project Project to be deleted
-   * @param teams Members of the project
    */
-  private void removeCertificatesFromMaterializer(Project project, Collection<ProjectTeam> teams) {
-    for (ProjectTeam team : teams) {
+  private void removeCertificatesFromMaterializer(Project project) {
+    for (ProjectTeam team : project.getProjectTeamCollection()) {
       certificateMaterializer.forceRemoveLocalMaterial(team.getUser().getUsername(), project.getName(), null, true);
       String remoteCertsDirectory = settings.getHdfsTmpCertDir() + Path.SEPARATOR +
           hdfsUsersController.getHdfsUserName(project, team.getUser());
@@ -1472,7 +1525,7 @@ public class ProjectController {
         List<HdfsGroups> groupsToClean = getGroupsToClean(project);
         removeProjectInt(project, usersToClean, groupsToClean, projectCreationFutures, decreaseCreatedProj);
         
-        removeCertificatesFromMaterializer(project, team);
+        removeCertificatesFromMaterializer(project);
         break;
       } catch (Exception ex) {
         nbTry++;
@@ -1584,6 +1637,10 @@ public class ProjectController {
         throw new IOException(e);
       }
 
+      // Remove Airflow DAGs from local filesystem,
+      // JWT renewal monitors and materialized X.509
+      airflowManager.onProjectRemoval(project);
+      
       //remove folder
       removeProjectFolder(project.getName(), dfso);
 
