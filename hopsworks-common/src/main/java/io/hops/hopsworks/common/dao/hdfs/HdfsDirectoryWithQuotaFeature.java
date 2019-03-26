@@ -52,27 +52,27 @@ import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @Entity
-@Table(name = "hops.hdfs_inode_attributes")
+@Table(name = "hops.hdfs_directory_with_quota_feature")
 @XmlRootElement
 @NamedQueries({
-  @NamedQuery(name = "HdfsInodeAttributes.findAll",
-          query = "SELECT h FROM HdfsInodeAttributes h"),
-  @NamedQuery(name = "HdfsInodeAttributes.findByInodeId",
+  @NamedQuery(name = "HdfsDirectoryWithQuotaFeature.findAll",
+          query = "SELECT h FROM HdfsDirectoryWithQuotaFeature h"),
+  @NamedQuery(name = "HdfsDirectoryWithQuotaFeature.findByInodeId",
           query
-          = "SELECT h FROM HdfsInodeAttributes h WHERE h.inodeId = :inodeId"),
-  @NamedQuery(name = "HdfsInodeAttributes.findByNsquota",
+          = "SELECT h FROM HdfsDirectoryWithQuotaFeature h WHERE h.inodeId = :inodeId"),
+  @NamedQuery(name = "HdfsDirectoryWithQuotaFeature.findByNsquota",
           query
-          = "SELECT h FROM HdfsInodeAttributes h WHERE h.nsquota = :nsquota"),
-  @NamedQuery(name = "HdfsInodeAttributes.findByDsquota",
+          = "SELECT h FROM HdfsDirectoryWithQuotaFeature h WHERE h.nsquota = :nsquota"),
+  @NamedQuery(name = "HdfsDirectoryWithQuotaFeature.findByDsquota",
           query
-          = "SELECT h FROM HdfsInodeAttributes h WHERE h.dsquota = :dsquota"),
-  @NamedQuery(name = "HdfsInodeAttributes.findByNscount",
+          = "SELECT h FROM HdfsDirectoryWithQuotaFeature h WHERE h.dsquota = :dsquota"),
+  @NamedQuery(name = "HdfsDirectoryWithQuotaFeature.findByNscount",
           query
-          = "SELECT h FROM HdfsInodeAttributes h WHERE h.nscount = :nscount"),
-  @NamedQuery(name = "HdfsInodeAttributes.findByDiskspace",
+          = "SELECT h FROM HdfsDirectoryWithQuotaFeature h WHERE h.nscount = :nscount"),
+  @NamedQuery(name = "HdfsDirectoryWithQuotaFeature.findByDiskspace",
           query
-          = "SELECT h FROM HdfsInodeAttributes h WHERE h.diskspace = :diskspace")})
-public class HdfsInodeAttributes implements Serializable {
+          = "SELECT h FROM HdfsDirectoryWithQuotaFeature h WHERE h.diskspace = :diskspace")})
+public class HdfsDirectoryWithQuotaFeature implements Serializable {
 
   private static final long serialVersionUID = 1L;
   private static final long MB = 1024l * 1024l;
@@ -90,11 +90,27 @@ public class HdfsInodeAttributes implements Serializable {
   private BigInteger nscount;
   @Column(name = "diskspace")
   private BigInteger diskspace;
+  @Column(name = "typespace_quota_disk")
+  private BigInteger typespaceQuotaDisk = BigInteger.valueOf(-1);
+  @Column(name = "typespace_quota_ssd")
+  private BigInteger typespaceQuotaSsd = BigInteger.valueOf(-1);
+  @Column(name = "typespace_quota_raid5")
+  private BigInteger typespaceQuotaRaid5 = BigInteger.valueOf(-1);
+  @Column(name = "typespace_quota_archive")
+  private BigInteger typespaceQuotaArchive = BigInteger.valueOf(-1);
+  @Column(name = "typespace_used_disk")
+  private BigInteger typespaceUsedDisk = BigInteger.valueOf(-1);
+  @Column(name = "typespace_used_ssd")
+  private BigInteger typespaceUsedSsd = BigInteger.valueOf(-1);
+  @Column(name = "typespace_used_raid5")
+  private BigInteger typespaceUsedRaid5 = BigInteger.valueOf(-1);
+  @Column(name = "typespace_used_archive")
+  private BigInteger typespaceUsedArchive = BigInteger.valueOf(-1);
 
-  public HdfsInodeAttributes() {
+  public HdfsDirectoryWithQuotaFeature() {
   }
 
-  public HdfsInodeAttributes(Long inodeId) {
+  public HdfsDirectoryWithQuotaFeature(Long inodeId) {
     this.inodeId = inodeId;
   }
 
@@ -164,10 +180,10 @@ public class HdfsInodeAttributes implements Serializable {
   @Override
   public boolean equals(Object object) {
     // TODO: Warning - this method won't work in the case the id fields are not set
-    if (!(object instanceof HdfsInodeAttributes)) {
+    if (!(object instanceof HdfsDirectoryWithQuotaFeature)) {
       return false;
     }
-    HdfsInodeAttributes other = (HdfsInodeAttributes) object;
+    HdfsDirectoryWithQuotaFeature other = (HdfsDirectoryWithQuotaFeature) object;
     if ((this.inodeId == null && other.inodeId != null) || (this.inodeId != null
             && !this.inodeId.equals(other.inodeId))) {
       return false;
@@ -177,8 +193,71 @@ public class HdfsInodeAttributes implements Serializable {
 
   @Override
   public String toString() {
-    return "se.kth.hopsworks.hdfs.fileoperations.HdfsInodeAttributes[ inodeId="
+    return "se.kth.hopsworks.hdfs.fileoperations.HdfsDirectoryWithQuotaFeature[ inodeId="
             + inodeId + " ]";
   }
 
+  public BigInteger getTypespaceQuotaDisk() {
+    return typespaceQuotaDisk;
+  }
+
+  public void setTypespaceQuotaDisk(BigInteger typespaceQuotaDisk) {
+    this.typespaceQuotaDisk = typespaceQuotaDisk;
+  }
+
+  public BigInteger getTypespaceQuotaSsd() {
+    return typespaceQuotaSsd;
+  }
+
+  public void setTypespaceQuotaSsd(BigInteger typespaceQuotaSsd) {
+    this.typespaceQuotaSsd = typespaceQuotaSsd;
+  }
+
+  public BigInteger getTypespaceQuotaRaid5() {
+    return typespaceQuotaRaid5;
+  }
+
+  public void setTypespaceQuotaRaid5(BigInteger typespaceQuotaRaid5) {
+    this.typespaceQuotaRaid5 = typespaceQuotaRaid5;
+  }
+
+  public BigInteger getTypespaceQuotaArchive() {
+    return typespaceQuotaArchive;
+  }
+
+  public void setTypespaceQuotaArchive(BigInteger typespaceQuotaArchive) {
+    this.typespaceQuotaArchive = typespaceQuotaArchive;
+  }
+
+  public BigInteger getTypespaceUsedDisk() {
+    return typespaceUsedDisk;
+  }
+
+  public void setTypespaceUsedDisk(BigInteger typespaceUsedDisk) {
+    this.typespaceUsedDisk = typespaceUsedDisk;
+  }
+
+  public BigInteger getTypespaceUsedSsd() {
+    return typespaceUsedSsd;
+  }
+
+  public void setTypespaceUsedSsd(BigInteger typespaceUsedSsd) {
+    this.typespaceUsedSsd = typespaceUsedSsd;
+  }
+
+  public BigInteger getTypespaceUsedRaid5() {
+    return typespaceUsedRaid5;
+  }
+
+  public void setTypespaceUsedRaid5(BigInteger typespaceUsedRaid5) {
+    this.typespaceUsedRaid5 = typespaceUsedRaid5;
+  }
+
+  public BigInteger getTypespaceUsedArchive() {
+    return typespaceUsedArchive;
+  }
+
+  public void setTypespaceUsedArchive(BigInteger typespaceUsedArchive) {
+    this.typespaceUsedArchive = typespaceUsedArchive;
+  }
 }
