@@ -17,25 +17,12 @@ package com.predic8.membrane.servlet.embedded;
 
 
 import com.predic8.membrane.core.transport.Transport;
-import java.net.URI;
 
 public class HopsTransport extends Transport {
 
-  private boolean removeContextRoot = false;
-  private URI targetUri;
-
-  public HopsTransport(URI targetUri) {
-    this.targetUri = targetUri;
+  public HopsTransport() {
     setPrintStackTrace(true);
     setReverseDNS(false);
-  }
-
-  public URI getTargetUri() {
-    return targetUri;
-  }
-
-  public boolean isRemoveContextRoot() {
-    return removeContextRoot;
   }
 
   @Override

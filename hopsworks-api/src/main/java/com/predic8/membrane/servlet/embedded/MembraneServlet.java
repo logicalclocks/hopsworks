@@ -100,20 +100,19 @@ public class MembraneServlet extends HttpServlet {
     try {
       targetUriObj = new URI(newQueryBuf.toString());
     } catch (Exception e) {
-      throw new ServletException("Rewritten targetUri is invalid: "
-              + newTargetUri, e);
+      throw new ServletException("Rewritten targetUri is invalid: " + newTargetUri, e);
     }
 
     ServiceProxy sp = new ServiceProxy(
         new ServiceProxyKey(externalIp, "*", "*", -1), "localhost", targetPort);
+
     sp.setTargetURL(newQueryBuf.toString());
-    // only set external hostname in case admin console is used
+
     try {
-      router = new HopsRouter(targetUriObj);
+      router = new HopsRouter();
       router.add(sp);
       router.init();
-      new HopsServletHandler(req, resp, router.getTransport(),
-              targetUriObj).run();
+      new HopsServletHandler(req, resp, router.getTransport(), targetUriObj).run();
     } catch (Exception ex) {
       LOGGER.log(Level.SEVERE, null, ex);
     }

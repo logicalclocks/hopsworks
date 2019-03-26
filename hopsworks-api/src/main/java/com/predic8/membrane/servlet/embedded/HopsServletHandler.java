@@ -133,13 +133,6 @@ class HopsServletHandler extends AbstractHttpHandler {
       pathQuery += "?" + request.getQueryString();
     }
 
-    if (getTransport().isRemoveContextRoot()) {
-      String contextPath = request.getContextPath();
-      if (contextPath.length() > 0 && pathQuery.startsWith(contextPath)) {
-        pathQuery = pathQuery.substring(contextPath.length());
-      }
-    }
-
     srcReq.create(request.getMethod(), pathQuery, request.getProtocol(),createHeader(), request.getInputStream());
 
     return srcReq;

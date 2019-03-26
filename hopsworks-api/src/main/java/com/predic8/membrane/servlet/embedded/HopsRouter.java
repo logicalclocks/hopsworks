@@ -25,29 +25,27 @@ import java.util.List;
 import com.predic8.membrane.core.interceptor.HTTPClientInterceptor;
 import com.predic8.membrane.core.interceptor.Interceptor;
 import com.predic8.membrane.core.interceptor.RuleMatchingInterceptor;
-import com.predic8.membrane.core.interceptor.UserFeatureInterceptor;
 import com.predic8.membrane.core.interceptor.rewrite.ReverseProxyingInterceptor;
 import com.predic8.membrane.core.interceptor.tunnel.WebSocketInterceptor;
 import com.predic8.membrane.core.transport.Transport;
-import java.net.URI;
 
 public class HopsRouter extends Router {
 
-  public HopsRouter(URI targetUri) throws Exception {
+  public HopsRouter() throws Exception {
     this.exchangeStore = new LimitedMemoryExchangeStore();
-    transport = createTransport(targetUri);
+    transport = createTransport();
   }
 
-  private Transport createTransport(URI targetUri) throws Exception {
-    Transport transport = new HopsTransport(targetUri);
+  private Transport createTransport() throws Exception {
+    Transport transport = new HopsTransport();
+
     List<Interceptor> interceptors = new ArrayList<>();
+
     interceptors.add(new RuleMatchingInterceptor());
+    interceptors.add(new ExchangeStoreInterceptor(this.exchangeStore));
     interceptors.add(new DispatchingInterceptor());
-    ExchangeStoreInterceptor esi = new ExchangeStoreInterceptor();
-    esi.setExchangeStore(this.exchangeStore);
-    interceptors.add(esi);
+
     interceptors.add(new ReverseProxyingInterceptor());
-    interceptors.add(new UserFeatureInterceptor());
     interceptors.add(new WebSocketInterceptor());
     interceptors.add(new HTTPClientInterceptor());
     transport.setInterceptors(interceptors);
