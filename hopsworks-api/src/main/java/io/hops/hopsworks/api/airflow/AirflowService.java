@@ -20,7 +20,7 @@ import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jwt.JWTHelper;
-import io.hops.hopsworks.common.airflow.AirflowJWTManager;
+import io.hops.hopsworks.common.airflow.AirflowManager;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.Users;
@@ -72,7 +72,7 @@ public class AirflowService {
   @EJB
   private JWTHelper jwtHelper;
   @EJB
-  private AirflowJWTManager airflowJWTManager;
+  private AirflowManager airflowJWTManager;
   @EJB
   private OSProcessExecutor osProcessExecutor;
 
