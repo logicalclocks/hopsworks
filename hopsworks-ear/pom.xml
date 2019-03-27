@@ -53,7 +53,7 @@
   <version>0.9.1</version>
   <packaging>ear</packaging>
 
-  <name>hopsworks-ear:0.9.1-SNAPSHOT</name>
+  <name>hopsworks-ear:0.9.1</name>
   
   <build>
     <plugins>
