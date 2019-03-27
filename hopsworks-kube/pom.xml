@@ -69,6 +69,12 @@
       <version>7.0</version>
       <scope>compile</scope>
     </dependency>
+    <dependency>
+      <groupId>io.hops.hopsworks</groupId>
+      <artifactId>hopsworks-rest-utils</artifactId>
+      <version>${project.version}</version>
+      <scope>provided</scope>
+    </dependency>
   </dependencies>
 
   <build>
