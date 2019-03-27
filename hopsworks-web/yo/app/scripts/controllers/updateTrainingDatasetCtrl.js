@@ -35,7 +35,7 @@ angular.module('hopsWorksApp')
             self.trainingDatasets = trainingDatasets
             self.trainingDataset = trainingDataset
             self.trainingDatasetId = trainingDataset.id
-            self.trainingDatasetNameRegexp = /^[a-zA-Z0-9-_]+$/;
+            self.trainingDatasetNameRegexp = /^[a-zA-Z0-9_]+$/;
 
             self.trainingDatasetNameWrongValue = 1
             self.trainingDatasetNameNotUnique = 1

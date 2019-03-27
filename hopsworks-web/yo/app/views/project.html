@@ -37,7 +37,7 @@
   ~ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
   -->
 
-  <div ng-controller="MainCtrl as mainCtrl">
+  <div ng-controller="MainCtrl as mainCtrl" ng-cloak="">
     <div ng-include="'nav.html'"></div>
     <div id="wrapper" class="toggled">
       <div class="overlay"></div>
@@ -56,7 +56,8 @@
                 <div class="widget-body col-md-10 thin-scrollbar" style="height: 90%; overflow-y: auto;">
                   <div class="timeline clearfix">
                     <div class="mid-line"></div>
-                    <div dir-paginate="activity in projectCtrl.activities | itemsPerPage:projectCtrl.pageSize" 
+                    <div dir-paginate="activity in projectCtrl.activities | itemsPerPage:projectCtrl.pageSize"
+                         pagination-id="project_activity_pagination"
                          current-page="projectCtrl.curentPage"
                          total-items="projectCtrl.totalItems">
                       <div class="right">
@@ -75,7 +76,10 @@
                         </div>
                       </div>
                     </div>
-                    <dir-pagination-controls class="pagination-sm" boundary-links="true" rotate="false"
+                    <dir-pagination-controls class="pagination-sm" 
+                                             boundary-links="true" 
+                                             rotate="false"
+                                             pagination-id="project_activity_pagination"
                                              max-size="projectCtrl.pageSize"
                                              on-page-change="projectCtrl.getActivitiesNextPage()">
                     </dir-pagination-controls>

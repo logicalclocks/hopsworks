@@ -36,114 +36,101 @@
  * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package io.hops.hopsworks.admin.jupyter;
+package io.hops.hopsworks.common.jupyter;
 
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
-import io.hops.hopsworks.common.dao.jupyter.JupyterSettingsFacade;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
-import io.hops.hopsworks.common.dao.jupyter.config.JupyterProcessMgr;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.ServiceException;
-import io.hops.hopsworks.common.hdfs.HdfsUsersController;
-import io.hops.hopsworks.common.jupyter.JupyterController;
 import io.hops.hopsworks.common.util.Settings;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
+import javax.ejb.DependsOn;
 import javax.ejb.EJB;
-import javax.faces.application.FacesMessage;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ViewScoped;
-import javax.faces.context.FacesContext;
-import java.io.Serializable;
+import javax.ejb.Singleton;
+import javax.ejb.Startup;
+import javax.ejb.Timeout;
+import javax.ejb.Timer;
+import javax.ejb.TimerService;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-@ManagedBean(name = "JupyterNotebooks")
-@ViewScoped
-public class JupyterNotebooksBean implements Serializable {
+@Singleton
+@Startup
+@DependsOn("Settings")
+public class JupyterNotebookCleaner {
 
-  private static final Logger LOGGER = Logger.getLogger(JupyterNotebooksBean.class.getName());
+  private static final  Logger LOGGER = Logger.getLogger(
+      JupyterNotebookCleaner.class.getName());
 
   @EJB
   private JupyterFacade jupyterFacade;
   @EJB
-  private JupyterSettingsFacade jupyterSettingsFacade;
-  @EJB
-  private JupyterProcessMgr jupyterProcessFacade;
-  @EJB
   private HdfsUsersFacade hdfsUsersFacade;
   @EJB
-  private Settings settings;
+  private UserFacade usersFacade;
   @EJB
   private JupyterController jupyterController;
   @EJB
-  private HdfsUsersController hdfsUsersController;
-  @EJB
-  private UserFacade userFacade;
+  private Settings settings;
+  @Resource
+  private TimerService timerService;
 
-  public String action;
-
-  private List<JupyterProject> filteredNotebooks;
-
-  private List<JupyterProject> allNotebooks;
-
-  public void setFilteredNotebooks(List<JupyterProject> filteredNotebooks) {
-    this.filteredNotebooks = filteredNotebooks;
+  @PostConstruct
+  public void init() {
+    String rawInterval = settings.getJupyterShutdownTimerInterval();
+    Long intervalValue = settings.getConfTimeValue(rawInterval);
+    TimeUnit intervalTimeunit = settings.getConfTimeTimeUnit(rawInterval);
+    intervalValue = intervalTimeunit.toMillis(intervalValue);
+    timerService.createTimer(intervalValue, intervalValue, "Jupyter Notebook Cleaner");
   }
 
-  public List<JupyterProject> getFilteredNotebooks() {
-    return filteredNotebooks;
-  }
-
-  public void setAllNotebooks(List<JupyterProject> allNotebooks) {
-    this.allNotebooks = allNotebooks;
-  }
-
-  public List<JupyterProject> getAllNotebooks() {
-    this.allNotebooks = jupyterProcessFacade.getAllNotebooks();
-    return this.allNotebooks;
-  }
-
-  public String getAction() {
-    return action;
-  }
-
-  public void setAction(String action) {
-    this.action = action;
-  }
-
-  public String getHdfsUser(JupyterProject notebook) {
-    int hdfsId = notebook.getHdfsUserId();
-    if (hdfsId == -1) {
-      return "Orphaned";
-    }
-    HdfsUsers hdfsUser = hdfsUsersFacade.find(hdfsId);
-    return hdfsUser.getName();
-  }
-
-  public String kill(JupyterProject notebook) {
-    String hdfsUser = getHdfsUser(notebook);
+  @Timeout
+  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+  public void execute(Timer timer) throws ServiceException{
+  
+    //TODO(Theofilos): Remove check for ca module for 0.7.0 onwards
     try {
-      if (hdfsUser.compareTo("Orphaned") == 0) {
-        jupyterProcessFacade.killServerJupyterUser(hdfsUser, "", notebook.getPid(), notebook.getPort());
-      } else {
-        String username = hdfsUsersController.getUserName(hdfsUser);
-        Users user = userFacade.findByUsername(username);
-        jupyterController.shutdown(notebook.getProjectId(), hdfsUser, user, notebook.getSecret(),
-          notebook.getPid(), notebook.getPort());
+      String applicationName = InitialContext.doLookup("java:app/AppName");
+      String moduleName = InitialContext.doLookup("java:module/ModuleName");
+      if(applicationName.contains("hopsworks-ca") || moduleName.contains("hopsworks-ca")){
+        return;
       }
-      FacesContext context = FacesContext.getCurrentInstance();
-      context.addMessage(null, new FacesMessage("Successful", "Successfully killed Jupyter Notebook Server."));
-    } catch (ServiceException ex) {
-      Logger.getLogger(JupyterNotebooksBean.class.getName()).log(Level.SEVERE, null, ex);
-      FacesContext context = FacesContext.getCurrentInstance();
-      context.addMessage(null, new FacesMessage("Failure", "Failed to kill Jupyter Notebook Server."));
-      return "KILL_NOTEBOOK_FAILED";
+    } catch (NamingException e) {
+      LOGGER.log(Level.SEVERE, null, e);
     }
-    return "KILL_NOTEBOOK_SUCCESS";
-  }
+    LOGGER.log(Level.INFO, "Running JupyterNotebookCleaner.");
+    // 1. Get all Running Jupyter Notebook Servers
+    List<JupyterProject> servers = jupyterFacade.getAllNotebookServers();
 
+    if (servers != null && !servers.isEmpty()) {
+      Date currentDate = Calendar.getInstance().getTime();
+      for (JupyterProject jp : servers) {
+        // If the notebook is expired
+        if (jp.getExpires().before(currentDate)) {
+          try {
+            HdfsUsers hdfsUser = hdfsUsersFacade.find(jp.getHdfsUserId());
+            Users user = usersFacade.findByUsername(hdfsUser.getUsername());
+            LOGGER.log(Level.FINE, "Shutting down expired notebook for hdfs user " + hdfsUser.getName());
+            jupyterController.shutdown(jp.getProjectId(), hdfsUser.getName(), user,
+              jp.getSecret(), jp.getPid(), jp.getPort());
+          } catch(Exception e) {
+            LOGGER.log(Level.SEVERE, "Failed to cleanup notebook with port " + jp.getPort(), e);
+          }
+        }
+      }
+    }
+  }
 }

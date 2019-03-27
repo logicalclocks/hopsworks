@@ -185,17 +185,24 @@ angular.module('hopsWorksApp')
             self.updateShutdownLevel = function() {
                 var currentHours = self.val.shutdownLevel;
 
-                self.val.shutdownLevel = Number(currentHours) + Number(self.shutdownLevelSelected.name);
+                self.val.shutdownLevel = Number(self.shutdownLevelSelected.name);
 
                 self.loadingText = "Updating Jupyter Shutdown Time";
                 JupyterService.update(self.projectId, self.val).then(
                     function(success) {
+                        JupyterService.running(self.projectId).then(
+                            function(success) {
+                                self.config = success.data;
+                                timeToShutdown();
+                            },
+                            function(error) {
+                            }
+                        );
                         self.val.shutdownLevel = success.data.shutdownLevel;
-                        growl.info("Updated... notebook will close automatically in " + self.val.shutdownLevel + " hours.", {
+                        growl.info("Updated... notebook will close automatically in " + Math.round(self.config.minutesUntilExpiration/60) + " hours.", {
                             title: 'Info',
                             ttl: 3000
                         });
-                        timeToShutdown();
                     },
                     function(error) {
                         growl.error("Could not update shutdown time for Jupyter notebook. If this problem persists please contact your system administrator.");
@@ -204,31 +211,14 @@ angular.module('hopsWorksApp')
             };
 
             var timeToShutdown = function() {
-                if ('lastAccessed' in self.config) {
-                    if ('shutdownLevel' in self.val) {
-                        var d = new Date();
-                        var currentTimeMs = d.getTime();
-                        var lastTimeMs = new Date(self.config.lastAccessed);
-                        var timeSinceLastAccess = currentTimeMs - lastTimeMs.valueOf();
-                        if (timeSinceLastAccess < 0) {
-                            timeSinceLastAccess = 0;
-                        }
-                        console.log("lastAccessed " + self.config.lastAccessed);
-                        console.log("lastAccessed " + lastTimeMs);
-                        console.log("timeSinceLast " + timeSinceLastAccess);
-                        console.log("currentTimeMs " + currentTimeMs);
-                        console.log("shutdownLevel " + self.val.shutdownLevel);
-                        var timeLeft = (((self.val.shutdownLevel * 60 * 60 * 1000) - timeSinceLastAccess) / (60 * 1000)).toFixed(1);
-                        if(timeLeft < 0) {
-                            //Assuming the JupyterNotebookCleaner is configured to run every 1 hr
-                            self.timeLeftInMinutes = "less than 1 hour"
-                        } else {
-                            self.timeLeftInMinutes = timeLeft + ' minutes'
-                        }
-                    }
+                var timeLeft = self.config.minutesUntilExpiration;
+                if(timeLeft < 0) {
+                    //Assuming the JupyterNotebookCleaner is configured to run every 1 hr
+                    self.timeLeftInMinutes = "less than 1 hour"
+                } else {
+                    self.timeLeftInMinutes = timeLeft + ' minutes'
                 }
             };
-
 
             self.changeUmask = function() {
                 self.val.umask = self.umask.name;
@@ -243,7 +233,6 @@ angular.module('hopsWorksApp')
             window.onfocus = function() {
                 self.livySessions(self.projectId);
             };
-
 
             $scope.autoExpand = function(e) {
                 var element = typeof e === 'object' ? e.target : document.getElementById(e);
@@ -554,7 +543,7 @@ angular.module('hopsWorksApp')
                         timeToShutdown();
                     },
                     function(error) {
-                        self.val.shutdownLevel = 6;
+                        self.val.shutdownLevel = 1;
                         self.tourService.currentStep_TourEight = 0;
                         // nothing to do
                     }
@@ -611,9 +600,11 @@ angular.module('hopsWorksApp')
                         self.distributionStrategySelected = self.distribution_strategies[0];
                         self.val.distributionStrategy = self.distributionStrategySelected.name;
 
-                        if (self.val.shutdownLevel <= "1") {
-                            self.shutdownLevelSelected = self.shutdown_levels[0];
-                        } else if (self.val.shutdownLevel <= "6") {
+                        if(self.val.shutdownLevel <= 1) {
+                          self.val.shutdownLevel = self.shutdown_levels[1].name;
+                        }
+
+                        if (self.val.shutdownLevel <= "6") {
                             self.shutdownLevelSelected = self.shutdown_levels[1];
                         } else if (self.val.shutdownLevel <= "12") {
                             self.shutdownLevelSelected = self.shutdown_levels[2];
@@ -624,7 +615,7 @@ angular.module('hopsWorksApp')
                         } else if (self.val.shutdownLevel <= "168") {
                             self.shutdownLevelSelected = self.shutdown_levels[5];
                         } else {
-                            self.shutdownLevelSelected = self.shutdown_levels[6];
+                            self.shutdownLevelSelected = self.shutdown_levels[1];
                         }
 
                         if (self.val.umask === "022") {
@@ -692,6 +683,8 @@ angular.module('hopsWorksApp')
                         stopLoading();
                         self.mode = "dynamicSpark";
                         $scope.sessions = null;
+                        self.val.shutdownLevel = self.shutdown_levels[1].name;
+                        self.shutdownLevelSelected = self.shutdown_levels[1];
                     },
                     function(error) {
                         growl.error("Could not stop the Jupyter Notebook Server.");
@@ -864,10 +857,10 @@ angular.module('hopsWorksApp')
                             title: 'Info',
                             ttl: 20000
                         });
+                        timeToShutdown();
                         self.ui = "/hopsworks-api/jupyter/" + self.config.port + "/?token=" + self.config.token;
                         $window.open(self.ui, '_blank');
                         $timeout(stopLoading(), 5000);
-                        timeToShutdown();
                         if (self.tourService.currentStep_TourEight == 6 || self.tourService.currentStep_TourEight == 7) {
                             self.tourService.currentStep_TourEight = 8;
                         } else {

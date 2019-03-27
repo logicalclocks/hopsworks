@@ -55,13 +55,14 @@ import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeView;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsGroups;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
-import io.hops.hopsworks.common.dao.jobhistory.Execution;
 import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
 import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.jobs.quota.YarnPriceMultiplicator;
 import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuota;
 import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuotaFacade;
+import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
+import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterProcessMgr;
 import io.hops.hopsworks.common.dao.kafka.KafkaFacade;
 import io.hops.hopsworks.common.dao.log.operation.OperationType;
@@ -105,6 +106,7 @@ import io.hops.hopsworks.common.jobs.execution.ExecutionController;
 import io.hops.hopsworks.common.jobs.spark.SparkJobConfiguration;
 import io.hops.hopsworks.common.jobs.yarn.LocalResourceDTO;
 import io.hops.hopsworks.common.jobs.yarn.YarnLogUtil;
+import io.hops.hopsworks.common.jupyter.JupyterController;
 import io.hops.hopsworks.common.kafka.KafkaController;
 import io.hops.hopsworks.common.livy.LivyController;
 import io.hops.hopsworks.common.message.MessageController;
@@ -166,8 +168,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -267,6 +267,10 @@ public class ProjectController {
   protected ExecutionController executionController;
   @EJB
   protected FeaturegroupController featuregroupController;
+  @EJB
+  private JupyterController jupyterController;
+  @EJB
+  private JupyterFacade jupyterFacade;
 
 
   /**
@@ -1050,22 +1054,21 @@ public class ProjectController {
           LOGGER.log(Level.SEVERE, "Error when killing Zeppelin during project cleanup", ex);
           cleanupLogger.logError(ex.getMessage());
         }
-
-        // Stop Jupyter
-        try {
-          jupyterProcessFacade.stopProject(project);
-          cleanupLogger.logSuccess("Stopped Jupyter");
-        } catch (Exception ex) {
-          cleanupLogger.logError("Error when killing Jupyter during project cleanup");
-          cleanupLogger.logError(ex.getMessage());
-        }
-
         // Kill Yarn Jobs
         try {
           killYarnJobs(project);
           cleanupLogger.logSuccess("Killed Yarn jobs");
         } catch (Exception ex) {
           cleanupLogger.logError("Error when killing YARN jobs during project cleanup");
+          cleanupLogger.logError(ex.getMessage());
+        }
+
+        // jupyter notebook server and sessions
+        try {
+          removeJupyter(project);
+          cleanupLogger.logSuccess("Removed Jupyter");
+        } catch (Exception ex) {
+          cleanupLogger.logError("Error when removing Anaconda during project cleanup");
           cleanupLogger.logError(ex.getMessage());
         }
 
@@ -1187,15 +1190,6 @@ public class ProjectController {
           cleanupLogger.logError(ex.getMessage());
         }
 
-        // remove anaconda repos
-        try {
-          removeJupyter(project);
-          cleanupLogger.logSuccess("Removed Jupyter");
-        } catch (Exception ex) {
-          cleanupLogger.logError("Error when removing Anaconda during project cleanup");
-          cleanupLogger.logError(ex.getMessage());
-        }
-
         // remove running tensorboards repos
         try {
           removeTensorBoard(project);
@@ -1277,14 +1271,6 @@ public class ProjectController {
           List<ApplicationReport> projectApps = getYarnApplications(hdfsUsersStr, yarnClientWrapper.getYarnClient());
           waitForJobLogs(projectApps, yarnClientWrapper.getYarnClient());
           cleanupLogger.logSuccess("Killed all Yarn Applications");
-        } catch (Exception ex) {
-          cleanupLogger.logError(ex.getMessage());
-        }
-
-        // Cleanup Jupyter project
-        try {
-          jupyterProcessFacade.stopProject(toDeleteProject);
-          cleanupLogger.logSuccess("Cleaned Jupyter environment");
         } catch (Exception ex) {
           cleanupLogger.logError(ex.getMessage());
         }
@@ -1398,36 +1384,18 @@ public class ProjectController {
 
   private List<ApplicationReport> getYarnApplications(Set<String> hdfsUsers, YarnClient yarnClient)
       throws YarnException, IOException {
-    List<ApplicationReport> projectApplications = yarnClient.getApplications(null, hdfsUsers, null,
+    return yarnClient.getApplications(null, hdfsUsers, null,
         EnumSet.of(
             YarnApplicationState.ACCEPTED, YarnApplicationState.NEW, YarnApplicationState.NEW_SAVING,
             YarnApplicationState.RUNNING, YarnApplicationState.SUBMITTED));
-    return projectApplications;
   }
-
-  private void killYarnJobs(Project project) {
+  
+  private void killYarnJobs(Project project) throws JobException {
     List<Jobs> running = jobFacade.getRunningJobs(project);
     if (running != null && !running.isEmpty()) {
-      Runtime rt = Runtime.getRuntime();
       for (Jobs job : running) {
         //Get the appId of the running app
-        List<Execution> jobExecs = execFacade.findByJob(job);
-        //Sort descending based on jobId because therie might be two
-        // jobs with the same name and we want the latest
-        Collections.sort(jobExecs, new Comparator<Execution>() {
-          @Override
-          public int compare(Execution lhs, Execution rhs) {
-            return lhs.getId() > rhs.getId() ? -1 : (lhs.getId() < rhs.
-                getId()) ? 1 : 0;
-          }
-        });
-        try {
-          rt.exec(settings.getHadoopSymbolicLinkDir() + "/bin/yarn application -kill "
-              + jobExecs.get(0).getAppId());
-        } catch (IOException ex) {
-          Logger.getLogger(ProjectController.class.getName()).
-              log(Level.SEVERE, null, ex);
-        }
+        executionController.stop(job);
       }
     }
   }
@@ -1549,7 +1517,7 @@ public class ProjectController {
         killZeppelin(project.getId(), sessionId);
 
         // try and close all the jupyter jobs
-        jupyterProcessFacade.stopProject(project);
+        removeJupyter(project);
 
         removeAnacondaEnv(project);
 
@@ -1639,6 +1607,9 @@ public class ProjectController {
         throw ex;
       }
 
+      //remove jupyter
+      removeJupyter(project);
+
       removeProjectRelatedFiles(usersToClean, dfso);
 
       //remove quota
@@ -1658,9 +1629,6 @@ public class ProjectController {
 
       //remove dumy Inode
       dfso.rm(dumy, true);
-
-      //remove anaconda repos
-      removeJupyter(project);
 
       //remove running tensorboards
       removeTensorBoard(project);
@@ -2072,21 +2040,9 @@ public class ProjectController {
         dbhdfsQuota, dbhdfsUsage, dbhdfsNsQuota, dbhdfsNsCount, fshdfsQuota, fshdfsUsage, fshdfsNsQuota,
         fshdfsNsCount, kafkaQuota);
   }
-
-  /**
-   * Deletes a member from a project
-   *
-   * @param project
-   * @param user
-   * @param toRemoveEmail
-   * @throws io.hops.hopsworks.common.exception.UserException
-   * @throws io.hops.hopsworks.common.exception.ProjectException
-   * @throws io.hops.hopsworks.common.exception.ServiceException
-   * @throws java.io.IOException
-   * @throws io.hops.hopsworks.common.security.CAException
-   */
+  
   public void removeMemberFromTeam(Project project, Users user, String toRemoveEmail) throws UserException,
-      ProjectException, ServiceException, IOException, CAException {
+    ProjectException, ServiceException, IOException, CAException, JobException {
     Users userToBeRemoved = userFacade.findByEmail(toRemoveEmail);
     if (userToBeRemoved == null) {
       throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE, "user: " + user.getEmail());
@@ -2108,8 +2064,12 @@ public class ProjectController {
           YarnApplicationState.ACCEPTED, YarnApplicationState.NEW, YarnApplicationState.NEW_SAVING,
           YarnApplicationState.RUNNING, YarnApplicationState.SUBMITTED));
       //kill jupyter for this user
-      jupyterProcessFacade.stopCleanly(hdfsUser);
-      livyController.deleteAllLivySessions(hdfsUser, ProjectServiceEnum.JUPYTER);
+
+      JupyterProject jupyterProject = jupyterFacade.findByUser(hdfsUser);
+      if(jupyterProject != null) {
+        jupyterController.shutdown(project, hdfsUser, user, jupyterProject.getSecret(), jupyterProject.getPid(),
+          jupyterProject.getPort());
+      }
 
       //kill running TB if any
       tensorBoardController.cleanup(project, user);
@@ -2118,26 +2078,8 @@ public class ProjectController {
       //kill jobs
       List<Jobs> running = jobFacade.getRunningJobs(project, hdfsUser);
       if (running != null && !running.isEmpty()) {
-        Runtime rt = Runtime.getRuntime();
         for (Jobs job : running) {
-          //Get the appId of the running app
-          List<Execution> jobExecs = execFacade.findByJob(job);
-          //Sort descending based on jobId because there might be two 
-          // jobs with the same name and we want the latest
-          Collections.sort(jobExecs, new Comparator<Execution>() {
-            @Override
-            public int compare(Execution lhs, Execution rhs) {
-              return lhs.getId() > rhs.getId() ? -1 : (lhs.getId() < rhs.
-                  getId()) ? 1 : 0;
-            }
-          });
-          try {
-            rt.exec(settings.getHadoopSymbolicLinkDir() + "/bin/yarn application -kill "
-                + jobExecs.get(0).getAppId());
-          } catch (IOException ex) {
-            Logger.getLogger(ProjectController.class.getName()).
-                log(Level.SEVERE, null, ex);
-          }
+          executionController.stop(job);
         }
       }
 
@@ -2502,8 +2444,7 @@ public class ProjectController {
 
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public void removeJupyter(Project project) throws ServiceException {
-    livyController.deleteAllLivySessionsForProject(project);
-    jupyterProcessFacade.stopProject(project);
+    jupyterController.removeJupyter(project);
   }
 
   @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -2792,6 +2733,17 @@ public class ProjectController {
 
           dfso.setHdfsQuotaBytes(hiveController.getDbPath(currentProject.getName()),
               quotas.getHiveHdfsNsQuota(), quotas.getHiveHdfsQuotaInBytes());
+          quotaChanged = true;
+        }
+
+        // If Featurestore quota has changed and the Featurestore service is enabled, persist the changes in the db.
+        if (quotas.getFeaturestoreHdfsQuotaInBytes() != null && quotas.getFeaturestoreHdfsNsQuota() != null
+            && projectServicesFacade.isServiceEnabledForProject(currentProject, ProjectServiceEnum.FEATURESTORE) &&
+            (!quotas.getFeaturestoreHdfsQuotaInBytes().equals(currentQuotas.getFeaturestoreHdfsQuotaInBytes()) ||
+            !quotas.getFeaturestoreHdfsNsQuota().equals(currentQuotas.getFeaturestoreHdfsNsQuota()))) {
+
+          dfso.setHdfsQuotaBytes(hiveController.getDbPath(featurestoreController.getFeaturestoreDbName(newProjectState))
+              , quotas.getFeaturestoreHdfsNsQuota(), quotas.getFeaturestoreHdfsQuotaInBytes());
           quotaChanged = true;
         }
       } catch (IOException e) {

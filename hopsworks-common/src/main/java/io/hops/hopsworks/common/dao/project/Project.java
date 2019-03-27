@@ -145,9 +145,6 @@ public class Project implements Serializable {
           mappedBy = "project")
   private Collection<TensorBoard> tensorBoardCollection;
 
-//  @OneToMany(cascade = CascadeType.ALL,
-//      mappedBy = "projectId")
-//  private Collection<Pia> piaCollection;
   private static final long serialVersionUID = 1L;
 
   @Id

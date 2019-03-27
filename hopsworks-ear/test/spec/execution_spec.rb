@@ -16,7 +16,7 @@
 
 describe "On #{ENV['OS']}" do
   describe 'execution' do
-    after (:all) {clean_projects}
+    after(:all) {clean_projects}
     describe "#create" do
       context 'without authentication' do
         before :all do
@@ -25,8 +25,8 @@ describe "On #{ENV['OS']}" do
         end
         it "should fail" do
           create_sparktour_job(@project, "demo_job", 'jar', nil)
-          expect_json(errorCode: 200003)
           expect_status(401)
+          expect_json(errorCode: 200003)
         end
       end
       job_types = ['py', 'jar', 'ipynb']

@@ -36,8 +36,7 @@
   ~ DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
   ~ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
   -->
-
-<div ng-show="profileCtrl.user.userAccountType !== 'LDAP_ACCOUNT_TYPE' ">
+<div ng-show="!profileCtrl.externalAccountType()">
 <div class="modal-header">
   <button class="close" ng-click="profileCtrl.close()" data-dismiss="modal" aria-hidden="true" type="button">&times;</button>
   <h2 class="modal-title">Profile</h2>

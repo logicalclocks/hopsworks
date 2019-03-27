@@ -97,6 +97,8 @@ describe "On #{ENV['OS']}" do
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/install",
                {lib: "requests", version: "2.20.0", channelUrl: "#{conda_channel}", installType: "CONDA", machineType: "CPU"}
           expect_status(200)
+          es_index_date_suffix = Time.now.strftime("%Y.%m.%d")
+          
           wait_for do
             CondaCommands.find_by(proj: @project[:projectname]).nil?
           end
@@ -209,7 +211,7 @@ describe "On #{ENV['OS']}" do
           end
         end
 
-        it 'export environment' do
+        xit 'export environment' do #skipped till pythonservice api v2 so we can only test python36
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/export"
           expect_status(200)
         end

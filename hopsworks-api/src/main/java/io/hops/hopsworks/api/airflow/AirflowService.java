@@ -16,8 +16,6 @@
  */
 package io.hops.hopsworks.api.airflow;
 
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.interfaces.DecodedJWT;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
@@ -25,7 +23,6 @@ import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.common.airflow.AirflowJWTManager;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.AirflowException;
 import io.hops.hopsworks.common.exception.RESTCodes;
@@ -36,12 +33,7 @@ import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.common.util.Settings;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.LinkOption;
-import java.nio.file.attribute.PosixFileAttributeView;
 import java.nio.file.attribute.PosixFilePermission;
-import java.security.NoSuchAlgorithmException;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Level;
@@ -50,7 +42,6 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -61,7 +52,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
-import io.hops.hopsworks.jwt.exception.JWTException;
 import org.apache.commons.codec.digest.DigestUtils;
 
 @RequestScoped
@@ -77,8 +67,6 @@ public class AirflowService {
 
   @EJB
   private Settings settings;
-  @EJB
-  private UserFacade userFacade;
   @EJB
   private HdfsUsersController hdfsUsersController;
   @EJB
@@ -100,7 +88,6 @@ public class AirflowService {
   };
   
   private static final Set<PosixFilePermission> DAGS_PERM = new HashSet<>(8);
-  private static final Set<PosixFilePermission> SECRETS_PERM = new HashSet<>();
   static {
     //add owners permission
     DAGS_PERM.add(PosixFilePermission.OWNER_READ);
@@ -113,14 +100,10 @@ public class AirflowService {
     //add others permissions
     DAGS_PERM.add(PosixFilePermission.OTHERS_READ);
     DAGS_PERM.add(PosixFilePermission.OTHERS_EXECUTE);
-    
-    SECRETS_PERM.add(PosixFilePermission.OWNER_READ);
-    SECRETS_PERM.add(PosixFilePermission.OWNER_WRITE);
-    SECRETS_PERM.add(PosixFilePermission.OWNER_EXECUTE);
-    
-    SECRETS_PERM.add(PosixFilePermission.GROUP_READ);
-    SECRETS_PERM.add(PosixFilePermission.GROUP_EXECUTE);
   }
+  
+  // Audience for Airflow JWTs
+  private static final String[] JWT_AUDIENCE = new String[]{Audience.JOB};
   
   public AirflowService() {
   }
@@ -140,20 +123,8 @@ public class AirflowService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response storeAirflowJWT(@Context SecurityContext sc) throws AirflowException {
-    try {
-      Users user = jwtHelper.getUserPrincipal(sc);
-      String[] audience = new String[]{Audience.JOB};
-      String token = jwtHelper.createToken(user, audience, settings.getJWTIssuer());
-      DecodedJWT decodedJWT = JWT.decode(token);
-      
-      LocalDateTime expirationDate = decodedJWT.getExpiresAt().toInstant()
-          .atZone(ZoneId.systemDefault()).toLocalDateTime();
-      
-      airflowJWTManager.storeJWT(user, project, token, expirationDate);
-    } catch (NoSuchAlgorithmException | JWTException ex) {
-      throw new AirflowException(RESTCodes.AirflowErrorCode.JWT_NOT_CREATED, Level.SEVERE,
-          "Could not create JWT for Airflow service", ex.getMessage(), ex);
-    }
+    Users user = jwtHelper.getUserPrincipal(sc);
+    airflowJWTManager.generateJWT(user, project, JWT_AUDIENCE);
     return Response.noContent().build();
   }
   
@@ -161,22 +132,16 @@ public class AirflowService {
   @Path("secretDir")
   @Produces(MediaType.TEXT_PLAIN)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response secretDir(@Context HttpServletRequest req) throws AirflowException {
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response secretDir() throws AirflowException {
     String secret = DigestUtils.sha256Hex(Integer.toString(this.projectId));
 
     java.nio.file.Path dagsDir = airflowJWTManager.getProjectDagDirectory(project);
   
-    java.nio.file.Path secretsDir = airflowJWTManager.getProjectSecretsDirectory(project);
-    
     try {
       // Instead of checking and setting the permissions, just set them as it is an idempotent operation
       dagsDir.toFile().mkdirs();
       Files.setPosixFilePermissions(dagsDir, DAGS_PERM);
-      
-      secretsDir.toFile().mkdirs();
-      Files.getFileAttributeView(secretsDir, PosixFileAttributeView.class, LinkOption.NOFOLLOW_LINKS)
-          .setGroup(airflowJWTManager.getAirflowGroup());
-      Files.setPosixFilePermissions(secretsDir, SECRETS_PERM);
     } catch (IOException ex) {
       throw new AirflowException(RESTCodes.AirflowErrorCode.AIRFLOW_DIRS_NOT_CREATED, Level.SEVERE,
           "Could not create Airlflow directories", ex.getMessage(), ex);
@@ -189,8 +154,9 @@ public class AirflowService {
   @Path("purgeAirflowDagsLocal")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response purgeAirflowDagsLocal(@Context HttpServletRequest req) {
-    Users user = userFacade.findByEmail(req.getRemoteUser());
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response purgeAirflowDagsLocal(@Context SecurityContext sc) {
+    Users user = jwtHelper.getUserPrincipal(sc);
     String projectUsername = hdfsUsersController.getHdfsUserName(project, user);
     airflowOperation(AirflowOp.PURGE_LOCAL, projectUsername);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
@@ -199,9 +165,10 @@ public class AirflowService {
   @GET
   @Path("restartWebserver")
   @Produces(MediaType.APPLICATION_JSON)
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response restartAirflowWebserver(@Context HttpServletRequest req) {
-    Users user = userFacade.findByEmail(req.getRemoteUser());
+  public Response restartAirflowWebserver(@Context SecurityContext sc) {
+    Users user = jwtHelper.getUserPrincipal(sc);
     String projectUsername = hdfsUsersController.getHdfsUserName(project, user);
     airflowOperation(AirflowOp.RESTART_WEBSERVER, projectUsername);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
@@ -210,9 +177,10 @@ public class AirflowService {
   @GET
   @Path("copyFromAirflowToHdfs")
   @Produces(MediaType.APPLICATION_JSON)
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response copyFromAirflowToHdfs(@Context HttpServletRequest req) {
-    Users user = userFacade.findByEmail(req.getRemoteUser());
+  public Response copyFromAirflowToHdfs(@Context SecurityContext sc) {
+    Users user = jwtHelper.getUserPrincipal(sc);
     String projectUsername = hdfsUsersController.getHdfsUserName(project, user);
     airflowOperation(AirflowOp.TO_HDFS, projectUsername);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
@@ -221,9 +189,10 @@ public class AirflowService {
   @GET
   @Path("copyToAirflowFromHdfs")
   @Produces(MediaType.APPLICATION_JSON)
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response copyToAirflowFromHdfs(@Context HttpServletRequest req) {
-    Users user = userFacade.findByEmail(req.getRemoteUser());
+  public Response copyToAirflowFromHdfs(@Context SecurityContext sc) {
+    Users user = jwtHelper.getUserPrincipal(sc);
     String projectUsername = hdfsUsersController.getHdfsUserName(project, user);
     airflowOperation(AirflowOp.FROM_HDFS, projectUsername);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();

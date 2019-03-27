@@ -89,6 +89,13 @@ angular.module('hopsWorksApp')
                   $http.defaults.headers.common.Authorization = token;
                 }
               },
+              getToken: function () {
+                return localStorage.getItem("token");
+              },
+              refreshToken: function() {
+                var token = localStorage.getItem("token");
+                $http.defaults.headers.common.Authorization = token;
+              },
               removeToken: function () {
                 localStorage.removeItem("token");
                 $http.defaults.headers.common.Authorization = '';

@@ -125,6 +125,19 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
     q.setParameter("job", job);
     return q.getResultList();
   }
+  
+  /**
+   * A job can have only one execution in a non-final state.
+   * @param job job
+   * @return the current job execution.
+   */
+  public List<Execution> findByJobAndNotFinished(Jobs job) {
+    TypedQuery<Execution> q = em.createNamedQuery("Execution.findByJobAndStates",
+      Execution.class);
+    q.setParameter("job", job);
+    q.setParameter("states", JobState.getRunningStates());
+    return q.getResultList();
+  }
 
   /**
    * Get all executions that are not in a final state.

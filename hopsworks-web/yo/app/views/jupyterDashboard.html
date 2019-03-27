@@ -603,15 +603,20 @@
 
                 <br/>
                 <div class="row" style="margin-left: 0px">
+                  <i class="fa fa-clock-o" aria-hidden="true"></i>
                   Automatic Notebook Shutdown in <span style="font-weight: bold;">{{jupyterCtrl.timeLeftInMinutes}}. </span>
+                  <hr>
                 </div>
                 <div class="row">  
-                  <div class="col-md-2">
-                    Add hour(s):
+                  <div class="col-md-4">
+                     Select hours to add to notebook
                   </div>
-                  <div class="col-md-3" style="z-index: 1;">
+                </div>
+              <div class="row">
+                <div class="col-md-2">
+                  <div>
                     <ui-select ng-model="jupyterCtrl.shutdownLevelSelected" theme="bootstrap"
-                               on-select="jupyterCtrl.updateShutdownLevel()">
+                               on-select="jupyterCtrl.updateShutdownLevel()" style="z-index: 0;">
                       <ui-select-match >
                         <span ng-bind="jupyterCtrl.shutdownLevelSelected.name"></span>
                       </ui-select-match>
@@ -620,6 +625,7 @@
                       </ui-select-choices>
                     </ui-select>
                   </div>
+                </div>
                 </div>
 
               </div>
@@ -847,7 +853,7 @@
                 tourtip-placement="right"
                 tourtip-next-label="Finish The Tour"
                 tourtip-offset-vertical="-15"
-                on-proceed=""
+                on-proceed="closeTour(); projectCtrl.tourService.resetTours();projectCtrl.disableTours();"
         ></virtual-step>
       </tour>
   </div>

@@ -51,6 +51,10 @@ body {
   margin: 0;
 }
 
+[ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
+  display: none !important;
+}
+
 h2 {
   font-size: 1.5em;
 }
@@ -531,9 +535,8 @@ th:focus {
   outline: none !important;
 }
 
-tbody > tr > td {
-  padding: 6px !important;
-  vertical-align: middle !important;
+.datasets-jobs-table td {
+  padding: 6px !important; vertical-align: middle !important;
 }
 
 md-input-container {

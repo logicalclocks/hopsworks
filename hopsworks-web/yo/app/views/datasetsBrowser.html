@@ -125,8 +125,7 @@
                       <div class="row">
                         <div class="col-md-6 pull-right">
                           <div class="input-group">
-                            <input type="text" class="form-control" 
-                                   ng-model="search" placeholder="Filter...">
+                            <input type="text" class="form-control" ng-model="datasetsCtrl.search" placeholder="Filter..." ng-change="datasetsCtrl.resetSelected()">
                             <span class="input-group-btn">
                               <button class="btn btn-default fa fa-filter icon-resize-small" type="button" title="Filter"></button>
                             </span>
@@ -165,7 +164,7 @@
                       <md-button class="md-icon-button md-primary" 
                                  ng-show="datasetsCtrl.isSelectedFiles() > 0 && !datasetsCtrl.all_selected" 
                                  aria-label="De-Select All" 
-                                 ng-click="datasetsCtrl.all_selected = false; datasetsCtrl.deselectAll();"
+                                 ng-click="datasetsCtrl.resetSelected();"
                                  style="margin-bottom: -10px">
                         <md-tooltip md-direction="right">
                           De-Select All
@@ -175,7 +174,7 @@
                       <md-button class="md-icon-button md-primary" 
                                  ng-show="datasetsCtrl.all_selected" 
                                  aria-label="De-Select All" 
-                                 ng-click="datasetsCtrl.all_selected = false; datasetsCtrl.deselectAll();"
+                                 ng-click="datasetsCtrl.resetSelected();"
                                  style="margin-bottom: -10px">
                         <md-tooltip md-direction="right">
                           De-Select All
@@ -183,35 +182,35 @@
                         <md-icon md-svg-icon="images/checkbox_true.svg"  ></md-icon>
                       </md-button>
                       </th>                       
-                      <th ng-click="sort('dir')">Type
+                      <th ng-click="sort('dir'); datasetsCtrl.resetSelected();">Type
                         <span class="glyphicon sort-icon" ng-show="sortKey == 'dir'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span></th>
-                      <th ng-click="sort('name')">Name
+                      <th ng-click="sort('name'); datasetsCtrl.resetSelected();">Name
                         <span class="glyphicon sort-icon" ng-show="sortKey === 'name'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span></th>
-                      <th ng-click="sort('owner')">Owner  
+                      <th ng-click="sort('owner'); datasetsCtrl.resetSelected();">Owner  
                         <span class="glyphicon sort-icon" ng-show="sortKey === 'owner'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span></th>
-                      <th ng-click="sort('project')" ng-if="datasetsCtrl.isShared()">Project  
+                      <th ng-click="sort('project'); datasetsCtrl.resetSelected();" ng-if="datasetsCtrl.isShared()">Project  
                         <span class="glyphicon sort-icon" ng-show="sortKey === 'project'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span></th>
-                      <th ng-click="sort('modification')">Last modified
+                      <th ng-click="sort('modification'); datasetsCtrl.resetSelected();">Last modified
                         <span class="glyphicon sort-icon" ng-show="sortKey === 'modification'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span></th>
-                      <th ng-click="sort('size')">File size
+                      <th ng-click="sort('size'); datasetsCtrl.resetSelected();">File size
                         <span class="glyphicon sort-icon" ng-show="sortKey === 'size'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span></th>
                       <th></th>
                       </tr>
                       </thead>
-                      <tbody ng-model="datasetsCtrl.files">                       
-                        <tr
-                          dir-paginate="file in datasetsCtrl.files | orderBy:sortKey:reverse | filter:search | itemsPerPage:datasetsCtrl.itemsPerPage"
-                          context-menu
-                          data-target="menu-{{ $index}}"
-                          ng-class="{ 'highlight': datasetsCtrl.haveSelected(file) === true
-                            , 'staging' : file.zipState === 'STAGING'
-                            , 'zipping' : file.zipState === 'ZIPPING'
-                            , 'unzipping' : file.zipState === 'UNZIPPING'
-                            , 'uploading' : file.zipState === 'UPLOADING'
-                            , 'success' : file.zipState === 'SUCCESS'
-                            , 'failed' : file.zipState === 'FAILED'
-                          }"
-                          id="table-{{ $index}}">
+                      <tbody class="datasets-jobs-table">
+                        <tr dir-paginate="file in datasetsCtrl.files | orderBy:sortKey:reverse | filter:datasetsCtrl.search | itemsPerPage:datasetsCtrl.itemsPerPage"
+                            pagination-id="dataset_browser_pagination"
+                            context-menu
+                            data-target="menu-{{ $index}}"
+                            ng-class="{ 'highlight': datasetsCtrl.haveSelected(file) === true
+                                      , 'staging' : file.zipState === 'STAGING'
+                                      , 'zipping' : file.zipState === 'ZIPPING'
+                                      , 'unzipping' : file.zipState === 'UNZIPPING'
+                                      , 'uploading' : file.zipState === 'UPLOADING'
+                                      , 'success' : file.zipState === 'SUCCESS'
+                                      , 'failed' : file.zipState === 'FAILED'
+                                    }"
+                            id="table-{{ $index}}">
                           <td>
                       <md-button class="md-icon-button md-primary" aria-label="Select File" ng-show="!datasetsCtrl.haveSelected(file)" 
                                  ng-click="datasetsCtrl.select($index, file, $event); metadataCtrl.setMetadataTemplate(file); datasetsCtrl.openMetadata(); datasetsCtrl.sharedDatasetPath();" >
@@ -231,9 +230,9 @@
                         <div>
                           <i uib-tooltip="Click on folder icon to enter folder" tooltip-placement="right" ng-show="file.dir" class="glyphicon"
                              ng-class="{ 'glyphicon-folder-close': datasetsCtrl.selected === file.name,  'glyphicon-folder-open': datasetsCtrl.selected !== file.name}"
-                             style="padding-right: 5px; color: #757575; float: left;margin-top: 4px;"></i>
+                             style="padding-right: 5px; color: #757575; float: left;"></i>
                           <i uib-tooltip="Download file" tooltip-placement="right" ng-show="!file.dir" class="glyphicon glyphicon-cloud-download" 
-                             style="padding-right: 5px; color: #757575;float: left;margin-top: 4px;"></i>
+                             style="padding-right: 5px; color: #757575;float: left;"></i>
                         </div>
                       </td>
                       <td ng-click="datasetsCtrl.openDir(file)">
@@ -431,9 +430,11 @@
                       <tfoot><tr><td colspan="100"><div class="loader loader-sm" ng-show="datasetsCtrl.working"></div></td></tr></tfoot>
                     </table>
                     <dir-pagination-controls
-                      max-size="5"
+                      pagination-id="dataset_browser_pagination"
+                      max-size="7"
                       direction-links="true"
                       boundary-links="true"
+                      on-page-change="datasetsCtrl.pageChange(newPageNumber)"
                       class="pull-right" style="margin-bottom: -10px;">
                     </dir-pagination-controls>
                   </div>                  

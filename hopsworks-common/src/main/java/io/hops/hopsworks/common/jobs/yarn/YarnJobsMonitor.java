@@ -86,30 +86,15 @@ public class YarnJobsMonitor {
 
   private int maxStatusPollRetry;
 
-  Map<String, Execution> executions = new HashMap<>();
   Map<String, YarnMonitor> monitors = new HashMap<>();
   Map<String, Integer> failures = new HashMap<>();
-  boolean init = true;
-  private List<CopyLogsFutureResult> copyLogsFutures = new ArrayList<>();
-  
-  /**
-   * Add an execution and its monitor to the applications that need to be monitored.
-   * <p/>
-   * @param appId the id of the application to monitor
-   * @param exec the execution corresponding to the monitored application
-   * @param monitor the monitor for this application
-   */
-  public void addToMonitor(String appId, Execution exec, YarnMonitor monitor) {
-    monitor = monitor.start();
-    executions.put(appId, exec);
-    monitors.put(appId, monitor);
-  }
+  private final Map<ApplicationId, CopyLogsFutureResult> copyLogsFutures = new HashMap<>();
 
   @Schedule(persistent = false,
       second = "*/5",
       minute = "*",
       hour = "*")
-  synchronized public void monitor(Timer timer) {
+  public synchronized void monitor(Timer timer) {
     //TODO(Theofilos): Remove check for ca module for 0.7.0 onwards
     try {
       String applicationName = InitialContext.doLookup("java:app/AppName");
@@ -120,57 +105,64 @@ public class YarnJobsMonitor {
     } catch (NamingException e) {
       LOGGER.log(Level.SEVERE, null, e);
     }
-    if (init) {
-      List<Execution> execs = executionFacade.findNotFinished();
-      if (execs != null && !execs.isEmpty()) {
-        for (Execution exec : execs) {
-          if (exec.getAppId() != null) {
-            executions.put(exec.getAppId(), exec);
-          }
+    Map<String, Execution> executions = new HashMap<>();
+    List<Execution> execs = executionFacade.findNotFinished();
+    if (execs != null && !execs.isEmpty()) {
+      for (Execution exec : execs) {
+        if (exec.getAppId() != null) {
+          executions.put(exec.getAppId(), exec);
+        }
+      }
+      //Remove (Close) all monitors of deleted jobs
+      Iterator<Map.Entry<String, YarnMonitor>> monitorsIter = monitors.entrySet().iterator();
+      while (monitorsIter.hasNext()) {
+        Map.Entry<String, YarnMonitor> entry = monitorsIter.next();
+        // Check if Value associated with Key is 10
+        if (!executions.keySet().contains(entry.getKey())) {
+          // Remove the element
+          entry.getValue().close();
+          monitorsIter.remove();
         }
       }
       maxStatusPollRetry = settings.getMaxStatusPollRetry();
-      init = false;
-    }
-    List<String> toRemove = new ArrayList<>();
-    List<Execution> toUpdate = new ArrayList<>();
-    for (String appID : executions.keySet()) {
-      YarnMonitor monitor = monitors.get(appID);
-      if (monitor == null) {
-        ApplicationId appId = ApplicationId.fromString(appID);
-        YarnClientWrapper newYarnclientWrapper = ycs.getYarnClientSuper(settings
-            .getConfiguration());
-        monitor = new YarnMonitor(appId, newYarnclientWrapper, ycs);
-        monitors.put(appID, monitor);
-      }
-      Execution exec = internalMonitor(executions.get(appID), monitor);
-      if (exec != null) {
-        toUpdate.add(exec);
-      } else {
-        toRemove.add(appID);
-        monitor.close();
-      }
-    }
-    for (Execution exec : toUpdate) {
-      executions.put(exec.getAppId(), exec);
-    }
-    for (String appID : toRemove) {
-      executions.remove(appID);
-      failures.remove(appID);
-      monitors.remove(appID);
-    }
-  
-    Iterator<CopyLogsFutureResult> futureResultIter = copyLogsFutures.iterator();
-    while (futureResultIter.hasNext() ){
-      CopyLogsFutureResult futureResult = futureResultIter.next();
-      if (futureResult.execFuture.isDone()) {
-        try {
-          execFinalizer.finalize(futureResult.execFuture.get(),
-              futureResult.jobState);
-        } catch (ExecutionException | InterruptedException ex) {
-          LOGGER.log(Level.SEVERE, ex.getMessage(), ex);
+      List<String> toRemove = new ArrayList<>();
+      try {
+        for (Map.Entry<String, Execution> entry : executions.entrySet()) {
+          YarnMonitor monitor = monitors.get(entry.getKey());
+          if (monitor == null) {
+            ApplicationId appId = ApplicationId.fromString(entry.getKey());
+            YarnClientWrapper newYarnclientWrapper = ycs.getYarnClientSuper(settings
+              .getConfiguration());
+            monitor = new YarnMonitor(appId, newYarnclientWrapper, ycs);
+            monitors.put(entry.getKey(), monitor);
+          }
+          Execution exec = internalMonitor(executions.get(entry.getKey()), monitor);
+          if (exec == null) {
+            toRemove.add(entry.getKey());
+            monitor.close();
+          }
         }
-        futureResultIter.remove();
+        for (String appID : toRemove) {
+          failures.remove(appID);
+          monitors.remove(appID);
+        }
+  
+        Iterator<Map.Entry<ApplicationId, CopyLogsFutureResult>> futureResultIter =
+            copyLogsFutures.entrySet().iterator();
+        while (futureResultIter.hasNext()) {
+          Map.Entry<ApplicationId, CopyLogsFutureResult> futureResult = futureResultIter.next();
+          if (futureResult.getValue().execFuture.isDone()) {
+            try {
+              execFinalizer.finalize(futureResult.getValue().execFuture.get(),
+                futureResult.getValue().jobState);
+            } catch (ExecutionException | InterruptedException ex) {
+              LOGGER.log(Level.SEVERE, ex.getMessage(), ex);
+            }
+            futureResultIter.remove();
+          }
+        }
+      } catch (Exception ex) {
+        LOGGER.log(Level.SEVERE, "Error while monitoring jobs", ex);
       }
     }
   }
@@ -183,15 +175,17 @@ public class YarnJobsMonitor {
       exec = updateProgress(progress, exec);
       exec = updateState(JobState.getJobState(appState), exec);
       exec = updateFinalStatus(JobFinalStatus.getJobFinalStatus(finalAppStatus), exec);
-
-      if (appState == YarnApplicationState.FAILED || appState == YarnApplicationState.FINISHED || appState
-          == YarnApplicationState.KILLED) {
+      
+      if ((appState == YarnApplicationState.FAILED
+          || appState == YarnApplicationState.FINISHED
+          || appState == YarnApplicationState.KILLED)
+          && !copyLogsFutures.containsKey(monitor.getApplicationId())) {
+        
         exec = executionFacade.updateState(exec, JobState.AGGREGATING_LOGS);
         // Async call
         Future<Execution> futureResult = execFinalizer.copyLogs(exec);
-        copyLogsFutures.add(new CopyLogsFutureResult(futureResult,
-            JobState.getJobState(appState)));
-        
+        copyLogsFutures.put(monitor.getApplicationId(),
+            new CopyLogsFutureResult(futureResult, JobState.getJobState(appState)));
         return null;
       }
     } catch (IOException | YarnException ex) {

@@ -63,6 +63,7 @@ angular.module('hopsWorksApp')
 
             // Details of the currently selecte file/dir
             self.selected = null; //The index of the selected file in the files array.
+            self.lastSelected = -1;
             self.sharedPath = null; //The details about the currently selected file.
             self.routeParamArray = [];
             $scope.readme = null;
@@ -181,10 +182,10 @@ angular.module('hopsWorksApp')
                       function (success) {
                         self.files = success.data;
                         self.pathArray = [];
-                        console.log(success);
+                        //console.log(success);
                       }, function (error) {
-                console.log("Error getting all datasets in project " + self.projectId);
-                console.log(error);
+                        console.log("Error getting all datasets in project " + self.projectId);
+                        console.log(error);
               });
             };
 
@@ -217,13 +218,14 @@ angular.module('hopsWorksApp')
                         self.selectedFiles = {};
                         //Reset the selected file
                         self.selected = null;
+                        self.lastSelected = -1;
                         self.working = false;
                         //Set the current files and path
                         self.files = success.data;
                         self.pathArray = newPathArray;
-                        console.log(success);
+//                        console.log(success);
 //                        alert('Execution time: ' + (new Date().getTime() - self.dir_timing)); 
-                        console.log('Execution time: ' + (new Date().getTime() - self.dir_timing));
+//                        console.log('Execution time: ' + (new Date().getTime() - self.dir_timing));
                         if ($rootScope.selectedFile) {
                           var filePathArray = self.pathArray.concat($rootScope.selectedFile);
                           self.getFile(filePathArray);
@@ -232,7 +234,7 @@ angular.module('hopsWorksApp')
                       }, function (error) {
                 if (error.data.errorMsg.indexOf("Path is not a directory.") > -1) {
                   var popped = newPathArray.pop();
-                  console.log(popped);
+                  //console.log(popped);
                   self.openDir({name: popped, dir: false, underConstruction: false});
                   self.pathArray = newPathArray;
                   self.routeParamArray = [];
@@ -249,8 +251,7 @@ angular.module('hopsWorksApp')
                   getDirContents();
                 }
                 self.working = false;
-                console.log("Error getting the contents of the path "
-                        + getPath(newPathArray));
+                console.log("Error getting the contents of the path " + getPath(newPathArray));
                 console.log(error);
               });
             };
@@ -879,11 +880,13 @@ angular.module('hopsWorksApp')
                                   self.all_selected = false;
                                   self.selectedFiles = {};
                                   self.selected = null;
+                                  self.lastSelected = -1;
                                 }, function (error) {
                           growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 4});
                           self.all_selected = false;
                           self.selectedFiles = {};
                           self.selected = null;
+                          self.lastSelected = -1;
                         });
                       });
             };
@@ -910,10 +913,8 @@ angular.module('hopsWorksApp')
 
               ModalService.upload('lg', self.projectId, getPath(self.pathArray), templateId).then(
                       function (success) {
-                        growl.success(success, {ttl: 5000});
                         getDirContents();
                       }, function (error) {
-//                growl.info("Closed without saving.", {title: 'Info', ttl: 5000});
                 getDirContents();
               });
             };
@@ -1100,6 +1101,15 @@ angular.module('hopsWorksApp')
             self.menustyle = {
               "opacity": 0.2
             };
+            
+            self.search = '';
+            function getFilteredResults() {
+              var filtered = $scope.$eval("datasetsCtrl.files | orderBy:sortKey:reverse | filter:datasetsCtrl.search");
+              var total = filtered.length;
+              var start = (self.curentPage - 1) * self.itemsPerPage;
+              var end = Math.min(start + self.itemsPerPage, total);
+              return filtered.slice(start, end);
+            }
 
             /**
              * Select an inode; updates details panel.
@@ -1109,17 +1119,42 @@ angular.module('hopsWorksApp')
              * @returns {undefined}
              */
             self.select = function (selectedIndex, file, event) {
-
               // 1. Turn off the selected file at the top of the browser.
               // Add existing selected file (idempotent, if already added)
               // If file already selected, deselect it.
-              if (event && event.ctrlKey) {
-
+              if (event && (event.ctrlKey || event.metaKey)) {
+                
+              } else if (event && event.shiftKey && self.isSelectedFiles() > 0) {
+                self.selected = null;
+                self.tgState = false;
+                var i = self.lastSelected;
+                var file;
+                var files = getFilteredResults();
+                if (self.lastSelected  >= 0 && self.lastSelected < selectedIndex) {
+                  while (i <= selectedIndex) {
+                    file = files[i];
+                    self.selectedFiles[file.name] = file;
+                    self.selectedFiles[file.name].selectedIndex = i;
+                    i++;
+                  }
+                } else if (self.lastSelected >= 0 && self.lastSelected > selectedIndex) {
+                  while (i >= selectedIndex) {
+                    file = files[i];
+                    self.selectedFiles[file.name] = file;
+                    self.selectedFiles[file.name].selectedIndex = i; 
+                    i--;
+                  }
+                }
+                self.menustyle.opacity = 1.0;
+                self.lastSelected = selectedIndex;
+                return;
               } else {
-                self.selectedFiles = {};
+                self.resetSelected();
               }
               if (self.isSelectedFiles() > 0) {
                 self.selected = null;
+                self.lastSelected = -1;
+                self.tgState = false;
               } else {
                 self.tgState = true;
                 self.selected = file.name;
@@ -1127,7 +1162,8 @@ angular.module('hopsWorksApp')
               self.selectedFiles[file.name] = file;
               self.selectedFiles[file.name].selectedIndex = selectedIndex;
               self.menustyle.opacity = 1.0;
-              console.log(self.selectedFiles);
+              self.lastSelected = selectedIndex;
+              //console.log(self.selectedFiles);
             };
 
             self.haveSelected = function (file) {
@@ -1140,18 +1176,24 @@ angular.module('hopsWorksApp')
               return false;
             };
 
+            self.curentPage = 1;
+            self.pageChange = function (newPageNumber) {
+              self.curentPage = newPageNumber;
+              self.resetSelected();
+            };
 
             self.selectAll = function () {
-              var i = 0;
-              var min = Math.min(self.itemsPerPage, self.files.length);
-              for (i = 0; i < min; i++) {
-                var f = self.files[i];
+              var filtered = getFilteredResults();
+              for (var i = 0; i < filtered.length; i++) {
+                var f = filtered[i];
                 self.selectedFiles[f.name] = f;
                 self.selectedFiles[f.name].selectedIndex = i;
               }
               self.menustyle.opacity = 1;
               self.selected = null;
+              self.lastSelected = -1;
               self.all_selected = true;
+              self.tgState = false;
               if (Object.keys(self.selectedFiles).length === 1
                       && self.selectedFiles.constructor === Object) {
                 self.selected = Object.keys(self.selectedFiles)[0];
@@ -1176,6 +1218,7 @@ angular.module('hopsWorksApp')
               self.all_selected = false;
               self.selectedFiles = {};
               self.selected = null;
+              self.lastSelected = -1;
             };
 
 
@@ -1208,20 +1251,31 @@ angular.module('hopsWorksApp')
               if (Object.keys(self.selectedFiles).length === 0 && self.selectedFiles.constructor === Object) {
                 self.menustyle.opacity = 0.2;
                 self.selected = null;
+                self.lastSelected = -1;
+                self.tgState = false;
               } else if (Object.keys(self.selectedFiles).length === 1 && self.selectedFiles.constructor === Object) {
                 self.menustyle.opacity = 1.0;
                 self.selected = Object.keys(self.selectedFiles)[0];
+                self.tgState = true;
+                self.lastSelected = selectedIndex;
+              } else {
+                self.tgState = false;
               }
               self.all_selected = false;
-              self.tgState = false;
-
             };
 
             self.deselectAll = function () {
               self.selectedFiles = {};
               self.selected = null;
+              self.lastSelected = -1;
               self.sharedPath = null;
+              self.all_selected = false;
               self.menustyle.opacity = 0.2;
+            };
+
+            self.resetSelected = function () {
+              self.deselectAll();
+              self.tgState = false;
             };
 
             self.toggleLeft = buildToggler('left');

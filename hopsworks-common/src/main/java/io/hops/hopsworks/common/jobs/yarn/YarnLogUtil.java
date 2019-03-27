@@ -180,7 +180,7 @@ public class YarnLogUtil {
     try {
       for (String src : srcs) {
         location = new Path(src);
-        LOGGER.log(Level.INFO, "Copying log from {0}", src);
+        LOGGER.log(Level.FINE, "Copying log from {0}", src);
         try {
           reader = new LogReader(dfs.getConf(), dfs,
                   new Path(src));
@@ -193,7 +193,7 @@ public class YarnLogUtil {
           reader = new LogReader(dfs.getConf(), dfs,
                   new Path(src));
         } catch (FileNotFoundException e) {
-          LOGGER.log(Level.SEVERE,
+          LOGGER.log(Level.FINE,
                   "Logs not available. Aggregation may have failed.");
           return;
         } catch (IOException e) {
