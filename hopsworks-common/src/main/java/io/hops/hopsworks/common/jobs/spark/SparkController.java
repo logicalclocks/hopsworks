@@ -118,9 +118,9 @@ public class SparkController {
 
     //If it is a notebook we need to convert it to a .py file every time the job is run
     if(appPath.endsWith(".ipynb")) {
-      int extensionIndex = appPath.lastIndexOf(".ipynb");
-      StringBuilder pathBuilder = new StringBuilder(appPath.substring(0, extensionIndex)).append("_job_" +
-              job.getName() + ".py");
+      String outPath = "hdfs:///" + Settings.DIR_ROOT + "/" + job.getProject().getName() + "/" +
+        Settings.PROJECT_STAGING_DIR;
+      StringBuilder pathBuilder = new StringBuilder(outPath).append("/job_tmp_" + job.getName() + ".py");
       String pyAppPath = pathBuilder.toString();
       sparkConfig.setAppPath(pyAppPath);
       jupyterController.convertIPythonNotebook(username, appPath, job.getProject(), pyAppPath);
