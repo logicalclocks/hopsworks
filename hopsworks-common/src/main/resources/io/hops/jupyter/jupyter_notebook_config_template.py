@@ -34,7 +34,7 @@ c.KernelSpecMAnager.ensure_native_kernel=False
 #  sparkrkernel                  /usr/local/share/jupyter/kernels/sparkrkernel
 #  python2                       /usr/local/share/jupyter/kernels/python-kernel
 
-c.NotebookApp.allow_origin = '*'
+c.NotebookApp.allow_origin = '%%allow_origin%%'
 c.NotebookApp.tornado_settings = {
     'headers': {
         'Content-Security-Policy': "frame-ancestors 'self' "
