@@ -85,7 +85,7 @@ public class JupyterConfigFilesGenerator {
   private TfLibMappingUtil tfLibMappingUtil;
 
   public JupyterPaths generateConfiguration(Project project, String secretConfig, String hdfsUser, String usersFullName,
-    String nameNodeEndpoint, JupyterSettings js, Integer port)
+    String nameNodeEndpoint, JupyterSettings js, Integer port, String allowOrigin)
     throws ServiceException {
     boolean newDir = false;
 
@@ -93,8 +93,8 @@ public class JupyterConfigFilesGenerator {
 
     try {
       newDir = createJupyterDirs(jP);
-      createConfigFiles(jP.getConfDirPath(), jP.getKernelsDir(), hdfsUser,
-        usersFullName, project, nameNodeEndpoint, port, js);
+      createConfigFiles(jP.getConfDirPath(), jP.getKernelsDir(), hdfsUser, usersFullName, project, nameNodeEndpoint,
+        port, js, allowOrigin);
     } catch (Exception e) {
       if (newDir) { // if the folder was newly created delete it
         removeProjectUserDirRecursive(jP);
@@ -150,7 +150,7 @@ public class JupyterConfigFilesGenerator {
 
   // returns true if one of the conf files were created anew 
   private boolean createConfigFiles(String confDirPath, String kernelsDir, String hdfsUser, String usersFullName,
-                                    Project project, String nameNodeEndpoint, Integer port, JupyterSettings js)
+    Project project, String nameNodeEndpoint, Integer port, JupyterSettings js, String allowOrigin)
     throws IOException, ServiceException {
     File jupyter_config_file = new File(confDirPath + JUPYTER_NOTEBOOK_CONFIG);
     File sparkmagic_config_file = new File(confDirPath + SPARKMAGIC_CONFIG);
@@ -201,8 +201,8 @@ public class JupyterConfigFilesGenerator {
               "python-kernel", ", '"+ pythonKernelName + "'",
               "hadoop_home", this.settings.getHadoopSymbolicLinkDir(),
               "hdfs_home", this.settings.getHadoopSymbolicLinkDir(),
-              "secret_dir", this.settings.getStagingDir()
-              + Settings.PRIVATE_DIRS + js.getSecret()
+              "secret_dir", this.settings.getStagingDir() + Settings.PRIVATE_DIRS + js.getSecret(),
+              "allow_origin", allowOrigin
           );
       createdJupyter = ConfigFileGenerator.createConfigFile(jupyter_config_file,
           jupyter_notebook_config.toString());

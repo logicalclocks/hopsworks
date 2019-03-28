@@ -102,6 +102,7 @@ import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Level;
 import javax.ws.rs.core.SecurityContext;
+import javax.ws.rs.core.UriInfo;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -274,7 +275,8 @@ public class JupyterService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response startNotebookServer(JupyterSettings jupyterSettings, @Context HttpServletRequest req, 
-      @Context SecurityContext sc) throws ProjectException, HopsSecurityException, ServiceException {
+      @Context SecurityContext sc, @Context UriInfo uriInfo) throws ProjectException, HopsSecurityException,
+    ServiceException {
 
     Users hopsworksUser = jWTHelper.getUserPrincipal(sc);
     String hdfsUser = hdfsUsersController.getHdfsUserName(project, hopsworksUser);
@@ -300,10 +302,15 @@ public class JupyterService {
       String configSecret = DigestUtils.sha256Hex(Integer.toString(ThreadLocalRandom.current().nextInt()));
       JupyterDTO dto = null;
       DistributedFileSystemOps dfso = dfsService.getDfsOps();
-  
+      String allowOriginScheme = uriInfo.getBaseUri().getScheme();
+      String allowOriginHost = uriInfo.getBaseUri().getHost();
+      int allowOriginPort = uriInfo.getBaseUri().getPort();
+      String allowOriginPortStr = allowOriginPort != -1 ? ":" + allowOriginPort : "";
+      String allowOrigin = allowOriginScheme + "://" + allowOriginHost + allowOriginPortStr;
       try {
         jupyterSettingsFacade.update(jupyterSettings);
-        dto = jupyterProcessFacade.startServerAsJupyterUser(project, configSecret, hdfsUser, realName, jupyterSettings);
+        dto = jupyterProcessFacade.startServerAsJupyterUser(project, configSecret, hdfsUser, realName,
+          jupyterSettings, allowOrigin);
         HopsUtils.materializeCertificatesForUserCustomDir(project.getName(), user.getUsername(),
             settings.getHdfsTmpCertDir(), dfso, certificateMaterializer, settings, dto.getCertificatesDir());
         // When Livy launches a job it will look in the standard directory for the certificates
