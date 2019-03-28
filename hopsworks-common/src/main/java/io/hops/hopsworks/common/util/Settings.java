@@ -164,6 +164,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_STAGING_DIR = "staging_dir";
   private static final String VARIABLE_AIRFLOW_DIR = "airflow_dir";
   private static final String VARIABLE_JUPYTER_DIR = "jupyter_dir";
+  private static final String VARIABLE_JUPYTER_WS_PING_INTERVAL = "jupyter_ws_ping_interval";
   private static final String VARIABLE_SPARK_DIR = "spark_dir";
   private static final String VARIABLE_FLINK_DIR = "flink_dir";
   private static final String VARIABLE_FLINK_USER = "flink_user";
@@ -425,6 +426,18 @@ public class Settings implements Serializable {
     return defaultValue;
   }
 
+  private long setMillisecondVar(String varName, Long defaultValue) {
+    Variables var = findById(varName);
+    if (var != null && var.getValue() != null && !var.getValue().isEmpty()) {
+      String val = var.getValue();
+      long timeValue = getConfTimeValue(val);
+      TimeUnit timeUnit = getConfTimeTimeUnit(val);
+      return timeUnit.toMillis(timeValue);
+    }
+
+    return defaultValue;
+  }
+
   private boolean cached = false;
 
   private void populateCache() {
@@ -458,6 +471,7 @@ public class Settings implements Serializable {
       ALERT_EMAIL_ADDRS = setStrVar(VARIABLE_ALERT_EMAIL_ADDRS, "");
       HADOOP_VERSION = setVar(VARIABLE_HADOOP_VERSION, HADOOP_VERSION);
       JUPYTER_DIR = setDirVar(VARIABLE_JUPYTER_DIR, JUPYTER_DIR);
+      JUPYTER_WS_PING_INTERVAL_MS = setMillisecondVar(VARIABLE_JUPYTER_WS_PING_INTERVAL, JUPYTER_WS_PING_INTERVAL_MS);
       MYSQL_DIR = setDirVar(VARIABLE_MYSQL_DIR, MYSQL_DIR);
       HADOOP_DIR = setDirVar(VARIABLE_HADOOP_DIR, HADOOP_DIR);
       HOPSWORKS_INSTALL_DIR = setDirVar(VARIABLE_HOPSWORKS_DIR,
@@ -1510,6 +1524,14 @@ public class Settings implements Serializable {
   public synchronized String getJupyterDir() {
     checkCache();
     return JUPYTER_DIR;
+  }
+
+  private long JUPYTER_WS_PING_INTERVAL_MS = 10000L;
+
+  public synchronized long getJupyterWSPingInterval() {
+    checkCache();
+    return JUPYTER_WS_PING_INTERVAL_MS;
+
   }
 
   // Service key rotation interval
