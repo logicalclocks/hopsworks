@@ -144,7 +144,7 @@ public class AuthService {
   public Response login(@FormParam("email") String email, @FormParam("password") String password,
       @FormParam("otp") String otp, @Context HttpServletRequest req) throws UserException, SigningKeyNotFoundException,
       NoSuchAlgorithmException, LoginException, DuplicateSigningKeyException {
-    logUserLogin(req);
+
     if (email == null || email.isEmpty()) {
       throw new IllegalArgumentException("Email was not provided");
     }
@@ -158,10 +158,21 @@ public class AuthService {
     if (!needLogin(req, user)) {
       return Response.ok().build();
     }
+
+    // A session needs to be create explicitly before doing to the login operation
+    req.getSession();
+
     // Do pre cauth realm check
     String passwordWithSaltPlusOtp = authController.preCustomRealmLoginCheck(user, password, otp, req);
 
-    return login(user, passwordWithSaltPlusOtp, req);
+    // Do login
+    Response response = login(user, passwordWithSaltPlusOtp, req);
+
+    if (LOGGER.isLoggable(Level.FINEST)) {
+      logUserLogin(req);
+    }
+
+    return response;
   }
 
   @GET
@@ -345,7 +356,7 @@ public class AuthService {
     roles.append(req.isUserInRole("HOPS_ADMIN") ? " admin" : "");
     roles.append(req.isUserInRole("AGENT") ? " agent" : "");
     roles.append(req.isUserInRole("CLUSTER_AGENT") ? " cluster-agent}" : "}");
-    LOGGER.log(Level.INFO, "[/hopsworks-api] login:\n email: {0}\n session: {1}\n in roles: {2}", new Object[]{
+    LOGGER.log(Level.FINEST, "[/hopsworks-api] login:\n email: {0}\n session: {1}\n in roles: {2}", new Object[]{
       req.getUserPrincipal(), req.getSession().getId(), roles});
   }
 }
