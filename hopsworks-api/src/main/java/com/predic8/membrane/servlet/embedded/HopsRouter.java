@@ -22,7 +22,6 @@ import com.predic8.membrane.core.interceptor.ExchangeStoreInterceptor;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.predic8.membrane.core.interceptor.HTTPClientInterceptor;
 import com.predic8.membrane.core.interceptor.Interceptor;
 import com.predic8.membrane.core.interceptor.RuleMatchingInterceptor;
 import com.predic8.membrane.core.interceptor.rewrite.ReverseProxyingInterceptor;
@@ -47,7 +46,7 @@ public class HopsRouter extends Router {
 
     interceptors.add(new ReverseProxyingInterceptor());
     interceptors.add(new WebSocketInterceptor());
-    interceptors.add(new HTTPClientInterceptor());
+    interceptors.add(new HopsHTTPClientInterceptor());
     transport.setInterceptors(interceptors);
     transport.init(this);
     return transport;

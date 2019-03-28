@@ -66,10 +66,9 @@ public class MembraneServlet extends HttpServlet {
   @Override
   protected void service(HttpServletRequest req, HttpServletResponse resp)
           throws ServletException, IOException {
+
     String queryString = req.getQueryString() == null ? "" : "?" + req.
             getQueryString();
-
-    Router router = null;
 
     String externalIp = Ip.getHost(req.getRequestURL().toString());
 
@@ -105,11 +104,10 @@ public class MembraneServlet extends HttpServlet {
 
     ServiceProxy sp = new ServiceProxy(
         new ServiceProxyKey(externalIp, "*", "*", -1), "localhost", targetPort);
-
     sp.setTargetURL(newQueryBuf.toString());
 
     try {
-      router = new HopsRouter();
+      Router router = new HopsRouter();
       router.add(sp);
       router.init();
       new HopsServletHandler(req, resp, router.getTransport(), targetUriObj).run();
