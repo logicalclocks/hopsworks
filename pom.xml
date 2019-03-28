@@ -222,9 +222,9 @@
 
   <distributionManagement>
     <repository>
-      <id>hops</id>
-      <name>hops repo</name>
-      <url>https://bbc1.sics.se/archiva/repository/hops/</url>
+      <id>Hops</id>
+      <name>Hops Repo</name>
+      <url>https://bbc1.sics.se/archiva/repository/Hops/</url>
     </repository>
   </distributionManagement>
 </project>
