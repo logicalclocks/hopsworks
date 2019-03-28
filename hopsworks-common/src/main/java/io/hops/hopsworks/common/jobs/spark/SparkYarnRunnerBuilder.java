@@ -40,7 +40,6 @@ package io.hops.hopsworks.common.jobs.spark;
 
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.jobs.configuration.JobType;
@@ -51,6 +50,7 @@ import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.util.SparkConfigurationUtil;
 import io.hops.hopsworks.common.util.templates.ConfigProperty;
+import io.hops.hopsworks.exceptions.ServiceException;
 import org.apache.hadoop.yarn.api.records.LocalResourceType;
 import org.apache.hadoop.yarn.api.records.LocalResourceVisibility;
 import org.apache.hadoop.yarn.client.api.YarnClient;
@@ -183,8 +183,6 @@ public class SparkYarnRunnerBuilder {
     extraJavaOptions.put(Settings.LOGSTASH_JOB_INFO,
             project.getName().toLowerCase() + "," + jobName + "," + job.getId() + ","
                     + YarnRunner.APPID_PLACEHOLDER);
-    extraJavaOptions.put(Settings.HOPSWORKS_JOBTYPE_PROPERTY, jobType.getName().toLowerCase());
-
     //Set up command
     StringBuilder amargs = new StringBuilder("--class ");
     amargs.append(((SparkJobConfiguration) job.getJobConfig()).
@@ -201,11 +199,6 @@ public class SparkYarnRunnerBuilder {
 
     String tfLibraryPath = services.getTfLibMappingUtil().getTfLdLibraryPath(project);
 
-    jobHopsworksProps.put(Settings.SPARK_YARN_APPMASTER_ENV + "SPARK_YARN_MODE", new ConfigProperty(
-      Settings.SPARK_YARN_APPMASTER_ENV + "SPARK_YARN_MODE",
-      HopsUtils.IGNORE,
-      "true"));
-
     Map<String, String> finalJobProps = new HashMap<>();
     finalJobProps.putAll(sparkConfigurationUtil.setFrameworkProperties(project, job.getJobConfig(), settings,
       jobUser, usersFullName, tfLibraryPath));
@@ -214,6 +207,8 @@ public class SparkYarnRunnerBuilder {
     
     finalJobProps.put(Settings.SPARK_YARN_APPMASTER_ENV + "SPARK_USER", jobUser);
     finalJobProps.put(Settings.SPARK_EXECUTOR_ENV + "SPARK_USER", jobUser);
+    finalJobProps.put(Settings.SPARK_YARN_APPMASTER_ENV + "SPARK_YARN_MODE", "true");
+    finalJobProps.put(Settings.SPARK_YARN_APPMASTER_ENV + "SPARK_YARN_STAGING_DIR", stagingPath);
 
     //Parse properties from Spark config file
     Properties sparkProperties = new Properties();

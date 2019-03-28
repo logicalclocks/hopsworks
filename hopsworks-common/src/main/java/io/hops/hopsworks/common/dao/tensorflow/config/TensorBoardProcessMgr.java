@@ -21,8 +21,8 @@ import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.tensorflow.TensorBoard;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.exception.RESTCodes;
-import io.hops.hopsworks.common.exception.ServiceException;
+import io.hops.hopsworks.restutils.RESTCodes;
+import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
@@ -87,7 +87,8 @@ public class TensorBoardProcessMgr {
    * @throws IOException
    */
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-  public TensorBoardDTO startTensorBoard(Project project, Users user, HdfsUsers hdfsUser, String hdfsLogdir)
+  public TensorBoardDTO startTensorBoard(Project project, Users user, HdfsUsers hdfsUser, String hdfsLogdir,
+                                         String tfLdLibraryPath)
           throws IOException {
 
     String prog = settings.getHopsworksDomainDir() + "/bin/tensorboard.sh";
@@ -165,6 +166,7 @@ public class TensorBoardProcessMgr {
           .addCommand(settings.getHadoopVersion())
           .addCommand(certsPath)
           .addCommand(settings.getJavaHome())
+          .addCommand(tfLdLibraryPath)
           .ignoreOutErrStreams(true)
           .build();
         LOGGER.log(Level.FINE, processDescriptor.toString());

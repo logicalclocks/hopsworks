@@ -44,23 +44,32 @@ import io.swagger.annotations.Api;
 import org.glassfish.jersey.server.ResourceConfig;
 
 @Api
-@javax.ws.rs.ApplicationPath("ca")
+@javax.ws.rs.ApplicationPath("v2")
 public class ApplicationConfig extends ResourceConfig {
 
   /**
    * adding manually all the restful services of the application.
    */
   public ApplicationConfig() {
-    register(io.hops.hopsworks.ca.api.certs.CertSigningService.class);
-    
+    register(io.hops.hopsworks.ca.api.certificates.CertificatesResource.class);
+    register(io.hops.hopsworks.ca.api.certificates.ProjectCertsResource.class);
+    register(io.hops.hopsworks.ca.api.certificates.HostCertsResource.class);
+    register(io.hops.hopsworks.ca.api.certificates.AppCertsResource.class);
+    register(io.hops.hopsworks.ca.api.certificates.DelaTrackerCertsResource.class);
+    register(io.hops.hopsworks.ca.api.token.TokenResources.class);
+
     register(org.glassfish.jersey.media.multipart.MultiPartFeature.class);
-    
+
+    // JWT filters
+    register(io.hops.hopsworks.ca.api.filter.AuthFilter.class);
+    register(io.hops.hopsworks.ca.api.filter.JWTAutoRenewFilter.class);
+
     //response filters
     register(io.hops.hopsworks.ca.api.filter.CORSFilter.class);
-    
+
     //Exception mappers
     register(CAThrowableMapper.class);
- 
+
     //swagger
     register(io.swagger.jaxrs.listing.ApiListingResource.class);
     register(io.swagger.jaxrs.listing.SwaggerSerializers.class);

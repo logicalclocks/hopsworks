@@ -44,8 +44,8 @@ import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.common.admin.llap.LlapClusterFacade;
 import io.hops.hopsworks.common.admin.llap.LlapClusterLifecycle;
 import io.hops.hopsworks.common.admin.llap.LlapClusterStatus;
-import io.hops.hopsworks.common.exception.RESTCodes;
-import io.hops.hopsworks.common.exception.ServiceException;
+import io.hops.hopsworks.restutils.RESTCodes;
+import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.Api;
 

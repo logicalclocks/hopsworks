@@ -141,7 +141,7 @@
                     Actions
                   </th>
                   </thead>
-                  <tbody>
+                  <tbody class="datasets-jobs-table">
                     <tr
                       dir-paginate="job in jobsCtrl.jobs| itemsPerPage:jobsCtrl.pageSize"
                       pagination-id="jobs_pagination"
@@ -259,9 +259,9 @@
                           {{jobsCtrl.toTitleCase(job.state)}}
                         </span>
                         <span
-                           ng-if="job.state === 'GENERATING_CERTS'"
+                           ng-if="job.state === 'GENERATING_SECURITY_MATERIAL'"
                            style="color: #880000 ">
-                           {{jobsCtrl.toTitleCase(job.state)}}
+                          {{jobsCtrl.toTitleCase(job.state)}}
                         </span>
                       </td>
                       <td>

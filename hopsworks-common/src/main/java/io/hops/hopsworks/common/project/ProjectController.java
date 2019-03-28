@@ -39,6 +39,7 @@
 
 package io.hops.hopsworks.common.project;
 
+import io.hops.hopsworks.common.airflow.AirflowManager;
 import io.hops.hopsworks.common.constants.auth.AllowedRoles;
 import io.hops.hopsworks.common.dao.certificates.CertsFacade;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
@@ -47,8 +48,8 @@ import io.hops.hopsworks.common.dao.dataset.DatasetType;
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
 import io.hops.hopsworks.common.dao.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.FeaturegroupController;
-import io.hops.hopsworks.common.dao.hdfs.HdfsInodeAttributes;
-import io.hops.hopsworks.common.dao.hdfs.HdfsInodeAttributesFacade;
+import io.hops.hopsworks.common.dao.hdfs.HdfsDirectoryWithQuotaFeature;
+import io.hops.hopsworks.common.dao.hdfs.HdfsDirectoryWithQuotaFeatureFacade;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeView;
@@ -70,7 +71,6 @@ import io.hops.hopsworks.common.dao.log.operation.OperationsLogFacade;
 import io.hops.hopsworks.common.dao.project.PaymentType;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.common.dao.project.cert.CertPwDTO;
 import io.hops.hopsworks.common.dao.project.service.ProjectServiceEnum;
 import io.hops.hopsworks.common.dao.project.service.ProjectServiceFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectRoleTypes;
@@ -84,17 +84,7 @@ import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.FolderNameValidator;
 import io.hops.hopsworks.common.elastic.ElasticController;
-import io.hops.hopsworks.common.exception.DatasetException;
-import io.hops.hopsworks.common.exception.FeaturestoreException;
-import io.hops.hopsworks.common.exception.GenericException;
-import io.hops.hopsworks.common.exception.HopsSecurityException;
-import io.hops.hopsworks.common.exception.JobException;
-import io.hops.hopsworks.common.exception.KafkaException;
-import io.hops.hopsworks.common.exception.ProjectException;
-import io.hops.hopsworks.common.exception.RESTCodes;
-import io.hops.hopsworks.common.exception.RESTException;
-import io.hops.hopsworks.common.exception.ServiceException;
-import io.hops.hopsworks.common.exception.UserException;
+import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.common.experiments.TensorBoardController;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
@@ -109,22 +99,27 @@ import io.hops.hopsworks.common.jupyter.JupyterController;
 import io.hops.hopsworks.common.kafka.KafkaController;
 import io.hops.hopsworks.common.livy.LivyController;
 import io.hops.hopsworks.common.message.MessageController;
-import io.hops.hopsworks.common.security.CAException;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.security.CertificatesController;
-import io.hops.hopsworks.common.security.CertificatesMgmService;
-import io.hops.hopsworks.common.security.OpensslOperations;
 import io.hops.hopsworks.common.serving.inference.logger.KafkaInferenceLogger;
 import io.hops.hopsworks.common.serving.tf.TfServingController;
 import io.hops.hopsworks.common.serving.tf.TfServingException;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.EmailBean;
-import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.yarn.YarnClientService;
 import io.hops.hopsworks.common.yarn.YarnClientWrapper;
-import org.apache.commons.codec.binary.Base64;
+import io.hops.hopsworks.exceptions.DatasetException;
+import io.hops.hopsworks.exceptions.GenericException;
+import io.hops.hopsworks.exceptions.HopsSecurityException;
+import io.hops.hopsworks.exceptions.JobException;
+import io.hops.hopsworks.exceptions.KafkaException;
+import io.hops.hopsworks.exceptions.ProjectException;
+import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.exceptions.UserException;
+import io.hops.hopsworks.restutils.RESTCodes;
+import io.hops.hopsworks.restutils.RESTException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
@@ -236,13 +231,9 @@ public class ProjectController {
   @EJB
   private CertificatesController certificatesController;
   @EJB
-  private CertificatesMgmService certificatesMgmService;
-  @EJB
   private MessageController messageController;
   @EJB
-  private HdfsInodeAttributesFacade hdfsInodeAttributesFacade;
-  @EJB
-  private OpensslOperations opensslOperations;
+  private HdfsDirectoryWithQuotaFeatureFacade hdfsDirectoryWithQuotaFeatureFacade;
   @EJB
   private FeaturestoreController featurestoreController;
   @Inject
@@ -266,6 +257,8 @@ public class ProjectController {
   private JupyterController jupyterController;
   @EJB
   private JupyterFacade jupyterFacade;
+  @EJB
+  private AirflowManager airflowManager;
 
 
   /**
@@ -431,18 +424,17 @@ public class ProjectController {
       }
       LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 9 (members): {0}", System.currentTimeMillis() - startTime);
 
-      if (projectCreationFutures != null) {
-        try {
-          for (Future f : projectCreationFutures) {
-            if (f != null) {
-              f.get();
-            }
+      try {
+        for (Future f : projectCreationFutures) {
+          if (f != null) {
+            f.get();
           }
-        } catch (InterruptedException | ExecutionException ex) {
-          LOGGER.log(Level.SEVERE, "Error while waiting for the certificate "
-              + "generation thread to finish. Will try to cleanup...", ex);
-          cleanup(project, sessionId, projectCreationFutures);
         }
+      } catch (InterruptedException | ExecutionException ex) {
+        LOGGER.log(Level.SEVERE, "Error while waiting for the certificate "
+            + "generation thread to finish. Will try to cleanup...", ex);
+        cleanup(project, sessionId, projectCreationFutures);
+        throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_CREATION_ERROR, Level.SEVERE);
       }
 
       // Run the handlers.
@@ -487,9 +479,6 @@ public class ProjectController {
           project.getName());
       } else if (!noExistingGroup(project.getName())) {
         throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_GROUP_EXISTS, Level.INFO, severity,
-          project.getName());
-      } else if (!noExistingCertificates(project.getName())) {
-        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_CERTIFICATES_EXISTS, Level.INFO, severity,
           project.getName());
       } else if (!verifyQuota(project.getName())) {
         cleanup(project, sessionId, true);
@@ -626,16 +615,6 @@ public class ProjectController {
     conf.addResource(new Path(yarnConfFile.getAbsolutePath()));
     return conf.get(YarnConfiguration.NM_REMOTE_APP_LOG_DIR,
         YarnConfiguration.DEFAULT_NM_REMOTE_APP_LOG_DIR);
-  }
-
-  private boolean noExistingCertificates(String projectName) {
-    boolean result = !opensslOperations.isPresentProjectCertificates(projectName);
-
-    if (!result) {
-      LOGGER.log(Level.WARNING, "certificates existing for project {0}",
-          projectName);
-    }
-    return result;
   }
 
   /**
@@ -986,8 +965,6 @@ public class ProjectController {
     }
 
     cleanup(project, sessionId);
-
-    certificateMaterializer.forceRemoveLocalMaterial(user.getUsername(), project.getName(), null, true);
   }
 
   public String[] forceCleanup(String projectName, String userEmail, String sessionId) {
@@ -999,7 +976,7 @@ public class ProjectController {
       yarnClientWrapper = ycs.getYarnClientSuper(settings.getConfiguration());
       Project project = projectFacade.findByName(projectName);
       if (project != null) {
-        cleanupLogger.logSuccess("Project not found in the database");
+        cleanupLogger.logSuccess("Project found in the database");
 
         // Run custom handler for project deletion
         for (ProjectHandler projectHandler : projectHandlers) {
@@ -1107,13 +1084,14 @@ public class ProjectController {
 
         // Remove certificates
         try {
-          certificatesController.deleteProjectCertificates(project);
+          certificatesController.revokeProjectCertificates(project);
           cleanupLogger.logSuccess("Removed certificates");
-        } catch (CAException ex) {
+        } catch (HopsSecurityException ex) {
           if (ex.getErrorCode() != RESTCodes.CAErrorCode.CERTNOTFOUND) {
             cleanupLogger.logError("Error when removing certificates during project cleanup");
+            cleanupLogger.logError(ex.getMessage());
           }
-        } catch (IOException ex) {
+        } catch (IOException | GenericException ex) {
           cleanupLogger.logError("Error when removing certificates during project cleanup");
           cleanupLogger.logError(ex.getMessage());
         }
@@ -1191,6 +1169,24 @@ public class ProjectController {
           cleanupLogger.logError(ex.getMessage());
         }
 
+        // Remove project DAGs, JWT monitors and free X.509 certificates
+        try {
+          airflowManager.onProjectRemoval(project);
+          cleanupLogger.logSuccess("Removed Airflow DAGs and security references");
+        } catch (Exception ex) {
+          cleanupLogger.logError("Error while cleaning Airflow DAGs and security references");
+          cleanupLogger.logError(ex.getMessage());
+        }
+  
+        try {
+          removeCertificatesFromMaterializer(project);
+          cleanupLogger.logSuccess("Removed all X.509 certificates related to the Project from " +
+              "CertificateMaterializer");
+        } catch (Exception ex) {
+          cleanupLogger.logError("Error while force removing Project certificates from CertificateMaterializer");
+          cleanupLogger.logError(ex.getMessage());
+        }
+        
         // remove dumy Inode
         try {
           dfso.rm(dummy, true);
@@ -1208,7 +1204,7 @@ public class ProjectController {
           cleanupLogger.logError("Error when removing root Project dir during project cleanup");
           cleanupLogger.logError(ex.getMessage());
         }
-
+        
         // Run custom handler for project deletion
         for (ProjectHandler projectHandler : projectHandlers) {
           try {
@@ -1277,7 +1273,7 @@ public class ProjectController {
 
         // Remove ElasticSearch index
         try {
-          removeElasticsearch(project);
+          removeElasticsearch(toDeleteProject);
           cleanupLogger.logSuccess("Removed ElasticSearch");
         } catch (Exception ex) {
           cleanupLogger.logError(ex.getMessage());
@@ -1300,12 +1296,42 @@ public class ProjectController {
           cleanupLogger.logError(ex.getMessage());
         }
 
+        
+        List<ProjectTeam> reconstructedProjectTeam = new ArrayList<>();
+        try {
+          for (HdfsUsers hdfsUser : hdfsUsersController.getAllProjectHdfsUsers(projectName)) {
+            Users foundUser = userFacade.findByUsername(hdfsUser.getUsername());
+            if (foundUser != null) {
+              reconstructedProjectTeam.add(new ProjectTeam(toDeleteProject, foundUser));
+            }
+          }
+        } catch (Exception ex) {
+          // NOOP
+        }
+        toDeleteProject.setProjectTeamCollection(reconstructedProjectTeam);
+        
+        try {
+          airflowManager.onProjectRemoval(toDeleteProject);
+          cleanupLogger.logSuccess("Removed Airflow DAGs and security references");
+        } catch (Exception ex) {
+          cleanupLogger.logError("Failed to remove Airflow DAGs and security references");
+          cleanupLogger.logError(ex.getMessage());
+        }
+        
+        try {
+          removeCertificatesFromMaterializer(toDeleteProject);
+          cleanupLogger.logSuccess("Freed all x.509 references from CertificateMaterializer");
+        } catch (Exception ex) {
+          cleanupLogger.logError("Failed to free all X.509 references from CertificateMaterializer");
+          cleanupLogger.logError(ex.getMessage());
+        }
+        
         // Remove Certificates
         try {
-          opensslOperations.deleteProjectCertificate(projectName);
+          certificatesController.revokeProjectCertificates(project);
           userCertsFacade.removeAllCertsOfAProject(projectName);
           cleanupLogger.logSuccess("Deleted certificates");
-        } catch (IOException ex) {
+        } catch (HopsSecurityException | GenericException | IOException ex) {
           cleanupLogger.logError(ex.getMessage());
         }
 
@@ -1329,7 +1355,10 @@ public class ProjectController {
       dfs.closeDfsClient(dfso);
       ycs.closeYarnClient(yarnClientWrapper);
       LOGGER.log(Level.INFO, cleanupLogger.getSuccessLog().toString());
-      LOGGER.log(Level.SEVERE, cleanupLogger.getErrorLog().toString());
+      String errorLog = cleanupLogger.getErrorLog().toString();
+      if (!errorLog.isEmpty()) {
+        LOGGER.log(Level.SEVERE, errorLog);
+      }
       sendInbox(cleanupLogger.getSuccessLog().append("\n")
           .append(cleanupLogger.getErrorLog()).append("\n").toString(), userEmail);
     }
@@ -1398,6 +1427,28 @@ public class ProjectController {
         Thread.sleep(500);
         appReport = client.getApplicationReport(appReport.getApplicationId());
         logAggregationState = appReport.getLogAggregationStatus();
+      }
+    }
+  }
+  
+  /**
+   * Safety-net method to delete certificate references from {@link CertificateMaterializer}
+   * Individual services who request material should de-reference them during cleanup, but just
+   * to be on the safe side force remove them too
+   *
+   * @param project Project to be deleted
+   */
+  private void removeCertificatesFromMaterializer(Project project) {
+    for (ProjectTeam team : project.getProjectTeamCollection()) {
+      certificateMaterializer.forceRemoveLocalMaterial(team.getUser().getUsername(), project.getName(), null, true);
+      String remoteCertsDirectory = settings.getHdfsTmpCertDir() + Path.SEPARATOR +
+          hdfsUsersController.getHdfsUserName(project, team.getUser());
+      if (remoteCertsDirectory.equals(settings.getHdfsTmpCertDir())) {
+        LOGGER.log(Level.WARNING, "Programming error! Tried to delete " + settings.getHdfsTmpCertDir()
+            + " while deleting project " + project + " but this operation is not allowed.");
+      } else {
+        certificateMaterializer.forceRemoveRemoteMaterial(team.getUser().getUsername(), project.getName(),
+            remoteCertsDirectory, false);
       }
     }
   }
@@ -1473,6 +1524,8 @@ public class ProjectController {
         List<HdfsUsers> usersToClean = getUsersToClean(project);
         List<HdfsGroups> groupsToClean = getGroupsToClean(project);
         removeProjectInt(project, usersToClean, groupsToClean, projectCreationFutures, decreaseCreatedProj);
+        
+        removeCertificatesFromMaterializer(project);
         break;
       } catch (Exception ex) {
         nbTry++;
@@ -1490,12 +1543,12 @@ public class ProjectController {
       }
     }
   }
-
+  
   private void removeProjectInt(Project project, List<HdfsUsers> usersToClean,
       List<HdfsGroups> groupsToClean, List<Future<?>> projectCreationFutures,
       boolean decreaseCreatedProj)
     throws IOException, InterruptedException, ExecutionException,
-    CAException, ServiceException, ProjectException {
+    HopsSecurityException, ServiceException, ProjectException, GenericException {
     DistributedFileSystemOps dfso = null;
     try {
       dfso = dfs.getDfsOps();
@@ -1538,14 +1591,14 @@ public class ProjectController {
       }
 
       try {
-        certificatesController.deleteProjectCertificates(project);
-      } catch (CAException ex) {
+        certificatesController.revokeProjectCertificates(project);
+      } catch (HopsSecurityException ex) {
         if (ex.getErrorCode() != RESTCodes.CAErrorCode.CERTNOTFOUND) {
           LOGGER.log(Level.SEVERE, "Could not delete certificates during cleanup for project " + project.getName()
               + ". Manual cleanup is needed!!!", ex);
           throw ex;
         }
-      } catch (IOException ex) {
+      } catch (IOException | GenericException ex) {
         LOGGER.log(Level.SEVERE, "Could not delete certificates during cleanup for project " + project.getName()
             + ". Manual cleanup is needed!!!", ex);
         throw ex;
@@ -1584,6 +1637,10 @@ public class ProjectController {
         throw new IOException(e);
       }
 
+      // Remove Airflow DAGs from local filesystem,
+      // JWT renewal monitors and materialized X.509
+      airflowManager.onProjectRemoval(project);
+      
       //remove folder
       removeProjectFolder(project.getName(), dfso);
 
@@ -1695,9 +1752,9 @@ public class ProjectController {
    * @param projectTeams
    * @return a list of user names that could not be added to the project team
    * list.
-   * @throws io.hops.hopsworks.common.exception.KafkaException
-   * @throws io.hops.hopsworks.common.exception.ProjectException
-   * @throws io.hops.hopsworks.common.exception.UserException
+   * @throws KafkaException
+   * @throws ProjectException
+   * @throws UserException
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public List<String> addMembers(Project project, Users owner, List<ProjectTeam> projectTeams) throws KafkaException,
@@ -1747,8 +1804,9 @@ public class ProjectController {
                 if (certsResultFuture != null) {
                   certsResultFuture.get();
                 }
-                certificatesController.deleteUserSpecificCertificates(project, newMember);
-              } catch (IOException | InterruptedException | ExecutionException | CAException e) {
+                certificatesController.revokeUserSpecificCertificates(project, newMember);
+              } catch (IOException | InterruptedException | ExecutionException |
+                  HopsSecurityException | GenericException e) {
                 String failedUser = project.getName() + HdfsUsersController.USER_NAME_DELIMITER + newMember.
                     getUsername();
                 LOGGER.log(Level.SEVERE,
@@ -1933,8 +1991,8 @@ public class ProjectController {
     }
 
     // HDFS project directory quota
-    HdfsInodeAttributes projectInodeAttrs = hdfsInodeAttributesFacade.
-        getInodeAttributes(project.getInode().getId());
+    HdfsDirectoryWithQuotaFeature projectInodeAttrs = hdfsDirectoryWithQuotaFeatureFacade.
+      getByInodeId(project.getInode().getId());
     if (projectInodeAttrs == null) {
       LOGGER.log(Level.SEVERE, "Cannot find HDFS quota information for project: " + project.getName());
     } else {
@@ -1949,7 +2007,8 @@ public class ProjectController {
       List<Dataset> datasets = (List<Dataset>) project.getDatasetCollection();
       for (Dataset ds : datasets) {
         if (ds.getType() == DatasetType.HIVEDB) {
-          HdfsInodeAttributes dbInodeAttrs = hdfsInodeAttributesFacade.getInodeAttributes(ds.getInodeId());
+          HdfsDirectoryWithQuotaFeature dbInodeAttrs = hdfsDirectoryWithQuotaFeatureFacade
+            .getByInodeId(ds.getInodeId());
           if (dbInodeAttrs == null) {
             LOGGER.log(Level.SEVERE, "Cannot find HiveDB quota information for project: " + project.getName());
           } else {
@@ -1967,7 +2026,8 @@ public class ProjectController {
       List<Dataset> datasets = (List<Dataset>) project.getDatasetCollection();
       for (Dataset ds : datasets) {
         if (ds.getType() == DatasetType.FEATURESTORE) {
-          HdfsInodeAttributes dbInodeAttrs = hdfsInodeAttributesFacade.getInodeAttributes(ds.getInodeId());
+          HdfsDirectoryWithQuotaFeature dbInodeAttrs = hdfsDirectoryWithQuotaFeatureFacade
+            .getByInodeId(ds.getInodeId());
           if (dbInodeAttrs == null) {
             LOGGER.log(Level.SEVERE, "Cannot find FeaturestoreDb quota information for project: " + project.getName());
           } else {
@@ -1984,9 +2044,9 @@ public class ProjectController {
         dbhdfsQuota, dbhdfsUsage, dbhdfsNsQuota, dbhdfsNsCount, fshdfsQuota, fshdfsUsage, fshdfsNsQuota,
         fshdfsNsCount, kafkaQuota);
   }
-  
+
   public void removeMemberFromTeam(Project project, Users user, String toRemoveEmail) throws UserException,
-    ProjectException, ServiceException, IOException, CAException, JobException {
+    ProjectException, ServiceException, IOException, GenericException, JobException, HopsSecurityException {
     Users userToBeRemoved = userFacade.findByEmail(toRemoveEmail);
     if (userToBeRemoved == null) {
       throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE, "user: " + user.getEmail());
@@ -2055,7 +2115,7 @@ public class ProjectController {
         MEMBER);
     
     certificateMaterializer.forceRemoveLocalMaterial(userToBeRemoved.getUsername(), project.getName(), null, false);
-    certificatesController.deleteUserSpecificCertificates(project, userToBeRemoved);
+    certificatesController.revokeUserSpecificCertificates(project, userToBeRemoved);
   }
 
   /**
@@ -2065,8 +2125,8 @@ public class ProjectController {
    * @param opsOwner
    * @param toUpdateEmail
    * @param newRole
-   * @throws io.hops.hopsworks.common.exception.UserException
-   * @throws io.hops.hopsworks.common.exception.ProjectException
+   * @throws UserException
+   * @throws ProjectException
    */
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   public void updateMemberRole(Project project, Users opsOwner, String toUpdateEmail, String newRole) throws
@@ -2508,47 +2568,6 @@ public class ProjectController {
     }
   }
 
-  public CertPwDTO getProjectSpecificCertPw(Users user, String projectName,
-      String keyStore) throws Exception {
-    //Compare the sent certificate with the one in the database
-    String keypw = HopsUtils.decrypt(user.getPassword(), userCertsFacade.findUserCert(projectName, user.getUsername()).
-        getUserKeyPwd(), certificatesMgmService.getMasterEncryptionPassword());
-    String projectUser = projectName + HdfsUsersController.USER_NAME_DELIMITER
-        + user.getUsername();
-    validateCert(Base64.decodeBase64(keyStore), keypw.toCharArray(), projectUser);
-
-    CertPwDTO respDTO = new CertPwDTO();
-    respDTO.setKeyPw(keypw);
-    respDTO.setTrustPw(keypw);
-    return respDTO;
-  }
-
-  /**
-   * Returns the project user from the keystore and verifies it.
-   *
-   * @param keyStore
-   * @param keyStorePwd
-   * @return
-   */
-  public void validateCert(byte[] keyStore, char[] keyStorePwd, String projectUser)
-    throws UserException, HopsSecurityException {
-    String commonName = certificatesController.extractCNFromCertificate(keyStore, keyStorePwd, projectUser);
-
-    if (!projectUser.equals(commonName)) {
-      throw new UserException(RESTCodes.UserErrorCode.CERT_AUTHORIZATION_ERROR, Level.WARNING,
-        "projectUser:" + projectUser);
-    }
-
-    byte[] userKey = userCertsFacade.findUserCert(hdfsUsersController.
-          getProjectName(commonName),
-          hdfsUsersController.getUserName(commonName)).getUserKey();
-
-    if (!Arrays.equals(userKey, keyStore)) {
-      throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_ERROR, Level.SEVERE,
-        "projectUser:" + projectUser);
-    }
-  }
-  
   public CertsDTO downloadCert(Integer projectId, Users user) throws ProjectException, DatasetException {
     Project project = findProjectById(projectId);
     String keyStore = "";

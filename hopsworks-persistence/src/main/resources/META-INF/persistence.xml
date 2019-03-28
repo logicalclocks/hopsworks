@@ -42,7 +42,7 @@
   <persistence-unit name="kthfsPU" transaction-type="JTA">
     <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
     <jta-data-source>jdbc/hopsworks</jta-data-source>
-    <class>io.hops.hopsworks.common.dao.hdfs.HdfsInodeAttributes</class>
+    <class>io.hops.hopsworks.common.dao.hdfs.HdfsDirectoryWithQuotaFeature</class>
     <class>io.hops.hopsworks.common.dao.hdfs.HdfsLeDescriptors</class>
     <class>io.hops.hopsworks.common.dao.hdfsUser.HdfsGroups</class>
     <class>io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers</class>
@@ -124,6 +124,7 @@
     <class>io.hops.hopsworks.common.dao.featurestore.stats.FeaturestoreStatistic</class>
     <class>io.hops.hopsworks.common.dao.featurestore.dependencies.FeaturestoreDependency</class>
     <class>io.hops.hopsworks.common.dao.featurestore.trainingdataset.feature.TrainingDatasetFeature</class>
+    <class>io.hops.hopsworks.common.dao.airflow.AirflowMaterial</class>
     <!-- Converters -->
     <class>io.hops.hopsworks.common.dao.user.cluster.RegistrationStatusConverter</class>
     <class>io.hops.hopsworks.common.jobs.configuration.JobConfigurationConverter</class>

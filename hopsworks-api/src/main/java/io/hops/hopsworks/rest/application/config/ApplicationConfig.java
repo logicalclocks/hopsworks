@@ -74,7 +74,6 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.api.project.ProjectMembersService.class);
     register(io.hops.hopsworks.api.project.ProjectService.class);
     register(io.hops.hopsworks.api.project.RequestService.class);
-    register(io.hops.hopsworks.api.project.CertService.class);
     register(io.hops.hopsworks.api.pythonDeps.PythonDepsService.class);
     register(io.hops.hopsworks.api.activities.ProjectActivitiesResource.class);
     register(io.hops.hopsworks.api.user.AuthService.class);
@@ -87,7 +86,6 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.api.util.LocalFsService.class);
     register(io.hops.hopsworks.api.util.UploadService.class);
     register(io.hops.hopsworks.api.util.VariablesService.class);
-    register(io.hops.hopsworks.api.app.ApplicationService.class);
     register(io.hops.hopsworks.api.cluster.Monitor.class);
     register(io.hops.hopsworks.api.serving.ServingConfResource.class);
     register(io.hops.hopsworks.api.featurestore.FeaturestoreService.class);

@@ -39,7 +39,7 @@
 
 package io.hops.hopsworks.kmon.communication;
 
-import io.hops.hopsworks.common.exception.GenericException;
+import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.common.util.WebCommunication;
 import java.util.ArrayList;
 import java.util.List;

@@ -60,7 +60,7 @@ public enum JobState {
   FRAMEWORK_FAILURE("Framework failure"),
   STARTING_APP_MASTER("Starting Application Master"),
   APP_MASTER_START_FAILED("Failed starting AM"),
-  GENERATING_CERTS("Generating certificate");
+  GENERATING_SECURITY_MATERIAL("Generating security material");
 
   private final String readable;
 
@@ -91,8 +91,8 @@ public enum JobState {
         return JobState.NEW_SAVING;
       case SUBMITTED:
         return JobState.SUBMITTED;
-      case GENERATING_CERTS:
-        return JobState.GENERATING_CERTS;
+      case GENERATING_SECURITY_MATERIAL:
+        return JobState.GENERATING_SECURITY_MATERIAL;
       default:
         throw new IllegalArgumentException("Invalid enum constant"); // can never happen        
     }
@@ -114,7 +114,8 @@ public enum JobState {
 
   public static Set<JobState> getRunningStates() {
     return EnumSet.
-        of(INITIALIZING, RUNNING, ACCEPTED, NEW, NEW_SAVING, SUBMITTED, STARTING_APP_MASTER, AGGREGATING_LOGS);
+        of(INITIALIZING, NEW, NEW_SAVING, GENERATING_SECURITY_MATERIAL, SUBMITTED, ACCEPTED, STARTING_APP_MASTER,
+            RUNNING, AGGREGATING_LOGS);
   }
   
   public static Set<JobState> getFinalStates() {

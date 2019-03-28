@@ -235,8 +235,12 @@ public class ProjectTeamFacade {
   public String findCurrentRole(Project project, String user) {
     TypedQuery<Users> q = em.createNamedQuery("Users.findByEmail", Users.class);
     q.setParameter("email", user);
-    Users u = q.getSingleResult();
-    return findCurrentRole(project, u);
+    try {
+      Users u = q.getSingleResult();
+      return findCurrentRole(project, u);
+    } catch (NoResultException e){
+      return null;
+    }
   }
 
   public void persistProjectTeam(ProjectTeam team) {

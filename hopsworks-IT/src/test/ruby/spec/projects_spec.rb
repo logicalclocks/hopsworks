@@ -58,9 +58,14 @@ describe "On #{ENV['OS']}" do
           check_project_limit
         end
         it 'should work with valid params' do
-          post "#{ENV['HOPSWORKS_API']}/project", {projectName: "project_#{Time.now.to_i}", description: "", status: 0, services: ["JOBS","HIVE"], projectTeam:[], retentionPeriod: ""}
+          projectname = "project_#{Time.now.to_i}"
+          post "#{ENV['HOPSWORKS_API']}/project", {projectName: "#{projectname}", description: "", status: 0, services: ["JOBS","HIVE"], projectTeam:[], retentionPeriod: ""}
           expect_json(successMessage: regex("Project created successfully.*"))
           expect_status(201)
+          get "#{ENV['HOPSWORKS_API']}/project/getProjectInfo/#{projectname}"
+          project_id = json_body[:projectId]
+          get "#{ENV['HOPSWORKS_API']}/project/#{project_id}"
+          expect_status(200)
         end
         it 'should create resources and logs datasets with right permissions and owner' do
           projectname = "project_#{Time.now.to_i}"
@@ -249,9 +254,26 @@ describe "On #{ENV['OS']}" do
           with_valid_project
         end
         it "should delete project" do
+          # Start Jupyter to put X.509 to HDFS
+          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/enable/3.6/true"
+          expect_status(200)
+          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/settings"
+          expect_status(200)
+          settings = json_body
+          settings[:distributionStrategy] = ""
+          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/start", JSON(settings)
+          expect_status(200)
+          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/running"
+          expect_status(200)
+
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/delete"
           expect_status(200)
           expect_json(successMessage: "The project and all related files were removed successfully.")
+
+          # Deleting a project even with Jupyter running should leave no references behind
+          user = User.find_by(email: @project[:username])
+          project_username = @project[:projectname] + "__" + user.username
+          expect(RemoteMaterialReferences.find_by(username: @project[:projectname])).to be_nil
         end
       end
     end

@@ -39,6 +39,8 @@
 
 package io.hops.hopsworks.common.util;
 
+import io.hops.hopsworks.restutils.JsonResponse;
+
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.security.KeyManagementException;

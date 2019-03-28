@@ -19,8 +19,8 @@ package io.hops.hopsworks.common.tensorflow;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.tensorflow.TfLibMapping;
 import io.hops.hopsworks.common.dao.tensorflow.TfLibMappingFacade;
-import io.hops.hopsworks.common.exception.RESTCodes;
-import io.hops.hopsworks.common.exception.ServiceException;
+import io.hops.hopsworks.restutils.RESTCodes;
+import io.hops.hopsworks.exceptions.ServiceException;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;

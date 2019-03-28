@@ -39,9 +39,9 @@
 
 <script>$(document).ready(hamburger);</script>
 
-<nav class="navbar navbar-default navbar-sics navbar-fixed-top" id="header_nav">
+<nav class="navbar navbar-default navbar-sics navbar-fixed-top" id="header_nav" ng-cloak="">
   <div ng-class="{'container': !projectView, 'container-fluid': projectView}">
-    <div growl class="pull-right"></div>
+    <div growl class="pull-right" ng-cloak></div>
     <div class="navbar-header">
       <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false">
         <span class="sr-only">Toggle navigation</span>

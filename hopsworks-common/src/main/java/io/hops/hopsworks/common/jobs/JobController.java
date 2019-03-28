@@ -54,8 +54,6 @@ import javax.xml.bind.JAXBException;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
-import io.hops.hopsworks.common.exception.JobException;
-import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -65,6 +63,8 @@ import io.hops.hopsworks.common.jobs.execution.ExecutionController;
 import io.hops.hopsworks.common.jobs.flink.FlinkController;
 import io.hops.hopsworks.common.jobs.configuration.JobType;
 import io.hops.hopsworks.common.jobs.spark.SparkController;
+import io.hops.hopsworks.exceptions.JobException;
+import io.hops.hopsworks.restutils.RESTCodes;
 import org.eclipse.persistence.exceptions.DatabaseException;
 
 @Stateless

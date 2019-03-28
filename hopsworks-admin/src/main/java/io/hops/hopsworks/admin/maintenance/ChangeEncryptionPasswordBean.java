@@ -38,7 +38,7 @@
  */
 package io.hops.hopsworks.admin.maintenance;
 
-import io.hops.hopsworks.common.exception.EncryptionMasterPasswordException;
+import io.hops.hopsworks.exceptions.EncryptionMasterPasswordException;
 import io.hops.hopsworks.common.security.CertificatesMgmService;
 
 import javax.ejb.EJB;

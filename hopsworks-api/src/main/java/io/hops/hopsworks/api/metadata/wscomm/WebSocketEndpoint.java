@@ -45,8 +45,8 @@ import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.exception.GenericException;
-import io.hops.hopsworks.common.exception.MetadataException;
+import io.hops.hopsworks.exceptions.GenericException;
+import io.hops.hopsworks.exceptions.MetadataException;
 
 import java.io.IOException;
 import java.util.logging.Level;
@@ -133,7 +133,7 @@ public class WebSocketEndpoint {
 
   @OnClose
   public void onClose(Session session) {
-    logger.log(Level.INFO,
+    logger.log(Level.FINEST,
             "HOPSWORKS: USER {0} SESSION DESTROYED sessions {1}",
             new Object[]{this.sender, session.getOpenSessions().size()});
     Message message = new TextMessage(this.sender, " Left");

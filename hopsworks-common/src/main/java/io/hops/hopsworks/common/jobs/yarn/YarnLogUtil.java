@@ -131,7 +131,8 @@ public class YarnLogUtil {
           }
           break;
         default :
-          writer.print("Something went wrong during log aggregation phase!");
+          writer.print("Something went wrong during log aggregation phase! Log aggregation status is: "
+              + logAggregationStatus.name());
       }
     } catch (Exception ex) {
       if (writer != null) {
@@ -162,7 +163,6 @@ public class YarnLogUtil {
     switch(status){
       case RUNNING:
       case RUNNING_WITH_FAILURE:
-      case NOT_START:
         return false;
       default :
         return true;
@@ -180,7 +180,7 @@ public class YarnLogUtil {
     try {
       for (String src : srcs) {
         location = new Path(src);
-        LOGGER.log(Level.INFO, "Copying log from {0}", src);
+        LOGGER.log(Level.FINE, "Copying log from {0}", src);
         try {
           reader = new LogReader(dfs.getConf(), dfs,
                   new Path(src));
@@ -193,7 +193,7 @@ public class YarnLogUtil {
           reader = new LogReader(dfs.getConf(), dfs,
                   new Path(src));
         } catch (FileNotFoundException e) {
-          LOGGER.log(Level.SEVERE,
+          LOGGER.log(Level.FINE,
                   "Logs not available. Aggregation may have failed.");
           return;
         } catch (IOException e) {

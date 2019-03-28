@@ -39,7 +39,7 @@
 
 package io.hops.hopsworks.dela.hopssite;
 
-import io.hops.hopsworks.common.exception.DelaException;
+import io.hops.hopsworks.exceptions.DelaException;
 
 public class HopsSite {
 

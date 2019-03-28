@@ -40,7 +40,7 @@ package io.hops.hopsworks.api.kibana;
 
 import com.google.api.client.repackaged.com.google.common.base.Strings;
 import io.hops.hopsworks.common.elastic.ElasticController;
-import io.hops.hopsworks.common.exception.ProjectException;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.project.ProjectDTO;
 import io.hops.hopsworks.common.util.HopsUtils;

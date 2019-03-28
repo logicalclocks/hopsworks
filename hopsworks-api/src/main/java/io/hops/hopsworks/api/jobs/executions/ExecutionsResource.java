@@ -25,13 +25,13 @@ import io.hops.hopsworks.common.dao.jobhistory.Execution;
 import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.exception.GenericException;
-import io.hops.hopsworks.common.exception.JobException;
-import io.hops.hopsworks.common.exception.RESTCodes;
-import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.jobs.JobLogDTO;
 import io.hops.hopsworks.common.jobs.execution.ExecutionController;
+import io.hops.hopsworks.exceptions.GenericException;
+import io.hops.hopsworks.exceptions.JobException;
+import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 

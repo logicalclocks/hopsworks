@@ -159,7 +159,7 @@
                     </div>
                 </div>
 
-                <div class="row" ng-if="sparkConfigCtrl.jobConfig.experimentType === 'DISTRIBUTED_TRAINING' && sparkConfigCtrl.jobConfig.distributionStrategy !== 'MIRRORED'">
+                <div class="row" ng-if="sparkConfigCtrl.jobConfig.experimentType === 'DISTRIBUTED_TRAINING'">
                     <div class="row clusterparams">
                         <div class="text-right col-md-4"> Workers <i class="fa fa-info-circle"
                                                                      uib-tooltip="The number of DistributionStrategy workers." style="margin-left: 10px"></i>
@@ -237,7 +237,7 @@
                         <div class="col-md-2 jupyter-left"><input type="number" ng-init="0"  ng-model="sparkConfigCtrl.jobConfig['spark.executor.gpus']" min="0" class="form-control"></div>
                     </div>
                 </div>
-                <div ng-if="sparkConfigCtrl.jobConfig.experimentType === 'EXPERIMENT' || (sparkConfigCtrl.jobConfig.experimentType == 'DISTRIBUTED_TRAINING' && sparkConfigCtrl.jobConfig.distributionStrategy == 'MirroredStrategy')" >
+                <div ng-if="sparkConfigCtrl.jobConfig.experimentType === 'EXPERIMENT'" >
                     <div class="row clusterparams" ng-if="clusterUtilCtrl.allocatedGPUs !== 0 || clusterUtilCtrl.availableGPUs !== 0">
                         <div class="text-right col-md-4">Number of GPUs<i class="fa fa-info-circle"
                                                                           uib-tooltip="The number of GPUs allocated for each PySpark Executor."
@@ -246,7 +246,7 @@
                         <div class="col-md-2 jupyter-left"><input type="number" ng-init="0"  ng-model="sparkConfigCtrl.jobConfig['spark.executor.gpus']" min="0" class="form-control"></div>
                     </div>
                 </div>
-                <div ng-show="(sparkConfigCtrl.jobConfig.experimentType === 'DISTRIBUTED_TRAINING' && sparkConfigCtrl.jobConfig.distributionStrategy !== 'MirroredStrategy') && (clusterUtilCtrl.allocatedGPUs !== 0 || clusterUtilCtrl.availableGPUs !== 0)">
+                <div ng-show="(sparkConfigCtrl.jobConfig.experimentType === 'DISTRIBUTED_TRAINING') && (clusterUtilCtrl.allocatedGPUs !== 0 || clusterUtilCtrl.availableGPUs !== 0)">
                     <div class="row clusterparams">
                         <div class="text-right col-md-4">Number GPUs per worker<i class="fa fa-info-circle"
                                                                                   uib-tooltip="The number of GPUs allocated for each worker. Parameter servers do not have access to a GPU."

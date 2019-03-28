@@ -42,7 +42,7 @@ import io.hops.hopsworks.common.dao.certificates.CertsFacade;
 import io.hops.hopsworks.common.dao.certificates.UserCerts;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.exception.CryptoPasswordNotFoundException;
+import io.hops.hopsworks.exceptions.CryptoPasswordNotFoundException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -456,7 +456,7 @@ public class CertificateMaterializer {
     boolean deletedMaterial = false;
     try {
       lock = getWriteLockForKey(key);
-      lock.unlock();
+      lock.lock();
       deletedMaterial = removeRemoteInternal(key, remoteDirectory, true);
       if (bothProjectAndUser) {
         ReentrantReadWriteLock.WriteLock projectLock = null;

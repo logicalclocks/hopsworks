@@ -43,7 +43,7 @@ import io.hops.hopsworks.common.agent.AgentController;
 import io.hops.hopsworks.common.dao.command.HeartbeatReplyDTO;
 import io.hops.hopsworks.common.dao.command.SystemCommand;
 import io.hops.hopsworks.common.dao.pythonDeps.CondaCommands;
-import io.hops.hopsworks.common.exception.ServiceException;
+import io.hops.hopsworks.exceptions.ServiceException;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;

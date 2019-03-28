@@ -34,8 +34,8 @@ import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.exception.FeaturestoreException;
-import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 
 import javax.ejb.EJB;

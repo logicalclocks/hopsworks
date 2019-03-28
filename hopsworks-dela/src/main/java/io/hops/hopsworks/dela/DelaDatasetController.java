@@ -47,13 +47,13 @@ import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.FilePreviewDTO;
-import io.hops.hopsworks.common.exception.DatasetException;
-import io.hops.hopsworks.common.exception.HopsSecurityException;
-import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.exceptions.DatasetException;
+import io.hops.hopsworks.exceptions.HopsSecurityException;
+import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.util.Settings;
-import io.hops.hopsworks.common.exception.DelaException;
+import io.hops.hopsworks.exceptions.DelaException;
 import org.apache.hadoop.fs.Path;
 
 import javax.ejb.EJB;

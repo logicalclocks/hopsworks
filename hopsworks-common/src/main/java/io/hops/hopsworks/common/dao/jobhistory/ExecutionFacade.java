@@ -45,7 +45,7 @@ import io.hops.hopsworks.common.dao.jobs.JobOutputFile;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.exception.InvalidQueryException;
+import io.hops.hopsworks.exceptions.InvalidQueryException;
 import io.hops.hopsworks.common.jobs.jobhistory.JobFinalStatus;
 import io.hops.hopsworks.common.jobs.jobhistory.JobState;
 import io.hops.hopsworks.common.jobs.configuration.JobType;

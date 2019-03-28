@@ -73,9 +73,9 @@ module JobHelper
             "spark.executor.cores": 1,
             "spark.executor.memory": 1500,
             "spark.executor.gpus": 0,
-            "spark.dynamicAllocation.enabled": false,
+            "spark.dynamicAllocation.enabled": true,
             "spark.dynamicAllocation.minExecutors": 1,
-            "spark.dynamicAllocation.maxExecutors": 10,
+            "spark.dynamicAllocation.maxExecutors": 1,
             "spark.dynamicAllocation.initialExecutors": 1
         }
       end
@@ -103,9 +103,9 @@ module JobHelper
           "spark.executor.cores":1,
           "spark.executor.memory":1500,
           "spark.executor.gpus":0,
-          "spark.dynamicAllocation.enabled":false,
+          "spark.dynamicAllocation.enabled": true,
           "spark.dynamicAllocation.minExecutors":1,
-          "spark.dynamicAllocation.maxExecutors":10,
+          "spark.dynamicAllocation.maxExecutors":1,
           "spark.dynamicAllocation.initialExecutors":1
         }
 

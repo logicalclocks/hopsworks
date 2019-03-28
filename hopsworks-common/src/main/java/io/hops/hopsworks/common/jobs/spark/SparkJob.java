@@ -40,10 +40,10 @@ package io.hops.hopsworks.common.jobs.spark;
 
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.exception.JobException;
-import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.Utils;
+import io.hops.hopsworks.exceptions.JobException;
+import io.hops.hopsworks.exceptions.ServiceException;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map.Entry;

@@ -41,15 +41,12 @@ package io.hops.hopsworks.admin.jupyter;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
-import io.hops.hopsworks.common.dao.jupyter.JupyterSettingsFacade;
-import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterProcessMgr;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.jupyter.JupyterController;
-import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.ServiceException;
 
 import javax.ejb.EJB;
 import javax.faces.application.FacesMessage;
@@ -68,15 +65,9 @@ public class JupyterNotebooksBean implements Serializable {
   private static final Logger LOGGER = Logger.getLogger(JupyterNotebooksBean.class.getName());
 
   @EJB
-  private JupyterFacade jupyterFacade;
-  @EJB
-  private JupyterSettingsFacade jupyterSettingsFacade;
-  @EJB
   private JupyterProcessMgr jupyterProcessFacade;
   @EJB
   private HdfsUsersFacade hdfsUsersFacade;
-  @EJB
-  private Settings settings;
   @EJB
   private JupyterController jupyterController;
   @EJB

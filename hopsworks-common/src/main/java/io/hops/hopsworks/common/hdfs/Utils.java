@@ -143,9 +143,4 @@ public final class Utils {
     //fetch the whole file content at once
     return scanner.useDelimiter("\\Z").next();
   }
-
-  public static String getProjectUsername(String project, String username) {
-    return project + "__" + username;
-  }
-
 }

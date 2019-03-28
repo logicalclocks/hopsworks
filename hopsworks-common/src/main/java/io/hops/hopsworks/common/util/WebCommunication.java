@@ -40,8 +40,8 @@
 package io.hops.hopsworks.common.util;
 
 import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade;
-import io.hops.hopsworks.common.exception.GenericException;
-import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.exceptions.GenericException;
+import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.commons.lang.StringEscapeUtils;
 
 import javax.annotation.PreDestroy;

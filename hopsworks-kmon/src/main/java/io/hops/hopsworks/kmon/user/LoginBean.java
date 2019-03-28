@@ -41,7 +41,7 @@ package io.hops.hopsworks.kmon.user;
 
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.exception.UserException;
+import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.common.user.AuthController;
 
 import javax.annotation.PostConstruct;
