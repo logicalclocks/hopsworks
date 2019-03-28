@@ -202,7 +202,8 @@ public class JupyterConfigFilesGenerator {
               "hadoop_home", this.settings.getHadoopSymbolicLinkDir(),
               "hdfs_home", this.settings.getHadoopSymbolicLinkDir(),
               "secret_dir", this.settings.getStagingDir() + Settings.PRIVATE_DIRS + js.getSecret(),
-              "allow_origin", allowOrigin
+              "allow_origin", allowOrigin,
+              "ws_ping_interval", String.valueOf(settings.getJupyterWSPingInterval())
           );
       createdJupyter = ConfigFileGenerator.createConfigFile(jupyter_config_file,
           jupyter_notebook_config.toString());

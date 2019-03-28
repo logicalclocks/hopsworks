@@ -36,6 +36,7 @@ c.KernelSpecMAnager.ensure_native_kernel=False
 
 c.NotebookApp.allow_origin = '%%allow_origin%%'
 c.NotebookApp.tornado_settings = {
+    'ws_ping_interval': %%ws_ping_interval%%,
     'headers': {
         'Content-Security-Policy': "frame-ancestors 'self' "
     }
