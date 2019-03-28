@@ -53,7 +53,6 @@ public class HopsHttpClient extends HttpClient {
   public void setupConnectionForwarding(Exchange exc, final Connection con, final String protocol,
                                         StreamPump.StreamPumpStats streamPumpStats) throws SocketException {
     final AbstractHttpHandler hsr = exc.getHandler();
-
     String source = hsr.getRemoteAddress();
     String dest = con.toString();
     final StreamPump a;

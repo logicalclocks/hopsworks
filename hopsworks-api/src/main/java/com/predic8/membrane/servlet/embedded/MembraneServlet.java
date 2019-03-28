@@ -17,7 +17,6 @@ package com.predic8.membrane.servlet.embedded;
 
 import java.io.IOException;
 
-import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -40,14 +39,6 @@ public class MembraneServlet extends HttpServlet {
   private static final long serialVersionUID = 1L;
   private static final Logger LOGGER = Logger.getLogger(MembraneServlet.class.getName());
 
-  @Override
-  public void init(ServletConfig config) throws ServletException {
-  }
-
-  @Override
-  public void destroy() {
-  }
-
 
   /*
    * For websockets, the following paths are used by JupyterHub:
@@ -67,19 +58,13 @@ public class MembraneServlet extends HttpServlet {
   protected void service(HttpServletRequest req, HttpServletResponse resp)
           throws ServletException, IOException {
 
-    String queryString = req.getQueryString() == null ? "" : "?" + req.
-            getQueryString();
-
     String externalIp = Ip.getHost(req.getRequestURL().toString());
 
-    StringBuffer urlBuf = new StringBuffer("http://localhost:");
+    StringBuilder urlBuf = new StringBuilder("http://localhost:");
 
-    String ctxPath = req.getRequestURI();
-
-    int x = ctxPath.indexOf("/jupyter");
-    int firstSlash = ctxPath.indexOf('/', x + 1);
-    int secondSlash = ctxPath.indexOf('/', firstSlash + 1);
-    String portString = ctxPath.substring(firstSlash + 1, secondSlash);
+    String pathInfo = req.getPathInfo();
+    int endPort = pathInfo.indexOf('/', 1);
+    String portString = pathInfo.substring(1, endPort);
     Integer targetPort;
     try {
       targetPort = Integer.parseInt(portString);
@@ -88,23 +73,21 @@ public class MembraneServlet extends HttpServlet {
       return;
     }
     urlBuf.append(portString);
-
-    String newTargetUri = urlBuf.toString() + req.getRequestURI();
-
-    StringBuilder newQueryBuf = new StringBuilder();
-    newQueryBuf.append(newTargetUri);
-    newQueryBuf.append(queryString);
+    urlBuf.append(req.getRequestURI());
+    if (req.getQueryString() != null) {
+      urlBuf.append('?').append(req.getQueryString());
+    }
 
     URI targetUriObj = null;
     try {
-      targetUriObj = new URI(newQueryBuf.toString());
+      targetUriObj = new URI(urlBuf.toString());
     } catch (Exception e) {
-      throw new ServletException("Rewritten targetUri is invalid: " + newTargetUri, e);
+      throw new ServletException("Rewritten targetUri is invalid: " + urlBuf.toString(), e);
     }
 
     ServiceProxy sp = new ServiceProxy(
         new ServiceProxyKey(externalIp, "*", "*", -1), "localhost", targetPort);
-    sp.setTargetURL(newQueryBuf.toString());
+    sp.setTargetURL(urlBuf.toString());
 
     try {
       Router router = new HopsRouter();
