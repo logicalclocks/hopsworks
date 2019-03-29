@@ -30,6 +30,13 @@ public class FilterBy implements AbstractFacade.FilterBy {
     this.param = filterStr;
   }
   
+  public FilterBy(UserFacade.Filters filter, String filterBy) {
+    this.filter = filter;
+    String filterStr = filterBy != null && !filterBy.isEmpty() ? filterBy.toUpperCase() :
+      this.filter.getDefaultParam();
+    this.param = filterStr;
+  }
+  
   
   private UserFacade.Filters toFilters(String filter) {
     switch (filter) {

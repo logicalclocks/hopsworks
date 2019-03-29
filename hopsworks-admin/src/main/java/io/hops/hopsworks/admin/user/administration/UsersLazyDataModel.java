@@ -15,7 +15,6 @@
  */
 package io.hops.hopsworks.admin.user.administration;
 
-import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
@@ -28,10 +27,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
-public class UsersLazyDataModel extends LazyDataModel<Users> {
+public abstract class UsersLazyDataModel extends LazyDataModel<Users> {
   
-  private static final Logger LOGGER = Logger.getLogger(UsersAdministrationBean.class.getName());
-  private UserFacade userFacade;
+  protected static final Logger LOGGER = Logger.getLogger(UsersAdministrationBean.class.getName());
+  protected UserFacade userFacade;
   
   public UsersLazyDataModel(UserFacade userFacade) {
     this.userFacade = userFacade;
@@ -40,13 +39,11 @@ public class UsersLazyDataModel extends LazyDataModel<Users> {
   
   @Override
   public List<Users> load(int first, int pageSize, String sortField, SortOrder sortOrder, Map<String, Object> filters) {
-    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.USERS);
-    resourceRequest.setOffset(first);
-    resourceRequest.setLimit(pageSize);
-    resourceRequest.setFilter(getFilters(filters));
     Set<UserFacade.SortBy> sort = new HashSet<>();
-    AbstractFacade.CollectionInfo collectionInfo =
-      userFacade.findAll(first, pageSize, resourceRequest.getFilter(), sort);
+    if (sortField != null && !sortField.isEmpty() && sortOrder != null) {
+      sort.add(new SortBy(sortField, sortOrder));
+    }
+    AbstractFacade.CollectionInfo collectionInfo = getUsers(first, pageSize, getFilters(filters), sort);
     this.setRowCount(collectionInfo.getCount().intValue());
     return collectionInfo.getItems();
   }
@@ -55,6 +52,9 @@ public class UsersLazyDataModel extends LazyDataModel<Users> {
   public Users getRowData(String rowKey) {
     return userFacade.findByEmail(rowKey);
   }
+  
+  public abstract AbstractFacade.CollectionInfo getUsers(int first, int pageSize, Set<UserFacade.FilterBy> filter,
+    Set<UserFacade.SortBy> sort);
   
   private Set<UserFacade.FilterBy> getFilters(Map<String, Object> filters) {
     Set<UserFacade.FilterBy> filterSet = new HashSet<>();

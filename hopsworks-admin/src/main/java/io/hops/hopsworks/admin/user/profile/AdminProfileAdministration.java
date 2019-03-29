@@ -40,10 +40,7 @@ package io.hops.hopsworks.admin.user.profile;
 
 import io.hops.hopsworks.admin.maintenance.ClientSessionState;
 import io.hops.hopsworks.admin.maintenance.MessagesController;
-import io.hops.hopsworks.common.util.EmailBean;
-import java.io.IOException;
 import java.io.Serializable;
-import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.PostConstruct;
@@ -51,11 +48,10 @@ import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
-import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
-import javax.mail.Message.RecipientType;
-import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
+
+import io.hops.hopsworks.admin.user.administration.UserAdministrationController;
 import io.hops.hopsworks.common.dao.user.security.Address;
 import io.hops.hopsworks.common.dao.user.BbcGroup;
 import io.hops.hopsworks.common.dao.user.Users;
@@ -67,10 +63,7 @@ import io.hops.hopsworks.common.dao.user.security.audit.RolesAuditAction;
 import io.hops.hopsworks.common.dao.user.security.audit.UserAuditActions;
 import io.hops.hopsworks.common.dao.user.security.audit.Userlogins;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
-import io.hops.hopsworks.common.dao.user.security.ua.SecurityUtils;
-import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
 import io.hops.hopsworks.common.user.UsersController;
-import io.hops.hopsworks.common.util.FormatUtils;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -91,11 +84,11 @@ public class AdminProfileAdministration implements Serializable {
 
   @EJB
   private BbcGroupFacade bbcGroupFacade;
-
-  @EJB
-  private EmailBean emailBean;
+  
   @EJB
   private AccountAuditFacade auditManager;
+  @EJB
+  protected UserAdministrationController userAdministrationController;
 
   @ManagedProperty(value = "#{clientSessionState}")
   private ClientSessionState sessionState;
@@ -168,14 +161,7 @@ public class AdminProfileAdministration implements Serializable {
   }
 
   public String accountTypeStr() {
-    switch (this.editingUser.getMode()) {
-      case M_ACCOUNT_TYPE:
-        return "Mobile Account";
-      case LDAP_ACCOUNT_TYPE:
-        return "LDAP Account";
-      default:
-        return "Unknown Account type";
-    }
+    return userAdministrationController.getAccountType(this.editingUser.getMode());
   }
 
   public List<String> getUserRole(Users p) {
@@ -305,27 +291,6 @@ public class AdminProfileAdministration implements Serializable {
     this.user = user;
   }
 
-  public String getLoginName() throws IOException {
-    FacesContext context = FacesContext.getCurrentInstance();
-    HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
-
-    Principal principal = request.getUserPrincipal();
-
-    try {
-      Users p = userFacade.findByEmail(principal.getName());
-
-      if (p != null) {
-        return p.getFname() + " " + p.getLname();
-      } else {
-        return principal.getName();
-      }
-    } catch (Exception ex) {
-      ExternalContext extContext = FacesContext.getCurrentInstance().getExternalContext();
-      extContext.redirect(extContext.getRequestContextPath());
-      return null;
-    }
-  }
-
   /**
    * Update user roles from profile by admin.
    */
@@ -401,6 +366,18 @@ public class AdminProfileAdministration implements Serializable {
     }
 
   }
+  
+  public String showProfile() {
+    String email = FacesContext.getCurrentInstance().getExternalContext().getRemoteUser();
+    Users user1 = userFacade.findByEmail(email);
+    FacesContext.getCurrentInstance().getExternalContext().getSessionMap().put("editinguser", user1);
+    
+    Userlogins login = auditManager.getLastUserLogin(user1);
+    FacesContext.getCurrentInstance().getExternalContext().getSessionMap().put("editinguser_logins", login);
+    
+    MessagesController.addInfoMessage("User successfully modified for " + user1.getEmail());
+    return "admin_profile";
+  }
 
   public ClientSessionState getSessionState() {
     return sessionState;
@@ -420,33 +397,6 @@ public class AdminProfileAdministration implements Serializable {
     if (num > -1) {
       usersController.updateMaxNumProjs(editingUser, num);
     }
-  }
-
-  public boolean notVerified() {
-
-    if (editingUser.getBbcGroupCollection().isEmpty() == false) {
-      return false;
-    }
-    if (editingUser.getStatus().equals(UserAccountStatus.VERIFIED_ACCOUNT)) {
-      return false;
-    }
-    return true;
-  }
-
-  public void resendAccountVerificationEmail() throws MessagingException {
-    FacesContext context = FacesContext.getCurrentInstance();
-    HttpServletRequest request = (HttpServletRequest) context.
-        getExternalContext().getRequest();
-
-    String activationKey = SecurityUtils.getRandomPassword(64);
-    emailBean.sendEmail(editingUser.getEmail(), RecipientType.TO,
-        UserAccountsEmailMessages.ACCOUNT_REQUEST_SUBJECT,
-        UserAccountsEmailMessages.buildMobileRequestMessage(
-            FormatUtils.getUserURL(request), user.getUsername()
-            + activationKey));
-    editingUser.setValidationKey(activationKey);
-    userFacade.persist(editingUser);
-
   }
 
 }

@@ -40,12 +40,10 @@
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml"   
-      xmlns:f="http://java.sun.com/jsf/core"
+<html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:ui="http://java.sun.com/jsf/facelets"
-      xmlns:p="http://primefaces.org/ui"
-      >
+      xmlns:p="http://primefaces.org/ui" xmlns:f="http://xmlns.jcp.org/jsf/core">
   <h:head>
     <title><ui:insert name="title">Hopsworks</ui:insert></title>
     <link rel="icon" type="image/png" href="#{resource['images/hops-black.png']}" />
@@ -73,75 +71,97 @@
           <div class="content">
             <h:form id="reqdataForm">
               <p:dataTable id="userReqTable" var="req"
-                           value="#{userAdministration.allRequests}"
-			   resizableColumns="true" liveResize="true"
+                           value="#{newUserAdministrationBean.lazyUsers}"
+                           resizableColumns="true" liveResize="true"
                            widgetVar="reqsTable"
                            emptyMessage="No open user requests"
-                           rowKey="#{req.email}" 
-                           selection="#{userAdministration.selectedUsers}" 
+                           rowKey="#{req.email}"
                            editable="true" editMode="cell"
                            rows="25"
                            paginator="true"
-                           paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
-                           rowsPerPageTemplate="15,25,35,45,55">
+                           paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                           rowsPerPageTemplate="15,25,35,45,55" lazy="true" selectionMode="single">
 
+                <p:ajax event="cellEdit" listener="#{newUserAdministrationBean.onCellEdit}"/>
 
-                <p:column id="nameColumn" headerText="First Name"  
-                          filterBy="#{req.fname}">
+                <p:column id="nnameColumn" headerText="First Name" filterBy="#{req.fname}">
                   <h:outputText value="#{req.fname}"  />
                 </p:column>
-                <p:column id="lnameCol" headerText="Last Name" 
-                          filterBy="#{req.lname}">
+
+                <p:column id="nlnameCol" headerText="Last Name" filterBy="#{req.lname}">
                   <h:outputText value="#{req.lname}" />
                 </p:column>
 
-                <p:column id="emailColumn" headerText="Email" 
-                          filterBy="#{req.email}">
+                <p:column id="nemailColumn" headerText="Email" filterBy="#{req.email}">
                   <h:outputText value="#{req.email}" />
                 </p:column>
 
-                <p:column id="roleColumn" headerText="Role">
-                  <p:selectOneMenu id="roleToChoose" 
-                                   rendered="#{userAdministration.notVerified(req) == false}"
-                                   value="#{userAdministration.role}"
-                                   editable="false">
-                    <f:selectItem itemLabel="Select Role"
-                                  itemValue="#{userAdministration.role}"/>
-                    <f:selectItems value="#{userAdministration.actGroups}"/>
-                  </p:selectOneMenu>
-                  <h:outputText value="Not yet verified." rendered="#{userAdministration.notVerified(req) == true}"/>
+                <p:column id="nmodeCol" filterBy="#{req.mode}" headerText="Account Type" style="width: 192px;">
+                  <f:facet name="filter">
+                    <p:selectOneMenu onchange="PF('reqsTable').filter()" styleClass="custom-filter">
+                      <f:selectItem itemLabel="Select One" itemValue="#{null}" noSelectionOption="true" />
+                      <f:selectItems value="#{newUserAdministrationBean.accountTypes}" />
+                    </p:selectOneMenu>
+                  </f:facet>
+                  <h:outputText value="#{newUserAdministrationBean.getAccountType(req.mode)}"/>
                 </p:column>
 
-                <p:column id="actionColumn" headerText="Action">
+                <p:column id="nactivationDateCol" headerText="Registerd" sortBy="#{req.activated}"
+                          style="width: 130px;">
+                  <h:outputText value="#{req.activated}">
+                    <f:convertDateTime pattern="YYYY-MM-DD HH:mm:ss"/>
+                  </h:outputText>
+                </p:column>
+
+                <p:column id="nroleColumn" headerText="Role">
+                  <p:cellEditor>
+                    <f:facet name="output">
+                      <h:outputText value="Verified"
+                                    rendered="#{newUserAdministrationBean.notActivated(req) == false and empty
+                                    req.groupName}" />
+                      <h:outputText value="#{req.groupName}"
+                                    rendered="#{newUserAdministrationBean.notActivated(req) == false and not empty
+                                    req.groupName}" />
+                      <h:outputText value="Not yet verified."
+                                    rendered="#{newUserAdministrationBean.notActivated(req) == true}"/>
+                    </f:facet>
+                    <f:facet name="input" >
+                      <h:selectOneMenu value="#{req.groupName}"
+                                       disabled="#{newUserAdministrationBean.notActivated(req) == true}">
+                        <f:selectItems value="#{newUserAdministrationBean.groups}" var="grp" itemLabel="#{grp}"
+                                       itemValue="#{grp}" />
+                      </h:selectOneMenu>
+                    </f:facet>
+                  </p:cellEditor>
+                </p:column>
+
+                <p:column id="actionColumn" headerText="Action" style="width: 60px;">
                   <h:panelGrid columns="3" style="width: auto" styleClass="actionTable">                                                    
                     <p:commandLink styleClass="ui-button-remove fa fa-ban" 
-                                   action="#{userAdministration.rejectUser}"
+                                   action="#{newUserAdministrationBean.reject(req)}"
                                    update="@form"
                                    title="Reject request">
                       <p:confirm header="Reject user" 
                                  message="Are you sure you want to reject #{req.email} ?" 
                                  icon="ui-icon-alert"/>
-                      <f:param name="userMail" value="#{req.email}"/>
                     </p:commandLink>
                     <p:commandLink styleClass="ui-button-allow fa fa-check" 
-                                   rendered="#{userAdministration.notVerified(req) == false}"
-                                   actionListener="#{userAdministration.activateUser}"
+                                   rendered="#{newUserAdministrationBean.notActivated(req) == false}"
+                                   actionListener="#{newUserAdministrationBean.activateUser(req)}"
                                    update="@form"
                                    title="Accept request">
-                      <p:confirm header="Activate user" 
-                                 message="Activate #{req.email} ?" 
+                      <p:confirm id="activateMsg" header="Activate user"
+                                 message="Activate #{req.email} ?"
                                  icon="ui-icon-alert"/>
-                      <f:param name="userMail" value="#{req.email}"/>
                     </p:commandLink>
                     <p:commandLink styleClass="ui-button-allow fa fa-envelope" 
-                                   rendered="#{userAdministration.notVerified(req)}"
-                                   actionListener="#{userAdministration.resendAccountVerificationEmail}"
+                                   rendered="#{newUserAdministrationBean.notActivated(req)}"
+                                   actionListener="#{newUserAdministrationBean.resendAccountVerificationEmail(req)}"
                                    update="@form"
                                    title="Resend Email">
                       <p:confirm header="Resend Email" 
                                  message="Resend Account Validation Email to #{req.email} ?"
                                  icon="ui-icon-alert"/>
-                      <f:param name="userMail" value="#{req.email}"/>
                     </p:commandLink> 
 
                   </h:panelGrid>

@@ -15,24 +15,26 @@
  */
 package io.hops.hopsworks.admin.user.administration;
 
-import io.hops.hopsworks.admin.maintenance.MessagesController;
+import io.hops.hopsworks.admin.maintenance.ClientSessionState;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountType;
+import org.primefaces.component.datatable.DataTable;
+import org.primefaces.event.CellEditEvent;
 import org.primefaces.model.LazyDataModel;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
+import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
-import javax.faces.context.FacesContext;
 import java.io.Serializable;
+import java.util.List;
 import java.util.logging.Logger;
 
 @ManagedBean
 @ViewScoped
-public class UsersAdministrationBean implements Serializable {
+public class NewUserAdministrationBean implements Serializable {
   
   private static final Logger LOGGER = Logger.getLogger(UsersAdministrationBean.class.getName());
   
@@ -40,20 +42,35 @@ public class UsersAdministrationBean implements Serializable {
   private UserFacade userFacade;
   @EJB
   protected UserAdministrationController userAdministrationController;
-  
+  @ManagedProperty("#{clientSessionState}")
+  private ClientSessionState sessionState;
   private LazyDataModel<Users> lazyUsers;
+  private List<String> groups;
   
   @PostConstruct
   public void init() {
-    lazyUsers = new UsersAdminLazyDataModel(userFacade);
+    lazyUsers = new NewUsersAdminLazyDataModel(userFacade);
+    groups = userAdministrationController.getAllGroupsNames();
   }
   
   public LazyDataModel<Users> getLazyUsers() {
     return lazyUsers;
   }
   
-  public UserAccountStatus[] getAccountStatuses() {
-    return UserAccountStatus.values();
+  public List<String> getGroups() {
+    return groups;
+  }
+  
+  public void setGroups(List<String> groups) {
+    this.groups = groups;
+  }
+  
+  public ClientSessionState getSessionState() {
+    return sessionState;
+  }
+  
+  public void setSessionState(ClientSessionState sessionState) {
+    this.sessionState = sessionState;
   }
   
   public UserAccountType[] getAccountTypes() {
@@ -64,13 +81,25 @@ public class UsersAdministrationBean implements Serializable {
     return userAdministrationController.getAccountType(type);
   }
   
-  public String getUserStatus(UserAccountStatus status) {
-    return userAdministrationController.getUserStatus(status);
+  public void reject(Users user) {
+    userAdministrationController.rejectUser(user);
   }
   
-  public String modifyUser(Users user) {
-    FacesContext.getCurrentInstance().getExternalContext().getSessionMap().put("editinguser", user);
-    MessagesController.addInfoMessage("User successfully modified for " + user.getEmail());
-    return "admin_profile";
+  public void activateUser(Users user) {
+    userAdministrationController.activateUser(user, sessionState.getLoggedInUser());
   }
+  
+  public boolean notActivated(Users user) {
+    return userAdministrationController.notActivated(user);
+  }
+  
+  public void resendAccountVerificationEmail(Users user) {
+    userAdministrationController.resendAccountVerificationEmail(user);
+  }
+  
+  public void onCellEdit(CellEditEvent event) {
+    Users entity =(Users)((DataTable)event.getComponent()).getRowData();
+    entity.setGroupName((String)event.getNewValue());
+  }
+  
 }
