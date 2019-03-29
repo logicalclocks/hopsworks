@@ -17,6 +17,7 @@ package io.hops.hopsworks.admin.user.administration;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
+import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -26,7 +27,7 @@ public class NewUsersAdminLazyDataModel extends UsersLazyDataModel {
   public NewUsersAdminLazyDataModel(UserFacade userFacade) {
     super(userFacade);
     Set<UserFacade.FilterBy> filter = new HashSet<>();
-    UserFacade.FilterBy fby = new FilterBy(UserFacade.Filters.STATUS_LT, "2");
+    UserFacade.FilterBy fby = new FilterBy(UserFacade.Filters.STATUS_LT, UserAccountStatus.ACTIVATED_ACCOUNT.name());
     filter.add(fby);
     long count = userFacade.countWithFilter(filter);
     this.setRowCount((int) count);
@@ -35,7 +36,7 @@ public class NewUsersAdminLazyDataModel extends UsersLazyDataModel {
   @Override
   public AbstractFacade.CollectionInfo getUsers(int first, int pageSize, Set<UserFacade.FilterBy> filter,
     Set<UserFacade.SortBy> sort) {
-    UserFacade.FilterBy fby = new FilterBy(UserFacade.Filters.STATUS_LT, "2");
+    UserFacade.FilterBy fby = new FilterBy(UserFacade.Filters.STATUS_LT, UserAccountStatus.ACTIVATED_ACCOUNT.name());
     filter.add(fby);
     return userFacade.findAll(first, pageSize, filter, sort);
   }
