@@ -79,7 +79,7 @@ public class FilterBy implements AbstractFacade.FilterBy {
   
   @Override
   public String toString() {
-    return filter.toString();
+    return this.filter.toString() + '=' + this.param;
   }
   
 }

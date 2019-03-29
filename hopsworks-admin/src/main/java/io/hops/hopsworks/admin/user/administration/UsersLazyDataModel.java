@@ -25,11 +25,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public abstract class UsersLazyDataModel extends LazyDataModel<Users> {
   
-  protected static final Logger LOGGER = Logger.getLogger(UsersAdministrationBean.class.getName());
+  protected static final Logger LOGGER = Logger.getLogger(UsersLazyDataModel.class.getName());
   protected UserFacade userFacade;
   
   public UsersLazyDataModel(UserFacade userFacade) {
@@ -43,8 +44,11 @@ public abstract class UsersLazyDataModel extends LazyDataModel<Users> {
     if (sortField != null && !sortField.isEmpty() && sortOrder != null) {
       sort.add(new SortBy(sortField, sortOrder));
     }
-    AbstractFacade.CollectionInfo collectionInfo = getUsers(first, pageSize, getFilters(filters), sort);
+    Set<UserFacade.FilterBy> filterBySet = getFilters(filters);
+    AbstractFacade.CollectionInfo collectionInfo = getUsers(first, pageSize, filterBySet, sort);
     this.setRowCount(collectionInfo.getCount().intValue());
+    LOGGER.log(Level.FINE, "Get users: first={0}, page size={1}, sort field={2}, sort order={3}, filterBy={4}, " +
+        "returned row count={5}", new Object[]{first, pageSize, sortField, sortOrder, filterBySet, this.getRowCount()});
     return collectionInfo.getItems();
   }
   

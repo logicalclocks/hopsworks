@@ -30,13 +30,14 @@ import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
 import java.io.Serializable;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @ManagedBean
 @ViewScoped
 public class NewUserAdministrationBean implements Serializable {
   
-  private static final Logger LOGGER = Logger.getLogger(UsersAdministrationBean.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(NewUserAdministrationBean.class.getName());
   
   @EJB
   private UserFacade userFacade;
@@ -87,6 +88,7 @@ public class NewUserAdministrationBean implements Serializable {
   
   public void activateUser(Users user) {
     userAdministrationController.activateUser(user, sessionState.getLoggedInUser());
+    LOGGER.log(Level.FINE, "Activated user: {0} with role: {1}", new Object[]{user.getEmail(), user.getGroupName()});
   }
   
   public boolean notActivated(Users user) {
@@ -95,6 +97,7 @@ public class NewUserAdministrationBean implements Serializable {
   
   public void resendAccountVerificationEmail(Users user) {
     userAdministrationController.resendAccountVerificationEmail(user);
+    LOGGER.log(Level.FINE, "Resend account verification email to: {0}", user.getEmail());
   }
   
   public void onCellEdit(CellEditEvent event) {

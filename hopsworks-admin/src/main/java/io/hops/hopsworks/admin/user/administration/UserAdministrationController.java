@@ -48,6 +48,7 @@ import java.util.logging.Logger;
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class UserAdministrationController {
+  
   private static final Logger LOGGER = Logger.getLogger(UserAdministrationController.class.getName());
   @EJB
   protected UsersController usersController;

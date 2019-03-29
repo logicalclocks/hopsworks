@@ -26,13 +26,14 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
 import java.io.Serializable;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @ManagedBean
 @ViewScoped
 public class SpamUserAdministrationBean implements Serializable {
   
-  private static final Logger LOGGER = Logger.getLogger(UsersAdministrationBean.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(SpamUserAdministrationBean.class.getName());
   
   @EJB
   private UserFacade userFacade;
@@ -70,9 +71,11 @@ public class SpamUserAdministrationBean implements Serializable {
   
   public void deleteUser(Users user) {
     userAdministrationController.deleteUser(user);
+    LOGGER.log(Level.FINE, "Deleted spam user: {0}", user.getEmail());
   }
   
   public void removeFromSpam(Users user) {
     userAdministrationController.removeFromSpam(user);
+    LOGGER.log(Level.FINE, "Removed from spam user: {0}", user.getEmail());
   }
 }
