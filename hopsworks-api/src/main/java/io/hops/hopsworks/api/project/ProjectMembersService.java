@@ -54,6 +54,7 @@ import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.exceptions.ProjectException;
+import io.hops.hopsworks.exceptions.TensorBoardException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.UserException;
@@ -197,7 +198,7 @@ public class ProjectMembersService {
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response removeMembersByID(@PathParam("email") String email, @Context SecurityContext sc)
     throws ProjectException, ServiceException, HopsSecurityException, UserException, GenericException, IOException,
-    JobException {
+    JobException, TensorBoardException {
     Project project = projectController.findProjectById(this.projectId);
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     Users reqUser = jWTHelper.getUserPrincipal(sc);
