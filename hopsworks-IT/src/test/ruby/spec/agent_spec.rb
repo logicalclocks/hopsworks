@@ -14,14 +14,17 @@
  If not, see <https://www.gnu.org/licenses/>.
 =end
 describe "On #{ENV['OS']}" do
-  describe "Agent Resource" do
+  before(:all) do
+    @registered_hosts = find_all_registered_hosts
+  end
+
+  describe "agent resource" do
     before(:all) do
       @agent_resource = "#{ENV['HOPSWORKS_API']}/agentresource?action="
       @ping_resource = @agent_resource + "ping"
       @register_resource = @agent_resource + "register"
       @heartbeat_resource = @agent_resource + "heartbeat"
     end
-
 
     context "#not logged in" do
       it "should not be able to ping" do
@@ -104,6 +107,103 @@ describe "On #{ENV['OS']}" do
           expect_status(200)
           host = find_by_hostid(@hostname)
           expect(host.memory_used).to eq(1123)
+        end
+      end
+    end
+  end
+
+  describe "agent admin" do
+    before(:all) do
+      reset_session
+      if @registered_hosts.count == 1
+        @hostname = @registered_hosts.first.hostname
+      else
+        @hostname = @registered_hosts.second.hostname
+      end
+    end
+
+    context "#not logged in" do
+      describe "#it should not be able to" do
+        it "stop" do
+          kagent_start(@hostname)
+          expect(is_kagent_running(@hostname)).to eq(true)
+          delete "#{ENV['HOPSWORKS_API']}/admin/kagent/#{@hostname}"
+          expect_status(401)
+          expect(is_kagent_running(@hostname)).to eq(true)
+        end
+        it "start" do
+          kagent_stop(@hostname)
+          expect(is_kagent_running(@hostname)).to eq(false)
+          post "#{ENV['HOPSWORKS_API']}/admin/kagent/#{@hostname}"
+          expect_status(401)
+          expect(is_kagent_running(@hostname)).to eq(false)
+        end
+        it "restart" do
+          put "#{ENV['HOPSWORKS_API']}/admin/kagent/#{@hostname}"
+          expect_status(401)
+        end
+      end
+    end
+
+    context "#logged in" do
+      before(:all) do
+        with_admin_session
+      end
+
+      describe "#it should be able to" do
+        it "stop" do
+          kagent_start(@hostname)
+          expect(is_kagent_running(@hostname)).to eq(true)
+          delete "#{ENV['HOPSWORKS_API']}/admin/kagent/#{@hostname}"
+          expect_status(200)
+          expect(is_kagent_running(@hostname)).to eq(false)
+        end
+        it "start" do
+          kagent_stop(@hostname)
+          expect(is_kagent_running(@hostname)).to eq(false)
+          post "#{ENV['HOPSWORKS_API']}/admin/kagent/#{@hostname}"
+          expect_status(200)
+          expect(is_kagent_running(@hostname)).to eq(true)
+        end
+        it "restart" do
+          kagent_stop(@hostname)
+          expect(is_kagent_running(@hostname)).to eq(false)
+          put "#{ENV['HOPSWORKS_API']}/admin/kagent/#{@hostname}"
+          expect_status(200)
+          expect(is_kagent_running(@hostname)).to eq(true)
+        end
+      end
+    end
+
+    context "#logged in but not admin" do
+      before(:all) do
+        with_valid_session
+      end
+
+      describe "#it should not be able to" do
+        it "stop" do
+          delete "#{ENV['HOPSWORKS_API']}/admin/kagent/#{@hostname}"
+          expect_status(403)
+        end
+        it "start" do
+          post "#{ENV['HOPSWORKS_API']}/admin/kagent/#{@hostname}"
+          expect_status(403)
+        end
+        it "restart" do
+          put "#{ENV['HOPSWORKS_API']}/admin/kagent/#{@hostname}"
+          expect_status(403)
+        end
+      end
+    end
+
+    context "#liveness monitor" do
+      it "should restart failed agent" do
+        kagent_start(@hostname)
+        sleep 5
+        kagent_stop(@hostname)
+        expect(is_kagent_running(@hostname)).to eq(false)
+        wait_for do
+          is_kagent_running(@hostname).eql?(true)
         end
       end
     end

@@ -557,7 +557,8 @@ public class RESTCodes {
     SERVICE_GENERIC_ERROR(42, "Generic error while enabling the service",
         Response.Status.INTERNAL_SERVER_ERROR),
     JUPYTER_SERVER_ALREADY_RUNNING(43, "Jupyter Notebook Server is already running",
-      Response.Status.BAD_REQUEST);
+      Response.Status.BAD_REQUEST),
+    ERROR_EXECUTING_REMOTE_COMMAND(44, "Error executing command over SSH", Response.Status.INTERNAL_SERVER_ERROR);
 
     private Integer code;
     private String message;

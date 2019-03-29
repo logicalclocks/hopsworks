@@ -84,6 +84,13 @@ public class SystemCommandFacade {
     return query.getResultList();
   }
   
+  public List<SystemCommand> findUnfinishedByHost(Hosts host) {
+    TypedQuery<SystemCommand> query = entityManager.createNamedQuery("SystemCommand.findNotFinishedByHost",
+        SystemCommand.class);
+    query.setParameter("host", host);
+    return query.getResultList();
+  }
+  
   public void persist(SystemCommand command) {
     entityManager.persist(command);
   }
