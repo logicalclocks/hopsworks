@@ -21,6 +21,8 @@ import io.hops.hopsworks.common.dao.tensorflow.TensorBoardFacade;
 import io.hops.hopsworks.common.dao.tensorflow.config.TensorBoardProcessMgr;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.common.util.Settings;
+import org.apache.commons.io.FileUtils;
+import org.apache.hadoop.fs.FileUtil;
 
 import javax.ejb.DependsOn;
 import javax.ejb.EJB;
@@ -59,57 +61,64 @@ public class TensorBoardKillTimer {
           minute = "*/10",
           hour = "*")
   public void rotate(Timer timer) {
-    LOGGER.log(Level.INFO, "Running TensorBoardKillTimer.");
-    int tensorBoardMaxLastAccessed = settings.getTensorBoardMaxLastAccessed();
-    Collection<TensorBoard> tensorBoardCollection = tensorBoardFacade.findAll();
-    for (TensorBoard tensorBoard : tensorBoardCollection) {
-      //Standard case, TB have been idle for a given amount of time
-      Date accessed = tensorBoard.getLastAccessed();
-      Date current = Calendar.getInstance().getTime();
-      if ((current.getTime() - accessed.getTime()) > tensorBoardMaxLastAccessed) {
-        try {
-          tensorBoardController.cleanup(tensorBoard);
-          LOGGER.log(Level.FINE, "Killed TensorBoard " + tensorBoard.toString() + " not accessed in the last " +
-              tensorBoardMaxLastAccessed + " milliseconds");
-        } catch (ServiceException ex) {
-          LOGGER.log(Level.SEVERE, "Failed to clean up running TensorBoard", ex);
+    try {
+      LOGGER.log(Level.INFO, "Running TensorBoardKillTimer.");
+      int tensorBoardMaxLastAccessed = settings.getTensorBoardMaxLastAccessed();
+      Collection<TensorBoard> tensorBoardCollection = tensorBoardFacade.findAll();
+      for (TensorBoard tensorBoard : tensorBoardCollection) {
+        //Standard case, TB have been idle for a given amount of time
+        Date accessed = tensorBoard.getLastAccessed();
+        Date current = Calendar.getInstance().getTime();
+        if ((current.getTime() - accessed.getTime()) > tensorBoardMaxLastAccessed) {
+          try {
+            tensorBoardController.cleanup(tensorBoard);
+            LOGGER.log(Level.FINE, "Killed TensorBoard " + tensorBoard.toString() + " not accessed in the last " +
+                    tensorBoardMaxLastAccessed + " milliseconds");
+          } catch (ServiceException ex) {
+            LOGGER.log(Level.SEVERE, "Failed to clean up running TensorBoard", ex);
+          }
         }
       }
-    }
 
-    //sanity check to make sure that all .pid files have a corresponding TB
-    try {
-      List<TensorBoard> TBs = tensorBoardFacade.findAll();
-      String tbDirPath = settings.getStagingDir() + Settings.TENSORBOARD_DIRS;
-      File tbDir = new File(tbDirPath);
-      //For each project_projectmember directory try to find .pid file
-      for (File file : tbDir.listFiles()) {
-        for (File possiblePidFile : file.listFiles()) {
-          if (possiblePidFile.getName().endsWith(".pid")) {
-            String pidContents = com.google.common.io.Files.readFirstLine(possiblePidFile, Charset.defaultCharset());
-            BigInteger pid = BigInteger.valueOf(Long.parseLong(pidContents));
+      //sanity check to make sure that all .pid files have a corresponding TB
+      try {
+        List<TensorBoard> TBs = tensorBoardFacade.findAll();
+        String tbDirPath = settings.getStagingDir() + Settings.TENSORBOARD_DIRS;
+        File tbDir = new File(tbDirPath);
+        //For each project_projectmember directory try to find .pid file
+        for (File currentTbDir : tbDir.listFiles()) {
+          for (File possiblePidFile : currentTbDir.listFiles()) {
+            if (possiblePidFile.getName().endsWith(".pid")) {
+              String pidContents = com.google.common.io.Files.readFirstLine(possiblePidFile, Charset.defaultCharset());
+              BigInteger pid = BigInteger.valueOf(Long.parseLong(pidContents));
 
-            if(pid != null) {
-              // do not kill TBs which are in the DB
-              boolean tbExists = false;
-              for (TensorBoard tb : TBs) {
-                if (tb.getPid().equals(pid)) {
-                  tbExists = true;
-                  continue;
+              if (pid != null) {
+                // do not kill TBs which are in the DB
+                boolean tbExists = false;
+                for (TensorBoard tb : TBs) {
+                  if (tb.getPid().equals(pid)) {
+                    tbExists = true;
+                    continue;
+                  }
                 }
-              }
 
-              if (!tbExists) {
-                LOGGER.log(Level.SEVERE, "MANUAL CERTIFICATE CLEANUP NEEDED: Detected a stray TensorBoard with pid "
-                    + pid.toString() + " in directory " + file.getAbsolutePath() + " killing it for now...");
-                tensorBoardProcessMgr.killTensorBoard(pid);
+                if (!tbExists) {
+                  LOGGER.log(Level.WARNING, "Detected a stray TensorBoard with pid "
+                          + pid.toString() + " in directory " + currentTbDir.getAbsolutePath() + ", cleaning up...");
+                  if(tensorBoardProcessMgr.ping(pid) == 0) {
+                    tensorBoardProcessMgr.killTensorBoard(pid);
+                  }
+                  FileUtils.deleteDirectory(currentTbDir);
+                }
               }
             }
           }
         }
+      } catch (IOException | NumberFormatException e) {
+        LOGGER.log(Level.SEVERE, "Exception while reading .pid files", e);
       }
-    } catch(IOException | NumberFormatException e) {
-      LOGGER.log(Level.SEVERE, "Exception while reading .pid files", e);
+    } catch(Exception e) {
+      LOGGER.log(Level.SEVERE, "An error occurred while checking for expired TensorBoards to be cleaned up", e);
     }
   }
 }

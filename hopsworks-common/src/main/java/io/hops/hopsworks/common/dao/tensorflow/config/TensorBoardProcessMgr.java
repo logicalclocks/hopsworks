@@ -97,10 +97,10 @@ public class TensorBoardProcessMgr {
     BigInteger pid = null;
     String tbBasePath = settings.getStagingDir() + Settings.TENSORBOARD_DIRS + File.separator;
     String projectUserUniquePath = project.getName() + "_" + hdfsUser.getName();
-    String tbPath = tbBasePath + DigestUtils.sha256Hex(projectUserUniquePath);
-    String certsPath = "\"\"";
+    String tbSecretDir = tbBasePath + DigestUtils.sha256Hex(projectUserUniquePath);
+    String certsPath = "";
 
-    File tbDir = new File(tbPath);
+    File tbDir = new File(tbSecretDir);
     if(tbDir.exists()) {
       for(File file: tbDir.listFiles()) {
         if(file.getName().endsWith(".pid")) {
@@ -123,7 +123,7 @@ public class TensorBoardProcessMgr {
 
     DistributedFileSystemOps dfso = dfsService.getDfsOps();
     try {
-      certsPath = tbBasePath + DigestUtils.sha256Hex(projectUserUniquePath + "_certs");
+      certsPath = tbSecretDir + "/certs";
       File certsDir = new File(certsPath);
       certsDir.mkdirs();
       HopsUtils.materializeCertificatesForUserCustomDir(project.getName(), user.getUsername(), settings
@@ -160,11 +160,10 @@ public class TensorBoardProcessMgr {
           .addCommand("start")
           .addCommand(hdfsUser.getName())
           .addCommand(hdfsLogdir)
-          .addCommand(tbPath)
+          .addCommand(tbSecretDir)
           .addCommand(port.toString())
           .addCommand(anacondaEnvironmentPath)
           .addCommand(settings.getHadoopVersion())
-          .addCommand(certsPath)
           .addCommand(settings.getJavaHome())
           .addCommand(tfLdLibraryPath)
           .ignoreOutErrStreams(true)
@@ -176,7 +175,7 @@ public class TensorBoardProcessMgr {
           throw new IOException("Tensorboard start process timed out!");
         }
         int exitValue = processResult.getExitCode();
-        String pidPath = tbPath + File.separator + port + ".pid";
+        String pidPath = tbSecretDir + File.separator + port + ".pid";
         File pidFile = new File(pidPath);
         // Read the pid for TensorBoard server
         if(pidFile.exists()) {
@@ -222,7 +221,7 @@ public class TensorBoardProcessMgr {
     //Certificates cleanup in case they were materialized but no TB started successfully
 
     dfso = dfsService.getDfsOps();
-    certsPath = tbBasePath + DigestUtils.sha256Hex(projectUserUniquePath + "_certs");
+    certsPath = tbBasePath + "/certs";
     File certsDir = new File(certsPath);
     certsDir.mkdirs();
     try {
@@ -316,7 +315,7 @@ public class TensorBoardProcessMgr {
     String tbPath = tbBasePath + DigestUtils.sha256Hex(projectUserUniquePath);
 
     //dematerialize certificates
-    String certsPath = tbBasePath + DigestUtils.sha256Hex(projectUserUniquePath + "_certs");
+    String certsPath = tbBasePath + "/certs";
     DistributedFileSystemOps dfso = dfsService.getDfsOps();
     try {
       HopsUtils.cleanupCertificatesForUserCustomDir(tb.getUsers().getUsername(), tb.getProject().getName(),
