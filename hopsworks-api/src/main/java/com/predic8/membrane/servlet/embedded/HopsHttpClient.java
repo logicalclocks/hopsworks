@@ -77,7 +77,9 @@ public class HopsHttpClient extends HttpClient {
       @Override
       public void setExchangeFinished() {
         // Backward Thread
-        managedExecutorService.submit(b);
+        if (managedExecutorService != null) {
+          managedExecutorService.submit(b);
+        }
         try {
           // Onward Thread
           a.run();
