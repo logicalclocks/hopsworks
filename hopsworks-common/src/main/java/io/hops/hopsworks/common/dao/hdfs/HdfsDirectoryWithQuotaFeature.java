@@ -63,15 +63,15 @@ import javax.xml.bind.annotation.XmlRootElement;
   @NamedQuery(name = "HdfsDirectoryWithQuotaFeature.findByNsquota",
           query
           = "SELECT h FROM HdfsDirectoryWithQuotaFeature h WHERE h.nsquota = :nsquota"),
-  @NamedQuery(name = "HdfsDirectoryWithQuotaFeature.findByDsquota",
+  @NamedQuery(name = "HdfsDirectoryWithQuotaFeature.findBySsquota",
           query
-          = "SELECT h FROM HdfsDirectoryWithQuotaFeature h WHERE h.dsquota = :dsquota"),
+          = "SELECT h FROM HdfsDirectoryWithQuotaFeature h WHERE h.ssquota = :ssquota"),
   @NamedQuery(name = "HdfsDirectoryWithQuotaFeature.findByNscount",
           query
           = "SELECT h FROM HdfsDirectoryWithQuotaFeature h WHERE h.nscount = :nscount"),
-  @NamedQuery(name = "HdfsDirectoryWithQuotaFeature.findByDiskspace",
+  @NamedQuery(name = "HdfsDirectoryWithQuotaFeature.findByStorageSpace",
           query
-          = "SELECT h FROM HdfsDirectoryWithQuotaFeature h WHERE h.diskspace = :diskspace")})
+          = "SELECT h FROM HdfsDirectoryWithQuotaFeature h WHERE h.storageSpace = :storageSpace")})
 public class HdfsDirectoryWithQuotaFeature implements Serializable {
 
   private static final long serialVersionUID = 1L;
@@ -84,12 +84,12 @@ public class HdfsDirectoryWithQuotaFeature implements Serializable {
   private Long inodeId;
   @Column(name = "nsquota")
   private BigInteger nsquota;
-  @Column(name = "dsquota")
-  private BigInteger dsquota;
+  @Column(name = "ssquota")
+  private BigInteger ssquota;
   @Column(name = "nscount")
   private BigInteger nscount;
-  @Column(name = "diskspace")
-  private BigInteger diskspace;
+  @Column(name = "storage_space")
+  private BigInteger storageSpace;
   @Column(name = "typespace_quota_disk")
   private BigInteger typespaceQuotaDisk = BigInteger.valueOf(-1);
   @Column(name = "typespace_quota_ssd")
@@ -130,18 +130,18 @@ public class HdfsDirectoryWithQuotaFeature implements Serializable {
     this.nsquota = nsquota;
   }
 
-  public BigInteger getDsquota() {
-    return dsquota;
+  public BigInteger getSsquota() {
+    return ssquota;
   }
 
-  public long getDsquotaInMBs() {
-    long quota = dsquota.longValue();
+  public long getSsquotaInMBs() {
+    long quota = ssquota.longValue();
     quota /= MB;
     return quota;
   }
 
-  public void setDsquota(BigInteger dsquota) {
-    this.dsquota = dsquota;
+  public void setSsquota(BigInteger ssquota) {
+    this.ssquota = ssquota;
   }
 
   public BigInteger getNscount() {
@@ -152,22 +152,22 @@ public class HdfsDirectoryWithQuotaFeature implements Serializable {
     this.nscount = nscount;
   }
 
-  public BigInteger getDiskspace() {
-    return diskspace;
+  public BigInteger getStorageSpace() {
+    return storageSpace;
   }
 
-  public long getDiskspaceInMBs() {
-    long quota = diskspace.longValue();
+  public long getStorageSpaceInMBs() {
+    long quota = storageSpace.longValue();
     quota /= MB;
     return quota;
   }
 
-  public void setDiskspaceInMBs(long diskspaceInMBs) {
-    this.diskspace = BigInteger.valueOf(diskspaceInMBs * MB);
+  public void setStorageSpaceInMBs(long storageSpaceInMBs) {
+    this.storageSpace = BigInteger.valueOf(storageSpaceInMBs * MB);
   }
 
-  public void setDiskspace(BigInteger diskspace) {
-    this.diskspace = diskspace;
+  public void setStorageSpace(BigInteger storageSpace) {
+    this.storageSpace = storageSpace;
   }
 
   @Override

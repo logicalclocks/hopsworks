@@ -1996,8 +1996,8 @@ public class ProjectController {
     if (projectInodeAttrs == null) {
       LOGGER.log(Level.SEVERE, "Cannot find HDFS quota information for project: " + project.getName());
     } else {
-      hdfsQuota = projectInodeAttrs.getDsquota().longValue();
-      hdfsUsage = projectInodeAttrs.getDiskspace().longValue();
+      hdfsQuota = projectInodeAttrs.getSsquota().longValue();
+      hdfsUsage = projectInodeAttrs.getStorageSpace().longValue();
       hdfsNsQuota = projectInodeAttrs.getNsquota().longValue();
       hdfsNsCount = projectInodeAttrs.getNscount().longValue();
     }
@@ -2012,8 +2012,8 @@ public class ProjectController {
           if (dbInodeAttrs == null) {
             LOGGER.log(Level.SEVERE, "Cannot find HiveDB quota information for project: " + project.getName());
           } else {
-            dbhdfsQuota = dbInodeAttrs.getDsquota().longValue();
-            dbhdfsUsage = dbInodeAttrs.getDiskspace().longValue();
+            dbhdfsQuota = dbInodeAttrs.getSsquota().longValue();
+            dbhdfsUsage = dbInodeAttrs.getStorageSpace().longValue();
             dbhdfsNsQuota = dbInodeAttrs.getNsquota().longValue();
             dbhdfsNsCount = dbInodeAttrs.getNscount().longValue();
           }
@@ -2031,8 +2031,8 @@ public class ProjectController {
           if (dbInodeAttrs == null) {
             LOGGER.log(Level.SEVERE, "Cannot find FeaturestoreDb quota information for project: " + project.getName());
           } else {
-            fshdfsQuota = dbInodeAttrs.getDsquota().longValue();
-            fshdfsUsage = dbInodeAttrs.getDiskspace().longValue();
+            fshdfsQuota = dbInodeAttrs.getSsquota().longValue();
+            fshdfsUsage = dbInodeAttrs.getStorageSpace().longValue();
             fshdfsNsQuota = dbInodeAttrs.getNsquota().longValue();
             fshdfsNsCount = dbInodeAttrs.getNscount().longValue();
           }
