@@ -26,6 +26,7 @@ import io.hops.hopsworks.common.exception.RESTCodes;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -139,6 +140,7 @@ public class FeaturestoreController {
     Featurestore featurestore = new Featurestore();
     featurestore.setProject(project);
     featurestore.setHiveDbId(hiveDbId);
+    featurestore.setCreated(new Date());
     featurestoreFacade.persist(featurestore);
     activityFacade.persistActivity(ActivityFacade.CREATED_FEATURESTORE +
         featurestoreName, project, project.getOwner(), ActivityFacade.ActivityFlag.SERVICE);
