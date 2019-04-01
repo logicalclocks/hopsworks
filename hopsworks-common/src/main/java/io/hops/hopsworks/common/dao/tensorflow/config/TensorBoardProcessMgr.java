@@ -92,7 +92,6 @@ public class TensorBoardProcessMgr {
           throws IOException {
 
     String prog = settings.getHopsworksDomainDir() + "/bin/tensorboard.sh";
-    Process process = null;
     Integer port = 0;
     BigInteger pid = null;
     String tbBasePath = settings.getStagingDir() + Settings.TENSORBOARD_DIRS;
@@ -204,32 +203,28 @@ public class TensorBoardProcessMgr {
         }
 
       } catch (Exception ex) {
-        LOGGER.log(Level.SEVERE, "Problem starting TensorBoard: {0}", ex);
-        if (process != null) {
-          process.destroyForcibly();
+
+        if(pid != null && this.ping(pid) == 0) {
+          this.killTensorBoard(pid);
         }
+
+        dfso = dfsService.getDfsOps();
+        certsPath = tbBasePath + "/certs";
+        File certsDir = new File(certsPath);
+        certsDir.mkdirs();
+        try {
+          HopsUtils.cleanupCertificatesForUserCustomDir(user.getUsername(), project.getName(),
+                  settings.getHdfsTmpCertDir(), certificateMaterializer, certsPath, settings);
+        } finally {
+          if (dfso != null) {
+            dfsService.closeDfsClient(dfso);
+          }
+        }
+
+        LOGGER.log(Level.SEVERE, "Problem starting TensorBoard: {0}", ex);
+
       } finally {
         retries--;
-      }
-    }
-
-    //Failed to start TensorBoard, make sure there is no process running for it! (This should not be needed)
-    if(pid != null && this.ping(pid) == 0) {
-      this.killTensorBoard(pid);
-    }
-
-    //Certificates cleanup in case they were materialized but no TB started successfully
-
-    dfso = dfsService.getDfsOps();
-    certsPath = tbBasePath + "/certs";
-    File certsDir = new File(certsPath);
-    certsDir.mkdirs();
-    try {
-      HopsUtils.cleanupCertificatesForUserCustomDir(user.getUsername(), project.getName(),
-          settings.getHdfsTmpCertDir(), certificateMaterializer, certsPath, settings);
-    } finally {
-      if (dfso != null) {
-        dfsService.closeDfsClient(dfso);
       }
     }
 
@@ -357,7 +352,7 @@ public class TensorBoardProcessMgr {
       }
     } catch (IOException ex) {
       LOGGER.log(Level.SEVERE, "Could not delete TensorBoard directory: " + tensorBoardDirectoryPath);
-      throw new ServiceException(RESTCodes.ServiceErrorCode.TENSORBOARD_CLEANUP_ERROR, Level.SEVERE,
+      throw new RESTCodes.TensorBoardErrorCode(RESTCodes.TensorBoardErrorCode.TENSORBOARD_CLEANUP_ERROR, Level.SEVERE,
               "TensorBoard directory:"+ tensorBoardDirectoryPath, ex.getMessage());
     }
   }
