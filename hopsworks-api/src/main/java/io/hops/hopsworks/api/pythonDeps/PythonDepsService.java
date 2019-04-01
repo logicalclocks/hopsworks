@@ -743,27 +743,30 @@ public class PythonDepsService {
           continue;
         }
 
-        // remove all paranthesis
-        line = line.replaceAll("[()]", "");
+        String libName = lineSplit[0];
 
-        // split on multiple spaces
-        lineSplit = line.split(" +");
+        if (!libName.toLowerCase().startsWith(library)) {
+          continue;
+        }
 
-        if (lineSplit.length >= 2) {
+        LibVersions libVersions = findPipLibPyPi(libName);
+        if (libVersions != null) {
+          foundLibraryVersions.add(libVersions);
+        } else {
 
-          String libName = lineSplit[0];
-
-          if (!libName.toLowerCase().startsWith(library)) {
-            continue;
-          }
-
-          LibVersions libVersions = findPipLibPyPi(libName);
-          if (libVersions != null) {
-            foundLibraryVersions.add(libVersions);
-          } else {
+          //This may happen when the version is (), i.e pip search does not return a version
+          String version = lineSplit[1];
+          if(version.equals("()")) {
             LibVersions pipSearchVersion = new LibVersions();
             pipSearchVersion.setLib(libName);
-            pipSearchVersion.addVersion(new Version(lineSplit[1]));
+            pipSearchVersion.addVersion(new Version(""));
+            foundLibraryVersions.add(pipSearchVersion);
+            continue;
+          } else {
+            version = version.replaceAll("[()]", "").trim();
+            LibVersions pipSearchVersion = new LibVersions();
+            pipSearchVersion.setLib(libName);
+            pipSearchVersion.addVersion(new Version(version));
             foundLibraryVersions.add(pipSearchVersion);
           }
         }
