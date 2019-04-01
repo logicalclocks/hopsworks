@@ -40,8 +40,8 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('LoginCtrl', ['$location', '$cookies', '$http','growl', 'TourService', 'AuthService', 'BannerService', 'md5', 'ModalService', 'VariablesService',
-          function ($location, $cookies, $http, growl, TourService, AuthService, BannerService, md5, ModalService, VariablesService) {
+        .controller('LoginCtrl', ['$location', '$cookies', '$http', '$rootScope', 'growl', 'TourService', 'AuthService', 'BannerService', 'md5', 'ModalService', 'VariablesService',
+          function ($location, $cookies, $http, $rootScope, growl, TourService, AuthService, BannerService, md5, ModalService, VariablesService) {
 
             var self = this;
 
@@ -51,10 +51,12 @@ angular.module('hopsWorksApp')
             self.adminPasswordChanged = true;
             self.tourService = TourService;
             self.working = false;
-            self.otp = $cookies.get('otp');
             self.user = {email: '', password: '', otp: ''};
             self.emailHash = md5.createHash(self.user.email || '');
+            self.otp = $cookies.get('otp');
             self.ldapEnabled = $cookies.get('ldap') === 'true';
+            self.krbEnabled = $cookies.get("krb") === 'true';
+            self.openIdProviders = [];
 
 
             self.showDefaultPassword = function() {
@@ -152,7 +154,7 @@ angular.module('hopsWorksApp')
                   console.log("Login error: ", error);
                   if (error !== undefined && error.status === 412) {
                     self.errorMessage = '';
-                    ModalService.ldapUserConsent('sm', error.data).then(function (success) {
+                    ModalService.remoteUserConsent('sm', error.data).then(function (success) {
                       if (success.val.consent) {
                         user.chosenEmail = success.val.chosenEmail;
                         user.consent = success.val.consent;
@@ -175,19 +177,29 @@ angular.module('hopsWorksApp')
               var user = {chosenEmail: '', consent: ''};
               krbLogin(user);
             };
-            
-            var checkKrb = function () {
-              VariablesService.getAuthStatus().then(
-                function (success) {
+
+            self.oauthLogin = function (providerName) {
+                AuthService.oauthLoginURI(providerName);
+            };
+
+            self.resetOAuthLoginErrorMsg = function () {
+                $rootScope.oauthLoginErrorMsg = undefined;
+            }
+
+            var checkRemoteAuth = function () {
+              VariablesService.getAuthStatus().then( function (success) {
                   $cookies.put("otp", success.data.twofactor);
                   $cookies.put("ldap", success.data.ldap);
                   $cookies.put("krb", success.data.krb);
-                  self.ldapEnabled = $cookies.get("ldap") === 'true';
-                  self.krbEnabled = $cookies.get("krb") === 'true';  
-                }, function (error) {
+                  $cookies.put("openIdProviders", JSON.stringify(success.data.openIdProviders));//check undefined
+                  self.otp = $cookies.get('otp');
+                  self.ldapEnabled = $cookies.get('ldap') === 'true';
+                  self.krbEnabled = $cookies.get("krb") === 'true';
+                  self.openIdProviders = JSON.parse($cookies.get("openIdProviders"));
+              }, function (error) {
               });
             };
-            checkKrb();
+            checkRemoteAuth();
 
             isAdminPasswordChanged();
             isFirstTime();

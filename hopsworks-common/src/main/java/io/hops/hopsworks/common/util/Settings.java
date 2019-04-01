@@ -2604,7 +2604,7 @@ public class Settings implements Serializable {
   }
   //Kafka END
 
-  //-------------------------KRB & LDAP----------------------------
+  //-------------------------Remote auth [OAuth2, KRB, LDAP]----------------------------
   private static final String VARIABLE_KRB_AUTH = "kerberos_auth";
   private static final String VARIABLE_LDAP_AUTH = "ldap_auth";
   private static final String VARIABLE_LDAP_GROUP_MAPPING = "ldap_group_mapping";
@@ -2621,6 +2621,10 @@ public class Settings implements Serializable {
   private static final String VARIABLE_LDAP_USERDN = "ldap_user_dn";
   private static final String VARIABLE_LDAP_GROUPDN = "ldap_group_dn";
   private static final String VARIABLE_LDAP_ACCOUNT_STATUS = "ldap_account_status";
+  private static final String VARIABLE_OAUTH_ENABLED = "oauth_enabled";
+  private static final String VARIABLE_OAUTH_REDIRECT_URI = "oauth_redirect_uri";
+  private static final String VARIABLE_OAUTH_ACCOUNT_STATUS = "oauth_account_status";
+  private static final String VARIABLE_OAUTH_GROUP_MAPPING = "oauth_group_mapping";
 
   private String KRB_AUTH = "false";
   private String LDAP_AUTH = "false";
@@ -2637,29 +2641,41 @@ public class Settings implements Serializable {
   private String LDAP_ATTR_BINARY = "java.naming.ldap.attributes.binary";
   private String LDAP_GROUP_TARGET = "cn";
   private String LDAP_DYNAMIC_GROUP_TARGET = "memberOf";
-  private String LDAP_LDAP_USERDN = "";
-  private String LDAP_LDAP_GROUPDN = "";
-  private int LDAP_ACCOUNT_STATUS = 4;
+  private String LDAP_USER_DN_DEFAULT = "";
+  private String LDAP_GROUP_DN_DEFAULT = "";
+  private String LDAP_USER_DN = LDAP_USER_DN_DEFAULT;
+  private String LDAP_GROUP_DN = LDAP_GROUP_DN_DEFAULT;
+  private int LDAP_ACCOUNT_STATUS = 1;
+  private String OAUTH_ENABLED = "false";
+  private boolean IS_OAUTH_ENABLED = false;
+  private String OAUTH_GROUP_MAPPING = "";
+  private String OAUTH_REDIRECT_URI = "hopsworks/callback";
+  private int OAUTH_ACCOUNT_STATUS = 1;
 
   private void populateLDAPCache() {
     KRB_AUTH = setVar(VARIABLE_KRB_AUTH, KRB_AUTH);
     LDAP_AUTH = setVar(VARIABLE_LDAP_AUTH, LDAP_AUTH);
-    IS_KRB_ENABLED = setBoolVar(VARIABLE_KRB_AUTH, IS_KRB_ENABLED);
-    IS_LDAP_ENABLED = setBoolVar(VARIABLE_LDAP_AUTH, IS_LDAP_ENABLED);
     LDAP_GROUP_MAPPING = setVar(VARIABLE_LDAP_GROUP_MAPPING, LDAP_GROUP_MAPPING);
     LDAP_USER_ID = setVar(VARIABLE_LDAP_USER_ID, LDAP_USER_ID);
     LDAP_USER_GIVEN_NAME = setVar(VARIABLE_LDAP_USER_GIVEN_NAME, LDAP_USER_GIVEN_NAME);
     LDAP_USER_SURNAME = setVar(VARIABLE_LDAP_USER_SURNAME, LDAP_USER_SURNAME);
     LDAP_USER_EMAIL = setVar(VARIABLE_LDAP_USER_EMAIL, LDAP_USER_EMAIL);
+    LDAP_ACCOUNT_STATUS = setIntVar(VARIABLE_LDAP_ACCOUNT_STATUS, LDAP_ACCOUNT_STATUS);
     LDAP_USER_SEARCH_FILTER = setVar(VARIABLE_LDAP_USER_SEARCH_FILTER, LDAP_USER_SEARCH_FILTER);
     LDAP_GROUP_SEARCH_FILTER = setVar(VARIABLE_LDAP_GROUP_SEARCH_FILTER, LDAP_GROUP_SEARCH_FILTER);
     LDAP_KRB_USER_SEARCH_FILTER = setVar(VARIABLE_LDAP_KRB_USER_SEARCH_FILTER, LDAP_KRB_USER_SEARCH_FILTER);
     LDAP_ATTR_BINARY = setVar(VARIABLE_LDAP_ATTR_BINARY, LDAP_ATTR_BINARY);
     LDAP_GROUP_TARGET = setVar(VARIABLE_LDAP_GROUP_TARGET, LDAP_GROUP_TARGET);
     LDAP_DYNAMIC_GROUP_TARGET = setVar(VARIABLE_LDAP_DYNAMIC_GROUP_TARGET, LDAP_DYNAMIC_GROUP_TARGET);
-    LDAP_LDAP_USERDN = setVar(VARIABLE_LDAP_USERDN, LDAP_LDAP_USERDN);
-    LDAP_LDAP_GROUPDN = setVar(VARIABLE_LDAP_GROUPDN, LDAP_LDAP_GROUPDN);
-    LDAP_ACCOUNT_STATUS = setIntVar(VARIABLE_LDAP_ACCOUNT_STATUS, LDAP_ACCOUNT_STATUS);
+    LDAP_USER_DN = setStrVar(VARIABLE_LDAP_USERDN, LDAP_USER_DN_DEFAULT);
+    LDAP_GROUP_DN = setStrVar(VARIABLE_LDAP_GROUPDN, LDAP_GROUP_DN_DEFAULT);
+    IS_KRB_ENABLED = setBoolVar(VARIABLE_KRB_AUTH, IS_KRB_ENABLED);
+    IS_LDAP_ENABLED = setBoolVar(VARIABLE_LDAP_AUTH, IS_LDAP_ENABLED);
+    OAUTH_ENABLED = setStrVar(VARIABLE_OAUTH_ENABLED, OAUTH_ENABLED);
+    IS_OAUTH_ENABLED = setBoolVar(VARIABLE_OAUTH_ENABLED, IS_OAUTH_ENABLED);
+    OAUTH_REDIRECT_URI = setStrVar(VARIABLE_OAUTH_REDIRECT_URI, OAUTH_REDIRECT_URI);
+    OAUTH_ACCOUNT_STATUS = setIntVar(VARIABLE_OAUTH_ACCOUNT_STATUS, OAUTH_ACCOUNT_STATUS);
+    OAUTH_GROUP_MAPPING = setStrVar(VARIABLE_OAUTH_GROUP_MAPPING, OAUTH_GROUP_MAPPING);
   }
 
   public synchronized String getKRBAuthStatus() {
@@ -2739,19 +2755,100 @@ public class Settings implements Serializable {
 
   public synchronized String getLdapUserDN() {
     checkCache();
-    return LDAP_LDAP_USERDN;
+    return LDAP_USER_DN;
   }
 
   public synchronized String getLdapGroupDN() {
     checkCache();
-    return LDAP_LDAP_GROUPDN;
+    return LDAP_GROUP_DN;
   }
 
   public synchronized int getLdapAccountStatus() {
     checkCache();
     return LDAP_ACCOUNT_STATUS;
   }
-  //----------------------------END LDAP------------------------------------
+
+  public synchronized String getOAuthEnabled() {
+    checkCache();
+    return OAUTH_ENABLED;
+  }
+
+  public synchronized  boolean isOAuthEnabled() {
+    checkCache();
+    return IS_OAUTH_ENABLED;
+  }
+
+  public synchronized String getOAuthGroupMapping() {
+    checkCache();
+    return OAUTH_GROUP_MAPPING;
+  }
+
+  public synchronized String getOauthRedirectUri() {
+    checkCache();
+    return OAUTH_REDIRECT_URI;
+  }
+
+  public synchronized int getOAuthAccountStatus() {
+    checkCache();
+    return OAUTH_ACCOUNT_STATUS;
+  }
+
+  public synchronized String getVarLdapAccountStatus() {
+    return VARIABLE_LDAP_ACCOUNT_STATUS;
+  }
+
+  public synchronized String getVarLdapGroupMapping() {
+    return VARIABLE_LDAP_GROUP_MAPPING;
+  }
+
+  public synchronized String getVarLdapUserId() {
+    return VARIABLE_LDAP_USER_ID;
+  }
+
+  public synchronized String getVarLdapUserGivenName() {
+    return VARIABLE_LDAP_USER_GIVEN_NAME;
+  }
+
+  public synchronized String getVarLdapUserSurname() {
+    return VARIABLE_LDAP_USER_SURNAME;
+  }
+
+  public synchronized String getVarLdapUserMail() {
+    return VARIABLE_LDAP_USER_EMAIL;
+  }
+
+  public synchronized String getVarLdapUserSearchFilter() {
+    return VARIABLE_LDAP_USER_SEARCH_FILTER;
+  }
+
+  public synchronized String getVarLdapGroupSearchFilter() {
+    return VARIABLE_LDAP_GROUP_SEARCH_FILTER;
+  }
+
+  public synchronized String getVarKrbUserSearchFilter() {
+    return VARIABLE_LDAP_KRB_USER_SEARCH_FILTER;
+  }
+
+  public synchronized String getVarLdapAttrBinary() {
+    return VARIABLE_LDAP_ATTR_BINARY;
+  }
+
+  public synchronized String getVarLdapGroupTarget() {
+    return VARIABLE_LDAP_GROUP_TARGET;
+  }
+
+  public synchronized String getVarLdapDynGroupTarget() {
+    return VARIABLE_LDAP_DYNAMIC_GROUP_TARGET;
+  }
+
+  public synchronized String getVarLdapUserDN() {
+    return VARIABLE_LDAP_USERDN;
+  }
+
+  public synchronized String getVarLdapGroupDN() {
+    return VARIABLE_LDAP_GROUPDN;
+  }
+  //----------------------------END remote user------------------------------------
 
   // Service key rotation enabled
   private static final String SERVICE_KEY_ROTATION_ENABLED_KEY = "service_key_rotation_enabled";

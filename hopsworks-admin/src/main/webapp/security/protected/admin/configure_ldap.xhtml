@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+~
+~ This file is part of Hopsworks
+~ Copyright (C) 2019, Logical Clocks AB. All rights reserved
+~
+~ Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+~ the GNU Affero General Public License as published by the Free Software Foundation,
+~ either version 3 of the License, or (at your option) any later version.
+~
+~ Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+~ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+~ PURPOSE.  See the GNU Affero General Public License for more details.
+~
+~ You should have received a copy of the GNU Affero General Public License along with this program.
+~ If not, see <https://www.gnu.org/licenses/>.
+~
+-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+
+<h:head>
+    <title>Hopsworks - OAuth2 client registration</title>
+    <link rel="icon" type="image/png" href="#{resource['images/hops-black.png']}"/>
+    <link rel="stylesheet" type="text/css" href="#{resource['/css/main.css']}"/>
+    <link rel="stylesheet" type="text/css" href="#{resource['/css/theme.css']}"/>
+</h:head>
+
+<h:body>
+    <ui:insert name="titleBar">
+        <ui:include src="/security/protected/admin/admintitleBar.xhtml"/>
+    </ui:insert>
+
+    <div align="center" class="user-profile">
+        <h:form id="ldap-form" style="margin-bottom:20px;">
+            <p:growl id="growl" life="2000" showDetail="true"/>
+            <p:panel id="ldap" header="LDAP configuration" toggleable="false" style="margin-bottom:20px">
+                <p:panelGrid columns="2">
+                    <p:column>
+                        <h3 style="color: rgba(0, 0, 0, 0.54);">
+                            <p:outputLabel for="account_status" value="Account status: "/>
+                        </h3>
+                    </p:column>
+                    <p:column>
+                        <p:selectOneMenu id="account_status" value="#{configureLdap.accountStatus}" style="width:235px"
+                                         required="true">
+                            <f:selectItems value="#{configureLdap.accountStatuses}"/>
+                        </p:selectOneMenu>
+                    </p:column>
+
+                    <p:column>
+                        <h3 style="color: rgba(0, 0, 0, 0.54);">
+                            <p:outputLabel for="group_mapping" value="Group mapping: "/>
+                        </h3>
+                    </p:column>
+                    <p:column>
+                        <p:inputTextarea rows="2" cols="50" id="group_mapping" value="#{configureLdap.groupMapping}"
+                                         required="true"
+                                         placeholder="Administrators->HOPS_ADMIN; IT People-> HOPS_USER">
+                        </p:inputTextarea>
+                    </p:column>
+                    <p:column>
+                        <h3 style="color: rgba(0, 0, 0, 0.54);">
+                            <p:outputLabel for="user_id" value="User id: "/>
+                        </h3>
+                    </p:column>
+                    <p:column>
+                        <p:inputTextarea rows="1" cols="30" id="user_id" value="#{configureLdap.userId}" required="true"
+                                         placeholder="sAMAccountName">
+                        </p:inputTextarea>
+                    </p:column>
+                    <p:column>
+                        <h3 style="color: rgba(0, 0, 0, 0.54);">
+                            <p:outputLabel for="user_givenName" value="User givenName: "/>
+                        </h3>
+                    </p:column>
+                    <p:column>
+                        <p:inputTextarea rows="1" cols="30" id="user_givenName" value="#{configureLdap.userGivenName}"
+                                         required="true" placeholder="givenName">
+                        </p:inputTextarea>
+                    </p:column>
+                    <p:column>
+                        <h3 style="color: rgba(0, 0, 0, 0.54);">
+                            <p:outputLabel for="user_surname" value="User surname: "/>
+                        </h3>
+                    </p:column>
+                    <p:column>
+                        <p:inputTextarea rows="1" cols="30" id="user_surname" value="#{configureLdap.userSurname}"
+                                         required="true" placeholder="sn">
+                        </p:inputTextarea>
+                    </p:column>
+                    <p:column>
+                        <h3 style="color: rgba(0, 0, 0, 0.54);">
+                            <p:outputLabel for="user_email" value="User email: "/>
+                        </h3>
+                    </p:column>
+                    <p:column>
+                        <p:inputTextarea rows="1" cols="30" id="user_email" value="#{configureLdap.userEmail}"
+                                         required="true"
+                                         placeholder="mail">
+                        </p:inputTextarea>
+                    </p:column>
+                    <p:column>
+                        <h3 style="color: rgba(0, 0, 0, 0.54);">
+                            <p:outputLabel for="user_search_filter" value="User search filter: "/>
+                        </h3>
+                    </p:column>
+                    <p:column>
+                        <p:inputTextarea rows="1" cols="30" id="user_search_filter"
+                                         value="#{configureLdap.userSearchFilter}"
+                                         required="true" placeholder="sAMAccountName">
+                        </p:inputTextarea>
+                    </p:column>
+                    <p:column>
+                        <h3 style="color: rgba(0, 0, 0, 0.54);">
+                            <p:outputLabel for="group_search_filter" value="Group search filter: "/>
+                        </h3>
+                    </p:column>
+                    <p:column>
+                        <p:inputTextarea rows="1" cols="30" id="group_search_filter"
+                                         value="#{configureLdap.groupSearchFilter}"
+                                         required="true" placeholder="member">
+                        </p:inputTextarea>
+                    </p:column>
+                    <p:column>
+                        <h3 style="color: rgba(0, 0, 0, 0.54);">
+                            <p:outputLabel for="principal_search_filter" value="Principal search filter: "/>
+                        </h3>
+                    </p:column>
+                    <p:column>
+                        <p:inputTextarea rows="1" cols="30" id="principal_search_filter"
+                                         value="#{configureLdap.principalSearchFilter}" required="true"
+                                         placeholder="userPrincipalName">
+                        </p:inputTextarea>
+                    </p:column>
+
+                    <p:column>
+                        <h3 style="color: rgba(0, 0, 0, 0.54);">
+                            <p:outputLabel for="group_target" value="Group target: "/>
+                        </h3>
+                    </p:column>
+                    <p:column>
+                        <p:inputTextarea rows="1" cols="30" id="group_target" value="#{configureLdap.groupTarget}"
+                                         required="true" placeholder="cn">
+                        </p:inputTextarea>
+                    </p:column>
+                    <p:column>
+                        <h3 style="color: rgba(0, 0, 0, 0.54);">
+                            <p:outputLabel for="dyn_group_target" value="Dynamic group target: "/>
+                        </h3>
+                    </p:column>
+                    <p:column>
+                        <p:inputTextarea rows="1" cols="30" id="dyn_group_target"
+                                         value="#{configureLdap.dynGroupTarget}"
+                                         required="true" placeholder="memberOf">
+                        </p:inputTextarea>
+                    </p:column>
+                    <p:column>
+                        <h3 style="color: rgba(0, 0, 0, 0.54);">
+                            <p:outputLabel for="user_dn" value="User dn: "/>
+                        </h3>
+                    </p:column>
+                    <p:column>
+                        <p:inputTextarea rows="1" cols="30" id="user_dn" value="#{configureLdap.userDn}">
+                        </p:inputTextarea>
+                    </p:column>
+                    <p:column>
+                        <h3 style="color: rgba(0, 0, 0, 0.54);">
+                            <p:outputLabel for="group_dn" value="Group dn: "/>
+                        </h3>
+                    </p:column>
+                    <p:column>
+                        <p:inputTextarea rows="1" cols="30" id="group_dn" value="#{configureLdap.groupDn}">
+                        </p:inputTextarea>
+                    </p:column>
+
+                </p:panelGrid>
+            </p:panel>
+            <p:commandButton value="Save" update="ldap-form" icon="ui-icon-check" action="#{configureLdap.save}"/>
+        </h:form>
+    </div>
+</h:body>
+</html>

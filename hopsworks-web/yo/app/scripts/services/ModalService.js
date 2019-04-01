@@ -1218,10 +1218,10 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
             },
-            ldapUserConsent: function (size, data, val) {
+            remoteUserConsent: function (size, data, val) {
                 var modalInstance = $uibModal.open({
-                    templateUrl: 'views/ldapUserConsentModal.html',
-                    controller: 'LdapUserConsentModalCtrl as ldapUserConsentModalCtrl',
+                    templateUrl: 'views/remoteUserConsentModal.html',
+                    controller: 'RemoteUserConsentModalCtrl as remoteUserConsentModalCtrl',
                     size: size,
                     resolve: {
                         data: function () {

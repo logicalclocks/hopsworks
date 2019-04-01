@@ -90,8 +90,7 @@
                             Logging you in
                         </div>
                         <div class="alert alert-danger" role="alert" ng-show="loginCtrl.errorMessage">
-                            <button type="button" class="close" aria-label="Close"
-                                    ng-click="loginCtrl.errorMessage = ''">
+                            <button type="button" class="close" aria-label="Close" ng-click="loginCtrl.errorMessage = ''">
                                 <span aria-hidden="true">&times;</span>
                             </button>
                             {{loginCtrl.errorMessage}}
@@ -100,10 +99,18 @@
                         <a ng-if="loginCtrl.ldapEnabled" class="btn btn-block btn-default" href="#!/ldapLogin">
                             Login with LDAP
                         </a>
-                        <button ng-if="loginCtrl.krbEnabled" class="btn btn-block btn-default"
-                                ng-click="loginCtrl.krbLogin()">
+                        <button ng-if="loginCtrl.krbEnabled" class="btn btn-block btn-default" ng-click="loginCtrl.krbLogin()">
                             Login with Kerberos
                         </button>
+                        <button ng-repeat="openIdProvider in loginCtrl.openIdProviders" class="btn btn-block btn-default"
+                                ng-click="loginCtrl.oauthLogin(openIdProvider.providerName)">
+                            <img style="padding-right: 10px;" alt="" ng-src="{{openIdProvider.providerLogoURI}}"/>{{openIdProvider.providerDisplayName}}
+                        </button>
+                        <div class="alert alert-danger" role="alert" style="margin-top: 5px" ng-if="oauthLoginErrorMsg !== undefined">
+                            <button type="button" class="close" aria-label="Close" ng-click="loginCtrl.resetOAuthLoginErrorMsg()">
+                                <span aria-hidden="true">&times;</span>
+                            </button>{{oauthLoginErrorMsg}}
+                        </div>
                         <a class="btn btn-block btn-default" href="#!/register">Register</a>
                     </div>
                 </div>

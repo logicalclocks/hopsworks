@@ -258,8 +258,32 @@
               <br></br>
               <p:outputLabel style="text-align: left"  value="Manage Conda"></p:outputLabel>
             </p:column>
-            
-            
+
+            <p:column rendered="#{oAuthClientRegistration.oauthEnabled}">
+              <h:commandLink action="oauthClient">
+                <p:graphicImage id="oauth2"
+                                value="/resources/images/oauth2.png"
+                                width="100"
+                                height="100"
+                                title="Register OAuth 2.0 Client">
+                </p:graphicImage>
+              </h:commandLink>
+              <br></br>
+              <p:outputLabel style="text-align: left" value="Register OAuth 2.0 Client"></p:outputLabel>
+            </p:column>
+            <p:column rendered="#{configureLdap.ldapEnabled}">
+              <h:commandLink action="confLDAP">
+                <p:graphicImage id="ldap"
+                                value="/resources/images/ldap.png"
+                                width="100"
+                                height="100"
+                                title="Configure LDAP">
+                </p:graphicImage>
+              </h:commandLink>
+              <br></br>
+              <p:outputLabel style="text-align: left" value="Configure LDAP"></p:outputLabel>
+            </p:column>
+
           </h:panelGrid>
         </h:form>
       </div>

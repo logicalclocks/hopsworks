@@ -29,6 +29,14 @@ angular.module('hopsWorksApp')
               $location.path('/login');
               $location.replace();
             };
+            var setAuth = function (success) {
+              if (typeof success.data !== 'undefined') {
+                  $cookies.put("otp", success.data.twofactor);
+                  $cookies.put("ldap", success.data.ldap);
+                  $cookies.put("krb", success.data.krb);
+                  $cookies.put("openIdProviders", JSON.stringify(success.data.openIdProviders));//check undefined
+              }
+            };
             var checkIsAdmin = function () {
               var isAdmin = sessionStorage.getItem("isAdmin");
               if (isAdmin != 'true' && isAdmin != 'false') {
@@ -65,9 +73,10 @@ angular.module('hopsWorksApp')
                     function (err) {
                       VariablesService.getAuthStatus().then(
                         function (success) {
-                          $cookies.put("otp", success.data.twofactor);
-                          $cookies.put("ldap", success.data.ldap);
+                          setAuth(success);
+                          return $q.when(err);
                         }, function (error) {
+                          return $q.when(err);
                       });
                     });
               },

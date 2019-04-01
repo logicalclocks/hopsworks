@@ -107,6 +107,14 @@ body {
   margin-right: 25%;
 }
 
+.register-server {
+  height: auto !important;
+  margin-top: 50px;
+  margin-left: 25%;
+  margin-right: 25%;
+}
+
+
 .personal-info{
   background-color: #FFF;
   text-align: left;
@@ -124,6 +132,12 @@ body {
 .user-profile .ui-widget-content {
   border-width: 0px;  
   overflow-y: hidden;
+}
+
+.register-server .ui-widget-content {
+  border-width: 0px;
+  overflow-y: hidden;
+  overflow-x: hidden;
 }
 
 .ui-panelgrid .ui-panelgrid-cell {

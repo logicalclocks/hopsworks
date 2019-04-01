@@ -208,7 +208,19 @@
       <to-view-id>/security/protected/admin/hostsManagement.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
-	
+
+    <navigation-case>
+      <from-outcome>oauthClient</from-outcome>
+      <to-view-id>/security/protected/admin/oauth_client.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+
+    <navigation-case>
+      <from-outcome>confLDAP</from-outcome>
+      <to-view-id>/security/protected/admin/configure_ldap.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+
     <navigation-case>
       <from-outcome>adminIndex</from-outcome>
       <to-view-id>/security/protected/admin/adminIndex.xhtml</to-view-id>

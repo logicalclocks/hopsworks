@@ -66,8 +66,8 @@ public class UsersAdministrationBean implements Serializable {
     switch (type) {
       case M_ACCOUNT_TYPE:
         return "Mobile Account";
-      case LDAP_ACCOUNT_TYPE:
-        return "LDAP Account";
+      case REMOTE_ACCOUNT_TYPE:
+        return "Remote Account";
       default:
         return "Unknown Account type";
     }
