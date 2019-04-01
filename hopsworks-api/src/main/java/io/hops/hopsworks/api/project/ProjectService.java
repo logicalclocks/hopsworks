@@ -38,8 +38,10 @@
  */
 package io.hops.hopsworks.api.project;
 
-import io.hops.hopsworks.api.activities.ProjectActivitiesResource;
+import io.hops.hopsworks.api.iot.IoTGatewayResource;
+import io.hops.hopsworks.common.project.CertsDTO;
 import io.hops.hopsworks.api.airflow.AirflowService;
+import io.hops.hopsworks.api.activities.ProjectActivitiesResource;
 import io.hops.hopsworks.api.dela.DelaClusterProjectService;
 import io.hops.hopsworks.api.dela.DelaProjectService;
 import io.hops.hopsworks.api.featurestore.FeaturestoreService;
@@ -79,7 +81,6 @@ import io.hops.hopsworks.common.dataset.FilePreviewDTO;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
-import io.hops.hopsworks.common.project.CertsDTO;
 import io.hops.hopsworks.common.project.MoreInfoDTO;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.project.ProjectDTO;
@@ -197,6 +198,8 @@ public class ProjectService {
   private ProjectActivitiesResource activitiesResource;
   @Inject
   private FeaturestoreService featurestoreService;
+  @Inject
+  private IoTGatewayResource iotResource;
 
   private final static Logger LOGGER = Logger.getLogger(ProjectService.class.getName());
 
@@ -823,4 +826,8 @@ public class ProjectService {
     return featurestoreService;
   }
 
+  @Path("{projectId}/iot")
+  public IoTGatewayResource iotService(@PathParam("projectId") Integer projectId) {
+    return this.iotResource.setProject(projectId);
+  }
 }
