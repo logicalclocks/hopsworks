@@ -22,7 +22,6 @@ import io.hops.hopsworks.common.dao.tensorflow.config.TensorBoardProcessMgr;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.common.util.Settings;
 import org.apache.commons.io.FileUtils;
-import org.apache.hadoop.fs.FileUtil;
 
 import javax.ejb.DependsOn;
 import javax.ejb.EJB;
