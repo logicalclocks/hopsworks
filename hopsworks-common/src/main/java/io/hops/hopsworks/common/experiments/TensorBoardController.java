@@ -147,12 +147,12 @@ public class TensorBoardController {
       //TensorBoard could be dead, remove from DB
       if (tensorBoardProcessMgr.ping(tb.getPid()) != 0) {
         tensorBoardFacade.remove(tb);
-        tensorBoardProcessMgr.cleanupLocalTBDir(tb);
+        tensorBoardProcessMgr.cleanup(tb);
         //TensorBoard is alive, kill it and remove from DB
       } else if (tensorBoardProcessMgr.ping(tb.getPid()) == 0) {
         if (tensorBoardProcessMgr.killTensorBoard(tb) == 0) {
           tensorBoardFacade.remove(tb);
-          tensorBoardProcessMgr.cleanupLocalTBDir(tb);
+          tensorBoardProcessMgr.cleanup(tb);
         }
       }
     }

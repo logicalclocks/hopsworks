@@ -21,7 +21,6 @@ import io.hops.hopsworks.common.dao.tensorflow.TensorBoardFacade;
 import io.hops.hopsworks.common.dao.tensorflow.config.TensorBoardProcessMgr;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.common.util.Settings;
-import org.apache.commons.io.FileUtils;
 
 import javax.ejb.DependsOn;
 import javax.ejb.EJB;
@@ -107,7 +106,7 @@ public class TensorBoardKillTimer {
                   if(tensorBoardProcessMgr.ping(pid) == 0) {
                     tensorBoardProcessMgr.killTensorBoard(pid);
                   }
-                  FileUtils.deleteDirectory(currentTbDir);
+                  tensorBoardProcessMgr.removeTensorBoardDirectory(currentTbDir.getAbsolutePath());
                 }
               }
             }

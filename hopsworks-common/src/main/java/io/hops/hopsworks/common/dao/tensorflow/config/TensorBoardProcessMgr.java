@@ -21,8 +21,6 @@ import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.tensorflow.TensorBoard;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.restutils.RESTCodes;
-import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
@@ -31,6 +29,8 @@ import io.hops.hopsworks.common.util.OSProcessExecutor;
 import io.hops.hopsworks.common.util.ProcessDescriptor;
 import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
 
@@ -302,11 +302,12 @@ public class TensorBoardProcessMgr {
   }
 
   /**
-   * Cleanup the local TensorBoard directory
+   * Dematerialize and remove TensorBoard directory
    * @param tb
    * @throws IOException
    */
-  public void cleanupLocalTBDir(TensorBoard tb) throws ServiceException {
+  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+  public void cleanup(TensorBoard tb) throws ServiceException {
 
     int hdfsUserId = tb.getHdfsUserId();
     HdfsUsers hdfsUser = hdfsUsersFacade.findById(hdfsUserId);
@@ -314,30 +315,53 @@ public class TensorBoardProcessMgr {
     String projectUserUniquePath = tb.getProject().getName() + "_" + hdfsUser.getName();
     String tbPath = tbBasePath + DigestUtils.sha256Hex(projectUserUniquePath);
 
-    //dematerialize certificates
+    // Dematerialize certificates
     String certsPath = tbBasePath + "/certs";
     DistributedFileSystemOps dfso = dfsService.getDfsOps();
     try {
       HopsUtils.cleanupCertificatesForUserCustomDir(tb.getUsers().getUsername(), tb.getProject().getName(),
-        settings.getHdfsTmpCertDir(), certificateMaterializer, certsPath, settings);
+              settings.getHdfsTmpCertDir(), certificateMaterializer, certsPath, settings);
     } finally {
       if (dfso != null) {
         dfsService.closeDfsClient(dfso);
       }
     }
 
-    //remove directory itself
-    File tbDir = new File(tbPath);
-    if(tbDir.exists()) {
-      try {
-        FileUtils.deleteDirectory(tbDir);
-      } catch (IOException e) {
-        LOGGER.log(Level.SEVERE, "Could not delete TensorBoard directory: " + tbDir);
-        throw new ServiceException(RESTCodes.ServiceErrorCode.TENSORBOARD_CLEANUP_ERROR, Level.SEVERE,
-          "TensorBoard directory:"+tbDir, e.getMessage());
+    removeTensorBoardDirectory(tbPath);
+  }
+
+  /**
+   * Remove TensorBoard directory
+   * @param tensorBoardDirectoryPath
+   * @throws IOException
+   */
+  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+  public void removeTensorBoardDirectory(String tensorBoardDirectoryPath) throws ServiceException {
+
+    // Remove directory
+    String prog = settings.getHopsworksDomainDir() + "/bin/tensorboard.sh";
+
+    ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
+            .addCommand("/usr/bin/sudo")
+            .addCommand(prog)
+            .addCommand("cleanup")
+            .addCommand(tensorBoardDirectoryPath)
+            .ignoreOutErrStreams(true)
+            .build();
+
+    LOGGER.log(Level.FINE, processDescriptor.toString());
+    try {
+      ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
+      if (!processResult.processExited()) {
+        LOGGER.log(Level.SEVERE, "Failed to remove TensorBoard directory, process time-out");
       }
+    } catch (IOException ex) {
+      LOGGER.log(Level.SEVERE, "Could not delete TensorBoard directory: " + tensorBoardDirectoryPath);
+      throw new ServiceException(RESTCodes.ServiceErrorCode.TENSORBOARD_CLEANUP_ERROR, Level.SEVERE,
+              "TensorBoard directory:"+ tensorBoardDirectoryPath, ex.getMessage());
     }
   }
+
 
   /**
    * Check to see if the process is running and is a TensorBoard started by tensorboard.sh
