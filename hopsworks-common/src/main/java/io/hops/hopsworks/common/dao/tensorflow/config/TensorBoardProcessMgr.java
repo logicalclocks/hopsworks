@@ -95,7 +95,7 @@ public class TensorBoardProcessMgr {
     Process process = null;
     Integer port = 0;
     BigInteger pid = null;
-    String tbBasePath = settings.getStagingDir() + Settings.TENSORBOARD_DIRS + File.separator;
+    String tbBasePath = settings.getStagingDir() + Settings.TENSORBOARD_DIRS;
     String projectUserUniquePath = project.getName() + "_" + hdfsUser.getName();
     String tbSecretDir = tbBasePath + DigestUtils.sha256Hex(projectUserUniquePath);
     String certsPath = "";
@@ -311,7 +311,7 @@ public class TensorBoardProcessMgr {
 
     int hdfsUserId = tb.getHdfsUserId();
     HdfsUsers hdfsUser = hdfsUsersFacade.findById(hdfsUserId);
-    String tbBasePath = settings.getStagingDir() + Settings.TENSORBOARD_DIRS + File.separator;
+    String tbBasePath = settings.getStagingDir() + Settings.TENSORBOARD_DIRS;
     String projectUserUniquePath = tb.getProject().getName() + "_" + hdfsUser.getName();
     String tbPath = tbBasePath + DigestUtils.sha256Hex(projectUserUniquePath);
 
