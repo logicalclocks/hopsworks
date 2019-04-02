@@ -23,9 +23,6 @@ import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import com.predic8.membrane.core.exchange.Exchange;
 import com.predic8.membrane.core.http.PlainBodyTransferrer;
 import com.predic8.membrane.core.http.Header;
@@ -45,12 +42,13 @@ import java.net.URI;
 import java.net.UnknownHostException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import org.apache.http.HttpHost;
 import org.apache.http.client.utils.URIUtils;
 
 class HopsServletHandler extends AbstractHttpHandler {
 
-  private static final Log log = LogFactory.getLog(HopsServletHandler.class);
+  private static Logger LOGGER = Logger.getLogger(HopsServletHandler.class.getName());
 
   private final HttpServletRequest request;
   private final HttpServletResponse response;
@@ -82,7 +80,6 @@ class HopsServletHandler extends AbstractHttpHandler {
         exchange.setRemoteAddr(Ip.getHost(request.getRequestURL().toString()));
         exchange.setRequest(srcReq);
         exchange.setOriginalRequestUri(request.getRequestURL().toString());
-//        exchange.setTargetConnection(con);
 
         invokeHandlers();
       } catch (AbortException e) {
@@ -95,13 +92,12 @@ class HopsServletHandler extends AbstractHttpHandler {
       writeResponse(exchange.getResponse());
       exchange.setCompleted();
     } catch (EndOfStreamException e) {
-      log.debug("stream closed");
+      LOGGER.log(Level.FINE, "Stream closed");
     } catch (EOFWhileReadingFirstLineException e) {
-      log.debug(
-              "Client connection terminated before line was read. Line so far: ("
-              + e.getLineSoFar() + ")");
+      LOGGER.log(Level.FINE,
+          "Client connection terminated before line was read. Line so far: (" + e.getLineSoFar() + ")");
     } catch (Exception e) {
-      log.error(e.getMessage(), e);
+      LOGGER.log(Level.SEVERE, e.getMessage(), e);
     } finally {
       exchange.detach();
     }
@@ -137,19 +133,8 @@ class HopsServletHandler extends AbstractHttpHandler {
       pathQuery += "?" + request.getQueryString();
     }
 
-    if (getTransport().isRemoveContextRoot()) {
-      String contextPath = request.getContextPath();
-      if (contextPath.length() > 0 && pathQuery.startsWith(contextPath)) {
-        pathQuery = pathQuery.substring(contextPath.length());
-      }
-    }
+    srcReq.create(request.getMethod(), pathQuery, request.getProtocol(),createHeader(), request.getInputStream());
 
-    srcReq.create(
-            request.getMethod(),
-            pathQuery,
-            request.getProtocol(),
-            createHeader(),
-            request.getInputStream());
     return srcReq;
   }
 
@@ -167,8 +152,7 @@ class HopsServletHandler extends AbstractHttpHandler {
     try {
       header.add(Header.DESTINATION, targetUriObj.toURL().toString());
     } catch (MalformedURLException ex) {
-      Logger.getLogger(HopsServletHandler.class.getName()).
-              log(Level.SEVERE, null, ex);
+      LOGGER.log(Level.SEVERE, null, ex);
     }
     return header;
   }
@@ -186,8 +170,7 @@ class HopsServletHandler extends AbstractHttpHandler {
       String externalIp = Ip.getHost(request.getRequestURL().toString());
       return InetAddress.getByName(externalIp);
     } catch (UnknownHostException ex) {
-      Logger.getLogger(HopsServletHandler.class.getName()).
-              log(Level.SEVERE, null, ex);
+      LOGGER.log(Level.SEVERE, null, ex);
     }
     return null;
   }
@@ -218,8 +201,7 @@ class HopsServletHandler extends AbstractHttpHandler {
     try {
       return response.getOutputStream();
     } catch (IOException ex) {
-      Logger.getLogger(HopsServletHandler.class.getName()).
-              log(Level.SEVERE, null, ex);
+      LOGGER.log(Level.SEVERE, null, ex);
     }
     return null;
   }
@@ -229,8 +211,7 @@ class HopsServletHandler extends AbstractHttpHandler {
     try {
       return request.getInputStream();
     } catch (IOException ex) {
-      Logger.getLogger(HopsServletHandler.class.getName()).
-              log(Level.SEVERE, null, ex);
+      LOGGER.log(Level.SEVERE, null, ex);
     }
     return null;
   }

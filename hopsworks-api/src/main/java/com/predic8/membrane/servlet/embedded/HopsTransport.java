@@ -15,51 +15,14 @@
  */
 package com.predic8.membrane.servlet.embedded;
 
-import java.io.IOException;
 
 import com.predic8.membrane.core.transport.Transport;
-import com.predic8.membrane.core.transport.ssl.SSLProvider;
-import java.net.URI;
 
-//@MCMain(
-//        outputPackage = "com.predic8.membrane.servlet.config.spring",
-//        outputName = "router-conf.xsd",
-//        targetNamespace = "http://membrane-soa.org/war/1/")
-//@MCElement(name = "hopsTransport",
-//        configPackage = "com.predic8.membrane.servlet.config.spring")
 public class HopsTransport extends Transport {
 
-  boolean removeContextRoot = false;
-  URI targetUri;
-
-  public HopsTransport(URI targetUri) {
-    this.targetUri = targetUri;
+  public HopsTransport() {
     setPrintStackTrace(true);
     setReverseDNS(false);
-  }
-
-  public URI getTargetUri() {
-    return targetUri;
-  }
-
-  public boolean isRemoveContextRoot() {
-    return removeContextRoot;
-  }
-
-//  @MCAttribute
-  public void setRemoveContextRoot(boolean removeContextRoot) {
-    this.removeContextRoot = removeContextRoot;
-  }
-
-  @Override
-  public void openPort(String ip, int port, SSLProvider sslProvider) throws
-          IOException {
-    // do nothing
-  }
-
-  @Override
-  public void closeAll() throws IOException {
-    // do nothing
   }
 
   @Override
