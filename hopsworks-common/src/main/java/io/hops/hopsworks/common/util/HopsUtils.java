@@ -186,6 +186,8 @@ public class HopsUtils {
       String projectName, String remoteFSDir, CertificateMaterializer certificateMaterializer, String directory,
       Settings settings) {
 
+    LOG.log(Level.SEVERE, "cleanup certs in " + directory);
+
     certificateMaterializer.removeCertificatesLocalCustomDir(username, projectName, directory);
     String projectSpecificUsername = projectName + HdfsUsersController
         .USER_NAME_DELIMITER + username;
@@ -211,6 +213,8 @@ public class HopsUtils {
       DistributedFileSystemOps dfso, CertificateMaterializer
       certificateMaterializer, Settings settings, String directory) throws
       IOException {
+
+    LOG.log(Level.SEVERE, "materialize certs in " + directory);
 
     String projectSpecificUsername = projectName + "__" + userName;
   

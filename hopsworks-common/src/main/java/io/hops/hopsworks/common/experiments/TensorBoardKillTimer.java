@@ -19,8 +19,8 @@ package io.hops.hopsworks.common.experiments;
 import io.hops.hopsworks.common.dao.tensorflow.TensorBoard;
 import io.hops.hopsworks.common.dao.tensorflow.TensorBoardFacade;
 import io.hops.hopsworks.common.dao.tensorflow.config.TensorBoardProcessMgr;
-import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.TensorBoardException;
 
 import javax.ejb.DependsOn;
 import javax.ejb.EJB;
@@ -72,7 +72,7 @@ public class TensorBoardKillTimer {
             tensorBoardController.cleanup(tensorBoard);
             LOGGER.log(Level.FINE, "Killed TensorBoard " + tensorBoard.toString() + " not accessed in the last " +
                     tensorBoardMaxLastAccessed + " milliseconds");
-          } catch (ServiceException ex) {
+          } catch (TensorBoardException ex) {
             LOGGER.log(Level.SEVERE, "Failed to clean up running TensorBoard", ex);
           }
         }

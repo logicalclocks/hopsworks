@@ -27,10 +27,10 @@ import io.hops.hopsworks.common.dao.tensorflow.TensorBoardPK;
 import io.hops.hopsworks.common.dao.tensorflow.config.TensorBoardDTO;
 import io.hops.hopsworks.common.dao.tensorflow.config.TensorBoardProcessMgr;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.elastic.ElasticController;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.tensorflow.TfLibMappingUtil;
+import io.hops.hopsworks.exceptions.TensorBoardException;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -45,17 +45,15 @@ import java.util.regex.Pattern;
 @Stateless
 public class TensorBoardController {
   @EJB
-  TensorBoardFacade tensorBoardFacade;
+  private TensorBoardFacade tensorBoardFacade;
   @EJB
-  TensorBoardProcessMgr tensorBoardProcessMgr;
+  private TensorBoardProcessMgr tensorBoardProcessMgr;
   @EJB
-  ElasticController elasticController;
+  private HdfsLeDescriptorsFacade hdfsLeDescriptorsFacade;
   @EJB
-  HdfsLeDescriptorsFacade hdfsLeDescriptorsFacade;
+  private HdfsUsersFacade hdfsUsersFacade;
   @EJB
-  HdfsUsersFacade hdfsUsersFacade;
-  @EJB
-  HdfsUsersController hdfsUsersController;
+  private HdfsUsersController hdfsUsersController;
   @EJB
   private TfLibMappingUtil tfLibMappingUtil;
 
@@ -88,7 +86,7 @@ public class TensorBoardController {
    * @throws IOException
    */
   public TensorBoardDTO startTensorBoard(String elasticId, Project project, Users user, String hdfsLogdir)
-    throws ServiceException {
+    throws TensorBoardException, ServiceException {
     //Kill existing TensorBoard
     TensorBoard tb = null;
     TensorBoardDTO tensorBoardDTO = null;
@@ -133,7 +131,7 @@ public class TensorBoardController {
    * @param project
    * @param user
    */
-  public void cleanup(Project project, Users user) throws ServiceException {
+  public void cleanup(Project project, Users user) throws TensorBoardException {
     TensorBoard tb = tensorBoardFacade.findForProjectAndUser(project, user);
     this.cleanup(tb);
   }
@@ -142,19 +140,13 @@ public class TensorBoardController {
    * Stop and cleanup a TensorBoard
    * @param tb
    */
-  public void cleanup(TensorBoard tb) throws ServiceException {
+  public void cleanup(TensorBoard tb) throws TensorBoardException {
     if (tb != null) {
-      //TensorBoard could be dead, remove from DB
-      if (tensorBoardProcessMgr.ping(tb.getPid()) != 0) {
-        tensorBoardFacade.remove(tb);
-        tensorBoardProcessMgr.cleanup(tb);
-        //TensorBoard is alive, kill it and remove from DB
-      } else if (tensorBoardProcessMgr.ping(tb.getPid()) == 0) {
-        if (tensorBoardProcessMgr.killTensorBoard(tb) == 0) {
-          tensorBoardFacade.remove(tb);
-          tensorBoardProcessMgr.cleanup(tb);
-        }
+      if(tensorBoardProcessMgr.ping(tb.getPid()) == 0) {
+        tensorBoardProcessMgr.killTensorBoard(tb);
       }
+      tensorBoardFacade.remove(tb);
+      tensorBoardProcessMgr.cleanup(tb);
     }
   }
 
@@ -163,7 +155,7 @@ public class TensorBoardController {
    * @param project
    * @throws IOException
    */
-  public void removeProject(Project project) throws ServiceException {
+  public void removeProject(Project project) throws TensorBoardException {
     Collection<TensorBoard> instances = project.getTensorBoardCollection();
     if(instances != null) {
       for(TensorBoard tensorBoard: instances) {

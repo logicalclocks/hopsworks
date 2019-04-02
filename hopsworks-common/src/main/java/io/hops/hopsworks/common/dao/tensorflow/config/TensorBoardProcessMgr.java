@@ -29,7 +29,7 @@ import io.hops.hopsworks.common.util.OSProcessExecutor;
 import io.hops.hopsworks.common.util.ProcessDescriptor;
 import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.common.util.Settings;
-import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.exceptions.TensorBoardException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
@@ -89,7 +89,7 @@ public class TensorBoardProcessMgr {
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public TensorBoardDTO startTensorBoard(Project project, Users user, HdfsUsers hdfsUser, String hdfsLogdir,
                                          String tfLdLibraryPath)
-          throws IOException {
+          throws IOException, TensorBoardException {
 
     String prog = settings.getHopsworksDomainDir() + "/bin/tensorboard.sh";
     Integer port = 0;
@@ -171,7 +171,7 @@ public class TensorBoardProcessMgr {
 
         ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
         if (!processResult.processExited()) {
-          throw new IOException("Tensorboard start process timed out!");
+          throw new IOException("TensorBoard start process timed out!");
         }
         int exitValue = processResult.getExitCode();
         String pidPath = tbSecretDir + File.separator + port + ".pid";
@@ -204,29 +204,29 @@ public class TensorBoardProcessMgr {
 
       } catch (Exception ex) {
 
+        LOGGER.log(Level.SEVERE, "Problem starting TensorBoard: {0}", ex);
+
         if(pid != null && this.ping(pid) == 0) {
           this.killTensorBoard(pid);
         }
-
-        dfso = dfsService.getDfsOps();
-        certsPath = tbBasePath + "/certs";
-        File certsDir = new File(certsPath);
-        certsDir.mkdirs();
-        try {
-          HopsUtils.cleanupCertificatesForUserCustomDir(user.getUsername(), project.getName(),
-                  settings.getHdfsTmpCertDir(), certificateMaterializer, certsPath, settings);
-        } finally {
-          if (dfso != null) {
-            dfsService.closeDfsClient(dfso);
-          }
-        }
-
-        LOGGER.log(Level.SEVERE, "Problem starting TensorBoard: {0}", ex);
 
       } finally {
         retries--;
       }
     }
+
+    dfso = dfsService.getDfsOps();
+    certsPath = tbBasePath + "/certs";
+    try {
+      HopsUtils.cleanupCertificatesForUserCustomDir(user.getUsername(), project.getName(),
+              settings.getHdfsTmpCertDir(), certificateMaterializer, certsPath, settings);
+    } finally {
+      if (dfso != null) {
+        dfsService.closeDfsClient(dfso);
+      }
+    }
+
+    this.removeTensorBoardDirectory(tbSecretDir);
 
     return null;
   }
@@ -302,7 +302,7 @@ public class TensorBoardProcessMgr {
    * @throws IOException
    */
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-  public void cleanup(TensorBoard tb) throws ServiceException {
+  public void cleanup(TensorBoard tb) throws TensorBoardException {
 
     int hdfsUserId = tb.getHdfsUserId();
     HdfsUsers hdfsUser = hdfsUsersFacade.findById(hdfsUserId);
@@ -331,7 +331,7 @@ public class TensorBoardProcessMgr {
    * @throws IOException
    */
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-  public void removeTensorBoardDirectory(String tensorBoardDirectoryPath) throws ServiceException {
+  public void removeTensorBoardDirectory(String tensorBoardDirectoryPath) throws TensorBoardException {
 
     // Remove directory
     String prog = settings.getHopsworksDomainDir() + "/bin/tensorboard.sh";
@@ -352,8 +352,8 @@ public class TensorBoardProcessMgr {
       }
     } catch (IOException ex) {
       LOGGER.log(Level.SEVERE, "Could not delete TensorBoard directory: " + tensorBoardDirectoryPath);
-      throw new RESTCodes.TensorBoardErrorCode(RESTCodes.TensorBoardErrorCode.TENSORBOARD_CLEANUP_ERROR, Level.SEVERE,
-              "TensorBoard directory:"+ tensorBoardDirectoryPath, ex.getMessage());
+      throw new TensorBoardException(RESTCodes.TensorBoardErrorCode.TENSORBOARD_CLEANUP_ERROR, Level.SEVERE,
+              "TensorBoard directory: " + tensorBoardDirectoryPath, ex.getMessage());
     }
   }
 
