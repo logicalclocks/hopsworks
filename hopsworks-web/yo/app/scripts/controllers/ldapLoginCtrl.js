@@ -74,7 +74,7 @@ angular.module('hopsWorksApp')
             console.log("Login error: ", error);
             if (error !== undefined && error.status === 412) {
               self.errorMessage = "";
-              ModalService.ldapUserConsent('sm', error.data).then(function (success) {
+              ModalService.remoteUserConsent('sm', error.data).then(function (success) {
                 if (success.val.consent) {
                   self.user.chosenEmail = success.val.chosenEmail;
                   self.user.consent = success.val.consent;

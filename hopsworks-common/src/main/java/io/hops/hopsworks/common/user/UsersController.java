@@ -232,38 +232,15 @@ public class UsersController {
     List<BbcGroup> groups = new ArrayList<>();
     String salt = authController.generateSalt();
     String password = authController.getPasswordHash(pwd, salt);
-    Users user = new Users(uname, password, email, fname, lname, title, "-", UserAccountStatus.NEW_MOBILE_ACCOUNT,
-        UserAccountType.M_ACCOUNT_TYPE, 0, salt);
+    Users user = new Users(uname, password, email, fname, lname, new Timestamp(new Date().getTime()), title, "-",
+      UserAccountStatus.NEW_MOBILE_ACCOUNT, UserAccountType.M_ACCOUNT_TYPE, new Timestamp(new Date().getTime()), 0,
+      salt);
     user.setBbcGroupCollection(groups);
-    return user;
-  }
-
-  /**
-   * Create ldap user
-   *
-   * @param email
-   * @param fname
-   * @param lname
-   * @param pwd
-   * @param accStatus
-   * @return
-   */
-  public Users createNewLdapUser(String email, String fname, String lname, String pwd, UserAccountStatus accStatus) {
-    String uname = generateUsername(email);
-    List<BbcGroup> groups = new ArrayList<>();
-    String salt = authController.generateSalt();
-    String password = authController.getPasswordHash(pwd, salt);
-
-    Users user = new Users(uname, password, email, fname, lname, "-", "-", accStatus,
-        UserAccountType.LDAP_ACCOUNT_TYPE, settings.getMaxNumProjPerUser(), salt);
-    user.setBbcGroupCollection(groups);
-    addAddress(user);
-    addOrg(user);
     return user;
   }
      
   /**
-   * Create Kerberos user
+   * Remote user
    * @param email
    * @param fname
    * @param lname
@@ -271,14 +248,14 @@ public class UsersController {
    * @param accStatus
    * @return 
    */
-  public Users createNewKrbLdapUser(String email, String fname, String lname, String pwd, UserAccountStatus accStatus) {
+  public Users createNewRemoteUser(String email, String fname, String lname, String pwd, UserAccountStatus accStatus) {
     String uname = generateUsername(email);
     List<BbcGroup> groups = new ArrayList<>();
     String salt = authController.generateSalt();
     String password = authController.getPasswordHash(pwd, salt);
-
-    Users user = new Users(uname, password, email, fname, lname, "-", "-", accStatus, UserAccountType.KRB_ACCOUNT_TYPE, 
-        settings.getMaxNumProjPerUser(), salt);
+    Users user = new Users(uname, password, email, fname, lname, new Timestamp(new Date().getTime()), "-", "-"
+      , accStatus, UserAccountType.REMOTE_ACCOUNT_TYPE, new Timestamp(new Date().getTime()),
+      settings.getMaxNumProjPerUser(), salt);
     user.setBbcGroupCollection(groups);
     addAddress(user);
     addOrg(user);

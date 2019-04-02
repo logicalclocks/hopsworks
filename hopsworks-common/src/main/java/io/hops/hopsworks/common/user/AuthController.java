@@ -127,7 +127,7 @@ public class AuthController {
    * @param otp
    * @param req
    * @return
-   * @throws io.hops.hopsworks.common.exception.UserException
+   * @throws UserException
    */
   public String preCustomRealmLoginCheck(Users user, String password, String otp, HttpServletRequest req)
       throws UserException {
@@ -151,16 +151,6 @@ public class AuthController {
       throw new IllegalArgumentException("Could not recognize the account type. Report a bug.");
     }
     return newPassword;
-  }
-
-  public String preLdapLoginCheck(Users user, String password) {
-    if (user == null) {
-      throw new IllegalArgumentException("User not set.");
-    }
-    if (!user.getMode().equals(UserAccountType.LDAP_ACCOUNT_TYPE)) {
-      throw new IllegalArgumentException("User is not registerd as ldap user.");
-    }
-    return getPasswordPlusSalt(password, user.getSalt()) + Settings.MOBILE_OTP_PADDING;
   }
 
   /**

@@ -39,6 +39,8 @@
 package io.hops.hopsworks.api.util;
 
 import io.hops.hopsworks.api.filter.NoCacheResponse;
+import io.hops.hopsworks.common.dao.remote.oauth.OauthClient;
+import io.hops.hopsworks.common.dao.remote.oauth.OauthClientFacade;
 import io.hops.hopsworks.common.util.Settings;
 import io.swagger.annotations.Api;
 
@@ -53,6 +55,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -67,6 +70,8 @@ public class VariablesService {
   private NoCacheResponse noCacheResponse;
   @EJB
   private Settings settings;
+  @EJB
+  private OauthClientFacade oauthClientFacade;
 
   @GET
   @Path("{id}")
@@ -99,9 +104,16 @@ public class VariablesService {
   @Path("authStatus")
   @Produces(MediaType.APPLICATION_JSON)
   public Response getAuthStatus() {
+    List<OauthClient> oauthClients = oauthClientFacade.findAll();
+    List<OpenIdProvider> providers = new ArrayList<>();
+    for (OauthClient client : oauthClients) {
+      providers.add(
+        new OpenIdProvider(client.getProviderName(), client.getProviderDisplayName(), client.getProviderLogoURI()));
+    }
     AuthStatus authStatus = new AuthStatus(settings.getTwoFactorAuth(), settings.getLDAPAuthStatus(), settings.
-        getKRBAuthStatus());
+      getKRBAuthStatus(), providers);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(authStatus).build();
+  
   }
 
   @GET

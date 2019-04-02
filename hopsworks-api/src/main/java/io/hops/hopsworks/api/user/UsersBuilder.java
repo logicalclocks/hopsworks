@@ -17,8 +17,10 @@ package io.hops.hopsworks.api.user;
 
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.AbstractFacade;
+import io.hops.hopsworks.common.dao.remote.user.RemoteUserFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.dao.user.security.ua.UserAccountType;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -36,6 +38,8 @@ public class UsersBuilder {
 
   @EJB
   private UserFacade userFacade;
+  @EJB
+  private RemoteUserFacade remoteUserFacade;
 
   public UserDTO uri(UserDTO dto, UriInfo uriInfo) {
     dto.setHref(uriInfo.getAbsolutePathBuilder()
@@ -98,7 +102,11 @@ public class UsersBuilder {
       dto.setEmail(user.getEmail());
       dto.setUsername(user.getUsername());
       dto.setPhoneNumber(user.getMobile());
-      dto.setAccountType(user.getMode().toString());
+      if (UserAccountType.REMOTE_ACCOUNT_TYPE.equals(user.getMode())) {
+        dto.setAccountType(remoteUserFacade.findByUsers(user).getType().toString());
+      } else {
+        dto.setAccountType(user.getMode().toString());
+      }
       dto.setMaxNumProjects(user.getMaxNumProjects());
       dto.setNumCreatedProjects(user.getNumCreatedProjects());
       dto.setNumActiveProjects(user.getNumActiveProjects());

@@ -164,7 +164,7 @@ angular.module('hopsWorksApp')
             };
             
             self.externalAccountType = function () {
-              return self.user.accountType === 'LDAP_ACCOUNT_TYPE' || self.user.accountType === 'KRB_ACCOUNT_TYPE';
+                return self.user.accountType !== 'M_ACCOUNT_TYPE';
             };
 
             self.reset = function () {
