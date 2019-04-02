@@ -54,8 +54,8 @@
             <p:commandButton value="Admin Home" action="adminIndex" ajax="false" process="@toolbarForm" icon="ui-icon-arrowrefresh-1-w"/>
           </f:facet>
           <f:facet name="right" rendered="#{roleEnforcementPoint.loggedIn}">
-            <p:menuButton value=" #{userAdministration.loginName}" id="userBtn">
-              <p:menuitem value="My Account" action="#{userAdministration.showProfile()}" icon="ui-icon-person"/>
+            <p:menuButton value=" #{roleEnforcementPoint.loginName}" id="userBtn">
+              <p:menuitem value="My Account" action="#{adminProfileAdministration.showProfile()}" icon="ui-icon-person"/>
               <p:menuitem value="Logout" action="#{roleEnforcementPoint.logOut()}" icon="ui-icon-extlink"/>           
             </p:menuButton>
           </f:facet>

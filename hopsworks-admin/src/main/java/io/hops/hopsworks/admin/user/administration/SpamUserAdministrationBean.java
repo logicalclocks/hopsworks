@@ -15,10 +15,8 @@
  */
 package io.hops.hopsworks.admin.user.administration;
 
-import io.hops.hopsworks.admin.maintenance.MessagesController;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountType;
 import org.primefaces.model.LazyDataModel;
 
@@ -26,34 +24,41 @@ import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
-import javax.faces.context.FacesContext;
 import java.io.Serializable;
+import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @ManagedBean
 @ViewScoped
-public class UsersAdministrationBean implements Serializable {
+public class SpamUserAdministrationBean implements Serializable {
   
-  private static final Logger LOGGER = Logger.getLogger(UsersAdministrationBean.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(SpamUserAdministrationBean.class.getName());
   
   @EJB
   private UserFacade userFacade;
   @EJB
   protected UserAdministrationController userAdministrationController;
-  
+
   private LazyDataModel<Users> lazyUsers;
+  private List<String> groups;
   
   @PostConstruct
   public void init() {
-    lazyUsers = new UsersAdminLazyDataModel(userFacade);
+    lazyUsers = new SpamUsersAdminLazyDataModel(userFacade);
+    groups = userAdministrationController.getAllGroupsNames();
   }
   
   public LazyDataModel<Users> getLazyUsers() {
     return lazyUsers;
   }
   
-  public UserAccountStatus[] getAccountStatuses() {
-    return UserAccountStatus.values();
+  public List<String> getGroups() {
+    return groups;
+  }
+  
+  public void setGroups(List<String> groups) {
+    this.groups = groups;
   }
   
   public UserAccountType[] getAccountTypes() {
@@ -64,13 +69,13 @@ public class UsersAdministrationBean implements Serializable {
     return userAdministrationController.getAccountType(type);
   }
   
-  public String getUserStatus(UserAccountStatus status) {
-    return userAdministrationController.getUserStatus(status);
+  public void deleteUser(Users user) {
+    userAdministrationController.deleteUser(user);
+    LOGGER.log(Level.FINE, "Deleted spam user: {0}", user.getEmail());
   }
   
-  public String modifyUser(Users user) {
-    FacesContext.getCurrentInstance().getExternalContext().getSessionMap().put("editinguser", user);
-    MessagesController.addInfoMessage("User successfully modified for " + user.getEmail());
-    return "admin_profile";
+  public void removeFromSpam(Users user) {
+    userAdministrationController.removeFromSpam(user);
+    LOGGER.log(Level.FINE, "Removed from spam user: {0}", user.getEmail());
   }
 }
