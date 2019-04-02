@@ -158,7 +158,7 @@ public class BbcGroup implements Serializable {
 
   @Override
   public String toString() {
-    return "BbcGroup[ gid=" + gid + " ]";
+    return this.groupName;
   }
 
 }

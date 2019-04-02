@@ -67,7 +67,7 @@
                         <h:outputText value="#{user.email}"/>
                     </p:column>
 
-                    <p:column id="modeCol" filterBy="#{user.mode}" headerText="Type">
+                    <p:column id="modeCol" filterBy="#{user.mode}" headerText="Account Type">
                         <f:facet name="filter">
                             <p:selectOneMenu onchange="PF('usersTable').filter()" styleClass="custom-filter">
                                 <f:selectItem itemLabel="Select One" itemValue="#{null}" noSelectionOption="true" />
@@ -98,8 +98,15 @@
                         <h:outputText value="#{user.isonline eq '1' ? 'True (1)' : 'False (0)' }"/>
                     </p:column>
 
+                    <p:column id="activationDateCol" headerText="Activated" sortBy="#{user.activated}"
+                              style="width: 125px;">
+                        <h:outputText value="#{user.activated}">
+                            <f:convertDateTime pattern="YYYY-MM-DD HH:mm:ss"/>
+                        </h:outputText>
+                    </p:column>
+
                     <p:column id="roleNCol" headerText="Role">
-                        <h:outputText value="#{usersAdministrationBean.getUserRole(user)}"/>
+                        <h:outputText value="#{user.groupNames}"/>
                     </p:column>
 
                     <p:column style="width:40px; padding-left:30px;" headerText="Modify">

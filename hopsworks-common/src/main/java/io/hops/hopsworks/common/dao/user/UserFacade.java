@@ -90,6 +90,13 @@ public class UserFacade extends AbstractFacade<Users> {
     setOffsetAndLim(offset, limit, query);
     return new CollectionInfo((Long) queryCount.getSingleResult(), query.getResultList());
   }
+  
+  public long countWithFilter(Set<? extends AbstractFacade.FilterBy> filter) {
+    String queryCountStr = buildQuery("SELECT COUNT(DISTINCT u.uid) FROM Users u ", filter, null, "");
+    Query queryCount = em.createQuery(queryCountStr, Users.class);
+    setFilter(filter, queryCount);
+    return (Long) queryCount.getSingleResult();
+  }
 
   private List<BbcGroup> getGroups(String field, String values) {
     String[] groups = values.split(",");
