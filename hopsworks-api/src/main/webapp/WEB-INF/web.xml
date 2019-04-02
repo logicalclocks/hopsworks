@@ -69,6 +69,7 @@
     <servlet-name>KibanaProxyServlet</servlet-name>
     <url-pattern>/kibana</url-pattern>
   </servlet-mapping>
+
   <servlet>
     <servlet-name>jupyter</servlet-name>
     <servlet-class>com.predic8.membrane.servlet.embedded.MembraneServlet</servlet-class>
@@ -89,31 +90,6 @@
     <servlet-name>jupyter</servlet-name>
     <url-pattern>/jupyter/*</url-pattern>
   </servlet-mapping>
-  <!-- 
-    Note that it is advised to deploy this web application with a context path of "/", using
-    virtual hosts, if necessary. Otherwise problems with forwarded web applications or services
-    might occur, since the request path differs. If this servlet is deployed using a different
-    context path, the context path prefix will be removed from any incoming request URIs before
-    any further processing takes place (unless <servletTransport removeContextRoot="false"/> is
-    used in proxies.xml).
-  -->
-  <servlet>
-    <servlet-name>membrane</servlet-name>
-    <servlet-class>com.predic8.membrane.servlet.embedded.MembraneServlet</servlet-class>
-    <init-param>
-      <param-name>proxiesXml</param-name>
-      <param-value>/WEB-INF/proxies.xml</param-value>
-    </init-param>
-  </servlet>
-  <servlet-mapping>
-    <servlet-name>membrane</servlet-name>
-    <url-pattern>/jupyter2</url-pattern>
-  </servlet-mapping>
-  <servlet-mapping>
-    <servlet-name>membrane</servlet-name>
-    <url-pattern>/jupyter2/*</url-pattern>
-  </servlet-mapping>
-    
 
   <servlet>
     <servlet-name>rstudio</servlet-name>
