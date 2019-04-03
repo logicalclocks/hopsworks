@@ -128,7 +128,6 @@ import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.yarn.api.records.ApplicationReport;
 import org.apache.hadoop.yarn.api.records.FinalApplicationStatus;
-import org.apache.hadoop.yarn.api.records.LogAggregationStatus;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
@@ -1422,12 +1421,7 @@ public class ProjectController {
         appReport = client.getApplicationReport(appReport.getApplicationId());
         finalState = appReport.getFinalApplicationStatus();
       }
-      LogAggregationStatus logAggregationState = appReport.getLogAggregationStatus();
-      while (!YarnLogUtil.isFinal(logAggregationState)) {
-        Thread.sleep(500);
-        appReport = client.getApplicationReport(appReport.getApplicationId());
-        logAggregationState = appReport.getLogAggregationStatus();
-      }
+      YarnLogUtil.waitForLogAggregation(client, appReport.getApplicationId());
     }
   }
   
@@ -1996,8 +1990,8 @@ public class ProjectController {
     if (projectInodeAttrs == null) {
       LOGGER.log(Level.SEVERE, "Cannot find HDFS quota information for project: " + project.getName());
     } else {
-      hdfsQuota = projectInodeAttrs.getDsquota().longValue();
-      hdfsUsage = projectInodeAttrs.getDiskspace().longValue();
+      hdfsQuota = projectInodeAttrs.getSsquota().longValue();
+      hdfsUsage = projectInodeAttrs.getStorageSpace().longValue();
       hdfsNsQuota = projectInodeAttrs.getNsquota().longValue();
       hdfsNsCount = projectInodeAttrs.getNscount().longValue();
     }
@@ -2012,8 +2006,8 @@ public class ProjectController {
           if (dbInodeAttrs == null) {
             LOGGER.log(Level.SEVERE, "Cannot find HiveDB quota information for project: " + project.getName());
           } else {
-            dbhdfsQuota = dbInodeAttrs.getDsquota().longValue();
-            dbhdfsUsage = dbInodeAttrs.getDiskspace().longValue();
+            dbhdfsQuota = dbInodeAttrs.getSsquota().longValue();
+            dbhdfsUsage = dbInodeAttrs.getStorageSpace().longValue();
             dbhdfsNsQuota = dbInodeAttrs.getNsquota().longValue();
             dbhdfsNsCount = dbInodeAttrs.getNscount().longValue();
           }
@@ -2031,8 +2025,8 @@ public class ProjectController {
           if (dbInodeAttrs == null) {
             LOGGER.log(Level.SEVERE, "Cannot find FeaturestoreDb quota information for project: " + project.getName());
           } else {
-            fshdfsQuota = dbInodeAttrs.getDsquota().longValue();
-            fshdfsUsage = dbInodeAttrs.getDiskspace().longValue();
+            fshdfsQuota = dbInodeAttrs.getSsquota().longValue();
+            fshdfsUsage = dbInodeAttrs.getStorageSpace().longValue();
             fshdfsNsQuota = dbInodeAttrs.getNsquota().longValue();
             fshdfsNsCount = dbInodeAttrs.getNscount().longValue();
           }
@@ -2095,12 +2089,7 @@ public class ProjectController {
           appReport = client.getApplicationReport(appReport.getApplicationId());
           finalState = appReport.getFinalApplicationStatus();
         }
-        LogAggregationStatus logAggregationState = appReport.getLogAggregationStatus();
-        while (!YarnLogUtil.isFinal(logAggregationState)) {
-          Thread.sleep(500);
-          appReport = client.getApplicationReport(appReport.getApplicationId());
-          logAggregationState = appReport.getLogAggregationStatus();
-        }
+        YarnLogUtil.waitForLogAggregation(client, appReport.getApplicationId());
       }
     } catch (YarnException | IOException | InterruptedException e) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.KILL_MEMBER_JOBS, Level.SEVERE,

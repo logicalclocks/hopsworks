@@ -177,7 +177,7 @@ RewriteEngine on
     sp.setTargetURL(newQueryBuf.toString());
     // only set external hostname in case admin console is used
     try {
-      router = new HopsRouter(targetUriObj);
+      router = new HopsRouter();
       router.add(sp);
       router.init();
       ProxyRule proxy = new ProxyRule(new ProxyRuleKey(-1));

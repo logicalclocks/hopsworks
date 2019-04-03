@@ -345,6 +345,9 @@ public class AgentController {
     Collection<PythonDep> deps = new ArrayList();
     
     String[] lines = condaListStr.split(System.getProperty("line.separator"));
+
+    String cpuHost = hostsFacade.findCPUHost();
+    String gpuHost = hostsFacade.findGPUHost();
     
     for (int i = 3; i < lines.length; i++) {
       
@@ -358,20 +361,57 @@ public class AgentController {
       if (settings.getPreinstalledPythonLibraryNames().contains(libraryName)) {
         AnacondaRepo repo = pythonDepsFacade.getRepo("PyPi", true);
         
-        //Special case for tensorflow
-        if (libraryName.equals("tensorflow")) {
-          PythonDep tensorflowCPU = pythonDepsFacade.getDep(repo, PythonDepsFacade.MachineType.CPU,
-              PythonDepsFacade.CondaInstallType.PIP, libraryName, version, true, true, status);
-          deps.add(tensorflowCPU);
-          PythonDep tensorflowGPU = pythonDepsFacade.getDep(repo, PythonDepsFacade.MachineType.GPU,
-              PythonDepsFacade.CondaInstallType.PIP, libraryName + "-gpu", version, true, true, status);
-          deps.add(tensorflowGPU);
-          continue;
-        }
-        
         PythonDep pyDep = pythonDepsFacade.getDep(repo, PythonDepsFacade.MachineType.ALL,
             PythonDepsFacade.CondaInstallType.PIP, libraryName, version, true, true, status);
         deps.add(pyDep);
+        continue;
+      }
+
+      //Special case for tensorflow
+      if (libraryName.equals("tensorflow") || libraryName.equals("tensorflow-gpu")) {
+        AnacondaRepo repo = pythonDepsFacade.getRepo("PyPi", true);
+        if(cpuHost != null) {
+          PythonDep tensorflowCPU = pythonDepsFacade.getDep(repo, PythonDepsFacade.MachineType.CPU,
+            PythonDepsFacade.CondaInstallType.PIP, "tensorflow", version, true, true, status);
+          deps.add(tensorflowCPU);
+        }
+        if(gpuHost != null) {
+          PythonDep tensorflowGPU = pythonDepsFacade.getDep(repo, PythonDepsFacade.MachineType.GPU,
+            PythonDepsFacade.CondaInstallType.PIP, "tensorflow-gpu", version, true, true, status);
+          deps.add(tensorflowGPU);
+        }
+        continue;
+      }
+
+      //Special case for pytorch
+      if (libraryName.equals("pytorch") || libraryName.equals("pytorch-cpu")) {
+        AnacondaRepo repo = pythonDepsFacade.getRepo("pytorch", true);
+        if(cpuHost != null) {
+          PythonDep pytorchCPU = pythonDepsFacade.getDep(repo, PythonDepsFacade.MachineType.CPU,
+            PythonDepsFacade.CondaInstallType.CONDA, "pytorch-cpu", version, true, false, status);
+          deps.add(pytorchCPU);
+        }
+        if(gpuHost != null) {
+          PythonDep pytorchGPU = pythonDepsFacade.getDep(repo, PythonDepsFacade.MachineType.GPU,
+            PythonDepsFacade.CondaInstallType.CONDA, "pytorch", version, true, false, status);
+          deps.add(pytorchGPU);
+        }
+        continue;
+      }
+
+      //Special case for torchvision
+      if (libraryName.equals("torchvision") || libraryName.equals("torchvision-cpu")) {
+        AnacondaRepo repo = pythonDepsFacade.getRepo("pytorch", true);
+        if(cpuHost != null) {
+          PythonDep torchvisionCPU = pythonDepsFacade.getDep(repo, PythonDepsFacade.MachineType.CPU,
+            PythonDepsFacade.CondaInstallType.CONDA, "torchvision-cpu", version, true, false, status);
+          deps.add(torchvisionCPU);
+        }
+        if(gpuHost != null) {
+          PythonDep torchvisionGPU = pythonDepsFacade.getDep(repo, PythonDepsFacade.MachineType.GPU,
+            PythonDepsFacade.CondaInstallType.CONDA, "torchvision", version, true, false, status);
+          deps.add(torchvisionGPU);
+        }
         continue;
       }
       

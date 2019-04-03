@@ -47,8 +47,10 @@ import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountType;
 import io.hops.hopsworks.common.dao.user.security.ua.SecurityQuestion;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -68,6 +70,7 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -288,7 +291,13 @@ public class Users implements Serializable {
   @OneToMany(cascade = CascadeType.ALL,
       mappedBy = "users")
   private Collection<TensorBoard> tensorBoardCollection;
-
+  
+  //Only used for adding group by name to the used
+  @Transient
+  private String groupName;
+  //Only used for viewing user groups as list
+  @Transient
+  private List<BbcGroup> groupNames;
 
   public Users() {
   }
@@ -651,7 +660,20 @@ public class Users implements Serializable {
       Collection<JupyterSettings> jupyterSettingsCollection) {
     this.jupyterSettingsCollection = jupyterSettingsCollection;
   }
-
+  
+  public String getGroupName() {
+    return groupName;
+  }
+  
+  public void setGroupName(String groupName) {
+    this.groupName = groupName;
+  }
+  
+  public List<BbcGroup> getGroupNames() {
+    this.groupNames = new ArrayList<>(this.bbcGroupCollection);
+    return groupNames;
+  }
+  
   @Override
   public int hashCode() {
     int hash = 0;
@@ -675,7 +697,7 @@ public class Users implements Serializable {
 
   @Override
   public String toString() {
-    return "se.kth.hopsworks.model.Users[ uid=" + uid + " ]";
+    return "Users[ uid=" + uid + " ]";
   }
 
   public Users asUser() {
