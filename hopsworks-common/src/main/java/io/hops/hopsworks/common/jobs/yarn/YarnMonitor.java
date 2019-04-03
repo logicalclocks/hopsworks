@@ -49,6 +49,7 @@ import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.FinalApplicationStatus;
 import org.apache.hadoop.yarn.api.records.LogAggregationStatus;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
+import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.util.ConverterUtils;
 
@@ -129,5 +130,9 @@ public final class YarnMonitor implements Closeable {
   public void cancelJob(String appid) throws YarnException, IOException {
     ApplicationId applicationId = ConverterUtils.toApplicationId(appid);
     yarnClientWrapper.getYarnClient().killApplication(applicationId);
+  }
+  
+  public YarnClient getYarnClient() {
+    return yarnClientWrapper.getYarnClient();
   }
 }
