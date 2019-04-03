@@ -46,11 +46,15 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.LogAggregationStatus;
+import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.logaggregation.AggregatedLogFormat;
@@ -104,7 +108,8 @@ public class YarnLogUtil {
   public static void copyAggregatedYarnLogs(DistributedFileSystemOps dfs, String src, String dst,
       String[] desiredLogTypes, YarnMonitor monitor) throws YarnException, IOException, InterruptedException {
   
-    LogAggregationStatus logAggregationStatus = waitForLogAggregation(monitor);
+    LogAggregationStatus logAggregationStatus = waitForLogAggregation(monitor.getYarnClient(),
+        monitor.getApplicationId());
     
     
     PrintStream writer = null;
@@ -148,21 +153,33 @@ public class YarnLogUtil {
     }
   }
   
-  public static LogAggregationStatus waitForLogAggregation(YarnMonitor monitor) throws InterruptedException,
-      YarnException, IOException {
-    LogAggregationStatus logAggregationStatus = monitor.getLogAggregationStatus();
+  public static LogAggregationStatus waitForLogAggregation(YarnClient yarnClient, ApplicationId appId)
+      throws InterruptedException, YarnException, IOException {
+    LogAggregationStatus logAggregationStatus = yarnClient.getApplicationReport(appId)
+        .getLogAggregationStatus();
 
+    int not_startRetries = 0;
     while (!isFinal(logAggregationStatus)) {
-      Thread.sleep(1000);
-      logAggregationStatus = monitor.getLogAggregationStatus();
+      TimeUnit.SECONDS.sleep(1);
+      logAggregationStatus = yarnClient.getApplicationReport(appId).getLogAggregationStatus();
+      // NOT_START LogAggregation status might happen in two cases:
+      // (a) Application has failed very early and status didn't change to FAILED
+      // (b) Application has succeeded but the moment we probe for status,
+      // log aggregation hasn't started yet.
+      if (logAggregationStatus.equals(LogAggregationStatus.NOT_START)) {
+        if (++not_startRetries > 5) {
+          break;
+        }
+      }
     }
     return logAggregationStatus;
   }
 
-  public static boolean isFinal(LogAggregationStatus status){
-    switch(status){
+  private static boolean isFinal(LogAggregationStatus status){
+    switch(status) {
       case RUNNING:
       case RUNNING_WITH_FAILURE:
+      case NOT_START:
         return false;
       default :
         return true;

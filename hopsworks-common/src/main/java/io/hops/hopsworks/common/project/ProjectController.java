@@ -133,7 +133,6 @@ import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.yarn.api.records.ApplicationReport;
 import org.apache.hadoop.yarn.api.records.FinalApplicationStatus;
-import org.apache.hadoop.yarn.api.records.LogAggregationStatus;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
@@ -1409,12 +1408,7 @@ public class ProjectController {
         appReport = client.getApplicationReport(appReport.getApplicationId());
         finalState = appReport.getFinalApplicationStatus();
       }
-      LogAggregationStatus logAggregationState = appReport.getLogAggregationStatus();
-      while (!YarnLogUtil.isFinal(logAggregationState)) {
-        Thread.sleep(500);
-        appReport = client.getApplicationReport(appReport.getApplicationId());
-        logAggregationState = appReport.getLogAggregationStatus();
-      }
+      YarnLogUtil.waitForLogAggregation(client, appReport.getApplicationId());
     }
   }
 
@@ -2091,12 +2085,7 @@ public class ProjectController {
           appReport = client.getApplicationReport(appReport.getApplicationId());
           finalState = appReport.getFinalApplicationStatus();
         }
-        LogAggregationStatus logAggregationState = appReport.getLogAggregationStatus();
-        while (!YarnLogUtil.isFinal(logAggregationState)) {
-          Thread.sleep(500);
-          appReport = client.getApplicationReport(appReport.getApplicationId());
-          logAggregationState = appReport.getLogAggregationStatus();
-        }
+        YarnLogUtil.waitForLogAggregation(client, appReport.getApplicationId());
       }
     } catch (YarnException | IOException | InterruptedException e) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.KILL_MEMBER_JOBS, Level.SEVERE,
