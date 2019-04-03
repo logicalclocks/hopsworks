@@ -366,17 +366,25 @@ describe "On #{ENV['OS']}" do
       it "the example feature engineering job should complete successfully, and after completion there should be 4 feature groups created in the project's feature store" do
         project = get_project
 
-        # Check that the job succeeds
+        # Check that the job was created and started and extracts its id
         get_executions(project.id, get_featurestore_tour_job_name, "")
         parsed_json = JSON.parse(response.body)
         expect_status(200)
         expect(parsed_json["items"].count == 1).to be true
         execution = parsed_json["items"][0]
+
+        # Wait for execution to complete
         wait_for_execution(2000) do
           get_execution(project.id, get_featurestore_tour_job_name, execution["id"])
-          parsed_json = JSON.parse(response.body)
-          parsed_json["state"] == "FINISHED"
+          execution_dto = JSON.parse(response.body)
+          not is_execution_active(execution_dto)
         end
+
+        # Check that the execution completed successfully
+        get_execution(project.id, get_featurestore_tour_job_name, execution["id"])
+        execution_dto = JSON.parse(response.body)
+        expect(execution_dto["state"] == "FINISHED").to be true
+        expect(execution_dto["finalStatus"] == "SUCCEEDED").to be true
 
         # Check that the job created 4 feature groups
         featurestore_id = get_featurestore_id(project.id)

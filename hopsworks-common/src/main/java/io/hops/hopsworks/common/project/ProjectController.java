@@ -2393,11 +2393,11 @@ public class ProjectController {
           sparkJobConfiguration.setMainClass(Settings.HOPS_FEATURESTORE_TOUR_JOB_CLASS);
           sparkJobConfiguration.setExecutorInstances(1);
           sparkJobConfiguration.setExecutorCores(1);
-          sparkJobConfiguration.setExecutorMemory(1024);
+          sparkJobConfiguration.setExecutorMemory(2024);
           sparkJobConfiguration.setExecutorGpus(0);
-          sparkJobConfiguration.setDynamicAllocationEnabled(false);
+          sparkJobConfiguration.setDynamicAllocationEnabled(true);
           sparkJobConfiguration.setDynamicAllocationMinExecutors(1);
-          sparkJobConfiguration.setDynamicAllocationMinExecutors(1);
+          sparkJobConfiguration.setDynamicAllocationMaxExecutors(3);
           sparkJobConfiguration.setDynamicAllocationInitialExecutors(1);
           sparkJobConfiguration.setArgs("");
           sparkJobConfiguration.setAppName(Settings.HOPS_FEATURESTORE_TOUR_JOB_NAME);
