@@ -418,7 +418,7 @@
                         <td class="col-sm-2">
                           <div class="row">
 
-                            <div class="form-group">
+                            <div class="form-group" ng-if="row.versions[0].version !== ''">
                               <label class="col-sm-3 control-label" style="margin-top: 5px;">Version</label>
                               <div class="col-sm-8">
                                 <ui-select ng-model="pythonDepsCtrl.pipSelectedLibs[row.lib].version" theme="select2"
@@ -430,7 +430,9 @@
                                   </ui-select-choices>
                                 </ui-select>
                               </div>
-
+                            </div>
+                            <div ng-if="row.versions[0].version === ''" class="col-sm-10">
+                              <input type="text" class="form-control" style="height: 32px;" placeholder="Enter version to install" ng-model="pythonDepsCtrl.pipSelectedLibs[row.lib].version.version">
                             </div>
                           </div>
                         </td>
