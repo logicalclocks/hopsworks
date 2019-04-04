@@ -18,10 +18,10 @@
 package io.hops.hopsworks.common.dao.rstudio;
 
 import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.exception.RESTCodes;
-import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.util.ConfigFileGenerator;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.commons.io.FileUtils;
 
 import javax.ejb.EJB;
