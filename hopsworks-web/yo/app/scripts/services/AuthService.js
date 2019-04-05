@@ -43,8 +43,8 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .factory('AuthService', ['$http', 'TransformRequest', '$cookies', '$location', 
-          function ($http, TransformRequest, $cookies, $location) {
+        .factory('AuthService', ['$http', 'TransformRequest', '$cookies', '$window',
+          function ($http, TransformRequest, $cookies, $window) {
             var service = {
 
               isAdmin: function () {
@@ -61,6 +61,12 @@ angular.module('hopsWorksApp')
               },
               krbLogin: function (user) {
                 return $http.post('/api/remote/user/auth/krb/login', TransformRequest.jQueryStyle(user));
+              },
+              oauthLoginURI: function (providerName) {
+                $window.location.href = getRemoteUserAuthPathname() + '/api/remote/user/oauth/provider/' + encodeURIComponent(providerName) + '/login/uri';
+              },
+              oauthLogin: function (user) {
+                return $http.post('/api/remote/user/auth/oauth/login', TransformRequest.jQueryStyle(user));
               },
               validatePassword: function (user) {
                 return $http.post('/api/auth/validatePassword', TransformRequest.jQueryStyle(user));
