@@ -365,19 +365,21 @@ public class Users implements Serializable {
     this.numCreatedProjects = 0;
     this.numActiveProjects = 0;
   }
-
-
-  public Users(String username, String password, String email, String fname, String lname, String title, String orcid,
-      UserAccountStatus status, UserAccountType mode, Integer maxNumProjects, String salt) {
+  
+  public Users(String username, String password, String email, String fname, String lname, Date activated,
+    String title, String orcid, UserAccountStatus status, UserAccountType mode, Date passwordChanged,
+    Integer maxNumProjects, String salt) {
     this.username = username;
     this.password = password;
     this.email = email;
     this.fname = fname;
     this.lname = lname;
+    this.activated = activated;
     this.title = title;
     this.orcid = orcid;
     this.status = status;
     this.mode = mode;
+    this.passwordChanged = passwordChanged;
     this.maxNumProjects = maxNumProjects;
     this.salt = salt;
     this.numCreatedProjects = 0;

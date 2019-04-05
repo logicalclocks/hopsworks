@@ -162,7 +162,15 @@ angular.module('hopsWorksApp', [
                           }]
                       }
                     })
-                    .when('/register', {
+                    .when('/callback', {
+                        templateUrl: 'views/oauthCallback.html',
+                        controller: 'OAuthCallbackCtrl as oauthCallbackCtrl'
+                    })
+                    .when('/error', {
+                        templateUrl: 'views/error.html',
+                        controller: 'ErrorCtrl as errorCtrl'
+                    })
+                   .when('/register', {
                       templateUrl: 'views/register.html',
                       controller: 'RegCtrl as regCtrl',
                       resolve: {
@@ -412,9 +420,9 @@ angular.module('hopsWorksApp', [
                             }]
                     }
                 })
-                    .otherwise({
-                      redirectTo: '/'
-                    });
+                .otherwise({
+                  redirectTo: '/'
+                });
 
             $compileProvider.aHrefSanitizationWhitelist(/^\s*(https?|ftp|mailto|tel|file|blob):/);
 
