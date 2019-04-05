@@ -54,4 +54,13 @@ module ExecutionHelper
   def count_executions(job_id)
     Execution.where(["job_id = ?", job_id]).count
   end
+
+  def is_execution_active(execution_dto)
+    state = execution_dto["state"]
+    if state == "FINISHED" || state == "FAILED" || state == "KILLED" || state == "INITIALIZATION_FAILED"
+      return false
+    else
+      return true
+    end
+  end
 end
