@@ -345,9 +345,9 @@ public class TensorBoardProcessMgr {
         LOGGER.log(Level.SEVERE, "Failed to remove TensorBoard directory, process time-out");
       }
     } catch (IOException ex) {
-      LOGGER.log(Level.SEVERE, "Could not delete TensorBoard directory: " + tensorBoardDirectoryPath);
       throw new TensorBoardException(RESTCodes.TensorBoardErrorCode.TENSORBOARD_CLEANUP_ERROR, Level.SEVERE,
-              "TensorBoard directory: " + tensorBoardDirectoryPath, ex.getMessage());
+              "Failed to cleanup TensorBoard", "Could not delete TensorBoard directory: "
+              + tensorBoardDirectoryPath, ex);
     }
   }
 

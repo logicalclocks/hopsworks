@@ -1300,6 +1300,49 @@ public class RESTCodes {
       return range;
     }
   }
+
+
+  /**
+   * TensorBoard specific error codes
+   */
+  public enum TensorBoardErrorCode implements RESTErrorCode {
+
+    TENSORBOARD_CLEANUP_ERROR(1, "Failed when deleting a running TensorBoard", Response.Status.INTERNAL_SERVER_ERROR),
+    TENSORBOARD_START_ERROR(2, "Failed to start TensorBoard", Response.Status.INTERNAL_SERVER_ERROR),
+    TENSORBOARD_FETCH_ERROR(3, "Error while fetching TensorBoard from database",
+            Response.Status.INTERNAL_SERVER_ERROR);
+
+    private Integer code;
+    private String message;
+    private Response.StatusType respStatus;
+    private final int range = 280000;
+
+    TensorBoardErrorCode(Integer code, String message, Response.StatusType respStatus) {
+      this.code = range + code;
+      this.message = message;
+      this.respStatus = respStatus;
+    }
+
+    @Override
+    public Response.StatusType getRespStatus() {
+      return respStatus;
+    }
+
+    @Override
+    public Integer getCode() {
+      return code;
+    }
+
+    @Override
+    public String getMessage() {
+      return message;
+    }
+
+    @Override
+    public int getRange() {
+      return range;
+    }
+  }
   
   /**
    * Airflow specific error codes
@@ -1342,47 +1385,4 @@ public class RESTCodes {
       return range;
     }
   }
-
-  /**
-   * Airflow specific error codes
-   */
-  public enum TensorBoardErrorCode implements RESTErrorCode {
-
-    TENSORBOARD_CLEANUP_ERROR(1, "Failed when deleting a running TensorBoard", Response.Status.INTERNAL_SERVER_ERROR),
-    TENSORBOARD_START_ERROR(2, "Failed to start TensorBoard", Response.Status.INTERNAL_SERVER_ERROR),
-    TENSORBOARD_FETCH_ERROR(3, "Error while fetching TensorBoard from database",
-            Response.Status.INTERNAL_SERVER_ERROR);
-
-    private Integer code;
-    private String message;
-    private Response.StatusType respStatus;
-    private final int range = 300000;
-
-    TensorBoardErrorCode(Integer code, String message, Response.StatusType respStatus) {
-      this.code = range + code;
-      this.message = message;
-      this.respStatus = respStatus;
-    }
-
-    @Override
-    public Response.StatusType getRespStatus() {
-      return respStatus;
-    }
-
-    @Override
-    public Integer getCode() {
-      return code;
-    }
-
-    @Override
-    public String getMessage() {
-      return message;
-    }
-
-    @Override
-    public int getRange() {
-      return range;
-    }
-  }
-
 }
