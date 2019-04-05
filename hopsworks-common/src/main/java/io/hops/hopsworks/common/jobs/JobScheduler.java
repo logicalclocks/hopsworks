@@ -47,6 +47,7 @@ import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.common.jobs.configuration.ScheduleDTO;
 import io.hops.hopsworks.common.jobs.configuration.ScheduleDTO.TimeUnit;
 import io.hops.hopsworks.common.jobs.execution.ExecutionController;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServiceException;
 
 import javax.annotation.Resource;
@@ -87,7 +88,7 @@ public class JobScheduler {
    * @param timer
    */
   @Timeout
-  public void timeout(Timer timer) throws GenericException, JobException, ServiceException {
+  public void timeout(Timer timer) throws GenericException, JobException, ServiceException, ProjectException {
     Serializable jobId = timer.getInfo();
     //Valid id?
     if (!(jobId instanceof Integer)) {

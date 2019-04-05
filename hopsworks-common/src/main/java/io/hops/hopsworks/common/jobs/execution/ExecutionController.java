@@ -53,10 +53,6 @@ import io.hops.hopsworks.common.dao.jobs.description.YarnAppUrlsDTO;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
-import io.hops.hopsworks.exceptions.GenericException;
-import io.hops.hopsworks.exceptions.JobException;
-import io.hops.hopsworks.exceptions.ServiceException;
-import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -72,6 +68,11 @@ import io.hops.hopsworks.common.jobs.yarn.YarnMonitor;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.yarn.YarnClientService;
 import io.hops.hopsworks.common.yarn.YarnClientWrapper;
+import io.hops.hopsworks.exceptions.GenericException;
+import io.hops.hopsworks.exceptions.JobException;
+import io.hops.hopsworks.exceptions.ProjectException;
+import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
@@ -90,9 +91,7 @@ import javax.ejb.TransactionAttributeType;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -139,17 +138,10 @@ public class ExecutionController {
 
   private static final Logger LOGGER = Logger.getLogger(ExecutionController.class.getName());
   private static final String REMOTE_PROTOCOL = "hdfs://";
-  private static final String PROXY_USER_COOKIE_NAME = "proxy-user";
-  
-  private static final HashSet<String> PASS_THROUGH_HEADERS = new HashSet<>(
-    Arrays.asList("User-Agent", "user-agent", "Accept", "accept",
-        "Accept-Encoding", "accept-encoding",
-        "Accept-Language",
-        "accept-language",
-        "Accept-Charset", "accept-charset"));
   
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  public Execution start(Jobs job, Users user) throws GenericException, JobException, ServiceException {
+  public Execution start(Jobs job, Users user) throws JobException, GenericException, ServiceException,
+    ProjectException {
     //A job can only have one execution running
     List<Execution> jobExecs = execFacade.findByJob(job);
     if(!jobExecs.isEmpty()) {
@@ -187,6 +179,9 @@ public class ExecutionController {
             ActivityFlag.JOB);
         break;
       case PYSPARK:
+        if(!job.getProject().getConda()){
+          throw new ProjectException(RESTCodes.ProjectErrorCode.ANACONDA_NOT_ENABLED, Level.FINEST);
+        }
         exec = sparkController.startJob(job, user);
         if (exec == null) {
           throw new IllegalArgumentException("Error while getting execution object for: " + job.getJobType());
