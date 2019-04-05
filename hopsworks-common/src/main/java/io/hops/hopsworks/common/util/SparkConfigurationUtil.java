@@ -70,11 +70,19 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
             new ConfigProperty(Settings.SPARK_YARN_APPMASTER_ENV + "CUDA_VISIBLE_DEVICES",
                     HopsUtils.OVERWRITE, ""));
 
+    sparkProps.put(Settings.SPARK_YARN_APPMASTER_ENV + "HIP_VISIBLE_DEVICES",
+            new ConfigProperty(Settings.SPARK_YARN_APPMASTER_ENV + "HIP_VISIBLE_DEVICES",
+                    HopsUtils.OVERWRITE, "-1"));
+
     sparkProps.put(Settings.SPARK_SUBMIT_DEPLOYMODE, new ConfigProperty(Settings.SPARK_SUBMIT_DEPLOYMODE,
       HopsUtils.OVERWRITE,
       "cluster"));
 
     if(experimentType != null) {
+      if(sparkJobConfiguration.getExecutorGpus() == 0) {
+        addToSparkEnvironment(sparkProps, "HIP_VISIBLE_DEVICES", "-1", settings);
+        addToSparkEnvironment(sparkProps, "CUDA_VISIBLE_DEVICES", "", settings);
+      }
       if (sparkJobConfiguration.getExecutorGpus() > 0) {
         sparkProps.put(Settings.SPARK_TF_GPUS_ENV,
           new ConfigProperty(
@@ -147,6 +155,7 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
                             experimentType != null)));
 
     if(experimentType != null) {
+      addToSparkEnvironment(sparkProps,"LC_ALL", "C", settings);
       //Dynamic executors requires the shuffle service to be enabled
       sparkProps.put(Settings.SPARK_SHUFFLE_SERVICE,
         new ConfigProperty(

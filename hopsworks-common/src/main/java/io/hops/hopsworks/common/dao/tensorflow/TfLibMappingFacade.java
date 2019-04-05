@@ -60,7 +60,7 @@ public class TfLibMappingFacade {
 
   public TfLibMapping findTfMappingForProject(Project project) {
     
-    if (project.getCondaEnv() == false) {
+    if (!project.getCondaEnv()) {
       return findByTfVersion(settings.getTensorflowVersion());
     }
     
@@ -69,7 +69,8 @@ public class TfLibMappingFacade {
 
     if(command == null) {
       return project.getPythonDepCollection().stream()
-          .filter(dep -> dep.getDependency().equals("tensorflow") || dep.getDependency().equals("tensorflow-gpu"))
+          .filter(dep -> dep.getDependency().equals("tensorflow") || dep.getDependency().equals("tensorflow-gpu")
+          || dep.getDependency().equals("tensorflow-rocm"))
           .findAny()
           .map(tfDep -> findByTfVersion(tfDep.getVersion()))
           .orElse(null);
@@ -90,6 +91,14 @@ public class TfLibMappingFacade {
       Matcher tfGPUMatcher = tfGPUPattern.matcher(envYml);
 
       if(tfGPUMatcher.find()) {
+        String [] libVersionPair = tfGPUMatcher.group(0).split("==");
+        return findByTfVersion(libVersionPair[1]);
+      }
+
+      Pattern tfRocmPattern = Pattern.compile("(tensorflow-rocm==\\d*.\\d*.\\d*)");
+      Matcher tfRocmMatcher = tfRocmPattern.matcher(envYml);
+
+      if(tfRocmMatcher.find()) {
         String [] libVersionPair = tfGPUMatcher.group(0).split("==");
         return findByTfVersion(libVersionPair[1]);
       }
