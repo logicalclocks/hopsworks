@@ -98,7 +98,7 @@ public class ExecutionsBuilder {
       dto.setHdfsUser(execution.getHdfsUser());
       dto.setFinalStatus(execution.getFinalStatus());
       dto.setProgress(execution.getProgress());
-      dto.setUser(usersBuilder.build(uriInfo, resourceRequest.get(ResourceRequest.Name.USER), execution.getUser()));
+      dto.setUser(usersBuilder.build(uriInfo, resourceRequest, execution.getUser()));
       dto.setFilesToRemove(execution.getFilesToRemove());
       dto.setDuration(execution.getExecutionDuration());
     }

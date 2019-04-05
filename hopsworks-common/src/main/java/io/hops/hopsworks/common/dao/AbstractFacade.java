@@ -45,6 +45,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -128,28 +129,33 @@ public abstract class AbstractFacade<T> {
     if (sortBy == null || sortBy.isEmpty()) {
       return "";
     }
+    sortBy.remove(null);
     Iterator<? extends SortBy> sort = sortBy.iterator();
     if (!sort.hasNext()) {
       return "";
     }
-    String c = "ORDER BY " + OrderBy(sort.next());
+    StringBuilder c = new StringBuilder("ORDER BY " + OrderBy(sort.next()));
     for (;sort.hasNext();) {
-      c += ", " + OrderBy(sort.next());
+      c.append(", ").append(OrderBy(sort.next()));
     }
-    return c;
+    return c.toString();
   }
   
   public String buildFilterString(Set<? extends FilterBy> filter, String more) {
+    String s = more == null || more.isEmpty() ? "" : "WHERE " + more;
     if (filter == null || filter.isEmpty()) {
-      return more == null || more.isEmpty()? "": "WHERE " + more;
+      return s;
     }
+    filter.remove(null);
     Iterator<? extends FilterBy> filterBy = filter.iterator();
-    String c = "WHERE " + filterBy.next().getSql();
-    for (;filterBy.hasNext();) {
-      c += "AND " + filterBy.next().getSql();
+    if (!filterBy.hasNext()) {
+      return s;
     }
-
-    return c + (more == null || more.isEmpty()? "": "AND " + more);
+    StringBuilder c = new StringBuilder("WHERE " + filterBy.next().getSql());
+    for (;filterBy.hasNext();) {
+      c.append("AND ").append(filterBy.next().getSql());
+    }
+    return c.append(more == null || more.isEmpty()? "": "AND " + more).toString();
   }
   
   public Date getDate(String field, String value) {
@@ -160,6 +166,63 @@ public abstract class AbstractFacade<T> {
       throw new InvalidQueryException(
         "Filter value for " + field + " needs to set valid format. Expected:yyyy-mm-dd hh:mm:ss but found: " + value);
     }
+  }
+  
+  public Integer getIntValue(FilterBy filterBy) {
+    return getIntValue(filterBy.getField(), filterBy.getParam());
+  }
+  
+  public Integer getIntValue(String field, String value) {
+    Integer val;
+    try {
+      val = Integer.parseInt(value);
+    } catch (NumberFormatException e) {
+      throw new InvalidQueryException("Filter value for " + field + " needs to set an Integer, but found: " + value);
+    }
+    return val;
+  }
+  
+  public List<Integer> getIntValues(FilterBy filterBy) {
+    String[] filterStrs = splitFilterParams(filterBy);
+    List<Integer> values = new ArrayList<>();
+    String field = filterBy.getField();
+    Integer val;
+    for (String filterStr : filterStrs) {
+      val = getIntValue(field, filterStr);
+      values.add(val);
+    }
+    return values;
+  }
+  
+  public boolean getBooleanValue(String value) {
+    return "1".equals(value) || "true".equalsIgnoreCase(value);
+  }
+  
+  public <E extends Enum<E>> List<E> getEnumValues(FilterBy filterBy, final Class<E> enumType) {
+    String[] filterStrs = splitFilterParams(filterBy);
+    List<E> enumObjects = new ArrayList<>();
+    String field = filterBy.getField();
+    E enumObject;
+    for (String filterStr : filterStrs) {
+      enumObject = getEnumValue(field, filterStr, enumType);
+      enumObjects.add(enumObject);
+    }
+    return enumObjects;
+  }
+  
+  public <E extends Enum<E>> E getEnumValue(String field, String filterStr, final Class<E> enumType) {
+    E enumObject;
+    try {
+      enumObject = E.valueOf(enumType, filterStr);
+    } catch (IllegalArgumentException iae) {
+      throw new InvalidQueryException("Filter value for " + field + " needs to set valid " + field + ", but found: "
+        + filterStr, iae);
+    }
+    return enumObject;
+  }
+  
+  public String[] splitFilterParams(FilterBy filterBy) {
+    return filterBy.getParam().split(",");
   }
   
   public interface SortBy {

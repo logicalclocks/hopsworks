@@ -37,46 +37,62 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package io.hops.hopsworks.common.dao.pythonDeps;
+package io.hops.hopsworks.common.dao.python;
 
-import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.List;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
-public class LibVersions {
+public class OpStatus {
 
-  private String channelUrl;
+  private String channelUrl = "default";
+  private String installType;
+  private String machineType;
   private String lib;
-  private List<Version> versions = new ArrayList<>();
+  private String version;
+  private String op;
   private String status = "Not Installed";
+  private List<HostOpStatus> hosts = new ArrayList<>();
 
-  public LibVersions() {
+  public OpStatus() {
   }
 
-  /**
-   *
-   * @param channelUrl
-   * @param lib
-   * @param versions
-   */
-  public LibVersions(String channelUrl, String lib) {
+  public OpStatus(String op, String installType, String machineType, String channelUrl, String lib, String version) {
+    this.op = op;
+    this.installType = installType;
+    this.machineType = machineType;
     this.channelUrl = channelUrl;
     this.lib = lib;
+    this.version = version;
   }
 
-  public void addVersion(Version version) {
-    if (this.versions == null) {
-      this.versions = new ArrayList<>();
-    }
-    if (!versions.contains(version)) {
-      this.versions.add(version);
-    }
+  public String getOp() {
+    return op;
   }
-  
-  public void reverseVersionList() {
-    this.versions = Lists.reverse(this.versions); 
+
+  public void setOp(String op) {
+    this.op = op;
+  }
+
+  public List<HostOpStatus> getHosts() {
+    return hosts;
+  }
+
+  public String getStatus() {
+    return status;
+  }
+
+  public void setHosts(List<HostOpStatus> hosts) {
+    this.hosts = hosts;
+  }
+
+  public void addHost(HostOpStatus host) {
+    this.hosts.add(host);
+  }
+
+  public void setStatus(String status) {
+    this.status = status;
   }
 
   public String getChannelUrl() {
@@ -87,6 +103,22 @@ public class LibVersions {
     this.channelUrl = channelUrl;
   }
 
+  public String getInstallType() {
+    return installType;
+  }
+
+  public void setInstallType(String installType) {
+    this.installType = installType;
+  }
+
+  public String getMachineType() {
+    return machineType;
+  }
+
+  public void setMachineType(String machineType) {
+    this.machineType = machineType;
+  }
+
   public String getLib() {
     return lib;
   }
@@ -95,29 +127,37 @@ public class LibVersions {
     this.lib = lib;
   }
 
-  public List<Version> getVersions() {
-    return versions;
+  public String getVersion() {
+    return version;
   }
 
-  public void setVersions(List<Version> versions) {
-    this.versions = versions;
+  public void setVersion(String version) {
+    this.version = version;
   }
 
-  public String getStatus() {
-    return status;
-  }
-
-  public void setStatus(String status) {
-    this.status = status;
+  @Override
+  public String toString() {
+    StringBuffer sb = new StringBuffer("[");
+    sb.append(channelUrl)
+        .append(",").append(lib)
+        .append(",").append(version)
+        .append(",").append(op)
+        .append(",").append(status)
+        .append(",(");
+    hosts.forEach((h) -> {
+      sb.append(h.toString());
+    });
+    sb.append(")]");
+    return sb.toString();
   }
 
   @Override
   public boolean equals(Object o) {
-    if (o instanceof LibVersions) {
-      LibVersions pd = (LibVersions) o;
+    if (o instanceof OpStatus) {
+      OpStatus pd = (OpStatus) o;
       if (pd.getChannelUrl().compareToIgnoreCase(this.channelUrl) == 0
-              && pd.getLib().compareToIgnoreCase(this.lib) == 0
-              && pd.getVersions().size() == this.versions.size()) {
+          && pd.getLib().compareToIgnoreCase(this.lib) == 0
+          && pd.getVersion().compareTo(this.version) == 0) {
         return true;
       }
     }
@@ -127,6 +167,6 @@ public class LibVersions {
   @Override
   public int hashCode() {
     return (this.channelUrl.hashCode() / 3 + this.lib.hashCode()
-            + this.versions.hashCode()) / 2;
+        + this.version.hashCode()) / 2;
   }
 }

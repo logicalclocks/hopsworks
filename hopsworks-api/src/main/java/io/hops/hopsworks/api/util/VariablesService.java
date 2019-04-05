@@ -128,5 +128,16 @@ public class VariablesService {
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(versions).build();
   }
+  
+  @GET
+  @Path("/conda")
+  @Produces(MediaType.TEXT_PLAIN)
+  public Response getCondaDefaultRepo() {
+    String defaultRepo = settings.getCondaDefaultRepo();
+    if (settings.isAnacondaEnabled()) {
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(defaultRepo).build();
+    }
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.SERVICE_UNAVAILABLE).build();
+  }
 
 }

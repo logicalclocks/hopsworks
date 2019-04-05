@@ -34,7 +34,7 @@ public class HostsLazyDataModel extends LazyDataModel<Hosts> {
   
   @Override
   public List<Hosts> load(int first, int pageSize, String sortField, SortOrder sortOrder, Map<String, Object> filters) {
-    List<Hosts> allHosts = hostsFacade.find();
+    List<Hosts> allHosts = hostsFacade.findAllHosts();
     
     // Filter by hostname and health
     List<Hosts> filteredItems = allHosts.parallelStream()

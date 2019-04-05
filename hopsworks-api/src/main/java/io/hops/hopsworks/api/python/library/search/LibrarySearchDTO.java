@@ -37,61 +37,65 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package io.hops.hopsworks.common.dao.pythonDeps;
+package io.hops.hopsworks.api.python.library.search;
+
+import io.hops.hopsworks.common.api.RestDTO;
+import io.hops.hopsworks.common.python.library.LibraryVersionDTO;
 
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.Set;
 
 @XmlRootElement
-public class HostOpStatus {
+public class LibrarySearchDTO extends RestDTO<LibrarySearchDTO> {
 
-  private String hostId;
-  private String status;
-
-  public HostOpStatus() {
+  private String library;
+  private String channelUrl;
+  private Set<LibraryVersionDTO> versions;
+  private String status = "Not Installed";
+  
+  public LibrarySearchDTO() {
   }
 
-  public HostOpStatus(String hostId, String status) {
-    this.hostId = hostId;
-    this.status = status;
+  /**
+   *
+   * @param channelUrl
+   * @param library
+   */
+  public LibrarySearchDTO(String channelUrl, String library, Set<LibraryVersionDTO> versions) {
+    this.channelUrl = channelUrl;
+    this.library = library;
+    this.versions = versions;
   }
 
-  public String getHostId() {
-    return hostId;
+  public String getChannelUrl() {
+    return channelUrl;
   }
 
-  public void setHostId(String hostId) {
-    this.hostId = hostId;
+  public void setChannelUrl(String channelUrl) {
+    this.channelUrl = channelUrl;
   }
 
+  public String getLibrary() {
+    return library;
+  }
+
+  public void setLibrary(String library) {
+    this.library = library;
+  }
+  
+  public Set<LibraryVersionDTO> getVersions() {
+    return versions;
+  }
+  
+  public void setVersions(Set<LibraryVersionDTO> versions) {
+    this.versions = versions;
+  }
+  
   public String getStatus() {
     return status;
   }
-
+  
   public void setStatus(String status) {
     this.status = status;
   }
-
-  @Override
-  public String toString() {
-    return hostId + ":" + status;
-  }
-  
-  // Two versions are equal if they have the same 'name', status doesn't matter.
-  @Override
-  public boolean equals(Object o) {
-    if (o instanceof HostOpStatus == false) {
-      return false;
-    }
-    HostOpStatus v = (HostOpStatus) o;
-    if (v.hostId.equals(this.hostId)) {
-      return false;
-    }
-    return true;
-  }
-
-  @Override
-  public int hashCode() {
-    return hostId.hashCode() * 17; //To change body of generated methods, choose Tools | Templates.
-  }
-
 }

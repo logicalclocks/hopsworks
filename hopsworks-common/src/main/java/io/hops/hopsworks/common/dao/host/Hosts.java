@@ -39,7 +39,7 @@
 
 package io.hops.hopsworks.common.dao.host;
 
-import io.hops.hopsworks.common.dao.pythonDeps.CondaCommands;
+import io.hops.hopsworks.common.dao.python.CondaCommands;
 import io.hops.hopsworks.common.dao.kagent.HostServices;
 import java.io.Serializable;
 import java.util.Collection;

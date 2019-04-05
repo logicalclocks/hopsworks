@@ -18,8 +18,9 @@ package io.hops.hopsworks.common.dao.tensorflow;
 
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.common.dao.pythonDeps.CondaCommands;
-import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade;
+import io.hops.hopsworks.common.dao.python.CondaCommandFacade;
+import io.hops.hopsworks.common.dao.python.CondaCommands;
+import io.hops.hopsworks.common.python.environment.EnvironmentController;
 import io.hops.hopsworks.common.util.Settings;
 
 import javax.ejb.EJB;
@@ -36,7 +37,7 @@ public class TfLibMappingFacade {
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
   @EJB
-  private PythonDepsFacade pythonDepsFacade;
+  private EnvironmentController environmentController;
   @EJB
   private ProjectFacade projectFacade;
   @EJB
@@ -63,9 +64,9 @@ public class TfLibMappingFacade {
     if (!project.getCondaEnv()) {
       return findByTfVersion(settings.getTensorflowVersion());
     }
-    
-    
-    CondaCommands command = pythonDepsFacade.getOngoingEnvCreation(project);
+
+    CondaCommands command = environmentController.getOngoingEnvCreation(project);
+
 
     if(command == null) {
       return project.getPythonDepCollection().stream()
@@ -74,9 +75,9 @@ public class TfLibMappingFacade {
           .findAny()
           .map(tfDep -> findByTfVersion(tfDep.getVersion()))
           .orElse(null);
-    } else if(command.getOp().compareTo(PythonDepsFacade.CondaOp.CREATE) == 0) {
+    } else if(command.getOp().compareTo(CondaCommandFacade.CondaOp.CREATE) == 0) {
       return findByTfVersion(settings.getTensorflowVersion());
-    } else if(command.getOp().compareTo(PythonDepsFacade.CondaOp.YML) == 0) {
+    } else if(command.getOp().compareTo(CondaCommandFacade.CondaOp.YML) == 0) {
       String envYml = command.getEnvironmentYml();
 
       Pattern tfCPUPattern = Pattern.compile("(tensorflow==\\d*.\\d*.\\d*)");

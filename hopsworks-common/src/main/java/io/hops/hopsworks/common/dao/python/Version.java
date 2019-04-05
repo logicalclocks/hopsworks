@@ -37,51 +37,55 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package io.hops.hopsworks.common.dao.pythonDeps;
+package io.hops.hopsworks.common.dao.python;
 
-import java.util.List;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
-public class CondaLib {
+public class Version {
 
-  private String library;
-  private List<String> versions;
+  private String version;
+  private String status = "Not Installed";
 
-  public CondaLib() {
+  public Version() {
   }
 
-  public String getLibrary() {
-    return library;
+  public Version(String version) {
+    this.version = version;
   }
 
-  public void setLibrary(String library) {
-    this.library = library;
+  public String getVersion() {
+    return version;
   }
 
-  public List<String> getVersions() {
-    return versions;
+  public void setVersion(String version) {
+    this.version = version;
   }
 
-  public void setVersions(List<String> versions) {
-    this.versions = versions;
+  public String getStatus() {
+    return status;
   }
 
+  public void setStatus(String status) {
+    this.status = status;
+  }
 
+  // Two versions are equal if they have the same 'name', status doesn't matter.
   @Override
   public boolean equals(Object o) {
-    if (o instanceof CondaLib) {
-      CondaLib pd = (CondaLib) o;
-      if (pd.getLibrary().compareToIgnoreCase(this.library) == 0) {
-        return true;
-      }
+    if (o instanceof Version == false) {
+      return false;
     }
-
-    return false;
+    Version v = (Version) o;
+    if (v.version.compareTo(this.version) != 0) {
+      return false;
+    }
+    return true;
   }
 
   @Override
   public int hashCode() {
-    return (this.library.hashCode() * 7) / 2;
+    return version.hashCode(); //To change body of generated methods, choose Tools | Templates.
   }
+
 }

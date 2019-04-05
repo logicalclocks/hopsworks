@@ -22,6 +22,7 @@ import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.exceptions.ActivitiesException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
 import javax.ejb.EJB;
@@ -39,6 +40,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 
+@Api(value = "User Activities Resource")
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class UserActivitiesResource {

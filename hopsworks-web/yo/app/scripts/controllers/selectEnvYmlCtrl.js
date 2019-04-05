@@ -71,9 +71,9 @@ angular.module('hopsWorksApp')
                 self.isDir = isDirectory;
             };
 
-            self.confirmSelection = function(pythonDepsCtrl, isDirectory) {
+            self.confirmSelection = function(pythonCtrl, isDirectory) {
 
-                var singleMachineType = ((pythonDepsCtrl.environmentTypes['CPU'] && !pythonDepsCtrl.environmentTypes['GPU']) || (!pythonDepsCtrl.environmentTypes['CPU'] && pythonDepsCtrl.environmentTypes['GPU']));
+                var singleMachineType = !(pythonCtrl.environmentTypes.includes('CPU') && pythonCtrl.environmentTypes.includes('GPU'));
 
                 if (singleMachineType && self.environmentYmlDef.allYmlPath === "") {
                     growl.error("Please select a .yml file for your Anaconda environment.", {
@@ -102,7 +102,7 @@ angular.module('hopsWorksApp')
 
 
 
-            self.selectEnvYml = function(pythonDepsCtrl, datasetsCtrl, file) {
+            self.selectEnvYml = function(pythonCtrl, datasetsCtrl, file) {
                 if (file.dir) {
                     self.select(file.path, true);
                     datasetsCtrl.openDir(file);

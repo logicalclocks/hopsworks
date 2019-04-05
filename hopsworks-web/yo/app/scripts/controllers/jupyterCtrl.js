@@ -41,9 +41,9 @@
 angular.module('hopsWorksApp')
     .controller('JupyterCtrl', ['$scope', '$routeParams', '$route',
         'growl', 'ModalService', '$interval', 'JupyterService', 'StorageService', '$location',
-        '$timeout', '$window', '$sce', 'PythonDepsService', 'TourService',
+        '$timeout', '$window', '$sce', 'PythonService', 'TourService',
         function($scope, $routeParams, $route, growl, ModalService, $interval, JupyterService,
-            StorageService, $location, $timeout, $window, $sce, PythonDepsService, TourService) {
+            StorageService, $location, $timeout, $window, $sce, PythonService, TourService) {
 
             var self = this;
             self.connectedStatus = false;
@@ -166,7 +166,7 @@ angular.module('hopsWorksApp')
             };
 
             self.checkCondaEnabled = function() {
-                PythonDepsService.enabled(self.projectId).then(
+                PythonService.enabled(self.projectId).then(
                     function(success) {
                         self.condaEnabled = true;
                     },
@@ -176,7 +176,7 @@ angular.module('hopsWorksApp')
             };
 
             var getCondaCommands = function() {
-                PythonDepsService.status(self.projectId).then(
+                PythonService.status(self.projectId).then(
                     function(success) {
                         self.opsStatus = success.data;
                         self.tempEnvs = 0;
@@ -202,7 +202,7 @@ angular.module('hopsWorksApp')
 
             var checkJupyterInstalled = function() {
                 // Use hdfscontents as a proxy to now if jupyter has been installed correctly or not
-                PythonDepsService.libInstalled(self.projectId, "hdfscontents").then(
+                PythonService.libInstalled(self.projectId, "hdfscontents").then(
                     function(success) {
                         self.jupyterInstalled = true;
                     },
@@ -304,13 +304,13 @@ angular.module('hopsWorksApp')
 
                         if (self.jupyterSettings.project.name.startsWith("demo_deep_learning")) {
                             //Activate anaconda
-                            PythonDepsService.enabled(self.projectId).then(
+                            PythonService.enabled(self.projectId).then(
                                 function(success) {},
                                 function(error) {
                                     growl.info("Anaconda environment with python 2.7 was selected for the project", {
                                         ttl: 10000
                                     });
-                                    PythonDepsService.enable(self.projectId, "2.7", "true").then(
+                                    PythonService.enable(self.projectId, "2.7", "true").then(
                                         function(success) {
                                             checkJupyterInstalled();
                                         },
