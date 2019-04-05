@@ -147,7 +147,7 @@ angular.module('hopsWorksApp')
                     "description": self.trainingDatasetDescription,
                     "dataFormat": self.trainingDatasetFormat,
                     "features": self.features,
-                    "featureCorrelationMatrixBase64": null,
+                    "featureCorrelationMatrix": null,
                     "descriptiveStatistics": null,
                     "updateMetadata": true,
                     "updateStats": false,

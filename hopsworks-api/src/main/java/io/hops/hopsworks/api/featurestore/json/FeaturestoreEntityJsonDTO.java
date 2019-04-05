@@ -27,7 +27,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import java.util.List;
 
 /**
- * Abstract storage entity in the featurestore. Contains the common fields and functionality between feature groups
+ * Abstract JSON template for the featurestore. Contains the common fields and functionality between feature groups
  * and training dataset JSON requests.
  */
 @XmlRootElement
