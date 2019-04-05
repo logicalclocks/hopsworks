@@ -1270,9 +1270,11 @@ public class RESTCodes {
         Response.Status.INTERNAL_SERVER_ERROR),
     CORRELATION_MATRIX_EXCEED_MAX_SIZE(23,
       "The size of the provided correlation matrix exceed the maximum size of 50 columns", Response.Status.BAD_REQUEST),
-    FEATURESTORE_NAME_NOT_PROVIDED(24, "Featurestore name was not provided", Response.Status.BAD_REQUEST);
-
-
+    FEATURESTORE_NAME_NOT_PROVIDED(24, "Featurestore name was not provided", Response.Status.BAD_REQUEST),
+    UNAUTHORIZED_FEATURESTORE_OPERATION(25, "Only data owners are allowed to delete or update feature groups/" +
+      "training datasets that are not created by themself.", Response.Status.UNAUTHORIZED);
+    
+    
     private int code;
     private String message;
     private Response.Status respStatus;

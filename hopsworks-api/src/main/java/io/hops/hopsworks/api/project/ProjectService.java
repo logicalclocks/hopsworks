@@ -38,9 +38,8 @@
  */
 package io.hops.hopsworks.api.project;
 
-import io.hops.hopsworks.common.project.CertsDTO;
-import io.hops.hopsworks.api.airflow.AirflowService;
 import io.hops.hopsworks.api.activities.ProjectActivitiesResource;
+import io.hops.hopsworks.api.airflow.AirflowService;
 import io.hops.hopsworks.api.dela.DelaClusterProjectService;
 import io.hops.hopsworks.api.dela.DelaProjectService;
 import io.hops.hopsworks.api.featurestore.FeaturestoreService;
@@ -52,11 +51,11 @@ import io.hops.hopsworks.api.jobs.KafkaService;
 import io.hops.hopsworks.api.jupyter.JupyterService;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.pythonDeps.PythonDepsService;
+import io.hops.hopsworks.api.serving.TfServingService;
 import io.hops.hopsworks.api.serving.inference.InferenceResource;
 import io.hops.hopsworks.api.tensorflow.TensorBoardService;
-import io.hops.hopsworks.api.serving.TfServingService;
-import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.api.util.LocalFsService;
+import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.dataset.DataSetDTO;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
@@ -79,6 +78,7 @@ import io.hops.hopsworks.common.dataset.FilePreviewDTO;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.project.CertsDTO;
 import io.hops.hopsworks.common.project.MoreInfoDTO;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.project.ProjectDTO;
@@ -87,17 +87,17 @@ import io.hops.hopsworks.common.project.TourProjectType;
 import io.hops.hopsworks.common.user.AuthController;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.Settings;
-import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.DatasetException;
+import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.exceptions.ProjectException;
-import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
@@ -119,6 +119,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -127,7 +128,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.ws.rs.core.SecurityContext;
 
 @Path("/project")
 @Stateless
@@ -817,9 +817,9 @@ public class ProjectService {
     return inference;
   }
 
-  @Path("{id}/featurestores")
-  public FeaturestoreService featurestoreService(@PathParam("id") Integer id, @Context HttpServletRequest req) {
-    featurestoreService.setProjectId(id);
+  @Path("{projectId}/featurestores")
+  public FeaturestoreService featurestoreService(@PathParam("projectId") Integer projectId) {
+    featurestoreService.setProjectId(projectId);
     return featurestoreService;
   }
 
