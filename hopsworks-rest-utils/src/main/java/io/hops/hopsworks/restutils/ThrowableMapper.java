@@ -138,6 +138,9 @@ public abstract class ThrowableMapper implements ExceptionMapper<Throwable> {
       if (!Strings.isNullOrEmpty(ex.getUsrMsg())) {
         sb.append(", usrMsg=").append(ex.getUsrMsg());
       }
+      if (!Strings.isNullOrEmpty(ex.getDevMsg())) {
+        sb.append(", devMsg=").append(ex.getDevMsg());
+      }
       logger.log(ex.getLevel(), sb.toString(), ex);
     }
     return handleRESTException(ex.getErrorCode().getRespStatus(), ex);
