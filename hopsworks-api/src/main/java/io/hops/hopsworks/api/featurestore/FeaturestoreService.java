@@ -24,11 +24,13 @@ import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.project.util.DsUpdateOperations;
+import io.hops.hopsworks.common.constants.auth.AllowedRoles;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
-import io.hops.hopsworks.common.dao.featurestore.app.FeaturestoreMetadataDTO;
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
 import io.hops.hopsworks.common.dao.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.dao.featurestore.FeaturestoreDTO;
+import io.hops.hopsworks.common.dao.featurestore.FeaturestoreEntityDTO;
+import io.hops.hopsworks.common.dao.featurestore.app.FeaturestoreMetadataDTO;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.RowValueQueryResult;
@@ -40,6 +42,7 @@ import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
+import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.exceptions.DatasetException;
@@ -108,6 +111,8 @@ public class FeaturestoreService {
   private ProjectFacade projectFacade;
   @EJB
   private JWTHelper jWTHelper;
+  @EJB
+  private ProjectTeamFacade projectTeamFacade;
 
   private Project project;
 
@@ -164,7 +169,7 @@ public class FeaturestoreService {
         .entity(featurestoreDTOGeneric)
         .build();
   }
-  
+
   /**
    * Endpoint for getting a featurestore by name. This method will be removed after HOPSWORKS-860.
    *
@@ -353,8 +358,12 @@ public class FeaturestoreService {
     //This call verifies that the project have access to the featurestoreId provided
     FeaturestoreDTO featurestoreDTO = featurestoreController.getFeaturestoreForProjectWithId(project, featurestoreId);
     Featurestore featurestore = featurestoreController.getFeaturestoreWithId(featurestoreDTO.getFeaturestoreId());
+    //Verify that the user has the data-owner role or is the creator of the featuregroup
+    FeaturegroupDTO featuregroupDTO = featuregroupController.getFeaturegroupWithIdAndFeaturestore(featurestore,
+      featuregroupId);
+    verifyUserRole(featuregroupDTO, featurestore, user);
     try {
-      FeaturegroupDTO featuregroupDTO = featuregroupController.
+      featuregroupDTO = featuregroupController.
           deleteFeaturegroupWithIdAndFeaturestore(featurestore, featuregroupId, project, user);
       activityFacade.persistActivity(ActivityFacade.DELETED_FEATUREGROUP + featuregroupDTO.getName(),
           project, user, ActivityFacade.ActivityFlag.SERVICE);
@@ -513,8 +522,10 @@ public class FeaturestoreService {
     //This call verifies that the project have access to the featurestoreId provided
     FeaturestoreDTO featurestoreDTO = featurestoreController.getFeaturestoreForProjectWithId(project, featurestoreId);
     Featurestore featurestore = featurestoreController.getFeaturestoreWithId(featurestoreDTO.getFeaturestoreId());
-    FeaturegroupDTO oldFeaturegroupDTO =
-        featuregroupController.getFeaturegroupWithIdAndFeaturestore(featurestore, featuregroupId);
+    //Verify that the user has the data-owner role or is the creator of the featuregroup
+    FeaturegroupDTO oldFeaturegroupDTO = featuregroupController.getFeaturegroupWithIdAndFeaturestore(featurestore,
+      featuregroupId);
+    verifyUserRole(oldFeaturegroupDTO, featurestore, user);
     Jobs job = null;
     if (oldFeaturegroupDTO.getJobId() != null)
       job = jobFacade.findByProjectAndId(project, oldFeaturegroupDTO.getJobId());
@@ -563,9 +574,9 @@ public class FeaturestoreService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiOperation(value = "Delete featuregroup contents",
+  @ApiOperation(value = "Update featuregroup contents",
       response = FeaturegroupDTO.class)
-  public Response updateFeaturegroup(
+  public Response updateFeaturegroupMetadata(
       @Context SecurityContext sc,
       @ApiParam(value = "Id of the featurestore", required = true)
       @PathParam("featurestoreId") Integer featurestoreId,
@@ -588,6 +599,11 @@ public class FeaturestoreService {
     //This call verifies that the project have access to the featurestoreId provided
     FeaturestoreDTO featurestoreDTO = featurestoreController.getFeaturestoreForProjectWithId(project, featurestoreId);
     Featurestore featurestore = featurestoreController.getFeaturestoreWithId(featurestoreDTO.getFeaturestoreId());
+
+    FeaturegroupDTO featuregroupDTO = featuregroupController.getFeaturegroupWithIdAndFeaturestore(featurestore,
+      featuregroupId);
+    verifyUserRole(featuregroupDTO, featurestore, user);
+
     Jobs job = null;
     if (featuregroupJsonDTO.getJobName() != null && !featuregroupJsonDTO.getJobName().isEmpty())
       job = jobFacade.findByProjectAndName(project, featuregroupJsonDTO.getJobName());
@@ -743,8 +759,8 @@ public class FeaturestoreService {
             trainingDatasetJsonDTO.getDescription(), trainingDatasetJsonDTO.getFeatureCorrelationMatrix(),
             trainingDatasetJsonDTO.getDescriptiveStatistics(), trainingDatasetJsonDTO.getFeaturesHistogram(),
             trainingDatasetJsonDTO.getFeatures(), trainingDatasetJsonDTO.getClusterAnalysis());
-    activityFacade.persistActivity(ActivityFacade.CREATED_TRAINING_DATASET + trainingDatasetDTO.getName(), project,
-      user, ActivityFacade.ActivityFlag.SERVICE);
+    activityFacade.persistActivity(ActivityFacade.CREATED_TRAINING_DATASET + trainingDatasetDTO.getName(),
+      project, user, ActivityFacade.ActivityFlag.SERVICE);
     GenericEntity<TrainingDatasetDTO> trainingDatasetDTOGeneric =
         new GenericEntity<TrainingDatasetDTO>(trainingDatasetDTO) {};
     return noCacheResponse.getNoCacheResponseBuilder
@@ -786,7 +802,9 @@ public class FeaturestoreService {
     FeaturestoreDTO featurestoreDTO = featurestoreController.getFeaturestoreForProjectWithId(project, featurestoreId);
     Featurestore featurestore = featurestoreController.getFeaturestoreWithId(featurestoreDTO.getFeaturestoreId());
     TrainingDatasetDTO trainingDatasetDTO =
-        trainingDatasetController.getTrainingDatasetWithIdAndFeaturestore(featurestore, trainingdatasetid);
+      trainingDatasetController.getTrainingDatasetWithIdAndFeaturestore(featurestore, trainingdatasetid);
+    verifyUserRole(trainingDatasetDTO, featurestore, user);
+
     Dataset trainingDatasetsFolder = featurestoreUtil.getTrainingDatasetFolder(featurestore.getProject());
     String trainingDatasetDirectoryName = featurestoreUtil.getTrainingDatasetPath(
         inodeFacade.getPath(trainingDatasetsFolder.getInode()),
@@ -843,7 +861,7 @@ public class FeaturestoreService {
     //This call verifies that the project have access to the featurestoreId provided
     FeaturestoreDTO featurestoreDTO = featurestoreController.getFeaturestoreForProjectWithId(project, featurestoreId);
     Featurestore featurestore = featurestoreController.getFeaturestoreWithId(featurestoreDTO.getFeaturestoreId());
-  
+
     Jobs job = null;
     if (trainingDatasetJsonDTO.getJobName() != null && !trainingDatasetJsonDTO.getJobName().isEmpty())
       job = jobFacade.findByProjectAndName(project, trainingDatasetJsonDTO.getJobName());
@@ -891,7 +909,7 @@ public class FeaturestoreService {
         .build();
     }
   }
-  
+
   /**
    * Endpoint for getting all metadata for a feature store. This is a convenience endpoint only used by program-clients
    * that needs feature store metadata for query planning. This endpoint means that the client do not have to do
@@ -925,5 +943,30 @@ public class FeaturestoreService {
       .entity(featurestoreMetadataGeneric)
       .build();
   }
-    
+  
+  /**
+   * Verify that the user is allowed to execute the requested operation based on his/hers project role
+   *
+   * Only data owners are allowed to update/delete feature groups/training datasets
+   * created by someone else in the project
+   *
+   * @param featurestoreEntityDTO the featurestore entity that the operation concerns (feature group or training
+   *                              dataset)
+   * @param featurestore the featurestore that the operation concerns
+   * @param user the user requesting the operation
+   * @throws FeaturestoreException
+   */
+  private void verifyUserRole(FeaturestoreEntityDTO featurestoreEntityDTO,
+    Featurestore featurestore, Users user)
+    throws FeaturestoreException {
+    String userRole = projectTeamFacade.findCurrentRole(project, user);
+    if(!featurestoreEntityDTO.getCreator().equals(user.getEmail()) &&  userRole !=
+      AllowedRoles.DATA_OWNER){
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.UNAUTHORIZED_FEATURESTORE_OPERATION, Level.FINE,
+        "project: " + project.getName() + ", featurestoreId: " + featurestore.getId() +
+          ", featuregroupId: " + featurestoreEntityDTO.getId() + ", userRole:" + userRole +
+          ", creator of the featuregroup: " + featurestoreEntityDTO.getCreator());
+    }
+  }
+
 }
