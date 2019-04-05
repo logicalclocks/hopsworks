@@ -189,7 +189,7 @@ angular.module('hopsWorksApp')
                     "description": self.featuregroupDoc,
                     "features": self.features,
                     "version": 1,
-                    "featureCorrelationMatrixBase64": null,
+                    "featureCorrelationMatrix": null,
                     "descriptiveStatistics": null,
                     "updateMetadata": false,
                     "updateStats": false,
