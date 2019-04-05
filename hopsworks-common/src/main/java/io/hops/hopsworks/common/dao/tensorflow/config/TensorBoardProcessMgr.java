@@ -341,8 +341,11 @@ public class TensorBoardProcessMgr {
     LOGGER.log(Level.FINE, processDescriptor.toString());
     try {
       ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
-      if (!processResult.processExited()) {
-        LOGGER.log(Level.SEVERE, "Failed to remove TensorBoard directory, process time-out");
+      if (!processResult.processExited() || processResult.getExitCode() != 0) {
+        throw new TensorBoardException(RESTCodes.TensorBoardErrorCode.TENSORBOARD_CLEANUP_ERROR, Level.SEVERE,
+                "Failed to cleanup TensorBoard", "Could not delete TensorBoard directory: "
+                + tensorBoardDirectoryPath
+          );
       }
     } catch (IOException ex) {
       throw new TensorBoardException(RESTCodes.TensorBoardErrorCode.TENSORBOARD_CLEANUP_ERROR, Level.SEVERE,
