@@ -156,6 +156,8 @@ public class ResourceRequest {
     MACHINETYPES,
     LIBRARIES,
     DATASETREQUESTS;
+    DATASETREQUESTS,
+    IOTGATEWAY;
     
     public static Name fromString(String name) {
       return valueOf(name.toUpperCase());
