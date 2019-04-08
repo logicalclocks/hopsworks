@@ -40,6 +40,7 @@
 package io.hops.hopsworks.api.util;
 
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.List;
 
 @XmlRootElement
 public class AuthStatus {
@@ -47,14 +48,16 @@ public class AuthStatus {
   private String twofactor;
   private String ldap;
   private String krb;
+  private List<OpenIdProvider> openIdProviders;
 
   public AuthStatus() {
   }
 
-  public AuthStatus(String twofactor, String ldap, String krb) {
+  public AuthStatus(String twofactor, String ldap, String krb, List<OpenIdProvider> openIdProviders) {
     this.twofactor = twofactor;
     this.ldap = ldap;
     this.krb = krb;
+    this.openIdProviders = openIdProviders;
   }
 
   public String getTwofactor() {
@@ -81,5 +84,11 @@ public class AuthStatus {
     this.krb = krb;
   }
   
+  public List<OpenIdProvider> getOpenIdProviders() {
+    return openIdProviders;
+  }
   
+  public void setOpenIdProviders(List<OpenIdProvider> openIdProviders) {
+    this.openIdProviders = openIdProviders;
+  }
 }

@@ -679,20 +679,31 @@ angular.module('hopsWorksApp')
             };
             
             var downloadCerts = function (accountType) {
-              if (accountType === 'KRB_ACCOUNT_TYPE') {
+              if (accountType === 'KRB') {
                 CertService.downloadProjectCertKrb(self.currentProject.projectId)
-                  .then(function (success) {
-                    var certs = success.data;
-                    download(atob(certs.kStore), 'keyStore.' + certs.fileExtension);
-                    download(atob(certs.tStore), 'trustStore.' + certs.fileExtension);
-                  }, function (error) {
-                    var errorMsg = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : "";
-                    growl.error(errorMsg, {title: error.data.errorMsg, ttl: 5000});
-                });
+                    .then(function (success) {
+                        var certs = success.data;
+                        download(atob(certs.kStore), 'keyStore.' + certs.fileExtension);
+                        download(atob(certs.tStore), 'trustStore.' + certs.fileExtension);
+                    }, function (error) {
+                        var errorMsg = (typeof error.data.usrMsg !== 'undefined') ? error.data.usrMsg : "";
+                        growl.error(errorMsg, {title: error.data.errorMsg, ttl: 5000});
+                    });
+              } else if (accountType === 'OAUTH2') {
+                CertService.downloadProjectCertOAuth(self.currentProject.projectId)
+                    .then(function (success) {
+                        var certs = success.data;
+                        download(atob(certs.kStore), 'keyStore.' + certs.fileExtension);
+                        download(atob(certs.tStore), 'trustStore.' + certs.fileExtension);
+                    }, function (error) {
+                        var errorMsg = (typeof error.data.usrMsg !== 'undefined') ? error.data.usrMsg : "";
+                        growl.error(errorMsg, {title: error.data.errorMsg, ttl: 5000});
+                    });
+
               } else {
                 ModalService.certs('sm', 'Certificates Download', 'Please type your password', self.projectId)
                   .then(function (successPwd) {
-                    if (accountType === 'LDAP_ACCOUNT_TYPE') {
+                    if (accountType === 'LDAP') {
                       CertService.downloadProjectCertLdap(self.currentProject.projectId, successPwd)
                         .then(function (success) {
                           var certs = success.data;

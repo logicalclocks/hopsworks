@@ -49,8 +49,8 @@ import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.UserGroupInformationService;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
-import io.hops.hopsworks.common.jobs.execution.ExecutionController;
 import io.hops.hopsworks.common.jobs.configuration.JobType;
+import io.hops.hopsworks.common.jobs.execution.ExecutionController;
 import io.hops.hopsworks.common.jobs.yarn.YarnJobsMonitor;
 import io.hops.hopsworks.common.jupyter.JupyterController;
 import io.hops.hopsworks.common.util.Settings;
@@ -108,7 +108,7 @@ public class SparkController {
    * Spark job.
    */
   public Execution startJob(final Jobs job, final Users user)
-      throws ServiceException, GenericException, JobException {
+    throws ServiceException, GenericException, JobException {
     //First: some parameter checking.
     sanityCheck(job, user);
     String username = hdfsUsersBean.getHdfsUserName(job.getProject(), user);

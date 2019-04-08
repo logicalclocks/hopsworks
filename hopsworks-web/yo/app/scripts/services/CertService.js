@@ -62,6 +62,14 @@ angular.module('hopsWorksApp')
           };
           return $http(req);
         },
+        downloadProjectCertOAuth: function (id) {
+          var req = {
+            method: 'POST',
+            url: '/api/remote/user/auth/oauth/downloadCert/' + id,
+            headers: {"Content-Type": "application/x-www-form-urlencoded"}
+          };
+          return $http(req);
+        },
         downloadProjectCertLdap: function (id, password) {
           var req = {
             method: 'POST',

@@ -500,7 +500,6 @@ public class RESTCodes {
     //Database
     DATABASE_UNAVAILABLE(8, "The database is temporarily unavailable. Please try again later",
         Response.Status.SERVICE_UNAVAILABLE),
-    TENSORBOARD_CLEANUP_ERROR(9, "Could not delete tensorboard", Response.Status.INTERNAL_SERVER_ERROR),
     ZOOKEEPER_SERVICE_UNAVAILABLE(10, "ZooKeeper service unavailable",
         Response.Status.SERVICE_UNAVAILABLE),
     ANACONDA_NODES_UNAVAILABLE(11, "No conda machine is enabled. Contact the administrator.",
@@ -549,8 +548,6 @@ public class RESTCodes {
     JUPYTER_SAVE_SETTINGS_ERROR(36, "Could not save Jupyter Settings.",
         Response.Status.INTERNAL_SERVER_ERROR),
     IPYTHON_CONVERT_ERROR(37, "Problem converting ipython notebook to python program",
-        Response.Status.INTERNAL_SERVER_ERROR),
-    TENSORBOARD_FETCH_ERROR(38, "Error while fetching TensorBoard from database",
         Response.Status.INTERNAL_SERVER_ERROR),
     EMAIL_SENDING_FAILURE(39, "Could not send email", Response.Status.INTERNAL_SERVER_ERROR),
     HOST_EXISTS(40, "Host exists", Response.Status.CONFLICT),
@@ -1270,9 +1267,11 @@ public class RESTCodes {
         Response.Status.INTERNAL_SERVER_ERROR),
     CORRELATION_MATRIX_EXCEED_MAX_SIZE(23,
       "The size of the provided correlation matrix exceed the maximum size of 50 columns", Response.Status.BAD_REQUEST),
-    FEATURESTORE_NAME_NOT_PROVIDED(24, "Featurestore name was not provided", Response.Status.BAD_REQUEST);
-
-
+    FEATURESTORE_NAME_NOT_PROVIDED(24, "Featurestore name was not provided", Response.Status.BAD_REQUEST),
+    UNAUTHORIZED_FEATURESTORE_OPERATION(25, "Only data owners are allowed to delete or update feature groups/" +
+      "training datasets that are not created by themself.", Response.Status.UNAUTHORIZED);
+    
+    
     private int code;
     private String message;
     private Response.Status respStatus;
@@ -1296,6 +1295,49 @@ public class RESTCodes {
 
     public Response.StatusType getRespStatus() {
       return respStatus;
+    }
+
+    @Override
+    public int getRange() {
+      return range;
+    }
+  }
+
+
+  /**
+   * TensorBoard specific error codes
+   */
+  public enum TensorBoardErrorCode implements RESTErrorCode {
+
+    TENSORBOARD_CLEANUP_ERROR(1, "Failed when deleting a running TensorBoard", Response.Status.INTERNAL_SERVER_ERROR),
+    TENSORBOARD_START_ERROR(2, "Failed to start TensorBoard", Response.Status.INTERNAL_SERVER_ERROR),
+    TENSORBOARD_FETCH_ERROR(3, "Error while fetching TensorBoard from database",
+            Response.Status.INTERNAL_SERVER_ERROR);
+
+    private Integer code;
+    private String message;
+    private Response.StatusType respStatus;
+    private final int range = 280000;
+
+    TensorBoardErrorCode(Integer code, String message, Response.StatusType respStatus) {
+      this.code = range + code;
+      this.message = message;
+      this.respStatus = respStatus;
+    }
+
+    @Override
+    public Response.StatusType getRespStatus() {
+      return respStatus;
+    }
+
+    @Override
+    public Integer getCode() {
+      return code;
+    }
+
+    @Override
+    public String getMessage() {
+      return message;
     }
 
     @Override
@@ -1345,5 +1387,4 @@ public class RESTCodes {
       return range;
     }
   }
-
 }
