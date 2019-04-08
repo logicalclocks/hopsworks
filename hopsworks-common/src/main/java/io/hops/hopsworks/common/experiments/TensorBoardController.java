@@ -27,16 +27,18 @@ import io.hops.hopsworks.common.dao.tensorflow.TensorBoardPK;
 import io.hops.hopsworks.common.dao.tensorflow.config.TensorBoardDTO;
 import io.hops.hopsworks.common.dao.tensorflow.config.TensorBoardProcessMgr;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.elastic.ElasticController;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.tensorflow.TfLibMappingUtil;
+import io.hops.hopsworks.exceptions.TensorBoardException;
+import org.apache.commons.codec.digest.DigestUtils;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Date;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -45,17 +47,15 @@ import java.util.regex.Pattern;
 @Stateless
 public class TensorBoardController {
   @EJB
-  TensorBoardFacade tensorBoardFacade;
+  private TensorBoardFacade tensorBoardFacade;
   @EJB
-  TensorBoardProcessMgr tensorBoardProcessMgr;
+  private TensorBoardProcessMgr tensorBoardProcessMgr;
   @EJB
-  ElasticController elasticController;
+  private HdfsLeDescriptorsFacade hdfsLeDescriptorsFacade;
   @EJB
-  HdfsLeDescriptorsFacade hdfsLeDescriptorsFacade;
+  private HdfsUsersFacade hdfsUsersFacade;
   @EJB
-  HdfsUsersFacade hdfsUsersFacade;
-  @EJB
-  HdfsUsersController hdfsUsersController;
+  private HdfsUsersController hdfsUsersController;
   @EJB
   private TfLibMappingUtil tfLibMappingUtil;
 
@@ -88,7 +88,7 @@ public class TensorBoardController {
    * @throws IOException
    */
   public TensorBoardDTO startTensorBoard(String elasticId, Project project, Users user, String hdfsLogdir)
-    throws ServiceException {
+    throws TensorBoardException, ServiceException {
     //Kill existing TensorBoard
     TensorBoard tb = null;
     TensorBoardDTO tensorBoardDTO = null;
@@ -103,8 +103,10 @@ public class TensorBoardController {
       HdfsUsers hdfsUser = hdfsUsersFacade.findByName(hdfsUsername);
 
       String tfLdLibraryPath = tfLibMappingUtil.getTfLdLibraryPath(project);
+      String tensorBoardDirectory = DigestUtils.sha256Hex(Integer.toString(ThreadLocalRandom.current().nextInt()));
 
-      tensorBoardDTO = tensorBoardProcessMgr.startTensorBoard(project, user, hdfsUser, hdfsLogdir, tfLdLibraryPath);
+      tensorBoardDTO = tensorBoardProcessMgr.startTensorBoard(project, user, hdfsUser, hdfsLogdir, tfLdLibraryPath,
+              tensorBoardDirectory);
       Date lastAccessed = new Date();
       tensorBoardDTO.setElasticId(elasticId);
       tensorBoardDTO.setLastAccessed(lastAccessed);
@@ -121,6 +123,7 @@ public class TensorBoardController {
       newTensorBoard.setElasticId(elasticId);
       newTensorBoard.setLastAccessed(lastAccessed);
       newTensorBoard.setHdfsLogdir(hdfsLogdir);
+      newTensorBoard.setSecret(tensorBoardDirectory);
       tensorBoardFacade.persist(newTensorBoard);
     } catch(IOException e) {
       LOGGER.log(Level.SEVERE, "Could not start TensorBoard", e);
@@ -133,7 +136,7 @@ public class TensorBoardController {
    * @param project
    * @param user
    */
-  public void cleanup(Project project, Users user) throws ServiceException {
+  public void cleanup(Project project, Users user) throws TensorBoardException {
     TensorBoard tb = tensorBoardFacade.findForProjectAndUser(project, user);
     this.cleanup(tb);
   }
@@ -142,19 +145,13 @@ public class TensorBoardController {
    * Stop and cleanup a TensorBoard
    * @param tb
    */
-  public void cleanup(TensorBoard tb) throws ServiceException {
+  public void cleanup(TensorBoard tb) throws TensorBoardException {
     if (tb != null) {
-      //TensorBoard could be dead, remove from DB
-      if (tensorBoardProcessMgr.ping(tb.getPid()) != 0) {
-        tensorBoardFacade.remove(tb);
-        tensorBoardProcessMgr.cleanupLocalTBDir(tb);
-        //TensorBoard is alive, kill it and remove from DB
-      } else if (tensorBoardProcessMgr.ping(tb.getPid()) == 0) {
-        if (tensorBoardProcessMgr.killTensorBoard(tb) == 0) {
-          tensorBoardFacade.remove(tb);
-          tensorBoardProcessMgr.cleanupLocalTBDir(tb);
-        }
+      if(tensorBoardProcessMgr.ping(tb.getPid()) == 0) {
+        tensorBoardProcessMgr.killTensorBoard(tb);
       }
+      tensorBoardFacade.remove(tb);
+      tensorBoardProcessMgr.cleanup(tb);
     }
   }
 
@@ -163,7 +160,7 @@ public class TensorBoardController {
    * @param project
    * @throws IOException
    */
-  public void removeProject(Project project) throws ServiceException {
+  public void removeProject(Project project) throws TensorBoardException {
     Collection<TensorBoard> instances = project.getTensorBoardCollection();
     if(instances != null) {
       for(TensorBoard tensorBoard: instances) {
