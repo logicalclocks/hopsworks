@@ -17,11 +17,13 @@ package io.hops.hopsworks.api.jwt;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
 import io.hops.hopsworks.api.filter.Audience;
+import io.hops.hopsworks.api.user.ServiceJWTDTO;
 import io.hops.hopsworks.common.dao.user.BbcGroup;
 import io.hops.hopsworks.common.dao.user.BbcGroupFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.user.UsersController;
+import io.hops.hopsworks.common.util.DateUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.jwt.Constants;
 import static io.hops.hopsworks.jwt.Constants.BEARER;
@@ -29,11 +31,21 @@ import io.hops.hopsworks.jwt.JWTController;
 import io.hops.hopsworks.jwt.SignatureAlgorithm;
 import io.hops.hopsworks.jwt.exception.DuplicateSigningKeyException;
 import io.hops.hopsworks.jwt.exception.InvalidationException;
+import io.hops.hopsworks.jwt.exception.JWTException;
 import io.hops.hopsworks.jwt.exception.NotRenewableException;
 import io.hops.hopsworks.jwt.exception.SigningKeyNotFoundException;
 import io.hops.hopsworks.jwt.exception.VerificationException;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.parquet.Strings;
+
 import java.security.NoSuchAlgorithmException;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
@@ -42,13 +54,24 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.container.ContainerRequestContext;
+
+import static io.hops.hopsworks.jwt.Constants.EXPIRY_LEEWAY;
+import static io.hops.hopsworks.jwt.Constants.RENEWABLE;
+import static io.hops.hopsworks.jwt.Constants.ROLES;
 import static javax.ws.rs.core.HttpHeaders.AUTHORIZATION;
+
 import javax.ws.rs.core.SecurityContext;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class JWTHelper {
-
+  private static final Logger LOGGER = Logger.getLogger(JWTHelper.class.getName());
+  
+  public static final List<String> SERVICE_RENEW_JWT_AUDIENCE = new ArrayList<>(1);
+  static {
+    SERVICE_RENEW_JWT_AUDIENCE.add(Audience.SERVICES);
+  }
+  
   @EJB
   private JWTController jwtController;
   @EJB
@@ -132,72 +155,65 @@ public class JWTHelper {
    * @throws SigningKeyNotFoundException
    * @throws DuplicateSigningKeyException
    */
-  public String createToken(Users user, String issuer) throws NoSuchAlgorithmException, SigningKeyNotFoundException,
+  public String createToken(Users user, String issuer, Map<String, Object> claims) throws NoSuchAlgorithmException,
+      SigningKeyNotFoundException,
       DuplicateSigningKeyException {
     String[] audience = null;
     Date expiresAt = null;
-    int leewaySec;
 
+    if (claims == null) {
+      claims = new HashMap<>(3);
+    }
     BbcGroup group = bbcGroupFacade.findByGroupName("AGENT");
     if (user.getBbcGroupCollection().contains(group)) {
       audience = new String[2];
       audience[0] = Audience.API;
       audience[1] = Audience.SERVICES;
       expiresAt = new Date(System.currentTimeMillis() + settings.getServiceJWTLifetimeMS());
-      leewaySec = settings.getServiceJWTExpLeewaySec();
+      claims.put(EXPIRY_LEEWAY, settings.getServiceJWTExpLeewaySec());
     } else {
       audience = new String[1];
       audience[0] = Audience.API;
       expiresAt = new Date(System.currentTimeMillis() + settings.getJWTLifetimeMs());
-      leewaySec = settings.getJWTExpLeewaySec();
+      claims.put(EXPIRY_LEEWAY, settings.getJWTExpLeewaySec());
     }
 
-    return createToken(user, audience, issuer, expiresAt, leewaySec);
+    return createToken(user, audience, issuer, expiresAt, claims);
   }
-
-  /**
-   * Create a new jwt for the given user.
-   *
-   * @param user
-   * @param issuer
-   * @return
-   * @throws NoSuchAlgorithmException
-   * @throws SigningKeyNotFoundException
-   * @throws DuplicateSigningKeyException
-   */
-  public String createToken(Users user, String[] audience, String issuer) throws NoSuchAlgorithmException,
-      SigningKeyNotFoundException, DuplicateSigningKeyException {
-    Date now = new Date();
-    Date expiresAt = new Date(now.getTime() + settings.getJWTLifetimeMs());
-    SignatureAlgorithm alg = SignatureAlgorithm.valueOf(settings.getJWTSignatureAlg());
-    String[] roles = userController.getUserRoles(user).toArray(new String[0]);
-    return jwtController.createToken(settings.getJWTSigningKeyName(), false, issuer, audience, expiresAt,
-        new Date(), user.getUsername(), true, settings.getJWTExpLeewaySec(), roles, alg);
-  }
-
   
   /**
    * One time token 60 sec life
    * @param user
    * @param issuer
+   * @param claims
    * @return
    */
-  public String createOneTimeToken(Users user, String issuer) {
+  public String createOneTimeToken(Users user, String issuer, Map<String, Object> claims) {
     String[] audience = {};
     Date now = new Date();
     Date expiresAt = new Date(now.getTime() + Constants.ONE_TIME_JWT_LIFETIME_MS);
-    SignatureAlgorithm alg = SignatureAlgorithm.valueOf(Constants.ONE_TIME_JWT_SIGNATURE_ALGORITHM);
     String[] roles = {};
     String token = null;
     try {
-      token = jwtController.createToken(Constants.ONE_TIME_JWT_SIGNING_KEY_NAME, false, issuer, audience, expiresAt, 
-          now, user.getUsername(), false, 0, roles, alg);
+      token = createOneTimeToken(user, roles, issuer, audience, now, expiresAt,
+          Constants.ONE_TIME_JWT_SIGNING_KEY_NAME, claims, false);
     } catch (NoSuchAlgorithmException | SigningKeyNotFoundException | DuplicateSigningKeyException ex) {
       Logger.getLogger(JWTHelper.class.getName()).log(Level.SEVERE, null, ex);
     }
     return token;
   }
 
+  public String createOneTimeToken(Users user, String[] roles, String issuer, String[] audience, Date notBefore,
+      Date expiresAt, String keyName, Map<String, Object> claims, boolean createNewKey)
+    throws NoSuchAlgorithmException, SigningKeyNotFoundException, DuplicateSigningKeyException {
+    SignatureAlgorithm algorithm = SignatureAlgorithm.valueOf(Constants.ONE_TIME_JWT_SIGNATURE_ALGORITHM);
+    claims = jwtController.addDefaultClaimsIfMissing(claims, false, 0, roles);
+    
+    return jwtController.createToken(keyName, createNewKey, issuer, audience, expiresAt, notBefore,
+        user.getUsername(), claims, algorithm);
+  }
+  
+  
   /**
    * Create a new jwt for the given user that can be used for the specified audience.
    *
@@ -209,14 +225,16 @@ public class JWTHelper {
    * @throws SigningKeyNotFoundException
    * @throws DuplicateSigningKeyException
    */
-  public String createToken(Users user, String[] audience, String issuer, Date expiresAt, int leeway)
+  public String createToken(Users user, String[] audience, String issuer, Date expiresAt, Map<String, Object> claims)
       throws NoSuchAlgorithmException, SigningKeyNotFoundException, DuplicateSigningKeyException {
     SignatureAlgorithm alg = SignatureAlgorithm.valueOf(settings.getJWTSignatureAlg());
     String[] roles = userController.getUserRoles(user).toArray(new String[0]);
+    
+    claims = jwtController.addDefaultClaimsIfMissing(claims, true, settings.getJWTExpLeewaySec(), roles);
     return jwtController.createToken(settings.getJWTSigningKeyName(), false, issuer, audience, expiresAt,
-        new Date(), user.getUsername(), true, leeway, roles, alg);
+        new Date(), user.getUsername(), claims, alg);
   }
-
+  
   /**
    * Create jwt with a new signing key. Fails if the keyName already exists.
    *
@@ -235,16 +253,18 @@ public class JWTHelper {
       return null;
     }
     Date now = new Date();
-    Date nbf = jWTRequestDTO.getNotBefore() != null ? jWTRequestDTO.getNotBefore() : now;
+    Date nbf = jWTRequestDTO.getNbf() != null ? jWTRequestDTO.getNbf() : now;
     Date expiresOn = jWTRequestDTO.getExpiresAt() != null ? jWTRequestDTO.getExpiresAt() : new Date(now.getTime()
         + settings.getJWTLifetimeMs());
     SignatureAlgorithm alg = SignatureAlgorithm.valueOf(settings.getJWTSignatureAlg());
-    String[] roles = {"HOPS_USER"}; //What role should we give to users not in system 
-    
-    String token = jwtController.createToken(jWTRequestDTO.getKeyName(), true, issuer, jWTRequestDTO.getAudiences(),
-        expiresOn, nbf, jWTRequestDTO.getSubject(), jWTRequestDTO.isRenewable(), jWTRequestDTO.getExpLeeway(), roles,
-        alg);
+    String[] roles = {"HOPS_USER"}; //What role should we give to users not in system
     int expLeeway = jwtController.getExpLeewayOrDefault(jWTRequestDTO.getExpLeeway());
+    Map<String, Object> claims = new HashMap<>(3);
+    claims.put(RENEWABLE, jWTRequestDTO.isRenewable());
+    claims.put(EXPIRY_LEEWAY, expLeeway);
+    claims.put(ROLES, roles);
+    String token = jwtController.createToken(jWTRequestDTO.getKeyName(), true, issuer, jWTRequestDTO.getAudiences(),
+        expiresOn, nbf, jWTRequestDTO.getSubject(), claims, alg);
     return new JWTResponseDTO(token, expiresOn, nbf, expLeeway);
   }
   
@@ -275,8 +295,9 @@ public class JWTHelper {
    * @throws NotRenewableException
    * @throws InvalidationException  
    */
-  public JWTResponseDTO renewToken(JsonWebTokenDTO jsonWebTokenDTO) throws SigningKeyNotFoundException,
-      NotRenewableException, InvalidationException {
+  public JWTResponseDTO renewToken(JsonWebTokenDTO jsonWebTokenDTO, boolean invalidate,
+      Map<String, Object> claims)
+      throws SigningKeyNotFoundException, NotRenewableException, InvalidationException {
     if (jsonWebTokenDTO == null || jsonWebTokenDTO.getToken() == null || jsonWebTokenDTO.getToken().isEmpty()) {
       throw new IllegalArgumentException("No token provided.");
     }
@@ -284,12 +305,62 @@ public class JWTHelper {
     Date nbf = jsonWebTokenDTO.getNbf() != null ? jsonWebTokenDTO.getNbf() : now;
     Date newExp = jsonWebTokenDTO.getExpiresAt() != null ? jsonWebTokenDTO.getExpiresAt() : new Date(now.getTime()
         + settings.getJWTLifetimeMs());
-    String token = jwtController.renewToken(jsonWebTokenDTO.getToken(), newExp, nbf);
+    String token = jwtController.renewToken(jsonWebTokenDTO.getToken(), newExp, nbf, invalidate, claims);
     DecodedJWT jwt = jwtController.decodeToken(token);
     int expLeeway = jwtController.getExpLeewayClaim(jwt);
     return new JWTResponseDTO(token, newExp, nbf, expLeeway);
   }
-
+  
+  /**
+   * Helper method to generate one-time tokens for service JWT renewal and renew the
+   * master service JWT
+   * @param token2renew Service JWT to renew
+   * @param oneTimeRenewalToken Valid one-time token associated with the master token to be renewed.
+   *                            One time tokens are generated once a service is logged-in and every time
+   *                            it renews its master token
+   * @param user Logged in user
+   * @param remoteHostname Hostname of the machine the service runs
+   * @return Renewed master service JWT and five one-time tokens used to renew it
+   * @throws JWTException
+   * @throws NoSuchAlgorithmException
+   */
+  public ServiceJWTDTO renewServiceToken(JsonWebTokenDTO token2renew, String oneTimeRenewalToken,
+      Users user, String remoteHostname) throws JWTException, NoSuchAlgorithmException {
+    if (Strings.isNullOrEmpty(oneTimeRenewalToken)) {
+      throw new VerificationException("Service renewal token cannot be null or empty");
+    }
+    if (user == null) {
+      DecodedJWT decodedJWT = jwtController.decodeToken(oneTimeRenewalToken);
+      throw new VerificationException("Could not find user associated with JWT with ID: " + decodedJWT.getId());
+    }
+    
+    LocalDateTime now = DateUtils.getNow();
+    Date expiresAt = token2renew.getExpiresAt() != null ? token2renew.getExpiresAt()
+        : DateUtils.localDateTime2Date(now.plus(settings.getServiceJWTLifetimeMS(), ChronoUnit.MILLIS));
+    Date notBefore = token2renew.getNbf() != null ? token2renew.getNbf()
+        : DateUtils.localDateTime2Date(now);
+    
+    List<String> userRoles = userController.getUserRoles(user);
+    Pair<String, String[]> renewedTokens = jwtController.renewServiceToken(oneTimeRenewalToken, token2renew.getToken(),
+        expiresAt, notBefore, settings.getServiceJWTLifetimeMS(), user.getUsername(),
+        userRoles, SERVICE_RENEW_JWT_AUDIENCE, remoteHostname, settings.getJWTIssuer(),
+        settings.getJWTSigningKeyName(), false);
+  
+    int expLeeway = jwtController.getExpLeewayClaim(jwtController.decodeToken(renewedTokens.getLeft()));
+    JWTResponseDTO renewedServiceToken = new JWTResponseDTO(renewedTokens.getLeft(), expiresAt, notBefore, expLeeway);
+    
+    return new ServiceJWTDTO(renewedServiceToken, renewedTokens.getRight());
+  }
+  
+  /**
+   * Invalidate a service master token and delete the signing key of the temporary
+   * one-time tokens.
+   * @param serviceToken2invalidate
+   */
+  public void invalidateServiceToken(String serviceToken2invalidate) {
+    jwtController.invalidateServiceToken(serviceToken2invalidate, settings.getJWTSigningKeyName());
+  }
+  
   /**
    * Invalidate a jwt found in the request header Authorization field.
    *
@@ -311,24 +382,12 @@ public class JWTHelper {
       Logger.getLogger(JWTHelper.class.getName()).log(Level.SEVERE, null, ex);
     }
   }
-
-  /**
-   * Add jti of the token in the invalid jwt table.
-   * @param jsonWebTokenDTO 
-   * @throws InvalidationException 
-   */
-  public void invalidateToken(JsonWebTokenDTO jsonWebTokenDTO) throws InvalidationException {
-    if (jsonWebTokenDTO == null || jsonWebTokenDTO.getToken() == null || jsonWebTokenDTO.getToken().isEmpty()) {
-      throw new IllegalArgumentException("No token provided.");
-    }
-    jwtController.invalidate(jsonWebTokenDTO.getToken());
-  }
   
   /**
    * Delete the signing key identified by keyName.
    * @param keyName 
    */
-  public void deleteSigningKey(String keyName) {
+  public void deleteSigningKeyByName(String keyName) {
     //Do not delete api signing key
     if (keyName == null || keyName.isEmpty()) {
       return;

@@ -15,10 +15,14 @@
  */
 package io.hops.hopsworks.api.jwt;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
 import java.util.Date;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
+@ApiModel(value = "Specification to renew an existing JWT")
 public class JsonWebTokenDTO {
 
   private String token;
@@ -34,6 +38,7 @@ public class JsonWebTokenDTO {
     this.nbf = nbf;
   }
 
+  @ApiModelProperty(value = "Token to renew", required = true)
   public String getToken() {
     return token;
   }
@@ -42,6 +47,7 @@ public class JsonWebTokenDTO {
     this.token = token;
   }
 
+  @ApiModelProperty(value = "Expiration date for the new JWT")
   public Date getExpiresAt() {
     return expiresAt;
   }
@@ -50,6 +56,7 @@ public class JsonWebTokenDTO {
     this.expiresAt = expiresAt;
   }
 
+  @ApiModelProperty(value = "Not-valid-before date for the new JWT")
   public Date getNbf() {
     return nbf;
   }

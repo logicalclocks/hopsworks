@@ -52,8 +52,10 @@ import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.util.Variables;
 import io.hops.hopsworks.common.util.RemoteCommandResult;
+import io.hops.hopsworks.common.security.ServiceJWTKeepAlive;
 import io.hops.hopsworks.exceptions.EncryptionMasterPasswordException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
+import io.hops.hopsworks.jwt.exception.JWTException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.common.security.CertificatesMgmService;
@@ -109,6 +111,8 @@ public class SystemAdminService {
   private JWTHelper jWTHelper;
   @EJB
   private AgentLivenessMonitor agentLivenessMonitor;
+  @EJB
+  private ServiceJWTKeepAlive serviceJWTKeepAlive;
   
   /**
    * Admin endpoint that changes the master encryption password used to encrypt the certificates' password
@@ -343,5 +347,12 @@ public class SystemAdminService {
     }
     String responseMessage = "Exit code: " + result.getExitCode() + " Reason: " + result.getStdout();
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NO_CONTENT).entity(responseMessage).build();
+  }
+  
+  @PUT
+  @Path("/servicetoken")
+  public Response renewServiceJWT() throws JWTException {
+    serviceJWTKeepAlive.forceRenewServiceToken();
+    return Response.noContent().build();
   }
 }

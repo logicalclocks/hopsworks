@@ -38,39 +38,17 @@
  */
 package io.hops.hopsworks.common.security;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.hops.hopsworks.common.dao.certificates.CertsFacade;
 import io.hops.hopsworks.common.dao.certificates.UserCerts;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.proxies.CAProxy;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.common.util.HopsUtils;
-import io.hops.hopsworks.restutils.RESTException;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpHeaders;
-import org.apache.http.HttpStatus;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpDelete;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.config.Registry;
-import org.apache.http.config.RegistryBuilder;
-import org.apache.http.conn.socket.ConnectionSocketFactory;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-import org.apache.http.protocol.HttpContext;
-import org.apache.http.ssl.SSLContexts;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.X500NameBuilder;
 import org.bouncycastle.asn1.x500.style.BCStyle;
@@ -96,7 +74,6 @@ import javax.ejb.TransactionAttributeType;
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
-import javax.net.ssl.SSLContext;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -105,12 +82,7 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.security.Key;
-import java.security.KeyManagementException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.KeyStore;
@@ -135,7 +107,6 @@ public class CertificatesController {
   private final static String SIGNATURE_ALGORITHM = "SHA256withRSA";
   private final static String CERTIFICATE_TYPE = "X.509";
   private final static int KEY_SIZE = 1024;
-  private final static String CA_PATH = "/hopsworks-ca/v2/certificate/";
 
   @EJB
   private CertsFacade certsFacade;
@@ -146,12 +117,11 @@ public class CertificatesController {
   @Inject
   @Any
   private Instance<CertificateHandler> certificateHandlers;
+  @EJB
+  private CAProxy caProxy;
 
   private KeyPairGenerator keyPairGenerator = null;
   private CertificateFactory certificateFactory = null;
-
-  private CloseableHttpClient httpClient = null;
-  private PoolingHttpClientConnectionManager connectionManager = null;
 
   private enum Endpoint {
     PROJECT("project"),
@@ -180,39 +150,6 @@ public class CertificatesController {
     } catch (Exception e) {
       LOGGER.log(Level.SEVERE, "Could not initialize the key generator", e);
     }
-
-    // Custom SSL Registry to skip hostname verification
-    Path trustStore = Paths.get(settings.getHopsworksDomainDir(), "config", "cacerts.jks");
-    char[] trustStorePassword = settings.getHopsworksMasterPasswordSsl().toCharArray();
-    SSLContext sslContext;
-    try {
-      sslContext = SSLContexts.custom()
-          .loadTrustMaterial(trustStore.toFile(), trustStorePassword,
-              new TrustSelfSignedStrategy())
-          .build();
-    } catch (IOException | KeyStoreException | NoSuchAlgorithmException | CertificateException |
-        KeyManagementException e) {
-      LOGGER.log(Level.SEVERE, "Could not initialize the https client", e);
-      return;
-    }
-    SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslContext, NoopHostnameVerifier.INSTANCE);
-
-    Registry<ConnectionSocketFactory> socketFactoryRegistry =
-        RegistryBuilder.<ConnectionSocketFactory> create()
-        .register("https", sslsf)
-        .build();
-
-
-    // Pool httpConnections to the CA
-    connectionManager = new PoolingHttpClientConnectionManager(socketFactoryRegistry);
-    // Allow 5 parallel connections to the CA
-    connectionManager.setMaxTotal(5);
-    connectionManager.setDefaultMaxPerRoute(5);
-
-    httpClient = HttpClients.custom()
-        .setConnectionManager(connectionManager)
-        .setKeepAliveStrategy((httpResponse, httpContext) -> settings.getConnectionKeepAliveTimeout() * 1000)
-        .build();
   }
 
   /**
@@ -367,76 +304,31 @@ public class CertificatesController {
   }
 
   private CSR signCSR(CSR csr, Endpoint endpoint) throws HopsSecurityException, GenericException,
-      UnsupportedEncodingException {
-    ObjectMapper objectMapper = new ObjectMapper();
-    HttpContext context = HttpClientContext.create();
-
-    // Build CAUri
-    URI caURI = null;
-    try {
-      caURI = new URIBuilder(settings.getRestEndpoint())
-          .setPath(CA_PATH + endpoint.toString())
-          .build();
-    } catch (URISyntaxException e){
-      throw new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR, Level.SEVERE, null, null, e);
+    UnsupportedEncodingException {
+    switch (endpoint) {
+      case PROJECT:
+        return caProxy.signProjectCSR(csr);
+      case DELA:
+        return caProxy.signDelaCSR(csr);
+      default:
+        throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CSR_ERROR, Level.FINE,
+            null, "Unknown CSR type " + endpoint.toString());
     }
-
-    HttpPost signRequestPost = new HttpPost(caURI);
-    signRequestPost.addHeader(HttpHeaders.CONTENT_TYPE, "application/json; charset=utf-8");
-
-    try {
-      signRequestPost.setEntity(new StringEntity(objectMapper.writeValueAsString(csr)));
-    } catch (JsonProcessingException e) {
-      throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CSR_ERROR, Level.SEVERE, null, null, e);
-    }
-
-    CloseableHttpResponse response = null;
-    CSR signedCert = null;
-    int nRetries = 3;
-    long timeout = 1000L;
-    while (nRetries > 0) {
-      try {
-        // Add JWT token to the request.
-        signRequestPost.addHeader(HttpHeaders.AUTHORIZATION, settings.getServiceJWT());
-
-        response = httpClient.execute(signRequestPost, context);
-
-        if ((response.getStatusLine().getStatusCode() / 100) == 2) {
-          // The HTTP status is of the 2xx family. Check the headers for the new JWT token.
-          checkToken(response);
-        } else if ((response.getStatusLine().getStatusCode() / 100) == 4) {
-          // Bad request, notify the user they sent us a bad request
-          RESTException exception = objectMapper.readValue(response.getEntity().getContent(), RESTException.class);
-          throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERTIFICATE_SIGN_USER_ERR, Level.FINE,
-              exception.getUsrMsg(), exception.getDevMsg());
-        } else {
-          // Internal error, retry
-          Thread.sleep(timeout);
-          timeout *= 2;
-          nRetries--;
-          continue;
-        }
-
-        HttpEntity responseEntity = response.getEntity();
-        signedCert = objectMapper.readValue(responseEntity.getContent(), CSR.class);
+  }
+  
+  private void revokeCertificate(String certificateIdentifier, Endpoint endpoint)
+      throws GenericException, HopsSecurityException {
+    switch (endpoint) {
+      case PROJECT:
+        caProxy.revokeProjectX509(certificateIdentifier);
         break;
-      } catch (IOException | InterruptedException e) {
-        LOGGER.log(Level.SEVERE, "Could not sign certificate", e);
-        nRetries--;
-      } finally {
-        if (response != null) {
-          try {
-            response.close();
-          } catch (IOException e) {}
-        }
-      }
+      case DELA:
+        caProxy.revokeDelaX509(certificateIdentifier);
+        break;
+      default:
+        throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERTIFICATE_REVOKATION_ERROR,
+            Level.FINE, null, "Unknown revocation type " + endpoint.toString());
     }
-
-    if (signedCert == null) {
-      throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CSR_ERROR, Level.SEVERE);
-    }
-
-    return signedCert;
   }
 
   private Pair<KeyStore, KeyStore> buildStores(String CN, String userKeyPwd,
@@ -466,84 +358,5 @@ public class CertificatesController {
     }
 
     return new Pair<>(keyStore, trustStore);
-  }
-
-  private void revokeCertificate(String certificateIdentifier, Endpoint endpoint)
-      throws GenericException, HopsSecurityException {
-
-    // Build CAUri
-    URI revokeUri = null;
-    try {
-      revokeUri = new URIBuilder(settings.getRestEndpoint())
-          .setPath(CA_PATH + endpoint.toString())
-          .setParameter("certId", certificateIdentifier)
-          .build();
-    } catch (URISyntaxException e){
-      throw new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR, Level.SEVERE, null, null, e);
-    }
-
-    HttpDelete revokeRequest = new HttpDelete(revokeUri);
-    HttpContext context = HttpClientContext.create();
-
-    boolean revoked = false;
-    int nRetries = 3;
-    long timeout = 1000L;
-    CloseableHttpResponse response = null;
-    while (nRetries > 0) {
-      try {
-        // Add JWT token to the request.
-        revokeRequest.addHeader(HttpHeaders.AUTHORIZATION, settings.getServiceJWT());
-
-        response = httpClient.execute(revokeRequest, context);
-
-        switch (response.getStatusLine().getStatusCode()) {
-          case HttpStatus.SC_OK:
-            revoked = true;
-            checkToken(response);
-            break;
-          case HttpStatus.SC_NO_CONTENT:
-            // The revoke endpoint returns NO_CONTENT if it cannot find the certificate.
-            // However the http status is 2xx, so it might contain the new JWT token.
-            // Check the header and throw the not found exception upstream.
-            checkToken(response);
-            throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERTIFICATE_NOT_FOUND, Level.SEVERE);
-          case HttpStatus.SC_BAD_REQUEST:
-            // Notify the user that they sent us a bad request
-            // Extract the error message from the HTTP response and wrap it in a HopsSecurityException
-            ObjectMapper objectMapper = new ObjectMapper();
-            RESTException exception = objectMapper.readValue(response.getEntity().getContent(), RESTException.class);
-            throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERTIFICATE_REVOKATION_USER_ERR,
-                Level.FINE, exception.getUsrMsg(), exception.getDevMsg());
-          default:
-            // Retry this error with an exponentially increasing timeout
-            Thread.sleep(timeout);
-            timeout *= 2;
-            nRetries--;
-            continue;
-        }
-
-        break;
-      } catch (IOException | InterruptedException e) {
-        LOGGER.log(Level.SEVERE, "Could not sign certificate", e);
-        nRetries--;
-      } finally {
-        if (response != null) {
-          try {
-            response.close();
-          } catch (IOException e) {}
-        }
-      }
-    }
-
-    if (!revoked) {
-      throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERTIFICATE_REVOKATION_ERROR, Level.SEVERE);
-    }
-  }
-
-  private void checkToken(CloseableHttpResponse response) {
-    // Check if there is a new token in the response
-    if (response.containsHeader(HttpHeaders.AUTHORIZATION)) {
-      settings.setServiceJWT(response.getFirstHeader(HttpHeaders.AUTHORIZATION).getValue());
-    }
   }
 }
