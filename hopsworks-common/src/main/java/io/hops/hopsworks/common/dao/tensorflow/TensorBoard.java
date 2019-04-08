@@ -112,6 +112,13 @@ public class TensorBoard implements Serializable {
   @Column(name = "hdfs_logdir")
   private String hdfsLogdir;
 
+  @Basic(optional = false)
+  @NotNull
+  @Size(min = 1,
+          max = 255)
+  @Column(name = "secret")
+  private String secret;
+
   @JoinColumn(name = "project_id",
       referencedColumnName = "id",
       insertable = false,
@@ -135,13 +142,14 @@ public class TensorBoard implements Serializable {
   }
 
   public TensorBoard(TensorBoardPK tensorBoardPK, BigInteger pid, String endpoint, String elasticId,
-                           Date lastAccessed, String hdfsLogdir, int hdfsUserId) {
+                           Date lastAccessed, String hdfsLogdir, String secret, int hdfsUserId) {
     this.setTensorBoardPK(tensorBoardPK);
     this.setPid(pid);
     this.setEndpoint(endpoint);
     this.setElasticId(elasticId);
     this.setLastAccessed(lastAccessed);
     this.setHdfsLogdir(hdfsLogdir);
+    this.setSecret(secret);
     this.setHdfsUserId(hdfsUserId);
   }
 
@@ -199,6 +207,14 @@ public class TensorBoard implements Serializable {
 
   public void setElasticId(String elasticId) {
     this.elasticId = elasticId;
+  }
+
+  public String getSecret() {
+    return secret;
+  }
+
+  public void setSecret(String secret) {
+    this.secret = secret;
   }
 
   public Project getProject() {

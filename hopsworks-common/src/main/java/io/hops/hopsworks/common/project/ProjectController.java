@@ -117,6 +117,7 @@ import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.exceptions.TensorBoardException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.restutils.RESTException;
@@ -1542,7 +1543,7 @@ public class ProjectController {
       List<HdfsGroups> groupsToClean, List<Future<?>> projectCreationFutures,
       boolean decreaseCreatedProj)
     throws IOException, InterruptedException, ExecutionException,
-    HopsSecurityException, ServiceException, ProjectException, GenericException {
+    HopsSecurityException, ServiceException, ProjectException, GenericException, TensorBoardException {
     DistributedFileSystemOps dfso = null;
     try {
       dfso = dfs.getDfsOps();
@@ -2040,7 +2041,8 @@ public class ProjectController {
   }
 
   public void removeMemberFromTeam(Project project, Users user, String toRemoveEmail) throws UserException,
-    ProjectException, ServiceException, IOException, GenericException, JobException, HopsSecurityException {
+    ProjectException, ServiceException, IOException, GenericException, JobException, HopsSecurityException,
+          TensorBoardException {
     Users userToBeRemoved = userFacade.findByEmail(toRemoveEmail);
     if (userToBeRemoved == null) {
       throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE, "user: " + user.getEmail());
@@ -2441,7 +2443,7 @@ public class ProjectController {
   }
 
   @TransactionAttribute(TransactionAttributeType.NEVER)
-  public void removeTensorBoard(Project project) throws ServiceException {
+  public void removeTensorBoard(Project project) throws TensorBoardException {
     tensorBoardController.removeProject(project);
   }
 
