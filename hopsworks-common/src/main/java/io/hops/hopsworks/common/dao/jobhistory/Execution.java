@@ -341,7 +341,6 @@ public class Execution implements Serializable {
 
   public void setExecutionStart(long executionStart) {
     this.executionStart = executionStart;
-    this.executionStop = executionStart;
   }
 
   public void setExecutionStop(long executionStop) {
