@@ -70,7 +70,11 @@ import java.util.List;
     @NamedQuery(name = "SystemCommand.findAll",
                 query = "SELECT c FROM SystemCommand c"),
     @NamedQuery(name = "SystemCommand.findByHost",
-                query = "SELECT C FROM SystemCommand c WHERE c.host = :host")
+                query = "SELECT c FROM SystemCommand c WHERE c.host = :host"),
+    @NamedQuery(name = "SystemCommand.findNotFinishedByHost",
+                query = "SELECT c FROM SystemCommand c WHERE c.host = :host "
+                  + "AND c.status != io.hops.hopsworks.common.dao.command.SystemCommandFacade.STATUS.FINISHED "
+                  + "AND c.status != io.hops.hopsworks.common.dao.command.SystemCommandFacade.STATUS.FAILED")
   })
 public class SystemCommand implements Serializable {
   private static final long serialVersionUID = 1L;

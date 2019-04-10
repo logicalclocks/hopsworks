@@ -26,4 +26,8 @@ module HostsHelper
   def find_by_hostid(hostId)
     Host.find_by(hostname: hostId)
   end
+
+  def find_all_registered_hosts()
+    Host.where(registered: true)
+  end
 end

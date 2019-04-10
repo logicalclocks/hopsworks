@@ -782,6 +782,21 @@ public class PythonDepsFacade {
   }
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+  public List<CondaCommands> findUnfinishedByHost(Hosts host) {
+    TypedQuery<CondaCommands> query = em.createNamedQuery("CondaCommands.findNotFinishedByHost",
+        CondaCommands.class);
+    query.setParameter("host", host);
+    return query.getResultList();
+  }
+  
+  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+  public void updateCondaCommandStatus(Integer commandID, CondaStatus status, String arguments)
+      throws ServiceException {
+    updateCondaCommandStatus(commandID, status,
+        null, null, arguments, null, null, null, null, null);
+  }
+  
+  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   public void updateCondaCommandStatus(int commandId, CondaStatus condaStatus, CondaInstallType installType,
       MachineType machineType, String arg, String proj, CondaOp opType, String lib, String version,
       String channel) throws ServiceException {

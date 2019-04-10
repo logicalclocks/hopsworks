@@ -45,11 +45,13 @@ import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
+import io.hops.hopsworks.common.agent.AgentLivenessMonitor;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.host.Hosts;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.util.Variables;
+import io.hops.hopsworks.common.util.RemoteCommandResult;
 import io.hops.hopsworks.exceptions.EncryptionMasterPasswordException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -105,6 +107,8 @@ public class SystemAdminService {
   private HostsFacade hostsFacade;
   @EJB
   private JWTHelper jWTHelper;
+  @EJB
+  private AgentLivenessMonitor agentLivenessMonitor;
   
   /**
    * Admin endpoint that changes the master encryption password used to encrypt the certificates' password
@@ -278,5 +282,66 @@ public class SystemAdminService {
       response = noCacheResponse.buildJsonResponse(Response.Status.NO_CONTENT, "Key rotation commands " +
         "issued");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NO_CONTENT).entity(response).build();
+  }
+  
+  @POST
+  @Path("/kagent/{hostname}")
+  public Response startAgent(@PathParam("hostname") String hostname) throws ServiceException {
+    if (Strings.isNullOrEmpty(hostname)) {
+      throw new IllegalArgumentException("Hostname should not be null or empty");
+    }
+    Hosts host = hostsFacade.findByHostname(hostname);
+    if (host == null) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.HOST_NOT_FOUND, Level.FINE, "Host " + hostname + " does " +
+          "not exist");
+    }
+    RemoteCommandResult result = agentLivenessMonitor.start(host);
+    
+    if (result.getExitCode() == 0) {
+      return Response.ok().build();
+    }
+    
+    String responseMessage = "Exit code: " + result.getExitCode() + " Reason: " + result.getStdout();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NO_CONTENT).entity(responseMessage).build();
+  }
+  
+  @DELETE
+  @Path("/kagent/{hostname}")
+  public Response stopAgent(@PathParam("hostname") String hostname) throws ServiceException {
+    if (Strings.isNullOrEmpty(hostname)) {
+      throw new IllegalArgumentException("Hostname should not be null or empty");
+    }
+    Hosts host = hostsFacade.findByHostname(hostname);
+    if (host == null) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.HOST_NOT_FOUND, Level.FINE, "Host " + hostname + " does " +
+          "not exist");
+    }
+    RemoteCommandResult result = agentLivenessMonitor.stop(host);
+    
+    if (result.getExitCode() == 0) {
+      return Response.ok().build();
+    }
+  
+    String responseMessage = "Exit code: " + result.getExitCode() + " Reason: " + result.getStdout();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NO_CONTENT).entity(responseMessage).build();
+  }
+  
+  @PUT
+  @Path("/kagent/{hostname}")
+  public Response restartAgent(@PathParam("hostname") String hostname) throws ServiceException {
+    if (Strings.isNullOrEmpty(hostname)) {
+      throw new IllegalArgumentException("Hostname should not be null or empty");
+    }
+    Hosts host = hostsFacade.findByHostname(hostname);
+    if (host == null) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.HOST_NOT_FOUND, Level.FINE, "Host " + hostname + " does " +
+          "not exist");
+    }
+    RemoteCommandResult result = agentLivenessMonitor.restart(host);
+    if (result.getExitCode() == 0) {
+      return Response.ok().build();
+    }
+    String responseMessage = "Exit code: " + result.getExitCode() + " Reason: " + result.getStdout();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NO_CONTENT).entity(responseMessage).build();
   }
 }

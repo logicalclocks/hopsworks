@@ -105,7 +105,11 @@ import javax.xml.bind.annotation.XmlRootElement;
           query
           = "DELETE FROM CondaCommands c WHERE c.status = :status"),
   @NamedQuery(name = "CondaCommands.findByHost",
-          query = "SELECT c FROM CondaCommands c WHERE c.hostId = :host")})
+          query = "SELECT c FROM CondaCommands c WHERE c.hostId = :host"),
+  @NamedQuery(name = "CondaCommands.findNotFinishedByHost",
+          query = "SELECT c FROM CondaCommands c WHERE c.hostId = :host AND c.status != "
+            + "io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade.CondaStatus.SUCCESS "
+            + "AND c.status != io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade.CondaStatus.FAILED")})
 public class CondaCommands implements Serializable {
 
   private static final long serialVersionUID = 1L;
