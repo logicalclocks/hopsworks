@@ -37,103 +37,125 @@
   ~ DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
   ~ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
   -->
+<!DOCTYPE html
+    PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:f="http://java.sun.com/jsf/core" xmlns:h="http://java.sun.com/jsf/html"
+    xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui">
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml"   
-      xmlns:f="http://java.sun.com/jsf/core"
-      xmlns:h="http://java.sun.com/jsf/html"
-      xmlns:ui="http://java.sun.com/jsf/facelets"
-      xmlns:p="http://primefaces.org/ui"
-      >
-
-  <ui:composition template="layout.xhtml">
-
+<ui:composition template="layout.xhtml">
     <ui:define name="title">
-      #{settingsController.name} - Hosts
+        #{settingsController.name} - Hosts
     </ui:define>
+
     <ui:define name="content">
+        <!-- Progress Dialog -->
+        <p:ajaxStatus onstart="PF('dlgAction').show()" onsuccess="PF('dlgAction').hide()" />
 
+        <p:dialog widgetVar="dlgAction" header="Ongoing Operation" modal="true" draggable="false" closable="false"
+            resizable="false" showHeader="false">
+            <p:graphicImage library="images" name="ajaxloadingbar.gif" />
+        </p:dialog>
 
+        <!-- Progress Dialog - End -->
 
-      <!-- Progress Dialog -->
-      <p:ajaxStatus onstart="PF('dlgAction').show()" onsuccess="PF('dlgAction').hide()" />
+        <h:form id="form_hosts_count" styleClass="services-header">
+            Hosts Under Management: #{hostsBean.lazyHosts.load(0, 30000, null, null, null).size()}
+        </h:form>
 
-      <p:dialog widgetVar="dlgAction" header="Ongoing Operation" modal="true" draggable="false" closable="false" resizable="false" showHeader="false">
-        <p:graphicImage library="images"  name="ajaxloadingbar.gif" />
-      </p:dialog>           
+        <p:panel header="Hosts">
+            <h:form id="hosts_f">
+                <p:growl id="msgs" showDetail="true" autoUpdate="true" />
+                
+                <div align="right" style="margin: 10px">
+                    <p:commandButton value="Start kagent" style="float:center"
+                        action="#{servicesController.startKagents(hostsBean.selectedHosts)}" update="@form">
+                    </p:commandButton>
 
-      <!-- Progress Dialog - End -->
+                    <p:commandButton value="Stop kagent" style="float:center"
+                        action="#{servicesController.stopKagents(hostsBean.selectedHosts)}" update="@form">
+                    </p:commandButton>
 
-      <!--Navigation Bar - Begin -->
-      <h:form styleClass="styleNav">
-        <p:panelGrid>  
-          <p:row>  
-            <p:column>
-              <h:outputText value="Hosts"/>
-            </p:column>
-          </p:row>
-        </p:panelGrid>
-      </h:form>
-      <!--Navigation Bar - End-->
+                    <p:commandButton value="Restart kagent" style="float:center"
+                        action="#{servicesController.restartKagents(hostsBean.selectedHosts)}" update="@form">
+                    </p:commandButton>
+                </div>
 
-      <h:form id="form_hosts_count" styleClass="services-header">
-        #{hostsController.hosts.size()} Host<h:outputText value ="s" rendered="#{hostsController.hosts.size()>1}"/> Under Management:
-      </h:form>
+                <p:dataTable id="hosts_dt" var="host" value="#{hostsBean.lazyHosts}" widgetVar="hostsTable"
+                    emptyMessage="No hosts found" rowKey="#{host.hostname}" resizableCOlumns="true" liveResize="true"
+                    scrollable="false" rows="20" paginator="true"
+                    paginatorTempalte="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                    rowsPerPageTemplate="10,25,50,100,250" lazy="true" selectionMode="multiple"
+                    selection="#{hostsBean.selectedHosts}">
 
-      <p:panel header="Hosts">  
-        <h:form id="form_hosts">  
-          <p:dataTable id="hosts" var="host" value="#{hostsController.hosts}">
+                    <p:column id="hostname_c" filterBy="#{host.hostname}" headerText="Hostname">
+                        <div align="center">
+                            <h:outputText value="#{host.hostname}" />
+                        </div>
+                    </p:column>
 
-            <p:column  headerText="Hostname">  
-              <p:commandLink id="gotohost" styleClass="Health-#{host.health}" action="#{urlController.host()}" ajax="false">
-                <h:outputText value="#{host.hostname}" />
-                <f:param name="hostname" value="#{host.hostname}"/>
-              </p:commandLink> 
-            </p:column>
-            <p:column headerText="Hostname" styleClass="Health-#{host.health}"><h:outputText value="#{host.hostname}"/></p:column>
-            <p:column headerText="Public IP"><h:outputText value="#{host.publicIp}"/></p:column>                        
-            <p:column headerText="Private IP"><h:outputText value="#{host.privateIp}"/></p:column>  
-            <p:column headerText="Health" styleClass="Health-#{host.health}"><h:outputText value="#{host.health}"/></p:column> 
-            <p:column headerText="Last Heartbeat">
-              <h:outputText value="#{host.lastHeartbeatFormatted} ago" rendered="#{not empty host.lastHeartbeatFormatted}"/>
-            </p:column>  
-            <p:column headerText="Disk Usage">
-              <div class="CapacityUsage #{host.diskInfo.priority}">
-                <span class="reading">#{host.diskInfo.usageInfo}</span>
-                <span class="bar" style="width: #{host.getDiskInfo().usagePercentageString};"></span>
-              </div>
-            </p:column> 
-            <p:column headerText="Physical Memory">
-              <div class="CapacityUsage #{host.memoryInfo.priority}">
-                <span class="reading">#{host.memoryInfo.usageInfo}</span>
-                <span class="bar" style="width: #{host.getMemoryInfo().usagePercentageString};"></span>
-              </div>
-            </p:column> 
-            <p:column headerText="Cores"><h:outputText value="#{host.cores}" rendered="#{not empty host.cores}"/></p:column>
-            <p:column headerText="# GPUs"><h:outputText value="#{host.numGpus}" rendered="#{not empty host.numGpus}"/></p:column>
-            <p:column headerText="Load Average">
-              <p:dataTable styleClass="innerDataTable" var="host" value="#{host}">
-                <p:column>#{host.load1}</p:column>
-                <p:column>#{host.load5}</p:column>
-                <p:column>#{host.load15}</p:column>
-              </p:dataTable>
-            </p:column>
-            <p:column headerText="Restart Kagent">
-              <p:commandButton value="Restart Kagent"
-                               style="float:center" 
-                               actionListener="#{servicesController.restartKagent(host.hostname)}" ajax ="true" update="@all">
-              </p:commandButton>              
-            </p:column>  
-          </p:dataTable>  
-        </h:form> 
+                    <p:column id="publicIP_c" headerText="Public IP">
+                        <div align="center">
+                            <h:outputText value="#{host.publicIp}" />
+                        </div>
+                    </p:column>
 
+                    <p:column id="privateIP_c" headerText="Private IP">
+                        <div align="center">
+                            <h:outputText value="#{host.privateIp}" />
+                        </div>
+                    </p:column>
 
-      </p:panel>
+                    <p:column headerText="Health" filterBy="#{host.health}" styleClass="Health-#{host.health}">
+                        <div align="center">
+                            <h:outputText value="#{host.health}" />
+                        </div>
+                    </p:column>
 
+                    <p:column headerText="Last Heartbeat" sortBy="#{host.lastHeartbeat}">
+                        <div align="center">
+                            <h:outputText value="#{host.lastHeartbeatFormatted} ago"
+                                rendered="#{not empty host.lastHeartbeatFormatted}" />
+                        </div>
+                    </p:column>
+
+                    <p:column headerText="Disk Usage">
+                        <div class="CapacityUsage #{host.diskInfo.priority}">
+                            <span class="reading">#{host.diskInfo.usageInfo}</span>
+                            <span class="bar" style="width: #{host.getDiskInfo().usagePercentageString};"></span>
+                        </div>
+                    </p:column>
+
+                    <p:column headerText="Physical Memory">
+                        <div class="CapacityUsage #{host.memoryInfo.priority}">
+                            <span class="reading">#{host.memoryInfo.usageInfo}</span>
+                            <span class="bar" style="width: #{host.getMemoryInfo().usagePercentageString};"></span>
+                        </div>
+                    </p:column>
+
+                    <p:column headerText="Cores">
+                        <div align="center">
+                            <h:outputText value="#{host.cores}" rendered="#{not empty host.cores}" />
+                        </div>
+                    </p:column>
+
+                    <p:column headerText="# GPUs">
+                        <div align="center">
+                            <h:outputText value="#{host.numGpus}" rendered="#{not empty host.numGpus}" />
+                        </div>
+                    </p:column>
+
+                    <p:column headerText="Load Average">
+                        <p:dataTable styleClass="innerDataTable" var="host_inner" value="#{host}">
+                            <p:column>#{host_inner.load1}</p:column>
+                            <p:column>#{host_inner.load5}</p:column>
+                            <p:column>#{host_inner.load15}</p:column>
+                        </p:dataTable>
+                    </p:column>
+                </p:dataTable>
+            </h:form>
+
+        </p:panel>
     </ui:define>
-
-  </ui:composition>
+</ui:composition>
 
 </html>
-

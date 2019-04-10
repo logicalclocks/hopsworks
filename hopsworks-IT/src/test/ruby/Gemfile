@@ -7,7 +7,7 @@ gem 'hops-airborne', '0.2.16'
 gem 'safe_attributes'
 gem 'activerecord', '4.2.6'
 gem 'mysql2', '0.4.4'
-gem 'net-ssh', '~> 2.1.0'
+gem 'net-ssh', '~> 5.2.0'
 gem 'session', '3.2.0'
 gem 'coderay', '1.1.1'
 gem 'rspec_junit_formatter'
@@ -16,7 +16,6 @@ gem 'file-tail'
 group :development do
   gem 'dotenv'
   gem 'byebug'
-  gem 'net-ssh-shell'
 end
 
 # gem "factory_girl", "~> 4"

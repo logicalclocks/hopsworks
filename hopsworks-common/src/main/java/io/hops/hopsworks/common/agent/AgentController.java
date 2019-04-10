@@ -82,6 +82,8 @@ public class AgentController {
   private AlertEJB alertFacade;
   @EJB
   private OSProcessExecutor osProcessExecutor;
+  @EJB
+  private AgentLivenessMonitor agentLivenessMonitor;
   
   public String register(String hostId, String password) {
     Hosts host = hostsFacade.findByHostname(hostId);
@@ -105,12 +107,17 @@ public class AgentController {
         "hostId: " + heartbeat.hostId);
     }
     
+    agentLivenessMonitor.alive(host);
     updateHostMetrics(host, heartbeat);
     updateServices(heartbeat);
     processCondaCommands(heartbeat);
     processSystemCommands(heartbeat);
     if (heartbeat.condaReport != null && !heartbeat.condaReport.isEmpty()) {
       issueCondaEnvsGCCommand(host, heartbeat.condaReport);
+    }
+    
+    if (heartbeat.recover != null && heartbeat.recover) {
+      recoverUnfinishedCommands(host);
     }
     
     final HeartbeatReplyDTO response = new HeartbeatReplyDTO();
@@ -142,6 +149,30 @@ public class AgentController {
     alertFacade.persistAlert(alert);
     if (!settings.getAlertEmailAddrs().isEmpty()) {
       emailAlert(UserAccountsEmailMessages.ALERT_SERVICE_DOWN, alert.toString());
+    }
+  }
+  
+  private void recoverUnfinishedCommands(final Hosts host) {
+    recoverCondaCommands(host);
+    recoverSystemCommands(host);
+  }
+  
+  private void recoverCondaCommands(Hosts host) {
+    final List<CondaCommands> allUnfinished = pythonDepsFacade.findUnfinishedByHost(host);
+    for (CondaCommands command : allUnfinished) {
+      try {
+        pythonDepsFacade.updateCondaCommandStatus(command.getId(), PythonDepsFacade.CondaStatus.NEW, command.getArg());
+      } catch (ServiceException ex) {
+        LOG.log(Level.WARNING, "Could not recover command with ID: " + command.getId() + " for host " + host);
+      }
+    }
+  }
+
+  private void recoverSystemCommands(Hosts host) {
+    final List<SystemCommand> allUnfinished = systemCommandFacade.findUnfinishedByHost(host);
+    for (SystemCommand command : allUnfinished) {
+      command.setStatus(SystemCommandFacade.STATUS.NEW);
+      systemCommandFacade.update(command);
     }
   }
   
@@ -510,12 +541,13 @@ public class AgentController {
     private final List<SystemCommand> systemCommands;
     private final List<CondaCommands> condaCommands;
     private final List<String> condaReport;
+    private final Boolean recover;
     
     public AgentHeartbeatDTO(final String hostId, final Long agentTime, final Double load1, final Double load5,
         final Double load15, final Integer numGpus, final Long diskUsed, final Long diskCapacity,
         final Long memoryUsed, final Long memoryCapacity, final Integer cores, final String privateIp,
         final List<AgentServiceDTO> services, final List<SystemCommand> systemCommands,
-        final List<CondaCommands> condaCommands, final List<String> condaReport) {
+        final List<CondaCommands> condaCommands, final List<String> condaReport, Boolean recover) {
       this.hostId = hostId;
       this.agentTime = agentTime;
       this.load1 = load1;
@@ -532,6 +564,7 @@ public class AgentController {
       this.systemCommands = systemCommands;
       this.condaCommands = condaCommands;
       this.condaReport = condaReport;
+      this.recover = recover;
     }
   
     public String getHostId() {
@@ -592,6 +625,10 @@ public class AgentController {
   
     public List<CondaCommands> getCondaCommands() {
       return condaCommands;
+    }
+  
+    public Boolean getRecover() {
+      return recover;
     }
   }
   

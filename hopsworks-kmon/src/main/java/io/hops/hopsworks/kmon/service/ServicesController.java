@@ -39,26 +39,31 @@
 package io.hops.hopsworks.kmon.service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
+
+import io.hops.hopsworks.common.agent.AgentLivenessMonitor;
 import io.hops.hopsworks.common.dao.host.Health;
-import io.hops.hopsworks.common.util.OSProcessExecutor;
-import io.hops.hopsworks.common.util.ProcessDescriptor;
-import io.hops.hopsworks.common.util.ProcessResult;
+import io.hops.hopsworks.common.dao.host.Hosts;
+import io.hops.hopsworks.common.dao.host.HostsFacade;
+import io.hops.hopsworks.common.util.RemoteCommandResult;
+import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.kmon.struct.InstanceFullInfo;
 import io.hops.hopsworks.common.dao.host.Status;
 import io.hops.hopsworks.common.dao.kagent.HostServicesFacade;
 import io.hops.hopsworks.common.dao.kagent.HostServicesInfo;
 import io.hops.hopsworks.common.util.FormatUtils;
 import io.hops.hopsworks.common.util.Settings;
-import java.io.IOException;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
+
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
 
@@ -71,7 +76,9 @@ public class ServicesController {
   @EJB
   private HostServicesFacade hostServicesFacade;
   @EJB
-  private OSProcessExecutor osProcessExecutor;
+  private AgentLivenessMonitor agentLivenessMonitor;
+  @EJB
+  private HostsFacade hostsFacade;
   @ManagedProperty("#{param.hostname}")
   private String hostname;
   @ManagedProperty("#{param.service}")
@@ -201,42 +208,117 @@ public class ServicesController {
     return true;
   }
 
-  public void restartKagent(String hostname) {
-    String prog = settings.getHopsworksDomainDir() + "/bin/kagent-restart.sh";
-    int exitValue;
-    Integer id = 1;
-  
-    ProcessDescriptor.Builder pdBuilder = new ProcessDescriptor.Builder()
-        .addCommand(prog)
-        .addCommand(hostname)
-        .setWaitTimeout(10L, TimeUnit.SECONDS);
-    if (!logger.isLoggable(Level.FINE)) {
-      pdBuilder.ignoreOutErrStreams(true);
-    }
-    
-    
-    try {
-      ProcessResult processResult = osProcessExecutor.execute(pdBuilder.build());
-      exitValue = processResult.getExitCode();
-      logger.log(Level.FINE, processResult.getStdout());
-    } catch (IOException ex) {
-      logger.log(Level.SEVERE, "Problem restarting kagent: {0}", ex.toString());
-      FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_INFO,
-          "Problem restarting kagent for: ", hostname);
-      FacesContext.getCurrentInstance().addMessage(null, message);
-      exitValue = -2;
-    }
-    if (exitValue == 0) {
-      logger.log(Level.INFO, "Restarted kagent for: {0}", hostname);
-      FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_INFO,
-          "Restarted kagent for: ", hostname);
-      FacesContext.getCurrentInstance().addMessage(null, message);
-    } else {
-      FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_INFO,
-          "Problem restarting kagent for: ", hostname);
-      FacesContext.getCurrentInstance().addMessage(null, message);
-    }
-
+  public void restartKagents(List<Hosts> hosts) {
+    performKagentAction(hosts, KagentAction.RESTART);
   }
-
+  
+  public void startKagents(List<Hosts> hosts) {
+    performKagentAction(hosts, KagentAction.START);
+  }
+  
+  public void stopKagents(List<Hosts> hosts) {
+    performKagentAction(hosts, KagentAction.STOP);
+  }
+  
+  private void performKagentAction(List<Hosts> hosts, KagentAction action) {
+    Map<Hosts, Future<RemoteCommandResult>> asyncResults = submitKagentAction(action, hosts);
+    if (asyncResults != null) {
+      boolean hadFailure = false;
+      for (Map.Entry<Hosts, Future<RemoteCommandResult>> entry : asyncResults.entrySet()) {
+        Future asyncResult = entry.getValue();
+        try {
+          if (asyncResult != null) {
+            asyncResult.get();
+          } else {
+            throw new ExecutionException(new Throwable("Command failed"));
+          }
+        } catch (InterruptedException | ExecutionException ex) {
+          FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_ERROR,
+              "Failed to " + action.name() + " agent",
+              "Failed to " + action.name() + " agent@" + entry.getKey());
+          FacesContext.getCurrentInstance().addMessage(null, message);
+          hadFailure = true;
+        }
+      }
+      if (!hadFailure) {
+        FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_INFO,
+            "All agents have " + action.effect + " successfully",
+            "");
+        FacesContext.getCurrentInstance().addMessage(null, message);
+      }
+    }
+  }
+  
+  private Map<Hosts, Future<RemoteCommandResult>> submitKagentAction(KagentAction action, List<Hosts> hosts) {
+    if (hosts == null || hosts.isEmpty()) {
+      FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_ERROR, "No hosts selected",
+          "Hosts list is null");
+      FacesContext.getCurrentInstance().addMessage(null, message);
+      return null;
+    }
+    switch (action) {
+      case START:
+        return startAgentsInternal(hosts);
+      case STOP:
+        return stopAgentsInternal(hosts);
+      case RESTART:
+        return restartAgentsInternal(hosts);
+      default:
+        FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Unknown action",
+            "Unknown action to perform on kagent");
+        FacesContext.getCurrentInstance().addMessage(null, message);
+        return null;
+    }
+  }
+  
+  private Map<Hosts, Future<RemoteCommandResult>> startAgentsInternal(List<Hosts> hosts) {
+    Map<Hosts, Future<RemoteCommandResult>> asyncResults = new HashMap<>(hosts.size());
+    for (Hosts host : hosts) {
+      try {
+        Future<RemoteCommandResult> asyncResult = agentLivenessMonitor.startAsync(host);
+        asyncResults.put(host, asyncResult);
+      } catch (ServiceException ex) {
+        asyncResults.put(host, null);
+      }
+    }
+    return asyncResults;
+  }
+  
+  private Map<Hosts, Future<RemoteCommandResult>> stopAgentsInternal(List<Hosts> hosts) {
+    Map<Hosts, Future<RemoteCommandResult>> asyncResults = new HashMap<>(hosts.size());
+    for (Hosts host : hosts) {
+      try {
+        Future<RemoteCommandResult> asyncResult = agentLivenessMonitor.stopAsync(host);
+        asyncResults.put(host, asyncResult);
+      } catch (ServiceException ex) {
+        asyncResults.put(host, null);
+      }
+    }
+    return asyncResults;
+  }
+  
+  private Map<Hosts, Future<RemoteCommandResult>> restartAgentsInternal(List<Hosts> hosts) {
+    Map<Hosts, Future<RemoteCommandResult>> asyncResults = new HashMap<>(hosts.size());
+    for (Hosts host : hosts) {
+      try {
+        Future<RemoteCommandResult> asyncResult = agentLivenessMonitor.restartAsync(host);
+        asyncResults.put(host, asyncResult);
+      } catch (ServiceException ex) {
+        asyncResults.put(host, null);
+      }
+    }
+    return asyncResults;
+  }
+  
+  enum KagentAction {
+    START("started"),
+    STOP("stopped"),
+    RESTART("restarted");
+    
+    private final String effect;
+    
+    KagentAction(String effect) {
+      this.effect = effect;
+    }
+  }
 }
