@@ -55,6 +55,7 @@ public class GatewaysBuilder {
       dto.setId(ioTGateway.getId());
       dto.setIpAddress(ioTGateway.getIpAddress());
       dto.setPort(ioTGateway.getPort());
+      dto.setState(ioTGateway.getState());
     }
     return dto;
   }

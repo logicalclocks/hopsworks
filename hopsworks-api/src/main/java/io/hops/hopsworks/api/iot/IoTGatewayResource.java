@@ -4,6 +4,7 @@ import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.iot.GatewayFacade;
+import io.hops.hopsworks.common.dao.iot.GatewayState;
 import io.hops.hopsworks.common.dao.iot.IoTGateways;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
@@ -62,21 +63,7 @@ public class IoTGatewayResource {
     IoTGatewayDTO dto = gatewaysBuilder.build(uriInfo, resourceRequest, project);
     return Response.ok().entity(dto).build();
   }
-
-  @PUT
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_GATEWAY"})
-  public Response registerGateway() {
-    //TODO: implement
-    return Response.ok().build();
-  }
-
-  @DELETE
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_GATEWAY"})
-  public Response unregisterGateway() {
-    //TODO: implement
-    return Response.ok().build();
-  }
-
+  
   @ApiOperation(value = "Get info about a specific IoT Gateway")
   @GET
   @Path("{id}")
@@ -93,45 +80,43 @@ public class IoTGatewayResource {
     return Response.ok().entity(dto).build();
   }
 
-  @ApiOperation(value = "Get list of all IoT Nodes of a gateway")
-  @GET
-  @Path("{id}/nodes")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response getNodes(
-          @PathParam("id") String id
-  ) {
-    //TODO: implement endpoint
-    String json = "{\"message\":\"Get list of nodes of gateway " + id +"\"}";
-    return Response.ok().entity(json).build();
+  @PUT
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_GATEWAY"})
+  public Response registerGateway() {
+    //TODO: implement
+    return Response.ok().build();
   }
 
-  @ApiOperation(value = "Start/stop blocking an IoT Gateway")
+  @DELETE
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_GATEWAY"})
+  public Response unregisterGateway() {
+    //TODO: implement
+    return Response.ok().build();
+  }
+
+  @ApiOperation(value = "Start blocking an IoT Gateway")
   @POST
   @Path("{id}/ignored")
-  @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response startBlockingGateway(
-          @PathParam("id") String id
+          @PathParam("id") Integer id
   ) {
     //TODO: implement endpoint
-    String json = "{\"message\":\"Start blocking gateway " + id +"\"}";
-    return Response.ok().entity(json).build();
+    gatewayFacade.updateState(id, GatewayState.BLOCKED);
+    return Response.ok().build();
   }
 
-  @ApiOperation(value = "Start/stop blocking an IoT Gateway")
+  @ApiOperation(value = "Stop blocking an IoT Gateway")
   @DELETE
   @Path("{id}/ignored")
-  @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response stopBlockingGateway(
-          @PathParam("id") String id
+          @PathParam("id") Integer id
   ) {
     //TODO: implement endpoint
-    String json = "{\"message\":\"Stop blocking gateway " + id +"\"}";
-    return Response.ok().entity(json).build();
+    gatewayFacade.updateState(id, GatewayState.REGISTERED);
+    return Response.ok().build();
   }
 }

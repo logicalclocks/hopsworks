@@ -10,6 +10,7 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Stateless
@@ -40,14 +41,32 @@ public class GatewayFacade extends AbstractFacade<IoTGateways> {
     }
   }
   
-  public IoTGateways findByProjectAndId(Project project, Integer id) {
+  public IoTGateways findByProjectAndId(Project project, int gatewayId) {
     TypedQuery<IoTGateways> query = em.createNamedQuery("IoTGateways.findByProjectAndId", IoTGateways.class);
     query.setParameter("project", project)
-      .setParameter("id", id);
+      .setParameter("id", gatewayId);
     try {
       return query.getSingleResult();
     } catch (NoResultException e) {
       return null;
     }
+  }
+  
+  public boolean updateState(int gatewayId, GatewayState newState) {
+    boolean status = false;
+    try {
+      TypedQuery<IoTGateways> query = em.createNamedQuery("IoTGateways.updateState", IoTGateways.class)
+        .setParameter("id", gatewayId)
+        .setParameter("state", newState);
+      int result = query.executeUpdate();
+      LOGGER.log(Level.INFO, "Updated entity count = {0}", result);
+      if (result == 1) {
+        status = true;
+      }
+    } catch (SecurityException | IllegalArgumentException ex) {
+      LOGGER.log(Level.SEVERE, "Could not update gateway with id:" + gatewayId);
+      throw ex;
+    }
+    return status;
   }
 }

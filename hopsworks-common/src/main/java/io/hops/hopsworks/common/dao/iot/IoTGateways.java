@@ -5,12 +5,15 @@ import io.hops.hopsworks.common.dao.project.Project;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
@@ -25,7 +28,9 @@ import java.util.Objects;
   @NamedQuery(name = "IoTGateways.findByProject",
     query = "SELECT i FROM IoTGateways i WHERE i.project = :project"),
   @NamedQuery(name = "IoTGateways.findByProjectAndId",
-    query = "SELECT i FROM IoTGateways i WHERE i.project = :project AND i.id = :id")
+    query = "SELECT i FROM IoTGateways i WHERE i.project = :project AND i.id = :id"),
+  @NamedQuery(name = "IoTGateways.updateState",
+    query = "UPDATE IoTGateways i SET i.state = :state WHERE i.id = :id")
   })
 public class IoTGateways implements Serializable {
 
@@ -50,20 +55,28 @@ public class IoTGateways implements Serializable {
   @ManyToOne(optional = false)
   private Project project;
   
+  @Basic(optional = false)
+  @NotNull
+  @Column(name = "state")
+  @Enumerated(EnumType.STRING)
+  private GatewayState state;
+  
   public IoTGateways() {
   }
   
-  public IoTGateways(Integer id, String ipAddress, Integer port) {
+  public IoTGateways(Integer id, String ipAddress, Integer port, GatewayState state) {
     this.id = id;
     this.ipAddress = ipAddress;
     this.port = port;
+    this.state = state;
   }
   
-  public IoTGateways(Integer id, String ipAddress, Integer port, Project project) {
+  public IoTGateways(Integer id, String ipAddress, Integer port, Project project, GatewayState state) {
     this.id = id;
     this.ipAddress = ipAddress;
     this.port = port;
     this.project = project;
+    this.state = state;
   }
   
   public Integer getId() {
@@ -96,6 +109,14 @@ public class IoTGateways implements Serializable {
 
   public void setProject(Project project) {
     this.project = project;
+  }
+  
+  public GatewayState getState() {
+    return state;
+  }
+  
+  public void setState(GatewayState state) {
+    this.state = state;
   }
   
   @Override
