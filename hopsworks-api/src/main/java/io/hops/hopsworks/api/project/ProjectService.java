@@ -826,7 +826,7 @@ public class ProjectService {
     return featurestoreService;
   }
 
-  @Path("{projectId}/iot")
+  @Path("{projectId}/gateways")
   public IoTGatewayResource iotService(@PathParam("projectId") Integer projectId) {
     return this.iotResource.setProject(projectId);
   }

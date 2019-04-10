@@ -3,9 +3,11 @@ package io.hops.hopsworks.api.iot;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.common.api.ResourceRequest;
-import io.hops.hopsworks.common.dao.iot.DevicesFacade;
+import io.hops.hopsworks.common.dao.iot.GatewayFacade;
+import io.hops.hopsworks.common.dao.iot.IoTGateways;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
+import io.hops.hopsworks.exceptions.GatewayException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.ApiOperation;
 
@@ -16,6 +18,7 @@ import javax.enterprise.context.RequestScoped;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -31,11 +34,13 @@ public class IoTGatewayResource {
   private static final Logger LOGGER = Logger.getLogger(IoTGatewayResource.class.getName());
 
   @EJB
-  private DevicesBuilder devicesBuilder;
+  private GatewaysBuilder gatewaysBuilder;
   @EJB
   private ProjectFacade projectFacade;
   @EJB
-  private DevicesFacade devicesFacade;
+  private GatewayFacade gatewayFacade;
+  @EJB
+  private GatewayController gatewayController;
 
   private Project project;
 
@@ -47,37 +52,50 @@ public class IoTGatewayResource {
 
   @ApiOperation(value = "Get list of currently connected IoT Gateways")
   @GET
-  @Path("gateways")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response getGateways(
     @Context UriInfo uriInfo
   ) {
-    //TODO: implement endpoint
-    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.IOTGATEWAY);
-    LOGGER.info("Get list of currently connected IoT Gateways");
-    IoTGatewayDTO dto = devicesBuilder.build(uriInfo, resourceRequest, project);
+    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.GATEWAYS);
+    IoTGatewayDTO dto = gatewaysBuilder.build(uriInfo, resourceRequest, project);
     return Response.ok().entity(dto).build();
+  }
+
+  @PUT
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_GATEWAY"})
+  public Response registerGateway() {
+    //TODO: implement
+    return Response.ok().build();
+  }
+
+  @DELETE
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_GATEWAY"})
+  public Response unregisterGateway() {
+    //TODO: implement
+    return Response.ok().build();
   }
 
   @ApiOperation(value = "Get info about a specific IoT Gateway")
   @GET
-  @Path("gateway/{id}")
+  @Path("{id}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response getGatewayById(
-          @PathParam("id") String id
-  ) {
-    //TODO: implement endpoint
-    String json = "{\"message\":\"Get info about gateway " + id +"\"}";
-    return Response.ok().entity(json).build();
+    @Context UriInfo uriInfo,
+    @PathParam("id") Integer id
+  ) throws GatewayException {
+    IoTGateways gateway = gatewayController.getGateway(project, id);
+    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.GATEWAYS);
+    IoTGatewayDTO dto = gatewaysBuilder.build(uriInfo, resourceRequest, gateway);
+    return Response.ok().entity(dto).build();
   }
 
   @ApiOperation(value = "Get list of all IoT Nodes of a gateway")
   @GET
-  @Path("gateway/{id}/nodes")
+  @Path("{id}/nodes")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
@@ -91,7 +109,7 @@ public class IoTGatewayResource {
 
   @ApiOperation(value = "Start/stop blocking an IoT Gateway")
   @POST
-  @Path("gateway/{id}/ignored")
+  @Path("{id}/ignored")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
@@ -105,7 +123,7 @@ public class IoTGatewayResource {
 
   @ApiOperation(value = "Start/stop blocking an IoT Gateway")
   @DELETE
-  @Path("gateway/{id}/ignored")
+  @Path("{id}/ignored")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})

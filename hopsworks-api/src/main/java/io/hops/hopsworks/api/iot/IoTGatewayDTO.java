@@ -7,7 +7,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class IoTGatewayDTO extends RestDTO<IoTGatewayDTO> {
   private Integer id;
-  private String name;
   private String ipAddress;
   private Integer port;
 
@@ -17,14 +16,6 @@ public class IoTGatewayDTO extends RestDTO<IoTGatewayDTO> {
 
   public void setId(Integer id) {
     this.id = id;
-  }
-
-  public String getName() {
-    return name;
-  }
-
-  public void setName(String name) {
-    this.name = name;
   }
 
   public String getIpAddress() {

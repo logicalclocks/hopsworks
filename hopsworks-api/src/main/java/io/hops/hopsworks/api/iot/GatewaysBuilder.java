@@ -1,8 +1,7 @@
 package io.hops.hopsworks.api.iot;
 
 import io.hops.hopsworks.common.api.ResourceRequest;
-import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.common.dao.iot.DevicesFacade;
+import io.hops.hopsworks.common.dao.iot.GatewayFacade;
 import io.hops.hopsworks.common.dao.iot.IoTGateways;
 import io.hops.hopsworks.common.dao.project.Project;
 
@@ -11,28 +10,29 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.ws.rs.core.UriInfo;
+import java.util.List;
 import java.util.logging.Logger;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class DevicesBuilder {
+public class GatewaysBuilder {
 
-  private static final Logger LOGGER = Logger.getLogger(DevicesBuilder.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(GatewaysBuilder.class.getName());
 
   @EJB
-  private DevicesFacade devicesFacade;
+  private GatewayFacade gatewayFacade;
 
   public IoTGatewayDTO uri(IoTGatewayDTO dto, UriInfo uriInfo, Project project) {
     dto.setHref(uriInfo.getBaseUriBuilder().path(ResourceRequest.Name.PROJECT.toString().toLowerCase())
       .path(Integer.toString(project.getId()))
-      .path(ResourceRequest.Name.IOTGATEWAY.toString().toLowerCase())
+      .path(ResourceRequest.Name.GATEWAYS.toString().toLowerCase())
       .build());
     return dto;
   }
 
   //FIXME: imho to be removed
   private IoTGatewayDTO expand(IoTGatewayDTO dto, ResourceRequest resourceRequest) {
-    if (resourceRequest != null && resourceRequest.contains(ResourceRequest.Name.IOTGATEWAY)) {
+    if (resourceRequest != null && resourceRequest.contains(ResourceRequest.Name.GATEWAYS)) {
       dto.setExpand(true);
     }
     return dto;
@@ -41,8 +41,8 @@ public class DevicesBuilder {
   public IoTGatewayDTO uri(IoTGatewayDTO dto, UriInfo uriInfo, IoTGateways ioTGateway) {
     dto.setHref(uriInfo.getBaseUriBuilder().path(ResourceRequest.Name.PROJECT.toString().toLowerCase())
       .path(Integer.toString(ioTGateway.getProject().getId()))
-      .path(ResourceRequest.Name.JOBS.toString().toLowerCase())
-      .path(ioTGateway.getName())
+      .path(ResourceRequest.Name.GATEWAYS.toString().toLowerCase())
+      .path(Integer.toString(ioTGateway.getId()))
       .build());
     return dto;
   }
@@ -53,7 +53,6 @@ public class DevicesBuilder {
     expand(dto, resourceRequest);
     if (dto.isExpand()) {
       dto.setId(ioTGateway.getId());
-      dto.setName(ioTGateway.getName());
       dto.setIpAddress(ioTGateway.getIpAddress());
       dto.setPort(ioTGateway.getPort());
     }
@@ -66,10 +65,10 @@ public class DevicesBuilder {
     expand(dto, resourceRequest);
     LOGGER.info("Expand IoTGateway: " + dto.isExpand());
     if (dto.isExpand()) {
-      AbstractFacade.CollectionInfo collectionInfo = devicesFacade.findByProject(project);
-      dto.setCount(collectionInfo.getCount());
+      List<IoTGateways> gateways = gatewayFacade.findByProject(project);
+      dto.setCount(Integer.toUnsignedLong(gateways.size()));
       LOGGER.info("Collected IoTGateway items: " + dto.getCount());
-      collectionInfo.getItems().forEach((iotGateway) ->
+      gateways.forEach((iotGateway) ->
         dto.addItem(build(uriInfo, resourceRequest, (IoTGateways) iotGateway)));
     }
     return dto;

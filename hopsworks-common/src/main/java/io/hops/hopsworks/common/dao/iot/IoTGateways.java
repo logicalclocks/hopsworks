@@ -17,23 +17,22 @@ import java.io.Serializable;
 import java.util.Objects;
 
 @Entity
-@Table(name = "hopsworks.iot_gateways")
+@Table(name = "hopsworks.gateways")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "IoTGateways.findAll",
-    query = "SELECT i FROM IoTGateways i")
+    query = "SELECT i FROM IoTGateways i"),
+  @NamedQuery(name = "IoTGateways.findByProject",
+    query = "SELECT i FROM IoTGateways i WHERE i.project = :project"),
+  @NamedQuery(name = "IoTGateways.findByProjectAndId",
+    query = "SELECT i FROM IoTGateways i WHERE i.project = :project AND i.id = :id")
   })
 public class IoTGateways implements Serializable {
 
   @Id
   @Basic(optional = false)
-  @Column(name = "id")
+  @Column(name = "gateway_id")
   private Integer id;
-
-  @Column(name = "name")
-  @Basic(optional = false)
-  @Size(max = 128)
-  private String name;
 
   @Column(name = "ip_address")
   @Basic(optional = false)
@@ -43,26 +42,36 @@ public class IoTGateways implements Serializable {
   @Column(name = "port")
   @Basic(optional = false)
   private Integer port;
-
+  
   @JoinColumn(name = "project_id",
-    referencedColumnName = "id")
+    referencedColumnName = "id",
+    insertable = false,
+    updatable = false)
   @ManyToOne(optional = false)
   private Project project;
-
+  
+  public IoTGateways() {
+  }
+  
+  public IoTGateways(Integer id, String ipAddress, Integer port) {
+    this.id = id;
+    this.ipAddress = ipAddress;
+    this.port = port;
+  }
+  
+  public IoTGateways(Integer id, String ipAddress, Integer port, Project project) {
+    this.id = id;
+    this.ipAddress = ipAddress;
+    this.port = port;
+    this.project = project;
+  }
+  
   public Integer getId() {
     return id;
   }
 
   public void setId(Integer id) {
     this.id = id;
-  }
-
-  public String getName() {
-    return name;
-  }
-
-  public void setName(String name) {
-    this.name = name;
   }
 
   public String getIpAddress() {
@@ -88,18 +97,25 @@ public class IoTGateways implements Serializable {
   public void setProject(Project project) {
     this.project = project;
   }
-
+  
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     IoTGateways that = (IoTGateways) o;
-    return Objects.equals(name, that.name);
+    return Objects.equals(id, that.id) &&
+      Objects.equals(ipAddress, that.ipAddress) &&
+      Objects.equals(port, that.port) &&
+      Objects.equals(project, that.project);
   }
-
+  
   @Override
   public int hashCode() {
-
-    return Objects.hash(name);
+    
+    return Objects.hash(id, ipAddress, port, project);
   }
 }
