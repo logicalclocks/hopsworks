@@ -64,7 +64,6 @@ public class GatewaysBuilder {
     IoTGatewayDTO dto = new IoTGatewayDTO();
     uri(dto, uriInfo, project);
     expand(dto, resourceRequest);
-    LOGGER.info("Expand IoTGateway: " + dto.isExpand());
     if (dto.isExpand()) {
       List<IoTGateways> gateways = gatewayFacade.findByProject(project);
       dto.setCount(Integer.toUnsignedLong(gateways.size()));

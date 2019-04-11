@@ -686,6 +686,22 @@ public class KafkaFacade {
     }
     return null;
   }
+  
+  public TopicAcls getTopicAcl(String topicName,
+    String permission_type, String operation_type,
+    String host, String role) {
+    TypedQuery<TopicAcls> query = em.createNamedQuery(
+      "TopicAcls.findAclWithoutPrincipal", TopicAcls.class)
+      .setParameter("topicName", topicName)
+      .setParameter("role", role)
+      .setParameter("host", host)
+      .setParameter("operationType", operation_type)
+      .setParameter("permissionType", permission_type);
+    if (query.getResultList() != null && query.getResultList().size() == 1) {
+      return query.getResultList().get(0);
+    }
+    return null;
+  }
 
   public List<AclDTO> getTopicAcls(String topicName, Project project) throws KafkaException {
     ProjectTopics pt = null;

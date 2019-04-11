@@ -6,9 +6,16 @@ import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.iot.GatewayFacade;
 import io.hops.hopsworks.common.dao.iot.GatewayState;
 import io.hops.hopsworks.common.dao.iot.IoTGateways;
+import io.hops.hopsworks.common.dao.iot.LwM2MTopics;
+import io.hops.hopsworks.common.dao.kafka.AclDTO;
+import io.hops.hopsworks.common.dao.kafka.KafkaFacade;
+import io.hops.hopsworks.common.dao.kafka.TopicAcls;
+import io.hops.hopsworks.common.dao.kafka.TopicDTO;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.GatewayException;
+import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.ApiOperation;
 
@@ -33,7 +40,7 @@ import java.util.logging.Logger;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class IoTGatewayResource {
   private static final Logger LOGGER = Logger.getLogger(IoTGatewayResource.class.getName());
-
+  
   @EJB
   private GatewaysBuilder gatewaysBuilder;
   @EJB
@@ -42,22 +49,25 @@ public class IoTGatewayResource {
   private GatewayFacade gatewayFacade;
   @EJB
   private GatewayController gatewayController;
-
+  @EJB
+  private KafkaFacade kafkaFacade;
+  
   private Project project;
-
-
+  
+  
   public IoTGatewayResource setProject(Integer projectId) {
     this.project = projectFacade.find(projectId);
     return this;
   }
-
+  
   @ApiOperation(value = "Get list of currently connected IoT Gateways")
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getGateways(
-    @Context UriInfo uriInfo
+    @Context
+      UriInfo uriInfo
   ) {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.GATEWAYS);
     IoTGatewayDTO dto = gatewaysBuilder.build(uriInfo, resourceRequest, project);
@@ -69,54 +79,104 @@ public class IoTGatewayResource {
   @Path("{id}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getGatewayById(
-    @Context UriInfo uriInfo,
-    @PathParam("id") Integer id
+    @Context
+      UriInfo uriInfo,
+    @PathParam("id")
+      Integer id
   ) throws GatewayException {
     IoTGateways gateway = gatewayController.getGateway(project, id);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.GATEWAYS);
     IoTGatewayDTO dto = gatewaysBuilder.build(uriInfo, resourceRequest, gateway);
     return Response.ok().entity(dto).build();
   }
-
+  
   @PUT
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_GATEWAY"})
   public Response registerGateway() {
     //TODO: implement
     return Response.ok().build();
   }
-
+  
   @DELETE
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_GATEWAY"})
   public Response unregisterGateway() {
     //TODO: implement
     return Response.ok().build();
   }
-
+  
   @ApiOperation(value = "Start blocking an IoT Gateway")
   @POST
   @Path("{id}/ignored")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response startBlockingGateway(
-          @PathParam("id") Integer id
+    @PathParam("id")
+      Integer id
   ) {
-    //TODO: implement endpoint
+    
+    kafkaFacade
+      .findTopicsByProject(project)
+      .stream()
+      .filter(t -> LwM2MTopics.getNamesAsList().contains(t.getName()))
+      .forEach(t -> addBlockingAcl(t, id));
+    
     gatewayFacade.updateState(id, GatewayState.BLOCKED);
     return Response.ok().build();
   }
-
+  
+  private void addBlockingAcl(TopicDTO t, int gatewayId) {
+    IoTGateways ioTGateway = gatewayFacade.findByProjectAndId(project, gatewayId);
+    AclDTO acl = new AclDTO(project.getName(),
+      Settings.KAFKA_ACL_WILDCARD,
+      "deny",
+      Settings.KAFKA_ACL_WILDCARD,
+      ioTGateway.getIpAddress(),
+      Settings.KAFKA_ACL_WILDCARD);
+    
+    try {
+      kafkaFacade.addAclsToTopic(t.getName(), project.getId(), acl);
+    } catch (Exception e){
+      e.printStackTrace();
+    }
+  }
+  
   @ApiOperation(value = "Stop blocking an IoT Gateway")
   @DELETE
   @Path("{id}/ignored")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response stopBlockingGateway(
-          @PathParam("id") Integer id
+    @PathParam("id")
+      Integer id
   ) {
-    //TODO: implement endpoint
+    kafkaFacade
+      .findTopicsByProject(project)
+      .stream()
+      .filter(t -> LwM2MTopics.getNamesAsList().contains(t.getName()))
+      .forEach(t -> removeBlockingAcl(t, id));
+    
     gatewayFacade.updateState(id, GatewayState.REGISTERED);
     return Response.ok().build();
+  }
+  
+  private void removeBlockingAcl(TopicDTO t, int gatewayId) {
+    String gatewayIp = gatewayFacade.findByProjectAndId(project, gatewayId).getIpAddress();
+    //TODO: make sure that principal is not necessary
+    TopicAcls acl = kafkaFacade.getTopicAcl(
+      t.getName(),
+      "deny",
+      Settings.KAFKA_ACL_WILDCARD,
+      gatewayIp,
+      Settings.KAFKA_ACL_WILDCARD);
+
+    try {
+      if (acl != null) {
+        kafkaFacade.removeAclFromTopic(t.getName(), acl.getId());
+      }
+    } catch (KafkaException e) {
+      e.printStackTrace();
+    }
   }
 }

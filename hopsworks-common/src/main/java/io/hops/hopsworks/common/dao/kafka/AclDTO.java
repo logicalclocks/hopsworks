@@ -39,8 +39,8 @@
 
 package io.hops.hopsworks.common.dao.kafka;
 
-import java.io.Serializable;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.io.Serializable;
 
 @XmlRootElement
 public class AclDTO implements Serializable {
@@ -131,5 +131,16 @@ public class AclDTO implements Serializable {
 
   public void setUserEmail(String userEmail) {
     this.userEmail = userEmail;
+  }
+  
+  @Override
+  public String toString() {
+    return "AclDTO(" + id
+      + "," + projectName
+      + "," + userEmail
+      + "," + permissionType
+      + "," + operationType
+      + "," + host
+      + "," + role + ")";
   }
 }
