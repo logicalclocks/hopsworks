@@ -166,7 +166,7 @@ public class JupyterConfigFilesGenerator {
       String nameNodeIp = nn[0];
       String nameNodePort = nn[1];
 
-      String pythonKernelName = "python-" + hdfsUser;
+      String pythonKernelName = "python-" + hdfsUser.toLowerCase();
 
       if (settings.isPythonKernelEnabled() && !project.getPythonVersion().contains("X")) {
         String pythonKernelPath = kernelsDir + File.separator + pythonKernelName;
