@@ -39,10 +39,10 @@ public class IoTGateways implements Serializable {
   @Column(name = "gateway_id")
   private Integer id;
 
-  @Column(name = "ip_address")
+  @Column(name = "hostname")
   @Basic(optional = false)
   @Size(max = 128)
-  private String ipAddress;
+  private String hostname;
 
   @Column(name = "port")
   @Basic(optional = false)
@@ -64,16 +64,16 @@ public class IoTGateways implements Serializable {
   public IoTGateways() {
   }
   
-  public IoTGateways(Integer id, String ipAddress, Integer port, GatewayState state) {
+  public IoTGateways(Integer id, String hostname, Integer port, GatewayState state) {
     this.id = id;
-    this.ipAddress = ipAddress;
+    this.hostname = hostname;
     this.port = port;
     this.state = state;
   }
   
-  public IoTGateways(Integer id, String ipAddress, Integer port, Project project, GatewayState state) {
+  public IoTGateways(Integer id, String hostname, Integer port, Project project, GatewayState state) {
     this.id = id;
-    this.ipAddress = ipAddress;
+    this.hostname = hostname;
     this.port = port;
     this.project = project;
     this.state = state;
@@ -87,12 +87,12 @@ public class IoTGateways implements Serializable {
     this.id = id;
   }
 
-  public String getIpAddress() {
-    return ipAddress;
+  public String getHostname() {
+    return hostname;
   }
 
-  public void setIpAddress(String ipAddress) {
-    this.ipAddress = ipAddress;
+  public void setHostname(String hostname) {
+    this.hostname = hostname;
   }
 
   public Integer getPort() {
@@ -129,7 +129,7 @@ public class IoTGateways implements Serializable {
     }
     IoTGateways that = (IoTGateways) o;
     return Objects.equals(id, that.id) &&
-      Objects.equals(ipAddress, that.ipAddress) &&
+      Objects.equals(hostname, that.hostname) &&
       Objects.equals(port, that.port) &&
       Objects.equals(project, that.project);
   }
@@ -137,6 +137,6 @@ public class IoTGateways implements Serializable {
   @Override
   public int hashCode() {
     
-    return Objects.hash(id, ipAddress, port, project);
+    return Objects.hash(id, hostname, port, project);
   }
 }

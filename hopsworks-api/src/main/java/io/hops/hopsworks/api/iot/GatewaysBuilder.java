@@ -53,7 +53,7 @@ public class GatewaysBuilder {
     expand(dto, resourceRequest);
     if (dto.isExpand()) {
       dto.setId(ioTGateway.getId());
-      dto.setIpAddress(ioTGateway.getIpAddress());
+      dto.setHostname(ioTGateway.getHostname());
       dto.setPort(ioTGateway.getPort());
       dto.setState(ioTGateway.getState());
     }

@@ -132,7 +132,7 @@ public class IoTGatewayResource {
       Settings.KAFKA_ACL_WILDCARD,
       "deny",
       Settings.KAFKA_ACL_WILDCARD,
-      ioTGateway.getIpAddress(),
+      ioTGateway.getHostname(),
       Settings.KAFKA_ACL_WILDCARD);
     
     try {
@@ -162,7 +162,7 @@ public class IoTGatewayResource {
   }
   
   private void removeBlockingAcl(TopicDTO t, int gatewayId) {
-    String gatewayIp = gatewayFacade.findByProjectAndId(project, gatewayId).getIpAddress();
+    String gatewayIp = gatewayFacade.findByProjectAndId(project, gatewayId).getHostname();
     //TODO: make sure that principal is not necessary
     TopicAcls acl = kafkaFacade.getTopicAcl(
       t.getName(),

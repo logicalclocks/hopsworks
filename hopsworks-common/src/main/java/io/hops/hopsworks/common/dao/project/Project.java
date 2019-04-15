@@ -521,6 +521,8 @@ public class Project implements Serializable {
     this.kafkaMaxNumTopics = kafkaMaxNumTopics;
   }
   
+  @XmlTransient
+  @JsonIgnore
   public Collection<IoTGateways> getGatewaysCollection() {
     return gatewaysCollection;
   }
