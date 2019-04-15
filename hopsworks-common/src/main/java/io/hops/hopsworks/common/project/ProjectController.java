@@ -2535,10 +2535,12 @@ public class ProjectController {
     }
   }
 
-  public CertsDTO downloadCert(Integer projectId, Users user) throws ProjectException, DatasetException {
+  public CertsDTO downloadCert(Integer projectId, Users user, boolean isGateway) throws ProjectException,
+    DatasetException {
     Project project = findProjectById(projectId);
     String keyStore = "";
     String trustStore = "";
+    String certPwd = "";
     try {
       //Read certs from database and stream them out
       certificateMaterializer.materializeCertificatesLocal(user.getUsername(), project.getName());
@@ -2546,7 +2548,7 @@ public class ProjectController {
           project.getName());
       keyStore = org.apache.commons.net.util.Base64.encodeBase64String(material.getKeyStore().array());
       trustStore = org.apache.commons.net.util.Base64.encodeBase64String(material.getTrustStore().array());
-      String certPwd = new String(material.getPassword());
+      certPwd = new String(material.getPassword());
       //Pop-up a message from admin
       messageController.send(user, userFacade.findByEmail(settings.getAdminEmail()), "Certificate Info", "",
           "An email was sent with the password for your project's certificates. If an email does not arrive shortly, "
@@ -2560,7 +2562,11 @@ public class ProjectController {
     } finally {
       certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());
     }
-    return new CertsDTO("jks", keyStore, trustStore);
+    if (isGateway) {
+      return new GatewayCertsDTO("jks", keyStore, trustStore, certPwd);
+    } else {
+      return new CertsDTO("jks", keyStore, trustStore);
+    }
   }
 
   /**

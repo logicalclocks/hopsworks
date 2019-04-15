@@ -38,16 +38,15 @@
  */
 package io.hops.hopsworks.api.project;
 
-import io.hops.hopsworks.api.iot.IoTGatewayResource;
-import io.hops.hopsworks.common.project.CertsDTO;
-import io.hops.hopsworks.api.airflow.AirflowService;
 import io.hops.hopsworks.api.activities.ProjectActivitiesResource;
+import io.hops.hopsworks.api.airflow.AirflowService;
 import io.hops.hopsworks.api.dela.DelaClusterProjectService;
 import io.hops.hopsworks.api.dela.DelaProjectService;
 import io.hops.hopsworks.api.featurestore.FeaturestoreService;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
+import io.hops.hopsworks.api.iot.IoTGatewayResource;
 import io.hops.hopsworks.api.jobs.JobsResource;
 import io.hops.hopsworks.api.jobs.KafkaService;
 import io.hops.hopsworks.api.jupyter.JupyterService;
@@ -81,6 +80,7 @@ import io.hops.hopsworks.common.dataset.FilePreviewDTO;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.project.CertsDTO;
 import io.hops.hopsworks.common.project.MoreInfoDTO;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.project.ProjectDTO;
@@ -723,13 +723,29 @@ public class ProjectService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response downloadCerts(@PathParam("projectId") Integer id, @FormParam("password") String password,
-      @Context HttpServletRequest req, @Context SecurityContext sc) throws ProjectException, HopsSecurityException,
+      @Context HttpServletRequest req, @Context SecurityContext sc) throws ProjectException,
+    HopsSecurityException,
       DatasetException {
     Users user = jWTHelper.getUserPrincipal(sc);
     if (user.getEmail().equals(Settings.AGENT_EMAIL) || !authController.validatePassword(user, password, req)) {
       throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_ACCESS_DENIED, Level.FINE);
     }
-    CertsDTO certsDTO = projectController.downloadCert(id, user);
+    CertsDTO certsDTO = projectController.downloadCert(id, user, false);
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(certsDTO).build();
+  }
+  
+  @POST
+  @Path("{projectId}/downloadGatewayCert")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
+  public Response downloadGatewayCerts(@PathParam("projectId") Integer id, @FormParam("password") String password,
+    @Context HttpServletRequest req, @Context SecurityContext sc) throws ProjectException, HopsSecurityException,
+    DatasetException {
+    Users user = jWTHelper.getUserPrincipal(sc);
+    if (user.getEmail().equals(Settings.AGENT_EMAIL) || !authController.validatePassword(user, password, req)) {
+      throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_ACCESS_DENIED, Level.FINE);
+    }
+    CertsDTO certsDTO = projectController.downloadCert(id, user, true);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(certsDTO).build();
   }
 
