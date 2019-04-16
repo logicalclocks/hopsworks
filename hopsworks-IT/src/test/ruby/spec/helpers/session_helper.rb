@@ -76,7 +76,7 @@ module SessionHelper
     if !headers["set_cookie"][1].nil?
       cookie = headers["set_cookie"][1].split(';')[0].split('=')
       @cookies = {"SESSIONID"=> json_body[:sessionID], cookie[0] => cookie[1]}
-    else 
+    else
       @cookies = {"SESSIONID"=> json_body[:sessionID]}
     end
     if !headers["authorization"].nil?
@@ -86,7 +86,7 @@ module SessionHelper
     Airborne.configure do |config|
       config.headers = {:cookies => @cookies, content_type: 'application/json' }
       config.headers["Authorization"] = @token
-    end  
+    end
   end
   
   def register_user(params={})
@@ -380,5 +380,9 @@ module SessionHelper
     create_user_with_role(user, "AGENT")
     get "#{ENV['HOPSWORKS_API']}/users"
     json_body[:items]
+  end
+
+  def get_user
+    @user
   end
 end

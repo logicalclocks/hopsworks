@@ -89,6 +89,7 @@ RSpec.configure do |config|
   config.include ExecutionHelper
   config.include FeaturestoreHelper
   config.include AgentHelper
+  config.include PythonHelper
   # uncomment next line if you need to clean hdfs and hopsworks db before test.
   # config.before(:suite) { clean_test_data }
   config.after(:suite) {
@@ -120,7 +121,7 @@ def clean_test_data
       puts "Remote HDFS Clean-up finished."
 
       puts "Database Clean-up starting..."
-      sh.exec!("cd #{ENV['RSPEC_SSH_USER_DIR']}; vagrant ssh -c  'sudo -u #{ENV['RSPEC_VAGRANT_MYSQL_USER']} -H sh -c \" /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh -e \\\" DROP DATABASE IF EXISTS hopsworks \\\" \" ' ")       
+      sh.exec!("cd #{ENV['RSPEC_SSH_USER_DIR']}; vagrant ssh -c  'sudo -u #{ENV['RSPEC_VAGRANT_MYSQL_USER']} -H sh -c \" /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh -e \\\" DROP DATABASE IF EXISTS hopsworks \\\" \" ' ")
       sh.exec!("cd #{ENV['RSPEC_SSH_USER_DIR']}; vagrant ssh -c  'sudo -u #{ENV['RSPEC_VAGRANT_MYSQL_USER']} -H sh -c \" /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh -e \\\" CREATE DATABASE IF NOT EXISTS hopsworks CHARACTER SET latin1 \\\" \" ' ")
       sh.exec!("cd #{ENV['RSPEC_SSH_USER_DIR']}; vagrant ssh -c  'sudo -u root -H sh -c \" /srv/hops/domains/domain1/flyway/flyway migrate \" ' ")
       sh.exec!("cd #{ENV['RSPEC_SSH_USER_DIR']}; vagrant ssh -c  'sudo -u root -H sh -c \" cat /srv/hops/domains/domain1/flyway/dml/*.sql | /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks \" ' ")
