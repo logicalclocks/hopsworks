@@ -75,7 +75,6 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.persistence.NonUniqueResultException;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -190,17 +189,14 @@ public class DatasetController {
         }
       } catch (Exception e) {
         try {
-          dfso.rm(new Path(dsPath), true);//if dataset persist fails rm ds folder.
+          dfso.rm(new Path(dsPath), true); //if dataset persist fails rm ds folder.
         } catch (IOException ex) {
-          if (e.getCause() instanceof NonUniqueResultException) {
-            throw new DatasetException(RESTCodes.DatasetErrorCode.DESTINATION_EXISTS, Level.SEVERE,
-              "path: " + dataSetName,
-              ex.getMessage(), ex);
-          }
-          throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OPERATION_ERROR, Level.SEVERE,
-            "Could not cleanup failed dataset create operation at path: " + dataSetName,
-            ex.getMessage(), ex);
+          // Dataset clean up failed. Log the exception for further debugging.
+          LOGGER.log(Level.SEVERE, "Could not cleanup dataset dir after exception: " + dsPath, ex);
         }
+
+        throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OPERATION_ERROR, Level.SEVERE,
+            "Could not create dataset: " + dataSetName, e.getMessage(), e);
       }
     } else {
       throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OPERATION_ERROR, Level.INFO,
