@@ -267,6 +267,14 @@ describe "On #{ENV['OS']}" do
           expect_json(successMessage: "The Dataset was successfully shared.")
           expect_status(200)
         end
+        it "should share an HiveDB" do
+          projectname = "project_#{short_random_id}"
+          project = create_project_by_name(projectname)
+          share_dataset(@project, "#{@project[:projectname]}.db", project)
+          datasets = get_all_datasets(project)
+          shared_ds = datasets.detect { |e| e[:name] == "#{@project[:projectname]}::#{@project[:projectname]}.db" }
+          expect(shared_ds).not_to be_nil
+        end
         it "should appear as pending for datasets not requested" do
           projectname = "project_#{short_random_id}"
           project = create_project_by_name(projectname)
