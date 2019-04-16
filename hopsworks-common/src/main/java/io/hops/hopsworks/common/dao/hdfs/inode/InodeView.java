@@ -139,6 +139,7 @@ public final class InodeView {
           break;
         case HIVEDB:
           this.owningProjectName = this.name.substring(0, this.name.lastIndexOf("."));
+          break;
         case FEATURESTORE:
           this.owningProjectName = this.name.substring(0, this.name.lastIndexOf("_"));
       }
