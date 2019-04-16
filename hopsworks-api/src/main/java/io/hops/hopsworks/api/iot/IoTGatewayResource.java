@@ -1,5 +1,6 @@
 package io.hops.hopsworks.api.iot;
 
+import com.google.gson.Gson;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.common.api.ResourceRequest;
@@ -18,7 +19,15 @@ import io.hops.hopsworks.exceptions.GatewayException;
 import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.ApiOperation;
+import org.apache.commons.io.IOUtils;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 
+import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -34,6 +43,12 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Logger;
 
 @RequestScoped
@@ -54,10 +69,17 @@ public class IoTGatewayResource {
   
   private Project project;
   
+  private CloseableHttpClient httpClient = null;
+  private PoolingHttpClientConnectionManager connectionManager = null;
   
   public IoTGatewayResource setProject(Integer projectId) {
     this.project = projectFacade.find(projectId);
     return this;
+  }
+  
+  @PostConstruct
+  public void init() {
+  
   }
   
   @ApiOperation(value = "Get list of currently connected IoT Gateways")
@@ -70,7 +92,7 @@ public class IoTGatewayResource {
       UriInfo uriInfo
   ) {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.GATEWAYS);
-    IoTGatewayDTO dto = gatewaysBuilder.build(uriInfo, resourceRequest, project);
+    IoTGatewayDTO dto = gatewaysBuilder.buildGateway(uriInfo, resourceRequest, project);
     return Response.ok().entity(dto).build();
   }
   
@@ -88,8 +110,50 @@ public class IoTGatewayResource {
   ) throws GatewayException {
     IoTGateways gateway = gatewayController.getGateway(project, id);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.GATEWAYS);
-    IoTGatewayDTO dto = gatewaysBuilder.build(uriInfo, resourceRequest, gateway);
+    IoTGatewayDTO dto = gatewaysBuilder.buildGateway(uriInfo, resourceRequest, gateway);
     return Response.ok().entity(dto).build();
+  }
+  
+  @ApiOperation(value = "Get list of all IoT Nodes connected to an IoT Gateway")
+  @GET
+  @Path("{id}/nodes")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  public Response getNodesOfGateway(
+    @Context UriInfo uriInfo,
+    @PathParam("id") Integer gatewayId
+  ) throws URISyntaxException, IOException {
+    CloseableHttpResponse response = sendRequestForNodes(gatewayId);
+    List<IoTDevice> devices = responseToDevices(response);
+    LOGGER.info("Connected " + devices.size() + " devices: " + devices);
+    IoTDeviceDTO dto = gatewaysBuilder.buildDevice(uriInfo, project, devices);
+    return Response.ok().entity(dto).build();
+  }
+  
+  private List<IoTDevice> responseToDevices(CloseableHttpResponse response)
+    throws IOException {
+    StringWriter writer = new StringWriter();
+    IOUtils.copy(response.getEntity().getContent(), writer);
+    String json = writer.toString();
+  
+    Gson gson = new Gson();
+    IoTDevice [] array = gson.fromJson(json, IoTDevice[].class);
+    return Arrays.asList(array);
+  }
+  
+  private CloseableHttpResponse sendRequestForNodes(int gatewayId)
+    throws URISyntaxException, IOException {
+    CloseableHttpClient httpClient = HttpClients.createDefault();
+    IoTGateways gateway = gatewayFacade.findByProjectAndId(project, gatewayId);
+    URI uri = new URIBuilder()
+      .setScheme("http")
+      .setHost(gateway.getHostname())
+      .setPort(gateway.getPort())
+      .setPath("/gateway/nodes")
+      .build();
+    HttpGet httpGet = new HttpGet(uri);
+    return httpClient.execute(httpGet);
   }
   
   @PUT

@@ -157,7 +157,8 @@ public class ResourceRequest {
     LIBRARIES,
     DATASETREQUESTS;
     DATASETREQUESTS,
-    GATEWAYS;
+    GATEWAYS,
+    NODES;
     
     public static Name fromString(String name) {
       return valueOf(name.toUpperCase());
