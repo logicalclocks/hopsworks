@@ -2549,12 +2549,14 @@ public class ProjectController {
       keyStore = org.apache.commons.net.util.Base64.encodeBase64String(material.getKeyStore().array());
       trustStore = org.apache.commons.net.util.Base64.encodeBase64String(material.getTrustStore().array());
       certPwd = new String(material.getPassword());
-      //Pop-up a message from admin
-      messageController.send(user, userFacade.findByEmail(settings.getAdminEmail()), "Certificate Info", "",
+      if (!isGateway) {
+        //Pop-up a message from admin
+        messageController.send(user, userFacade.findByEmail(Settings.SITE_EMAIL), "Certificate Info", "",
           "An email was sent with the password for your project's certificates. If an email does not arrive shortly, "
-          + "please check spam first and then contact the administrator.", "");
-      emailBean.sendEmail(user.getEmail(), Message.RecipientType.TO, "Hopsworks certificate information",
+            + "please check spam first and then contact the administrator.", "");
+        emailBean.sendEmail(user.getEmail(), Message.RecipientType.TO, "Hopsworks certificate information",
           "The password for keystore and truststore is:" + certPwd);
+      }
     } catch (Exception ex) {
       LOGGER.log(Level.SEVERE, null, ex);
       throw new DatasetException(RESTCodes.DatasetErrorCode.DOWNLOAD_ERROR, Level.SEVERE, "projectId: " + projectId,
