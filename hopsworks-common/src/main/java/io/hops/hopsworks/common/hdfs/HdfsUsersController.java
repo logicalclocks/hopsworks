@@ -68,7 +68,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 @Stateless
 public class HdfsUsersController {
@@ -200,13 +202,16 @@ public class HdfsUsersController {
       throw new IllegalArgumentException("Could not create dataset group in HDFS.");
     }
 
-    //during the project creation we cannot rely on the owner being in the projectTeamCollection
-    //when this method is invoked, hence we explicitly add them to the group.
-    addUserToGroup(dfso, dsOwner, hdfsGroup);
+    Set<Users> projectUsers = project.getProjectTeamCollection()
+        .stream().map(ProjectTeam::getUser).collect(Collectors.toSet());
+
+    // During the project creation we cannot rely on the owner being in the projectTeamCollection
+    // when this method is invoked, hence we explicitly add them to the group.
+    projectUsers.add(owner);
 
     //add every member to the new ds group
-    for (ProjectTeam member : project.getProjectTeamCollection()) {
-      String hdfsUsername = getHdfsUserName(project, member.getUser());
+    for (Users member : projectUsers) {
+      String hdfsUsername = getHdfsUserName(project, member);
       addUserToGroup(dfso, hdfsUsername, hdfsGroup);
     }
   }
