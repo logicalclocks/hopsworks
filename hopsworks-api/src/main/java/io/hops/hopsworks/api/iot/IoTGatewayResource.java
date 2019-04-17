@@ -125,13 +125,13 @@ public class IoTGatewayResource {
     @PathParam("id") Integer gatewayId
   ) throws URISyntaxException, IOException {
     CloseableHttpResponse response = sendRequestForNodes(gatewayId);
-    List<IoTDevice> devices = responseToDevices(response);
-    LOGGER.info("Connected " + devices.size() + " devices: " + devices);
+    List<IoTDevice> devices = responseToDevices(response, gatewayId);
+    LOGGER.info("Connected " + devices.size() + " devices");
     IoTDeviceDTO dto = gatewaysBuilder.buildDevice(uriInfo, project, devices);
     return Response.ok().entity(dto).build();
   }
   
-  private List<IoTDevice> responseToDevices(CloseableHttpResponse response)
+  private List<IoTDevice> responseToDevices(CloseableHttpResponse response, Integer gatewayId)
     throws IOException {
     StringWriter writer = new StringWriter();
     IOUtils.copy(response.getEntity().getContent(), writer);
@@ -139,7 +139,9 @@ public class IoTGatewayResource {
   
     Gson gson = new Gson();
     IoTDevice [] array = gson.fromJson(json, IoTDevice[].class);
-    return Arrays.asList(array);
+    List<IoTDevice> list = Arrays.asList(array);
+    list.forEach(d -> d.setGatewayId(gatewayId));
+    return list;
   }
   
   private CloseableHttpResponse sendRequestForNodes(int gatewayId)

@@ -11,16 +11,6 @@ public class IoTDeviceDTO extends RestDTO<IoTDeviceDTO> {
   private int port;
   private int gatewayId;
   
-  public IoTDeviceDTO() {
-  }
-  
-  public IoTDeviceDTO(String endpoint, String hostname, int port, int gatewayId) {
-    this.endpoint = endpoint;
-    this.hostname = hostname;
-    this.port = port;
-    this.gatewayId = gatewayId;
-  }
-  
   public String getEndpoint() {
     return endpoint;
   }

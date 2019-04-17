@@ -57,13 +57,13 @@ public class GatewaysBuilder {
     return dto;
   }
   
-  public IoTDeviceDTO uriDeviceNode(IoTDeviceDTO dto, UriInfo uriInfo, Project project) {
+  public IoTDeviceDTO uriDeviceNode(IoTDeviceDTO dto, UriInfo uriInfo, Project project, IoTDevice ioTDevice) {
     dto.setHref(uriInfo.getBaseUriBuilder().path(ResourceRequest.Name.PROJECT.toString().toLowerCase())
       .path(Integer.toString(project.getId()))
       .path(ResourceRequest.Name.GATEWAYS.toString().toLowerCase())
-      .path(Integer.toString(dto.getGatewayId()))
+      .path(Integer.toString(ioTDevice.getGatewayId()))
       .path(ResourceRequest.Name.NODES.toString().toLowerCase())
-      .path(dto.getHostname())
+      .path(ioTDevice.getEndpoint())
       .build());
     return dto;
   }
@@ -105,10 +105,11 @@ public class GatewaysBuilder {
   
   private IoTDeviceDTO buildDevice(UriInfo uriInfo, IoTDevice ioTDevice, Project project) {
     IoTDeviceDTO dto = new IoTDeviceDTO();
-    uriDeviceNode(dto, uriInfo, project);
+    uriDeviceNode(dto, uriInfo, project, ioTDevice);
     dto.setEndpoint(ioTDevice.getEndpoint());
     dto.setHostname(ioTDevice.getHostname());
     dto.setPort(ioTDevice.getPort());
+    dto.setGatewayId(ioTDevice.getGatewayId());
     return dto;
   }
 }
