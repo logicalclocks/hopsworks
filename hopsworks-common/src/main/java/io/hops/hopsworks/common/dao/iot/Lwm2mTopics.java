@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public enum LwM2MTopics {
+public enum Lwm2mTopics {
   
   TEMPERATURE("topic-lwm2m-3303-temperature");
   
@@ -15,14 +15,14 @@ public enum LwM2MTopics {
     return name;
   }
   
-  LwM2MTopics(String name) {
+  Lwm2mTopics(String name) {
     this.name = name;
   }
   
   public static List<String> getNamesAsList() {
     return Arrays
-      .stream(LwM2MTopics.values())
-      .map(LwM2MTopics::toString)
+      .stream(Lwm2mTopics.values())
+      .map(Lwm2mTopics::toString)
       .collect(Collectors.toList());
   }
 }

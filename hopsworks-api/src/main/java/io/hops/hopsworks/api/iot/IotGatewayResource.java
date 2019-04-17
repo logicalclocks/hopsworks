@@ -4,10 +4,11 @@ import com.google.gson.Gson;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.common.api.ResourceRequest;
-import io.hops.hopsworks.common.dao.iot.GatewayFacade;
-import io.hops.hopsworks.common.dao.iot.GatewayState;
-import io.hops.hopsworks.common.dao.iot.IoTGateways;
-import io.hops.hopsworks.common.dao.iot.LwM2MTopics;
+import io.hops.hopsworks.common.dao.iot.IotGatewayConfiguration;
+import io.hops.hopsworks.common.dao.iot.IotGatewayFacade;
+import io.hops.hopsworks.common.dao.iot.IotGatewayState;
+import io.hops.hopsworks.common.dao.iot.IotGateways;
+import io.hops.hopsworks.common.dao.iot.Lwm2mTopics;
 import io.hops.hopsworks.common.dao.kafka.AclDTO;
 import io.hops.hopsworks.common.dao.kafka.KafkaFacade;
 import io.hops.hopsworks.common.dao.kafka.TopicAcls;
@@ -25,7 +26,6 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
@@ -53,26 +53,23 @@ import java.util.logging.Logger;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class IoTGatewayResource {
-  private static final Logger LOGGER = Logger.getLogger(IoTGatewayResource.class.getName());
+public class IotGatewayResource {
+  private static final Logger LOGGER = Logger.getLogger(IotGatewayResource.class.getName());
   
   @EJB
-  private GatewaysBuilder gatewaysBuilder;
+  private IotGatewayBuilder iotGatewayBuilder;
   @EJB
   private ProjectFacade projectFacade;
   @EJB
-  private GatewayFacade gatewayFacade;
+  private IotGatewayFacade iotGatewayFacade;
   @EJB
-  private GatewayController gatewayController;
+  private IotGatewayController iotGatewayController;
   @EJB
   private KafkaFacade kafkaFacade;
   
   private Project project;
   
-  private CloseableHttpClient httpClient = null;
-  private PoolingHttpClientConnectionManager connectionManager = null;
-  
-  public IoTGatewayResource setProject(Integer projectId) {
+  public IotGatewayResource setProject(Integer projectId) {
     this.project = projectFacade.find(projectId);
     return this;
   }
@@ -88,11 +85,10 @@ public class IoTGatewayResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getGateways(
-    @Context
-      UriInfo uriInfo
+    @Context UriInfo uriInfo
   ) {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.GATEWAYS);
-    IoTGatewayDTO dto = gatewaysBuilder.buildGateway(uriInfo, resourceRequest, project);
+    IotGatewayDTO dto = iotGatewayBuilder.buildGateway(uriInfo, resourceRequest, project);
     return Response.ok().entity(dto).build();
   }
   
@@ -103,14 +99,12 @@ public class IoTGatewayResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getGatewayById(
-    @Context
-      UriInfo uriInfo,
-    @PathParam("id")
-      Integer id
+    @Context UriInfo uriInfo,
+    @PathParam("id") Integer id
   ) throws GatewayException {
-    IoTGateways gateway = gatewayController.getGateway(project, id);
+    IotGateways gateway = iotGatewayController.getGateway(project, id);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.GATEWAYS);
-    IoTGatewayDTO dto = gatewaysBuilder.buildGateway(uriInfo, resourceRequest, gateway);
+    IotGatewayDTO dto = iotGatewayBuilder.buildGateway(uriInfo, resourceRequest, gateway);
     return Response.ok().entity(dto).build();
   }
   
@@ -125,21 +119,21 @@ public class IoTGatewayResource {
     @PathParam("id") Integer gatewayId
   ) throws URISyntaxException, IOException {
     CloseableHttpResponse response = sendRequestForNodes(gatewayId);
-    List<IoTDevice> devices = responseToDevices(response, gatewayId);
+    List<IotDevice> devices = responseToDevices(response, gatewayId);
     LOGGER.info("Connected " + devices.size() + " devices");
-    IoTDeviceDTO dto = gatewaysBuilder.buildDevice(uriInfo, project, devices);
+    IotDeviceDTO dto = iotGatewayBuilder.buildDevice(uriInfo, project, devices, gatewayId);
     return Response.ok().entity(dto).build();
   }
   
-  private List<IoTDevice> responseToDevices(CloseableHttpResponse response, Integer gatewayId)
+  private List<IotDevice> responseToDevices(CloseableHttpResponse response, Integer gatewayId)
     throws IOException {
     StringWriter writer = new StringWriter();
     IOUtils.copy(response.getEntity().getContent(), writer);
     String json = writer.toString();
   
     Gson gson = new Gson();
-    IoTDevice [] array = gson.fromJson(json, IoTDevice[].class);
-    List<IoTDevice> list = Arrays.asList(array);
+    IotDevice[] array = gson.fromJson(json, IotDevice[].class);
+    List<IotDevice> list = Arrays.asList(array);
     list.forEach(d -> d.setGatewayId(gatewayId));
     return list;
   }
@@ -147,7 +141,7 @@ public class IoTGatewayResource {
   private CloseableHttpResponse sendRequestForNodes(int gatewayId)
     throws URISyntaxException, IOException {
     CloseableHttpClient httpClient = HttpClients.createDefault();
-    IoTGateways gateway = gatewayFacade.findByProjectAndId(project, gatewayId);
+    IotGateways gateway = iotGatewayFacade.findByProjectAndId(project, gatewayId);
     URI uri = new URIBuilder()
       .setScheme("http")
       .setHost(gateway.getHostname())
@@ -158,17 +152,47 @@ public class IoTGatewayResource {
     return httpClient.execute(httpGet);
   }
   
+  @ApiOperation(value = "Register an IoT Gateway")
   @PUT
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_GATEWAY"})
-  public Response registerGateway() {
-    //TODO: implement
-    return Response.ok().build();
+  public Response registerGateway(
+    IotGatewayConfiguration config,
+    @Context UriInfo uriInfo
+  ) {
+    if (config == null) {
+      throw new IllegalArgumentException("Gateway configuration was not provided.");
+    }
+    IotGateways gateway = iotGatewayController.putGateway(project, config);
+    IotGatewayDTO dto =
+      iotGatewayBuilder.buildGateway(uriInfo, new ResourceRequest(ResourceRequest.Name.GATEWAYS), gateway);
+    return Response.created(dto.getHref()).build();
   }
   
+  @ApiOperation(value = "Unregister IoT Gateway")
   @DELETE
+  @Path("{id}")
+  @Produces(MediaType.TEXT_PLAIN)
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_GATEWAY"})
-  public Response unregisterGateway() {
-    //TODO: implement
+  public Response unregisterGateway(
+    @PathParam("id") Integer gatewayId,
+    @Context UriInfo uriInfo
+  ) {
+    IotGateways gateway = iotGatewayFacade.findByProjectAndId(project, gatewayId);
+    if (gateway == null) {
+      String message = "Gateway with id " + gatewayId + " not found.";
+      return Response
+        .status(Response.Status.NOT_FOUND)
+        .entity(message)
+        .type(MediaType.TEXT_PLAIN)
+        .build();
+    }
+    
+    if (gateway.getState() == IotGatewayState.ACTIVE) {
+      iotGatewayFacade.removeIotGateway(gateway);
+    } else if (gateway.getState() == IotGatewayState.BLOCKED) {
+      iotGatewayFacade.updateState(gateway.getId(), IotGatewayState.INACTIVE_BLOCKED);
+    }
+    
     return Response.ok().build();
   }
   
@@ -185,15 +209,15 @@ public class IoTGatewayResource {
     kafkaFacade
       .findTopicsByProject(project)
       .stream()
-      .filter(t -> LwM2MTopics.getNamesAsList().contains(t.getName()))
+      .filter(t -> Lwm2mTopics.getNamesAsList().contains(t.getName()))
       .forEach(t -> addBlockingAcl(t, id));
     
-    gatewayFacade.updateState(id, GatewayState.BLOCKED);
+    iotGatewayFacade.updateState(id, IotGatewayState.BLOCKED);
     return Response.ok().build();
   }
   
   private void addBlockingAcl(TopicDTO t, int gatewayId) {
-    IoTGateways ioTGateway = gatewayFacade.findByProjectAndId(project, gatewayId);
+    IotGateways ioTGateway = iotGatewayFacade.findByProjectAndId(project, gatewayId);
     AclDTO acl = new AclDTO(project.getName(),
       Settings.KAFKA_ACL_WILDCARD,
       "deny",
@@ -214,21 +238,25 @@ public class IoTGatewayResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response stopBlockingGateway(
-    @PathParam("id")
-      Integer id
+    @PathParam("id") Integer gatewayId
   ) {
     kafkaFacade
       .findTopicsByProject(project)
       .stream()
-      .filter(t -> LwM2MTopics.getNamesAsList().contains(t.getName()))
-      .forEach(t -> removeBlockingAcl(t, id));
+      .filter(t -> Lwm2mTopics.getNamesAsList().contains(t.getName()))
+      .forEach(t -> removeBlockingAcl(t, gatewayId));
     
-    gatewayFacade.updateState(id, GatewayState.REGISTERED);
+    IotGateways gateway = iotGatewayFacade.findByProjectAndId(project, gatewayId);
+    if (gateway.getState() == IotGatewayState.INACTIVE_BLOCKED) {
+      iotGatewayFacade.removeIotGateway(gateway);
+    } else if (gateway.getState() == IotGatewayState.BLOCKED) {
+      iotGatewayFacade.updateState(gatewayId, IotGatewayState.ACTIVE);
+    }
     return Response.ok().build();
   }
   
   private void removeBlockingAcl(TopicDTO t, int gatewayId) {
-    String gatewayIp = gatewayFacade.findByProjectAndId(project, gatewayId).getHostname();
+    String gatewayIp = iotGatewayFacade.findByProjectAndId(project, gatewayId).getHostname();
     //TODO: make sure that principal is not necessary
     TopicAcls acl = kafkaFacade.getTopicAcl(
       t.getName(),

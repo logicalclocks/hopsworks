@@ -108,7 +108,7 @@
     <class>io.hops.hopsworks.common.dao.jupyter.JupyterProject</class>
     <class>io.hops.hopsworks.common.dao.jupyter.JupyterSettings</class>
     <class>io.hops.hopsworks.common.dao.ndb.NdbBackup</class>
-    <class>io.hops.hopsworks.common.dao.iot.IoTGateways</class>
+    <class>io.hops.hopsworks.common.dao.iot.IotGateways</class>
     <class>io.hops.hopsworks.common.dao.jobs.description.Jobs</class>
     <class>io.hops.hopsworks.common.dao.dela.certs.ClusterCertificate</class>
     <class>io.hops.hopsworks.common.dao.host.Hosts</class>

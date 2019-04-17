@@ -46,7 +46,7 @@ import io.hops.hopsworks.api.featurestore.FeaturestoreService;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
-import io.hops.hopsworks.api.iot.IoTGatewayResource;
+import io.hops.hopsworks.api.iot.IotGatewayResource;
 import io.hops.hopsworks.api.jobs.JobsResource;
 import io.hops.hopsworks.api.jobs.KafkaService;
 import io.hops.hopsworks.api.jupyter.JupyterService;
@@ -199,7 +199,7 @@ public class ProjectService {
   @Inject
   private FeaturestoreService featurestoreService;
   @Inject
-  private IoTGatewayResource iotResource;
+  private IotGatewayResource iotResource;
 
   private final static Logger LOGGER = Logger.getLogger(ProjectService.class.getName());
 
@@ -843,7 +843,7 @@ public class ProjectService {
   }
 
   @Path("{projectId}/gateways")
-  public IoTGatewayResource iotService(@PathParam("projectId") Integer projectId) {
+  public IotGatewayResource iotService(@PathParam("projectId") Integer projectId) {
     return this.iotResource.setProject(projectId);
   }
 }

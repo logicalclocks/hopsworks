@@ -5,7 +5,7 @@ import io.hops.hopsworks.common.api.RestDTO;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
-public class IoTDeviceDTO extends RestDTO<IoTDeviceDTO> {
+public class IotDeviceDTO extends RestDTO<IotDeviceDTO> {
   private String endpoint;
   private String hostname;
   private int port;
@@ -45,7 +45,7 @@ public class IoTDeviceDTO extends RestDTO<IoTDeviceDTO> {
   
   @Override
   public String toString() {
-    return "IoTDeviceDTO(" + endpoint + "," +
+    return "IotDeviceDTO(" + endpoint + "," +
       hostname + "," +
       port + "," +
       gatewayId + ")";

@@ -3,16 +3,16 @@ package io.hops.hopsworks.api.iot;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
-public class IoTDevice {
+public class IotDevice {
   private String endpoint;
   private String hostname;
   private Integer port;
   private Integer gatewayId;
   
-  public IoTDevice() {
+  public IotDevice() {
   }
   
-  public IoTDevice(String endpoint, String hostname, Integer port, Integer gatewayId) {
+  public IotDevice(String endpoint, String hostname, Integer port, Integer gatewayId) {
     this.endpoint = endpoint;
     this.hostname = hostname;
     this.port = port;
@@ -53,7 +53,7 @@ public class IoTDevice {
   
   @Override
   public String toString() {
-    return "IoTDevice(" + endpoint + "," +
+    return "IotDevice(" + endpoint + "," +
       hostname + "," +
       port + "," +
       gatewayId + ")";

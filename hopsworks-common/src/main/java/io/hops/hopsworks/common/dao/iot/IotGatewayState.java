@@ -1,8 +1,9 @@
 package io.hops.hopsworks.common.dao.iot;
 
-public enum GatewayState {
-  REGISTERED("Registered"),
-  BLOCKED("Blocked");
+public enum IotGatewayState {
+  ACTIVE("Active"),
+  BLOCKED("Blocked"),
+  INACTIVE_BLOCKED("InactiveBlocked");
   
   private final String name;
   
@@ -11,7 +12,7 @@ public enum GatewayState {
     return name;
   }
   
-  GatewayState(String name) {
+  IotGatewayState(String name) {
     this.name = name;
   }
 }

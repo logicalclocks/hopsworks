@@ -23,16 +23,16 @@ import java.util.Objects;
 @Table(name = "hopsworks.gateways")
 @XmlRootElement
 @NamedQueries({
-  @NamedQuery(name = "IoTGateways.findAll",
-    query = "SELECT i FROM IoTGateways i"),
-  @NamedQuery(name = "IoTGateways.findByProject",
-    query = "SELECT i FROM IoTGateways i WHERE i.project = :project"),
-  @NamedQuery(name = "IoTGateways.findByProjectAndId",
-    query = "SELECT i FROM IoTGateways i WHERE i.project = :project AND i.id = :id"),
-  @NamedQuery(name = "IoTGateways.updateState",
-    query = "UPDATE IoTGateways i SET i.state = :state WHERE i.id = :id")
+  @NamedQuery(name = "IotGateways.findAll",
+    query = "SELECT i FROM IotGateways i"),
+  @NamedQuery(name = "IotGateways.findByProject",
+    query = "SELECT i FROM IotGateways i WHERE i.project = :project"),
+  @NamedQuery(name = "IotGateways.findByProjectAndId",
+    query = "SELECT i FROM IotGateways i WHERE i.project = :project AND i.id = :id"),
+  @NamedQuery(name = "IotGateways.updateState",
+    query = "UPDATE IotGateways i SET i.state = :state WHERE i.id = :id")
   })
-public class IoTGateways implements Serializable {
+public class IotGateways implements Serializable {
 
   @Id
   @Basic(optional = false)
@@ -49,9 +49,7 @@ public class IoTGateways implements Serializable {
   private Integer port;
   
   @JoinColumn(name = "project_id",
-    referencedColumnName = "id",
-    insertable = false,
-    updatable = false)
+    referencedColumnName = "id")
   @ManyToOne(optional = false)
   private Project project;
   
@@ -59,22 +57,30 @@ public class IoTGateways implements Serializable {
   @NotNull
   @Column(name = "state")
   @Enumerated(EnumType.STRING)
-  private GatewayState state;
+  private IotGatewayState state;
   
-  public IoTGateways() {
+  public IotGateways() {
   }
   
-  public IoTGateways(Integer id, String hostname, Integer port, GatewayState state) {
+  public IotGateways(Integer id, String hostname, Integer port, IotGatewayState state) {
     this.id = id;
     this.hostname = hostname;
     this.port = port;
     this.state = state;
   }
   
-  public IoTGateways(Integer id, String hostname, Integer port, Project project, GatewayState state) {
+  public IotGateways(Integer id, String hostname, Integer port, Project project, IotGatewayState state) {
     this.id = id;
     this.hostname = hostname;
     this.port = port;
+    this.project = project;
+    this.state = state;
+  }
+  
+  public IotGateways(IotGatewayConfiguration config, Project project, IotGatewayState state) {
+    this.id = config.getGatewayId();
+    this.hostname = config.getHostname();
+    this.port = config.getPort();
     this.project = project;
     this.state = state;
   }
@@ -111,11 +117,11 @@ public class IoTGateways implements Serializable {
     this.project = project;
   }
   
-  public GatewayState getState() {
+  public IotGatewayState getState() {
     return state;
   }
   
-  public void setState(GatewayState state) {
+  public void setState(IotGatewayState state) {
     this.state = state;
   }
   
@@ -127,7 +133,7 @@ public class IoTGateways implements Serializable {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    IoTGateways that = (IoTGateways) o;
+    IotGateways that = (IotGateways) o;
     return Objects.equals(id, that.id) &&
       Objects.equals(hostname, that.hostname) &&
       Objects.equals(port, that.port) &&

@@ -1,16 +1,16 @@
 package io.hops.hopsworks.api.iot;
 
 import io.hops.hopsworks.common.api.RestDTO;
-import io.hops.hopsworks.common.dao.iot.GatewayState;
+import io.hops.hopsworks.common.dao.iot.IotGatewayState;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
-public class IoTGatewayDTO extends RestDTO<IoTGatewayDTO> {
+public class IotGatewayDTO extends RestDTO<IotGatewayDTO> {
   private Integer id;
   private String hostname;
   private Integer port;
-  private GatewayState state;
+  private IotGatewayState state;
 
   public Integer getId() {
     return id;
@@ -36,11 +36,11 @@ public class IoTGatewayDTO extends RestDTO<IoTGatewayDTO> {
     this.port = port;
   }
   
-  public GatewayState getState() {
+  public IotGatewayState getState() {
     return state;
   }
   
-  public void setState(GatewayState state) {
+  public void setState(IotGatewayState state) {
     this.state = state;
   }
 }

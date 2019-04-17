@@ -1,10 +1,11 @@
 package io.hops.hopsworks.common.dao.iot;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
@@ -14,16 +15,16 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Stateless
-public class GatewayFacade extends AbstractFacade<IoTGateways> {
+public class IotGatewayFacade extends AbstractFacade<IotGateways> {
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
-  private static final Logger LOGGER = Logger.getLogger(JobFacade.class.
+  private static final Logger LOGGER = Logger.getLogger(IotGatewayFacade.class.
     getName());
 
-  public GatewayFacade() {
-    super(IoTGateways.class);
+  public IotGatewayFacade() {
+    super(IotGateways.class);
   }
 
   @Override
@@ -31,8 +32,8 @@ public class GatewayFacade extends AbstractFacade<IoTGateways> {
     return em;
   }
 
-  public List<IoTGateways> findByProject(Project project) {
-    TypedQuery<IoTGateways> query = em.createNamedQuery("IoTGateways.findByProject", IoTGateways.class);
+  public List<IotGateways> findByProject(Project project) {
+    TypedQuery<IotGateways> query = em.createNamedQuery("IotGateways.findByProject", IotGateways.class);
     query.setParameter("project", project);
     try {
       return query.getResultList();
@@ -41,8 +42,8 @@ public class GatewayFacade extends AbstractFacade<IoTGateways> {
     }
   }
   
-  public IoTGateways findByProjectAndId(Project project, int gatewayId) {
-    TypedQuery<IoTGateways> query = em.createNamedQuery("IoTGateways.findByProjectAndId", IoTGateways.class);
+  public IotGateways findByProjectAndId(Project project, int gatewayId) {
+    TypedQuery<IotGateways> query = em.createNamedQuery("IotGateways.findByProjectAndId", IotGateways.class);
     query.setParameter("project", project)
       .setParameter("id", gatewayId);
     try {
@@ -52,10 +53,10 @@ public class GatewayFacade extends AbstractFacade<IoTGateways> {
     }
   }
   
-  public boolean updateState(int gatewayId, GatewayState newState) {
+  public boolean updateState(int gatewayId, IotGatewayState newState) {
     boolean status = false;
     try {
-      TypedQuery<IoTGateways> query = em.createNamedQuery("IoTGateways.updateState", IoTGateways.class)
+      TypedQuery<IotGateways> query = em.createNamedQuery("IotGateways.updateState", IotGateways.class)
         .setParameter("id", gatewayId)
         .setParameter("state", newState);
       int result = query.executeUpdate();
@@ -68,5 +69,24 @@ public class GatewayFacade extends AbstractFacade<IoTGateways> {
       throw ex;
     }
     return status;
+  }
+  
+  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+  public IotGateways putIotGateway(IotGateways gateway) {
+    gateway = em.merge(gateway);
+    em.flush();
+    return gateway;
+  }
+  
+  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+  public void removeIotGateway(IotGateways gateway) {
+    try {
+      IotGateways managedGateway = em.find(IotGateways.class, gateway.getId());
+      em.remove(em.merge(managedGateway));
+      em.flush();
+    } catch (SecurityException | IllegalStateException ex) {
+      LOGGER.log(Level.SEVERE, "Could not delete gateway: " + gateway.getId());
+      throw ex;
+    }
   }
 }

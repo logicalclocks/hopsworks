@@ -64,7 +64,7 @@ import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
-import io.hops.hopsworks.common.dao.iot.IoTGateways;
+import io.hops.hopsworks.common.dao.iot.IotGateways;
 import io.hops.hopsworks.common.dao.tensorflow.TensorBoard;
 import io.hops.hopsworks.common.dao.serving.Serving;
 import org.codehaus.jackson.annotate.JsonIgnore;
@@ -146,7 +146,7 @@ public class Project implements Serializable {
   private Collection<TensorBoard> tensorBoardCollection;
   @OneToMany(cascade = CascadeType.ALL,
           mappedBy = "project")
-  private Collection<IoTGateways> gatewaysCollection;
+  private Collection<IotGateways> gatewaysCollection;
 
   private static final long serialVersionUID = 1L;
 
@@ -523,11 +523,11 @@ public class Project implements Serializable {
   
   @XmlTransient
   @JsonIgnore
-  public Collection<IoTGateways> getGatewaysCollection() {
+  public Collection<IotGateways> getGatewaysCollection() {
     return gatewaysCollection;
   }
   
-  public void setGatewaysCollection(Collection<IoTGateways> gatewaysCollection) {
+  public void setGatewaysCollection(Collection<IotGateways> gatewaysCollection) {
     this.gatewaysCollection = gatewaysCollection;
   }
   
