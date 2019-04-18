@@ -111,7 +111,7 @@ describe "On #{ENV['OS']}" do
           end
           
           # Elasticsearch index should have been created for this project
-          index_name = "#{@project[:projectname]}_kagent-#{es_index_date_suffix}"
+          index_name = "#{@project[:projectname].downcase}_kagent-#{es_index_date_suffix}"
           head "#{ENV['ELASTIC_API']}/#{index_name}"
           
           Airborne.configure do |config|

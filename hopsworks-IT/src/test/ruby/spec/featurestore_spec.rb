@@ -35,7 +35,7 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json[0].key?("projectName")).to be true
           expect(parsed_json[0].key?("featurestoreName")).to be true
           expect(parsed_json[0]["projectName"] == project.projectname).to be true
-          expect(parsed_json[0]["featurestoreName"] == project.projectname + "_featurestore").to be true
+          expect(parsed_json[0]["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
         end
 
         it "should be able to get a featurestore with a particular id" do
@@ -48,7 +48,7 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json.key?("projectName")).to be true
           expect(parsed_json.key?("featurestoreName")).to be true
           expect(parsed_json["projectName"] == project.projectname).to be true
-          expect(parsed_json["featurestoreName"] == project.projectname + "_featurestore").to be true
+          expect(parsed_json["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
         end
       end
     end
@@ -69,7 +69,7 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json.key?("id")).to be true
           expect(parsed_json.key?("featurestoreName")).to be true
           expect(parsed_json.key?("name")).to be true
-          expect(parsed_json["featurestoreName"] == project.projectname + "_featurestore").to be true
+          expect(parsed_json["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
           expect(parsed_json["name"] == featuregroup_name).to be true
         end
 
@@ -180,7 +180,7 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json[0].key?("id")).to be true
           expect(parsed_json[0].key?("featurestoreName")).to be true
           expect(parsed_json[0].key?("name")).to be true
-          expect(parsed_json[0]["featurestoreName"] == project.projectname + "_featurestore").to be true
+          expect(parsed_json[0]["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
           expect(parsed_json[0]["name"] == featuregroup_name).to be true
         end
 
@@ -201,7 +201,7 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json.key?("featurestoreId")).to be true
           expect(parsed_json.key?("name")).to be true
           expect(parsed_json["featurestoreId"] == featurestore_id).to be true
-          expect(parsed_json["featurestoreName"] == project.projectname + "_featurestore").to be true
+          expect(parsed_json["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
           expect(parsed_json["name"] == featuregroup_name).to be true
           expect(parsed_json["id"] == featuregroup_id).to be true
         end
@@ -224,7 +224,7 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json.key?("id")).to be true
           expect(parsed_json.key?("featurestoreName")).to be true
           expect(parsed_json.key?("name")).to be true
-          expect(parsed_json["featurestoreName"] == project.projectname + "_featurestore").to be true
+          expect(parsed_json["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
           expect(parsed_json["name"] == training_dataset_name).to be true
         end
 
@@ -296,7 +296,7 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json[0].key?("id")).to be true
           expect(parsed_json[0].key?("featurestoreName")).to be true
           expect(parsed_json[0].key?("name")).to be true
-          expect(parsed_json[0]["featurestoreName"] == project.projectname + "_featurestore").to be true
+          expect(parsed_json[0]["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
           expect(parsed_json[0]["name"] == training_dataset_name).to be true
         end
 
@@ -317,7 +317,7 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json.key?("featurestoreId")).to be true
           expect(parsed_json.key?("name")).to be true
           expect(parsed_json["featurestoreId"] == featurestore_id).to be true
-          expect(parsed_json["featurestoreName"] == project.projectname + "_featurestore").to be true
+          expect(parsed_json["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
           expect(parsed_json["name"] == training_dataset_name).to be true
           expect(parsed_json["id"] == training_dataset_id).to be true
         end

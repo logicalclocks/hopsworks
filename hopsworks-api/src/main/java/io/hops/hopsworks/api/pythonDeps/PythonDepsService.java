@@ -377,7 +377,7 @@ public class PythonDepsService {
   private String checkCondaEnvExists(Project project) throws ServiceException, ProjectException {
     String msg = "";
     if (!project.getCondaEnv()) {
-      String indexName = project.getName() + Settings.ELASTIC_KAGENT_INDEX_PATTERN.replace("*",
+      String indexName = project.getName().toLowerCase() + Settings.ELASTIC_KAGENT_INDEX_PATTERN.replace("*",
           LocalDateTime.now().format(ELASTIC_INDEX_FORMATTER));
       if (!elasticController.indexExists(indexName)) {
         elasticController.createIndex(indexName);
