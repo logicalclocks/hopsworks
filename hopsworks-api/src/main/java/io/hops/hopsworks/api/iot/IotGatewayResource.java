@@ -203,26 +203,29 @@ public class IotGatewayResource {
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response startBlockingGateway(
     @PathParam("id")
-      Integer id
+      Integer gatewayId
   ) {
-    
-    kafkaFacade
-      .findTopicsByProject(project)
-      .stream()
-      .filter(t -> Lwm2mTopics.getNamesAsList().contains(t.getName()))
-      .forEach(t -> addBlockingAcl(t, id));
-    
-    iotGatewayFacade.updateState(id, IotGatewayState.BLOCKED);
+    IotGateways gateway = iotGatewayFacade.findByProjectAndId(project, gatewayId);
+    if (gateway == null) {
+      return Response.status(Response.Status.NOT_FOUND).entity("Gateway " + gatewayId + " not found.").build();
+    } else if (gateway.getState() == IotGatewayState.ACTIVE) {
+      kafkaFacade
+        .findTopicsByProject(project)
+        .stream()
+        .filter(t -> Lwm2mTopics.getNamesAsList().contains(t.getName()))
+        .forEach(t -> addBlockingAcl(t, gateway.getHostname()));
+      iotGatewayFacade.updateState(gatewayId, IotGatewayState.BLOCKED);
+      return Response.accepted().build();
+    }
     return Response.ok().build();
   }
   
-  private void addBlockingAcl(TopicDTO t, int gatewayId) {
-    IotGateways ioTGateway = iotGatewayFacade.findByProjectAndId(project, gatewayId);
+  private void addBlockingAcl(TopicDTO t, String iotGatewayHostname) {
     AclDTO acl = new AclDTO(project.getName(),
       Settings.KAFKA_ACL_WILDCARD,
       "deny",
       Settings.KAFKA_ACL_WILDCARD,
-      ioTGateway.getHostname(),
+      iotGatewayHostname,
       Settings.KAFKA_ACL_WILDCARD);
     
     try {
@@ -240,31 +243,35 @@ public class IotGatewayResource {
   public Response stopBlockingGateway(
     @PathParam("id") Integer gatewayId
   ) {
-    kafkaFacade
-      .findTopicsByProject(project)
-      .stream()
-      .filter(t -> Lwm2mTopics.getNamesAsList().contains(t.getName()))
-      .forEach(t -> removeBlockingAcl(t, gatewayId));
-    
     IotGateways gateway = iotGatewayFacade.findByProjectAndId(project, gatewayId);
-    if (gateway.getState() == IotGatewayState.INACTIVE_BLOCKED) {
-      iotGatewayFacade.removeIotGateway(gateway);
-    } else if (gateway.getState() == IotGatewayState.BLOCKED) {
-      iotGatewayFacade.updateState(gatewayId, IotGatewayState.ACTIVE);
+    if (gateway == null) {
+      return Response.status(Response.Status.NOT_FOUND).entity("Gateway " + gatewayId + " not found.").build();
+    } else if (gateway.getState() == IotGatewayState.ACTIVE) {
+      return Response.ok().build();
+    } else {
+      kafkaFacade
+        .findTopicsByProject(project)
+        .stream()
+        .filter(t -> Lwm2mTopics.getNamesAsList().contains(t.getName()))
+        .forEach(t -> removeBlockingAcl(t, gateway.getHostname()));
+      if (gateway.getState() == IotGatewayState.INACTIVE_BLOCKED) {
+        iotGatewayFacade.removeIotGateway(gateway);
+      } else if (gateway.getState() == IotGatewayState.BLOCKED) {
+        iotGatewayFacade.updateState(gatewayId, IotGatewayState.ACTIVE);
+      }
+      return Response.accepted().build();
     }
-    return Response.ok().build();
   }
   
-  private void removeBlockingAcl(TopicDTO t, int gatewayId) {
-    String gatewayIp = iotGatewayFacade.findByProjectAndId(project, gatewayId).getHostname();
+  private void removeBlockingAcl(TopicDTO t, String iotGatewayHostname) {
     //TODO: make sure that principal is not necessary
     TopicAcls acl = kafkaFacade.getTopicAcl(
       t.getName(),
       "deny",
       Settings.KAFKA_ACL_WILDCARD,
-      gatewayIp,
+      iotGatewayHostname,
       Settings.KAFKA_ACL_WILDCARD);
-
+    
     try {
       if (acl != null) {
         kafkaFacade.removeAclFromTopic(t.getName(), acl.getId());
