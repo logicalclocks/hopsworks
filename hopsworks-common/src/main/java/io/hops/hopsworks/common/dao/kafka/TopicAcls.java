@@ -95,11 +95,6 @@ import io.hops.hopsworks.common.dao.user.Users;
     = "SELECT t FROM TopicAcls t WHERE t.principal = :principal AND t.role = :role AND t.host = :host AND "
         + "t.operationType = :operationType AND t.permissionType = :permissionType AND "
         + "t.projectTopics.topicName = :topicName"),
-  @NamedQuery(name = "TopicAcls.findAclWithoutPrincipal",
-    query
-      = "SELECT t FROM TopicAcls t WHERE t.role = :role AND t.host = :host AND "
-      + "t.operationType = :operationType AND t.permissionType = :permissionType AND "
-      + "t.projectTopics.topicName = :topicName"),
   @NamedQuery(name = "TopicAcls.deleteByUser",
       query = "DELETE FROM TopicAcls t WHERE t.user = :user AND t.projectTopics.project = " +
           ":project")})

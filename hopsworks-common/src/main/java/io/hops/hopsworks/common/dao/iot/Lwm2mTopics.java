@@ -6,7 +6,8 @@ import java.util.stream.Collectors;
 
 public enum Lwm2mTopics {
   
-  TEMPERATURE("topic-lwm2m-3303-temperature");
+  TEMPERATURE("topic-lwm2m-3303-temperature"),
+  PRESENCE("topic-lwm2m-3302-presence");
   
   private final String name;
   

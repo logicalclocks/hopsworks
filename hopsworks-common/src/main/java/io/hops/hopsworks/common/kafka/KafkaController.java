@@ -41,23 +41,27 @@ package io.hops.hopsworks.common.kafka;
 
 import io.hops.hopsworks.common.dao.certificates.CertsFacade;
 import io.hops.hopsworks.common.dao.certificates.UserCerts;
+import io.hops.hopsworks.common.dao.iot.IotGateways;
+import io.hops.hopsworks.common.dao.iot.Lwm2mTopics;
 import io.hops.hopsworks.common.dao.kafka.AclDTO;
 import io.hops.hopsworks.common.dao.kafka.KafkaFacade;
 import io.hops.hopsworks.common.dao.kafka.SharedTopics;
+import io.hops.hopsworks.common.dao.kafka.TopicAcls;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.UserException;
-import io.hops.hopsworks.common.util.Settings;
+
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
-import javax.ejb.EJB;
-import javax.ejb.Stateless;
 
 @Stateless
 public class KafkaController {
@@ -168,5 +172,53 @@ public class KafkaController {
     }
     return topics;
   }
-
+  
+  public void startBlockingIotGateway(IotGateways gateway, Project project) {
+    kafkaFacade
+      .findTopicsByProject(project)
+      .stream()
+      .filter(t -> Lwm2mTopics.getNamesAsList().contains(t.getName()))
+      .forEach(t -> addBlockingAcl(t, gateway.getHostname(), project));
+  }
+  
+  private void addBlockingAcl(TopicDTO t, String iotGatewayHostname, Project project) {
+    AclDTO acl = new AclDTO(project.getName(),
+      Settings.KAFKA_ACL_WILDCARD,
+      "deny",
+      Settings.KAFKA_ACL_WILDCARD,
+      iotGatewayHostname,
+      Settings.KAFKA_ACL_WILDCARD);
+    try {
+      kafkaFacade.addAclsToTopic(t.getName(), project.getId(), acl);
+    } catch (KafkaException | ProjectException | UserException ex) {
+      throw new RuntimeException(ex);
+    }
+  }
+  
+  public void removeBlockingIotGateway(IotGateways gateway, Project project, Users user) {
+    String principal = project.getName() + "__" + user.getUsername();
+    kafkaFacade
+      .findTopicsByProject(project)
+      .stream()
+      .filter(t -> Lwm2mTopics.getNamesAsList().contains(t.getName()))
+      .forEach(t -> removeBlockingAcl(t, gateway.getHostname(), principal));
+  }
+  
+  private void removeBlockingAcl(TopicDTO t, String iotGatewayHostname, String principal) {
+    TopicAcls acl = kafkaFacade.getTopicAcl(
+      t.getName(),
+      principal,
+      "deny",
+      Settings.KAFKA_ACL_WILDCARD,
+      iotGatewayHostname,
+      Settings.KAFKA_ACL_WILDCARD);
+  
+    if (acl != null) {
+      try {
+        kafkaFacade.removeAclFromTopic(t.getName(), acl.getId());
+      } catch (KafkaException ex) {
+        throw new RuntimeException(ex);
+      }
+    }
+  }
 }

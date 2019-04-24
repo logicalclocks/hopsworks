@@ -58,9 +58,9 @@ public class IotGatewayBuilder {
     return dto;
   }
   
-  private IotDeviceDTO buildDevice(UriInfo uriInfo, IotDevice iotDevice, Project project) {
+  public IotDeviceDTO buildDevice(UriInfo uriInfo, IotDevice iotDevice, Project project) {
     IotDeviceDTO dto = new IotDeviceDTO();
-    dto.setHref(uriIotNodes(iotDevice.getGatewayId(), uriInfo, project));
+    dto.setHref(uriIotNode(iotDevice.getGatewayId(), iotDevice.getEndpoint(), uriInfo, project));
     dto.setEndpoint(iotDevice.getEndpoint());
     dto.setHostname(iotDevice.getHostname());
     dto.setPort(iotDevice.getPort());
@@ -87,6 +87,16 @@ public class IotGatewayBuilder {
       .path(ResourceRequest.Name.GATEWAYS.toString().toLowerCase())
       .path(Integer.toString(gatewayId))
       .path(ResourceRequest.Name.NODES.toString().toLowerCase())
+      .build();
+  }
+  
+  private URI uriIotNode(Integer gatewayId, String nodeId, UriInfo uriInfo, Project project) {
+    return uriInfo.getBaseUriBuilder().path(ResourceRequest.Name.PROJECT.toString().toLowerCase())
+      .path(Integer.toString(project.getId()))
+      .path(ResourceRequest.Name.GATEWAYS.toString().toLowerCase())
+      .path(Integer.toString(gatewayId))
+      .path(ResourceRequest.Name.NODES.toString().toLowerCase())
+      .path(nodeId)
       .build();
   }
 }
