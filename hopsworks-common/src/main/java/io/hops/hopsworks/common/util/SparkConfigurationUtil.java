@@ -155,7 +155,6 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
                             experimentType != null)));
 
     if(experimentType != null) {
-      addToSparkEnvironment(sparkProps,"LC_ALL", "C", settings);
       //Dynamic executors requires the shuffle service to be enabled
       sparkProps.put(Settings.SPARK_SHUFFLE_SERVICE,
         new ConfigProperty(
