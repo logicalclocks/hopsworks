@@ -694,13 +694,8 @@ angular.module('hopsWorksApp')
                           var conv = new showdown.Converter({parseImgDimensions: true});
                           $scope.readme = conv.makeHtml(content);
                         }, function (error) {
-                  //To hide README from UI
-                        if (typeof error.data.usrMsg !== 'undefined') {
-                            growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 4});
-                        } else {
-                            growl.error("", {title: error.data.errorMsg, ttl: 5000, referenceId: 4});
-                        }
-                  $scope.readme = null;
+                          //To hide README from UI
+                          $scope.readme = null;
                 });
               } else {
                 ModalService.filePreview('lg', fileName, filePath, self.projectId, "head").then(
