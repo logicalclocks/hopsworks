@@ -56,7 +56,7 @@ module ProjectHelper
 
   def create_project
     with_valid_session
-    new_project = {projectName: "project_#{short_random_id}", description:"", status: 0, services: ["JOBS","JUPYTER","HIVE","KAFKA","SERVING", "FEATURESTORE"],
+    new_project = {projectName: "ProJect_#{short_random_id}", description:"", status: 0, services: ["JOBS","JUPYTER","HIVE","KAFKA","SERVING", "FEATURESTORE"],
                    projectTeam:[], retentionPeriod: ""}
     post "#{ENV['HOPSWORKS_API']}/project", new_project
     expect_status(201)
