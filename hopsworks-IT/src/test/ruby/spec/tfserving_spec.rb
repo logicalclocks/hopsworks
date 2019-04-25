@@ -287,7 +287,7 @@ describe "On #{ENV['OS']}" do
           config.base_url = ''
         end
 
-        index = get "#{ENV['ELASTIC_API']}/#{@project[:projectname]}_serving*/_search?q=modelname:#{@serving[:model_name]}"
+        index = get "#{ENV['ELASTIC_API']}/#{@project[:projectname].downcase}_serving*/_search?q=modelname:#{@serving[:model_name]}"
 
         Airborne.configure do |config|
           config.base_url = "https://#{ENV['WEB_HOST']}:#{ENV['WEB_PORT']}"
