@@ -300,7 +300,6 @@ public class FeaturegroupController {
    * @param featurestore             the featurestore that the featuregroup belongs to
    * @param featuregroupName         the name of the new featuregroup
    * @param features                 string of features separated with comma
-   * @param featuregroupDoc          description of the featuregroup
    * @param dependencies             dependencies to create the featuregroup (e.g input datasets to feature engineering)
    * @param job                      (optional) job to compute this feature group\
    * @param version                  version of the featuregroup
@@ -317,7 +316,7 @@ public class FeaturegroupController {
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public FeaturegroupDTO createFeaturegroup(
       Project project, Users user, Featurestore featurestore,
-      String featuregroupName, String features, String featuregroupDoc,
+      String featuregroupName, String features,
       List<String> dependencies, Jobs job, Integer version,
       FeatureCorrelationMatrixDTO featureCorrelationMatrix, DescriptiveStatsDTO descriptiveStatistics,
       FeatureDistributionsDTO featuresHistogram,
@@ -326,8 +325,8 @@ public class FeaturegroupController {
     //Create Hive Table
     String db = featurestoreController.getFeaturestoreDbName(featurestore.getProject());
     String tableName = getTblName(featuregroupName, version);
-    String query = "CREATE TABLE " + db + ".`" + tableName + "`(" +
-        features + ")" + " COMMENT '" + featuregroupDoc + "' STORED AS " +
+    String query = "CREATE TABLE " + db + ".`" + tableName + "` " +
+        features + " STORED AS " +
         settings.getFeaturestoreDbDefaultStorageFormat();
     executeUpdateHiveQuery(query, db, project, user);
     String hdfsUsername = hdfsUsersController.getHdfsUserName(project, user);

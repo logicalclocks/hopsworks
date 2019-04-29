@@ -146,6 +146,7 @@ public class FeaturegroupFacade extends AbstractFacade<Featuregroup> {
           (String) featureObject[2]);
       featureDTOs.add(featureDTO);
     }
+    featureDTOs.addAll(getHivePartitionKeys(hiveTableId));
     return featureDTOs;
   }
 
@@ -162,6 +163,29 @@ public class FeaturegroupFacade extends AbstractFacade<Featuregroup> {
           + hiveTableName + "' AND `DB_ID`=" + hiveDbId +";").getSingleResult();
     } catch (NoResultException e) {
       return null;
+    }
+  }
+
+  /**
+   * Gets the partition keys of a featuregroup from the Hive metastore
+   *
+   * @param hiveTableId the id of the Hive table for the featuregroup
+   * @return list of featureDTOs with name,type,comment of the partition keys
+   */
+  public List<FeatureDTO> getHivePartitionKeys(Long hiveTableId) {
+    try {
+      List<Object[]> featureObjects = em.createNativeQuery("SELECT `PKEY_NAME`, `PKEY_TYPE`, `PKEY_COMMENT` " +
+          "FROM metastore.`PARTITION_KEYS` " +
+          "WHERE `TBL_ID`=" + hiveTableId + ";").getResultList();
+      ArrayList<FeatureDTO> featureDTOs = new ArrayList<>();
+      for (Object[] featureObject : featureObjects) {
+        FeatureDTO featureDTO = new FeatureDTO((String) featureObject[0], (String) featureObject[1],
+            (String) featureObject[2], false, true);
+        featureDTOs.add(featureDTO);
+      }
+      return featureDTOs;
+    } catch (NoResultException e) {
+      return new ArrayList<>();
     }
   }
 
