@@ -5,10 +5,13 @@
 
 ## Overview
 
-<a href=""><img src="https://hopsworks.readthedocs.io/en/latest/_images/hopsworks.png" align="center"></a>
+<!-- <a href=""><img src="https://hopsworks.readthedocs.io/en/latest/_images/hopsworks.png" align="center"></a> -->
 
 <a href=""><img src="https://www.hops.io/wp-content/uploads/2018/07/Plants-Hops-icon-50x50-e1532970413999.png" align="left" hspace="10" vspace="6"></a>
-**Hopsworks** is a full-stack platform for Data Science built on Hops, the world's fastest and most scalable Hadoop distribution. Hopsworks has unique support for project-based multi-tenancy, horizontally scalable ML pipelines and managed GPUs-as-a-resource.
+**Hopsworks** is a platform for both the design and operation of data analytics and machine learning applications. You can design ML applications in Jupyter notebooks in Python and operate them in workflows orchestrated by Airflow, while running on the world's fastest and most scalable Hadoop distribution. Hopsworks is more than a Hadoop distribution, as it has unique support for project-based multi-tenancy, horizontally scalable ML pipelines, and managed GPUs-as-a-resource.
+
+
+<a href=""><img src="hopsworks-web/yo/app/images/what-is-hopsworks.png" align="center"></a>
 
 ## Multi-tenancy - Projects, Users, Datasets
 Hopsworks provides Projects as a privacy-by-design sandbox for data, including sensitive data, and for managing collaborating teams - like GitHub.
@@ -16,7 +19,7 @@ Datasets can be shared between projects - like Dropbox. Each project has its own
 
 ## HopsML
 
-<a href=""><img src="https://hopsworks.readthedocs.io/en/latest/_images/hopsml-hopsfs-pipeline.png" align="center"></a>
+<a href=""><img src="hopsworks-web/yo/app/images/hopsworks-e2e-ml.png" align="center"></a>
 
 HopsML is our framework for writing end-to-end machine learning workflows in Python. We support Airflow to orchestrate workflows with: ETL in PySpark or TensorFlow, a Feature Store, AutoML hyperparameter optimization techniques over many hosts and GPUs in Keras/TensorFlow/PyTorch, in addition to distributed training such as Collective AllReduce.
 
