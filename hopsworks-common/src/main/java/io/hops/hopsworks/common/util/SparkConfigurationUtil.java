@@ -120,7 +120,8 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
     addToSparkEnvironment(sparkProps, "HADOOP_USER_NAME", hdfsUser, settings);
     addToSparkEnvironment(sparkProps, "LD_LIBRARY_PATH", settings.getJavaHome() +
       "/jre/lib/amd64/server" + File.pathSeparator + tfLdLibraryPath +
-      settings.getHadoopSymbolicLinkDir() + "/lib/native", settings);
+      settings.getHadoopSymbolicLinkDir() + "/lib/native" + File.pathSeparator + settings.getAnacondaProjectDir(project)
+        + "/lib/", settings);
     if(!Strings.isNullOrEmpty(sparkJobConfiguration.getAppName())) {
       addToSparkEnvironment(sparkProps, "HOPSWORKS_JOB_NAME", sparkJobConfiguration.getAppName(), settings);
     }
