@@ -23,13 +23,13 @@ Datasets can be shared between projects - like Dropbox. Each project has its own
 
 HopsML is our framework for writing end-to-end machine learning workflows in Python. We support Airflow to orchestrate workflows with: ETL in PySpark or TensorFlow, a Feature Store, AutoML hyperparameter optimization techniques over many hosts and GPUs in Keras/TensorFlow/PyTorch, in addition to distributed training such as Collective AllReduce.
 
-Jupyter notebooks can be used to write all parts of the pipeline, and TensorBoard to visualize experiment results during and after training. Models can be deployed in Kubernetes (built-in or external) and monitored in production using Kafka/Spark-Streaming. For more information see the docs [docs](https://hopsworks.readthedocs.io/en/latest/hopsml/hopsML.html).
+Jupyter notebooks can be used to write all parts of the pipeline, and TensorBoard to visualize experiment results during and after training. Models can be deployed in Kubernetes (built-in or external) and monitored in production using Kafka/Spark-Streaming. For more information see the [docs](https://hopsworks.readthedocs.io/en/latest/hopsml/hopsML.html).
 
 ## Feature Store
 
-<a href=""><img src="https://hopsworks.readthedocs.io/en/latest/_images/overview_new1.png" align="center" hspace="10" vspace="30"></a>
+<a href=""><img src="hopsworks-web/yo/app/images/hopsworks-featurestore.png" align="center" hspace="10" vspace="30"></a>
 
-The feature store is as a central place to store curated features for machine learning pipelines in Hopsworks. A feature is a measurable property of some data-sample. It could be for example an image-pixel, a word from a piece of text, the age of a person, a coordinate emitted from a sensor, or an aggregate value like the average number of purchases within the last hour. Features can come directly from tables or files or can be derived values, computed from one or more data sources. For more information see the docs [docs](https://hopsworks.readthedocs.io/en/latest/user_guide/hopsworks/featurestore.html).
+The feature store is as a central place to store curated features for machine learning pipelines in Hopsworks. A feature is a measurable property of some data-sample. It could be for example an image-pixel, a word from a piece of text, the age of a person, a coordinate emitted from a sensor, or an aggregate value like the average number of purchases within the last hour. Features can come directly from tables or files or can be derived values, computed from one or more data sources. For more information see the [docs](https://hopsworks.readthedocs.io/en/latest/user_guide/hopsworks/featurestore.html).
 
 ## TLS security
 
