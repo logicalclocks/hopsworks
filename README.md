@@ -41,9 +41,8 @@ Uniquely in Hadoop, Hops supports X.509 certificates for authentication and auth
 
 ## HopsFS
 
-
 <p align="center">
-  <a href=""><src="hopsworks-web/yo/app/images/hopsfs.png"></a>
+  <a href=""><img src="hopsworks-web/yo/app/images/hopsfs.png"></a>
 </p>
 
 HopsFS is a drop-in replacement for HDFS that adds distributed metadata and "small-files in metadata (NVMe disks)" support to HDFS. 
