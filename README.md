@@ -39,6 +39,15 @@ The feature store is as a central place to store curated features for machine le
 
 Uniquely in Hadoop, Hops supports X.509 certificates for authentication and authorization: users, services, jobs and TLS for in-flight encryption. At-rest encryption is also supported using ZFS-on-Linux.
 
+## HopsFS
+
+
+<p align="center">
+  <a href=""><src="hopsworks-web/yo/app/images/hopsfs.png"></a>
+</p>
+
+HopsFS is a drop-in replacement for HDFS that adds distributed metadata and "small-files in metadata (NVMe disks)" support to HDFS. 
+
 ## Information
 
 <ul>
