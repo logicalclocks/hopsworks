@@ -27,7 +27,6 @@ angular.module('hopsWorksApp')
 
             var self = this;
 
-            self.pyFiles = [];
             self.jars = [];
             self.archives = [];
             self.files = [];
@@ -81,7 +80,6 @@ angular.module('hopsWorksApp')
                     self.jobConfig.distributionStrategy = self.distributionStrategy;
                 }
 
-                self.pyFiles = [];
                 self.jars = [];
                 self.archives = [];
                 self.files = [];
@@ -92,16 +90,6 @@ angular.module('hopsWorksApp')
                         if (files[i]) {
                           if(self.files.indexOf(files[i] === -1))
                             self.files.push(files[i]);
-                        }
-                    }
-                }
-
-                if (self.jobConfig['spark.yarn.dist.pyFiles']) {
-                    var pyFiles = self.jobConfig['spark.yarn.dist.pyFiles'].split(',');
-                    for (var i = 0; i < pyFiles.length; i++) {
-                        if (pyFiles[i]) {
-                            if(self.pyFiles.indexOf(pyFiles[i] === -1))
-                            self.pyFiles.push(pyFiles[i]);
                         }
                     }
                 }
@@ -229,14 +217,12 @@ angular.module('hopsWorksApp')
             //Set some (semi-)constants
             self.selectFileRegexes = {
                 "JAR": /.jar\b/,
-                "PY": /.py\b/,
                 "FILES": /[^]*/,
                 "ZIP": /.zip\b/,
                 "TGZ": /.zip\b/
             };
             self.selectFileErrorMsgs = {
                 "JAR": "Please select a JAR file.",
-                "PY": "Please select a Python file.",
                 "ZIP": "Please select a zip file.",
                 "TGZ": "Please select a tgz file.",
                 "FILES": "Please select a file."
@@ -267,27 +253,6 @@ angular.module('hopsWorksApp')
                 var file = path.replace(/^.*[\\\/]/, '')
                 var fileName = file.substr(0, file.lastIndexOf('.'))
                 switch (reason.toUpperCase()) {
-                    case "PYFILES":
-                        if (extension.toUpperCase() === "PY" ||
-                            extension.toUpperCase() === "ZIP" ||
-                            extension.toUpperCase() === "EGG") {
-                            if (self.pyFiles === []) {
-                                self.pyFiles = [path];
-                            } else {
-                                if (self.pyFiles.indexOf(path) === -1) {
-                                    self.pyFiles.push(path);
-                                }
-                            }
-                            self.jobConfig['spark.yarn.dist.pyFiles'] = "";
-                            for (var i = 0; i < self.pyFiles.length; i++) {
-                                self.jobConfig['spark.yarn.dist.pyFiles'] = self.jobConfig['spark.yarn.dist.pyFiles'] + self.pyFiles[i] + ",";
-                            }
-                        } else {
-                            growl.error("Invalid file type selected. Expecting .py, .zip or .egg - Found: " + extension, {
-                                ttl: 10000
-                            });
-                        }
-                        break;
                     case "JARS":
                         if (extension.toUpperCase() === "JAR") {
                             if (self.jars === []) {
@@ -358,13 +323,9 @@ angular.module('hopsWorksApp')
                 self.jars.splice(index, 1);
                 arr = self.jars;
 
-                } else if(type === 'archives') {
+                } else(type === 'archives') {
                 self.archives.splice(index, 1);
                 arr = self.archives;
-
-                } else {
-                self.pyFiles.splice(index, 1);
-                 arr = self.pyFiles;
                 }
                 self.jobConfig['spark.yarn.dist.' + type] = "";
                 for (var i = 0; i < arr.length; i++) {

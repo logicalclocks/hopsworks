@@ -105,9 +105,6 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
   @XmlElement(name="spark.blacklist.enabled")
   private boolean blacklistingEnabled = false;
 
-  @XmlElement(name="spark.yarn.dist.pyFiles")
-  private String pyFiles;
-
   @XmlElement(name="spark.yarn.dist.files")
   private String files;
 
@@ -255,14 +252,6 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
     } else {
       return JobType.SPARK;
     }
-  }
-
-  public String getPyFiles() {
-    return pyFiles;
-  }
-
-  public void setPyFiles(String pyFiles) {
-    this.pyFiles = pyFiles;
   }
 
   public String getFiles() {

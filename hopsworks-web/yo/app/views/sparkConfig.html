@@ -361,29 +361,6 @@
                         </div>
                     </div>
                 </div>
-
-                <div class="row">
-                    <div class="row clusterparams">
-                        <div class="text-right col-md-4">
-                            <label for="pyFiles">
-                                <button
-                                        uib-tooltip='Comma-separated list of .py, .zip or .egg files that should be added to PYTHONPATH. This option corresponds to --pyFiles option in Spark. ' id="selectPyFileButton" class="btn btn-default"
-                                        ng-click="sparkConfigCtrl.selectFile('pyfiles')" style="width:100px;">
-                                    <span><i class="fa fa-plus" style="margin-right:4px; font-size:0.8em;"/><i class="fa fa-file" style="font-size:0.8em;"/> Python</span>
-                                </button>
-                            </label>
-                            <i class="fa fa-info-circle" uib-tooltip='Comma-separated list of .py, .zip or .egg files that should be added to PYTHONPATH. This option corresponds to --pyFiles option in Spark. ' style="margin-left: 10px"></i>
-                        </div>
-                        <div class="col-md-7 jupyter-left">
-                            <ul id="pyFiles" class="resource-ul">
-                                <li class="resource resource-show" ng-repeat="file in sparkConfigCtrl.pyFiles" style="list-style-type: none; background:#efefef; color:black; display: inline-block;">{{file}}
-                                    <button class="close" ng-click="sparkConfigCtrl.remove($index, 'pyFiles')" type="button"><span style="margin-left: 5px; color:black; font-size:1.3em;" aria-hidden="true">×</span></button></li>
-                            </ul>
-                            <div ng-if="sparkConfigCtrl.pyFiles.length === 0">No additional python dependencies</div>
-                        </div>
-                    </div>
-                </div>
-
                 <div class="row">
                     <div class="row clusterparams">
                         <div class="text-right col-md-4">

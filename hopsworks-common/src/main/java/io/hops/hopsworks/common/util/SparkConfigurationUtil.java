@@ -352,18 +352,6 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
       sparkFiles.append(",").append(applicationFiles);
     }
 
-    String applicationPyFiles = sparkJobConfiguration.getPyFiles();
-    if(!Strings.isNullOrEmpty(applicationPyFiles)) {
-      StringBuilder pythonPath = new StringBuilder();
-      applicationPyFiles = formatResources(applicationPyFiles);
-      for(String pythonDep: applicationPyFiles.split(",")) {
-        String name = pythonDep.substring(pythonDep.lastIndexOf("/") + 1);
-        pythonPath.append("{{PWD}}/" + name + File.pathSeparator);
-      }
-      addToSparkEnvironment(sparkProps,"PYTHONPATH", pythonPath.toString(), settings);
-      sparkFiles.append(",").append(applicationPyFiles);
-    }
-
     applicationFiles = formatResources(sparkFiles.toString());
     sparkProps.put(Settings.SPARK_YARN_DIST_FILES, new ConfigProperty(
             Settings.SPARK_YARN_DIST_FILES, HopsUtils.APPEND_COMMA,

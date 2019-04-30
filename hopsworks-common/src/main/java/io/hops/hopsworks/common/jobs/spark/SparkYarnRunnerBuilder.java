@@ -262,7 +262,7 @@ public class SparkYarnRunnerBuilder {
     builder.amVCores(sparkJobConfiguration.getAmVCores());
     builder.amQueue(sparkJobConfiguration.getAmQueue());
 
-    //pyfiles, jars and files are distributed as spark.yarn.dist.files
+    //jars and files are distributed as spark.yarn.dist.files
     String hopsFiles = finalJobProps.get("spark.yarn.dist.files");
     if(!Strings.isNullOrEmpty(hopsFiles)) {
       for (String filePath : hopsFiles.split(",")) {
