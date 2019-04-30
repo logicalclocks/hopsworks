@@ -294,7 +294,7 @@ angular.module('hopsWorksApp')
                 PythonService.enabled(self.projectId).then(
                     function (success) {
                         self.enabled = true;
-                        self.pythonVersion = success.data;
+                        self.pythonVersion = success.data.items[0].pythonVersion;
                     },
                     function (error) {
                         self.enabled = false;

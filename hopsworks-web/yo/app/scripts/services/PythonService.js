@@ -50,10 +50,13 @@ angular.module('hopsWorksApp')
         .factory('PythonService', ['$http', function ($http) {
             return {
               enabled: function (projectId) {
-                return $http.get('/api/project/' + projectId + '/python/environments/enabled');
+                return $http.get('/api/project/' + projectId + '/python/environments');
               },
               getLibraries: function (projectId, pythonVersion) {
                 return $http.get('/api/project/' + projectId + '/python/environments/' + pythonVersion + '/libraries?expand=commands');
+              },
+              getLibrary: function (projectId, pythonVersion, lib) {
+                return $http.get('/api/project/' + projectId + '/python/environments/' + pythonVersion + '/libraries/' + lib);
               },
               createEnvironmentFromVersion: function (projectId, version, pythonKernelEnabled) {
                 return $http.post('/api/project/' + projectId + '/python/environments/' + version + '?action=create&pythonKernelEnable=' + pythonKernelEnabled);

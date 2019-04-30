@@ -197,20 +197,6 @@ public class EnvironmentResource {
     org.apache.hadoop.fs.Path fullPath = ymlPath.getFullPath();
     return fullPath.toString();
   }
-  
-  
-  @GET
-  @Path("/enabled")
-  @Produces(MediaType.TEXT_PLAIN)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response enabled() {
-    boolean enabled = project.getConda();
-    if (enabled) {
-      return Response.ok().entity(project.getPythonVersion()).build();
-    }
-    return Response.status(Response.Status.SERVICE_UNAVAILABLE).build();
-  }
 
   @ApiOperation(value = "Python library sub-resource", tags = {"PythonLibraryResource"})
   @Path("{version}/libraries")

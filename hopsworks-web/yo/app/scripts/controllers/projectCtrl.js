@@ -333,8 +333,9 @@ angular.module('hopsWorksApp')
               self.enabling = true;
               PythonService.enabled(self.projectId).then(
                   function (success) {
+                      var version = success.data.count > 0? success.data.items[0].pythonVersion : "0.0";
                       // Check if jupyter is installed
-                      PythonService.libInstalled(self.projectId, "hdfscontents").then(
+                      PythonService.getLibrary(self.projectId, version,"hdfscontents").then(
                           function(success) {
                               self.goToUrl('jupyter');
                           },

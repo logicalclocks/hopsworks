@@ -73,7 +73,7 @@ angular.module('hopsWorksApp')
 
             self.confirmSelection = function(pythonCtrl, isDirectory) {
 
-                var singleMachineType = !(pythonCtrl.environmentTypes.includes('CPU') && pythonCtrl.environmentTypes.includes('GPU'));
+                var singleMachineType = !(pythonCtrl.environmentTypes['CPU'] && pythonCtrl.environmentTypes['GPU']);
 
                 if (singleMachineType && self.environmentYmlDef.allYmlPath === "") {
                     growl.error("Please select a .yml file for your Anaconda environment.", {

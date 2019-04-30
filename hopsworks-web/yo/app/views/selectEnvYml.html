@@ -45,7 +45,7 @@
 </div>
 <div class="modal-body" ng-controller="PythonCtrl as pythonCtrl">
 
-  <div class="row" ng-if="(pythonCtrl.environmentTypes.contains('CPU') && pythonCtrl.environmentTypes.contains('GPU'))">
+  <div class="row" ng-if="(pythonCtrl.environmentTypes['CPU'] && pythonCtrl.environmentTypes['GPU'])">
     <div class="col-md-2">
       <button id="selectCpuYmlButton" class="btn btn-primary" ng-click="selectEnvYmlCtrl.envMode = 'CPU'">
           <span>
@@ -58,7 +58,7 @@
     </div>
   </div>
 
-  <div class="row" ng-if="!(pythonCtrl.environmentTypes.contains('CPU') && pythonCtrl.environmentTypes.contains('GPU'))">
+  <div class="row" ng-if="!(pythonCtrl.environmentTypes['CPU'] && pythonCtrl.environmentTypes['GPU'])">
     <div class="col-md-2">
       <button id="selectAllYmlButton" class="btn btn-primary" ng-click="selectEnvYmlCtrl.envMode = 'ALL'">
           <span>
@@ -71,7 +71,7 @@
     </div>
   </div>
 
-  <div class="row" ng-show="(pythonCtrl.environmentTypes.contains('CPU') && pythonCtrl.environmentTypes.contains('GPU'))">
+  <div class="row" ng-show="(pythonCtrl.environmentTypes['CPU'] && pythonCtrl.environmentTypes['GPU'])">
     <div class="col-md-2">
       <button id="selectGpuYmlButton" class="btn btn-primary" ng-click="selectEnvYmlCtrl.envMode = 'GPU'">
           <span>
