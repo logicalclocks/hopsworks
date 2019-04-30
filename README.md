@@ -3,10 +3,49 @@
 [![Join the chat at https://gitter.im/hopshadoop/hopsworks](https://badges.gitter.im/hopshadoop/services.png)](https://gitter.im/hopshadoop/hopsworks)
 [![Google Group](https://img.shields.io/badge/google-group-blue.svg)](https://groups.google.com/forum/#!forum/hopshadoop)
 
+## Overview
+
+<!-- <a href=""><img src="https://hopsworks.readthedocs.io/en/latest/_images/hopsworks.png" align="center"></a> -->
 
 <a href=""><img src="https://www.hops.io/wp-content/uploads/2018/07/Plants-Hops-icon-50x50-e1532970413999.png" align="left" hspace="10" vspace="6"></a>
-**Hopsworks** is the UI for Hops, a new distribution of Apache Hadoop with scalable, highly available, customizable 
-metadata. Hopsworks lowers the barrier to entry for users getting started with Hadoop by providing graphical access to services such as Spark, Flink, Kafka, HDFS, and YARN. HopsWorks provides self-service Hadoop by introducing two new abstractions: projects and datasets. Users manage membership of projects, which scope access to datasets. Datasets are again managed by users who can safely share them between projects or keep them private within a project. Hopsworks takes the administrator out of the loop for managing data and access to data.
+**Hopsworks** is a platform for both the design and operation of data analytics and machine learning applications. You can design ML applications in Jupyter notebooks in Python and operate them in workflows orchestrated by Airflow, while running on HopsFS, the world's most scalable HDFS-compatibledistributed hierarchical filesystem (<a href="https://www.usenix.org/conference/fast17/technical-sessions/presentation/niazi">peer-reviewed, 1.2m ops/sec on Spotify's Hadoop workload</a>). HopsFS also <a href="http://www.diva-portal.org/smash/get/diva2:1260838/FULLTEXT01.pdf">solves the small-files problem of HDFS</a>, by storing small files on NVMe disks in the horizontally scalable metadata layer. Hopsworks is also a platform for data engineering, with support for Spark, Flink, and Kafka. As an on-premises platform, Hopsworks has unique support for project-based multi-tenancy, horizontally scalable ML pipelines, and managed GPUs-as-a-resource.
+
+
+<a href=""><img src="hopsworks-web/yo/app/images/what-is-hopsworks.png" align="center"></a>
+
+## Multi-tenancy - Projects, Users, Datasets
+Hopsworks provides Projects as a privacy-by-design sandbox for data, including sensitive data, and for managing collaborating teams - like GitHub.
+Datasets can be shared between projects - like Dropbox. Each project has its own Anaconda environment, enabling python dependencies to be managed by the data scientists themselves.
+
+## HopsML
+
+<a href=""><img src="hopsworks-web/yo/app/images/hopsworks-e2e-ml.png" align="center"></a>
+
+HopsML is our framework for writing end-to-end machine learning workflows in Python. We support Airflow to orchestrate workflows with: ETL in PySpark or TensorFlow, a Feature Store, AutoML hyperparameter optimization techniques over many hosts and GPUs in Keras/TensorFlow/PyTorch, in addition to distributed training such as Collective AllReduce.
+
+Jupyter notebooks can be used to write all parts of the pipeline, and TensorBoard to visualize experiment results during and after training. Models can be deployed in Kubernetes (built-in or external) and monitored in production using Kafka/Spark-Streaming. For more information see the [docs](https://hopsworks.readthedocs.io/en/latest/hopsml/hopsML.html).
+
+## Feature Store
+
+<a href=""><img src="hopsworks-web/yo/app/images/hopsworks-featurestore.png" align="center" hspace="10" vspace="30"></a>
+
+The feature store is as a central place to store curated features for machine learning pipelines in Hopsworks. A feature is a measurable property of some data-sample. It could be for example an image-pixel, a word from a piece of text, the age of a person, a coordinate emitted from a sensor, or an aggregate value like the average number of purchases within the last hour. Features can come directly from tables or files or can be derived values, computed from one or more data sources. For more information see the [docs](https://hopsworks.readthedocs.io/en/latest/user_guide/hopsworks/featurestore.html).
+
+## TLS security
+
+<p align="center">
+  <a href=""><img width="656" height="432" src="hopsworks-web/yo/app/images/security.png"></a>
+</p>
+
+Uniquely in Hadoop, Hops supports X.509 certificates for authentication and authorization: users, services, jobs and TLS for in-flight encryption. At-rest encryption is also supported using ZFS-on-Linux.
+
+## HopsFS
+
+<p align="center">
+  <a href=""><img src="hopsworks-web/yo/app/images/hopsfs.png"></a>
+</p>
+
+HopsFS is a drop-in replacement for HDFS that adds distributed metadata and "small-files in metadata (NVMe disks)" support to HDFS. 
 
 ## Information
 
