@@ -22,9 +22,7 @@ import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.python.AnacondaRepo;
 import io.hops.hopsworks.common.dao.python.CondaCommandFacade;
 import io.hops.hopsworks.common.dao.python.CondaCommands;
-import io.hops.hopsworks.common.dao.python.HostOpStatus;
 import io.hops.hopsworks.common.dao.python.LibraryFacade;
-import io.hops.hopsworks.common.dao.python.OpStatus;
 import io.hops.hopsworks.common.dao.python.PythonDep;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.util.WebCommunication;
@@ -42,9 +40,7 @@ import javax.enterprise.concurrent.ManagedExecutorService;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -152,49 +148,6 @@ public class CommandsController {
     } catch (InterruptedException | ExecutionException | TimeoutException ex) {
       LOGGER.log(Level.SEVERE, null, ex);
     }
-  }
-  
-  public List<OpStatus> opStatus(Project proj) {
-    Collection<CondaCommands> commands = proj.getCondaCommandsCollection();
-    List<OpStatus> ops = new ArrayList<>();
-    Set<CondaCommandFacade.CondaOp> uniqueOps = new HashSet<>();
-    for (CondaCommands cc : commands) {
-      uniqueOps.add(cc.getOp());
-    }
-    // For every unique operation, iterate through the commands and add an entry for it.
-    // Inefficient, O(N^2) - but its small data
-    // Set the status for the operation as a whole (on OpStatus) based on the status of
-    // the operation on all hosts (if all finished => OpStatus.status = Installed).
-    for (CondaCommandFacade.CondaOp co : uniqueOps) {
-      OpStatus os = new OpStatus();
-      os.setOp(co.toString());
-      for (CondaCommands cc : commands) {
-        boolean failed = false;
-        boolean installing = false;
-        if (cc.getOp() == co) {
-          os.setChannelUrl(cc.getChannelUrl());
-          os.setLib(cc.getLib());
-          os.setVersion(cc.getVersion());
-          os.setInstallType(cc.getInstallType().name());
-          os.setMachineType(cc.getMachineType().name());
-          Hosts h = cc.getHostId();
-          os.addHost(new HostOpStatus(h.getHostname(), cc.getStatus().toString()));
-          if (cc.getStatus() == CondaCommandFacade.CondaStatus.FAILED) {
-            failed = true;
-          }
-          if (cc.getStatus() == CondaCommandFacade.CondaStatus.ONGOING) {
-            installing = true;
-          }
-        }
-        if (failed) {
-          os.setStatus(CondaCommandFacade.CondaStatus.FAILED.toString());
-        } else if (installing) {
-          os.setStatus(CondaCommandFacade.CondaStatus.ONGOING.toString());
-        }
-      }
-      ops.add(os);
-    }
-    return ops;
   }
   
   public PythonDep condaOp(CondaCommandFacade.CondaOp op, CondaCommandFacade.CondaInstallType installType,
