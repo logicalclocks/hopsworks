@@ -8,7 +8,7 @@
 <!-- <a href=""><img src="https://hopsworks.readthedocs.io/en/latest/_images/hopsworks.png" align="center"></a> -->
 
 <a href=""><img src="https://www.hops.io/wp-content/uploads/2018/07/Plants-Hops-icon-50x50-e1532970413999.png" align="left" hspace="10" vspace="6"></a>
-**Hopsworks** is a platform for both the design and operation of data analytics and machine learning applications. You can design ML applications in Jupyter notebooks in Python and operate them in workflows orchestrated by Airflow, while running on the world's fastest and most scalable Hadoop distribution. Hopsworks is more than a Hadoop distribution, as it has unique support for project-based multi-tenancy, horizontally scalable ML pipelines, and managed GPUs-as-a-resource.
+**Hopsworks** is a platform for both the design and operation of data analytics and machine learning applications. You can design ML applications in Jupyter notebooks in Python and operate them in workflows orchestrated by Airflow, while running on the world's fastest and most scalable hierarchical distributed filesystem (<a href="https://www.usenix.org/conference/fast17/technical-sessions/presentation/niazi">peer-reviewed, 1.2m ops/sec on Spotify's Hadoop workload</a>). Hopsworks is also a platform for data engineering, with support for Spark, Flink, and Kafka. As an on-premises platform, Hopsworks has unique support for project-based multi-tenancy, horizontally scalable ML pipelines, and managed GPUs-as-a-resource.
 
 
 <a href=""><img src="hopsworks-web/yo/app/images/what-is-hopsworks.png" align="center"></a>
