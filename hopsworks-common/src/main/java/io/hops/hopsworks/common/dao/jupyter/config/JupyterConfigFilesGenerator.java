@@ -83,6 +83,8 @@ public class JupyterConfigFilesGenerator {
   private Settings settings;
   @EJB
   private TfLibMappingUtil tfLibMappingUtil;
+  @EJB
+  private JWTController jwtController;
 
   public JupyterPaths generateConfiguration(Project project, String secretConfig, String hdfsUser, String usersFullName,
     String nameNodeEndpoint, JupyterSettings js, Integer port, String allowOrigin)
@@ -197,7 +199,7 @@ public class JupyterConfigFilesGenerator {
               "hopsworks_ip", settings.getHopsworksIp(),
               "base_dir", js.getBaseDir(),
               "hdfs_user", hdfsUser,
-              "port", port.toString(),
+              "hopsworks_port", settings.getHopsworksPort(),
               "python-kernel", ", '"+ pythonKernelName + "'",
               "hadoop_home", this.settings.getHadoopSymbolicLinkDir(),
               "hdfs_home", this.settings.getHadoopSymbolicLinkDir(),
@@ -292,6 +294,51 @@ public class JupyterConfigFilesGenerator {
           custom_js, custom_js_sb.toString());
     }
 
+
+    // JWT TOKEN
+
+    try {
+	LocalDateTime expirationDate =  LocalDateTime.now().plus(settings.getJWTLifetimeMs(), ChronoUnit.MILLIS);
+        String[] audience = new String[]{"job"};
+
+
+	String token = jwtController.createToken(settings.getJWTSigningKeyName(), false, settings.getJWTIssuer(), audience, Date.from(expirationDate.toInstant(ZoneOffset.UTC)),
+	    Date.from(LocalDateTime.now().plus(settings.getJWTLifetimeMs(), ChronoUnit.MILLIS)), user.getUsername(),
+		       false, settings.getJWTExpLeewaySec(), roles, SignatureAlgorithm.valueOf(settings.getJWTSignatureAlg()).toInstant(ZoneOffset.UTC) );
+	String tokenFileName = projectName + "__" + username + ".jwt";
+	Path tokenFile = Paths.get(jupyterSecretDir,tokenFileName);
+	FileUtils.writeStringToFile(tokenFile.toFile(), token);
+	Set<PosixFilePermission> TOKEN_FILE_PERMISSIONS = new HashSet<>(5);
+	TOKEN_FILE_PERMISSIONS.add(PosixFilePermission.OWNER_READ);
+	TOKEN_FILE_PERMISSIONS.add(PosixFilePermission.OWNER_WRITE);
+	TOKEN_FILE_PERMISSIONS.add(PosixFilePermission.OWNER_EXECUTE);
+
+	TOKEN_FILE_PERMISSIONS.add(PosixFilePermission.GROUP_READ);
+	TOKEN_FILE_PERMISSIONS.add(PosixFilePermission.GROUP_EXECUTE);
+	Files.setPosixFilePermissions(airflowJWT.tokenFile, TOKEN_FILE_PERMISSIONS);
+	Files.getFileAttributeView(tokenFile, PosixFileAttributeView.class,
+				   LinkOption.NOFOLLOW_LINKS).setGroup(settings.getJupyterGroup());
+
+    } catch (GeneralSecurityException | JWTException ex) {
+	throw new JupyterException(RESTCodes.AirflowErrorCode.JWT_NOT_CREATED, Level.SEVERE,
+				   "Could not generate Jupyter JWT for user " + user.getUsername(), ex.getMessage(), ex);
+    } catch (IOException ex) {
+	LOG.log(Level.WARNING, "Could not write Jupyter JWT for user " + hdfsUsersController
+		.getHdfsUserName(project, user), ex);
+	//        deleteJupyterMaterial(materialID);
+	try {
+	    jwtController.invalidate(token);
+	} catch (InvalidationException invEx) {
+	    LOG.log(Level.FINE, "Could not invalidate Jupyter JWT. Skipping...", ex);
+	}
+	throw new JupyterException(RESTCodes.AirflowErrorCode.JWT_NOT_STORED, Level.SEVERE,
+				   "Could not store Jupyter JWT for user " + hdfsUsersController.getHdfsUserName(project, user),
+				   ex.getMessage(), ex);
+    }
+
+
+
+    
     // Add this local file to 'spark: file' to copy it to hdfs and localize it.
     return createdJupyter || createdSparkmagic || createdCustomJs;
   }
