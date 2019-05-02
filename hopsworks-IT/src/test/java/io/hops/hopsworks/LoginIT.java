@@ -21,7 +21,9 @@ import static org.junit.Assert.fail;
 import org.junit.Before;
 import org.junit.Test;
 import org.openqa.selenium.By;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 
 public class LoginIT {
 
@@ -32,17 +34,64 @@ public class LoginIT {
   public void startUp() {
     driver = WebDriverFactory.getWebDriver();
   }
-
+  
   @Test
-  public void loginTest() throws Exception {
+  public void firstLoginTest() {
     driver.findElement(By.id("login_inputEmail")).clear();
     driver.findElement(By.id("login_inputEmail")).sendKeys("admin@kth.se");
+    driver.findElement(By.id("login_inputPassword")).clear();
+    driver.findElement(By.id("login_inputPassword")).sendKeys("admin");
+    driver.findElement(By.name("loginForm")).submit();
+    WebElement content = null;
+    try {
+      content = driver.findElement(By.className("growl-title"));
+    } catch (NoSuchElementException nse) {
+    }
+    try {
+      assertEquals(content, null);
+    } catch (Error e) {
+      verificationErrors.append("Should not show growl on first login. But showed growl with msg: ")
+        .append(content.getText())
+        .append(e.getMessage());
+    }
+  }
+  
+  @Test
+  public void loginTest() {
+    driver.findElement(By.id("login_inputEmail")).clear();
+    driver.findElement(By.id("login_inputEmail")).sendKeys("admin@kth.se");
+    driver.findElement(By.id("login_inputPassword")).clear();
     driver.findElement(By.id("login_inputPassword")).sendKeys("admin");
     driver.findElement(By.name("loginForm")).submit();
     try {
       assertEquals("admin@kth.se", driver.findElement(By.id("navbarProfile")).getText());
     } catch (Error e) {
       verificationErrors.append("Should login user and show email on navbar.").append(e.getMessage());
+    }
+  }
+  
+  @Test
+  public void loginGrowlTest() {
+    driver.findElement(By.id("login_inputEmail")).clear();
+    driver.findElement(By.id("login_inputEmail")).sendKeys("admin@kth.se");
+    driver.findElement(By.id("login_inputPassword")).clear();
+    driver.findElement(By.id("login_inputPassword")).sendKeys("admin1");
+    driver.findElement(By.name("loginForm")).submit();
+    driver.findElement(By.id("login_inputPassword")).clear();
+    driver.findElement(By.id("login_inputPassword")).sendKeys("admin");
+    driver.findElement(By.name("loginForm")).submit();
+    WebElement content = null;
+    try {
+      content = driver.findElement(By.className("growl-title"));
+    } catch (NoSuchElementException nse) {
+    }
+  
+    try {
+      assertEquals(content, null);
+    } catch (Error e) {
+      verificationErrors.append("Should not show growl after login. But showed growl with msg: ")
+        .append(content.getText())
+        .append(e.getMessage());
     }
   }
 
