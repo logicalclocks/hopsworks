@@ -399,7 +399,8 @@ public class AgentController {
       }
 
       //Special case for tensorflow
-      if (libraryName.equals("tensorflow") || libraryName.equals("tensorflow-gpu")) {
+      if (libraryName.equals("tensorflow") || libraryName.equals("tensorflow-gpu") ||
+              libraryName.equals("tensorflow-rocm")) {
         AnacondaRepo repo = pythonDepsFacade.getRepo("PyPi", true);
         if(cpuHost != null) {
           PythonDep tensorflowCPU = pythonDepsFacade.getDep(repo, PythonDepsFacade.MachineType.CPU,
@@ -407,9 +408,12 @@ public class AgentController {
           deps.add(tensorflowCPU);
         }
         if(gpuHost != null) {
-          PythonDep tensorflowGPU = pythonDepsFacade.getDep(repo, PythonDepsFacade.MachineType.GPU,
+          PythonDep tensorflowCudaGPU = pythonDepsFacade.getDep(repo, PythonDepsFacade.MachineType.GPU,
             PythonDepsFacade.CondaInstallType.PIP, "tensorflow-gpu", version, true, true, status);
-          deps.add(tensorflowGPU);
+          deps.add(tensorflowCudaGPU);
+          PythonDep tensorflowROCmGPU = pythonDepsFacade.getDep(repo, PythonDepsFacade.MachineType.GPU,
+                  PythonDepsFacade.CondaInstallType.PIP, "tensorflow-rocm", version, true, true, status);
+          deps.add(tensorflowROCmGPU);
         }
         continue;
       }
