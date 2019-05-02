@@ -123,22 +123,17 @@ angular.module('hopsWorksApp')
                         $cookies.put("email", self.user.email);
                         $location.path('/');
                       }, function (error) {
-                self.working = false;
-                if (error.data !== undefined && error.data.errorCode === 120002) {
-                  self.errorMessage = "";
-                  self.emailHash = md5.createHash(self.user.email || '');
-                  self.secondFactorRequired = true;
-                } else if (error.data !== undefined &&
-                        error.data !== null &&
-                        error.data.errorMsg !== undefined &&
-                        error.data.errorMsg !== null) {
-                  self.errorMessage = error.data.errorMsg;
-                }
-              if (typeof error.data.usrMsg !== 'undefined') {
-                  growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
-              } else {
-                  growl.error("", {title: error.data.errorMsg, ttl: 8000});
-              }
+                        self.working = false;
+                        if (error.data !== undefined && error.data.errorCode === 120002) {
+                          self.errorMessage = "";
+                          self.emailHash = md5.createHash(self.user.email || '');
+                          self.secondFactorRequired = true;
+                        } else if (error.data !== undefined &&
+                                error.data !== null &&
+                                error.data.errorMsg !== undefined &&
+                                error.data.errorMsg !== null) {
+                          self.errorMessage = error.data.errorMsg;
+                        }
               });
             };
             
