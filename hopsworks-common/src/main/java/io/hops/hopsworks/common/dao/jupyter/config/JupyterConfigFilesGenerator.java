@@ -66,7 +66,13 @@ import java.security.GeneralSecurityException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.HashSet;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.Date;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -76,8 +82,7 @@ import java.util.logging.Logger;
 @Stateless
 public class JupyterConfigFilesGenerator {
 
-  private static final Logger LOGGER = Logger.getLogger(JupyterConfigFilesGenerator.class.
-      getName());
+  private static final Logger LOGGER = Logger.getLogger(JupyterConfigFilesGenerator.class.getName());
   private static final String JUPYTER_NOTEBOOK_CONFIG = "/jupyter_notebook_config.py";
   private static final String JUPYTER_CUSTOM_KERNEL = "/kernel.json";
   private static final String JUPYTER_CUSTOM_JS = "/custom/custom.js";
@@ -304,17 +309,13 @@ public class JupyterConfigFilesGenerator {
     String token = "";
     try {
       LocalDateTime expirationDate =  LocalDateTime.now().plus(settings.getJWTLifetimeMs(), ChronoUnit.MILLIS);
-          String[] audience = new String[]{"job"};
-
+      String[] audience = new String[]{"job"};
       String[] roles = new String[1];
       roles[1] = "HOPS_USER";
-
       token = jwtController.createToken(settings.getJWTSigningKeyName(), false, settings.getJWTIssuer(),
-              audience,  Date.from(expirationDate.toInstant(ZoneOffset.UTC)),
-              Date.from(LocalDateTime.now().toInstant(ZoneOffset.UTC)),
-              hdfsUser,
-              false, settings.getJWTExpLeewaySec(), roles,
-              SignatureAlgorithm.valueOf(settings.getJWTSignatureAlg()));
+        audience, Date.from(expirationDate.toInstant(ZoneOffset.UTC)),
+        Date.from(LocalDateTime.now().toInstant(ZoneOffset.UTC)),hdfsUser,
+        false, settings.getJWTExpLeewaySec(), roles, SignatureAlgorithm.valueOf(settings.getJWTSignatureAlg()));
       String tokenFileName = hdfsUser + ".jwt";
       Path tokenFile = Paths.get(confDirPath,tokenFileName);
       FileUtils.writeStringToFile(tokenFile.toFile(), token);
@@ -322,26 +323,24 @@ public class JupyterConfigFilesGenerator {
       TOKEN_FILE_PERMISSIONS.add(PosixFilePermission.OWNER_READ);
       TOKEN_FILE_PERMISSIONS.add(PosixFilePermission.OWNER_WRITE);
       TOKEN_FILE_PERMISSIONS.add(PosixFilePermission.OWNER_EXECUTE);
-
       TOKEN_FILE_PERMISSIONS.add(PosixFilePermission.GROUP_READ);
       TOKEN_FILE_PERMISSIONS.add(PosixFilePermission.GROUP_EXECUTE);
       Files.setPosixFilePermissions(tokenFile, TOKEN_FILE_PERMISSIONS);
-//      Files.getFileAttributeView(tokenFile, PosixFileAttributeView.class,
-//                     LinkOption.NOFOLLOW_LINKS).setGroup(settings.getGrou);
-
+      //      Files.getFileAttributeView(tokenFile, PosixFileAttributeView.class,
+      //                     LinkOption.NOFOLLOW_LINKS).setGroup(settings.getGrou);
     } catch (GeneralSecurityException | JWTException ex) {
-//    	throw new AirflowException(RESTCodes.AirflowErrorCode.JWT_NOT_CREATED, Level.SEVERE,
-//				   "Could not generate Jupyter JWT for user " + hdfsUser, ex.getMessage(), ex);
+      //    	throw new AirflowException(RESTCodes.AirflowErrorCode.JWT_NOT_CREATED, Level.SEVERE,
+      //				   "Could not generate Jupyter JWT for user " + hdfsUser, ex.getMessage(), ex);
     } catch (IOException ex) {
       LOGGER.log(Level.WARNING, "Could not write Jupyter JWT for user " + hdfsUser, ex);
       //        deleteJupyterMaterial(materialID);
       try {
-          jwtController.invalidate(token);
+        jwtController.invalidate(token);
       } catch (InvalidationException invEx) {
         LOGGER.log(Level.FINE, "Could not invalidate Jupyter JWT. Skipping...", ex);
       }
-  //	throw new JupyterException(RESTCodes.AirflowErrorCode.JWT_NOT_STORED, Level.SEVERE,
-  //				   "Could not store Jupyter JWT for user " + hdfsUser, ex.getMessage(), ex);
+      //	throw new JupyterException(RESTCodes.AirflowErrorCode.JWT_NOT_STORED, Level.SEVERE,
+      //				   "Could not store Jupyter JWT for user " + hdfsUser, ex.getMessage(), ex);
     }
 
 
