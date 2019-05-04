@@ -66,15 +66,27 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
       settings.getAnacondaProjectDir(project) + "/bin/python"));
 
 
+    //https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html
+    //Needs to be set for CUDA libraries to not initialize GPU context
     sparkProps.put(Settings.SPARK_YARN_APPMASTER_ENV + "CUDA_VISIBLE_DEVICES",
             new ConfigProperty(Settings.SPARK_YARN_APPMASTER_ENV + "CUDA_VISIBLE_DEVICES",
                     HopsUtils.OVERWRITE, ""));
+
+    //https://rocm-documentation.readthedocs.io/en/latest/Other_Solutions/Other-Solutions.html
+    //Needs to be set for ROCm libraries to not initialize GPU context
+    sparkProps.put(Settings.SPARK_YARN_APPMASTER_ENV + "HIP_VISIBLE_DEVICES",
+            new ConfigProperty(Settings.SPARK_YARN_APPMASTER_ENV + "HIP_VISIBLE_DEVICES",
+                    HopsUtils.OVERWRITE, "-1"));
 
     sparkProps.put(Settings.SPARK_SUBMIT_DEPLOYMODE, new ConfigProperty(Settings.SPARK_SUBMIT_DEPLOYMODE,
       HopsUtils.OVERWRITE,
       "cluster"));
 
     if(experimentType != null) {
+      if(sparkJobConfiguration.getExecutorGpus() == 0) {
+        addToSparkEnvironment(sparkProps, "HIP_VISIBLE_DEVICES", "-1", settings);
+        addToSparkEnvironment(sparkProps, "CUDA_VISIBLE_DEVICES", "", settings);
+      }
       if (sparkJobConfiguration.getExecutorGpus() > 0) {
         sparkProps.put(Settings.SPARK_TF_GPUS_ENV,
           new ConfigProperty(
