@@ -60,7 +60,7 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.api.jobs.executions.ExecutionsResource.class);
     register(io.hops.hopsworks.api.jobs.JobsResource.class);
     register(io.hops.hopsworks.api.jupyter.JupyterService.class);
-    register(io.hops.hopsworks.api.serving.TfServingService.class);
+    register(io.hops.hopsworks.api.serving.ServingService.class);
     register(io.hops.hopsworks.api.serving.inference.InferenceResource.class);
     register(io.hops.hopsworks.api.jobs.KafkaService.class);
     register(io.hops.hopsworks.api.project.DataSetService.class);

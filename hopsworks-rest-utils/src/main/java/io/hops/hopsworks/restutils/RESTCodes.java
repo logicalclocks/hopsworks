@@ -1007,14 +1007,14 @@ public class RESTCodes {
     }
   }
 
-  public enum TfServingErrorCode implements RESTErrorCode {
+  public enum ServingErrorCode implements RESTErrorCode {
 
-    INSTANCENOTFOUND(0, "TFServing instance not found", Response.Status.NOT_FOUND),
-    DELETIONERROR(1, "TFServing instance could not be deleted",
+    INSTANCENOTFOUND(0, "Serving instance not found", Response.Status.NOT_FOUND),
+    DELETIONERROR(1, "Serving instance could not be deleted",
         Response.Status.INTERNAL_SERVER_ERROR),
-    UPDATEERROR(2, "TFServing instance could not be updated", Response.Status.INTERNAL_SERVER_ERROR),
-    LIFECYCLEERROR(3, "TFServing instance could not be started/stopped", Response.Status.BAD_REQUEST),
-    LIFECYCLEERRORINT(4, "TFServing instance could not be started/stopped",
+    UPDATEERROR(2, "Serving instance could not be updated", Response.Status.INTERNAL_SERVER_ERROR),
+    LIFECYCLEERROR(3, "Serving instance could not be started/stopped", Response.Status.BAD_REQUEST),
+    LIFECYCLEERRORINT(4, "Serving instance could not be started/stopped",
         Response.Status.INTERNAL_SERVER_ERROR),
     STATUSERROR(5, "Error getting TFServing instance status", Response.Status.INTERNAL_SERVER_ERROR),
     PATHNOTFOUND(6, "Model Path not found", Response.Status.BAD_REQUEST),
@@ -1022,7 +1022,9 @@ public class RESTCodes {
     COMMANDNOTPROVIDED(8, "Command not provided", Response.Status.BAD_REQUEST),
     SPECNOTPROVIDED(9, "TFServing spec not provided", Response.Status.BAD_REQUEST),
     BAD_TOPIC(10, "Topic provided cannot be used for Serving logging", Response.Status.BAD_REQUEST),
-    DUPLICATEDENTRY(11, "An entry with the same name already exists in this project", Response.Status.BAD_REQUEST);
+    DUPLICATEDENTRY(11, "An entry with the same name already exists in this project", Response.Status.BAD_REQUEST),
+    PYTHON_ENVIRONMENT_NOT_ENABLED(12, "Python environment has not been enabled in this project, " +
+      "which is required for serving SkLearn Models", Response.Status.BAD_REQUEST);
 
 
     private Integer code;
@@ -1031,7 +1033,7 @@ public class RESTCodes {
     public final int range = 240000;
 
 
-    TfServingErrorCode(Integer code, String message, Response.StatusType respStatus) {
+    ServingErrorCode(Integer code, String message, Response.StatusType respStatus) {
       this.code = range + code;
       this.message = message;
       this.respStatus = respStatus;

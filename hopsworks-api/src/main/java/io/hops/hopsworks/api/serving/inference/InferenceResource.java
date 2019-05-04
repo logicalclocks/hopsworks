@@ -39,7 +39,12 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.logging.Logger;
 
+/**
+ * RESTful microservice for sending inference requests to models being served on Hopsworks.
+ * Works as a proxy, it takes in the user request and relays it to the right model.
+ */
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 @Api(value = "Model inference service", description = "Handles inference requests for ML models")
@@ -52,6 +57,8 @@ public class InferenceResource {
   
   private Project project;
 
+  private final static Logger logger = Logger.getLogger(InferenceResource.class.getName());
+
   public void setProjectId(Integer projectId) {
     this.project = projectFacade.find(projectId);
   }
@@ -61,14 +68,13 @@ public class InferenceResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Make inference")
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response infer(
       @ApiParam(value = "Name of the model to query", required = true) @PathParam("modelName") String modelName,
-      @ApiParam(value = "Version fo the model to query") @PathParam("version") String modelVersion,
+      @ApiParam(value = "Version of the model to query") @PathParam("version") String modelVersion,
       @ApiParam(value = "Type of query") @PathParam("verb") String verb,
       String inferenceRequestJson) throws InferenceException {
-
     Integer version = null;
     if (!Strings.isNullOrEmpty(modelVersion)) {
       version = Integer.valueOf(modelVersion.split("/")[2]);

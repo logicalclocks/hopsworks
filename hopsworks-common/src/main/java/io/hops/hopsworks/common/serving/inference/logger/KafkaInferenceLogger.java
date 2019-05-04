@@ -19,7 +19,7 @@ package io.hops.hopsworks.common.serving.inference.logger;
 import com.twitter.bijection.Injection;
 import com.twitter.bijection.avro.GenericAvroCodecs;
 import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.serving.TfServing;
+import io.hops.hopsworks.common.dao.serving.Serving;
 import io.hops.hopsworks.exceptions.CryptoPasswordNotFoundException;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.util.HopsUtils;
@@ -82,7 +82,7 @@ public class KafkaInferenceLogger implements InferenceLogger {
 
   @Override
   @Asynchronous
-  public void logInferenceRequest(TfServing serving, String inferenceRequest,
+  public void logInferenceRequest(Serving serving, String inferenceRequest,
                                   Integer responseHttpCode, String inferenceResponse) {
 
     if (serving.getKafkaTopic() == null) {
@@ -103,7 +103,7 @@ public class KafkaInferenceLogger implements InferenceLogger {
     // Create and populate the GenericRecord
     GenericData.Record inferenceRecord = new GenericData.Record(schema);
     inferenceRecord.put("modelId", serving.getId());
-    inferenceRecord.put("modelName", serving.getModelName());
+    inferenceRecord.put("modelName", serving.getName());
     inferenceRecord.put("modelVersion", serving.getVersion());
     inferenceRecord.put("requestTimestamp", System.currentTimeMillis());
     inferenceRecord.put("responseHttpCode", responseHttpCode);

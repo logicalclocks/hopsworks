@@ -40,9 +40,9 @@ package io.hops.hopsworks.common.security;
 
 import io.hops.hopsworks.common.dao.certificates.CertsFacade;
 import io.hops.hopsworks.common.dao.certificates.UserCerts;
+import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.exceptions.CryptoPasswordNotFoundException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -50,6 +50,7 @@ import io.hops.hopsworks.common.security.dao.RemoteMaterialRefID;
 import io.hops.hopsworks.common.security.dao.RemoteMaterialReferences;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.CryptoPasswordNotFoundException;
 import org.apache.commons.collections.Bag;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.collections.bag.HashBag;
@@ -1136,7 +1137,47 @@ public class CertificateMaterializer {
     }
     return uri;
   }
-  
+
+  /**
+   * Returns the path to materialized password file for a project-user
+   *
+   * @param project the project for which the password will be used
+   * @param user    the user for which the password will be used
+   * @return materialized password path
+   */
+  public String getUserTransientPasswordPath(Project project, Users user) {
+    String transientDir = settings.getHopsworksTmpCertDir();
+    String keyName = project.getName() + "__" + user.getUsername() + Settings.CERT_PASS_SUFFIX;
+    return transientDir + "/" + keyName;
+  }
+
+  /**
+   * Returns the path to materialized truststore for a project-user
+   *
+   * @param project the project for which the truststore will be used
+   * @param user    the user for which the truststore will be used
+   * @return path to truststore
+   */
+  public String getUserTransientTruststorePath(Project project, Users user) {
+    String transientDir = settings.getHopsworksTmpCertDir();
+    String truststoreName = project.getName() + "__" + user.getUsername() + Settings.TRUSTSTORE_SUFFIX;
+    return transientDir + "/" + truststoreName;
+  }
+
+  /**
+   * Returns the path to materialized keystore for a project-user
+   *
+   * @param project the project for which the keystore will be used
+   * @param user    the user for which the keystore will be used
+   * @return path to keystore
+   */
+  public String getUserTransientKeystorePath(Project project, Users user) {
+    String transientDir = settings.getHopsworksTmpCertDir();
+    String keystoreName = project.getName() + "__" + user.getUsername() + Settings.KEYSTORE_SUFFIX;
+    return transientDir + "/" + keystoreName;
+  }
+
+
   private void deleteFromHDFS(DistributedFileSystemOps dfso, Path path) throws IOException {
     dfso.rm(path, false);
   }

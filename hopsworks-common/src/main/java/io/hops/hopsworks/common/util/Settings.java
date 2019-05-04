@@ -283,11 +283,21 @@ public class Settings implements Serializable {
   private static final String VARIABLE_HOPSWORKS_REST_LOG_LEVEL = "hopsworks_rest_log_level";
 
   /*
-   * -------------------- TfServing ---------------
+   * -------------------- Serving ---------------
    */
-  private static final String VARIABLE_TF_SERVING_MONITOR_INT = "tf_serving_monitor_int";
+  private static final String VARIABLE_SERVING_MONITOR_INT = "serving_monitor_int";
+
+  /*
+   * -------------------- Serving ---------------
+   */
   private static final String VARIABLE_TF_SERVING_CONNECTION_POOL_SIZE = "tf_serving_connection_pool_size";
   private static final String VARIABLE_TF_SERVING_MAX_ROUTE_CONNECTIONS = "tf_serving_max_route_connections";
+
+  /*
+   * -------------------- SkLearnServing ---------------
+   */
+  private static final String VARIABLE_SK_LEARN_SERVING_CONNECTION_POOL_SIZE = "sklearn_serving_connection_pool_size";
+  private static final String VARIABLE_SK_LEARN_SERVING_MAX_ROUTE_CONNECTIONS = "sklearn_serving_max_route_connections";
 
   /*
    * -------------------- Kubernetes ---------------
@@ -615,11 +625,17 @@ public class Settings implements Serializable {
           setStrVar(VARIABLE_PREINSTALLED_PYTHON_LIBRARY_NAMES, DEFAULT_PREINSTALLED_PYTHON_LIBRARY_NAMES),
           ",");
 
-      TF_SERVING_MONITOR_INT = setStrVar(VARIABLE_TF_SERVING_MONITOR_INT, TF_SERVING_MONITOR_INT);
+      SERVING_MONITOR_INT = setStrVar(VARIABLE_SERVING_MONITOR_INT, SERVING_MONITOR_INT);
+
       TF_SERVING_CONNECTION_POOL_SIZE = setIntVar(VARIABLE_TF_SERVING_CONNECTION_POOL_SIZE,
         TF_SERVING_CONNECTION_POOL_SIZE);
       TF_SERVING_MAX_ROUTE_CONNECTIONS = setIntVar(VARIABLE_TF_SERVING_MAX_ROUTE_CONNECTIONS,
         TF_SERVING_MAX_ROUTE_CONNECTIONS);
+
+      SK_LEARN_SERVING_CONNECTION_POOL_SIZE = setIntVar(VARIABLE_SK_LEARN_SERVING_CONNECTION_POOL_SIZE,
+          SK_LEARN_SERVING_CONNECTION_POOL_SIZE);
+      SK_LEARN_SERVING_MAX_ROUTE_CONNECTIONS = setIntVar(VARIABLE_SK_LEARN_SERVING_MAX_ROUTE_CONNECTIONS,
+          SK_LEARN_SERVING_MAX_ROUTE_CONNECTIONS);
 
       KUBE_USER = setStrVar(VARIABLE_KUBE_USER, KUBE_USER);
       KUBEMASTER_URL = setStrVar(VARIABLE_KUBEMASTER_URL, KUBEMASTER_URL);
@@ -3270,11 +3286,11 @@ public class Settings implements Serializable {
     return KUBE_MAX_SERVING_INSTANCES;
   }
 
-  private String TF_SERVING_MONITOR_INT = "30s";
+  private String SERVING_MONITOR_INT = "30s";
 
-  public synchronized String getTFServingMonitorInt() {
+  public synchronized String getServingMonitorInt() {
     checkCache();
-    return TF_SERVING_MONITOR_INT;
+    return SERVING_MONITOR_INT;
   }
 
   private int TF_SERVING_CONNECTION_POOL_SIZE = 40;
@@ -3287,6 +3303,18 @@ public class Settings implements Serializable {
   public synchronized int getTFServingMaxRouteConnections() {
     checkCache();
     return TF_SERVING_MAX_ROUTE_CONNECTIONS;
+  }
+
+  private int SK_LEARN_SERVING_CONNECTION_POOL_SIZE = 40;
+  public synchronized int getSkLearnConnectionPoolSize() {
+    checkCache();
+    return SK_LEARN_SERVING_CONNECTION_POOL_SIZE;
+  }
+
+  private int SK_LEARN_SERVING_MAX_ROUTE_CONNECTIONS = 10;
+  public synchronized int getSkLearnMaxRouteConnections() {
+    checkCache();
+    return SK_LEARN_SERVING_MAX_ROUTE_CONNECTIONS;
   }
 
   private String JWT_SIGNATURE_ALGORITHM = "HS512";

@@ -17,37 +17,77 @@
 INFERENCE_SCHEMA_NAME = "inferenceschema"
 INFERENCE_SCHEMA_VERSION = 1
 
-TOUR_FILE_LOCATION = "/user/hdfs/tensorflow_demo/data/mnist/model/*"
+TF_MODEL_TOUR_FILE_LOCATION = "/user/hdfs/tensorflow_demo/data/mnist/model/*"
+SKLEARN_MODEL_TOUR_FILE_LOCATION = "/user/hdfs/tensorflow_demo/data/iris/iris_knn.pkl"
+SKLEARN_SCRIPT_FILE_NAME="iris_flower_classifier.py"
+SKLEARN_SCRIPT_TOUR_FILE_LOCATION = "/user/hdfs/tensorflow_demo/notebooks/Serving/sklearn/#{SKLEARN_SCRIPT_FILE_NAME}"
 
 module ServingHelper
 
-  def with_serving(project_id, project_name, user)
+  def with_tf_serving(project_id, project_name, user)
     # Copy model to the project directory
     mkdir("/Projects/#{project_name}/Models/mnist/", "#{project_name}__#{user}", "#{project_name}__Models", 750)
-    copy(TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/mnist/", "#{project_name}__#{user}", "#{project_name}__Models", 750, "#{project_name}")
+    copy(TF_MODEL_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/mnist/", "#{project_name}__#{user}", "#{project_name}__Models", 750, "#{project_name}")
 
-    @serving ||= create_serving(project_id, project_name)
+    @serving ||= create_tf_serving(project_id, project_name)
     @topic = ProjectTopics.find(@serving[:kafka_topic_id])
   end
 
-  def create_serving(project_id, project_name)
+  def with_sklearn_serving(project_id, project_name, user)
+    # Copy model to the project directory
+    copy(SKLEARN_MODEL_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/", "#{project_name}__#{user}",
+         "#{project_name}__Models", 750, "#{project_name}")
+    # Copy script to the project directory
+    copy(SKLEARN_SCRIPT_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/", "#{project_name}__#{user}",
+         "#{project_name}__Models", 750, "#{project_name}")
+
+    @serving ||= create_sklearn_serving(project_id, project_name)
+    @topic = ProjectTopics.find(@serving[:kafka_topic_id])
+  end
+
+  def create_tf_serving(project_id, project_name)
     serving_name = "testModel#{short_random_id}"
     put "#{ENV['HOPSWORKS_API']}/project/#{project_id}/serving/",
-              {modelName: serving_name,
-               modelPath: "/Projects/#{project_name}/Models/mnist/",
+              {name: serving_name,
+               artifactPath: "/Projects/#{project_name}/Models/mnist/",
                modelVersion: 1,
                batchingEnabled: true,
                kafkaTopicDTO: {
                   name: "CREATE",
                   numOfPartitions: 1,
                   numOfReplicas: 1
-               }}
+               },
+               servingType: 0
+              }
     expect_status(201)
 
-    TfServing.find_by(project_id: project_id, model_name: serving_name)
+    Serving.find_by(project_id: project_id, name: serving_name)
   end
 
-  def purge_all_serving_instances()
+  def purge_all_tf_serving_instances()
     system "sudo /bin/bash -c \"pgrep -f tensorflow_model_server | xargs kill\""
+  end
+
+  def create_sklearn_serving(project_id, project_name)
+    serving_name = "testModel#{short_random_id}"
+    put "#{ENV['HOPSWORKS_API']}/project/#{project_id}/serving/",
+        {name: serving_name,
+         artifactPath: "/Projects/#{project_name}/Models/#{SKLEARN_SCRIPT_FILE_NAME}",
+         modelVersion: 1,
+         batchingEnabled: true,
+         kafkaTopicDTO: {
+             name: "CREATE",
+             numOfPartitions: 1,
+             numOfReplicas: 1
+         },
+         servingType: 1
+        }
+    expect_status(201)
+
+    Serving.find_by(project_id: project_id, name: serving_name)
+  end
+
+  def purge_all_sklearn_serving_instances()
+    system "sudo /bin/bash -c \"pgrep -f sklearn_flask_server | xargs kill\""
   end
 end

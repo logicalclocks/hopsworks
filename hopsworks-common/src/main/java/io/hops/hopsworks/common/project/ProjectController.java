@@ -47,7 +47,6 @@ import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
 import io.hops.hopsworks.common.dao.dataset.DatasetType;
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
 import io.hops.hopsworks.common.dao.featurestore.FeaturestoreController;
-import io.hops.hopsworks.common.dao.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.dao.hdfs.HdfsDirectoryWithQuotaFeature;
 import io.hops.hopsworks.common.dao.hdfs.HdfsDirectoryWithQuotaFeatureFacade;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
@@ -106,8 +105,6 @@ import io.hops.hopsworks.common.message.MessageController;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.security.CertificatesController;
 import io.hops.hopsworks.common.serving.inference.logger.KafkaInferenceLogger;
-import io.hops.hopsworks.common.serving.tf.TfServingController;
-import io.hops.hopsworks.common.serving.tf.TfServingException;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.EmailBean;
 import io.hops.hopsworks.common.util.ProjectUtils;
@@ -115,6 +112,7 @@ import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.yarn.YarnClientService;
 import io.hops.hopsworks.common.yarn.YarnClientWrapper;
 import io.hops.hopsworks.exceptions.DatasetException;
+import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.JobException;
@@ -240,7 +238,7 @@ public class ProjectController {
   @EJB
   private FeaturestoreController featurestoreController;
   @Inject
-  private TfServingController tfServingController;
+  private ServingController servingController;
   @Inject
   @Any
   private Instance<ProjectHandler> projectHandlers;
@@ -426,7 +424,7 @@ public class ProjectController {
           throw ex;
         }
       }
-      
+
       try {
         //add members of the project
         failedMembers = new ArrayList<>();
@@ -1173,10 +1171,10 @@ public class ProjectController {
         }
 
         try {
-          tfServingController.deleteTfServings(project);
-          cleanupLogger.logSuccess("Removed Tf Servings");
+          servingController.deleteServings(project);
+          cleanupLogger.logSuccess("Removed servings");
         } catch (Exception ex) {
-          cleanupLogger.logError("Error when removing Tf Serving instances");
+          cleanupLogger.logError("Error when removing serving instances");
           cleanupLogger.logError(ex.getMessage());
         }
 
@@ -1188,7 +1186,7 @@ public class ProjectController {
           cleanupLogger.logError("Error while cleaning Airflow DAGs and security references");
           cleanupLogger.logError(ex.getMessage());
         }
-  
+
         try {
           removeCertificatesFromMaterializer(project);
           cleanupLogger.logSuccess("Removed all X.509 certificates related to the Project from " +
@@ -1197,7 +1195,7 @@ public class ProjectController {
           cleanupLogger.logError("Error while force removing Project certificates from CertificateMaterializer");
           cleanupLogger.logError(ex.getMessage());
         }
-  
+
         // remove conda envs
         try {
           removeAnacondaEnv(project);
@@ -1206,7 +1204,7 @@ public class ProjectController {
           cleanupLogger.logError("Error when removing conda envs during project cleanup");
           cleanupLogger.logError(ex.getMessage());
         }
-        
+
         // remove dumy Inode
         try {
           dfso.rm(dummy, true);
@@ -1224,7 +1222,7 @@ public class ProjectController {
           cleanupLogger.logError("Error when removing root Project dir during project cleanup");
           cleanupLogger.logError(ex.getMessage());
         }
-        
+
         // Run custom handler for project deletion
         for (ProjectHandler projectHandler : projectHandlers) {
           try {
@@ -1316,7 +1314,7 @@ public class ProjectController {
           cleanupLogger.logError(ex.getMessage());
         }
 
-        
+
         List<ProjectTeam> reconstructedProjectTeam = new ArrayList<>();
         try {
           for (HdfsUsers hdfsUser : hdfsUsersController.getAllProjectHdfsUsers(projectName)) {
@@ -1329,7 +1327,7 @@ public class ProjectController {
           // NOOP
         }
         toDeleteProject.setProjectTeamCollection(reconstructedProjectTeam);
-        
+
         try {
           airflowManager.onProjectRemoval(toDeleteProject);
           cleanupLogger.logSuccess("Removed Airflow DAGs and security references");
@@ -1337,7 +1335,7 @@ public class ProjectController {
           cleanupLogger.logError("Failed to remove Airflow DAGs and security references");
           cleanupLogger.logError(ex.getMessage());
         }
-        
+
         try {
           removeCertificatesFromMaterializer(toDeleteProject);
           cleanupLogger.logSuccess("Freed all x.509 references from CertificateMaterializer");
@@ -1345,7 +1343,7 @@ public class ProjectController {
           cleanupLogger.logError("Failed to free all X.509 references from CertificateMaterializer");
           cleanupLogger.logError(ex.getMessage());
         }
-        
+
         // Remove Certificates
         try {
           certificatesController.revokeProjectCertificates(project);
@@ -1422,7 +1420,7 @@ public class ProjectController {
             YarnApplicationState.ACCEPTED, YarnApplicationState.NEW, YarnApplicationState.NEW_SAVING,
             YarnApplicationState.RUNNING, YarnApplicationState.SUBMITTED));
   }
-  
+
   private void killYarnJobs(Project project) throws JobException {
     List<Jobs> running = jobFacade.getRunningJobs(project);
     if (running != null && !running.isEmpty()) {
@@ -1445,7 +1443,7 @@ public class ProjectController {
       YarnLogUtil.waitForLogAggregation(client, appReport.getApplicationId());
     }
   }
-  
+
   /**
    * Safety-net method to delete certificate references from {@link CertificateMaterializer}
    * Individual services who request material should de-reference them during cleanup, but just
@@ -1539,7 +1537,7 @@ public class ProjectController {
         List<HdfsUsers> usersToClean = getUsersToClean(project);
         List<HdfsGroups> groupsToClean = getGroupsToClean(project);
         removeProjectInt(project, usersToClean, groupsToClean, projectCreationFutures, decreaseCreatedProj);
-        
+
         removeCertificatesFromMaterializer(project);
         break;
       } catch (Exception ex) {
@@ -1558,7 +1556,7 @@ public class ProjectController {
       }
     }
   }
-  
+
   private void removeProjectInt(Project project, List<HdfsUsers> usersToClean,
       List<HdfsGroups> groupsToClean, List<Future<?>> projectCreationFutures,
       boolean decreaseCreatedProj)
@@ -1643,17 +1641,17 @@ public class ProjectController {
       //remove dumy Inode
       dfso.rm(dumy, true);
 
-      // Remove TF Servings
+      // Remove servings
       try {
-        tfServingController.deleteTfServings(project);
-      } catch (TfServingException e) {
+        servingController.deleteServings(project);
+      } catch (ServingException e) {
         throw new IOException(e);
       }
 
       // Remove Airflow DAGs from local filesystem,
       // JWT renewal monitors and materialized X.509
       airflowManager.onProjectRemoval(project);
-      
+
       //remove folder
       removeProjectFolder(project.getName(), dfso);
 
@@ -1833,7 +1831,7 @@ public class ProjectController {
                 new Object[]{newMember.getEmail(),
                   project.getName()});
 
-            logActivity(ActivityFacade.NEW_MEMBER + projectTeam.getProjectTeamPK().getTeamMember(), owner, 
+            logActivity(ActivityFacade.NEW_MEMBER + projectTeam.getProjectTeamPK().getTeamMember(), owner,
                 project, ActivityFlag.MEMBER);
           } else if (newMember == null) {
             failedList.add(projectTeam.getProjectTeamPK().getTeamMember()
@@ -2114,7 +2112,7 @@ public class ProjectController {
 
     logActivity(ActivityFacade.REMOVED_MEMBER + userToBeRemoved.getEmail(), user, project, ActivityFlag.
         MEMBER);
-    
+
     certificateMaterializer.forceRemoveLocalMaterial(userToBeRemoved.getUsername(), project.getName(), null, false);
     certificatesController.revokeUserSpecificCertificates(project, userToBeRemoved);
   }
@@ -2550,7 +2548,7 @@ public class ProjectController {
       resp = elasticController.sendKibanaReq(params, "index-pattern",
           projectName + Settings.ELASTIC_KAGENT_INDEX_PATTERN);
       LOGGER.log(Level.FINE, resp.toString(4));
-      
+
       // 3. Cleanup Experiment related Kibana stuff
       String experimentsIndex = projectName + "_" + Settings.ELASTIC_EXPERIMENTS_INDEX;
       elasticController.sendKibanaReq(params, "index-pattern", experimentsIndex, false);

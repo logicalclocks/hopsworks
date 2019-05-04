@@ -14,16 +14,16 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.common.serving.tf;
+package io.hops.hopsworks.common.serving.inference;
 
-import javax.xml.bind.annotation.XmlEnum;
+import io.hops.common.Pair;
+import io.hops.hopsworks.common.dao.serving.Serving;
 
-@XmlEnum
-public enum TfServingCommands {
-  START,
-  STOP;
-
-  public static TfServingCommands fromString(String command) {
-    return valueOf(command.toUpperCase());
-  }
+/**
+ * Interface for sending inference requests to sklearn serving instances. Different type of sklearn serving controllers
+ * e.g (localhost or Kubernetes) should implement this interface.
+ */
+public interface SkLearnInferenceController {
+  Pair<Integer, String> infer(Serving serving, Integer modelVersion,
+                              String verb, String inferenceRequestJson) throws InferenceException;
 }

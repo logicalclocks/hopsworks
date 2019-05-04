@@ -49,7 +49,7 @@ describe "On #{ENV['OS']}" do
 
     after (:all) do
       clean_projects
-      purge_all_serving_instances
+      purge_all_tf_serving_instances
     end
 
     describe "#create" do
@@ -62,10 +62,12 @@ describe "On #{ENV['OS']}" do
 
         it "should fail to create the serving" do
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-              {modelName: "testModel",
-               modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
+              {name: "testModel",
+               artifactPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
                modelVersion: 1,
-               batchingEnabled: false }
+               batchingEnabled: false,
+               servingType: 0
+              }
           expect_json(errorCode: 200003)
           expect_status(401)
         end
@@ -76,42 +78,48 @@ describe "On #{ENV['OS']}" do
           with_valid_project
 
           mkdir("/Projects/#{@project[:projectname]}/Models/mnist/", @user[:username], "#{@project[:projectname]}__Models", 750)
-          copy(TOUR_FILE_LOCATION, "/Projects/#{@project[:projectname]}/Models/mnist/", @user[:username], "#{@project[:projectname]}__Models", 750, "#{@project[:projectname]}")
+          copy(TF_MODEL_TOUR_FILE_LOCATION, "/Projects/#{@project[:projectname]}/Models/mnist/", @user[:username], "#{@project[:projectname]}__Models", 750, "#{@project[:projectname]}")
         end
 
         it "should create the serving without Kafka topic" do
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-              {modelName: "testModel",
-               modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
+              {name: "testModel",
+               artifactPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
                modelVersion: 1,
-               batchingEnabled: false}
+               batchingEnabled: false,
+               servingType: 0
+              }
           expect_status(201)
 
           serving_list = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/"
-          kafka_topic = JSON.parse(serving_list).select { |serving| serving['modelName'] == "testModel"}[0]['kafkaTopicDTO']
+          kafka_topic = JSON.parse(serving_list).select { |serving| serving['name'] == "testModel"}[0]['kafkaTopicDTO']
           expect(kafka_topic).to be nil
         end
 
         it "should create the serving with batching" do
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-              {modelName: "testModelBatching",
-               modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
+              {name: "testModelBatching",
+               artifactPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
                modelVersion: 1,
-               batchingEnabled: true}
+               batchingEnabled: true,
+               servingType: 0
+              }
           expect_status(201)
         end
 
         it "should create the serving with a new Kafka topic" do
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-              {modelName: "testModel1",
-               modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
+              {name: "testModel1",
+               artifactPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
                modelVersion: 1,
                batchingEnabled: false,
                kafkaTopicDTO: {
                    name: "CREATE",
                    numOfPartitions: 1,
                    numOfReplicas: 1
-               }}
+               },
+               servingType: 0
+              }
           expect_status(201)
 
           # Kafka authorizer needs some time to take up the new permissions.
@@ -121,25 +129,27 @@ describe "On #{ENV['OS']}" do
           serving_list = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/"
           kafka_topic_list = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/kafka/topics"
 
-          kafka_topic_name = JSON.parse(serving_list).select { |serving| serving['modelName'] == "testModel1"}[0]['kafkaTopicDTO']['name']
+          kafka_topic_name = JSON.parse(serving_list).select { |serving| serving['name'] == "testModel1"}[0]['kafkaTopicDTO']['name']
           kafka_topic = JSON.parse(kafka_topic_list).select { |topic| topic['name'] == kafka_topic_name}
           expect(kafka_topic.size).to eq 1
           expect(kafka_topic[0]['schemaName']).to eql INFERENCE_SCHEMA_NAME
         end
 
-        it "should create the serving with an existing Kakfa topic" do
+        it "should create the serving with an existing Kafka topic" do
           # Create kafka topic
           json, topic_name = add_topic(@project[:id], INFERENCE_SCHEMA_NAME, INFERENCE_SCHEMA_VERSION)
 
           # Create serving
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-              {modelName: "testModel2",
-               modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
+              {name: "testModel2",
+               artifactPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
                modelVersion: 1,
                batchingEnabled: false,
                kafkaTopicDTO: {
                    name: topic_name
-               }}
+               },
+               servingType: 0
+              }
           expect_status(201)
 
           # Kafka authorizer needs some time to take up the new permissions.
@@ -147,99 +157,35 @@ describe "On #{ENV['OS']}" do
 
           # Check that the serving is actually using that topic
           serving_list = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/"
-          kafka_topic_name = JSON.parse(serving_list).select { |serving| serving['modelName'] == "testModel2"}[0]['kafkaTopicDTO']['name']
+          kafka_topic_name = JSON.parse(serving_list).select { |serving| serving['name'] == "testModel2"}[0]['kafkaTopicDTO']['name']
           expect(kafka_topic_name).to eql topic_name
         end
 
         it "fail to create a serving with the same name" do
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-              {modelName: "testModel1",
-               modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
+              {name: "testModel1",
+               artifactPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
                modelVersion: 1,
                batchingEnabled: false,
                kafkaTopicDTO: {
                    name: "CREATE",
                    numOfPartitions: 1,
                    numOfReplicas: 1
-               }}
+               },
+               servingType: 0
+              }
           expect_json(errorMsg: "An entry with the same name already exists in this project")
           expect_status(400)
         end
 
-        it "fail to create a serving with bad kafka configuration" do
+        it "should fail to create a serving with a non-existent path" do
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-              {modelName: "testModelBadKafka",
-               modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
+              {name: "testModel5",
+               artifactPath: "/Projects/#{@project[:projectname]}/DOESNTEXISTS",
+               batchingEnabled: false,
                modelVersion: 1,
-               batchingEnabled: false,
-               kafkaTopicDTO: {
-                   name: "CREATE",
-                   numOfPartitions: -10,
-                   numOfReplicas: 5
-               }}
-          expect_json(errorMsg: "Maximum topic replication factor exceeded")
-          expect_status(400)
-        end
-
-        it "should fail to create the serving without a name" do
-          # Create serving
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-              {modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
-               batchingEnabled: false,
-               modelVersion: 1}
-          expect_json(usrMsg: "Model name not provided")
-        end
-
-        it "fail to create a serving with space in the name" do
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-              {modelName: "test Model1",
-               modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
-               modelVersion: 1,
-               batchingEnabled: false,
-               kafkaTopicDTO: {
-                   name: "CREATE",
-                   numOfPartitions: 1,
-                   numOfReplicas: 1
-               }}
-          expect_json(usrMsg: "Model name cannot contain spaces")
-          expect_status(422)
-        end
-
-        it "fail to create a serving without batching specified" do
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-              {modelName: "nobatchingModels",
-               modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
-               modelVersion: 1,
-               kafkaTopicDTO: {
-                   name: "CREATE",
-                   numOfPartitions: 1,
-                   numOfReplicas: 1
-               }}
-          expect_json(usrMsg: "Batching is null")
-        end
-
-        it "should fail to create a serving without a path" do
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-              {modelName: "testModel3",
-               batchingEnabled: false,
-               modelVersion: 1}
-          expect_json(usrMsg: "Model path not provided")
-        end
-
-        it "should fail to create a serving without a version" do
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-              {modelName: "testModel4",
-               modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
-               batchingEnabled: false}
-          expect_json(usrMsg: "Model version not provided")
-        end
-
-        it "should fail to create a serving with a non-standard path" do
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-              {modelName: "testModel5",
-               modelPath: "/Projects/#{@project[:projectname]}/DOESNTEXISTS",
-               batchingEnabled: false,
-               modelVersion: 1}
+               servingType: 0
+              }
           expect_json(usrMsg: "The model path provided does not exists")
           expect_status(422)
         end
@@ -248,10 +194,12 @@ describe "On #{ENV['OS']}" do
           rm("/Projects/#{@project[:projectname]}/Models/mnist/1/saved_model.pb")
 
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-              {modelName: "testModel6",
-               modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
+              {name: "testModel6",
+               artifactPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
                batchingEnabled: false,
-               modelVersion: 1}
+               modelVersion: 1,
+               servingType: 0
+              }
           expect_json(usrMsg: "The model path does not respect the TensorFlow standard")
           expect_status(422)
         end
@@ -262,11 +210,11 @@ describe "On #{ENV['OS']}" do
     describe "#start", vm: true do
       before :all do
         with_valid_project
-        with_serving(@project[:id], @project[:projectname], @user[:username])
+        with_tf_serving(@project[:id], @project[:projectname], @user[:username])
       end
 
       after :all do
-        purge_all_serving_instances
+        purge_all_tf_serving_instances
       end
 
       it "should be able to start a serving instance" do
@@ -275,7 +223,7 @@ describe "On #{ENV['OS']}" do
 
         # Check if the process is running on the host
         wait_for do
-          system "pgrep -f #{@serving[:model_name]} -a"
+          system "pgrep -f #{@serving[:name]} -a"
           $?.exitstatus == 0
         end
 
@@ -287,7 +235,7 @@ describe "On #{ENV['OS']}" do
           config.base_url = ''
         end
 
-        index = get "#{ENV['ELASTIC_API']}/#{@project[:projectname].downcase}_serving*/_search?q=modelname:#{@serving[:model_name]}"
+        index = get "#{ENV['ELASTIC_API']}/#{@project[:projectname].downcase}_serving*/_search?q=modelname:#{@serving[:name]}"
 
         Airborne.configure do |config|
           config.base_url = "https://#{ENV['WEB_HOST']}:#{ENV['WEB_PORT']}"
@@ -308,19 +256,19 @@ describe "On #{ENV['OS']}" do
     describe "#update", vm: true do
       before :all do
         with_valid_project
-        with_serving(@project[:id], @project[:projectname], @user[:username])
+        with_tf_serving(@project[:id], @project[:projectname], @user[:username])
 
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=start"
         expect_status(200)
 
         wait_for do
-          system "pgrep -f #{@serving[:model_name]} -a"
+          system "pgrep -f #{@serving[:name]} -a"
           $?.exitstatus == 0
         end
       end
 
       after :all do
-        purge_all_serving_instances
+        purge_all_tf_serving_instances
       end
 
       after :each do
@@ -334,39 +282,45 @@ describe "On #{ENV['OS']}" do
       it "should be able to update the name" do
         put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
             {id: @serving[:id],
-             modelName: "testModelChanged",
-             modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
+             name: "testModelChanged",
+             artifactPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
              modelVersion: 1,
              batchingEnabled: false,
              kafkaTopicDTO: {
                  name: @topic[:topic_name]
-             }}
+             },
+             servingType: 0
+            }
         expect_status(201)
       end
 
       it "should be able to update the version" do
         put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
             {id: @serving[:id],
-             modelName: "testModelChanged",
-             modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
+             name: "testModelChanged",
+             artifactPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
              modelVersion: 2,
              batchingEnabled: false,
              kafkaTopicDTO: {
                  name: @topic[:topic_name]
-             }}
+             },
+             servingType: 0
+            }
         expect_status(201)
       end
 
       it "should be able to update the batching" do
         put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
             {id: @serving[:id],
-             modelName: "testModelChanged",
-             modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
+             name: "testModelChanged",
+             artifactPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
              modelVersion: 2,
              batchingEnabled: true,
              kafkaTopicDTO: {
                  name: @topic[:topic_name]
-             }}
+             },
+             servingType: 0
+            }
         expect_status(201)
       end
 
@@ -380,13 +334,15 @@ describe "On #{ENV['OS']}" do
 
         put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
             {id: @serving[:id],
-             modelName: "testModelChanged",
-             modelPath: "/Projects/#{@project[:projectname]}/Models/newMnist/",
+             name: "testModelChanged",
+             artifactPath: "/Projects/#{@project[:projectname]}/Models/newMnist/",
              modelVersion: 2,
              batchingEnabled: false,
              kafkaTopicDTO: {
                  name: @topic[:topic_name]
-             }}
+             },
+             servingType: 0
+            }
         expect_status(201)
       end
 
@@ -395,16 +351,18 @@ describe "On #{ENV['OS']}" do
 
         put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
             {id: @serving[:id],
-             modelName: "testModelChanged",
-             modelPath: "/Projects/#{@project[:projectname]}/Models/newMnist/",
+             name: "testModelChanged",
+             artifactPath: "/Projects/#{@project[:projectname]}/Models/newMnist/",
              modelVersion: 2,
              batchingEnabled: false,
              kafkaTopicDTO: {
                  name: topic_name
-             }}
+             },
+             servingType: 0
+            }
         expect_status(201)
 
-        serving = TfServing.find(@serving[:id])
+        serving = Serving.find(@serving[:id])
         new_topic = ProjectTopics.find_by(topic_name: topic_name, project_id: @project[:id])
         expect(serving[:kafka_topic_id]).to be new_topic[:id]
       end
@@ -412,16 +370,18 @@ describe "On #{ENV['OS']}" do
       it "should be able to stop writing to a kafka topic" do
         put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
             {id: @serving[:id],
-             modelName: "testModelChanged",
-             modelPath: "/Projects/#{@project[:projectname]}/Models/newMnist/",
+             name: "testModelChanged",
+             artifactPath: "/Projects/#{@project[:projectname]}/Models/newMnist/",
              modelVersion: 2,
              batchingEnabled: false,
              kafkaTopicDTO: {
                  name: "NONE"
-             }}
+             },
+             servingType: 0
+            }
         expect_status(201)
 
-        serving = TfServing.find(@serving[:id])
+        serving = Serving.find(@serving[:id])
         expect(serving[:kafka_topic_id]).to be nil
       end
     end
@@ -429,7 +389,7 @@ describe "On #{ENV['OS']}" do
     describe "#kill", vm: true do
       before :all do
         with_valid_project
-        with_serving(@project[:id], @project[:projectname], @user[:username])
+        with_tf_serving(@project[:id], @project[:projectname], @user[:username])
       end
 
       before :each do
@@ -473,7 +433,7 @@ describe "On #{ENV['OS']}" do
 
         # Check that the serving is reported as dead
         serving_list = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/"
-        serving = JSON.parse(serving_list).select { |serving| serving[:modelName] == @serving[:modelName]}[0]
+        serving = JSON.parse(serving_list).select { |serving| serving["name"] == @serving[:name]}[0]
         expect(serving['status']).to eql "Stopped"
       end
     end
@@ -486,11 +446,11 @@ describe "On #{ENV['OS']}" do
 
 
         mkdir("/Projects/#{@project[:projectname]}/Models/mnist/", @user[:username], "#{@project[:projectname]}__Models", 750)
-        copy(TOUR_FILE_LOCATION, "/Projects/#{@project[:projectname]}/Models/mnist/", @user[:username], "#{@project[:projectname]}__Models", 750, "#{@project[:projectname]}")
+        copy(TF_MODEL_TOUR_FILE_LOCATION, "/Projects/#{@project[:projectname]}/Models/mnist/", @user[:username], "#{@project[:projectname]}__Models", 750, "#{@project[:projectname]}")
       end
 
       before :each do
-        @serving = create_serving(@project[:id], @project[:projectname])
+        @serving = create_tf_serving(@project[:id], @project[:projectname])
       end
 
       it "should be able to delete a serving instance" do

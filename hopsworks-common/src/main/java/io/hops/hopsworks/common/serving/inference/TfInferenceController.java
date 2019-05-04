@@ -17,9 +17,13 @@
 package io.hops.hopsworks.common.serving.inference;
 
 import io.hops.common.Pair;
-import io.hops.hopsworks.common.dao.serving.TfServing;
+import io.hops.hopsworks.common.dao.serving.Serving;
 
+/**
+ * Interface for sending inference requests to tfserving serving instances. Different type of tf serving
+ * controllers e.g (localhost or Kubernetes) should implement this interface.
+ */
 public interface TfInferenceController {
-  Pair<Integer, String> infer(TfServing tfServing, Integer modelVersion,
-                             String verb, String inferenceRequestJson) throws InferenceException;
+  Pair<Integer, String> infer(Serving serving, Integer modelVersion,
+                              String verb, String inferenceRequestJson) throws InferenceException;
 }

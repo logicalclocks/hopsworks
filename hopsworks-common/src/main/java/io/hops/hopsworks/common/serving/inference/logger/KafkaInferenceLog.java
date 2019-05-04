@@ -16,7 +16,7 @@
 
 package io.hops.hopsworks.common.serving.inference.logger;
 
-import io.hops.hopsworks.common.dao.serving.TfServing;
+import io.hops.hopsworks.common.dao.serving.Serving;
 
 import java.io.Serializable;
 
@@ -35,11 +35,11 @@ public class KafkaInferenceLog implements Serializable {
   public KafkaInferenceLog() {
   }
 
-  public KafkaInferenceLog(TfServing tfServing, String inferenceRequest,
+  public KafkaInferenceLog(Serving serving, String inferenceRequest,
                            Integer responseHttpCode, String inferenceResponse) {
-    this.modelId = tfServing.getId();
-    this.modelName = tfServing.getModelName();
-    this.modelVersion = tfServing.getVersion();
+    this.modelId = serving.getId();
+    this.modelName = serving.getName();
+    this.modelVersion = serving.getVersion();
 
     this.requestTimestamp = System.currentTimeMillis();
 

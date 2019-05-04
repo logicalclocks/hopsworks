@@ -49,20 +49,20 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Tensorflow Localhost Inference Controller
+ * SkLearn Localhost Inference Controller
  *
- * Sends inference requests to a local tensorflow serving server to get a prediction response
+ * Sends inference requests to a local sklearn flask server to get a prediction response
  */
 @Alternative
 @Singleton
 @TransactionAttribute(TransactionAttributeType.NEVER)
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
-public class LocalhostTfInferenceController implements TfInferenceController {
+public class LocalhostSkLearnInferenceController implements SkLearnInferenceController {
 
   @EJB
   private Settings settings;
 
-  private static final Logger logger = Logger.getLogger(LocalhostTfInferenceController.class.getName());
+  private static final Logger logger = Logger.getLogger(LocalhostSkLearnInferenceController.class.getName());
 
   CloseableHttpClient httpClient = null;
   PoolingHttpClientConnectionManager cm = null;
@@ -73,13 +73,12 @@ public class LocalhostTfInferenceController implements TfInferenceController {
   @PostConstruct
   public void init() {
     cm = new PoolingHttpClientConnectionManager(30l, TimeUnit.SECONDS);
-    int poolSize = settings.getTFServingConnectionPoolSize();
-    int maxRouteConnections = settings.getTFServingMaxRouteConnections();
+    int poolSize = settings.getSkLearnConnectionPoolSize();
+    int maxRouteConnections = settings.getSkLearnMaxRouteConnections();
     cm.setMaxTotal(poolSize);
     cm.setDefaultMaxPerRoute(maxRouteConnections);
-    logger.log(Level.FINE, "Creating connection pool for TF Serving of size " +
-      poolSize + " and max connections per route " +
-      maxRouteConnections);
+    logger.log(Level.FINE, "Creating connection pool for SkLearn of size " +
+      poolSize + " and max connections per route " + maxRouteConnections);
 
     httpClient = HttpClients.custom()
       .setConnectionManager(cm)
@@ -87,9 +86,9 @@ public class LocalhostTfInferenceController implements TfInferenceController {
   }
   
   /**
-   * Tensorflow inference. Sends a JSON request to the REST API of a tensorflow serving server
+   * SkLearn inference. Sends a JSON request to a flask server that serves a SkLearn model
    *
-   * @param serving the tensorflow serving instance to send the request to
+   * @param serving the sklearn serving instance to send the request to
    * @param modelVersion the version of the serving
    * @param verb the type of inference request (predict, regress, classify)
    * @param inferenceRequestJson the JSON payload of the inference request
@@ -99,17 +98,9 @@ public class LocalhostTfInferenceController implements TfInferenceController {
   public Pair<Integer, String> infer(Serving serving, Integer modelVersion,
                                      String verb, String inferenceRequestJson) throws InferenceException {
     
-    // TODO(Fabio) does Tf model server support TLS?
-    StringBuilder pathBuilder = new StringBuilder()
-        .append("/v1/models/")
-        .append(serving.getName());
 
-    // Append the version if the user specified it.
-    if (modelVersion != null) {
-      pathBuilder.append("/versions").append(modelVersion);
-    }
-
-    pathBuilder.append(verb);
+    StringBuilder pathBuilder =
+        new StringBuilder().append("/").append(verb.replaceFirst(":", ""));
 
     CloseableHttpResponse response = null;
     // Send request
@@ -120,7 +111,6 @@ public class LocalhostTfInferenceController implements TfInferenceController {
           .setPort(serving.getLocalPort())
           .setPath(pathBuilder.toString())
           .build();
-
       HttpPost request = new HttpPost(uri);
       request.addHeader("content-type", "application/json; charset=utf-8");
       request.setEntity(new StringEntity(inferenceRequestJson));

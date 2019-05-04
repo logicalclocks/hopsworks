@@ -54,7 +54,7 @@ angular.module('hopsWorksApp')
               },
 
               /**
-               * Get all the tfservings
+               * Get all the servings
                * @param {int} projectId
                * @returns {unresolved} A list of tf serving objects.
                */
@@ -71,7 +71,7 @@ angular.module('hopsWorksApp')
               },
 
               /**
-               * Create a new Serving Tf server in the given project, of the given type.
+               * Create a new Serving serving instance in the given project, of the given type.
                * @param {type} projectId
                * @param {type} servingDetails The configuration of the newly created topic.
                * @returns {undefined} The newly created tf server object.
@@ -106,7 +106,7 @@ angular.module('hopsWorksApp')
               transformGraph: function (projectId, servingId, transformGraph) {
                 var req = {
                   method: 'POST',
-                  url: '/api/project/' + projectId + '/tfserving/transform/' + servingId,
+                  url: '/api/project/' + projectId + '/serving/transform/' + servingId,
                   headers: {
                     'Content-Type': 'application/json'
                   },

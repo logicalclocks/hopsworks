@@ -36,14 +36,14 @@
  * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package io.hops.hopsworks.common.serving.tf;
+package io.hops.hopsworks.common.serving;
 
 
 import javax.xml.bind.annotation.XmlEnum;
 import javax.xml.bind.annotation.XmlEnumValue;
 
 @XmlEnum
-public enum TfServingStatusEnum {
+public enum ServingStatusEnum {
   @XmlEnumValue("Running")
   RUNNING("Running"),
   @XmlEnumValue("Stopped")
@@ -59,24 +59,24 @@ public enum TfServingStatusEnum {
 
   private final String readable;
 
-  private TfServingStatusEnum(String readable) {
+  private ServingStatusEnum(String readable) {
     this.readable = readable;
   }
 
-  public static TfServingStatusEnum fromString(String shortName) {
+  public static ServingStatusEnum fromString(String shortName) {
     switch (shortName) {
       case "Running":
-        return TfServingStatusEnum.RUNNING;
+        return ServingStatusEnum.RUNNING;
       case "Stopped":
-        return TfServingStatusEnum.STOPPED;
+        return ServingStatusEnum.STOPPED;
       case "Starting":
-        return TfServingStatusEnum.STARTING;
+        return ServingStatusEnum.STARTING;
       case "Updating":
-        return TfServingStatusEnum.UPDATING;
+        return ServingStatusEnum.UPDATING;
       case "Stopping":
-        return TfServingStatusEnum.STOPPING;
+        return ServingStatusEnum.STOPPING;
       case "Transforming":
-        return TfServingStatusEnum.TRANSFORMING;
+        return ServingStatusEnum.TRANSFORMING;
       default:
         throw new IllegalArgumentException("ShortName [" + shortName + "] not supported.");
     }

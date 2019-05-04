@@ -14,15 +14,16 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.common.serving.tf;
+package io.hops.hopsworks.common.serving.sklearn;
 
+import com.google.common.base.Strings;
 import com.google.common.io.Files;
-import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.serving.Serving;
 import io.hops.hopsworks.common.dao.serving.ServingFacade;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.serving.ServingException;
 import io.hops.hopsworks.common.serving.ServingWrapper;
@@ -37,12 +38,10 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.inject.Alternative;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -53,16 +52,16 @@ import static io.hops.hopsworks.common.serving.LocalhostServingController.PID_ST
 import static io.hops.hopsworks.common.serving.LocalhostServingController.SERVING_DIRS;
 
 /**
- * Localhost Tensorflow Serving Controller
+ * Localhost SkLearn Serving Controller
  *
- * Launches/Kills a local tensorflow-serving-server for serving tensorflow Models
+ * Launches/Kills a local Flask Server for Serving SkLearn Models
  */
 @Alternative
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-public class LocalhostTfServingController {
+public class LocalhostSkLearnServingController {
 
-  private final static Logger logger = Logger.getLogger(LocalhostTfServingController.class.getName());
+  private final static Logger logger = Logger.getLogger(LocalhostSkLearnServingController.class.getName());
 
   @EJB
   private ServingFacade servingFacade;
@@ -80,77 +79,21 @@ public class LocalhostTfServingController {
   }
   
   public String getClassName() {
-    return LocalhostTfServingController.class.getName();
+    return LocalhostSkLearnServingController.class.getName();
   }
   
   /**
-   * Updates the model version that is being served of an existing tfserving instance. The new model is copied to the
-   * secret directory where the serving instance is running and then the server will automatically pick up the new
-   * version.
+   * Stops a SKLearn serving instance by killing the process with the corresponding PID
    *
-   * @param project the project of the serving instance
-   * @param user the user making the request
-   * @param serving the serving instance to update the model version for
-   * @throws ServingException
-   */
-  public void updateModelVersion(Project project, Users user, Serving serving) throws ServingException {
-    // TFServing polls for new version of the model in the directory
-    // if a new version is downloaded it starts serving it
-    String script = settings.getHopsworksDomainDir() + "/bin/tfserving.sh";
-
-    Path secretDir = Paths.get(settings.getStagingDir(), SERVING_DIRS, serving.getLocalDir());
-  
-    ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
-        .addCommand("/usr/bin/sudo")
-        .addCommand(script)
-        .addCommand("update")
-        .addCommand(serving.getName())
-        .addCommand(Paths.get(serving.getArtifactPath(), serving.getVersion().toString()).toString())
-        .addCommand(secretDir.toString())
-        .addCommand(project.getName() + USER_NAME_DELIMITER + user.getUsername())
-        .ignoreOutErrStreams(true)
-        .setWaitTimeout(2L, TimeUnit.MINUTES)
-        .build();
-    logger.log(Level.INFO, processDescriptor.toString());
-    
-    // Materialized TLS certificates to be able to read the model
-    if (settings.getHopsRpcTls()) {
-      try {
-        certificateMaterializer.materializeCertificatesLocal(user.getUsername(), project.getName());
-      } catch (IOException e) {
-        throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERRORINT, Level.SEVERE, null,
-          e.getMessage(), e);
-      } finally {
-        servingFacade.releaseLock(project, serving.getId());
-      }
-    }
-
-    try {
-      osProcessExecutor.execute(processDescriptor);
-    } catch (IOException ex) {
-      throw new ServingException(RESTCodes.ServingErrorCode.UPDATEERROR, Level.SEVERE,
-        "serving id: " + serving.getId(), ex.getMessage(), ex);
-    } finally {
-      if (settings.getHopsRpcTls()) {
-        certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());
-      }
-
-      servingFacade.releaseLock(project, serving.getId());
-    }
-  }
-  
-  /**
-   * Stops a Tensorflow serving instance by killing the process with the corresponding PID
-   *
-   * @param project the project where the tensorflow serving instance is running
+   * @param project the project where the sklearn instance is running
    * @param serving the serving instance to stop
    * @param releaseLock boolean flag deciding whether to release the lock afterwards.
    * @throws ServingException
    */
   public void killServingInstance(Project project, Serving serving, boolean releaseLock)
       throws ServingException {
-    String script = settings.getHopsworksDomainDir() + "/bin/tfserving.sh";
-    
+    String script = settings.getHopsworksDomainDir() + "/bin/sklearn_serving.sh";
+
     Path secretDir = Paths.get(settings.getStagingDir(), SERVING_DIRS + serving.getLocalDir());
 
     ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
@@ -162,7 +105,6 @@ public class LocalhostTfServingController {
         .addCommand(secretDir.toString())
         .ignoreOutErrStreams(true)
         .build();
-
     logger.log(Level.INFO, processDescriptor.toString());
     try {
       osProcessExecutor.execute(processDescriptor);
@@ -177,7 +119,7 @@ public class LocalhostTfServingController {
 
     if (releaseLock) {
       // During the restart the lock is needed until the serving instance is actually restarted.
-      // The startTfServingInstance method is responsible of releasing the lock on the db entry
+      // The startSkLearnServingInstance method is responsible of releasing the lock on the db entry
       // During the termination phase, this method is responsible of releasing the lock
       // In case of termination + deletion, we don't release the lock as the entry will be removed from the db.
       servingFacade.releaseLock(project, serving.getId());
@@ -185,56 +127,41 @@ public class LocalhostTfServingController {
   }
   
   /**
-   * Starts a Tensorflow serving instance. Executes the tfserving bash script to launch a tensorflow serving
-   * server as serving-user and localize the tf-model from HDFS server. It records the PID of the server for monitoring.
+   * Starts a SkLearn serving instance. Executes the sklearn bash script to launch a Flask server as serving-user
+   * in the project's anaconda environment. It records the PID of the server for monitoring.
    *
    * @param project the project to start the serving in
    * @param user the user starting the serving
-   * @param serving the serving instance to start (tfserving servingtype)
+   * @param serving the serving instance to start (sklearn servingtype)
    * @throws ServingException
    */
   public void startServingInstance(Project project, Users user, Serving serving) throws ServingException {
-    String script = settings.getHopsworksDomainDir() + "/bin/tfserving.sh";
-
-    // TODO(Fabio) this is bad as we don't know if the port is used or not
-    Integer grpcPort = ThreadLocalRandom.current().nextInt(40000, 59999);
-    Integer restPort = ThreadLocalRandom.current().nextInt(40000, 59999);
-
+    String script = settings.getHopsworksDomainDir() + "/bin/sklearn_serving.sh";
+    Integer port = ThreadLocalRandom.current().nextInt(40000, 59999);
     Path secretDir = Paths.get(settings.getStagingDir(), SERVING_DIRS + serving.getLocalDir());
-
     ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
         .addCommand("/usr/bin/sudo")
         .addCommand(script)
         .addCommand("start")
-        .addCommand(serving.getName())
-        .addCommand(Paths.get(serving.getArtifactPath(), serving.getVersion().toString()).toString())
-        .addCommand(String.valueOf(grpcPort))
-        .addCommand(String.valueOf(restPort))
+        .addCommand(Utils.getFileName(Paths.get(serving.getArtifactPath()).toString()))
+        .addCommand(Paths.get(serving.getArtifactPath()).toString())
+        .addCommand(String.valueOf(port))
         .addCommand(secretDir.toString())
         .addCommand(project.getName() + USER_NAME_DELIMITER + user.getUsername())
-        .addCommand(serving.isBatchingEnabled() ? "1" : "0")
         .addCommand(project.getName().toLowerCase())
+        .addCommand(settings.getAnacondaProjectDir(project) + "/bin/python")
+        .addCommand(certificateMaterializer.getUserTransientKeystorePath(project, user))
+        .addCommand(certificateMaterializer.getUserTransientTruststorePath(project, user))
+        .addCommand(certificateMaterializer.getUserTransientPasswordPath(project, user))
+        .addCommand(serving.getName())
         .setWaitTimeout(2L, TimeUnit.MINUTES)
         .ignoreOutErrStreams(true)
         .build();
     logger.log(Level.INFO, processDescriptor.toString());
-
-    // Materialized TLS certificates to be able to read the model
-    if (settings.getHopsRpcTls()) {
-      try {
-        certificateMaterializer.materializeCertificatesLocal(user.getUsername(), project.getName());
-      } catch (IOException e) {
-        throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERRORINT, Level.SEVERE,
-            null, e.getMessage(), e);
-      } finally {
-        // Release lock on the serving entry
-        servingFacade.releaseLock(project, serving.getId());
-      }
-    }
-
     try {
+      // Materialized TLS certificates so that user can read from HDFS inside python script
+      certificateMaterializer.materializeCertificatesLocal(user.getUsername(), project.getName());
       ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
-
       if (processResult.getExitCode() != 0) {
         // Startup process failed for some reason
         serving.setLocalPid(PID_STOPPED);
@@ -243,12 +170,12 @@ public class LocalhostTfServingController {
       }
 
       // Read the pid for TensorFlow Serving server
-      Path pidFilePath = Paths.get(secretDir.toString(), "tfserving.pid");
+      Path pidFilePath = Paths.get(secretDir.toString(), "sklearn_flask_server.pid");
       String pidContents = Files.readFirstLine(pidFilePath.toFile(), Charset.defaultCharset());
 
       // Update the info in the db
       serving.setLocalPid(Integer.valueOf(pidContents));
-      serving.setLocalPort(restPort);
+      serving.setLocalPort(port);
       servingFacade.updateDbObject(serving, project);
     } catch (Exception ex) {
       // Startup process failed for some reason
@@ -268,34 +195,38 @@ public class LocalhostTfServingController {
   }
   
   /**
-   * Validates user data for creating or updating a Tensorflow Serving Instance
+   * Validates user data for creating or updating a SkLearn Serving Instance
    *
    * @param servingWrapper the user data
    * @param project the project to create the serving for
    * @throws ServingException if the python environment is not activated for the project
    */
-  public void validateUserInput(ServingWrapper servingWrapper, Project project) {
-    // Check that the modelPath respects the TensorFlow standard
-    validateModelPath(servingWrapper.getServing().getArtifactPath(),
-      servingWrapper.getServing().getVersion());
+  public void validateUserInput(ServingWrapper servingWrapper, Project project) throws ServingException {
+
+    // Check that serving name is provided
+    if (Strings.isNullOrEmpty(servingWrapper.getServing().getName())) {
+      throw new IllegalArgumentException("Serving name not provided");
+    }
     
-    // Check that the batching option has been specified
-    if (servingWrapper.getServing().isBatchingEnabled() == null) {
-      throw new IllegalArgumentException("Batching is null");
+    // Check that the script name is valid and exists
+    String scriptName = Utils.getFileName(servingWrapper.getServing().getArtifactPath());
+    if(!scriptName.contains(".py")){
+      throw new IllegalArgumentException("Script name should be a valid python script name");
+    }
+    String hdfsPath = servingWrapper.getServing().getArtifactPath();
+    if (!hdfsPath.substring(0, 7).equalsIgnoreCase("hdfs://")) {
+      hdfsPath = "hdfs://" + hdfsPath;
+    }
+    if(!servingWrapper.getServing().getArtifactPath().contains(".py")){
+      throw new IllegalArgumentException("Script name should be a valid python script name");
+    } else if(inodeFacade.existsPath(hdfsPath)){
+      throw new IllegalArgumentException("Python script path does not exist in HDFS");
+    }
+    
+    //Check that python environment is activated
+    boolean enabled = project.getConda();
+    if(!enabled){
+      throw new ServingException(RESTCodes.ServingErrorCode.PYTHON_ENVIRONMENT_NOT_ENABLED, Level.SEVERE, null);
     }
   }
-
-  private void validateModelPath(String path, Integer version) throws IllegalArgumentException {
-    try {
-      List<Inode> children = inodeFacade.getChildren(Paths.get(path, version.toString()).toString());
-
-      if (children.stream().noneMatch(inode -> inode.getInodePK().getName().equals("variables")) ||
-          children.stream().noneMatch(inode -> inode.getInodePK().getName().contains(".pb"))) {
-        throw new IllegalArgumentException("The model path does not respect the TensorFlow standard");
-      }
-    } catch (FileNotFoundException e) {
-      throw new IllegalArgumentException("The model path provided does not exists");
-    }
-  }
-
 }
