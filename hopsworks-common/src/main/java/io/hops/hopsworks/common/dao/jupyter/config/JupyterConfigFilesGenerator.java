@@ -311,7 +311,7 @@ public class JupyterConfigFilesGenerator {
       LocalDateTime expirationDate =  LocalDateTime.now().plus(settings.getJWTLifetimeMs(), ChronoUnit.MILLIS);
       String[] audience = new String[]{"job"};
       String[] roles = new String[1];
-      roles[1] = "HOPS_USER";
+      roles[0] = "HOPS_USER";
       token = jwtController.createToken(settings.getJWTSigningKeyName(), false, settings.getJWTIssuer(),
         audience, Date.from(expirationDate.toInstant(ZoneOffset.UTC)),
         Date.from(LocalDateTime.now().toInstant(ZoneOffset.UTC)),hdfsUser,
