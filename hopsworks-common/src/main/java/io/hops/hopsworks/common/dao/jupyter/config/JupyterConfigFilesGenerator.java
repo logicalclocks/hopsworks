@@ -48,9 +48,9 @@ import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.util.SparkConfigurationUtil;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.JWTController;
-//import io.hops.hopsworks.jwt.SignatureAlgorithm;
-//import io.hops.hopsworks.jwt.exception.InvalidationException;
-//import io.hops.hopsworks.jwt.exception.JWTException;
+import io.hops.hopsworks.jwt.SignatureAlgorithm;
+import io.hops.hopsworks.jwt.exception.InvalidationException;
+import io.hops.hopsworks.jwt.exception.JWTException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.commons.io.FileUtils;
 import javax.ejb.TransactionAttributeType;
@@ -58,21 +58,23 @@ import javax.ejb.TransactionAttribute;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.ejb.TransactionManagement;
+import javax.ejb.TransactionManagementType;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-//import java.nio.file.Path;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
-//import java.security.GeneralSecurityException;
-//import java.time.LocalDateTime;
-//import java.time.ZoneOffset;
-//import java.time.temporal.ChronoUnit;
+import java.security.GeneralSecurityException;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-//import java.util.Date;
+import java.util.Date;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.logging.Level;
@@ -82,6 +84,7 @@ import java.util.logging.Logger;
  * This class is used to generate the Configuration Files for a Jupyter Notebook Server
  */
 @Stateless
+@TransactionAttribute(value=TransactionAttributeType.NEVER)
 public class JupyterConfigFilesGenerator {
 
   private static final Logger LOGGER = Logger.getLogger(JupyterConfigFilesGenerator.class.getName());
@@ -162,7 +165,6 @@ public class JupyterConfigFilesGenerator {
   }
 
   // returns true if one of the conf files were created anew 
-  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   private boolean createConfigFiles(String confDirPath, String kernelsDir, String hdfsUser, String usersFullName,
     Project project, String nameNodeEndpoint, Integer port, JupyterSettings js, String allowOrigin)
     throws IOException, ServiceException {
@@ -310,46 +312,46 @@ public class JupyterConfigFilesGenerator {
 
     // JWT TOKEN
 
-    // String token = "";
-    // try {
-    //   LocalDateTime expirationDate =  LocalDateTime.now().plus(settings.getJWTLifetimeMs(), ChronoUnit.MILLIS);
-    //   String[] audience = new String[]{"job"};
-    //   String[] roles = new String[1];
-    //   roles[0] = "HOPS_USER";
-    //   String skn = settings.getJWTSigningKeyName();
-    //   token = jwtController.createToken(skn, false, settings.getJWTIssuer(),
-    //     audience, Date.from(expirationDate.toInstant(ZoneOffset.UTC)),
-    //     Date.from(LocalDateTime.now().toInstant(ZoneOffset.UTC)),hdfsUser,
-    //     false, settings.getJWTExpLeewaySec(), roles, SignatureAlgorithm.valueOf(settings.getJWTSignatureAlg()));
-    //   String tokenFileName = hdfsUser + ".jwt";
-    //   Path tokenFile = Paths.get(confDirPath,tokenFileName);
-    //   FileUtils.writeStringToFile(tokenFile.toFile(), token);
-    //   Set<PosixFilePermission> TOKEN_FILE_PERMISSIONS = new HashSet<>(5);
-    //   TOKEN_FILE_PERMISSIONS.add(PosixFilePermission.OWNER_READ);
-    //   TOKEN_FILE_PERMISSIONS.add(PosixFilePermission.OWNER_WRITE);
-    //   TOKEN_FILE_PERMISSIONS.add(PosixFilePermission.OWNER_EXECUTE);
-    //   TOKEN_FILE_PERMISSIONS.add(PosixFilePermission.GROUP_READ);
-    //   TOKEN_FILE_PERMISSIONS.add(PosixFilePermission.GROUP_EXECUTE);
-    //   Files.setPosixFilePermissions(tokenFile, TOKEN_FILE_PERMISSIONS);
-    //   //      Files.getFileAttributeView(tokenFile, PosixFileAttributeView.class,
-    //   //                     LinkOption.NOFOLLOW_LINKS).setGroup(settings.getGrou);
-    // } catch (GeneralSecurityException | JWTException ex) {
-    //   ex.printStackTrace();
-    //   //    	throw new AirflowException(RESTCodes.AirflowErrorCode.JWT_NOT_CREATED, Level.SEVERE,
-    //   //				   "Could not generate Jupyter JWT for user " + hdfsUser, ex.getMessage(), ex);
-    // } catch (IOException ex) {
-    //   ex.printStackTrace();	
-    //   LOGGER.log(Level.WARNING, "Could not write Jupyter JWT for user " + hdfsUser, ex);
-    //   //        deleteJupyterMaterial(materialID);
-    //   try {
-    //     jwtController.invalidate(token);
-    //   } catch (InvalidationException invEx) {
-    //     ex.printStackTrace();	  
-    //     LOGGER.log(Level.FINE, "Could not invalidate Jupyter JWT. Skipping...", ex);
-    //   }
-    //   //	throw new JupyterException(RESTCodes.AirflowErrorCode.JWT_NOT_STORED, Level.SEVERE,
-    //   //				   "Could not store Jupyter JWT for user " + hdfsUser, ex.getMessage(), ex);
-    // }
+     String token = "";
+     try {
+       LocalDateTime expirationDate =  LocalDateTime.now().plus(settings.getJWTLifetimeMs(), ChronoUnit.MILLIS);
+       String[] audience = new String[]{"job"};
+       String[] roles = new String[1];
+       roles[0] = "HOPS_USER";
+       String skn = settings.getJWTSigningKeyName();
+       token = jwtController.createToken(skn, false, settings.getJWTIssuer(),
+         audience, Date.from(expirationDate.toInstant(ZoneOffset.UTC)),
+         Date.from(LocalDateTime.now().toInstant(ZoneOffset.UTC)),hdfsUser,
+         false, settings.getJWTExpLeewaySec(), roles, SignatureAlgorithm.valueOf(settings.getJWTSignatureAlg()));
+       String tokenFileName = hdfsUser + ".jwt";
+       Path tokenFile = Paths.get(confDirPath,tokenFileName);
+       FileUtils.writeStringToFile(tokenFile.toFile(), token);
+       Set<PosixFilePermission> TOKEN_FILE_PERMISSIONS = new HashSet<>(5);
+       TOKEN_FILE_PERMISSIONS.add(PosixFilePermission.OWNER_READ);
+       TOKEN_FILE_PERMISSIONS.add(PosixFilePermission.OWNER_WRITE);
+       TOKEN_FILE_PERMISSIONS.add(PosixFilePermission.OWNER_EXECUTE);
+       TOKEN_FILE_PERMISSIONS.add(PosixFilePermission.GROUP_READ);
+       TOKEN_FILE_PERMISSIONS.add(PosixFilePermission.GROUP_EXECUTE);
+       Files.setPosixFilePermissions(tokenFile, TOKEN_FILE_PERMISSIONS);
+       //      Files.getFileAttributeView(tokenFile, PosixFileAttributeView.class,
+       //                     LinkOption.NOFOLLOW_LINKS).setGroup(settings.getGrou);
+     } catch (GeneralSecurityException | JWTException ex) {
+       ex.printStackTrace();
+       //    	throw new AirflowException(RESTCodes.AirflowErrorCode.JWT_NOT_CREATED, Level.SEVERE,
+       //				   "Could not generate Jupyter JWT for user " + hdfsUser, ex.getMessage(), ex);
+     } catch (IOException ex) {
+       ex.printStackTrace();
+       LOGGER.log(Level.WARNING, "Could not write Jupyter JWT for user " + hdfsUser, ex);
+       //        deleteJupyterMaterial(materialID);
+       try {
+         jwtController.invalidate(token);
+       } catch (InvalidationException invEx) {
+         ex.printStackTrace();
+         LOGGER.log(Level.FINE, "Could not invalidate Jupyter JWT. Skipping...", ex);
+       }
+       //	throw new JupyterException(RESTCodes.AirflowErrorCode.JWT_NOT_STORED, Level.SEVERE,
+       //				   "Could not store Jupyter JWT for user " + hdfsUser, ex.getMessage(), ex);
+     }
 
 
 
