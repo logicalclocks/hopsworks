@@ -1009,13 +1009,19 @@ public class Settings implements Serializable {
     return HOPSWORKS_IP;
   }
 
-  private Integer HOPSWORKS_PORT = 8080;
+  private Integer HOPSWORKS_PORT = 8181;
 
   public synchronized Integer getHopsworksPort() {
     checkCache();
     return HOPSWORKS_PORT;
   }
 
+
+  public synchronized String getHopsworksEndpoint() {
+    return getHopsworksIp() + ":" +  getHopsworksPort().toString();
+  }
+
+    
   private String CERTS_DIR = "/srv/hops/certs-dir";
 
   public synchronized String getCertsDir() {

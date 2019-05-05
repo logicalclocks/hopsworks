@@ -44,6 +44,6 @@ c.NotebookApp.tornado_settings = {
 
 
 import os
-os.environ['REST_ENDPOINT'] = "https://%%hopsworks_ip%%:%%hopsworks_port%%"
-os.environ['ELASTIC_ENDPOINT'] = "https://%%hopsworks_ip%%:%%hopsworks_port%%"
-os.environ['HADOOP_USER_NAME'] = "%hdfs_user%%"
+os.environ['REST_ENDPOINT'] = "https://%%hopsworks_endpoint%%"
+os.environ['ELASTIC_ENDPOINT'] = "https://%%hopsworks_endpoint%%"
+os.environ['HADOOP_USER_NAME'] = "%%hdfs_user%%"
