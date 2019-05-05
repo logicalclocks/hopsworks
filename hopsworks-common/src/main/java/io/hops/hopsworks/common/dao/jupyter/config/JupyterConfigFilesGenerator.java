@@ -209,7 +209,7 @@ public class JupyterConfigFilesGenerator {
               "namenode_ip", nameNodeIp,
               "namenode_port", nameNodePort,
               "hopsworks_endpoint", this.settings.getHopsworksEndpoint(),
-              "port", port,
+              "port", port.toString(),
               "base_dir", js.getBaseDir(),
               "hdfs_user", hdfsUser,
               "python-kernel", ", '"+ pythonKernelName + "'",
