@@ -24,33 +24,33 @@ import io.hops.hopsworks.jwt.dao.InvalidJwt;
 import io.hops.hopsworks.jwt.dao.InvalidJwtFacade;
 import io.hops.hopsworks.jwt.dao.JwtSigningKey;
 import io.hops.hopsworks.jwt.dao.JwtSigningKeyFacade;
-import java.security.NoSuchAlgorithmException;
-import java.util.Date;
-import java.util.UUID;
-import java.util.logging.Logger;
-import javax.ejb.EJB;
-import javax.ejb.Stateless;
-import static io.hops.hopsworks.jwt.Constants.DEFAULT_EXPIRY_LEEWAY;
-import static io.hops.hopsworks.jwt.Constants.DEFAULT_RENEWABLE;
-import static io.hops.hopsworks.jwt.Constants.EXPIRY_LEEWAY;
-import static io.hops.hopsworks.jwt.Constants.RENEWABLE;
-import static io.hops.hopsworks.jwt.Constants.ROLES;
 import io.hops.hopsworks.jwt.exception.DuplicateSigningKeyException;
 import io.hops.hopsworks.jwt.exception.InvalidationException;
 import io.hops.hopsworks.jwt.exception.NotRenewableException;
 import io.hops.hopsworks.jwt.exception.SigningKeyNotFoundException;
 import io.hops.hopsworks.jwt.exception.VerificationException;
+
+import javax.ejb.AccessLocalException;
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import java.security.NoSuchAlgorithmException;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.logging.Level;
-import javax.ejb.AccessLocalException;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-import javax.ejb.TransactionManagement;
-import javax.ejb.TransactionManagementType;
+import java.util.logging.Logger;
+
+import static io.hops.hopsworks.jwt.Constants.DEFAULT_EXPIRY_LEEWAY;
+import static io.hops.hopsworks.jwt.Constants.DEFAULT_RENEWABLE;
+import static io.hops.hopsworks.jwt.Constants.EXPIRY_LEEWAY;
+import static io.hops.hopsworks.jwt.Constants.RENEWABLE;
+import static io.hops.hopsworks.jwt.Constants.ROLES;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
