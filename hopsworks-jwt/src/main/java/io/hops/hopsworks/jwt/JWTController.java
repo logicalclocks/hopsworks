@@ -49,9 +49,12 @@ import java.util.logging.Level;
 import javax.ejb.AccessLocalException;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.ejb.TransactionManagement;
+import javax.ejb.TransactionManagementType;
 
 @Stateless
-@TransactionAttribute(TransactionAttributeType.NEVER)
+@TransactionManagement(TransactionManagementType.BEAN)
+@TransactionAttribute(value=TransactionAttributeType.NEVER)
 public class JWTController {
 
   private final static Logger LOGGER = Logger.getLogger(JWTController.class.getName());
@@ -177,7 +180,7 @@ public class JWTController {
   /**
    * Get expLeeway or default if expLeeway < 1
    * @param expLeeway
-   * @return 
+   * @return
    */
   public int getExpLeewayOrDefault(int expLeeway) {
     return expLeeway < 1 ? DEFAULT_EXPIRY_LEEWAY : expLeeway;
