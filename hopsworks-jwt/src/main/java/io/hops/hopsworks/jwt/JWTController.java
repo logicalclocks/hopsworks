@@ -53,8 +53,7 @@ import javax.ejb.TransactionManagement;
 import javax.ejb.TransactionManagementType;
 
 @Stateless
-@TransactionManagement(TransactionManagementType.BEAN)
-@TransactionAttribute(value=TransactionAttributeType.NEVER)
+@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 public class JWTController {
 
   private final static Logger LOGGER = Logger.getLogger(JWTController.class.getName());
@@ -493,7 +492,7 @@ public class JWTController {
    *
    * @return
    */
-  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+//  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public int cleanupInvalidTokens() {
     List<InvalidJwt> expiredTokens = invalidJwtFacade.findExpired();
     int count = 0;
@@ -506,7 +505,7 @@ public class JWTController {
     return count;
   }
   
-  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+//  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public boolean markOldSigningKeys() {
     JwtSigningKey jwtSigningKey = jwtSigningKeyFacade.findByName(Constants.ONE_TIME_JWT_SIGNING_KEY_NAME);
     final Calendar cal = Calendar.getInstance();
@@ -523,7 +522,7 @@ public class JWTController {
     return false;
   }
   
-  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+//  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public void removeMarkedKeys() {
     JwtSigningKey jwtSigningKey = jwtSigningKeyFacade.findByName(Constants.OLD_ONE_TIME_JWT_SIGNING_KEY_NAME);
     if (jwtSigningKey != null) {
