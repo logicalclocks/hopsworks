@@ -103,15 +103,15 @@ public class JupyterConfigFilesGenerator {
     throws ServiceException {
     boolean newDir = false;
     
-    JupyterPaths jP = new JupyterPaths(settings.getJupyterDir(), project.getName(), hdfsUser, secretConfig);
+    JupyterPaths jp = new JupyterPaths(settings.getJupyterDir(), project.getName(), hdfsUser, secretConfig);
     
     try {
-      newDir = createJupyterDirs(jP);
-      createConfigFiles(jP.getConfDirPath(), jP.getKernelsDir(), hdfsUser, usersFullName, project, nameNodeEndpoint,
+      newDir = createJupyterDirs(jp);
+      createConfigFiles(jp, hdfsUser, usersFullName, project, nameNodeEndpoint,
         port, js, allowOrigin);
     } catch (Exception e) {
       if (newDir) { // if the folder was newly created delete it
-        removeProjectUserDirRecursive(jP);
+        removeProjectUserDirRecursive(jp);
       }
       LOGGER.log(Level.SEVERE,
         "Error in initializing JupyterConfig for project: {0}. {1}",
@@ -121,7 +121,7 @@ public class JupyterConfigFilesGenerator {
         e.getMessage(), e);
     }
     
-    return jP;
+    return jp;
   }
   
   //returns true if the project dir was created
@@ -163,9 +163,13 @@ public class JupyterConfigFilesGenerator {
   }
   
   // returns true if one of the conf files were created anew 
-  private boolean createConfigFiles(String confDirPath, String kernelsDir, String hdfsUser, String usersFullName,
+  private boolean createConfigFiles(JupyterPaths jp, String hdfsUser,
+    String usersFullName,
     Project project, String nameNodeEndpoint, Integer port, JupyterSettings js, String allowOrigin)
     throws IOException, ServiceException {
+    String confDirPath = jp.getConfDirPath();
+    String kernelsDir = jp.getKernelsDir();
+    String certsDir = jp.getCertificatesDir();
     File jupyter_config_file = new File(confDirPath + JUPYTER_NOTEBOOK_CONFIG);
     File sparkmagic_config_file = new File(confDirPath + SPARKMAGIC_CONFIG);
     File custom_js = new File(confDirPath + JUPYTER_CUSTOM_JS);
@@ -215,7 +219,7 @@ public class JupyterConfigFilesGenerator {
           "python-kernel", ", '" + pythonKernelName + "'",
           "hadoop_home", this.settings.getHadoopSymbolicLinkDir(),
           "hdfs_home", this.settings.getHadoopSymbolicLinkDir(),
-          "jupyter_private_dir", js.getPrivateDir(),
+          "jupyter_certs_dir", certsDir,
           "secret_dir", this.settings.getStagingDir() + Settings.PRIVATE_DIRS + js.getSecret(),
           "allow_origin", allowOrigin,
           "ws_ping_interval", String.valueOf(settings.getJupyterWSPingInterval())
@@ -322,7 +326,7 @@ public class JupyterConfigFilesGenerator {
         Date.from(LocalDateTime.now().toInstant(ZoneOffset.UTC)), hdfsUser,
         false, settings.getJWTExpLeewaySec(), roles, SignatureAlgorithm.valueOf(settings.getJWTSignatureAlg()));
       String tokenFileName = hdfsUser + ".jwt";
-      Path tokenFile = Paths.get(confDirPath, tokenFileName);
+      Path tokenFile = Paths.get(certsDir, tokenFileName);
       FileUtils.writeStringToFile(tokenFile.toFile(), token);
       Set<PosixFilePermission> TOKEN_FILE_PERMISSIONS = new HashSet<>(5);
       TOKEN_FILE_PERMISSIONS.add(PosixFilePermission.OWNER_READ);
@@ -331,8 +335,6 @@ public class JupyterConfigFilesGenerator {
       TOKEN_FILE_PERMISSIONS.add(PosixFilePermission.GROUP_READ);
       TOKEN_FILE_PERMISSIONS.add(PosixFilePermission.GROUP_EXECUTE);
       Files.setPosixFilePermissions(tokenFile, TOKEN_FILE_PERMISSIONS);
-      //      Files.getFileAttributeView(tokenFile, PosixFileAttributeView.class,
-      //                     LinkOption.NOFOLLOW_LINKS).setGroup(settings.getGrou);
     } catch (GeneralSecurityException | JWTException ex) {
       ex.printStackTrace();
       //    	throw new AirflowException(RESTCodes.AirflowErrorCode.JWT_NOT_CREATED, Level.SEVERE,

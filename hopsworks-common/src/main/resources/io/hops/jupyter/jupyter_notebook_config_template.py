@@ -47,4 +47,4 @@ import os
 os.environ['REST_ENDPOINT'] = "https://%%hopsworks_endpoint%%"
 os.environ['ELASTIC_ENDPOINT'] = "https://%%hopsworks_endpoint%%"
 os.environ['HADOOP_USER_NAME'] = "%%hdfs_user%%"
-os.environ['JUPYTER_PRIVATE_DIR'] = "%%jupyter_private_dir%%"
+os.environ['JUPYTER_CERTS_DIR'] = "%%jupyter_certs_dir%%"
