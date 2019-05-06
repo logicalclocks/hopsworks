@@ -70,6 +70,13 @@
           </td>
         </tr>
       </tbody>
+      <tfoot>
+      <tr>
+        <td>
+          <div class="loader loader-sm" ng-show="datasetsCtrl.working" style="position: static;"></div>
+        </td>
+      </tr>
+      </tfoot>
     </table>
     <button ng-click="selectFileCtrl.confirmSelection(true)" class="btn btn-default">Select</button>
   </div>

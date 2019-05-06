@@ -176,16 +176,18 @@ angular.module('hopsWorksApp')
              * @returns {undefined}
              */
             self.getAllDatasets = function () {
+                self.working = true;
               //Get the path for an empty patharray: will get the datasets
               var path = getPath([]);
               dataSetService.getContents(path).then(
                       function (success) {
                         self.files = success.data;
                         self.pathArray = [];
-                        //console.log(success);
+                        self.working = false;
                       }, function (error) {
                         console.log("Error getting all datasets in project " + self.projectId);
                         console.log(error);
+                        self.working = false;
               });
             };
 

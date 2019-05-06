@@ -71,6 +71,13 @@
           </td>
         </tr>
       </tbody>
+      <tfoot>
+      <tr>
+        <td>
+          <div class="loader loader-sm" ng-show="datasetsCtrl.working" style="position: static;"></div>
+        </td>
+      </tr>
+      </tfoot>
     </table>
     <button ng-if="selectFileCtrl.dirAllowed" ng-click="selectFileCtrl.confirmSelection(selectFileCtrl.isDir)" class="btn btn-default">Select</button>
     <button ng-if="!selectFileCtrl.dirAllowed" ng-click="selectFileCtrl.confirmSelection(selectFileCtrl.isDir)" class="btn btn-default">Select</button>
