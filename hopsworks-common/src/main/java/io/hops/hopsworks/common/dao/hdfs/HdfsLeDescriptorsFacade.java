@@ -39,30 +39,19 @@
 
 package io.hops.hopsworks.common.dao.hdfs;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
-
-import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
-import io.hops.hopsworks.common.hdfs.DistributedFsService;
-import org.apache.hadoop.conf.Configuration;
 import io.hops.hopsworks.common.dao.AbstractFacade;
+import java.util.Random;
 
 @Stateless
 public class HdfsLeDescriptorsFacade extends AbstractFacade<HdfsLeDescriptors> {
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
-
-  @EJB
-  private DistributedFsService dfsService;
   
   @Override
   protected EntityManager getEntityManager() {
@@ -74,73 +63,34 @@ public class HdfsLeDescriptorsFacade extends AbstractFacade<HdfsLeDescriptors> {
   }
 
   /**
-   * HdfsLeDescriptors.hostname returns the hostname + port for the Leader NN
-   * (e.g., "127.0.0.1:8020")
+   * Get the hostname:port to a random NN, randomness is needed to ensure workload spread
+   * From a client perspective it does not matter if it bootstraps on a lead NN or not
    *
    * @return
    */
-  public HdfsLeDescriptors findEndpoint() {
+  public String getEndpoint() {
     try {
-//            return em.createNamedQuery("HdfsLeDescriptors.findEndpoint", HdfsLeDescriptors.class).getSingleResult();
-      List<HdfsLeDescriptors> res = em.createNamedQuery(
+      List<HdfsLeDescriptors> hdfsLeDescriptorsList = em.createNamedQuery(
               "HdfsLeDescriptors.findEndpoint", HdfsLeDescriptors.class).
               getResultList();
-      if (res.isEmpty()) {
+      if (hdfsLeDescriptorsList.isEmpty()) {
         return null;
       } else {
-        return res.get(0);
-      }
-    } catch (NoResultException e) {
-      return null;
-    }
-  }
+        // Get a random NN Address
+        int randomNNIndex = new Random().nextInt(hdfsLeDescriptorsList.size());
+        HdfsLeDescriptors randomNN = hdfsLeDescriptorsList.get(randomNNIndex);
+        String rpcAddresses = randomNN.getRpcAddresses();
+        rpcAddresses = rpcAddresses.trim();
 
-  /**
-   *
-   * @return "ip:port" for the first namenode found in the table.
-   */
-  public String getSingleEndpoint() {
-    HdfsLeDescriptors hdfs = findEndpoint();
-    if (hdfs == null) {
-      return "";
-    }
-    return hdfs.getHostname();
-  }
-
-  /**
-   * Get the currently active NameNode. Loops the NameNodes provided by the
-   * hdfs_le_descriptors table.
-   *
-   * @return
-   */
-  public HdfsLeDescriptors getActiveNN() {
-    try {
-      List<HdfsLeDescriptors> res = em.createNamedQuery(
-          "HdfsLeDescriptors.findEndpoint", HdfsLeDescriptors.class).
-          getResultList();
-    
-      if (res.isEmpty()) {
-        return null;
-      } else {
-        //Try to open a connection to NN
-        Configuration conf = new Configuration();
-        for (HdfsLeDescriptors hdfsLeDesc : res) {
-          try {
-            DistributedFileSystemOps dfso = dfsService.getDfsOps(
-                new URI("hdfs://" + hdfsLeDesc.getHostname()));
-            if (null != dfso) {
-              return hdfsLeDesc;
-            }
-          } catch (URISyntaxException ex) {
-            Logger.getLogger(HdfsLeDescriptorsFacade.class.getName()).
-                log(Level.SEVERE, null, ex);
-          }
+        if(rpcAddresses.contains(",")) {
+          String[] rpcAddressArr = rpcAddresses.split(",");
+          return rpcAddressArr[0];
+        } else {
+          return rpcAddresses;
         }
       }
     } catch (NoResultException e) {
       return null;
     }
-    return null;
   }
-
 }
