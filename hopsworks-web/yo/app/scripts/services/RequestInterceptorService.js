@@ -59,8 +59,9 @@ angular.module('hopsWorksApp')
                 var isKibana = config.url.startsWith("/"+KIBANA_NAME);
                 var isCross = config.url.indexOf('http');
                 var isPython = config.url.indexOf("/"+PYTHON_NAME);
+                var hasChannel = config.url.indexOf('channel=http');
                 
-                if (((isApi !== -1 || isKibana) && isCross === -1) || (isPython !== -1 && isApi !== -1 && isCross !== -1)) {
+                if (((isApi !== -1 || isKibana) && isCross === -1) || (isPython !== -1 && isApi !== -1 && hasChannel !== -1)) {
                   config.url = RESOURCE_SERVER + config.url;
                   return config || $q.when(config);
                 } else {
