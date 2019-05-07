@@ -27,36 +27,48 @@ import java.util.List;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.REQUIRED)
-public class AirflowMaterialFacade {
+public class MaterializedJWTFacade {
   
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager entityManager;
   
-  public AirflowMaterialFacade() {
+  public MaterializedJWTFacade() {
   }
   
-  public AirflowMaterial findById(AirflowMaterialID identifier) {
-    return entityManager.find(AirflowMaterial.class, identifier);
+  public MaterializedJWT findById(MaterializedJWTID identifier) {
+    return entityManager.find(MaterializedJWT.class, identifier);
   }
   
-  public void persist(AirflowMaterial airflowMaterial) {
+  public void persist(MaterializedJWT airflowMaterial) {
     entityManager.persist(airflowMaterial);
   }
   
-  public void delete(AirflowMaterialID identifier) {
-    AirflowMaterial airflowMaterial = findById(identifier);
+  public void delete(MaterializedJWTID identifier) {
+    MaterializedJWT airflowMaterial = findById(identifier);
     if (airflowMaterial != null) {
       entityManager.remove(airflowMaterial);
     }
   }
   
-  public List<AirflowMaterial> findAll() {
-    TypedQuery<AirflowMaterial> query = entityManager.createNamedQuery("AirflowMaterial.findAll",
-        AirflowMaterial.class);
+  public List<MaterializedJWT> findAll() {
+    TypedQuery<MaterializedJWT> query = entityManager.createNamedQuery("MaterializedJWT.findAll",
+        MaterializedJWT.class);
     return query.getResultList();
   }
   
-  public boolean exists(AirflowMaterialID identifier) {
+  public List<MaterializedJWT> findAll4Airflow() {
+    return entityManager.createNamedQuery("MaterializedJWT.findByUsage", MaterializedJWT.class)
+        .setParameter("usage", MaterializedJWTID.USAGE.AIRFLOW)
+        .getResultList();
+  }
+  
+  public List<MaterializedJWT> findAll4Jupyter() {
+    return entityManager.createNamedQuery("MaterializedJWT.findByUsage", MaterializedJWT.class)
+        .setParameter("usage", MaterializedJWTID.USAGE.JUPYTER)
+        .getResultList();
+  }
+  
+  public boolean exists(MaterializedJWTID identifier) {
     return findById(identifier) != null;
   }
 }
