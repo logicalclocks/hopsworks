@@ -242,36 +242,62 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
             HopsUtils.OVERWRITE,
             "0"));
       }
-    } else {
+    } else if(sparkJobConfiguration.isDynamicAllocationEnabled()) {
       //Spark dynamic
-      if(sparkJobConfiguration.isDynamicAllocationEnabled()) {
-        sparkProps.put(Settings.SPARK_SHUFFLE_SERVICE,
-          new ConfigProperty(
-            Settings.SPARK_SHUFFLE_SERVICE,
-            HopsUtils.OVERWRITE,
-            "true"));
-        sparkProps.put(Settings.SPARK_DYNAMIC_ALLOC_MIN_EXECS_ENV,
-          new ConfigProperty(
-            Settings.SPARK_DYNAMIC_ALLOC_MIN_EXECS_ENV,
-            HopsUtils.OVERWRITE,
-            String.valueOf(sparkJobConfiguration.getDynamicAllocationMinExecutors())));
-        sparkProps.put(Settings.SPARK_DYNAMIC_ALLOC_MAX_EXECS_ENV,
-          new ConfigProperty(
-            Settings.SPARK_DYNAMIC_ALLOC_MAX_EXECS_ENV,
-            HopsUtils.OVERWRITE,
-            String.valueOf(sparkJobConfiguration.getDynamicAllocationMaxExecutors())));
+      sparkProps.put(Settings.SPARK_SHUFFLE_SERVICE,
+        new ConfigProperty(
+          Settings.SPARK_SHUFFLE_SERVICE,
+          HopsUtils.OVERWRITE,
+          "true"));
+
+      // To avoid users creating erroneous configurations for the initialExecutors field
+      // Initial executors should not be greater than MaxExecutors
+      if(sparkJobConfiguration.getDynamicAllocationInitialExecutors() >
+              sparkJobConfiguration.getDynamicAllocationMaxExecutors()) {
         sparkProps.put(Settings.SPARK_DYNAMIC_ALLOC_INIT_EXECS_ENV,
           new ConfigProperty(
-            Settings.SPARK_DYNAMIC_ALLOC_INIT_EXECS_ENV,
-            HopsUtils.OVERWRITE,
-            String.valueOf(sparkJobConfiguration.getDynamicAllocationInitialExecutors())));
+          Settings.SPARK_DYNAMIC_ALLOC_INIT_EXECS_ENV,
+          HopsUtils.OVERWRITE,
+          String.valueOf(sparkJobConfiguration.getDynamicAllocationMaxExecutors())));
+      // Initial executors should not be less than MinExecutors
+      } else if(sparkJobConfiguration.getDynamicAllocationInitialExecutors() <
+              sparkJobConfiguration.getDynamicAllocationMinExecutors()) {
+        sparkProps.put(Settings.SPARK_DYNAMIC_ALLOC_INIT_EXECS_ENV,
+          new ConfigProperty(
+          Settings.SPARK_DYNAMIC_ALLOC_INIT_EXECS_ENV,
+          HopsUtils.OVERWRITE,
+          String.valueOf(sparkJobConfiguration.getDynamicAllocationMinExecutors())));
+      } else {
+      // User set it to a valid value
+        sparkProps.put(Settings.SPARK_DYNAMIC_ALLOC_INIT_EXECS_ENV,
+          new ConfigProperty(
+          Settings.SPARK_DYNAMIC_ALLOC_INIT_EXECS_ENV,
+          HopsUtils.OVERWRITE,
+          String.valueOf(sparkJobConfiguration.getDynamicAllocationInitialExecutors())));
       }
+      sparkProps.put(Settings.SPARK_DYNAMIC_ALLOC_MIN_EXECS_ENV,
+        new ConfigProperty(
+          Settings.SPARK_DYNAMIC_ALLOC_MIN_EXECS_ENV,
+          HopsUtils.OVERWRITE,
+          String.valueOf(sparkJobConfiguration.getDynamicAllocationMinExecutors())));
+      sparkProps.put(Settings.SPARK_DYNAMIC_ALLOC_MAX_EXECS_ENV,
+        new ConfigProperty(
+          Settings.SPARK_DYNAMIC_ALLOC_MAX_EXECS_ENV,
+          HopsUtils.OVERWRITE,
+          String.valueOf(sparkJobConfiguration.getDynamicAllocationMaxExecutors())));
+      sparkProps.put(Settings.SPARK_NUMBER_EXECUTORS_ENV,
+        new ConfigProperty(
+          Settings.SPARK_NUMBER_EXECUTORS_ENV,
+          HopsUtils.OVERWRITE,
+          Integer.toString(sparkJobConfiguration.getDynamicAllocationMinExecutors())));
+    } else {
+      //Spark Static
+      sparkProps.put(Settings.SPARK_NUMBER_EXECUTORS_ENV,
+          new ConfigProperty(
+            Settings.SPARK_NUMBER_EXECUTORS_ENV,
+            HopsUtils.OVERWRITE,
+            Integer.toString(sparkJobConfiguration.getExecutorInstances())));
     }
-    sparkProps.put(Settings.SPARK_NUMBER_EXECUTORS_ENV,
-      new ConfigProperty(
-        Settings.SPARK_NUMBER_EXECUTORS_ENV,
-        HopsUtils.OVERWRITE,
-        Integer.toString(sparkJobConfiguration.getExecutorInstances())));
     sparkProps.put(Settings.SPARK_DRIVER_MEMORY_ENV,
       new ConfigProperty(
         Settings.SPARK_DRIVER_MEMORY_ENV,
