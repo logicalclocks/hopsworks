@@ -73,6 +73,19 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["name"] == featuregroup_name).to be true
         end
 
+        it "should be able to add a featuregroup with hive partitioning to the featurestore" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          json_result, featuregroup_name = create_featuregroup_with_partition(project.id, featurestore_id)
+          parsed_json = JSON.parse(json_result)
+          expect_status(201)
+          expect(parsed_json.key?("id")).to be true
+          expect(parsed_json.key?("featurestoreName")).to be true
+          expect(parsed_json.key?("name")).to be true
+          expect(parsed_json["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
+          expect(parsed_json["name"] == featuregroup_name).to be true
+        end
+
         it "should be able to preview a featuregroup in the featurestore" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)

@@ -59,7 +59,7 @@ public class FeaturestoreUtil {
     }
     FeatureDTO primaryKey = primaryKeys.get(0);
     if(primaryKey.getPartition()){
-      LOGGER.warning("The primary key column: " + primaryKey.getName() +
+      LOGGER.fine("The primary key column: " + primaryKey.getName() +
           " was specified as a partition column, which is not " +
               "allowed. Primary key columns can not be partitioned; Ignoring this partition request.");
     }
