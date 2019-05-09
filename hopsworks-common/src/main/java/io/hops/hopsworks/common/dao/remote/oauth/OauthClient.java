@@ -28,7 +28,6 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
-import javax.validation.ValidationException;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -151,12 +150,6 @@ public class OauthClient implements Serializable {
     this.tokenEndpoint = tokenEndpoint;
     this.userInfoEndpoint = userInfoEndpoint;
     this.jwksURI = jwksURI;
-    if (!providerMetadataEndpointSupported &&
-      (authorisationEndpoint == null || authorisationEndpoint.isEmpty() || tokenEndpoint == null ||
-        tokenEndpoint.isEmpty() || userInfoEndpoint == null || userInfoEndpoint.isEmpty()) || jwksURI == null ||
-      jwksURI.isEmpty()) {
-      throw new ValidationException("Required field/s missing.");
-    }
   }
   
   public Integer getId() {
