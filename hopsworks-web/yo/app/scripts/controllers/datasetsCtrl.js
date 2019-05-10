@@ -189,9 +189,11 @@ angular.module('hopsWorksApp')
                 self.currentPath = parent;
             };
 
-            self.setCurrentPathFromFiles = function (files) {
+            self.setCurrentPathFromFiles = function (files, newPathArray) {
                 if (typeof files === "undefined" || files.length < 1) {
-                    self.currentPath = [self.projectName];
+                    var path = angular.copy(newPathArray);
+                    path.unshift(self.projectName);
+                    self.currentPath = path;
                     return;
                 }
                 self.setCurrentPathToParent(files[0].path);
@@ -209,7 +211,7 @@ angular.module('hopsWorksApp')
                       function (success) {
                         self.files = success.data;
                         self.pathArray = [];
-                        self.setCurrentPathFromFiles(self.files);
+                        self.setCurrentPathFromFiles(self.files, []);
                         self.working = false;
                       }, function (error) {
                         console.log("Error getting all datasets in project " + self.projectId);
@@ -252,7 +254,7 @@ angular.module('hopsWorksApp')
                         //Set the current files and path
                         self.files = success.data;
                         self.pathArray = newPathArray;
-                        self.setCurrentPathFromFiles(self.files);
+                        self.setCurrentPathFromFiles(self.files, newPathArray);
 //                        console.log(success);
 //                        alert('Execution time: ' + (new Date().getTime() - self.dir_timing)); 
 //                        console.log('Execution time: ' + (new Date().getTime() - self.dir_timing));
