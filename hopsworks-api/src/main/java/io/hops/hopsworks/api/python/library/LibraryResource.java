@@ -48,7 +48,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -176,11 +175,11 @@ public class LibraryResource {
       throw new PythonException(RESTCodes.PythonErrorCode.INSTALL_TYPE_NOT_SUPPORTED, Level.FINE);
     }
     switch (packageManager) {
-      case pip:
+      case PIP:
         //indicate that the library comes from the distribution published in PyPi
         channel = "PyPi";
         break;
-      case conda:
+      case CONDA:
         if(channel == null) {
           throw new PythonException(RESTCodes.PythonErrorCode.CONDA_INSTALL_REQUIRES_CHANNEL, Level.FINE);
         }
@@ -223,29 +222,18 @@ public class LibraryResource {
                          @Context UriInfo uriInfo) throws ServiceException, PythonException {
     environmentController.checkCondaEnabled(project, pythonVersion);
     LibrarySearchDTO librarySearchDTO;
-    LibraryDTO.PackageManager packageManager = LibraryDTO.PackageManager.valueOf(search);
+    LibraryDTO.PackageManager packageManager = LibraryDTO.PackageManager.fromString(search);
     switch (packageManager) {
-      case conda:
+      case CONDA:
         librarySearchDTO = librariesSearchBuilder.buildCondaItems(uriInfo, query, project, channel);
         break;
-      case pip:
+      case PIP:
         librarySearchDTO = librariesSearchBuilder.buildPipItems(uriInfo, query, project);
         break;
       default:
         throw new PythonException(RESTCodes.PythonErrorCode.PYTHON_SEARCH_TYPE_NOT_SUPPORTED, Level.FINE);
     }
     return Response.ok().entity(librarySearchDTO).build();
-  }
-  
-  @ApiOperation(value = "Update commands for this library")
-  @PUT
-  @Path("{library}")
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response update(@PathParam("library") String library, @Context UriInfo uriInfo) throws PythonException {
-    environmentController.checkCondaEnabled(project, pythonVersion);
-    commandsController.retryFailedCondaOps(project, library);
-    return Response.ok().build();
   }
 
   @ApiOperation(value = "Python Library Commands sub-resource", tags = {"LibraryCommandsResource"})

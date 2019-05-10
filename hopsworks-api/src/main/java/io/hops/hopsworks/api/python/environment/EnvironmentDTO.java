@@ -62,7 +62,11 @@ public class EnvironmentDTO extends RestDTO<EnvironmentDTO> {
   }
 
   public enum Operation {
-    create,
-    export;
+    CREATE,
+    EXPORT;
+  
+    public static Operation fromString(String param) {
+      return valueOf(param.toUpperCase());
+    }
   }
 }

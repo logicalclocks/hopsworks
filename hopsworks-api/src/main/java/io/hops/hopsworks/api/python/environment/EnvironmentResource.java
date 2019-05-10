@@ -147,12 +147,12 @@ public class EnvironmentResource {
       @Context SecurityContext sc) throws PythonException, ServiceException {
     Users user = jWTHelper.getUserPrincipal(sc);
     EnvironmentDTO dto;
-    switch ((action != null) ? action : EnvironmentDTO.Operation.create) {
-      case export:
+    switch ((action != null) ? action : EnvironmentDTO.Operation.CREATE) {
+      case EXPORT:
         environmentController.exportEnv(user, project);
         dto = buildEnvDTO(uriInfo, null, version);
         return Response.ok().entity(dto).build();
-      case create:
+      case CREATE:
         environmentController.createEnv(version, pythonKernelEnable, project);
         dto = buildEnvDTO(uriInfo,null, version);
         return Response.created(dto.getHref()).entity(dto).build();

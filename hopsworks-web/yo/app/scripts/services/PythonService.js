@@ -84,7 +84,7 @@ angular.module('hopsWorksApp')
                 return $http.delete('/api/project/' + projectId + '/python/environments/' + version + '/libraries/' + library + '/commands');
               },
               retryInstallLibrary: function (projectId, version, library) {
-                return $http.put('/api/project/' + projectId + '/python/environments/' + version + '/libraries/' + library);
+                return $http.put('/api/project/' + projectId + '/python/environments/' + version + '/libraries/' + library + '/commands');
               },
               search: function (projectId, selected) {
                 if(selected.installType === 'PIP') {

@@ -377,6 +377,7 @@ angular.module('hopsWorksApp')
             };
 
             self.goToPython = function () {
+              self.toggleKibanaNavBar();
               self.goToUrl('python');
             };
 

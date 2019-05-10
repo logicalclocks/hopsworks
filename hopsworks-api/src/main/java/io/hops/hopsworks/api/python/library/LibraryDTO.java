@@ -136,8 +136,13 @@ public class LibraryDTO extends RestDTO<LibraryDTO> {
   }
 
   public enum PackageManager {
-    conda,
-    pip
+    CONDA,
+    PIP;
+    
+    public static PackageManager fromString(String param) {
+      return valueOf(param.toUpperCase());
+    }
+    
   }
   
   @Override

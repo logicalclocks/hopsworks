@@ -37,6 +37,7 @@ import javax.enterprise.context.RequestScoped;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -101,6 +102,16 @@ public class LibraryCommandsResource {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.COMMANDS);
     CommandDTO dto = commandBuilder.build(uriInfo, resourceRequest, project, library, commandId);
     return Response.ok().entity(dto).build();
+  }
+  
+  @ApiOperation(value = "Update commands for this library")
+  @PUT
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response update(@PathParam("library") String library, @Context UriInfo uriInfo) throws PythonException {
+    environmentController.checkCondaEnabled(project, pythonVersion);
+    commandsController.retryFailedCondaOps(project, library);
+    return Response.ok().build();
   }
   
   @ApiOperation(value = "Delete commands for this library")
