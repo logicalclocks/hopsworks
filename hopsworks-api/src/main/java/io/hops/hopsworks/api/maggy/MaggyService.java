@@ -66,7 +66,7 @@ public class MaggyService {
   @GET
   @Path("getDriver/{appId}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response globalSearch(@PathParam("appId") String appId, @Context HttpServletRequest req) throws
+  public Response getDriver(@PathParam("appId") String appId, @Context HttpServletRequest req) throws
       ServiceException {
 
     if (Strings.isNullOrEmpty(appId)) {
