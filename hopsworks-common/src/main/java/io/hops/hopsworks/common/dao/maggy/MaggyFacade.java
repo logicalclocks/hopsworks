@@ -16,6 +16,7 @@
 package io.hops.hopsworks.common.dao.maggy;
 
 import io.hops.hopsworks.common.dao.featurestore.FeaturestoreFacade;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -66,6 +67,7 @@ public class MaggyFacade {
   
   public void add(MaggyDriver driver) {
     if (driver != null) {
+      driver.setCreated(java.sql.Timestamp.valueOf(LocalDateTime.now()));
       em.persist(driver);
     }
   }  
