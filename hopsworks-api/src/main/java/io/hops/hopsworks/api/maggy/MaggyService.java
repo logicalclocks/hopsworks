@@ -24,9 +24,8 @@ import io.hops.hopsworks.common.dao.maggy.MaggyFacade;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -42,63 +41,75 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 @Path("/maggy")
 @Stateless
-@JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-@Api(value = "Maggy Service", description = "Maggy Service")
+@JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+@Api(value = "Maggy Service", description = "Register and retrieve Maggy Driver Endpoints, used in logging by " +
+  "sparkmagic")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class MaggyService {
-
+  
   private static final Logger logger = Logger.getLogger(MaggyService.class.getName());
   @EJB
   private NoCacheResponse noCacheResponse;
   @EJB
   private MaggyFacade maggyFacade;
-
+  
   /**
    * Searches for the Maggy Driver with appId
    * <p/>
+   *
    * @param appId
    * @param req
    * @return
    * @throws io.hops.hopsworks.exceptions.ServiceException
    */
   @GET
-  @Path("getDriver/{appId}")
+  @Path("drivers/{appId}")
+  @ApiOperation(value = "Get a Maggy Driver Endpoint for this YARN appId", response = MaggyDriver.class)
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getDriver(@PathParam("appId") String appId, @Context HttpServletRequest req) throws
-      ServiceException {
-
+  public Response getDriver(
+    @PathParam("appId")
+      String appId,
+    @Context
+      HttpServletRequest req) throws
+    ServiceException {
+    
     logger.log(Level.INFO, "REST call from sparkmagic for driver for " + appId);
     if (Strings.isNullOrEmpty(appId)) {
       throw new IllegalArgumentException("appId was not provided or was empty");
     }
-    GenericEntity<MaggyDriver> driver = new GenericEntity<MaggyDriver>(maggyFacade.findByAppId(appId)) {};
+    GenericEntity<MaggyDriver> driver = new GenericEntity<MaggyDriver>(maggyFacade.findByAppId(appId)) {
+    };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(driver).build();
   }
-
+  
   /**
    * <p/>
+   *
    * @param driver
    * @return
    */
   @POST
-  @Path("registerDriver")
+  @Path("drivers")
+  @ApiOperation(value = "Register a Maggy Driver Endpoint for this YARN appId (called by Spark Driver in maggy).")
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response register(MaggyDriver driver) throws ServiceException {
-  
+    
     logger.log(Level.INFO, "REST call from maggy to register the driver: " + driver);
-
+    
     if (driver == null || driver.getAppId() == null) {
       throw new IllegalArgumentException("Driver was null or had no appId");
     }
-
+    
     maggyFacade.add(driver);
     
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
-
+  
 }
