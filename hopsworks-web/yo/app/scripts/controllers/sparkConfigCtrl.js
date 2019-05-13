@@ -388,5 +388,14 @@ angular.module('hopsWorksApp')
             self.changeDistributionStrategy = function() {
                 self.jobConfig.distributionStrategy = self.distributionStrategySelected.name;
             };
+
+            self.autoExpand = function(e) {
+                  var element = typeof e === 'object' ? e.target : document.getElementById(e);
+                  var scrollHeight = element.scrollHeight; // replace 60 by the sum of padding-top and padding-bottom
+                  var currentElemHeight = element.style.height.slice(0, -2);
+                  if(currentElemHeight < scrollHeight) {
+                    element.style.height = scrollHeight + "px";
+                  }
+            };
         }
     ]);

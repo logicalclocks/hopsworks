@@ -414,8 +414,8 @@
                         </div>
                         <div class="col-md-3 jupyter-left">
                     <textarea style="width: 100%;" id="TextArea" ng-model="sparkConfigCtrl.jobConfig.properties"
-                              ng-keyup="autoExpand($event)"
-                              title="spark.yarn.am.port=12242&#10;spark.driver.extraLibraryPath=/path/to/extra/library">
+                              ng-keyup="sparkConfigCtrl.autoExpand($event)"
+                              title="spark.yarn.am.port=12242&#10;spark.executor.extraJavaOptions=-XX:+PrintGCDetails -XX:+PrintGCTimeStamps">
                     </textarea>
                         </div>
                     </div>
