@@ -325,15 +325,12 @@ public class JupyterConfigFilesGenerator {
         audience, Date.from(expirationDate.toInstant(ZoneOffset.UTC)),
         Date.from(LocalDateTime.now().toInstant(ZoneOffset.UTC)), hdfsUser,
         false, settings.getJWTExpLeewaySec(), roles, SignatureAlgorithm.valueOf(settings.getJWTSignatureAlg()));
-      String tokenFileName = hdfsUser + ".jwt";
-      Path tokenFile = Paths.get(certsDir, tokenFileName);
+      String tokenFileName = "token.jwt"; // hdfsUser +
+      Path tokenFile = Paths.get(jp.getNotebookPath(), tokenFileName);
       FileUtils.writeStringToFile(tokenFile.toFile(), token);
       Set<PosixFilePermission> TOKEN_FILE_PERMISSIONS = new HashSet<>(5);
       TOKEN_FILE_PERMISSIONS.add(PosixFilePermission.OWNER_READ);
-      TOKEN_FILE_PERMISSIONS.add(PosixFilePermission.OWNER_WRITE);
-      TOKEN_FILE_PERMISSIONS.add(PosixFilePermission.OWNER_EXECUTE);
       TOKEN_FILE_PERMISSIONS.add(PosixFilePermission.GROUP_READ);
-      TOKEN_FILE_PERMISSIONS.add(PosixFilePermission.GROUP_EXECUTE);
       Files.setPosixFilePermissions(tokenFile, TOKEN_FILE_PERMISSIONS);
     } catch (GeneralSecurityException | JWTException ex) {
       ex.printStackTrace();
