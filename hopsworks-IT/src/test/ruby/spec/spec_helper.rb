@@ -109,6 +109,7 @@ end
 
 Airborne.configure do |config|
   config.base_url = "https://#{ENV['WEB_HOST']}:#{ENV['WEB_PORT']}"
+  config.timeout = 120
 end
 
 def clean_test_data
