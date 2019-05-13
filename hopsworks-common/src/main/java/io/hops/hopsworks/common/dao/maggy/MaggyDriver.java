@@ -17,6 +17,7 @@ package io.hops.hopsworks.common.dao.maggy;
 
 import java.io.Serializable;
 import java.util.Date;
+import javax.annotation.Nullable;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -77,8 +78,10 @@ public class MaggyDriver implements Serializable {
       max = 128)
   @Column(name = "secret")
   private String secret;
+  
   @Column(name = "created")
   @Temporal(TemporalType.TIMESTAMP)
+  @Nullable
   private Date created;
 
   public MaggyDriver() {

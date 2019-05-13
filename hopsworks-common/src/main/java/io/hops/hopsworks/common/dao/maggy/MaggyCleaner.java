@@ -18,6 +18,7 @@ package io.hops.hopsworks.common.dao.maggy;
 import io.hops.hopsworks.common.livy.LivyController;
 import io.hops.hopsworks.common.livy.LivyMsg;
 import io.hops.hopsworks.common.livy.LivyMsg.Session;
+import io.hops.hopsworks.common.util.Settings;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -40,6 +41,8 @@ public class MaggyCleaner {
   private LivyController livyService;
   @EJB
   private MaggyFacade maggyFacade;
+  @EJB
+  private Settings settings;
 
   // Run once per hour
   @Schedule(persistent = false,
@@ -64,7 +67,7 @@ public class MaggyCleaner {
 // Only cleanup Drivers older than 24 hours - in case Livy returns no session, 
 // but there really is an Driver running
         if (md.getCreated().before(
-            new Date(System.currentTimeMillis() - (24 * 60 * 1000)))) {
+            new Date(System.currentTimeMillis() - settings.getMaggyCleanupInterval()))) {
           driversToRemove.add(md);
           if (sessions != null) {
             for (Session s : sessions) {

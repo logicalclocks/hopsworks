@@ -3312,6 +3312,12 @@ public class Settings implements Serializable {
     return CONNECTION_KEEPALIVE_TIMEOUT;
   }
 
+  private int MAGGY_CLEANUP_INTERVAL = 24 * 60 * 1000;
+  public synchronized int getMaggyCleanupInterval() {
+    checkCache();
+    return MAGGY_CLEANUP_INTERVAL;
+  }
+
   public String getHiveSiteSparkHdfsPath() {
     return "hdfs:///user/" + getSparkUser() + "/hive-site.xml";
   }
