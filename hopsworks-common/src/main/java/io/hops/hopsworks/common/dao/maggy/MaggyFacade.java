@@ -46,13 +46,16 @@ public class MaggyFacade {
   
   public List<MaggyDriver> getAllDrivers() {
     List<MaggyDriver> res;
-    TypedQuery<MaggyDriver> query = em.createNamedQuery(
-        "MaggyDriver.findAll", MaggyDriver.class);
     try {
+      TypedQuery<MaggyDriver> query = em.createNamedQuery(
+        "MaggyDriver.findAll", MaggyDriver.class);
       res = query.getResultList();
     } catch (EntityNotFoundException | NoResultException e) {
       Logger.getLogger(MaggyFacade.class.getName()).log(Level.FINE, null,
           e);
+      return null;
+    } catch (Throwable e) {
+      e.printStackTrace();
       return null;
     }
     return res;

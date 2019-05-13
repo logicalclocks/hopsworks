@@ -24,6 +24,8 @@ import io.hops.hopsworks.common.dao.maggy.MaggyFacade;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.Api;
+
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -69,6 +71,7 @@ public class MaggyService {
   public Response getDriver(@PathParam("appId") String appId, @Context HttpServletRequest req) throws
       ServiceException {
 
+    logger.log(Level.INFO, "REST call from sparkmagic for driver for " + appId);
     if (Strings.isNullOrEmpty(appId)) {
       throw new IllegalArgumentException("appId was not provided or was empty");
     }
@@ -87,6 +90,8 @@ public class MaggyService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response register(MaggyDriver driver) throws ServiceException {
   
+    logger.log(Level.INFO, "REST call from maggy to register the driver: " + driver);
+
     if (driver == null || driver.getAppId() == null) {
       throw new IllegalArgumentException("Driver was null or had no appId");
     }

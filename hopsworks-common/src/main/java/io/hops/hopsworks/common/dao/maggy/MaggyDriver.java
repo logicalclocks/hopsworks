@@ -157,7 +157,8 @@ public class MaggyDriver implements Serializable {
 
   @Override
   public String toString() {
-    return "io.hops.hopsworks.common.dao.maggy.MaggyDriver[ appId=" + appId + " ]";
+    return "io.hops.hopsworks.common.dao.maggy.MaggyDriver[ appId=" + appId + " ip:port=" + getHostIp() + ":" +
+    getPort() + ")]";
   }
   
 }
