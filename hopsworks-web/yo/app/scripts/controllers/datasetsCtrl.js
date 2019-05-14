@@ -43,10 +43,10 @@ angular.module('hopsWorksApp')
         .controller('DatasetsCtrl', ['$scope', '$mdSidenav', '$mdUtil',
           'DataSetService', 'JupyterService', '$routeParams', 'ModalService', 'growl', '$location',
           'MetadataHelperService', '$rootScope', 'DelaProjectService', 'DelaClusterProjectService', 'UtilsService', 'UserService', '$mdToast',
-          'TourService',
+          'TourService', 'ProjectService',
           function ($scope, $mdSidenav, $mdUtil, DataSetService, JupyterService, $routeParams,
                   ModalService, growl, $location, MetadataHelperService,
-                  $rootScope, DelaProjectService, DelaClusterProjectService, UtilsService, UserService, $mdToast, TourService) {
+                  $rootScope, DelaProjectService, DelaClusterProjectService, UtilsService, UserService, $mdToast, TourService, ProjectService) {
 
             var self = this;
             self.itemsPerPage = 14;
@@ -57,6 +57,7 @@ angular.module('hopsWorksApp')
             self.pathArray; //An array containing all the path components of the current path. If empty: project root directory.
             self.sharedPathArray; //An array containing all the path components of a path in a shared dataset 
             self.highlighted;
+            self.currentPath = [];//used in dataset browser modal
             self.parentDS = $rootScope.parentDS;
             self.tourService = TourService;
             self.tourService.currentStep_TourNine = 6; //Feature store Tour
@@ -170,22 +171,52 @@ angular.module('hopsWorksApp')
               return self.sharedPathArray;
             };
 
+            var setPath = function (path) {
+                path = path.split('/').filter(function (el) {
+                    return el != null && el !== "";
+                });
+                path.splice(0, 1); // remove Projects
+                return path;
+            };
+
+            self.setCurrentPath = function (path) {
+               self.currentPath = setPath(path);
+            };
+
+            self.setCurrentPathToParent = function (path) {
+                var parent = setPath(path);
+                parent.pop(); // remove last to get parent path
+                self.currentPath = parent;
+            };
+
+            self.setCurrentPathFromFiles = function (files, newPathArray) {
+                if (typeof files === "undefined" || files.length < 1) {
+                    var path = angular.copy(newPathArray);
+                    path.unshift(self.projectName);
+                    self.currentPath = path;
+                    return;
+                }
+                self.setCurrentPathToParent(files[0].path);
+            };
 
             /*
              * Get all datasets under the current project.
              * @returns {undefined}
              */
             self.getAllDatasets = function () {
+              self.working = true;
               //Get the path for an empty patharray: will get the datasets
               var path = getPath([]);
               dataSetService.getContents(path).then(
                       function (success) {
                         self.files = success.data;
                         self.pathArray = [];
-                        //console.log(success);
+                        self.setCurrentPathFromFiles(self.files, []);
+                        self.working = false;
                       }, function (error) {
                         console.log("Error getting all datasets in project " + self.projectId);
                         console.log(error);
+                        self.working = false;
               });
             };
 
@@ -223,6 +254,7 @@ angular.module('hopsWorksApp')
                         //Set the current files and path
                         self.files = success.data;
                         self.pathArray = newPathArray;
+                        self.setCurrentPathFromFiles(self.files, newPathArray);
 //                        console.log(success);
 //                        alert('Execution time: ' + (new Date().getTime() - self.dir_timing)); 
 //                        console.log('Execution time: ' + (new Date().getTime() - self.dir_timing));
@@ -277,6 +309,16 @@ angular.module('hopsWorksApp')
               });
             };
 
+              var getProjectName = function () {
+                  ProjectService.get({}, {'id': self.projectId}).$promise.then(
+                      function (success) {
+                          self.projectName = success.projectName;
+                          getDirContents();
+                      }, function (error) {
+                      });
+
+              };
+
 
             var init = function () {
               //Check if the current dataset is set
@@ -296,6 +338,8 @@ angular.module('hopsWorksApp')
                   }
                 });
               }
+
+              getProjectName();
               getDirContents();
 
               self.tgState = false;
@@ -1072,6 +1116,7 @@ angular.module('hopsWorksApp')
             self.back = function () {
               var newPathArray = self.pathArray.slice(0);
               newPathArray.pop();
+              self.currentPath.pop();
               if (newPathArray.length === 0) {
                 $location.path('/project/' + self.projectId + '/datasets');
               } else {
