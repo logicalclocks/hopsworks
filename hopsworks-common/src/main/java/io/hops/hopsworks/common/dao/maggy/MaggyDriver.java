@@ -32,7 +32,7 @@ import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @Entity
-@Table(name = "maggy_driver")
+@Table(name = "hopsworks.maggy_driver")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "MaggyDriver.findAll",

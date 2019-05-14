@@ -34,6 +34,7 @@ import javax.persistence.TypedQuery;
 public class MaggyFacade {
   
   private static final Logger LOGGER = Logger.getLogger(FeaturestoreFacade.class.getName());
+  
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
