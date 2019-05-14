@@ -240,14 +240,14 @@ describe "On #{ENV['OS']}" do
             expect(serving_library[:machine]).to eq ("ALL")
 
             expect(tflearn_library[:machine]).to eq ("ALL")
-            expect(tflearn_library[:packageManager]).to eq ("pip")
+            expect(tflearn_library[:packageManager]).to eq ("PIP")
             expect(tflearn_library[:version]).to eq ("0.3.2")
 
             expect(hops_library[:machine]).to eq ("ALL")
-            expect(hops_library[:packageManager]).to eq ("pip")
+            expect(hops_library[:packageManager]).to eq ("PIP")
 
             expect(imageio_library[:machine]).to eq("CPU")
-            expect(imageio_library[:packageManager]).to eq("conda")
+            expect(imageio_library[:packageManager]).to eq("CONDA")
             expect(imageio_library[:version]).to eq ("2.2.0")
 
           end
