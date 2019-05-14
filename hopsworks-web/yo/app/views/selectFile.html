@@ -52,8 +52,9 @@
       <span data-ng-repeat="path in datasetsCtrl.pathArray track by $index">/
         {{path}}</span>
     </div>
+    <div growl reference="114" class="pull-right" ></div>
     <table class="table table-hover" >
-      <tbody ng-model="datasetsCtrl.files">
+      <tbody>
         <tr ng-click="selectFileCtrl.back(datasetsCtrl)">
           <td style="padding: 0px">&nbsp &nbsp
             <a style="font-size:25px">..</a>
@@ -61,9 +62,8 @@
         </tr>
       <a href="selectFile.html"></a>
         <tr ng-repeat="file in datasetsCtrl.files| filter:{status: true} | orderBy: 'name'"
-            ng-class="{ 'highlight': datasetsCtrl.selected === {{ $index}}, 'expanded' : expanded }"
-            ng-click="selectFileCtrl.click(datasetsCtrl, file, false); selectFileCtrl.select(file.path, file.dir); datasetsCtrl.select($index, file, $event);"
-            >
+            ng-class="{ 'highlight': selectFileCtrl.selected === {{ $index}}, 'expanded' : expanded }"
+            ng-click="selectFileCtrl.click(datasetsCtrl, file, $index)">
           <td>
             <i ng-show="file.dir" class="glyphicon glyphicon-folder-close" style="padding-right: 10px; color: #757575;"></i>
             <i ng-show="!file.dir" class="glyphicon glyphicon-file" style="padding-right: 10px; color: #757575;"></i>
@@ -71,9 +71,17 @@
           </td>
         </tr>
       </tbody>
+      <tfoot>
+      <tr>
+        <td>
+          <div class="loader loader-sm" ng-show="datasetsCtrl.working" style="position: static;"></div>
+        </td>
+      </tr>
+      </tfoot>
     </table>
-    <button ng-if="selectFileCtrl.dirAllowed" ng-click="selectFileCtrl.confirmSelection(selectFileCtrl.isDir)" class="btn btn-default">Select</button>
-    <button ng-if="!selectFileCtrl.dirAllowed" ng-click="selectFileCtrl.confirmSelection(selectFileCtrl.isDir)" class="btn btn-default">Select</button>
+    <button ng-if="selectFileCtrl.dirAllowed"
+            ng-click="selectFileCtrl.confirmSelection(datasetsCtrl, selectFileCtrl.isDir)" class="btn btn-default">Select</button>
+    <button ng-if="!selectFileCtrl.dirAllowed" ng-click="selectFileCtrl.confirmSelection(datasetsCtrl, false)" class="btn btn-default">Select</button>
   </div>
 </div>
 
