@@ -155,7 +155,6 @@ public class ResourceRequest {
     COMMANDS,
     MACHINETYPES,
     LIBRARIES,
-    DATASETREQUESTS;
     DATASETREQUESTS,
     GATEWAYS,
     NODES;

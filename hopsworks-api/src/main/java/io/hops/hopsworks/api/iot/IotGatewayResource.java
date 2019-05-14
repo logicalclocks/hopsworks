@@ -144,8 +144,8 @@ public class IotGatewayResource {
   @ApiOperation(value = "Start blocking an IoT Gateway")
   @POST
   @Path("{id}/blocked")
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @AllowedProjectRoles({AllowedProjectRoles.ANYONE})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response startBlockingGateway(
     @PathParam("id")
       Integer gatewayId
@@ -164,8 +164,8 @@ public class IotGatewayResource {
   @ApiOperation(value = "Stop blocking an IoT Gateway")
   @DELETE
   @Path("{id}/blocked")
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @AllowedProjectRoles({AllowedProjectRoles.ANYONE})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response stopBlockingGateway(
     @PathParam("id") Integer gatewayId,
     @Context SecurityContext sc
@@ -226,8 +226,8 @@ public class IotGatewayResource {
   @ApiOperation(value = "start blocking a node")
   @POST
   @Path("{gId}/nodes/{nId}/blocked")
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @AllowedProjectRoles({AllowedProjectRoles.ANYONE})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response startBlockingNodeById (
     @PathParam("gId") Integer gatewayId,
     @PathParam("nId") String nodeId
@@ -239,8 +239,8 @@ public class IotGatewayResource {
   @ApiOperation(value = "stop blocking a node")
   @DELETE
   @Path("{gId}/nodes/{nId}/blocked")
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @AllowedProjectRoles({AllowedProjectRoles.ANYONE})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response stopBlockingNodeById (
     @PathParam("gId") Integer gatewayId,
     @PathParam("nId") String nodeId
