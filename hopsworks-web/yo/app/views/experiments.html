@@ -73,8 +73,14 @@
                                        ng-click="experimentsCtrl.stopTB();"
                                        type="button" class="btn btn-danger btn-md glyphicon glyphicon-off" style="padding:6px 11px; margin-bottom:1px;">
                            </button>
+
                            </span>
-                                    <span style="font-size:16px; margin-right:45px; float:right; padding-top:5px;">
+                                    <span style="font-size:16px; margin-right:25px; float:right; padding-top:5px;">
+                                        <span>
+                                        <a ng-click="experimentsCtrl.newWindow()"><i class="glyphicon glyphicon-new-window"></i> New Window</a>
+                                            </span>
+                           </span>
+                                    <span style="font-size:16px; margin-right:40px; float:right; padding-top:5px;">
                                         <span>
                                         Showing TensorBoard for experiment   <b>{{experimentsCtrl.tb.elasticId}}</b>
                                             </span>

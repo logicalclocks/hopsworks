@@ -224,6 +224,10 @@ angular.module('hopsWorksApp')
                }
            });
 
-            self.kibanaUI();
+           self.newWindow = function () {
+             $window.open(self.ui, '_blank');
+           };
+
+           self.kibanaUI();
         }
     ]);
