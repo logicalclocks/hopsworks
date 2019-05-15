@@ -220,8 +220,7 @@
                         <div class="text-right col-md-4">Initial executors <i class="fa fa-info-circle"
                                                                               uib-tooltip="The initial number of Spark executors that should be requested. Must be greater than the minimum and smaller than the maximum number of executors." style="margin-left: 10px"></i></div>
 
-                        <div class="col-md-2 jupyter-left"><input type="number"
-                                                                  ng-change="sparkConfigCtrl.setInitExecs()" min="0" ng-model="sparkConfigCtrl.jobConfig['spark.dynamicAllocation.minExecutors']"
+                        <div class="col-md-2 jupyter-left"><input type="number" min="0" ng-model="sparkConfigCtrl.jobConfig['spark.dynamicAllocation.initialExecutors']"
                                                                   class="form-control">
                         </div>
                     </div>
