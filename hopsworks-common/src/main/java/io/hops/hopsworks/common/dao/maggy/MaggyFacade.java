@@ -16,16 +16,17 @@
 package io.hops.hopsworks.common.dao.maggy;
 
 import io.hops.hopsworks.common.dao.featurestore.FeaturestoreFacade;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * A facade for storing information about Maggy Driver instances running in the cluster.
@@ -37,32 +38,37 @@ public class MaggyFacade {
   
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
-
+  
   public MaggyDriver findByAppId(String appId) {
-    TypedQuery<MaggyDriver> query = em.createNamedQuery(
-            "MaggyDriver.findByAppId",
-            MaggyDriver.class).setParameter("appId", appId);
+    TypedQuery<MaggyDriver> query;
+    try {
+      query = em.createNamedQuery("MaggyDriver.findByAppId", MaggyDriver.class).setParameter("appId", appId);
+    } catch (EntityNotFoundException | NoResultException e) {
+      Logger.getLogger(MaggyFacade.class.getName()).log(Level.FINE, null, e);
+      return null;
+    } catch (Throwable e) {
+      e.printStackTrace();
+      return null;
+    }
     return query.getSingleResult();
-  }  
+  }
   
   
   public List<MaggyDriver> getAllDrivers() {
     List<MaggyDriver> res;
     try {
-      TypedQuery<MaggyDriver> query = em.createNamedQuery(
-        "MaggyDriver.findAll", MaggyDriver.class);
+      TypedQuery<MaggyDriver> query = em.createNamedQuery("MaggyDriver.findAll", MaggyDriver.class);
       res = query.getResultList();
     } catch (EntityNotFoundException | NoResultException e) {
-      Logger.getLogger(MaggyFacade.class.getName()).log(Level.FINE, null,
-          e);
+      Logger.getLogger(MaggyFacade.class.getName()).log(Level.FINE, null, e);
       return null;
     } catch (Throwable e) {
       e.printStackTrace();
       return null;
     }
     return res;
-  }  
-
+  }
+  
   public void remove(MaggyDriver driver) {
     if (driver != null) {
       em.remove(driver);
@@ -74,6 +80,6 @@ public class MaggyFacade {
       driver.setCreated(java.sql.Timestamp.valueOf(LocalDateTime.now()));
       em.persist(driver);
     }
-  }  
+  }
   
 }

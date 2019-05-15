@@ -83,7 +83,11 @@ public class MaggyService {
     if (Strings.isNullOrEmpty(appId)) {
       throw new IllegalArgumentException("appId was not provided or was empty");
     }
-    GenericEntity<MaggyDriver> driver = new GenericEntity<MaggyDriver>(maggyFacade.findByAppId(appId)) {
+    MaggyDriver md = maggyFacade.findByAppId(appId);
+    if (md == null) {
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
+    }
+    GenericEntity<MaggyDriver> driver = new GenericEntity<MaggyDriver>(md) {
     };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(driver).build();
   }
