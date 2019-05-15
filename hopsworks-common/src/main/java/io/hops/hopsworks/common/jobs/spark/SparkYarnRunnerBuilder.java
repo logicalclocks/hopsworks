@@ -170,14 +170,14 @@ public class SparkYarnRunnerBuilder {
     //These properties are set so that spark history server picks them up
     jobHopsworksProps.put(Settings.SPARK_DRIVER_STAGINGDIR_ENV,
           new ConfigProperty(
-                Settings.SPARK_DRIVER_STAGINGDIR_ENV,
-                HopsUtils.IGNORE,
-                stagingPath));
+                  Settings.SPARK_DRIVER_STAGINGDIR_ENV,
+                  HopsUtils.IGNORE,
+                  stagingPath));
     jobHopsworksProps.put(Settings.HOPSWORKS_APPID_PROPERTY,
-        new ConfigProperty(
-            Settings.HOPSWORKS_APPID_PROPERTY,
-            HopsUtils.IGNORE,
-            YarnRunner.APPID_PLACEHOLDER));
+          new ConfigProperty(
+                  Settings.HOPSWORKS_APPID_PROPERTY,
+                  HopsUtils.IGNORE,
+                  YarnRunner.APPID_PLACEHOLDER));
 
     extraJavaOptions.put(Settings.HOPSWORKS_APPID_PROPERTY, YarnRunner.APPID_PLACEHOLDER);
     extraJavaOptions.put(Settings.LOGSTASH_JOB_INFO,
@@ -201,10 +201,8 @@ public class SparkYarnRunnerBuilder {
 
     Map<String, String> finalJobProps = new HashMap<>();
     finalJobProps.putAll(sparkConfigurationUtil.setFrameworkProperties(project, job.getJobConfig(), settings,
-      jobUser, usersFullName, tfLibraryPath));
-    extraJavaOptions.putAll(sparkConfigurationUtil.setJVMProperties(project, job.getJobConfig(),
-            settings, jobUser));
-    
+            jobUser, usersFullName, tfLibraryPath, extraJavaOptions));
+
     finalJobProps.put(Settings.SPARK_YARN_APPMASTER_ENV + "SPARK_USER", jobUser);
     finalJobProps.put(Settings.SPARK_EXECUTOR_ENV + "SPARK_USER", jobUser);
     finalJobProps.put(Settings.SPARK_YARN_APPMASTER_ENV + "SPARK_YARN_MODE", "true");
@@ -222,16 +220,10 @@ public class SparkYarnRunnerBuilder {
         }
       }
     }
-
-    //Create a string with system properties from extraJavaOptions
-    StringBuilder extraJavaOptionsSb = new StringBuilder();
-    for (String key : extraJavaOptions.keySet()) {
-      extraJavaOptionsSb.append(" -D").append(key).append("=").append(extraJavaOptions.get(key)).append(" ");
-      addSystemProperty(key, extraJavaOptions.get(key));
+    
+    for (String jvmOption : finalJobProps.get(Settings.SPARK_DRIVER_EXTRA_JAVA_OPTIONS).split(" +")) {
+      builder.addJavaOption(jvmOption);
     }
-
-    finalJobProps.put(Settings.SPARK_EXECUTOR_EXTRA_JAVA_OPTS,
-        extraJavaOptionsSb.toString().trim());
 
     for (String key : finalJobProps.keySet()) {
       if(key.startsWith("spark.yarn.appMasterEnv.")) {
@@ -242,8 +234,6 @@ public class SparkYarnRunnerBuilder {
     }
 
     builder.addToAppMasterEnvironment("CLASSPATH", finalJobProps.get(Settings.SPARK_DRIVER_EXTRACLASSPATH));
-
-
 
     for (String s : sysProps.keySet()) {
       String option = YarnRunner.escapeForShell("-D" + s + "=" + sysProps.get(s));
@@ -272,9 +262,9 @@ public class SparkYarnRunnerBuilder {
           filePath = filePath.substring(0, filePath.indexOf("#"));
         }
         builder.addLocalResource(new LocalResourceDTO(
-          fileName, filePath,
-          LocalResourceVisibility.APPLICATION.toString(),
-          LocalResourceType.FILE.toString(), null), false);
+                fileName, filePath,
+                LocalResourceVisibility.APPLICATION.toString(),
+                LocalResourceType.FILE.toString(), null), false);
       }
     }
 
@@ -309,8 +299,7 @@ public class SparkYarnRunnerBuilder {
     return this;
   }
 
-  public SparkYarnRunnerBuilder addExtraFiles(
-      List<LocalResourceDTO> projectLocalResources) {
+  public SparkYarnRunnerBuilder addExtraFiles(List<LocalResourceDTO> projectLocalResources) {
     if (projectLocalResources != null && !projectLocalResources.isEmpty()) {
       this.extraFiles.addAll(projectLocalResources);
     }
