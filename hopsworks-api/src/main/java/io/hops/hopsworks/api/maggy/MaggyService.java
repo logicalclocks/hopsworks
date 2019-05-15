@@ -44,10 +44,9 @@ import javax.ws.rs.core.Response;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-
 @Path("/maggy")
 @Stateless
-@JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+@JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
 @Api(value = "Maggy Service", description = "Register and retrieve Maggy Driver Endpoints, used in logging by " +
   "sparkmagic")
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -101,8 +100,7 @@ public class MaggyService {
   @POST
   @Path("drivers")
   @ApiOperation(value = "Register a Maggy Driver Endpoint for this YARN appId (called by Spark Driver in maggy).")
-  @Consumes(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  @Produces(MediaType.APPLICATION_JSON)
   public Response register(MaggyDriver driver) throws ServiceException {
     
     logger.log(Level.INFO, "REST call from maggy to register the driver: " + driver);
