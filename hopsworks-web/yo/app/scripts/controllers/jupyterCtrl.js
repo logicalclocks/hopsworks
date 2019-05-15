@@ -136,16 +136,6 @@ angular.module('hopsWorksApp')
                 self.livySessions(self.projectId);
             };
 
-            $scope.autoExpand = function(e) {
-                var element = typeof e === 'object' ? e.target : document.getElementById(e);
-                var scrollHeight = element.scrollHeight; // replace 60 by the sum of padding-top and padding-bottom
-                element.style.height = scrollHeight + "px";
-            };
-
-            function expand() {
-                $scope.autoExpand('TextArea');
-            }
-
             self.livySessions = function(projectId) {
                 JupyterService.livySessions(projectId).then(
                     function(success) {

@@ -218,25 +218,13 @@ public class JupyterConfigFilesGenerator {
 
       extraJavaOptions.put(Settings.LOGSTASH_JOB_INFO, project.getName().toLowerCase() + ",jupyter,notebook,?");
 
-      extraJavaOptions.putAll(sparkConfigurationUtil.setJVMProperties(project, sparkJobConfiguration,
-        settings, hdfsUser));
-
-      StringBuilder extraJavaOptionsSb = new StringBuilder();
-      for (String key : extraJavaOptions.keySet()) {
-        extraJavaOptionsSb.append(" -D").append(key).append("=").append(extraJavaOptions.get(key));
-      }
-
       HashMap<String, String> finalSparkConfiguration = new HashMap<>();
-
-      finalSparkConfiguration.put(Settings.SPARK_EXECUTOR_EXTRA_JAVA_OPTS, extraJavaOptionsSb.toString());
-
-      finalSparkConfiguration.put(Settings.SPARK_DRIVER_EXTRA_JAVA_OPTIONS, extraJavaOptionsSb.toString());
 
       finalSparkConfiguration.put(Settings.SPARK_DRIVER_STAGINGDIR_ENV,
         "hdfs:///Projects/" + project.getName() + "/Resources");
 
       finalSparkConfiguration.putAll(sparkConfigurationUtil.setFrameworkProperties(project, sparkJobConfiguration,
-        settings, hdfsUser, usersFullName, tfLdLibraryPath));
+        settings, hdfsUser, usersFullName, tfLdLibraryPath, extraJavaOptions));
       StringBuilder sparkConfBuilder = new StringBuilder();
       ArrayList<String> keys = new ArrayList<>(finalSparkConfiguration.keySet());
       Collections.sort(keys);

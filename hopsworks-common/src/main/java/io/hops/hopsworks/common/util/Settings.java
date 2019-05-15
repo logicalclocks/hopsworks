@@ -794,14 +794,6 @@ public class Settings implements Serializable {
 
   //PySpark properties
   public static final String SPARK_APP_NAME_ENV = "spark.app.name";
-  public static final String SPARK_EXECUTORENV_PYTHONPATH = "spark.executorEnv.PYTHONPATH";
-  public static final String SPARK_APPMASTERENV_PATH = "spark.yarn.appMasterEnv.PATH";
-  public static final String SPARK_APPMASTERENV_PYTHONPATH = "spark.yarn.appMasterEnv.PYTHONPATH";
-  public static final String SPARK_EXECUTORENV_LD_LIBRARY_PATH = "spark.executorEnv.LD_LIBRARY_PATH";
-  public static final String SPARK_EXECUTORENV_LD_LIBRARY_PYTHONPATH = "spark.executorEnv.PYTHONPATH";
-  public static final String SPARK_EXECUTORENV_HDFS_USER = "spark.executorEnv.HDFS_USER";
-  public static final String SPARK_EXECUTORENV_HADOOP_USER_NAME = "spark.executorEnv.HADOOP_USER_NAME";
-  public static final String SPARK_EXECUTORENV_JOB_NAME = "spark.executorEnv.JOB_NAME";
 
   public static final String SPARK_YARN_IS_PYTHON_ENV = "spark.yarn.isPython";
 
