@@ -16,7 +16,6 @@
 package io.hops.hopsworks.api.maggy;
 
 import com.google.common.base.Strings;
-import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.common.dao.maggy.MaggyDriver;
@@ -31,7 +30,6 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -46,7 +44,7 @@ import java.util.logging.Logger;
 
 @Path("/maggy")
 @Stateless
-@JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+@JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
 @Api(value = "Maggy Service", description = "Register and retrieve Maggy Driver Endpoints, used in logging by " +
   "sparkmagic")
 @TransactionAttribute(TransactionAttributeType.NEVER)
