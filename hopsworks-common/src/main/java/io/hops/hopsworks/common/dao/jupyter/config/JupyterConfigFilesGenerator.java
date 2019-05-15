@@ -311,46 +311,6 @@ public class JupyterConfigFilesGenerator {
         custom_js, custom_js_sb.toString());
     }
     
-    
-    // JWT TOKEN
-    
-    String token = "";
-    try {
-      LocalDateTime expirationDate = LocalDateTime.now().plus(settings.getJWTLifetimeMs(), ChronoUnit.MILLIS);
-      String[] audience = new String[]{"job"};
-      String[] roles = new String[1];
-      roles[0] = "HOPS_USER";
-      String skn = settings.getJWTSigningKeyName();
-      token = jwtController.createToken(skn, false, settings.getJWTIssuer(),
-        audience, Date.from(expirationDate.toInstant(ZoneOffset.UTC)),
-        Date.from(LocalDateTime.now().toInstant(ZoneOffset.UTC)), hdfsUser,
-        false, settings.getJWTExpLeewaySec(), roles, SignatureAlgorithm.valueOf(settings.getJWTSignatureAlg()));
-      String tokenFileName = "token.jwt"; // hdfsUser +
-      Path tokenFile = Paths.get(jp.getNotebookPath(), tokenFileName);
-      FileUtils.writeStringToFile(tokenFile.toFile(), token);
-      Set<PosixFilePermission> TOKEN_FILE_PERMISSIONS = new HashSet<>(5);
-      TOKEN_FILE_PERMISSIONS.add(PosixFilePermission.OWNER_READ);
-      TOKEN_FILE_PERMISSIONS.add(PosixFilePermission.GROUP_READ);
-      Files.setPosixFilePermissions(tokenFile, TOKEN_FILE_PERMISSIONS);
-    } catch (GeneralSecurityException | JWTException ex) {
-      ex.printStackTrace();
-      //    	throw new AirflowException(RESTCodes.AirflowErrorCode.JWT_NOT_CREATED, Level.SEVERE,
-      //				   "Could not generate Jupyter JWT for user " + hdfsUser, ex.getMessage(), ex);
-    } catch (IOException ex) {
-      ex.printStackTrace();
-      LOGGER.log(Level.WARNING, "Could not write Jupyter JWT for user " + hdfsUser, ex);
-      //        deleteJupyterMaterial(materialID);
-      try {
-        jwtController.invalidate(token);
-      } catch (InvalidationException invEx) {
-        ex.printStackTrace();
-        LOGGER.log(Level.FINE, "Could not invalidate Jupyter JWT. Skipping...", ex);
-      }
-      //	throw new JupyterException(RESTCodes.AirflowErrorCode.JWT_NOT_STORED, Level.SEVERE,
-      //				   "Could not store Jupyter JWT for user " + hdfsUser, ex.getMessage(), ex);
-    }
-    
-    
     // Add this local file to 'spark: file' to copy it to hdfs and localize it.
     return createdJupyter || createdSparkmagic || createdCustomJs;
   }
