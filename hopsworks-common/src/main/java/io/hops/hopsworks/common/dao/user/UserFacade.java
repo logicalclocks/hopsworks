@@ -113,16 +113,6 @@ public class UserFacade extends AbstractFacade<Users> {
     }
     return roles;
   }
-
-  private Integer getIntValue(String field, String value) {
-    Integer val;
-    try {
-      val = Integer.parseInt(value);
-    } catch (NumberFormatException e) {
-      throw new InvalidQueryException("Filter value for " + field + " needs to set an Integer, but found: " + value);
-    }
-    return val;
-  }
   
   private UserAccountType getTypeValue(String field, String value) {
     if (value == null || value.isEmpty()) {

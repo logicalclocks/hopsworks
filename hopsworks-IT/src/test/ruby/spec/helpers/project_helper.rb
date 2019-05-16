@@ -104,6 +104,10 @@ module ProjectHelper
     @project
   end
 
+  def update_project
+    @project = get_project_by_name(name)
+  end
+
   def get_project_by_name(name)
     Project.find_by(projectName: "#{name}")
   end

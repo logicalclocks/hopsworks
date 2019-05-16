@@ -20,6 +20,7 @@ import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetType;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
+import io.hops.hopsworks.common.dao.user.activity.ActivityFlag;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.restutils.RESTCodes;
 
@@ -143,7 +144,7 @@ public class FeaturestoreController {
     featurestore.setCreated(new Date());
     featurestoreFacade.persist(featurestore);
     activityFacade.persistActivity(ActivityFacade.CREATED_FEATURESTORE +
-        featurestoreName, project, project.getOwner(), ActivityFacade.ActivityFlag.SERVICE);
+        featurestoreName, project, project.getOwner(), ActivityFlag.SERVICE);
     return featurestore;
   }
 

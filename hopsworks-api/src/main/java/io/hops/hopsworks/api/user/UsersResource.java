@@ -60,7 +60,6 @@ import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.Authorization;
 import org.apache.commons.codec.binary.Base64;
 
 import javax.ejb.EJB;
@@ -90,9 +89,7 @@ import javax.ws.rs.core.UriInfo;
 @JWTRequired(acceptedTokens = {Audience.API},
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
 @Api(value = "Users",
-    description = "Users service",
-    authorizations = {
-      @Authorization(value = "Cauth-Realm")})
+    description = "Users service")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class UsersResource {
 
@@ -176,7 +173,7 @@ public class UsersResource {
     user = userController.updateProfile(user, firstName, lastName, phoneNumber, toursState, req);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.USERS);
     UserProfileDTO userDTO = usersBuilder.buildFull(uriInfo, resourceRequest, user);
-    return Response.ok().entity(userDTO).build();
+    return Response.created(userDTO.getHref()).entity(userDTO).build();
   }
 
   @POST

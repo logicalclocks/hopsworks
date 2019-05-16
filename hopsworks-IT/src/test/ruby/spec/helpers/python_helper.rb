@@ -17,13 +17,14 @@
 module PythonHelper
 
   def with_python_enabled(project_id, python_version)
-    get "#{ENV['HOPSWORKS_API']}/project/"  + project_id.to_s + "/pythonDeps/enabled"
+    get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/python/environments"
     if response.code == 200
-      get "#{ENV['HOPSWORKS_API']}/project/"  + project_id.to_s + "/pythonDeps/destroyAnaconda"
-      expect_status(200)
+      version = json_body[:items][0].pythonVersion
+      delete "#{ENV['HOPSWORKS_API']}/project/#{project_id}/python/environments/#{version}"
+      expect_status(204)
     end
-    get "#{ENV['HOPSWORKS_API']}/project/"  + project_id.to_s + "/pythonDeps/enable/" + python_version + "/true"
-    expect_status(200)
+    post "#{ENV['HOPSWORKS_API']}/project/#{project_id}/python/environments/#{python_version}?action=create&pythonKernelEnable=true"
+    expect_status(201)
   end
 
   def get_python_it_tests_job_name(version)

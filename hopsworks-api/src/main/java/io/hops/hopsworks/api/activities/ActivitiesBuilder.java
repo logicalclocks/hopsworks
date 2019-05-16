@@ -81,7 +81,7 @@ public class ActivitiesBuilder {
       dto.setActivity(activity.getActivity());
       dto.setTimestamp(activity.getTimestamp());
       dto.setProjectName(activity.getProject().getName());
-      dto.setFlag(activity.getFlag());
+      dto.setFlag(activity.getFlag().getValue());
       dto.setUser(usersBuilder.build(uriInfo, resourceRequest, activity.getUser()));
     }
     return dto;
@@ -95,7 +95,7 @@ public class ActivitiesBuilder {
       dto.setActivity(activity.getActivity());
       dto.setTimestamp(activity.getTimestamp());
       dto.setProjectName(activity.getProject().getName());
-      dto.setFlag(activity.getFlag());
+      dto.setFlag(activity.getFlag().getValue());
       dto.setUser(usersBuilder.build(uriInfo, resourceRequest, activity.getUser()));
     }
     return dto;
@@ -168,7 +168,7 @@ public class ActivitiesBuilder {
         case ID:
           return order(a.getId(), b.getId(), sortBy.getParam());
         case FLAG:
-          return order(a.getFlag(), b.getFlag(), sortBy.getParam());
+          return order(a.getFlag().getValue(), b.getFlag().getValue(), sortBy.getParam());
         case DATE_CREATED:
           return order(a.getTimestamp(), b.getTimestamp(), sortBy.getParam());
         default:

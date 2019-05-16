@@ -37,7 +37,7 @@ public class ActivitiesDTO extends RestDTO<ActivitiesDTO>{
     this.activity = activity.getActivity();
     this.timestamp = activity.getTimestamp();
     this.projectName = activity.getProject().getName();
-    this.flag = activity.getFlag();
+    this.flag = activity.getFlag().getValue();
   }
 
   public String getActivity() {

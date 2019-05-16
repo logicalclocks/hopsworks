@@ -150,6 +150,11 @@ public class ResourceRequest {
     INODES,
     MESSAGES,
     ACTIVITIES,
+    PYTHON,
+    ENVIRONMENTS,
+    COMMANDS,
+    MACHINETYPES,
+    LIBRARIES,
     DATASETREQUESTS;
     
     public static Name fromString(String name) {

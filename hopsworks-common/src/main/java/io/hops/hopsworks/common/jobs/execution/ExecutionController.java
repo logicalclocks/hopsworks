@@ -53,6 +53,7 @@ import io.hops.hopsworks.common.dao.jobs.description.YarnAppUrlsDTO;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
+import io.hops.hopsworks.common.dao.user.activity.ActivityFlag;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -175,8 +176,8 @@ public class ExecutionController {
         String inodeName = inode.getInodePK().getName();
 
         jobHistoryFac.persist(user, job, execId, exec.getAppId());
-        activityFacade.persistActivity(ActivityFacade.EXECUTED_JOB + inodeName, job.getProject(), user, ActivityFacade.
-            ActivityFlag.JOB);
+        activityFacade.persistActivity(ActivityFacade.EXECUTED_JOB + inodeName, job.getProject(), user,
+          ActivityFlag.JOB);
         break;
       case PYSPARK:
         if(!job.getProject().getConda()){

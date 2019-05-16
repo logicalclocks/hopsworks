@@ -77,13 +77,14 @@ import io.hops.hopsworks.common.dao.project.team.ProjectRoleTypes;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamPK;
-import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
+import io.hops.hopsworks.common.dao.user.activity.ActivityFlag;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.FolderNameValidator;
 import io.hops.hopsworks.common.elastic.ElasticController;
+import io.hops.hopsworks.common.python.environment.EnvironmentController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.common.experiments.TensorBoardController;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
@@ -207,7 +208,7 @@ public class ProjectController {
   @EJB
   private OperationsLogFacade operationsLogFacade;
   @EJB
-  private PythonDepsFacade pythonDepsFacade;
+  private EnvironmentController environmentController;
   @EJB
   private JupyterProcessMgr jupyterProcessFacade;
   @EJB
@@ -733,8 +734,7 @@ public class ProjectController {
 
     // Persist enabled service in the database
     projectServicesFacade.addServiceForProject(project, service);
-    logActivity(ActivityFacade.ADDED_SERVICE + service.toString(), user, project, ActivityFacade.
-        ActivityFlag.SERVICE);
+    logActivity(ActivityFacade.ADDED_SERVICE + service.toString(), user, project, ActivityFlag.SERVICE);
     return futureList;
   }
 
@@ -867,7 +867,7 @@ public class ProjectController {
       project.setDescription(projectDescr);
       projectFacade.mergeProject(project);
       logProject(project, OperationType.Update);
-      logActivity(ActivityFacade.PROJECT_DESC_CHANGED + projectDescr, user, project, ActivityFacade.ActivityFlag.
+      logActivity(ActivityFacade.PROJECT_DESC_CHANGED + projectDescr, user, project, ActivityFlag.
           PROJECT);
       return true;
     }
@@ -889,8 +889,8 @@ public class ProjectController {
       project.setRetentionPeriod(projectRetention);
       projectFacade.mergeProject(project);
       logProject(project, OperationType.Update);
-      logActivity(ActivityFacade.PROJECT_RETENTION_CHANGED + projectRetention, user, project, ActivityFacade.
-          ActivityFlag.PROJECT);
+      logActivity(ActivityFacade.PROJECT_RETENTION_CHANGED + projectRetention, user, project,
+        ActivityFlag.PROJECT);
       return true;
     }
     return false;
@@ -1184,6 +1184,15 @@ public class ProjectController {
               "CertificateMaterializer");
         } catch (Exception ex) {
           cleanupLogger.logError("Error while force removing Project certificates from CertificateMaterializer");
+          cleanupLogger.logError(ex.getMessage());
+        }
+  
+        // remove conda envs
+        try {
+          removeAnacondaEnv(project);
+          cleanupLogger.logSuccess("Removed conda envs");
+        } catch (Exception ex) {
+          cleanupLogger.logError("Error when removing conda envs during project cleanup");
           cleanupLogger.logError(ex.getMessage());
         }
         
@@ -1818,7 +1827,7 @@ public class ProjectController {
                   project.getName()});
 
             logActivity(ActivityFacade.NEW_MEMBER + projectTeam.getProjectTeamPK().getTeamMember(), owner, 
-                project, ActivityFacade.ActivityFlag.MEMBER);
+                project, ActivityFlag.MEMBER);
           } else if (newMember == null) {
             failedList.add(projectTeam.getProjectTeamPK().getTeamMember()
                 + " was not found in the system.");
@@ -1924,7 +1933,7 @@ public class ProjectController {
     setHdfsSpaceQuotasInMBs(project, diskspaceQuotaInMB, null, null, dfso);
     projectFacade.setTimestampQuotaUpdate(project, new Date());
     //Add the activity information
-    logActivity(ActivityFacade.NEW_PROJECT + project.getName(), user, project, ActivityFacade.ActivityFlag.PROJECT);
+    logActivity(ActivityFacade.NEW_PROJECT + project.getName(), user, project, ActivityFlag.PROJECT);
     //update role information in project
     addProjectOwner(project.getId(), user.getEmail());
     LOGGER.log(Level.FINE, "{0} - project created successfully.", project.
@@ -2102,7 +2111,7 @@ public class ProjectController {
 
     kafkaController.removeProjectMemberFromTopics(project, userToBeRemoved);
 
-    logActivity(ActivityFacade.REMOVED_MEMBER + userToBeRemoved.getEmail(), user, project, ActivityFacade.ActivityFlag.
+    logActivity(ActivityFacade.REMOVED_MEMBER + userToBeRemoved.getEmail(), user, project, ActivityFlag.
         MEMBER);
     
     certificateMaterializer.forceRemoveLocalMaterial(userToBeRemoved.getUsername(), project.getName(), null, false);
@@ -2148,7 +2157,7 @@ public class ProjectController {
         hdfsUsersController.modifyProjectMembership(user, project);
       }
 
-      logActivity(ActivityFacade.CHANGE_ROLE + toUpdateEmail, opsOwner, project, ActivityFacade.ActivityFlag.MEMBER);
+      logActivity(ActivityFacade.CHANGE_ROLE + toUpdateEmail, opsOwner, project, ActivityFlag.MEMBER);
     }
 
   }
@@ -2223,8 +2232,7 @@ public class ProjectController {
    * @param performedOn the project the operation was performed on.
    * @param flag
    */
-  public void logActivity(String activityPerformed, Users performedBy, Project performedOn, 
-      ActivityFacade.ActivityFlag flag) {
+  public void logActivity(String activityPerformed, Users performedBy, Project performedOn, ActivityFlag flag) {
     activityFacade.persistActivity(activityPerformed, performedOn, performedBy, flag);
   }
 
@@ -2405,11 +2413,11 @@ public class ProjectController {
           sparkJobConfiguration.setAppName(Settings.HOPS_FEATURESTORE_TOUR_JOB_NAME);
           sparkJobConfiguration.setLocalResources(new LocalResourceDTO[0]);
           Jobs job = jobController.putJob(user, project, null, sparkJobConfiguration);
-          activityFacade.persistActivity(ActivityFacade.CREATED_JOB + job.getName(),
-                project, user, ActivityFacade.ActivityFlag.SERVICE);
+          activityFacade.persistActivity(ActivityFacade.CREATED_JOB + job.getName(), project, user,
+            ActivityFlag.SERVICE);
           executionController.start(job, user);
-          activityFacade.persistActivity(ActivityFacade.RAN_JOB + job.getName(),
-                project, user, ActivityFacade.ActivityFlag.SERVICE);
+          activityFacade.persistActivity(ActivityFacade.RAN_JOB + job.getName(), project, user,
+            ActivityFlag.SERVICE);
           break;
         default:
           break;
@@ -2434,7 +2442,7 @@ public class ProjectController {
 
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public void removeAnacondaEnv(Project project) throws ServiceException {
-    pythonDepsFacade.removeProject(project);
+    environmentController.removeEnvironment(project);
   }
 
   @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -2449,7 +2457,7 @@ public class ProjectController {
 
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public void cloneAnacondaEnv(Project srcProj, Project destProj) throws ServiceException {
-    pythonDepsFacade.cloneProject(srcProj, destProj);
+    environmentController.cloneProject(srcProj, destProj);
   }
 
   /**

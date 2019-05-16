@@ -50,8 +50,8 @@ import io.hops.hopsworks.api.jobs.JobsResource;
 import io.hops.hopsworks.api.jobs.KafkaService;
 import io.hops.hopsworks.api.jupyter.JupyterService;
 import io.hops.hopsworks.api.jwt.JWTHelper;
-import io.hops.hopsworks.api.pythonDeps.PythonDepsService;
 import io.hops.hopsworks.api.serving.TfServingService;
+import io.hops.hopsworks.api.python.PythonResource;
 import io.hops.hopsworks.api.serving.inference.InferenceResource;
 import io.hops.hopsworks.api.tensorflow.TensorBoardService;
 import io.hops.hopsworks.api.util.LocalFsService;
@@ -73,6 +73,7 @@ import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
+import io.hops.hopsworks.common.dao.user.activity.ActivityFlag;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.FilePreviewDTO;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
@@ -163,7 +164,7 @@ public class ProjectService {
   @Inject
   private JobsResource jobs;
   @Inject
-  private PythonDepsService pysparkService;
+  private PythonResource pythonResource;
   @EJB
   private ActivityFacade activityFacade;
   @EJB
@@ -708,7 +709,7 @@ public class ProjectService {
     Users user = jWTHelper.getUserPrincipal(sc);
 
     activityFacade.persistActivity(ActivityFacade.SHARED_DATA + newDS.toString() + " with project " + destProj.getName()
-        , destProj, user, ActivityFacade.ActivityFlag.DATASET);
+        , destProj, user, ActivityFlag.DATASET);
 
     hdfsUsersBean.shareDataset(destProj, ds);
 
@@ -760,10 +761,10 @@ public class ProjectService {
     return this.tfServingService;
   }
 
-  @Path("{projectId}/pythonDeps")
-  public PythonDepsService pysparkDeps(@PathParam("projectId") Integer id) {
-    this.pysparkService.setProjectId(id);
-    return pysparkService;
+  @Path("{projectId}/python")
+  public PythonResource python(@PathParam("projectId") Integer id) {
+    this.pythonResource.setProjectId(id);
+    return this.pythonResource;
   }
 
   @Path("{projectId}/dela")
