@@ -41,6 +41,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.ws.rs.Consumes;
 
 @Path("/maggy")
 @Stateless
@@ -98,7 +99,7 @@ public class MaggyService {
   @POST
   @Path("drivers")
   @ApiOperation(value = "Register a Maggy Driver Endpoint for this YARN appId (called by Spark Driver in maggy).")
-  @Produces(MediaType.APPLICATION_JSON)
+  @Consumes(MediaType.APPLICATION_JSON)
   public Response register(MaggyDriver driver) throws ServiceException {
     
     logger.log(Level.INFO, "REST call from maggy to register the driver: " + driver);
