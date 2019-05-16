@@ -18,11 +18,19 @@ package io.hops.hopsworks.common.dao.airflow;
 
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import java.io.Serializable;
 
 @Embeddable
-public class AirflowMaterialID implements Serializable {
+public class MaterializedJWTID implements Serializable {
   private static final long serialVersionUID = 1L;
+  
+  // Order is important. Always append!
+  public enum USAGE {
+    AIRFLOW,
+    JUPYTER
+  }
   
   @Column(name = "project_id",
           nullable = false)
@@ -32,12 +40,18 @@ public class AirflowMaterialID implements Serializable {
           nullable = false)
   private Integer userId;
   
-  public AirflowMaterialID() {
+  @Enumerated(EnumType.ORDINAL)
+  @Column(name = "\"usage\"",
+          nullable = false)
+  private USAGE usage;
+  
+  public MaterializedJWTID() {
   }
   
-  public AirflowMaterialID(Integer projectId, Integer userId) {
+  public MaterializedJWTID(Integer projectId, Integer userId, USAGE usage) {
     this.projectId = projectId;
     this.userId = userId;
+    this.usage = usage;
   }
   
   public Integer getProjectId() {
@@ -56,11 +70,20 @@ public class AirflowMaterialID implements Serializable {
     this.userId = userId;
   }
   
+  public USAGE getUsage() {
+    return usage;
+  }
+  
+  public void setUsage(USAGE usage) {
+    this.usage = usage;
+  }
+  
   @Override
   public int hashCode() {
     int result = 17;
     result = 31 * result + userId;
     result = 31 * result + projectId;
+    result = 31 * result + usage.ordinal();
     return result;
   }
   
@@ -69,15 +92,15 @@ public class AirflowMaterialID implements Serializable {
     if (this == o) {
       return true;
     }
-    if (o instanceof AirflowMaterialID) {
-      AirflowMaterialID id = (AirflowMaterialID) o;
-      return this.projectId.equals(id.projectId) && this.userId.equals(id.userId);
+    if (o instanceof MaterializedJWTID) {
+      MaterializedJWTID id = (MaterializedJWTID) o;
+      return this.projectId.equals(id.projectId) && this.userId.equals(id.userId) && this.usage.equals(id.usage);
     }
     return false;
   }
   
   @Override
   public String toString() {
-    return "PID: " + projectId + " - UID: " + userId;
+    return "PID: " + projectId + " - UID: " + userId + " - USAGE: " + usage;
   }
 }

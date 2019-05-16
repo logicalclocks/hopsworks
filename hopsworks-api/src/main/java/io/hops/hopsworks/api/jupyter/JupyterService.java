@@ -63,6 +63,7 @@ import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.common.jupyter.JupyterController;
+import io.hops.hopsworks.common.jupyter.JupyterJWTManager;
 import io.hops.hopsworks.common.livy.LivyController;
 import io.hops.hopsworks.common.livy.LivyMsg;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
@@ -109,7 +110,8 @@ import javax.ws.rs.core.UriInfo;
 public class JupyterService {
 
   private static final Logger LOGGER = Logger.getLogger(JupyterService.class.getName());
-
+  private static final String[] JUPYTER_JWT_AUD = new String[]{Audience.API};
+  
   @EJB
   private ProjectFacade projectFacade;
   @EJB
@@ -140,6 +142,8 @@ public class JupyterService {
   private OSProcessExecutor osProcessExecutor;
   @EJB
   private JupyterController jupyterController;
+  @EJB
+  private JupyterJWTManager jupyterJWTManager;
 
   private Integer projectId;
   // No @EJB annotation for Project, it's injected explicitly in ProjectService.
@@ -317,6 +321,8 @@ public class JupyterService {
         // We materialize them twice but most probably other operations will need them too, so it is OK
         // Remember to remove both when stopping Jupyter server or an exception is thrown
         certificateMaterializer.materializeCertificatesLocal(user.getUsername(), project.getName());
+        
+        jupyterJWTManager.materializeJWT(hopsworksUser, project, jupyterSettings, JUPYTER_JWT_AUD);
       } catch (ServiceException ex) {
         throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_START_ERROR, Level.SEVERE, ex.getMessage(),
             null, ex);
