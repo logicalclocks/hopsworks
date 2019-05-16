@@ -51,7 +51,7 @@
     <div class="">
       <!-- Page Content -->
       <div class="content" style="height:100%; overflow: hidden; margin-top: 50px;" >
-        <div class="row rg-row-top" resizable r-directions="['bottom']">
+        <div class="row rg-row-top" resizable r-directions="['bottom']" r-flex="true">
           <div class="row">
             <div class=" col-md-6"
                  style="margin-bottom: 20px;" id="buttonCreateJob">
@@ -63,11 +63,12 @@
             </div>
           </div>
           <h3 class="text-muted" style="text-align: center;"
-              ng-show="jobsCtrl.jobs === undefined || jobsCtrl.jobs === null">
-            No jobs have been created yet.
+              ng-if="jobsCtrl.jobs === undefined || jobsCtrl.jobs === null || jobsCtrl.jobs.length === 0">
+            No job to show.
           </h3>
-          <div ng-show="jobsCtrl.jobs !== undefined && jobsCtrl.jobs !== null">
-            <div style="height:100%;">
+          <div ng-if="jobsCtrl.jobs !== undefined && jobsCtrl.jobs !== null && jobsCtrl.jobs.length > 0"
+               style="height: calc(100% - 35px); overflow-y: auto; overflow-x: hidden;">
+            <div>
               <div class="row form-inline">
                 <div class="col-sm-6 col-md-6 col-lg-6 form-group">
                   <label>Search
@@ -94,7 +95,7 @@
                   </div>
                 </div>
               </div>
-              <div style="height:85%; overflow: auto;" >
+              <div>
                 <table class="table table-hover"
                        ng-style="(jobsCtrl.dimTable) ? {'opacity': 0.3} : {}" id="jobsTable">
                   <thead>

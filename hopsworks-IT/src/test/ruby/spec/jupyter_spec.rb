@@ -46,13 +46,29 @@ describe "On #{ENV['OS']}" do
 
         settings = json_body
         settings[:distributionStrategy] = ""
+        staging_dir = settings[:privateDir]
 
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/start", JSON(settings)
         expect_status(200)
-
+        secret_dir = json_body[:secret]
+        
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/running"
         expect_status(200)
 
+        jwt_file = File.join(staging_dir, "token.jwt")
+        expect(File.file? jwt_file).to be true
+        
+        jupyter_dir = Variables.find_by(id: "jupyter_dir").value
+        project_username = "#{@project[:projectname]}__#{@user[:username]}"
+        path2secret = File.join(jupyter_dir, "Projects", @project[:projectname], project_username, secret_dir, "certificates")
+        
+        kstore_file = File.join(path2secret, "#{project_username}__kstore.jks")
+        expect(File.file? kstore_file).to be true
+        tstore_file = File.join(path2secret, "#{project_username}__tstore.jks")
+        expect(File.file? tstore_file).to be true
+        password_file = File.join(path2secret, "#{project_username}__cert.key")
+        expect(File.file? password_file).to be true
+        
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/stop"
         expect_status(200)
 

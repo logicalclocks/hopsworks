@@ -24,6 +24,7 @@ import io.hops.hopsworks.common.jobs.spark.DistributionStrategy;
 import io.hops.hopsworks.common.jobs.spark.ExperimentType;
 import io.hops.hopsworks.common.jobs.spark.SparkJobConfiguration;
 import io.hops.hopsworks.common.util.templates.ConfigProperty;
+import io.hops.hopsworks.common.util.templates.ConfigReplacementPolicy;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,7 +35,8 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
 
   public Map<String, String> setFrameworkProperties(Project project, JobConfiguration jobConfiguration,
                                                             Settings settings, String hdfsUser, String usersFullName,
-                                                            String tfLdLibraryPath) throws IOException {
+                                                            String tfLdLibraryPath, Map<String,
+                                                            String> extraJavaOptions) throws IOException {
     SparkJobConfiguration sparkJobConfiguration = (SparkJobConfiguration)jobConfiguration;
     ExperimentType experimentType = sparkJobConfiguration.getExperimentType();
     DistributionStrategy distributionStrategy = sparkJobConfiguration.getDistributionStrategy();
@@ -45,7 +47,7 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
       sparkProps.put(Settings.SPARK_APP_NAME_ENV,
         new ConfigProperty(
           Settings.SPARK_APP_NAME_ENV,
-          HopsUtils.IGNORE,
+          HopsUtils.OVERWRITE,
           sparkJobConfiguration.getAppName()));
     }
 
@@ -58,11 +60,11 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
 
       addToSparkEnvironment(sparkProps, "PATH", "{{PWD}}" + File.pathSeparator +
           settings.getAnacondaProjectDir(project) + "/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
-        settings);
+        HopsUtils.APPEND_PATH);
     }
 
     sparkProps.put(Settings.SPARK_PYSPARK_PYTHON_OPTION, new ConfigProperty(
-      Settings.SPARK_PYSPARK_PYTHON_OPTION, HopsUtils.OVERWRITE,
+      Settings.SPARK_PYSPARK_PYTHON_OPTION, HopsUtils.IGNORE,
       settings.getAnacondaProjectDir(project) + "/bin/python"));
 
 
@@ -70,22 +72,21 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
     //Needs to be set for CUDA libraries to not initialize GPU context
     sparkProps.put(Settings.SPARK_YARN_APPMASTER_ENV + "CUDA_VISIBLE_DEVICES",
             new ConfigProperty(Settings.SPARK_YARN_APPMASTER_ENV + "CUDA_VISIBLE_DEVICES",
-                    HopsUtils.OVERWRITE, ""));
+                    HopsUtils.IGNORE, ""));
 
     //https://rocm-documentation.readthedocs.io/en/latest/Other_Solutions/Other-Solutions.html
     //Needs to be set for ROCm libraries to not initialize GPU context
     sparkProps.put(Settings.SPARK_YARN_APPMASTER_ENV + "HIP_VISIBLE_DEVICES",
             new ConfigProperty(Settings.SPARK_YARN_APPMASTER_ENV + "HIP_VISIBLE_DEVICES",
-                    HopsUtils.OVERWRITE, "-1"));
+                    HopsUtils.IGNORE, "-1"));
 
     sparkProps.put(Settings.SPARK_SUBMIT_DEPLOYMODE, new ConfigProperty(Settings.SPARK_SUBMIT_DEPLOYMODE,
-      HopsUtils.OVERWRITE,
-      "cluster"));
+      HopsUtils.OVERWRITE,"cluster"));
 
     if(experimentType != null) {
       if(sparkJobConfiguration.getExecutorGpus() == 0) {
-        addToSparkEnvironment(sparkProps, "HIP_VISIBLE_DEVICES", "-1", settings);
-        addToSparkEnvironment(sparkProps, "CUDA_VISIBLE_DEVICES", "", settings);
+        addToSparkEnvironment(sparkProps, "HIP_VISIBLE_DEVICES", "-1", HopsUtils.IGNORE);
+        addToSparkEnvironment(sparkProps, "CUDA_VISIBLE_DEVICES", "", HopsUtils.IGNORE);
       }
       if (sparkJobConfiguration.getExecutorGpus() > 0) {
         sparkProps.put(Settings.SPARK_TF_GPUS_ENV,
@@ -114,40 +115,44 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
     pyFilesDist.append(sparkjars).append(",").append(py4jArchive);
 
     sparkProps.put(Settings.SPARK_YARN_DIST_PYFILES, new ConfigProperty(
-      Settings.SPARK_YARN_DIST_PYFILES, HopsUtils.OVERWRITE,
+      Settings.SPARK_YARN_DIST_PYFILES, HopsUtils.APPEND_COMMA,
       pyFilesDist.toString()));
 
-    addToSparkEnvironment(sparkProps, "SPARK_HOME", settings.getSparkDir(), settings);
-    addToSparkEnvironment(sparkProps, "SPARK_CONF_DIR", settings.getSparkConfDir(), settings);
-    addToSparkEnvironment(sparkProps, "ELASTIC_ENDPOINT", settings.getElasticRESTEndpoint(), settings);
-    addToSparkEnvironment(sparkProps, "HADOOP_VERSION", settings.getHadoopVersion(), settings);
-    addToSparkEnvironment(sparkProps, "HOPSWORKS_VERSION", settings.getHopsworksVersion(), settings);
-    addToSparkEnvironment(sparkProps, "CUDA_VERSION", settings.getCudaVersion(), settings);
-    addToSparkEnvironment(sparkProps, "TENSORFLOW_VERSION", settings.getTensorflowVersion(), settings);
-    addToSparkEnvironment(sparkProps, "KAFKA_VERSION", settings.getKafkaVersion(), settings);
-    addToSparkEnvironment(sparkProps, "SPARK_VERSION", settings.getSparkVersion(), settings);
-    addToSparkEnvironment(sparkProps, "LIVY_VERSION", settings.getLivyVersion(), settings);
-    addToSparkEnvironment(sparkProps, "HADOOP_HOME", settings.getHadoopSymbolicLinkDir(), settings);
-    addToSparkEnvironment(sparkProps, "HADOOP_HDFS_HOME", settings.getHadoopSymbolicLinkDir(), settings);
-    addToSparkEnvironment(sparkProps, "HADOOP_USER_NAME", hdfsUser, settings);
+    addToSparkEnvironment(sparkProps, "SPARK_HOME", settings.getSparkDir(), HopsUtils.IGNORE);
+    addToSparkEnvironment(sparkProps, "SPARK_CONF_DIR", settings.getSparkConfDir(), HopsUtils.IGNORE);
+    addToSparkEnvironment(sparkProps, "ELASTIC_ENDPOINT", settings.getElasticRESTEndpoint(), HopsUtils.IGNORE);
+    addToSparkEnvironment(sparkProps, "HADOOP_VERSION", settings.getHadoopVersion(), HopsUtils.IGNORE);
+    addToSparkEnvironment(sparkProps, "HOPSWORKS_VERSION", settings.getHopsworksVersion(), HopsUtils.IGNORE);
+    addToSparkEnvironment(sparkProps, "CUDA_VERSION", settings.getCudaVersion(), HopsUtils.IGNORE);
+    addToSparkEnvironment(sparkProps, "TENSORFLOW_VERSION", settings.getTensorflowVersion(), HopsUtils.IGNORE);
+    addToSparkEnvironment(sparkProps, "KAFKA_VERSION", settings.getKafkaVersion(),HopsUtils.IGNORE);
+    addToSparkEnvironment(sparkProps, "SPARK_VERSION", settings.getSparkVersion(), HopsUtils.IGNORE);
+    addToSparkEnvironment(sparkProps, "LIVY_VERSION", settings.getLivyVersion(), HopsUtils.IGNORE);
+    addToSparkEnvironment(sparkProps, "HADOOP_HOME", settings.getHadoopSymbolicLinkDir(), HopsUtils.IGNORE);
+    addToSparkEnvironment(sparkProps, "HADOOP_HDFS_HOME", settings.getHadoopSymbolicLinkDir(),
+            HopsUtils.IGNORE);
+    addToSparkEnvironment(sparkProps, "HADOOP_USER_NAME", hdfsUser, HopsUtils.IGNORE);
     addToSparkEnvironment(sparkProps, "LD_LIBRARY_PATH", settings.getJavaHome() +
       "/jre/lib/amd64/server" + File.pathSeparator + tfLdLibraryPath +
       settings.getHadoopSymbolicLinkDir() + "/lib/native" + File.pathSeparator + settings.getAnacondaProjectDir(project)
-        + "/lib/", settings);
+        + "/lib/", HopsUtils.APPEND_PATH);
     if(!Strings.isNullOrEmpty(sparkJobConfiguration.getAppName())) {
-      addToSparkEnvironment(sparkProps, "HOPSWORKS_JOB_NAME", sparkJobConfiguration.getAppName(), settings);
+      addToSparkEnvironment(sparkProps, "HOPSWORKS_JOB_NAME", sparkJobConfiguration.getAppName(),
+              HopsUtils.IGNORE);
     }
     if(!Strings.isNullOrEmpty(settings.getKafkaBrokersStr())) {
-      addToSparkEnvironment(sparkProps, "KAFKA_BROKERS", settings.getKafkaBrokersStr(), settings);
+      addToSparkEnvironment(sparkProps, "KAFKA_BROKERS", settings.getKafkaBrokersStr(), HopsUtils.IGNORE);
     }
     addToSparkEnvironment(sparkProps, "LIBHDFS_OPTS", "-Xmx96m -Dlog4j.configuration=" +
             settings.getHadoopSymbolicLinkDir() +"/etc/hadoop/log4j.properties -Dhadoop.root.logger=ERROR,RFA",
-      settings);
-    addToSparkEnvironment(sparkProps, "REST_ENDPOINT", settings.getRestEndpoint(), settings);
-    addToSparkEnvironment(sparkProps,"HOPSWORKS_USER", usersFullName, settings);
+      HopsUtils.APPEND_SPACE);
+    addToSparkEnvironment(sparkProps, "REST_ENDPOINT", settings.getRestEndpoint(), HopsUtils.IGNORE);
+    addToSparkEnvironment(sparkProps,"HOPSWORKS_USER", usersFullName, HopsUtils.IGNORE);
     addToSparkEnvironment(sparkProps,
-      Settings.SPARK_PYSPARK_PYTHON, settings.getAnacondaProjectDir(project) + "/bin/python", settings);
-    addToSparkEnvironment(sparkProps, "HOPSWORKS_PROJECT_ID", Integer.toString(project.getId()), settings);
+      Settings.SPARK_PYSPARK_PYTHON, settings.getAnacondaProjectDir(project) + "/bin/python",
+            HopsUtils.IGNORE);
+    addToSparkEnvironment(sparkProps, "HOPSWORKS_PROJECT_ID", Integer.toString(project.getId()),
+            HopsUtils.IGNORE);
     //If DynamicExecutors are not enabled, set the user defined number
     //of executors
 
@@ -242,36 +247,62 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
             HopsUtils.OVERWRITE,
             "0"));
       }
-    } else {
+    } else if(sparkJobConfiguration.isDynamicAllocationEnabled()) {
       //Spark dynamic
-      if(sparkJobConfiguration.isDynamicAllocationEnabled()) {
-        sparkProps.put(Settings.SPARK_SHUFFLE_SERVICE,
-          new ConfigProperty(
-            Settings.SPARK_SHUFFLE_SERVICE,
-            HopsUtils.OVERWRITE,
-            "true"));
-        sparkProps.put(Settings.SPARK_DYNAMIC_ALLOC_MIN_EXECS_ENV,
-          new ConfigProperty(
-            Settings.SPARK_DYNAMIC_ALLOC_MIN_EXECS_ENV,
-            HopsUtils.OVERWRITE,
-            String.valueOf(sparkJobConfiguration.getDynamicAllocationMinExecutors())));
-        sparkProps.put(Settings.SPARK_DYNAMIC_ALLOC_MAX_EXECS_ENV,
-          new ConfigProperty(
-            Settings.SPARK_DYNAMIC_ALLOC_MAX_EXECS_ENV,
-            HopsUtils.OVERWRITE,
-            String.valueOf(sparkJobConfiguration.getDynamicAllocationMaxExecutors())));
+      sparkProps.put(Settings.SPARK_SHUFFLE_SERVICE,
+        new ConfigProperty(
+          Settings.SPARK_SHUFFLE_SERVICE,
+          HopsUtils.OVERWRITE,
+          "true"));
+
+      // To avoid users creating erroneous configurations for the initialExecutors field
+      // Initial executors should not be greater than MaxExecutors
+      if(sparkJobConfiguration.getDynamicAllocationInitialExecutors() >
+              sparkJobConfiguration.getDynamicAllocationMaxExecutors()) {
         sparkProps.put(Settings.SPARK_DYNAMIC_ALLOC_INIT_EXECS_ENV,
           new ConfigProperty(
-            Settings.SPARK_DYNAMIC_ALLOC_INIT_EXECS_ENV,
-            HopsUtils.OVERWRITE,
-            String.valueOf(sparkJobConfiguration.getDynamicAllocationInitialExecutors())));
+          Settings.SPARK_DYNAMIC_ALLOC_INIT_EXECS_ENV,
+          HopsUtils.OVERWRITE,
+          String.valueOf(sparkJobConfiguration.getDynamicAllocationMaxExecutors())));
+      // Initial executors should not be less than MinExecutors
+      } else if(sparkJobConfiguration.getDynamicAllocationInitialExecutors() <
+              sparkJobConfiguration.getDynamicAllocationMinExecutors()) {
+        sparkProps.put(Settings.SPARK_DYNAMIC_ALLOC_INIT_EXECS_ENV,
+          new ConfigProperty(
+          Settings.SPARK_DYNAMIC_ALLOC_INIT_EXECS_ENV,
+          HopsUtils.OVERWRITE,
+          String.valueOf(sparkJobConfiguration.getDynamicAllocationMinExecutors())));
+      } else {
+      // User set it to a valid value
+        sparkProps.put(Settings.SPARK_DYNAMIC_ALLOC_INIT_EXECS_ENV,
+          new ConfigProperty(
+          Settings.SPARK_DYNAMIC_ALLOC_INIT_EXECS_ENV,
+          HopsUtils.OVERWRITE,
+          String.valueOf(sparkJobConfiguration.getDynamicAllocationInitialExecutors())));
       }
+      sparkProps.put(Settings.SPARK_DYNAMIC_ALLOC_MIN_EXECS_ENV,
+        new ConfigProperty(
+          Settings.SPARK_DYNAMIC_ALLOC_MIN_EXECS_ENV,
+          HopsUtils.OVERWRITE,
+          String.valueOf(sparkJobConfiguration.getDynamicAllocationMinExecutors())));
+      sparkProps.put(Settings.SPARK_DYNAMIC_ALLOC_MAX_EXECS_ENV,
+        new ConfigProperty(
+          Settings.SPARK_DYNAMIC_ALLOC_MAX_EXECS_ENV,
+          HopsUtils.OVERWRITE,
+          String.valueOf(sparkJobConfiguration.getDynamicAllocationMaxExecutors())));
+      sparkProps.put(Settings.SPARK_NUMBER_EXECUTORS_ENV,
+        new ConfigProperty(
+          Settings.SPARK_NUMBER_EXECUTORS_ENV,
+          HopsUtils.OVERWRITE,
+          Integer.toString(sparkJobConfiguration.getDynamicAllocationMinExecutors())));
+    } else {
+      //Spark Static
+      sparkProps.put(Settings.SPARK_NUMBER_EXECUTORS_ENV,
+          new ConfigProperty(
+            Settings.SPARK_NUMBER_EXECUTORS_ENV,
+            HopsUtils.OVERWRITE,
+            Integer.toString(sparkJobConfiguration.getExecutorInstances())));
     }
-    sparkProps.put(Settings.SPARK_NUMBER_EXECUTORS_ENV,
-      new ConfigProperty(
-        Settings.SPARK_NUMBER_EXECUTORS_ENV,
-        HopsUtils.OVERWRITE,
-        Integer.toString(sparkJobConfiguration.getExecutorInstances())));
     sparkProps.put(Settings.SPARK_DRIVER_MEMORY_ENV,
       new ConfigProperty(
         Settings.SPARK_DRIVER_MEMORY_ENV,
@@ -372,7 +403,7 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
         String name = pythonDep.substring(pythonDep.lastIndexOf("/") + 1);
         pythonPath.append("{{PWD}}/" + name + File.pathSeparator);
       }
-      addToSparkEnvironment(sparkProps,"PYTHONPATH", pythonPath.toString(), settings);
+      addToSparkEnvironment(sparkProps,"PYTHONPATH", pythonPath.toString(), HopsUtils.APPEND_PATH);
       sparkFiles.append(",").append(applicationPyFiles);
     }
 
@@ -431,31 +462,17 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
     //If fault tolerance is enabled then TASK_MAX_FAILURES needs to be set to 3 to match the blacklisting
     // settings above
     if(experimentType != null) {
-      if (!sparkJobConfiguration.isBlacklistingEnabled() ||
-        (experimentType == ExperimentType.DISTRIBUTED_TRAINING && sparkJobConfiguration.isBlacklistingEnabled())) {
+      // Blacklisting is enabled and we are dealing with an Experiment/Parallel Experiment
+      if (sparkJobConfiguration.isBlacklistingEnabled() &&
+              (experimentType == ExperimentType.EXPERIMENT || experimentType == ExperimentType.PARALLEL_EXPERIMENTS)) {
         sparkProps.put(Settings.SPARK_TASK_MAX_FAILURES, new ConfigProperty(
-          Settings.SPARK_TASK_MAX_FAILURES, HopsUtils.OVERWRITE, "1"));
-      } else if (experimentType != ExperimentType.DISTRIBUTED_TRAINING &&
-        sparkJobConfiguration.isBlacklistingEnabled()) {
+                Settings.SPARK_TASK_MAX_FAILURES, HopsUtils.OVERWRITE, "3"));
+      // All other configurations should not retry to avoid wasting time during development (syntax errors etc)
+      } else {
         sparkProps.put(Settings.SPARK_TASK_MAX_FAILURES, new ConfigProperty(
-          Settings.SPARK_TASK_MAX_FAILURES, HopsUtils.OVERWRITE, "3"));
+                Settings.SPARK_TASK_MAX_FAILURES, HopsUtils.OVERWRITE, "1"));
       }
     }
-
-
-    String userSparkProperties = sparkJobConfiguration.getProperties();
-    Map<String, String> validatedSparkProperties = HopsUtils.validateUserProperties(userSparkProperties,
-      settings.getSparkDir());
-    // Merge system and user defined properties
-    Map<String, String> sparkParamsAfterMerge = HopsUtils.mergeHopsworksAndUserParams(sparkProps,
-      validatedSparkProperties);
-    return sparkParamsAfterMerge;
-
-  }
-
-  public Map<String, String> setJVMProperties(Project project, JobConfiguration jobConfiguration,
-                                            Settings settings, String hdfsUser) {
-    Map<String, String> extraJavaOptions = new HashMap<>();
 
     extraJavaOptions.put(Settings.SPARK_LOG4J_CONFIG, Settings.SPARK_LOG4J_PROPERTIES);
     extraJavaOptions.put(Settings.HOPSWORKS_REST_ENDPOINT_PROPERTY, settings.getRestEndpoint());
@@ -470,17 +487,36 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
     if(jobConfiguration.getAppName() != null) {
       extraJavaOptions.put(Settings.HOPSWORKS_JOBNAME_PROPERTY, jobConfiguration.getAppName());
     }
-    return extraJavaOptions;
+
+    StringBuilder extraJavaOptionsSb = new StringBuilder();
+    for (String key : extraJavaOptions.keySet()) {
+      extraJavaOptionsSb.append(" -D").append(key).append("=").append(extraJavaOptions.get(key));
+    }
+
+    sparkProps.put(Settings.SPARK_EXECUTOR_EXTRA_JAVA_OPTS, new ConfigProperty(
+            Settings.SPARK_EXECUTOR_EXTRA_JAVA_OPTS, HopsUtils.APPEND_SPACE, extraJavaOptionsSb.toString()));
+
+    sparkProps.put(Settings.SPARK_DRIVER_EXTRA_JAVA_OPTIONS, new ConfigProperty(
+            Settings.SPARK_DRIVER_EXTRA_JAVA_OPTIONS, HopsUtils.APPEND_SPACE, extraJavaOptionsSb.toString()));
+
+    String userSparkProperties = sparkJobConfiguration.getProperties();
+    Map<String, String> validatedSparkProperties = HopsUtils.validateUserProperties(userSparkProperties,
+      settings.getSparkDir());
+    // Merge system and user defined properties
+    Map<String, String> sparkParamsAfterMerge = HopsUtils.mergeHopsworksAndUserParams(sparkProps,
+      validatedSparkProperties);
+    return sparkParamsAfterMerge;
+
   }
 
   private void addToSparkEnvironment(Map<String, ConfigProperty> sparkProps, String envName,
-                                     String value, Settings settings) {
-    sparkProps.put(settings.SPARK_EXECUTOR_ENV + envName,
-            new ConfigProperty(settings.SPARK_EXECUTOR_ENV + envName,
-                    HopsUtils.OVERWRITE, value));
-    sparkProps.put(settings.SPARK_YARN_APPMASTER_ENV + envName,
-            new ConfigProperty(settings.SPARK_YARN_APPMASTER_ENV + envName,
-                    HopsUtils.OVERWRITE, value));
+                                     String value, ConfigReplacementPolicy replacementPolicy) {
+    sparkProps.put(Settings.SPARK_EXECUTOR_ENV + envName,
+            new ConfigProperty(Settings.SPARK_EXECUTOR_ENV + envName,
+                    replacementPolicy, value));
+    sparkProps.put(Settings.SPARK_YARN_APPMASTER_ENV + envName,
+            new ConfigProperty(Settings.SPARK_YARN_APPMASTER_ENV + envName,
+                    replacementPolicy, value));
   }
 
   //Clean comma-separated resource string
@@ -489,7 +525,7 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
     StringBuilder resourceBuilder = new StringBuilder();
     for(String resource: resourceArr) {
       if(!resource.equals(",") && !resource.equals("")) {
-        resourceBuilder.append(resource).append(",");
+        resourceBuilder.append(resource.trim()).append(",");
       }
     }
     if(resourceBuilder.charAt(resourceBuilder.length()-1) == ',') {

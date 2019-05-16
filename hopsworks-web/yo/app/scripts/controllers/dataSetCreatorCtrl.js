@@ -83,10 +83,10 @@ angular.module('hopsWorksApp')
                         self.working = false;
                         $uibModalInstance.close(success);
                       },
-                              function (error) {
-                                self.working = false;
-                                growl.error(error.data.errorMsg, {title: 'Error', ttl: 10000});
-                              });
+                      function (error) {
+                        self.working = false;
+                        growl.error(error.data.errorMsg, {title: 'Error', ttl: 10000});
+                      });
             };
 
             var createTopLevelDataSet = function (dataSet) {
@@ -110,7 +110,7 @@ angular.module('hopsWorksApp')
               self.dataSet.template = self.selectedTemplate.id;
               if (path) {
                 //Assign it to new var to avoid showing the 
-                var newDS = self.dataSet;
+                var newDS = angular.copy(self.dataSet);
                 newDS.name = path + '/' + newDS.name;
                 createDataSetDir(newDS);
               } else {
