@@ -272,14 +272,22 @@ public class OAuthClientRegistration implements Serializable {
   }
   
   public void saveClient() {
-    OauthClient oauthClient = new OauthClient(this.clientId, this.clientSecret, this.providerURI, this.providerName,
-      this.providerLogoURI, this.providerDisplayName, this.providerMetadataEndpointSupported,
-      this.authorisationEndpoint, this.tokenEndpoint, this.userInfoEndpoint, this.jwksURI);
+    if (!providerMetadataEndpointSupported && (authorisationEndpoint == null || authorisationEndpoint.isEmpty() ||
+      tokenEndpoint == null || tokenEndpoint.isEmpty() || userInfoEndpoint == null || userInfoEndpoint.isEmpty() ||
+      jwksURI == null || jwksURI.isEmpty())) {
+      LOGGER.log(Level.WARNING,"Failed to create client. Required field/s missing.");
+      MessagesController.addErrorMessage("Failed to create client.", "Missing required field/s.");
+      return;
+    }
     try {
+      OauthClient oauthClient = new OauthClient(this.clientId, this.clientSecret, this.providerURI, this.providerName,
+        this.providerLogoURI, this.providerDisplayName, this.providerMetadataEndpointSupported,
+        this.authorisationEndpoint, this.tokenEndpoint, this.userInfoEndpoint, this.jwksURI);
       oauthClientFacade.save(oauthClient);
       MessagesController.addInfoMessage("Added new OAuth server.");
       init();
     } catch (Exception e) {
+      LOGGER.log(Level.WARNING,"Failed to create client. {0}", e.getMessage());
       MessagesController.addErrorMessage(e.getMessage(), getRootCause(e));
     }
   }
