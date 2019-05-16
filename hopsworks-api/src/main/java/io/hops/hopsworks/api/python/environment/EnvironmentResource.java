@@ -188,7 +188,7 @@ public class EnvironmentResource {
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response delete(@PathParam("version") String version) throws ServiceException {
     environmentController.removeEnvironment(project);
-    return Response.ok().build();
+    return Response.noContent().build();
   }
 
   private String getYmlPath(String path) throws DatasetException, ProjectException {

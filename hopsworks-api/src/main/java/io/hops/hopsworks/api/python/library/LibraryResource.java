@@ -153,7 +153,7 @@ public class LibraryResource {
 
     commandsController.deleteCommands(project, library);
     libraryController.uninstallLibrary(project, library);
-    return Response.ok().build();
+    return Response.noContent().build();
   }
 
   @ApiOperation(value = "Install a python library in the environment")

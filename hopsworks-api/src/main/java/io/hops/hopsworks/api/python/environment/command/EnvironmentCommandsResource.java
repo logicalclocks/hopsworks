@@ -109,6 +109,6 @@ public class EnvironmentCommandsResource {
   public Response delete() throws PythonException {
     environmentController.checkCondaEnabled(project, pythonVersion);
     commandsController.deleteCommands(project);
-    return Response.ok().build();
+    return Response.noContent().build();
   }
 }

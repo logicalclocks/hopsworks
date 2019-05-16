@@ -21,7 +21,7 @@ module PythonHelper
     if response.code == 200
       version = json_body[:items][0].pythonVersion
       delete "#{ENV['HOPSWORKS_API']}/project/#{project_id}/python/environments/#{version}"
-      expect_status(200)
+      expect_status(204)
     end
     post "#{ENV['HOPSWORKS_API']}/project/#{project_id}/python/environments/#{python_version}?action=create&pythonKernelEnable=true"
     expect_status(201)

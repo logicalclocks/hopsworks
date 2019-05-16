@@ -255,7 +255,7 @@ describe "On #{ENV['OS']}" do
           it 'uninstall libraries' do
             @project = create_env_and_update_project(@project, python_version, true)
             uninstall_library(@project[:id], @project[:python_version], 'imageio')
-            expect_status(200)
+            expect_status(204)
 
             wait_for do
               CondaCommands.find_by(proj: @project[:projectname]).nil?
@@ -271,7 +271,7 @@ describe "On #{ENV['OS']}" do
           it 'remove env' do
             @project = create_env_and_update_project(@project, python_version, true)
             delete_env(@project[:id], @project[:python_version])
-            expect_status(200)
+            expect_status(204)
 
             wait_for do
               CondaCommands.find_by(proj: @project[:projectname]).nil?
@@ -308,7 +308,7 @@ describe "On #{ENV['OS']}" do
             expect(check_if_env_exists_locally(@project[:projectname])).to be false
 
             delete_env(@project[:id], python_version)
-            expect_status(200)
+            expect_status(204)
             wait_for do
               CondaCommands.find_by(proj: @project[:projectname]).nil?
             end
@@ -423,7 +423,7 @@ describe "On #{ENV['OS']}" do
           end
 
           delete_env(@project[:id], python_version)
-          expect_status(200)
+          expect_status(204)
         end
 
         it 'should be able to re-enable conda on a host' do

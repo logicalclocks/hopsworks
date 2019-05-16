@@ -111,7 +111,7 @@ public class LibraryCommandsResource {
   public Response update(@PathParam("library") String library, @Context UriInfo uriInfo) throws PythonException {
     environmentController.checkCondaEnabled(project, pythonVersion);
     commandsController.retryFailedCondaOps(project, library);
-    return Response.ok().build();
+    return Response.noContent().build();
   }
   
   @ApiOperation(value = "Delete commands for this library")
@@ -121,7 +121,7 @@ public class LibraryCommandsResource {
   public Response delete(@PathParam("library") String library) throws PythonException {
     environmentController.checkCondaEnabled(project, pythonVersion);
     commandsController.deleteCommands(project, library);
-    return Response.ok().build();
+    return Response.noContent().build();
   }
   
 }
