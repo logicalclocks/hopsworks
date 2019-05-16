@@ -23,7 +23,7 @@ describe "On #{ENV['OS']}" do
     context "#logged in" do
 
       it "should be able to register" do
-        post "#{ENV['HOPSWORKS_API']}/maggy/drivers", {"app_id": "42", "host_ip": "127.0.3.5", "port": "12345",
+        post "#{ENV['HOPSWORKS_API']}/maggy/drivers", {"appId": "42", "hostIp": "127.0.3.5", "port": 12345,
         "secret": "magster"}
         expect_status(200)
       end
@@ -31,8 +31,11 @@ describe "On #{ENV['OS']}" do
       it "should be able to get a registered driver" do
         get "#{ENV['HOPSWORKS_API']}/maggy/drivers/42"
         expect_status(200)
-        json_body[:port].eql? '12345'
       end
+        json_body[:appId].eql? '42'
+        json_body[:hostIp].eql? '127.0.3.5'
+        json_body[:secret].eql? 'magster'
+        json_body[:port].eql? '12345'
     end
 
 end
