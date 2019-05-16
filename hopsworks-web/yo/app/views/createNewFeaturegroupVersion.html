@@ -228,6 +228,25 @@
 
         <div class="view-info">
             <div class="col-md-12">
+                <div class="col-sm-12">
+                    <div class="col-sm-3">
+                        <label class="control-label">Partition key</label>
+                        <i class="fa fa-info-circle" tooltip-placement="auto left"
+                           uib-tooltip='Whether to partition the Hive table of the featuregroup on this feature.
+                                       A feature can not simultaneously be a primary key and a partition key of the featuregroup'
+                           style="margin-left: 10px"></i>
+                    </div>
+                    <div class="col-sm-9">
+                        <input type="checkbox" class="form-check-input" id="partitionKeyCheck"
+                               ng-model="createFeaturegroupCtrl.features[$index].partition"
+                               value="{{feature.partition}}">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="view-info">
+            <div class="col-md-12">
                 <div class="col-sm-12" style="margin-bottom: 20px">
                     <div class="col-sm-3">
                     </div>
@@ -270,6 +289,9 @@
                 </div>
                 <div ng-if="createNewFeaturegroupVersionCtrl.primaryKeyWrongValue === -1" style="color: red">
                     {{"There must be exactly one feature marked as primary key for each feature group"}}
+                </div>
+                <div ng-if="createFeaturegroupCtrl.partitionKeyWrongValue === -1" style="color: red">
+                    {{"A feature can not be marked as both primary key and partition key."}}
                 </div>
             </div>
         </div>
