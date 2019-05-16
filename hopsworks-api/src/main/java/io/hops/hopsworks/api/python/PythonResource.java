@@ -36,56 +36,45 @@
  * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package io.hops.hopsworks.api.python;
 
-package io.hops.hopsworks.common.dao.pythonDeps;
+import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.common.dao.project.ProjectFacade;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import io.hops.hopsworks.api.python.environment.EnvironmentResource;
 
-@XmlRootElement
-public class Version {
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 
-  private String version;
-  private String status = "Not Installed";
+import javax.ejb.EJB;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import javax.enterprise.context.RequestScoped;
+import javax.inject.Inject;
+import javax.ws.rs.Path;
 
-  public Version() {
+
+@Api(value = "Python")
+@RequestScoped
+@TransactionAttribute(TransactionAttributeType.NEVER)
+public class PythonResource {
+
+  @Inject
+  private EnvironmentResource environmentResource;
+
+  @EJB
+  private ProjectFacade projectFacade;
+
+  private Project project;
+
+  public void setProjectId(Integer projectId) {
+    this.project = projectFacade.find(projectId);
   }
-
-  public Version(String version) {
-    this.version = version;
-  }
-
-  public String getVersion() {
-    return version;
-  }
-
-  public void setVersion(String version) {
-    this.version = version;
-  }
-
-  public String getStatus() {
-    return status;
-  }
-
-  public void setStatus(String status) {
-    this.status = status;
-  }
-
-  // Two versions are equal if they have the same 'name', status doesn't matter.
-  @Override
-  public boolean equals(Object o) {
-    if (o instanceof Version == false) {
-      return false;
-    }
-    Version v = (Version) o;
-    if (v.version.compareTo(this.version) != 0) {
-      return false;
-    }
-    return true;
-  }
-
-  @Override
-  public int hashCode() {
-    return version.hashCode(); //To change body of generated methods, choose Tools | Templates.
+  
+  @ApiOperation(value = "Python environment sub-resource")
+  @Path("/environments")
+  public EnvironmentResource environment() {
+    return this.environmentResource.setProject(project);
   }
 
 }

@@ -52,10 +52,10 @@
 
       <section>
         <div class="content-wrapper">
-          <h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.projectName}} Settings</h3>
+          <h3 id="projectSettings" style="display: none;"> {{ projectCtrl.currentProject.projectName}} Settings</h3>
 
 
-          <div ng-controller="PythonDepsCtrl as pythonDepsCtrl"  ng-init="indextab = 0">
+          <div ng-controller="PythonCtrl as pythonCtrl"  ng-init="indextab = 0">
 
             <uib-tabset active="indextab">
               <uib-tab index="0" heading="Project Settings">

@@ -37,30 +37,29 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package io.hops.hopsworks.common.dao.pythonDeps;
+package io.hops.hopsworks.common.dao.python;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
-public class HostOpStatus {
+public class Version {
 
-  private String hostId;
-  private String status;
+  private String version;
+  private String status = "Not Installed";
 
-  public HostOpStatus() {
+  public Version() {
   }
 
-  public HostOpStatus(String hostId, String status) {
-    this.hostId = hostId;
-    this.status = status;
+  public Version(String version) {
+    this.version = version;
   }
 
-  public String getHostId() {
-    return hostId;
+  public String getVersion() {
+    return version;
   }
 
-  public void setHostId(String hostId) {
-    this.hostId = hostId;
+  public void setVersion(String version) {
+    this.version = version;
   }
 
   public String getStatus() {
@@ -71,19 +70,14 @@ public class HostOpStatus {
     this.status = status;
   }
 
-  @Override
-  public String toString() {
-    return hostId + ":" + status;
-  }
-  
   // Two versions are equal if they have the same 'name', status doesn't matter.
   @Override
   public boolean equals(Object o) {
-    if (o instanceof HostOpStatus == false) {
+    if (o instanceof Version == false) {
       return false;
     }
-    HostOpStatus v = (HostOpStatus) o;
-    if (v.hostId.equals(this.hostId)) {
+    Version v = (Version) o;
+    if (v.version.compareTo(this.version) != 0) {
       return false;
     }
     return true;
@@ -91,7 +85,7 @@ public class HostOpStatus {
 
   @Override
   public int hashCode() {
-    return hostId.hashCode() * 17; //To change body of generated methods, choose Tools | Templates.
+    return version.hashCode(); //To change body of generated methods, choose Tools | Templates.
   }
 
 }

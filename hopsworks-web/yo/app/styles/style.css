@@ -602,3 +602,7 @@ md-input-container {
   display: inline-block;
   vertical-align: middle;
 }
+
+#python-install-progress .progress-bar {
+  border-radius: unset !important;
+}

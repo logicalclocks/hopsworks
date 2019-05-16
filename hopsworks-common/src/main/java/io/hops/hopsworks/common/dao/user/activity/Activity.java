@@ -44,6 +44,8 @@ import java.util.Date;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -96,13 +98,6 @@ public class Activity implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
-  @Basic(optional = false)
-  @NotNull
-  @Size(min = 1,
-          max = 5)
-  @Column(name = "flag")
-  private String flag;
-
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Basic(optional = false)
@@ -118,7 +113,13 @@ public class Activity implements Serializable {
   @Column(name = "created")
   @Temporal(TemporalType.TIMESTAMP)
   private Date timestamp;
-
+  
+  @Basic(optional = false)
+  @NotNull
+  @Enumerated(EnumType.STRING)
+  @Column(name = "flag")
+  private ActivityFlag flag;
+  
   @JoinColumn(name = "project_id",
           referencedColumnName = "id")
   @ManyToOne(optional = false)
@@ -190,11 +191,11 @@ public class Activity implements Serializable {
     return "Activity[ id=" + id + " ]";
   }
 
-  public String getFlag() {
+  public ActivityFlag getFlag() {
     return flag;
   }
 
-  public void setFlag(String flag) {
+  public void setFlag(ActivityFlag flag) {
     this.flag = flag;
   }
 

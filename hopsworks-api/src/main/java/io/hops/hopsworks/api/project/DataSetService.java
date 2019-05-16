@@ -72,6 +72,7 @@ import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
+import io.hops.hopsworks.common.dao.user.activity.ActivityFlag;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.FilePreviewDTO;
 import io.hops.hopsworks.exceptions.DatasetException;
@@ -440,7 +441,7 @@ public class DataSetService {
     }
 
     activityFacade.persistActivity(ActivityFacade.SHARED_DATA + dataSet.getName() + " with project " + proj.getName(), 
-        project, user, ActivityFacade.ActivityFlag.DATASET);
+        project, user, ActivityFlag.DATASET);
 
     json.setSuccessMessage("The Dataset was successfully shared.");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
@@ -469,7 +470,7 @@ public class DataSetService {
       hdfsUsersController.unshareDataset(proj, ds);
       datasetFacade.removeDataset(dst);
       activityFacade.persistActivity(ActivityFacade.UNSHARED_DATA + dataSet.getName() + " with project " + 
-          proj.getName(), project, user, ActivityFacade.ActivityFlag.DATASET);
+          proj.getName(), project, user, ActivityFlag.DATASET);
     }
     json.setSuccessMessage("The Dataset was successfully unshared.");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(

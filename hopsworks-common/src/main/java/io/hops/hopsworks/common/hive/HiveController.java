@@ -51,6 +51,7 @@ import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
+import io.hops.hopsworks.common.dao.user.activity.ActivityFlag;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -182,8 +183,7 @@ public class HiveController {
     dfso.setMetaEnabled(dbPath);
     datasetController.logDataset(dbDataset, OperationType.Add);
   
-    activityFacade.persistActivity(ActivityFacade.NEW_DATA + dbDataset.getName(), project, user,
-      ActivityFacade.ActivityFlag.DATASET);
+    activityFacade.persistActivity(ActivityFacade.NEW_DATA + dbDataset.getName(), project, user, ActivityFlag.DATASET);
 
     try {
       // Assign database directory to the user and project group

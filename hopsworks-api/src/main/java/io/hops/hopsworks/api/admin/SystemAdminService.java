@@ -178,7 +178,7 @@ public class SystemAdminService {
   @GET
   @Path("/hosts")
   public Response getAllClusterNodes() {
-    List<Hosts> allNodes = hostsFacade.find();
+    List<Hosts> allNodes = hostsFacade.findAllHosts();
     
     List<Hosts> responseList = new ArrayList<>(allNodes.size());
     // Send only hostID and hostname

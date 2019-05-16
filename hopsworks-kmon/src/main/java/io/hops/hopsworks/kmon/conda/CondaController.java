@@ -18,9 +18,10 @@
 
 package io.hops.hopsworks.kmon.conda;
 
-import io.hops.hopsworks.common.dao.pythonDeps.CondaCommands;
-import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade;
-import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade.CondaStatus;
+import io.hops.hopsworks.common.dao.python.CondaCommandFacade;
+import io.hops.hopsworks.common.dao.python.CondaCommands;
+import io.hops.hopsworks.common.python.commands.CommandsController;
+import io.hops.hopsworks.common.python.environment.EnvironmentController;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.LocalhostServices;
 import io.hops.hopsworks.common.util.OSProcessExecutor;
@@ -49,7 +50,11 @@ import java.util.logging.Logger;
 public class CondaController implements Serializable {
 
   @EJB
-  private PythonDepsFacade pythonDepsFacade;
+  private CondaCommandFacade condaCommandFacade;
+  @EJB
+  private CommandsController commandsController;
+  @EJB
+  private EnvironmentController environmentController;
   @EJB
   private Settings settings;
   @EJB
@@ -80,25 +85,25 @@ public class CondaController implements Serializable {
   }
 
   public void deleteAllFailedCommands() {
-    pythonDepsFacade.deleteAllCommandsByStatus(CondaStatus.FAILED);
+    condaCommandFacade.deleteAllCommandsByStatus(CondaCommandFacade.CondaStatus.FAILED);
     message("deleting all commands with the state 'failed'");
     loadFailedCommands();
   }
 
   public void deleteAllOngoingCommands() {
-    pythonDepsFacade.deleteAllCommandsByStatus(CondaStatus.ONGOING);
+    condaCommandFacade.deleteAllCommandsByStatus(CondaCommandFacade.CondaStatus.ONGOING);
     message("deleting all commands with the state 'ongoing'");
     loadOngoingCommands();
   }
 
   public void deleteAllNewCommands() {
-    pythonDepsFacade.deleteAllCommandsByStatus(CondaStatus.NEW);
+    condaCommandFacade.deleteAllCommandsByStatus(CondaCommandFacade.CondaStatus.NEW);
     message("deleting all commands with the state 'new'");
     loadNewCommands();
   }
 
   public void deleteCommand(CondaCommands command) {
-    pythonDepsFacade.removeCondaCommand(command.getId());
+    condaCommandFacade.removeCondaCommand(command.getId());
     message("deleting");
     loadCommands();
   }
@@ -107,7 +112,7 @@ public class CondaController implements Serializable {
     // ssh to the host, run the command, print out the results to the terminal.
 
     try {
-      if (command.getStatus() != CondaStatus.FAILED) {
+      if (command.getStatus() != CondaCommandFacade.CondaStatus.FAILED) {
         FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_INFO,
             "You can only execute failed commands.", "Not executed");
         FacesContext.getCurrentInstance().addMessage(null, message);
@@ -118,7 +123,7 @@ public class CondaController implements Serializable {
         this.output = "Conda command was null. Report a bug.";
       } else {
         message("executing");
-        PythonDepsFacade.CondaOp op = command.getOp();
+        CondaCommandFacade.CondaOp op = command.getOp();
         if (op.isEnvOp()) {
           // anaconda environment command: <host> <op> <proj> <arg> <offline> <hadoop_home>
           String prog = settings.getHopsworksDomainDir() + "/bin/anaconda-command-ssh.sh";
@@ -150,11 +155,14 @@ public class CondaController implements Serializable {
           
           if (processResult.getExitCode() == 0) {
             // delete from conda_commands tables
-            command.setStatus(CondaStatus.SUCCESS);
-            pythonDepsFacade.removeCondaCommand(command.getId());
-  
+            command.setStatus(CondaCommandFacade.CondaStatus.SUCCESS);
+            condaCommandFacade.removeCondaCommand(command.getId());
+
+
             this.output = "SUCCESS. \r\n" + processResult.getStdout();
-            pythonDepsFacade.updateCondaCommandStatus(command.getId(), CondaStatus.SUCCESS, command.getInstallType(),
+            commandsController.updateCondaCommandStatus(command.getId(), CondaCommandFacade.CondaStatus.SUCCESS,
+                command.getInstallType(),
+
               command.getMachineType(), command.getArg(), command.getProj(), command.getOp(), command.getLib(),
               command.getVersion(), command.getChannelUrl());
 
@@ -187,10 +195,12 @@ public class CondaController implements Serializable {
           }
           if (processResult.getExitCode() == 0) {
             // delete from conda_commands tables
-            command.setStatus(CondaStatus.SUCCESS);
-            pythonDepsFacade.removeCondaCommand(command.getId());
+            command.setStatus(CondaCommandFacade.CondaStatus.SUCCESS);
+
+            condaCommandFacade.removeCondaCommand(command.getId());
             this.output = "SUCCESS. \r\n" + processResult.getStdout();
-            pythonDepsFacade.updateCondaCommandStatus(command.getId(), CondaStatus.SUCCESS, command.getInstallType(),
+            commandsController.updateCondaCommandStatus(command.getId(), CondaCommandFacade.CondaStatus.SUCCESS,
+                command.getInstallType(),
               command.getMachineType(), command.getArg(), command.getProj(), command.getOp(), command.getLib(),
               command.getVersion(), command.getChannelUrl());
             loadCommands();
@@ -223,21 +233,21 @@ public class CondaController implements Serializable {
   }
 
   private void loadFailedCommands() {
-    failedCommands = pythonDepsFacade.findByStatus(PythonDepsFacade.CondaStatus.FAILED);
+    failedCommands = condaCommandFacade.findByStatus(CondaCommandFacade.CondaStatus.FAILED);
     if (failedCommands == null) {
       failedCommands = new ArrayList<>();
     }
   }
 
   private void loadOngoingCommands() {
-    ongoingCommands = pythonDepsFacade.findByStatus(PythonDepsFacade.CondaStatus.ONGOING);
+    ongoingCommands = condaCommandFacade.findByStatus(CondaCommandFacade.CondaStatus.ONGOING);
     if (ongoingCommands == null) {
       ongoingCommands = new ArrayList<>();
     }
   }
 
   private void loadNewCommands() {
-    newCommands = pythonDepsFacade.findByStatus(PythonDepsFacade.CondaStatus.NEW);
+    newCommands = condaCommandFacade.findByStatus(CondaCommandFacade.CondaStatus.NEW);
     if (newCommands == null) {
       newCommands = new ArrayList<>();
     }
@@ -327,7 +337,7 @@ public class CondaController implements Serializable {
   
   public void cleanupConda() {
     try {
-      pythonDepsFacade.cleanupConda();
+      environmentController.cleanupConda();
     } catch (Exception e) {
       logger.warning("Problem cleaning up Conda");
       logger.warning(e.getMessage());

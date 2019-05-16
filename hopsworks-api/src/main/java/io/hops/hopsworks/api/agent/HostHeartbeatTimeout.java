@@ -83,7 +83,7 @@ public class HostHeartbeatTimeout {
   @Timeout
   public void checkHosts(Timer timer) {
     //get list of existing project
-    List<Hosts> hosts = hostFacade.find();
+    List<Hosts> hosts = hostFacade.findAllHosts();
   
     for(Hosts host : hosts){
       if(host.getHealth().equals(Health.Bad)){

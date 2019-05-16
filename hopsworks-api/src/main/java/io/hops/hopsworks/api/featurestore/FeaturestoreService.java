@@ -45,6 +45,7 @@ import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
+import io.hops.hopsworks.common.dao.user.activity.ActivityFlag;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
@@ -279,7 +280,7 @@ public class FeaturestoreService {
           featuregroupJsonDTO.getFeatureCorrelationMatrix(), featuregroupJsonDTO.getDescriptiveStatistics(),
           featuregroupJsonDTO.getFeaturesHistogram(), featuregroupJsonDTO.getClusterAnalysis());
       activityFacade.persistActivity(ActivityFacade.CREATED_FEATUREGROUP + featuregroupDTO.getName(),
-          project, user, ActivityFacade.ActivityFlag.SERVICE);
+          project, user, ActivityFlag.SERVICE);
       GenericEntity<FeaturegroupDTO> featuregroupGeneric =
           new GenericEntity<FeaturegroupDTO>(featuregroupDTO) {};
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).entity(featuregroupGeneric).build();
@@ -367,7 +368,7 @@ public class FeaturestoreService {
       featuregroupDTO = featuregroupController.
           deleteFeaturegroupWithIdAndFeaturestore(featurestore, featuregroupId, project, user);
       activityFacade.persistActivity(ActivityFacade.DELETED_FEATUREGROUP + featuregroupDTO.getName(),
-          project, user, ActivityFacade.ActivityFlag.SERVICE);
+          project, user, ActivityFlag.SERVICE);
       GenericEntity<FeaturegroupDTO> featuregroupGeneric =
           new GenericEntity<FeaturegroupDTO>(featuregroupDTO) {};
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK)
@@ -614,7 +615,7 @@ public class FeaturestoreService {
         featuregroupJsonDTO.isUpdateMetadata(), featuregroupJsonDTO.isUpdateStats(),
         featuregroupJsonDTO.getFeaturesHistogram(), featuregroupJsonDTO.getClusterAnalysis());
     activityFacade.persistActivity(ActivityFacade.EDITED_FEATUREGROUP +
-        updatedFeaturegroupDTO.getName(), project, user, ActivityFacade.ActivityFlag.SERVICE);
+        updatedFeaturegroupDTO.getName(), project, user, ActivityFlag.SERVICE);
     GenericEntity<FeaturegroupDTO> featuregroupGeneric =
         new GenericEntity<FeaturegroupDTO>(updatedFeaturegroupDTO) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featuregroupGeneric).build();
@@ -761,7 +762,7 @@ public class FeaturestoreService {
             trainingDatasetJsonDTO.getDescriptiveStatistics(), trainingDatasetJsonDTO.getFeaturesHistogram(),
             trainingDatasetJsonDTO.getFeatures(), trainingDatasetJsonDTO.getClusterAnalysis());
     activityFacade.persistActivity(ActivityFacade.CREATED_TRAINING_DATASET + trainingDatasetDTO.getName(),
-      project, user, ActivityFacade.ActivityFlag.SERVICE);
+      project, user, ActivityFlag.SERVICE);
     GenericEntity<TrainingDatasetDTO> trainingDatasetDTOGeneric =
         new GenericEntity<TrainingDatasetDTO>(trainingDatasetDTO) {};
     return noCacheResponse.getNoCacheResponseBuilder
@@ -812,7 +813,7 @@ public class FeaturestoreService {
         trainingDatasetDTO.getName(), trainingDatasetDTO.getVersion());
     dsUpdateOperations.deleteDatasetFile(project, user, trainingDatasetDirectoryName);
     activityFacade.persistActivity(ActivityFacade.DELETED_TRAINING_DATASET + trainingDatasetDTO.getName(),
-        project, user, ActivityFacade.ActivityFlag.SERVICE);
+        project, user, ActivityFlag.SERVICE);
     GenericEntity<TrainingDatasetDTO> trainingDatasetGeneric =
         new GenericEntity<TrainingDatasetDTO>(trainingDatasetDTO) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK)
@@ -886,7 +887,7 @@ public class FeaturestoreService {
           trainingDatasetJsonDTO.getDescriptiveStatistics(), trainingDatasetJsonDTO.getFeaturesHistogram(),
           trainingDatasetJsonDTO.getFeatures(), trainingDatasetJsonDTO.getClusterAnalysis());
       activityFacade.persistActivity(ActivityFacade.EDITED_TRAINING_DATASET + newTrainingDatasetDTO.getName(),
-        project, user, ActivityFacade.ActivityFlag.SERVICE);
+        project, user, ActivityFlag.SERVICE);
       GenericEntity<TrainingDatasetDTO> trainingDatasetGeneric =
         new GenericEntity<TrainingDatasetDTO>(newTrainingDatasetDTO) {
         };
@@ -901,7 +902,7 @@ public class FeaturestoreService {
         trainingDatasetJsonDTO.getFeatures(), trainingDatasetJsonDTO.isUpdateMetadata(),
         trainingDatasetJsonDTO.isUpdateStats(), trainingDatasetJsonDTO.getClusterAnalysis());
       activityFacade.persistActivity(ActivityFacade.EDITED_TRAINING_DATASET + trainingDatasetDTO.getName(),
-        project, user, ActivityFacade.ActivityFlag.SERVICE);
+        project, user, ActivityFlag.SERVICE);
       GenericEntity<TrainingDatasetDTO> trainingDatasetGeneric =
         new GenericEntity<TrainingDatasetDTO>(trainingDatasetDTO) {
         };

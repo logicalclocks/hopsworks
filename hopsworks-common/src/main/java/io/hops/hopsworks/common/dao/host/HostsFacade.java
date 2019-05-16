@@ -39,26 +39,32 @@
 
 package io.hops.hopsworks.common.dao.host;
 
-import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade;
+import io.hops.hopsworks.common.dao.AbstractFacade;
+import io.hops.hopsworks.common.dao.python.LibraryFacade;
 
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
-import java.io.Serializable;
 import java.util.List;
 
 @Stateless
-public class HostsFacade implements Serializable {
+public class HostsFacade extends AbstractFacade<Hosts> {
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
   public HostsFacade() {
+    super(Hosts.class);
+  }
+  
+  @Override
+  protected EntityManager getEntityManager() {
+    return em;
   }
 
-  public List<Hosts> find() {
+  public List<Hosts> findAllHosts() {
     TypedQuery<Hosts> query = em.createNamedQuery("Hosts.find", Hosts.class);
     return query.getResultList();
   }
@@ -101,7 +107,7 @@ public class HostsFacade implements Serializable {
   }
 
   public String findCPUHost() {
-    List<Hosts> hosts = find();
+    List<Hosts> hosts = findAllHosts();
     for(Hosts host: hosts){
       if(host.getNumGpus() == 0 && host.getCondaEnabled()){
         return host.getHostname();
@@ -111,7 +117,7 @@ public class HostsFacade implements Serializable {
   }
 
   public String findGPUHost() {
-    List<Hosts> hosts = find();
+    List<Hosts> hosts = findAllHosts();
     for(Hosts host: hosts){
       if(host.getNumGpus() > 0 && host.getCondaEnabled()){
         return host.getHostname();
@@ -142,7 +148,7 @@ public class HostsFacade implements Serializable {
     return false;
   }
 
-  public List<Hosts> getCondaHosts(PythonDepsFacade.MachineType machineType) {
+  public List<Hosts> getCondaHosts(LibraryFacade.MachineType machineType) {
     TypedQuery<Hosts> query;
     switch (machineType) {
       case CPU:

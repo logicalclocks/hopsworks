@@ -243,7 +243,7 @@ public class CertificatesMgmService {
   
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   public void issueServiceKeyRotationCommand() {
-    List<Hosts> allHosts = hostsFacade.find();
+    List<Hosts> allHosts = hostsFacade.findAllHosts();
     for (Hosts host : allHosts) {
       SystemCommand rotateCommand = new SystemCommand(host, SystemCommandFacade.OP.SERVICE_KEY_ROTATION);
       systemCommandFacade.persist(rotateCommand);

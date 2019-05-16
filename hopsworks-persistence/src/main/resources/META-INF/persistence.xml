@@ -102,9 +102,9 @@
     <class>io.hops.hopsworks.common.dao.remote.user.RemoteUser</class>
     <class>io.hops.hopsworks.common.dao.remote.oauth.OauthClient</class>
     <class>io.hops.hopsworks.common.dao.remote.oauth.OauthLoginState</class>
-    <class>io.hops.hopsworks.common.dao.pythonDeps.PythonDep</class>
-    <class>io.hops.hopsworks.common.dao.pythonDeps.AnacondaRepo</class>
-    <class>io.hops.hopsworks.common.dao.pythonDeps.CondaCommands</class>
+    <class>io.hops.hopsworks.common.dao.python.PythonDep</class>
+    <class>io.hops.hopsworks.common.dao.python.AnacondaRepo</class>
+    <class>io.hops.hopsworks.common.dao.python.CondaCommands</class>
     <class>io.hops.hopsworks.common.dao.tensorflow.TensorBoard</class>
     <class>io.hops.hopsworks.common.dao.tensorflow.TfLibMapping</class>
     <class>io.hops.hopsworks.common.dao.serving.TfServing</class>

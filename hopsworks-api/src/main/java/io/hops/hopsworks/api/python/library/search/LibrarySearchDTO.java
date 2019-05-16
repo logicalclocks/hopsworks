@@ -37,46 +37,34 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package io.hops.hopsworks.common.dao.pythonDeps;
+package io.hops.hopsworks.api.python.library.search;
 
-import com.google.common.collect.Lists;
-import java.util.ArrayList;
-import java.util.List;
+import io.hops.hopsworks.common.api.RestDTO;
+import io.hops.hopsworks.common.python.library.LibraryVersionDTO;
+
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.Set;
 
 @XmlRootElement
-public class LibVersions {
+public class LibrarySearchDTO extends RestDTO<LibrarySearchDTO> {
 
+  private String library;
   private String channelUrl;
-  private String lib;
-  private List<Version> versions = new ArrayList<>();
+  private Set<LibraryVersionDTO> versions;
   private String status = "Not Installed";
-
-  public LibVersions() {
+  
+  public LibrarySearchDTO() {
   }
 
   /**
    *
    * @param channelUrl
-   * @param lib
-   * @param versions
+   * @param library
    */
-  public LibVersions(String channelUrl, String lib) {
+  public LibrarySearchDTO(String channelUrl, String library, Set<LibraryVersionDTO> versions) {
     this.channelUrl = channelUrl;
-    this.lib = lib;
-  }
-
-  public void addVersion(Version version) {
-    if (this.versions == null) {
-      this.versions = new ArrayList<>();
-    }
-    if (!versions.contains(version)) {
-      this.versions.add(version);
-    }
-  }
-  
-  public void reverseVersionList() {
-    this.versions = Lists.reverse(this.versions); 
+    this.library = library;
+    this.versions = versions;
   }
 
   public String getChannelUrl() {
@@ -87,46 +75,27 @@ public class LibVersions {
     this.channelUrl = channelUrl;
   }
 
-  public String getLib() {
-    return lib;
+  public String getLibrary() {
+    return library;
   }
 
-  public void setLib(String lib) {
-    this.lib = lib;
+  public void setLibrary(String library) {
+    this.library = library;
   }
-
-  public List<Version> getVersions() {
+  
+  public Set<LibraryVersionDTO> getVersions() {
     return versions;
   }
-
-  public void setVersions(List<Version> versions) {
+  
+  public void setVersions(Set<LibraryVersionDTO> versions) {
     this.versions = versions;
   }
-
+  
   public String getStatus() {
     return status;
   }
-
+  
   public void setStatus(String status) {
     this.status = status;
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (o instanceof LibVersions) {
-      LibVersions pd = (LibVersions) o;
-      if (pd.getChannelUrl().compareToIgnoreCase(this.channelUrl) == 0
-              && pd.getLib().compareToIgnoreCase(this.lib) == 0
-              && pd.getVersions().size() == this.versions.size()) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  @Override
-  public int hashCode() {
-    return (this.channelUrl.hashCode() / 3 + this.lib.hashCode()
-            + this.versions.hashCode()) / 2;
   }
 }

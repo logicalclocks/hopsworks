@@ -37,20 +37,24 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package io.hops.hopsworks.common.dao.pythonDeps;
+package io.hops.hopsworks.common.dao.python;
 
+import io.hops.hopsworks.common.dao.project.Project;
 import java.io.Serializable;
 import java.util.Collection;
 import javax.persistence.Basic;
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
-import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -59,21 +63,31 @@ import javax.xml.bind.annotation.XmlTransient;
 import org.codehaus.jackson.annotate.JsonIgnore;
 
 @Entity
-@Table(name = "anaconda_repo",
+@Table(name = "python_dep",
         catalog = "hopsworks",
         schema = "")
 @XmlRootElement
 @NamedQueries({
-  @NamedQuery(name = "AnacondaRepo.findAll",
+  @NamedQuery(name = "PythonDep.findAll",
           query
-          = "SELECT a FROM AnacondaRepo a"),
-  @NamedQuery(name = "AnacondaRepo.findById",
+          = "SELECT p FROM PythonDep p"),
+  @NamedQuery(name = "PythonDep.findById",
           query
-          = "SELECT a FROM AnacondaRepo a WHERE a.id = :id"),
-  @NamedQuery(name = "AnacondaRepo.findByUrl",
+          = "SELECT p FROM PythonDep p WHERE p.id = :id"),
+  @NamedQuery(name = "PythonDep.findByDependency",
           query
-          = "SELECT a FROM AnacondaRepo a WHERE a.url = :url")})
-public class AnacondaRepo implements Serializable {
+          = "SELECT p FROM PythonDep p WHERE p.dependency = :dependency"),
+  @NamedQuery(name = "PythonDep.findByDependencyAndProject",
+        query
+          = "SELECT p FROM PythonDep p WHERE p.dependency = :dependency AND :project MEMBER OF p.projectCollection"),
+  @NamedQuery(name = "PythonDep.findUniqueDependency",
+          query
+          = "SELECT p FROM PythonDep p WHERE p.dependency = :dependency AND p.version = :version " +
+                  "AND p.installType = :installType AND p.repoUrl = :repoUrl AND p.machineType = :machineType "),
+  @NamedQuery(name = "PythonDep.findByVersion",
+          query
+          = "SELECT p FROM PythonDep p WHERE p.version = :version")})
+public class PythonDep implements Serializable {
 
   private static final long serialVersionUID = 1L;
   @Id
@@ -84,23 +98,44 @@ public class AnacondaRepo implements Serializable {
   @Basic(optional = false)
   @NotNull
   @Size(min = 1,
-          max = 255)
-  @Column(name = "url")
-  private String url;
-  @OneToMany(cascade = CascadeType.ALL,
-          mappedBy = "repoUrl")
-  private Collection<PythonDep> pythonDepCollection;
+          max = 128)
+  @Column(name = "dependency")
+  private String dependency;
+  @Basic(optional = false)
+  @NotNull
+  @Size(min = 1,
+          max = 128)
+  @Column(name = "version")
+  private String version;
+  @Basic(optional = true)
+  @Column(name = "preinstalled")
+  private boolean preinstalled;
 
-  public AnacondaRepo() {
+  @ManyToMany(mappedBy = "pythonDepCollection")
+  private Collection<Project> projectCollection;
+  @JoinColumn(name = "repo_id",
+          referencedColumnName = "id")
+  @ManyToOne(optional = false)
+  private AnacondaRepo repoUrl;
+
+  @Column(name = "status")
+  @Enumerated(EnumType.ORDINAL)
+  private CondaCommandFacade.CondaStatus status
+          = CondaCommandFacade.CondaStatus.NEW;
+
+  @Column(name = "install_type")
+  @Enumerated(EnumType.ORDINAL)
+  private CondaCommandFacade.CondaInstallType installType;
+
+  @Column(name = "machine_type")
+  @Enumerated(EnumType.ORDINAL)
+  private LibraryFacade.MachineType machineType;
+
+  public PythonDep() {
   }
 
-  public AnacondaRepo(Integer id) {
+  public PythonDep(Integer id) {
     this.id = id;
-  }
-
-  public AnacondaRepo(Integer id, String url) {
-    this.id = id;
-    this.url = url;
   }
 
   public Integer getId() {
@@ -111,22 +146,70 @@ public class AnacondaRepo implements Serializable {
     this.id = id;
   }
 
-  public String getUrl() {
-    return url;
+  public String getDependency() {
+    return dependency;
   }
 
-  public void setUrl(String url) {
-    this.url = url;
+  public void setDependency(String dependency) {
+    this.dependency = dependency;
+  }
+
+  public String getVersion() {
+    return version;
+  }
+
+  public void setVersion(String version) {
+    this.version = version;
   }
 
   @XmlTransient
   @JsonIgnore
-  public Collection<PythonDep> getPythonDepCollection() {
-    return pythonDepCollection;
+  public Collection<Project> getProjectCollection() {
+    return projectCollection;
   }
 
-  public void setPythonDepCollection(Collection<PythonDep> pythonDepCollection) {
-    this.pythonDepCollection = pythonDepCollection;
+  public void setProjectCollection(Collection<Project> projectCollection) {
+    this.projectCollection = projectCollection;
+  }
+
+  public AnacondaRepo getRepoUrl() {
+    return repoUrl;
+  }
+
+  public void setRepoUrl(AnacondaRepo repoUrl) {
+    this.repoUrl = repoUrl;
+  }
+
+  public void setInstallType(CondaCommandFacade.CondaInstallType installType) {
+    this.installType = installType;
+  }
+
+  public CondaCommandFacade.CondaInstallType getInstallType() {
+    return installType;
+  }
+
+  public void setStatus(CondaCommandFacade.CondaStatus status) {
+    this.status = status;
+  }
+
+  public CondaCommandFacade.CondaStatus getStatus() {
+    return status;
+  }
+
+  public void setMachineType(LibraryFacade.MachineType machineType) {
+    this.machineType = machineType;
+  }
+
+  public LibraryFacade.MachineType getMachineType() {
+    return machineType;
+  }
+
+  public boolean isPreinstalled() {
+    return preinstalled;
+  }
+
+  public void setPreinstalled(boolean preinstalled) {
+    this.preinstalled = preinstalled;
   }
 
   @Override
@@ -139,10 +222,10 @@ public class AnacondaRepo implements Serializable {
   @Override
   public boolean equals(Object object) {
     // TODO: Warning - this method won't work in the case the id fields are not set
-    if (!(object instanceof AnacondaRepo)) {
+    if (!(object instanceof PythonDep)) {
       return false;
     }
-    AnacondaRepo other = (AnacondaRepo) object;
+    PythonDep other = (PythonDep) object;
     if ((this.id == null && other.id != null) || (this.id != null && !this.id.
             equals(other.id))) {
       return false;
@@ -152,8 +235,7 @@ public class AnacondaRepo implements Serializable {
 
   @Override
   public String toString() {
-    return "io.hops.hopsworks.common.dao.pythonDeps.AnacondaRepo[ id=" + id
-            + " ]";
+    return "io.hops.hopsworks.common.dao.pythonDeps.PythonDep[ id=" + id + " ]";
   }
 
 }

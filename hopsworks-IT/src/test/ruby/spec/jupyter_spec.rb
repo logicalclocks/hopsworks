@@ -38,8 +38,8 @@ describe "On #{ENV['OS']}" do
 
       it "should start and stop a notebook server" do
 
-        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/enable/#{version}/true"
-        expect_status(200)
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/python/environments/#{version}?action=create&pythonKernelEnable=true"
+        expect_status(201)
 
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/settings"
         expect_status(200)
@@ -79,8 +79,8 @@ describe "On #{ENV['OS']}" do
 
       it "should not allow starting multiple notebook servers" do
 
-        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/enable/#{version}/true"
-        expect_status(200)
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/python/environments/#{version}?action=create&pythonKernelEnable=true"
+        expect_status(201)
 
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/settings"
         expect_status(200)
@@ -107,8 +107,8 @@ describe "On #{ENV['OS']}" do
 
       it "should allow multiple restarts" do
 
-        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/enable/#{version}/true"
-        expect_status(200)
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/python/environments/#{version}?action=create&pythonKernelEnable=true"
+        expect_status(201)
 
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/settings"
         expect_status(200)
@@ -139,8 +139,8 @@ describe "On #{ENV['OS']}" do
       end
 
       it "should be killed by timer" do
-        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/enable/#{version}/true"
-        expect_status(200)
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/python/environments/#{version}?action=create&pythonKernelEnable=true"
+        expect_status(201)
 
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/settings"
         expect_status(200)
@@ -166,8 +166,8 @@ describe "On #{ENV['OS']}" do
 
       it "should not be killed by timer" do
 
-        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/enable/#{version}/true"
-        expect_status(200)
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/python/environments/#{version}?action=create&pythonKernelEnable=true"
+        expect_status(201)
 
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/settings"
         expect_status(200)
@@ -197,8 +197,8 @@ describe "On #{ENV['OS']}" do
 
         copy("/user/hdfs/tensorflow_demo/notebooks/Experiment/Keras/mnist.ipynb", "/Projects/#{@project[:projectname]}/Resources", @user[:username], "#{@project[:projectname]}__Resources", 750, "#{@project[:projectname]}")
 
-        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/enable/#{version}/true"
-        expect_status(200)
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/python/environments/#{version}?action=create&pythonKernelEnable=true"
+        expect_status(201)
 
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent/Resources"
         expect_status(200)

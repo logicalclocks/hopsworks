@@ -52,6 +52,7 @@ import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.dao.user.activity.ActivityFlag;
 
 @ManagedBean
 @ViewScoped
@@ -95,7 +96,7 @@ public class ProjectTeamController implements Serializable {
       teamFacade.removeProjectTeam(sessionState.getActiveProject(),
         user);
       activityFacade.persistActivity(ActivityFacade.REMOVED_MEMBER + toRemoveEmail, sessionState.getActiveProject(),
-        sessionState.getLoggedInUsername(), ActivityFacade.ActivityFlag.MEMBER);
+        sessionState.getLoggedInUsername(), ActivityFlag.MEMBER);
     } catch (EJBException ejb) {
       MessagesController.addErrorMessage("Deleting team member failed.");
       LOGGER.log(Level.WARNING, "Failed to remove team member " + toRemoveEmail

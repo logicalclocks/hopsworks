@@ -25,6 +25,7 @@ import io.hops.hopsworks.exceptions.ActivitiesException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.restutils.RESTCodes;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
 import javax.ejb.EJB;
@@ -43,6 +44,7 @@ import javax.ws.rs.core.UriInfo;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+@Api(value = "Project Activities Resource")
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ProjectActivitiesResource {
