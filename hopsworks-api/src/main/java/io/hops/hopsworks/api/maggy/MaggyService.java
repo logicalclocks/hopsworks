@@ -44,7 +44,7 @@ import java.util.logging.Logger;
 
 @Path("/maggy")
 @Stateless
-@JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+@JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
 @Api(value = "Maggy Service", description = "Register and retrieve Maggy Driver Endpoints, used in logging by " +
   "sparkmagic")
 @TransactionAttribute(TransactionAttributeType.NEVER)
