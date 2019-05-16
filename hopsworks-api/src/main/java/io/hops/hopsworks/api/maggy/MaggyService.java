@@ -30,6 +30,7 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -41,7 +42,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.ws.rs.Consumes;
 
 @Path("/maggy")
 @Stateless
@@ -70,11 +70,7 @@ public class MaggyService {
   @Path("drivers/{appId}")
   @ApiOperation(value = "Get a Maggy Driver Endpoint for this YARN appId", response = MaggyDriver.class)
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getDriver(
-    @PathParam("appId")
-      String appId,
-    @Context
-      HttpServletRequest req) throws
+  public Response getDriver( @PathParam("appId") String appId, @Context HttpServletRequest req) throws
     ServiceException {
     
     logger.log(Level.INFO, "REST call from sparkmagic for driver for " + appId);
