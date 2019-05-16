@@ -42,18 +42,23 @@
   <h2 class="modal-title">File Preview - {{filePreviewCtrl.fileName}}</h2>
 </div>
 <div growl reference="23" class="pull-right"></div>
-<div ng-show="filePreviewCtrl.type === 'text'">
-  <button style="border-color: #eee; min-width: 64px;"
-          ng-click="filePreviewCtrl.fetchFile(filePreviewCtrl.modes[0])">
-    <span style="color: #20AD28" class="glyphicon glyphicon-chevron-up" aria-hidden="true"></span> Head</button>
-    
-    <button style="border-color:#eee; min-width: 64px;"
-          ng-click="filePreviewCtrl.fetchFile(filePreviewCtrl.modes[1])">
-      <span style="color: #4285f4" class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span> Tail</button>
+<div class="modal-body" ng-show="filePreviewCtrl.loading" style=" min-height: 100px">
+  <div class="loader loader-sm" style="position: unset;"></div>
 </div>
-<div class="modal-body content" ng-show="filePreviewCtrl.type === 'image'">
-  <img class="img-preview" src="data:image/{{filePreviewCtrl.extension}};base64,{{filePreviewCtrl.content}}" alt="Waiting for image download...">
+<div class="modal-body content" ng-if="!filePreviewCtrl.loading && filePreviewCtrl.type === 'image'"
+     style="background-color: white;border: 1px inset;margin: 10px;">
+  <img id="image" class="img-preview" ng-src="{{filePreviewCtrl.getImageSrc()}}" alt="Waiting for image download..." style="align-self: center;">
 </div>
-<div class="modal-body " ng-show="filePreviewCtrl.type === 'text'">
-  <p class="filepreview">{{filePreviewCtrl.content}}</p>
+<div class="modal-body " ng-if="!filePreviewCtrl.loading && filePreviewCtrl.type === 'text'">
+  <div style="margin-bottom: 5px">
+    <button type="button" class="btn" ng-click="filePreviewCtrl.fetchFile(filePreviewCtrl.modes[0])">
+      <i class="fa fa-caret-up" aria-hidden="true"></i> Head
+    </button>
+    <button type="button" class="btn" ng-click="filePreviewCtrl.fetchFile(filePreviewCtrl.modes[1])">
+      <i class="fa fa-caret-down" aria-hidden="true"></i> Tail
+    </button>
+  </div>
+  <div style="background-color: white;border: 1px inset; margin: 0px;">
+    <p class="filepreview" style="padding: 20px 20px 0px 20px; margin-bottom: 0px"  tabindex="0">{{filePreviewCtrl.content}}</p>
+  </div>
 </div>

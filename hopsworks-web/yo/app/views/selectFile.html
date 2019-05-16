@@ -47,37 +47,52 @@
 <div class="modal-body">
 
   <div class="table-responsive" style="overflow: hidden;">
-    <div class="row">
-      >> {{ selectFileCtrl.datasetBrowser.projectName}}/{{ selectFileCtrl.datasetBrowser.relativePath}}
-    </div>
+    <h4 class="row text-muted" style="margin-bottom: 15px; margin-left: 10px;">
+      /{{ selectFileCtrl.datasetBrowser.projectName}}/{{ selectFileCtrl.datasetBrowser.relativePath}}
+    </h4>
     <div growl reference="114" class="pull-right" ></div>
-    <table class="table table-hover" >
+    <table class="table table-hover" id="select_file">
       <tbody>
         <tr ng-click="selectFileCtrl.datasetBrowser.back(datasetsCtrl)">
           <td style="padding: 0px">&nbsp &nbsp
             <a style="font-size:25px">..</a>
           </td>
         </tr>
-      <a href="selectFile.html"></a>
-        <tr ng-repeat="file in selectFileCtrl.datasetBrowser.files| filter:{status: true} | orderBy: 'name'"
-            ng-class="{ 'highlight': selectFileCtrl.datasetBrowser.selected === {{ $index}}, 'expanded' : expanded }"
-            ng-click="selectFileCtrl.datasetBrowser.select(file, $index)">
+        <tr dir-paginate="file in selectFileCtrl.datasetBrowser.files | itemsPerPage:selectFileCtrl.datasetBrowser.pageSize"
+            pagination-id="file_select_pagination"
+            current-page="selectFileCtrl.datasetBrowser.currentPage"
+            total-items="selectFileCtrl.datasetBrowser.filesCount"
+            ng-click="selectFileCtrl.datasetBrowser.select(file, $index)"
+            ng-class="{'highlight': selectFileCtrl.datasetBrowser.selected === $index }">
           <td>
-            <i ng-show="file.dir" class="glyphicon glyphicon-folder-close" style="padding-right: 10px; color: #757575;"></i>
-            <i ng-show="!file.dir" class="glyphicon glyphicon-file" style="padding-right: 10px; color: #757575;"></i>
-            {{file.name}}
+            <i ng-show="file.attributes.dir" class="fa fa-folder" style="padding-right: 10px; color: #757575;"></i>
+            <i ng-show="!file.attributes.dir" class="fa fa-file" style="padding-right: 10px; color: #757575;"></i>
+            {{file.attributes.name}}
           </td>
         </tr>
       </tbody>
       <tfoot>
       <tr>
         <td>
-          <div class="loader loader-sm" ng-show="selectFileCtrl.datasetBrowser.working" style="position: static;"></div>
+          <div class="loader loader-sm" ng-show="selectFileCtrl.datasetBrowser.working" style="position: static;"
+               id="select_file_loading"></div>
         </td>
       </tr>
       </tfoot>
     </table>
-    <button ng-click="selectFileCtrl.confirmSelection(selectFileCtrl.dirAllowed)" class="btn btn-default">Select</button>
+    <div layout="row" class="pull-right" style="margin-top: -20px; margin-bottom: -20px">
+      <dir-pagination-controls
+              pagination-id="file_select_pagination"
+              max-size="7"
+              direction-links="true"
+              boundary-links="true"
+              on-page-change="selectFileCtrl.datasetBrowser.pageChange(newPageNumber)"
+              class="pull-right">
+      </dir-pagination-controls>
+    </div>
   </div>
+</div>
+<div class="modal-footer">
+  <button ng-click="selectFileCtrl.confirmSelection(selectFileCtrl.dirAllowed)" class="btn btn-default">Select</button>
 </div>
 

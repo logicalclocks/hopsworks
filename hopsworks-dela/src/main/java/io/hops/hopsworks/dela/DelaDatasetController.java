@@ -41,7 +41,7 @@ package io.hops.hopsworks.dela;
 
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
-import io.hops.hopsworks.common.dao.dataset.DatasetPermissions;
+import io.hops.hopsworks.common.dao.dataset.SharedState;
 import io.hops.hopsworks.common.dao.log.operation.OperationType;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
@@ -83,21 +83,24 @@ public class DelaDatasetController {
   @EJB
   private DistributedFsService dfs;
 
-  public Dataset uploadToHops(Dataset dataset, String publicDSId) {
-    dataset.setPublicDsState(Dataset.SharedState.HOPS);
+  public Dataset uploadToHops(Project project, Dataset dataset, String publicDSId) {
+    dataset.setPublicDsState(SharedState.HOPS);
     dataset.setPublicDsId(publicDSId);
-    dataset.setEditable(DatasetPermissions.OWNER_ONLY);
+    //TODO:Alex move to set hdfs permissions
+    //datasetController.setPermissions();
+    //dataset.setEditable(DatasetPermissions.OWNER_ONLY);
     datasetFacade.merge(dataset);
-    datasetCtrl.logDataset(dataset, OperationType.Update);
+    datasetCtrl.logDataset(project, dataset, OperationType.Update);
     return dataset;
   }
   
-  public Dataset unshareFromHops(Dataset dataset) {
-    dataset.setPublicDsState(Dataset.SharedState.PRIVATE);
+  public Dataset unshareFromHops(Project project, Dataset dataset) {
+    dataset.setPublicDsState(SharedState.PRIVATE);
     dataset.setPublicDsId(null);
-    dataset.setEditable(DatasetPermissions.GROUP_WRITABLE_SB);
+    //datasetController.setPermissions();
+    //dataset.setEditable(DatasetPermissions.GROUP_WRITABLE_SB);
     datasetFacade.merge(dataset);
-    datasetCtrl.logDataset(dataset, OperationType.Update);
+    datasetCtrl.logDataset(project, dataset, OperationType.Update);
     return dataset;
   }
   
@@ -110,23 +113,24 @@ public class DelaDatasetController {
       throw new DelaException(RESTCodes.DelaErrorCode.THIRD_PARTY_ERROR, Level.SEVERE, DelaException.Source.LOCAL, null,
         e.getMessage(), e);
     }
-    dataset.setPublicDsState(Dataset.SharedState.HOPS);
+    dataset.setPublicDsState(SharedState.HOPS);
     dataset.setPublicDsId(publicDSId);
-    dataset.setEditable(DatasetPermissions.OWNER_ONLY);
+    //datasetController.setPermissions();
+    //dataset.setEditable(DatasetPermissions.OWNER_ONLY);
     datasetFacade.merge(dataset);
-    datasetCtrl.logDataset(dataset, OperationType.Update);
+    datasetCtrl.logDataset(project, dataset, OperationType.Update);
     return dataset;
   }
 
-  public Dataset updateDescription(Dataset dataset, String description) {
+  public Dataset updateDescription(Project project, Dataset dataset, String description) {
     dataset.setDescription(description);
     datasetFacade.merge(dataset);
-    datasetCtrl.logDataset(dataset, OperationType.Update);
+    datasetCtrl.logDataset(project, dataset, OperationType.Update);
     return dataset;
   }
 
   public void delete(Project project, Dataset dataset) throws DelaException, DatasetException {
-    if (dataset.isShared()) {
+    if (dataset.isShared(project)) {
       //remove the entry in the table that represents shared ds
       //but leave the dataset in hdfs b/c the user does not have the right to delete it.
       hdfsUsersBean.unShareDataset(project, dataset);
@@ -153,7 +157,7 @@ public class DelaDatasetController {
   }
   
   public List<Dataset> getLocalPublicDatasets() {
-    return datasetFacade.findAllDatasetsByState(Dataset.SharedState.HOPS.state, false);
+    return datasetFacade.findPublicDatasetsByState(SharedState.HOPS.state);
   }
   
   public Optional<Dataset> isPublicDatasetLocal(String publicDsId) {

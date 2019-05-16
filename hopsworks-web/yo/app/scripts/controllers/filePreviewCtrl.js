@@ -52,9 +52,11 @@ angular.module('hopsWorksApp')
             self.mode; //Head or Tail the file
             self.imgHeight=400;
             self.imgWidth=400;
+            self.loading = false;
             self.fetchFile = function (mode) {
+              self.loading = true;
               var dataSetService = DataSetService(self.projectId); //The datasetservice for the current project.
-              dataSetService.filePreview(filePath, mode).then(
+              dataSetService.getDatasetBlob(filePath, mode).then(
                       function (success) {
 //                                .replace(/\\/g, '\\\\')
 //                                .replace(/\"/g, '\\"')
@@ -65,22 +67,32 @@ angular.module('hopsWorksApp')
 //                                .replace(/\r/g, '\\r')
 //                                .replace(/\t/g, '\\t')
                         self.mode = mode;
-                        self.fileDetails = JSON.parse(success.data.data);
-
-                        self.type = self.fileDetails.filePreviewDTO[0].type;
-                        self.content = self.fileDetails.filePreviewDTO[0].content;
-                        self.extension = self.fileDetails.filePreviewDTO[0].extension;
-                        self.getImageWidthHeight();
+                        self.fileDetails = success.data;
+                        self.type = self.fileDetails.preview.type;
+                        self.content = self.fileDetails.preview.content;
+                        self.extension = self.fileDetails.preview.extension;
+                        self.loading = false;
+                        if (self.type === 'image') {
+                            self.getImageWidthHeight();
+                        }
                       }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Could not get file contents', ttl: 5000, referenceId: 23});
+                         self.loading = false;
+                         growl.error(error.data.errorMsg, {title: 'Could not get file contents', ttl: 5000, referenceId: 23});
               });
             };
             self.fetchFile(mode);
             
             self.getImageWidthHeight = function() {
               var myImg = document.querySelector("#image");
-              self.imgWidth = myImg.naturalWidth;
-              self.imgHeight = myImg.naturalHeight;
+              if (myImg) {
+                  self.imgWidth = myImg.naturalWidth;
+                  self.imgHeight = myImg.naturalHeight;
+              }
+
+            };
+
+            self.getImageSrc = function () {
+                return 'data:image/' + self.extension +';base64,'+ self.content;
             };
                         
 

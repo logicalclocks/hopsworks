@@ -55,7 +55,7 @@ angular.module('hopsWorksApp')
               responseError: function (responseRejection) {
                 var redirect = true;
                 if (responseRejection.status === 401) {
-                  // Authorization issue, check if token ues different from token in local storage
+                  // Authorization issue, check if token used is different from token in local storage
                   var headerToken = responseRejection.config.headers.Authorization;
                   if (headerToken) {
                     var authService = $injector.get('AuthService');

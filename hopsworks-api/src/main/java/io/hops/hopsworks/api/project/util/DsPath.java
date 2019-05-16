@@ -41,7 +41,7 @@ package io.hops.hopsworks.api.project.util;
 
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
-import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
+import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.hadoop.fs.Path;
@@ -85,9 +85,9 @@ public class DsPath {
     this.dsRelativePath = dsRelativePath;
   }
 
-  public Inode validatePathExists(InodeFacade ifacade,
+  public Inode validatePathExists(InodeController inodeController,
                                   Boolean dir) throws DatasetException {
-    Inode inode = ifacade.getInodeAtPath(fullPath.toString());
+    Inode inode = inodeController.getInodeAtPath(fullPath.toString());
     if (inode == null) {
       throw new DatasetException(RESTCodes.DatasetErrorCode.PATH_NOT_FOUND, Level.FINE, "path: " + fullPath.toString());
     }

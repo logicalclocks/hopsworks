@@ -19,7 +19,7 @@ package io.hops.hopsworks.api.project.util;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
-import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
+import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.Users;
@@ -56,7 +56,7 @@ public class DsUpdateOperations {
   @EJB
   private ProjectTeamFacade projectTeamFacade;
   @EJB
-  private InodeFacade inodeFacade;
+  private InodeController inodeController;
 
   /**
    * Creates a directory inside a top-level dataset
@@ -168,7 +168,7 @@ public class DsUpdateOperations {
   public org.apache.hadoop.fs.Path moveDatasetFile(Project project, Users user, Inode sourceInode, String destPathStr)
       throws DatasetException, ProjectException, HopsSecurityException {
     String username = hdfsUsersBean.getHdfsUserName(project, user);
-    String sourcePathStr = inodeFacade.getPath(sourceInode);
+    String sourcePathStr = inodeController.getPath(sourceInode);
     DsPath sourceDsPath = pathValidator.validatePath(project, sourcePathStr);
     DsPath destDsPath = pathValidator.validatePath(project, destPathStr);
 

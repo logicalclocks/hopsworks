@@ -41,7 +41,7 @@ package io.hops.hopsworks.common.jobs.execution;
 
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
-import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
+import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.dao.jobhistory.Execution;
 import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationAttemptStateFacade;
@@ -117,7 +117,7 @@ public class ExecutionController {
   @EJB
   private FlinkController flinkController;
   @EJB
-  private InodeFacade inodes;
+  private InodeController inodeController;
   @EJB
   private ActivityFacade activityFacade;
   @EJB
@@ -181,7 +181,7 @@ public class ExecutionController {
         Pattern.compile(patternString).matcher(path);
         String[] parts = path.split("/");
         String pathOfInode = path.replace(REMOTE_PROTOCOL + parts[2], "");
-        Inode inode = inodes.getInodeAtPath(pathOfInode);
+        Inode inode = inodeController.getInodeAtPath(pathOfInode);
         String inodeName = inode.getInodePK().getName();
 
         activityFacade.persistActivity(ActivityFacade.EXECUTED_JOB + inodeName, job.getProject(), user,

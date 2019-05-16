@@ -57,10 +57,11 @@
       
       <div class="row" style="margin-left: 0px;">
         <div class="span6">
-          <span class="btn btn-small btn-info" flow-btn>
+          <span class="btn btn-small btn-info" flow-btn id="file-upload">
             <i class="glyphicon glyphicon-file"></i>
             &nbsp Upload File</span>
-          <span class="btn btn-small btn-info" flow-btn flow-directory ng-show="$flow.supportDirectory">
+          <span class="btn btn-small btn-info" flow-btn flow-directory ng-show="$flow.supportDirectory"
+                id="folder-upload">
             <i class="glyphicon glyphicon-folder-open"></i>
             &nbsp Upload Folder
           </span>
@@ -69,16 +70,17 @@
       </div>
       <hr class="soften">
       <p>
-        <a class="btn btn-small btn-success" ng-click="$flow.resume()" ng-show="!$flow.isUploading()">
+        <a class="btn btn-small btn-success" ng-click="$flow.resume()" ng-show="!$flow.isUploading()" id="upload-all">
           <i class="glyphicon glyphicon-cloud-upload"></i>
           Upload all</a>
-        <a class="btn btn-small btn-warning" ng-click="$flow.pause()" ng-show="$flow.isUploading()">
+        <a class="btn btn-small btn-warning" ng-click="$flow.pause()" ng-show="$flow.isUploading()" id="pause-all">
           <i class="glyphicon glyphicon-pause"></i>
           Pause all</a>
 <!--        <a class="btn btn-small btn-danger" ng-click="$flow.cancel()">
           <i class="glyphicon glyphicon-remove-circle"></i>
           Cancel all</a>-->
-        <span class="label label-info">Total Size: {{fileUploadCtrl.size($flow.getSize())}}</span>
+        <span class="label label-info" ng-show="$flow.getSize() > 0" id="upload-size">Total Size:
+          {{fileUploadCtrl.size($flow.getSize())}}</span>
         <!--span class="label label-info">Is Uploading: {{$flow.isUploading()}}</span-->
       </p>
 
@@ -115,16 +117,19 @@
             </td>
             <td>
               <div class="">
-                <a class="btn btn-mini btn-warning btn-circle" ng-click="file.pause()" ng-show="file.isUploading()">
+                <a class="btn btn-mini btn-warning btn-circle" ng-click="file.pause()" ng-show="file.isUploading()"
+                   id="pause-file-upload">
                   <i class="glyphicon glyphicon-pause"></i>
                 </a>
-                <a class="btn btn-mini btn-success btn-circle" ng-click="file.resume()" ng-show="!file.isUploading()">
+                <a class="btn btn-mini btn-success btn-circle" ng-click="file.resume()" ng-show="!file.isUploading()"
+                   id="resume-file-upload">
                   <i class="glyphicon glyphicon-play"></i>
                 </a>
 <!--                <a class="btn btn-mini btn-danger btn-circle" ng-click="file.cancel()">
                   <i class="glyphicon glyphicon-remove-circle"></i>
                 </a>-->
-                <a class="btn btn-mini btn-info btn-circle" ng-click="file.retry()" ng-show="file.error">
+                <a class="btn btn-mini btn-info btn-circle" ng-click="file.retry()" ng-show="file.error"
+                   id="retry-file-upload">
                   <i class="glyphicon glyphicon-repeat round"></i>
                 </a>
               </div>

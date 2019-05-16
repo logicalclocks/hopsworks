@@ -41,7 +41,9 @@ package io.hops.hopsworks.dela.cluster;
 
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
+import io.hops.hopsworks.common.dao.dataset.SharedState;
 import io.hops.hopsworks.common.dao.log.operation.OperationType;
+import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import java.util.List;
 import java.util.logging.Logger;
@@ -61,33 +63,27 @@ public class ClusterDatasetController {
   @EJB
   private DatasetFacade datasetFacade;
 
-  public Dataset shareWithCluster(Dataset dataset) {
+  public Dataset shareWithCluster(Project project, Dataset dataset) {
     if (dataset.isPublicDs()) {
       return dataset;
     }
-
-    for (Dataset d : datasetFacade.findByInode(dataset.getInode())) {
-      d.setPublicDsState(Dataset.SharedState.CLUSTER);
-      datasetFacade.merge(d);
-      datasetCtrl.logDataset(d, OperationType.Update);
-    }
+    dataset.setPublicDsState(SharedState.CLUSTER);
+    datasetFacade.merge(dataset);
+    datasetCtrl.logDataset(project, dataset, OperationType.Update);
     return dataset;
   }
-
-  public Dataset unshareFromCluster(Dataset dataset) {
+  
+  public Dataset unshareFromCluster(Project project, Dataset dataset) {
     if (!dataset.isPublicDs()) {
       return dataset;
     }
-
-    for (Dataset d : datasetFacade.findByInode(dataset.getInode())) {
-      d.setPublicDsState(Dataset.SharedState.PRIVATE);
-      datasetFacade.merge(d);
-      datasetCtrl.logDataset(d, OperationType.Update);
-    }
+    dataset.setPublicDsState(SharedState.PRIVATE);
+    datasetFacade.merge(dataset);
+    datasetCtrl.logDataset(project, dataset, OperationType.Update);
     return dataset;
   }
 
   public List<Dataset> getPublicDatasets() {
-    return datasetFacade.findAllDatasetsByState(Dataset.SharedState.CLUSTER.state, false);
+    return datasetFacade.findPublicDatasetsByState(SharedState.CLUSTER.state);
   }
 }

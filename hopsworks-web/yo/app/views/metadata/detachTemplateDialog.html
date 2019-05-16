@@ -56,7 +56,7 @@
       <div class="columnHeader">
         <ui-select  ng-model="detachTemplateCtrl.selectedTemplate" theme="select2"
                     ng-disabled="detachTemplateCtrl.noTemplates"
-                    on-select="detachTemplateCtrl.update()" style="min-width: 15em;">
+                    on-select="detachTemplateCtrl.update()" style="min-width: 15em;" id="template_select">
 
           <ui-select-match placeholder="Select a template...">{{$select.selected.templateName}}</ui-select-match>
 

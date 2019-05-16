@@ -41,23 +41,21 @@
 
   <button class="close" ng-click="datasetCreatorCtrl.close()" data-dismiss="modal" aria-hidden="true"
           type="button">&times;</button>
-  <h2 class="modal-title">New Folder</h2>
+  <h2 class="modal-title" ng-show="datasetCreatorCtrl.isDataset">New Dataset</h2>
+  <h2 class="modal-title" ng-show="!datasetCreatorCtrl.isDataset">New Folder</h2>
 </div>
 <div class="modal-body">
 
   <form role="form" name="dataSetForm" ng-submit="datasetCreatorCtrl.saveDataSetDir()" novalidate class="form-validate">
     <div class="row">
       <fieldset>
-
         <div class="control-group col-md-offset-1" style="margin-right: 8.33333%;">
           <label for="dataSetName" style="color: black;">Folder Name</label>
-          <md-input-container style="height: 50px;" class="md-block">
+          <md-input-container style="height: 50px; margin: 0px" class="md-block">
             <input name="dataSet_name" type="text" id="dataSetName"
                    ng-model="datasetCreatorCtrl.dataSet.name"
-                   required autofocus
-				   >
+                   required autofocus>
           </md-input-container>
-
           <span
             ng-show="(dataSetForm.$submitted || dataSetForm.dataSet_name.$dirty) &amp;&amp;
                 dataSetForm.dataSet_name.$error.required"
@@ -71,18 +69,15 @@
 
             <span ng-show="(dataSetForm.dataSet_name.$dirty) &amp;&amp;
                   dataSetForm.dataSet_name.$error.maxlength"
-                  class="text-danger ng-hide">Dataset name shouldn't be longer
-              than 24 characters.</span>
-
-          <p></p>
-
-          <label for="description">Description</label>
-
-          <div class="controls" id="description">
-            <textarea class="form-control" style="resize:none;" ng-model="datasetCreatorCtrl.dataSet.description"
+                  class="text-danger ng-hide">Dataset name shouldn't be longer than 24 characters.</span>
+            <div ng-if="datasetCreatorCtrl.isDataset">
+              <p></p>
+              <label for="description">Description</label>
+              <div class="controls" id="description">
+              <textarea class="form-control" style="resize:none;" ng-model="datasetCreatorCtrl.dataSet.description"
                       rows="3"></textarea>
+            </div>
           </div>
-
           <div class="row">
             <div class="col-md-12">
               <div class="row">
@@ -90,11 +85,9 @@
                         margin-right: 15px;
                         margin-bottom: 15px;
                         margin-left: 15px;" >Templates</label>
-                <ui-select ng-model="datasetCreatorCtrl.selectedTemplate" theme="select2"
-                           on-select="" style="min-width: 300px;">
-
+                <ui-select ng-model="datasetCreatorCtrl.selectedTemplate" theme="select2" on-select=""
+                           style="min-width: 300px;">
                   <ui-select-match id="template" placeholder="Add a template...">{{$select.selected.name}}</ui-select-match>
-
                   <ui-select-choices repeat="template in datasetCreatorCtrl.templates | filter: $select.search">
                     <small>
                       <span ng-bind-html="'' + template.name | highlight: $select.search"></span>
@@ -103,13 +96,11 @@
                 </ui-select>
               </div>
               <div class="row" style="margin-left: 0px;">
-                <md-checkbox class="md-primary"
-                             ng-model="datasetCreatorCtrl.dataSet.searchable">
-                  Searchable
+                <md-checkbox class="md-primary" ng-model="datasetCreatorCtrl.dataSet.searchable">Searchable
                 </md-checkbox><br>
                 <md-checkbox  class="md-primary"
                               ng-model="datasetCreatorCtrl.dataSet.generateReadme"
-                              ng-hide="datasetCreatorCtrl.path.length>0">
+                              ng-hide="datasetCreatorCtrl.path.length>0" id="generate_readme">
                   Generate README.md
                 </md-checkbox>
               </div>

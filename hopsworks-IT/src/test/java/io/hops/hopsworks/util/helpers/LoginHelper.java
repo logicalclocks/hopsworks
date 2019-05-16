@@ -16,7 +16,7 @@
 package io.hops.hopsworks.util.helpers;
 
 import io.hops.hopsworks.util.DBHelper;
-import io.hops.hopsworks.util.User;
+import io.hops.hopsworks.util.models.User;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;

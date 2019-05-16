@@ -237,6 +237,6 @@ public class RegisterIT {
     if (!"".equals(verificationErrorString)) {
       fail(verificationErrorString);
     }
-    LOGGER.log(Level.INFO, "Finshed register test.");
+    LOGGER.log(Level.INFO, "Finished register test.");
   }
 }

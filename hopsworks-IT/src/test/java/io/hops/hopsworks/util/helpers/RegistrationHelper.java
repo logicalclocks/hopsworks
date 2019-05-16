@@ -19,7 +19,7 @@ import io.hops.hopsworks.WebDriverFactory;
 import io.hops.hopsworks.util.DBHelper;
 import io.hops.hopsworks.util.Helpers;
 import io.hops.hopsworks.util.JavascriptExec;
-import io.hops.hopsworks.util.User;
+import io.hops.hopsworks.util.models.User;
 import org.openqa.selenium.By;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
@@ -83,10 +83,12 @@ public class RegistrationHelper {
         .getText());
       driver.findElement(By.linkText("Ok")).click();
     } else {
-      String attribute = driver.findElement(By.xpath("//div[contains(@class, \"panel-body\")]/div[3]")).getAttribute(
-        "aria-hidden");
+      Helpers.waitForElementVisibility(By.id("regSuccess"), driver);
+      String successAttr = driver.findElement(By.id("regSuccess")).getAttribute("aria-hidden");
+      String errorAttr = driver.findElement(By.id("regError")).getAttribute("aria-hidden");
       //assert no error msg
-      assertEquals("true", attribute);
+      assertEquals("true", errorAttr);
+      assertEquals("false", successAttr);
       driver.findElement(By.linkText("Sign in")).click();
     }
   }

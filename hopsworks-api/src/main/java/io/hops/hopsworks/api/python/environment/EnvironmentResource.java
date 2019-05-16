@@ -24,7 +24,7 @@ import io.hops.hopsworks.api.project.util.PathValidator;
 import io.hops.hopsworks.api.python.environment.command.EnvironmentCommandsResource;
 import io.hops.hopsworks.api.python.library.LibraryResource;
 import io.hops.hopsworks.common.api.ResourceRequest;
-import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
+import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.python.environment.EnvironmentController;
@@ -68,7 +68,7 @@ public class EnvironmentResource {
   @EJB
   private PathValidator pathValidator;
   @EJB
-  private InodeFacade inodes;
+  private InodeController inodeController;
   @EJB
   private JWTHelper jWTHelper;
   @Inject
@@ -195,7 +195,7 @@ public class EnvironmentResource {
       return null;
     }
     DsPath ymlPath = pathValidator.validatePath(this.project, path);
-    ymlPath.validatePathExists(inodes, false);
+    ymlPath.validatePathExists(inodeController, false);
     org.apache.hadoop.fs.Path fullPath = ymlPath.getFullPath();
     return fullPath.toString();
   }

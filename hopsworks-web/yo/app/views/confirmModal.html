@@ -42,7 +42,7 @@
   <h3 class="modal-title">{{modalCtrl.title}}</h3>
 </div>
 <div class="modal-body">
-  {{modalCtrl.msg}}
+  <p ng-bind-html="modalCtrl.msg" style="font-size: medium;"></p>
 </div>
 <div class="modal-footer">
   <button class="btn btn-default" ng-click="modalCtrl.cancel()">Cancel</button>

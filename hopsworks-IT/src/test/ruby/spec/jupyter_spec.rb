@@ -23,9 +23,9 @@ describe "On #{ENV['OS']}" do
     end
 
     it "should not have the sticky bit set - HOPSWORKS-750" do
-      get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent"
-      ds = json_body.detect { |d| d[:name] == "Jupyter"}
-      expect(ds[:permission]).not_to include("t", "T")
+      get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/?expand=inodes&action=listing"
+      ds = json_body[:items].detect { |d| d[:name] == "Jupyter"}
+      expect(ds[:attributes][:permission]).not_to include("t", "T")
     end
   end
 
@@ -158,17 +158,17 @@ describe "On #{ENV['OS']}" do
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/python/environments/#{version}?action=create"
         expect_status(201)
 
-        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent/Resources"
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/Resources/?action=listing&expand=inodes"
         expect_status(200)
-        notebook_file = json_body.detect { |d| d[:name] == "mnist.ipynb" }
+        notebook_file = json_body[:items].detect { |d| d[:attributes][:name] == "mnist.ipynb" }
         expect(notebook_file).to be_present
 
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/convertIPythonNotebook/Resources/mnist.ipynb"
         expect_status(200)
 
-        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent/Resources"
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/Resources/?action=listing&expand=inodes"
         expect_status(200)
-        python_file = json_body.detect { |d| d[:name] == "mnist.py" }
+        python_file = json_body[:items].detect { |d| d[:attributes][:name] == "mnist.py" }
         expect(python_file).to be_present
       end
     end

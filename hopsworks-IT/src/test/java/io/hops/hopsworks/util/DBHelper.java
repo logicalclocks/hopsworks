@@ -15,6 +15,10 @@
  */
 package io.hops.hopsworks.util;
 
+import io.hops.hopsworks.util.models.Dataset;
+import io.hops.hopsworks.util.models.Project;
+import io.hops.hopsworks.util.models.User;
+
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.sql.Connection;
@@ -104,6 +108,18 @@ public class DBHelper {
     String sql = "SELECT * FROM users WHERE email=?";
     User user = getUser(sql, email);
     return user;
+  }
+  
+  public Project getProjectByName(String name) {
+    String sql = "SELECT * FROM project WHERE projectname=?";
+    Project project = getProject(sql, name);
+    return project;
+  }
+  
+  public Dataset getDatasetByName(Integer projectId, String name) {
+    String sql = "SELECT * FROM dataset WHERE projectId=? AND inode_name=?";
+    Dataset dataset = getDataset(sql, projectId, name);
+    return dataset;
   }
   
   public int getGroupId(String group) {
@@ -210,6 +226,65 @@ public class DBHelper {
       }
     }
     return user;
+  }
+  
+  public Project getProject(String sql, String ... args) {
+    Project project = null;
+    PreparedStatement stmt = null;
+    ResultSet rs = null;
+    try {
+      stmt = conn.prepareStatement(sql);
+      for (int i = 0; i < args.length; i++) {
+        stmt.setString(i + 1, args[i]);
+      }
+      rs = stmt.executeQuery();
+      if (rs.next()) {
+        project = new Project(rs);
+      }
+    } catch (SQLException e) {
+      e.printStackTrace();
+    } finally {
+      try {
+        if (rs != null) {
+          rs.close();
+        }
+        if (stmt != null) {
+          stmt.close();
+        }
+      } catch (SQLException se) {
+      }
+    }
+    return project;
+  }
+  
+  public Dataset getDataset(String sql, Integer arg, String ... args) {
+    Dataset dataset = null;
+    PreparedStatement stmt = null;
+    ResultSet rs = null;
+    try {
+      stmt = conn.prepareStatement(sql);
+      stmt.setInt(1, arg);
+      for (int i = 0; i < args.length; i++) {
+        stmt.setString(i + 2, args[i]);
+      }
+      rs = stmt.executeQuery();
+      if (rs.next()) {
+        dataset = new Dataset(rs);
+      }
+    } catch (SQLException e) {
+      e.printStackTrace();
+    } finally {
+      try {
+        if (rs != null) {
+          rs.close();
+        }
+        if (stmt != null) {
+          stmt.close();
+        }
+      } catch (SQLException se) {
+      }
+    }
+    return dataset;
   }
   
   public void getRes(PreparedStatement stmt, ResultSet rs, String sql, String ... args) {

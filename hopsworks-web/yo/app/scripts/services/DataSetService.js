@@ -44,232 +44,104 @@
 
 angular.module('hopsWorksApp')
         .factory('DataSetService', ['$http', function ($http) {
+            var getQuery = function (query, queryName, first) {
+                var c = typeof first === "undefined" || first === false? '&' : '?';
+                return typeof query === "undefined"? '': c + queryName + '=' + query;
+            };
             return function (id) {
+              var baseUrl = '/api/project/' + id + '/dataset/';
               var services = {
-
-                /**
-                 * 
-                 * @param {type} fileName
-                 * @returns json
-                 */
-               unzip: function (fileName) {
-                  return $http.get('/api/project/' + id + '/dataset/unzip/' + fileName);
-                },
-                /**
-                 *
-                 * @param {type} fileName
-                 * @returns json
-                 */
-               zip: function (fileName) {
-                  return $http.get('/api/project/' + id + '/dataset/zip/' + fileName);
-                },
-                 
                 /**
                  * Get the listing of all datasets under the current project.
                  * @returns {unresolved}
                  */
-                getAllDatasets: function () {
-                  return $http.get('/api/project/' + id + '/dataset/getContent/');
+                getAllDatasets: function (path, offset, limit, sortBy, filterBy, type) {
+                  var datasetPath = typeof path === "undefined"? '': path;
+                  var datasetType = getQuery(type, 'type');
+                  var lim = getQuery(limit, 'limit');
+                  var off = getQuery(offset, 'offset');
+                  var sort = typeof sortBy === "undefined" || sortBy.length < 1? '':'&sort_by=';
+                  var filter = typeof filterBy === "undefined" || filterBy.length < 1? '':'&filter_by=';
+                  var sortLen = typeof sortBy === "undefined" || sortBy.length < 1? 0 : sortBy.length;
+                  var filterLen = typeof filterBy === "undefined" || filterBy.length < 1? 0 : filterBy.length;
+                  for (var i = 0; i < sortLen; i++) {
+                      sort = sort + sortBy[i];
+                      if (i+1 < sortLen) {
+                          sort = sort + ',';
+                      }
+                  }
+                  for (var j = 0; j < filterLen; j++) {
+                      filter = filter + filterBy[j];
+                      if (j+1 < filterLen) {
+                          filter = filter + '&filter_by='
+                      }
+                  }
+                  return $http.get(baseUrl + datasetPath + '?action=listing&expand=inodes' + off + lim + sort + filter + datasetType);
                 },
-                /**
-                 * Get the contents of the folder to which the path points. 
-                 * The parameter is a path relative to the project root folder.
-                 * @param {type} relativePath
-                 * @returns {unresolved}
-                 */
-                getContents: function (relativePath) {
-                  return $http.get('/api/project/' + id + '/dataset/getContent/' + relativePath);
+                getDatasetStat: function (path, type) {
+                  var datasetType = getQuery(type, 'type');
+                  return $http.get(baseUrl + path + '?action=stat&expand=inodes' + datasetType);
                 },
-                
-                /**
-                 * Checks the existence of a file. Should be caled before fileDownload.
-                 * @param {type} fileName is a path relative to the current ds to the file
-                 * @returns {unresolved}
-                 */
-                checkFileExist: function (fileName) {
-                  return $http.get('/api/project/' + id + '/dataset/fileExists/' + fileName);
+                getDatasetBlob: function (path, mode, type) {
+                  var datasetType = getQuery(type, 'type');
+                  var previewMode = getQuery(mode, 'mode');
+                  return $http.get(baseUrl + path + '?action=blob&expand=inodes' + datasetType + previewMode);
                 },
-                
-                checkFileForDownload: function (fileName) {
-                  return $http.get('/api/project/' + id + '/dataset/checkFileForDownload/' + fileName);
+                create: function (path, templateId, description, searchable, generateReadme, type) {
+                  var template = getQuery(templateId, 'templateId');
+                  var description = getQuery(description, 'description');
+                  var searchable = getQuery(searchable, 'searchable');
+                  var generateReadme = getQuery(generateReadme, 'generate_readme');
+                  var datasetType = getQuery(type, 'type');
+                  return $http.post(baseUrl + path + '?action=create' + template + description + searchable + generateReadme + datasetType);
                 },
-                /**
-                 * Get file or folder to which the path points. 
-                 * The parameter is a path relative to the project root folder.
-                 * @param {type} relativePath
-                 * @returns {unresolved}
-                 */
-                getFile: function (relativePath) {
-                  return $http.get('/api/project/' + id + '/dataset/getFile/' + relativePath);
+                copy: function (path, destinationPath) {
+                  var destinationPath = getQuery(destinationPath, 'destination_path');
+                  return $http.post(baseUrl + path + '?action=copy' + destinationPath);
                 },
-                /**
-                 * Downloads a file using location.href. This can replace the
-                 * page with error page if the download is unsuccessful. So use checkFileExist
-                 * before calling this to minimize the risk of an error page being showed. 
-                 * @param {type} fileName is a path relative to the current ds to the file 
-                 * @returns {undefined}
-                 */
-                fileDownload: function (fileName, token) {
-                  location.href=getPathname() + '/api/project/' + id + '/dataset/fileDownload/' + fileName + '?token=' + token;
+                move: function (path, destinationPath) {
+                  var destinationPath = getQuery(destinationPath, 'destination_path');
+                  return $http.post(baseUrl + path + '?action=move' + destinationPath);
                 },
-                compressFile: function(fileName) {
-                  return $http.get('/api/project/' + id + '/dataset/compressFile/' + fileName);
+                share: function (path, targetProject) {
+                  var targetProject = getQuery(targetProject, 'target_project');
+                  return $http.post(baseUrl + path + '?action=share' + targetProject);
                 },
-                checkFileBlocks: function(fileName){
-                  return $http.get('/api/project/' + id + '/dataset/countFileBlocks/' + fileName);
+                accept: function (path) {
+                  return $http.post(baseUrl + path + '?action=accept');
                 },
-                isDir: function(path){
-                  return $http.get('/api/project/' + id + '/dataset/isDir/' + path);
+                reject: function (path) {
+                  return $http.post(baseUrl + path + '?action=reject');
                 },
-                upload: function (dataSetPath) {
-                  return $http.post('/api/project/' + id + '/dataset/upload/' + dataSetPath);
+                zip: function (path) {
+                  return $http.post(baseUrl + path + '?action=zip');
                 },
-                createDataSetDir: function (dataSet) {
-                  var regReq = {
-                    method: 'POST',
-                    url: '/api/project/' + id + '/dataset',
-                    headers: {
-                      'Content-Type': 'application/json'
-                    },
-                    data: dataSet
-                  };
-
-                  return $http(regReq);
+                unzip: function (path) {
+                  return $http.post(baseUrl + path + '?action=unzip');
                 },
-                createTopLevelDataSet: function (dataSet) {
-                  var regReq = {
-                    method: 'POST',
-                    url: '/api/project/' + id + '/dataset/createTopLevelDataSet',
-                    headers: {
-                      'Content-Type': 'application/json'
-                    },
-                    data: dataSet
-                  };
-
-                  return $http(regReq);
+                permissions: function (path, permissions) {
+                  return $http.put(baseUrl + path + '?action=permission' + '&permissions=' + permissions);
                 },
-                shareDataSet: function (dataSet) {
-                  var regReq = {
-                    method: 'POST',
-                    url: '/api/project/' + id + '/dataset/shareDataSet',
-                    headers: {
-                      'Content-Type': 'application/json'
-                    },
-                    data: dataSet
-                  };
-
-                  return $http(regReq);
+                updateDescription: function (path, description) {
+                  return $http.put(baseUrl + path + '?action=description' + '&description=' + description);
                 },
-                permissions: function (dataSet) {
-                  var regReq = {
-                    method: 'PUT',
-                    url: '/api/project/' + id + '/dataset/permissions',
-                    headers: {
-                      'Content-Type': 'application/json'
-                    },
-                    data: dataSet
-                  };
-
-                  return $http(regReq);
+                delete: function (path) {
+                  return $http.delete(baseUrl + path);
                 },
-                unshareDataSet: function (dataSet) {
-                  var regReq = {
-                    method: 'POST',
-                    url: '/api/project/' + id + '/dataset/unshareDataSet',
-                    headers: {
-                      'Content-Type': 'application/json'
-                    },
-                    data: dataSet
-                  };
-
-                  return $http(regReq);
+                deleteCorrupted: function (path) {
+                  return $http.delete(baseUrl + path + '?action=corrupted');
                 },
-                projectsSharedWith: function (dataSet) {
-                  var regReq = {
-                    method: 'POST',
-                    url: '/api/project/' + id + '/dataset/projectsSharedWith',
-                    headers: {
-                      'Content-Type': 'application/json'
-                    },
-                    data: dataSet
-                  };
-
-                  return $http(regReq);
+                unshare: function (path, targetProject) {
+                  var targetProject = getQuery(targetProject, 'target_project');
+                  return $http.delete(baseUrl + path + '?action=unshare' + targetProject);
                 },
-                acceptDataset: function (inodeId) {
-                  return $http.get('/api/project/' + id + '/dataset/accept/' + inodeId);
+                getDownloadToken: function (path, type) {
+                  var datasetType = getQuery(type, 'type', true);
+                  return $http.get(baseUrl + 'download/token/' + path + datasetType);
                 },
-                rejectDataset: function (inodeId) {
-                  return $http.get('/api/project/' + id + '/dataset/reject/' + inodeId);
-                },
-                removeDataSetDir: function (fileName) {
-                  return $http.delete('/api/project/' + id + '/dataset/' + fileName);
-                },
-                removeImportedDataSetDir: function (fileName) {
-                  return $http.delete('/api/project/' + id + '/dataset/removeImportedDataset/' + fileName);
-                },
-                filePreview: function (filePath, mode) {
-                  return $http.get('/api/project/' + id + '/dataset/filePreview/' + filePath +"?mode="+mode);
-                },
-                move: function (srcInodeId, fullPath) {
-                  
-                  var moveOp = { 
-                    inodeId: srcInodeId, 
-                    destPath: fullPath 
-                  };
-
-                  var moveReq = {
-                    method: 'POST',
-                    url: '/api/project/' + id + '/dataset/move',
-                    headers: {
-                      'Content-Type': 'application/json'
-                    },
-                    data: moveOp
-                  };
-                  return $http(moveReq);                  
-                },
-                copy: function (srcInodeId, fullPath) {
-                  var copyOp = { 
-                    inodeId: srcInodeId, 
-                    destPath: fullPath 
-                  };
-
-                  var copyReq = {
-                    method: 'POST',
-                    url: '/api/project/' + id + '/dataset/copy',
-                    headers: {
-                      'Content-Type': 'application/json'
-                    },
-                    data: copyOp
-                  };
-                  return $http(copyReq);                  
-                },
-                attachTemplate: function (fileTemplateData) {
-                  var regReq = {
-                    method: 'POST',
-                    url: '/api/project/' + id + '/dataset/attachTemplate',
-                    headers: {
-                      'Content-Type': 'application/json'
-                    },
-                    data: fileTemplateData
-                  };
-
-                  return $http(regReq);
-                },
-                fetchTemplate: function(templateid, sender){
-                  return $http.get('/api/metadata/fetchtemplate/' + templateid + '/' + sender);
-                },
-                fetchTemplatesForInode: function(inodeid){
-                  return $http.get('/api/metadata/fetchtemplatesforinode/' + inodeid);
-                },
-                fetchAvailableTemplatesforInode: function(inodeid){
-                  return $http.get('/api/metadata/fetchavailabletemplatesforinode/' + inodeid);
-                },
-                detachTemplate: function(inodeid, templateid){
-                  return $http.get('/api/metadata/detachtemplate/' + inodeid + '/' + templateid);
-                },
-                fetchMetadata: function (inodePid, inodeName, tableId) {
-                  return $http.get('/api/metadata/fetchmetadata/' + inodePid + '/' + inodeName + '/' + tableId);
+                download: function (path, token, type) {
+                  var datasetType = getQuery(type, 'type');
+                  location.href=getPathname() + baseUrl + 'download/' + path + '?token=' + token + datasetType;
                 }
               };
               return services;

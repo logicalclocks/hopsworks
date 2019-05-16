@@ -111,7 +111,8 @@
                            ng-checked="projectCreatorCtrl.exists(projectType)"
                            ng-click="projectCreatorCtrl.addSelected(projectType)"
                            aria-label="projectType"
-                           tabindex="4">
+                           tabindex="{{$index}}"
+                           id="{{projectType}}">
                 {{ projectType}}
               </md-checkbox>
             </div>

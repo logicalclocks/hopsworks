@@ -64,6 +64,7 @@ import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+import io.hops.hopsworks.common.dao.dataset.DatasetSharedWith;
 import io.hops.hopsworks.common.dao.tensorflow.TensorBoard;
 import io.hops.hopsworks.common.dao.serving.Serving;
 import org.codehaus.jackson.annotate.JsonIgnore;
@@ -130,9 +131,11 @@ public class Project implements Serializable {
       mappedBy = "project")
   private Collection<ProjectServices> projectServicesCollection;
   @OneToMany(cascade = CascadeType.ALL,
-      mappedBy = "project")
+      mappedBy = "project", fetch = FetchType.LAZY)
   private Collection<Dataset> datasetCollection;
-
+  @OneToMany(cascade = CascadeType.ALL,
+    mappedBy = "project", fetch = FetchType.LAZY)
+  private Collection<DatasetSharedWith> datasetSharedWithCollectionCollection;
   @OneToMany(cascade = CascadeType.ALL,
       mappedBy = "projectId")
   private Collection<CondaCommands> condaCommandsCollection;
@@ -438,7 +441,18 @@ public class Project implements Serializable {
   public void setDatasetCollection(Collection<Dataset> datasetCollection) {
     this.datasetCollection = datasetCollection;
   }
-
+  
+  @XmlTransient
+  @JsonIgnore
+  public Collection<DatasetSharedWith> getDatasetSharedWithCollectionCollection() {
+    return datasetSharedWithCollectionCollection;
+  }
+  
+  public void setDatasetSharedWithCollectionCollection(
+    Collection<DatasetSharedWith> datasetSharedWithCollectionCollection) {
+    this.datasetSharedWithCollectionCollection = datasetSharedWithCollectionCollection;
+  }
+  
   @XmlTransient
   @JsonIgnore
   public Collection<PythonDep> getPythonDepCollection() {

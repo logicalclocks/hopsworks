@@ -18,12 +18,12 @@ package io.hops.hopsworks.api.serving;
 
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
-import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.serving.Serving;
 import io.hops.hopsworks.common.dao.serving.ServingFacade;
 import io.hops.hopsworks.common.dao.serving.ServingType;
 import io.hops.hopsworks.common.hdfs.Utils;
+import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.serving.ServingWrapper;
 import io.hops.hopsworks.exceptions.ServingException;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -46,7 +46,7 @@ public class ServingUtil {
   @EJB
   private ServingFacade servingFacade;
   @EJB
-  private InodeFacade inodeFacade;
+  private InodeController inodeController;
   
   /**
    * Validates user input before creating or updating a serving. This method contains the common input validation
@@ -108,7 +108,7 @@ public class ServingUtil {
     if (hdfsPath.substring(0, 7).equalsIgnoreCase("hdfs://")) {
       hdfsPath = hdfsPath.substring(7);
     }
-    if(!inodeFacade.existsPath(hdfsPath)){
+    if(!inodeController.existsPath(hdfsPath)){
       throw new IllegalArgumentException("Python script path does not exist in HDFS");
     }
     
@@ -147,7 +147,7 @@ public class ServingUtil {
    */
   private void validateTfModelPath(String path, Integer version) throws IllegalArgumentException {
     try {
-      List<Inode> children = inodeFacade.getChildren(Paths.get(path, version.toString()).toString());
+      List<Inode> children = inodeController.getChildren(Paths.get(path, version.toString()).toString());
       
       if (children.stream().noneMatch(inode -> inode.getInodePK().getName().equals("variables")) ||
         children.stream().noneMatch(inode -> inode.getInodePK().getName().contains(".pb"))) {

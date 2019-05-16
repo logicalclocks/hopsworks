@@ -31,6 +31,9 @@ angular.module('hopsWorksApp').service('DatasetBrowserService', ['DataSetService
             this.working = false;
             this.type = type;
             this.referenceId = growlReferenceId;
+            this.pageSize = 20;
+            this.currentPage = 1;
+            this.filesCount = 0;
             this.datasetService = DataSetService(this.projectId);
             this.init();
         };
@@ -53,9 +56,11 @@ angular.module('hopsWorksApp').service('DatasetBrowserService', ['DataSetService
             self.files = [];
             self.selected = -1;
             self.isDir = true;
-            self.datasetService.getAllDatasets().then(function(success) {
+            self.currentPage = 1;
+            self.datasetService.getAllDatasets(undefined, self.currentPage -1, self.pageSize, ['ID:asc']).then(function(success) {
                 self.pathFiles = [];
-                self.setFiles(success.data);
+                self.setFiles(success.data.items);
+                self.filesCount = success.data.count;
             }, function(error) {
                 showError(error, self.referenceId);
             }).finally(function() {
@@ -69,10 +74,12 @@ angular.module('hopsWorksApp').service('DatasetBrowserService', ['DataSetService
             var self = this;
             self.working = true;
             self.files = [];
-            self.selected = -1
-            self.datasetService.getContents(file.path).then(function(success) {
+            self.selected = -1;
+            self.currentPage = 1;
+            self.datasetService.getAllDatasets(file.attributes.path, self.currentPage -1, self.pageSize, ['ID:asc']).then(function(success) {
                 self.pathFiles.push(file);
-                self.setFiles(success.data);
+                self.setFiles(success.data.items);
+                self.filesCount = success.data.count;
             }, function(error) {
                 showError(error, self.referenceId);
             }).finally(function() {
@@ -102,10 +109,10 @@ angular.module('hopsWorksApp').service('DatasetBrowserService', ['DataSetService
                 return;
             }
             var self = this;
-            self.isDir = file.dir;
+            self.isDir = file.attributes.dir;
             if (!self.isDir) {
                 var currentFile = self.getCurrentFile();
-                if (!currentFile.dir) {
+                if (!currentFile.attributes.dir) {
                     self.pathFiles.pop();
                 }
                 self.selected = index;
@@ -126,8 +133,7 @@ angular.module('hopsWorksApp').service('DatasetBrowserService', ['DataSetService
             var files = angular.copy(this.pathFiles);
             var type = findType(files);
             var file = files.pop();
-            var path = getPathArray(file.path);
-
+            var path = getPathArray(file.attributes.path);
             if (type === "DATASET") {
                 path.splice(0, 2); // remove /Projects/projectName
             } else {
@@ -144,7 +150,7 @@ angular.module('hopsWorksApp').service('DatasetBrowserService', ['DataSetService
             }
             var files = angular.copy(this.pathFiles);
             var file = files.pop();
-            this.fullPath = file.path;
+            this.fullPath = file.attributes.path;
             return this.fullPath;
         };
 
@@ -167,6 +173,26 @@ angular.module('hopsWorksApp').service('DatasetBrowserService', ['DataSetService
             }
         };
 
+        DatasetBrowserService.prototype.pageChange = function (newPageNumber) {
+            var self = this;
+            self.currentPage = newPageNumber;
+            var current = self.getCurrentFile();
+            if (typeof current === "undefined") {
+                return;
+            }
+            var offset = (self.currentPage - 1)*self.pageSize;
+            self.datasetService.getAllDatasets(current.attributes.path, offset, self.pageSize, ['ID:asc']).then(function(success) {
+                self.setFiles(success.data.items);
+                self.filesCount = success.data.count;
+            }, function(error) {
+                showError(error, self.referenceId);
+            }).finally(function() {
+                self.working = false;
+                self.getRelativePath();
+                self.getFullPath();
+            });
+        };
+
         function getPathArray(path) {
             if (typeof path === 'undefined') {
                 return [];
@@ -179,8 +205,8 @@ angular.module('hopsWorksApp').service('DatasetBrowserService', ['DataSetService
         function findType(files) {
             var i;
             for (i = 0; i < files.length; i++) {
-                if (typeof files[i].type !== 'undefined') {
-                   return files[i].type;
+                if (typeof files[i].datasetType !== 'undefined') {
+                   return files[i].datasetType;
                 }
             }
         }

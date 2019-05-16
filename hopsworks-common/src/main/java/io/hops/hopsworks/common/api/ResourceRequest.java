@@ -160,7 +160,8 @@ public class ResourceRequest {
     MACHINETYPES,
     LIBRARIES,
     DATASETREQUESTS,
-    APIKEY;
+    APIKEY,
+    TEMPLATE;
     
     public static Name fromString(String name) {
       return valueOf(name.toUpperCase());

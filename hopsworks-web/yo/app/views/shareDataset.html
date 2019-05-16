@@ -52,7 +52,6 @@
                         <label class="text-muted control-label">Projects</label><br>
                         <div class="btn-group" role="group" aria-label="..." style="min-width: 100%">
                             <div uib-dropdown class="btn-group" role="group" style="width: 21%">
-
                                     <button type="button"
                                             uib-dropdown-toggle
                                             class="btn btn-default"
@@ -65,60 +64,41 @@
                                         <li role="menuitem"><a > All</a></li>
                                         <li role="menuitem"><a > Requested</a></li>
                                     </ul>
-
                             </div>
-
                             <div class="btn-group" role="group" style="width: 100%">
                                 <div type="button" class="btn btn-default" style="padding: 3px;width: 100%">
-                                    <ui-select name="project_name" theme="select2"
-                                               ng-model="shareDatasetCtrl.dataSet.projectId" style="width: 100%" required>
-
+                                    <ui-select name="project_name" theme="select2" id="project_select"
+                                               ng-model="shareDatasetCtrl.targetProject" style="width: 100%" required>
                                         <ui-select-match placeholder="Select a project to share with">{{$select.selected.name}}</ui-select-match>
-
-                                        <ui-select-choices repeat="project.id as project in shareDatasetCtrl.projects  | filter: omitCurrentProject | filter: $select.search">
-                                            <div ng-bind-html="project.name | highlight: $select.search"></div>
+                                        <ui-select-choices repeat="project.name as project in shareDatasetCtrl.projects | filter: omitCurrentProject | filter: $select.search">
+                                            <div>
+                                                <span ng-bind-html="project.name | highlight: $select.search"></span>
+                                            </div>
                                             <small>
                                                 Owner: {{project.owner.fname}} {{project.owner.lname}}
                                             </small>
                                         </ui-select-choices>
-
+                                        <ui-select-no-choice>
+                                            <span ng-if="shareDatasetCtrl.loading" class="loading-dots-sm">Loading</span>
+                                            <span ng-if="!shareDatasetCtrl.loading">No project found</span>
+                                        </ui-select-no-choice>
                                     </ui-select><br>
-                                    <span ng-show="(dataSetForm.$submitted || dataSetForm.project_name.$dirty) &amp;&amp;
-                                          dataSetForm.project_name.$error.required"
-                                          class="text-danger ng-hide">
-                                        Choose a project to share with.
+                                    <span ng-show="(dataSetForm.$submitted || dataSetForm.project_name.$dirty) &amp;&amp; dataSetForm.project_name.$error.required"
+                                          class="text-danger ng-hide">Choose a project to share with.
                                     </span>
                                 </div>
                             </div>
-
-
                         </div>
                     <p></p>
-                    <div>
-                    <label class="text-muted control-label">Description</label>
-
-                    <div class="controls">
-                      <textarea class="form-control" style="resize:none;"
-                                ng-model="shareDatasetCtrl.dataSet.description"
-                                rows="3">
-                      </textarea>
-                    </div>
-
-                    </div>
                 </div>
                 </div>
             </fieldset>
             <fieldset>
                 <div class="col-md-1">
-
                 </div>
             </fieldset>
         </div>
-
         <div class="modal-footer" style="padding-bottom: 1px; padding-right: 1px">
-          
-            <!--<button class="btn btn-default" type="button" ng-click="shareDatasetCtrl.setPermissionsModal('GROUP_WRITABLE_SB')" style="float: left;">Editable (Owner Protected)</button>
-            <button class="btn btn-default" type="button" ng-click="shareDatasetCtrl.setPermissionsModal('GROUP_WRITABLE')" style="float: left;">Editable</button>-->
             <button class="btn btn-default" type="button" ng-click="shareDatasetCtrl.close()">Cancel</button>
             <button class="btn btn-primary" type="submit" ng-disabled="dataSetForm.dataSet_name.$error.required">
                 Share

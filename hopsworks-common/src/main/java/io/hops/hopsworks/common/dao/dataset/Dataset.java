@@ -42,6 +42,8 @@ package io.hops.hopsworks.common.dao.dataset;
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.project.Project;
+import org.apache.hadoop.fs.permission.FsPermission;
+import org.codehaus.jackson.annotate.JsonIgnore;
 
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
@@ -62,97 +64,84 @@ import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 import java.io.Serializable;
 import java.util.Collection;
 
+
 @Entity
-@Table(name = "hopsworks.dataset")
+@Table(name = "dataset",
+    catalog = "hopsworks",
+    schema = "")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "Dataset.findAll",
-          query = "SELECT d FROM Dataset d"),
-  @NamedQuery(name = "Dataset.findById",
-          query
-          = "SELECT d FROM Dataset d WHERE d.id = :id"),
-  @NamedQuery(name = "Dataset.findByInodeId",
-          query
-          = "SELECT d FROM Dataset d WHERE d.InodeId = :inodeId"),
-  @NamedQuery(name = "Dataset.findByInode",
-          query = "SELECT d FROM Dataset d WHERE d.inode = :inode"),
-  @NamedQuery(name = "Dataset.findByProjectAndInode",
-          query
-          = "SELECT d FROM Dataset d WHERE d.project = :projectId AND d.inode = :inode"),
-  @NamedQuery(name = "Dataset.findByProject",
-          query
-          = "SELECT d FROM Dataset d WHERE d.project = :projectId"),
-  @NamedQuery(name = "Dataset.findAllPublic",
-          query = "SELECT d FROM Dataset d WHERE d.publicDs in (1,2)"),//AND d.shared = 0
-  @NamedQuery(name = "Dataset.findAllByState",
-          query = "SELECT d FROM Dataset d WHERE d.publicDs = :state AND d.shared = :shared"),
-  @NamedQuery(name = "Dataset.findByDescription",
-          query = "SELECT d FROM Dataset d WHERE d.description = :description"),
-  @NamedQuery(name = "Dataset.findByPublicDsIdProject",
-          query = "SELECT d FROM Dataset d WHERE d.publicDsId = :publicDsId AND d.project = :project"),
-  @NamedQuery(name = "Dataset.findByName",
-          query = "SELECT d FROM Dataset d WHERE d.name = :name"),
-  @NamedQuery(name = "Dataset.findByNameAndProjectId",
-          query
-          = "SELECT d FROM Dataset d WHERE d.name = :name AND d.project = :project"),
-  @NamedQuery(name = "Dataset.findSharedWithProject",
-          query
-          = "SELECT d FROM Dataset d WHERE d.project = :projectId AND "
-                  + "d.shared = true"),
-  @NamedQuery(name = "Dataset.findByPublicDsId",
-    query = "SELECT d FROM Dataset d WHERE d.publicDsId = :publicDsId")})
+      query = "SELECT d FROM Dataset d")
+  ,
+    @NamedQuery(name = "Dataset.findById",
+      query = "SELECT d FROM Dataset d WHERE d.id = :id")
+  ,
+    @NamedQuery(name = "Dataset.findByInode",
+      query = "SELECT d FROM Dataset d WHERE d.inode = :inode")
+  ,
+    @NamedQuery(name = "Dataset.findByProject",
+      query = "SELECT d FROM Dataset d WHERE d.project = :project")
+  ,
+    @NamedQuery(name = "Dataset.findByProjectAndInode",
+      query = "SELECT d FROM Dataset d WHERE d.project = :project AND d.inode = :inode")
+  ,
+    @NamedQuery(name = "Dataset.findBySearchable",
+      query = "SELECT d FROM Dataset d WHERE d.searchable = :searchable")
+  ,
+    @NamedQuery(name = "Dataset.findByPublicDs",
+      query = "SELECT d FROM Dataset d WHERE d.publicDs = :publicDs")
+  ,
+    @NamedQuery(name = "Dataset.findByPublicDsId",
+      query = "SELECT d FROM Dataset d WHERE d.publicDsId = :publicDsId")
+  ,
+    @NamedQuery(name = "Dataset.findByPublicDsIdProject",
+      query = "SELECT d FROM Dataset d WHERE d.project = :project AND d.publicDsId = :publicDsId")
+  ,
+    @NamedQuery(name = "Dataset.findAllPublic",
+      query = "SELECT d FROM Dataset d WHERE d.publicDs in (1,2)")
+  ,
+    @NamedQuery(name = "Dataset.findPublicByState",
+      query = "SELECT d FROM Dataset d WHERE d.publicDs = :publicDs")
+  ,
+    @NamedQuery(name = "Dataset.findByDstype",
+      query = "SELECT d FROM Dataset d WHERE d.dsType = :dstype")})
 public class Dataset implements Serializable {
 
   private static final long serialVersionUID = 1L;
-  public static final boolean PENDING = false;
-  public static final boolean ACCEPTED = true;
   @Id
-  @GeneratedValue(strategy = GenerationType.SEQUENCE)
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Basic(optional = false)
   @Column(name = "id")
   private Integer id;
   @JoinColumns({
     @JoinColumn(name = "inode_pid",
-            referencedColumnName = "parent_id"),
+      referencedColumnName = "parent_id"),
     @JoinColumn(name = "inode_name",
-            referencedColumnName = "name"),
+      referencedColumnName = "name"),
     @JoinColumn(name = "partition_id",
-            referencedColumnName = "partition_id")})
+      referencedColumnName = "partition_id")})
   @ManyToOne(optional = false)
   private Inode inode;
-
-  @Basic(optional = false)
-  @Column(name = "inode_name",
-          updatable = false,
-          insertable = false)
-  private String name;
-
   @Basic(optional = false)
   @Column(name = "inode_id")
-  private long InodeId = 0;
-
-  @Size(max = 3000)
+  private Long inodeId;
+  @Basic(optional = false)
+  @Column(name = "inode_name",
+    updatable = false,
+    insertable = false)
+  private String name;
+  @Size(max = 2000)
   @Column(name = "description")
   private String description;
-  @JoinColumn(name = "projectId",
-          referencedColumnName = "id")
-  @ManyToOne(optional = false)
-  private Project project;
-  @Basic(optional = false)
-  @NotNull
-  @Column(name = "editable")
-  private int editable = 0;
   @Basic(optional = false)
   @NotNull
   @Column(name = "searchable")
-  private boolean searchable = true;
-  @Basic(optional = false)
-  @NotNull
-  @Column(name = "status")
-  private boolean status = ACCEPTED;
+  private boolean searchable;
   @Basic(optional = false)
   @NotNull
   @Column(name = "public_ds")
@@ -162,20 +151,23 @@ public class Dataset implements Serializable {
   private String publicDsId;
   @Basic(optional = false)
   @NotNull
-  @Column(name = "shared")
-  private boolean shared = false;
-  @Basic(optional = false)
-  @NotNull
   @Enumerated(EnumType.ORDINAL)
   @Column(name = "dstype")
-  private DatasetType type = DatasetType.DATASET;
-  @JoinColumn(name = "feature_store_id", referencedColumnName = "id")
-  @ManyToOne(optional = false)
-  private Featurestore featurestore = null;
-
+  private DatasetType dsType = DatasetType.DATASET;
   @OneToMany(cascade = CascadeType.ALL,
-          mappedBy = "dataset")
+    mappedBy = "dataset")
   private Collection<DatasetRequest> datasetRequestCollection;
+  @OneToMany(cascade = CascadeType.ALL,
+    mappedBy = "dataset")
+  private Collection<DatasetSharedWith> datasetSharedWithCollection;
+  @JoinColumn(name = "feature_store_id",
+      referencedColumnName = "id")
+  @ManyToOne
+  private Featurestore featureStore;
+  @JoinColumn(name = "projectId",
+      referencedColumnName = "id")
+  @ManyToOne(optional = false)
+  private Project project;
 
   public Dataset() {
   }
@@ -183,36 +175,31 @@ public class Dataset implements Serializable {
   public Dataset(Integer id) {
     this.id = id;
   }
-
+  
   public Dataset(Integer id, Inode inode) {
     this.id = id;
     this.inode = inode;
-    this.InodeId = inode.getId();
     this.name = inode.getInodePK().getName();
+    this.inodeId = inode.getId();
   }
-
+  
   public Dataset(Inode inode, Project project) {
     this.inode = inode;
     this.project = project;
-    this.InodeId = inode.getId();
     this.name = inode.getInodePK().getName();
+    this.inodeId = inode.getId();
   }
-
+  
   public Dataset(Dataset ds, Project project){
     this.inode = ds.getInode();
     this.project = project;
-    this.InodeId = ds.getInodeId();
     this.name = ds.getInode().getInodePK().getName();
+    this.inodeId = ds.getInode().getId();
     this.searchable = ds.isSearchable();
     this.description = ds.getDescription();
-    this.editable = ds.getPermissionsAsInt();
     this.publicDs = ds.getPublicDs();
-    this.type = ds.getType();
-    this.featurestore = ds.getFeaturestore();
-  }
-  
-  public String getName() {
-    return name;
+    this.dsType = ds.getDsType();
+    this.featureStore = ds.getFeatureStore();
   }
 
   public Integer getId() {
@@ -222,15 +209,37 @@ public class Dataset implements Serializable {
   public void setId(Integer id) {
     this.id = id;
   }
-
+  
   public Inode getInode() {
     return inode;
   }
-
+  
   public void setInode(Inode inode) {
     this.inode = inode;
+    this.inodeId = inode.getId();
+    this.name = inode.getInodePK().getName();
   }
-
+  
+  public String getName() {
+    return name;
+  }
+  
+  public void setName(String name) {
+    this.name = name;
+  }
+  
+  public boolean isSearchable() {
+    return searchable;
+  }
+  
+  public Project getProject() {
+    return project;
+  }
+  
+  public void setProject(Project project) {
+    this.project = project;
+  }
+  
   public String getDescription() {
     return description;
   }
@@ -239,86 +248,20 @@ public class Dataset implements Serializable {
     this.description = description;
   }
 
-  public Project getProject() {
-    return project;
-  }
-
-  public void setProject(Project project) {
-    this.project = project;
-  }
-  
-  private int getPermissionsAsInt() {
-    return editable;
-  }
-
-  public DatasetPermissions getEditable() {
-    switch (this.editable) {
-      case 0:
-        return DatasetPermissions.OWNER_ONLY;
-      case 1:
-        return DatasetPermissions.GROUP_WRITABLE_SB;
-      case 2:
-        return DatasetPermissions.GROUP_WRITABLE;
-      default:
-        break;
-    }
-    return null;
-  }
-
-  public void setEditable(DatasetPermissions permissions) {
-    if (null != permissions) {
-      switch (permissions) {
-        case OWNER_ONLY:
-          this.editable = 0;
-          break;
-        case GROUP_WRITABLE_SB:
-          this.editable = 1;
-          break;
-        case GROUP_WRITABLE:
-          this.editable = 2;
-          break;
-        default:
-          break;
-      }
-    }
-  }
-
-  public boolean isSearchable() {
-    return this.searchable;
+  public boolean getSearchable() {
+    return searchable;
   }
 
   public void setSearchable(boolean searchable) {
     this.searchable = searchable;
   }
 
-  public boolean getStatus() {
-    return status;
-  }
-
-  public void setStatus(boolean status) {
-    this.status = status;
-  }
-
-  public boolean isPublicDs() {
-    if(publicDs == 0 ) {
-      return false;
-    }
-    return true;
-  }
-
   public int getPublicDs() {
     return publicDs;
   }
-  public void setPublicDs(int sharedState) {
-    this.publicDs = sharedState;
-  }
-  
-  public SharedState getPublicDsState() {
-    return SharedState.of(publicDs);
-  }
-  
-  public void setPublicDsState(SharedState sharedState) {
-    this.publicDs = sharedState.state;
+
+  public void setPublicDs(int publicDs) {
+    this.publicDs = publicDs;
   }
 
   public String getPublicDsId() {
@@ -329,35 +272,66 @@ public class Dataset implements Serializable {
     this.publicDsId = publicDsId;
   }
 
-  public boolean isShared() {
-    return shared;
+  public DatasetType getDsType() {
+    return dsType;
   }
 
-  public void setShared(boolean shared) {
-    this.shared = shared;
+  public void setDsType(DatasetType dsType) {
+    this.dsType = dsType;
   }
 
-  public void setType(DatasetType type) { this.type = type; }
-
-  public DatasetType getType() { return this.type; }
-
-  public Featurestore getFeaturestore() {
-    return featurestore;
+  public Featurestore getFeatureStore() {
+    return featureStore;
   }
 
-  public void setFeaturestore(Featurestore featurestore) {
-    this.featurestore = featurestore;
+  public void setFeatureStore(Featurestore featureStoreId) {
+    this.featureStore = featureStoreId;
   }
-
+  
+  @XmlTransient
+  @JsonIgnore
   public Collection<DatasetRequest> getDatasetRequestCollection() {
     return datasetRequestCollection;
   }
-
-  public void setDatasetRequestCollection(
-          Collection<DatasetRequest> datasetRequestCollection) {
+  
+  public void setDatasetRequestCollection(Collection<DatasetRequest> datasetRequestCollection) {
     this.datasetRequestCollection = datasetRequestCollection;
   }
-
+  
+  @XmlTransient
+  @JsonIgnore
+  public Collection<DatasetSharedWith> getDatasetSharedWithCollection() {
+    return datasetSharedWithCollection;
+  }
+  
+  public void setDatasetSharedWithCollection(Collection<DatasetSharedWith> datasetSharedWithCollection) {
+    this.datasetSharedWithCollection = datasetSharedWithCollection;
+  }
+  
+  public void setPublicDsState(SharedState sharedState) {
+    this.publicDs = sharedState.state;
+  }
+  
+  public boolean isPublicDs() {
+    if(publicDs == 0 ) {
+      return false;
+    }
+    return true;
+  }
+  
+  public boolean isShared(Project project) {
+    return !this.project.equals(project);
+  }
+  
+  public Long getInodeId() {
+    return this.getInode().getId();
+  }
+  
+  public DatasetPermissions getPermissions() {
+    FsPermission fsPermission = new FsPermission(this.inode.getPermission());
+    return DatasetPermissions.fromFilePermissions(fsPermission);
+  }
+  
   @Override
   public int hashCode() {
     int hash = 0;
@@ -372,52 +346,15 @@ public class Dataset implements Serializable {
       return false;
     }
     Dataset other = (Dataset) object;
-    if ((this.id == null && other.id != null) || (this.id != null && !this.id.
-            equals(other.id))) {
+    if ((this.id == null && other.id != null) || (this.id != null && !this.id.equals(other.id))) {
       return false;
     }
     return true;
   }
-  /**
-   * DO NOT USE THIS - used by ePipe
-   *
-   * @return
-   */
-  public long getInodeId() {
-    return InodeId;
-  }
-
-  public void setInodeId(long InodeId) {
-    this.InodeId = InodeId;
-  }
 
   @Override
   public String toString() {
-    return "se.kth.hopsworks.dataset.Dataset[ id=" + id + " ]";
+    return "Dataset[ id=" + id + " ]";
   }
-
-  public static enum SharedState {
-    PRIVATE((byte)0),
-    CLUSTER((byte)1),
-    HOPS((byte)2);
-    
-    public final int state;
-    
-    SharedState(byte state) {
-      this.state = state;
-    }
-    
-    public static SharedState of(int state) {
-      switch(state) {
-        case 0:
-          return SharedState.PRIVATE;
-        case 1:
-          return SharedState.CLUSTER;
-        case 2:
-          return SharedState.HOPS;
-        default:
-          throw new IllegalArgumentException("undefined state:" + state);
-      }
-    }
-  }
+  
 }

@@ -142,7 +142,7 @@
 
               <button class="btn"
                       style="width: 100%;border-radius: 0px; padding:10px;"
-                      ng-click="metadataCtrl.importTemplate()">
+                      ng-click="metadataCtrl.importTemplate()" id="upload-metadata">
                 <i class="fa fa-plus fa-lg pull-left" style="margin-top: 4px;"></i>
                 <span class="pull-left">Upload template</span>
               </button>
@@ -181,7 +181,8 @@
 
                       <!--onaftersave="metadataCtrl.updateTemplateName(template)"-->
 
-                      <span editable-text="template.name" e-form="editForm" style="font-size: 14px;" onaftersave="metadataCtrl.updateTemplateName(template)">
+                      <span editable-text="template.name" e-form="editForm" style="font-size: 14px;"
+                            onaftersave="metadataCtrl.updateTemplateName(template)" id="template-{{template.name}}">
                         <span class="glyphicon glyphicon-hand-right" ng-show="template.showing"></span><label style="font-weight: bold;margin-left: 10px" ng-show="template.showing" >{{template.name| cut:true:16:' ...'}}</label>
                         <label style="font-weight: normal" ng-hide="template.showing">{{template.name| cut:true:30:' ...'}}</label>
                       </span>

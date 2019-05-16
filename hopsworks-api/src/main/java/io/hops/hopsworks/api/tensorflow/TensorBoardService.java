@@ -28,6 +28,7 @@ import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.tensorflow.config.TensorBoardDTO;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.elastic.ElasticController;
+import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.TensorBoardException;
@@ -66,6 +67,8 @@ public class TensorBoardService {
   private ProjectFacade projectFacade;
   @EJB
   private InodeFacade inodesFacade;
+  @EJB
+  private InodeController inodeController;
   @EJB
   private TensorBoardController tensorBoardController;
   @EJB
@@ -127,7 +130,7 @@ public class TensorBoardService {
     hdfsLogdir = tensorBoardController.replaceNN(hdfsLogdir);
 
     DsPath tbPath = pathValidator.validatePath(this.project, hdfsLogdir);
-    tbPath.validatePathExists(inodesFacade, true);
+    tbPath.validatePathExists(inodeController, true);
 
     TensorBoardDTO tensorBoardDTO = null;
     tensorBoardDTO = tensorBoardController.startTensorBoard(elasticId, this.project, user, hdfsLogdir);

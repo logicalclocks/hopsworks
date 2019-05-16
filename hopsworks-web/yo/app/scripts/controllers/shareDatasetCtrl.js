@@ -38,14 +38,15 @@
  */
 
 angular.module('hopsWorksApp')
-    .controller('ShareDatasetCtrl', ['$scope','$uibModalInstance', 'DataSetService', '$routeParams', 'growl', 'ProjectService', 'dsName', 'dsType', 'permissions', 'ModalService',
-        function ($scope, $uibModalInstance, DataSetService, $routeParams, growl, ProjectService, dsName, dsType, permissions, ModalService) {
+    .controller('ShareDatasetCtrl', ['$scope','$uibModalInstance', 'DataSetService', '$routeParams', 'growl', 'ProjectService', 'datasetPath', 'dsType', 'permissions', 'ModalService',
+        function ($scope, $uibModalInstance, DataSetService, $routeParams, growl, ProjectService, datasetPath, dsType, permissions, ModalService) {
 
             var self = this;
             self.datasets = [];
             self.projects = [];
-            self.dataSet = {'name': dsName, 'description': "", 'projectId': "", 'permissions': permissions, type: dsType};
+            self.targetProject = null;
             self.pId = $routeParams.projectID;
+            self.loading = true;
             var dataSetService = DataSetService(self.pId);
             var defaultPermissions = 'OWNER_ONLY';
             
@@ -58,12 +59,14 @@ angular.module('hopsWorksApp')
             ProjectService.getAll().$promise.then(
                 function (success) {
                     self.projects = success;
+                    self.loading = false;
                 }, function (error) {
                     if (typeof error.data.usrMsg !== 'undefined') {
                         growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
                     } else {
                         growl.error("", {title: error.data.errorMsg, ttl: 8000});
                     }
+                    self.loading = false;
                 }
             );
 
@@ -74,7 +77,7 @@ angular.module('hopsWorksApp')
 
             self.shareDataset = function () {
                 if ($scope.dataSetForm.$valid) {
-                    dataSetService.shareDataSet(self.dataSet)
+                    dataSetService.share(datasetPath, self.targetProject)
                         .then(function (success) {
                             $uibModalInstance.close(success);
                         },
@@ -93,7 +96,7 @@ angular.module('hopsWorksApp')
             
             self.setPermissions = function () {
                 if ($scope.dataSetForm.$valid) {
-                    dataSetService.permissions(self.dataSet)
+                    dataSetService.permissions(datasetPath, permissions)
                         .then(function (success) {
                             $uibModalInstance.close(success);
                         },
@@ -107,12 +110,12 @@ angular.module('hopsWorksApp')
             };
             
             self.getPermissionsText = function() {
-              if(typeof self.dataSet !== 'undefined'){
-                if(self.dataSet.permissions === 'GROUP_WRITABLE_SB'){
+              if(typeof permissions !== 'undefined'){
+                if(permissions === 'GROUP_WRITABLE_SB'){
                   return self.groupWritableAndStickyBitSet;
-                } else if(self.dataSet.permissions === 'GROUP_WRITABLE'){
+                } else if(permissions === 'GROUP_WRITABLE'){
                   return self.groupWritable;
-                } else if(self.dataSet.permissions === 'OWNER_ONLY'){
+                } else if(permissions === 'OWNER_ONLY'){
                   return self.ownerOnlyMsg;
                 } 
               }
