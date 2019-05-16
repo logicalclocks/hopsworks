@@ -20,14 +20,15 @@ import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
 import io.hops.hopsworks.common.dao.featurestore.feature.FeatureDTO;
 import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.restutils.RESTCodes;
-import io.hops.hopsworks.common.util.Settings;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import java.util.List;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /**
@@ -38,39 +39,73 @@ public class FeaturestoreUtil {
 
   @EJB
   private DatasetFacade datasetFacade;
-
+  private static final Logger LOGGER = Logger.getLogger(FeaturestoreUtil.class.getName());
   /**
    * Returns a String with Columns from a JSON featuregroup
    * that can be used for a HiveQL CREATE TABLE statement
    *
    * @param features list of featureDTOs
+   * @param featuregroupDoc description of the featuregroup
    * @return feature schema string for creating hive table
    */
-  public String makeCreateTableColumnsStr(List<FeatureDTO> features) throws FeaturestoreException {
-    StringBuilder stringBuilder = new StringBuilder();
+  public String makeCreateTableColumnsStr(List<FeatureDTO> features, String featuregroupDoc)
+      throws FeaturestoreException {
+    StringBuilder schemaStringBuilder = new StringBuilder();
+    StringBuilder partitionStringBuilder = new StringBuilder();
     List<FeatureDTO> primaryKeys = features.stream().filter(f -> f.getPrimary()).collect(Collectors.toList());
     if(primaryKeys.isEmpty()){
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.NO_PRIMARY_KEY_SPECIFIED, Level.SEVERE,
           "Out of the " + features.size() + " features provided, none is marked as primary");
     }
     FeatureDTO primaryKey = primaryKeys.get(0);
+    if(primaryKey.getPartition()){
+      LOGGER.fine("The primary key column: " + primaryKey.getName() +
+          " was specified as a partition column, which is not " +
+              "allowed. Primary key columns can not be partitioned; Ignoring this partition request.");
+    }
+    schemaStringBuilder.append("(");
+    int numPartitions = features.stream().filter(f -> f.getPartition()).collect(Collectors.toList()).size();
+    partitionStringBuilder.append("PARTITIONED BY (");
+    Boolean firstPartition = true;
     for (int i = 0; i < features.size(); i++) {
       FeatureDTO feature = features.get(i);
-      stringBuilder.append("`");
-      stringBuilder.append(feature.getName());
-      stringBuilder.append("` ");
-      stringBuilder.append(feature.getType());
-      stringBuilder.append(" COMMENT '");
-      stringBuilder.append(feature.getDescription());
-      stringBuilder.append("'");
-      stringBuilder.append(", ");
+      if(!feature.getPartition() || feature.getPrimary()){
+        schemaStringBuilder.append("`");
+        schemaStringBuilder.append(feature.getName());
+        schemaStringBuilder.append("` ");
+        schemaStringBuilder.append(feature.getType());
+        schemaStringBuilder.append(" COMMENT '");
+        schemaStringBuilder.append(feature.getDescription());
+        schemaStringBuilder.append("'");
+        schemaStringBuilder.append(", ");
+      } else {
+        if(!firstPartition){
+          partitionStringBuilder.append(",");
+        } else {
+          firstPartition = false;
+        }
+        partitionStringBuilder.append("`");
+        partitionStringBuilder.append(feature.getName());
+        partitionStringBuilder.append("` ");
+        partitionStringBuilder.append(feature.getType());
+        partitionStringBuilder.append(" COMMENT '");
+        partitionStringBuilder.append(feature.getDescription());
+        partitionStringBuilder.append("'");
+      }
       if (i == features.size() - 1){
-        stringBuilder.append("PRIMARY KEY (`");
-        stringBuilder.append(primaryKey.getName());
-        stringBuilder.append("`) DISABLE NOVALIDATE");
+        schemaStringBuilder.append("PRIMARY KEY (`");
+        schemaStringBuilder.append(primaryKey.getName());
+        schemaStringBuilder.append("`) DISABLE NOVALIDATE) COMMENT '");
+        schemaStringBuilder.append(featuregroupDoc);
+        schemaStringBuilder.append("' ");
+        if(numPartitions > 0){
+          partitionStringBuilder.append(")");
+          schemaStringBuilder.append(" ");
+          schemaStringBuilder.append(partitionStringBuilder.toString());
+        }
       }
     }
-    return stringBuilder.toString();
+    return schemaStringBuilder.toString();
   }
 
   /**

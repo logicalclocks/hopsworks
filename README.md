@@ -8,7 +8,7 @@
 <!-- <a href=""><img src="https://hopsworks.readthedocs.io/en/latest/_images/hopsworks.png" align="center"></a> -->
 
 <a href=""><img src="https://www.hops.io/wp-content/uploads/2018/07/Plants-Hops-icon-50x50-e1532970413999.png" align="left" hspace="10" vspace="6"></a>
-**Hopsworks** is a platform for both the design and operation of data analytics and machine learning applications. You can design ML applications in Jupyter notebooks in Python and operate them in workflows orchestrated by Airflow, while running on HopsFS, the world's most scalable HDFS-compatibledistributed hierarchical filesystem (<a href="https://www.usenix.org/conference/fast17/technical-sessions/presentation/niazi">peer-reviewed, 1.2m ops/sec on Spotify's Hadoop workload</a>). HopsFS also <a href="http://www.diva-portal.org/smash/get/diva2:1260838/FULLTEXT01.pdf">solves the small-files problem of HDFS</a>, by storing small files on NVMe disks in the horizontally scalable metadata layer. Hopsworks is also a platform for data engineering, with support for Spark, Flink, and Kafka. As an on-premises platform, Hopsworks has unique support for project-based multi-tenancy, horizontally scalable ML pipelines, and managed GPUs-as-a-resource.
+**Hopsworks** is a platform for both the design and operation of data analytics and machine learning applications. You can design ML applications in Jupyter notebooks in Python and operate them in workflows orchestrated by Airflow, while running on HopsFS, the world's most scalable HDFS-compatible distributed hierarchical filesystem (<a href="https://www.usenix.org/conference/fast17/technical-sessions/presentation/niazi">peer-reviewed, 1.2m ops/sec on Spotify's Hadoop workload</a>). HopsFS also <a href="http://www.diva-portal.org/smash/get/diva2:1260838/FULLTEXT01.pdf">solves the small-files problem of HDFS</a>, by storing small files on NVMe disks in the horizontally scalable metadata layer. Hopsworks is also a platform for data engineering, with support for Spark, Flink, and Kafka. As an on-premises platform, Hopsworks has unique support for project-based multi-tenancy, horizontally scalable ML pipelines, and managed GPUs-as-a-resource.
 
 
 <a href=""><img src="hopsworks-web/yo/app/images/what-is-hopsworks.png" align="center"></a>
@@ -45,7 +45,7 @@ Uniquely in Hadoop, Hops supports X.509 certificates for authentication and auth
   <a href=""><img src="hopsworks-web/yo/app/images/hopsfs.png"></a>
 </p>
 
-HopsFS is a drop-in replacement for HDFS that adds distributed metadata and "small-files in metadata (NVMe disks)" support to HDFS. 
+HopsFS is a drop-in replacement for HDFS that adds distributed metadata and "small-files in metadata (NVMe disks)" support to HDFS.
 
 ## Information
 
@@ -58,7 +58,7 @@ HopsFS is a drop-in replacement for HDFS that adds distributed metadata and "sma
 ## Installing Hopsworks
 
 Installation of Hopsworks and all its services is automated with the Karamel software. Instructions on
- how to install the entire platform are available 
+ how to install the entire platform are available
  [here](http://hopsworks.readthedocs.io).
 
 For a local single-node installation, to access Hopsworks just point your browser at:
@@ -70,7 +70,7 @@ For a local single-node installation, to access Hopsworks just point your browse
 
 ## Build instructions
 Hopsworks consists of the backend module which is packaged in two files, `hopsworks.ear`  and `hopsworks-ca.war`,
-and the front-end module which is packaged in a single `.war` file. 
+and the front-end module which is packaged in a single `.war` file.
 
 
 ### Build Requirements (for Ubuntu)
@@ -87,7 +87,7 @@ sudo npm install grunt -g
 
 ### Build with Maven
 ```sh
-mvn install 
+mvn install
 ```
 Maven uses yeoman-maven-plugin to build both the front-end and the backend.
 Maven first executes the Gruntfile in the yo directory, then builds the back-end in Java.
@@ -108,8 +108,7 @@ If you want to build Hopsworks-enterprise with support for Kubernetes you should
 mvn clean install -Pkube
 ``` 
 
-## Front-end Development 
-
+## Front-end Development
 The javascript produced by building maven is obsfuscated. For debugging javascript, we recommend that you use the following script
 to deploy changes to HTML or javascript to your vagrant machine:
 
@@ -148,7 +147,7 @@ The following steps must be taken to run Hopsworks integration tests:
 -Warning: This test will clean hdfs and drop Hopsworks database. So it should only be used on a test machine.
 ```
 
-First create a .env file by copying the .env.example file. Then edit the .env file by providing your specific configuration. 
+First create a .env file by copying the .env.example file. Then edit the .env file by providing your specific configuration.
 ```sh
    cd hopsworks/hopsworks-IT/src/test/ruby/
    cp .env.example .env
@@ -191,15 +190,14 @@ If you have already deployed hopsworks-ear and just want to run the integration 
    bundle install
    rspec --format html --out ../target/test-report.html
 ```
-To run a single test 
+To run a single test
 ```sh
    cd hopsworks/hopsworks-IT/src/test/ruby/
    rspec ./spec/session_spec.rb:60
 ```
-To skip tests that need to run inside a vm 
+To skip tests that need to run inside a vm
 ```sh
    cd hopsworks/hopsworks-IT/src/test/ruby/
    rspec --format html --out ../target/test-report.html --tag ~vm:true
 ```
 When the test is done if `LAUNCH_BROWSER` is set to true in `.env`, it will open the test report in a browser.
-

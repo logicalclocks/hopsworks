@@ -268,12 +268,13 @@ public class FeaturestoreService {
     Jobs job = null;
     if (featuregroupJsonDTO.getJobName() != null)
       job = jobFacade.findByProjectAndName(project, featuregroupJsonDTO.getJobName());
-    String featureStr = featurestoreUtil.makeCreateTableColumnsStr(featuregroupJsonDTO.getFeatures());
+    String featureStr = featurestoreUtil.makeCreateTableColumnsStr(featuregroupJsonDTO.getFeatures(),
+        featuregroupJsonDTO.getDescription());
     try {
       featuregroupController.dropFeaturegroup(featuregroupJsonDTO.getName(),
           featuregroupJsonDTO.getVersion(), project, user, featurestore);
       FeaturegroupDTO featuregroupDTO = featuregroupController.createFeaturegroup(project, user, featurestore,
-          featuregroupJsonDTO.getName(), featureStr, featuregroupJsonDTO.getDescription(),
+          featuregroupJsonDTO.getName(), featureStr,
           featuregroupJsonDTO.getDependencies(), job, featuregroupJsonDTO.getVersion(),
           featuregroupJsonDTO.getFeatureCorrelationMatrix(), featuregroupJsonDTO.getDescriptiveStatistics(),
           featuregroupJsonDTO.getFeaturesHistogram(), featuregroupJsonDTO.getClusterAnalysis());
@@ -529,7 +530,8 @@ public class FeaturestoreService {
     Jobs job = null;
     if (oldFeaturegroupDTO.getJobId() != null)
       job = jobFacade.findByProjectAndId(project, oldFeaturegroupDTO.getJobId());
-    String featureStr = featurestoreUtil.makeCreateTableColumnsStr(oldFeaturegroupDTO.getFeatures());
+    String featureStr = featurestoreUtil.makeCreateTableColumnsStr(oldFeaturegroupDTO.getFeatures(),
+        oldFeaturegroupDTO.getDescription());
     try {
       featuregroupController.deleteFeaturegroupWithIdAndFeaturestore(featurestore, featuregroupId, project, user);
     } catch (IOException | SQLException e) {
@@ -542,8 +544,7 @@ public class FeaturestoreService {
       List<String> dependencies = oldFeaturegroupDTO.getDependencies().stream().map(d ->
           d.getPath()).collect(Collectors.toList());
       FeaturegroupDTO newFeaturegroupDTO = featuregroupController.createFeaturegroup(project, user, featurestore,
-          oldFeaturegroupDTO.getName(), featureStr, oldFeaturegroupDTO.getDescription(),
-          dependencies,
+          oldFeaturegroupDTO.getName(), featureStr, dependencies,
           job, oldFeaturegroupDTO.getVersion(), oldFeaturegroupDTO.getFeatureCorrelationMatrix(),
           oldFeaturegroupDTO.getDescriptiveStatistics(), oldFeaturegroupDTO.getFeaturesHistogram(),
           oldFeaturegroupDTO.getClusterAnalysis());
