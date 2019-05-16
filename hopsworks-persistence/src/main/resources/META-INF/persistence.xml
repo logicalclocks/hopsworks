@@ -126,7 +126,7 @@
     <class>io.hops.hopsworks.common.dao.featurestore.stats.FeaturestoreStatistic</class>
     <class>io.hops.hopsworks.common.dao.featurestore.dependencies.FeaturestoreDependency</class>
     <class>io.hops.hopsworks.common.dao.featurestore.trainingdataset.feature.TrainingDatasetFeature</class>
-    <class>io.hops.hopsworks.common.dao.airflow.AirflowMaterial</class>
+    <class>io.hops.hopsworks.common.dao.airflow.MaterializedJWT</class>
     <!-- Converters -->
     <class>io.hops.hopsworks.common.dao.user.cluster.RegistrationStatusConverter</class>
     <class>io.hops.hopsworks.common.jobs.configuration.JobConfigurationConverter</class>

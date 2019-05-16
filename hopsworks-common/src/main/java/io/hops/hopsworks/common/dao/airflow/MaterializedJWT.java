@@ -24,28 +24,31 @@ import javax.persistence.Table;
 import java.io.Serializable;
 
 @Entity
-@Table(name = "airflow_material", catalog = "hopsworks")
+@Table(name = "materialized_jwt", catalog = "hopsworks")
 @NamedQueries({
-    @NamedQuery(name = "AirflowMaterial.findAll",
-                query = " SELECT a FROM AirflowMaterial a")})
-public class AirflowMaterial implements Serializable {
+    @NamedQuery(name = "MaterializedJWT.findAll",
+                query = " SELECT a FROM MaterializedJWT a"),
+    @NamedQuery(name = "MaterializedJWT.findByUsage",
+                query = "SELECT a FROM MaterializedJWT a WHERE a.identifier.usage = :usage")
+  })
+public class MaterializedJWT implements Serializable {
   private static final long serialVersionUID = 1L;
   
   @EmbeddedId
-  private AirflowMaterialID identifier;
+  private MaterializedJWTID identifier;
   
-  public AirflowMaterial() {
+  public MaterializedJWT() {
   }
   
-  public AirflowMaterial(AirflowMaterialID identifier) {
+  public MaterializedJWT(MaterializedJWTID identifier) {
     this.identifier = identifier;
   }
   
-  public AirflowMaterialID getIdentifier() {
+  public MaterializedJWTID getIdentifier() {
     return identifier;
   }
   
-  public void setIdentifier(AirflowMaterialID identifier) {
+  public void setIdentifier(MaterializedJWTID identifier) {
     this.identifier = identifier;
   }
 }
