@@ -313,10 +313,9 @@ public class JupyterService {
       try {
         jupyterSettingsFacade.update(jupyterSettings);
   
-  
         dto = jupyterProcessFacade.startServerAsJupyterUser(project, configSecret, hdfsUser, realName,
           jupyterSettings, allowOrigin);
-        HopsUtils.materializeCertificatesForUserCustomDir(project.getName(), hopsworksUser.getUsername(),
+        HopsUtils.materializeCertificatesForUserCustomDir(project.getName(), user.getUsername(),
             settings.getHdfsTmpCertDir(), dfso, certificateMaterializer, settings, dto.getCertificatesDir());
         // When Livy launches a job it will look in the standard directory for the certificates
         // We materialize them twice but most probably other operations will need them too, so it is OK

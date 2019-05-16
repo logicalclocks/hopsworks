@@ -277,12 +277,6 @@ public class JupyterJWTManager {
         jupyterJWT.token = token;
         writeToken2file(jupyterJWT);
         
-        String groupName = settings.getHopsworksUser();
-        UserPrincipalLookupService lookupService = FileSystems.getDefault().getUserPrincipalLookupService();
-        GroupPrincipal group = lookupService.lookupPrincipalByGroupName(groupName);
-        Files.getFileAttributeView(jupyterJWT.tokenFile, PosixFileAttributeView.class,
-          LinkOption.NOFOLLOW_LINKS).setGroup(group);
-        
         jupyterJWTs.add(jupyterJWT);
       } catch (GeneralSecurityException | JWTException ex) {
         LOG.log(Level.SEVERE, "Error generating Jupyter JWT for " + jupyterJWT, ex);
@@ -394,6 +388,13 @@ public class JupyterJWTManager {
   
   private void writeToken2file(JupyterJWT jupyterJWT) throws IOException {
     FileUtils.writeStringToFile(jupyterJWT.tokenFile.toFile(), jupyterJWT.token);
+  
+    String groupName = settings.getHopsworksUser();
+    UserPrincipalLookupService lookupService = FileSystems.getDefault().getUserPrincipalLookupService();
+    GroupPrincipal group = lookupService.lookupPrincipalByGroupName(groupName);
+    Files.getFileAttributeView(jupyterJWT.tokenFile, PosixFileAttributeView.class,
+      LinkOption.NOFOLLOW_LINKS).setGroup(group);
+  
     Files.setPosixFilePermissions(jupyterJWT.tokenFile, TOKEN_FILE_PERMISSIONS);
   }
   
