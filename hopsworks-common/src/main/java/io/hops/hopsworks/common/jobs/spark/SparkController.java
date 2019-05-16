@@ -200,7 +200,7 @@ public class SparkController {
     } else {
       config.setMainClass(Settings.SPARK_PY_MAINCLASS);
     }
-    config.setAppPath(path);
+    config.setAppPath("hdfs://" + path);
     return config;
   }
 

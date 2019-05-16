@@ -628,7 +628,7 @@ angular.module('hopsWorksApp')
               ModalService.selectFile('lg', self.selectFileRegexes[reason],
                       self.selectFileErrorMsgs["PYSPARK"], false).then(
                       function (success) {
-                        self.onFileSelected(reason, "hdfs://" + success);
+                        self.onFileSelected(reason, success);
                       }, function (error) {
                 //The user changed their mind.
               });
@@ -643,7 +643,7 @@ angular.module('hopsWorksApp')
               ModalService.selectDir('lg', self.selectFileRegexes[reason],
                       self.selectFileErrorMsgs["PYSPARK"]).then(
                       function (success) {
-                        self.onFileSelected(reason, "hdfs://" + success);
+                        self.onFileSelected(reason, success);
                       }, function (error) {
                 //The user changed their mind.
               });
