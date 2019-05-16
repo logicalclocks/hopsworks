@@ -320,13 +320,10 @@ public class JupyterService {
         // When Livy launches a job it will look in the standard directory for the certificates
         // We materialize them twice but most probably other operations will need them too, so it is OK
         // Remember to remove both when stopping Jupyter server or an exception is thrown
-<<<<<<< HEAD
-        certificateMaterializer.materializeCertificatesLocal(hopsworksUser.getUsername(), project.getName());
-=======
+
         certificateMaterializer.materializeCertificatesLocal(user.getUsername(), project.getName());
         
         jupyterJWTManager.materializeJWT(hopsworksUser, project, jupyterSettings, JUPYTER_JWT_AUD);
->>>>>>> cec9435749ae2b4cb7ecc882fd778f92de922867
       } catch (ServiceException ex) {
         throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_START_ERROR, Level.SEVERE, ex.getMessage(),
             null, ex);
