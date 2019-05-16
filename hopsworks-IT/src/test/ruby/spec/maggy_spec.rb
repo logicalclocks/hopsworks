@@ -18,7 +18,7 @@ describe "On #{ENV['OS']}" do
     with_valid_session
   end
 
-  describe "maggy resource" do
+  describe "maggyresource" do
 
     context "#logged in" do
 
@@ -31,11 +31,11 @@ describe "On #{ENV['OS']}" do
       it "should be able to get a registered driver" do
         get "#{ENV['HOPSWORKS_API']}/maggy/drivers/42"
         expect_status(200)
-      end
         json_body[:appId].eql? '42'
         json_body[:hostIp].eql? '127.0.3.5'
         json_body[:secret].eql? 'magster'
         json_body[:port].eql? '12345'
+      end
     end
-
+  end
 end
