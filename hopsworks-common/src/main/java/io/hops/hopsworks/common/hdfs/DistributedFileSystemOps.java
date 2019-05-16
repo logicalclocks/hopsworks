@@ -77,6 +77,22 @@ public class DistributedFileSystemOps {
   private String hadoopConfDir;
   private final String effectiveUser;
 
+  public enum StoragePolicy {
+    SMALL_FILES("DB"),
+    DEFAULT("HOT");
+
+    private String policyName;
+
+    StoragePolicy(String policyName) {
+      this.policyName = policyName;
+    }
+
+    @Override
+    public String toString() {
+      return super.toString();
+    }
+  }
+
   /**
    * Returns a file system with username access.
    * <p>
@@ -708,5 +724,9 @@ public class DistributedFileSystemOps {
   
   public void removeUserFromGroup(String userName, String groupName) throws IOException{
     dfs.removeUserFromGroup(userName, groupName);
+  }
+
+  public void setStoragePolicy(Path path, StoragePolicy storagePolicy) throws IOException {
+    dfs.setStoragePolicy(path, storagePolicy.toString());
   }
 }

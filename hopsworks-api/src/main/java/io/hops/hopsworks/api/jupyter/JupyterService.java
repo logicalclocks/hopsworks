@@ -62,6 +62,7 @@ import javax.ws.rs.core.Response;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.jupyter.JupyterController;
 import io.hops.hopsworks.common.jupyter.JupyterJWTManager;
 import io.hops.hopsworks.common.livy.LivyController;
@@ -391,7 +392,7 @@ public class JupyterService {
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response convertIPythonNotebook(@PathParam("path") String path,
       @Context SecurityContext sc) throws ServiceException {
-    String ipynbPath = settings.getProjectPath(this.project.getName()) + "/" + path;
+    String ipynbPath = Utils.getProjectPath(this.project.getName()) + "/" + path;
     int extensionIndex = ipynbPath.lastIndexOf(".ipynb");
     StringBuilder pathBuilder = new StringBuilder(ipynbPath.substring(0, extensionIndex)).append(".py");
     String pyAppPath = pathBuilder.toString();

@@ -1325,18 +1325,12 @@ public class Settings implements Serializable {
     return HADOOP_CLASSPATH_GLOB;
   }
 
-  public String getHdfsRootPath(String projectName) {
-    return "/" + DIR_ROOT + "/" + projectName;
-  }
-
   /**
    * Static final fields are allowed in session beans:
    * http://stackoverflow.com/questions/9141673/static-variables-restriction-in-session-beans
    */
   //Directory names in HDFS
   public static final String DIR_ROOT = "Projects";
-  public static final String DIR_SAMPLES = "Samples";
-  public static final String DIR_RESULTS = "Results";
   public static final String DIR_META_TEMPLATES = File.separator + DIR_ROOT + File.separator + "Uploads"
       + File.separator;
   public static final String PROJECT_STAGING_DIR = "Resources";
@@ -2064,10 +2058,6 @@ public class Settings implements Serializable {
 
   public void detach(Variables variable) {
     em.detach(variable);
-  }
-
-  public String getProjectPath(String projectName) {
-    return File.separator + DIR_ROOT + File.separator + projectName;
   }
 
   Configuration conf;
