@@ -636,7 +636,7 @@ public class ProjectController {
       datasetController.createDataset(user, project, ds.getName(), ds.
           getDescription(), -1, false, true, true, dfso);
 
-      Path dsPath = new Path(Utils.getProjectPath(project.getName() + ds.getName()));
+      Path dsPath = new Path(Utils.getProjectPath(project.getName()) + ds.getName());
 
       FileStatus fstatus = dfso.getFileStatus(dsPath);
 
