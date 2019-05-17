@@ -85,7 +85,7 @@ public final class Utils {
   }
 
   public static String getProjectPath(String projectname) {
-    return File.separator + Settings.DIR_ROOT + File.separator + projectname + File.separator;
+    return "/" + Settings.DIR_ROOT + "/" + projectname + "/";
   }
 
   public static String ensurePathEndsInSlash(String path) {
