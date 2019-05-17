@@ -68,7 +68,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Stateless
-@TransactionAttribute(TransactionAttributeType.NEVER)
+//@TransactionAttribute(TransactionAttributeType.NEVER)
 public class EnvironmentController {
   
   @EJB
