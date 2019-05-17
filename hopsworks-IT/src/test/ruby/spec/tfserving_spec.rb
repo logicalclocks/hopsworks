@@ -66,7 +66,7 @@ describe "On #{ENV['OS']}" do
                artifactPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
                modelVersion: 1,
                batchingEnabled: false,
-               servingType: 0
+               servingType: "TENSORFLOW"
               }
           expect_json(errorCode: 200003)
           expect_status(401)
@@ -87,7 +87,7 @@ describe "On #{ENV['OS']}" do
                artifactPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
                modelVersion: 1,
                batchingEnabled: false,
-               servingType: 0
+               servingType: "TENSORFLOW"
               }
           expect_status(201)
 
@@ -102,7 +102,7 @@ describe "On #{ENV['OS']}" do
                artifactPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
                modelVersion: 1,
                batchingEnabled: true,
-               servingType: 0
+               servingType: "TENSORFLOW"
               }
           expect_status(201)
         end
@@ -118,7 +118,7 @@ describe "On #{ENV['OS']}" do
                    numOfPartitions: 1,
                    numOfReplicas: 1
                },
-               servingType: 0
+               servingType: "TENSORFLOW"
               }
           expect_status(201)
 
@@ -135,9 +135,9 @@ describe "On #{ENV['OS']}" do
           expect(kafka_topic[0]['schemaName']).to eql INFERENCE_SCHEMA_NAME
         end
 
-        it "should create the serving with an existing Kafka topic" do
+        it "should create the serving with an existing Kafka topic with Inference Schema version 1" do
           # Create kafka topic
-          json, topic_name = add_topic(@project[:id], INFERENCE_SCHEMA_NAME, INFERENCE_SCHEMA_VERSION)
+          json, topic_name = add_topic(@project[:id], INFERENCE_SCHEMA_NAME, 1)
 
           # Create serving
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
@@ -148,7 +148,7 @@ describe "On #{ENV['OS']}" do
                kafkaTopicDTO: {
                    name: topic_name
                },
-               servingType: 0
+               servingType: "TENSORFLOW"
               }
           expect_status(201)
 
@@ -161,7 +161,54 @@ describe "On #{ENV['OS']}" do
           expect(kafka_topic_name).to eql topic_name
         end
 
-        it "fail to create a serving with the same name" do
+        it "should create the serving with an existing Kafka topic with Inference Schema version 2" do
+          # Create kafka topic
+          json, topic_name = add_topic(@project[:id], INFERENCE_SCHEMA_NAME, 2)
+
+          # Create serving
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+              {name: "testModel2",
+               artifactPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
+               modelVersion: 1,
+               batchingEnabled: false,
+               kafkaTopicDTO: {
+                   name: topic_name
+               },
+               servingType: "TENSORFLOW"
+              }
+          expect_status(201)
+
+          # Kafka authorizer needs some time to take up the new permissions.
+          sleep(5)
+
+          # Check that the serving is actually using that topic
+          serving_list = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/"
+          kafka_topic_name = JSON.parse(serving_list).select { |serving| serving['name'] == "testModel2"}[0]['kafkaTopicDTO']['name']
+          expect(kafka_topic_name).to eql topic_name
+        end
+
+        it "should fail to create the serving with an existing Kafka topic without the Inference Schema" do
+          # Create Kafka Schema
+          json_result, schema_name = add_schema(@project[:id])
+
+          # Create kafka topic
+          json, topic_name = add_topic(@project[:id], schema_name, 1)
+
+          # Create serving
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+              {name: "testModel2",
+               artifactPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
+               modelVersion: 1,
+               batchingEnabled: false,
+               kafkaTopicDTO: {
+                   name: topic_name
+               },
+               servingType: "TENSORFLOW"
+              }
+          expect_status(400)
+        end
+
+        it "should fail to create a serving with the same name" do
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
               {name: "testModel1",
                artifactPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
@@ -172,7 +219,7 @@ describe "On #{ENV['OS']}" do
                    numOfPartitions: 1,
                    numOfReplicas: 1
                },
-               servingType: 0
+               servingType: "TENSORFLOW"
               }
           expect_json(errorMsg: "An entry with the same name already exists in this project")
           expect_status(400)
@@ -184,7 +231,7 @@ describe "On #{ENV['OS']}" do
                artifactPath: "/Projects/#{@project[:projectname]}/DOESNTEXISTS",
                batchingEnabled: false,
                modelVersion: 1,
-               servingType: 0
+               servingType: "TENSORFLOW"
               }
           expect_json(usrMsg: "The model path provided does not exists")
           expect_status(422)
@@ -198,7 +245,7 @@ describe "On #{ENV['OS']}" do
                artifactPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
                batchingEnabled: false,
                modelVersion: 1,
-               servingType: 0
+               servingType: "TENSORFLOW"
               }
           expect_json(usrMsg: "The model path does not respect the TensorFlow standard")
           expect_status(422)
@@ -289,7 +336,7 @@ describe "On #{ENV['OS']}" do
              kafkaTopicDTO: {
                  name: @topic[:topic_name]
              },
-             servingType: 0
+             servingType: "TENSORFLOW"
             }
         expect_status(201)
       end
@@ -304,7 +351,7 @@ describe "On #{ENV['OS']}" do
              kafkaTopicDTO: {
                  name: @topic[:topic_name]
              },
-             servingType: 0
+             servingType: "TENSORFLOW"
             }
         expect_status(201)
       end
@@ -319,7 +366,7 @@ describe "On #{ENV['OS']}" do
              kafkaTopicDTO: {
                  name: @topic[:topic_name]
              },
-             servingType: 0
+             servingType: "TENSORFLOW"
             }
         expect_status(201)
       end
@@ -341,9 +388,25 @@ describe "On #{ENV['OS']}" do
              kafkaTopicDTO: {
                  name: @topic[:topic_name]
              },
-             servingType: 0
+             servingType: "TENSORFLOW"
             }
         expect_status(201)
+      end
+
+      it "should not be able to update the serving type" do
+
+        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+            {id: @serving[:id],
+             name: "testModelChanged",
+             artifactPath: "/Projects/#{@project[:projectname]}/Models/newMnist/",
+             modelVersion: 2,
+             batchingEnabled: false,
+             kafkaTopicDTO: {
+                 name: @topic[:topic_name]
+             },
+             servingType: "SKLEARN"
+            }
+        expect_status(422)
       end
 
       it "should be able to change the kafka topic it's writing to"  do
@@ -358,7 +421,7 @@ describe "On #{ENV['OS']}" do
              kafkaTopicDTO: {
                  name: topic_name
              },
-             servingType: 0
+             servingType: "TENSORFLOW"
             }
         expect_status(201)
 
@@ -377,7 +440,7 @@ describe "On #{ENV['OS']}" do
              kafkaTopicDTO: {
                  name: "NONE"
              },
-             servingType: 0
+             servingType: "TENSORFLOW"
             }
         expect_status(201)
 

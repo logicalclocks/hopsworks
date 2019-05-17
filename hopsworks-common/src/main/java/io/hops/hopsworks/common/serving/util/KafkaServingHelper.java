@@ -42,10 +42,7 @@ import java.util.logging.Level;
 
 @Stateless
 public class KafkaServingHelper {
-
-  public final static String SCHEMANAME = "inferenceschema";
-  public final static int SCHEMAVERSION = 1;
-
+  
   @EJB
   private KafkaFacade kafkaFacade;
   @EJB
@@ -55,7 +52,7 @@ public class KafkaServingHelper {
 
   @PostConstruct
   public void init() {
-    schemaTopics = kafkaFacade.getSchema(SCHEMANAME, SCHEMAVERSION);
+    schemaTopics = kafkaFacade.getSchema(Settings.INFERENCE_SCHEMANAME, Settings.INFERENCE_SCHEMAVERSION);
   }
   
   /**
@@ -159,7 +156,8 @@ public class KafkaServingHelper {
     String servingTopicName = getServingTopicName(servingWrapper);
 
     TopicDTO topicDTO = new TopicDTO(servingTopicName, servingWrapper.getKafkaTopicDTO().getNumOfReplicas(),
-        servingWrapper.getKafkaTopicDTO().getNumOfPartitions(), SCHEMANAME, SCHEMAVERSION);
+        servingWrapper.getKafkaTopicDTO().getNumOfPartitions(), Settings.INFERENCE_SCHEMANAME,
+      Settings.INFERENCE_SCHEMAVERSION);
 
     ProjectTopics pt = null;
     pt = kafkaFacade.createTopicInProject(project, topicDTO);
@@ -185,11 +183,10 @@ public class KafkaServingHelper {
           "name: " + servingWrapper.getKafkaTopicDTO().getName());
     }
 
-    if (!(topic.getSchemaTopics().getSchemaTopicsPK().getName().equalsIgnoreCase(SCHEMANAME) &&
-        topic.getSchemaTopics().getSchemaTopicsPK().getVersion() == SCHEMAVERSION)) {
+    if (!topic.getSchemaTopics().getSchemaTopicsPK().getName().equalsIgnoreCase(Settings.INFERENCE_SCHEMANAME)) {
 
       throw new ServingException(RESTCodes.ServingErrorCode.BAD_TOPIC, Level.INFO,
-          SCHEMANAME + " required. Version: " + String.valueOf(SCHEMAVERSION));
+        Settings.INFERENCE_SCHEMANAME + " required");
     }
 
     return topic;

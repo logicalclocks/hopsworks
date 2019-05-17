@@ -1147,7 +1147,7 @@ public class CertificateMaterializer {
    */
   public String getUserTransientPasswordPath(Project project, Users user) {
     String transientDir = settings.getHopsworksTmpCertDir();
-    String keyName = project.getName() + "__" + user.getUsername() + Settings.CERT_PASS_SUFFIX;
+    String keyName = project.getName() + Settings.DOUBLE_UNDERSCORE + user.getUsername() + Settings.CERT_PASS_SUFFIX;
     return transientDir + "/" + keyName;
   }
 
@@ -1160,7 +1160,8 @@ public class CertificateMaterializer {
    */
   public String getUserTransientTruststorePath(Project project, Users user) {
     String transientDir = settings.getHopsworksTmpCertDir();
-    String truststoreName = project.getName() + "__" + user.getUsername() + Settings.TRUSTSTORE_SUFFIX;
+    String truststoreName = project.getName() + Settings.DOUBLE_UNDERSCORE + user.getUsername() +
+      Settings.TRUSTSTORE_SUFFIX;
     return transientDir + "/" + truststoreName;
   }
 
@@ -1173,7 +1174,8 @@ public class CertificateMaterializer {
    */
   public String getUserTransientKeystorePath(Project project, Users user) {
     String transientDir = settings.getHopsworksTmpCertDir();
-    String keystoreName = project.getName() + "__" + user.getUsername() + Settings.KEYSTORE_SUFFIX;
+    String keystoreName = project.getName() + Settings.DOUBLE_UNDERSCORE + user.getUsername() +
+      Settings.KEYSTORE_SUFFIX;
     return transientDir + "/" + keystoreName;
   }
 

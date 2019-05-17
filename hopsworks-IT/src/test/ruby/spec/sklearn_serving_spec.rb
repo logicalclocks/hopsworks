@@ -1,9 +1,6 @@
 =begin
- Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
- are released under the following license:
-
  This file is part of Hopsworks
- Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ Copyright (C) 2019, Logical Clocks AB. All rights reserved
 
  Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  the GNU Affero General Public License as published by the Free Software Foundation,
@@ -15,26 +12,6 @@
 
  You should have received a copy of the GNU Affero General Public License along with this program.
  If not, see <https://www.gnu.org/licenses/>.
-
- Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
- are released under the following license:
-
- Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
-
- Permission is hereby granted, free of charge, to any person obtaining a copy of this
- software and associated documentation files (the "Software"), to deal in the Software
- without restriction, including without limitation the rights to use, copy, modify, merge,
- publish, distribute, sublicense, and/or sell copies of the Software, and to permit
- persons to whom the Software is furnished to do so, subject to the following conditions:
-
- The above copyright notice and this permission notice shall be included in all copies or
- substantial portions of the Software.
-
- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  OR IMPLIED, INCLUDING
- BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
- DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 =end
 
 require 'json'
@@ -60,9 +37,9 @@ describe "On #{ENV['OS']}" do
         it "should fail to create the serving" do
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
               {name: "testModel",
-               artifactPath: "/Projects/#{@project[:projectname]}/Models/#{SKLEARN_SCRIPT_FILE_NAME}",
+               artifactPath: "/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
                modelVersion: 1,
-               servingType: 1
+               servingType: "SKLEARN"
               }
           expect_json(errorCode: 200003)
           expect_status(401)
@@ -72,23 +49,30 @@ describe "On #{ENV['OS']}" do
       context 'with authentication but without python enabled' do
         before :all do
           with_valid_project
-
-          # Copy model to the project directory
-          copy(SKLEARN_MODEL_TOUR_FILE_LOCATION, "/Projects/#{@project[:projectname]}/Models/",
-               "#{@project[:projectname]}__#{@user[:username]}",
+          # Make Serving Dir
+          mkdir("/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/", "#{@user[:username]}",
+                "#{@project[:projectname]}__Models", 750)
+          # Make Version Dir
+          mkdir("/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1", "#{@user[:username]}",
+                "#{@project[:projectname]}__Models", 750)
+          # Copy model to the servingversion dir
+          copy(SKLEARN_MODEL_TOUR_FILE_LOCATION, "/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1/",
+               "#{@user[:username]}",
                "#{@project[:projectname]}__Models", 750, "#{@project[:projectname]}")
-          # Copy script to the project directory
-          copy(SKLEARN_SCRIPT_TOUR_FILE_LOCATION, "/Projects/#{@project[:projectname]}/Models/",
-               "#{@project[:projectname]}__#{@user[:username]}",
+          # Copy script to the servingversion dir
+          copy(SKLEARN_SCRIPT_TOUR_FILE_LOCATION, "/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1/",
+               "#{@user[:username]}",
                "#{@project[:projectname]}__Models", 750, "#{@project[:projectname]}")
+          # Remove conda
+          delete_conda_env(@project[:id])
         end
 
         it "should fail to create the serving" do
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
               {name: "testModel",
-               artifactPath: "/Projects/#{@project[:projectname]}/Models/#{SKLEARN_SCRIPT_FILE_NAME}",
+               artifactPath: "/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
                modelVersion: 1,
-               servingType: 1
+               servingType: "SKLEARN"
               }
           expect_json(errorCode: 240012)
           expect_status(400)
@@ -106,7 +90,7 @@ describe "On #{ENV['OS']}" do
               {name: "testModel",
                artifactPath: "/Projects/#{@project[:projectname]}/Models/NONEXISTENT",
                modelVersion: 1,
-               servingType: 1
+               servingType: "SKLEARN"
               }
           expect_json(errorCode: 120001)
           expect_status(422)
@@ -118,22 +102,28 @@ describe "On #{ENV['OS']}" do
           with_valid_project
           with_python_enabled(@project[:id], "3.6")
 
-          # Copy model to the project directory
-          copy(SKLEARN_MODEL_TOUR_FILE_LOCATION, "/Projects/#{@project[:projectname]}/Models/",
-               "#{@project[:projectname]}__#{@user[:username]}",
+          # Make Serving Dir
+          mkdir("/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/", "#{@user[:username]}",
+                "#{@project[:projectname]}__Models", 750)
+          # Make Version Dir
+          mkdir("/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1", "#{@user[:username]}",
+                "#{@project[:projectname]}__Models", 750)
+          # Copy model to the servingversion dir
+          copy(SKLEARN_MODEL_TOUR_FILE_LOCATION, "/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1/",
+               "#{@user[:username]}",
                "#{@project[:projectname]}__Models", 750, "#{@project[:projectname]}")
-          # Copy script to the project directory
-          copy(SKLEARN_SCRIPT_TOUR_FILE_LOCATION, "/Projects/#{@project[:projectname]}/Models/",
-               "#{@project[:projectname]}__#{@user[:username]}",
+          # Copy script to the servingversion dir
+          copy(SKLEARN_SCRIPT_TOUR_FILE_LOCATION, "/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1/",
+               "#{@user[:username]}",
                "#{@project[:projectname]}__Models", 750, "#{@project[:projectname]}")
         end
 
         it "should create the serving without Kafka topic" do
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
               {name: "testModel",
-               artifactPath: "/Projects/#{@project[:projectname]}/Models/#{SKLEARN_SCRIPT_FILE_NAME}",
+               artifactPath: "/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
                modelVersion: 1,
-               servingType: 1
+               servingType: "SKLEARN"
               }
           expect_status(201)
 
@@ -148,22 +138,28 @@ describe "On #{ENV['OS']}" do
           with_valid_project
           with_python_enabled(@project[:id], "2.7")
 
-          # Copy model to the project directory
-          copy(SKLEARN_MODEL_TOUR_FILE_LOCATION, "/Projects/#{@project[:projectname]}/Models/",
-               "#{@project[:projectname]}__#{@user[:username]}",
+          # Make Serving Dir
+          mkdir("/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/", "#{@user[:username]}",
+                "#{@project[:projectname]}__Models", 750)
+          # Make Version Dir
+          mkdir("/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1", "#{@user[:username]}",
+                "#{@project[:projectname]}__Models", 750)
+          # Copy model to the servingversion dir
+          copy(SKLEARN_MODEL_TOUR_FILE_LOCATION, "/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1/",
+               "#{@user[:username]}",
                "#{@project[:projectname]}__Models", 750, "#{@project[:projectname]}")
-          # Copy script to the project directory
-          copy(SKLEARN_SCRIPT_TOUR_FILE_LOCATION, "/Projects/#{@project[:projectname]}/Models/",
-               "#{@project[:projectname]}__#{@user[:username]}",
+          # Copy script to the servingversion dir
+          copy(SKLEARN_SCRIPT_TOUR_FILE_LOCATION, "/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1/",
+               "#{@user[:username]}",
                "#{@project[:projectname]}__Models", 750, "#{@project[:projectname]}")
         end
 
         it "should create the serving without Kafka topic" do
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
               {name: "testModel",
-               artifactPath: "/Projects/#{@project[:projectname]}/Models/#{SKLEARN_SCRIPT_FILE_NAME}",
+               artifactPath: "/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
                modelVersion: 1,
-               servingType: 1
+               servingType: "SKLEARN"
               }
           expect_status(201)
 
@@ -175,14 +171,14 @@ describe "On #{ENV['OS']}" do
         it "should create the serving with a new Kafka topic" do
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
               {name: "testModel1",
-               artifactPath: "/Projects/#{@project[:projectname]}/Models/#{SKLEARN_SCRIPT_FILE_NAME}",
+               artifactPath: "/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
                modelVersion: 1,
                kafkaTopicDTO: {
                    name: "CREATE",
                    numOfPartitions: 1,
                    numOfReplicas: 1
                },
-               servingType: 1
+               servingType: "SKLEARN"
               }
           expect_status(201)
 
@@ -199,19 +195,19 @@ describe "On #{ENV['OS']}" do
           expect(kafka_topic[0]['schemaName']).to eql INFERENCE_SCHEMA_NAME
         end
 
-        it "should create the serving with an existing Kafka topic" do
+        it "should create the serving with an existing Kafka topic with Inference Schema version 1" do
           # Create kafka topic
-          json, topic_name = add_topic(@project[:id], INFERENCE_SCHEMA_NAME, INFERENCE_SCHEMA_VERSION)
+          json, topic_name = add_topic(@project[:id], INFERENCE_SCHEMA_NAME, 1)
 
           # Create serving
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
               {name: "testModel2",
-               artifactPath: "/Projects/#{@project[:projectname]}/Models/#{SKLEARN_SCRIPT_FILE_NAME}",
+               artifactPath: "/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
                modelVersion: 1,
                kafkaTopicDTO: {
                    name: topic_name
                },
-               servingType: 1
+               servingType: "SKLEARN"
               }
           expect_status(201)
 
@@ -224,17 +220,62 @@ describe "On #{ENV['OS']}" do
           expect(kafka_topic_name).to eql topic_name
         end
 
+        it "should create the serving with an existing Kafka topic with Inference Schema version 2" do
+          # Create kafka topic
+          json, topic_name = add_topic(@project[:id], INFERENCE_SCHEMA_NAME, 2)
+
+          # Create serving
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+              {name: "testModel2",
+               artifactPath: "/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
+               modelVersion: 1,
+               kafkaTopicDTO: {
+                   name: topic_name
+               },
+               servingType: "SKLEARN"
+              }
+          expect_status(201)
+
+          # Kafka authorizer needs some time to take up the new permissions.
+          sleep(5)
+
+          # Check that the serving is actually using that topic
+          serving_list = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/"
+          kafka_topic_name = JSON.parse(serving_list).select {|serving| serving['name'] == "testModel2"}[0]['kafkaTopicDTO']['name']
+          expect(kafka_topic_name).to eql topic_name
+        end
+
+        it "should fail to create the serving with an existing Kafka topic without the Inference Schema" do
+          # Create Kafka Schema
+          json_result, schema_name = add_schema(@project[:id])
+
+          # Create kafka topic
+          json, topic_name = add_topic(@project[:id], schema_name, 1)
+
+          # Create serving
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+              {name: "testModel2",
+               artifactPath: "/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
+               modelVersion: 1,
+               kafkaTopicDTO: {
+                   name: topic_name
+               },
+               servingType: "SKLEARN"
+              }
+          expect_status(400)
+        end
+
         it "fail to create a serving with the same name" do
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
               {name: "testModel1",
-               artifactPath: "/Projects/#{@project[:projectname]}/Models/#{SKLEARN_SCRIPT_FILE_NAME}",
+               artifactPath: "/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
                modelVersion: 1,
                kafkaTopicDTO: {
                    name: "CREATE",
                    numOfPartitions: 1,
                    numOfReplicas: 1
                },
-               servingType: 1
+               servingType: "SKLEARN"
               }
           expect_json(errorMsg: "An entry with the same name already exists in this project")
           expect_status(400)
@@ -245,7 +286,7 @@ describe "On #{ENV['OS']}" do
               {name: "testModel5",
                artifactPath: "/Projects/#{@project[:projectname]}/DOESNTEXISTS",
                modelVersion: 1,
-               servingType: 1
+               servingType: "SKLEARN"
               }
           expect_json(errorCode: 120001)
           expect_status(422)
@@ -379,12 +420,12 @@ describe "On #{ENV['OS']}" do
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
               {id: @serving[:id],
                name: "testModelChanged",
-               artifactPath: "/Projects/#{@project[:projectname]}/Models/#{SKLEARN_SCRIPT_FILE_NAME}",
+               artifactPath: "/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
                modelVersion: 1,
                kafkaTopicDTO: {
                    name: @topic[:topic_name]
                },
-               servingType: 1
+               servingType: "SKLEARN"
               }
           expect_status(201)
         end
@@ -393,14 +434,28 @@ describe "On #{ENV['OS']}" do
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
               {id: @serving[:id],
                name: "testModelChanged",
-               artifactPath: "/Projects/#{@project[:projectname]}/Models/#{SKLEARN_SCRIPT_FILE_NAME}",
+               artifactPath: "/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
                modelVersion: 2,
                kafkaTopicDTO: {
                    name: @topic[:topic_name]
                },
-               servingType: 1
+               servingType: "SKLEARN"
               }
           expect_status(201)
+        end
+
+        it "should not be able to update the serving type" do
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+              {id: @serving[:id],
+               name: "testModelChanged",
+               artifactPath: "/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
+               modelVersion: 2,
+               kafkaTopicDTO: {
+                   name: @topic[:topic_name]
+               },
+               servingType: "TENSORFLOW"
+              }
+          expect_status(422)
         end
 
         it "should be able to change the kafka topic it's writing to" do
@@ -409,12 +464,12 @@ describe "On #{ENV['OS']}" do
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
               {id: @serving[:id],
                name: "testModelChanged",
-               artifactPath: "/Projects/#{@project[:projectname]}/Models/#{SKLEARN_SCRIPT_FILE_NAME}",
+               artifactPath: "/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
                modelVersion: 2,
                kafkaTopicDTO: {
                    name: topic_name
                },
-               servingType: 1
+               servingType: "SKLEARN"
               }
           expect_status(201)
 
@@ -427,12 +482,12 @@ describe "On #{ENV['OS']}" do
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
               {id: @serving[:id],
                name: "testModelChanged",
-               artifactPath: "/Projects/#{@project[:projectname]}/Models/#{SKLEARN_SCRIPT_FILE_NAME}",
+               artifactPath: "/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
                modelVersion: 2,
                kafkaTopicDTO: {
                    name: "NONE"
                },
-               servingType: 1
+               servingType: "SKLEARN"
               }
           expect_status(201)
 
@@ -471,12 +526,12 @@ describe "On #{ENV['OS']}" do
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
               {id: @serving[:id],
                name: "testModelChanged",
-               artifactPath: "/Projects/#{@project[:projectname]}/Models/#{SKLEARN_SCRIPT_FILE_NAME}",
+               artifactPath: "/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
                modelVersion: 1,
                kafkaTopicDTO: {
                    name: @topic[:topic_name]
                },
-               servingType: 1
+               servingType: "SKLEARN"
               }
           expect_status(201)
         end
@@ -485,12 +540,12 @@ describe "On #{ENV['OS']}" do
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
               {id: @serving[:id],
                name: "testModelChanged",
-               artifactPath: "/Projects/#{@project[:projectname]}/Models/#{SKLEARN_SCRIPT_FILE_NAME}",
+               artifactPath: "/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
                modelVersion: 2,
                kafkaTopicDTO: {
                    name: @topic[:topic_name]
                },
-               servingType: 1
+               servingType: "SKLEARN"
               }
           expect_status(201)
         end
@@ -501,12 +556,12 @@ describe "On #{ENV['OS']}" do
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
               {id: @serving[:id],
                name: "testModelChanged",
-               artifactPath: "/Projects/#{@project[:projectname]}/Models/#{SKLEARN_SCRIPT_FILE_NAME}",
+               artifactPath: "/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
                modelVersion: 2,
                kafkaTopicDTO: {
                    name: topic_name
                },
-               servingType: 1
+               servingType: "SKLEARN"
               }
           expect_status(201)
 
@@ -519,12 +574,12 @@ describe "On #{ENV['OS']}" do
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
               {id: @serving[:id],
                name: "testModelChanged",
-               artifactPath: "/Projects/#{@project[:projectname]}/Models/#{SKLEARN_SCRIPT_FILE_NAME}",
+               artifactPath: "/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
                modelVersion: 2,
                kafkaTopicDTO: {
                    name: "NONE"
                },
-               servingType: 1
+               servingType: "SKLEARN"
               }
           expect_status(201)
 
@@ -551,6 +606,9 @@ describe "On #{ENV['OS']}" do
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=stop"
           expect_status(200)
 
+          # Wait a bit
+          sleep(30)
+
           # check if the process is running on the host
           system "pgrep -f sklearn_flask_server.py"
           if $?.exitstatus != 1
@@ -561,6 +619,9 @@ describe "On #{ENV['OS']}" do
         it "should fail to kill a non running instance" do
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=stop"
           expect_status(200)
+
+          # Wait a bit
+          sleep(30)
 
           # check if the process is running on the host
           system "pgrep -f sklearn_flask_server.py"
@@ -604,6 +665,9 @@ describe "On #{ENV['OS']}" do
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=stop"
           expect_status(200)
 
+          # Wait a bit
+          sleep(30)
+
           # check if the process is running on the host
           system "pgrep -f sklearn_flask_server.py"
           if $?.exitstatus != 1
@@ -614,6 +678,9 @@ describe "On #{ENV['OS']}" do
         it "should fail to kill a non running instance" do
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=stop"
           expect_status(200)
+
+          # Wait a bit
+          sleep(30)
 
           # check if the process is running on the host
           system "pgrep -f sklearn_flask_server.py"
@@ -651,13 +718,19 @@ describe "On #{ENV['OS']}" do
           with_valid_project
           with_python_enabled(@project[:id], "3.6")
 
-          # Copy model to the project directory
-          copy(SKLEARN_MODEL_TOUR_FILE_LOCATION, "/Projects/#{@project[:projectname]}/Models/",
-               "#{@project[:projectname]}__#{@user[:username]}",
+          # Make Serving Dir
+          mkdir("/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/", "#{@user[:username]}",
+                "#{@project[:projectname]}__Models", 750)
+          # Make Version Dir
+          mkdir("/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1", "#{@user[:username]}",
+                "#{@project[:projectname]}__Models", 750)
+          # Copy model to the servingversion dir
+          copy(SKLEARN_MODEL_TOUR_FILE_LOCATION, "/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1/",
+               "#{@user[:username]}",
                "#{@project[:projectname]}__Models", 750, "#{@project[:projectname]}")
-          # Copy script to the project directory
-          copy(SKLEARN_SCRIPT_TOUR_FILE_LOCATION, "/Projects/#{@project[:projectname]}/Models/",
-               "#{@project[:projectname]}__#{@user[:username]}",
+          # Copy script to the servingversion dir
+          copy(SKLEARN_SCRIPT_TOUR_FILE_LOCATION, "/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1/",
+               "#{@user[:username]}",
                "#{@project[:projectname]}__Models", 750, "#{@project[:projectname]}")
         end
 
@@ -700,13 +773,19 @@ describe "On #{ENV['OS']}" do
           with_valid_project
           with_python_enabled(@project[:id], "2.7")
 
-          # Copy model to the project directory
-          copy(SKLEARN_MODEL_TOUR_FILE_LOCATION, "/Projects/#{@project[:projectname]}/Models/",
-               "#{@project[:projectname]}__#{@user[:username]}",
+          # Make Serving Dir
+          mkdir("/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/", "#{@user[:username]}",
+                "#{@project[:projectname]}__Models", 750)
+          # Make Version Dir
+          mkdir("/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1", "#{@user[:username]}",
+                "#{@project[:projectname]}__Models", 750)
+          # Copy model to the servingversion dir
+          copy(SKLEARN_MODEL_TOUR_FILE_LOCATION, "/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1/",
+               "#{@user[:username]}",
                "#{@project[:projectname]}__Models", 750, "#{@project[:projectname]}")
-          # Copy script to the project directory
-          copy(SKLEARN_SCRIPT_TOUR_FILE_LOCATION, "/Projects/#{@project[:projectname]}/Models/",
-               "#{@project[:projectname]}__#{@user[:username]}",
+          # Copy script to the servingversion dir
+          copy(SKLEARN_SCRIPT_TOUR_FILE_LOCATION, "/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1/",
+               "#{@user[:username]}",
                "#{@project[:projectname]}__Models", 750, "#{@project[:projectname]}")
         end
 

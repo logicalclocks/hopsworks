@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2019, Logical Clocks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -16,9 +16,7 @@
 
 package io.hops.hopsworks.common.serving.sklearn;
 
-import com.google.common.base.Strings;
 import com.google.common.io.Files;
-import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.serving.Serving;
 import io.hops.hopsworks.common.dao.serving.ServingFacade;
@@ -26,7 +24,6 @@ import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.serving.ServingException;
-import io.hops.hopsworks.common.serving.ServingWrapper;
 import io.hops.hopsworks.common.util.OSProcessExecutor;
 import io.hops.hopsworks.common.util.ProcessDescriptor;
 import io.hops.hopsworks.common.util.ProcessResult;
@@ -37,7 +34,6 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.enterprise.inject.Alternative;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
@@ -56,7 +52,6 @@ import static io.hops.hopsworks.common.serving.LocalhostServingController.SERVIN
  *
  * Launches/Kills a local Flask Server for Serving SkLearn Models
  */
-@Alternative
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 public class LocalhostSkLearnServingController {
@@ -71,8 +66,6 @@ public class LocalhostSkLearnServingController {
   private CertificateMaterializer certificateMaterializer;
   @EJB
   private OSProcessExecutor osProcessExecutor;
-  @EJB
-  private InodeFacade inodeFacade;
   
   public int getMaxNumInstances() {
     return 1;
@@ -169,7 +162,7 @@ public class LocalhostSkLearnServingController {
         throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERRORINT, Level.INFO);
       }
 
-      // Read the pid for TensorFlow Serving server
+      // Read the pid for SkLearn Serving Flask server
       Path pidFilePath = Paths.get(secretDir.toString(), "sklearn_flask_server.pid");
       String pidContents = Files.readFirstLine(pidFilePath.toFile(), Charset.defaultCharset());
 
@@ -194,39 +187,4 @@ public class LocalhostSkLearnServingController {
     }
   }
   
-  /**
-   * Validates user data for creating or updating a SkLearn Serving Instance
-   *
-   * @param servingWrapper the user data
-   * @param project the project to create the serving for
-   * @throws ServingException if the python environment is not activated for the project
-   */
-  public void validateUserInput(ServingWrapper servingWrapper, Project project) throws ServingException {
-
-    // Check that serving name is provided
-    if (Strings.isNullOrEmpty(servingWrapper.getServing().getName())) {
-      throw new IllegalArgumentException("Serving name not provided");
-    }
-    
-    // Check that the script name is valid and exists
-    String scriptName = Utils.getFileName(servingWrapper.getServing().getArtifactPath());
-    if(!scriptName.contains(".py")){
-      throw new IllegalArgumentException("Script name should be a valid python script name");
-    }
-    String hdfsPath = servingWrapper.getServing().getArtifactPath();
-    if (!hdfsPath.substring(0, 7).equalsIgnoreCase("hdfs://")) {
-      hdfsPath = "hdfs://" + hdfsPath;
-    }
-    if(!servingWrapper.getServing().getArtifactPath().contains(".py")){
-      throw new IllegalArgumentException("Script name should be a valid python script name");
-    } else if(inodeFacade.existsPath(hdfsPath)){
-      throw new IllegalArgumentException("Python script path does not exist in HDFS");
-    }
-    
-    //Check that python environment is activated
-    boolean enabled = project.getConda();
-    if(!enabled){
-      throw new ServingException(RESTCodes.ServingErrorCode.PYTHON_ENVIRONMENT_NOT_ENABLED, Level.SEVERE, null);
-    }
-  }
 }

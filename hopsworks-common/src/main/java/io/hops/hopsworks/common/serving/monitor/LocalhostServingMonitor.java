@@ -97,13 +97,10 @@ public class LocalhostServingMonitor {
 
   @Timeout
   public void monitor(Timer timer) {
-    LOGGER.log(Level.FINE, "Run Localhost Serving instances monitor");
-
     // Get the list of running Localhost Serving instances
     List<Serving> servingList = servingFacade.getLocalhostRunning();
     for (Serving serving : servingList) {
       try {
-        LOGGER.warning("MOnitor trying to acquire lock for serving instance:" + serving.getId());
         Serving dbServing = servingFacade.acquireLock(serving.getProject(), serving.getId());
         ProcessDescriptor.Builder builder = new ProcessDescriptor.Builder().addCommand("/usr/bin/sudo");
         if (serving.getServingType() == ServingType.TENSORFLOW) {

@@ -20,14 +20,13 @@ import com.twitter.bijection.Injection;
 import com.twitter.bijection.avro.GenericAvroCodecs;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.serving.Serving;
-import io.hops.hopsworks.exceptions.CryptoPasswordNotFoundException;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.CryptoPasswordNotFoundException;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
-import org.apache.avro.reflect.ReflectData;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -59,16 +58,10 @@ public class KafkaInferenceLogger implements InferenceLogger {
   private CertificateMaterializer certificateMaterializer;
 
   public static final String SERVING_MANAGER_USERNAME = "srvmanager";
-
-  private Schema schema;
-  private Injection<GenericRecord, byte[]> recordSerializer;
   private Properties props;
 
   @PostConstruct
   public void init() {
-    schema = ReflectData.get().getSchema(KafkaInferenceLog.class);
-    recordSerializer = GenericAvroCodecs.toBinary(schema);
-
     // Setup default properties
     props = new Properties();
     props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, settings.getKafkaBrokersStr());
@@ -99,16 +92,20 @@ public class KafkaInferenceLogger implements InferenceLogger {
           + serving.getProject().getName() , e);
       // We didn't manage to write the log to Kafka, nothing we can do.
     }
-
-    // Create and populate the GenericRecord
-    GenericData.Record inferenceRecord = new GenericData.Record(schema);
-    inferenceRecord.put("modelId", serving.getId());
-    inferenceRecord.put("modelName", serving.getName());
-    inferenceRecord.put("modelVersion", serving.getVersion());
-    inferenceRecord.put("requestTimestamp", System.currentTimeMillis());
-    inferenceRecord.put("responseHttpCode", responseHttpCode);
-    inferenceRecord.put("inferenceRequest", inferenceRequest);
-    inferenceRecord.put("inferenceResponse", inferenceResponse);
+    
+    //Get the schema for the topic and the serializer
+    Schema avroSchema = new Schema.Parser().parse(serving.getKafkaTopic().getSchemaTopics().getContents());
+    Injection<GenericRecord, byte[]> recordSerializer = GenericAvroCodecs.toBinary(avroSchema);
+  
+    //Get the version of the schema
+    int schemaVersion = serving.getKafkaTopic().getSchemaTopics().getSchemaTopicsPK().getVersion();
+    
+    // Create the GenericRecord from the avroSchema
+    GenericData.Record inferenceRecord = new GenericData.Record(avroSchema);
+  
+    // Populate the Inference Record with data
+    populateInfererenceRecord(serving, inferenceRequest, responseHttpCode, inferenceResponse, inferenceRecord,
+      schemaVersion);
 
     // Serialize record to byte
     byte[] inferenceRecordBytes = recordSerializer.apply(inferenceRecord);
@@ -131,6 +128,41 @@ public class KafkaInferenceLogger implements InferenceLogger {
 
     // De-materialize certificate
     certificateMaterializer.removeCertificatesLocal(SERVING_MANAGER_USERNAME, serving.getProject().getName());
+  }
+  
+  /**
+   * Specify inference record based on the schema version. To not break backwards-compatibility, changes to the
+   * inference schema (addition or removal of fields) should be made in new versions of the schema. This method will
+   * populate the inference record with the right data based on the version of the inference schema.
+   *
+   * @param serving serving creating the inference
+   * @param inferenceRequest inferenceRequest provided by the client
+   * @param responseHttpCode http response code by the serving
+   * @param inferenceResponse http response by the serving
+   * @param inferenceRecord kafka inference record to populate
+   * @param schemaVersion version of the inference schema
+   */
+  private void populateInfererenceRecord(Serving serving, String inferenceRequest, Integer responseHttpCode,
+    String inferenceResponse, GenericData.Record inferenceRecord, int schemaVersion){
+    if(schemaVersion == 1) {
+      inferenceRecord.put("modelId", serving.getId());
+      inferenceRecord.put("modelName", serving.getName());
+      inferenceRecord.put("modelVersion", serving.getVersion());
+      inferenceRecord.put("requestTimestamp", System.currentTimeMillis());
+      inferenceRecord.put("responseHttpCode", responseHttpCode);
+      inferenceRecord.put("inferenceRequest", inferenceRequest);
+      inferenceRecord.put("inferenceResponse", inferenceResponse);
+    }
+    if(schemaVersion == 2){
+      inferenceRecord.put("modelId", serving.getId());
+      inferenceRecord.put("modelName", serving.getName());
+      inferenceRecord.put("modelVersion", serving.getVersion());
+      inferenceRecord.put("requestTimestamp", System.currentTimeMillis());
+      inferenceRecord.put("responseHttpCode", responseHttpCode);
+      inferenceRecord.put("inferenceRequest", inferenceRequest);
+      inferenceRecord.put("inferenceResponse", inferenceResponse);
+      inferenceRecord.put("servingType", serving.getServingType().name());
+    }
   }
 
 

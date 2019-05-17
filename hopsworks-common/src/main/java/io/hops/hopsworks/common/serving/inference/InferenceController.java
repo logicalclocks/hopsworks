@@ -35,8 +35,6 @@ import javax.inject.Inject;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static io.hops.hopsworks.common.serving.LocalhostServingController.PID_STOPPED;
-
 /**
  * Contains the common functionality between serving instances for doing inference, delegates type-specific
  * functionality to specific inference controllers like TfInferenceController, and SkLearnInferenceController
@@ -76,10 +74,6 @@ public class InferenceController {
     Serving serving = servingFacade.findByProjectAndName(project, modelName);
     if (serving == null) {
       throw new InferenceException(RESTCodes.InferenceErrorCode.SERVING_NOT_FOUND, Level.FINE, "name: " + modelName);
-    }
-  
-    if (serving.getLocalPid().equals(PID_STOPPED)) {
-      throw new InferenceException(RESTCodes.InferenceErrorCode.SERVING_NOT_RUNNING, Level.FINE);
     }
   
     if (Strings.isNullOrEmpty(verb)) {

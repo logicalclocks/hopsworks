@@ -35,7 +35,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * 12. Security error codes start  with "20".
  * 14. CA error codes start with "22".
  * 15. DelaCSR error codes start with "23".
- * 16. TfServing error codes start with "24".
+ * 16. Serving error codes start with "24".
  * 17. Inference error codes start with "25".
  * 18. Activities error codes start with "26".
  * 19. Featurestore error codes start with "27".
@@ -618,7 +618,10 @@ public class RESTCodes {
     ACL_NOT_FOUND(12, "ACL not found.", Response.Status.NOT_FOUND),
     ACL_NOT_FOR_TOPIC(13, "ACL does not belong to the specified topic", Response.Status.BAD_REQUEST),
     SCHEMA_IN_USE(14, "Schema is currently used by topics. topic", Response.Status.PRECONDITION_FAILED),
-    BAD_NUM_PARTITION(15, "Invalid number of partitions", Response.Status.BAD_REQUEST);
+    BAD_NUM_PARTITION(15, "Invalid number of partitions", Response.Status.BAD_REQUEST),
+    CREATE_SCHEMA_RESERVED_NAME(16, "The provided schema name is reserved", Response.Status.BAD_REQUEST),
+    DELETE_RESERVED_SCHEMA(17, "The schema is reserved and cannot be deleted",
+      Response.Status.METHOD_NOT_ALLOWED);
 
 
     private Integer code;
@@ -1022,9 +1025,12 @@ public class RESTCodes {
     COMMANDNOTPROVIDED(8, "Command not provided", Response.Status.BAD_REQUEST),
     SPECNOTPROVIDED(9, "TFServing spec not provided", Response.Status.BAD_REQUEST),
     BAD_TOPIC(10, "Topic provided cannot be used for Serving logging", Response.Status.BAD_REQUEST),
-    DUPLICATEDENTRY(11, "An entry with the same name already exists in this project", Response.Status.BAD_REQUEST),
+    DUPLICATEDENTRY(11, "An entry with the same name already exists in this project",
+      Response.Status.BAD_REQUEST),
     PYTHON_ENVIRONMENT_NOT_ENABLED(12, "Python environment has not been enabled in this project, " +
-      "which is required for serving SkLearn Models", Response.Status.BAD_REQUEST);
+      "which is required for serving SkLearn Models", Response.Status.BAD_REQUEST),
+    UPDATE_SERVING_TYPE_ERROR(13, "The serving type of a serving cannot be updated.",
+      Response.Status.BAD_REQUEST);
 
 
     private Integer code;

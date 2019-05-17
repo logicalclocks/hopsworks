@@ -117,8 +117,8 @@ public class ServingFacade {
       dbServing.setBatchingEnabled(newServing.isBatchingEnabled());
     }
 
-    if (newServing.getServingType() != null) {
-      dbServing.setServingType(newServing.getServingType());
+    if (newServing.getServingType() != null && newServing.getServingType() != dbServing.getServingType()) {
+      throw new ServingException(RESTCodes.ServingErrorCode.UPDATE_SERVING_TYPE_ERROR, Level.FINE);
     }
 
     return merge(dbServing);

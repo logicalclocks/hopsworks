@@ -47,7 +47,7 @@ public class ServingView implements Serializable {
   private Integer nodePort;
   private Date created;
   private Boolean batchingEnabled;
-  private Integer servingType;
+  private ServingType servingType;
 
   // TODO(Fabio): use expansions here
   private String creator;
@@ -72,7 +72,7 @@ public class ServingView implements Serializable {
     this.status = servingWrapper.getStatus();
     this.kafkaTopicDTO = servingWrapper.getKafkaTopicDTO();
     this.batchingEnabled = servingWrapper.getServing().isBatchingEnabled();
-    this.servingType = servingWrapper.getServing().getServingType().ordinal();
+    this.servingType = servingWrapper.getServing().getServingType();
     Users user = servingWrapper.getServing().getCreator();
     this.creator = user.getFname() + " " + user.getLname();
   }
@@ -181,22 +181,11 @@ public class ServingView implements Serializable {
   }
   
   @ApiModelProperty(value = "Type of serving, sklearn or tfserving")
-  public Integer getServingType() {
+  public ServingType getServingType() {
     return servingType;
   }
-
-  public ServingType getServingTypeEnum() {
-    if(servingType == null){
-      throw new IllegalArgumentException("Serving type is null");
-    }
-    if(servingType < 0 || servingType > ServingType.values().length-1){
-      throw new IllegalArgumentException("Serving type is invalid, valid serving types are integers from 0 to " +
-        (ServingType.values().length-1));
-    }
-    return ServingType.values[servingType];
-  }
   
-  public void setServingType(Integer servingType) {
+  public void setServingType(ServingType servingType) {
     this.servingType = servingType;
   }
   
@@ -205,7 +194,7 @@ public class ServingView implements Serializable {
 
     ServingWrapper servingWrapper = new ServingWrapper(
         new Serving(id, name, artifactPath, modelVersion, requestedInstances, batchingEnabled,
-            getServingTypeEnum()));
+            servingType));
     servingWrapper.setKafkaTopicDTO(kafkaTopicDTO);
 
     return servingWrapper;

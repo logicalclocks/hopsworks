@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2019, Logical Clocks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -16,7 +16,6 @@
 
 package io.hops.hopsworks.common.serving;
 
-import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.serving.Serving;
 import io.hops.hopsworks.common.dao.serving.ServingFacade;
@@ -42,8 +41,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.logging.Level;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Contains the common functionality between localhost serving controllers, the specific functionality is provided by
@@ -194,7 +191,6 @@ public class LocalhostServingController implements ServingController {
       throws ServingException {
 
     Serving serving = servingFacade.acquireLock(project, servingId);
-
     ServingStatusEnum currentStatus = getServingStatus(serving);
 
     // getServingStatus returns STARTING if the PID is set to -2 and there is a lock.
@@ -278,65 +274,6 @@ public class LocalhostServingController implements ServingController {
         // The instance is not running, nothing else to do. Just release the lock.
         servingFacade.releaseLock(project, serving.getId());
       }
-    }
-  }
-  
-  /**
-   * Check if there is already a serving with the same name as a new/updated serving in the project
-   *
-   * @param project the project to query
-   * @param servingWrapper the serving to compare with the existing servings
-   * @throws ServingException if a duplicate was found in the database
-   */
-  @Override
-  public void checkDuplicates(Project project, ServingWrapper servingWrapper) throws ServingException {
-    Serving serving = servingFacade.findByProjectAndName(project,
-        servingWrapper.getServing().getName());
-    if (serving != null && !serving.getId().equals(servingWrapper.getServing().getId())) {
-      // There is already an entry for this project
-      throw new ServingException(RESTCodes.ServingErrorCode.DUPLICATEDENTRY, Level.FINE);
-    }
-  }
-  
-  /**
-   * Validates user input before creating or updating a serving. This method contains the common input validation
-   * between different serving types and then delegates to serving-type-specific controllers to do validation specific
-   * to the serving type.
-   *
-   * @param servingWrapper contains the user-data to validate
-   * @param project the project where the serving resides
-   * @throws ServingException
-   */
-  @Override
-  public void validateUserInput(ServingWrapper servingWrapper, Project project) throws ServingException {
-    // Check that the modelName is present
-    if (Strings.isNullOrEmpty(servingWrapper.getServing().getName())) {
-      throw new IllegalArgumentException("Serving name not provided");
-    } else if (servingWrapper.getServing().getName().contains(" ")) {
-      throw new IllegalArgumentException("Serving name cannot contain spaces");
-    }
-    // Check that the artifactPath is present
-    if (Strings.isNullOrEmpty(servingWrapper.getServing().getArtifactPath())) {
-      throw new IllegalArgumentException("Artifact path not provided");
-    }
-    if (servingWrapper.getServing().getVersion() == null) {
-      throw new IllegalArgumentException("Serving version not provided");
-    }
-    // Check for duplicated entries
-    checkDuplicates(project, servingWrapper);
-    //Validate that serving name follows allowed regex as required by the InferenceResource to use it as a
-    //Rest Endpoint
-    Pattern urlPattern = Pattern.compile("[a-zA-Z0-9]+");
-    Matcher urlMatcher = urlPattern.matcher(servingWrapper.getServing().getName());
-    if(!urlMatcher.matches()){
-      throw new IllegalArgumentException("Serving name must follow regex: \"[a-zA-Z0-9]+\"");
-    }
-    //Serving-type-specific validations
-    if(servingWrapper.getServing().getServingType() == ServingType.TENSORFLOW){
-      tfServingController.validateUserInput(servingWrapper, project);
-    }
-    if(servingWrapper.getServing().getServingType() == ServingType.SKLEARN){
-      skLearnServingController.validateUserInput(servingWrapper, project);
     }
   }
   

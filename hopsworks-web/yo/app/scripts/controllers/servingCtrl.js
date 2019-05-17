@@ -21,7 +21,7 @@
 
 angular.module('hopsWorksApp')
     .controller('servingCtrl', ['$scope', '$routeParams', 'growl', 'ServingService', 'UtilsService', '$location',
-        'PythonDepsService', 'ModalService', '$interval', 'StorageService', '$mdSidenav', 'DataSetService',
+        'PythonService', 'ModalService', '$interval', 'StorageService', '$mdSidenav', 'DataSetService',
         'KafkaService', 'JobService',
         function ($scope, $routeParams, growl, ServingService, UtilsService, $location, PythonDepsService,
                   ModalService, $interval, StorageService, $mdSidenav, DataSetService, KafkaService) {
@@ -80,13 +80,13 @@ angular.module('hopsWorksApp')
             self.ignorePoll = false;
             self.createNewServingMode = false;
 
-            self.editServing.servingType = 0
+            self.editServing.servingType = "TENSORFLOW"
             self.sklearnScriptRegex = /(.py|.ipynb)\b/
             self.sklearnSelectScriptErrorMsg = "Please select a .py or .ipynb file."
             self.nameRegex = /^[a-zA-Z0-9]+$/;
 
             this.selectFile = function () {
-                if (self.servingTypeToString(self.editServing.servingType) === "tf") {
+                if (self.editServing.servingType === "TENSORFLOW") {
                     ModalService.selectModelServing('lg', '*', '').then(
                         function (success) {
                             self.onDirSelected(success);
@@ -95,10 +95,11 @@ angular.module('hopsWorksApp')
                             // Users changed their minds.
                         });
                 }
-                if (self.servingTypeToString(self.editServing.servingType) == "sklearn") {
+                if (self.editServing.servingType == "SKLEARN") {
                     ModalService.selectFile('lg', self.sklearnScriptRegex, self.sklearnSelectScriptErrorMsg,
                         false).then(
                         function (success) {
+                            var projectName = UtilsService.getProjectName();
                             self.onFileSelected(success);
                         }, function (error) {
                             //The user changed their mind.
@@ -167,7 +168,7 @@ angular.module('hopsWorksApp')
              * @param artifactPath the directory HDFS path
              */
             self.onDirSelected = function (artifactPath) {
-                if (self.servingTypeToString(self.editServing.servingType) === "tf") {
+                if (self.editServing.servingType === "TENSORFLOW") {
                     self.validateTfModelPath(artifactPath, self.editServing.name);
                 }
             };
@@ -179,7 +180,7 @@ angular.module('hopsWorksApp')
              */
             self.validateSkLearnScriptPath = function (artifactPath, name) {
                 var filename = getFileName(artifactPath);
-                if(!filename.toLowerCase().endsWith(".py")){
+                if (!filename.toLowerCase().endsWith(".py")) {
                     growl.error("You need to select a python script with file ending .py", {
                         title: 'Error - Invalid sklearn serving python script.',
                         ttl: 15000
@@ -188,9 +189,11 @@ angular.module('hopsWorksApp')
                 }
                 if (typeof name === 'undefined' || name === null || name == "") {
                     name = filename.replace(".py", "");
+                    name = name.replace(/_/g, "")
                 }
                 self.editServing.artifactPath = artifactPath;
                 self.editServing.name = name;
+                self.editServing.modelVersion = 1;
             }
 
             /**
@@ -199,7 +202,7 @@ angular.module('hopsWorksApp')
              * @param path the selected path
              */
             self.onFileSelected = function (path) {
-                if(self.servingTypeToString(self.editServing.servingType) === "sklearn"){
+                if (self.editServing.servingType === "SKLEARN") {
                     self.validateSkLearnScriptPath(path, self.editServing.name)
                 }
             }
@@ -219,7 +222,7 @@ angular.module('hopsWorksApp')
                 self.editServing.kafkaTopicDTO.numOfPartitions = self.kafkaDefaultNumPartitions;
                 self.editServing.kafkaTopicDTO.numOfReplicas = self.kafkaDefaultNumReplicas;
                 self.editServing.batchingEnabled = false;
-                self.editServing.servingType = 0;
+                self.editServing.servingType = "TENSORFLOW";
                 self.versions = [];
                 self.sliderOptions.value = 1;
                 self.showAdvancedForm = false;
@@ -273,8 +276,7 @@ angular.module('hopsWorksApp')
                         self.projectKafkaTopics.push(self.noneKafkaTopicDTO);
 
                         for (var topic in success.data) {
-                            if (success.data[topic].schemaName === self.kafkaSchemaName &&
-                                success.data[topic].schemaVersion === self.kafkaSchemaVersion) {
+                            if (success.data[topic].schemaName === self.kafkaSchemaName) {
                                 self.projectKafkaTopics.push(success.data[topic]);
                             }
                         }
@@ -314,15 +316,6 @@ angular.module('hopsWorksApp')
 
             self.getAllServings()
 
-            self.servingTypeToString = function(servingType) {
-                if(servingType == 0){
-                    return "tf"
-                }
-                if(servingType == 1){
-                    return "sklearn"
-                }
-            }
-
             /**
              * Create or update serving
              *
@@ -344,7 +337,7 @@ angular.module('hopsWorksApp')
                     return;
                 }
                 // Check that name is valid according to regex so that it can be used as a REST endpoint for inference
-                if(!self.nameRegex.test(self.editServing.name)) {
+                if (!self.nameRegex.test(self.editServing.name)) {
                     growl.error("Serving/Model name must be valid according to regex: " + self.nameRegex, {
                         title: 'Error',
                         ttl: 15000
@@ -354,15 +347,17 @@ angular.module('hopsWorksApp')
 
                 // Check that python kernel is enabled if it is a sklearn serving, as the flask serving will be launched
                 // inside the project anaconda environment
-                if(self.servingTypeToString(self.editServing.servingType) === "sklearn"){
+                if (self.editServing.servingType === "SKLEARN") {
                     PythonDepsService.enabled(self.projectId).then(
                         function (success) {
                             self.doCreateOrUpdate()
                         },
                         function (error) {
                             growl.error("You need to enable Python in your project before creating a SkLearn serving" +
-                                " instance.", {title: 'Error - Python not' +
-                                    ' enabled yet.', ttl: 15000});
+                                " instance.", {
+                                title: 'Error - Python not' +
+                                    ' enabled yet.', ttl: 15000
+                            });
 
                         });
                 } else {
@@ -398,7 +393,7 @@ angular.module('hopsWorksApp')
                 angular.copy(serving, self.editServing);
                 self.editServing.modelVersion = self.editServing.modelVersion.toString();
                 self.sliderOptions.value = serving.requestedInstances;
-                if(self.servingTypeToString(self.editServing.servingType) === "tf"){
+                if (self.editServing.servingType === "TENSORFLOW") {
                     self.validateTfModelPath(serving.artifactPath, serving.name);
                 }
                 self.showCreateServingForm();
@@ -461,14 +456,6 @@ angular.module('hopsWorksApp')
                 self.editServing.artifactPath = ""
                 self.editServing.name = ""
                 self.editServing.modelVersion = ""
-                if(servingType === 'sklearn'){
-                    self.editServing.servingType = 1
-                    return
-                }
-                if(servingType === 'tf'){
-                    self.editServing.servingType = 0
-                    return
-                }
                 self.editServing.servingType = servingType
             }
 
@@ -506,7 +493,7 @@ angular.module('hopsWorksApp')
                     function (success) {
                         self.sliderOptions.options.ceil = success.data.maxNumInstances;
                         self.kafkaSchemaName = success.data.kafkaTopicSchema;
-                        self.kafkaSchemaVersion = success.data.kafkaTopicVersion;
+                        self.kafkaSchemaVersion = success.data.kafkaTopicSchemaVersion;
                     },
                     function (error) {
                         self.ignorePoll = false;

@@ -20,7 +20,7 @@ describe "On #{ENV['OS']}" do
   describe 'kafka' do
     after (:all) {clean_projects}
 
-    describe "kafka create topics and schemas" do
+    describe "kafka create/delete topics and schemas" do
 
       context 'with valid project and kafka service enabled' do
         before :all do
@@ -31,6 +31,12 @@ describe "On #{ENV['OS']}" do
           project = get_project
           json_result, schema_name = add_schema(project.id)
           expect_status(200)
+        end
+
+        it "should not be able to create a kafka schema with a reserved name" do
+          project = get_project
+          json_result, schema_name = add_schema(project.id, "inferenceschema")
+          expect_status(400)
         end
 
         it "should be able to share the topic with another project" do
@@ -49,6 +55,12 @@ describe "On #{ENV['OS']}" do
           shared_topic = JSON.parse(shared_topics).select{ |topic| topic['name'] == @topic[:topic_name]}
           expect(shared_topic.size).to eq 1
         end
+
+        it "should not be able to delete a kafka schema with a reserved name" do
+          project = get_project
+          delete_schema(project.id, "inferenceschema", 1)
+          expect_status(400)
+        end
       end
     end
 
@@ -62,7 +74,37 @@ describe "On #{ENV['OS']}" do
       it "should be able to create a kafka topic using the schema" do
         project = get_project
         schema = get_schema
-        json_result, schema_name = add_topic(project.id, schema.name, 1)
+        json_result, kafka_topic_name = add_topic(project.id, schema.name, 1)
+        expect_status(200)
+      end
+    end
+
+    context 'with valid project, kafka service enabled, a kafka schema, and a kafka topic' do
+      before :all do
+        with_valid_project
+        project = get_project
+        with_kafka_schema(project.id)
+        with_kafka_topic(project.id)
+      end
+
+      it "should not be able to delete the schema that is being used by the topic" do
+        project = get_project
+        schema = get_schema
+        delete_schema(project.id, schema.name, 1)
+        expect_status(412)
+      end
+
+      it "should be able to delete the topic" do
+        project = get_project
+        topic = get_topic
+        delete_topic(project.id, topic.topic_name)
+        expect_status(200)
+      end
+
+      it "should be able to delete the schema when it is not being used by a topic" do
+        project = get_project
+        schema = get_schema
+        delete_schema(project.id, schema.name, 1)
         expect_status(200)
       end
     end

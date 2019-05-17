@@ -17,7 +17,6 @@
 package io.hops.hopsworks.common.serving.tf;
 
 import com.google.common.io.Files;
-import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.serving.Serving;
@@ -25,7 +24,6 @@ import io.hops.hopsworks.common.dao.serving.ServingFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.serving.ServingException;
-import io.hops.hopsworks.common.serving.ServingWrapper;
 import io.hops.hopsworks.common.util.OSProcessExecutor;
 import io.hops.hopsworks.common.util.ProcessDescriptor;
 import io.hops.hopsworks.common.util.ProcessResult;
@@ -36,13 +34,10 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.enterprise.inject.Alternative;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -57,7 +52,6 @@ import static io.hops.hopsworks.common.serving.LocalhostServingController.SERVIN
  *
  * Launches/Kills a local tensorflow-serving-server for serving tensorflow Models
  */
-@Alternative
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 public class LocalhostTfServingController {
@@ -266,36 +260,4 @@ public class LocalhostTfServingController {
       servingFacade.releaseLock(project, serving.getId());
     }
   }
-  
-  /**
-   * Validates user data for creating or updating a Tensorflow Serving Instance
-   *
-   * @param servingWrapper the user data
-   * @param project the project to create the serving for
-   * @throws ServingException if the python environment is not activated for the project
-   */
-  public void validateUserInput(ServingWrapper servingWrapper, Project project) {
-    // Check that the modelPath respects the TensorFlow standard
-    validateModelPath(servingWrapper.getServing().getArtifactPath(),
-      servingWrapper.getServing().getVersion());
-    
-    // Check that the batching option has been specified
-    if (servingWrapper.getServing().isBatchingEnabled() == null) {
-      throw new IllegalArgumentException("Batching is null");
-    }
-  }
-
-  private void validateModelPath(String path, Integer version) throws IllegalArgumentException {
-    try {
-      List<Inode> children = inodeFacade.getChildren(Paths.get(path, version.toString()).toString());
-
-      if (children.stream().noneMatch(inode -> inode.getInodePK().getName().equals("variables")) ||
-          children.stream().noneMatch(inode -> inode.getInodePK().getName().contains(".pb"))) {
-        throw new IllegalArgumentException("The model path does not respect the TensorFlow standard");
-      }
-    } catch (FileNotFoundException e) {
-      throw new IllegalArgumentException("The model path provided does not exists");
-    }
-  }
-
 }

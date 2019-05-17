@@ -35,8 +35,8 @@
                   <div style="display: inline-block; vertical-align: top;">
                     <div class="btn-group btn-group-toggle" data-toggle="buttons">
                       <label class="btn btn-default btn-md" id="tensorflow_serving_lbl"
-                             ng-click="servingCtrl.setServingType('tf');"
-                             ng-class="{unset: servingCtrl.servingTypeToString(servingCtrl.editServing.servingType) !== 'tf'}"
+                             ng-click="servingCtrl.setServingType('TENSORFLOW');"
+                             ng-class="{unset: servingCtrl.editServing.servingType !== 'TENSORFLOW'}"
                              style="margin:2px; background:rgb(108, 117, 125); color:white;">
                         <input type="radio" value="TENSORFLOW_SERVING" id="TENSORFLOW_SERVING">
                         Tensorflow
@@ -46,8 +46,8 @@
                         </i>
                       </label>
                       <label class="btn btn-default btn-md" id="sklearn_serving_lbl"
-                             ng-click="servingCtrl.setServingType('sklearn');"
-                             ng-class="{unset: servingCtrl.servingTypeToString(servingCtrl.editServing.servingType) !== 'sklearn'}"
+                             ng-click="servingCtrl.setServingType('SKLEARN');"
+                             ng-class="{unset: servingCtrl.editServing.servingType !== 'SKLEARN'}"
                              style="margin:2px; background:rgb(108, 117, 125); color:white;">
                         <input type="radio" value="SKLEARN_SERVING" id="SKLEARN_SERVING">
                         Sci-kit Learn (SkLearn)
@@ -73,7 +73,7 @@
 
               <div class="row">
                 <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3" style="text-align: right;">
-                    <div ng-if="servingCtrl.servingTypeToString(servingCtrl.editServing.servingType) === 'sklearn'">
+                    <div ng-if="servingCtrl.editServing.servingType === 'SKLEARN'">
                       <div>
                         <label>
                           <button style="margin-top: 5px;" id="selectArchiveButton" class="btn btn-default" ng-click="servingCtrl.selectFile()">
@@ -88,7 +88,7 @@
                   <div style="margin-top: 9px; heigth: 2em;"><label>Serving Version</label></div>
                     </div>
 
-               <div ng-if="servingCtrl.servingTypeToString(servingCtrl.editServing.servingType) === 'tf'">
+               <div ng-if="servingCtrl.editServing.servingType === 'TENSORFLOW'">
                   <div>
                     <label>
                       <button style="margin-top: 5px;" id="selectArchiveButton" class="btn btn-default" ng-click="servingCtrl.selectFile()">
@@ -121,12 +121,12 @@
                   <input style="margin-top: 5px" name="name" class="form-control" type="text" ng-model="servingCtrl.editServing.name">
                   <input style="margin-top: 5px" name="modelVersion" class="form-control" type="text"
                          ng-model="servingCtrl.editServing.modelVersion"
-                         ng-if="servingCtrl.servingTypeToString(servingCtrl.editServing.servingType) === 'sklearn'">
+                         ng-if="servingCtrl.editServing.servingType === 'SKLEARN'">
 
                   <select class="form-control" style="margin-top: 5px; width: 25%" name="modelVersion"
                           ng-model="servingCtrl.editServing.modelVersion"
                           ng-options="x for x in servingCtrl.editServing.versions"
-                          ng-if="servingCtrl.servingTypeToString(servingCtrl.editServing.servingType) === 'tf'"></select>
+                          ng-if="servingCtrl.editServing.servingType === 'TENSORFLOW'"></select>
 
                   <rzslider ng-if="servingCtrl.sliderOptions.options.ceil > 1" style="margin-top: 40px;"
                        rz-slider-model="servingCtrl.sliderOptions.value"
@@ -139,7 +139,8 @@
             <div ng-if="servingCtrl.showAdvancedForm" class="animate-if">
               <div class="row">
                 <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3" style="text-align: right;">
-                  <div style="margin-top: 10px; heigth: 2em;" ng-if="servingCtrl.servingTypeToString(servingCtrl.editServing.servingType) === 'tf'"><label>Request Batching</label></div>
+                  <div style="margin-top: 10px; heigth: 2em;"
+                       ng-if="servingCtrl.editServing.servingType === 'TENSORFLOW'"><label>Request Batching</label></div>
                   <div style="margin-top: 10px; heigth: 2em;"><label>Kafka Topic</label></div>
                   <div style="margin-top: 10px; heigth: 2em;"><label>Kafka Num Partitions</label></div>
                   <div style="margin-top: 10px; heigth: 2em;"><label>Kafka Replication Factor</label></div>
@@ -148,7 +149,7 @@
                 <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6" style="padding-top: 10px">
                   <input type="checkbox" name="requestBatching"
                           ng-model="servingCtrl.editServing.batchingEnabled"
-                         ng-if="servingCtrl.servingTypeToString(servingCtrl.editServing.servingType) === 'tf'">
+                         ng-if="servingCtrl.editServing.servingType === 'TENSORFLOW'">
 
                   <select class="form-control" style="margin-top: 5px; width: 40%" name="kafkaTopicName"
                           ng-model="servingCtrl.editServing.kafkaTopicDTO"
@@ -244,7 +245,7 @@
 
                   </td>
                   <td> {{serving.name}} </td>
-                  <td> {{servingCtrl.servingTypeToString(serving.servingType)}} </td>
+                  <td> {{serving.servingType}} </td>
                   <td> {{serving.artifactPath}} </td>
                   <td> {{serving.modelVersion}} </td>
                   <td> {{serving.availableInstances}} / {{serving.requestedInstances}} </td>

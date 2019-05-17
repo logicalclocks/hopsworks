@@ -95,7 +95,7 @@ describe "On #{ENV['OS']}" do
         end
       end
 
-      context 'with authentication', vm: true do
+      context 'with authentication and with tf serving', vm: true do
         before :all do
           with_valid_project
           with_tf_serving(@project[:id], @project[:projectname], @user[:username])
@@ -135,16 +135,18 @@ describe "On #{ENV['OS']}" do
             # TODO(Check that the response has the correct format)
           end
 
-          it "should succeeds to infer from a with no kafka logging" do
+          it "should succeed to infer from a serving with no kafka logging" do
             put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
              {id: @serving[:id],
               name: @serving[:name],
-              artifactPath: @serving[:artifactp_path],
+              artifactPath: @serving[:artifact_path],
               modelVersion: @serving[:version],
               batchingEnabled: false,
               kafkaTopicDTO: {
                  name: "NONE"
-              }}
+              },
+              servingType: "TENSORFLOW"
+             }
             expect_status(201)
 
             post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
@@ -161,7 +163,9 @@ describe "On #{ENV['OS']}" do
               batchingEnabled: false,
               kafkaTopicDTO: {
                  name: @topic[:topic_name]
-              }}
+              },
+              servingType: "TENSORFLOW"
+             }
           end
 
           it "should receive an error if the input payload is malformed" do

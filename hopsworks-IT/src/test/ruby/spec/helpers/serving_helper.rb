@@ -15,7 +15,7 @@
 =end
 
 INFERENCE_SCHEMA_NAME = "inferenceschema"
-INFERENCE_SCHEMA_VERSION = 1
+INFERENCE_SCHEMA_VERSION = 2
 
 TF_MODEL_TOUR_FILE_LOCATION = "/user/hdfs/tensorflow_demo/data/mnist/model/*"
 SKLEARN_MODEL_TOUR_FILE_LOCATION = "/user/hdfs/tensorflow_demo/data/iris/iris_knn.pkl"
@@ -34,11 +34,19 @@ module ServingHelper
   end
 
   def with_sklearn_serving(project_id, project_name, user)
-    # Copy model to the project directory
-    copy(SKLEARN_MODEL_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/", "#{project_name}__#{user}",
+    # Make Serving Dir
+    mkdir("/Projects/#{project_name}/Models/IrisFlowerClassifier/", "#{project_name}__#{user}",
+          "#{project_name}__Models", 750)
+    # Make Version Dir
+    mkdir("/Projects/#{project_name}/Models/IrisFlowerClassifier/1", "#{project_name}__#{user}",
+          "#{project_name}__Models", 750)
+    # Copy model to the servingversion dir
+    copy(SKLEARN_MODEL_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/IrisFlowerClassifier/1/",
+         "#{project_name}__#{user}",
          "#{project_name}__Models", 750, "#{project_name}")
-    # Copy script to the project directory
-    copy(SKLEARN_SCRIPT_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/", "#{project_name}__#{user}",
+    # Copy script to the servingversion dir
+    copy(SKLEARN_SCRIPT_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/IrisFlowerClassifier/1/",
+         "#{project_name}__#{user}",
          "#{project_name}__Models", 750, "#{project_name}")
 
     @serving ||= create_sklearn_serving(project_id, project_name)
@@ -57,7 +65,7 @@ module ServingHelper
                   numOfPartitions: 1,
                   numOfReplicas: 1
                },
-               servingType: 0
+               servingType: "TENSORFLOW"
               }
     expect_status(201)
 
@@ -72,15 +80,14 @@ module ServingHelper
     serving_name = "testModel#{short_random_id}"
     put "#{ENV['HOPSWORKS_API']}/project/#{project_id}/serving/",
         {name: serving_name,
-         artifactPath: "/Projects/#{project_name}/Models/#{SKLEARN_SCRIPT_FILE_NAME}",
+         artifactPath: "/Projects/#{project_name}/Models/IrisFlowerClassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
          modelVersion: 1,
-         batchingEnabled: true,
          kafkaTopicDTO: {
              name: "CREATE",
              numOfPartitions: 1,
              numOfReplicas: 1
          },
-         servingType: 1
+         servingType: "SKLEARN"
         }
     expect_status(201)
 

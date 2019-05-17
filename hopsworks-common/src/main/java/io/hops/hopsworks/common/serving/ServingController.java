@@ -49,10 +49,6 @@ public interface ServingController {
   void createOrUpdate(Project project, Users user, ServingWrapper newServing)
       throws KafkaException, UserException, ProjectException, ServiceException, ServingException;
 
-  void validateUserInput(ServingWrapper servingWrapper, Project project) throws ServingException;
-
-  void checkDuplicates(Project project, ServingWrapper servingWrapper) throws ServingException;
-
   int getMaxNumInstances();
 
   String getClassName();

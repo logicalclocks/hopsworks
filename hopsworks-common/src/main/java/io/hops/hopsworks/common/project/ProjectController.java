@@ -54,7 +54,6 @@ import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeView;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsGroups;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
-import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
 import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.jobs.quota.YarnPriceMultiplicator;
@@ -62,7 +61,6 @@ import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuota;
 import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuotaFacade;
 import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
-import io.hops.hopsworks.common.dao.jupyter.config.JupyterProcessMgr;
 import io.hops.hopsworks.common.dao.kafka.KafkaFacade;
 import io.hops.hopsworks.common.dao.log.operation.OperationType;
 import io.hops.hopsworks.common.dao.log.operation.OperationsLog;
@@ -84,14 +82,11 @@ import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.FolderNameValidator;
 import io.hops.hopsworks.common.elastic.ElasticController;
 import io.hops.hopsworks.common.exception.PythonException;
-import io.hops.hopsworks.common.python.environment.EnvironmentController;
-import io.hops.hopsworks.common.util.DateUtils;
-import io.hops.hopsworks.common.hdfs.Utils;
-import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.common.experiments.TensorBoardController;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.hive.HiveController;
 import io.hops.hopsworks.common.jobs.JobController;
 import io.hops.hopsworks.common.jobs.execution.ExecutionController;
@@ -100,12 +95,15 @@ import io.hops.hopsworks.common.jobs.yarn.LocalResourceDTO;
 import io.hops.hopsworks.common.jobs.yarn.YarnLogUtil;
 import io.hops.hopsworks.common.jupyter.JupyterController;
 import io.hops.hopsworks.common.kafka.KafkaController;
-import io.hops.hopsworks.common.livy.LivyController;
 import io.hops.hopsworks.common.message.MessageController;
+import io.hops.hopsworks.common.python.environment.EnvironmentController;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.security.CertificatesController;
+import io.hops.hopsworks.common.serving.ServingController;
+import io.hops.hopsworks.common.serving.ServingException;
 import io.hops.hopsworks.common.serving.inference.logger.KafkaInferenceLogger;
 import io.hops.hopsworks.common.user.UsersController;
+import io.hops.hopsworks.common.util.DateUtils;
 import io.hops.hopsworks.common.util.EmailBean;
 import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
@@ -210,8 +208,6 @@ public class ProjectController {
   @EJB
   private EnvironmentController environmentController;
   @EJB
-  private JupyterProcessMgr jupyterProcessFacade;
-  @EJB
   private JobFacade jobFacade;
   @EJB
   private KafkaFacade kafkaFacade;
@@ -221,8 +217,6 @@ public class ProjectController {
   private TensorBoardController tensorBoardController;
   @EJB
   private ElasticController elasticController;
-  @EJB
-  private ExecutionFacade execFacade;
   @EJB
   private CertificateMaterializer certificateMaterializer;
   @EJB
@@ -245,13 +239,9 @@ public class ProjectController {
   @EJB
   private ProjectUtils projectUtils;
   @EJB
-  private LivyController livyController;
-  @EJB
   protected JobController jobController;
   @EJB
   protected ExecutionController executionController;
-  @EJB
-  protected FeaturegroupController featuregroupController;
   @EJB
   private EmailBean emailBean;
   @EJB
@@ -277,9 +267,10 @@ public class ProjectController {
    * @param sessionId
    * @return
    */
-  public Project createProject(ProjectDTO projectDTO, Users owner, List<String> failedMembers, String sessionId)
-    throws DatasetException, GenericException, KafkaException, ProjectException, UserException, HopsSecurityException,
-    ServiceException, FeaturestoreException {
+  public Project createProject(ProjectDTO projectDTO, Users owner,
+                               List<String> failedMembers, String sessionId)
+      throws DatasetException, GenericException, KafkaException, ProjectException, UserException, HopsSecurityException,
+      ServiceException, FeaturestoreException {
 
     Long startTime = System.currentTimeMillis();
 
@@ -401,7 +392,7 @@ public class ProjectController {
           "project: " + projectName, ex.getMessage(), ex);
       }
       LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 8 (logs): {0}", System.currentTimeMillis() - startTime);
-      
+  
       if (environmentController.condaEnabledHosts()) {
         try {
           environmentController.createEnv("3.6", true, project);//TODO: use variables for version
@@ -944,7 +935,7 @@ public class ProjectController {
      * that'll be created down this directory tree will have as a parent this
      * inode.
      */
-    String projectPath = Utils.getProjectPath(projectName) ;
+    String projectPath = Utils.getProjectPath(projectName);
     //Create first the projectPath
     projectDirCreated = dfso.mkdir(projectPath);
 

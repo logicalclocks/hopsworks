@@ -70,7 +70,8 @@ public class ServingService {
 
   @Inject
   private ServingController servingController;
-
+  @EJB
+  private ServingUtil servingUtil;
   @EJB
   private NoCacheResponse noCacheResponse;
   @EJB
@@ -104,7 +105,7 @@ public class ServingService {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Get the list of serving instances for the project",
       response = ServingView.class,
       responseContainer = "List")
@@ -149,7 +150,7 @@ public class ServingService {
   @DELETE
   @Path("/{servingId}")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Delete a serving instance")
   public Response deleteServing(
       @ApiParam(value = "Id of the serving instance", required = true) @PathParam("servingId") Integer servingId)
@@ -167,7 +168,7 @@ public class ServingService {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Create or update a serving instance")
   public Response createOrUpdate(@Context SecurityContext sc,
       @ApiParam(value = "serving specification", required = true)
@@ -178,7 +179,7 @@ public class ServingService {
       throw new IllegalArgumentException("serving was not provided");
     }
     ServingWrapper servingWrapper = serving.getServingWrapper();
-    servingController.validateUserInput(servingWrapper, project);
+    servingUtil.validateUserInput(servingWrapper, project);
     servingController.createOrUpdate(project, user, servingWrapper);
     return Response.status(Response.Status.CREATED).build();
   }
@@ -187,7 +188,7 @@ public class ServingService {
   @Path("/{servingId}")
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Start or stop a Serving instance")
   public Response startOrStop(@Context SecurityContext sc,
       @ApiParam(value = "ID of the Serving instance to start/stop", required = true)
