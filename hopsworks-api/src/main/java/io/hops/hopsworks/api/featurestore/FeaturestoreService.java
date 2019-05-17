@@ -925,7 +925,7 @@ public class FeaturestoreService {
   @Path("/{featurestoreName}/metadata")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getFeaturestoreId(@PathParam("featurestoreName") String featurestoreName)
     throws FeaturestoreException {
     if (Strings.isNullOrEmpty(featurestoreName)) {

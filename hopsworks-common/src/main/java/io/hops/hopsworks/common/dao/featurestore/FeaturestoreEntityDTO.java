@@ -301,7 +301,27 @@ public abstract class FeaturestoreEntityDTO {
         dependencies.stream().map(d -> new FeaturestoreDependencyDTO(d.getInode(), inodeFacade))
             .collect(Collectors.toList());
   }
-
+  
+  public void setDescriptiveStatistics(
+    DescriptiveStatsDTO descriptiveStatistics) {
+    this.descriptiveStatistics = descriptiveStatistics;
+  }
+  
+  public void setFeatureCorrelationMatrix(
+    FeatureCorrelationMatrixDTO featureCorrelationMatrix) {
+    this.featureCorrelationMatrix = featureCorrelationMatrix;
+  }
+  
+  public void setFeaturesHistogram(
+    FeatureDistributionsDTO featuresHistogram) {
+    this.featuresHistogram = featuresHistogram;
+  }
+  
+  public void setClusterAnalysis(
+    ClusterAnalysisDTO clusterAnalysis) {
+    this.clusterAnalysis = clusterAnalysis;
+  }
+  
   @Override
   public String toString() {
     return "FeaturestoreEntityDTO{" +
