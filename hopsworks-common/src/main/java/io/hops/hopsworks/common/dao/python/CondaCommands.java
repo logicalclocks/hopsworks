@@ -37,7 +37,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package io.hops.hopsworks.common.dao.pythonDeps;
+package io.hops.hopsworks.common.dao.python;
 
 import io.hops.hopsworks.common.dao.host.Hosts;
 import io.hops.hopsworks.common.dao.project.Project;
@@ -83,6 +83,12 @@ import javax.xml.bind.annotation.XmlRootElement;
   @NamedQuery(name = "CondaCommands.findByProj",
           query
           = "SELECT c FROM CondaCommands c WHERE c.projectId = :projectId"),
+  @NamedQuery(name = "CondaCommands.findByProjectAndStatus",
+          query
+          = "SELECT c FROM CondaCommands c WHERE c.projectId = :projectId AND c.status = :status"),
+  @NamedQuery(name = "CondaCommands.findByProjectAndLibAndStatus",
+          query
+           = "SELECT c FROM CondaCommands c WHERE c.projectId = :projectId AND c.lib = :lib AND c.status = :status"),
   @NamedQuery(name = "CondaCommands.findByChannelUrl",
           query
           = "SELECT c FROM CondaCommands c WHERE c.channelUrl = :channelUrl"),
@@ -108,8 +114,8 @@ import javax.xml.bind.annotation.XmlRootElement;
           query = "SELECT c FROM CondaCommands c WHERE c.hostId = :host"),
   @NamedQuery(name = "CondaCommands.findNotFinishedByHost",
           query = "SELECT c FROM CondaCommands c WHERE c.hostId = :host AND c.status != "
-            + "io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade.CondaStatus.SUCCESS "
-            + "AND c.status != io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade.CondaStatus.FAILED")})
+            + "io.hops.hopsworks.common.dao.python.CondaCommandFacade.CondaStatus.SUCCESS "
+            + "AND c.status != io.hops.hopsworks.common.dao.python.CondaCommandFacade.CondaStatus.FAILED")})
 public class CondaCommands implements Serializable {
 
   private static final long serialVersionUID = 1L;
@@ -148,28 +154,28 @@ public class CondaCommands implements Serializable {
           max = 52)
   @Column(name = "op")
   @Enumerated(EnumType.STRING)
-  private PythonDepsFacade.CondaOp op;
+  private CondaCommandFacade.CondaOp op;
   @Basic(optional = false)
   @NotNull
   @Size(min = 1,
           max = 52)
   @Column(name = "status")
   @Enumerated(EnumType.STRING)
-  private PythonDepsFacade.CondaStatus status;
+  private CondaCommandFacade.CondaStatus status;
   @Basic(optional = false)
   @NotNull
   @Size(min = 1,
           max = 52)
   @Column(name = "install_type")
   @Enumerated(EnumType.STRING)
-  private PythonDepsFacade.CondaInstallType installType;
+  private CondaCommandFacade.CondaInstallType installType;
   @Basic(optional = false)
   @NotNull
   @Size(min = 1,
           max = 52)
   @Column(name = "machine_type")
   @Enumerated(EnumType.STRING)
-  private PythonDepsFacade.MachineType machineType;
+  private LibraryFacade.MachineType machineType;
   @Basic(optional = false)
   @NotNull
   @Column(name = "created")
@@ -194,10 +200,10 @@ public class CondaCommands implements Serializable {
   public CondaCommands() {
   }
 
-  public CondaCommands(Hosts h, String user, PythonDepsFacade.CondaOp op,
-          PythonDepsFacade.CondaStatus status, PythonDepsFacade.CondaInstallType installType,
-          PythonDepsFacade.MachineType machineType, Project project, String lib, String version, String channelUrl,
-                       Date created, String arg,  String environmentYml, Boolean installJupyter) {
+  public CondaCommands(Hosts h, String user, CondaCommandFacade.CondaOp op,
+                       CondaCommandFacade.CondaStatus status, CondaCommandFacade.CondaInstallType installType,
+                       LibraryFacade.MachineType machineType, Project project, String lib, String version,
+                       String channelUrl, Date created, String arg, String environmentYml, Boolean installJupyter) {
     this.hostId = h;
     if (op  == null || user == null || project == null) { 
       throw new NullPointerException("Op/user/project cannot be null");
@@ -299,35 +305,35 @@ public class CondaCommands implements Serializable {
     this.hostId = hostId;
   }
 
-  public PythonDepsFacade.CondaOp getOp() {
+  public CondaCommandFacade.CondaOp getOp() {
     return op;
   }
 
-  public void setOp(PythonDepsFacade.CondaOp op) {
+  public void setOp(CondaCommandFacade.CondaOp op) {
     this.op = op;
   }
 
-  public PythonDepsFacade.CondaStatus getStatus() {
+  public CondaCommandFacade.CondaStatus getStatus() {
     return status;
   }
 
-  public void setStatus(PythonDepsFacade.CondaStatus status) {
+  public void setStatus(CondaCommandFacade.CondaStatus status) {
     this.status = status;
   }
 
-  public PythonDepsFacade.CondaInstallType getInstallType() {
+  public CondaCommandFacade.CondaInstallType getInstallType() {
     return installType;
   }
 
-  public void setInstallType(PythonDepsFacade.CondaInstallType installType) {
+  public void setInstallType(CondaCommandFacade.CondaInstallType installType) {
     this.installType = installType;
   }
 
-  public PythonDepsFacade.MachineType getMachineType() {
+  public LibraryFacade.MachineType getMachineType() {
     return machineType;
   }
 
-  public void setMachineType(PythonDepsFacade.MachineType machineType) {
+  public void setMachineType(LibraryFacade.MachineType machineType) {
     this.machineType = machineType;
   }
 

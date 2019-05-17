@@ -39,10 +39,6 @@
 
 package io.hops.hopsworks.rest.application.config;
 
-import io.hops.hopsworks.api.exception.mapper.RESTApiThrowableMapper;
-import io.hops.hopsworks.api.jobs.JobsResource;
-import io.hops.hopsworks.api.jobs.executions.ExecutionsResource;
-import io.hops.hopsworks.api.user.UsersResource;
 import io.swagger.annotations.Api;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -56,13 +52,13 @@ public class ApplicationConfig extends ResourceConfig {
   public ApplicationConfig() {
     register(io.hops.hopsworks.api.agent.AgentResource.class);
     register(io.hops.hopsworks.api.elastic.ElasticService.class);
-    register(RESTApiThrowableMapper.class);
+    register(io.hops.hopsworks.api.exception.mapper.RESTApiThrowableMapper.class);
     register(io.hops.hopsworks.api.filter.ProjectAuthFilter.class);
     register(io.hops.hopsworks.api.filter.AuthFilter.class);
     register(io.hops.hopsworks.api.filter.JWTAutoRenewFilter.class);
     register(io.hops.hopsworks.api.jwt.JWTResource.class);
-    register(ExecutionsResource.class);
-    register(JobsResource.class);
+    register(io.hops.hopsworks.api.jobs.executions.ExecutionsResource.class);
+    register(io.hops.hopsworks.api.jobs.JobsResource.class);
     register(io.hops.hopsworks.api.jupyter.JupyterService.class);
     register(io.hops.hopsworks.api.serving.TfServingService.class);
     register(io.hops.hopsworks.api.serving.inference.InferenceResource.class);
@@ -74,11 +70,15 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.api.project.ProjectMembersService.class);
     register(io.hops.hopsworks.api.project.ProjectService.class);
     register(io.hops.hopsworks.api.project.RequestService.class);
-    register(io.hops.hopsworks.api.pythonDeps.PythonDepsService.class);
     register(io.hops.hopsworks.api.activities.ProjectActivitiesResource.class);
+    register(io.hops.hopsworks.api.python.environment.command.EnvironmentCommandsResource.class);
+    register(io.hops.hopsworks.api.python.environment.EnvironmentResource.class);
+    register(io.hops.hopsworks.api.python.library.command.LibraryCommandsResource.class);
+    register(io.hops.hopsworks.api.python.library.LibraryResource.class);
+    register(io.hops.hopsworks.api.python.PythonResource.class);
     register(io.hops.hopsworks.api.user.AuthService.class);
     register(io.hops.hopsworks.api.airflow.AirflowService.class);
-    register(UsersResource.class);
+    register(io.hops.hopsworks.api.user.UsersResource.class);
     register(io.hops.hopsworks.api.util.BannerService.class);
     register(io.hops.hopsworks.api.util.ClusterUtilisationService.class);
     register(io.hops.hopsworks.api.util.DownloadService.class);
@@ -89,6 +89,7 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.api.cluster.Monitor.class);
     register(io.hops.hopsworks.api.serving.ServingConfResource.class);
     register(io.hops.hopsworks.api.featurestore.FeaturestoreService.class);
+    register(io.hops.hopsworks.api.host.machine.MachineTypeResource.class);
 
     // admin
     register(io.hops.hopsworks.api.admin.UsersAdmin.class);

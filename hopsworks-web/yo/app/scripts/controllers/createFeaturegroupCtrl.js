@@ -53,6 +53,7 @@ angular.module('hopsWorksApp')
             self.featureNamesNotUnique = 1
             self.featuregroupNameNotUnique = 1
             self.primaryKeyWrongValue = 1;
+            self.partitionKeyWrongValue = 1;
             self.emptyFeatures = 1
             self.wrong_values = 1;
             self.working = false;
@@ -80,6 +81,7 @@ angular.module('hopsWorksApp')
                 self.emptyFeatures = 1
                 self.featuregroupDocWrongValue = 1;
                 self.primaryKeyWrongValue = 1;
+                self.partitionKeyWrongValue = 1;
                 self.working = true;
                 for (i = 0; i < self.dependencies.length; i++) {
                     if(!self.dependencies[i] || self.dependencies[i] === "" || self.dependencies[i] === null){
@@ -141,6 +143,10 @@ angular.module('hopsWorksApp')
                     }
                     if (self.features[i].primary) {
                         numberOfPrimary++;
+                        if(self.features[i].partition){
+                            self.partitionKeyWrongValue = -1
+                            self.wrong_values = -1;
+                        }
                     }
                 }
                 if (numberOfPrimary != 1) {
@@ -242,7 +248,7 @@ angular.module('hopsWorksApp')
              * Adds a new feature to the form
              */
             self.addNewFeature = function () {
-                self.features.push({'name': '', 'type': '', 'description': "", primary: false});
+                self.features.push({'name': '', 'type': '', 'description': "", primary: false, partition: false});
                 self.featuresNameWrongValue.push(1);
                 self.featuresTypeWrongValue.push(1);
             };

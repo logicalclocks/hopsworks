@@ -39,9 +39,9 @@
 
 package io.hops.hopsworks.common.util;
 
-import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.restutils.RESTCodes;
+import io.hops.hopsworks.common.dao.python.CondaCommandFacade;
 import org.apache.commons.lang.StringEscapeUtils;
 
 import javax.annotation.PreDestroy;
@@ -400,7 +400,7 @@ public class WebCommunication {
     String template = "%s://%s:%s/%s";
     String url = String.format(template, PROTOCOL, hostAddress, PORT, path);
     Map<String, String> args = null;
-    if (op.compareToIgnoreCase(PythonDepsFacade.CondaOp.CLONE.toString())
+    if (op.compareToIgnoreCase(CondaCommandFacade.CondaOp.CLONE.toString())
             == 0) {
       args = new HashMap<>();
       if (arg == null || arg.isEmpty()) {

@@ -43,6 +43,8 @@ describe "On #{ENV['OS']}" do
 
     let(:num_hosts) {Host.count}
     let(:conda_channel) {Variables.find_by(id: "conda_default_repo").value}
+    let(:python_version) {'2.7'}
+    let(:python_version_2) {'3.6'}
 
     describe "#create" do
       context 'without authentication' do
@@ -51,7 +53,7 @@ describe "On #{ENV['OS']}" do
           reset_session
         end
         it "not authenticated" do
-          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/enable/2.7/true"
+          create_env(@project[:id], python_version, true)
           expect_json(errorCode: 200003)
           expect_status(401)
         end
@@ -62,213 +64,309 @@ describe "On #{ENV['OS']}" do
           with_valid_project
         end
 
-        it 'destroy anaconda should not delete base environments' do
-          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/enable/2.7/true"
-          expect_status(200)
-          if not conda_exists
-            skip "Anaconda is not installed in the machine or test is run locally"
+        context 'conda not enabled' do
+          it 'should fail to list envs' do
+            @project = get_project_by_name(@project[:projectname])
+            if !@project[:python_version].nil? and !@project[:python_version].empty?
+              delete_env(@project[:id], @project[:python_version])
+            end
+            list_envs(@project[:id])
+            expect_status(404)
           end
 
-          # Enabling anaconda will not create an environment yet
-          expect(check_if_env_exists_locally(@project[:projectname])).to be false
-
-          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/destroyAnaconda"
-          expect_status(200)
-          wait_for do
-            CondaCommands.find_by(proj: @project[:projectname]).nil?
-          end
-          expect(check_if_env_exists_locally("python27")).to be true
-          expect(check_if_env_exists_locally("python36")).to be true
-        end
-                
-        it 'enable anaconda' do
-          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/enable/2.7/true"
-          expect_status(200)
-          if not conda_exists
-            skip "Anaconda is not installed in the machine or test is run locally"
+          it 'should fail to get env commands' do
+            @project = get_project_by_name(@project[:projectname])
+            if !@project[:python_version].nil? and !@project[:python_version].empty?
+              delete_env(@project[:id], @project[:python_version])
+            end
+            get_env_commands(@project[:id], python_version)
+            expect_status(404)
           end
 
-          # Enabling anaconda will not create an environment yet
-          expect(check_if_env_exists_locally(@project[:projectname])).to be false
-          # There should be no CondaCommands in the database
-          expect(CondaCommands.find_by(proj: @project[:projectname])).to be nil
-
-          lib_name = "requests"
-          lib_version = "2.20.0"
-          # Install a library to create the new environment
-          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/install",
-               {lib: "#{lib_name}", version: "#{lib_version}", channelUrl: "#{conda_channel}", installType: "CONDA", machineType: "CPU"}
-          expect_status(200)
-          es_index_date_suffix = Time.now.strftime("%Y.%m.%d")
-          
-          wait_for do
-            CondaCommands.find_by(proj: @project[:projectname]).nil?
-          end
-          expect(check_if_env_exists_locally(@project[:projectname])).to be true
-
-          Airborne.configure do |config|
-            config.base_url = ''
-          end
-          
-          # Elasticsearch index should have been created for this project
-          index_name = "#{@project[:projectname].downcase}_kagent-#{es_index_date_suffix}"
-          head "#{ENV['ELASTIC_API']}/#{index_name}"
-          
-          Airborne.configure do |config|
-            config.base_url = "https://#{ENV['WEB_HOST']}:#{ENV['WEB_PORT']}"
-          end
-          
-          expect_status(200)
-        end
-
-        it 'search libraries' do
-          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/search",
-               {lib: "dropbox", channelUrl: "#{conda_channel}", installType: "CONDA"}
-          expect_status(200)
-          expect(json_body.count).to be >= 1
-          dropbox = json_body.detect { |library| library[:lib] == "dropbox" }
-          expect(dropbox[:versions].count).to be >= 1
-        end
-        
-        it 'GC stale Conda env' do
-          if not conda_exists
-            skip "Anaconda is not installed in the machine or test is run locally"
-          end
-        
-          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/enable/2.7/true"
-          expect_status(200)
-          
-          # Install a library to create the new environment
-          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/install",
-               {lib: "paramiko", version: "2.4.2", channelUrl: "#{conda_channel}", installType: "CONDA", machineType: "CPU"}
-          expect_status(200)
-          wait_for do
-            CondaCommands.find_by(proj: @project[:projectname]).nil?
-          end
-          expect(check_if_env_exists_locally(@project[:projectname])).to be true
-
-          # Create a second project with Anaconda enabled
-          project2 = create_project
-          get "#{ENV['HOPSWORKS_API']}/project/#{project2[:id]}/pythonDeps/enable/2.7/true"
-          expect_status(200)
-          
-          # Install a library to create the new environment                                                                  
-          post "#{ENV['HOPSWORKS_API']}/project/#{project2[:id]}/pythonDeps/install",
-               {lib: "paramiko", version: "2.4.2", channelUrl: "#{conda_channel}", installType: "CONDA", machineType: "CPU"}
-          expect_status(200)
-          wait_for do
-            CondaCommands.find_by(proj: project2[:projectname]).nil?
-          end
-          expect(check_if_env_exists_locally(project2[:projectname])).to be true
-
-          # Disable Anaconda for project2 directly in the database
-          # so it does not send a command to kagent
-          tmp_proj = Project.find_by(id: project2[:id])
-          tmp_proj.conda = 0
-          tmp_proj.save
-
-          trigger_conda_gc
-          
-          wait_for do
-            check_if_env_exists_locally(project2[:projectname]) == false
+          it 'should fail to list libraries' do
+            @project = get_project_by_name(@project[:projectname])
+            if !@project[:python_version].nil? and !@project[:python_version].empty?
+              delete_env(@project[:id], @project[:python_version])
+            end
+            list_libraries(@project[:id], python_version)
+            expect_status(404)
           end
 
-          expect(check_if_env_exists_locally(project2[:projectname])).to be false
-        end
-
-        it 'install libraries' do
-          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/install",
-               {lib: "imageio", version: "2.2.0", channelUrl: "#{conda_channel}", installType: "CONDA", machineType: "CPU"}
-          expect_status(200)
-
-          wait_for do
-            CondaCommands.find_by(proj: @project[:projectname]).nil?
+          it 'should fail to list library commands' do
+            @project = get_project_by_name(@project[:projectname])
+            if !@project[:python_version].nil? and !@project[:python_version].empty?
+              delete_env(@project[:id], @project[:python_version])
+            end
+            get_library_commands(@project[:id], python_version, 'numpy')
+            expect_status(404)
           end
 
-          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/install",
-               {lib: "tflearn", version: "0.3.2", channelUrl: "PyPi", installType: "PIP", machineType: "ALL"}
-          expect_status(200)
+          it 'should fail to install library' do
+            @project = get_project_by_name(@project[:projectname])
+            if !@project[:python_version].nil? and !@project[:python_version].empty?
+              delete_env(@project[:id], @project[:python_version])
+            end
+            install_library(@project[:id], python_version, 'requests', 'conda', '2.20.0', 'CPU', conda_channel)
+            expect_status(404)
+          end
 
-          wait_for do
-            CondaCommands.find_by(proj: @project[:projectname]).nil?
+          it 'should fail to search for a library' do
+            @project = get_project_by_name(@project[:projectname])
+            if !@project[:python_version].nil? and !@project[:python_version].empty?
+              delete_env(@project[:id], @project[:python_version])
+            end
+            search_library(@project[:id], python_version, 'conda', 'dropbox', conda_channel)
+            expect_status(404)
           end
         end
 
-        it 'list libraries' do
-          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/"
+        context 'conda enabled' do
+          it 'enable anaconda' do
+            @project = create_env_and_update_project(@project, python_version, true)
 
-          tflearn_library = json_body.detect { |library| library[:lib] == "tflearn" }
-          serving_library = json_body.detect { |library| library[:lib] == "tensorflow-serving-api" }
-          hops_library = json_body.detect { |library| library[:lib] == "hops" }
-          imageio_library = json_body.detect { |library| library[:lib] == "imageio" }
+            if not conda_exists
+              skip "Anaconda is not installed in the machine or test is run locally"
+            end
 
-          expect(serving_library[:machineType]).to eq ("ALL")
+            # Enabling anaconda will not create an environment yet
+            expect(check_if_env_exists_locally(@project[:projectname])).to be false
+            # There should be no CondaCommands in the database
+            expect(CondaCommands.find_by(proj: @project[:projectname])).to be nil
 
-          expect(tflearn_library[:machineType]).to eq ("ALL")
-          expect(tflearn_library[:installType]).to eq ("PIP")
-          expect(tflearn_library[:version]).to eq ("0.3.2")
+            # Install a library to create the new environment
+            install_library(@project[:id], @project[:python_version], 'requests', 'conda', '2.20.0', 'CPU', conda_channel)
+            expect_status(201)
+            es_index_date_suffix = Time.now.strftime("%Y.%m.%d")
 
-          expect(hops_library[:machineType]).to eq ("ALL")
-          expect(hops_library[:installType]).to eq ("PIP")
+            get_env_commands(@project[:id], @project[:python_version])
+            expect_status(200)
+            expect(json_body[:count]).to be > 0
+            expect(json_body[:count]).to be <= num_hosts
 
-          expect(imageio_library[:machineType]).to eq("CPU")
-          expect(imageio_library[:installType]).to eq("CONDA")
-          expect(imageio_library[:version]).to eq ("2.2.0")
+            wait_for do
+              CondaCommands.find_by(proj: @project[:projectname]).nil?
+            end
 
-        end
+            get_env_commands(@project[:id], @project[:python_version])
+            expect_status(200)
+            expect(json_body[:count]).to be == 0
 
-        it 'uninstall libraries' do
-          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/remove",
-               {lib: "imageio", version: "2.2.0", channelUrl: "#{conda_channel}", installType: "CONDA", machineType: "CPU"}
-          expect_status(200)
+            expect(check_if_env_exists_locally(@project[:projectname])).to be true
 
-          wait_for do
-            CondaCommands.find_by(proj: @project[:projectname]).nil?
+            Airborne.configure do |config|
+              config.base_url = ''
+            end
+
+            # Elasticsearch index should have been created for this project
+            index_name = "#{@project[:projectname].downcase}_kagent-#{es_index_date_suffix}"
+            head "#{ENV['ELASTIC_API']}/#{index_name}"
+
+            Airborne.configure do |config|
+              config.base_url = "https://#{ENV['WEB_HOST']}:#{ENV['WEB_PORT']}"
+            end
+
+            expect_status(200)
           end
-        end
 
-        xit 'export environment' do #skipped till pythonservice api v2 so we can only test python36
-          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/export"
-          expect_status(200)
-        end
-
-        it 'remove env' do
-          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/destroyAnaconda"
-          expect_status(200)
-
-          wait_for do
-            CondaCommands.find_by(proj: @project[:projectname]).nil?
+          it 'search libraries' do
+            @project = create_env_and_update_project(@project, python_version, true)
+            search_library(@project[:id], @project[:python_version], 'conda', 'dropbox', conda_channel)
+            expect_status(200)
+            expect(json_body.count).to be >= 1
+            dropbox = json_body[:items].detect { |library| library[:library] == "dropbox" }
+            expect(dropbox[:versions].count).to be >= 1
           end
 
-          Airborne.configure do |config|
-            config.base_url = ''
+          it 'should fail to install library if package manager not set' do
+            @project = create_env_and_update_project(@project, python_version, true)
+            install_library(@project[:id], @project[:python_version], 'dropbox', '', '9.0.0', 'CPU', conda_channel)
+            expect_status(400)
           end
-          
-          # Elasticsearch index should have been deleted
-          index_name = "#{@project[:projectname]}_kagent-*"
-          response = head "#{ENV['ELASTIC_API']}/_cat/indices/#{index_name}"
-          
-          Airborne.configure do |config|
-            config.base_url = "https://#{ENV['WEB_HOST']}:#{ENV['WEB_PORT']}"
+
+          it 'should fail to install library if version not set' do
+            @project = create_env_and_update_project(@project, python_version, true)
+            install_library(@project[:id], @project[:python_version], 'dropbox', 'conda', '', 'CPU', conda_channel)
+            expect_status(400)
           end
-          
-          expect(response).to  eq("")
 
-          
-          if not conda_exists
-            skip "Anaconda is not installed in the machine or test is run locally"
+          it 'should fail to install library if machine type not set' do
+            @project = create_env_and_update_project(@project, python_version, true)
+            install_library(@project[:id], @project[:python_version], 'dropbox', 'conda', '9.0.0', '', conda_channel)
+            expect_status(400)
           end
-          expect(check_if_env_exists_locally(@project[:projectname])).to be false
-        end
 
-        it 'enable environment from yml' do
-          skip "MMLSpark breaks this code"
-          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/enableYml",
-               {pythonKernelEnable: "true", allYmlPath: "/Projects/#{@project[:projectname]}/Resources/environment_cpu.yml", cpuYmlPath: "", gpuYmlPath: ""}
-          expect_status(200)
+          it 'should fail to install library if env version wrong' do
+            @project = create_env_and_update_project(@project, python_version, true)
+            install_library(@project[:id], python_version_2, 'dropbox', 'conda', '9.0.0', 'CPU', conda_channel)
+            expect_status(404)
+          end
 
-          wait_for do
-            CondaCommands.find_by(proj: @project[:projectname]).nil?
+          it 'install libraries' do
+            @project = create_env_and_update_project(@project, python_version, true)
+            install_library(@project[:id], @project[:python_version], 'imageio', 'conda', '2.2.0', 'CPU', conda_channel)
+            expect_status(201)
+
+            get_library_commands(@project[:id], @project[:python_version], 'imageio')
+            expect_status(200)
+            expect(json_body[:count]).to be > 0
+            expect(json_body[:count]).to be <= num_hosts
+
+            wait_for do
+              CondaCommands.find_by(proj: @project[:projectname]).nil?
+            end
+
+            get_library_commands(@project[:id], @project[:python_version], 'imageio')
+            expect_status(200)
+            expect(json_body[:count]).to be == 0
+
+            install_library(@project[:id], @project[:python_version], 'tflearn', 'pip', '0.3.2', 'ALL', conda_channel)
+            expect_status(201)
+
+            wait_for do
+              CondaCommands.find_by(proj: @project[:projectname]).nil?
+            end
+
+          end
+
+          it 'list libraries' do
+            @project = create_env_and_update_project(@project, python_version, true)
+            list_libraries(@project[:id], @project[:python_version])
+
+            tflearn_library = json_body[:items].detect { |library| library[:library] == "tflearn" }
+            serving_library = json_body[:items].detect { |library| library[:library] == "tensorflow-serving-api" }
+            hops_library = json_body[:items].detect { |library| library[:library] == "hops" }
+            imageio_library = json_body[:items].detect { |library| library[:library] == "imageio" }
+
+            expect(serving_library[:machine]).to eq ("ALL")
+
+            expect(tflearn_library[:machine]).to eq ("ALL")
+            expect(tflearn_library[:packageManager]).to eq ("PIP")
+            expect(tflearn_library[:version]).to eq ("0.3.2")
+
+            expect(hops_library[:machine]).to eq ("ALL")
+            expect(hops_library[:packageManager]).to eq ("PIP")
+
+            expect(imageio_library[:machine]).to eq("CPU")
+            expect(imageio_library[:packageManager]).to eq("CONDA")
+            expect(imageio_library[:version]).to eq ("2.2.0")
+
+          end
+
+          it 'uninstall libraries' do
+            @project = create_env_and_update_project(@project, python_version, true)
+            uninstall_library(@project[:id], @project[:python_version], 'imageio')
+            expect_status(204)
+
+            wait_for do
+              CondaCommands.find_by(proj: @project[:projectname]).nil?
+            end
+          end
+
+          it 'export environment' do
+            @project = create_env_and_update_project(@project, python_version, true)
+            export_env(@project[:id], @project[:python_version])
+            expect_status(200)
+          end
+
+          it 'remove env' do
+            @project = create_env_and_update_project(@project, python_version, true)
+            delete_env(@project[:id], @project[:python_version])
+            expect_status(204)
+
+            wait_for do
+              CondaCommands.find_by(proj: @project[:projectname]).nil?
+            end
+
+            Airborne.configure do |config|
+              config.base_url = ''
+            end
+
+            # Elasticsearch index should have been deleted
+            index_name = "#{@project[:projectname]}_kagent-*"
+            response = head "#{ENV['ELASTIC_API']}/_cat/indices/#{index_name}"
+
+            Airborne.configure do |config|
+              config.base_url = "https://#{ENV['WEB_HOST']}:#{ENV['WEB_PORT']}"
+            end
+
+            expect(response).to  eq("")
+
+            if not conda_exists
+              skip "Anaconda is not installed in the machine or test is run locally"
+            end
+            expect(check_if_env_exists_locally(@project[:projectname])).to be false
+          end
+
+          it 'destroy anaconda should not delete base environments' do
+            create_env(@project[:id], python_version, true)
+            expect_status(201)
+            if not conda_exists
+              skip "Anaconda is not installed in the machine or test is run locally"
+            end
+
+            # Enabling anaconda will not create an environment yet
+            expect(check_if_env_exists_locally(@project[:projectname])).to be false
+
+            delete_env(@project[:id], python_version)
+            expect_status(204)
+            wait_for do
+              CondaCommands.find_by(proj: @project[:projectname]).nil?
+            end
+            expect(check_if_env_exists_locally("python27")).to be true
+            expect(check_if_env_exists_locally("python36")).to be true
+          end
+
+          it 'enable environment from yml' do
+            create_env_yml(@project[:id], true, "/Projects/#{@project[:projectname]}/Resources/environment_cpu.yml", '', '')
+            expect_status(201)
+
+            wait_for do
+              CondaCommands.find_by(proj: @project[:projectname]).nil?
+            end
+          end
+
+          it 'GC stale Conda env' do
+            if not conda_exists
+              skip "Anaconda is not installed in the machine or test is run locally"
+            end
+
+            @project = get_project_by_name(@project[:projectname]) #
+            delete_env(@project[:id], @project[:python_version])
+
+            wait_for do
+              CondaCommands.find_by(proj: @project[:projectname]).nil?
+            end
+
+            # Create a second project with Anaconda enabled
+            project2 = create_project
+            project2 = create_env_and_update_project(project2, python_version, true)
+            expect_status(201)
+
+            # Install a library to create the new environment
+            install_library(project2[:id], project2[:python_version], 'paramiko', 'conda', '2.4.2', 'CPU', conda_channel)
+            expect_status(201)
+            wait_for do
+              CondaCommands.find_by(proj: project2[:projectname]).nil?
+            end
+            expect(check_if_env_exists_locally(project2[:projectname])).to be true
+
+            # Disable Anaconda for project2 directly in the database
+            # so it does not send a command to kagent
+            tmp_proj = Project.find_by(id: project2[:id])
+            tmp_proj.conda = 0
+            tmp_proj.save
+
+            wait_for do
+              CondaCommands.find_by(proj: project2[:projectname]).nil?
+            end
+
+            trigger_conda_gc
+
+            wait_for do
+              check_if_env_exists_locally(project2[:projectname]) == false
+            end
+
+            expect(check_if_env_exists_locally(project2[:projectname])).to be false
           end
         end
       end
@@ -297,7 +395,7 @@ describe "On #{ENV['OS']}" do
           end
 
           create_session(@user[:email], "Pass123")
-          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/enable/2.7/true"
+          create_env(@project[:id], python_version, true)
           expect_status(503)
         end
 
@@ -315,8 +413,8 @@ describe "On #{ENV['OS']}" do
           end
 
           create_session(@user[:email], "Pass123")
-          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/enable/2.7/true"
-          expect_status(200)
+          create_env(@project[:id], python_version, true)
+          expect_status(201)
         end
 
         it 'should delete the environment from the other machines - multi vm' do
@@ -324,8 +422,8 @@ describe "On #{ENV['OS']}" do
             skip "Singe vm setup"
           end
 
-          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/destroyAnaconda"
-          expect_status(200)
+          delete_env(@project[:id], python_version)
+          expect_status(204)
         end
 
         it 'should be able to re-enable conda on a host' do
@@ -341,8 +439,8 @@ describe "On #{ENV['OS']}" do
 
         it 'should be able to create an environment' do
           create_session(@user[:email], "Pass123")
-          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/enable/2.7/true"
-          expect_status(200)
+          create_env(@project[:id], python_version, true)
+          expect_status(201)
         end
       end
     end
@@ -354,8 +452,7 @@ describe "On #{ENV['OS']}" do
         end
 
         it 'should create an environment ' do
-          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/enable/2.7/true"
-          expect_status(200)
+          @project = create_env_and_update_project(@project, python_version, true)
         end
 
         it 'should be able to disable conda on a host' do
@@ -371,15 +468,14 @@ describe "On #{ENV['OS']}" do
 
         it 'should fail to install a library' do
           create_session(@user[:email], "Pass123")
-          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/install",
-               {lib: "imageio", version: "2.2.0", channelUrl: "#{conda_channel}", installType: "CONDA", machineType: "CPU"}
-
+          @project = create_env_and_update_project(@project, python_version, true)
+          install_library(@project[:id], @project[:python_version], 'imageio', 'conda', '2.2.0', 'CPU', conda_channel)
           if num_hosts == 1
             #  If single VM there are no hosts on which to install the library. Hopsworks returns 412
             expect_status(503)
           else
             # If it is a multi vm there are hosts to install the library.
-            expect_status(200)
+            expect_status(201)
           end
         end
 
@@ -408,9 +504,9 @@ describe "On #{ENV['OS']}" do
 
         it 'should be able to install a library' do
           create_session(@user[:email], "Pass123")
-          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/install",
-               {lib: "dropbox", version: "9.0.0", channelUrl: "#{conda_channel}", installType: "CONDA", machineType: "CPU"}
-          expect_status(200)
+          @project = create_env_and_update_project(@project, python_version, true)
+          install_library(@project[:id], @project[:python_version], 'dropbox', 'conda', '9.0.0', 'CPU', conda_channel)
+          expect_status(201)
 
           # Check that the command has been register into the table and it will be eventually sent to the agent
           expect(CondaCommands.find_by(proj: @project[:projectname])).not_to be nil

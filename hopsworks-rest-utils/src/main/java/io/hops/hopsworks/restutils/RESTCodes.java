@@ -38,7 +38,8 @@ import javax.xml.bind.annotation.XmlRootElement;
  * 16. TfServing error codes start with "24".
  * 17. Inference error codes start with "25".
  * 18. Activities error codes start with "26".
- * 18. Featurestore error codes start with "27".
+ * 19. Featurestore error codes start with "27".
+ * 20. Python error codes start with "28".
  */
 
 @XmlRootElement
@@ -516,12 +517,12 @@ public class RESTCodes {
     JUPYTER_STOP_ERROR(17, "Couldn't stop Jupyter Notebook Server.",
         Response.Status.INTERNAL_SERVER_ERROR),
     INVALID_YML(18, "Invalid .yml file", Response.Status.BAD_REQUEST),
-    INVALID_YML_SIZE(19, ".yml file too large. Maximum size is 0 bytes",
-        Response.Status.INTERNAL_SERVER_ERROR),
+    INVALID_YML_SIZE(19, ".yml file too large. Maximum size is 10000 bytes",
+      Response.Status.INTERNAL_SERVER_ERROR),
     ANACONDA_FROM_YML_ERROR(20, "Failed to create Anaconda environment from .yml file.",
-        Response.Status.INTERNAL_SERVER_ERROR),
-    PYTHON_INVALID_VERSION(21, "Invalid version of python (valid: '2.7', and '3.5', and '3.6'",
-        Response.Status.BAD_REQUEST),
+      Response.Status.INTERNAL_SERVER_ERROR),
+    PYTHON_INVALID_VERSION(21, "Invalid version of python (valid: '2.7', and '3.6'",
+      Response.Status.BAD_REQUEST),
     ANACONDA_REPO_ERROR(22, "Problem adding the repo.", Response.Status.INTERNAL_SERVER_ERROR),
     ANACONDA_OP_IN_PROGRESS(23,
         "A conda environment operation is currently executing (create/remove/list). Wait " +
@@ -554,11 +555,10 @@ public class RESTCodes {
     TENSORFLOW_VERSION_NOT_SUPPORTED(41,
         "We currently do not support this version of TensorFlow. Update to a " +
             "newer version or contact an admin", Response.Status.BAD_REQUEST),
-    SERVICE_GENERIC_ERROR(42, "Generic error while enabling the service",
-        Response.Status.INTERNAL_SERVER_ERROR),
-    JUPYTER_SERVER_ALREADY_RUNNING(43, "Jupyter Notebook Server is already running",
-      Response.Status.BAD_REQUEST),
-    ERROR_EXECUTING_REMOTE_COMMAND(44, "Error executing command over SSH", Response.Status.INTERNAL_SERVER_ERROR);
+    SERVICE_GENERIC_ERROR(42, "Generic error while enabling the service", Response.Status.INTERNAL_SERVER_ERROR),
+    JUPYTER_SERVER_ALREADY_RUNNING(43, "Jupyter Notebook Server is already running", Response.Status.BAD_REQUEST),
+    ERROR_EXECUTING_REMOTE_COMMAND(44, "Error executing command over SSH", Response.Status.INTERNAL_SERVER_ERROR),
+    OPERATION_NOT_SUPPORTED(44, "Supplied operation is not supported", Response.Status.BAD_REQUEST);
 
     private Integer code;
     private String message;
@@ -829,7 +829,7 @@ public class RESTCodes {
     TRANSITION_STATUS_ERROR(46, "The user can't transition from current status to requested status",
       Response.Status.BAD_REQUEST),
     ACCESS_CONTROL(47, "Client not authorized for this invocation.", Response.Status.FORBIDDEN);
-    
+
     private Integer code;
     private String message;
     private Response.StatusType respStatus;
@@ -1099,7 +1099,7 @@ public class RESTCodes {
       return range;
     }
   }
-  
+
   public enum ActivitiesErrorCode implements RESTErrorCode {
 
     FORBIDDEN(0, "You are not allow to perform this action.", Response.Status.FORBIDDEN),
@@ -1136,7 +1136,7 @@ public class RESTCodes {
       return range;
     }
   }
-  
+
   public enum ResourceErrorCode implements RESTErrorCode {
 
     INVALID_QUERY_PARAMETER(0, "Invalid query.", Response.Status.NOT_FOUND);
@@ -1172,7 +1172,7 @@ public class RESTCodes {
       return range;
     }
   }
-  
+
   /**
    * Provides http status codes not available in Response.StatusType.
    */
@@ -1377,7 +1377,7 @@ public class RESTCodes {
     public Integer getCode() {
       return code;
     }
-    
+
     @Override
     public String getMessage() {
       return message;
@@ -1388,4 +1388,56 @@ public class RESTCodes {
       return range;
     }
   }
+
+  public enum PythonErrorCode implements RESTErrorCode {
+
+    ANACONDA_ENVIRONMENT_NOT_FOUND(0, "No Anaconda environment created for this project.",
+            Response.Status.NOT_FOUND),
+    ANACONDA_ENVIRONMENT_ALREADY_INITIALIZED(1, "Anaconda environment already created for this project.",
+            Response.Status.CONFLICT),
+    PYTHON_SEARCH_TYPE_NOT_SUPPORTED(2, "The supplied search is not supported, only pip and conda are currently " +
+            "supported.", Response.Status.BAD_REQUEST),
+    PYTHON_LIBRARY_NOT_FOUND(3, "Library could not be found.", Response.Status.NOT_FOUND),
+    YML_FILE_MISSING_PYTHON_VERSION(4, "No python binary version was found in the environment yaml file.",
+            Response.Status.BAD_REQUEST),
+    NOT_MATCHING_PYTHON_VERSIONS(5, "The supplied yaml files have mismatching python versions.",
+            Response.Status.BAD_REQUEST),
+    CONDA_INSTALL_REQUIRES_CHANNEL(6, "Conda package manager requires that a conda channel is selected in which the " +
+            "library is located", Response.Status.BAD_REQUEST),
+    INSTALL_TYPE_NOT_SUPPORTED(7, "The provided install type is not supported", Response.Status.BAD_REQUEST),
+    CONDA_COMMAND_NOT_FOUND(8, "Command not found.", Response.Status.BAD_REQUEST),
+    MACHINE_TYPE_NOT_SPECIFIED(9, "Machine type not specified.", Response.Status.BAD_REQUEST),
+    VERSION_NOT_SPECIFIED(9, "Version not specified.", Response.Status.BAD_REQUEST);
+
+    private int code;
+    private String message;
+    private Response.Status respStatus;
+    public final int range = 280000;
+
+    PythonErrorCode(Integer code, String message, Response.Status respStatus) {
+      this.code = range + code;
+      this.message = message;
+      this.respStatus = respStatus;
+    }
+
+    @Override
+    public Integer getCode() {
+      return code;
+    }
+
+    @Override
+    public String getMessage() {
+      return message;
+    }
+
+    public Response.StatusType getRespStatus() {
+      return respStatus;
+    }
+
+    @Override
+    public int getRange() {
+      return range;
+    }
+  }
+
 }

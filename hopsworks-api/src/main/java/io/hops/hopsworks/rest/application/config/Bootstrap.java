@@ -23,19 +23,18 @@ import io.swagger.models.auth.In;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.ServletConfig;
-import javax.servlet.ServletException;
 
 public class Bootstrap extends HttpServlet {
 
   @Override
-  public void init(ServletConfig config) throws ServletException {
+  public void init(ServletConfig config) {
     ApiKeyAuthDefinition apiKeyAuth = new ApiKeyAuthDefinition();
     apiKeyAuth.setName("Authorization");
     apiKeyAuth.setIn(In.HEADER);
     Swagger swagger = new Swagger();
-    swagger.securityDefinition("Cauth-Realm", apiKeyAuth);
-    swagger.addScheme(Scheme.HTTP);
+    swagger.securityDefinition("Authorization", apiKeyAuth);
     swagger.addScheme(Scheme.HTTPS);
+    swagger.addScheme(Scheme.HTTP);
     new SwaggerContextService().withServletConfig(config).updateSwagger(swagger);
   }
 }

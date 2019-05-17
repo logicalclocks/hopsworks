@@ -81,9 +81,64 @@ module CondaHelper
   def trigger_conda_gc
     tmp = Dir.tmpdir()
     trigger_file = File.join(tmp, 'trigger_conda_gc')
-    open(trigger_file, 'w') do |fd|
-      fd.puts "1"
-    end
+    File.open(trigger_file, "w") { |file| file.puts "1"}
     File.chmod(0777, trigger_file)
   end
+
+  def create_env(projectId, version, pythonKernelEnable)
+    post "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments/#{version}?action=create&pythonKernelEnable=#{pythonKernelEnable}"
+  end
+
+  def list_envs(projectId)
+    get "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments"
+  end
+
+  def create_env_and_update_project(project, version, pythonKernelEnable)
+    project = get_project_by_name(project[:projectname])
+    if project[:python_version].nil? or project[:python_version].empty?
+      create_env(project[:id], version, pythonKernelEnable)
+      expect_status(201)
+      get_project_by_name(project[:projectname]) #get project from db with updated python version
+    else
+      project
+    end
+  end
+
+  def create_env_yml(projectId, pythonKernelEnable, allYmlPath, cpuYmlPath, gpuYmlPath)
+    post "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments",
+         {pythonKernelEnable: pythonKernelEnable, allYmlPath: allYmlPath, cpuYmlPath: cpuYmlPath, gpuYmlPath: gpuYmlPath}
+  end
+
+  def export_env(projectId, version)
+    post "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments/#{version}?action=export"
+  end
+
+  def delete_env(projectId, version)
+    delete "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments/#{version}"
+  end
+
+  def list_libraries(projectId, version)
+    get "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments/#{version}/libraries"
+  end
+
+  def install_library(projectId, version, lib, package_manager, lib_version, machine, channel)
+    post "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments/#{version}/libraries/#{lib}?package_manager=#{package_manager}&version=#{lib_version}&machine=#{machine}&channel=#{channel}"
+  end
+
+  def search_library(projectId, version, package_manager, lib, conda_channel)
+    get "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments/#{version}/libraries/#{package_manager}?query=#{lib}&channel=#{conda_channel}"
+  end
+
+  def uninstall_library(projectId, version, lib)
+    delete "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments/#{version}/libraries/#{lib}"
+  end
+
+  def get_env_commands(projectId, version)
+    get "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments/#{version}/commands"
+  end
+
+  def get_library_commands(projectId, version, lib)
+    get "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments/#{version}/libraries/#{lib}/commands"
+  end
+
 end

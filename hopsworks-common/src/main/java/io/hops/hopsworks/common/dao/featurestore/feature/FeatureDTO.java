@@ -25,21 +25,23 @@ import javax.xml.bind.annotation.XmlType;
  * using jaxb.
  */
 @XmlRootElement
-@XmlType(propOrder = {"name", "type", "description", "primary"})
+@XmlType(propOrder = {"name", "type", "description", "primary", "partition"})
 public class FeatureDTO {
 
   private String name;
   private String type;
   private String description;
   private Boolean primary = false;
+  private Boolean partition = false;
 
   public FeatureDTO(){}
 
-  public FeatureDTO(String name, String type, String description, Boolean primary) {
+  public FeatureDTO(String name, String type, String description, Boolean primary, Boolean partition) {
     this.name = name;
     this.type = type;
     this.description = description;
     this.primary = primary;
+    this.partition = partition;
   }
 
   public FeatureDTO(String name, String type, String description) {
@@ -68,6 +70,11 @@ public class FeatureDTO {
     return primary;
   }
 
+  @XmlElement
+  public Boolean getPartition() {
+    return partition;
+  }
+
   public void setPrimary(Boolean primary) {
     this.primary = primary;
   }
@@ -84,6 +91,10 @@ public class FeatureDTO {
     this.description = description;
   }
 
+  public void setPartition(Boolean partition) {
+    this.partition = partition;
+  }
+
   @Override
   public String toString() {
     return "FeatureDTO{" +
@@ -91,6 +102,7 @@ public class FeatureDTO {
         ", type='" + type + '\'' +
         ", description='" + description + '\'' +
         ", primary=" + primary +
+        ", partition=" + partition +
         '}';
   }
 }

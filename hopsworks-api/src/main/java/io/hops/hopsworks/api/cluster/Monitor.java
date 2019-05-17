@@ -132,7 +132,7 @@ public class Monitor {
   @RolesAllowed({"HOPS_ADMIN"}) //return the password in the host object
   @Produces(MediaType.APPLICATION_JSON)
   public Response getHosts() {
-    List<Hosts> list = hostEjb.find();
+    List<Hosts> list = hostEjb.findAllHosts();
     GenericEntity<List<Hosts>> hosts = new GenericEntity<List<Hosts>>(list) {
     };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(hosts).build();

@@ -36,52 +36,88 @@
  * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package io.hops.hopsworks.api.python.environment;
 
-package io.hops.hopsworks.common.dao.pythonDeps;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 
-import java.util.List;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
-public class CondaLib {
-
-  private String library;
-  private List<String> versions;
-
-  public CondaLib() {
+@ApiModel(value="EnvironmentYmlDTO")
+public class EnvironmentYmlDTO {
+  
+  private String allYmlPath;
+  private String cpuYmlPath;
+  private String gpuYmlPath;
+  private Boolean pythonKernelEnable;
+  private Boolean installJupyter;
+  
+  public EnvironmentYmlDTO() {
   }
-
-  public String getLibrary() {
-    return library;
+  
+  public EnvironmentYmlDTO(String allYmlPath, String cpuYmlPath, String gpuYmlPath, Boolean pythonKernelEnable,
+    Boolean installJupyter) {
+    this.allYmlPath = allYmlPath;
+    this.cpuYmlPath = cpuYmlPath;
+    this.gpuYmlPath = gpuYmlPath;
+    this.pythonKernelEnable = pythonKernelEnable;
+    this.installJupyter = installJupyter;
   }
-
-  public void setLibrary(String library) {
-    this.library = library;
+  
+  @ApiModelProperty(value = "Path to a yml with libraries to be installed on all machine types.")
+  public String getAllYmlPath() {
+    return allYmlPath;
   }
-
-  public List<String> getVersions() {
-    return versions;
+  
+  public void setAllYmlPath(String allYmlPath) {
+    this.allYmlPath = allYmlPath;
   }
-
-  public void setVersions(List<String> versions) {
-    this.versions = versions;
+  
+  @ApiModelProperty(value = "Path to a yml with libraries to be installed on CPU machines.")
+  public String getCpuYmlPath() {
+    return cpuYmlPath;
   }
-
-
+  
+  public void setCpuYmlPath(String cpuYmlPath) {
+    this.cpuYmlPath = cpuYmlPath;
+  }
+  
+  @ApiModelProperty(value = "Path to a yml with libraries to be installed on GPU machines.")
+  public String getGpuYmlPath() {
+    return gpuYmlPath;
+  }
+  
+  public void setGpuYmlPath(String gpuYmlPath) {
+    this.gpuYmlPath = gpuYmlPath;
+  }
+  
+  @ApiModelProperty(value = "Enable python kernel for the environment.")
+  public Boolean getPythonKernelEnable() {
+    return pythonKernelEnable;
+  }
+  
+  public void setPythonKernelEnable(Boolean pythonKernelEnable) {
+    this.pythonKernelEnable = pythonKernelEnable;
+  }
+  
+  @ApiModelProperty(value = "Install Jupyter in the environment.")
+  public Boolean getInstallJupyter() {
+    return installJupyter;
+  }
+  
+  public void setInstallJupyter(Boolean installJupyter) {
+    this.installJupyter = installJupyter;
+  }
+  
   @Override
-  public boolean equals(Object o) {
-    if (o instanceof CondaLib) {
-      CondaLib pd = (CondaLib) o;
-      if (pd.getLibrary().compareToIgnoreCase(this.library) == 0) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  @Override
-  public int hashCode() {
-    return (this.library.hashCode() * 7) / 2;
+  public String toString() {
+    return "EnvironmentYmlDTO{" +
+      "allYmlPath='" + allYmlPath + '\'' +
+      ", cpuYmlPath='" + cpuYmlPath + '\'' +
+      ", gpuYmlPath='" + gpuYmlPath + '\'' +
+      ", pythonKernelEnable=" + pythonKernelEnable +
+      ", installJupyter=" + installJupyter +
+      '}';
   }
 }

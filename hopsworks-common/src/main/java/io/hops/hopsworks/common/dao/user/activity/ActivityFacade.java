@@ -41,7 +41,6 @@ package io.hops.hopsworks.common.dao.user.activity;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.exceptions.InvalidQueryException;
 
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -49,7 +48,6 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -88,31 +86,6 @@ public class ActivityFacade extends AbstractFacade<Activity> {
   // Flag constants
   public static final String FLAG_PROJECT = "PROJECT";
   public static final String FLAG_DATASET = "DATASET";
-
-  // Flag constants
-  public enum ActivityFlag {
-    MEMBER("MEMBER"),
-    PROJECT("PROJECT"),
-    SERVICE("SERVICE"),
-    DATASET("DATASET"),
-    JOB("JOB");
-
-    private final String value;
-
-    private ActivityFlag(String value) {
-      this.value = value;
-    }
-
-    public String getValue() {
-      return value;
-    }
-
-    @Override
-    public String toString() {
-      return value;
-    }
-
-  }
   
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
@@ -173,7 +146,7 @@ public class ActivityFacade extends AbstractFacade<Activity> {
     Activity a = new Activity();
     a.setActivity(activity);
     a.setProject(project);
-    a.setFlag(flag.getValue());
+    a.setFlag(flag);
     a.setUser(user);
     a.setTimestamp(new Date());
     em.persist(a);
@@ -344,19 +317,7 @@ public class ActivityFacade extends AbstractFacade<Activity> {
   }
 
   private void setFilterQuery(AbstractFacade.FilterBy filterBy, Query q) {
-    String[] filterStrs = filterBy.getParam().split(",");
-    List<String> activityFlags = new ArrayList<>();
-    ActivityFacade.ActivityFlag flag;
-    String field = filterBy.getField();
-    for (String filterStr : filterStrs) {
-      try {
-        flag = ActivityFacade.ActivityFlag.valueOf(filterStr);
-      } catch (IllegalArgumentException iae) {
-        throw new InvalidQueryException("Filter value for " + field + " needs to set valid " + field + ", but found: "
-            + filterStr, iae);
-      }
-      activityFlags.add(flag.getValue());
-    }
+    List<ActivityFlag> activityFlags = getEnumValues(filterBy, ActivityFlag.class);
     q.setParameter(filterBy.getField(), activityFlags);
   }
 
