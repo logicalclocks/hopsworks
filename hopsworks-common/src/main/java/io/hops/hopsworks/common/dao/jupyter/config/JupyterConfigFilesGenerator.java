@@ -73,7 +73,7 @@ import java.util.logging.Logger;
  * This class is used to generate the Configuration Files for a Jupyter Notebook Server
  */
 @Stateless
-@TransactionAttribute(value = TransactionAttributeType.NEVER)
+//@TransactionAttribute(value = TransactionAttributeType.NEVER)
 public class JupyterConfigFilesGenerator {
   
   private static final Logger LOGGER = Logger.getLogger(JupyterConfigFilesGenerator.class.getName());
