@@ -389,7 +389,7 @@ public class JupyterJWTManager {
   private void writeToken2file(JupyterJWT jupyterJWT) throws IOException {
     FileUtils.writeStringToFile(jupyterJWT.tokenFile.toFile(), jupyterJWT.token);
   
-    String groupName = settings.getHopsworksUser();
+    String groupName = settings.getJupyterGroup();
     UserPrincipalLookupService lookupService = FileSystems.getDefault().getUserPrincipalLookupService();
     GroupPrincipal group = lookupService.lookupPrincipalByGroupName(groupName);
     Files.getFileAttributeView(jupyterJWT.tokenFile, PosixFileAttributeView.class,
