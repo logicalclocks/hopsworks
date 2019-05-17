@@ -42,10 +42,10 @@
 angular.module('hopsWorksApp')
         .controller('NewJobCtrl', ['$routeParams', 'growl', 'JobService',
           '$location', 'ModalService', 'StorageService', '$scope', 'TourService', 'HistoryService',
-            'KafkaService', 'ProjectService', 'PythonDepsService', '$timeout',
+            'KafkaService', 'ProjectService', 'PythonService', '$timeout',
           function ($routeParams, growl, JobService,
                   $location, ModalService, StorageService, $scope, TourService,
-                  HistoryService, KafkaService, ProjectService, PythonDepsService, $timeout) {
+                  HistoryService, KafkaService, ProjectService, PythonService, $timeout) {
 
             var self = this;
             self.tourService = TourService;
@@ -540,7 +540,7 @@ angular.module('hopsWorksApp')
               var filename = getFileName(path);
 
               if (reason.toUpperCase() === "PYSPARK") {
-                PythonDepsService.enabled(self.projectId).then(
+                PythonService.enabled(self.projectId).then(
                     function (success) {
                     },
                     function (error) {
