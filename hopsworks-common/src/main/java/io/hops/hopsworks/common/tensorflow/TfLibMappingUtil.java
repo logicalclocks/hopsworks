@@ -24,6 +24,8 @@ import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import java.io.File;
 import java.util.logging.Level;
 
@@ -32,6 +34,7 @@ import java.util.logging.Level;
  * notebooks as jobs
  */
 @Stateless
+@TransactionAttribute(TransactionAttributeType.NEVER)
 public class TfLibMappingUtil {
 
   private static final String LIB_PATH = "/usr/local";
