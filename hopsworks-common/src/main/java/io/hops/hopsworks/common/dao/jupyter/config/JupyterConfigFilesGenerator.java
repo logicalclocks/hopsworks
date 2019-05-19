@@ -53,6 +53,8 @@ import org.apache.commons.io.FileUtils;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -71,6 +73,7 @@ import java.util.logging.Logger;
  * This class is used to generate the Configuration Files for a Jupyter Notebook Server
  */
 @Stateless
+@TransactionAttribute(TransactionAttributeType.NEVER)
 public class JupyterConfigFilesGenerator {
   
   private static final Logger LOGGER = Logger.getLogger(JupyterConfigFilesGenerator.class.getName());
