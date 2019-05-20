@@ -34,7 +34,7 @@ import java.util.logging.Level;
  * notebooks as jobs
  */
 @Stateless
-@TransactionAttribute(TransactionAttributeType.NEVER)
+@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 public class TfLibMappingUtil {
 
   private static final String LIB_PATH = "/usr/local";
