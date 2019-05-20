@@ -17,7 +17,6 @@
 package io.hops.hopsworks.common.dao.tensorflow;
 
 import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.python.CondaCommandFacade;
 import io.hops.hopsworks.common.dao.python.CondaCommands;
 import io.hops.hopsworks.common.python.environment.EnvironmentController;
@@ -25,6 +24,8 @@ import io.hops.hopsworks.common.util.Settings;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
@@ -32,14 +33,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Stateless
+@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 public class TfLibMappingFacade {
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
   @EJB
   private EnvironmentController environmentController;
-  @EJB
-  private ProjectFacade projectFacade;
   @EJB
   private Settings settings;
 
