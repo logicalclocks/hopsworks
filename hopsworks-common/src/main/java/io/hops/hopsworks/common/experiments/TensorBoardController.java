@@ -16,7 +16,6 @@
 
 package io.hops.hopsworks.common.experiments;
 
-import io.hops.hopsworks.common.dao.hdfs.HdfsLeDescriptors;
 import io.hops.hopsworks.common.dao.hdfs.HdfsLeDescriptorsFacade;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
@@ -175,9 +174,7 @@ public class TensorBoardController {
    * @return HDFS path with updated namenode host:port
    */
   public String replaceNN(String hdfsPath)  {
-    HdfsLeDescriptors descriptor = hdfsLeDescriptorsFacade.findEndpoint();
-
-    String endPoint = descriptor.getRpcAddresses().split(",")[0].replaceAll(",", "");
+    String endPoint = hdfsLeDescriptorsFacade.getEndpoint();
 
     Pattern urlPattern = Pattern.compile("([a-zA-Z0-9\\-\\.]{2,255}:[0-9]{1,6})(/.*$)");
     Matcher urlMatcher = urlPattern.matcher(hdfsPath);
