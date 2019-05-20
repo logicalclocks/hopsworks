@@ -19,6 +19,7 @@ package io.hops.hopsworks.common.hive;
 
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
+import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.util.Settings;
@@ -64,6 +65,8 @@ public class HiveScratchdirCleaner {
   private DistributedFsService dfs;
   @EJB
   private YarnClientService yarnService;
+  @EJB
+  private YarnApplicationstateFacade yarnApplicationstateFacade;
   @Resource
   private TimerService timerService;
 
@@ -77,9 +80,7 @@ public class HiveScratchdirCleaner {
     // SparkSQL creates a scratchdir as well
     applicationTypeSet = new HashSet<>(Arrays.asList("TEZ", "SPARK"));
 
-    applicationStateEnumSet = EnumSet.of(YarnApplicationState.NEW, YarnApplicationState.GENERATING_SECURITY_MATERIAL,
-        YarnApplicationState.NEW_SAVING, YarnApplicationState.SUBMITTED, YarnApplicationState.ACCEPTED,
-        YarnApplicationState.RUNNING);
+    applicationStateEnumSet = yarnApplicationstateFacade.getRunningStates();
 
     String intervalRaw = settings.getHiveScratchdirCleanerInterval();
     Long intervalValue = settings.getConfTimeValue(intervalRaw);
