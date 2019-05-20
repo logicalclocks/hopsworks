@@ -127,17 +127,6 @@ public class HdfsLeDescriptors implements Serializable {
   public void setCounter(long counter) {
     this.counter = counter;
   }
-
-  public String getHostname() {
-    if (rpcAddresses == null) {
-      return "";
-    }
-    int pos = rpcAddresses.indexOf(",");
-    if (pos == -1) {
-      return "";
-    }
-    return rpcAddresses.substring(0, pos);
-  }
   
   public String getRpcAddresses() {
     return rpcAddresses;
