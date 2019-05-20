@@ -17,11 +17,10 @@ package io.hops.hopsworks.common.dao.maggy;
 
 import java.io.Serializable;
 import java.util.Date;
-import javax.annotation.Nullable;
 import javax.persistence.Basic;
 import javax.persistence.Column;
+import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
-import javax.persistence.Id;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
@@ -31,21 +30,26 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 
+
 @Entity
-@Table(name = "hopsworks.maggy_driver")
+@Table(name = "maggy_driver",
+    catalog = "hopsworks",
+    schema = "")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "MaggyDriver.findAll",
       query = "SELECT m FROM MaggyDriver m")
   ,
     @NamedQuery(name = "MaggyDriver.findByAppId",
-      query = "SELECT m FROM MaggyDriver m WHERE m.appId = :appId")
+      query
+      = "SELECT m FROM MaggyDriver m WHERE m.maggyDriverPK.appId = :appId")
   ,
     @NamedQuery(name = "MaggyDriver.findByHostIp",
       query = "SELECT m FROM MaggyDriver m WHERE m.hostIp = :hostIp")
   ,
     @NamedQuery(name = "MaggyDriver.findByPort",
-      query = "SELECT m FROM MaggyDriver m WHERE m.port = :port")
+      query
+      = "SELECT m FROM MaggyDriver m WHERE m.maggyDriverPK.port = :port")
   ,
     @NamedQuery(name = "MaggyDriver.findBySecret",
       query = "SELECT m FROM MaggyDriver m WHERE m.secret = :secret")
@@ -55,13 +59,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class MaggyDriver implements Serializable {
 
   private static final long serialVersionUID = 1L;
-  @Id
-  @Basic(optional = false)
-  @NotNull
-  @Size(min = 1,
-      max = 30)
-  @Column(name = "app_id")
-  private String appId;
+  @EmbeddedId
+  protected MaggyDriverPK maggyDriverPK;
   @Basic(optional = false)
   @NotNull
   @Size(min = 1,
@@ -70,56 +69,49 @@ public class MaggyDriver implements Serializable {
   private String hostIp;
   @Basic(optional = false)
   @NotNull
-  @Column(name = "port")
-  private int port;
-  @Basic(optional = false)
-  @NotNull
   @Size(min = 1,
       max = 128)
   @Column(name = "secret")
   private String secret;
-  
   @Column(name = "created")
   @Temporal(TemporalType.TIMESTAMP)
-  @Nullable
   private Date created;
 
   public MaggyDriver() {
   }
 
-  public MaggyDriver(String appId) {
-    this.appId = appId;
+  public MaggyDriver(MaggyDriverPK maggyDriverPK) {
+    this.maggyDriverPK = maggyDriverPK;
   }
 
-  public MaggyDriver(String appId, String hostIp, int port, String secret) {
-    this.appId = appId;
+  public MaggyDriver(MaggyDriverPK maggyDriverPK, String hostIp, String secret) {
+    this.maggyDriverPK = maggyDriverPK;
     this.hostIp = hostIp;
-    this.port = port;
     this.secret = secret;
   }
 
+  public MaggyDriver(String appId, int port) {
+    this.maggyDriverPK = new MaggyDriverPK(appId, port);
+  }
+
+  public MaggyDriverPK getMaggyDriverPK() {
+    return maggyDriverPK;
+  }
+
+  public void setMaggyDriverPK(MaggyDriverPK maggyDriverPK) {
+    this.maggyDriverPK = maggyDriverPK;
+  }
+
   public String getAppId() {
-    return appId;
+    return this.maggyDriverPK.getAppId();
   }
-
-  public void setAppId(String appId) {
-    this.appId = appId;
-  }
-
+  
   public String getHostIp() {
     return hostIp;
   }
 
   public void setHostIp(String hostIp) {
     this.hostIp = hostIp;
-  }
-
-  public int getPort() {
-    return port;
-  }
-
-  public void setPort(int port) {
-    this.port = port;
   }
 
   public String getSecret() {
@@ -141,7 +133,7 @@ public class MaggyDriver implements Serializable {
   @Override
   public int hashCode() {
     int hash = 0;
-    hash += (appId != null ? appId.hashCode() : 0);
+    hash += (maggyDriverPK != null ? maggyDriverPK.hashCode() : 0);
     return hash;
   }
 
@@ -152,7 +144,8 @@ public class MaggyDriver implements Serializable {
       return false;
     }
     MaggyDriver other = (MaggyDriver) object;
-    if ((this.appId == null && other.appId != null) || (this.appId != null && !this.appId.equals(other.appId))) {
+    if ((this.maggyDriverPK == null && other.maggyDriverPK != null) ||
+        (this.maggyDriverPK != null && !this.maggyDriverPK.equals(other.maggyDriverPK))) {
       return false;
     }
     return true;
@@ -160,8 +153,7 @@ public class MaggyDriver implements Serializable {
 
   @Override
   public String toString() {
-    return "io.hops.hopsworks.common.dao.maggy.MaggyDriver[ appId=" + appId + " ip:port=" + getHostIp() + ":" +
-    getPort() + ")]";
+    return "io.hops.hopsworks.common.dao.maggy.MaggyDriver[ maggyDriverPK=" + maggyDriverPK + " ]";
   }
   
 }
