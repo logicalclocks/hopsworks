@@ -34,7 +34,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Stateless
-@TransactionAttribute(TransactionAttributeType.NEVER)
+//@TransactionAttribute(TransactionAttributeType.NEVER)
 public class TfLibMappingFacade {
 
   @PersistenceContext(unitName = "kthfsPU")
