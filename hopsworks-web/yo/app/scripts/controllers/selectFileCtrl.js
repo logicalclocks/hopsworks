@@ -60,7 +60,7 @@ angular.module('hopsWorksApp')
 
             self.confirmSelection = function (datasetsCtrl, isDirectory) {
                 var destPath = angular.copy(datasetsCtrl.currentPath);
-                destPath.splice(0, 1); // remove project name to get relative path
+                // destPath.splice(0, 1); // remove project name to get relative path
                 var selectedFilePath = destPath.join('/');
                 if (typeof selectedFilePath === "undefined" || selectedFilePath.length < 1) {
                     growl.error("Please select a file.", {title: "No file selected", ttl: 5000, referenceId: 114});

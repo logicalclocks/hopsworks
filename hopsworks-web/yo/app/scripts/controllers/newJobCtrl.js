@@ -554,7 +554,7 @@ angular.module('hopsWorksApp')
                 case "SPARK":
                 case "PYSPARK":
                   self.sparkState.selectedJar = filename;
-                  JobService.getInspection(self.projectId, reason.toLowerCase(), path).then(
+                  JobService.getInspection(self.projectId, reason.toLowerCase(), "hdfs:///" + path).then(
                           function (success) {
                             $scope.jobConfig = success.data;
                             self.runConfig = $scope.jobConfig;
@@ -601,7 +601,7 @@ angular.module('hopsWorksApp')
                   break;
                 case "FLINK":
                   self.flinkState.selectedJar = filename;
-                  JobService.getInspection(self.projectId, reason.toLowerCase(), path).then(
+                  JobService.getInspection(self.projectId, reason.toLowerCase(), "hdfs:///" + path).then(
                           function (success) {
                             self.runConfig = success.data;
                             self.mainFileSelected(filename);
@@ -628,7 +628,7 @@ angular.module('hopsWorksApp')
               ModalService.selectFile('lg', self.selectFileRegexes[reason],
                       self.selectFileErrorMsgs["PYSPARK"], false).then(
                       function (success) {
-                        self.onFileSelected(reason, "hdfs://" + success);
+                        self.onFileSelected(reason, success);
                       }, function (error) {
                 //The user changed their mind.
               });
@@ -643,7 +643,7 @@ angular.module('hopsWorksApp')
               ModalService.selectDir('lg', self.selectFileRegexes[reason],
                       self.selectFileErrorMsgs["PYSPARK"]).then(
                       function (success) {
-                        self.onFileSelected(reason, "hdfs://" + success);
+                        self.onFileSelected(reason, success);
                       }, function (error) {
                 //The user changed their mind.
               });
