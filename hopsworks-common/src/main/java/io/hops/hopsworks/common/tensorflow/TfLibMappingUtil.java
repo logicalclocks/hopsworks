@@ -17,21 +17,30 @@
 package io.hops.hopsworks.common.tensorflow;
 
 import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.common.dao.python.CondaCommandFacade;
+import io.hops.hopsworks.common.dao.python.CondaCommands;
 import io.hops.hopsworks.common.dao.tensorflow.TfLibMapping;
 import io.hops.hopsworks.common.dao.tensorflow.TfLibMappingFacade;
+import io.hops.hopsworks.common.python.environment.EnvironmentController;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.exceptions.ServiceException;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import java.io.File;
 import java.util.logging.Level;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Obs! This code is here as it should be used both for Jupyter and for running
  * notebooks as jobs
  */
 @Stateless
+@TransactionAttribute(TransactionAttributeType.NEVER)
 public class TfLibMappingUtil {
 
   private static final String LIB_PATH = "/usr/local";
@@ -40,6 +49,10 @@ public class TfLibMappingUtil {
   private static final String NCCL_BASE_PATH = LIB_PATH + "/nccl";
   @EJB
   private TfLibMappingFacade tfLibMappingFacade;
+  @EJB
+  private Settings settings;
+  @EJB
+  private EnvironmentController environmentController;
 
   private String buildTfLdLibraryPath(TfLibMapping tfLibMapping) {
 
@@ -57,11 +70,59 @@ public class TfLibMappingUtil {
 
   public String getTfLdLibraryPath(Project project) throws ServiceException {
     // Get information about which version of TensorFlow the user is running
-    TfLibMapping tfLibMapping = tfLibMappingFacade.findTfMappingForProject(project);
+    TfLibMapping tfLibMapping = findTfMappingForProject(project);
     if (tfLibMapping == null) {
       // We are not supporting this version.
       throw new ServiceException(RESTCodes.ServiceErrorCode.TENSORFLOW_VERSION_NOT_SUPPORTED, Level.INFO);
     }
     return  buildTfLdLibraryPath(tfLibMapping);
+  }
+
+  private TfLibMapping findTfMappingForProject(Project project) {
+
+    if (!project.getCondaEnv()) {
+      return tfLibMappingFacade.findByTfVersion(settings.getTensorflowVersion());
+    }
+
+    CondaCommands command = environmentController.getOngoingEnvCreation(project);
+
+
+    if(command == null) {
+      return project.getPythonDepCollection().stream()
+          .filter(dep -> dep.getDependency().equals("tensorflow") || dep.getDependency().equals("tensorflow-gpu")
+          || dep.getDependency().equals("tensorflow-rocm"))
+          .findAny()
+          .map(tfDep -> tfLibMappingFacade.findByTfVersion(tfDep.getVersion()))
+          .orElse(null);
+    } else if(command.getOp().compareTo(CondaCommandFacade.CondaOp.CREATE) == 0) {
+      return tfLibMappingFacade.findByTfVersion(settings.getTensorflowVersion());
+    } else if(command.getOp().compareTo(CondaCommandFacade.CondaOp.YML) == 0) {
+      String envYml = command.getEnvironmentYml();
+
+      Pattern tfCPUPattern = Pattern.compile("(tensorflow==\\d*.\\d*.\\d*)");
+      Matcher tfCPUMatcher = tfCPUPattern.matcher(envYml);
+
+      if(tfCPUMatcher.find()) {
+        String [] libVersionPair = tfCPUMatcher.group(0).split("==");
+        return tfLibMappingFacade.findByTfVersion(libVersionPair[1]);
+      }
+
+      Pattern tfGPUPattern = Pattern.compile("(tensorflow-gpu==\\d*.\\d*.\\d*)");
+      Matcher tfGPUMatcher = tfGPUPattern.matcher(envYml);
+
+      if(tfGPUMatcher.find()) {
+        String [] libVersionPair = tfGPUMatcher.group(0).split("==");
+        return tfLibMappingFacade.findByTfVersion(libVersionPair[1]);
+      }
+
+      Pattern tfRocmPattern = Pattern.compile("(tensorflow-rocm==\\d*.\\d*.\\d*)");
+      Matcher tfRocmMatcher = tfRocmPattern.matcher(envYml);
+
+      if(tfRocmMatcher.find()) {
+        String [] libVersionPair = tfGPUMatcher.group(0).split("==");
+        return tfLibMappingFacade.findByTfVersion(libVersionPair[1]);
+      }
+    }
+    return null;
   }
 }
