@@ -833,14 +833,11 @@ angular.module('hopsWorksApp')
               ModalService.selectDir('lg', "/[^]*/",
                       "problem selecting folder").then(
                       function (success) {
-                        console.log("success:" + success)
                         var destPath = success;
                         // Get the relative path of this DataSet, relative to the project home directory
                         // replace only first occurrence 
                         var relPath = destPath.replace(self.projectName + "/", "").replace("Projects/", "");
-                          console.log("relPath:" + relPath);
                         var finalPath = relPath + "/" + name;
-                          console.log("finalPath:" + finalPath);
 
                         dataSetService.move(inodeId, finalPath).then(
                                 function (success) {
@@ -874,12 +871,10 @@ angular.module('hopsWorksApp')
                 ModalService.selectDir('lg', "/[^]*/",
                         "problem selecting folder").then(
                         function (success) {
-                          console.log("success:" + success);
                           var destPath = success;
                           // Get the relative path of this DataSet, relative to the project home directory
                           // replace only first occurrence 
                           var relPath = destPath.replace(self.projectName + "/", "").replace("Projects/", "");
-                            console.log("relPath:" + relPath);
                           //var finalPath = relPath + "/" + name;
                           var names = [];
                           var i = 0;
@@ -891,7 +886,6 @@ angular.module('hopsWorksApp')
 
                           var errorCode = -1;
                           for (var name in self.selectedFiles) {
-                              console.log("name:" + name);
                             dataSetService.move(self.selectedFiles[name].id, relPath + "/" + name).then(
                                     function (success) {
                                       //If we moved the last file
