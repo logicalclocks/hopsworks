@@ -217,7 +217,7 @@ public class FlinkController {
       //Set Flink config params
       config.setFlinkConfDir(settings.getFlinkConfDir());
       config.setFlinkConfFile(settings.getFlinkConfFile());
-      config.setJarPath(path);
+      config.setJarPath("hdfs://" + path);
       return config;
     } catch (IOException ex) {
       throw new JobException(RESTCodes.JobErrorCode.JAR_INSPECTION_ERROR, Level.SEVERE,

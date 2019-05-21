@@ -17,7 +17,7 @@
 package io.hops.hopsworks.common.util;
 
 import com.google.common.base.Strings;
-import io.hops.hopsworks.common.dao.project.Project;;
+import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.jobs.configuration.JobConfiguration;
 import io.hops.hopsworks.common.jobs.configuration.JobType;
 import io.hops.hopsworks.common.jobs.spark.DistributionStrategy;

@@ -175,7 +175,7 @@ angular.module('hopsWorksApp')
                 path = path.split('/').filter(function (el) {
                     return el != null && el !== "";
                 });
-                path.splice(0, 1); // remove Projects
+                // path.splice(0, 1); // remove Projects
                 return path;
             };
 
@@ -756,7 +756,7 @@ angular.module('hopsWorksApp')
                 var destPath = success;
                 // Get the relative path of this DataSet, relative to the project home directory
                 // replace only first occurrence 
-                var relPath = destPath.replace("/Projects/" + self.projectId + "/", "");
+                var relPath = destPath.replace(self.projectName + "/", "").replace("Projects/", "");
                 var finalPath = relPath + "/" + name;
 
                 dataSetService.copy(inodeId, finalPath).then(
@@ -788,7 +788,7 @@ angular.module('hopsWorksApp')
                           var destPath = success;
                           // Get the relative path of this DataSet, relative to the project home directory
                           // replace only first occurrence 
-                          var relPath = destPath.replace("/Projects/" + self.projectId + "/", "");
+                          var relPath = destPath.replace(self.projectName + "/", "").replace("Projects/", "");
                           //var finalPath = relPath + "/" + name;
                           var names = [];
                           var i = 0;
@@ -836,7 +836,7 @@ angular.module('hopsWorksApp')
                         var destPath = success;
                         // Get the relative path of this DataSet, relative to the project home directory
                         // replace only first occurrence 
-                        var relPath = destPath.replace("/Projects/" + self.projectId + "/", "");
+                        var relPath = destPath.replace(self.projectName + "/", "").replace("Projects/", "");
                         var finalPath = relPath + "/" + name;
 
                         dataSetService.move(inodeId, finalPath).then(
@@ -844,8 +844,12 @@ angular.module('hopsWorksApp')
                                   getDirContents();
                                   growl.success(success.data.successMessage, {title: 'Moved successfully. Opened dest dir: ' + relPath, ttl: 2000});
                                 }, function (error) {
-                                  growl.error(error.data.errorMsg, {title: name + ' was not moved', ttl: 5000});
-                        });
+                                    if (typeof error.data.usrMsg !== 'undefined') {
+                                        growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
+                                    } else {
+                                        growl.error("", {title: error.data.errorMsg, ttl: 5000});
+                                    }
+                                });
                       }, function (error) {
               });
 
@@ -870,7 +874,7 @@ angular.module('hopsWorksApp')
                           var destPath = success;
                           // Get the relative path of this DataSet, relative to the project home directory
                           // replace only first occurrence 
-                          var relPath = destPath.replace("/Projects/" + self.projectId + "/", "");
+                          var relPath = destPath.replace(self.projectName + "/", "").replace("Projects/", "");
                           //var finalPath = relPath + "/" + name;
                           var names = [];
                           var i = 0;
@@ -893,8 +897,12 @@ angular.module('hopsWorksApp')
                                         self.all_selected = false;
                                       }
                                     }, function (error) {
-                                        growl.error(error.data.errorMsg, {title: name + ' was not moved', ttl: 5000});
-                                        errorCode = error.data.code;
+                                        if (typeof error.data.usrMsg !== 'undefined') {
+                                            growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
+                                        } else {
+                                            growl.error("", {title: error.data.errorMsg, ttl: 5000});
+                                        }
+                                    errorCode = error.data.code;
                             });
                             if (errorCode === 110045) {
                               break;
