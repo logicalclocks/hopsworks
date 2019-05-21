@@ -131,10 +131,10 @@ public class Settings implements Serializable {
   }
 
   public static final String AGENT_EMAIL = "kagent@hops.io";
-  public static final String SITE_EMAIL = "admin@kth.se";
   /**
    * Global Variables taken from the DB
    */
+  private static final String VARIABLE_ADMIN_EMAIL = "admin_email";
   private static final String VARIABLE_PYPI_REST_ENDPOINT = "pypi_rest_endpoint";
   private static final String VARIABLE_PYTHON_KERNEL = "python_kernel";
   private static final String VARIABLE_HADOOP_VERSION = "hadoop_version";
@@ -448,6 +448,7 @@ public class Settings implements Serializable {
 
   private void populateCache() {
     if (!cached) {
+      ADMIN_EMAIL = setVar(VARIABLE_ADMIN_EMAIL, ADMIN_EMAIL);
       PYTHON_KERNEL = setBoolVar(VARIABLE_PYTHON_KERNEL, PYTHON_KERNEL);
       JAVA_HOME = setVar(VARIABLE_JAVA_HOME, JAVA_HOME);
       TWOFACTOR_AUTH = setVar(VARIABLE_TWOFACTOR_AUTH, TWOFACTOR_AUTH);
@@ -1709,12 +1710,19 @@ public class Settings implements Serializable {
     // Just use a dummy password here, no need to store the actual password - enough to say it is different from 'admin'
     ADMIN_PWD = "changed";
   }
+  
+  private String ADMIN_EMAIL = "admin@hopsworks.com";
+  
+  public synchronized String getAdminEmail() {
+    checkCache();
+    return ADMIN_EMAIL;
+  }
 
   public synchronized boolean isDefaultAdminPasswordChanged() {
     if (ADMIN_PWD.compareTo(DEFAULT_ADMIN_PWD) != 0) {
       return true;
     }
-    Users user = userFacade.findByEmail("admin@kth.se");
+    Users user = userFacade.findByEmail(ADMIN_EMAIL);
     if (user != null) {
       ADMIN_PWD = user.getPassword();
     }

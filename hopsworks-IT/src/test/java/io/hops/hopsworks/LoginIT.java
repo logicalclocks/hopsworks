@@ -38,7 +38,7 @@ public class LoginIT {
   @Test
   public void firstLoginTest() {
     driver.findElement(By.id("login_inputEmail")).clear();
-    driver.findElement(By.id("login_inputEmail")).sendKeys("admin@kth.se");
+    driver.findElement(By.id("login_inputEmail")).sendKeys("admin@hopsworks.com");
     driver.findElement(By.id("login_inputPassword")).clear();
     driver.findElement(By.id("login_inputPassword")).sendKeys("admin");
     driver.findElement(By.name("loginForm")).submit();
@@ -59,12 +59,12 @@ public class LoginIT {
   @Test
   public void loginTest() {
     driver.findElement(By.id("login_inputEmail")).clear();
-    driver.findElement(By.id("login_inputEmail")).sendKeys("admin@kth.se");
+    driver.findElement(By.id("login_inputEmail")).sendKeys("admin@hopsworks.com");
     driver.findElement(By.id("login_inputPassword")).clear();
     driver.findElement(By.id("login_inputPassword")).sendKeys("admin");
     driver.findElement(By.name("loginForm")).submit();
     try {
-      assertEquals("admin@kth.se", driver.findElement(By.id("navbarProfile")).getText());
+      assertEquals("admin@hopsworks.com", driver.findElement(By.id("navbarProfile")).getText());
     } catch (Error e) {
       verificationErrors.append("Should login user and show email on navbar.").append(e.getMessage());
     }
@@ -73,7 +73,7 @@ public class LoginIT {
   @Test
   public void loginGrowlTest() {
     driver.findElement(By.id("login_inputEmail")).clear();
-    driver.findElement(By.id("login_inputEmail")).sendKeys("admin@kth.se");
+    driver.findElement(By.id("login_inputEmail")).sendKeys("admin@hopsworks.com");
     driver.findElement(By.id("login_inputPassword")).clear();
     driver.findElement(By.id("login_inputPassword")).sendKeys("admin1");
     driver.findElement(By.name("loginForm")).submit();

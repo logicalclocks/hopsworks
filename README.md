@@ -64,9 +64,11 @@ Installation of Hopsworks and all its services is automated with the Karamel sof
 For a local single-node installation, to access Hopsworks just point your browser at:
 ```
   http://localhost:8080/hopsworks
-  usename: admin@kth.se
+  usename: admin@hopsworks.se
   password: admin
 ```
+Admin email may differ on your installation. Please refer to your Karamel cluster definition to access/set the 
+email.
 
 ## Build instructions
 Hopsworks consists of the backend module which is packaged in two files, `hopsworks.ear`  and `hopsworks-ca.war`,
