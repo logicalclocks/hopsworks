@@ -85,7 +85,15 @@ module CondaHelper
     File.chmod(0777, trigger_file)
   end
 
+  def delete_env(projectId, version)
+    delete "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments/#{version}"
+  end
+
   def create_env(projectId, version, pythonKernelEnable)
+    project = get_project_by_name(project[:projectname])
+    if not project[:python_version].nil? or project[:python_version].empty?
+      delete_env(projectId, version)
+    end
     post "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments/#{version}?action=create&pythonKernelEnable=#{pythonKernelEnable}"
   end
 
@@ -111,10 +119,6 @@ module CondaHelper
 
   def export_env(projectId, version)
     post "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments/#{version}?action=export"
-  end
-
-  def delete_env(projectId, version)
-    delete "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments/#{version}"
   end
 
   def list_libraries(projectId, version)
