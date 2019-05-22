@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.common.tensorflow;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.python.CondaCommandFacade;
 import io.hops.hopsworks.common.dao.python.CondaCommands;
@@ -23,15 +24,13 @@ import io.hops.hopsworks.common.dao.tensorflow.TfLibMapping;
 import io.hops.hopsworks.common.dao.tensorflow.TfLibMappingFacade;
 import io.hops.hopsworks.common.python.environment.EnvironmentController;
 import io.hops.hopsworks.common.util.Settings;
-import io.hops.hopsworks.restutils.RESTCodes;
-import io.hops.hopsworks.exceptions.ServiceException;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.io.File;
-import java.util.logging.Level;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -56,29 +55,34 @@ public class TfLibMappingUtil {
 
   private String buildTfLdLibraryPath(TfLibMapping tfLibMapping) {
 
-    // Add cuDnn dependency
-    String ldPathBuilder = CUDNN_BASE_PATH + tfLibMapping.getCudnnVersion() + "/lib64" + File.pathSeparator;
+    StringBuilder ldPathBuilder = new StringBuilder();
 
-    // Add cuda version
-    ldPathBuilder += CUDA_BASE_PATH + tfLibMapping.getCudaVersion() + "/lib64" + File.pathSeparator;
+    if(!Strings.isNullOrEmpty(tfLibMapping.getCudnnVersion())) {
+      ldPathBuilder.append(CUDNN_BASE_PATH + tfLibMapping.getCudnnVersion() + "/lib64" + File.pathSeparator);
+    }
 
-    // Add nccl version
-    ldPathBuilder += NCCL_BASE_PATH + tfLibMapping.getNcclVersion() + "/lib" + File.pathSeparator;
+    if(!Strings.isNullOrEmpty(tfLibMapping.getCudaVersion())) {
+      ldPathBuilder.append(CUDA_BASE_PATH + tfLibMapping.getCudaVersion() + "/lib64" + File.pathSeparator);
+    }
 
-    return ldPathBuilder;
+    if(!Strings.isNullOrEmpty(tfLibMapping.getNcclVersion())) {
+      ldPathBuilder.append(NCCL_BASE_PATH + tfLibMapping.getNcclVersion() + "/lib" + File.pathSeparator);
+    }
+
+    return ldPathBuilder.toString();
   }
 
-  public String getTfLdLibraryPath(Project project) throws ServiceException {
+  public String getTfLdLibraryPath(Project project) {
     // Get information about which version of TensorFlow the user is running
     TfLibMapping tfLibMapping = findTfMappingForProject(project);
+    // No tensorflow-gpu
     if (tfLibMapping == null) {
-      // We are not supporting this version.
-      throw new ServiceException(RESTCodes.ServiceErrorCode.TENSORFLOW_VERSION_NOT_SUPPORTED, Level.INFO);
+      return "";
     }
-    return  buildTfLdLibraryPath(tfLibMapping);
+    return buildTfLdLibraryPath(tfLibMapping);
   }
 
-  private TfLibMapping findTfMappingForProject(Project project) {
+  public TfLibMapping findTfMappingForProject(Project project) {
 
     if (!project.getCondaEnv()) {
       return tfLibMappingFacade.findByTfVersion(settings.getTensorflowVersion());
@@ -86,14 +90,12 @@ public class TfLibMappingUtil {
 
     CondaCommands command = environmentController.getOngoingEnvCreation(project);
 
-
     if(command == null) {
       return project.getPythonDepCollection().stream()
-          .filter(dep -> dep.getDependency().equals("tensorflow") || dep.getDependency().equals("tensorflow-gpu")
-          || dep.getDependency().equals("tensorflow-rocm"))
-          .findAny()
-          .map(tfDep -> tfLibMappingFacade.findByTfVersion(tfDep.getVersion()))
-          .orElse(null);
+              .filter(dep -> dep.getDependency().equals("tensorflow") || dep.getDependency().equals("tensorflow-gpu"))
+              .findAny()
+              .map(tfDep -> tfLibMappingFacade.findByTfVersion(tfDep.getVersion()))
+              .orElse(null);
     } else if(command.getOp().compareTo(CondaCommandFacade.CondaOp.CREATE) == 0) {
       return tfLibMappingFacade.findByTfVersion(settings.getTensorflowVersion());
     } else if(command.getOp().compareTo(CondaCommandFacade.CondaOp.YML) == 0) {
