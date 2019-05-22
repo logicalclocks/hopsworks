@@ -35,6 +35,7 @@ import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.CryptoPasswordNotFoundException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -44,11 +45,8 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -100,6 +98,7 @@ public class FeaturegroupController {
    * @return conn the JDBC connection
    * @throws SQLException
    * @throws IOException
+   * @throws FeaturestoreException
    */
   private Connection initConnection(String databaseName, Project project, Users user) throws SQLException, IOException,
       FeaturestoreException {
@@ -107,11 +106,12 @@ public class FeaturegroupController {
       // Load Hive JDBC Driver
       Class.forName(HIVE_DRIVER);
 
-      //Check if certs exists, otherwise materialize them
-      materializeCerts(project, user);
+      //Materialize certs
+      certificateMaterializer.materializeCertificatesLocal(user.getUsername(), project.getName());
 
       //Read password
-      String password = new String(Files.readAllBytes(Paths.get(getUserTransientPasswordPath(project, user))));
+      String password =
+        certificateMaterializer.getUserMaterial(user.getUsername(), project.getName()).getPassword().toString();
 
       // Create connection url
       String hiveEndpoint = settings.getHiveServerHostName(false);
@@ -123,7 +123,7 @@ public class FeaturegroupController {
           "keyStorePassword=" + password;
 
       return DriverManager.getConnection(jdbcString);
-    } catch (FileNotFoundException e) {
+    } catch (FileNotFoundException | CryptoPasswordNotFoundException e) {
       LOGGER.log(Level.SEVERE, "Could not find user certificates for authenticating with Hive: " +
           e);
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.CERTIFICATES_NOT_FOUND, Level.SEVERE,
@@ -131,34 +131,10 @@ public class FeaturegroupController {
     } catch (ClassNotFoundException e) {
       LOGGER.log(Level.SEVERE, "Error initiating Hive connection: " +
           e);
+      certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_INITIATE_HIVE_CONNECTION, Level.SEVERE,
           "project: " + project.getName() + ", hive database: " + databaseName, e.getMessage(), e);
     }
-  }
-
-  /**
-   * Checks if materialized certs for the given user already exists in the tmp dir, otherwise materializes them
-   *
-   * @param project the project for which the certs will be used
-   * @param user    the user for which the certs will be used
-   * @throws IOException
-   */
-  private void materializeCerts(Project project, Users user) throws IOException {
-    String pwdPath = getUserTransientKeystorePath(project, user);
-    String truststorePath = getUserTransientTruststorePath(project, user);
-    String keystorePath = getUserTransientKeystorePath(project, user);
-    Boolean fileMissing = false;
-    File pwdFile = new File(pwdPath);
-    if (!pwdFile.exists())
-      fileMissing = true;
-    File truststoreFile = new File(truststorePath);
-    if (!truststoreFile.exists())
-      fileMissing = true;
-    File keystoreFile = new File(keystorePath);
-    if (!keystoreFile.exists())
-      fileMissing = true;
-    if (fileMissing)
-      certificateMaterializer.materializeCertificatesLocal(user.getUsername(), project.getName());
   }
 
   /**
@@ -218,7 +194,7 @@ public class FeaturegroupController {
    * @param project         the project of the user making the request
    * @param user            the user making the request
    * @param featurestore    the featurestore where the featuregroup resides
-   * @return JSON/XML DTO with the schema
+   * @return                JSON/XML DTO with the schema
    * @throws IOException
    * @throws SQLException
    * @throws FeaturestoreException
@@ -286,7 +262,7 @@ public class FeaturegroupController {
    *
    * @param featuregroupName name of the featuregroup
    * @param version          version of the featuregroup
-   * @return
+   * @return                 the hive table name of the featuregroup (featuregroup_version)
    */
   private String getTblName(String featuregroupName, Integer version) {
     return featuregroupName + "_" + version.toString();
@@ -307,7 +283,7 @@ public class FeaturegroupController {
    * @param descriptiveStatistics    descriptive statistics data
    * @param featuresHistogram        feature distributions data
    * @param clusterAnalysis          cluster analysis JSON
-   * @return
+   * @return                         a DTO representing the created featuregroup
    * @throws IOException
    * @throws FeaturestoreException
    * @throws HopsSecurityException
@@ -546,17 +522,17 @@ public class FeaturegroupController {
    * @param project      the project of the user making the request
    * @param user         the user making the request
    * @throws SQLException
-   * @throws IOException
    * @throws FeaturestoreException
    * @throws HopsSecurityException
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
   private void executeUpdateHiveQuery(String query, String databaseName, Project project, Users user)
-      throws SQLException, IOException, FeaturestoreException, HopsSecurityException {
+      throws SQLException, FeaturestoreException, HopsSecurityException {
     //Re-create the connection every time since the connection is database and user-specific
-    Connection conn = initConnection(databaseName, project, user);
     Statement stmt = null;
+    Connection conn = null;
     try {
+      conn = initConnection(databaseName, project, user);
       // Create database
       stmt = conn.createStatement();
       stmt.executeUpdate(query);
@@ -575,7 +551,7 @@ public class FeaturegroupController {
       if (stmt != null) {
         stmt.close();
       }
-      closeConnection(conn);
+      closeConnection(conn, user, project);
     }
   }
 
@@ -620,12 +596,13 @@ public class FeaturegroupController {
   @TransactionAttribute(TransactionAttributeType.NEVER)
   private List<RowValueQueryResult> executeReadHiveQuery(
       String query, String databaseName, Project project, Users user)
-      throws SQLException, IOException, FeaturestoreException, HopsSecurityException {
-    //Re-create the connection every time since the connection is database and user-specific
-    Connection conn = initConnection(databaseName, project, user);
+      throws SQLException, FeaturestoreException, HopsSecurityException {
+    Connection conn = null;
     Statement stmt = null;
     List<RowValueQueryResult> resultList = null;
     try {
+      //Re-create the connection every time since the connection is database and user-specific
+      conn = initConnection(databaseName, project, user);
       stmt = conn.createStatement();
       ResultSet rs = stmt.executeQuery(query);
       resultList = parseResultset(rs);
@@ -642,26 +619,26 @@ public class FeaturegroupController {
       if (stmt != null) {
         stmt.close();
       }
-      closeConnection(conn);
+      closeConnection(conn, user, project);
     }
     return resultList;
   }
-
+  
   /**
    * Checks if the JDBC connection to HS2 is open, and if so closes it.
+   *
+   * @param conn the JDBC connection
+   * @param user the user using the connection
+   * @param project the project where the connection is used
    */
-  private void closeConnection(Connection conn) {
+  private void closeConnection(Connection conn, Users user, Project project) {
     try {
       if (conn != null) {
         conn.close();
       }
-      //don't add this line:
-      //certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());
-      //concurrent requests by the same user will fail, let certs be cleaned up by
-      //garbage collector periodically instead
+      certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());
     } catch (SQLException e) {
-      LOGGER.log(Level.WARNING, "Error closing Hive JDBC connection: " +
-          e);
+      LOGGER.log(Level.WARNING, "Error closing Hive JDBC connection: " +  e);
     }
   }
 }
