@@ -47,7 +47,6 @@ import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationAttemptStateFacade;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstate;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
-import io.hops.hopsworks.common.dao.jobs.JobsHistoryFacade;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.jobs.description.YarnAppUrlsDTO;
 import io.hops.hopsworks.common.dao.project.Project;
@@ -119,8 +118,6 @@ public class ExecutionController {
   @EJB
   private ActivityFacade activityFacade;
   @EJB
-  private JobsHistoryFacade jobHistoryFac;
-  @EJB
   private HdfsUsersController hdfsUsersController;
   @EJB
   private DistributedFsService dfs;
@@ -175,7 +172,6 @@ public class ExecutionController {
         Inode inode = inodes.getInodeAtPath(pathOfInode);
         String inodeName = inode.getInodePK().getName();
 
-        jobHistoryFac.persist(user, job, execId, exec.getAppId());
         activityFacade.persistActivity(ActivityFacade.EXECUTED_JOB + inodeName, job.getProject(), user,
           ActivityFlag.JOB);
         break;

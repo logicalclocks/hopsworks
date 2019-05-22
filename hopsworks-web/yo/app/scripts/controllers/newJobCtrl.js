@@ -41,11 +41,11 @@
 
 angular.module('hopsWorksApp')
         .controller('NewJobCtrl', ['$routeParams', 'growl', 'JobService',
-          '$location', 'ModalService', 'StorageService', '$scope', 'TourService', 'HistoryService',
+          '$location', 'ModalService', 'StorageService', '$scope', 'TourService',
             'KafkaService', 'ProjectService', 'PythonService', '$timeout',
           function ($routeParams, growl, JobService,
                   $location, ModalService, StorageService, $scope, TourService,
-                  HistoryService, KafkaService, ProjectService, PythonService, $timeout) {
+                  KafkaService, ProjectService, PythonService, $timeout) {
 
             var self = this;
             self.tourService = TourService;
@@ -761,11 +761,6 @@ angular.module('hopsWorksApp')
                       !angular.isUndefined(jobDetails.selectedJar) && !angular.isUndefined(jobDetails.jobType)) {
 
                 self.configAlert = false;
-                HistoryService.getHeuristics(jobDetails).then(
-                        function (success) {
-                          self.autoConfigResult = success.data;
-                          console.log(self.autoConfigResult);
-                        });
               } else {
                 self.configAlert = true;
                 self.isSpin = false;

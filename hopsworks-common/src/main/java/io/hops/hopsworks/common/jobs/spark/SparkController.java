@@ -49,6 +49,7 @@ import io.hops.hopsworks.common.dao.user.activity.ActivityFlag;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.UserGroupInformationService;
+import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.jobs.configuration.JobType;
 import io.hops.hopsworks.common.jobs.execution.ExecutionController;
@@ -119,8 +120,7 @@ public class SparkController {
 
     //If it is a notebook we need to convert it to a .py file every time the job is run
     if(appPath.endsWith(".ipynb")) {
-      String outPath = "hdfs:///" + Settings.DIR_ROOT + "/" + job.getProject().getName() + "/" +
-        Settings.PROJECT_STAGING_DIR;
+      String outPath = "hdfs://"+ Utils.getHdfsRootPath(job.getProject().getName()) + Settings.PROJECT_STAGING_DIR;
       StringBuilder pathBuilder = new StringBuilder(outPath).append("/job_tmp_" + job.getName() + ".py");
       String pyAppPath = pathBuilder.toString();
       sparkConfig.setAppPath(pyAppPath);
