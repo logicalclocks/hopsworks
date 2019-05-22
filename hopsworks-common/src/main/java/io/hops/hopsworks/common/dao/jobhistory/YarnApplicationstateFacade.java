@@ -38,6 +38,7 @@
  */
 package io.hops.hopsworks.common.dao.jobhistory;
 
+import java.util.EnumSet;
 import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -45,6 +46,7 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import io.hops.hopsworks.common.dao.AbstractFacade;
+import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 
 @Stateless
 public class YarnApplicationstateFacade extends AbstractFacade<YarnApplicationstate> {
@@ -59,6 +61,12 @@ public class YarnApplicationstateFacade extends AbstractFacade<YarnApplicationst
 
   public YarnApplicationstateFacade() {
     super(YarnApplicationstate.class);
+  }
+
+  public EnumSet<YarnApplicationState> getRunningStates() {
+    return EnumSet.of(YarnApplicationState.NEW, YarnApplicationState.GENERATING_SECURITY_MATERIAL,
+        YarnApplicationState.NEW_SAVING, YarnApplicationState.SUBMITTED, YarnApplicationState.ACCEPTED,
+        YarnApplicationState.RUNNING);
   }
 
   @Override

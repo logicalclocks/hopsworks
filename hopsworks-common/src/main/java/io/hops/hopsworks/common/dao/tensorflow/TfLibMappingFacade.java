@@ -16,21 +16,12 @@
 
 package io.hops.hopsworks.common.dao.tensorflow;
 
-import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.python.CondaCommandFacade;
-import io.hops.hopsworks.common.dao.python.CondaCommands;
-import io.hops.hopsworks.common.python.environment.EnvironmentController;
-import io.hops.hopsworks.common.util.Settings;
-
-import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
@@ -38,10 +29,6 @@ public class TfLibMappingFacade {
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
-  @EJB
-  private EnvironmentController environmentController;
-  @EJB
-  private Settings settings;
 
   protected EntityManager getEntityManager() {
     return em;
@@ -57,53 +44,5 @@ public class TfLibMappingFacade {
     } catch (NoResultException e) {
       return null;
     }
-  }
-
-  public TfLibMapping findTfMappingForProject(Project project) {
-    
-    if (!project.getCondaEnv()) {
-      return findByTfVersion(settings.getTensorflowVersion());
-    }
-
-    CondaCommands command = environmentController.getOngoingEnvCreation(project);
-
-
-    if(command == null) {
-      return project.getPythonDepCollection().stream()
-          .filter(dep -> dep.getDependency().equals("tensorflow") || dep.getDependency().equals("tensorflow-gpu")
-          || dep.getDependency().equals("tensorflow-rocm"))
-          .findAny()
-          .map(tfDep -> findByTfVersion(tfDep.getVersion()))
-          .orElse(null);
-    } else if(command.getOp().compareTo(CondaCommandFacade.CondaOp.CREATE) == 0) {
-      return findByTfVersion(settings.getTensorflowVersion());
-    } else if(command.getOp().compareTo(CondaCommandFacade.CondaOp.YML) == 0) {
-      String envYml = command.getEnvironmentYml();
-
-      Pattern tfCPUPattern = Pattern.compile("(tensorflow==\\d*.\\d*.\\d*)");
-      Matcher tfCPUMatcher = tfCPUPattern.matcher(envYml);
-
-      if(tfCPUMatcher.find()) {
-        String [] libVersionPair = tfCPUMatcher.group(0).split("==");
-        return findByTfVersion(libVersionPair[1]);
-      }
-
-      Pattern tfGPUPattern = Pattern.compile("(tensorflow-gpu==\\d*.\\d*.\\d*)");
-      Matcher tfGPUMatcher = tfGPUPattern.matcher(envYml);
-
-      if(tfGPUMatcher.find()) {
-        String [] libVersionPair = tfGPUMatcher.group(0).split("==");
-        return findByTfVersion(libVersionPair[1]);
-      }
-
-      Pattern tfRocmPattern = Pattern.compile("(tensorflow-rocm==\\d*.\\d*.\\d*)");
-      Matcher tfRocmMatcher = tfRocmPattern.matcher(envYml);
-
-      if(tfRocmMatcher.find()) {
-        String [] libVersionPair = tfGPUMatcher.group(0).split("==");
-        return findByTfVersion(libVersionPair[1]);
-      }
-    }
-    return null;
   }
 }

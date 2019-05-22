@@ -186,6 +186,8 @@ public class Settings implements Serializable {
   private static final String VARIABLE_HIVE_SUPERUSER = "hive_superuser";
   private static final String VARIABLE_HIVE_WAREHOUSE = "hive_warehouse";
   private static final String VARIABLE_HIVE_SCRATCHDIR = "hive_scratchdir";
+  private static final String VARIABLE_HIVE_SCRATCHDIR_DELAY = "hive_scratchdir_delay";
+  private static final String VARIABLE_HIVE_SCRATCHDIR_CLEANER_INTERVAL = "hive_scratchdir_cleaner_interval";
   private static final String VARIABLE_HIVE_DEFAULT_QUOTA = "hive_default_quota";
   private static final String VARIABLE_HIVE_LLAP_SLIDER_DIR = "hive_llap_slider_dir";
   private static final String VARIABLE_HIVE_LLAP_LOCAL_DIR = "hive_llap_local_dir";
@@ -475,6 +477,9 @@ public class Settings implements Serializable {
       HIVE_LLAP_SLIDER_DIR = setStrVar(VARIABLE_HIVE_LLAP_SLIDER_DIR, HIVE_LLAP_SLIDER_DIR);
       HIVE_LLAP_LOCAL_FS_DIR = setStrVar(VARIABLE_HIVE_LLAP_LOCAL_DIR, HIVE_LLAP_LOCAL_FS_DIR);
       HIVE_SCRATCHDIR = setStrVar(VARIABLE_HIVE_SCRATCHDIR, HIVE_SCRATCHDIR);
+      HIVE_SCRATCHDIR_DELAY = setStrVar(VARIABLE_HIVE_SCRATCHDIR_DELAY, HIVE_SCRATCHDIR_DELAY);
+      HIVE_SCRATCHDIR_CLEANER_INTERVAL = setStrVar(VARIABLE_HIVE_SCRATCHDIR_CLEANER_INTERVAL,
+          HIVE_SCRATCHDIR_CLEANER_INTERVAL);
       HIVE_DB_DEFAULT_QUOTA = setStrVar(VARIABLE_HIVE_DEFAULT_QUOTA, HIVE_DB_DEFAULT_QUOTA);
       ALERT_EMAIL_ADDRS = setStrVar(VARIABLE_ALERT_EMAIL_ADDRS, "");
       HADOOP_VERSION = setVar(VARIABLE_HADOOP_VERSION, HADOOP_VERSION);
@@ -978,6 +983,20 @@ public class Settings implements Serializable {
   public synchronized String getHiveScratchdir() {
     checkCache();
     return HIVE_SCRATCHDIR;
+  }
+
+  private String HIVE_SCRATCHDIR_DELAY = "7d";
+
+  public synchronized String getHiveScratchdirDelay() {
+    checkCache();
+    return HIVE_SCRATCHDIR_DELAY;
+  }
+
+  private String HIVE_SCRATCHDIR_CLEANER_INTERVAL = "24h";
+
+  public synchronized String getHiveScratchdirCleanerInterval() {
+    checkCache();
+    return HIVE_SCRATCHDIR_CLEANER_INTERVAL;
   }
 
   private String HIVE_DB_DEFAULT_QUOTA = "50000";
