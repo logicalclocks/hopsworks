@@ -42,7 +42,6 @@ package io.hops.hopsworks.common.jobs;
 import io.hops.hopsworks.common.dao.certificates.CertsFacade;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
-import io.hops.hopsworks.common.dao.jobs.JobsHistoryFacade;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.jobs.execution.HopsJob;
@@ -76,8 +75,6 @@ public class AsynchronousJobExecutor {
   private DistributedFsService dfs;
   @EJB
   private InodeFacade inodeFacade;
-  @EJB
-  private JobsHistoryFacade jhf;
   @EJB
   private CertsFacade userCerts;
   @EJB
@@ -121,10 +118,6 @@ public class AsynchronousJobExecutor {
   
   public DistributedFileSystemOps getFileOperations(String hdfsUser) {
     return dfs.getDfsOps(hdfsUser);
-  }
-
-  public JobsHistoryFacade getJobsHistoryFacade() {
-    return jhf;
   }
 
   public CertsFacade getUserCerts() {
