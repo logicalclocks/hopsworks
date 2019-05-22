@@ -89,7 +89,7 @@ public class DistributedFileSystemOps {
 
     @Override
     public String toString() {
-      return super.toString();
+      return policyName;
     }
   }
 
