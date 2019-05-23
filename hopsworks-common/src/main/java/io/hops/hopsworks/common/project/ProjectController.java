@@ -1608,6 +1608,9 @@ public class ProjectController {
         throw ex;
       }
 
+      //remove running tensorboards
+      removeTensorBoard(project);
+
       //remove jupyter
       removeJupyter(project);
 
@@ -1630,9 +1633,6 @@ public class ProjectController {
 
       //remove dumy Inode
       dfso.rm(dumy, true);
-
-      //remove running tensorboards
-      removeTensorBoard(project);
 
       // Remove TF Servings
       try {
