@@ -1194,30 +1194,6 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
             },
-            historyDetails: function (job, size) {
-                var modalInstance = $uibModal.open({
-                    templateUrl: 'views/historyDetails.html',
-                    controller: 'HistoryDetailCtrl as historyDetailCtrl',
-                    size: size,
-                    resolve: {
-                        auth: ['$q', '$location', 'AuthService',
-                            function ($q, $location, AuthService) {
-                                return AuthService.session().then(
-                                    function (success) {
-                                    },
-                                    function (err) {
-                                        $location.path('/login');
-                                        $location.replace();
-                                        return $q.reject(err);
-                                    });
-                            }],
-                        job: function () {
-                            return job;
-                        }
-                    }
-                });
-                return modalInstance.result;
-            },
             remoteUserConsent: function (size, data, val) {
                 var modalInstance = $uibModal.open({
                     templateUrl: 'views/remoteUserConsentModal.html',

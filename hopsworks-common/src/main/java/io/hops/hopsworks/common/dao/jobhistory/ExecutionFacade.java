@@ -40,15 +40,13 @@
 package io.hops.hopsworks.common.dao.jobhistory;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.common.dao.jobs.JobInputFile;
-import io.hops.hopsworks.common.dao.jobs.JobOutputFile;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.exceptions.InvalidQueryException;
+import io.hops.hopsworks.common.jobs.configuration.JobType;
 import io.hops.hopsworks.common.jobs.jobhistory.JobFinalStatus;
 import io.hops.hopsworks.common.jobs.jobhistory.JobState;
-import io.hops.hopsworks.common.jobs.configuration.JobType;
+import io.hops.hopsworks.exceptions.InvalidQueryException;
 
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -56,7 +54,6 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -314,17 +311,13 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
   // Create update remove
   //====================================================================================================================
   
-  public Execution create(Jobs job, Users user, String stdoutPath,
-          String stderrPath, Collection<JobInputFile> input,
-          JobFinalStatus finalStatus, float progress, String hdfsUser) {
-    return create(job, user, JobState.INITIALIZING, stdoutPath, stderrPath,
-            input, finalStatus, progress, hdfsUser);
+  public Execution create(Jobs job, Users user, String stdoutPath, String stderrPath, JobFinalStatus finalStatus,
+    float progress, String hdfsUser) {
+    return create(job, user, JobState.INITIALIZING, stdoutPath, stderrPath, finalStatus, progress, hdfsUser);
   }
 
-  public Execution create(Jobs job, Users user, JobState state,
-          String stdoutPath,
-          String stderrPath, Collection<JobInputFile> input,
-          JobFinalStatus finalStatus, float progress, String hdfsUser) {
+  public Execution create(Jobs job, Users user, JobState state, String stdoutPath, String stderrPath,
+    JobFinalStatus finalStatus, float progress, String hdfsUser) {
     //Check if state is ok
     if (state == null) {
       state = JobState.INITIALIZING;
@@ -333,8 +326,8 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
       finalStatus = JobFinalStatus.UNDEFINED;
     }
     //Create new object
-    Execution exec = new Execution(state, job, user, stdoutPath, stderrPath,
-            input, finalStatus, progress, hdfsUser);
+    Execution exec = new Execution(state, job, user, new java.util.Date(), stdoutPath, stderrPath, finalStatus,
+      progress, hdfsUser);
     //And persist it
     em.persist(exec);
     em.flush();
@@ -376,10 +369,8 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
     return exec;
   }
   
-  public Execution updateOutput(Execution exec,
-          Collection<JobOutputFile> outputFiles) {
+  public Execution updateOutput(Execution exec) {
     exec = getExecution(exec);
-    exec.setJobOutputFileCollection(outputFiles);
     merge(exec);
     return exec;
   }
