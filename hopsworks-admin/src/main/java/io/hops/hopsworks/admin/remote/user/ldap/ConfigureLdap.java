@@ -33,7 +33,6 @@ import java.util.logging.Logger;
 public class ConfigureLdap implements Serializable {
   
   private final Logger LOGGER = Logger.getLogger(ConfigureLdap.class.getName());
-  
   private UserAccountStatus accountStatus;
   private String groupMapping;
   private String userId;

@@ -238,7 +238,7 @@ public class UsersController {
     user.setBbcGroupCollection(groups);
     return user;
   }
-     
+  
   /**
    * Remote user
    * @param email

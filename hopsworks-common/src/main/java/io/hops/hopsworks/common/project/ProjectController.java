@@ -2586,7 +2586,7 @@ public class ProjectController {
     }
     return new CertsDTO("jks", keyStore, trustStore);
   }
-
+  
   /**
    * Helper class to log force cleanup operations
    *

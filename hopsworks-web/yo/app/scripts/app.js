@@ -79,7 +79,7 @@ angular.module('hopsWorksApp', [
   'ngFileUpload',
   'googlechart'
 ])
-        .config(['$routeProvider', '$httpProvider', '$compileProvider', 'flowFactoryProvider', 'accordionConfig', 
+        .config(['$routeProvider', '$httpProvider', '$compileProvider', 'flowFactoryProvider', 'accordionConfig',
           function ($routeProvider, $httpProvider, $compileProvider, flowFactoryProvider, accordionConfig) {
 
             // tensorflow cluster panes should expand faster than default 0.5s

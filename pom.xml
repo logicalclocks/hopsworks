@@ -74,6 +74,15 @@
       </modules>
     </profile>
     <profile>
+      <id>remote-user-auth</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <modules>
+        <module>hopsworks-remote-user-auth</module>
+      </modules>
+    </profile>
+    <profile>
       <id>cluster</id>
       <activation>
         <activeByDefault>false</activeByDefault>
@@ -237,4 +246,3 @@
     </repository>
   </distributionManagement>
 </project>
-

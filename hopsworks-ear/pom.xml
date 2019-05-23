@@ -132,7 +132,7 @@
         <dependency>
           <groupId>io.hops.hopsworks</groupId>
           <artifactId>hopsworks-cluster</artifactId>
-          <version>0.10.0-SNAPSHOT</version>
+          <version>${project.version}</version>
           <type>war</type>
         </dependency>
       </dependencies>
@@ -147,8 +147,22 @@
         <dependency>
           <groupId>io.hops.hopsworks</groupId>
           <artifactId>hopsworks-kube</artifactId>
-          <version>0.10.0-SNAPSHOT</version>
+          <version>${project.version}</version>
           <type>ejb</type>
+        </dependency>
+      </dependencies>
+    </profile>
+    <profile>
+      <id>remote-user-auth</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <dependencies>
+        <dependency>
+          <groupId>io.hops.hopsworks</groupId>
+          <artifactId>hopsworks-remote-user-auth</artifactId>
+          <version>${project.version}</version>
+          <type>war</type>
         </dependency>
       </dependencies>
     </profile>

@@ -37,37 +37,57 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package io.hops.hopsworks.common.dao.user.security.ua;
+package io.hops.hopsworks.remote.user.auth.api;
 
-import javax.xml.bind.annotation.XmlEnum;
-import javax.xml.bind.annotation.XmlEnumValue;
-import javax.xml.bind.annotation.XmlType;
+import io.hops.hopsworks.restutils.JsonResponse;
 
-@XmlType(name = "userAccountType")
-@XmlEnum
-public enum UserAccountType {
+import java.util.List;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 
-  @XmlEnumValue("M_ACCOUNT_TYPE")
-  M_ACCOUNT_TYPE(0),
-  @XmlEnumValue("REMOTE_ACCOUNT_TYPE")
-  REMOTE_ACCOUNT_TYPE(1);
-
-  private final int value;
-
-  private UserAccountType(int value) {
-    this.value = value;
+@XmlRootElement
+public class RESTApiJsonResponse extends JsonResponse {
+  
+  private String QRCode;
+  private List<String> fieldErrors;
+  private Object data;
+  private String sessionID;
+  
+  public RESTApiJsonResponse() {
   }
-
-  public int getValue() {
-    return value;
+  
+  
+  public List<String> getFieldErrors() {
+    return fieldErrors;
   }
-
-  public static UserAccountType fromValue(int v) {
-    for (UserAccountType c : UserAccountType.values()) {
-      if (c.value == v) {
-        return c;
-      }
-    }
-    throw new IllegalArgumentException("" + v);
+  
+  public void setFieldErrors(List<String> fieldErrors) {
+    this.fieldErrors = fieldErrors;
   }
+  
+  public Object getData() {
+    return data;
+  }
+  
+  public void setData(Object data) {
+    this.data = data;
+  }
+  
+  @XmlElement
+  public String getSessionID() {
+    return sessionID;
+  }
+  
+  public void setSessionID(String sessionID) {
+    this.sessionID = sessionID;
+  }
+  
+  public String getQRCode() {
+    return QRCode;
+  }
+  
+  public void setQRCode(String QRCode) {
+    this.QRCode = QRCode;
+  }
+  
 }

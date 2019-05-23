@@ -16,7 +16,6 @@
 package io.hops.hopsworks.common.dao.remote.oauth;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
-
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -28,12 +27,12 @@ public class OauthClientFacade extends AbstractFacade<OauthClient> {
   
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
-  
+
   @Override
   protected EntityManager getEntityManager() {
     return em;
   }
-  
+
   public OauthClientFacade() {
     super(OauthClient.class);
   }
