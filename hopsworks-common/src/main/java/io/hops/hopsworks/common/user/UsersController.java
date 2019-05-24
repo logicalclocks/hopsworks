@@ -318,7 +318,7 @@ public class UsersController {
       }
       accountAuditFacade.registerAccountChange(user, AccountsAuditActions.PASSWORDCHANGE.name(),
           AccountsAuditActions.SUCCESS.name(), "Changed password.", user, req);
-      if (user.getEmail().compareTo("admin@kth.se") == 0) {
+      if (user.getEmail().compareTo(settings.getAdminEmail()) == 0) {
         settings.setAdminPasswordChanged();
       }
 

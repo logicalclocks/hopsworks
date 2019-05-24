@@ -48,7 +48,6 @@ angular.module('hopsWorksApp')
             self.permission_type;
 
             self.project;
-            self.user_email = "admin@kth.se";
             self.permission_type = "Allow";
             self.operation_type = "Read";
             self.host = "*";
