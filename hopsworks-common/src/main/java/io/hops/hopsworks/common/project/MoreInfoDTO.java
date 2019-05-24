@@ -39,14 +39,13 @@
 
 package io.hops.hopsworks.common.project;
 
-import java.io.File;
 import java.util.Date;
 import java.util.Objects;
 import javax.xml.bind.annotation.XmlRootElement;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
-import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.common.hdfs.Utils;
 
 @XmlRootElement
 public class MoreInfoDTO {
@@ -69,8 +68,7 @@ public class MoreInfoDTO {
     this.size = 0;
     this.createDate = proj.getCreated();
     this.uploadDate = null;
-    this.path = File.separator + Settings.DIR_ROOT + File.separator
-            + proj.getName();
+    this.path = Utils.getProjectPath(proj.getName());
   }
 
   public MoreInfoDTO(Inode inode) {

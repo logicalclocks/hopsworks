@@ -191,12 +191,12 @@ public class FlinkJob extends YarnJob {
       return false;
     }
 
-    String stdOutFinalDestination = Utils.getHdfsRootPath(
+    String stdOutFinalDestination = Utils.getProjectPath(
         jobs.
             getProject().
             getName())
         + Settings.FLINK_DEFAULT_OUTPUT_PATH;
-    String stdErrFinalDestination = Utils.getHdfsRootPath(
+    String stdErrFinalDestination = Utils.getProjectPath(
         jobs.
             getProject().
             getName())

@@ -58,6 +58,7 @@ import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFlag;
+import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
@@ -148,9 +149,7 @@ public class DatasetController {
     FolderNameValidator.isValidName(dataSetName, false);
     //Logic
     boolean success;
-    String dsPath = File.separator + Settings.DIR_ROOT + File.separator
-        + project.getName();
-    dsPath = dsPath + File.separator + dataSetName;
+    String dsPath = Utils.getProjectPath(project.getName()) + dataSetName;
     Inode parent = inodes.getProjectRoot(project.getName());
     Inode ds = inodes.findByInodePK(parent, dataSetName,
         HopsUtils.dataSetPartitionId(parent, dataSetName));
@@ -411,9 +410,7 @@ public class DatasetController {
       //Generate README.md for the Default Datasets
       readmeFile = String.format(Settings.README_TEMPLATE, dsName, description);
       StringBuilder readmeSb = new StringBuilder();
-      readmeSb.append(File.separator).append(Settings.DIR_ROOT)
-          .append(File.separator).append(project)
-          .append(File.separator).append(dsName)
+      readmeSb.append(Utils.getProjectPath(project)).append(dsName)
           .append(File.separator).append(Settings.README_FILE);
 
       readMeFilePath = readmeSb.toString();
@@ -495,7 +492,7 @@ public class DatasetController {
     switch (ds.getType()) {
       case DATASET:
         Project owningProject = getOwningProject(ds);
-        path = new Path(settings.getProjectPath(owningProject.getName()),
+        path = new Path(Utils.getProjectPath(owningProject.getName()),
             ds.getInode().getInodePK().getName());
         break;
       case FEATURESTORE:
