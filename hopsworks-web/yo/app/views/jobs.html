@@ -63,10 +63,10 @@
             </div>
           </div>
           <h3 class="text-muted" style="text-align: center;"
-              ng-if="jobsCtrl.jobs === undefined || jobsCtrl.jobs === null || jobsCtrl.jobs.length === 0">
+              ng-if="jobsCtrl.jobs === undefined || jobsCtrl.jobs === null">
             No job to show.
           </h3>
-          <div ng-if="jobsCtrl.jobs !== undefined && jobsCtrl.jobs !== null && jobsCtrl.jobs.length > 0"
+          <div ng-if="jobsCtrl.jobs !== undefined && jobsCtrl.jobs !== null"
                style="height: calc(100% - 35px); overflow-y: auto; overflow-x: hidden;">
             <div>
               <div class="row form-inline">
