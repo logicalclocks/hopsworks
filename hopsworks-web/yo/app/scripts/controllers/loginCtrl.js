@@ -59,14 +59,6 @@ angular.module('hopsWorksApp')
             self.openIdProviders = [];
 
 
-            self.showDefaultPassword = function() {
-              if (self.firstTime === false || self.adminPasswordChanged === true ||
-                      self.user.email !== 'admin@kth.se') {
-                return false;
-              }
-              return true;
-            };
-
             var getAnnouncement = function () {
               BannerService.findBanner().then(
                       function (success) {
@@ -84,8 +76,6 @@ angular.module('hopsWorksApp')
               BannerService.isFirstTime().then(
                       function (success) {
                         self.firstTime = true;
-                        self.user.email = "admin@kth.se";
-//                        self.user.password = "admin";
                         self.user.toursState = 0;
                       }, function (error) {
                 self.firstTime = false;
@@ -97,7 +87,7 @@ angular.module('hopsWorksApp')
                         self.adminPasswordChanged = true;
                       }, function (error) {
                 self.adminPasswordChanged = false;
-                self.announcement = "Security risk: change the current default password for the 'admin@kth.se' account."
+                self.announcement = "Security risk: change the current default password for the default admin account."
               });
             };
             self.enterAdminPassword = function () {

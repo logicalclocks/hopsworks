@@ -46,7 +46,6 @@ import io.hops.hopsworks.common.dao.dela.certs.ClusterCertificate;
 import io.hops.hopsworks.common.dao.dela.certs.ClusterCertificateFacade;
 import io.hops.hopsworks.common.dao.host.Hosts;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
-import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.message.MessageController;
@@ -88,14 +87,10 @@ import java.util.logging.Logger;
 public class CertificatesMgmService {
   private final Logger LOG = Logger.getLogger(CertificatesMgmService.class.getName());
   
-  public static final String CERTIFICATE_SUFFIX = ".cert.pem";
-  
   @EJB
   private Settings settings;
   @EJB
   private UserFacade userFacade;
-  @EJB
-  private ProjectFacade projectFacade;
   @EJB
   private CertsFacade certsFacade;
   @EJB
@@ -106,8 +101,6 @@ public class CertificatesMgmService {
   private SystemCommandFacade systemCommandFacade;
   @EJB
   private HostsFacade hostsFacade;
-  @EJB
-  private ServiceCertificateRotationTimer serviceCertificateRotationTimer;
   
   private File masterPasswordFile;
   private final Map<Class, MasterPasswordChangeHandler> handlersMap = new ConcurrentHashMap<>();
@@ -292,7 +285,7 @@ public class CertificatesMgmService {
   
   private void sendInbox(String message, String preview, String userRequested) {
     Users to = userFacade.findByEmail(userRequested);
-    Users from = userFacade.findByEmail(Settings.SITE_EMAIL);
+    Users from = userFacade.findByEmail(settings.getAdminEmail());
     messageController.send(to, from, "Master encryption password changed", preview, message, "");
   }
   

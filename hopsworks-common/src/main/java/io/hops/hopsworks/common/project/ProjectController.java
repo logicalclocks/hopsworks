@@ -1379,7 +1379,7 @@ public class ProjectController {
 
   private void sendInbox(String message, String userRequested) {
     Users to = userFacade.findByEmail(userRequested);
-    Users from = userFacade.findByEmail(Settings.SITE_EMAIL);
+    Users from = userFacade.findByEmail(settings.getAdminEmail());
     messageController.send(to, from, "Force project cleanup", "Status", message, "");
   }
 
@@ -2580,7 +2580,7 @@ public class ProjectController {
       trustStore = org.apache.commons.net.util.Base64.encodeBase64String(material.getTrustStore().array());
       String certPwd = new String(material.getPassword());
       //Pop-up a message from admin
-      messageController.send(user, userFacade.findByEmail(Settings.SITE_EMAIL), "Certificate Info", "",
+      messageController.send(user, userFacade.findByEmail(settings.getAdminEmail()), "Certificate Info", "",
           "An email was sent with the password for your project's certificates. If an email does not arrive shortly, "
           + "please check spam first and then contact the administrator.", "");
       emailBean.sendEmail(user.getEmail(), Message.RecipientType.TO, "Hopsworks certificate information",
