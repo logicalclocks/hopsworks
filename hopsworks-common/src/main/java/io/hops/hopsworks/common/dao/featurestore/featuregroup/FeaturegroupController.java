@@ -35,20 +35,19 @@ import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.CryptoPasswordNotFoundException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.commons.lang3.StringUtils;
 
+import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -90,7 +89,18 @@ public class FeaturegroupController {
 
   private static final Logger LOGGER = Logger.getLogger(FeaturegroupController.class.getName());
   private static final String HIVE_DRIVER = "org.apache.hive.jdbc.HiveDriver";
-
+  
+  
+  @PostConstruct
+  public void init() {
+    try {
+      // Load Hive JDBC Driver
+      Class.forName(HIVE_DRIVER);
+    } catch (ClassNotFoundException e) {
+      LOGGER.log(Level.SEVERE, "Could not load the Hive driver: " + HIVE_DRIVER, e);
+    }
+  }
+  
   /**
    * Initializes a JDBC connection (thrift RPC) to HS2 using SSL with a given project user and database
    *
@@ -98,20 +108,16 @@ public class FeaturegroupController {
    * @param project      the project of the user making the request
    * @param user         the user making the request
    * @return conn the JDBC connection
-   * @throws SQLException
-   * @throws IOException
+   * @throws FeaturestoreException
    */
-  private Connection initConnection(String databaseName, Project project, Users user) throws SQLException, IOException,
-      FeaturestoreException {
+  private Connection initConnection(String databaseName, Project project, Users user) throws FeaturestoreException {
     try {
-      // Load Hive JDBC Driver
-      Class.forName(HIVE_DRIVER);
-
-      //Check if certs exists, otherwise materialize them
-      materializeCerts(project, user);
+      //Materialize certs
+      certificateMaterializer.materializeCertificatesLocal(user.getUsername(), project.getName());
 
       //Read password
-      String password = new String(Files.readAllBytes(Paths.get(getUserTransientPasswordPath(project, user))));
+      String password = String.copyValueOf(
+        certificateMaterializer.getUserMaterial(user.getUsername(), project.getName()).getPassword());
 
       // Create connection url
       String hiveEndpoint = settings.getHiveServerHostName(false);
@@ -123,42 +129,18 @@ public class FeaturegroupController {
           "keyStorePassword=" + password;
 
       return DriverManager.getConnection(jdbcString);
-    } catch (FileNotFoundException e) {
+    } catch (FileNotFoundException | CryptoPasswordNotFoundException e) {
       LOGGER.log(Level.SEVERE, "Could not find user certificates for authenticating with Hive: " +
           e);
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.CERTIFICATES_NOT_FOUND, Level.SEVERE,
           "project: " + project.getName() + ", hive database: " + databaseName, e.getMessage(), e);
-    } catch (ClassNotFoundException e) {
+    } catch (SQLException | IOException e) {
       LOGGER.log(Level.SEVERE, "Error initiating Hive connection: " +
           e);
+      certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_INITIATE_HIVE_CONNECTION, Level.SEVERE,
           "project: " + project.getName() + ", hive database: " + databaseName, e.getMessage(), e);
     }
-  }
-
-  /**
-   * Checks if materialized certs for the given user already exists in the tmp dir, otherwise materializes them
-   *
-   * @param project the project for which the certs will be used
-   * @param user    the user for which the certs will be used
-   * @throws IOException
-   */
-  private void materializeCerts(Project project, Users user) throws IOException {
-    String pwdPath = getUserTransientKeystorePath(project, user);
-    String truststorePath = getUserTransientTruststorePath(project, user);
-    String keystorePath = getUserTransientKeystorePath(project, user);
-    Boolean fileMissing = false;
-    File pwdFile = new File(pwdPath);
-    if (!pwdFile.exists())
-      fileMissing = true;
-    File truststoreFile = new File(truststorePath);
-    if (!truststoreFile.exists())
-      fileMissing = true;
-    File keystoreFile = new File(keystorePath);
-    if (!keystoreFile.exists())
-      fileMissing = true;
-    if (fileMissing)
-      certificateMaterializer.materializeCertificatesLocal(user.getUsername(), project.getName());
   }
 
   /**
@@ -218,8 +200,7 @@ public class FeaturegroupController {
    * @param project         the project of the user making the request
    * @param user            the user making the request
    * @param featurestore    the featurestore where the featuregroup resides
-   * @return JSON/XML DTO with the schema
-   * @throws IOException
+   * @return                JSON/XML DTO with the schema
    * @throws SQLException
    * @throws FeaturestoreException
    * @throws HopsSecurityException
@@ -228,7 +209,7 @@ public class FeaturegroupController {
   public RowValueQueryResult getSchema(
       FeaturegroupDTO featuregroupDTO, Project project, Users user,
       Featurestore featurestore)
-      throws IOException, SQLException, FeaturestoreException, HopsSecurityException {
+      throws SQLException, FeaturestoreException, HopsSecurityException {
     String sqlSchema = parseSqlSchemaResult(getSQLSchemaForFeaturegroup(featuregroupDTO, project, user, featurestore));
     ColumnValueQueryResult column = new ColumnValueQueryResult("schema", sqlSchema);
     List<ColumnValueQueryResult> columns = new ArrayList<>();
@@ -286,7 +267,7 @@ public class FeaturegroupController {
    *
    * @param featuregroupName name of the featuregroup
    * @param version          version of the featuregroup
-   * @return
+   * @return                 the hive table name of the featuregroup (featuregroup_version)
    */
   private String getTblName(String featuregroupName, Integer version) {
     return featuregroupName + "_" + version.toString();
@@ -301,14 +282,13 @@ public class FeaturegroupController {
    * @param featuregroupName         the name of the new featuregroup
    * @param features                 string of features separated with comma
    * @param dependencies             dependencies to create the featuregroup (e.g input datasets to feature engineering)
-   * @param job                      (optional) job to compute this feature group\
+   * @param job                      (optional) job to compute this feature group
    * @param version                  version of the featuregroup
    * @param featureCorrelationMatrix feature correlation data
    * @param descriptiveStatistics    descriptive statistics data
    * @param featuresHistogram        feature distributions data
    * @param clusterAnalysis          cluster analysis JSON
-   * @return
-   * @throws IOException
+   * @return                         a DTO representing the created featuregroup
    * @throws FeaturestoreException
    * @throws HopsSecurityException
    * @throws SQLException
@@ -321,7 +301,7 @@ public class FeaturegroupController {
       FeatureCorrelationMatrixDTO featureCorrelationMatrix, DescriptiveStatsDTO descriptiveStatistics,
       FeatureDistributionsDTO featuresHistogram,
       ClusterAnalysisDTO clusterAnalysis)
-      throws IOException, SQLException, FeaturestoreException, HopsSecurityException {
+      throws SQLException, FeaturestoreException, HopsSecurityException {
     //Create Hive Table
     String db = featurestoreController.getFeaturestoreDbName(featurestore.getProject());
     String tableName = getTblName(featuregroupName, version);
@@ -346,8 +326,8 @@ public class FeaturegroupController {
     featuregroup.setHiveTblId(hiveTblId);
     featuregroupFacade.persist(featuregroup);
     featurestoreDependencyController.updateFeaturestoreDependencies(featuregroup, null, dependencies);
-    featurestoreStatisticController.updateFeaturestoreStatistics(featuregroup, null, featureCorrelationMatrix,
-        descriptiveStatistics, featuresHistogram, clusterAnalysis);
+    featurestoreStatisticController.updateFeaturestoreStatistics(featuregroup, null,
+      featureCorrelationMatrix, descriptiveStatistics, featuresHistogram, clusterAnalysis);
     return convertFeaturegrouptoDTO(featuregroup);
   }
 
@@ -402,11 +382,12 @@ public class FeaturegroupController {
     if (updateMetadata) {
       updatedFeaturegroup =
           featuregroupFacade.updateFeaturegroupMetadata(featuregroup, job);
-      featurestoreDependencyController.updateFeaturestoreDependencies(updatedFeaturegroup, null, dependencies);
+      featurestoreDependencyController.updateFeaturestoreDependencies(updatedFeaturegroup, null,
+        dependencies);
     }
     if (updateStats) {
-      featurestoreStatisticController.updateFeaturestoreStatistics(featuregroup, null, featureCorrelationMatrix,
-          descriptiveStatistics, featuresHistogram, clusterAnalysis);
+      featurestoreStatisticController.updateFeaturestoreStatistics(featuregroup, null,
+        featureCorrelationMatrix, descriptiveStatistics, featuresHistogram, clusterAnalysis);
     }
     return convertFeaturegrouptoDTO(updatedFeaturegroup);
   }
@@ -419,7 +400,6 @@ public class FeaturegroupController {
    * @param featurestore    the feature store where the feature group resides
    * @param user            the user making the request
    * @return list of feature-rows from the Hive table where the featuregroup is stored
-   * @throws IOException
    * @throws SQLException
    * @throws FeaturestoreException
    * @throws HopsSecurityException
@@ -427,7 +407,7 @@ public class FeaturegroupController {
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public List<RowValueQueryResult> getFeaturegroupPreview(
       FeaturegroupDTO featuregroupDTO, Featurestore featurestore, Project project, Users user)
-      throws IOException, SQLException, FeaturestoreException, HopsSecurityException {
+      throws SQLException, FeaturestoreException, HopsSecurityException {
     String tbl = getTblName(featuregroupDTO.getName(), featuregroupDTO.getVersion());
     String query = "SELECT * FROM " + tbl + " LIMIT 20";
     String db = featurestoreController.getFeaturestoreDbName(featurestore.getProject());
@@ -441,7 +421,6 @@ public class FeaturegroupController {
    * @param project         the project of the user making the request
    * @param user            the user making the request
    * @param featurestore    the featurestore where the featuregroup resides
-   * @throws IOException
    * @throws SQLException
    * @throws FeaturestoreException
    * @throws HopsSecurityException
@@ -450,7 +429,7 @@ public class FeaturegroupController {
   private List<RowValueQueryResult> getSQLSchemaForFeaturegroup(
       FeaturegroupDTO featuregroupDTO,
       Project project, Users user, Featurestore featurestore)
-      throws IOException, SQLException, FeaturestoreException, HopsSecurityException {
+      throws SQLException, FeaturestoreException, HopsSecurityException {
     String tbl = getTblName(featuregroupDTO.getName(), featuregroupDTO.getVersion());
     String query = "SHOW CREATE TABLE " + tbl;
     String db = featurestoreController.getFeaturestoreDbName(featurestore.getProject());
@@ -493,7 +472,6 @@ public class FeaturegroupController {
    * @param project      the project of the user making the request
    * @param user         the user making the request
    * @return JSON/XML DTO of the deleted featuregroup
-   * @throws IOException
    * @throws SQLException
    * @throws FeaturestoreException
    * @throws HopsSecurityException
@@ -501,7 +479,7 @@ public class FeaturegroupController {
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public FeaturegroupDTO deleteFeaturegroupWithIdAndFeaturestore(
       Featurestore featurestore, Integer id, Project project, Users user)
-      throws IOException, SQLException, FeaturestoreException, HopsSecurityException {
+      throws SQLException, FeaturestoreException, HopsSecurityException {
     Featuregroup featuregroup = featuregroupFacade.findByIdAndFeaturestore(id, featurestore);
     if (featuregroup == null) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_NOT_FOUND, Level.SEVERE,
@@ -521,7 +499,6 @@ public class FeaturegroupController {
    * @param project          the project of the user making the request
    * @param user             the user making the request
    * @param featurestore     the featurestore where the featuregroup resides
-   * @throws IOException
    * @throws SQLException
    * @throws FeaturestoreException
    * @throws HopsSecurityException
@@ -529,7 +506,7 @@ public class FeaturegroupController {
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public void dropFeaturegroup(
       String featuregroupName, Integer version,
-      Project project, Users user, Featurestore featurestore) throws IOException, SQLException,
+      Project project, Users user, Featurestore featurestore) throws SQLException,
       FeaturestoreException, HopsSecurityException {
     String db = featurestoreController.getFeaturestoreDbName(featurestore.getProject());
     String tableName = getTblName(featuregroupName, version);
@@ -546,21 +523,21 @@ public class FeaturegroupController {
    * @param project      the project of the user making the request
    * @param user         the user making the request
    * @throws SQLException
-   * @throws IOException
    * @throws FeaturestoreException
    * @throws HopsSecurityException
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
   private void executeUpdateHiveQuery(String query, String databaseName, Project project, Users user)
-      throws SQLException, IOException, FeaturestoreException, HopsSecurityException {
+      throws SQLException, FeaturestoreException, HopsSecurityException {
     //Re-create the connection every time since the connection is database and user-specific
-    Connection conn = initConnection(databaseName, project, user);
     Statement stmt = null;
+    Connection conn = null;
     try {
+      conn = initConnection(databaseName, project, user);
       // Create database
       stmt = conn.createStatement();
       stmt.executeUpdate(query);
-    } catch (Exception e) {
+    } catch (SQLException e) {
       //Hive throws a generic HiveSQLException not a specific AuthorizationException
       if (e.getMessage().toLowerCase().contains("permission denied"))
         throw new HopsSecurityException(RESTCodes.SecurityErrorCode.HDFS_ACCESS_CONTROL, Level.FINE,
@@ -575,7 +552,7 @@ public class FeaturegroupController {
       if (stmt != null) {
         stmt.close();
       }
-      closeConnection(conn);
+      closeConnection(conn, user, project);
     }
   }
 
@@ -614,22 +591,23 @@ public class FeaturegroupController {
    * @param user         the user making the request
    * @return parsed resultset
    * @throws SQLException
-   * @throws IOException
+   * @throws HopsSecurityException
    * @throws FeaturestoreException
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
   private List<RowValueQueryResult> executeReadHiveQuery(
       String query, String databaseName, Project project, Users user)
-      throws SQLException, IOException, FeaturestoreException, HopsSecurityException {
-    //Re-create the connection every time since the connection is database and user-specific
-    Connection conn = initConnection(databaseName, project, user);
+      throws SQLException, FeaturestoreException, HopsSecurityException {
+    Connection conn = null;
     Statement stmt = null;
     List<RowValueQueryResult> resultList = null;
     try {
+      //Re-create the connection every time since the connection is database and user-specific
+      conn = initConnection(databaseName, project, user);
       stmt = conn.createStatement();
       ResultSet rs = stmt.executeQuery(query);
       resultList = parseResultset(rs);
-    } catch (Exception e) {
+    } catch (SQLException e) {
       //Hive throws a generic HiveSQLException not a specific AuthorizationException
       if (e.getMessage().toLowerCase().contains("permission denied"))
         throw new HopsSecurityException(RESTCodes.SecurityErrorCode.HDFS_ACCESS_CONTROL, Level.FINE,
@@ -642,26 +620,27 @@ public class FeaturegroupController {
       if (stmt != null) {
         stmt.close();
       }
-      closeConnection(conn);
+      closeConnection(conn, user, project);
     }
     return resultList;
   }
-
+  
   /**
    * Checks if the JDBC connection to HS2 is open, and if so closes it.
+   *
+   * @param conn the JDBC connection
+   * @param user the user using the connection
+   * @param project the project where the connection is used
    */
-  private void closeConnection(Connection conn) {
+  private void closeConnection(Connection conn, Users user, Project project) {
     try {
       if (conn != null) {
         conn.close();
       }
-      //don't add this line:
-      //certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());
-      //concurrent requests by the same user will fail, let certs be cleaned up by
-      //garbage collector periodically instead
     } catch (SQLException e) {
-      LOGGER.log(Level.WARNING, "Error closing Hive JDBC connection: " +
-          e);
+      LOGGER.log(Level.WARNING, "Error closing Hive JDBC connection: " +  e);
+    } finally {
+      certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());
     }
   }
 }

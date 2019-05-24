@@ -13,6 +13,9 @@
  You should have received a copy of the GNU Affero General Public License along with this program.
  If not, see <https://www.gnu.org/licenses/>.
 =end
+
+require 'open3'
+
 module HopsFSHelper
 
   @@hdfs_user = Variables.find_by(id: "hdfs_user").value
@@ -65,5 +68,14 @@ module HopsFSHelper
     if $?.exitstatus > 0
       raise "Failed to chmod directory: #{path} "
     end
+  end
+
+  def get_storage_policy(path)
+    cmd = "sudo su #{@@hdfs_user} /bin/bash -c \"#{@@hadoop_home}/bin/hdfs storagepolicies -getStoragePolicy -path #{path}\""
+    policy = ""
+    Open3.popen3(cmd) do |_, stdout, _, _|
+      policy = stdout.read
+    end
+    policy
   end
 end

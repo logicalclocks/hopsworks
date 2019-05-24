@@ -74,7 +74,6 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.logging.Level;
@@ -284,7 +283,7 @@ public class FeaturestoreService {
       GenericEntity<FeaturegroupDTO> featuregroupGeneric =
           new GenericEntity<FeaturegroupDTO>(featuregroupDTO) {};
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).entity(featuregroupGeneric).build();
-    } catch (IOException | SQLException e) {
+    } catch (SQLException e) {
       LOGGER.log(Level.SEVERE, RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATUREGROUP.getMessage(), e);
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATUREGROUP, Level.SEVERE,
           "project: " + project.getName() + ", featurestoreId: " + featurestoreId, e.getMessage(), e);
@@ -374,7 +373,7 @@ public class FeaturestoreService {
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK)
           .entity(featuregroupGeneric)
           .build();
-    } catch (IOException | SQLException e) {
+    } catch (SQLException e) {
       LOGGER.log(Level.SEVERE, RESTCodes.FeaturestoreErrorCode.COULD_NOT_DELETE_FEATUREGROUP.getMessage(), e);
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_DELETE_FEATUREGROUP, Level.SEVERE,
           "project: " + project.getName() + ", featurestoreId: " + featurestoreId +
@@ -425,7 +424,7 @@ public class FeaturestoreService {
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK)
           .entity(featuresdataGeneric)
           .build();
-    } catch (IOException | SQLException e) {
+    } catch (SQLException e) {
       LOGGER.log(Level.SEVERE, RESTCodes.FeaturestoreErrorCode.COULD_NOT_PREVIEW_FEATUREGROUP.getMessage(), e);
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_PREVIEW_FEATUREGROUP, Level.SEVERE,
           "project: " + project.getName() + ", featurestoreId: " + featurestoreId +
@@ -475,7 +474,7 @@ public class FeaturestoreService {
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK)
           .entity(schemaGeneric)
           .build();
-    } catch (IOException | SQLException e) {
+    } catch (SQLException e) {
       LOGGER.log(Level.SEVERE,
           RESTCodes.FeaturestoreErrorCode.COULD_NOT_FETCH_FEATUREGROUP_SHOW_CREATE_SCHEMA.getMessage(), e);
       throw new FeaturestoreException(
@@ -535,7 +534,7 @@ public class FeaturestoreService {
         oldFeaturegroupDTO.getDescription());
     try {
       featuregroupController.deleteFeaturegroupWithIdAndFeaturestore(featurestore, featuregroupId, project, user);
-    } catch (IOException | SQLException e) {
+    } catch (SQLException e) {
       LOGGER.log(Level.SEVERE, RESTCodes.FeaturestoreErrorCode.COULD_NOT_DELETE_FEATUREGROUP.getMessage(), e);
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_DELETE_FEATUREGROUP, Level.SEVERE,
           "project: " + project.getName() + ", featurestoreId: " + featurestoreId +
@@ -552,7 +551,7 @@ public class FeaturestoreService {
       GenericEntity<FeaturegroupDTO> featuregroupGeneric =
           new GenericEntity<FeaturegroupDTO>(newFeaturegroupDTO) {};
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featuregroupGeneric).build();
-    } catch (IOException | SQLException e) {
+    } catch (SQLException e) {
       LOGGER.log(Level.SEVERE, RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATUREGROUP.getMessage(), e);
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATUREGROUP, Level.SEVERE,
           "project: " + project.getName() + ", featurestoreId: " + featurestoreId +

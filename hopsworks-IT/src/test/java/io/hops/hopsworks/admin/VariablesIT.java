@@ -36,7 +36,7 @@ public class VariablesIT {
   public void startUp() {
     driver = WebDriverFactory.getWebDriver();
     Helpers helpers = new Helpers(driver);
-    helpers.login("admin@kth.se", "admin");
+    helpers.login("admin@hopsworks.com", "admin");
     helpers.driverGet("hopsworks-admin/security/protected/admin/refreshVariables.xhtml");
   }
 

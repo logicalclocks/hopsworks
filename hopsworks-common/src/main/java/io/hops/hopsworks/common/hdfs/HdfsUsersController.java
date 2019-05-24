@@ -55,7 +55,6 @@ import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.UserException;
-import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
@@ -63,7 +62,6 @@ import org.apache.hadoop.fs.permission.FsPermission;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -106,8 +104,7 @@ public class HdfsUsersController {
    */
   public void addProjectFolderOwner(Project project, DistributedFileSystemOps dfso) throws IOException {
     String owner = getHdfsUserName(project, project.getOwner());
-    String projectPath = File.separator + Settings.DIR_ROOT + File.separator + project.getName();
-    Path location = new Path(projectPath);
+    Path location = new Path(Utils.getProjectPath(project.getName()));
     //FsPermission(FsAction u, FsAction g, FsAction o) 555
     //We prohibit a user from creating top-level datasets bypassing Hopsworks UI (i.e. from as Spark app)
     FsPermission fsPermission = new FsPermission(FsAction.READ_EXECUTE, FsAction.READ_EXECUTE, FsAction.READ_EXECUTE);

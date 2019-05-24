@@ -131,10 +131,10 @@ public class Settings implements Serializable {
   }
 
   public static final String AGENT_EMAIL = "kagent@hops.io";
-  public static final String SITE_EMAIL = "admin@kth.se";
   /**
    * Global Variables taken from the DB
    */
+  private static final String VARIABLE_ADMIN_EMAIL = "admin_email";
   private static final String VARIABLE_PYPI_REST_ENDPOINT = "pypi_rest_endpoint";
   private static final String VARIABLE_PYTHON_KERNEL = "python_kernel";
   private static final String VARIABLE_HADOOP_VERSION = "hadoop_version";
@@ -450,6 +450,7 @@ public class Settings implements Serializable {
 
   private void populateCache() {
     if (!cached) {
+      ADMIN_EMAIL = setVar(VARIABLE_ADMIN_EMAIL, ADMIN_EMAIL);
       PYTHON_KERNEL = setBoolVar(VARIABLE_PYTHON_KERNEL, PYTHON_KERNEL);
       JAVA_HOME = setVar(VARIABLE_JAVA_HOME, JAVA_HOME);
       TWOFACTOR_AUTH = setVar(VARIABLE_TWOFACTOR_AUTH, TWOFACTOR_AUTH);
@@ -1335,18 +1336,12 @@ public class Settings implements Serializable {
     return HADOOP_CLASSPATH_GLOB;
   }
 
-  public String getHdfsRootPath(String projectName) {
-    return "/" + DIR_ROOT + "/" + projectName;
-  }
-
   /**
    * Static final fields are allowed in session beans:
    * http://stackoverflow.com/questions/9141673/static-variables-restriction-in-session-beans
    */
   //Directory names in HDFS
   public static final String DIR_ROOT = "Projects";
-  public static final String DIR_SAMPLES = "Samples";
-  public static final String DIR_RESULTS = "Results";
   public static final String DIR_META_TEMPLATES = File.separator + DIR_ROOT + File.separator + "Uploads"
       + File.separator;
   public static final String PROJECT_STAGING_DIR = "Resources";
@@ -1734,12 +1729,19 @@ public class Settings implements Serializable {
     // Just use a dummy password here, no need to store the actual password - enough to say it is different from 'admin'
     ADMIN_PWD = "changed";
   }
+  
+  private String ADMIN_EMAIL = "admin@hopsworks.com";
+  
+  public synchronized String getAdminEmail() {
+    checkCache();
+    return ADMIN_EMAIL;
+  }
 
   public synchronized boolean isDefaultAdminPasswordChanged() {
     if (ADMIN_PWD.compareTo(DEFAULT_ADMIN_PWD) != 0) {
       return true;
     }
-    Users user = userFacade.findByEmail("admin@kth.se");
+    Users user = userFacade.findByEmail(ADMIN_EMAIL);
     if (user != null) {
       ADMIN_PWD = user.getPassword();
     }
@@ -2089,10 +2091,6 @@ public class Settings implements Serializable {
 
   public void detach(Variables variable) {
     em.detach(variable);
-  }
-
-  public String getProjectPath(String projectName) {
-    return File.separator + DIR_ROOT + File.separator + projectName;
   }
 
   Configuration conf;

@@ -181,8 +181,7 @@ public class JupyterFacade {
     }
   }
 
-  public String getProjectPath(JupyterProject jp, String projectName,
-      String hdfsUser) {
+  public String getProjectPath(JupyterProject jp, String projectName, String hdfsUser) {
     return settings.getJupyterDir() + File.separator
         + Settings.DIR_ROOT + File.separator + projectName
         + File.separator + hdfsUser + File.separator + jp.getSecret();

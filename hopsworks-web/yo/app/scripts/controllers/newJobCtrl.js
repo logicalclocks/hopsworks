@@ -554,7 +554,7 @@ angular.module('hopsWorksApp')
                 case "SPARK":
                 case "PYSPARK":
                   self.sparkState.selectedJar = filename;
-                  JobService.getInspection(self.projectId, reason.toLowerCase(), "hdfs:///" + path).then(
+                  JobService.getInspection(self.projectId, reason.toLowerCase(), "hdfs://" + path).then(
                           function (success) {
                             $scope.jobConfig = success.data;
                             self.runConfig = $scope.jobConfig;

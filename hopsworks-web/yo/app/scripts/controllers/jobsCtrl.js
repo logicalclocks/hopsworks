@@ -600,7 +600,7 @@ angular.module('hopsWorksApp')
 
             ////////////////////////////////////////////////////////////////////
             self.untoggle = function (job, index) {
-              if(typeof job === 'undefined' && typeof self.currentjob !== 'undefined') {
+              if(typeof job === 'undefined' && typeof self.currentjob !== 'undefined' && self.currentjob !== null) {
                   job = self.currentjob;
                   StorageService.remove(self.projectId + "_jobui_" + job.name);
               }

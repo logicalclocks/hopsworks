@@ -85,6 +85,7 @@ import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.FolderNameValidator;
 import io.hops.hopsworks.common.elastic.ElasticController;
 import io.hops.hopsworks.common.python.environment.EnvironmentController;
+import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.common.experiments.TensorBoardController;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
@@ -635,25 +636,25 @@ public class ProjectController {
       datasetController.createDataset(user, project, ds.getName(), ds.
           getDescription(), -1, false, true, true, dfso);
 
-      StringBuilder dsStrBuilder = new StringBuilder();
-      dsStrBuilder.append(File.separator).append(Settings.DIR_ROOT)
-          .append(File.separator).append(project.getName())
-          .append(File.separator).append(ds.getName());
+      Path dsPath = new Path(Utils.getProjectPath(project.getName()) + ds.getName());
 
-      Path dsPath = new Path(dsStrBuilder.toString());
       FileStatus fstatus = dfso.getFileStatus(dsPath);
 
       // create subdirectories for the resource dataset
       if (ds.equals(Settings.BaseDataset.RESOURCES)) {
         String[] subResources = settings.getResourceDirs().split(";");
         for (String sub : subResources) {
-          Path resourceDir = new Path(settings.getProjectPath(project.getName()),
+          Path resourceDir = new Path(Utils.getProjectPath(project.getName()),
               ds.getName());
           Path subDirPath = new Path(resourceDir, sub);
           datasetController.createSubDirectory(project, subDirPath, -1,
               "", false, dfso);
           dfso.setOwner(subDirPath, fstatus.getOwner(), fstatus.getGroup());
         }
+      } else if (ds.equals(Settings.BaseDataset.LOGS)) {
+        // To not fill the SSDs with Logs files that nobody access frequently
+        // We set the StoragePolicy for the LOGS dir to be DEFAULT
+        dfso.setStoragePolicy(dsPath, DistributedFileSystemOps.StoragePolicy.DEFAULT);
       }
 
       //Persist README.md to hdfs for Default Datasets
@@ -758,9 +759,7 @@ public class ProjectController {
       if (dfso == udfso && udfso.getEffectiveUser()
           .equals(settings.getHdfsSuperUser())) {
         StringBuilder dsStrBuilder = new StringBuilder();
-        dsStrBuilder.append(File.separator).append(Settings.DIR_ROOT)
-            .append(File.separator).append(project.getName())
-            .append(File.separator).append(datasetName);
+        dsStrBuilder.append(Utils.getProjectPath(project.getName())).append(datasetName);
         Path dsPath = new Path(dsStrBuilder.toString());
         FileStatus fstatus = dfso.getFileStatus(dsPath);
         Path readmePath = new Path(dsPath, Settings.README_FILE);
@@ -924,6 +923,9 @@ public class ProjectController {
       FsPermission fsPermission = new FsPermission(FsAction.ALL, FsAction.ALL,
           FsAction.READ_EXECUTE);
       rootDirCreated = dfso.mkdir(location, fsPermission);
+
+      // Set the DIR_ROOT (/Projects) to have DB storage policy, i.e. - small files stored on db
+      dfso.setStoragePolicy(location, DistributedFileSystemOps.StoragePolicy.SMALL_FILES);
     } else {
       rootDirCreated = true;
     }
@@ -933,8 +935,7 @@ public class ProjectController {
      * that'll be created down this directory tree will have as a parent this
      * inode.
      */
-    String projectPath = File.separator + rootDir + File.separator
-        + projectName;
+    String projectPath = Utils.getProjectPath(projectName) ;
     //Create first the projectPath
     projectDirCreated = dfso.mkdir(projectPath);
 
@@ -1054,8 +1055,7 @@ public class ProjectController {
 
         // Change ownership of root dir
         try {
-          Path path = new Path(File.separator + Settings.DIR_ROOT + File.separator
-              + project.getName());
+          Path path = new Path(Utils.getProjectPath(project.getName()));
           changeOwnershipToSuperuser(path, dfso);
           cleanupLogger.logSuccess("Changed ownership of root Project dir");
         } catch (Exception ex) {
@@ -1379,7 +1379,7 @@ public class ProjectController {
 
   private void sendInbox(String message, String userRequested) {
     Users to = userFacade.findByEmail(userRequested);
-    Users from = userFacade.findByEmail(Settings.SITE_EMAIL);
+    Users from = userFacade.findByEmail(settings.getAdminEmail());
     messageController.send(to, from, "Force project cleanup", "Status", message, "");
   }
 
@@ -1572,9 +1572,7 @@ public class ProjectController {
       //log removal to notify elastic search
       logProject(project, OperationType.Delete);
       //change the owner and group of the project folder to hdfs super user
-      String path = File.separator + Settings.DIR_ROOT + File.separator
-          + project.getName();
-      Path location = new Path(path);
+      Path location = new Path(Utils.getProjectPath(project.getName()));
       changeOwnershipToSuperuser(location, dfso);
 
       Path dumy = new Path("/tmp/" + project.getName());
@@ -1739,9 +1737,7 @@ public class ProjectController {
 
   private void removeProjectFolder(String projectName,
       DistributedFileSystemOps dfso) throws IOException {
-    String path = File.separator + Settings.DIR_ROOT + File.separator
-        + projectName;
-    final Path location = new Path(path);
+    final Path location = new Path(Utils.getProjectPath(projectName));
     dfso.rm(location, true);
   }
 
@@ -1864,12 +1860,8 @@ public class ProjectController {
     if (project == null) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectID);
     }
-    String name = project.getName();
-
     //find the project as an inode from hops database
-    Inode inode = inodes.getInodeAtPath(File.separator + Settings.DIR_ROOT
-        + File.separator + name);
-
+    Inode inode = inodes.getInodeAtPath(Utils.getProjectPath(project.getName()));
 
     List<ProjectTeam> projectTeam = projectTeamFacade.findMembersByProject(
         project);
@@ -1900,8 +1892,7 @@ public class ProjectController {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "project: " + name);
     }
     //find the project as an inode from hops database
-    String path = File.separator + Settings.DIR_ROOT + File.separator + name;
-    Inode inode = inodes.getInodeAtPath(path);
+    Inode inode = inodes.getInodeAtPath(Utils.getProjectPath(name));
 
     List<ProjectTeam> projectTeam = projectTeamFacade.findMembersByProject(
         project);
@@ -1945,8 +1936,7 @@ public class ProjectController {
                                       DistributedFileSystemOps dfso)
       throws IOException {
 
-    dfso.setHdfsSpaceQuotaInMBs(new Path(settings.getProjectPath(project.getName())),
-        diskspaceQuotaInMB);
+    dfso.setHdfsSpaceQuotaInMBs(new Path(Utils.getProjectPath(project.getName())), diskspaceQuotaInMB);
 
     if (hiveDbSpaceQuotaInMb != null && projectServicesFacade.isServiceEnabledForProject(project,
         ProjectServiceEnum.HIVE)) {
@@ -2244,12 +2234,12 @@ public class ProjectController {
     Users user = userFacade.findByEmail(username);
     datasetController.createDataset(user, project, Settings.HOPS_TOUR_DATASET,
       "files for guide projects", -1, false, true, true, dfso);
-
     if (null != projectType) {
+      String projectPath = Utils.getProjectPath(project.getName());
+
       switch (projectType) {
         case SPARK:
-          String exampleDir = settings.getSparkDir() + Settings.SPARK_EXAMPLES_DIR
-              + "/";
+          String exampleDir = settings.getSparkDir() + Settings.SPARK_EXAMPLES_DIR + "/";
           try {
             File dir = new File(exampleDir);
             File[] file = dir.listFiles((File dir1, String name) ->
@@ -2263,14 +2253,14 @@ public class ProjectController {
                   "More than one spark-examples*.jar found in {0}.", dir.
                       getAbsolutePath());
             }
-            String hdfsJarPath = "/" + Settings.DIR_ROOT + "/" + project.getName() + "/" + Settings.HOPS_TOUR_DATASET
+            String hdfsJarPath = projectPath + Settings.HOPS_TOUR_DATASET
                 + "/spark-examples.jar";
             udfso.copyToHDFSFromLocal(false, file[0].getAbsolutePath(), hdfsJarPath);
             String datasetGroup = hdfsUsersController.getHdfsGroupName(project, Settings.HOPS_TOUR_DATASET);
             String userHdfsName = hdfsUsersController.getHdfsUserName(project, user);
             udfso.setPermission(new Path(hdfsJarPath), udfso.getParentPermission(new Path(hdfsJarPath)));
-            udfso.setOwner(new Path("/" + Settings.DIR_ROOT + "/" + project.getName() + "/" + Settings.HOPS_TOUR_DATASET
-                + "/spark-examples.jar"), userHdfsName, datasetGroup);
+            udfso.setOwner(new Path(projectPath + Settings.HOPS_TOUR_DATASET + "/spark-examples.jar"),
+                userHdfsName, datasetGroup);
 
           } catch (IOException ex) {
             throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_TOUR_FILES_ERROR, Level.SEVERE,
@@ -2281,8 +2271,8 @@ public class ProjectController {
           // Get the JAR from /user/<super user>
           String kafkaExampleSrc = "/user/" + settings.getSparkUser() + "/"
               + settings.getHopsExamplesSparkFilename();
-          String kafkaExampleDst = "/" + Settings.DIR_ROOT + "/" + project.getName()
-              + "/" + Settings.HOPS_TOUR_DATASET + "/" + settings.getHopsExamplesSparkFilename();
+          String kafkaExampleDst = projectPath + Settings.HOPS_TOUR_DATASET +
+              "/" + settings.getHopsExamplesSparkFilename();
           try {
             udfso.copyInHdfs(new Path(kafkaExampleSrc), new Path(kafkaExampleDst));
             String datasetGroup = hdfsUsersController.getHdfsGroupName(project, Settings.HOPS_TOUR_DATASET);
@@ -2300,8 +2290,7 @@ public class ProjectController {
           //Depending on tour type, copy files
           String DLDataSrc = "/user/" + settings.getHdfsSuperUser() + "/" + Settings.HOPS_DEEP_LEARNING_TOUR_DATA
               + "/*";
-          String DLDataDst = "/" + Settings.DIR_ROOT + "/" + project.getName() + "/"
-              + Settings.HOPS_TOUR_DATASET;
+          String DLDataDst = projectPath + Settings.HOPS_TOUR_DATASET;
           try {
             udfso.copyInHdfs(new Path(DLDataSrc), new Path(DLDataDst));
             String datasetGroup = hdfsUsersController.getHdfsGroupName(project, Settings.HOPS_TOUR_DATASET);
@@ -2319,8 +2308,7 @@ public class ProjectController {
             //Move notebooks to Jupyter Dataset
             if (projectType == TourProjectType.DEEP_LEARNING) {
               String DLNotebooksSrc = DLDataDst + "/notebooks";
-              String DLNotebooksDst = "/" + Settings.DIR_ROOT + "/" + project.getName() + "/"
-                  + Settings.HOPS_TOUR_DATASET_JUPYTER;
+              String DLNotebooksDst = projectPath + Settings.HOPS_TOUR_DATASET_JUPYTER;
               udfso.copyInHdfs(new Path(DLNotebooksSrc + "/*"), new Path(DLNotebooksDst));
               datasetGroup = hdfsUsersController.getHdfsGroupName(project, Settings.HOPS_TOUR_DATASET_JUPYTER);
               Inode parentJupyterDs = inodes.getInodeAtPath(DLNotebooksDst);
@@ -2344,13 +2332,13 @@ public class ProjectController {
           // Get the JAR from /user/<super user>
           String featurestoreExampleJarSrc = "/user/" + settings.getSparkUser() + "/"
               + settings.getHopsExamplesFeaturestoreFilename();
-          String featurestoreExampleJarDst = "/" + Settings.DIR_ROOT + "/" + project.getName()
-              + "/" + Settings.HOPS_TOUR_DATASET + "/" + settings.getHopsExamplesFeaturestoreFilename();
+          String featurestoreExampleJarDst = projectPath
+              + Settings.HOPS_TOUR_DATASET + "/" + settings.getHopsExamplesFeaturestoreFilename();
           // Get the sample data and notebooks from /user/<super user>/featurestore_demo/
           String featurestoreExampleDataSrc = "/user/" + settings.getHdfsSuperUser() + "/" +
               Settings.HOPS_FEATURESTORE_TOUR_DATA + "/*";
-          String featurestoreExampleDataDst = "/" + Settings.DIR_ROOT + "/" + project.getName() + "/"
-              + Settings.HOPS_TOUR_DATASET;
+          String featurestoreExampleDataDst = projectPath + Settings.HOPS_TOUR_DATASET;
+
           try {
             //Move example .jar file to HDFS
             udfso.copyInHdfs(new Path(featurestoreExampleJarSrc), new Path(featurestoreExampleJarDst));
@@ -2375,8 +2363,7 @@ public class ProjectController {
             }
             //Move example notebooks to Jupyter dataset
             String featurestoreExampleNotebooksSrc = featurestoreExampleDataDst + "/notebooks";
-            String featurestoreExampleNotebooksDst = "/" + Settings.DIR_ROOT + "/" + project.getName() + "/"
-                + Settings.HOPS_TOUR_DATASET_JUPYTER;
+            String featurestoreExampleNotebooksDst = projectPath + Settings.HOPS_TOUR_DATASET_JUPYTER;
             udfso.copyInHdfs(new Path(featurestoreExampleNotebooksSrc + "/*"),
                 new Path(featurestoreExampleNotebooksDst));
             datasetGroup = hdfsUsersController.getHdfsGroupName(project, Settings.HOPS_TOUR_DATASET_JUPYTER);
@@ -2580,7 +2567,7 @@ public class ProjectController {
       trustStore = org.apache.commons.net.util.Base64.encodeBase64String(material.getTrustStore().array());
       String certPwd = new String(material.getPassword());
       //Pop-up a message from admin
-      messageController.send(user, userFacade.findByEmail(Settings.SITE_EMAIL), "Certificate Info", "",
+      messageController.send(user, userFacade.findByEmail(settings.getAdminEmail()), "Certificate Info", "",
           "An email was sent with the password for your project's certificates. If an email does not arrive shortly, "
           + "please check spam first and then contact the administrator.", "");
       emailBean.sendEmail(user.getEmail(), Message.RecipientType.TO, "Hopsworks certificate information",
@@ -2676,7 +2663,7 @@ public class ProjectController {
             equals(currentQuotas.getHdfsQuotaInBytes()) || !quotas.getHdfsNsQuota().equals(currentQuotas.
             getHdfsNsQuota()))) {
 
-          dfso.setHdfsQuotaBytes(new Path(settings.getProjectPath(currentProject.getName())),
+          dfso.setHdfsQuotaBytes(new Path(Utils.getProjectPath(currentProject.getName())),
               quotas.getHdfsNsQuota(), quotas.getHdfsQuotaInBytes());
           quotaChanged = true;
 
