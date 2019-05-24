@@ -91,7 +91,7 @@ module CondaHelper
 
   def create_env(project, version, pythonKernelEnable)
     project = get_project_by_name(project[:projectname])
-    if not project[:python_version].nil? or project[:python_version].empty?
+    if not (project[:python_version].nil? or project[:python_version].empty?)
       delete_env(project[:id], version)
     end
     post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/python/environments/#{version}?action=create&pythonKernelEnable=#{pythonKernelEnable}"
