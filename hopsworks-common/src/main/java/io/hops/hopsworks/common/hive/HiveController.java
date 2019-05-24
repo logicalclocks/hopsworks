@@ -61,6 +61,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -100,26 +101,28 @@ public class HiveController {
 
   private Connection conn;
   private String jdbcString = null;
-
-  private void initConnection() throws SQLException {
+  
+  @PostConstruct
+  public void init() {
     try {
       // Load Hive JDBC Driver
       Class.forName(driver);
-
-      // Create connection url
-      String hiveEndpoint = settings.getHiveServerHostName(false);
-      jdbcString = "jdbc:hive2://" + hiveEndpoint + "/default;" +
-          "auth=noSasl;ssl=true;twoWay=true;" +
-          "sslTrustStore=" + bhcs.getSuperTrustStorePath() + ";" +
-          "trustStorePassword=" + bhcs.getSuperTrustStorePassword() + ";" +
-          "sslKeyStore=" + bhcs.getSuperKeystorePath() + ";" +
-          "keyStorePassword=" + bhcs.getSuperKeystorePassword();
-
-      conn = DriverManager.getConnection(jdbcString);
     } catch (ClassNotFoundException e) {
-      logger.log(Level.SEVERE, "Error opening Hive JDBC connection: " +
-          e);
+      logger.log(Level.SEVERE, "Could not load the Hive driver: " + driver, e);
     }
+  }
+
+  private void initConnection() throws SQLException {
+    // Create connection url
+    String hiveEndpoint = settings.getHiveServerHostName(false);
+    jdbcString = "jdbc:hive2://" + hiveEndpoint + "/default;" +
+      "auth=noSasl;ssl=true;twoWay=true;" +
+      "sslTrustStore=" + bhcs.getSuperTrustStorePath() + ";" +
+      "trustStorePassword=" + bhcs.getSuperTrustStorePassword() + ";" +
+      "sslKeyStore=" + bhcs.getSuperKeystorePath() + ";" +
+      "keyStorePassword=" + bhcs.getSuperKeystorePassword();
+  
+    conn = DriverManager.getConnection(jdbcString);
   }
 
   @PreDestroy
@@ -226,11 +229,10 @@ public class HiveController {
    * @param dbName name of the database
    * @param dbComment description of the database
    * @throws SQLException
-   * @throws IOException
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public void createDatabase(String dbName, String dbComment)
-      throws SQLException, IOException {
+      throws SQLException {
     if (conn == null || conn.isClosed()) {
       initConnection();
     }
