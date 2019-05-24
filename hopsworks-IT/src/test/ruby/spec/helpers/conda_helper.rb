@@ -89,12 +89,12 @@ module CondaHelper
     delete "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments/#{version}"
   end
 
-  def create_env(projectId, version, pythonKernelEnable)
+  def create_env(project, version, pythonKernelEnable)
     project = get_project_by_name(project[:projectname])
     if not project[:python_version].nil? or project[:python_version].empty?
-      delete_env(projectId, version)
+      delete_env(project[:id], version)
     end
-    post "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments/#{version}?action=create&pythonKernelEnable=#{pythonKernelEnable}"
+    post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/python/environments/#{version}?action=create&pythonKernelEnable=#{pythonKernelEnable}"
   end
 
   def list_envs(projectId)
