@@ -104,7 +104,7 @@ module CondaHelper
   def create_env_and_update_project(project, version, pythonKernelEnable)
     project = get_project_by_name(project[:projectname])
     if project[:python_version].nil? or project[:python_version].empty?
-      create_env(project[:id], version, pythonKernelEnable)
+      create_env(project, version, pythonKernelEnable)
       expect_status(201)
       get_project_by_name(project[:projectname]) #get project from db with updated python version
     else
