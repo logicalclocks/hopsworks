@@ -134,8 +134,7 @@ angular.module('hopsWorksApp')
                 };
 
                 tourService.getKafkaGuideJarPath = function (projectName, filename) {
-                  return "hdfs:///Projects/" + projectName +
-                   "/TestJob/" + filename;
+                  return "Projects/" + projectName + "/TestJob/" + filename;
                 };
 
                 tourService.resetTours = function () {
