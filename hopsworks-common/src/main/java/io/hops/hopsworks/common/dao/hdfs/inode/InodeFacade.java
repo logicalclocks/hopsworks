@@ -54,6 +54,7 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
+import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.dao.AbstractFacade;
@@ -307,7 +308,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
    * @return The sought for Inode, or null if this Inode does not exist.
    */
   public Inode getProjectRoot(String name) {
-    return getInode("/" + Settings.DIR_ROOT + "/" + name);
+    return getInode(Utils.getProjectPath(name));
   }
 
   /**
@@ -360,8 +361,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
    */
   public boolean isProjectRoot(Inode i) {
     Inode parent = findParent(i);
-    if (!parent.getInodePK().getName().equals(
-            Settings.DIR_ROOT)) {
+    if (!parent.getInodePK().getName().equals(Settings.DIR_ROOT)) {
       return false;
     } else {
       //A node is the project root if its parent has the name $DIR_ROOT and its 

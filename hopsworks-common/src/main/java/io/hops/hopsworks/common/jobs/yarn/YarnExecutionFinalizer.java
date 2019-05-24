@@ -119,10 +119,10 @@ public class YarnExecutionFinalizer {
           defaultOutputPath = "Logs/";
       }
       String stdOutFinalDestination =
-          Utils.getHdfsRootPath(exec.getJob().getProject().getName()) +
+          Utils.getProjectPath(exec.getJob().getProject().getName()) +
               defaultOutputPath;
       String stdErrFinalDestination =
-          Utils.getHdfsRootPath(exec.getJob().getProject().getName()) +
+          Utils.getProjectPath(exec.getJob().getProject().getName()) +
               defaultOutputPath;
   
       String stdOutPath =
