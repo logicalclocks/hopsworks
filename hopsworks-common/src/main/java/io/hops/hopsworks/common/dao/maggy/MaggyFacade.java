@@ -44,9 +44,10 @@ public class MaggyFacade {
     try {
       query = em.createNamedQuery("MaggyDriver.findByAppId", MaggyDriver.class).setParameter("appId", appId);
     } catch (EntityNotFoundException | NoResultException e) {
-      Logger.getLogger(MaggyFacade.class.getName()).log(Level.FINE, null, e);
+      Logger.getLogger(MaggyFacade.class.getName()).log(Level.WARNING, null, e);
       return null;
     } catch (Throwable e) {
+      Logger.getLogger(MaggyFacade.class.getName()).log(Level.WARNING, null, e);
       e.printStackTrace();
       return null;
     }
@@ -60,9 +61,10 @@ public class MaggyFacade {
       TypedQuery<MaggyDriver> query = em.createNamedQuery("MaggyDriver.findAll", MaggyDriver.class);
       res = query.getResultList();
     } catch (EntityNotFoundException | NoResultException e) {
-      Logger.getLogger(MaggyFacade.class.getName()).log(Level.FINE, null, e);
+      Logger.getLogger(MaggyFacade.class.getName()).log(Level.WARNING, null, e);
       return null;
     } catch (Throwable e) {
+      Logger.getLogger(MaggyFacade.class.getName()).log(Level.WARNING, null, e);
       e.printStackTrace();
       return null;
     }

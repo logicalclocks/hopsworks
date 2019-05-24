@@ -73,7 +73,7 @@ public class MaggyService {
   public Response getDriver( @PathParam("appId") String appId, @Context HttpServletRequest req) throws
     ServiceException {
     
-    logger.log(Level.INFO, "REST call from sparkmagic for driver for " + appId);
+    logger.log(Level.FINE, "REST call from sparkmagic for driver for " + appId);
     if (Strings.isNullOrEmpty(appId)) {
       throw new IllegalArgumentException("appId was not provided or was empty");
     }
@@ -98,7 +98,7 @@ public class MaggyService {
   @Consumes(MediaType.APPLICATION_JSON)
   public Response register(MaggyDriver driver) throws ServiceException {
     
-    logger.log(Level.INFO, "REST call from maggy to register the driver: " + driver);
+    logger.log(Level.FINE, "REST call from maggy to register the driver: " + driver);
     
     if (driver == null || driver.getAppId() == null) {
       throw new IllegalArgumentException("Driver was null or had no appId");
