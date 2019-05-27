@@ -2396,7 +2396,8 @@ public class ProjectController {
           sparkJobConfiguration.setDynamicAllocationMinExecutors(1);
           sparkJobConfiguration.setDynamicAllocationMaxExecutors(3);
           sparkJobConfiguration.setDynamicAllocationInitialExecutors(1);
-          sparkJobConfiguration.setArgs("");
+          sparkJobConfiguration.setArgs(Settings.HOPS_FEATURESTORE_TOUR_JOB_INPUT_PARAM + Settings.HOPS_TOUR_DATASET +
+            "/data");
           sparkJobConfiguration.setAppName(Settings.HOPS_FEATURESTORE_TOUR_JOB_NAME);
           sparkJobConfiguration.setLocalResources(new LocalResourceDTO[0]);
           Jobs job = jobController.putJob(user, project, null, sparkJobConfiguration);
