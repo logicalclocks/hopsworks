@@ -160,6 +160,8 @@ public class Settings implements Serializable {
   private static final String VARIABLE_YARN_SUPERUSER = "yarn_user";
   private static final String VARIABLE_HDFS_SUPERUSER = "hdfs_user";
   private static final String VARIABLE_HOPSWORKS_USER = "hopsworks_user";
+  private static final String VARIABLE_JUPYTER_GROUP = "jupyter_group";
+  private static final String VARIABLE_JUPYTER_USER = "jupyter_user";
   private static final String VARIABLE_AIRFLOW_USER = "airflow_user";
   private static final String VARIABLE_STAGING_DIR = "staging_dir";
   private static final String VARIABLE_AIRFLOW_DIR = "airflow_dir";
@@ -454,6 +456,8 @@ public class Settings implements Serializable {
       TWOFACTOR_AUTH = setVar(VARIABLE_TWOFACTOR_AUTH, TWOFACTOR_AUTH);
       TWOFACTOR_EXCLUDE = setVar(VARIABLE_TWOFACTOR_EXCLUD, TWOFACTOR_EXCLUDE);
       HOPSWORKS_USER = setVar(VARIABLE_HOPSWORKS_USER, HOPSWORKS_USER);
+      JUPYTER_USER = setVar(VARIABLE_JUPYTER_USER, JUPYTER_USER);
+      JUPYTER_GROUP = setVar(VARIABLE_JUPYTER_GROUP, JUPYTER_GROUP);
       AIRFLOW_USER = setVar(VARIABLE_AIRFLOW_USER, AIRFLOW_USER);
       HDFS_SUPERUSER = setVar(VARIABLE_HDFS_SUPERUSER, HDFS_SUPERUSER);
       YARN_SUPERUSER = setVar(VARIABLE_YARN_SUPERUSER, YARN_SUPERUSER);
@@ -1021,13 +1025,19 @@ public class Settings implements Serializable {
     return HOPSWORKS_IP;
   }
 
-  private Integer HOPSWORKS_PORT = 8080;
+  private Integer HOPSWORKS_PORT = 8181;
 
   public synchronized Integer getHopsworksPort() {
     checkCache();
     return HOPSWORKS_PORT;
   }
 
+
+  public synchronized String getHopsworksEndpoint() {
+    return getHopsworksIp() + ":" +  getHopsworksPort().toString();
+  }
+
+    
   private String CERTS_DIR = "/srv/hops/certs-dir";
 
   public synchronized String getCertsDir() {
@@ -1545,6 +1555,21 @@ public class Settings implements Serializable {
     checkCache();
     return JUPYTER_DIR;
   }
+  
+  private String JUPYTER_USER = "jupyter";
+  
+  public synchronized String getJupyterUser() {
+    checkCache();
+    return JUPYTER_USER;
+  }
+  
+  private String JUPYTER_GROUP = "jupyter";
+  
+  public synchronized String getJupyterGroup() {
+    checkCache();
+    return JUPYTER_GROUP;
+  }
+
 
   private long JUPYTER_WS_PING_INTERVAL_MS = 10000L;
 
@@ -3313,6 +3338,12 @@ public class Settings implements Serializable {
   public synchronized int getConnectionKeepAliveTimeout() {
     checkCache();
     return CONNECTION_KEEPALIVE_TIMEOUT;
+  }
+
+  private int MAGGY_CLEANUP_INTERVAL = 24 * 60 * 1000;
+  public synchronized int getMaggyCleanupInterval() {
+    checkCache();
+    return MAGGY_CLEANUP_INTERVAL;
   }
 
   public String getHiveSiteSparkHdfsPath() {

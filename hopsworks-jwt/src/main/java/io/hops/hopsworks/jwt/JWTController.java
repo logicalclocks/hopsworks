@@ -24,34 +24,36 @@ import io.hops.hopsworks.jwt.dao.InvalidJwt;
 import io.hops.hopsworks.jwt.dao.InvalidJwtFacade;
 import io.hops.hopsworks.jwt.dao.JwtSigningKey;
 import io.hops.hopsworks.jwt.dao.JwtSigningKeyFacade;
-import java.security.NoSuchAlgorithmException;
-import java.util.Date;
-import java.util.UUID;
-import java.util.logging.Logger;
-import javax.ejb.EJB;
-import javax.ejb.Stateless;
-import static io.hops.hopsworks.jwt.Constants.DEFAULT_EXPIRY_LEEWAY;
-import static io.hops.hopsworks.jwt.Constants.DEFAULT_RENEWABLE;
-import static io.hops.hopsworks.jwt.Constants.EXPIRY_LEEWAY;
-import static io.hops.hopsworks.jwt.Constants.RENEWABLE;
-import static io.hops.hopsworks.jwt.Constants.ROLES;
 import io.hops.hopsworks.jwt.exception.DuplicateSigningKeyException;
 import io.hops.hopsworks.jwt.exception.InvalidationException;
 import io.hops.hopsworks.jwt.exception.NotRenewableException;
 import io.hops.hopsworks.jwt.exception.SigningKeyNotFoundException;
 import io.hops.hopsworks.jwt.exception.VerificationException;
+
+import javax.ejb.AccessLocalException;
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import java.security.NoSuchAlgorithmException;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.logging.Level;
-import javax.ejb.AccessLocalException;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
+import java.util.logging.Logger;
+
+import static io.hops.hopsworks.jwt.Constants.DEFAULT_EXPIRY_LEEWAY;
+import static io.hops.hopsworks.jwt.Constants.DEFAULT_RENEWABLE;
+import static io.hops.hopsworks.jwt.Constants.EXPIRY_LEEWAY;
+import static io.hops.hopsworks.jwt.Constants.RENEWABLE;
+import static io.hops.hopsworks.jwt.Constants.ROLES;
 
 @Stateless
-@TransactionAttribute(TransactionAttributeType.NEVER)
+@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 public class JWTController {
 
   private final static Logger LOGGER = Logger.getLogger(JWTController.class.getName());
@@ -177,7 +179,7 @@ public class JWTController {
   /**
    * Get expLeeway or default if expLeeway < 1
    * @param expLeeway
-   * @return 
+   * @return
    */
   public int getExpLeewayOrDefault(int expLeeway) {
     return expLeeway < 1 ? DEFAULT_EXPIRY_LEEWAY : expLeeway;
@@ -490,7 +492,7 @@ public class JWTController {
    *
    * @return
    */
-  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+//  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public int cleanupInvalidTokens() {
     List<InvalidJwt> expiredTokens = invalidJwtFacade.findExpired();
     int count = 0;
@@ -503,7 +505,7 @@ public class JWTController {
     return count;
   }
   
-  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+//  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public boolean markOldSigningKeys() {
     JwtSigningKey jwtSigningKey = jwtSigningKeyFacade.findByName(Constants.ONE_TIME_JWT_SIGNING_KEY_NAME);
     final Calendar cal = Calendar.getInstance();
@@ -520,7 +522,7 @@ public class JWTController {
     return false;
   }
   
-  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+//  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public void removeMarkedKeys() {
     JwtSigningKey jwtSigningKey = jwtSigningKeyFacade.findByName(Constants.OLD_ONE_TIME_JWT_SIGNING_KEY_NAME);
     if (jwtSigningKey != null) {

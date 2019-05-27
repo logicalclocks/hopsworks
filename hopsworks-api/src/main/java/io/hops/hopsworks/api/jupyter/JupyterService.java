@@ -38,35 +38,10 @@
  */
 package io.hops.hopsworks.api.jupyter;
 
-import io.hops.hopsworks.api.filter.NoCacheResponse;
-
-import java.time.Duration;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.logging.Logger;
-import javax.ejb.EJB;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-import javax.enterprise.context.RequestScoped;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.GET;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.POST;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.Path;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
+import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jwt.JWTHelper;
-import io.hops.hopsworks.common.hdfs.Utils;
-import io.hops.hopsworks.common.jupyter.JupyterController;
-import io.hops.hopsworks.common.jupyter.JupyterJWTManager;
-import io.hops.hopsworks.common.livy.LivyController;
-import io.hops.hopsworks.common.livy.LivyMsg;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuota;
@@ -81,30 +56,54 @@ import io.hops.hopsworks.common.dao.project.PaymentType;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.exceptions.HopsSecurityException;
-import io.hops.hopsworks.exceptions.ProjectException;
-import io.hops.hopsworks.restutils.RESTCodes;
-import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.jupyter.JupyterController;
+import io.hops.hopsworks.common.jupyter.JupyterJWTManager;
+import io.hops.hopsworks.common.livy.LivyController;
+import io.hops.hopsworks.common.livy.LivyMsg;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.util.HopsUtils;
+import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.util.Ip;
 import io.hops.hopsworks.common.util.OSProcessExecutor;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.HopsSecurityException;
+import io.hops.hopsworks.exceptions.ProjectException;
+import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.commons.codec.digest.DigestUtils;
 
+import javax.ejb.EJB;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import javax.enterprise.context.RequestScoped;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
+import javax.ws.rs.core.UriInfo;
 import java.io.IOException;
+import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Level;
-import javax.ws.rs.core.SecurityContext;
-import javax.ws.rs.core.UriInfo;
+import java.util.logging.Logger;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -279,7 +278,7 @@ public class JupyterService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response startNotebookServer(JupyterSettings jupyterSettings, @Context HttpServletRequest req, 
+  public Response startNotebookServer(JupyterSettings jupyterSettings, @Context HttpServletRequest req,
       @Context SecurityContext sc, @Context UriInfo uriInfo) throws ProjectException, HopsSecurityException,
     ServiceException {
 
