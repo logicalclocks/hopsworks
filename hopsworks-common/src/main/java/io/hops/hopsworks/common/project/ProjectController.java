@@ -402,15 +402,17 @@ public class ProjectController {
           "project: " + projectName, ex.getMessage(), ex);
       }
       LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 8 (logs): {0}", System.currentTimeMillis() - startTime);
-  
-      try {
-        environmentController.createEnv("3.6", true, project);//TODO: use variables for version
-      } catch (PythonException | EJBException ex) {
-        cleanup(project, sessionId, projectCreationFutures);
-        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_ANACONDA_ENABLE_ERROR, Level.SEVERE,
-          "project: " + projectName, ex.getMessage(), ex);
+      
+      if (environmentController.condaEnabledHosts()) {
+        try {
+          environmentController.createEnv("3.6", true, project);//TODO: use variables for version
+        } catch (PythonException | EJBException ex) {
+          cleanup(project, sessionId, projectCreationFutures);
+          throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_ANACONDA_ENABLE_ERROR, Level.SEVERE,
+            "project: " + projectName, ex.getMessage(), ex);
+        }
+        LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 9 (env): {0}", System.currentTimeMillis() - startTime);
       }
-      LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 9 (env): {0}", System.currentTimeMillis() - startTime);
 
       logProject(project, OperationType.Add);
 
