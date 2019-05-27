@@ -312,7 +312,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_JWT_SIGNING_KEY_NAME = "jwt_signing_key_name";
   private static final String VARIABLE_JWT_ISSUER_KEY = "jwt_issuer";
 
-  private static final String VARIABLE_SERVICE_JWT = "service_jwt";
+  private static final String VARIABLE_SERVICE_MASTER_JWT = "service_master_jwt";
   private static final String VARIABLE_SERVICE_JWT_LIFETIME_MS = "service_jwt_lifetime_ms";
   private static final String VARIABLE_SERVICE_JWT_EXP_LEEWAY_SEC = "service_jwt_exp_leeway_sec";
 
@@ -639,11 +639,12 @@ public class Settings implements Serializable {
       JWT_EXP_LEEWAY_SEC = setIntVar(VARIABLE_JWT_EXP_LEEWAY_SEC, JWT_EXP_LEEWAY_SEC);
       JWT_SIGNING_KEY_NAME = setStrVar(VARIABLE_JWT_SIGNING_KEY_NAME, JWT_SIGNING_KEY_NAME);
       JWT_ISSUER = setStrVar(VARIABLE_JWT_ISSUER_KEY, JWT_ISSUER);
-
-      SERVICE_JWT = setStrVar(VARIABLE_SERVICE_JWT, SERVICE_JWT);
+      
       SERVICE_JWT_LIFETIME_MS = setLongVar(VARIABLE_SERVICE_JWT_LIFETIME_MS, SERVICE_JWT_LIFETIME_MS);
       SERVICE_JWT_EXP_LEEWAY_SEC = setIntVar(VARIABLE_SERVICE_JWT_EXP_LEEWAY_SEC, SERVICE_JWT_EXP_LEEWAY_SEC);
 
+      populateServiceJWTCache();
+      
       CONNECTION_KEEPALIVE_TIMEOUT = setIntVar(VARIABLE_CONNECTION_KEEPALIVE_TIMEOUT, CONNECTION_KEEPALIVE_TIMEOUT);
 
       FEATURESTORE_DB_DEFAULT_QUOTA = setStrVar(VARIABLE_FEATURESTORE_DEFAULT_QUOTA, FEATURESTORE_DB_DEFAULT_QUOTA);
@@ -2382,6 +2383,16 @@ public class Settings implements Serializable {
     PUBLIC_HTTPS_PORT = setStrVar(VARIABLE_PUBLIC_HTTPS_PORT, PUBLIC_HTTPS_PORT);
     DELA_CLUSTER_ID = setStrVar(VARIABLE_DELA_CLUSTER_ID, DELA_CLUSTER_ID);
   }
+  
+  private void populateServiceJWTCache() {
+    SERVICE_MASTER_JWT = setStrVar(VARIABLE_SERVICE_MASTER_JWT, SERVICE_MASTER_JWT);
+    RENEW_TOKENS = new String[NUM_OF_SERVICE_RENEW_TOKENS];
+    for (int i = 0; i < NUM_OF_SERVICE_RENEW_TOKENS; i++) {
+      String variableKey = String.format(SERVICE_RENEW_TOKEN_VARIABLE_TEMPLATE, i);
+      String token = setStrVar(variableKey, "");
+      RENEW_TOKENS[i] = token;
+    }
+  }
 
   public synchronized Boolean isDelaEnabled() {
     checkCache();
@@ -3322,18 +3333,34 @@ public class Settings implements Serializable {
     return JWT_ISSUER;
   }
 
-  private String SERVICE_JWT = "";
-  public synchronized String getServiceJWT(){
+  private String SERVICE_MASTER_JWT = "";
+  public synchronized String getServiceMasterJWT() {
     checkCache();
-    return SERVICE_JWT;
+    return SERVICE_MASTER_JWT;
   }
 
-  public synchronized void setServiceJWT(String JWT) {
-    updateVariableInternal(VARIABLE_SERVICE_JWT, JWT);
+  public synchronized void setServiceMasterJWT(String JWT) {
+    updateVariableInternal(VARIABLE_SERVICE_MASTER_JWT, JWT);
     em.flush();
-    SERVICE_JWT = JWT;
+    SERVICE_MASTER_JWT = JWT;
+  }
+  
+  private final int NUM_OF_SERVICE_RENEW_TOKENS = 5;
+  private final static String SERVICE_RENEW_TOKEN_VARIABLE_TEMPLATE = "service_renew_token_%d";
+  private String[] RENEW_TOKENS = new String[0];
+  public synchronized String[] getServiceRenewJWTs() {
+    checkCache();
+    return RENEW_TOKENS;
   }
 
+  public synchronized void setServiceRenewJWTs(String[] renewTokens) {
+    for (int i = 0; i < renewTokens.length; i++) {
+      String variableKey = String.format(SERVICE_RENEW_TOKEN_VARIABLE_TEMPLATE, i);
+      updateVariableInternal(variableKey, renewTokens[i]);
+    }
+    RENEW_TOKENS = renewTokens;
+  }
+  
   private int CONNECTION_KEEPALIVE_TIMEOUT = 30;
   public synchronized int getConnectionKeepAliveTimeout() {
     checkCache();

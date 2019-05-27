@@ -16,77 +16,158 @@
 
 package io.hops.hopsworks.common.security;
 
+import com.auth0.jwt.interfaces.DecodedJWT;
+import com.google.common.base.Strings;
+import io.hops.hopsworks.common.util.DateUtils;
 import io.hops.hopsworks.common.util.Settings;
-import org.apache.http.HttpHeaders;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.protocol.HttpContext;
+import io.hops.hopsworks.jwt.JWTController;
+import io.hops.hopsworks.jwt.exception.JWTException;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.hadoop.util.BackOff;
+import org.apache.hadoop.util.ExponentialBackOff;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 import javax.ejb.DependsOn;
 import javax.ejb.EJB;
-import javax.ejb.Schedule;
+import javax.ejb.Lock;
+import javax.ejb.LockType;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
+import javax.ejb.Timeout;
+import javax.ejb.TimerConfig;
+import javax.ejb.TimerService;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import java.security.NoSuchAlgorithmException;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Singleton
 @Startup
 @DependsOn("Settings")
+@TransactionAttribute(TransactionAttributeType.NEVER)
 public class ServiceJWTKeepAlive {
-
+  
+  private final static Logger LOGGER = Logger.getLogger(ServiceJWTKeepAlive.class.getName());
+  private final static List<String> SERVICE_RENEW_JWT_AUDIENCE = new ArrayList<>(1);
+  static {
+    SERVICE_RENEW_JWT_AUDIENCE.add("services");
+  }
+  
   @EJB
   private Settings settings;
+  @EJB
+  private JWTController jwtController;
+  @Resource
+  private TimerService timerService;
 
-  private CloseableHttpClient httpClient = HttpClients.createDefault();
-  private URI caURI = null;
-
-  private final static String CA_PATH = "hopsworks-ca/v2/token";
-  private final static Logger LOGGER = Logger.getLogger(ServiceJWTKeepAlive.class.getName());
-
+  private String hostname;
+  private BackOff backOff;
+  
   @PostConstruct
+  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public void init() {
-    try {
-      caURI = new URIBuilder(settings.getRestEndpoint())
-        .setPath(CA_PATH)
+    hostname = "hopsworks";
+    backOff = new ExponentialBackOff.Builder()
+        .setInitialIntervalMillis(100L)
+        .setMaximumIntervalMillis(2000L)
+        .setMultiplier(2)
+        // We issue five renewal tokens so we have four retries
+        .setMaximumRetries(4)
         .build();
-    } catch (URISyntaxException e) {
-      LOGGER.log(Level.SEVERE, "Could not build the URI for the CA", e);
+    
+    // Do not whirl like a sufi
+    long interval = Math.min(10000,
+        Math.max(500L, settings.getServiceJWTLifetimeMS() / 2));
+    timerService.createIntervalTimer(5000L, interval, new TimerConfig("Service JWT renewer", false));
+  }
+  
+  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+  @Timeout
+  @Lock(LockType.WRITE)
+  public void renewServiceToken() {
+    try {
+      doRenew(false);
+    } catch (Exception ex) {
+      LOGGER.log(Level.SEVERE, "Error renewing service JWT", ex);
     }
   }
-
-  @Schedule(persistent = false, hour = "*")
-  public void checkTokenValid() {
-    HttpContext httpContext = HttpClientContext.create();
-
-    HttpGet getRequest = new HttpGet(caURI);
-    getRequest.setHeader(HttpHeaders.AUTHORIZATION, settings.getServiceJWT());
-
-    CloseableHttpResponse response = null;
+  
+  @Lock(LockType.WRITE)
+  public void forceRenewServiceToken() throws JWTException {
     try {
-      response = httpClient.execute(getRequest, httpContext);
-
-      if (response.containsHeader(HttpHeaders.AUTHORIZATION)) {
-        settings.setServiceJWT(response.getFirstHeader(HttpHeaders.AUTHORIZATION).getValue());
-      }
-
-      response.close();
-    } catch (IOException e) {
-      LOGGER.log(Level.SEVERE, "Failed to send keepalive request, I'll try again in 1 hour", e);
-    } finally {
-      if (response != null) {
-        try {
-          response.close();
-        } catch (IOException e) {}
-      }
+      doRenew(true);
+    } catch (InterruptedException ex) {
+      LOGGER.log(Level.SEVERE, "Could not renew service JWT", ex);
+      throw new JWTException(ex.getMessage(), ex);
     }
+  }
+  
+  private void doRenew(boolean force)
+      throws JWTException, InterruptedException {
+    String masterToken = settings.getServiceMasterJWT();
+    if (Strings.isNullOrEmpty(masterToken)) {
+      throw new JWTException("Master token is empty!");
+    }
+    LocalDateTime now = DateUtils.getNow();
+    DecodedJWT masterJWT = jwtController.decodeToken(masterToken);
+    if (force || maybeRenewMasterToken(masterJWT, now)) {
+      String[] renewalTokens = settings.getServiceRenewJWTs();
+      List<String> masterJWTRoles = getJWTRoles(masterJWT);
+      String user = masterJWT.getSubject();
+  
+      backOff.reset();
+      int renewIdx = 0;
+      while (renewIdx < renewalTokens.length) {
+        String oneTimeToken = renewalTokens[renewIdx];
+        Date notBefore = DateUtils.localDateTime2Date(now);
+        LocalDateTime expiresAt = now.plus(settings.getServiceJWTLifetimeMS(), ChronoUnit.MILLIS);
+        try {
+          Pair<String, String[]> renewedTokens = jwtController.renewServiceToken(oneTimeToken, masterToken,
+              DateUtils.localDateTime2Date(expiresAt), notBefore, settings.getServiceJWTLifetimeMS(), user,
+              masterJWTRoles, SERVICE_RENEW_JWT_AUDIENCE, hostname, settings.getJWTIssuer(),
+              settings.getJWTSigningKeyName(), force);
+          LOGGER.log(Level.FINEST, "New master JWT: " + renewedTokens.getLeft());
+          updateTokens(renewedTokens);
+          LOGGER.log(Level.FINEST, "Invalidating JWT: " + masterToken);
+          jwtController.invalidateServiceToken(masterToken, settings.getJWTSigningKeyName());
+          break;
+        } catch (JWTException | NoSuchAlgorithmException ex) {
+          renewIdx++;
+          Long backoffTimeout = backOff.getBackOffInMillis();
+          if (backoffTimeout != -1) {
+            LOGGER.log(Level.WARNING, "Failed to renew service JWT, retrying in " + backoffTimeout + " ms");
+            TimeUnit.MILLISECONDS.sleep(backoffTimeout);
+          } else {
+            backOff.reset();
+            throw new JWTException("Cannot renew service JWT");
+          }
+        }
+      }
+      LOGGER.log(Level.FINE, "Successfully renewed service JWT");
+    }
+  }
+  
+  private void updateTokens(Pair<String, String[]> tokens) {
+    settings.setServiceMasterJWT(tokens.getLeft());
+    settings.setServiceRenewJWTs(tokens.getRight());
+  }
+  
+  private List<String> getJWTRoles(DecodedJWT jwt) {
+    String[] rolesArray = jwtController.getRolesClaim(jwt);
+    return Arrays.asList(rolesArray);
+  }
+  
+  private boolean maybeRenewMasterToken(DecodedJWT jwt, LocalDateTime now) {
+    LocalDateTime expiresAt = DateUtils.date2LocalDateTime(jwt.getExpiresAt());
+    return expiresAt.isBefore(now) || expiresAt.isEqual(now);
   }
 }

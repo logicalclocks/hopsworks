@@ -15,17 +15,21 @@
  */
 package io.hops.hopsworks.api.jwt;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
 import java.util.Date;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
+@ApiModel(value = "Specification for generating new JWT")
 public class JWTRequestDTO {
 
   private String subject;
   private String[] audiences;
   private String keyName;
   private Date expiresAt;
-  private Date notBefore;
+  private Date nbf;
   private boolean renewable;
   private int expLeeway;
 
@@ -44,11 +48,12 @@ public class JWTRequestDTO {
     this.audiences = audiences;
     this.keyName = keyName;
     this.expiresAt = expiresAt;
-    this.notBefore = notBefore;
+    this.nbf = notBefore;
     this.renewable = renewable;
     this.expLeeway = expLeeway;
   }
 
+  @ApiModelProperty(value = "Subject to be encoded in JWT", required = true)
   public String getSubject() {
     return subject;
   }
@@ -57,6 +62,7 @@ public class JWTRequestDTO {
     this.subject = subject;
   }
 
+  @ApiModelProperty(value = "Appropriate audience for the JWT", required = true)
   public String[] getAudiences() {
     return audiences;
   }
@@ -65,6 +71,7 @@ public class JWTRequestDTO {
     this.audiences = audiences;
   }
 
+  @ApiModelProperty(value = "Name of the signing key", required = true)
   public String getKeyName() {
     return keyName;
   }
@@ -73,6 +80,7 @@ public class JWTRequestDTO {
     this.keyName = keyName;
   }
 
+  @ApiModelProperty(value = "Expiration date of the token")
   public Date getExpiresAt() {
     return expiresAt;
   }
@@ -81,14 +89,16 @@ public class JWTRequestDTO {
     this.expiresAt = expiresAt;
   }
 
-  public Date getNotBefore() {
-    return notBefore;
+  @ApiModelProperty(value = "Not-valid-before date")
+  public Date getNbf() {
+    return nbf;
   }
 
-  public void setNotBefore(Date notBefore) {
-    this.notBefore = notBefore;
+  public void setNbf(Date notBefore) {
+    this.nbf = notBefore;
   }
 
+  @ApiModelProperty(value = "Flag to indicate if the token is auto-renewable", required = true)
   public boolean isRenewable() {
     return renewable;
   }
@@ -97,6 +107,7 @@ public class JWTRequestDTO {
     this.renewable = renewable;
   }
 
+  @ApiModelProperty(value = "Number of seconds after the expiration the token is still valid", required = true)
   public int getExpLeeway() {
     return expLeeway;
   }
@@ -108,7 +119,7 @@ public class JWTRequestDTO {
   @Override
   public String toString() {
     return "JWTRequestDTO{" + "subject=" + subject + ", audiences=" + audiences + ", keyName=" + keyName
-        + ", expiresAt=" + expiresAt + ", notBefore=" + notBefore + ", renewable=" + renewable + ", expLeeway="
+        + ", expiresAt=" + expiresAt + ", notBefore=" + nbf + ", renewable=" + renewable + ", expLeeway="
         + expLeeway + '}';
   }
 
