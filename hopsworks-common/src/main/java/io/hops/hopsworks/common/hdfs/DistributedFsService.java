@@ -127,8 +127,7 @@ public class DistributedFsService {
     conf.addResource(hadoopPath);
     conf.addResource(hdfsPath);
     conf.set("fs.permissions.umask-mode", "000");
-    conf.setStrings("dfs.namenode.rpc-address", hdfsLeDescriptorsFacade.
-            getEndpoint());
+    conf.setStrings("dfs.namenode.rpc-address", hdfsLeDescriptorsFacade.getRPCEndpoint());
 //    conf.setStrings("dfs.namenodes.rpc.addresses", hdfsLeDescriptorsFacade.getActiveNN().getHostname());
 //    conf.setStrings("fs.defaultFS", "hdfs://"+hdfsLeDescriptorsFacade.getActiveNN().getHostname());
     if (settings.getHopsRpcTls()) {

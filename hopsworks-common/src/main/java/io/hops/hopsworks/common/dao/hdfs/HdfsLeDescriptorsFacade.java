@@ -68,11 +68,10 @@ public class HdfsLeDescriptorsFacade extends AbstractFacade<HdfsLeDescriptors> {
    *
    * @return
    */
-  public String getEndpoint() {
+  public String getRPCEndpoint() {
     try {
       List<HdfsLeDescriptors> hdfsLeDescriptorsList = em.createNamedQuery(
-              "HdfsLeDescriptors.findEndpoint", HdfsLeDescriptors.class).
-              getResultList();
+              "HdfsLeDescriptors.findEndpoint", HdfsLeDescriptors.class).getResultList();
       if (hdfsLeDescriptorsList.isEmpty()) {
         return null;
       } else {
@@ -93,4 +92,25 @@ public class HdfsLeDescriptorsFacade extends AbstractFacade<HdfsLeDescriptors> {
       return null;
     }
   }
+
+  /**
+   * Get the web UI address for the leader NN
+   *
+   * @return
+   */
+  public String getLeaderWebEndpoint() {
+    try {
+      List<HdfsLeDescriptors> hdfsLeDescriptorsList = em.createNamedQuery(
+          "HdfsLeDescriptors.findLeader", HdfsLeDescriptors.class).getResultList();
+      if (hdfsLeDescriptorsList.isEmpty()) {
+        return null;
+      } else {
+        return hdfsLeDescriptorsList.get(0).getHttpAddress();
+      }
+    } catch (NoResultException e) {
+      return null;
+    }
+  }
+
+
 }

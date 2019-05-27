@@ -121,7 +121,7 @@ public class JupyterProcessMgr {
     
     Integer port = ThreadLocalRandom.current().nextInt(40000, 59999);
     JupyterPaths jp = jupyterConfigFilesGenerator.generateConfiguration(project, secretConfig, hdfsUser, realName,
-        hdfsLeFacade.getEndpoint(), js, port, allowOrigin);
+        hdfsLeFacade.getRPCEndpoint(), js, port, allowOrigin);
     String secretDir = settings.getStagingDir() + Settings.PRIVATE_DIRS + js.getSecret();
     String logfile = jp.getLogDirPath() + "/" + hdfsUser + "-" + port + ".log";
     
