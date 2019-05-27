@@ -85,6 +85,7 @@ import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.FolderNameValidator;
 import io.hops.hopsworks.common.elastic.ElasticController;
 import io.hops.hopsworks.common.python.environment.EnvironmentController;
+import io.hops.hopsworks.common.util.DateUtils;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.common.experiments.TensorBoardController;
@@ -152,7 +153,6 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -1229,7 +1229,7 @@ public class ProjectController {
         // Create /tmp/Project and add to database so we lock in case someone tries to create a Project
         // with the same name at the same time
         cleanupLogger.logSuccess("Project is *NOT* in the database, going to remove as much as possible");
-        Date now = Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant());
+        Date now = DateUtils.localDateTime2Date(DateUtils.getNow());
         Users user = userFacade.findByEmail(userEmail);
         Project toDeleteProject = new Project(projectName, user, now, PaymentType.PREPAID);
         toDeleteProject.setKafkaMaxNumTopics(settings.getKafkaMaxNumTopics());
@@ -2608,7 +2608,7 @@ public class ProjectController {
     }
 
     private void log(StringBuilder log, String summary, String message) {
-      LocalDateTime now = LocalDateTime.now();
+      LocalDateTime now = DateUtils.getNow();
       log.append("<").append(now.format(DateTimeFormatter.ISO_DATE_TIME)).append(">")
           .append(summary)
           .append(message)

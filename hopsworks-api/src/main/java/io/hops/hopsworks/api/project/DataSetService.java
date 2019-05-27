@@ -998,7 +998,7 @@ public class DataSetService {
     if (owningProject.equals(project) && datasetController.isDownloadAllowed(project, user, dsPath.getFullPath().
         toString())) {
       checkFileExists(path, sc);
-      String token = jWTHelper.createOneTimeToken(user, dsPath.getFullPath().toString());
+      String token = jWTHelper.createOneTimeToken(user, dsPath.getFullPath().toString(), null);
       if (token != null && !token.isEmpty()) {
         response.setData(token);
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(response).build();
