@@ -559,7 +559,7 @@ public class RESTCodes {
     SERVICE_GENERIC_ERROR(42, "Generic error while enabling the service", Response.Status.INTERNAL_SERVER_ERROR),
     JUPYTER_SERVER_ALREADY_RUNNING(43, "Jupyter Notebook Server is already running", Response.Status.BAD_REQUEST),
     ERROR_EXECUTING_REMOTE_COMMAND(44, "Error executing command over SSH", Response.Status.INTERNAL_SERVER_ERROR),
-    OPERATION_NOT_SUPPORTED(44, "Supplied operation is not supported", Response.Status.BAD_REQUEST);
+    OPERATION_NOT_SUPPORTED(45, "Supplied operation is not supported", Response.Status.BAD_REQUEST);
 
     private Integer code;
     private String message;
