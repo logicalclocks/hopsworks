@@ -109,7 +109,6 @@ public class YarnUIProxyServlet extends ProxyServlet {
 
   protected void initTarget() throws ServletException {
     // TODO - should get the Kibana URI from Settings.java
-//    targetUri = Settings.getKibanaUri();
     targetUri = settings.getYarnWebUIAddress();
     if (!targetUri.contains("http://")) {
       targetUri = "http://" + targetUri;
@@ -306,10 +305,6 @@ public class YarnUIProxyServlet extends ProxyServlet {
         try {
           int contentSize = 0;
           String hostname = method.getURI().getHost();
-          if (settings.isLocalHost()) {
-            hostname = "localhost";
-          }
-          
           String source = "http://" + hostname + ":" + method.getURI().getPort();
           while ((inputLine = br.readLine()) != null) {
             String outputLine = hopify(inputLine, source, isAdmin) + "\n";
