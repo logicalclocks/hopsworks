@@ -182,7 +182,8 @@ public class RESTCodes {
     PROJECT_SERVICE_NOT_FOUND(71, "service was not found.", Response.Status.BAD_REQUEST),
     QUOTA_REQUEST_NOT_COMPLETE(72, "Please specify both " + "namespace and space quota.", Response.Status.BAD_REQUEST),
     RESERVED_PROJECT_NAME(73, "Not allowed - reserved project name, pick another project name.",
-        Response.Status.BAD_REQUEST);
+        Response.Status.BAD_REQUEST),
+    PROJECT_ANACONDA_ENABLE_ERROR(74, "Failed to enable conda.", Response.Status.INTERNAL_SERVER_ERROR);
 
 
     private Integer code;

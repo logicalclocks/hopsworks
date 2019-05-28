@@ -301,18 +301,15 @@ angular.module('hopsWorksApp')
                             PythonService.enabled(self.projectId).then(
                                 function(success) {},
                                 function(error) {
-                                    growl.info("Anaconda environment with python 2.7 was selected for the project", {
+                                    growl.warning("Anaconda environment is not enabled for the project", {
                                         ttl: 10000
                                     });
-                                    PythonService.createEnvironmentFromVersion(self.projectId, "2.7", "true").then(
+                                    PythonService.createEnvironmentFromVersion(self.projectId, "3.6", "true").then(
                                         function(success) {
                                             checkJupyterInstalled();
                                         },
                                         function(error) {
-                                            growl.error("Could not enable Anaconda", {
-                                                title: 'Error',
-                                                ttl: 5000
-                                            });
+                                            growl.error("Could not enable Anaconda", {title: 'Error', ttl: 5000});
                                         });
                                 });
 

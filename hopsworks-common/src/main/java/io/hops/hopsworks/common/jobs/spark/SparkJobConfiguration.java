@@ -70,7 +70,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
   private String properties;
 
   @XmlElement
-  private ExperimentType experimentType;
+  private ExperimentType experimentType = ExperimentType.EXPERIMENT;
 
   @XmlElement
   private DistributionStrategy distributionStrategy;
@@ -91,7 +91,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
   private int numPs = 0;
 
   @XmlElement(name="spark.dynamicAllocation.enabled")
-  private boolean dynamicAllocationEnabled = false;
+  private boolean dynamicAllocationEnabled = true;
 
   @XmlElement(name="spark.dynamicAllocation.minExecutors")
   private int dynamicAllocationMinExecutors = Settings.SPARK_MIN_EXECS;

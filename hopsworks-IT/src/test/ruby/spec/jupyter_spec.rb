@@ -34,6 +34,7 @@ describe "On #{ENV['OS']}" do
     describe "Jupyter basic operations - python " + version do
       before :each do
         with_valid_project
+        delete_env(@project[:id], '3.6')
       end
 
       it "should start and stop a notebook server" do

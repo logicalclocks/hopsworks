@@ -87,8 +87,16 @@ module CondaHelper
     File.chmod(0777, trigger_file)
   end
 
-  def create_env(projectId, version, pythonKernelEnable)
-    post "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments/#{version}?action=create&pythonKernelEnable=#{pythonKernelEnable}"
+  def delete_env(projectId, version)
+    delete "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments/#{version}"
+  end
+
+  def create_env(project, version, pythonKernelEnable)
+    project = get_project_by_name(project[:projectname])
+    if not (project[:python_version].nil? or project[:python_version].empty?)
+      delete_env(project[:id], version)
+    end
+    post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/python/environments/#{version}?action=create&pythonKernelEnable=#{pythonKernelEnable}"
   end
 
   def list_envs(projectId)
@@ -98,7 +106,7 @@ module CondaHelper
   def create_env_and_update_project(project, version, pythonKernelEnable)
     project = get_project_by_name(project[:projectname])
     if project[:python_version].nil? or project[:python_version].empty?
-      create_env(project[:id], version, pythonKernelEnable)
+      create_env(project, version, pythonKernelEnable)
       expect_status(201)
       get_project_by_name(project[:projectname]) #get project from db with updated python version
     else
@@ -113,10 +121,6 @@ module CondaHelper
 
   def export_env(projectId, version)
     post "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments/#{version}?action=export"
-  end
-
-  def delete_env(projectId, version)
-    delete "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments/#{version}"
   end
 
   def list_libraries(projectId, version)

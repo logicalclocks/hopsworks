@@ -62,7 +62,6 @@ angular.module('hopsWorksApp')
                     self.setMode(self.jobConfig.experimentType);
                 } else if (self.jobConfig['spark.dynamicAllocation.enabled'] && self.jobConfig['spark.dynamicAllocation.enabled'] === true) {
                     self.setMode('SPARK_DYNAMIC');
-                    self.jobConfig['spark.dynamicAllocation.enabled']=true;
                 } else {
                     self.setMode('SPARK_STATIC');
                     self.jobConfig['spark.dynamicAllocation.enabled']=false;
