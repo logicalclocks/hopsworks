@@ -53,7 +53,7 @@ describe "On #{ENV['OS']}" do
           reset_session
         end
         it "not authenticated" do
-          create_env(@project[:id], python_version, true)
+          create_env(@project, python_version, true)
           expect_json(errorCode: 200003)
           expect_status(401)
         end
@@ -298,7 +298,7 @@ describe "On #{ENV['OS']}" do
           end
 
           it 'destroy anaconda should not delete base environments' do
-            create_env(@project[:id], python_version, true)
+            create_env(@project, python_version, true)
             expect_status(201)
             if not conda_exists
               skip "Anaconda is not installed in the machine or test is run locally"
@@ -395,7 +395,7 @@ describe "On #{ENV['OS']}" do
           end
 
           create_session(@user[:email], "Pass123")
-          create_env(@project[:id], python_version, true)
+          create_env(@project, python_version, true)
           expect_status(503)
         end
 
@@ -413,7 +413,7 @@ describe "On #{ENV['OS']}" do
           end
 
           create_session(@user[:email], "Pass123")
-          create_env(@project[:id], python_version, true)
+          create_env(@project, python_version, true)
           expect_status(201)
         end
 
@@ -439,7 +439,7 @@ describe "On #{ENV['OS']}" do
 
         it 'should be able to create an environment' do
           create_session(@user[:email], "Pass123")
-          create_env(@project[:id], python_version, true)
+          create_env(@project, python_version, true)
           expect_status(201)
         end
       end

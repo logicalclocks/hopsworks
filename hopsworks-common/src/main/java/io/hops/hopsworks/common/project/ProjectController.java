@@ -84,6 +84,7 @@ import io.hops.hopsworks.common.dao.user.activity.ActivityFlag;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.FolderNameValidator;
 import io.hops.hopsworks.common.elastic.ElasticController;
+import io.hops.hopsworks.common.exception.PythonException;
 import io.hops.hopsworks.common.python.environment.EnvironmentController;
 import io.hops.hopsworks.common.util.DateUtils;
 import io.hops.hopsworks.common.hdfs.Utils;
@@ -278,10 +279,9 @@ public class ProjectController {
    * @param sessionId
    * @return
    */
-  public Project createProject(ProjectDTO projectDTO, Users owner,
-                               List<String> failedMembers, String sessionId)
-      throws DatasetException, GenericException, KafkaException, ProjectException, UserException, HopsSecurityException,
-      ServiceException, FeaturestoreException {
+  public Project createProject(ProjectDTO projectDTO, Users owner, List<String> failedMembers, String sessionId)
+    throws DatasetException, GenericException, KafkaException, ProjectException, UserException, HopsSecurityException,
+    ServiceException, FeaturestoreException {
 
     Long startTime = System.currentTimeMillis();
 
@@ -403,6 +403,17 @@ public class ProjectController {
           "project: " + projectName, ex.getMessage(), ex);
       }
       LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 8 (logs): {0}", System.currentTimeMillis() - startTime);
+      
+      if (environmentController.condaEnabledHosts()) {
+        try {
+          environmentController.createEnv("3.6", true, project);//TODO: use variables for version
+        } catch (PythonException | EJBException ex) {
+          cleanup(project, sessionId, projectCreationFutures);
+          throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_ANACONDA_ENABLE_ERROR, Level.SEVERE,
+            "project: " + projectName, ex.getMessage(), ex);
+        }
+        LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 9 (env): {0}", System.currentTimeMillis() - startTime);
+      }
 
       logProject(project, OperationType.Add);
 

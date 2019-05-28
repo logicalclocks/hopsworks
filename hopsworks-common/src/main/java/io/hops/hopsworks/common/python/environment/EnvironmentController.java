@@ -221,6 +221,11 @@ public class EnvironmentController {
     return hosts;
   }
   
+  public boolean condaEnabledHosts() {
+    List<Hosts> hosts = hostsFacade.getCondaHosts(LibraryFacade.MachineType.ALL);
+    return !hosts.isEmpty();
+  }
+  
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   public void copyOnWriteCondaEnv(Project project) throws ServiceException {
     condaEnvironmentOp(CondaCommandFacade.CondaOp.CREATE, project.getPythonVersion(), project,
