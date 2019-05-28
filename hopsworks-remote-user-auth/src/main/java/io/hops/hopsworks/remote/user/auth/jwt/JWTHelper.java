@@ -21,6 +21,8 @@ import io.hops.hopsworks.jwt.exception.SigningKeyNotFoundException;
 import io.hops.hopsworks.jwt.exception.VerificationException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
@@ -29,6 +31,8 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.container.ContainerRequestContext;
+
+import static io.hops.hopsworks.jwt.Constants.EXPIRY_LEEWAY;
 import static javax.ws.rs.core.HttpHeaders.AUTHORIZATION;
 import javax.ws.rs.core.SecurityContext;
 
@@ -56,8 +60,7 @@ public class JWTHelper {
   public Users getUserPrincipal(HttpServletRequest req) {
     String jwt = getAuthToken(req);
     DecodedJWT djwt = jwtController.decodeToken(jwt);
-    Users user = djwt == null ? null : userFacade.findByUsername(djwt.getSubject());
-    return user;
+    return djwt == null ? null : userFacade.findByUsername(djwt.getSubject());
   }
   
   /**
@@ -66,8 +69,7 @@ public class JWTHelper {
    * @return 
    */
   public Users getUserPrincipal(SecurityContext sc) {
-    Users user = sc == null ? null : userFacade.findByUsername(sc.getUserPrincipal().getName());
-    return user;
+    return sc == null ? null : userFacade.findByUsername(sc.getUserPrincipal().getName());
   }
 
   /**
@@ -78,8 +80,7 @@ public class JWTHelper {
   public Users getUserPrincipal(ContainerRequestContext req) {
     String jwt = getAuthToken(req);
     DecodedJWT djwt = jwtController.decodeToken(jwt);
-    Users user = djwt == null ? null : userFacade.findByUsername(djwt.getSubject());
-    return user;
+    return djwt == null ? null : userFacade.findByUsername(djwt.getSubject());
   }
 
   /**
@@ -122,38 +123,61 @@ public class JWTHelper {
    * @throws SigningKeyNotFoundException
    * @throws DuplicateSigningKeyException
    */
-  public String createToken(Users user, String issuer) throws NoSuchAlgorithmException, SigningKeyNotFoundException,
-      DuplicateSigningKeyException {
-    String[] audience = {Audience.API};
+  public String createToken(Users user, String issuer, Map<String, Object> claims) throws NoSuchAlgorithmException,
+      SigningKeyNotFoundException, DuplicateSigningKeyException {
+    String[] audience = null;
+    Date expiresAt = null;
+
+    if (claims == null) {
+      claims = new HashMap<>(3);
+    }
     BbcGroup group = bbcGroupFacade.findByGroupName("AGENT");
     if (user.getBbcGroupCollection().contains(group)) {
       audience = new String[2];
       audience[0] = Audience.API;
       audience[1] = Audience.SERVICES;
+      expiresAt = new Date(System.currentTimeMillis() + settings.getServiceJWTLifetimeMS());
+      claims.put(EXPIRY_LEEWAY, settings.getServiceJWTExpLeewaySec());
+    } else {
+      audience = new String[1];
+      audience[0] = Audience.API;
+      expiresAt = new Date(System.currentTimeMillis() + settings.getJWTLifetimeMs());
+      claims.put(EXPIRY_LEEWAY, settings.getJWTExpLeewaySec());
     }
-    return createToken(user, audience, issuer);
+
+    return createToken(user, audience, issuer, expiresAt, claims);
   }
-  
+
   /**
    * One time token 60 sec life
    * @param user
    * @param issuer
+   * @param claims
    * @return
    */
-  public String createOneTimeToken(Users user, String issuer) {
+  public String createOneTimeToken(Users user, String issuer, Map<String, Object> claims) {
     String[] audience = {};
     Date now = new Date();
     Date expiresAt = new Date(now.getTime() + Constants.ONE_TIME_JWT_LIFETIME_MS);
-    SignatureAlgorithm alg = SignatureAlgorithm.valueOf(Constants.ONE_TIME_JWT_SIGNATURE_ALGORITHM);
     String[] roles = {};
     String token = null;
     try {
-      token = jwtController.createToken(Constants.ONE_TIME_JWT_SIGNING_KEY_NAME, false, issuer, audience, expiresAt, 
-          now, user.getUsername(), false, 0, roles, alg);
+      token = createOneTimeToken(user, roles, issuer, audience, now, expiresAt,
+          Constants.ONE_TIME_JWT_SIGNING_KEY_NAME, claims, false);
     } catch (NoSuchAlgorithmException | SigningKeyNotFoundException | DuplicateSigningKeyException ex) {
       Logger.getLogger(JWTHelper.class.getName()).log(Level.SEVERE, null, ex);
     }
     return token;
+  }
+
+  public String createOneTimeToken(Users user, String[] roles, String issuer, String[] audience, Date notBefore,
+      Date expiresAt, String keyName, Map<String, Object> claims, boolean createNewKey)
+    throws NoSuchAlgorithmException, SigningKeyNotFoundException, DuplicateSigningKeyException {
+    SignatureAlgorithm algorithm = SignatureAlgorithm.valueOf(Constants.ONE_TIME_JWT_SIGNATURE_ALGORITHM);
+    claims = jwtController.addDefaultClaimsIfMissing(claims, false, 0, roles);
+
+    return jwtController.createToken(keyName, createNewKey, issuer, audience, expiresAt, notBefore,
+        user.getUsername(), claims, algorithm);
   }
 
   /**
@@ -167,15 +191,14 @@ public class JWTHelper {
    * @throws SigningKeyNotFoundException
    * @throws DuplicateSigningKeyException
    */
-  public String createToken(Users user, String[] audience, String issuer) throws NoSuchAlgorithmException,
-      SigningKeyNotFoundException, DuplicateSigningKeyException {
-    Date now = new Date();
-    Date expiresAt = new Date(now.getTime() + settings.getJWTLifetimeMs());
+  public String createToken(Users user, String[] audience, String issuer, Date expiresAt, Map<String, Object> claims)
+      throws NoSuchAlgorithmException, SigningKeyNotFoundException, DuplicateSigningKeyException {
     SignatureAlgorithm alg = SignatureAlgorithm.valueOf(settings.getJWTSignatureAlg());
     String[] roles = userController.getUserRoles(user).toArray(new String[0]);
-    String token = jwtController.createToken(settings.getJWTSigningKeyName(), false, issuer, audience, expiresAt,
-        new Date(), user.getUsername(), true, settings.getJWTExpLeewaySec(), roles, alg);
-    return token;
+
+    claims = jwtController.addDefaultClaimsIfMissing(claims, true, settings.getJWTExpLeewaySec(), roles);
+    return jwtController.createToken(settings.getJWTSigningKeyName(), false, issuer, audience, expiresAt,
+        new Date(), user.getUsername(), claims, alg);
   }
   
   /**

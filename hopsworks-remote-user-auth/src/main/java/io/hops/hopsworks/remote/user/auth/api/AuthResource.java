@@ -47,6 +47,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ws.rs.PathParam;
@@ -251,7 +252,7 @@ public class AuthResource {
 
     json.setSessionID(req.getSession().getId());
     json.setData(user.getEmail());
-    String token = jWTHelper.createToken(user, settings.getJWTIssuer());
+    String token = jWTHelper.createToken(user, settings.getJWTIssuer(), new HashMap<>());
     return Response.ok().header(AUTHORIZATION, Constants.BEARER + token).entity(json).build();
   }
 
