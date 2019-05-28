@@ -1732,7 +1732,7 @@ public class Settings implements Serializable {
     ADMIN_PWD = "changed";
   }
   
-  private String ADMIN_EMAIL = "admin@hopsworks.com";
+  private String ADMIN_EMAIL = "admin@hopsworks.ai";
   
   public synchronized String getAdminEmail() {
     checkCache();
