@@ -36,10 +36,16 @@ describe "On #{ENV['OS']}" do
     end
 
     context "#users" do
+      before :all do
+        reset_session
+        with_valid_session
+        @user_email = @user.email
+        reset_session
+      end
       
       it "should not be able to login as service" do
         post "#{ENV['HOPSWORKS_API']}/auth/service",
-             URI.encode_www_form({ email: "admin@kth.se", password: "admin"}), { content_type: 'application/x-www-form-urlencoded'}
+             URI.encode_www_form({ email: @user_email, password: "Pass123"}), { content_type: 'application/x-www-form-urlencoded'}
         expect_status(403)
       end
     end
