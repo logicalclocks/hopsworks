@@ -305,7 +305,12 @@ public class YarnUIProxyServlet extends ProxyServlet {
 
         try {
           int contentSize = 0;
-          String source = "http://" + method.getURI().getHost() + ":" + method.getURI().getPort();
+          String hostname = method.getURI().getHost();
+          if (settings.isLocalHost()) {
+            hostname = "localhost";
+          }
+          
+          String source = "http://" + hostname + ":" + method.getURI().getPort();
           while ((inputLine = br.readLine()) != null) {
             String outputLine = hopify(inputLine, source, isAdmin) + "\n";
             byte[] output = outputLine.getBytes(Charset.forName("UTF-8"));
