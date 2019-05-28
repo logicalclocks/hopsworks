@@ -183,7 +183,7 @@ public class RegisterIT {
   public void testRegisterTwoFactor() throws Exception {
     //enable 2factor
     Helpers helpers = new Helpers(driver);
-    helpers.login("admin@hopsworks.com", "admin");
+    helpers.login("admin@hopsworks.ai", "admin");
     helpers.enableTwoFactor();
     helpers.logout();
     driver.findElement(By.linkText("Register")).click();

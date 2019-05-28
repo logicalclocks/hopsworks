@@ -41,7 +41,7 @@ public class Helpers {
     driver.findElement(By.id("login_inputEmail")).sendKeys(username);
     driver.findElement(By.id("login_inputPassword")).sendKeys(password);
     driver.findElement(By.name("loginForm")).submit();
-    assertEquals("admin@hopsworks.com", driver.findElement(By.id("navbarProfile")).getText());
+    assertEquals("admin@hopsworks.ai", driver.findElement(By.id("navbarProfile")).getText());
   }
 
   public void enableTwoFactor() {
