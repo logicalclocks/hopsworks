@@ -2551,7 +2551,7 @@ public class ProjectController {
       certPwd = new String(material.getPassword());
       if (!isGateway) {
         //Pop-up a message from admin
-        messageController.send(user, userFacade.findByEmail(Settings.SITE_EMAIL), "Certificate Info", "",
+        messageController.send(user, userFacade.findByEmail(settings.getAdminEmail()), "Certificate Info", "",
           "An email was sent with the password for your project's certificates. If an email does not arrive shortly, "
             + "please check spam first and then contact the administrator.", "");
         emailBean.sendEmail(user.getEmail(), Message.RecipientType.TO, "Hopsworks certificate information",
