@@ -161,6 +161,8 @@ public class Settings implements Serializable {
   private static final String VARIABLE_YARN_SUPERUSER = "yarn_user";
   private static final String VARIABLE_HDFS_SUPERUSER = "hdfs_user";
   private static final String VARIABLE_HOPSWORKS_USER = "hopsworks_user";
+  private static final String VARIABLE_JUPYTER_GROUP = "jupyter_group";
+  private static final String VARIABLE_JUPYTER_USER = "jupyter_user";
   private static final String VARIABLE_AIRFLOW_USER = "airflow_user";
   private static final String VARIABLE_STAGING_DIR = "staging_dir";
   private static final String VARIABLE_AIRFLOW_DIR = "airflow_dir";
@@ -311,7 +313,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_JWT_SIGNING_KEY_NAME = "jwt_signing_key_name";
   private static final String VARIABLE_JWT_ISSUER_KEY = "jwt_issuer";
 
-  private static final String VARIABLE_SERVICE_JWT = "service_jwt";
+  private static final String VARIABLE_SERVICE_MASTER_JWT = "service_master_jwt";
   private static final String VARIABLE_SERVICE_JWT_LIFETIME_MS = "service_jwt_lifetime_ms";
   private static final String VARIABLE_SERVICE_JWT_EXP_LEEWAY_SEC = "service_jwt_exp_leeway_sec";
 
@@ -456,6 +458,8 @@ public class Settings implements Serializable {
       TWOFACTOR_AUTH = setVar(VARIABLE_TWOFACTOR_AUTH, TWOFACTOR_AUTH);
       TWOFACTOR_EXCLUDE = setVar(VARIABLE_TWOFACTOR_EXCLUD, TWOFACTOR_EXCLUDE);
       HOPSWORKS_USER = setVar(VARIABLE_HOPSWORKS_USER, HOPSWORKS_USER);
+      JUPYTER_USER = setVar(VARIABLE_JUPYTER_USER, JUPYTER_USER);
+      JUPYTER_GROUP = setVar(VARIABLE_JUPYTER_GROUP, JUPYTER_GROUP);
       AIRFLOW_USER = setVar(VARIABLE_AIRFLOW_USER, AIRFLOW_USER);
       HDFS_SUPERUSER = setVar(VARIABLE_HDFS_SUPERUSER, HDFS_SUPERUSER);
       YARN_SUPERUSER = setVar(VARIABLE_YARN_SUPERUSER, YARN_SUPERUSER);
@@ -637,11 +641,12 @@ public class Settings implements Serializable {
       JWT_EXP_LEEWAY_SEC = setIntVar(VARIABLE_JWT_EXP_LEEWAY_SEC, JWT_EXP_LEEWAY_SEC);
       JWT_SIGNING_KEY_NAME = setStrVar(VARIABLE_JWT_SIGNING_KEY_NAME, JWT_SIGNING_KEY_NAME);
       JWT_ISSUER = setStrVar(VARIABLE_JWT_ISSUER_KEY, JWT_ISSUER);
-
-      SERVICE_JWT = setStrVar(VARIABLE_SERVICE_JWT, SERVICE_JWT);
+      
       SERVICE_JWT_LIFETIME_MS = setLongVar(VARIABLE_SERVICE_JWT_LIFETIME_MS, SERVICE_JWT_LIFETIME_MS);
       SERVICE_JWT_EXP_LEEWAY_SEC = setIntVar(VARIABLE_SERVICE_JWT_EXP_LEEWAY_SEC, SERVICE_JWT_EXP_LEEWAY_SEC);
 
+      populateServiceJWTCache();
+      
       CONNECTION_KEEPALIVE_TIMEOUT = setIntVar(VARIABLE_CONNECTION_KEEPALIVE_TIMEOUT, CONNECTION_KEEPALIVE_TIMEOUT);
 
       FEATURESTORE_DB_DEFAULT_QUOTA = setStrVar(VARIABLE_FEATURESTORE_DEFAULT_QUOTA, FEATURESTORE_DB_DEFAULT_QUOTA);
@@ -1023,13 +1028,19 @@ public class Settings implements Serializable {
     return HOPSWORKS_IP;
   }
 
-  private Integer HOPSWORKS_PORT = 8080;
+  private Integer HOPSWORKS_PORT = 8181;
 
   public synchronized Integer getHopsworksPort() {
     checkCache();
     return HOPSWORKS_PORT;
   }
 
+
+  public synchronized String getHopsworksEndpoint() {
+    return getHopsworksIp() + ":" +  getHopsworksPort().toString();
+  }
+
+    
   private String CERTS_DIR = "/srv/hops/certs-dir";
 
   public synchronized String getCertsDir() {
@@ -1185,7 +1196,7 @@ public class Settings implements Serializable {
   public static final String ENV_KEY_YARN_CONF = "YARN_CONF_DIR";
   public static final String ENV_KEY_SPARK_CONF_DIR = "SPARK_CONF_DIR";
   //YARN constants
-  public static final int YARN_DEFAULT_APP_MASTER_MEMORY = 1024;
+  public static final int YARN_DEFAULT_APP_MASTER_MEMORY = 2048;
   public static final String YARN_DEFAULT_OUTPUT_PATH = "Logs/Yarn/";
   public static final String HADOOP_COMMON_HOME_KEY = "HADOOP_COMMON_HOME";
   public static final String HADOOP_HOME_KEY = "HADOOP_HOME";
@@ -1237,6 +1248,7 @@ public class Settings implements Serializable {
   public static final String HOPS_FEATURESTORE_TOUR_DATA = "featurestore_demo";
   public static final String HOPS_FEATURESTORE_TOUR_JOB_CLASS = "io.hops.examples.featurestore.Main";
   public static final String HOPS_FEATURESTORE_TOUR_JOB_NAME = "featurestore_tour_job";
+  public static final String HOPS_FEATURESTORE_TOUR_JOB_INPUT_PARAM = "--input ";
 
   public String getTensorFlowJarPath(String tfUser) {
     return "hdfs:///user/" + tfUser + "/" + TENSORFLOW_JAR;
@@ -1547,6 +1559,21 @@ public class Settings implements Serializable {
     checkCache();
     return JUPYTER_DIR;
   }
+  
+  private String JUPYTER_USER = "jupyter";
+  
+  public synchronized String getJupyterUser() {
+    checkCache();
+    return JUPYTER_USER;
+  }
+  
+  private String JUPYTER_GROUP = "jupyter";
+  
+  public synchronized String getJupyterGroup() {
+    checkCache();
+    return JUPYTER_GROUP;
+  }
+
 
   private long JUPYTER_WS_PING_INTERVAL_MS = 10000L;
 
@@ -2358,6 +2385,16 @@ public class Settings implements Serializable {
     DELA_PUBLIC_HOPSWORK_PORT = setStrVar(VARIABLE_DELA_PUBLIC_HOPSWORKS_PORT, DELA_PUBLIC_HOPSWORK_PORT);
     PUBLIC_HTTPS_PORT = setStrVar(VARIABLE_PUBLIC_HTTPS_PORT, PUBLIC_HTTPS_PORT);
     DELA_CLUSTER_ID = setStrVar(VARIABLE_DELA_CLUSTER_ID, DELA_CLUSTER_ID);
+  }
+  
+  private void populateServiceJWTCache() {
+    SERVICE_MASTER_JWT = setStrVar(VARIABLE_SERVICE_MASTER_JWT, SERVICE_MASTER_JWT);
+    RENEW_TOKENS = new String[NUM_OF_SERVICE_RENEW_TOKENS];
+    for (int i = 0; i < NUM_OF_SERVICE_RENEW_TOKENS; i++) {
+      String variableKey = String.format(SERVICE_RENEW_TOKEN_VARIABLE_TEMPLATE, i);
+      String token = setStrVar(variableKey, "");
+      RENEW_TOKENS[i] = token;
+    }
   }
 
   public synchronized Boolean isDelaEnabled() {
@@ -3299,22 +3336,44 @@ public class Settings implements Serializable {
     return JWT_ISSUER;
   }
 
-  private String SERVICE_JWT = "";
-  public synchronized String getServiceJWT(){
+  private String SERVICE_MASTER_JWT = "";
+  public synchronized String getServiceMasterJWT() {
     checkCache();
-    return SERVICE_JWT;
+    return SERVICE_MASTER_JWT;
   }
 
-  public synchronized void setServiceJWT(String JWT) {
-    updateVariableInternal(VARIABLE_SERVICE_JWT, JWT);
+  public synchronized void setServiceMasterJWT(String JWT) {
+    updateVariableInternal(VARIABLE_SERVICE_MASTER_JWT, JWT);
     em.flush();
-    SERVICE_JWT = JWT;
+    SERVICE_MASTER_JWT = JWT;
+  }
+  
+  private final int NUM_OF_SERVICE_RENEW_TOKENS = 5;
+  private final static String SERVICE_RENEW_TOKEN_VARIABLE_TEMPLATE = "service_renew_token_%d";
+  private String[] RENEW_TOKENS = new String[0];
+  public synchronized String[] getServiceRenewJWTs() {
+    checkCache();
+    return RENEW_TOKENS;
   }
 
+  public synchronized void setServiceRenewJWTs(String[] renewTokens) {
+    for (int i = 0; i < renewTokens.length; i++) {
+      String variableKey = String.format(SERVICE_RENEW_TOKEN_VARIABLE_TEMPLATE, i);
+      updateVariableInternal(variableKey, renewTokens[i]);
+    }
+    RENEW_TOKENS = renewTokens;
+  }
+  
   private int CONNECTION_KEEPALIVE_TIMEOUT = 30;
   public synchronized int getConnectionKeepAliveTimeout() {
     checkCache();
     return CONNECTION_KEEPALIVE_TIMEOUT;
+  }
+
+  private int MAGGY_CLEANUP_INTERVAL = 24 * 60 * 1000;
+  public synchronized int getMaggyCleanupInterval() {
+    checkCache();
+    return MAGGY_CLEANUP_INTERVAL;
   }
 
   public String getHiveSiteSparkHdfsPath() {

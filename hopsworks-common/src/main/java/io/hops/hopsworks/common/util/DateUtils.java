@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2019, Logical Clocks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -13,45 +13,24 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.common.proxies.views;
 
+package io.hops.hopsworks.common.util;
+
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Date;
 
-public class JWTRequest {
-  private String token;
-  private Date expiresAt;
-  private Date nbf;
-  
-  public JWTRequest() {
+public final class DateUtils {
+  public static LocalDateTime date2LocalDateTime(Date date) {
+    return date.toInstant().atZone(ZoneId.systemDefault())
+        .toLocalDateTime();
   }
   
-  public JWTRequest(String token, Date expiresAt, Date nbf) {
-    this.token = token;
-    this.expiresAt = expiresAt;
-    this.nbf = nbf;
+  public static Date localDateTime2Date(LocalDateTime dateTime) {
+    return Date.from(dateTime.atZone(ZoneId.systemDefault()).toInstant());
   }
   
-  public String getToken() {
-    return token;
-  }
-  
-  public void setToken(String token) {
-    this.token = token;
-  }
-  
-  public Date getExpiresAt() {
-    return expiresAt;
-  }
-  
-  public void setExpiresAt(Date expiresAt) {
-    this.expiresAt = expiresAt;
-  }
-  
-  public Date getNbf() {
-    return nbf;
-  }
-  
-  public void setNbf(Date nbf) {
-    this.nbf = nbf;
+  public static LocalDateTime getNow() {
+    return LocalDateTime.now();
   }
 }

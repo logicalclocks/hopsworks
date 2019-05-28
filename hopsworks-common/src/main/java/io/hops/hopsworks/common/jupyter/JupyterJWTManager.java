@@ -32,8 +32,10 @@ import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.user.UsersController;
+import io.hops.hopsworks.common.util.DateUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.jwt.Constants;
 import io.hops.hopsworks.jwt.JWTController;
 import io.hops.hopsworks.jwt.SignatureAlgorithm;
 import io.hops.hopsworks.jwt.exception.InvalidationException;
@@ -56,20 +58,25 @@ import javax.ejb.TimerService;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.io.IOException;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.GroupPrincipal;
+import java.nio.file.attribute.PosixFileAttributeView;
 import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.UserPrincipalLookupService;
 import java.security.GeneralSecurityException;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Level;
@@ -84,12 +91,14 @@ public class JupyterJWTManager {
   private static final String TOKEN_FILE_NAME = "token.jwt";
   
   private static final Set<PosixFilePermission> TOKEN_FILE_PERMISSIONS = new HashSet<>();
+  
   static {
     TOKEN_FILE_PERMISSIONS.add(PosixFilePermission.OWNER_READ);
     TOKEN_FILE_PERMISSIONS.add(PosixFilePermission.OWNER_WRITE);
     TOKEN_FILE_PERMISSIONS.add(PosixFilePermission.OWNER_EXECUTE);
     
     TOKEN_FILE_PERMISSIONS.add(PosixFilePermission.GROUP_READ);
+    TOKEN_FILE_PERMISSIONS.add(PosixFilePermission.GROUP_WRITE);
     TOKEN_FILE_PERMISSIONS.add(PosixFilePermission.GROUP_EXECUTE);
   }
   
@@ -157,7 +166,7 @@ public class JupyterJWTManager {
       Users user = userFacade.find(materializedJWT.getIdentifier().getUserId());
       if (project == null || user == null) {
         LOG.log(Level.WARNING, "Tried to recover " + materializedJWT.getIdentifier() + " but could not find " +
-            "either Project or User");
+          "either Project or User");
         failed2recover.add(materializedJWT);
         continue;
       }
@@ -174,7 +183,7 @@ public class JupyterJWTManager {
       // Check if Jupyter is still running
       if (!jupyterProcessMgr.pingServerJupyterUser(jupyterProject.getPid())) {
         LOG.log(Level.FINEST, "Jupyter server is not running for " + materializedJWT.getIdentifier()
-            + " Skip recovering...");
+          + " Skip recovering...");
         failed2recover.add(materializedJWT);
         continue;
       }
@@ -187,7 +196,7 @@ public class JupyterJWTManager {
       try {
         token = FileUtils.readFileToString(tokenFile.toFile());
         DecodedJWT decodedJWT = jwtController.verifyToken(token, settings.getJWTIssuer());
-        jupyterJWT = new JupyterJWT(project, user, date2LocalDateTime(decodedJWT.getExpiresAt()));
+        jupyterJWT = new JupyterJWT(project, user, DateUtils.date2LocalDateTime(decodedJWT.getExpiresAt()));
         jupyterJWT.token = token;
         jupyterJWT.tokenFile = tokenFile;
         LOG.log(Level.FINE, "Successfully read existing JWT from local filesystem");
@@ -199,10 +208,13 @@ public class JupyterJWTManager {
         LocalDateTime expirationDate = LocalDateTime.now().plus(settings.getJWTLifetimeMs(), ChronoUnit.MILLIS);
         String[] userRoles = usersController.getUserRoles(user).toArray(new String[1]);
         try {
+          Map<String, Object> claims = new HashMap<>(3);
+          claims.put(Constants.RENEWABLE, false);
+          claims.put(Constants.EXPIRY_LEEWAY, settings.getJWTExpLeewaySec());
+          claims.put(Constants.ROLES, userRoles);
           token = jwtController.createToken(settings.getJWTSigningKeyName(), false, settings.getJWTIssuer(),
-              audience, localDateTime2Date(expirationDate), localDateTime2Date(LocalDateTime.now()),
-              user.getUsername(), false, settings.getJWTExpLeewaySec(), userRoles,
-              SignatureAlgorithm.valueOf(settings.getJWTSignatureAlg()));
+              audience, DateUtils.localDateTime2Date(expirationDate), DateUtils.localDateTime2Date(DateUtils.getNow()),
+              user.getUsername(), claims, SignatureAlgorithm.valueOf(settings.getJWTSignatureAlg()));
           jupyterJWT = new JupyterJWT(project, user, expirationDate);
           jupyterJWT.token = token;
           jupyterJWT.tokenFile = tokenFile;
@@ -210,8 +222,8 @@ public class JupyterJWTManager {
           LOG.log(Level.FINE, "Generated new Jupyter JWT cause could not recover existing");
         } catch (IOException recIOEx) {
           LOG.log(Level.WARNING, "Failed to recover Jupyter JWT for " + materializedJWT.getIdentifier()
-              + ", generated new valid JWT but failed to write to local filesystem. Invalidating new token!" +
-              " Continue recovering...");
+            + ", generated new valid JWT but failed to write to local filesystem. Invalidating new token!" +
+            " Continue recovering...");
           if (token != null) {
             try {
               jwtController.invalidate(token);
@@ -223,7 +235,7 @@ public class JupyterJWTManager {
           continue;
         } catch (GeneralSecurityException | JWTException jwtEx) {
           LOG.log(Level.WARNING, "Failed to recover Jupyter JWT for " + materializedJWT.getIdentifier()
-              + ", tried to generate new token and it failed as well. Could not recover! Continue recovering...");
+            + ", tried to generate new token and it failed as well. Could not recover! Continue recovering...");
           // Did our best, it's good to know when you should give up
           failed2recover.add(materializedJWT);
           continue;
@@ -239,10 +251,6 @@ public class JupyterJWTManager {
     LOG.log(Level.INFO, "Finished Jupyter JWT recovery");
   }
   
-  private LocalDateTime date2LocalDateTime(Date date) {
-    return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
-  }
-  
   private Path constructTokenFilePath(JupyterSettings jupyterSettings) {
     return Paths.get(settings.getStagingDir(), Settings.PRIVATE_DIRS, jupyterSettings.getSecret(), TOKEN_FILE_NAME);
   }
@@ -252,7 +260,7 @@ public class JupyterJWTManager {
   public void materializeJWT(Users user, Project project, JupyterSettings jupyterSettings, String[] audience)
     throws ServiceException {
     MaterializedJWTID materialID = new MaterializedJWTID(project.getId(), user.getUid(),
-        MaterializedJWTID.USAGE.JUPYTER);
+      MaterializedJWTID.USAGE.JUPYTER);
     if (!materializedJWTFacade.exists(materialID)) {
       LocalDateTime expirationDate = LocalDateTime.now().plus(settings.getJWTLifetimeMs(), ChronoUnit.MILLIS);
       JupyterJWT jupyterJWT = new JupyterJWT(project, user, expirationDate);
@@ -260,20 +268,26 @@ public class JupyterJWTManager {
         String[] roles = usersController.getUserRoles(user).toArray(new String[1]);
         MaterializedJWT materializedJWT = new MaterializedJWT(materialID);
         materializedJWTFacade.persist(materializedJWT);
+        
+        Map<String, Object> claims = new HashMap<>(3);
+        claims.put(Constants.RENEWABLE, false);
+        claims.put(Constants.EXPIRY_LEEWAY, settings.getJWTExpLeewaySec());
+        claims.put(Constants.ROLES, roles);
         String token = jwtController.createToken(settings.getJWTSigningKeyName(), false, settings.getJWTIssuer(),
-            audience, localDateTime2Date(expirationDate), localDateTime2Date(LocalDateTime.now()),
-            user.getUsername(), false, settings.getJWTExpLeewaySec(), roles,
-            SignatureAlgorithm.valueOf(settings.getJWTSignatureAlg()));
+            audience, DateUtils.localDateTime2Date(expirationDate), DateUtils.localDateTime2Date(DateUtils.getNow()),
+            user.getUsername(), claims, SignatureAlgorithm.valueOf(settings.getJWTSignatureAlg()));
         
         jupyterJWT.tokenFile = constructTokenFilePath(jupyterSettings);
+        
         jupyterJWT.token = token;
         writeToken2file(jupyterJWT);
+        
         jupyterJWTs.add(jupyterJWT);
       } catch (GeneralSecurityException | JWTException ex) {
         LOG.log(Level.SEVERE, "Error generating Jupyter JWT for " + jupyterJWT, ex);
         materializedJWTFacade.delete(materialID);
         throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_START_ERROR, Level.SEVERE,
-            "Could not generate Jupyter JWT", ex.getMessage(), ex);
+          "Could not generate Jupyter JWT", ex.getMessage(), ex);
       } catch (IOException ex) {
         LOG.log(Level.SEVERE, "Error writing Jupyter JWT to file for " + jupyterJWT, ex);
         materializedJWTFacade.delete(materialID);
@@ -283,7 +297,7 @@ public class JupyterJWTManager {
           LOG.log(Level.FINE, "Could not invalidate Jupyter JWT after failure to write to file", ex);
         }
         throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_START_ERROR, Level.SEVERE,
-            "Could not write Jupyter JWT to file", ex.getMessage(), ex);
+          "Could not write Jupyter JWT to file", ex.getMessage(), ex);
       }
     }
   }
@@ -299,7 +313,7 @@ public class JupyterJWTManager {
     // Renew the rest of them
     Set<JupyterJWT> renewedJWTs = new HashSet<>(this.jupyterJWTs.size());
     Iterator<JupyterJWT> jupyterJWTs = this.jupyterJWTs.iterator();
-    LocalDateTime now = LocalDateTime.now();
+    LocalDateTime now = DateUtils.getNow();
     
     while (jupyterJWTs.hasNext()) {
       JupyterJWT element = jupyterJWTs.next();
@@ -309,8 +323,8 @@ public class JupyterJWTManager {
         LocalDateTime newExpirationDate = now.plus(settings.getJWTLifetimeMs(), ChronoUnit.MILLIS);
         String newToken = null;
         try {
-          newToken = jwtController.renewToken(element.token, localDateTime2Date(newExpirationDate),
-              localDateTime2Date(now));
+          newToken = jwtController.renewToken(element.token, DateUtils.localDateTime2Date(newExpirationDate),
+              DateUtils.localDateTime2Date(now), true, new HashMap<>(3));
           
           JupyterJWT renewedJWT = new JupyterJWT(element.project, element.user, newExpirationDate);
           renewedJWT.tokenFile = element.tokenFile;
@@ -346,7 +360,7 @@ public class JupyterJWTManager {
       JupyterJWT element = jupyterJWTs.next();
       try {
         MaterializedJWTID materializedJWTID = new MaterializedJWTID(element.project.getId(), element.user.getUid(),
-            MaterializedJWTID.USAGE.JUPYTER);
+          MaterializedJWTID.USAGE.JUPYTER);
         MaterializedJWT material = materializedJWTFacade.findById(materializedJWTID);
         boolean isStillValid = false;
         
@@ -379,11 +393,14 @@ public class JupyterJWTManager {
   
   private void writeToken2file(JupyterJWT jupyterJWT) throws IOException {
     FileUtils.writeStringToFile(jupyterJWT.tokenFile.toFile(), jupyterJWT.token);
-    Files.setPosixFilePermissions(jupyterJWT.tokenFile, TOKEN_FILE_PERMISSIONS);
-  }
   
-  private Date localDateTime2Date(LocalDateTime localDateTime) {
-    return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
+    String groupName = settings.getJupyterGroup();
+    UserPrincipalLookupService lookupService = FileSystems.getDefault().getUserPrincipalLookupService();
+    GroupPrincipal group = lookupService.lookupPrincipalByGroupName(groupName);
+    Files.getFileAttributeView(jupyterJWT.tokenFile, PosixFileAttributeView.class,
+      LinkOption.NOFOLLOW_LINKS).setGroup(group);
+  
+    Files.setPosixFilePermissions(jupyterJWT.tokenFile, TOKEN_FILE_PERMISSIONS);
   }
   
   private final class JupyterJWT {

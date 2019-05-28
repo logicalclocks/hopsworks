@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2019, Logical Clocks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -14,7 +14,7 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.common.proxies;
+package io.hops.hopsworks.common.proxies.client;
 
 import io.hops.hopsworks.common.util.Settings;
 import org.apache.http.HttpHeaders;
@@ -67,6 +67,7 @@ public class HttpClient {
       connectionManager = createConnectionManager();
       client = HttpClients.custom()
           .setConnectionManager(connectionManager)
+          .setKeepAliveStrategy((httpResponse, httpContext) -> settings.getConnectionKeepAliveTimeout() * 1000)
           .build();
       host = HttpHost.create(settings.getRestEndpoint());
     } catch (IOException | GeneralSecurityException ex) {
@@ -98,12 +99,14 @@ public class HttpClient {
   private PoolingHttpClientConnectionManager createConnectionManager() throws IOException, GeneralSecurityException {
     PoolingHttpClientConnectionManager connectionManager =
         new PoolingHttpClientConnectionManager(createConnectionFactory());
+    connectionManager.setMaxTotal(10);
     connectionManager.setDefaultMaxPerRoute(10);
     return connectionManager;
   }
   
-  public void setAuthorizationHeader(HttpRequest httpRequest, String token) {
-    httpRequest.setHeader(HttpHeaders.AUTHORIZATION, String.format(AUTH_HEADER_CONTENT, token));
+  public void setAuthorizationHeader(HttpRequest httpRequest) {
+    httpRequest.setHeader(HttpHeaders.AUTHORIZATION,
+        String.format(AUTH_HEADER_CONTENT, settings.getServiceMasterJWT()));
   }
   
   public <T> T execute(HttpRequest request, ResponseHandler<T> handler) throws IOException {
