@@ -167,7 +167,7 @@ describe "On #{ENV['OS']}" do
 
           # Create serving
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-              {name: "testModel2",
+              {name: "testModel3",
                artifactPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
                modelVersion: 1,
                batchingEnabled: false,
@@ -196,7 +196,7 @@ describe "On #{ENV['OS']}" do
 
           # Create serving
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-              {name: "testModel2",
+              {name: "testModel5",
                artifactPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
                modelVersion: 1,
                batchingEnabled: false,

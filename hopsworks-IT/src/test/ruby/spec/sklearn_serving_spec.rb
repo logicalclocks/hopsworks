@@ -226,7 +226,7 @@ describe "On #{ENV['OS']}" do
 
           # Create serving
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-              {name: "testModel2",
+              {name: "testModel3",
                artifactPath: "/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
                modelVersion: 1,
                kafkaTopicDTO: {
@@ -254,7 +254,7 @@ describe "On #{ENV['OS']}" do
 
           # Create serving
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-              {name: "testModel2",
+              {name: "testModel4",
                artifactPath: "/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
                modelVersion: 1,
                kafkaTopicDTO: {
