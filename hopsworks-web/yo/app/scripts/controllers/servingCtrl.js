@@ -473,6 +473,13 @@ angular.module('hopsWorksApp')
                 self.showLogs = true;
             };
 
+            self.showDetailedInformation = function (serving) {
+                ModalService.viewServingInfo('lg', self.projectId, serving).then(
+                    function (success) {
+                    }, function (error) {
+                    });
+            };
+
             self.showMainUI = function () {
                 self.showLogs = false;
             };
