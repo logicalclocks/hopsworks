@@ -19,11 +19,19 @@ package io.hops.hopsworks.api.serving.inference;
 import com.google.common.base.Strings;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
+import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.api.jwt.JsonWebTokenDTO;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
+import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.serving.inference.InferenceController;
 import io.hops.hopsworks.exceptions.InferenceException;
+import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.jwt.JWTController;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.hops.hopsworks.jwt.exception.DuplicateSigningKeyException;
+import io.hops.hopsworks.jwt.exception.InvalidationException;
+import io.hops.hopsworks.jwt.exception.SigningKeyNotFoundException;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -33,13 +41,20 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.logging.Logger;
+import javax.ws.rs.core.SecurityContext;
+import java.security.NoSuchAlgorithmException;
+import java.util.Calendar;
+import java.util.Date;
 
 /**
  * RESTful microservice for sending inference requests to models being served on Hopsworks.
@@ -54,6 +69,12 @@ public class InferenceResource {
   private InferenceController inferenceController;
   @EJB
   private ProjectFacade projectFacade;
+  @EJB
+  private JWTHelper jwtHelper;
+  @EJB
+  private JWTController jwtController;
+  @EJB
+  private Settings settings;
   
   private Project project;
 
@@ -68,7 +89,8 @@ public class InferenceResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Make inference")
-  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB, Audience.INFERENCE},
+    allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response infer(
       @ApiParam(value = "Name of the model to query", required = true) @PathParam("modelName") String modelName,
@@ -83,4 +105,34 @@ public class InferenceResource {
     String inferenceResult = inferenceController.infer(project, modelName, version, verb, inferenceRequestJson);
     return Response.ok().entity(inferenceResult).build();
   }
+  
+  @GET
+  @Path("/jwt")
+  @Produces(MediaType.APPLICATION_JSON)
+  @ApiOperation(value = "Get inferenceing jwt")
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  public Response getJWT(@Context SecurityContext sc) throws DuplicateSigningKeyException, NoSuchAlgorithmException,
+    SigningKeyNotFoundException {
+    Users user = jwtHelper.getUserPrincipal(sc);
+    Calendar cal = Calendar.getInstance();
+    cal.add(Calendar.YEAR, 100);
+    Date expDate = cal.getTime();
+    String token = jwtHelper.createToken(user, new String[]{Audience.INFERENCE}, settings.getJWTIssuer(), expDate,
+      null);
+    JsonWebTokenDTO jwt = new JsonWebTokenDTO(token, expDate, new Date());
+    return Response.ok().entity(jwt).build();
+  }
+  
+  
+  @DELETE
+  @Path("/jwt")
+  @ApiOperation(value = "Invalidate inferenceing jwt")
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  public Response deleteJWT(JsonWebTokenDTO jwt) throws InvalidationException {
+    jwtController.invalidate(jwt.getToken());
+    return Response.noContent().build();
+  }
+  
 }

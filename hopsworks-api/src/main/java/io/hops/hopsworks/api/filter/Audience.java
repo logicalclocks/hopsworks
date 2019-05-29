@@ -22,4 +22,5 @@ public class Audience {
   public static final String DATASET ="dataset";
   public static final String EMAIL ="email";
   public static final String SERVICES ="services";
+  public static final String INFERENCE = "Inference";
 }
