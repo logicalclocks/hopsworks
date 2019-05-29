@@ -241,7 +241,8 @@ describe "On #{ENV['OS']}" do
 
           # Check that the serving is actually using that topic
           serving_list = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/"
-          kafka_topic_name = JSON.parse(serving_list).select {|serving| serving['name'] == "testModel2"}[0]['kafkaTopicDTO']['name']
+          kafka_topic_name = JSON.parse(serving_list).select {|serving| serving['name'] ==
+              "testModel3"}[0]['kafkaTopicDTO']['name']
           expect(kafka_topic_name).to eql topic_name
         end
 
