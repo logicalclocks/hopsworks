@@ -722,7 +722,8 @@ public class KafkaFacade {
     validateSchemaNameAgainstBlacklist(schemaDTO.getName(), RESTCodes.KafkaErrorCode.CREATE_SCHEMA_RESERVED_NAME);
   }
   
-  public void validateSchemaNameAgainstBlacklist(String schemaName, RESTCodes.KafkaErrorCode restCode) throws KafkaException {
+  public void validateSchemaNameAgainstBlacklist(String schemaName, RESTCodes.KafkaErrorCode restCode)
+    throws KafkaException {
     if(Settings.KAFKA_SCHEMA_BLACKLIST.contains(schemaName)){
       throw new KafkaException(restCode, Level.FINE);
     }

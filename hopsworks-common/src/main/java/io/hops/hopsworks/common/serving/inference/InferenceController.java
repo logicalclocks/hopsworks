@@ -23,6 +23,7 @@ import io.hops.hopsworks.common.dao.serving.Serving;
 import io.hops.hopsworks.common.dao.serving.ServingFacade;
 import io.hops.hopsworks.common.dao.serving.ServingType;
 import io.hops.hopsworks.common.serving.inference.logger.InferenceLogger;
+import io.hops.hopsworks.exceptions.InferenceException;
 import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;

@@ -18,6 +18,7 @@ package io.hops.hopsworks.common.serving.inference;
 
 import io.hops.common.Pair;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.InferenceException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;

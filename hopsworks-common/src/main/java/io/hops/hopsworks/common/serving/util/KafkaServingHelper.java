@@ -23,7 +23,7 @@ import io.hops.hopsworks.common.dao.kafka.SchemaTopics;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.serving.Serving;
-import io.hops.hopsworks.common.serving.ServingException;
+import io.hops.hopsworks.exceptions.ServingException;
 import io.hops.hopsworks.common.serving.ServingWrapper;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.KafkaException;

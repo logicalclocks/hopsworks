@@ -23,7 +23,7 @@ import io.hops.hopsworks.common.dao.serving.Serving;
 import io.hops.hopsworks.common.dao.serving.ServingFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
-import io.hops.hopsworks.common.serving.ServingException;
+import io.hops.hopsworks.exceptions.ServingException;
 import io.hops.hopsworks.common.util.OSProcessExecutor;
 import io.hops.hopsworks.common.util.ProcessDescriptor;
 import io.hops.hopsworks.common.util.ProcessResult;

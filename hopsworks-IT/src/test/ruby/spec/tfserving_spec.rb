@@ -465,6 +465,8 @@ describe "On #{ENV['OS']}" do
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=stop"
         expect_status(200)
 
+        sleep(5)
+
         # check if the process is running on the host
         system "pgrep -f tensorflow_model_server"
         if $?.exitstatus != 1
@@ -475,6 +477,8 @@ describe "On #{ENV['OS']}" do
       it "should fail to kill a non running instance" do
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=stop"
         expect_status(200)
+
+        sleep(5)
 
         # check if the process is running on the host
         system "pgrep -f tensorflow_model_server"
@@ -535,6 +539,8 @@ describe "On #{ENV['OS']}" do
 
         delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}"
         expect_status(200)
+
+        sleep(5)
 
         # Check that the process has been killed
         wait_for do

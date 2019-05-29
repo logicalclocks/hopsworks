@@ -14,31 +14,29 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.common.serving.inference;
+package io.hops.hopsworks.exceptions;
 
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.restutils.RESTException;
 
 import java.util.logging.Level;
 
-
-public class InferenceException extends RESTException {
-
-  public InferenceException(RESTCodes.InferenceErrorCode code, Level level) {
+public class ServingException extends RESTException {
+  
+  public ServingException(RESTCodes.ServingErrorCode code, Level level) {
     super(code, level);
   }
-
-  public InferenceException(RESTCodes.InferenceErrorCode code, Level level, String usrMsg) {
+  
+  public ServingException(RESTCodes.ServingErrorCode code, Level level, String usrMsg) {
     super(code, level, usrMsg);
   }
-
-  public InferenceException(RESTCodes.InferenceErrorCode code, Level level, String usrMsg, String devMsg) {
+  
+  public ServingException(RESTCodes.ServingErrorCode code, Level level, String usrMsg, String devMsg) {
     super(code, level, usrMsg, devMsg);
   }
-
-  public InferenceException(RESTCodes.InferenceErrorCode code, Level level, String usrMsg, String devMsg,
-                            Throwable throwable) {
+  
+  public ServingException(RESTCodes.ServingErrorCode code, Level level, String usrMsg, String devMsg,
+                          Throwable throwable) {
     super(code, level, usrMsg, devMsg, throwable);
   }
-
 }

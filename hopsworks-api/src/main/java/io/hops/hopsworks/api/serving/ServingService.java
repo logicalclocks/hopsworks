@@ -24,7 +24,7 @@ import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.serving.ServingController;
-import io.hops.hopsworks.common.serving.ServingException;
+import io.hops.hopsworks.exceptions.ServingException;
 import io.hops.hopsworks.common.serving.ServingWrapper;
 import io.hops.hopsworks.common.serving.util.ServingCommands;
 import io.hops.hopsworks.exceptions.CryptoPasswordNotFoundException;

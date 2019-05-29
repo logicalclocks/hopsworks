@@ -8,7 +8,7 @@ import io.hops.hopsworks.common.dao.serving.Serving;
 import io.hops.hopsworks.common.dao.serving.ServingFacade;
 import io.hops.hopsworks.common.dao.serving.ServingType;
 import io.hops.hopsworks.common.hdfs.Utils;
-import io.hops.hopsworks.common.serving.ServingException;
+import io.hops.hopsworks.exceptions.ServingException;
 import io.hops.hopsworks.common.serving.ServingWrapper;
 import io.hops.hopsworks.restutils.RESTCodes;
 

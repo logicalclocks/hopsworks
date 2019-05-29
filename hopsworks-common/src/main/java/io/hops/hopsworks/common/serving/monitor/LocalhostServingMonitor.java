@@ -21,7 +21,7 @@ import io.hops.hopsworks.common.dao.serving.ServingFacade;
 import io.hops.hopsworks.common.dao.serving.ServingType;
 import io.hops.hopsworks.common.serving.LocalhostServingController;
 import io.hops.hopsworks.common.serving.ServingController;
-import io.hops.hopsworks.common.serving.ServingException;
+import io.hops.hopsworks.exceptions.ServingException;
 import io.hops.hopsworks.common.util.OSProcessExecutor;
 import io.hops.hopsworks.common.util.ProcessDescriptor;
 import io.hops.hopsworks.common.util.ProcessResult;

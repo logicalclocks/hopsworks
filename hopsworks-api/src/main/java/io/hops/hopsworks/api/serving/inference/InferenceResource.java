@@ -22,7 +22,7 @@ import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.serving.inference.InferenceController;
-import io.hops.hopsworks.common.serving.inference.InferenceException;
+import io.hops.hopsworks.exceptions.InferenceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;

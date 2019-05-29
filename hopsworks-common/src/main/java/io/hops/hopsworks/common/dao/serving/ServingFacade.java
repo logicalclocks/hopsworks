@@ -18,7 +18,7 @@ package io.hops.hopsworks.common.dao.serving;
 
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.restutils.RESTCodes;
-import io.hops.hopsworks.common.serving.ServingException;
+import io.hops.hopsworks.exceptions.ServingException;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.Stateless;

@@ -18,6 +18,7 @@ package io.hops.hopsworks.common.serving.inference;
 
 import io.hops.common.Pair;
 import io.hops.hopsworks.common.dao.serving.Serving;
+import io.hops.hopsworks.exceptions.InferenceException;
 
 /**
  * Interface for sending inference requests to tfserving serving instances. Different type of tf serving

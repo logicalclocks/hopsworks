@@ -100,7 +100,7 @@ import io.hops.hopsworks.common.python.environment.EnvironmentController;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.security.CertificatesController;
 import io.hops.hopsworks.common.serving.ServingController;
-import io.hops.hopsworks.common.serving.ServingException;
+import io.hops.hopsworks.exceptions.ServingException;
 import io.hops.hopsworks.common.serving.inference.logger.KafkaInferenceLogger;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.DateUtils;

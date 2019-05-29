@@ -28,6 +28,7 @@ import io.hops.hopsworks.common.serving.util.ServingCommands;
 import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.exceptions.ServingException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.restutils.RESTCodes;
 
