@@ -286,6 +286,20 @@ angular.module('hopsWorksApp')
               KafkaService.unblockIotGateway(self.projectId, id)
             };
 
+            self.viewIotNodes = function(id) {
+              KafkaService.getIotNodes(self.projectId, id).then(
+                  function(success) {
+                      console.log(success.data.items)
+                  }, function(error) {
+                      if (typeof error.data.usrMsg !== 'undefined') {
+                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
+                      } else {
+                          growl.error("", {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
+                      }
+                  }
+              )
+            };
+
             self.viewIotGatewayDetails = function(hostname, port) {
                 // ModalService.viewIotGatewayDetails('lg', self.projectId, gatewayId).then(
                 //     function (success) {

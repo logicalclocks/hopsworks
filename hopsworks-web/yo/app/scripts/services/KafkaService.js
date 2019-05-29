@@ -140,6 +140,10 @@ angular.module('hopsWorksApp')
               getIotGatewayDetails: function (hostname, port) {
                 return $http.get('http://' + hostname + ':' + port + '/gateway')
               },
+
+              getIotNodes: function (projectId, gatewayId) {
+                return $http.get('/api/project/' + projectId + '/gateways/' + gatewayId + '/nodes')
+              },
               
               getSchemasForTopics: function (projectId){
                 return $http.get('/api/project/' + projectId + '/kafka/schemas');
