@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.api.serving.inference;
 
+import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.common.base.Strings;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
@@ -131,7 +132,10 @@ public class InferenceResource {
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response deleteJWT(JsonWebTokenDTO jwt) throws InvalidationException {
-    jwtController.invalidate(jwt.getToken());
+    DecodedJWT djwt = jwtController.decodeToken(jwt.getToken());
+    if (Audience.INFERENCE.equals(djwt.getAudience())) {
+      jwtController.invalidate(jwt.getToken());
+    }
     return Response.noContent().build();
   }
   
