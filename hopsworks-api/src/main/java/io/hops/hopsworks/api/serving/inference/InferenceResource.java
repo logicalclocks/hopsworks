@@ -48,6 +48,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -131,11 +132,12 @@ public class InferenceResource {
   @ApiOperation(value = "Invalidate inferenceing jwt")
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response deleteJWT(JsonWebTokenDTO jwt) throws InvalidationException {
-    DecodedJWT djwt = jwtController.decodeToken(jwt.getToken());
-    if (Audience.INFERENCE.equals(djwt.getAudience())) {
-      jwtController.invalidate(jwt.getToken());
+  public Response deleteJWT(@QueryParam("token") String token) throws InvalidationException {
+    DecodedJWT jwt = jwtController.decodeToken(token);
+    if (jwt.getAudience() == null || jwt.getAudience().isEmpty() || !jwt.getAudience().contains(Audience.INFERENCE)) {
+      throw new InvalidationException("Can only invalidate inference token.");
     }
+    jwtController.invalidate(token);
     return Response.noContent().build();
   }
   

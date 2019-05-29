@@ -213,6 +213,10 @@
                                 Create New Serving<i style="margin-left: 10px" class="glyphicon glyphicon-plus">
                             </i>
                             </button>
+                            <button type="button" class="btn btn-default btn-success control-label"
+                                    ng-click="servingCtrl.getToken()">Create Inference token</button>
+                            <button type="button" class="btn btn-default btn-success control-label"
+                                    ng-click="servingCtrl.invalidateToken()">Invalidate Inference token</button>
                         </div>
 
                         <table class="table table-hover">

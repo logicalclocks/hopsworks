@@ -80,6 +80,25 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
             },
+            jwtModal: function (size, title, msg, token) {
+                var modalInstance = $uibModal.open({
+                    templateUrl: 'views/jwtModal.html',
+                    controller: 'JWTModalCtrl as modalCtrl',
+                    size: size,
+                    resolve: {
+                        title: function () {
+                            return title;
+                        },
+                        msg: function () {
+                            return msg;
+                        },
+                        token: function () {
+                            return token;
+                        }
+                    }
+                });
+                return modalInstance.result;
+            },
             reportIssueModal: function (size, title, msg, projectId) {
                 var modalInstance = $uibModal.open({
                     templateUrl: 'views/reportIssue.html',

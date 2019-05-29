@@ -22,9 +22,9 @@
 angular.module('hopsWorksApp')
     .controller('servingCtrl', ['$scope', '$routeParams', 'growl', 'ServingService', 'UtilsService', '$location',
         'PythonService', 'ModalService', '$interval', 'StorageService', '$mdSidenav', 'DataSetService',
-        'KafkaService', 'JobService',
-        function ($scope, $routeParams, growl, ServingService, UtilsService, $location, PythonDepsService,
-                  ModalService, $interval, StorageService, $mdSidenav, DataSetService, KafkaService) {
+        'KafkaService', 'JobService', 'InferenceService',
+        function ($scope, $routeParams, growl, ServingService, UtilsService, $location, PythonService,
+                  ModalService, $interval, StorageService, $mdSidenav, DataSetService, KafkaService, JobService, InferenceService) {
 
             var self = this;
 
@@ -348,7 +348,7 @@ angular.module('hopsWorksApp')
                 // Check that python kernel is enabled if it is a sklearn serving, as the flask serving will be launched
                 // inside the project anaconda environment
                 if (self.editServing.servingType === "SKLEARN") {
-                    PythonDepsService.enabled(self.projectId).then(
+                    PythonService.enabled(self.projectId).then(
                         function (success) {
                             self.doCreateOrUpdate()
                         },
@@ -526,5 +526,30 @@ angular.module('hopsWorksApp')
                 )
             };
             self.init();
-        }
-    ]);
+
+        self.getToken = function () {
+            InferenceService.getToken(self.projectId).then(function(success) {
+                ModalService.jwtModal('md', 'Inference token', '', success.data.token)
+            }, function (error) {
+                growl.error(error.data.errorMsg, {
+                    title: 'Error',
+                    ttl: 15000
+                });
+            })
+        };
+
+        self.invalidateToken = function () {
+            ModalService.jwtModal('md', 'Inference token', '', undefined).then(function(success) {
+                InferenceService.invalidateToken(self.projectId, success).then(function() {
+                    growl.success("Token invalidated.", {title: "Success", ttl: 5000})
+                }, function(error) {
+                    var msg = typeof error.data.usrMsg !== 'undefined'? error.data.usrMsg : error.data.errorMsg;
+                    growl.error(msg, {
+                        title: 'Error',
+                        ttl: 15000
+                    });
+                })
+            })
+
+        };
+    }]);
