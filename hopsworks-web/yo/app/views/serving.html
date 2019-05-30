@@ -195,17 +195,13 @@
             <table class="table table-hover">
               <thead style="border:none;">
               <th style="width: 6%"></th>
-              <th style="width: 8%">Name</th>
-              <th style="width: 6%">Type</th>
-              <th style="width: 21%">Path</th>
+              <th style="width: 17%">Name</th>
+              <th style="width: 11%">Type</th>
+              <th style="width: 30%">Path</th>
               <th style="width: 4%">Version</th>
-              <th style="width: 4%">Instances</th>
               <th style="width: 9%">Created</th>
-              <th style="width: 14%">Topic Name</th>
-              <th style="width: 3%">Batching</th>
-              <th style="width: 9%">Creator</th>
               <th style="width: 6%">Status</th>
-              <th style="width: 15%">Actions</th>
+              <th style="width: 22%">Actions</th>
               </thead>
               <tbody>
                 <tr dir-paginate="serving in servingCtrl.servings| orderBy :sortKey:reverse| itemsPerPage:pageSize">
@@ -247,18 +243,15 @@
                   <td> {{serving.servingType}} </td>
                   <td> {{serving.artifactPath}} </td>
                   <td> {{serving.modelVersion}} </td>
-                  <td> {{serving.availableInstances}} / {{serving.requestedInstances}} </td>
                   <td> {{serving.created | date:'short'}} </td>
-                  <td> {{serving.kafkaTopicDTO.name}} </td>
-                  <td> <span class="glyphicon glyphicon-ok-circle" ng-show="serving.batchingEnabled"/>
                   </td>
-                  <td> {{serving.creator}} </td>
                   <td> {{serving.status}} </td>
                   <td>
                     <button class="btn btn-info glyphicon glyphicon-edit" uib-tooltip="Edit" style="margin-right:-3px" ng-click="servingCtrl.updateServing(serving); $event.stopPropagation();"></button>
                     <button class="btn btn-danger glyphicon glyphicon-trash" uib-tooltip="Delete" style="margin-right: -3px;" ng-click="servingCtrl.deleteServing(serving); $event.stopPropagation();"></button>
                     <button class="btn btn-warning glyphicon glyphicon-list" uib-tooltip="Show logs" style="margin-right: -3px;" ng-click="servingCtrl.showServingLogs(serving); $event.stopPropagation();"></button>
-                    <button class="btn btn-default glyphicon" uib-tooltip="Show Detailed Information" style="margin-right: -3px;" ng-click="servingCtrl.showDetailedInformation(serving); $event.stopPropagation();"></button>
+                    <button class="btn btn-primary glyphicon glyphicon-eye-open" uib-tooltip="Show Detailed Information" style="margin-right: -3px;" ng-click="servingCtrl.showDetailedInformation(serving); $event.stopPropagation();">
+                    </button>
                   </td>
                 </tr>
               </tbody>

@@ -30,21 +30,89 @@
             <tbody>
             <tr>
                 <td>
-                 Serving Name
+                 Serving Name <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                 uib-tooltip="Name of the serving (unique identifier)"
+                                 style="margin-left: 10px"></i>
                 </td>
                 <td>{{servingViewInfoCtrl.serving.name}}</td>
             </tr>
             <tr>
                 <td>
-                    Inference Endpoint
+                    Predict inference endpoint
+                    <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                    uib-tooltip="REST endpoint for
+                                    predict inference requests."
+                                    style="margin-left: 10px"></i>
                 </td>
-                <td>{{servingViewInfoCtrl.getInferenceEndpoint(servingViewInfoCtrl.serving.name)}}</td>
+                <td>{{servingViewInfoCtrl.getPredictInferenceEndpoint(servingViewInfoCtrl.serving.name)}}</td>
             </tr>
             <tr>
                 <td>
-                    Serving Server Port
+                    Classify inference endpoint
+                    <i class="fa fa-info-circle" tooltip-placement="auto left"
+                       uib-tooltip="REST endpoint for
+                                    classify inference requests."
+                       style="margin-left: 10px"></i>
                 </td>
-                <td>{{servingViewInfoCtrl.serving.port}}</td>
+                <td>{{servingViewInfoCtrl.getClassifyInferenceEndpoint(servingViewInfoCtrl.serving.name)}}</td>
+            </tr>
+            <tr>
+                <td>
+                    Regression inference endpoint
+                    <i class="fa fa-info-circle" tooltip-placement="auto left"
+                       uib-tooltip="REST endpoint for
+                                    regression inference requests."
+                       style="margin-left: 10px"></i>
+                </td>
+                <td>{{servingViewInfoCtrl.getRegressInferenceEndpoint(servingViewInfoCtrl.serving.name)}}</td>
+            </tr>
+            <tr>
+                <td>
+                    Serving Server Port <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                           uib-tooltip="Port of the  serving instance (necessary if you want to send requests directly to the serving server
+                                           rather than going through the standard inference endpoint).
+                                           If the serving server is not running the port will be undefined."
+                                           style="margin-left: 10px"></i>
+                </td>
+                <td>{{servingViewInfoCtrl.getPortString(servingViewInfoCtrl.serving.nodePort)}}</td>
+            </tr>
+            <tr>
+                <td>
+                    Batching <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                           uib-tooltip="Whether batching is enabled for the serving instance.
+                                           With batching, several inference requests will be processed together by the serving instance rather than processing one request at a time.
+                                           This will give a speedup in terms of number of inference requests processed per second, especially if using GPUs."
+                                           style="margin-left: 10px"></i>
+                </td>
+                <td> <span class="glyphicon glyphicon-ok-circle" ng-show="servingViewInfoCtrl.serving.batchingEnabled"/>
+                    <span ng-show="!servingViewInfoCtrl.serving.batchingEnabled"> No </span> </td>
+            </tr>
+            <tr>
+                <td>
+                    Creator <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                uib-tooltip="User that created the serving."
+                                style="margin-left: 10px"></i>
+                </td>
+                <td> {{servingViewInfoCtrl.serving.creator}} </td>
+            </tr>
+            <tr>
+                <td>
+                    Instances <i class="fa fa-info-circle" tooltip-placement="auto left"
+                               uib-tooltip="Number of active instances of the serving out of the total number of instances.
+                                           Using multiple instances is recommended for servings with high load of inference
+                                           requests as the number of requests will be load balanced across the active instances."
+                               style="margin-left: 10px"></i>
+                </td>
+                <td> {{servingViewInfoCtrl.serving.availableInstances}} / {{servingViewInfoCtrl.serving.requestedInstances}} </td>
+            </tr>
+            <tr>
+                <td>
+                    Kafka Topic Name <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                 uib-tooltip="Name of the kafka topic where inference requests and responses are logged.
+                                             The kafka topic can be used to monitor how the serving instance is handling inference requests in real-time."
+                                 style="margin-left: 10px"></i>
+                </td>
+                <td> {{servingViewInfoCtrl.serving.kafkaTopicDTO.name}} </td>
             </tr>
             </tbody>
         </table>
