@@ -285,8 +285,8 @@
               <file>target/hopsworks-api/WEB-INF/beans.xml</file>
               <replacements>
                 <replacement>
-                  <token>io.hops.hopsworks.common.serving.tf.LocalhostTfServingController</token>
-                  <value>io.hops.hopsworks.kube.serving.KubeTfServingController</value>
+                  <token>io.hops.hopsworks.common.serving.LocalhostServingController</token>
+                  <value>io.hops.hopsworks.kube.serving.KubeServingController</value>
                 </replacement>
               </replacements>
             </configuration>

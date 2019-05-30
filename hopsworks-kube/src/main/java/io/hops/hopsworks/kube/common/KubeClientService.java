@@ -31,9 +31,12 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static io.hops.hopsworks.common.util.Settings.CERT_PASS_SUFFIX;
 import static io.hops.hopsworks.common.util.Settings.HOPS_USERNAME_SEPARATOR;
@@ -195,5 +198,19 @@ public class KubeClientService {
 
   public List<Node> getNodeList() throws KubernetesClientException {
     return client.nodes().list().getItems();
+
+  }
+
+  public List<String> getNodeIpList() throws KubernetesClientException {
+    // Extract node IPs
+    List<String> nodeIPList = getNodeList().stream()
+        .flatMap(node -> node.getStatus().getAddresses().stream())
+        .filter(nodeAddress -> nodeAddress.getType().equals("InternalIP"))
+        .flatMap(nodeAddress -> Stream.of(nodeAddress.getAddress()))
+        .collect(Collectors.toList());
+
+    Collections.shuffle(nodeIPList);
+
+    return nodeIPList;
   }
 }

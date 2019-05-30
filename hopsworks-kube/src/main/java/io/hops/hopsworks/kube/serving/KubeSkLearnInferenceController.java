@@ -1,33 +1,31 @@
 /*
- * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2019, Logical Clocks AB. All rights reserved
  */
-
 package io.hops.hopsworks.kube.serving;
 
-import com.google.common.base.Strings;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.hops.common.Pair;
 import io.hops.hopsworks.common.dao.serving.Serving;
 import io.hops.hopsworks.common.serving.inference.InferenceHttpClient;
-import io.hops.hopsworks.common.serving.inference.TfInferenceController;
+import io.hops.hopsworks.common.serving.inference.SkLearnInferenceController;
 import io.hops.hopsworks.exceptions.InferenceException;
 import io.hops.hopsworks.kube.common.KubeClientService;
 import io.hops.hopsworks.restutils.RESTCodes;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.protocol.HttpContext;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.protocol.HttpClientContext;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.ConcurrencyManagement;
 import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.EJB;
+import javax.ejb.Singleton;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.ejb.Singleton;
 import javax.enterprise.inject.Alternative;
 import java.io.IOException;
 import java.net.URI;
@@ -37,14 +35,14 @@ import java.util.logging.Level;
 
 @Alternative
 @Singleton
-@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+@TransactionAttribute(TransactionAttributeType.NEVER)
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
-public class KubeTfInferenceController implements TfInferenceController {
+public class KubeSkLearnInferenceController implements SkLearnInferenceController {
 
   @EJB
   private KubeClientService kubeClientService;
   @EJB
-  private KubeTfServingController kubeTfServingController;
+  private KubeSkLearnServingController kubeSKLearnServingController;
   @EJB
   private InferenceHttpClient inferenceHttpClient;
 
@@ -56,15 +54,13 @@ public class KubeTfInferenceController implements TfInferenceController {
   }
 
   @Override
-  public Pair<Integer, String> infer(Serving serving, Integer modelVersion,
-                                     String verb, String inferenceRequestJson)
+  public Pair<Integer, String> infer(Serving serving, Integer modelVersion, String verb, String inferenceRequestJson)
       throws InferenceException {
-
     // Get node port
     Service serviceInfo = null;
     try {
       serviceInfo = kubeClientService.getServiceInfo(serving.getProject(),
-          kubeTfServingController.getServiceName(serving.getId().toString()));
+          kubeSKLearnServingController.getServiceName(serving.getId().toString()));
     } catch (KubernetesClientException e) {
       throw new InferenceException(RESTCodes.InferenceErrorCode.SERVING_INSTANCE_INTERNAL, Level.SEVERE, null,
           e.getMessage(), e);
@@ -74,21 +70,8 @@ public class KubeTfInferenceController implements TfInferenceController {
       throw new InferenceException(RESTCodes.InferenceErrorCode.SERVING_NOT_RUNNING, Level.FINE);
     }
 
-    if (Strings.isNullOrEmpty(verb)) {
-      throw new InferenceException(RESTCodes.InferenceErrorCode.MISSING_VERB, Level.FINE);
-    }
-
-    // TODO(Fabio) does Tf model server support TLS?
-    StringBuilder pathBuilder = new StringBuilder()
-        .append("/v1/models/")
-        .append(serving.getName());
-
-    // Append the version if the user specified it.
-    if (modelVersion != null) {
-      pathBuilder.append("/versions").append(modelVersion);
-    }
-
-    pathBuilder.append(verb);
+    StringBuilder pathBuilder =
+        new StringBuilder().append("/").append(verb.replaceFirst(":", ""));
 
     // Send request
     URI uri = null;

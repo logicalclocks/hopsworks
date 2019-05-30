@@ -10,6 +10,6 @@
                       http://xmlns.jcp.org/xml/ns/javaee/beans_1_1.xsd"
         bean-discovery-mode="annotated">
     <alternatives>
-        <class>io.hops.hopsworks.kube.serving.KubeTfServingController</class>
+        <class>io.hops.hopsworks.kube.serving.KubeServingController</class>
     </alternatives>
 </beans>
