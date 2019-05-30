@@ -24,6 +24,26 @@ public class IotGatewayBuilder {
   @EJB
   private IotGatewayFacade iotGatewayFacade;
   
+  public IotGatewayDetailsDTO buildGatewayDetails(UriInfo uriInfo, ResourceRequest resourceRequest, IotGatewayDetails
+    ioTGatewayDetails) {
+    IotGatewayDetailsDTO dto = new IotGatewayDetailsDTO();
+    URI href = uriIotGateway(uriInfo, ioTGatewayDetails).build();
+    dto.setExpand(true);
+    dto.setHref(href);
+    dto.setId(ioTGatewayDetails.getIotGateway().getId());
+    dto.setHostname(ioTGatewayDetails.getIotGateway().getHostname());
+    dto.setPort(ioTGatewayDetails.getIotGateway().getPort());
+    dto.setState(ioTGatewayDetails.getIotGateway().getState());
+    dto.setBlockedDevicesEndpoints(ioTGatewayDetails.getBlockedDevicesEndpoints());
+    dto.setCoapHost(ioTGatewayDetails.getCoapHost());
+    dto.setCoapPort(ioTGatewayDetails.getCoapPort());
+    dto.setCoapsHost(ioTGatewayDetails.getCoapsHost());
+    dto.setCoapsPort(ioTGatewayDetails.getCoapsPort());
+    dto.setConnectedDevices(ioTGatewayDetails.getConnectedDevices());
+    
+    return dto;
+  }
+  
   public IotGatewayDTO buildGateway(UriInfo uriInfo, ResourceRequest resourceRequest, IotGateways ioTGateway) {
     IotGatewayDTO dto = new IotGatewayDTO();
     URI href = uriIotGateway(uriInfo, ioTGateway).build();
@@ -74,6 +94,11 @@ public class IotGatewayBuilder {
       .path(ResourceRequest.Name.PROJECT.toString().toLowerCase())
       .path(Integer.toString(project.getId()))
       .path(ResourceRequest.Name.GATEWAYS.toString().toLowerCase());
+  }
+  
+  private UriBuilder uriIotGateway(UriInfo uriInfo, IotGatewayDetails iotGatewayDetails) {
+    return uriIotGateways(uriInfo, iotGatewayDetails.getIotGateway().getProject())
+      .path(Integer.toString(iotGatewayDetails.getIotGateway().getId()));
   }
   
   private UriBuilder uriIotGateway(UriInfo uriInfo, IotGateways iotGateway) {

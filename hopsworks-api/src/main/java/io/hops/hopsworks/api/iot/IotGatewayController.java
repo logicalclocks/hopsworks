@@ -37,12 +37,34 @@ public class IotGatewayController {
   
   private static final Logger LOGGER = Logger.getLogger(IotGatewayController.class.getName());
   
-  public IotGateways getGateway(Project project, Integer id) throws GatewayException {
+  public IotGatewayDetails getGateway(Project project, Integer id) throws
+    GatewayException, URISyntaxException, IOException {
     IotGateways gateway = iotGatewayFacade.findByProjectAndId(project, id);
     if (gateway == null) {
       throw new GatewayException(RESTCodes.GatewayErrorCode.GATEWAY_NOT_FOUND, Level.FINEST, "gatewayId:" + id);
     }
-    return gateway;
+    CloseableHttpClient httpClient = HttpClients.createDefault();
+    URI uri = new URIBuilder()
+      .setScheme("http")
+      .setHost(gateway.getHostname())
+      .setPort(gateway.getPort())
+      .setPath("/gateway")
+      .build();
+    HttpGet httpGet = new HttpGet(uri);
+    CloseableHttpResponse response = httpClient.execute(httpGet);
+    return responseToIotGatewayDetails(response, gateway);
+  }
+  
+  private IotGatewayDetails responseToIotGatewayDetails(CloseableHttpResponse response, IotGateways gateway)
+    throws IOException {
+    StringWriter writer = new StringWriter();
+    IOUtils.copy(response.getEntity().getContent(), writer);
+    String json = writer.toString();
+    
+    Gson gson = new Gson();
+    IotGatewayDetails gw = gson.fromJson(json, IotGatewayDetails.class);
+    gw.setIotGateway(gateway);
+    return gw;
   }
   
   public IotGateways putGateway(Project project, IotGatewayConfiguration config) {

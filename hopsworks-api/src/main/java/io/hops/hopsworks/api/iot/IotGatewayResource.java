@@ -90,10 +90,10 @@ public class IotGatewayResource {
   public Response getGatewayById(
     @Context UriInfo uriInfo,
     @PathParam("id") Integer id
-  ) throws GatewayException {
-    IotGateways gateway = iotGatewayController.getGateway(project, id);
+  ) throws GatewayException, URISyntaxException, IOException {
+    IotGatewayDetails gateway = iotGatewayController.getGateway(project, id);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.GATEWAYS);
-    IotGatewayDTO dto = iotGatewayBuilder.buildGateway(uriInfo, resourceRequest, gateway);
+    IotGatewayDetailsDTO dto = iotGatewayBuilder.buildGatewayDetails(uriInfo, resourceRequest, gateway);
     return Response.ok().entity(dto).build();
   }
   
