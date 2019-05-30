@@ -300,15 +300,14 @@ angular.module('hopsWorksApp')
               )
             };
 
-            self.viewIotGatewayDetails = function(hostname, port) {
-                // ModalService.viewIotGatewayDetails('lg', self.projectId, gatewayId).then(
-                //     function (success) {
-                //
-                //     }, function (error) {
-                //         //The user changed their mind.
-                //     });
-                console.log("gateway details for " + hostname + ":" + port);
-                KafkaService.getIotGatewayDetails(hostname, port).then(
+            self.viewIotGatewayDetails = function(gatewayId) {
+                ModalService.viewIotGatewayDetails('lg', self.projectId, gatewayId).then(
+                    function (success) {
+
+                    }, function (error) {
+                        //The user changed their mind.
+                    });
+                KafkaService.getIotGatewayDetails(self.projectId, gatewayId).then(
                     function(success) {
                         console.log(success.data)
                     }, function(error) {

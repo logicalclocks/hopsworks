@@ -137,8 +137,8 @@ angular.module('hopsWorksApp')
                 return $http.delete('/api/project/' + projectId + '/gateways/' + gatewayId + '/blocked')
               },
 
-              getIotGatewayDetails: function (hostname, port) {
-                return $http.get('http://' + hostname + ':' + port + '/gateway')
+              getIotGatewayDetails: function (projectId, gatewayId) {
+                return $http.get('/api/project/' + projectId + '/gateways/' + gatewayId)
               },
 
               getIotNodes: function (projectId, gatewayId) {
