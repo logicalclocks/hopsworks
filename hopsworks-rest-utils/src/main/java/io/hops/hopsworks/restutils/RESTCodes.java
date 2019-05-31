@@ -619,7 +619,8 @@ public class RESTCodes {
     ACL_NOT_FOR_TOPIC(13, "ACL does not belong to the specified topic", Response.Status.BAD_REQUEST),
     SCHEMA_IN_USE(14, "Schema is currently used by topics. topic", Response.Status.PRECONDITION_FAILED),
     BAD_NUM_PARTITION(15, "Invalid number of partitions", Response.Status.BAD_REQUEST),
-    CREATE_SCHEMA_RESERVED_NAME(16, "The provided schema name is reserved", Response.Status.BAD_REQUEST),
+    CREATE_SCHEMA_RESERVED_NAME(16, "The provided schema name is reserved",
+      Response.Status.METHOD_NOT_ALLOWED),
     DELETE_RESERVED_SCHEMA(17, "The schema is reserved and cannot be deleted",
       Response.Status.METHOD_NOT_ALLOWED);
 

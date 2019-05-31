@@ -36,7 +36,7 @@ describe "On #{ENV['OS']}" do
         it "should not be able to create a kafka schema with a reserved name" do
           project = get_project
           json_result, schema_name = add_schema(project.id, "inferenceschema")
-          expect_status(400)
+          expect_status(405)
         end
 
         it "should be able to share the topic with another project" do
@@ -59,7 +59,7 @@ describe "On #{ENV['OS']}" do
         it "should not be able to delete a kafka schema with a reserved name" do
           project = get_project
           delete_schema(project.id, "inferenceschema", 1)
-          expect_status(400)
+          expect_status(405)
         end
       end
     end
