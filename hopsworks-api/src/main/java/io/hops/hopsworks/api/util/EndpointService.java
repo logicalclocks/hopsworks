@@ -72,7 +72,7 @@ public class EndpointService {
   @Produces(MediaType.APPLICATION_JSON)
   public Response findEndpoint() {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
-    json.setData(hdfsLeDescriptorsFacade.getEndpoint());
+    json.setData(hdfsLeDescriptorsFacade.getRPCEndpoint());
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }
 }
