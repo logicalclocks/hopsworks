@@ -299,7 +299,9 @@ describe "On #{ENV['OS']}" do
         before :all do
           with_valid_project
           with_python_enabled(@project[:id], "2.7")
+          sleep(5)
           with_sklearn_serving(@project[:id], @project[:projectname], @user[:username])
+          sleep(5)
         end
 
         after :all do
@@ -345,7 +347,9 @@ describe "On #{ENV['OS']}" do
         before :all do
           with_valid_project
           with_python_enabled(@project[:id], "3.6")
+          sleep(5)
           with_sklearn_serving(@project[:id], @project[:projectname], @user[:username])
+          sleep(5)
         end
 
         after :all do

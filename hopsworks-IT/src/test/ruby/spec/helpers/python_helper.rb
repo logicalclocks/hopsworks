@@ -17,9 +17,18 @@
 module PythonHelper
 
   def with_python_enabled(project_id, python_version)
-    delete_conda_env(project_id)
-    post "#{ENV['HOPSWORKS_API']}/project/#{project_id}/python/environments/#{python_version}?action=create&pythonKernelEnable=true"
-    expect_status(201)
+    get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/python/environments"
+    if response.code == 200
+      version = json_body[:items][0][:pythonVersion]
+      if version != python_version
+        delete_conda_env(project_id)
+        post "#{ENV['HOPSWORKS_API']}/project/#{project_id}/python/environments/#{python_version}?action=create&pythonKernelEnable=true"
+        expect_status(201)
+      end
+    else
+      post "#{ENV['HOPSWORKS_API']}/project/#{project_id}/python/environments/#{python_version}?action=create&pythonKernelEnable=true"
+      expect_status(201)
+    end
   end
 
   def delete_conda_env(project_id)

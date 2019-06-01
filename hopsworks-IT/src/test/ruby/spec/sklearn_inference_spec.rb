@@ -73,7 +73,7 @@ describe "On #{ENV['OS']}" do
             expect_status(200)
 
             # Sleep a bit to avoid race condition
-            sleep(10)
+            sleep(30)
 
             # Sleep some time while the SkLearn Flask server starts
             wait_for do
