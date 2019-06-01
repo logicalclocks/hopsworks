@@ -41,6 +41,7 @@ package io.hops.hopsworks.api.admin;
 
 import io.hops.hopsworks.api.kibana.ProxyServlet;
 import io.hops.hopsworks.api.util.CustomSSLProtocolSocketFactory;
+import io.hops.hopsworks.common.dao.hdfs.HdfsLeDescriptorsFacade;
 import io.hops.hopsworks.common.security.BaseHadoopClientsService;
 import io.hops.hopsworks.common.util.Settings;
 import java.io.BufferedReader;
@@ -81,6 +82,8 @@ public class HDFSUIProxyServlet extends ProxyServlet {
   private Settings settings;
   @EJB
   private BaseHadoopClientsService baseHadoopClientsService;
+  @EJB
+  private HdfsLeDescriptorsFacade hdfsLeDescriptorsFacade;
 
   private static final HashSet<String> PASS_THROUGH_HEADERS
       = new HashSet<String>(
@@ -92,7 +95,7 @@ public class HDFSUIProxyServlet extends ProxyServlet {
               "Accept-Charset", "accept-charset"));
 
   protected void initTarget() throws ServletException {
-    targetUri = settings.getHDFSWebUIAddress();
+    targetUri = hdfsLeDescriptorsFacade.getLeaderWebEndpoint();
   
     if (targetUri == null) {
       throw new ServletException(P_TARGET_URI + " is required.");
@@ -132,6 +135,12 @@ public class HDFSUIProxyServlet extends ProxyServlet {
           "You don't have the access right for this service");
       return;
     }
+    String leaderWebEndpoint = hdfsLeDescriptorsFacade.getLeaderWebEndpoint();
+    // If the leader NN went down during the lifecycle of the bean, we need to reinitialize the targetURI and targetHost
+    // Otherwise the web UI will forward to a leader NN that is now down
+    if(!targetUri.contains(leaderWebEndpoint)) {
+      initTarget();
+    }
     if (servletRequest.getAttribute(ATTR_TARGET_URI) == null) {
       servletRequest.setAttribute(ATTR_TARGET_URI, targetUri);
     }
@@ -145,7 +154,7 @@ public class HDFSUIProxyServlet extends ProxyServlet {
     String proxyRequestUri = rewriteUrlFromRequest(servletRequest);
 
     try {
-      String[] targetHost_port = settings.getHDFSWebUIAddress().split(":");
+      String[] targetHost_port = leaderWebEndpoint.split(":");
       File keyStore = new File(baseHadoopClientsService.getSuperKeystorePath());
       File trustStore = new File(baseHadoopClientsService.getSuperTrustStorePath());
       // Assume that KeyStore password and Key password are the same

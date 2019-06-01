@@ -179,7 +179,7 @@ public class TensorBoardController {
    * @return HDFS path with updated namenode host:port
    */
   public String replaceNN(String hdfsPath)  {
-    String endPoint = hdfsLeDescriptorsFacade.getEndpoint();
+    String endPoint = hdfsLeDescriptorsFacade.getRPCEndpoint();
 
     Pattern urlPattern = Pattern.compile("([a-zA-Z0-9\\-\\.]{2,255}:[0-9]{1,6})(/.*$)");
     Matcher urlMatcher = urlPattern.matcher(hdfsPath);
