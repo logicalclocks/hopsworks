@@ -759,6 +759,34 @@ angular.module('hopsWorksApp')
                 return modalInstance.result;
             },
 
+            viewIotGatewayDetails: function (size, projectId, gatewayId) {
+                var modalInstance = $uibModal.open({
+                    templateUrl: 'views/iotGatewayDetailsViewContent.html',
+                    controller: 'IotGatewayDetailsViewContentCtrl as iotGatewayDetailsViewContentCtrl',
+                    size: size,
+                    resolve: {
+                        auth: ['$q', '$location', 'AuthService',
+                            function ($q, $location, AuthService) {
+                                return AuthService.session().then(
+                                    function (success) {
+                                    },
+                                    function (err) {
+                                        $location.path('/login');
+                                        $location.replace();
+                                        return $q.reject(err);
+                                    });
+                            }],
+                        projectId: function () {
+                            return projectId;
+                        },
+                        gatewayId: function () {
+                            return gatewayId;
+                        }
+                    }
+                });
+                return modalInstance.result;
+            },
+
             updateSchemaContent: function (size, projectId, schemaName, schemaVersion) {
                 var modalInstance = $uibModal.open({
                     templateUrl: 'views/schemaUpdateContent.html',
@@ -817,6 +845,60 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
             },
+
+            addIotGateway: function (size, projectId) {
+                var modalInstance = $uibModal.open({
+                    templateUrl: 'views/addIotGateway.html',
+                    controller: 'AddIotGatewayCtrl as addIotGatewayCtrl',
+                    size: size,
+                    resolve: {
+                        auth: ['$q', '$location', 'AuthService',
+                            function ($q, $location, AuthService) {
+                                return AuthService.session().then(
+                                    function (success) {
+                                    },
+                                    function (err) {
+                                        $location.path('/login');
+                                        $location.replace();
+                                        return $q.reject(err);
+                                    });
+                            }],
+                        projectId: function () {
+                            return projectId;
+                        }
+                    }
+                });
+                return modalInstance.result;
+            },
+
+            viewIotNodes: function (size, projectId, gatewayId) {
+                var modalInstance = $uibModal.open({
+                    templateUrl: 'views/viewIotNodes.html',
+                    controller: 'ViewIotNodesCtrl as viewIotNodesCtrl',
+                    size: size,
+                    resolve: {
+                        auth: ['$q', '$location', 'AuthService',
+                            function ($q, $location, AuthService) {
+                                return AuthService.session().then(
+                                    function (success) {
+                                    },
+                                    function (err) {
+                                        $location.path('/login');
+                                        $location.replace();
+                                        return $q.reject(err);
+                                    });
+                            }],
+                        projectId: function () {
+                            return projectId;
+                        },
+                        gatewayId: function () {
+                            return gatewayId;
+                        }
+                    }
+                });
+                return modalInstance.result;
+            },
+
             createTopicAcl: function (size, projectId, topicName) {
                 var modalInstance = $uibModal.open({
                     templateUrl: 'views/createTopicAcl.html',

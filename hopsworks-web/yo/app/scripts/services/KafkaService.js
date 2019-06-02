@@ -144,6 +144,18 @@ angular.module('hopsWorksApp')
               getIotNodes: function (projectId, gatewayId) {
                 return $http.get('/api/project/' + projectId + '/gateways/' + gatewayId + '/nodes')
               },
+
+              registerIotGateway: function (projectId, gatewayDetails) {
+                var req = {
+                    method: 'PUT',
+                    url: '/api/project/' + projectId + '/gateways',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    data: gatewayDetails
+                };
+                return $http(req);
+              },
               
               getSchemasForTopics: function (projectId){
                 return $http.get('/api/project/' + projectId + '/kafka/schemas');

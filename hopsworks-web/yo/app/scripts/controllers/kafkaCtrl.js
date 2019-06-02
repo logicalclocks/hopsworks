@@ -262,7 +262,19 @@ angular.module('hopsWorksApp')
             };
 
             self.addIotGateway = function() {
-
+                ModalService.addIotGateway('lg', self.projectId)
+                    .then(
+                        function (success) {
+                            growl.success(success.data, {title: 'New IoT Gateway added successfully.', ttl: 2000});
+                            self.listIotGateways();
+                        }, function (error) {
+                            if (typeof error.data.usrMsg !== 'undefined') {
+                                growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
+                            } else {
+                                growl.error("", {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
+                            }
+                        });
+                self.listIotGateways();
             };
 
             self.listIotGateways = function () {
@@ -279,25 +291,32 @@ angular.module('hopsWorksApp')
             };
 
             self.blockIotGateway = function(id) {
-              KafkaService.blockIotGateway(self.projectId, id)
+              KafkaService.blockIotGateway(self.projectId, id).then(
+                  function (success) {
+                      self.listIotGateways();
+                  }, function (error) {
+                      self.listIotGateways();
+                  }
+              )
             };
 
             self.unblockIotGateway = function(id) {
-              KafkaService.unblockIotGateway(self.projectId, id)
+                KafkaService.unblockIotGateway(self.projectId, id).then(
+                    function (success) {
+                        self.listIotGateways();
+                    }, function (error) {
+                        self.listIotGateways();
+                    }
+                )
             };
 
             self.viewIotNodes = function(id) {
-              KafkaService.getIotNodes(self.projectId, id).then(
-                  function(success) {
-                      console.log(success.data.items)
-                  }, function(error) {
-                      if (typeof error.data.usrMsg !== 'undefined') {
-                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
-                      } else {
-                          growl.error("", {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
-                      }
-                  }
-              )
+              ModalService.viewIotNodes('lg', self.projectId, id).then(
+                function (success) {
+
+                }, function (error) {
+                    //The user changed their mind.
+                });
             };
 
             self.viewIotGatewayDetails = function(gatewayId) {
@@ -307,17 +326,6 @@ angular.module('hopsWorksApp')
                     }, function (error) {
                         //The user changed their mind.
                     });
-                KafkaService.getIotGatewayDetails(self.projectId, gatewayId).then(
-                    function(success) {
-                        console.log(success.data)
-                    }, function(error) {
-                        if (typeof error.data.usrMsg !== 'undefined') {
-                            growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
-                        } else {
-                            growl.error("", {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
-                        }
-                    }
-                )
             };
 
             self.lala = function () {
