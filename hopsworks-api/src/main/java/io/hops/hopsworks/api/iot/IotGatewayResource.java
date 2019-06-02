@@ -14,6 +14,8 @@ import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.kafka.KafkaController;
 import io.hops.hopsworks.exceptions.GatewayException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.hops.hopsworks.jwt.exception.DuplicateSigningKeyException;
+import io.hops.hopsworks.jwt.exception.SigningKeyNotFoundException;
 import io.swagger.annotations.ApiOperation;
 
 import javax.annotation.PostConstruct;
@@ -35,6 +37,7 @@ import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -102,12 +105,17 @@ public class IotGatewayResource {
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_GATEWAY"})
   public Response registerGateway(
     IotGatewayConfiguration config,
-    @Context UriInfo uriInfo
-  ) {
+    @Context UriInfo uriInfo,
+    @Context SecurityContext sc
+  ) throws URISyntaxException, IOException, NoSuchAlgorithmException, SigningKeyNotFoundException,
+    DuplicateSigningKeyException {
     if (config == null) {
       throw new IllegalArgumentException("Gateway configuration was not provided.");
     }
     IotGateways gateway = iotGatewayController.putGateway(project, config);
+    Users user = jWTHelper.getUserPrincipal(sc);
+    String jwt = jWTHelper.createToken(user, "hopsworks@logicalclocks.com", null);
+    iotGatewayController.sendJwtToIotGateway(config, project.getId(), jwt);
     IotGatewayDTO dto =
       iotGatewayBuilder.buildGateway(uriInfo, new ResourceRequest(ResourceRequest.Name.GATEWAYS), gateway);
     return Response.created(dto.getHref()).build();

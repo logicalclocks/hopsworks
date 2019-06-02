@@ -9,6 +9,9 @@ import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.exceptions.GatewayException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.commons.io.IOUtils;
+import org.apache.http.Consts;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
@@ -17,6 +20,7 @@ import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.message.BasicNameValuePair;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -24,6 +28,7 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
@@ -139,5 +144,25 @@ public class IotGatewayController {
       method = new HttpDelete(uri);
     }
     CloseableHttpResponse response = httpClient.execute(method);
+  }
+  
+  public void sendJwtToIotGateway(IotGatewayConfiguration config, Integer projectId, String jwt) throws
+    URISyntaxException,
+    IOException  {
+    CloseableHttpClient httpClient = HttpClients.createDefault();
+    URI uri = new URIBuilder()
+      .setScheme("http")
+      .setHost(config.getHostname())
+      .setPort(config.getPort())
+      .setPath("/gateway/jwt")
+      .build();
+    List<NameValuePair> form = new ArrayList<>();
+    form.add(new BasicNameValuePair("projectId", Integer.toString(projectId)));
+    form.add(new BasicNameValuePair("jwt", jwt));
+    UrlEncodedFormEntity entity = new UrlEncodedFormEntity(form, Consts.UTF_8);
+    
+    HttpPost httpPost = new HttpPost(uri);
+    httpPost.setEntity(entity);
+    CloseableHttpResponse response = httpClient.execute(httpPost);
   }
 }
