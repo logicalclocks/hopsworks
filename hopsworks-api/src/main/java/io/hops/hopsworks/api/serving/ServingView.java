@@ -19,10 +19,11 @@ package io.hops.hopsworks.api.serving;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
-import io.hops.hopsworks.common.dao.serving.TfServing;
-import io.hops.hopsworks.common.serving.tf.TfServingStatusEnum;
+import io.hops.hopsworks.common.dao.serving.ServingType;
+import io.hops.hopsworks.common.dao.serving.Serving;
+import io.hops.hopsworks.common.serving.ServingStatusEnum;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.serving.tf.TfServingWrapper;
+import io.hops.hopsworks.common.serving.ServingWrapper;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -32,50 +33,51 @@ import java.io.Serializable;
 import java.util.Date;
 
 @XmlRootElement
-@ApiModel(value = "Represents a TfServing model")
-public class TfServingView implements Serializable {
+@ApiModel(value = "Represents a Serving model")
+public class ServingView implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
   private Integer id;
-  private String modelName;
-  private String modelPath;
+  private String name;
+  private String artifactPath;
   private Integer modelVersion;
   private Integer availableInstances;
   private Integer requestedInstances;
   private Integer nodePort;
   private Date created;
   private Boolean batchingEnabled;
+  private ServingType servingType;
 
   // TODO(Fabio): use expansions here
   private String creator;
 
   @XmlElement
-  private TfServingStatusEnum status;
+  private ServingStatusEnum status;
 
   // TODO(Fabio): use expansions here
   private TopicDTO kafkaTopicDTO;
 
-  public TfServingView() { }
+  public ServingView() { }
 
-  public TfServingView(TfServingWrapper tfServingWrapper) {
-    this.id = tfServingWrapper.getTfServing().getId();
-    this.modelName = tfServingWrapper.getTfServing().getModelName();
-    this.modelPath = tfServingWrapper.getTfServing().getModelPath();
-    this.modelVersion = tfServingWrapper.getTfServing().getVersion();
-    this.availableInstances = tfServingWrapper.getAvailableReplicas();
-    this.requestedInstances = tfServingWrapper.getTfServing().getInstances();
-    this.nodePort = tfServingWrapper.getNodePort();
-    this.created = tfServingWrapper.getTfServing().getCreated();
-    this.status = tfServingWrapper.getStatus();
-    this.kafkaTopicDTO = tfServingWrapper.getKafkaTopicDTO();
-    this.batchingEnabled = tfServingWrapper.getTfServing().isBatchingEnabled();
-
-    Users user = tfServingWrapper.getTfServing().getCreator();
+  public ServingView(ServingWrapper servingWrapper) {
+    this.id = servingWrapper.getServing().getId();
+    this.name = servingWrapper.getServing().getName();
+    this.artifactPath = servingWrapper.getServing().getArtifactPath();
+    this.modelVersion = servingWrapper.getServing().getVersion();
+    this.availableInstances = servingWrapper.getAvailableReplicas();
+    this.requestedInstances = servingWrapper.getServing().getInstances();
+    this.nodePort = servingWrapper.getNodePort();
+    this.created = servingWrapper.getServing().getCreated();
+    this.status = servingWrapper.getStatus();
+    this.kafkaTopicDTO = servingWrapper.getKafkaTopicDTO();
+    this.batchingEnabled = servingWrapper.getServing().isBatchingEnabled();
+    this.servingType = servingWrapper.getServing().getServingType();
+    Users user = servingWrapper.getServing().getCreator();
     this.creator = user.getFname() + " " + user.getLname();
   }
 
-  @ApiModelProperty(value = "ID of the TfServing entry" )
+  @ApiModelProperty(value = "ID of the Serving entry" )
   public Integer getId() {
     return id;
   }
@@ -84,25 +86,25 @@ public class TfServingView implements Serializable {
     this.id = id;
   }
 
-  @ApiModelProperty(value = "Name of the model to serve")
-  public String getModelName() {
-    return modelName;
+  @ApiModelProperty(value = "Name of the serving")
+  public String getName() {
+    return name;
   }
 
-  public void setModelName(String modelName) {
-    this.modelName = modelName;
+  public void setName(String name) {
+    this.name = name;
   }
 
-  @ApiModelProperty(value = "HopsFS directory path containing the model")
-  public String getModelPath() {
-    return modelPath;
+  @ApiModelProperty(value = "HopsFS directory path containing the model (tf) or python script (sklearn)")
+  public String getArtifactPath() {
+    return artifactPath;
   }
 
-  public void setModelPath(String modelPath) {
-    this.modelPath = modelPath;
+  public void setArtifactPath(String artifactPath) {
+    this.artifactPath = artifactPath;
   }
 
-  @ApiModelProperty(value = "Model version to serve")
+  @ApiModelProperty(value = "Version of the serving")
   public Integer getModelVersion() {
     return modelVersion;
   }
@@ -111,7 +113,7 @@ public class TfServingView implements Serializable {
     this.modelVersion = modelVersion;
   }
 
-  @ApiModelProperty(value = "Number of TfServing instances to use for serving")
+  @ApiModelProperty(value = "Number of Serving instances to use for serving")
   public Integer getRequestedInstances() {
     return requestedInstances;
   }
@@ -120,7 +122,7 @@ public class TfServingView implements Serializable {
     this.requestedInstances = requestedInstances;
   }
 
-  @ApiModelProperty(value = "Number of TfServing instances available for serving", readOnly = true)
+  @ApiModelProperty(value = "Number of Serving instances available for serving", readOnly = true)
   public Integer getAvailableInstances() {
     return availableInstances;
   }
@@ -129,7 +131,7 @@ public class TfServingView implements Serializable {
     this.availableInstances = availableInstances;
   }
 
-  @ApiModelProperty(value = "Port on which the TfServing instance(s) are listening", readOnly = true)
+  @ApiModelProperty(value = "Port on which the Serving instance(s) are listening", readOnly = true)
   public Integer getNodePort() {
     return nodePort;
   }
@@ -138,7 +140,7 @@ public class TfServingView implements Serializable {
     this.nodePort = nodePort;
   }
 
-  @ApiModelProperty(value = "Date on which the TfServing entry was created", readOnly = true)
+  @ApiModelProperty(value = "Date on which the Serving entry was created", readOnly = true)
   public Date getCreated() {
     return created;
   }
@@ -147,7 +149,7 @@ public class TfServingView implements Serializable {
     this.created = created;
   }
 
-  @ApiModelProperty(value = "User whom created the TfServing entry", readOnly = true)
+  @ApiModelProperty(value = "User whom created the Serving entry", readOnly = true)
   public String getCreator() {
     return creator;
   }
@@ -156,8 +158,8 @@ public class TfServingView implements Serializable {
     this.creator = creator;
   }
 
-  @ApiModelProperty(value = "Status of the TfServing entry", readOnly = true)
-  public TfServingStatusEnum getStatus() {
+  @ApiModelProperty(value = "Status of the Serving entry", readOnly = true)
+  public ServingStatusEnum getStatus() {
     return status;
   }
 
@@ -177,14 +179,24 @@ public class TfServingView implements Serializable {
   public void setKafkaTopicDTO(TopicDTO kafkaTopicDTO) {
     this.kafkaTopicDTO = kafkaTopicDTO;
   }
-
+  
+  @ApiModelProperty(value = "Type of serving, sklearn or tfserving")
+  public ServingType getServingType() {
+    return servingType;
+  }
+  
+  public void setServingType(ServingType servingType) {
+    this.servingType = servingType;
+  }
+  
   @JsonIgnore
-  public TfServingWrapper getTfServingWrapper() {
+  public ServingWrapper getServingWrapper() {
 
-    TfServingWrapper tfServingWrapper = new TfServingWrapper(
-        new TfServing(id, modelName, modelPath, modelVersion, requestedInstances, batchingEnabled));
-    tfServingWrapper.setKafkaTopicDTO(kafkaTopicDTO);
+    ServingWrapper servingWrapper = new ServingWrapper(
+        new Serving(id, name, artifactPath, modelVersion, requestedInstances, batchingEnabled,
+            servingType));
+    servingWrapper.setKafkaTopicDTO(kafkaTopicDTO);
 
-    return tfServingWrapper;
+    return servingWrapper;
   }
 }

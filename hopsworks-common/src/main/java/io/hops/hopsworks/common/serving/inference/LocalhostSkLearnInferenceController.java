@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2019, Logical Clocks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -40,25 +40,24 @@ import java.net.URISyntaxException;
 import java.util.logging.Level;
 
 import static io.hops.hopsworks.common.serving.LocalhostServingController.PID_STOPPED;
-
 /**
- * Tensorflow Localhost Inference Controller
- * <p>
- * Sends inference requests to a local tensorflow serving server to get a prediction response
+ * SkLearn Localhost Inference Controller
+ *
+ * Sends inference requests to a local sklearn flask server to get a prediction response
  */
 @Alternative
 @Singleton
 @TransactionAttribute(TransactionAttributeType.NEVER)
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
-public class LocalhostTfInferenceController implements TfInferenceController {
-  
+public class LocalhostSkLearnInferenceController implements SkLearnInferenceController {
+
   @EJB
-  private InferenceHttpClient inferenceHttpClient;
-  
+  private  InferenceHttpClient inferenceHttpClient;
+
   /**
-   * Tensorflow inference. Sends a JSON request to the REST API of a tensorflow serving server
+   * SkLearn inference. Sends a JSON request to a flask server that serves a SkLearn model
    *
-   * @param serving the tensorflow serving instance to send the request to
+   * @param serving the sklearn serving instance to send the request to
    * @param modelVersion the version of the serving
    * @param verb the type of inference request (predict, regress, classify)
    * @param inferenceRequestJson the JSON payload of the inference request
@@ -66,33 +65,22 @@ public class LocalhostTfInferenceController implements TfInferenceController {
    * @throws InferenceException
    */
   public Pair<Integer, String> infer(Serving serving, Integer modelVersion,
-    String verb, String inferenceRequestJson) throws InferenceException {
-    
+                                     String verb, String inferenceRequestJson) throws InferenceException {
+
     if (serving.getLocalPid().equals(PID_STOPPED)) {
       throw new InferenceException(RESTCodes.InferenceErrorCode.SERVING_NOT_RUNNING, Level.FINE);
     }
-    
-    // TODO(Fabio) does Tf model server support TLS?
-    StringBuilder pathBuilder = new StringBuilder()
-      .append("/v1/models/")
-      .append(serving.getName());
-    
-    // Append the version if the user specified it.
-    if (modelVersion != null) {
-      pathBuilder.append("/versions").append(modelVersion);
-    }
-    
-    pathBuilder.append(verb);
-    
-    // Send request
+
+    StringBuilder pathBuilder =
+        new StringBuilder().append("/").append(verb.replaceFirst(":", ""));
+
     try {
       URI uri = new URIBuilder()
-        .setScheme("http")
-        .setHost("localhost")
-        .setPort(serving.getLocalPort())
-        .setPath(pathBuilder.toString())
-        .build();
-      
+          .setScheme("http")
+          .setHost("localhost")
+          .setPort(serving.getLocalPort())
+          .setPath(pathBuilder.toString())
+          .build();
       HttpPost request = new HttpPost(uri);
       request.addHeader("content-type", "application/json; charset=utf-8");
       request.setEntity(new StringEntity(inferenceRequestJson));

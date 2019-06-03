@@ -14,7 +14,7 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.common.serving;
+package io.hops.hopsworks.common.serving.util;
 
 import io.hops.hopsworks.common.dao.kafka.AclDTO;
 import io.hops.hopsworks.common.dao.kafka.KafkaFacade;
@@ -22,15 +22,15 @@ import io.hops.hopsworks.common.dao.kafka.ProjectTopics;
 import io.hops.hopsworks.common.dao.kafka.SchemaTopics;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
 import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.serving.TfServing;
+import io.hops.hopsworks.common.dao.serving.Serving;
+import io.hops.hopsworks.exceptions.ServingException;
+import io.hops.hopsworks.common.serving.ServingWrapper;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.exceptions.ProjectException;
-import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.UserException;
-import io.hops.hopsworks.common.serving.tf.TfServingException;
-import io.hops.hopsworks.common.serving.tf.TfServingWrapper;
-import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.zookeeper.KeeperException;
 
@@ -39,16 +39,10 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import java.io.IOException;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 @Stateless
 public class KafkaServingHelper {
-
-  public final static String SCHEMANAME = "inferenceschema";
-  public final static int SCHEMAVERSION = 1;
-
-  private final static Logger LOGGER = Logger.getLogger(KafkaServingHelper.class.toString());
-
+  
   @EJB
   private KafkaFacade kafkaFacade;
   @EJB
@@ -58,12 +52,27 @@ public class KafkaServingHelper {
 
   @PostConstruct
   public void init() {
-    schemaTopics = kafkaFacade.getSchema(SCHEMANAME, SCHEMAVERSION);
+    schemaTopics = kafkaFacade.getSchema(Settings.INFERENCE_SCHEMANAME, Settings.INFERENCE_SCHEMAVERSION);
   }
-
-  public void setupKafkaServingTopic(Project project, TfServingWrapper servingWrapper,
-                                     TfServing newDbServing, TfServing oldDbServing)
-      throws KafkaException, ProjectException, UserException, ServiceException, TfServingException {
+  
+  /**
+   * Sets up the kafka topic for logging inference requests for models being served on Hopsworks. This kafka topic
+   * for logging is setup automatically when updating or creating a model serving instance if the user have specified
+   * that option in the configuration of the serving.
+   *
+   * @param project the project where the serving resides and where the kafka topic is to be created
+   * @param servingWrapper the internal representation of the serving instance
+   * @param newDbServing the new serving to save in the database (either a new insertion or an update)
+   * @param oldDbServing the old serving in the database (in case of an update)
+   * @throws KafkaException
+   * @throws ProjectException
+   * @throws UserException
+   * @throws ServiceException
+   * @throws ServingException
+   */
+  public void setupKafkaServingTopic(Project project, ServingWrapper servingWrapper,
+                                     Serving newDbServing, Serving oldDbServing)
+      throws KafkaException, ProjectException, UserException, ServiceException, ServingException {
 
     if (servingWrapper.getKafkaTopicDTO() != null &&
         servingWrapper.getKafkaTopicDTO().getName() != null &&
@@ -98,8 +107,14 @@ public class KafkaServingHelper {
       }
     }
   }
-
-  public TopicDTO buildTopicDTO(TfServing serving) {
+  
+  /**
+   * Creates the TopicDTO from the topic name of a serving
+   *
+   * @param serving the serving that is connected to the kafka topic
+   * @return the topicDTO of the serving
+   */
+  public TopicDTO buildTopicDTO(Serving serving) {
     if (serving.getKafkaTopic() == null) {
       return null;
     }
@@ -107,7 +122,7 @@ public class KafkaServingHelper {
     return new TopicDTO(serving.getKafkaTopic().getTopicName());
   }
 
-  private ProjectTopics setupKafkaTopic(Project project, TfServingWrapper servingWrapper) throws KafkaException,
+  private ProjectTopics setupKafkaTopic(Project project, ServingWrapper servingWrapper) throws KafkaException,
       ServiceException, UserException, ProjectException {
 
     try {
@@ -141,7 +156,8 @@ public class KafkaServingHelper {
     String servingTopicName = getServingTopicName(servingWrapper);
 
     TopicDTO topicDTO = new TopicDTO(servingTopicName, servingWrapper.getKafkaTopicDTO().getNumOfReplicas(),
-        servingWrapper.getKafkaTopicDTO().getNumOfPartitions(), SCHEMANAME, SCHEMAVERSION);
+        servingWrapper.getKafkaTopicDTO().getNumOfPartitions(), Settings.INFERENCE_SCHEMANAME,
+      Settings.INFERENCE_SCHEMAVERSION);
 
     ProjectTopics pt = null;
     pt = kafkaFacade.createTopicInProject(project, topicDTO);
@@ -157,8 +173,8 @@ public class KafkaServingHelper {
     return pt;
   }
 
-  private ProjectTopics checkSchemaRequirements(Project project, TfServingWrapper servingWrapper)
-      throws KafkaException, TfServingException {
+  private ProjectTopics checkSchemaRequirements(Project project, ServingWrapper servingWrapper)
+      throws KafkaException, ServingException {
     ProjectTopics topic = kafkaFacade.findTopicByNameAndProject(project, servingWrapper.getKafkaTopicDTO().getName());
 
     if (topic == null) {
@@ -167,17 +183,16 @@ public class KafkaServingHelper {
           "name: " + servingWrapper.getKafkaTopicDTO().getName());
     }
 
-    if (!(topic.getSchemaTopics().getSchemaTopicsPK().getName().equalsIgnoreCase(SCHEMANAME) &&
-        topic.getSchemaTopics().getSchemaTopicsPK().getVersion() == SCHEMAVERSION)) {
+    if (!topic.getSchemaTopics().getSchemaTopicsPK().getName().equalsIgnoreCase(Settings.INFERENCE_SCHEMANAME)) {
 
-      throw new TfServingException(RESTCodes.TfServingErrorCode.BAD_TOPIC, Level.INFO,
-          SCHEMANAME + " required. Version: " + String.valueOf(SCHEMAVERSION));
+      throw new ServingException(RESTCodes.ServingErrorCode.BAD_TOPIC, Level.INFO,
+        Settings.INFERENCE_SCHEMANAME + " required");
     }
 
     return topic;
   }
 
-  private String getServingTopicName(TfServingWrapper servingWrapper) {
-    return servingWrapper.getTfServing().getModelName() + "-inf" + RandomStringUtils.randomNumeric(4);
+  private String getServingTopicName(ServingWrapper servingWrapper) {
+    return servingWrapper.getServing().getName() + "-inf" + RandomStringUtils.randomNumeric(4);
   }
 }

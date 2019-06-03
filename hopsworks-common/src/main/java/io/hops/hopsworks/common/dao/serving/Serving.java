@@ -20,11 +20,11 @@ import io.hops.hopsworks.common.dao.kafka.ProjectTopics;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
 
-import java.io.Serializable;
-import java.util.Date;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -38,24 +38,26 @@ import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.io.Serializable;
+import java.util.Date;
 
 @Entity
-@Table(name = "tf_serving", catalog = "hopsworks", schema = "")
+@Table(name = "serving", catalog = "hopsworks", schema = "")
 @XmlRootElement
 @NamedQueries({
-    @NamedQuery(name = "TfServing.findAll", query = "SELECT t FROM TfServing t"),
-    @NamedQuery(name = "TfServing.findById", query = "SELECT t FROM TfServing t WHERE t.id = :id"),
-    @NamedQuery(name = "TfServing.findByProject", query = "SELECT t FROM TfServing t " +
+    @NamedQuery(name = "Serving.findAll", query = "SELECT t FROM Serving t"),
+    @NamedQuery(name = "Serving.findById", query = "SELECT t FROM Serving t WHERE t.id = :id"),
+    @NamedQuery(name = "Serving.findByProject", query = "SELECT t FROM Serving t " +
       "WHERE t.project = :project"),
-    @NamedQuery(name = "TfServing.findByProjectAndId", query = "SELECT t FROM TfServing t " +
+    @NamedQuery(name = "Serving.findByProjectAndId", query = "SELECT t FROM Serving t " +
       "WHERE t.project = :project AND t.id = :id"),
-    @NamedQuery(name = "TfServing.findByCreated", query = "SELECT t FROM TfServing t WHERE t.created = :created"),
-    @NamedQuery(name = "TfServing.findLocalhostRunning", query = "SELECT t FROM TfServing t WHERE t.localPid != -2"),
-    @NamedQuery(name = "TfServing.expiredLocks", query = "SELECT t FROM TfServing t " +
+    @NamedQuery(name = "Serving.findByCreated", query = "SELECT t FROM Serving t WHERE t.created = :created"),
+    @NamedQuery(name = "Serving.findLocalhostRunning", query = "SELECT t FROM Serving t WHERE t.localPid != -2"),
+    @NamedQuery(name = "Serving.expiredLocks", query = "SELECT t FROM Serving t " +
         "WHERE t.lockTimestamp is not NULL AND t.lockTimestamp < :lockts"),
-    @NamedQuery(name = "TfServing.findByProjectModelName", query = "SELECT t FROM TfServing t " +
-      "WHERE t.modelName = :modelName AND t.project = :project")})
-public class TfServing implements Serializable {
+    @NamedQuery(name = "Serving.findByProjectAndName", query = "SELECT t FROM Serving t " +
+      "WHERE t.name = :name AND t.project = :project")})
+public class Serving implements Serializable {
 
   private static final long serialVersionUID = 1L;
   @Id
@@ -73,13 +75,13 @@ public class TfServing implements Serializable {
   @Basic(optional = false)
   @NotNull
   @Size(min = 1, max = 255)
-  @Column(name = "model_name")
-  private String modelName;
+  @Column(name = "name")
+  private String name;
   @Basic(optional = false)
   @NotNull
   @Size(min = 1, max = 255)
-  @Column(name = "model_path")
-  private String modelPath;
+  @Column(name = "artifact_path")
+  private String artifactPath;
   @Basic(optional = false)
   @NotNull
   @Column(name = "version")
@@ -114,17 +116,22 @@ public class TfServing implements Serializable {
   @Basic(optional = true)
   @Column(name = "local_dir")
   private String localDir;
+  @NotNull
+  @Enumerated(EnumType.ORDINAL)
+  @Column(name = "serving_type")
+  private ServingType servingType = ServingType.TENSORFLOW;
 
-  public TfServing() { }
+  public Serving() { }
 
-  public TfServing(Integer id, String modelName, String modelPath, Integer version,
-                   Integer nInstances, Boolean batchingEnabled) {
+  public Serving(Integer id, String name, String artifactPath, Integer version,
+                 Integer nInstances, Boolean batchingEnabled, ServingType servingType) {
     this.id = id;
-    this.modelName = modelName;
-    this.modelPath = modelPath;
+    this.name = name;
+    this.artifactPath = artifactPath;
     this.version = version;
     this.instances = nInstances;
     this.batchingEnabled = batchingEnabled;
+    this.servingType = servingType;
   }
 
   public Integer getId() {
@@ -151,20 +158,20 @@ public class TfServing implements Serializable {
     this.creator = creator;
   }
 
-  public String getModelName() {
-    return modelName;
+  public String getName() {
+    return name;
   }
 
-  public void setModelName(String modelName) {
-    this.modelName = modelName;
+  public void setName(String name) {
+    this.name = name;
   }
 
-  public String getModelPath() {
-    return modelPath;
+  public String getArtifactPath() {
+    return artifactPath;
   }
 
-  public void setModelPath(String modelPath) {
-    this.modelPath = modelPath;
+  public void setArtifactPath(String artifactPath) {
+    this.artifactPath = artifactPath;
   }
 
   public Integer getVersion() {
@@ -255,30 +262,39 @@ public class TfServing implements Serializable {
     this.kafkaTopic = kafkaTopic;
   }
 
+  public ServingType getServingType() {
+    return servingType;
+  }
+
+  public void setServingType(ServingType servingType) {
+    this.servingType = servingType;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
 
-    TfServing tfServing = (TfServing) o;
+    Serving serving = (Serving) o;
 
-    if (optimized != tfServing.optimized) return false;
-    if (batchingEnabled != tfServing.batchingEnabled) return false;
-    if (id != null ? !id.equals(tfServing.id) : tfServing.id != null) return false;
-    if (created != null ? !created.equals(tfServing.created) : tfServing.created != null) return false;
-    if (creator != null ? !creator.equals(tfServing.creator) : tfServing.creator != null) return false;
-    if (!modelName.equals(tfServing.modelName)) return false;
-    if (!modelPath.equals(tfServing.modelPath)) return false;
-    if (!version.equals(tfServing.version)) return false;
-    if (instances != null ? !instances.equals(tfServing.instances) : tfServing.instances != null) return false;
-    if (project != null ? !project.equals(tfServing.project) : tfServing.project != null) return false;
-    if (lockIP != null ? !lockIP.equals(tfServing.lockIP) : tfServing.lockIP != null) return false;
-    if (lockTimestamp != null ? !lockTimestamp.equals(tfServing.lockTimestamp) : tfServing.lockTimestamp != null)
+    if (optimized != serving.optimized) return false;
+    if (batchingEnabled != serving.batchingEnabled) return false;
+    if (id != null ? !id.equals(serving.id) : serving.id != null) return false;
+    if (created != null ? !created.equals(serving.created) : serving.created != null) return false;
+    if (creator != null ? !creator.equals(serving.creator) : serving.creator != null) return false;
+    if (!name.equals(serving.name)) return false;
+    if (!artifactPath.equals(serving.artifactPath)) return false;
+    if (!version.equals(serving.version)) return false;
+    if (instances != null ? !instances.equals(serving.instances) : serving.instances != null) return false;
+    if (project != null ? !project.equals(serving.project) : serving.project != null) return false;
+    if (lockIP != null ? !lockIP.equals(serving.lockIP) : serving.lockIP != null) return false;
+    if (lockTimestamp != null ? !lockTimestamp.equals(serving.lockTimestamp) : serving.lockTimestamp != null)
       return false;
-    if (kafkaTopic != null ? !kafkaTopic.equals(tfServing.kafkaTopic) : tfServing.kafkaTopic != null) return false;
-    if (localPort != null ? !localPort.equals(tfServing.localPort) : tfServing.localPort != null) return false;
-    if (localPid != null ? !localPid.equals(tfServing.localPid) : tfServing.localPid != null) return false;
-    return localDir != null ? localDir.equals(tfServing.localDir) : tfServing.localDir == null;
+    if (kafkaTopic != null ? !kafkaTopic.equals(serving.kafkaTopic) : serving.kafkaTopic != null) return false;
+    if (localPort != null ? !localPort.equals(serving.localPort) : serving.localPort != null) return false;
+    if (localPid != null ? !localPid.equals(serving.localPid) : serving.localPid != null) return false;
+    if (servingType != null ? !servingType.equals(serving.servingType) : serving.servingType != null) return false;
+    return localDir != null ? localDir.equals(serving.localDir) : serving.localDir == null;
   }
 
   @Override
@@ -286,8 +302,8 @@ public class TfServing implements Serializable {
     int result = id != null ? id.hashCode() : 0;
     result = 31 * result + (created != null ? created.hashCode() : 0);
     result = 31 * result + (creator != null ? creator.hashCode() : 0);
-    result = 31 * result + modelName.hashCode();
-    result = 31 * result + modelPath.hashCode();
+    result = 31 * result + name.hashCode();
+    result = 31 * result + artifactPath.hashCode();
     result = 31 * result + version.hashCode();
     result = 31 * result + (optimized ? 1 : 0);
     result = 31 * result + (instances != null ? instances.hashCode() : 0);
@@ -299,6 +315,7 @@ public class TfServing implements Serializable {
     result = 31 * result + (localPort != null ? localPort.hashCode() : 0);
     result = 31 * result + (localPid != null ? localPid.hashCode() : 0);
     result = 31 * result + (localDir != null ? localDir.hashCode() : 0);
+    result = 31 * result + (servingType!= null ? servingType.hashCode() : 0);
     return result;
   }
 }

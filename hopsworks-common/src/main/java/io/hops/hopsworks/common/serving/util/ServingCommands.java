@@ -14,24 +14,16 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.api.serving;
+package io.hops.hopsworks.common.serving.util;
 
-import io.hops.hopsworks.common.serving.tf.TfServingStatusEnum;
+import javax.xml.bind.annotation.XmlEnum;
 
-import javax.persistence.AttributeConverter;
-import javax.persistence.Converter;
+@XmlEnum
+public enum ServingCommands {
+  START,
+  STOP;
 
-@Converter(autoApply = true)
-public class TfServingStatusConverter implements AttributeConverter<TfServingStatusEnum, String> {
-
-  @Override
-  public String convertToDatabaseColumn(TfServingStatusEnum attribute) {
-    return attribute.toString();
+  public static ServingCommands fromString(String command) {
+    return valueOf(command.toUpperCase());
   }
-
-  @Override
-  public TfServingStatusEnum convertToEntityAttribute(String dbData) {
-    return TfServingStatusEnum.fromString(dbData);
-  }
-
 }
