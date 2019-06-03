@@ -118,7 +118,7 @@ public class FeaturestoreFacade extends AbstractFacade<Featurestore> {
   public Long getHiveDatabaseId(String featurestoreName) {
     try {
       return (Long) em.createNativeQuery("SELECT `DB_ID` FROM metastore.`DBS` " +
-        "WHERE NAME = ?1;").setParameter(1, featurestoreName).getSingleResult();
+        "WHERE NAME = ?1;").setParameter(1, featurestoreName.toLowerCase()).getSingleResult();
     } catch (NoResultException e) {
       return null;
     }
