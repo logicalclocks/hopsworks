@@ -38,20 +38,20 @@
  */
 
 angular.module('hopsWorksApp')
-        .controller('ViewIotNodesCtrl', ['$uibModalInstance', '$scope', 'KafkaService', 'growl', 'projectId', 'gatewayId',
-          function ($uibModalInstance, $scope, KafkaService, growl, projectId, gatewayId) {
+        .controller('ViewIotNodesCtrl', ['$uibModalInstance', '$scope', 'KafkaService', 'growl', 'projectId', 'gatewayName',
+          function ($uibModalInstance, $scope, KafkaService, growl, projectId, gatewayName) {
 
             var self = this;
 
             self.projectId = projectId;
-            self.gatewayId = gatewayId;
+            self.gatewayName = gatewayName;
             self.iotNodesContents =[];
             $scope.jsonObj = "";
 
 
             self.init = function() {
 
-                KafkaService.getIotNodes(self.projectId, self.gatewayId).then(
+                KafkaService.getIotNodes(self.projectId, self.gatewayName).then(
                     function(success) {
                         self.iotNodesContents = success.data.items;
                         $scope.jsonObj = success.data.items;

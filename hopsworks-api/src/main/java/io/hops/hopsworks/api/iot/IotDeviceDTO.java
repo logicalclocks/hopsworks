@@ -9,7 +9,8 @@ public class IotDeviceDTO extends RestDTO<IotDeviceDTO> {
   private String endpoint;
   private String hostname;
   private int port;
-  private int gatewayId;
+  private String gatewayName;
+  private Integer projectId;
   
   public String getEndpoint() {
     return endpoint;
@@ -35,19 +36,30 @@ public class IotDeviceDTO extends RestDTO<IotDeviceDTO> {
     this.port = port;
   }
   
-  public int getGatewayId() {
-    return gatewayId;
+  public String getGatewayName() {
+    return gatewayName;
   }
   
-  public void setGatewayId(int gatewayId) {
-    this.gatewayId = gatewayId;
+  public void setGatewayName(String gatewayName) {
+    this.gatewayName = gatewayName;
+  }
+  
+  public Integer getProjectId() {
+    return projectId;
+  }
+  
+  public void setProjectId(Integer projectId) {
+    this.projectId = projectId;
   }
   
   @Override
   public String toString() {
-    return "IotDeviceDTO(" + endpoint + "," +
-      hostname + "," +
-      port + "," +
-      gatewayId + ")";
+    return "IotDeviceDTO{" +
+      "endpoint='" + endpoint + '\'' +
+      ", hostname='" + hostname + '\'' +
+      ", port=" + port +
+      ", gatewayName='" + gatewayName + '\'' +
+      ", projectId=" + projectId +
+      '}';
   }
 }

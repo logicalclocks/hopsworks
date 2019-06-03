@@ -759,7 +759,7 @@ angular.module('hopsWorksApp')
                 return modalInstance.result;
             },
 
-            viewIotGatewayDetails: function (size, projectId, gatewayId) {
+            viewIotGatewayDetails: function (size, projectId, gatewayName) {
                 var modalInstance = $uibModal.open({
                     templateUrl: 'views/iotGatewayDetailsViewContent.html',
                     controller: 'IotGatewayDetailsViewContentCtrl as iotGatewayDetailsViewContentCtrl',
@@ -779,8 +779,8 @@ angular.module('hopsWorksApp')
                         projectId: function () {
                             return projectId;
                         },
-                        gatewayId: function () {
-                            return gatewayId;
+                        gatewayName: function () {
+                            return gatewayName;
                         }
                     }
                 });
@@ -871,7 +871,7 @@ angular.module('hopsWorksApp')
                 return modalInstance.result;
             },
 
-            viewIotNodes: function (size, projectId, gatewayId) {
+            viewIotNodes: function (size, projectId, gatewayName) {
                 var modalInstance = $uibModal.open({
                     templateUrl: 'views/viewIotNodes.html',
                     controller: 'ViewIotNodesCtrl as viewIotNodesCtrl',
@@ -891,8 +891,8 @@ angular.module('hopsWorksApp')
                         projectId: function () {
                             return projectId;
                         },
-                        gatewayId: function () {
-                            return gatewayId;
+                        gatewayName: function () {
+                            return gatewayName;
                         }
                     }
                 });

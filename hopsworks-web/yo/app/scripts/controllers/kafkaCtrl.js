@@ -290,8 +290,8 @@ angular.module('hopsWorksApp')
                     });
             };
 
-            self.blockIotGateway = function(id) {
-              KafkaService.blockIotGateway(self.projectId, id).then(
+            self.blockIotGateway = function(name) {
+              KafkaService.blockIotGateway(self.projectId, name).then(
                   function (success) {
                       self.listIotGateways();
                   }, function (error) {
@@ -300,8 +300,8 @@ angular.module('hopsWorksApp')
               )
             };
 
-            self.unblockIotGateway = function(id) {
-                KafkaService.unblockIotGateway(self.projectId, id).then(
+            self.unblockIotGateway = function(name) {
+                KafkaService.unblockIotGateway(self.projectId, name).then(
                     function (success) {
                         self.listIotGateways();
                     }, function (error) {
@@ -310,8 +310,8 @@ angular.module('hopsWorksApp')
                 )
             };
 
-            self.viewIotNodes = function(id) {
-              ModalService.viewIotNodes('lg', self.projectId, id).then(
+            self.viewIotNodes = function(name) {
+              ModalService.viewIotNodes('lg', self.projectId, name).then(
                 function (success) {
 
                 }, function (error) {
@@ -319,8 +319,8 @@ angular.module('hopsWorksApp')
                 });
             };
 
-            self.viewIotGatewayDetails = function(gatewayId) {
-                ModalService.viewIotGatewayDetails('lg', self.projectId, gatewayId).then(
+            self.viewIotGatewayDetails = function(gatewayName) {
+                ModalService.viewIotGatewayDetails('lg', self.projectId, gatewayName).then(
                     function (success) {
 
                     }, function (error) {

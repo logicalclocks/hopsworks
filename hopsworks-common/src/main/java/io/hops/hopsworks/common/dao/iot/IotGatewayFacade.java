@@ -42,10 +42,11 @@ public class IotGatewayFacade extends AbstractFacade<IotGateways> {
     }
   }
   
-  public IotGateways findByProjectAndId(Project project, int gatewayId) {
-    TypedQuery<IotGateways> query = em.createNamedQuery("IotGateways.findByProjectAndId", IotGateways.class);
+  public IotGateways findByProjectAndDomainAndPort(Project project, String domain, Integer port) {
+    TypedQuery<IotGateways> query = em.createNamedQuery("IotGateways.findByProjectAndDomainAndPort", IotGateways.class);
     query.setParameter("project", project)
-      .setParameter("id", gatewayId);
+      .setParameter("domain", domain)
+      .setParameter("port", port);
     try {
       return query.getSingleResult();
     } catch (NoResultException e) {
@@ -53,11 +54,23 @@ public class IotGatewayFacade extends AbstractFacade<IotGateways> {
     }
   }
   
-  public boolean updateState(int gatewayId, IotGatewayState newState) {
+  public IotGateways findByProjectAndName(Project project, String name) {
+    TypedQuery<IotGateways> query = em.createNamedQuery("IotGateways.findByProjectAndName", IotGateways.class);
+    query.setParameter("project", project)
+      .setParameter("name", name);
+    try {
+      return query.getSingleResult();
+    } catch (NoResultException e) {
+      return null;
+    }
+  }
+  
+  public boolean updateState(String domain, Integer port, IotGatewayState newState) {
     boolean status = false;
     try {
       TypedQuery<IotGateways> query = em.createNamedQuery("IotGateways.updateState", IotGateways.class)
-        .setParameter("id", gatewayId)
+        .setParameter("domain", domain)
+        .setParameter("port", port)
         .setParameter("state", newState);
       int result = query.executeUpdate();
       LOGGER.log(Level.INFO, "Updated entity count = {0}", result);
@@ -65,7 +78,7 @@ public class IotGatewayFacade extends AbstractFacade<IotGateways> {
         status = true;
       }
     } catch (SecurityException | IllegalArgumentException ex) {
-      LOGGER.log(Level.SEVERE, "Could not update gateway with id:" + gatewayId);
+      LOGGER.log(Level.SEVERE, "Could not update gateway " + domain + ":" + port);
       throw ex;
     }
     return status;
@@ -81,11 +94,11 @@ public class IotGatewayFacade extends AbstractFacade<IotGateways> {
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   public void removeIotGateway(IotGateways gateway) {
     try {
-      IotGateways managedGateway = em.find(IotGateways.class, gateway.getId());
+      IotGateways managedGateway = em.find(IotGateways.class, gateway);
       em.remove(em.merge(managedGateway));
       em.flush();
     } catch (SecurityException | IllegalStateException ex) {
-      LOGGER.log(Level.SEVERE, "Could not delete gateway: " + gateway.getId());
+      LOGGER.log(Level.SEVERE, "Could not delete gateway: " + gateway.getName());
       throw ex;
     }
   }

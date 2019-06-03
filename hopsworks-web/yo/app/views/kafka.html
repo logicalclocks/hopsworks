@@ -121,7 +121,7 @@
             <thead>
             <tr>
               <th class="col-sm-2">IoT Gateway ID</th>
-              <th class="col-sm-2">Hostname</th>
+              <th class="col-sm-2">Domain</th>
               <th class="col-sm-2">Port</th>
               <th class="col-sm-2">More Info</th>
               <th class="col-sm-2">IoT Nodes</th>
@@ -133,24 +133,24 @@
 
             <tr st-select-row="row" st-select-mode="single" ng-repeat="row in kafkaCtrl.iotGateways track by $index">
               <td class="col-sm-2">
-                <div class="row" style="margin-left: 8px;">{{row.id}}</div>
+                <div class="row" style="margin-left: 8px;">{{row.name}}</div>
               </td>
               <td class="col-sm-2">
-                <div class="row" style="margin-left: 8px;">{{row.hostname}}</div>
+                <div class="row" style="margin-left: 8px;">{{row.domain}}</div>
               </td>
               <td class="col-sm-2">
                 <div class="row" style="margin-left: 8px;">{{row.port}}</div>
               </td>
               <td class="col-sm-2">
                 <button type="button"
-                        ng-click="kafkaCtrl.viewIotGatewayDetails(row.id)"
+                        ng-click="kafkaCtrl.viewIotGatewayDetails(row.name)"
                         class="btn btn-sm btn-primary">
                   Details<i style="margin-left: 6px"></i>
                 </button>
               </td>
               <td class="col-sm-2">
                 <button type="button"
-                        ng-click="kafkaCtrl.viewIotNodes(row.id)" class="btn btn-sm btn-primary">
+                        ng-click="kafkaCtrl.viewIotNodes(row.name)" class="btn btn-sm btn-primary">
                   IoT Nodes<i style="margin-left: 6px"></i>
                 </button>
               </td>
@@ -158,11 +158,11 @@
                 <div class="row" style="margin-left: 6px;">{{row.state}}</div>
               </td>
               <td class="col-sm-2">
-                  <button  type="button" ng-click="kafkaCtrl.blockIotGateway(row.id)"
+                  <button  type="button" ng-click="kafkaCtrl.blockIotGateway(row.name)"
                            class="btn btn-danger" ng-if="row.state !== 'BLOCKED'">
                     BLOCK
                   </button>
-                  <button  type="button" ng-click="kafkaCtrl.unblockIotGateway(row.id)"
+                  <button  type="button" ng-click="kafkaCtrl.unblockIotGateway(row.name)"
                            class="btn btn-success" ng-if="row.state === 'BLOCKED'">
                     UNBLOCK
                   </button>

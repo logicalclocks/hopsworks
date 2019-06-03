@@ -27,22 +27,24 @@ import java.util.Objects;
     query = "SELECT i FROM IotGateways i"),
   @NamedQuery(name = "IotGateways.findByProject",
     query = "SELECT i FROM IotGateways i WHERE i.project = :project"),
-  @NamedQuery(name = "IotGateways.findByProjectAndId",
-    query = "SELECT i FROM IotGateways i WHERE i.project = :project AND i.id = :id"),
+  @NamedQuery(name = "IotGateways.findByProjectAndDomainAndPort",
+    query = "SELECT i FROM IotGateways i WHERE i.project = :project AND i.domain = :domain AND i.port = :port"),
+  @NamedQuery(name = "IotGateways.findByProjectAndName",
+    query = "SELECT i FROM IotGateways i WHERE i.project = :project AND i.name = :name"),
   @NamedQuery(name = "IotGateways.updateState",
-    query = "UPDATE IotGateways i SET i.state = :state WHERE i.id = :id")
+    query = "UPDATE IotGateways i SET i.state = :state WHERE i.domain = :domain AND i.port = :port")
   })
 public class IotGateways implements Serializable {
 
   @Id
   @Basic(optional = false)
-  @Column(name = "gateway_id")
-  private Integer id;
+  @Column(name = "name")
+  private String name;
 
-  @Column(name = "hostname")
+  @Column(name = "domain")
   @Basic(optional = false)
   @Size(max = 128)
-  private String hostname;
+  private String domain;
 
   @Column(name = "port")
   @Basic(optional = false)
@@ -62,43 +64,43 @@ public class IotGateways implements Serializable {
   public IotGateways() {
   }
   
-  public IotGateways(Integer id, String hostname, Integer port, IotGatewayState state) {
-    this.id = id;
-    this.hostname = hostname;
+  public IotGateways(String name, String domain, Integer port, IotGatewayState state) {
+    this.name = name;
+    this.domain = domain;
     this.port = port;
     this.state = state;
   }
   
-  public IotGateways(Integer id, String hostname, Integer port, Project project, IotGatewayState state) {
-    this.id = id;
-    this.hostname = hostname;
+  public IotGateways(String name, String domain, Integer port, Project project, IotGatewayState state) {
+    this.name = name;
+    this.domain = domain;
     this.port = port;
     this.project = project;
     this.state = state;
   }
   
   public IotGateways(IotGatewayConfiguration config, Project project, IotGatewayState state) {
-    this.id = config.getGatewayId();
-    this.hostname = config.getHostname();
+    this.name = config.getName();
+    this.domain = config.getDomain();
     this.port = config.getPort();
     this.project = project;
     this.state = state;
   }
   
-  public Integer getId() {
-    return id;
+  public String getName() {
+    return name;
   }
 
-  public void setId(Integer id) {
-    this.id = id;
+  public void setName(String name) {
+    this.name = name;
   }
 
-  public String getHostname() {
-    return hostname;
+  public String getDomain() {
+    return domain;
   }
 
-  public void setHostname(String hostname) {
-    this.hostname = hostname;
+  public void setDomain(String domain) {
+    this.domain = domain;
   }
 
   public Integer getPort() {
@@ -134,8 +136,8 @@ public class IotGateways implements Serializable {
       return false;
     }
     IotGateways that = (IotGateways) o;
-    return Objects.equals(id, that.id) &&
-      Objects.equals(hostname, that.hostname) &&
+    return Objects.equals(name, that.name) &&
+      Objects.equals(domain, that.domain) &&
       Objects.equals(port, that.port) &&
       Objects.equals(project, that.project);
   }
@@ -143,6 +145,6 @@ public class IotGateways implements Serializable {
   @Override
   public int hashCode() {
     
-    return Objects.hash(id, hostname, port, project);
+    return Objects.hash(name, domain, port, project);
   }
 }

@@ -129,20 +129,20 @@ angular.module('hopsWorksApp')
                 return $http.get('/api/project/' + projectId + '/gateways');
               },
 
-              blockIotGateway: function (projectId, gatewayId) {
-                return $http.post('/api/project/' + projectId + '/gateways/' + gatewayId + '/blocked')
+              blockIotGateway: function (projectId, gatewayName) {
+                return $http.post('/api/project/' + projectId + '/gateways/' + gatewayName + '/blocked')
               },
 
-              unblockIotGateway: function (projectId, gatewayId) {
-                return $http.delete('/api/project/' + projectId + '/gateways/' + gatewayId + '/blocked')
+              unblockIotGateway: function (projectId, gatewayName) {
+                return $http.delete('/api/project/' + projectId + '/gateways/' + gatewayName + '/blocked')
               },
 
-              getIotGatewayDetails: function (projectId, gatewayId) {
-                return $http.get('/api/project/' + projectId + '/gateways/' + gatewayId)
+              getIotGatewayDetails: function (projectId, gatewayName) {
+                return $http.get('/api/project/' + projectId + '/gateways/' + gatewayName)
               },
 
-              getIotNodes: function (projectId, gatewayId) {
-                return $http.get('/api/project/' + projectId + '/gateways/' + gatewayId + '/nodes')
+              getIotNodes: function (projectId, gatewayName) {
+                return $http.get('/api/project/' + projectId + '/gateways/' + gatewayName + '/nodes')
               },
 
               registerIotGateway: function (projectId, gatewayDetails) {

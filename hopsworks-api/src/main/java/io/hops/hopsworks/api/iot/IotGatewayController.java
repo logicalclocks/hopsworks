@@ -42,16 +42,16 @@ public class IotGatewayController {
   
   private static final Logger LOGGER = Logger.getLogger(IotGatewayController.class.getName());
   
-  public IotGatewayDetails getGateway(Project project, Integer id) throws
+  public IotGatewayDetails getGateway(Project project, String name) throws
     GatewayException, URISyntaxException, IOException {
-    IotGateways gateway = iotGatewayFacade.findByProjectAndId(project, id);
+    IotGateways gateway = iotGatewayFacade.findByProjectAndName(project, name);
     if (gateway == null) {
-      throw new GatewayException(RESTCodes.GatewayErrorCode.GATEWAY_NOT_FOUND, Level.FINEST, "gatewayId:" + id);
+      throw new GatewayException(RESTCodes.GatewayErrorCode.GATEWAY_NOT_FOUND, Level.FINEST, "gatewayName:" + name);
     }
     CloseableHttpClient httpClient = HttpClients.createDefault();
     URI uri = new URIBuilder()
       .setScheme("http")
-      .setHost(gateway.getHostname())
+      .setHost(gateway.getDomain())
       .setPort(gateway.getPort())
       .setPath("/gateway")
       .build();
@@ -77,7 +77,7 @@ public class IotGatewayController {
       throw new IllegalArgumentException("Arguments cannot be null.");
     }
   
-    IotGateways gateway = iotGatewayFacade.findByProjectAndId(project, config.getGatewayId());
+    IotGateways gateway = iotGatewayFacade.findByProjectAndName(project, config.getName());
   
     if (gateway == null) {
       gateway = new IotGateways(config, project, IotGatewayState.ACTIVE);
@@ -89,22 +89,22 @@ public class IotGatewayController {
     return gateway;
   }
   
-  public List<IotDevice> getNodesOfGateway(Integer gatewayId, Project project)
+  public List<IotDevice> getNodesOfGateway(String gatewayName, Project project)
     throws URISyntaxException, IOException {
     CloseableHttpClient httpClient = HttpClients.createDefault();
-    IotGateways gateway = iotGatewayFacade.findByProjectAndId(project, gatewayId);
+    IotGateways gateway = iotGatewayFacade.findByProjectAndName(project, gatewayName);
     URI uri = new URIBuilder()
       .setScheme("http")
-      .setHost(gateway.getHostname())
+      .setHost(gateway.getDomain())
       .setPort(gateway.getPort())
       .setPath("/gateway/nodes")
       .build();
     HttpGet httpGet = new HttpGet(uri);
     CloseableHttpResponse response = httpClient.execute(httpGet);
-    return responseToDevices(response, gatewayId);
+    return responseToDevices(response, gatewayName);
   }
   
-  private List<IotDevice> responseToDevices(CloseableHttpResponse response, Integer gatewayId)
+  private List<IotDevice> responseToDevices(CloseableHttpResponse response, String gatewayName)
     throws IOException {
     StringWriter writer = new StringWriter();
     IOUtils.copy(response.getEntity().getContent(), writer);
@@ -113,27 +113,27 @@ public class IotGatewayController {
     Gson gson = new Gson();
     IotDevice[] array = gson.fromJson(json, IotDevice[].class);
     List<IotDevice> list = Arrays.asList(array);
-    list.forEach(d -> d.setGatewayId(gatewayId));
+    list.forEach(d -> d.setGatewayName(gatewayName));
     return list;
   }
   
   //TODO: future work - implement in terms of an endpoint that doesn't return all nodes
-  public IotDevice getNodeById(Integer gatewayId, String nodeId, Project project)
+  public IotDevice getNodeById(String gatewayName, String nodeId, Project project)
     throws URISyntaxException, IOException {
-    return getNodesOfGateway(gatewayId, project)
+    return getNodesOfGateway(gatewayName, project)
       .stream()
       .filter(d -> d.getEndpoint().equals(nodeId))
       .findAny()
       .orElseThrow(IllegalArgumentException::new);
   }
   
-  public void actionBlockingNode(Integer gatewayId, String nodeId, Project project, Boolean block)
+  public void actionBlockingNode(String gatewayName, String nodeId, Project project, Boolean block)
     throws URISyntaxException, IOException {
     CloseableHttpClient httpClient = HttpClients.createDefault();
-    IotGateways gateway = iotGatewayFacade.findByProjectAndId(project, gatewayId);
+    IotGateways gateway = iotGatewayFacade.findByProjectAndName(project, gatewayName);
     URI uri = new URIBuilder()
       .setScheme("http")
-      .setHost(gateway.getHostname())
+      .setHost(gateway.getDomain())
       .setPort(gateway.getPort())
       .setPath("/gateway/nodes/" + nodeId + "/blocked")
       .build();
@@ -152,7 +152,7 @@ public class IotGatewayController {
     CloseableHttpClient httpClient = HttpClients.createDefault();
     URI uri = new URIBuilder()
       .setScheme("http")
-      .setHost(config.getHostname())
+      .setHost(config.getDomain())
       .setPort(config.getPort())
       .setPath("/gateway/jwt")
       .build();

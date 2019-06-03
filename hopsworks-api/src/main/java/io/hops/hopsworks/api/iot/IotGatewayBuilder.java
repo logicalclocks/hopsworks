@@ -30,8 +30,8 @@ public class IotGatewayBuilder {
     URI href = uriIotGateway(uriInfo, ioTGatewayDetails).build();
     dto.setExpand(true);
     dto.setHref(href);
-    dto.setId(ioTGatewayDetails.getIotGateway().getId());
-    dto.setHostname(ioTGatewayDetails.getIotGateway().getHostname());
+    dto.setName(ioTGatewayDetails.getIotGateway().getName());
+    dto.setHostname(ioTGatewayDetails.getIotGateway().getDomain());
     dto.setPort(ioTGatewayDetails.getIotGateway().getPort());
     dto.setState(ioTGatewayDetails.getIotGateway().getState());
     dto.setBlockedDevicesEndpoints(ioTGatewayDetails.getBlockedDevicesEndpoints());
@@ -49,8 +49,8 @@ public class IotGatewayBuilder {
     URI href = uriIotGateway(uriInfo, ioTGateway).build();
     dto.setExpand(true);
     dto.setHref(href);
-    dto.setId(ioTGateway.getId());
-    dto.setHostname(ioTGateway.getHostname());
+    dto.setName(ioTGateway.getName());
+    dto.setDomain(ioTGateway.getDomain());
     dto.setPort(ioTGateway.getPort());
     dto.setState(ioTGateway.getState());
     
@@ -69,9 +69,9 @@ public class IotGatewayBuilder {
     return dto;
   }
   
-  public IotDeviceDTO buildDevice(UriInfo uriInfo, Project project, List<IotDevice> devices, Integer gatewayId) {
+  public IotDeviceDTO buildDevice(UriInfo uriInfo, Project project, List<IotDevice> devices, String gatewayName) {
     IotDeviceDTO dto = new IotDeviceDTO();
-    dto.setHref(uriIotNodes(gatewayId, uriInfo, project));
+    dto.setHref(uriIotNodes(gatewayName, uriInfo, project));
     dto.setCount(Integer.toUnsignedLong(devices.size()));
     devices.forEach((iotDevice) ->
       dto.addItem(buildDevice(uriInfo, (IotDevice) iotDevice, project)));
@@ -80,11 +80,12 @@ public class IotGatewayBuilder {
   
   public IotDeviceDTO buildDevice(UriInfo uriInfo, IotDevice iotDevice, Project project) {
     IotDeviceDTO dto = new IotDeviceDTO();
-    dto.setHref(uriIotNode(iotDevice.getGatewayId(), iotDevice.getEndpoint(), uriInfo, project));
+    dto.setHref(uriIotNode(iotDevice.getGatewayName(), iotDevice.getEndpoint(), uriInfo, project));
     dto.setEndpoint(iotDevice.getEndpoint());
     dto.setHostname(iotDevice.getHostname());
     dto.setPort(iotDevice.getPort());
-    dto.setGatewayId(iotDevice.getGatewayId());
+    dto.setGatewayName(iotDevice.getGatewayName());
+    dto.setProjectId(iotDevice.getProjectId());
     return dto;
   }
   
@@ -98,28 +99,28 @@ public class IotGatewayBuilder {
   
   private UriBuilder uriIotGateway(UriInfo uriInfo, IotGatewayDetails iotGatewayDetails) {
     return uriIotGateways(uriInfo, iotGatewayDetails.getIotGateway().getProject())
-      .path(Integer.toString(iotGatewayDetails.getIotGateway().getId()));
+      .path(iotGatewayDetails.getIotGateway().getName());
   }
   
   private UriBuilder uriIotGateway(UriInfo uriInfo, IotGateways iotGateway) {
     return uriIotGateways(uriInfo, iotGateway.getProject())
-      .path(Integer.toString(iotGateway.getId()));
+      .path(iotGateway.getName());
   }
   
-  private URI uriIotNodes(Integer gatewayId, UriInfo uriInfo, Project project) {
+  private URI uriIotNodes(String gatewayName, UriInfo uriInfo, Project project) {
     return uriInfo.getBaseUriBuilder().path(ResourceRequest.Name.PROJECT.toString().toLowerCase())
       .path(Integer.toString(project.getId()))
       .path(ResourceRequest.Name.GATEWAYS.toString().toLowerCase())
-      .path(Integer.toString(gatewayId))
+      .path(gatewayName)
       .path(ResourceRequest.Name.NODES.toString().toLowerCase())
       .build();
   }
   
-  private URI uriIotNode(Integer gatewayId, String nodeId, UriInfo uriInfo, Project project) {
+  private URI uriIotNode(String gatewayName, String nodeId, UriInfo uriInfo, Project project) {
     return uriInfo.getBaseUriBuilder().path(ResourceRequest.Name.PROJECT.toString().toLowerCase())
       .path(Integer.toString(project.getId()))
       .path(ResourceRequest.Name.GATEWAYS.toString().toLowerCase())
-      .path(Integer.toString(gatewayId))
+      .path(gatewayName)
       .path(ResourceRequest.Name.NODES.toString().toLowerCase())
       .path(nodeId)
       .build();

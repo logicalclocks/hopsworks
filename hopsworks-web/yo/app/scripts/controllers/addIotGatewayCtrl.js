@@ -44,11 +44,11 @@ angular.module('hopsWorksApp')
 
             var self = this;
             self.projectId = projectId;
-            self.gatewayId;
-            self.hostname;
+            self.name;
+            self.domain;
             self.port;
-            self.gatewayId_wrong_value = 1;
-            self.hostname_wrong_value = 1;
+            self.name_wrong_value = 1;
+            self.domain_wrong_value = 1;
             self.port_wrong_value = 1;
             self.wrong_values = 1;
             self.working = false;
@@ -62,21 +62,21 @@ angular.module('hopsWorksApp')
             self.addIotGateway = function () {
               self.working = true;
               self.wrong_values = 1;
-              self.gatewayId_wrong_value = 1;
-              self.hostname_wrong_value = 1;
+              self.name_wrong_value = 1;
+              self.domain_wrong_value = 1;
               self.port_wrong_value = 1;
               
-              if(!self.gatewayId){
-                self.gatewayId_wrong_value =-1;
+              if(!self.name){
+                self.name_wrong_value =-1;
                 self.wrong_values=-1;
               }else{
-                self.gatewayId_wrong_value =1;
+                self.name_wrong_value =1;
               }
-              if(!self.hostname){
-                  self.hostname_wrong_value =-1;
+              if(!self.domain){
+                  self.domain_wrong_value =-1;
                   self.wrong_values=-1;
               }else{
-                  self.hostname_wrong_value =1;
+                  self.domain_wrong_value =1;
               }
               if(!self.port){
                   self.port_wrong_value =-1;
@@ -91,8 +91,8 @@ angular.module('hopsWorksApp')
               }
 
                 var iotGatewayDetail ={};
-                iotGatewayDetail.gatewayId = self.gatewayId;
-                iotGatewayDetail.hostname = self.hostname;
+                iotGatewayDetail.name = self.name;
+                iotGatewayDetail.domain = self.domain;
                 iotGatewayDetail.port = self.port;
               
 

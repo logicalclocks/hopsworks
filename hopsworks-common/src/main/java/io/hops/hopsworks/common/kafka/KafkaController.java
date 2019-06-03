@@ -178,7 +178,7 @@ public class KafkaController {
       .findTopicsByProject(project)
       .stream()
       .filter(t -> Lwm2mTopics.getNamesAsList().contains(t.getName()))
-      .forEach(t -> addBlockingAcl(t, gateway.getHostname(), project));
+      .forEach(t -> addBlockingAcl(t, gateway.getDomain(), project));
   }
   
   private void addBlockingAcl(TopicDTO t, String iotGatewayHostname, Project project) {
@@ -201,7 +201,7 @@ public class KafkaController {
       .findTopicsByProject(project)
       .stream()
       .filter(t -> Lwm2mTopics.getNamesAsList().contains(t.getName()))
-      .forEach(t -> removeBlockingAcl(t, gateway.getHostname(), principal));
+      .forEach(t -> removeBlockingAcl(t, gateway.getDomain(), principal));
   }
   
   private void removeBlockingAcl(TopicDTO t, String iotGatewayHostname, String principal) {

@@ -52,24 +52,24 @@
         class="form-validate">
     <div class="view-info">
       <div class="col-md-12">
-        <label class="control-label">Gateway ID</label><br>
+        <label class="control-label">Name</label><br>
         <div class="col-sm-12">
-          <input type="text" class="form-control" id="gatewayId" ng-model="addIotGatewayCtrl.gatewayId"
-                 placeholder="Gateway ID">
+          <input type="text" class="form-control" id="name" ng-model="addIotGatewayCtrl.name"
+                 placeholder="name">
         </div>
       </div>
-      <div ng-if="addIotGatewayCtrl.gatewayId_wrong_value === -1" style="color: red">{{"Gateway ID shouldn't be empty, baby"}}</div>
+      <div ng-if="addIotGatewayCtrl.name_wrong_value === -1" style="color: red">{{"Gateway Name shouldn't be empty, baby"}}</div>
       <div class="col-md-12">
-        <label class="control-label">Hostname</label><br>
+        <label class="control-label">Domain</label><br>
         <div class="col-sm-12">
-          <input type="text" class="form-control" id="hostname" ng-model="addIotGatewayCtrl.hostname"
-                 placeholder="hostname">
+          <input type="text" class="form-control" id="domain" ng-model="addIotGatewayCtrl.domain"
+                 placeholder="domain">
         </div>
       </div>
       <div class="col-md-12">
         <label class="control-label">Port</label><br>
         <div class="col-sm-12">
-          <input type="text" class="form-control" id="port" ng-model="addIotGatewayCtrl.port" placeholder="port">
+          <input type="number" class="form-control" id="port" ng-model="addIotGatewayCtrl.port" placeholder="port">
         </div>
       </div>
       <div ng-if="addIotGatewayCtrl.port_wrong_value === -1" style="color: red">{{"Port shouldn't be empty, baby"}}</div>

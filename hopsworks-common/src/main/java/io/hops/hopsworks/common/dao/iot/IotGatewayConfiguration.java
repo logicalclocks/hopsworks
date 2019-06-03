@@ -14,35 +14,35 @@ import javax.xml.bind.annotation.XmlRootElement;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY)
 public class IotGatewayConfiguration {
   @XmlElement
-  private Integer gatewayId;
+  private String name;
   @XmlElement
-  private String hostname;
+  private String domain;
   @XmlElement
   private Integer port;
   
   public IotGatewayConfiguration() {
   }
   
-  public IotGatewayConfiguration(Integer gatewayId, String hostname, Integer port) {
-    this.gatewayId = gatewayId;
-    this.hostname = hostname;
+  public IotGatewayConfiguration(String name, String domain, Integer port) {
+    this.name = name;
+    this.domain = domain;
     this.port = port;
   }
   
-  public Integer getGatewayId() {
-    return gatewayId;
+  public String getName() {
+    return name;
   }
   
-  public void setGatewayId(Integer gatewayId) {
-    this.gatewayId = gatewayId;
+  public void setName(String name) {
+    this.name = name;
   }
   
-  public String getHostname() {
-    return hostname;
+  public String getDomain() {
+    return domain;
   }
   
-  public void setHostname(String hostname) {
-    this.hostname = hostname;
+  public void setDomain(String domain) {
+    this.domain = domain;
   }
   
   public Integer getPort() {

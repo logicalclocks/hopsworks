@@ -7,16 +7,18 @@ public class IotDevice {
   private String endpoint;
   private String hostname;
   private Integer port;
-  private Integer gatewayId;
+  private String gatewayName;
+  private Integer projectId;
   
   public IotDevice() {
   }
   
-  public IotDevice(String endpoint, String hostname, Integer port, Integer gatewayId) {
+  public IotDevice(String endpoint, String hostname, Integer port, String gatewayName, Integer projectId) {
     this.endpoint = endpoint;
     this.hostname = hostname;
     this.port = port;
-    this.gatewayId = gatewayId;
+    this.gatewayName = gatewayName;
+    this.projectId = projectId;
   }
   
   public String getEndpoint() {
@@ -43,19 +45,30 @@ public class IotDevice {
     this.port = port;
   }
   
-  public Integer getGatewayId() {
-    return gatewayId;
+  public String getGatewayName() {
+    return gatewayName;
   }
   
-  public void setGatewayId(Integer gatewayId) {
-    this.gatewayId = gatewayId;
+  public void setGatewayName(String gatewayName) {
+    this.gatewayName = gatewayName;
+  }
+  
+  public Integer getProjectId() {
+    return projectId;
+  }
+  
+  public void setProjectId(Integer projectId) {
+    this.projectId = projectId;
   }
   
   @Override
   public String toString() {
-    return "IotDevice(" + endpoint + "," +
-      hostname + "," +
-      port + "," +
-      gatewayId + ")";
+    return "IotDevice{" +
+      "endpoint='" + endpoint + '\'' +
+      ", hostname='" + hostname + '\'' +
+      ", port=" + port +
+      ", gatewayName='" + gatewayName + '\'' +
+      ", projectId=" + projectId +
+      '}';
   }
 }

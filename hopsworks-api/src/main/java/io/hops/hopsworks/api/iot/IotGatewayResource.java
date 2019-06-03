@@ -86,15 +86,15 @@ public class IotGatewayResource {
   
   @ApiOperation(value = "Get info about a specific IoT Gateway")
   @GET
-  @Path("{id}")
+  @Path("{name}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getGatewayById(
     @Context UriInfo uriInfo,
-    @PathParam("id") Integer id
+    @PathParam("name") String gatewayName
   ) throws GatewayException, URISyntaxException, IOException {
-    IotGatewayDetails gateway = iotGatewayController.getGateway(project, id);
+    IotGatewayDetails gateway = iotGatewayController.getGateway(project, gatewayName);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.GATEWAYS);
     IotGatewayDetailsDTO dto = iotGatewayBuilder.buildGatewayDetails(uriInfo, resourceRequest, gateway);
     return Response.ok().entity(dto).build();
@@ -123,16 +123,16 @@ public class IotGatewayResource {
   
   @ApiOperation(value = "Unregister IoT Gateway")
   @DELETE
-  @Path("{id}")
+  @Path("{name}")
   @Produces(MediaType.TEXT_PLAIN)
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_GATEWAY"})
   public Response unregisterGateway(
-    @PathParam("id") Integer gatewayId,
+    @PathParam("name") String gatewayName,
     @Context UriInfo uriInfo
   ) {
-    IotGateways gateway = iotGatewayFacade.findByProjectAndId(project, gatewayId);
+    IotGateways gateway = iotGatewayFacade.findByProjectAndName(project, gatewayName);
     if (gateway == null) {
-      String message = "Gateway with id " + gatewayId + " not found.";
+      String message = "Gateway with name " + gatewayName + " not found.";
       return Response
         .status(Response.Status.NOT_FOUND)
         .entity(message)
@@ -143,7 +143,7 @@ public class IotGatewayResource {
     if (gateway.getState() == IotGatewayState.ACTIVE) {
       iotGatewayFacade.removeIotGateway(gateway);
     } else if (gateway.getState() == IotGatewayState.BLOCKED) {
-      iotGatewayFacade.updateState(gateway.getId(), IotGatewayState.INACTIVE_BLOCKED);
+      iotGatewayFacade.updateState(gateway.getDomain(), gateway.getPort(), IotGatewayState.INACTIVE_BLOCKED);
     }
     
     return Response.ok().build();
@@ -151,19 +151,19 @@ public class IotGatewayResource {
   
   @ApiOperation(value = "Start blocking an IoT Gateway")
   @POST
-  @Path("{id}/blocked")
+  @Path("{name}/blocked")
   @AllowedProjectRoles({AllowedProjectRoles.ANYONE})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response startBlockingGateway(
-    @PathParam("id")
-      Integer gatewayId
+    @PathParam("name")
+      String gatewayName
   ) {
-    IotGateways gateway = iotGatewayFacade.findByProjectAndId(project, gatewayId);
+    IotGateways gateway = iotGatewayFacade.findByProjectAndName(project, gatewayName);
     if (gateway == null) {
-      return Response.status(Response.Status.NOT_FOUND).entity("Gateway " + gatewayId + " not found.").build();
+      return Response.status(Response.Status.NOT_FOUND).entity("Gateway " + gatewayName + " not found.").build();
     } else if (gateway.getState() == IotGatewayState.ACTIVE) {
       kafkaController.startBlockingIotGateway(gateway, project);
-      iotGatewayFacade.updateState(gatewayId, IotGatewayState.BLOCKED);
+      iotGatewayFacade.updateState(gateway.getDomain(), gateway.getPort(), IotGatewayState.BLOCKED);
       return Response.accepted().build();
     }
     return Response.status(Response.Status.NO_CONTENT).build();
@@ -171,17 +171,17 @@ public class IotGatewayResource {
   
   @ApiOperation(value = "Stop blocking an IoT Gateway")
   @DELETE
-  @Path("{id}/blocked")
+  @Path("{name}/blocked")
   @AllowedProjectRoles({AllowedProjectRoles.ANYONE})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response stopBlockingGateway(
-    @PathParam("id") Integer gatewayId,
+    @PathParam("name") String gatewayName,
     @Context SecurityContext sc
   ) {
-    IotGateways gateway = iotGatewayFacade.findByProjectAndId(project, gatewayId);
+    IotGateways gateway = iotGatewayFacade.findByProjectAndName(project, gatewayName);
     Users user = jWTHelper.getUserPrincipal(sc);
     if (gateway == null) {
-      return Response.status(Response.Status.NOT_FOUND).entity("Gateway " + gatewayId + " not found.").build();
+      return Response.status(Response.Status.NOT_FOUND).entity("Gateway " + gatewayName + " not found.").build();
     } else if (gateway.getState() == IotGatewayState.ACTIVE) {
       return Response.accepted().build();
     } else {
@@ -189,7 +189,7 @@ public class IotGatewayResource {
       if (gateway.getState() == IotGatewayState.INACTIVE_BLOCKED) {
         iotGatewayFacade.removeIotGateway(gateway);
       } else if (gateway.getState() == IotGatewayState.BLOCKED) {
-        iotGatewayFacade.updateState(gatewayId, IotGatewayState.ACTIVE);
+        iotGatewayFacade.updateState(gateway.getDomain(), gateway.getPort(), IotGatewayState.ACTIVE);
       }
       return Response.accepted().build();
     }
@@ -197,32 +197,32 @@ public class IotGatewayResource {
   
   @ApiOperation(value = "Get list of all IoT Nodes connected to an IoT Gateway")
   @GET
-  @Path("{id}/nodes")
+  @Path("{name}/nodes")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getNodesOfGateway(
     @Context UriInfo uriInfo,
-    @PathParam("id") Integer gatewayId
+    @PathParam("name") String gatewayName
   ) throws URISyntaxException, IOException {
-    List<IotDevice> devices = iotGatewayController.getNodesOfGateway(gatewayId, project);
+    List<IotDevice> devices = iotGatewayController.getNodesOfGateway(gatewayName, project);
     LOGGER.info("Connected " + devices.size() + " devices");
-    IotDeviceDTO dto = iotGatewayBuilder.buildDevice(uriInfo, project, devices, gatewayId);
+    IotDeviceDTO dto = iotGatewayBuilder.buildDevice(uriInfo, project, devices, gatewayName);
     return Response.ok().entity(dto).build();
   }
   
-  @ApiOperation(value = "Get info about node by its ID")
+  @ApiOperation(value = "Get info about node by its name")
   @GET
-  @Path("{gId}/nodes/{nId}")
+  @Path("{gName}/nodes/{nId}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getNodeById (
     @Context UriInfo uriInfo,
-    @PathParam("gId") Integer gatewayId,
+    @PathParam("gName") String gatewayName,
     @PathParam("nId") String nodeId)
     throws URISyntaxException, IOException {
-    IotDevice device = iotGatewayController.getNodeById(gatewayId, nodeId, project);
+    IotDevice device = iotGatewayController.getNodeById(gatewayName, nodeId, project);
     if (device == null) {
       return Response.status(Response.Status.NOT_FOUND).build();
     } else {
@@ -233,27 +233,27 @@ public class IotGatewayResource {
   
   @ApiOperation(value = "start blocking a node")
   @POST
-  @Path("{gId}/nodes/{nId}/blocked")
+  @Path("{gName}/nodes/{nId}/blocked")
   @AllowedProjectRoles({AllowedProjectRoles.ANYONE})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response startBlockingNodeById (
-    @PathParam("gId") Integer gatewayId,
+    @PathParam("gName") String gatewayName,
     @PathParam("nId") String nodeId
   ) throws URISyntaxException, IOException {
-    iotGatewayController.actionBlockingNode(gatewayId, nodeId, project, true);
+    iotGatewayController.actionBlockingNode(gatewayName, nodeId, project, true);
     return Response.ok().build();
   }
   
   @ApiOperation(value = "stop blocking a node")
   @DELETE
-  @Path("{gId}/nodes/{nId}/blocked")
+  @Path("{gName}/nodes/{nId}/blocked")
   @AllowedProjectRoles({AllowedProjectRoles.ANYONE})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response stopBlockingNodeById (
-    @PathParam("gId") Integer gatewayId,
+    @PathParam("gName") String gatewayName,
     @PathParam("nId") String nodeId
   ) throws URISyntaxException, IOException {
-    iotGatewayController.actionBlockingNode(gatewayId, nodeId, project, false);
+    iotGatewayController.actionBlockingNode(gatewayName, nodeId, project, false);
     return Response.ok().build();
   }
 }

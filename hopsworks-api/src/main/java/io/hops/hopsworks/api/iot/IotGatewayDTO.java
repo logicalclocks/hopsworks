@@ -7,25 +7,25 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
 public class IotGatewayDTO extends RestDTO<IotGatewayDTO> {
-  private Integer id;
-  private String hostname;
+  private String name;
+  private String domain;
   private Integer port;
   private IotGatewayState state;
 
-  public Integer getId() {
-    return id;
+  public String getName() {
+    return name;
   }
 
-  public void setId(Integer id) {
-    this.id = id;
+  public void setName(String name) {
+    this.name = name;
   }
 
-  public String getHostname() {
-    return hostname;
+  public String getDomain() {
+    return domain;
   }
 
-  public void setHostname(String hostname) {
-    this.hostname = hostname;
+  public void setDomain(String domain) {
+    this.domain = domain;
   }
 
   public Integer getPort() {

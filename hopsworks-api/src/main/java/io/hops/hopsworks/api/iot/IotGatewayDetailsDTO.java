@@ -8,8 +8,8 @@ import java.util.List;
 
 @XmlRootElement
 public class IotGatewayDetailsDTO extends RestDTO<IotGatewayDetailsDTO> {
-  private Integer id;
-  private String hostname;
+  private String name;
+  private String domain;
   private Integer port;
   private IotGatewayState state;
   private List<String> blockedDevicesEndpoints;
@@ -19,20 +19,20 @@ public class IotGatewayDetailsDTO extends RestDTO<IotGatewayDetailsDTO> {
   private Integer coapsPort;
   private Integer connectedDevices;
   
-  public Integer getId() {
-    return id;
+  public String getName() {
+    return name;
   }
   
-  public void setId(Integer id) {
-    this.id = id;
+  public void setName(String name) {
+    this.name = name;
   }
   
   public String getHostname() {
-    return hostname;
+    return domain;
   }
   
-  public void setHostname(String hostname) {
-    this.hostname = hostname;
+  public void setHostname(String domain) {
+    this.domain = domain;
   }
   
   public Integer getPort() {
