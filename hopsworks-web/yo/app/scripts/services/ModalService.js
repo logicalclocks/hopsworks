@@ -1812,6 +1812,33 @@ angular.module('hopsWorksApp')
                     }
                 });
                 return modalInstance.result;
-            }
+            },
+            viewServingInfo: function (size, projectId, serving) {
+                var modalInstance = $uibModal.open({
+                    templateUrl: 'views/servingViewInfo.html',
+                    controller: 'servingViewInfoCtrl as servingViewInfoCtrl',
+                    size: size,
+                    resolve: {
+                        auth: ['$q', '$location', 'AuthService',
+                            function ($q, $location, AuthService) {
+                                return AuthService.session().then(
+                                    function (success) {
+                                    },
+                                    function (err) {
+                                        $location.path('/login');
+                                        $location.replace();
+                                        return $q.reject(err);
+                                    });
+                            }],
+                        projectId: function () {
+                            return projectId;
+                        },
+                        serving: function () {
+                            return serving;
+                        }
+                    }
+                });
+                return modalInstance.result;
+            },
         };
     }]);

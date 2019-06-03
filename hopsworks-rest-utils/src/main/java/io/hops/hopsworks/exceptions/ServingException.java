@@ -14,29 +14,29 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.common.serving.tf;
+package io.hops.hopsworks.exceptions;
 
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.restutils.RESTException;
 
 import java.util.logging.Level;
 
-public class TfServingException extends RESTException {
+public class ServingException extends RESTException {
   
-  public TfServingException(RESTCodes.TfServingErrorCode code, Level level) {
+  public ServingException(RESTCodes.ServingErrorCode code, Level level) {
     super(code, level);
   }
   
-  public TfServingException(RESTCodes.TfServingErrorCode code, Level level, String usrMsg) {
+  public ServingException(RESTCodes.ServingErrorCode code, Level level, String usrMsg) {
     super(code, level, usrMsg);
   }
   
-  public TfServingException(RESTCodes.TfServingErrorCode code, Level level, String usrMsg, String devMsg) {
+  public ServingException(RESTCodes.ServingErrorCode code, Level level, String usrMsg, String devMsg) {
     super(code, level, usrMsg, devMsg);
   }
   
-  public TfServingException(RESTCodes.TfServingErrorCode code, Level level, String usrMsg, String devMsg,
-    Throwable throwable) {
+  public ServingException(RESTCodes.ServingErrorCode code, Level level, String usrMsg, String devMsg,
+                          Throwable throwable) {
     super(code, level, usrMsg, devMsg, throwable);
   }
 }

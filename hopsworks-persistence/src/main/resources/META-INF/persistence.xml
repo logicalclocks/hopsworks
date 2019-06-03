@@ -104,7 +104,7 @@
     <class>io.hops.hopsworks.common.dao.python.CondaCommands</class>
     <class>io.hops.hopsworks.common.dao.tensorflow.TensorBoard</class>
     <class>io.hops.hopsworks.common.dao.tensorflow.TfLibMapping</class>
-    <class>io.hops.hopsworks.common.dao.serving.TfServing</class>
+    <class>io.hops.hopsworks.common.dao.serving.Serving</class>
     <class>io.hops.hopsworks.common.dao.jupyter.JupyterProject</class>
     <class>io.hops.hopsworks.common.dao.jupyter.JupyterSettings</class>
     <class>io.hops.hopsworks.common.dao.ndb.NdbBackup</class>

@@ -43,17 +43,17 @@ import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.exceptions.CryptoPasswordNotFoundException;
-import io.hops.hopsworks.exceptions.KafkaException;
-import io.hops.hopsworks.exceptions.ProjectException;
-import io.hops.hopsworks.restutils.RESTCodes;
-import io.hops.hopsworks.exceptions.ServiceException;
-import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.security.BaseHadoopClientsService;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.CryptoPasswordNotFoundException;
+import io.hops.hopsworks.exceptions.KafkaException;
+import io.hops.hopsworks.exceptions.ProjectException;
+import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.exceptions.UserException;
+import io.hops.hopsworks.restutils.RESTCodes;
 import kafka.admin.AdminUtils;
 import kafka.admin.RackAwareMode;
 import kafka.common.TopicAlreadyMarkedForDeletionException;
@@ -714,9 +714,24 @@ public class KafkaFacade {
     
     return aclDtos;
   }
-
+  
+  public void validateSchema(SchemaDTO schemaDTO) throws KafkaException {
+    if(schemaDTO == null){
+      throw new IllegalArgumentException("No schema provided");
+    }
+    validateSchemaNameAgainstBlacklist(schemaDTO.getName(), RESTCodes.KafkaErrorCode.CREATE_SCHEMA_RESERVED_NAME);
+  }
+  
+  public void validateSchemaNameAgainstBlacklist(String schemaName, RESTCodes.KafkaErrorCode restCode)
+    throws KafkaException {
+    if(Settings.KAFKA_SCHEMA_BLACKLIST.contains(schemaName)){
+      throw new KafkaException(restCode, Level.FINE);
+    }
+  }
+  
+  
   public SchemaCompatiblityCheck schemaBackwardCompatibility(SchemaDTO schemaDto) {
-
+    
     String schemaContent = schemaDto.getContents();
 
     SchemaCompatibility.SchemaPairCompatibility schemaCompatibility;
@@ -837,6 +852,7 @@ public class KafkaFacade {
   }
   
   public void deleteSchema(String schemaName, Integer version) throws KafkaException {
+    validateSchemaNameAgainstBlacklist(schemaName, RESTCodes.KafkaErrorCode.DELETE_RESERVED_SCHEMA);
     //Check if schema is currently used by a topic.
     List<ProjectTopics> topics = em.createNamedQuery(
       "ProjectTopics.findBySchemaVersion", ProjectTopics.class)

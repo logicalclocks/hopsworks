@@ -55,14 +55,14 @@ import io.hops.hopsworks.common.dao.kafka.TopicDefaultValueDTO;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.exceptions.KafkaException;
-import io.hops.hopsworks.exceptions.ProjectException;
-import io.hops.hopsworks.restutils.RESTCodes;
-import io.hops.hopsworks.exceptions.ServiceException;
-import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.common.kafka.KafkaController;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.KafkaException;
+import io.hops.hopsworks.exceptions.ProjectException;
+import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.zookeeper.KeeperException;
 
 import javax.ejb.EJB;
@@ -81,11 +81,11 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 import java.io.IOException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.ws.rs.core.SecurityContext;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -355,9 +355,9 @@ public class KafkaService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response ValidateSchemaForTopics(SchemaDTO schemaData)  {
+  public Response ValidateSchemaForTopics(SchemaDTO schemaData) throws KafkaException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
-
+    kafkaFacade.validateSchema(schemaData);
     switch (kafkaFacade.schemaBackwardCompatibility(schemaData)) {
       case INVALID:
         json.setErrorMsg("schema is invalid");
@@ -377,12 +377,10 @@ public class KafkaService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response addTopicSchema(SchemaDTO schemaData) {
+  public Response addTopicSchema(SchemaDTO schemaData) throws KafkaException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
-
-    //String schemaContent = schemaData.getContents();
+    kafkaFacade.validateSchema(schemaData);
     switch (kafkaFacade.schemaBackwardCompatibility(schemaData)) {
-
       case INVALID:
         json.setErrorMsg("schema is invalid");
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_ACCEPTABLE).entity(json).build();

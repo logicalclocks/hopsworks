@@ -76,6 +76,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -148,7 +149,8 @@ public class Settings implements Serializable {
   private static final String VARIABLE_RM_PORT = "rm_port";
   private static final String VARIABLE_LOGSTASH_IP = "logstash_ip";
   private static final String VARIABLE_LOGSTASH_PORT = "logstash_port";
-  private static final String VARIABLE_LOGSTASH_PORT_SERVING = "logstash_port_serving";
+  private static final String VARIABLE_LOGSTASH_PORT_TF_SERVING = "logstash_port_tf_serving";
+  private static final String VARIABLE_LOGSTASH_PORT_SKLEARN_SERVING = "logstash_port_sklearn_serving";
   private static final String VARIABLE_OOZIE_IP = "oozie_ip";
   private static final String VARIABLE_SPARK_HISTORY_SERVER_IP
       = "spark_history_server_ip";
@@ -225,7 +227,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_ANACONDA_DIR = "anaconda_dir";
   private static final String VARIABLE_ANACONDA_ENABLED = "anaconda_enabled";
   private static final String VARIABLE_ANACONDA_DEFAULT_REPO = "conda_default_repo";
-  
+
   private static final String VARIABLE_DOWNLOAD_ALLOWED = "download_allowed";
   private static final String VARIABLE_SUPPORT_EMAIL_ADDR = "support_email_addr";
   private static final String VARIABLE_HOPSUTIL_VERSION = "hopsutil_version";
@@ -281,11 +283,16 @@ public class Settings implements Serializable {
   private static final String VARIABLE_HOPSWORKS_REST_LOG_LEVEL = "hopsworks_rest_log_level";
 
   /*
-   * -------------------- TfServing ---------------
+   * -------------------- Serving ---------------
    */
-  private static final String VARIABLE_TF_SERVING_MONITOR_INT = "tf_serving_monitor_int";
-  private static final String VARIABLE_TF_SERVING_CONNECTION_POOL_SIZE = "tf_serving_connection_pool_size";
-  private static final String VARIABLE_TF_SERVING_MAX_ROUTE_CONNECTIONS = "tf_serving_max_route_connections";
+  private static final String VARIABLE_SERVING_MONITOR_INT = "serving_monitor_int";
+
+  /*
+   * -------------------- Serving ---------------
+   */
+  private static final String VARIABLE_SERVING_CONNECTION_POOL_SIZE = "serving_connection_pool_size";
+  private static final String VARIABLE_SERVING_MAX_ROUTE_CONNECTIONS = "serving_max_route_connections";
+
 
   /*
    * -------------------- Kubernetes ---------------
@@ -503,7 +510,8 @@ public class Settings implements Serializable {
       RM_PORT = setIntVar(VARIABLE_RM_PORT, RM_PORT);
       LOGSTASH_IP = setIpVar(VARIABLE_LOGSTASH_IP, LOGSTASH_IP);
       LOGSTASH_PORT = setIntVar(VARIABLE_LOGSTASH_PORT, LOGSTASH_PORT);
-      LOGSTASH_PORT_SERVING = setIntVar(VARIABLE_LOGSTASH_PORT_SERVING, LOGSTASH_PORT_SERVING);
+      LOGSTASH_PORT_TF_SERVING = setIntVar(VARIABLE_LOGSTASH_PORT_TF_SERVING, LOGSTASH_PORT_TF_SERVING);
+      LOGSTASH_PORT_SKLEARN_SERVING = setIntVar(VARIABLE_LOGSTASH_PORT_SKLEARN_SERVING, LOGSTASH_PORT_SKLEARN_SERVING);
       JHS_IP = setIpVar(VARIABLE_JHS_IP, JHS_IP);
       LIVY_IP = setIpVar(VARIABLE_LIVY_IP, LIVY_IP);
       OOZIE_IP = setIpVar(VARIABLE_OOZIE_IP, OOZIE_IP);
@@ -612,11 +620,12 @@ public class Settings implements Serializable {
           setStrVar(VARIABLE_PREINSTALLED_PYTHON_LIBRARY_NAMES, DEFAULT_PREINSTALLED_PYTHON_LIBRARY_NAMES),
           ",");
 
-      TF_SERVING_MONITOR_INT = setStrVar(VARIABLE_TF_SERVING_MONITOR_INT, TF_SERVING_MONITOR_INT);
-      TF_SERVING_CONNECTION_POOL_SIZE = setIntVar(VARIABLE_TF_SERVING_CONNECTION_POOL_SIZE,
-        TF_SERVING_CONNECTION_POOL_SIZE);
-      TF_SERVING_MAX_ROUTE_CONNECTIONS = setIntVar(VARIABLE_TF_SERVING_MAX_ROUTE_CONNECTIONS,
-        TF_SERVING_MAX_ROUTE_CONNECTIONS);
+      SERVING_MONITOR_INT = setStrVar(VARIABLE_SERVING_MONITOR_INT, SERVING_MONITOR_INT);
+
+      SERVING_CONNECTION_POOL_SIZE = setIntVar(VARIABLE_SERVING_CONNECTION_POOL_SIZE,
+        SERVING_CONNECTION_POOL_SIZE);
+      SERVING_MAX_ROUTE_CONNECTIONS = setIntVar(VARIABLE_SERVING_MAX_ROUTE_CONNECTIONS,
+        SERVING_MAX_ROUTE_CONNECTIONS);
 
       KUBE_USER = setStrVar(VARIABLE_KUBE_USER, KUBE_USER);
       KUBEMASTER_URL = setStrVar(VARIABLE_KUBEMASTER_URL, KUBEMASTER_URL);
@@ -637,12 +646,12 @@ public class Settings implements Serializable {
       JWT_EXP_LEEWAY_SEC = setIntVar(VARIABLE_JWT_EXP_LEEWAY_SEC, JWT_EXP_LEEWAY_SEC);
       JWT_SIGNING_KEY_NAME = setStrVar(VARIABLE_JWT_SIGNING_KEY_NAME, JWT_SIGNING_KEY_NAME);
       JWT_ISSUER = setStrVar(VARIABLE_JWT_ISSUER_KEY, JWT_ISSUER);
-      
+
       SERVICE_JWT_LIFETIME_MS = setLongVar(VARIABLE_SERVICE_JWT_LIFETIME_MS, SERVICE_JWT_LIFETIME_MS);
       SERVICE_JWT_EXP_LEEWAY_SEC = setIntVar(VARIABLE_SERVICE_JWT_EXP_LEEWAY_SEC, SERVICE_JWT_EXP_LEEWAY_SEC);
 
       populateServiceJWTCache();
-      
+
       CONNECTION_KEEPALIVE_TIMEOUT = setIntVar(VARIABLE_CONNECTION_KEEPALIVE_TIMEOUT, CONNECTION_KEEPALIVE_TIMEOUT);
 
       FEATURESTORE_DB_DEFAULT_QUOTA = setStrVar(VARIABLE_FEATURESTORE_DEFAULT_QUOTA, FEATURESTORE_DB_DEFAULT_QUOTA);
@@ -908,7 +917,7 @@ public class Settings implements Serializable {
     checkCache();
     return AIRFLOW_DIR;
   }
-  
+
   private String AIRFLOW_USER = "airflow";
   public synchronized String getAirflowUser() {
     checkCache();
@@ -1034,7 +1043,7 @@ public class Settings implements Serializable {
     return getHopsworksIp() + ":" +  getHopsworksPort().toString();
   }
 
-    
+
   private String CERTS_DIR = "/srv/hops/certs-dir";
 
   public synchronized String getCertsDir() {
@@ -1238,6 +1247,13 @@ public class Settings implements Serializable {
   public static final String HOPS_FEATURESTORE_TOUR_JOB_CLASS = "io.hops.examples.featurestore.Main";
   public static final String HOPS_FEATURESTORE_TOUR_JOB_NAME = "featurestore_tour_job";
   public static final String HOPS_FEATURESTORE_TOUR_JOB_INPUT_PARAM = "--input ";
+
+  //Serving constants
+  public static final String INFERENCE_SCHEMANAME = "inferenceschema";
+  public static final int INFERENCE_SCHEMAVERSION = 2;
+
+  //Kafka constants
+  public static final Set<String> KAFKA_SCHEMA_BLACKLIST = new HashSet<>(Arrays.asList(INFERENCE_SCHEMANAME));
 
   public String getTensorFlowJarPath(String tfUser) {
     return "hdfs:///user/" + tfUser + "/" + TENSORFLOW_JAR;
@@ -1477,11 +1493,18 @@ public class Settings implements Serializable {
     return LOGSTASH_PORT;
   }
 
-  private int LOGSTASH_PORT_SERVING = 5045;
+  private int LOGSTASH_PORT_TF_SERVING = 5045;
 
-  public synchronized Integer getLogstashPortServing() {
+  public synchronized Integer getLogstashPortTfServing() {
     checkCache();
-    return LOGSTASH_PORT_SERVING;
+    return LOGSTASH_PORT_TF_SERVING;
+  }
+  
+  private int LOGSTASH_PORT_SKLEARN_SERVING = 5047;
+  
+  public synchronized Integer getLogstashPortSkLearnServing() {
+    checkCache();
+    return LOGSTASH_PORT_SKLEARN_SERVING;
   }
 
   // Livy Server`
@@ -1548,16 +1571,16 @@ public class Settings implements Serializable {
     checkCache();
     return JUPYTER_DIR;
   }
-  
+
   private String JUPYTER_USER = "jupyter";
-  
+
   public synchronized String getJupyterUser() {
     checkCache();
     return JUPYTER_USER;
   }
-  
+
   private String JUPYTER_GROUP = "jupyter";
-  
+
   public synchronized String getJupyterGroup() {
     checkCache();
     return JUPYTER_GROUP;
@@ -1633,13 +1656,13 @@ public class Settings implements Serializable {
     checkCache();
     return ANACONDA_ENABLED;
   }
-  
+
   private Boolean DOWNLOAD_ALLOWED = true;
   public synchronized Boolean isDownloadAllowed() {
     checkCache();
     return DOWNLOAD_ALLOWED;
   }
-  
+
 //  private String CONDA_CHANNEL_URL = "https://repo.continuum.io/pkgs/free/linux-64/";
   private String CONDA_CHANNEL_URL = "default";
 
@@ -1647,7 +1670,7 @@ public class Settings implements Serializable {
     checkCache();
     return CONDA_CHANNEL_URL;
   }
-  
+
   /**
    * kagent liveness monitor settings
    */
@@ -1656,37 +1679,37 @@ public class Settings implements Serializable {
     checkCache();
     return KAGENT_USER;
   }
-  
+
   private boolean KAGENT_LIVENESS_MONITOR_ENABLED = false;
   public synchronized boolean isKagentLivenessMonitorEnabled() {
     checkCache();
     return KAGENT_LIVENESS_MONITOR_ENABLED;
   }
-  
+
   private String KAGENT_LIVENESS_THRESHOLD = "10s";
   public synchronized String getKagentLivenessThreshold() {
     checkCache();
     return KAGENT_LIVENESS_THRESHOLD;
   }
-  
+
   private String SERVICE_RESTART_SCRIPT = "/srv/hops/kagent/kagent/bin/restart-service.sh";
   public synchronized String getServiceRestartScript() {
     checkCache();
     return SERVICE_RESTART_SCRIPT;
   }
-  
+
   private String SERVICE_START_SCRIPT = "/srv/hops/kagent/kagent/bin/start-service.sh";
   public synchronized String getServiceStartScript() {
     checkCache();
     return SERVICE_START_SCRIPT;
   }
-  
+
   private String SERVICE_STOP_SCRIPT = "/srv/hops/kagent/kagent/bin/stop-service.sh";
   public synchronized String getServiceStopScript() {
     checkCache();
     return SERVICE_STOP_SCRIPT;
   }
-  
+
   private String HOPSWORKS_REST_ENDPOINT = "hopsworks0:8181";
 
   public synchronized String getRestEndpoint() {
@@ -1695,7 +1718,7 @@ public class Settings implements Serializable {
   }
 
   private RESTLogLevel HOPSWORKS_REST_LOG_LEVEL = RESTLogLevel.PROD;
-  
+
   public synchronized RESTLogLevel getHopsworksRESTLogLevel() {
     checkCache();
     return HOPSWORKS_REST_LOG_LEVEL;
@@ -1722,9 +1745,9 @@ public class Settings implements Serializable {
     // Just use a dummy password here, no need to store the actual password - enough to say it is different from 'admin'
     ADMIN_PWD = "changed";
   }
-  
+
   private String ADMIN_EMAIL = "admin@hopsworks.ai";
-  
+
   public synchronized String getAdminEmail() {
     checkCache();
     return ADMIN_EMAIL;
@@ -2375,7 +2398,7 @@ public class Settings implements Serializable {
     PUBLIC_HTTPS_PORT = setStrVar(VARIABLE_PUBLIC_HTTPS_PORT, PUBLIC_HTTPS_PORT);
     DELA_CLUSTER_ID = setStrVar(VARIABLE_DELA_CLUSTER_ID, DELA_CLUSTER_ID);
   }
-  
+
   private void populateServiceJWTCache() {
     SERVICE_MASTER_JWT = setStrVar(VARIABLE_SERVICE_MASTER_JWT, SERVICE_MASTER_JWT);
     RENEW_TOKENS = new String[NUM_OF_SERVICE_RENEW_TOKENS];
@@ -2770,12 +2793,12 @@ public class Settings implements Serializable {
     checkCache();
     return LDAP_AUTH;
   }
-  
+
   public synchronized  boolean isKrbEnabled() {
     checkCache();
     return IS_KRB_ENABLED;
   }
-  
+
   public synchronized  boolean isLdapEnabled() {
     checkCache();
     return IS_LDAP_ENABLED;
@@ -2815,12 +2838,12 @@ public class Settings implements Serializable {
     checkCache();
     return LDAP_GROUP_SEARCH_FILTER;
   }
-  
+
   public synchronized String getKrbUserSearchFilter() {
     checkCache();
     return LDAP_KRB_USER_SEARCH_FILTER;
   }
-  
+
   public synchronized String getLdapAttrBinary() {
     checkCache();
     return LDAP_ATTR_BINARY;
@@ -3267,23 +3290,23 @@ public class Settings implements Serializable {
     return KUBE_MAX_SERVING_INSTANCES;
   }
 
-  private String TF_SERVING_MONITOR_INT = "30s";
+  private String SERVING_MONITOR_INT = "30s";
 
-  public synchronized String getTFServingMonitorInt() {
+  public synchronized String getServingMonitorInt() {
     checkCache();
-    return TF_SERVING_MONITOR_INT;
+    return SERVING_MONITOR_INT;
   }
 
-  private int TF_SERVING_CONNECTION_POOL_SIZE = 40;
-  public synchronized int getTFServingConnectionPoolSize() {
+  private int SERVING_CONNECTION_POOL_SIZE = 40;
+  public synchronized int getServingConnectionPoolSize() {
     checkCache();
-    return TF_SERVING_CONNECTION_POOL_SIZE;
+    return SERVING_CONNECTION_POOL_SIZE;
   }
 
-  private int TF_SERVING_MAX_ROUTE_CONNECTIONS = 10;
-  public synchronized int getTFServingMaxRouteConnections() {
+  private int SERVING_MAX_ROUTE_CONNECTIONS = 10;
+  public synchronized int getServingMaxRouteConnections() {
     checkCache();
-    return TF_SERVING_MAX_ROUTE_CONNECTIONS;
+    return SERVING_MAX_ROUTE_CONNECTIONS;
   }
 
   private String JWT_SIGNATURE_ALGORITHM = "HS512";
@@ -3325,7 +3348,7 @@ public class Settings implements Serializable {
     checkCache();
     return JWT_SIGNING_KEY_NAME;
   }
-  
+
   public synchronized String getJWTIssuer() {
     checkCache();
     return JWT_ISSUER;
@@ -3342,7 +3365,7 @@ public class Settings implements Serializable {
     em.flush();
     SERVICE_MASTER_JWT = JWT;
   }
-  
+
   private final int NUM_OF_SERVICE_RENEW_TOKENS = 5;
   private final static String SERVICE_RENEW_TOKEN_VARIABLE_TEMPLATE = "service_renew_token_%d";
   private String[] RENEW_TOKENS = new String[0];
@@ -3358,7 +3381,7 @@ public class Settings implements Serializable {
     }
     RENEW_TOKENS = renewTokens;
   }
-  
+
   private int CONNECTION_KEEPALIVE_TIMEOUT = 30;
   public synchronized int getConnectionKeepAliveTimeout() {
     checkCache();

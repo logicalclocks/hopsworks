@@ -18,7 +18,7 @@ package io.hops.hopsworks.common.dao.serving;
 
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.restutils.RESTCodes;
-import io.hops.hopsworks.common.serving.tf.TfServingException;
+import io.hops.hopsworks.exceptions.ServingException;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.Stateless;
@@ -36,8 +36,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Stateless
-public class TfServingFacade {
-  private static final Logger LOGGER = Logger.getLogger(TfServingFacade.class.getName());
+public class ServingFacade {
+  private static final Logger LOGGER = Logger.getLogger(ServingFacade.class.getName());
 
   private static final long LOCK_TIMEOUT = 60000L; // 1 minutes
 
@@ -59,74 +59,78 @@ public class TfServingFacade {
     return em;
   }
 
-  public TfServingFacade() {}
+  public ServingFacade() {}
 
-  public List<TfServing> findForProject(Project project) {
-    return em.createNamedQuery("TfServing.findByProject", TfServing.class)
+  public List<Serving> findForProject(Project project) {
+    return em.createNamedQuery("Serving.findByProject", Serving.class)
         .setParameter("project", project)
         .getResultList();
   }
 
-  public TfServing findById(Integer id) {
-    return em.createNamedQuery("TfServing.findById", TfServing.class)
+  public Serving findById(Integer id) {
+    return em.createNamedQuery("Serving.findById", Serving.class)
         .setParameter("id", id)
         .getSingleResult();
   }
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  public void delete(TfServing tfServing) {
-    // Fetch again the tfServing instance from the DB as the method that calls this
+  public void delete(Serving serving) {
+    // Fetch again the serving instance from the DB as the method that calls this
     // doesn't run within a transaction as it needs to do network ops.
-    TfServing refetched = em.find(TfServing.class, tfServing.getId());
+    Serving refetched = em.find(Serving.class, serving.getId());
     if (refetched != null) {
       em.remove(refetched);
     }
   }
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  public TfServing updateDbObject(TfServing newTfServing, Project project) throws TfServingException {
+  public Serving updateDbObject(Serving newServing, Project project) throws ServingException {
     // Update request - execute this code within a transaction
-    TfServing dbTfServing = findByProjectAndId(project, newTfServing.getId());
+    Serving dbServing = findByProjectAndId(project, newServing.getId());
 
-    if (newTfServing.getModelName() != null && !newTfServing.getModelName().isEmpty()) {
-      dbTfServing.setModelName(newTfServing.getModelName());
+    if (newServing.getName() != null && !newServing.getName().isEmpty()) {
+      dbServing.setName(newServing.getName());
     }
-    if (newTfServing.getModelPath() != null && !newTfServing.getModelPath().isEmpty()) {
-      dbTfServing.setModelPath(newTfServing.getModelPath());
+    if (newServing.getArtifactPath() != null && !newServing.getArtifactPath().isEmpty()) {
+      dbServing.setArtifactPath(newServing.getArtifactPath());
     }
-    if (newTfServing.getInstances() != null) {
-      dbTfServing.setInstances(newTfServing.getInstances());
+    if (newServing.getInstances() != null) {
+      dbServing.setInstances(newServing.getInstances());
     }
-    if (newTfServing.getVersion() != null) {
-      dbTfServing.setVersion(newTfServing.getVersion());
-    }
-
-    dbTfServing.setKafkaTopic(newTfServing.getKafkaTopic());
-
-    if (newTfServing.getLocalPid() != null) {
-      dbTfServing.setLocalPid(newTfServing.getLocalPid());
-    }
-    if (newTfServing.getLocalDir() != null) {
-      dbTfServing.setLocalDir(newTfServing.getLocalDir());
-    }
-    if (newTfServing.getLocalPort() != null) {
-      dbTfServing.setLocalPort(newTfServing.getLocalPort());
+    if (newServing.getVersion() != null) {
+      dbServing.setVersion(newServing.getVersion());
     }
 
-    if (newTfServing.isBatchingEnabled() != null) {
-      dbTfServing.setBatchingEnabled(newTfServing.isBatchingEnabled());
+    dbServing.setKafkaTopic(newServing.getKafkaTopic());
+
+    if (newServing.getLocalPid() != null) {
+      dbServing.setLocalPid(newServing.getLocalPid());
+    }
+    if (newServing.getLocalDir() != null) {
+      dbServing.setLocalDir(newServing.getLocalDir());
+    }
+    if (newServing.getLocalPort() != null) {
+      dbServing.setLocalPort(newServing.getLocalPort());
     }
 
-    return merge(dbTfServing);
+    if (newServing.isBatchingEnabled() != null) {
+      dbServing.setBatchingEnabled(newServing.isBatchingEnabled());
+    }
+
+    if (newServing.getServingType() != null && newServing.getServingType() != dbServing.getServingType()) {
+      throw new ServingException(RESTCodes.ServingErrorCode.UPDATE_SERVING_TYPE_ERROR, Level.FINE);
+    }
+
+    return merge(dbServing);
   }
 
-  public TfServing merge(TfServing tfServing) {
-    return em.merge(tfServing);
+  public Serving merge(Serving serving) {
+    return em.merge(serving);
   }
 
-  public TfServing findByProjectAndId(Project project, Integer id) {
+  public Serving findByProjectAndId(Project project, Integer id) {
     try {
-      return em.createNamedQuery("TfServing.findByProjectAndId", TfServing.class)
+      return em.createNamedQuery("Serving.findByProjectAndId", Serving.class)
           .setParameter("project", project)
           .setParameter("id", id)
           .getSingleResult();
@@ -135,11 +139,11 @@ public class TfServingFacade {
     }
   }
 
-  public TfServing findByProjectModelName(Project project, String modelName) {
+  public Serving findByProjectAndName(Project project, String servingName) {
     try {
-      return em.createNamedQuery("TfServing.findByProjectModelName", TfServing.class)
+      return em.createNamedQuery("Serving.findByProjectAndName", Serving.class)
           .setParameter("project", project)
-          .setParameter("modelName", modelName)
+          .setParameter("name", servingName)
           .getSingleResult();
     } catch (NoResultException e) {
       return null;
@@ -147,75 +151,74 @@ public class TfServingFacade {
   }
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  public TfServing acquireLock(Project project, Integer id) throws TfServingException {
+  public Serving acquireLock(Project project, Integer id) throws ServingException {
     int retries = 5;
 
     if (nodeIP == null) {
-      throw new TfServingException(RESTCodes.TfServingErrorCode.LIFECYCLEERRORINT, Level.SEVERE);
+      throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERRORINT, Level.SEVERE);
     }
 
     // Acquire DB read lock on the row
     while (retries > 0) {
       try {
-        TfServing tfServing = em.createNamedQuery("TfServing.findByProjectAndId", TfServing.class)
+        Serving serving = em.createNamedQuery("Serving.findByProjectAndId", Serving.class)
             .setParameter("project", project)
             .setParameter("id", id)
             .setLockMode(LockModeType.PESSIMISTIC_WRITE)
             .getSingleResult();
 
-        if (tfServing == null) {
-          throw new TfServingException(RESTCodes.TfServingErrorCode.INSTANCENOTFOUND, Level.WARNING);
+        if (serving == null) {
+          throw new ServingException(RESTCodes.ServingErrorCode.INSTANCENOTFOUND, Level.WARNING);
         }
 
-        if (tfServing.getLockIP() != null &&
-            tfServing.getLockTimestamp() > System.currentTimeMillis() - LOCK_TIMEOUT) {
+        if (serving.getLockIP() != null &&
+            serving.getLockTimestamp() > System.currentTimeMillis() - LOCK_TIMEOUT) {
           // There is another request working on this entry. Wait.
           retries--;
           continue;
         }
 
-        tfServing.setLockIP(nodeIP);
-        tfServing.setLockTimestamp(System.currentTimeMillis());
+        serving.setLockIP(nodeIP);
+        serving.setLockTimestamp(System.currentTimeMillis());
 
         // Lock acquire, return;
-        return em.merge(tfServing);
+        return em.merge(serving);
       } catch (LockTimeoutException e) {
         retries--;
       }
     }
 
-    throw new TfServingException(RESTCodes.TfServingErrorCode.LIFECYCLEERRORINT, Level.FINE);
+    throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERRORINT, Level.FINE);
   }
 
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  public TfServing releaseLock(Project project, Integer id) throws TfServingException {
+  public Serving releaseLock(Project project, Integer id) throws ServingException {
     int retries = 5;
-
     // Acquire DB read lock on the row
     while (retries > 0) {
       try {
-        TfServing tfServing = em.createNamedQuery("TfServing.findByProjectAndId", TfServing.class)
+        Serving serving = em.createNamedQuery("Serving.findByProjectAndId", Serving.class)
             .setParameter("project", project)
             .setParameter("id", id)
             .setLockMode(LockModeType.PESSIMISTIC_WRITE)
             .getSingleResult();
 
-        tfServing.setLockIP(null);
-        tfServing.setLockTimestamp(null);
+        serving.setLockIP(null);
+        serving.setLockTimestamp(null);
 
-        return em.merge(tfServing);
+        return em.merge(serving);
       } catch (LockTimeoutException e) {
         retries--;
       }
     }
 
     // Lock will be claimed
-    throw new TfServingException(RESTCodes.TfServingErrorCode.LIFECYCLEERRORINT, Level.FINE);
+    throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERRORINT, Level.FINE);
   }
 
-  public List<TfServing> getLocalhostRunning() {
-    return em.createNamedQuery("TfServing.findLocalhostRunning", TfServing.class)
+  public List<Serving> getLocalhostRunning() {
+    return em.createNamedQuery("Serving.findLocalhostRunning", Serving.class)
         .getResultList();
   }
 }

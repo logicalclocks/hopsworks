@@ -14,37 +14,41 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.common.serving.tf;
+package io.hops.hopsworks.common.serving;
 
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.serving.util.ServingCommands;
 import io.hops.hopsworks.exceptions.CryptoPasswordNotFoundException;
 import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.exceptions.ServingException;
 import io.hops.hopsworks.exceptions.UserException;
 
 import java.util.List;
 
-public interface TfServingController {
+/**
+ * Interface for managing serving instances. Different type of serving controllers e.g (localhost or Kubernetes) should
+ * implement this interface.
+ */
+public interface ServingController {
 
-  List<TfServingWrapper> getTfServings(Project project)
-      throws TfServingException, KafkaException, CryptoPasswordNotFoundException;
+  List<ServingWrapper> getServings(Project project)
+      throws ServingException, KafkaException, CryptoPasswordNotFoundException;
 
-  TfServingWrapper getTfServing(Project project, Integer id)
-      throws TfServingException, KafkaException, CryptoPasswordNotFoundException;
+  ServingWrapper getServing(Project project, Integer id)
+      throws ServingException, KafkaException, CryptoPasswordNotFoundException;
 
-  void deleteTfServing(Project project, Integer id) throws TfServingException;
+  void deleteServing(Project project, Integer id) throws ServingException;
 
-  void deleteTfServings(Project project) throws TfServingException;
+  void deleteServings(Project project) throws ServingException;
 
-  void createOrUpdate(Project project, Users user, TfServingWrapper newTfServing)
-      throws KafkaException, UserException, ProjectException, ServiceException, TfServingException;
+  void startOrStop(Project project, Users user, Integer servingId, ServingCommands command)
+      throws ServingException;
 
-  void checkDuplicates(Project project, TfServingWrapper tfServingWrapper) throws TfServingException;
-
-  void startOrStop(Project project, Users user, Integer tfServingId, TfServingCommands command)
-      throws TfServingException;
+  void createOrUpdate(Project project, Users user, ServingWrapper newServing)
+      throws KafkaException, UserException, ProjectException, ServiceException, ServingException;
 
   int getMaxNumInstances();
 
