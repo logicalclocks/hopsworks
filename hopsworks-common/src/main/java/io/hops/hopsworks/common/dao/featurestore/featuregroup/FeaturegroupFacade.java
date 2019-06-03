@@ -165,7 +165,7 @@ public class FeaturegroupFacade extends AbstractFacade<Featuregroup> {
     try {
       return (Long) em.createNativeQuery("SELECT `TBL_ID` FROM metastore.`TBLS` WHERE " +
         "`TBL_NAME` = ?1 AND `DB_ID` = ?2;")
-        .setParameter(1, hiveTableName)
+        .setParameter(1, hiveTableName.toLowerCase())
         .setParameter(2, hiveDbId)
         .getSingleResult();
     } catch (NoResultException e) {

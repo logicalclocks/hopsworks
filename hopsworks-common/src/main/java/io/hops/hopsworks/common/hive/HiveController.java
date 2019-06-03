@@ -178,7 +178,6 @@ public class HiveController {
     // Persist Hive db as dataset in the Hopsworks database
     Dataset dbDataset = new Dataset(dbInode, project);
     dbDataset.setType(datasetType);
-    dbDataset.setDescription(buildDescription(dbName));
     dbDataset.setSearchable(true);
     dbDataset.setFeaturestore(featurestore);
     datasetFacade.persistDataset(dbDataset);
@@ -281,15 +280,5 @@ public class HiveController {
   public Path getDbPath(String dbName) {
     return new Path(settings.getHiveWarehouse(), dbName.toLowerCase() + ".db");
   }
-
-  private String buildDescription(String projectName) {
-    return "Use the following configuration settings to connect to Hive from external clients:<br>" +
-        "Url: jdbc:hive2://" + settings.getHiveServerHostName(true) + "/" + projectName + "<br>" +
-        "Authentication: noSasl<br>" +
-        "SSL: enabled - TrustStore and its password<br>" +
-        "Username: your Hopsworks email address<br>" +
-        "Password: your Hopsworks password";
-  }
-
 
 }
