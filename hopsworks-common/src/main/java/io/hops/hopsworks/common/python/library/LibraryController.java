@@ -41,13 +41,12 @@ import java.io.InputStreamReader;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -115,9 +114,9 @@ public class LibraryController {
       dependency, version);
   }
   
-  public HashMap<String, Set<LibraryVersionDTO>> condaSearch(String library, String url) throws ServiceException {
+  public HashMap<String, List<LibraryVersionDTO>> condaSearch(String library, String url) throws ServiceException {
     
-    HashMap<String, Set<LibraryVersionDTO>> libVersions = new HashMap<>();
+    HashMap<String, List<LibraryVersionDTO>> libVersions = new HashMap<>();
     
     String prog = settings.getHopsworksDomainDir() + "/bin/condasearch.sh";
     ProcessBuilder pb = new ProcessBuilder(prog, url, library);
@@ -171,11 +170,14 @@ public class LibraryController {
         }
         
         if (!libVersions.containsKey(foundLib)) {
-          Set<LibraryVersionDTO> versions = new HashSet<>();
+          List<LibraryVersionDTO> versions = new LinkedList<>();
           versions.add(new LibraryVersionDTO(foundVersion));
           libVersions.put(foundLib, versions);
         } else {
-          libVersions.get(foundLib).add(new LibraryVersionDTO(foundVersion));
+          LibraryVersionDTO libraryVersionDTO = new LibraryVersionDTO(foundVersion);
+          if(!libVersions.get(foundLib).contains(libraryVersionDTO)) {
+            libVersions.get(foundLib).add(0, libraryVersionDTO);
+          }
         }
       }
       int errCode = process.waitFor();
@@ -193,14 +195,13 @@ public class LibraryController {
       }
       
       return libVersions;
-      
     } catch (IOException | InterruptedException ex) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_ERROR, Level.SEVERE, "lib: " + library,
         ex.getMessage(), ex);
     }
   }
   
-  private void findPipLibPyPi(String libName, HashMap<String, Set<LibraryVersionDTO>> versions)
+  private void findPipLibPyPi(String libName, HashMap<String, List<LibraryVersionDTO>> versions)
   {
     Response resp = null;
     try {
@@ -226,8 +227,8 @@ public class LibraryController {
     }
   }
   
-  private Set<LibraryVersionDTO> getVersions(JSONObject releases) {
-    Set<LibraryVersionDTO> versions = new HashSet<>();
+  private List<LibraryVersionDTO> getVersions(JSONObject releases) {
+    List<LibraryVersionDTO> versions = new ArrayList<>();
     Iterator<String> keys = releases.keys();
     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
     while (keys.hasNext()) {
@@ -250,10 +251,10 @@ public class LibraryController {
     return versions;
   }
   
-  public HashMap<String, Set<LibraryVersionDTO>> pipSearch(String library, Project project) throws ServiceException {
+  public HashMap<String, List<LibraryVersionDTO>> pipSearch(String library, Project project) throws ServiceException {
     
     String env = projectUtils.getCurrentCondaEnvironment(project);
-    HashMap<String, Set<LibraryVersionDTO>> versions = new HashMap<>();
+    HashMap<String, List<LibraryVersionDTO>> versions = new HashMap<>();
     
     String prog = settings.getHopsworksDomainDir() + "/bin/pipsearch.sh";
     ProcessBuilder pb = new ProcessBuilder(prog, library, env);
@@ -289,12 +290,12 @@ public class LibraryController {
           //This may happen when the version is (), i.e pip search does not return a version
           String version = lineSplit[1];
           if(version.equals("()")) {
-            Set<LibraryVersionDTO> versionList = new HashSet<>();
+            List<LibraryVersionDTO> versionList = new ArrayList<>();
             versionList.add(new LibraryVersionDTO(""));
             versions.put(libName, versionList);
           } else {
             version = version.replaceAll("[()]", "").trim();
-            Set<LibraryVersionDTO> versionList = new HashSet<>();
+            List<LibraryVersionDTO> versionList = new ArrayList<>();
             versionList.add(new LibraryVersionDTO(version));
             versions.put(libName, versionList);
           }
