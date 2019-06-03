@@ -39,7 +39,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Utility functions for the featurestore service, contains common functionality between Localhost and K8 serving
+ * Utility functions for the serving service, contains common functionality between Localhost and K8 serving
  */
 @Stateless
 public class ServingUtil {
