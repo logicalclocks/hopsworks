@@ -28,7 +28,7 @@ import javax.ejb.TransactionAttributeType;
 import javax.ws.rs.core.UriInfo;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Set;
+import java.util.List;
 import java.util.logging.Logger;
 
 @Stateless
@@ -61,7 +61,7 @@ public class LibrarySearchBuilder {
     return dto;
   }
   
-  public LibrarySearchDTO build(UriInfo uriInfo, Set<LibraryVersionDTO> libVersions, String foundLibrary,
+  public LibrarySearchDTO build(UriInfo uriInfo, List<LibraryVersionDTO> libVersions, String foundLibrary,
     Collection<PythonDep> installedDeps, String url) {
     LibrarySearchDTO dto = new LibrarySearchDTO();
     if (url != null) {
@@ -85,7 +85,7 @@ public class LibrarySearchBuilder {
     uri(dto, uriInfo, library, url);
     dto.setLibrary(library);
     dto.setChannelUrl(url);
-    HashMap<String, Set<LibraryVersionDTO>> libVersions = libraryController.condaSearch(library, url);
+    HashMap<String, List<LibraryVersionDTO>> libVersions = libraryController.condaSearch(library, url);
     dto.setCount((long) libVersions.size());
     return buildItems(dto, uriInfo, libVersions, project, url);
   }
@@ -94,13 +94,13 @@ public class LibrarySearchBuilder {
     LibrarySearchDTO dto = new LibrarySearchDTO();
     uri(dto, uriInfo, library);
     dto.setLibrary(library);
-    HashMap<String, Set<LibraryVersionDTO>> libVersions = libraryController.pipSearch(library, project);
+    HashMap<String, List<LibraryVersionDTO>> libVersions = libraryController.pipSearch(library, project);
     dto.setCount((long) libVersions.size());
     return buildItems(dto, uriInfo, libVersions, project, null);
   }
   
   private LibrarySearchDTO buildItems(LibrarySearchDTO dto, UriInfo uriInfo,
-    HashMap<String, Set<LibraryVersionDTO>> libVersions, Project project, String url) {
+    HashMap<String, List<LibraryVersionDTO>> libVersions, Project project, String url) {
     Collection<PythonDep> installedDeps = project.getPythonDepCollection();
     if (libVersions != null && !libVersions.isEmpty()) {
       libVersions.forEach((k, v) -> dto.addItem(build(uriInfo, v, k, installedDeps, url)));
