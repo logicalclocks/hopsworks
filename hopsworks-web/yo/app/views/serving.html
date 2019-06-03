@@ -15,264 +15,303 @@
   -->
 
 <div ng-controller="MainCtrl as mainCtrl">
-  <div ng-include="'nav.html'"></div>
-  <div id="wrapper" class="toggled"  ng-controller="servingCtrl as servingCtrl">
-    <div class="overlay"></div>
-    <div ng-include="'navProject.html'"></div>
+    <div ng-include="'nav.html'"></div>
+    <div id="wrapper" class="toggled" ng-controller="servingCtrl as servingCtrl">
+        <div class="overlay"></div>
+        <div ng-include="'navProject.html'"></div>
 
-    <div class="content-wrapper">
+        <div class="content-wrapper">
 
-      <div ng-show="servingCtrl.activeTab === 'serving'" layout-align="center center">
+            <div ng-show="servingCtrl.activeTab === 'serving'" layout-align="center center">
 
-        <div class="" ng-if="servingCtrl.showLogs === false">
-          <!-- Page Content -->
-          <div ng-if="servingCtrl.showCreateNewServingForm === true">
+                <div class="" ng-if="servingCtrl.showLogs === false">
+                    <!-- Page Content -->
+                    <div ng-if="servingCtrl.showCreateNewServingForm === true">
+                        <div class="col-xs-10 col-sm-10 col-md-10 col-lg-10" layout-align="left left"
+                             style='margin-left: 0px;'>
 
-            <div class="col-md-12" style="margin-left: 5px; margin-top:-10px;">
-              <div class="btn-group blocks" style="padding: 5px;">
-                <div class="col-md-2"></div>
-                <div class="col-md-8">
-                  <div style="display: inline-block; vertical-align: top;">
-                    <div class="btn-group btn-group-toggle" data-toggle="buttons">
-                      <label class="btn btn-default btn-md" id="tensorflow_serving_lbl"
-                             ng-click="servingCtrl.setServingType('TENSORFLOW');"
-                             ng-class="{unset: servingCtrl.editServing.servingType !== 'TENSORFLOW'}"
-                             style="margin:2px; background:rgb(108, 117, 125); color:white;">
-                        <input type="radio" value="TENSORFLOW_SERVING" id="TENSORFLOW_SERVING">
-                        Tensorflow
-                        <i class="fa fa-info-circle"
-                           uib-tooltip="Serving of Tensorflow models"
-                           tooltip-placement="left" style="margin-left: 10px">
-                        </i>
-                      </label>
-                      <label class="btn btn-default btn-md" id="sklearn_serving_lbl"
-                             ng-click="servingCtrl.setServingType('SKLEARN');"
-                             ng-class="{unset: servingCtrl.editServing.servingType !== 'SKLEARN'}"
-                             style="margin:2px; background:rgb(108, 117, 125); color:white;">
-                        <input type="radio" value="SKLEARN_SERVING" id="SKLEARN_SERVING">
-                        Sci-kit Learn (SkLearn)
-                        <i class="fa fa-info-circle"
-                           uib-tooltip="Serving of SkLearn models"
-                           tooltip-placement="left" style="margin-left: 10px">
-                        </i>
-                      </label>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <br>
-              <div class="col-md-2"></div>
-            </div>
+                            <div class="row">
+                                <div class="col-xs-9 col-sm-9 col-md-9 col-lg-8">
+                                    <button class="close" ng-click="servingCtrl.hideCreateServingForm()" type="button">
+                                        <span aria-hidden="true">&times;</span></button>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3" style="text-align: right;">
+                                </div>
+                                <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
+                                    <div class="btn-group blocks" style="padding: 0px;">
+                                        <div style="display: inline-block; vertical-align: top;">
+                                            <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                                                <label class="btn btn-default btn-md" id="tensorflow_serving_lbl"
+                                                       ng-click="servingCtrl.setServingType('TENSORFLOW');"
+                                                       ng-class="{unset: servingCtrl.editServing.servingType !== 'TENSORFLOW'}"
+                                                       style="margin:2px; background:rgb(108, 117, 125); color:white;">
+                                                    <input type="radio" value="TENSORFLOW_SERVING"
+                                                           id="TENSORFLOW_SERVING">
+                                                    Tensorflow
+                                                    <i class="fa fa-info-circle"
+                                                       uib-tooltip="Serving of Tensorflow models"
+                                                       tooltip-placement="left" style="margin-left: 10px">
+                                                    </i>
+                                                </label>
+                                                <label class="btn btn-default btn-md" id="sklearn_serving_lbl"
+                                                       ng-click="servingCtrl.setServingType('SKLEARN');"
+                                                       ng-class="{unset: servingCtrl.editServing.servingType !== 'SKLEARN'}"
+                                                       style="margin:2px; background:rgb(108, 117, 125); color:white;">
+                                                    <input type="radio" value="SKLEARN_SERVING"
+                                                           id="SKLEARN_SERVING">
+                                                    Sci-kit Learn (SkLearn)
+                                                    <i class="fa fa-info-circle"
+                                                       uib-tooltip="Serving of SkLearn models"
+                                                       tooltip-placement="left" style="margin-left: 10px">
+                                                    </i>
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <br>
+                                    </div>
+                                </div>
+                            </div>
 
-            <div class="col-xs-10 col-sm-10 col-md-10 col-lg-10" layout-align="left left" style='margin-left: 0px;'>
-              <div class="row">
-                <div class="col-xs-9 col-sm-9 col-md-9 col-lg-8">
-                  <button class="close" ng-click="servingCtrl.hideCreateServingForm()" type="button"><span aria-hidden="true">&times;</span></button>
-                </div>
-              </div>
+                            <div class="row">
+                                <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3" style="text-align: right;">
+                                    <div ng-if="servingCtrl.editServing.servingType === 'SKLEARN'">
+                                        <div>
+                                            <label>
+                                                <button style="margin-top: 5px;" id="selectArchiveButton"
+                                                        class="btn btn-default" ng-click="servingCtrl.selectFile()">
+                                                    <span>Python Script</span>
+                                                </button>
+                                            </label>
+                                            <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                               uib-tooltip='Select a python script that implements the Predict class and the predict(inputs) --> prediction function.'
+                                               style="margin-left: 10px"></i>
+                                        </div>
+                                        <div style="margin-top: 7px; heigth: 2em;"><label>Serving Name</label></div>
+                                        <div style="margin-top: 9px; heigth: 2em;"><label>Serving Version</label></div>
+                                    </div>
 
-              <div class="row">
-                <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3" style="text-align: right;">
-                    <div ng-if="servingCtrl.editServing.servingType === 'SKLEARN'">
-                      <div>
-                        <label>
-                          <button style="margin-top: 5px;" id="selectArchiveButton" class="btn btn-default" ng-click="servingCtrl.selectFile()">
-                            <span>Python Script</span>
-                          </button>
-                        </label>
-                        <i class="fa fa-info-circle" tooltip-placement="auto left"
-                           uib-tooltip='Select a python script that implements the Predict class and the predict(inputs) --> prediction function.'
-                           style="margin-left: 10px"></i>
-                      </div>
-                  <div style="margin-top: 7px; heigth: 2em;"><label>Serving Name</label></div>
-                  <div style="margin-top: 9px; heigth: 2em;"><label>Serving Version</label></div>
-                    </div>
+                                    <div ng-if="servingCtrl.editServing.servingType === 'TENSORFLOW'">
+                                        <div>
+                                            <label>
+                                                <button style="margin-top: 5px;" id="selectArchiveButton"
+                                                        class="btn btn-default" ng-click="servingCtrl.selectFile()">
+                                                    <span>Model</span>
+                                                </button>
+                                            </label>
+                                            <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                               uib-tooltip='Select a model directory. The correct directory structure can be found in the documentation'
+                                               style="margin-left: 10px"></i>
+                                        </div>
 
-               <div ng-if="servingCtrl.editServing.servingType === 'TENSORFLOW'">
-                  <div>
-                    <label>
-                      <button style="margin-top: 5px;" id="selectArchiveButton" class="btn btn-default" ng-click="servingCtrl.selectFile()">
-                        <span>Model</span>
-                      </button>
-                    </label>
-                    <i class="fa fa-info-circle" tooltip-placement="auto left"
-                       uib-tooltip='Select a model directory. The correct directory structure can be found in the documentation' style="margin-left: 10px"></i>
-                  </div>
+                                        <div style="margin-top: 7px; heigth: 2em;"><label>Model
+                                            Name</label></div>
+                                        <div style="margin-top: 9px; heigth: 2em;"><label>Model Version</label></div>
+                                        <div style="margin-top: 15px; heigth: 2em;"
+                                             ng-if="servingCtrl.sliderOptions.options.ceil > 1">
+                                            <label># Instances</label>
+                                        </div>
+                                    </div>
 
-                  <div style="margin-top: 7px; heigth: 2em;"><label>Model
-                    Name</label></div>
-                  <div style="margin-top: 9px; heigth: 2em;"><label>Model Version</label></div>
-                  <div style="margin-top: 15px; heigth: 2em;" ng-if="servingCtrl.sliderOptions.options.ceil > 1">
-                    <label># Instances</label>
-                  </div>
-                </div>
+                                    <div style="margin-top: 11px; heigth: 2em;"><label
+                                            ng-click="servingCtrl.showAdvanced()">
+                                        <span class="glyphicon glyphicon-chevron-right"
+                                              ng-if="!servingCtrl.showAdvancedForm"></span>
+                                        <span class="glyphicon glyphicon-chevron-down"
+                                              ng-if="servingCtrl.showAdvancedForm"></span>
+                                        Advanced</label>
+                                    </div>
+                                </div>
 
-                  <div style="margin-top: 11px; heigth: 2em;"><label ng-click="servingCtrl.showAdvanced()">
-                    <span class="glyphicon glyphicon-chevron-right" ng-if="!servingCtrl.showAdvancedForm"></span>
-                    <span class="glyphicon glyphicon-chevron-down" ng-if="servingCtrl.showAdvancedForm"></span>
-                    Advanced</label>
-                  </div>
-                </div>
+                                <div class="col-xs-6 col-sm-6 col-md-6 col-lg-5">
+                                    <input style="margin-top: 5px" type="text" class="form-control" id="archives"
+                                           ng-model="servingCtrl.editServing.artifactPath">
 
-                <div class="col-xs-6 col-sm-6 col-md-6 col-lg-5">
-                  <input style="margin-top: 5px" type="text" class="form-control" id="archives"
-                         ng-model="servingCtrl.editServing.artifactPath">
+                                    <input style="margin-top: 5px" name="name" class="form-control" type="text"
+                                           ng-model="servingCtrl.editServing.name">
+                                    <input style="margin-top: 5px" name="modelVersion" class="form-control" type="text"
+                                           ng-model="servingCtrl.editServing.modelVersion"
+                                           ng-if="servingCtrl.editServing.servingType === 'SKLEARN'">
 
-                  <input style="margin-top: 5px" name="name" class="form-control" type="text" ng-model="servingCtrl.editServing.name">
-                  <input style="margin-top: 5px" name="modelVersion" class="form-control" type="text"
-                         ng-model="servingCtrl.editServing.modelVersion"
-                         ng-if="servingCtrl.editServing.servingType === 'SKLEARN'">
+                                    <select class="form-control" style="margin-top: 5px; width: 25%" name="modelVersion"
+                                            ng-model="servingCtrl.editServing.modelVersion"
+                                            ng-options="x for x in servingCtrl.editServing.versions"
+                                            ng-if="servingCtrl.editServing.servingType === 'TENSORFLOW'"></select>
 
-                  <select class="form-control" style="margin-top: 5px; width: 25%" name="modelVersion"
-                          ng-model="servingCtrl.editServing.modelVersion"
-                          ng-options="x for x in servingCtrl.editServing.versions"
-                          ng-if="servingCtrl.editServing.servingType === 'TENSORFLOW'"></select>
+                                    <rzslider ng-if="servingCtrl.sliderOptions.options.ceil > 1"
+                                              style="margin-top: 40px;"
+                                              rz-slider-model="servingCtrl.sliderOptions.value"
+                                              rz-slider-options="servingCtrl.sliderOptions.options">
+                                    </rzslider>
 
-                  <rzslider ng-if="servingCtrl.sliderOptions.options.ceil > 1" style="margin-top: 40px;"
-                       rz-slider-model="servingCtrl.sliderOptions.value"
-                       rz-slider-options="servingCtrl.sliderOptions.options">
-                  </rzslider>
+                                    <hr>
+                                </div>
+                            </div>
+                            <div ng-if="servingCtrl.showAdvancedForm" class="animate-if">
+                                <div class="row">
+                                    <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3" style="text-align: right;">
+                                        <div style="margin-top: 10px; heigth: 2em;"
+                                             ng-if="servingCtrl.editServing.servingType === 'TENSORFLOW'"><label>Request
+                                            Batching</label></div>
+                                        <div style="margin-top: 10px; heigth: 2em;"><label>Kafka Topic</label></div>
+                                        <div style="margin-top: 10px; heigth: 2em;"><label>Kafka Num Partitions</label>
+                                        </div>
+                                        <div style="margin-top: 10px; heigth: 2em;"><label>Kafka Replication
+                                            Factor</label></div>
+                                    </div>
 
-                  <hr>
-                </div>
-              </div>
-            <div ng-if="servingCtrl.showAdvancedForm" class="animate-if">
-              <div class="row">
-                <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3" style="text-align: right;">
-                  <div style="margin-top: 10px; heigth: 2em;"
-                       ng-if="servingCtrl.editServing.servingType === 'TENSORFLOW'"><label>Request Batching</label></div>
-                  <div style="margin-top: 10px; heigth: 2em;"><label>Kafka Topic</label></div>
-                  <div style="margin-top: 10px; heigth: 2em;"><label>Kafka Num Partitions</label></div>
-                  <div style="margin-top: 10px; heigth: 2em;"><label>Kafka Replication Factor</label></div>
-                </div>
+                                    <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6" style="padding-top: 10px">
+                                        <input type="checkbox" name="requestBatching"
+                                               ng-model="servingCtrl.editServing.batchingEnabled"
+                                               ng-if="servingCtrl.editServing.servingType === 'TENSORFLOW'">
 
-                <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6" style="padding-top: 10px">
-                  <input type="checkbox" name="requestBatching"
-                          ng-model="servingCtrl.editServing.batchingEnabled"
-                         ng-if="servingCtrl.editServing.servingType === 'TENSORFLOW'">
+                                        <select class="form-control" style="margin-top: 5px; width: 40%"
+                                                name="kafkaTopicName"
+                                                ng-model="servingCtrl.editServing.kafkaTopicDTO"
+                                                ng-options="x.name for x in servingCtrl.projectKafkaTopics"
+                                                ng-change="servingCtrl.updateKafkaDetails()"></select>
 
-                  <select class="form-control" style="margin-top: 5px; width: 40%" name="kafkaTopicName"
-                          ng-model="servingCtrl.editServing.kafkaTopicDTO"
-                          ng-options="x.name for x in servingCtrl.projectKafkaTopics"
-                          ng-change="servingCtrl.updateKafkaDetails()"></select>
+                                        <input style="margin-top: 5px; width: 40%" name="kafkaNumPartitions"
+                                               class="form-control"
+                                               type="number" min="1"
+                                               ng-model="servingCtrl.editServing.kafkaTopicDTO.numOfPartitions"
+                                               ng-disabled="servingCtrl.editServing.kafkaTopicDTO.name !== 'CREATE'">
 
-                  <input style="margin-top: 5px; width: 40%" name="kafkaNumPartitions" class="form-control"
-                         type="number" min="1" ng-model="servingCtrl.editServing.kafkaTopicDTO.numOfPartitions"
-                         ng-disabled="servingCtrl.editServing.kafkaTopicDTO.name !== 'CREATE'">
+                                        <input style="margin-top: 5px; width: 40%" name="kafkaReplicationFactor"
+                                               class="form-control" type="number"
+                                               max="{{servingCtrl.kafkaMaxNumReplicas}}" min="1"
+                                               ng-model="servingCtrl.editServing.kafkaTopicDTO.numOfReplicas"
+                                               ng-disabled="servingCtrl.editServing.kafkaTopicDTO.name !== 'CREATE'">
 
-                  <input style="margin-top: 5px; width: 40%" name="kafkaReplicationFactor" class="form-control" type="number"
-                         max="{{servingCtrl.kafkaMaxNumReplicas}}" min="1"
-                         ng-model="servingCtrl.editServing.kafkaTopicDTO.numOfReplicas"
-                         ng-disabled="servingCtrl.editServing.kafkaTopicDTO.name !== 'CREATE'">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3" style="text-align: right;">
+                                </div>
 
-                  </div>
-                </div>
-            </div>
-              <div class="row">
-                <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3" style="text-align: right;">
-                </div>
-
-                <div class="col-xs-6 col-sm-6 col-md-6 col-lg-5">
-                  <button type="button" style="float:right; margin-bottom: 10px; margin-top: 10px;" class="btn btn-success" ng-click="servingCtrl.createOrUpdate()">
-                    <span class="fa fa-spinner fa-spin" aria-hidden="true" ng-if="servingCtrl.sendingRequest === true"></span>
-                    {{servingCtrl.editServing.id == null ? 'Create Serving' : 'Update Serving'}}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <hr class="col-xs-12 col-sm-12 col-md-12 col-lg-12" ng-if="servingCtrl.showCreateNewServingForm === true" />
-
-          <div>
-            <div class="row" ng-if="servingCtrl.createNewServingMode === false">
-              <button type="button" ng-click="servingCtrl.showCreateServingForm()" class="btn btn-default btn-success control-label" style="margin: 10px">
-                Create New Serving<i style="margin-left: 10px" class="glyphicon glyphicon-plus">
-                </i>
-              </button>
-            </div>
-
-            <table class="table table-hover">
-              <thead style="border:none;">
-              <th style="width: 6%"></th>
-              <th style="width: 17%">Name</th>
-              <th style="width: 11%">Type</th>
-              <th style="width: 30%">Path</th>
-              <th style="width: 4%">Version</th>
-              <th style="width: 9%">Created</th>
-              <th style="width: 6%">Status</th>
-              <th style="width: 22%">Actions</th>
-              </thead>
-              <tbody>
-                <tr dir-paginate="serving in servingCtrl.servings| orderBy :sortKey:reverse| itemsPerPage:pageSize">
-                  <td>
-                    <!-- Start -->
-                    <div class="btn-group" role="group" ng-if="serving.status === 'Stopped'">
-                      <button style="max-width: 80px;"
-                              ng-click="servingCtrl.startOrStopServing(serving, 'START'); $event.stopPropagation();"
-                              class="btn btn-default btn-sm btn-block">
-                        <span style="color: #20AD28" class="glyphicon glyphicon-play" aria-hidden="true"></span> Run
-                      </button>
-
+                                <div class="col-xs-6 col-sm-6 col-md-6 col-lg-5">
+                                    <button type="button" style="float:right; margin-bottom: 10px; margin-top: 10px;"
+                                            class="btn btn-success" ng-click="servingCtrl.createOrUpdate()">
+                                        <span class="fa fa-spinner fa-spin" aria-hidden="true"
+                                              ng-if="servingCtrl.sendingRequest === true"></span>
+                                        {{servingCtrl.editServing.id == null ? 'Create Serving' : 'Update Serving'}}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- Stop with starting/update in progress -->
-                    <div class="btn-group" role="group" ng-if="serving.status === 'Starting' || serving.status === 'Updating'">
-                      <button style="max-width: 80px;" class="btn btn-danger btn-sm btn-block" ng-click="servingCtrl.startOrStopServing(serving, 'STOP'); $event.stopPropagation();">
-                        <span class="fa fa-spinner fa-spin" aria-hidden="true"></span> Stop
-                      </button>
+                    <hr class="col-xs-12 col-sm-12 col-md-12 col-lg-12"
+                        ng-if="servingCtrl.showCreateNewServingForm === true"/>
+
+                    <div>
+                        <div class="row" ng-if="servingCtrl.createNewServingMode === false">
+                            <button type="button" ng-click="servingCtrl.showCreateServingForm()"
+                                    class="btn btn-default btn-success control-label" style="margin: 10px">
+                                Create New Serving<i style="margin-left: 10px" class="glyphicon glyphicon-plus">
+                            </i>
+                            </button>
+                        </div>
+
+                        <table class="table table-hover">
+                            <thead style="border:none;">
+                            <th style="width: 6%"></th>
+                            <th style="width: 17%">Name</th>
+                            <th style="width: 11%">Type</th>
+                            <th style="width: 30%">Path</th>
+                            <th style="width: 4%">Version</th>
+                            <th style="width: 9%">Created</th>
+                            <th style="width: 6%">Status</th>
+                            <th style="width: 22%">Actions</th>
+                            </thead>
+                            <tbody>
+                            <tr dir-paginate="serving in servingCtrl.servings| orderBy :sortKey:reverse| itemsPerPage:pageSize">
+                                <td>
+                                    <!-- Start -->
+                                    <div class="btn-group" role="group" ng-if="serving.status === 'Stopped'">
+                                        <button style="max-width: 80px;"
+                                                ng-click="servingCtrl.startOrStopServing(serving, 'START'); $event.stopPropagation();"
+                                                class="btn btn-default btn-sm btn-block">
+                                            <span style="color: #20AD28" class="glyphicon glyphicon-play"
+                                                  aria-hidden="true"></span> Run
+                                        </button>
+
+                                    </div>
+
+                                    <!-- Stop with starting/update in progress -->
+                                    <div class="btn-group" role="group"
+                                         ng-if="serving.status === 'Starting' || serving.status === 'Updating'">
+                                        <button style="max-width: 80px;" class="btn btn-danger btn-sm btn-block"
+                                                ng-click="servingCtrl.startOrStopServing(serving, 'STOP'); $event.stopPropagation();">
+                                            <span class="fa fa-spinner fa-spin" aria-hidden="true"></span> Stop
+                                        </button>
+                                    </div>
+
+                                    <!-- Stopping -->
+                                    <div class="btn-group" role="group" ng-if="serving.status === 'Stopping'"
+                                         ng-click="servingCtrl.startOrStopServing(serving, 'STOP'); $event.stopPropagation();">
+                                        <button style="max-width: 80px;" class="btn btn-danger btn-sm btn-block">
+                                            <span class="fa fa-spinner fa-spin" aria-hidden="true"></span> Stopping
+                                        </button>
+                                    </div>
+
+
+                                    <!-- Stop -->
+                                    <div class="btn-group" role="group" ng-if="serving.status === 'Running'">
+                                        <button style="max-width: 80px;" class="btn btn-danger btn-sm btn-block"
+                                                ng-click="servingCtrl.startOrStopServing(serving, 'STOP'); $event.stopPropagation();">
+                                            <span class="glyphicon glyphicon-stop"></span> Stop
+                                        </button>
+                                    </div>
+
+                                </td>
+                                <td> {{serving.name}}</td>
+                                <td> {{serving.servingType}}</td>
+                                <td> {{serving.artifactPath}}</td>
+                                <td> {{serving.modelVersion}}</td>
+                                <td> {{serving.created | date:'short'}}</td>
+                                </td>
+                                <td> {{serving.status}}</td>
+                                <td>
+                                    <button class="btn btn-info glyphicon glyphicon-edit" uib-tooltip="Edit"
+                                            style="margin-right:-3px"
+                                            ng-click="servingCtrl.updateServing(serving); $event.stopPropagation();"></button>
+                                    <button class="btn btn-danger glyphicon glyphicon-trash" uib-tooltip="Delete"
+                                            style="margin-right: -3px;"
+                                            ng-click="servingCtrl.deleteServing(serving); $event.stopPropagation();"></button>
+                                    <button class="btn btn-warning glyphicon glyphicon-list" uib-tooltip="Show logs"
+                                            style="margin-right: -3px;"
+                                            ng-click="servingCtrl.showServingLogs(serving); $event.stopPropagation();"></button>
+                                    <button class="btn btn-primary glyphicon glyphicon-eye-open"
+                                            uib-tooltip="Show Detailed Information" style="margin-right: -3px;"
+                                            ng-click="servingCtrl.showDetailedInformation(serving); $event.stopPropagation();">
+                                    </button>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                        <dir-pagination-controls
+                                class="pull-right"
+                                max-size="5"
+                                direction-links="true"
+                                boundary-links="true">
+                        </dir-pagination-controls>
                     </div>
-
-                    <!-- Stopping -->
-                    <div class="btn-group" role="group" ng-if="serving.status === 'Stopping'" ng-click="servingCtrl.startOrStopServing(serving, 'STOP'); $event.stopPropagation();">
-                      <button style="max-width: 80px;" class="btn btn-danger btn-sm btn-block" >
-                        <span class="fa fa-spinner fa-spin" aria-hidden="true"></span> Stopping
-                      </button>
-                    </div>
-
-
-                    <!-- Stop -->
-                    <div class="btn-group" role="group" ng-if="serving.status === 'Running'">
-                      <button style="max-width: 80px;" class="btn btn-danger btn-sm btn-block" ng-click="servingCtrl.startOrStopServing(serving, 'STOP'); $event.stopPropagation();">
-                        <span class="glyphicon glyphicon-stop"></span> Stop
-                      </button>
-                    </div>
-
-                  </td>
-                  <td> {{serving.name}} </td>
-                  <td> {{serving.servingType}} </td>
-                  <td> {{serving.artifactPath}} </td>
-                  <td> {{serving.modelVersion}} </td>
-                  <td> {{serving.created | date:'short'}} </td>
-                  </td>
-                  <td> {{serving.status}} </td>
-                  <td>
-                    <button class="btn btn-info glyphicon glyphicon-edit" uib-tooltip="Edit" style="margin-right:-3px" ng-click="servingCtrl.updateServing(serving); $event.stopPropagation();"></button>
-                    <button class="btn btn-danger glyphicon glyphicon-trash" uib-tooltip="Delete" style="margin-right: -3px;" ng-click="servingCtrl.deleteServing(serving); $event.stopPropagation();"></button>
-                    <button class="btn btn-warning glyphicon glyphicon-list" uib-tooltip="Show logs" style="margin-right: -3px;" ng-click="servingCtrl.showServingLogs(serving); $event.stopPropagation();"></button>
-                    <button class="btn btn-primary glyphicon glyphicon-eye-open" uib-tooltip="Show Detailed Information" style="margin-right: -3px;" ng-click="servingCtrl.showDetailedInformation(serving); $event.stopPropagation();">
+                    <!-- /#wrapper -->
+                </div>
+                <div class="" ng-if="servingCtrl.showLogs === true">
+                    <button ng-click="servingCtrl.showMainUI();$event.stopPropagation();"
+                            class="btn btn-primary btn-md fa fa-table"
+                            style="font-size:0.9em; padding:7px 10px; margin-bottom: 3px; background-color:#005571;"
+                            onmouseover="this.style.backgroundColor='#004159'"
+                            onmouseout="this.style.backgroundColor='#005571'"> Model Serving Summary
                     </button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-            <dir-pagination-controls
-              class="pull-right"
-              max-size="5"
-              direction-links="true"
-              boundary-links="true">
-            </dir-pagination-controls>
-          </div>
-          <!-- /#wrapper -->
+                    <iframe style="overflow-y: auto;" id="ui_iframe" ng-src="{{servingCtrl.kibanaUI}}" width="99%"
+                            height="86%"></iframe>
+                </div>
+            </div>
         </div>
-        <div class="" ng-if="servingCtrl.showLogs === true">
-          <button ng-click="servingCtrl.showMainUI();$event.stopPropagation();"
-                  class="btn btn-primary btn-md fa fa-table" style="font-size:0.9em; padding:7px 10px; margin-bottom: 3px; background-color:#005571;"
-                  onmouseover="this.style.backgroundColor='#004159'"
-                  onmouseout="this.style.backgroundColor='#005571'"> Model Serving Summary</button>
-          <iframe style="overflow-y: auto;" id="ui_iframe"  ng-src="{{servingCtrl.kibanaUI}}" width="99%" height="86%"></iframe>
-        </div>
-      </div>
     </div>
-  </div>
 </div>
