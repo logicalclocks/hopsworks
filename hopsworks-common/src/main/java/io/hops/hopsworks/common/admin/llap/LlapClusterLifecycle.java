@@ -46,6 +46,7 @@ import io.hops.hopsworks.common.util.ProcessDescriptor;
 import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.yarn.YarnClientService;
+import io.hops.hopsworks.common.yarn.YarnClientWrapper;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.ApplicationReport;
 import org.apache.hadoop.yarn.api.records.QueueInfo;
@@ -137,6 +138,7 @@ public class LlapClusterLifecycle {
         .setWaitTimeout(5L, TimeUnit.MINUTES)
         .build();
 
+    YarnClientWrapper yarnClientWrapper = null;
     try {
       ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
       if (processResult.getExitCode() != 0) {
@@ -144,7 +146,8 @@ public class LlapClusterLifecycle {
       }
 
       // Store the appId in the database
-      YarnClient yarnClient = yarnClientService.getYarnClientSuper(settings.getConfiguration()).getYarnClient();
+      yarnClientWrapper = yarnClientService.getYarnClientSuper(settings.getConfiguration());
+      YarnClient yarnClient = yarnClientWrapper.getYarnClient();
 
       Set<String> queueSet = new HashSet<>();
       List<QueueInfo> queueInfoList = yarnClient.getAllQueues();
@@ -162,6 +165,8 @@ public class LlapClusterLifecycle {
     } finally {
       // Process ended, clean the db
       variablesFacade.storeVariable(Settings.VARIABLE_LLAP_START_PROC, "-1");
+
+      yarnClientService.closeYarnClient(yarnClientWrapper);
     }
   }
 
