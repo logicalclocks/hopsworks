@@ -149,7 +149,8 @@ public class Settings implements Serializable {
   private static final String VARIABLE_RM_PORT = "rm_port";
   private static final String VARIABLE_LOGSTASH_IP = "logstash_ip";
   private static final String VARIABLE_LOGSTASH_PORT = "logstash_port";
-  private static final String VARIABLE_LOGSTASH_PORT_SERVING = "logstash_port_serving";
+  private static final String VARIABLE_LOGSTASH_PORT_TF_SERVING = "logstash_port_tf_serving";
+  private static final String VARIABLE_LOGSTASH_PORT_SKLEARN_SERVING = "logstash_port_sklearn_serving";
   private static final String VARIABLE_OOZIE_IP = "oozie_ip";
   private static final String VARIABLE_SPARK_HISTORY_SERVER_IP
       = "spark_history_server_ip";
@@ -510,7 +511,8 @@ public class Settings implements Serializable {
       RM_PORT = setIntVar(VARIABLE_RM_PORT, RM_PORT);
       LOGSTASH_IP = setIpVar(VARIABLE_LOGSTASH_IP, LOGSTASH_IP);
       LOGSTASH_PORT = setIntVar(VARIABLE_LOGSTASH_PORT, LOGSTASH_PORT);
-      LOGSTASH_PORT_SERVING = setIntVar(VARIABLE_LOGSTASH_PORT_SERVING, LOGSTASH_PORT_SERVING);
+      LOGSTASH_PORT_TF_SERVING = setIntVar(VARIABLE_LOGSTASH_PORT_TF_SERVING, LOGSTASH_PORT_TF_SERVING);
+      LOGSTASH_PORT_SKLEARN_SERVING = setIntVar(VARIABLE_LOGSTASH_PORT_SKLEARN_SERVING, LOGSTASH_PORT_SKLEARN_SERVING);
       JHS_IP = setIpVar(VARIABLE_JHS_IP, JHS_IP);
       LIVY_IP = setIpVar(VARIABLE_LIVY_IP, LIVY_IP);
       OOZIE_IP = setIpVar(VARIABLE_OOZIE_IP, OOZIE_IP);
@@ -1500,11 +1502,18 @@ public class Settings implements Serializable {
     return LOGSTASH_PORT;
   }
 
-  private int LOGSTASH_PORT_SERVING = 5045;
+  private int LOGSTASH_PORT_TF_SERVING = 5045;
 
-  public synchronized Integer getLogstashPortServing() {
+  public synchronized Integer getLogstashPortTfServing() {
     checkCache();
-    return LOGSTASH_PORT_SERVING;
+    return LOGSTASH_PORT_TF_SERVING;
+  }
+  
+  private int LOGSTASH_PORT_SKLEARN_SERVING = 5047;
+  
+  public synchronized Integer getLogstashPortSkLearnServing() {
+    checkCache();
+    return LOGSTASH_PORT_SKLEARN_SERVING;
   }
 
   // Livy Server`
