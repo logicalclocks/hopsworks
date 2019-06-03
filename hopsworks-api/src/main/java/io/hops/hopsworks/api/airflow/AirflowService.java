@@ -103,7 +103,7 @@ public class AirflowService {
   }
   
   // Audience for Airflow JWTs
-  private static final String[] JWT_AUDIENCE = new String[]{Audience.JOB};
+  private static final String[] JWT_AUDIENCE = new String[]{Audience.API};
   
   public AirflowService() {
   }

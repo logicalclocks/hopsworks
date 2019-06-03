@@ -202,7 +202,7 @@ public class AirflowManager {
         // JWT does not exist in the filesystem or we cannot read them or it is not valid any longer
         // We will create a new one
         //TODO(Antonis): Not very good that audience is hardcoded, but it is not accessible from hopsworks-common
-        String[] audience = new String[]{"job"};
+        String[] audience = new String[]{"api"};
         LocalDateTime expirationDate = DateUtils.getNow().plus(settings.getJWTLifetimeMs(), ChronoUnit.MILLIS);
         String[] roles = getUserRoles(user);
         try {
