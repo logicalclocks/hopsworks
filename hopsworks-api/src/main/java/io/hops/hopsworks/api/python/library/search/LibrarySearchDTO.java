@@ -43,14 +43,14 @@ import io.hops.hopsworks.common.api.RestDTO;
 import io.hops.hopsworks.common.python.library.LibraryVersionDTO;
 
 import javax.xml.bind.annotation.XmlRootElement;
-import java.util.Set;
+import java.util.List;
 
 @XmlRootElement
 public class LibrarySearchDTO extends RestDTO<LibrarySearchDTO> {
 
   private String library;
   private String channelUrl;
-  private Set<LibraryVersionDTO> versions;
+  private List<LibraryVersionDTO> versions;
   private String status = "Not Installed";
   
   public LibrarySearchDTO() {
@@ -61,7 +61,7 @@ public class LibrarySearchDTO extends RestDTO<LibrarySearchDTO> {
    * @param channelUrl
    * @param library
    */
-  public LibrarySearchDTO(String channelUrl, String library, Set<LibraryVersionDTO> versions) {
+  public LibrarySearchDTO(String channelUrl, String library, List<LibraryVersionDTO> versions) {
     this.channelUrl = channelUrl;
     this.library = library;
     this.versions = versions;
@@ -83,11 +83,11 @@ public class LibrarySearchDTO extends RestDTO<LibrarySearchDTO> {
     this.library = library;
   }
   
-  public Set<LibraryVersionDTO> getVersions() {
+  public List<LibraryVersionDTO> getVersions() {
     return versions;
   }
   
-  public void setVersions(Set<LibraryVersionDTO> versions) {
+  public void setVersions(List<LibraryVersionDTO> versions) {
     this.versions = versions;
   }
   
