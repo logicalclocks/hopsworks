@@ -89,8 +89,8 @@ public class FeaturegroupController {
 
   private static final Logger LOGGER = Logger.getLogger(FeaturegroupController.class.getName());
   private static final String HIVE_DRIVER = "org.apache.hive.jdbc.HiveDriver";
-  
-  
+
+
   @PostConstruct
   public void init() {
     try {
@@ -100,7 +100,7 @@ public class FeaturegroupController {
       LOGGER.log(Level.SEVERE, "Could not load the Hive driver: " + HIVE_DRIVER, e);
     }
   }
-  
+
   /**
    * Initializes a JDBC connection (thrift RPC) to HS2 using SSL with a given project user and database
    *
@@ -123,9 +123,9 @@ public class FeaturegroupController {
       String hiveEndpoint = settings.getHiveServerHostName(false);
       String jdbcString = "jdbc:hive2://" + hiveEndpoint + "/" + databaseName + ";" +
           "auth=noSasl;ssl=true;twoWay=true;" +
-          "sslTrustStore=" + getUserTransientTruststorePath(project, user) + ";" +
+          "sslTrustStore=" + certificateMaterializer.getUserTransientTruststorePath(project, user) + ";" +
           "trustStorePassword=" + password + ";" +
-          "sslKeyStore=" + getUserTransientKeystorePath(project, user) + ";" +
+          "sslKeyStore=" + certificateMaterializer.getUserTransientKeystorePath(project, user) + ";" +
           "keyStorePassword=" + password;
 
       return DriverManager.getConnection(jdbcString);
@@ -143,44 +143,6 @@ public class FeaturegroupController {
     }
   }
 
-  /**
-   * Returns the path to materialized password file for a project-user
-   *
-   * @param project the project for which the password will be used
-   * @param user    the user for which the password will be used
-   * @return materialized password path
-   */
-  private String getUserTransientPasswordPath(Project project, Users user) {
-    String transientDir = settings.getHopsworksTmpCertDir();
-    String keyName = project.getName() + "__" + user.getUsername() + "__cert.key";
-    return transientDir + "/" + keyName;
-  }
-
-  /**
-   * Returns the path to materialized truststore for a project-user
-   *
-   * @param project the project for which the truststore will be used
-   * @param user    the user for which the truststore will be used
-   * @return path to truststore
-   */
-  private String getUserTransientTruststorePath(Project project, Users user) {
-    String transientDir = settings.getHopsworksTmpCertDir();
-    String truststoreName = project.getName() + "__" + user.getUsername() + "__tstore.jks";
-    return transientDir + "/" + truststoreName;
-  }
-
-  /**
-   * Returns the path to materialized keystore for a project-user
-   *
-   * @param project the project for which the keystore will be used
-   * @param user    the user for which the keystore will be used
-   * @return path to keystore
-   */
-  private String getUserTransientKeystorePath(Project project, Users user) {
-    String transientDir = settings.getHopsworksTmpCertDir();
-    String keystoreName = project.getName() + "__" + user.getUsername() + "__kstore.jks";
-    return transientDir + "/" + keystoreName;
-  }
 
   /**
    * Gets all featuregroups for a particular featurestore and project, using the userCerts to query Hive
@@ -624,7 +586,7 @@ public class FeaturegroupController {
     }
     return resultList;
   }
-  
+
   /**
    * Checks if the JDBC connection to HS2 is open, and if so closes it.
    *

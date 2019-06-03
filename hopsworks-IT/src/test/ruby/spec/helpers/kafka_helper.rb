@@ -17,7 +17,8 @@
 module KafkaHelper
 
   def with_kafka_topic(project_id)
-    @topic ||= create_topic(project_id)
+    with_kafka_schema(project_id)
+    @topic ||= create_topic(project_id, @schema[:name], 1)
   end
 
   def with_kafka_schema(project_id)
@@ -32,20 +33,23 @@ module KafkaHelper
     @schema
   end
 
-  def create_topic(project_id)
-    _, schema_name = add_schema(project_id)
-    _, topic_name = add_topic(project_id, schema_name, 1)
+  def create_topic(project_id, schema_name=nil, schema_version = nil)
+    if (schema_name.nil?)
+      _, schema_name = add_schema(project_id)
+      schema_version = 1
+    end
+    _, topic_name = add_topic(project_id, schema_name, schema_version)
     ProjectTopics.find_by(project_id:project_id, topic_name:topic_name)
   end
 
-  def create_schema(project_id)
-    schema_name = add_schema(project_id)
+
+  def create_schema(project_id, kafka_schema_name = "kafka_schema_#{random_id}")
+    schema_name = add_schema(project_id, kafka_schema_name)
     SchemaTopics.find_by(name:schema_name, version: 1)
   end
 
-  def add_schema(project_id)
+  def add_schema(project_id, kafka_schema_name = "kafka_schema_#{random_id}")
     add_schema_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/kafka/schema/add"
-    kafka_schema_name = "kafka_schema_#{random_id}"
     json_data = {
         name: kafka_schema_name,
         contents: "[]",
@@ -69,6 +73,18 @@ module KafkaHelper
     json_data = json_data.to_json
     json_result = post add_topic_endpoint, json_data
     return json_result, kafka_topic_name
+  end
+
+  def delete_schema(project_id, kafka_schema_name, kafka_schema_version)
+    delete_schema_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s +
+        "/kafka/removeSchema/#{kafka_schema_name}/#{kafka_schema_version}"
+    delete delete_schema_endpoint
+  end
+
+  def delete_topic(project_id, kafka_topic_name)
+    delete_kafka_topic = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s +
+        "/kafka/topic/#{kafka_topic_name}/remove"
+    delete delete_kafka_topic
   end
 
 end

@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2019, Logical Clocks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -14,16 +14,16 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.common.serving.tf;
+package io.hops.hopsworks.common.dao.serving;
 
-import javax.xml.bind.annotation.XmlEnum;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-@XmlEnum
-public enum TfServingCommands {
-  START,
-  STOP;
-
-  public static TfServingCommands fromString(String command) {
-    return valueOf(command.toUpperCase());
-  }
+/**
+ * Type of Model Serving
+ */
+public enum ServingType {
+  @JsonProperty("TENSORFLOW")
+  TENSORFLOW,
+  @JsonProperty("SKLEARN")
+  SKLEARN; //Note: since we map enum directly to the DB the order is important!
 }

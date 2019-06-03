@@ -16,12 +16,15 @@
 
 package io.hops.hopsworks.common.serving.inference;
 
+import com.google.common.base.Strings;
 import io.hops.common.Pair;
 import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.serving.TfServing;
-import io.hops.hopsworks.common.dao.serving.TfServingFacade;
-import io.hops.hopsworks.restutils.RESTCodes;
+import io.hops.hopsworks.common.dao.serving.Serving;
+import io.hops.hopsworks.common.dao.serving.ServingFacade;
+import io.hops.hopsworks.common.dao.serving.ServingType;
 import io.hops.hopsworks.common.serving.inference.logger.InferenceLogger;
+import io.hops.hopsworks.exceptions.InferenceException;
+import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -33,6 +36,10 @@ import javax.inject.Inject;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * Contains the common functionality between serving instances for doing inference, delegates type-specific
+ * functionality to specific inference controllers like TfInferenceController, and SkLearnInferenceController
+ */
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class InferenceController {
@@ -40,32 +47,54 @@ public class InferenceController {
   private static final Logger logger = Logger.getLogger(InferenceLogger.class.getName());
 
   @EJB
-  private TfServingFacade tfServingFacade;
+  private ServingFacade servingFacade;
 
   @Inject
   private TfInferenceController tfInferenceController;
   @Inject
+  private SkLearnInferenceController skLearnInferenceController;
+  @Inject
   @Any
   private Instance<InferenceLogger> inferenceLoggers;
-
-
+  
+  
+  /**
+   * Makes an inference request to a running serving instance
+   *
+   * @param project the project where the serving is running
+   * @param modelName the name of the serving
+   * @param modelVersion the version of the serving
+   * @param verb the predictiont type (predict, regress, or classify)
+   * @param inferenceRequestJson the user-provided JSON payload for the inference request
+   * @return a string representation of the inference result
+   * @throws InferenceException
+   */
   public String infer(Project project, String modelName, Integer modelVersion,
                       String verb, String inferenceRequestJson) throws InferenceException {
 
-    TfServing tfServing = tfServingFacade.findByProjectModelName(project, modelName);
-    if (tfServing == null) {
+    Serving serving = servingFacade.findByProjectAndName(project, modelName);
+    if (serving == null) {
       throw new InferenceException(RESTCodes.InferenceErrorCode.SERVING_NOT_FOUND, Level.FINE, "name: " + modelName);
     }
+  
+    if (Strings.isNullOrEmpty(verb)) {
+      throw new InferenceException(RESTCodes.InferenceErrorCode.MISSING_VERB, Level.FINE);
+    }
 
-    // TODO(Fabio): ATM all the serving are tfServings. so we just redirect everything to the TfInferenceController
-    // When we will add spark serving and or sklearn here we will invoke the different controllers
-    Pair<Integer, String> inferenceResult =
-        tfInferenceController.infer(tfServing, modelVersion, verb, inferenceRequestJson);
+    Pair<Integer, String> inferenceResult = null;
+    if(serving.getServingType() == ServingType.TENSORFLOW){
+      inferenceResult =
+          tfInferenceController.infer(serving, modelVersion, verb, inferenceRequestJson);
+    }
+    if(serving.getServingType() == ServingType.SKLEARN){
+      inferenceResult =
+          skLearnInferenceController.infer(serving, modelVersion, verb, inferenceRequestJson);
+    }
 
     // Log the inference
     for (InferenceLogger inferenceLogger : inferenceLoggers) {
       try {
-        inferenceLogger.logInferenceRequest(tfServing, inferenceRequestJson,
+        inferenceLogger.logInferenceRequest(serving, inferenceRequestJson,
             inferenceResult.getL(), inferenceResult.getR());
       } catch (Exception e) {
         // We don't want to fill the logs with inference logging errors
@@ -86,4 +115,5 @@ public class InferenceController {
 
     return inferenceResult.getR();
   }
+
 }

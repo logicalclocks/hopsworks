@@ -23,7 +23,7 @@ describe "On #{ENV['OS']}" do
     end
 
     after (:all) do
-      purge_all_serving_instances
+      purge_all_tf_serving_instances
     end
 
     let(:test_data) {[[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
@@ -84,21 +84,21 @@ describe "On #{ENV['OS']}" do
       context 'without authentication', vm: true do
         before :all do
           with_valid_project
-          with_serving(@project[:id], @project[:projectname], @user[:username])
+          with_tf_serving(@project[:id], @project[:projectname], @user[:username])
           reset_session
         end
 
         it "the inference should fail" do
-          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:model_name]}:predict"
+          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict"
           expect_json(errorCode: 200003)
           expect_status(401)
         end
       end
 
-      context 'with authentication', vm: true do
+      context 'with authentication and with tf serving', vm: true do
         before :all do
           with_valid_project
-          with_serving(@project[:id], @project[:projectname], @user[:username])
+          with_tf_serving(@project[:id], @project[:projectname], @user[:username])
         end
 
         it "should fail to send a request to a non existing model"  do
@@ -108,7 +108,7 @@ describe "On #{ENV['OS']}" do
         end
 
         it "should fail to send a request to a non running model" do
-          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:model_name]}:predict"
+          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict"
           expect_json(errorCode: 250001)
           expect_status(400)
         end
@@ -121,13 +121,13 @@ describe "On #{ENV['OS']}" do
 
             # Sleep some time while the TfServing server starts
             wait_for do
-              system "pgrep -f #{@serving[:model_name]} -a"
+              system "pgrep -f #{@serving[:name]} -a"
               $?.exitstatus == 0
             end
           end
 
           it "should succeeds to infer from a with kafka logging" do
-            post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:model_name]}:predict", {
+            post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
                 signature_name: 'predict_images',
                 instances: test_data
             }
@@ -135,19 +135,21 @@ describe "On #{ENV['OS']}" do
             # TODO(Check that the response has the correct format)
           end
 
-          it "should succeeds to infer from a with no kafka logging" do
+          it "should succeed to infer from a serving with no kafka logging" do
             put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
              {id: @serving[:id],
-              modelName: @serving[:model_name],
-              modelPath: @serving[:model_path],
+              name: @serving[:name],
+              artifactPath: @serving[:artifact_path],
               modelVersion: @serving[:version],
               batchingEnabled: false,
               kafkaTopicDTO: {
                  name: "NONE"
-              }}
+              },
+              servingType: "TENSORFLOW"
+             }
             expect_status(201)
 
-            post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:model_name]}:predict", {
+            post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
                 signature_name: 'predict_images',
                 instances: test_data
             }
@@ -155,17 +157,19 @@ describe "On #{ENV['OS']}" do
 
             put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
              {id: @serving[:id],
-              modelName: @serving[:model_name],
-              modelPath: @serving[:model_path],
+              name: @serving[:name],
+              artifactPath: @serving[:artifact_path],
               modelVersion: @serving[:model_version],
               batchingEnabled: false,
               kafkaTopicDTO: {
                  name: @topic[:topic_name]
-              }}
+              },
+              servingType: "TENSORFLOW"
+             }
           end
 
           it "should receive an error if the input payload is malformed" do
-            post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:model_name]}:predict", {
+            post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
                 signature_name: 'predict_images',
                 somethingwrong: test_data
             }
@@ -174,7 +178,7 @@ describe "On #{ENV['OS']}" do
           end
 
           it "should receive an error if the input payload is empty" do
-            post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:model_name]}:predict"
+            post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict"
             expect_json(errorCode: 250008)
             expect_status(400)
           end

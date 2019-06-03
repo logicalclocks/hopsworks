@@ -50,8 +50,8 @@ import io.hops.hopsworks.api.jobs.JobsResource;
 import io.hops.hopsworks.api.jobs.KafkaService;
 import io.hops.hopsworks.api.jupyter.JupyterService;
 import io.hops.hopsworks.api.jwt.JWTHelper;
-import io.hops.hopsworks.api.serving.TfServingService;
 import io.hops.hopsworks.api.python.PythonResource;
+import io.hops.hopsworks.api.serving.ServingService;
 import io.hops.hopsworks.api.serving.inference.InferenceResource;
 import io.hops.hopsworks.api.tensorflow.TensorBoardService;
 import io.hops.hopsworks.api.util.LocalFsService;
@@ -156,7 +156,7 @@ public class ProjectService {
   @Inject
   private TensorBoardService tensorboard;
   @Inject
-  private TfServingService tfServingService;
+  private ServingService servingService;
   @Inject
   private DataSetService dataSet;
   @Inject
@@ -755,10 +755,10 @@ public class ProjectService {
   }
 
   @Path("{projectId}/serving")
-  public TfServingService tfServingService(@PathParam("projectId") Integer id, @Context HttpServletRequest req) {
+  public ServingService servingService(@PathParam("projectId") Integer id, @Context HttpServletRequest req) {
     Users user = jWTHelper.getUserPrincipal(req);
-    this.tfServingService.setProjectId(id);
-    return this.tfServingService;
+    this.servingService.setProjectId(id);
+    return this.servingService;
   }
 
   @Path("{projectId}/python")
@@ -778,7 +778,7 @@ public class ProjectService {
     this.delaclusterService.setProjectId(id);
     return this.delaclusterService;
   }
-  
+
   @Path("{projectId}/activities")
   public ProjectActivitiesResource activities(@PathParam("projectId") Integer id) {
     this.activitiesResource.setProjectId(id);

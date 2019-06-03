@@ -82,12 +82,18 @@ angular.module('hopsWorksApp')
                 self.validSchema = "valid";
                 
                self.schemaName_empty = 1;
+               self.schemaName_reserved = 1;
                self.content_empty = 1;
                self.wrong_values=1;
                 
-              if(!self.schemaName){
+              if(!self.schemaName || self.schemaName === "" || self.schemaName === null){
                 self.schemaName_empty = -1;
                 self.wrong_values = -1;
+              }
+
+              if(self.schemaName && self.schemaName !== null && self.schemaName.toLowerCase() === "inferenceschema"){
+                  self.schemaName_reserved = -1;
+                  self.wrong_values = -1;
               }
               
               if(!self.content){
@@ -123,9 +129,15 @@ angular.module('hopsWorksApp')
                self.schemaName_empty = 1;
                self.content_empty = 1;
                self.wrong_values=1;
+               self.schemaName_reserved = 1;
               
-              if(!self.schemaName){
+              if(!self.schemaName || self.schemaName === "" || self.schemaName === null){
                   self.schemaName_empty = -1;
+                  self.wrong_values = -1;
+              }
+
+              if(self.schemaName && self.schemaName !== null && self.schemaName.toLowerCase() === "inferenceschema"){
+                  self.schemaName_reserved = -1;
                   self.wrong_values = -1;
               }
               

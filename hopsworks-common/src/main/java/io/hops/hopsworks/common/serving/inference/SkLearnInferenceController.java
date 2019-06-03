@@ -16,29 +16,15 @@
 
 package io.hops.hopsworks.common.serving.inference;
 
-import io.hops.hopsworks.restutils.RESTCodes;
-import io.hops.hopsworks.restutils.RESTException;
+import io.hops.common.Pair;
+import io.hops.hopsworks.common.dao.serving.Serving;
+import io.hops.hopsworks.exceptions.InferenceException;
 
-import java.util.logging.Level;
-
-
-public class InferenceException extends RESTException {
-
-  public InferenceException(RESTCodes.InferenceErrorCode code, Level level) {
-    super(code, level);
-  }
-
-  public InferenceException(RESTCodes.InferenceErrorCode code, Level level, String usrMsg) {
-    super(code, level, usrMsg);
-  }
-
-  public InferenceException(RESTCodes.InferenceErrorCode code, Level level, String usrMsg, String devMsg) {
-    super(code, level, usrMsg, devMsg);
-  }
-
-  public InferenceException(RESTCodes.InferenceErrorCode code, Level level, String usrMsg, String devMsg,
-                            Throwable throwable) {
-    super(code, level, usrMsg, devMsg, throwable);
-  }
-
+/**
+ * Interface for sending inference requests to sklearn serving instances. Different type of sklearn serving controllers
+ * e.g (localhost or Kubernetes) should implement this interface.
+ */
+public interface SkLearnInferenceController {
+  Pair<Integer, String> infer(Serving serving, Integer modelVersion,
+                              String verb, String inferenceRequestJson) throws InferenceException;
 }

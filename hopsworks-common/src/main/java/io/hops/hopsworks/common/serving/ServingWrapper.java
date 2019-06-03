@@ -14,37 +14,37 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.common.serving.tf;
+package io.hops.hopsworks.common.serving;
 
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
-import io.hops.hopsworks.common.dao.serving.TfServing;
+import io.hops.hopsworks.common.dao.serving.Serving;
 
-public class TfServingWrapper {
-  private TfServing tfServing;
+public class ServingWrapper {
+  private Serving serving;
 
-  private TfServingStatusEnum status;
+  private ServingStatusEnum status;
   private Integer availableReplicas;
   private Integer nodePort;
 
   private TopicDTO kafkaTopicDTO;
 
-  public TfServingWrapper(TfServing tfServing) {
-    this.tfServing = tfServing;
+  public ServingWrapper(Serving serving) {
+    this.serving = serving;
   }
 
-  public TfServing getTfServing() {
-    return tfServing;
+  public Serving getServing() {
+    return serving;
   }
 
-  public void setTfServing(TfServing tfServing) {
-    this.tfServing = tfServing;
+  public void setServing(Serving serving) {
+    this.serving = serving;
   }
 
-  public TfServingStatusEnum getStatus() {
+  public ServingStatusEnum getStatus() {
     return status;
   }
 
-  public void setStatus(TfServingStatusEnum status) {
+  public void setStatus(ServingStatusEnum status) {
     this.status = status;
   }
 

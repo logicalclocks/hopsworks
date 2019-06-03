@@ -31,7 +31,7 @@ import io.hops.hopsworks.restutils.RESTCodes.RequestErrorCode;
 import io.hops.hopsworks.restutils.RESTCodes.ResourceErrorCode;
 import io.hops.hopsworks.restutils.RESTCodes.SecurityErrorCode;
 import io.hops.hopsworks.restutils.RESTCodes.ServiceErrorCode;
-import io.hops.hopsworks.restutils.RESTCodes.TfServingErrorCode;
+import io.hops.hopsworks.restutils.RESTCodes.ServingErrorCode;
 import io.hops.hopsworks.restutils.RESTCodes.UserErrorCode;
 import org.junit.Before;
 import org.junit.Test;
@@ -54,7 +54,7 @@ public class TestRESTCodes {
     values.addAll(Arrays.asList(DatasetErrorCode.values()));
     values.addAll(Arrays.asList(DelaErrorCode.values()));
     values.addAll(Arrays.asList(DelaCSRErrorCode.values()));
-    values.addAll(Arrays.asList(TfServingErrorCode.values()));
+    values.addAll(Arrays.asList(ServingErrorCode.values()));
     values.addAll(Arrays.asList(ProjectErrorCode.values()));
     values.addAll(Arrays.asList(SecurityErrorCode.values()));
     values.addAll(Arrays.asList(GenericErrorCode.values()));

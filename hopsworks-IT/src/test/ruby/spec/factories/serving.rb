@@ -16,9 +16,9 @@
 
 require 'safe_attributes/base'
 
-class TfServing < ActiveRecord::Base
+class Serving < ActiveRecord::Base
   include SafeAttributes::Base
   def self.table_name
-    "tf_serving"
+    "serving"
   end
 end
