@@ -67,6 +67,11 @@ describe "On #{ENV['OS']}" do
           delete_conda_env(@project[:id])
         end
 
+        after :all do
+          purge_all_sklearn_serving_instances()
+          delete_all_sklearn_serving_instances(@project)
+        end
+
         it "should fail to create the serving" do
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
               {name: "testModel",
@@ -83,6 +88,11 @@ describe "On #{ENV['OS']}" do
         before :all do
           with_valid_project
           with_python_enabled(@project[:id], "2.7")
+        end
+
+        after :all do
+          purge_all_sklearn_serving_instances()
+          delete_all_sklearn_serving_instances(@project)
         end
 
         it "should fail to create the serving" do
@@ -116,6 +126,11 @@ describe "On #{ENV['OS']}" do
           copy(SKLEARN_SCRIPT_TOUR_FILE_LOCATION, "/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1/",
                "#{@user[:username]}",
                "#{@project[:projectname]}__Models", 750, "#{@project[:projectname]}")
+        end
+
+        after :all do
+          purge_all_sklearn_serving_instances()
+          delete_all_sklearn_serving_instances(@project)
         end
 
         it "should create the serving without Kafka topic" do
@@ -152,6 +167,11 @@ describe "On #{ENV['OS']}" do
           copy(SKLEARN_SCRIPT_TOUR_FILE_LOCATION, "/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1/",
                "#{@user[:username]}",
                "#{@project[:projectname]}__Models", 750, "#{@project[:projectname]}")
+        end
+
+        after :all do
+          purge_all_sklearn_serving_instances()
+          delete_all_sklearn_serving_instances(@project)
         end
 
         it "should create the serving without Kafka topic" do
@@ -305,7 +325,8 @@ describe "On #{ENV['OS']}" do
         end
 
         after :all do
-          purge_all_sklearn_serving_instances
+          purge_all_sklearn_serving_instances()
+          delete_all_sklearn_serving_instances(@project)
         end
 
         it "should be able to start a serving instance" do
@@ -353,7 +374,8 @@ describe "On #{ENV['OS']}" do
         end
 
         after :all do
-          purge_all_sklearn_serving_instances
+          purge_all_sklearn_serving_instances()
+          delete_all_sklearn_serving_instances(@project)
         end
 
         it "should be able to start a serving instance" do
@@ -410,7 +432,8 @@ describe "On #{ENV['OS']}" do
         end
 
         after :all do
-          purge_all_sklearn_serving_instances
+          purge_all_sklearn_serving_instances()
+          delete_all_sklearn_serving_instances(@project)
         end
 
         after :each do
@@ -516,7 +539,8 @@ describe "On #{ENV['OS']}" do
         end
 
         after :all do
-          purge_all_sklearn_serving_instances
+          purge_all_sklearn_serving_instances()
+          delete_all_sklearn_serving_instances(@project)
         end
 
         after :each do
@@ -602,6 +626,11 @@ describe "On #{ENV['OS']}" do
           with_sklearn_serving(@project[:id], @project[:projectname], @user[:username])
         end
 
+        after :all do
+          purge_all_sklearn_serving_instances()
+          delete_all_sklearn_serving_instances(@project)
+        end
+
         before :each do
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=start"
           expect_status(200)
@@ -659,6 +688,11 @@ describe "On #{ENV['OS']}" do
           with_valid_project
           with_python_enabled(@project[:id], "2.7")
           with_sklearn_serving(@project[:id], @project[:projectname], @user[:username])
+        end
+
+        after :all do
+          purge_all_sklearn_serving_instances()
+          delete_all_sklearn_serving_instances(@project)
         end
 
         before :each do
@@ -739,6 +773,11 @@ describe "On #{ENV['OS']}" do
                "#{@project[:projectname]}__Models", 750, "#{@project[:projectname]}")
         end
 
+        after :all do
+          purge_all_sklearn_serving_instances()
+          delete_all_sklearn_serving_instances(@project)
+        end
+
         before :each do
           @serving = create_sklearn_serving(@project[:id], @project[:projectname])
         end
@@ -792,6 +831,11 @@ describe "On #{ENV['OS']}" do
           copy(SKLEARN_SCRIPT_TOUR_FILE_LOCATION, "/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1/",
                "#{@user[:username]}",
                "#{@project[:projectname]}__Models", 750, "#{@project[:projectname]}")
+        end
+
+        after :all do
+          purge_all_sklearn_serving_instances()
+          delete_all_sklearn_serving_instances(@project)
         end
 
         before :each do
