@@ -17,7 +17,10 @@ package io.hops.hopsworks.admin;
 
 import static org.junit.Assert.assertEquals;
 import io.hops.hopsworks.WebDriverFactory;
+import io.hops.hopsworks.util.DBHelper;
 import io.hops.hopsworks.util.Helpers;
+import io.hops.hopsworks.util.User;
+import io.hops.hopsworks.util.helpers.LoginHelper;
 import org.junit.After;
 import static org.junit.Assert.fail;
 import org.junit.Before;
@@ -30,14 +33,16 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 public class VariablesIT {
 
   private WebDriver driver;
+  private DBHelper dbHelper;
+  private User user;
   private final StringBuffer verificationErrors = new StringBuffer();
 
   @Before
   public void startUp() {
     driver = WebDriverFactory.getWebDriver();
-    Helpers helpers = new Helpers(driver);
-    helpers.login("admin@hopsworks.ai", "admin");
-    helpers.driverGet("hopsworks-admin/security/protected/admin/refreshVariables.xhtml");
+    dbHelper = new DBHelper();
+    user = LoginHelper.loginAsAdmin(driver, dbHelper);
+    Helpers.driverGet("hopsworks-admin/security/protected/admin/refreshVariables.xhtml", driver);
   }
 
   @Test

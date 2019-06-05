@@ -44,7 +44,6 @@ angular.module('hopsWorksApp')
           function (AuthService, $location, $scope, $window, SecurityQuestions, $routeParams, $cookies) {
           
             var self = this;
-            self.securityQuestions = SecurityQuestions.getQuestions();
             self.working = false;
             self.otp = $cookies.get('otp');
             self.newUser = {
@@ -68,7 +67,12 @@ angular.module('hopsWorksApp')
               country: '',
               testUser: false
             };
-            
+
+            SecurityQuestions.getQuestions().then(function(success) {
+              self.securityQuestions = success.data;
+              console.log("self.securityQuestions", self.securityQuestions);
+            });
+
             self.userEmail ='';
             
             self.mode = $routeParams.mode;

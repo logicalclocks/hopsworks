@@ -51,6 +51,9 @@ angular.module('hopsWorksApp')
               changeLoginCredentials: function (newCredentials) {
                 return $http.post('/api/users/credentials', TransformRequest.jQueryStyle(newCredentials));
               },
+              changeSecurityQA: function (securityQA) {
+                return $http.post('/api/users/securityQA', TransformRequest.jQueryStyle(securityQA));
+              },
               allUsers: function () {
                 return $http.get('/api/users');
               },

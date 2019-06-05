@@ -104,6 +104,12 @@
       <scope>test</scope>
       <type>jar</type>
     </dependency>
+    <dependency>
+      <groupId>mysql</groupId>
+      <artifactId>mysql-connector-java</artifactId>
+      <scope>test</scope>
+      <version>5.1.6</version>
+    </dependency>
   </dependencies>
   <build>
     <plugins>

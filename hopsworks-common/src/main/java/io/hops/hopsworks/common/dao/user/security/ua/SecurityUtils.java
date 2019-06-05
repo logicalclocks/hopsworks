@@ -39,12 +39,26 @@
 
 package io.hops.hopsworks.common.dao.user.security.ua;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.security.NoSuchAlgorithmException;
+
 import org.apache.commons.codec.binary.Base32;
 import java.security.SecureRandom;
+import java.util.Base64;
+import java.util.Random;
 import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class SecurityUtils {
+  
+  private final static Logger LOGGER = Logger.getLogger(SecurityUtils.class.getName());
+  
+  public final static int SALT_LENGTH = 64;
+  public final static long RESET_LINK_VALID_FOR_HOUR = 24;
+  public final static int RANDOM_KEY_LEN = 64;
+  public final static Random RANDOM = new SecureRandom();
 
   /**
    * Generate the secrete key for mobile devices.
@@ -73,5 +87,33 @@ public class SecurityUtils {
       randomStr += UUID.randomUUID().toString();
     }
     return randomStr.substring(0, length);
+  }
+  
+  /**
+   * Generates a salt value with SALT_LENGTH and DIGEST
+   *
+   * @return
+   */
+  public static String generateSecureRandom(int length) {
+    byte[] bytes = new byte[length];
+    RANDOM.nextBytes(bytes);
+    byte[] encoded = Base64.getEncoder().encode(bytes);
+    String rand = "";
+    try {
+      rand = new String(encoded, "UTF-8");
+    } catch (UnsupportedEncodingException ex) {
+      LOGGER.log(Level.SEVERE, "Generate salt encoding failed", ex);
+    }
+    return rand;
+  }
+  
+  public static String urlEncode(String key) {
+    String urlEncoded;
+    try {
+      urlEncoded = URLEncoder.encode(key, "UTF-8");
+    } catch (UnsupportedEncodingException e) {
+      throw new IllegalStateException(e);
+    }
+    return urlEncoded;
   }
 }

@@ -55,8 +55,8 @@ import io.hops.hopsworks.common.dao.user.security.ua.SecurityUtils;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountType;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
+import io.hops.hopsworks.common.util.FormatUtils;
 import io.hops.hopsworks.restutils.RESTCodes;
-import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.common.security.CertificatesMgmService;
 import io.hops.hopsworks.common.util.EmailBean;
@@ -72,13 +72,10 @@ import javax.ejb.TransactionAttributeType;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
-import java.io.UnsupportedEncodingException;
-import java.security.SecureRandom;
 import java.sql.Timestamp;
-import java.util.Base64;
 import java.util.Date;
 import java.util.List;
-import java.util.Random;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -87,9 +84,6 @@ import java.util.logging.Logger;
 public class AuthController {
 
   private final static Logger LOGGER = Logger.getLogger(AuthController.class.getName());
-  private final static int SALT_LENGTH = 64;
-  private final static int RANDOM_PWD_LEN = 8;
-  private final static Random RANDOM = new SecureRandom();
 
   @EJB
   private UserFacade userFacade;
@@ -198,8 +192,8 @@ public class AuthController {
   }
 
   /**
-   * Checks password and user status. Also updates false login attempts
-   *
+   * Checks password and user status. Also updates false login attempts.
+   * throws UserException with rest code Unauthorized
    * @param user
    * @param password
    * @param req
@@ -210,10 +204,71 @@ public class AuthController {
     if (user == null) {
       throw new IllegalArgumentException("User not set.");
     }
+    userStatusValidator.checkStatus(user.getStatus());
     if (!validatePassword(user, password, req)) {
       return false;
     }
-    return userStatusValidator.checkStatus(user.getStatus());
+    return true;
+  }
+  
+  /**
+   * Checks password and user status. Also updates false login attempts.
+   * throws UserException with rest code Bad Request
+   * @param user
+   * @param password
+   * @param req
+   * @return
+   * @throws UserException
+   */
+  public boolean checkUserPasswordAndStatus(Users user, String password, HttpServletRequest req) throws UserException {
+    checkUserStatus(user, false);
+    if (!validatePassword(user, password, req)) {
+      return false;
+    }
+    return true;
+  }
+  
+  /**
+   * Check security question and user status
+   * @param user
+   * @param securityQ
+   * @param securityAnswer
+   * @param req
+   * @return
+   * @throws UserException
+   */
+  public boolean validateSecurityQAndStatus(Users user, String securityQ, String securityAnswer, HttpServletRequest req)
+    throws UserException {
+    checkUserStatus(user, false);
+    if (!validateSecurityQA(user, securityQ, securityAnswer, req)) {
+      return false;
+    }
+    return true;
+  }
+  
+  private Users getUserFromKey(String key) {
+    if (key == null) {
+      throw new IllegalArgumentException("Validation key not supplied.");
+    }
+    if (key.length() <= Settings.USERNAME_LENGTH) {
+      throw new IllegalArgumentException("Unrecognized validation key.");
+    }
+    String userName = key.substring(0, Settings.USERNAME_LENGTH);
+    return userFacade.findByUsername(userName);
+  }
+  
+  private void validate(Users user, String key, HttpServletRequest req) throws UserException {
+    // get the 8 char username
+    String secret = key.substring(Settings.USERNAME_LENGTH);
+    if (!secret.equals(user.getValidationKey())) {
+      registerFalseKeyValidation(user, req);
+      throw new UserException(RESTCodes.UserErrorCode.INCORRECT_VALIDATION_KEY, Level.FINE);
+    }
+    if (diffMillis(user.getValidationKeyUpdated()) <  TimeUnit.SECONDS.toMillis(5)) {
+      resetValidationKey(user);// will this get rolled back?
+      throw new UserException(RESTCodes.UserErrorCode.INCORRECT_VALIDATION_KEY, Level.FINE);
+    }
+    resetFalseLogin(user);
   }
 
   /**
@@ -223,46 +278,141 @@ public class AuthController {
    * @param req
    * @throws UserException
    */
-  public void validateKey(String key, HttpServletRequest req) throws UserException {
-    if (key == null) {
-      throw new IllegalArgumentException("the validation key should not be null");
-    }
-    if (key.length() <= Settings.USERNAME_LENGTH) {
-      throw new IllegalArgumentException(
-        "The validation key is invalid. Minimum length is: " + Settings.USERNAME_LENGTH);
-    }
-    String userName = key.substring(0, Settings.USERNAME_LENGTH);
-    // get the 8 char username
-    String secret = key.substring(Settings.USERNAME_LENGTH);
-    Users user = userFacade.findByUsername(userName);
-    if (user == null) {
-      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
-    }
-    if (!secret.equals(user.getValidationKey())) {
-      registerFalseKeyValidation(user, req);
-      throw new UserException(RESTCodes.UserErrorCode.INCORRECT_VALIDATION_KEY, Level.FINE,
-          "user: " + user.getUsername());
-    }
-
-    if (!user.getStatus().equals(UserAccountStatus.NEW_MOBILE_ACCOUNT)) {
-      switch (user.getStatus()) {
-        case VERIFIED_ACCOUNT:
-          throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_INACTIVE, Level.FINE);
-        case ACTIVATED_ACCOUNT:
-          throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_ALREADY_VERIFIED, Level.FINE);
-        default:
-          throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_BLOCKED, Level.FINE);
-      }
-    }
-
+  public void validateEmail(String key, HttpServletRequest req) throws UserException {
+    Users user = getUserFromKey(key);
+    checkUserStatusAndKey(user, ValidationKeyType.EMAIL, true);
+    validate(user, key, req);
     user.setStatus(UserAccountStatus.VERIFIED_ACCOUNT);
-    userFacade.update(user);
+    user.setActivated(new Timestamp(new Date().getTime()));
+    resetValidationKey(user); //reset and update
     accountAuditFacade.registerRoleChange(user, UserAccountStatus.VERIFIED_ACCOUNT.name(), RolesAuditAction.SUCCESS.
         name(), "Account verification", user, req);
   }
+  
+  /**
+   * Check if the key exists and is valid. Will fail if the key is already set to reset.
+   * Only password keys can be checked.
+   * @param key
+   * @param req
+   * @throws UserException
+   */
+  public void checkRecoveryKey(String key, HttpServletRequest req) throws UserException {
+    Users user = getUserFromKey(key);
+    checkUserStatusAndKey(user, ValidationKeyType.PASSWORD, false); // only password keys can be checked
+    validate(user, key, req);
+    user.setValidationKeyType(ValidationKeyType.PASSWORD_RESET);
+    userFacade.update(user);
+  }
+  
+  /**
+   * Check if the key exists and is valid before removing it. Will fail if the key is not of the given type
+   * @param key
+   * @param req
+   * @return
+   * @throws UserException
+   */
+  public Users validateRecoveryKey(String key, ValidationKeyType type, HttpServletRequest req)
+    throws UserException {
+    Users user = getUserFromKey(key);
+    checkUserStatusAndKey(user, type, false);
+    validate(user, key, req);
+    return user;
+  }
+  
+  public void resetValidationKey(Users user) {
+    user.setValidationKey(null);
+    user.setValidationKeyUpdated(null);
+    user.setValidationKeyType(null);
+    userFacade.update(user);
+  }
+  
+  public void setValidationKey(Users user, String resetToken, ValidationKeyType type) {
+    user.setValidationKey(resetToken);
+    user.setValidationKeyUpdated(new Timestamp(new Date().getTime()));
+    user.setValidationKeyType(type);
+    userFacade.update(user);
+  }
+  
+  private void checkUserStatusAndKey(Users user, ValidationKeyType type, boolean newUser) throws UserException {
+    checkUserStatus(user, newUser);
+    if (user.getValidationKeyType() == null || !type.equals(user.getValidationKeyType())) {
+      throw new UserException(RESTCodes.UserErrorCode.INCORRECT_VALIDATION_KEY, Level.FINE);
+    }
+  }
+  
+  private void checkUserStatus(Users user, boolean newUser) throws UserException {
+    if (user == null) {
+      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
+    }
+    if (newUser) {
+      userStatusValidator.checkNewUserStatus(user.getStatus());
+    } else {
+      try {
+        userStatusValidator.checkStatus(user.getStatus());
+      } catch (UserException e) {
+        //Needed to not map account exceptions to Unauthorized rest response.
+        throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_NOT_ACTIVE, Level.FINE, e.getErrorCode().getMessage());
+      }
+    }
+  }
+  
+  /**
+   *
+   * @param user
+   * @param url
+   * @param isPassword
+   * @param req
+   * @throws MessagingException
+   */
+  public void sendNewRecoveryValidationKey(Users user, String url, boolean isPassword, HttpServletRequest req)
+    throws MessagingException, UserException {
+    if (user == null) {
+      throw new IllegalArgumentException("User not set.");
+    }
+    if (UserAccountType.REMOTE_ACCOUNT_TYPE.equals(user.getMode())) {
+      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
+    }
+    String resetToken;
+    long validForHour = TimeUnit.HOURS.toMillis(SecurityUtils.RESET_LINK_VALID_FOR_HOUR);
+    //resend the same token exp date > 5min
+    if (user.getValidationKey() != null &&
+      user.getValidationKeyType().equals(isPassword ? ValidationKeyType.PASSWORD : ValidationKeyType.QR_RESET) &&
+      diffMillis(user.getValidationKeyUpdated()) > TimeUnit.MINUTES.toMillis(5)) {
+      resetToken = user.getValidationKey();
+      validForHour = diffMillis(user.getValidationKeyUpdated());
+    } else {
+      resetToken = SecurityUtils.generateSecureRandom(SecurityUtils.RANDOM_KEY_LEN);
+      setValidationKey(user, resetToken, isPassword ? ValidationKeyType.PASSWORD : ValidationKeyType.QR_RESET);
+    }
+    sendRecoveryValidationKey(user, url, SecurityUtils.urlEncode(resetToken), isPassword, validForHour, req);
+  }
+  
+  private long diffMillis(Date date) {
+    if (date == null) {
+      return -1;
+    }
+    Date now = new Date();
+    long validForMs = TimeUnit.HOURS.toMillis(SecurityUtils.RESET_LINK_VALID_FOR_HOUR);
+    long diff = now.getTime() - date.getTime();
+    long diffMs = validForMs - diff;
+    return diffMs;
+  }
+  
+  private void sendRecoveryValidationKey(Users user, String url, String resetToken, boolean isPassword, long validFor,
+    HttpServletRequest req) throws MessagingException {
+    String subject = UserAccountsEmailMessages.ACCOUNT_MOBILE_RECOVERY_SUBJECT;
+    String msg = UserAccountsEmailMessages.buildQRRecoveryMessage(url, user.getUsername() + resetToken, validFor);
+    if (isPassword) {
+      subject = UserAccountsEmailMessages.ACCOUNT_PASSWORD_RECOVERY_SUBJECT;
+      msg = UserAccountsEmailMessages.buildPasswordRecoveryMessage(url, user.getUsername() + resetToken, validFor);
+    }
+    emailBean.sendEmail(user.getEmail(), Message.RecipientType.TO, subject, msg);
+    accountAuditFacade.registerAccountChange(user, AccountsAuditActions.RECOVERY.name(), AccountsAuditActions.SUCCESS.
+      name(), "New " + (isPassword? "password " : "QR ") + "recovery key", user, req);
+  }
 
   /**
-   * Sends new activation key to the given user.
+   * Sends new recovery key email.
    *
    * @param user
    * @param req
@@ -272,41 +422,29 @@ public class AuthController {
     if (user == null) {
       throw new IllegalArgumentException("User not set.");
     }
-    String activationKey = SecurityUtils.getRandomPassword(RANDOM_PWD_LEN);
-    emailBean.sendEmail(user.getEmail(), Message.RecipientType.TO, UserAccountsEmailMessages.ACCOUNT_REQUEST_SUBJECT,
-        UserAccountsEmailMessages.buildMobileRequestMessageRest(settings.getVerificationEndpoint(), user.getUsername()
-            + activationKey));
-    user.setValidationKey(activationKey);
-    userFacade.update(user);
+    String activationKey = SecurityUtils.generateSecureRandom(SecurityUtils.RANDOM_KEY_LEN);
+    sendEmailValidationKey(user, activationKey, req);
+    accountAuditFacade.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
+      AccountsAuditActions.SUCCESS.name(), "New validation key", user, req);
+    accountAuditFacade.registerAccountChange(user, AccountsAuditActions.QRCODE.name(),
+      AccountsAuditActions.SUCCESS.name(), "", user, req);
+    setValidationKey(user, activationKey, ValidationKeyType.EMAIL);
   }
-
+  
   /**
-   * Reset password with random string and send email to user with the new password.
    *
    * @param user
-   * @param req
-   * @throws ServiceException
+   * @param activationKey
+   * @throws MessagingException
    */
-  public void resetPassword(Users user, HttpServletRequest req) throws ServiceException {
-    if (user == null) {
-      throw new IllegalArgumentException("User not set.");
-    }
-    if (userStatusValidator.isBlockedAccount(user)) {
-      throw new IllegalStateException("User is blocked.");
-    }
-    String randomPassword = SecurityUtils.getRandomPassword(UserValidator.PASSWORD_MIN_LENGTH);
-    String message = UserAccountsEmailMessages.buildTempResetMessage(randomPassword);
-    try {
-      emailBean.sendEmail(user.getEmail(), Message.RecipientType.TO, UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET,
-          message);
-    } catch (MessagingException ex) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.EMAIL_SENDING_FAILURE,
-          Level.SEVERE, "user: " + user.getUsername(), ex.getMessage(), ex);
-    }
-    changePassword(user, randomPassword, req);
-    resetFalseLogin(user);
-    accountAuditFacade.registerAccountChange(user, AccountsAuditActions.RECOVERY.name(), UserAuditActions.SUCCESS.
-        name(), "Password reset.", user, req);
+  public void sendEmailValidationKey(Users user, String activationKey, HttpServletRequest req)
+    throws MessagingException {
+    long validForHour = diffMillis(user.getValidationKeyUpdated());
+    String path = FormatUtils.getUserURL(req) + settings.getEmailVerificationEndpoint();
+    String subject = UserAccountsEmailMessages.ACCOUNT_REQUEST_SUBJECT;
+    String msg = UserAccountsEmailMessages.buildMobileRequestMessageRest(path, user.getUsername()
+        + SecurityUtils.urlEncode(activationKey), validForHour);
+    emailBean.sendEmail(user.getEmail(), Message.RecipientType.TO, subject, msg);
   }
 
   /**
@@ -386,6 +524,8 @@ public class AuthController {
     user.setPasswordChanged(new Timestamp(new Date().getTime()));
     userFacade.update(user);
     resetProjectCertPassword(user, oldPassword);
+    accountAuditFacade.registerAccountChange(user, AccountsAuditActions.PASSWORDCHANGE.name(), AccountsAuditActions.
+      SUCCESS.name(), "Changed password.", user, req);
   }
 
   /**
@@ -447,8 +587,9 @@ public class AuthController {
       int count = user.getFalseLogin() + 1;
       user.setFalseLogin(count);
 
+      int allowedFalseLogins = isUserAgent(user)? Settings.ALLOWED_AGENT_FALSE_LOGINS : Settings.ALLOWED_FALSE_LOGINS;
       // block the user account if more than allowed false logins
-      if (count > Settings.ALLOWED_FALSE_LOGINS) {
+      if (count > allowedFalseLogins) {
         user.setStatus(UserAccountStatus.BLOCKED_ACCOUNT);
         try {
           emailBean.sendEmail(user.getEmail(), Message.RecipientType.TO,
@@ -462,6 +603,11 @@ public class AuthController {
       // notify user about the false attempts
       userFacade.update(user);
     }
+  }
+  
+  private boolean isUserAgent(Users user) {
+    BbcGroup group = bbcGroupFacade.findByGroupName("AGENT");
+    return user.getBbcGroupCollection().contains(group);
   }
 
   /**
@@ -548,20 +694,11 @@ public class AuthController {
   }
 
   /**
-   * Generates a salt value with SALT_LENGTH and DIGEST
+   * Generates a salt value with SALT_LENGTH
    *
    * @return
    */
   public String generateSalt() {
-    byte[] bytes = new byte[SALT_LENGTH];
-    RANDOM.nextBytes(bytes);
-    byte[] encodedSalt = Base64.getEncoder().encode(bytes);
-    String salt = "";
-    try {
-      salt = new String(encodedSalt, "UTF-8");
-    } catch (UnsupportedEncodingException ex) {
-      LOGGER.log(Level.SEVERE, "Generate salt encoding failed", ex);
-    }
-    return salt;
+    return SecurityUtils.generateSecureRandom(SecurityUtils.SALT_LENGTH);
   }
 }

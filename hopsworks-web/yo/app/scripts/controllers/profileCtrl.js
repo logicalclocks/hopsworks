@@ -40,14 +40,16 @@
 'use strict'
 
 angular.module('hopsWorksApp')
-        .controller('ProfileCtrl', ['UserService', '$location', '$scope', 'md5', 'growl', '$uibModalInstance','$cookies', 'ProjectService',
-          function (UserService, $location, $scope, md5, growl, $uibModalInstance, $cookies, ProjectService) {
+        .controller('ProfileCtrl', ['UserService', '$location', '$scope', 'md5', 'growl', '$uibModalInstance','$cookies', 'ProjectService', 'SecurityQuestions',
+          function (UserService, $location, $scope, md5, growl, $uibModalInstance, $cookies, ProjectService, SecurityQuestions) {
 
             var self = this;
             self.working = false;
             self.credentialWorking = false;
             self.twoFactorWorking = false;
             self.secretsWorking = false;
+            self.securityQAWorking = false;
+            self.qrCodeWorking = false;
             self.noPassword = false;
             self.otp = $cookies.get('otp');
             self.emailHash = '';
@@ -66,6 +68,12 @@ angular.module('hopsWorksApp')
               newPassword: '',
               confirmedPassword: ''
             };
+
+            self.securityQA = {
+                oldPassword: '',
+                securityQuestion: '',
+                securityAnswer: ''
+            };
             
             self.secrets = [];
 
@@ -80,6 +88,10 @@ angular.module('hopsWorksApp')
               password: '',
               twoFactor: ''
             };
+
+            SecurityQuestions.getQuestions().then(function(success) {
+               self.securityQuestions = success.data;
+            });
 
             self.profile = function () {
               UserService.profile().then(
@@ -113,21 +125,31 @@ angular.module('hopsWorksApp')
               });
             };
 
-            self.changeLoginCredentials = function (isFormValid) {
+            self.credentialsMsg = {
+              successMessage: '',
+              errorMessage:''
+            };
+            self.changeLoginCredentials = function (form) {
+              self.credentialsMsg = {
+                successMessage: '',
+                errorMessage:''
+              };
               self.credentialWorking = true;
-              if (isFormValid) {
+              if (form.$valid) {
                 UserService.changeLoginCredentials(self.loginCredes).then(
                         function (success) {
                           self.credentialWorking = false;
-                          growl.success("Your password is now updated.", {title: 'Success', ttl: 5000, referenceId: 1});
+                          self.loginCredes.oldPassword= '';
+                          self.loginCredes.newPassword= '';
+                          self.loginCredes.confirmedPassword= '';
+                          form.$setPristine();
+                          self.credentialsMsg.successMessage = success.data.successMessage;
                         }, function (error) {
                           self.credentialWorking = false;
-                          self.errorMsg = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : "";
-                          growl.error(self.errorMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 1});
+                          setErrorMsg(error, self.credentialsMsg);
                 });
               }
             };
-
 
             self.load_secrets = function () {
               self.secretsWorking = true;
@@ -222,25 +244,60 @@ angular.module('hopsWorksApp')
                 }
               );
             };
-            
-            self.changeTwoFactor = function() {
+
+            self.securityQAMsg = {
+                successMessage: '',
+                errorMessage:''
+            };
+            self.changeSecurityQA = function (form) {
+                self.securityQAMsg = {
+                    successMessage: '',
+                    errorMessage:''
+                };
+                self.securityQAWorking = true;
+                if (form.$valid) {
+                    UserService.changeSecurityQA(self.securityQA).then(
+                      function (success) {
+                          self.securityQAWorking = false;
+                          self.securityQA.oldPassword = '';
+                          self.securityQA.securityQuestion= '';
+                          self.securityQA.securityAnswer= '';
+                          form.$setPristine();
+                          self.securityQAMsg.successMessage = success.data.successMessage;
+                      }, function (error) {
+                          self.securityQAWorking = false;
+                          setErrorMsg(error, self.securityQAMsg);
+                      });
+                }
+            };
+
+            self.twoFactorAuthMsg = {
+                successMessage: '',
+                errorMessage:''
+            };
+            self.changeTwoFactor = function(form) {
+              self.twoFactorAuthMsg = {
+                  successMessage: '',
+                  errorMessage:''
+              };
+
               if (self.twoFactorAuth.twoFactor !== self.master.twoFactor) {
                 self.twoFactorWorking = true;
                 UserService.changeTwoFactor(self.twoFactorAuth).then(
                         function (success) {
                           self.twoFactorWorking = false;
                           self.twoFactorAuth.password = '';
+                          form.$setPristine();
                           if (success.data.QRCode !== undefined) {
                             self.close();
                             $location.path("/qrCode/profile/" + success.data.QRCode);
                           } else if (success.data.successMessage !== undefined) { 
                             self.master.twoFactor = false;
-                            growl.success(success.data.successMessage, {title: 'Success', ttl: 5000, referenceId: 1});
+                            self.twoFactorAuthMsg.successMessage = success.data.successMessage;
                           }
                         }, function (error) {
-                          self.twoFactorWorking = false;
-                          self.errorMsg = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : "";
-                          growl.error(self.errorMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 1});
+                           self.twoFactorWorking = false;
+                           setErrorMsg(error, self.twoFactorAuthMsg);
                 });
               }
             };
@@ -252,21 +309,25 @@ angular.module('hopsWorksApp')
                     return;
                 }
                 self.noPassword = false;
-                self.twoFactorWorking = true;
+                self.qrCodeWorking = true;
                 UserService.getQR(self.twoFactorAuth.password).then(
                         function (success) {
-                          self.twoFactorWorking = false;
+                          self.qrCodeWorking = false;
                           self.twoFactorAuth.password = '';
                           if (success.data.QRCode !== undefined) {
                             self.close();
                             $location.path("/qrCode/profile/" + success.data.QRCode);
                           } 
                         }, function (error) {
-                          self.twoFactorWorking = false;
-                          self.errorMsg = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : "";
-                          growl.error(self.errorMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 1});
+                          self.qrCodeWorking = false;
+                          setErrorMsg(error, self.twoFactorAuthMsg);
                 });
             };
+
+            var setErrorMsg = function (error, msg) {
+                var errorMsg = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : error.data.errorMsg;
+                msg.errorMessage = errorMsg;
+            }
             
             self.externalAccountType = function () {
                 return self.user.accountType !== 'M_ACCOUNT_TYPE';

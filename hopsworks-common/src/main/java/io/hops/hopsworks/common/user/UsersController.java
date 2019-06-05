@@ -64,19 +64,19 @@ import io.hops.hopsworks.common.dao.user.sshkey.SshKeys;
 import io.hops.hopsworks.common.dao.user.sshkey.SshKeysPK;
 import io.hops.hopsworks.common.dao.user.sshkey.SshkeysFacade;
 import io.hops.hopsworks.restutils.RESTCodes;
-import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.common.util.EmailBean;
 import io.hops.hopsworks.common.util.FormatUtils;
 import io.hops.hopsworks.common.util.QRCodeGenerator;
 import io.hops.hopsworks.common.util.Settings;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.mail.Message.RecipientType;
+import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
@@ -121,34 +121,29 @@ public class UsersController {
   // To send the user the QR code image
   private byte[] qrCode;
 
-  public byte[] registerUser(UserDTO newUser, HttpServletRequest req) throws
-    NoSuchAlgorithmException, UserException {
+  public byte[] registerUser(UserDTO newUser, HttpServletRequest req) throws NoSuchAlgorithmException, UserException {
     userValidator.isValidNewUser(newUser);
     Users user = createNewUser(newUser, UserAccountStatus.NEW_MOBILE_ACCOUNT, UserAccountType.M_ACCOUNT_TYPE);
     addAddress(user);
     addOrg(user);
-    //to privent sending email for test user emails
+    //to prevent sending email for test user emails
     try {
       if (!newUser.isTestUser()) {
         // Notify user about the request if not test user.
-        emailBean.sendEmail(newUser.getEmail(), RecipientType.TO, UserAccountsEmailMessages.ACCOUNT_REQUEST_SUBJECT,
-            UserAccountsEmailMessages.buildMobileRequestMessage(FormatUtils.getUserURL(req), user.getUsername() + user.
-                getValidationKey()));
+        authController.sendEmailValidationKey(user, user.getValidationKey(), req);
       }
       // Only register the user if i can send the email
       userFacade.persist(user);
       qrCode = QRCodeGenerator.getQRCodeBytes(newUser.getEmail(), Settings.ISSUER, user.getSecret());
       accountAuditFacade.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
-          AccountsAuditActions.SUCCESS.name(), "", user, req);
+        AccountsAuditActions.SUCCESS.name(), "New validation key", user, req);
       accountAuditFacade.registerAccountChange(user, AccountsAuditActions.QRCODE.name(),
-          AccountsAuditActions.SUCCESS.name(), "", user, req);
+        AccountsAuditActions.SUCCESS.name(), "", user, req);
     } catch (WriterException | MessagingException | IOException ex) {
-
       accountAuditFacade.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
           AccountsAuditActions.FAILED.name(), "", user, req);
       accountAuditFacade.registerAccountChange(user, AccountsAuditActions.QRCODE.name(),
           AccountsAuditActions.FAILED.name(), "", user, req);
-
       throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_REGISTRATION_ERROR, Level.SEVERE,
         "user: " + newUser.getUsername(), ex.getMessage(), ex);
     }
@@ -200,19 +195,18 @@ public class UsersController {
   public Users createNewUser(UserDTO newUser, UserAccountStatus accountStatus, UserAccountType accountType)
     throws NoSuchAlgorithmException {
     String otpSecret = SecurityUtils.calculateSecretKey();
-    String activationKey = SecurityUtils.getRandomPassword(64);
+    String activationKey = SecurityUtils.generateSecureRandom(SecurityUtils.RANDOM_KEY_LEN);
     String uname = generateUsername(newUser.getEmail());
     List<BbcGroup> groups = new ArrayList<>();
     String salt = authController.generateSalt();
     String password = authController.getPasswordHash(newUser.getChosenPassword(), salt);
-
-    Users user = new Users(uname, password,
-        newUser.getEmail(), newUser.getFirstName(), newUser.getLastName(),
-        new Timestamp(new Date().getTime()), "-", "-", accountStatus, otpSecret, activationKey,
-        SecurityQuestion.getQuestion(newUser.getSecurityQuestion()),
-        authController.getHash(newUser.getSecurityAnswer().toLowerCase()),
-        accountType, new Timestamp(new Date().getTime()), newUser.getTelephoneNum(),
-        settings.getMaxNumProjPerUser(), newUser.isTwoFactor(), salt, newUser.getToursState());
+    Timestamp now = new Timestamp(new Date().getTime());
+    SecurityQuestion secQuestion = SecurityQuestion.getQuestion(newUser.getSecurityQuestion());
+    String secAnswer = authController.getHash(newUser.getSecurityAnswer().toLowerCase());
+    Users user = new Users(uname, password, newUser.getEmail(), newUser.getFirstName(), newUser.getLastName(), now, "-",
+      "-", accountStatus, otpSecret, activationKey, now, ValidationKeyType.EMAIL, secQuestion, secAnswer, accountType,
+      now, newUser.getTelephoneNum(), settings.getMaxNumProjPerUser(), newUser.isTwoFactor(), salt,
+      newUser.getToursState());
     user.setBbcGroupCollection(groups);
     return user;
   }
@@ -288,27 +282,86 @@ public class UsersController {
     org.setPhone("-");
     user.setOrganization(org);
   }
-
-  public void recoverPassword(String email, String securityQuestion, String securityAnswer, HttpServletRequest req)
-    throws UserException, ServiceException {
-    if (userValidator.isValidEmail(email) && userValidator.isValidsecurityQA(securityQuestion, securityAnswer)) {
-      Users user = userFacade.findByEmail(email);
-      if (user == null) {
-        throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
-      }
-      if (!authController.validateSecurityQA(user, securityQuestion, securityAnswer, req)) {
-        throw new UserException(RESTCodes.UserErrorCode.SEC_QA_INCORRECT, Level.FINE);
-      }
-      authController.resetPassword(user, req);
+  
+  public void sendQRRecoveryEmail(String email, String password, HttpServletRequest req)
+    throws UserException, MessagingException {
+    Users user = userFacade.findByEmail(email);
+    String path = FormatUtils.getUserURL(req);
+    if (!authController.checkUserPasswordAndStatus(user, password, req)) {
+      throw new UserException(RESTCodes.UserErrorCode.INCORRECT_CREDENTIALS, Level.FINE);
     }
+    if (!user.getTwoFactor()) {
+      throw new UserException(RESTCodes.UserErrorCode.TWO_FA_DISABLED, Level.FINE);
+    }
+    authController.sendNewRecoveryValidationKey(user, path, false, req);
+  }
+  
+  public void sendPasswordRecoveryEmail(String email, String securityQuestion, String securityAnswer,
+    HttpServletRequest req) throws UserException, MessagingException {
+    Users user = userFacade.findByEmail(email);
+    String path = FormatUtils.getUserURL(req);
+    if (!authController.validateSecurityQAndStatus(user, securityQuestion, securityAnswer, req)) {
+      throw new UserException(RESTCodes.UserErrorCode.SEC_QA_INCORRECT, Level.FINE);
+    }
+    authController.sendNewRecoveryValidationKey(user, path, true, req);
+  }
+  
+  public String recoverQRCode(String key, HttpServletRequest req) throws UserException, MessagingException {
+    return new String(recoverQRCodeByte(key, req));
+  }
+  
+  public byte[] recoverQRCodeByte(String key, HttpServletRequest req) throws UserException, MessagingException {
+    Users user = authController.validateRecoveryKey(key, ValidationKeyType.QR_RESET, req);
+    byte[] qrCode = recoverQRCode(user, req);
+    if (qrCode == null) {
+      throw new UserException(RESTCodes.UserErrorCode.TWO_FA_DISABLED, Level.FINE);
+    }
+    authController.resetValidationKey(user);
+    //Send verification
+    String subject = UserAccountsEmailMessages.ACCOUNT_QR_RESET;
+    String msg = UserAccountsEmailMessages.buildQRResetMessage();
+    emailBean.sendEmail(user.getEmail(), Message.RecipientType.TO, subject, msg);
+    return Base64.encodeBase64(qrCode);
+  }
+  
+  private byte[] recoverQRCode(Users user, HttpServletRequest req) {
+    String random = SecurityUtils.getRandomPassword(Settings.PASSWORD_MIN_LENGTH);
+    updateSecret(user.getUid(), random);
+    auditManager.registerAccountChange(user, AccountsAuditActions.RECOVERY.name(), AccountsAuditActions.SUCCESS.name(),
+      "Reset QR code.", user, req);
+    return getQrCode(user);
   }
 
   public void changePassword(Users user, String oldPassword, String newPassword, String confirmedPassword,
       HttpServletRequest req) throws UserException {
-
     if (!authController.validatePassword(user, oldPassword, req)) {
       throw new UserException(RESTCodes.UserErrorCode.PASSWORD_INCORRECT, Level.FINE);
     }
+    changePassword(user, newPassword, confirmedPassword, req);
+  }
+  
+  public void checkRecoveryKey(String key, HttpServletRequest req) throws UserException {
+    authController.checkRecoveryKey(key, req);
+  }
+  
+  public void validateKey(String key, HttpServletRequest req) throws UserException {
+    authController.validateEmail(key, req);
+  }
+  
+  public void changePassword(String key, String newPassword, String confirmedPassword, HttpServletRequest req)
+    throws UserException, MessagingException {
+    userValidator.isValidPassword(newPassword, confirmedPassword);
+    Users user = authController.validateRecoveryKey(key, ValidationKeyType.PASSWORD_RESET, req);
+    changePassword(user, newPassword, confirmedPassword, req);
+    authController.resetValidationKey(user);
+    //Send verification
+    String subject = UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET;
+    String msg = UserAccountsEmailMessages.buildResetMessage();
+    emailBean.sendEmail(user.getEmail(), Message.RecipientType.TO, subject, msg);
+  }
+  
+  private void changePassword(Users user, String newPassword, String confirmedPassword, HttpServletRequest req)
+    throws UserException {
     if (userValidator.isValidPassword(newPassword, confirmedPassword)) {
       try {
         authController.changePassword(user, newPassword, req);
@@ -316,12 +369,10 @@ public class UsersController {
         throw new UserException(RESTCodes.UserErrorCode.PASSWORD_RESET_UNSUCCESSFUL, Level.SEVERE, null,
           ex.getMessage(), ex);
       }
-      accountAuditFacade.registerAccountChange(user, AccountsAuditActions.PASSWORDCHANGE.name(),
-          AccountsAuditActions.SUCCESS.name(), "Changed password.", user, req);
       if (user.getEmail().compareTo(settings.getAdminEmail()) == 0) {
         settings.setAdminPasswordChanged();
       }
-
+    
     }
   }
 
@@ -355,9 +406,8 @@ public class UsersController {
     if (toursState != null) {
       user.setToursState(toursState);
     }
-    accountAuditFacade.registerAccountChange(user, AccountsAuditActions.SECQUESTION.name(),
-        AccountsAuditActions.SUCCESS.name(), "Update Profile Info", user,
-        req);
+    accountAuditFacade.registerAccountChange(user, AccountsAuditActions.PROFILE.name(),
+      AccountsAuditActions.SUCCESS.name(), "Update Profile Info", user, req);
     userFacade.update(user);
     return user;
   }
@@ -490,6 +540,11 @@ public class UsersController {
     if (!authController.validatePassword(user, password, req)) {
       throw new UserException(RESTCodes.UserErrorCode.PASSWORD_INCORRECT, Level.FINE);
     }
+    
+    return getQrCode(user);
+  }
+  
+  public byte[] getQrCode(Users user) {
     byte[] qr_code = null;
     if (user.getTwoFactor()) {
       try {
@@ -557,19 +612,11 @@ public class UsersController {
 
   }
 
-  public void resetKey(int id) {
-    Users p = userFacade.find(id);
-    p.setValidationKey(SecurityUtils.getRandomPassword(64));
-    userFacade.update(p);
-
-  }
-
   public void resetSecQuestion(int id, SecurityQuestion question, String ans) {
     Users p = userFacade.find(id);
     p.setSecurityQuestion(question);
     p.setSecurityAnswer(ans);
     userFacade.update(p);
-
   }
 
   public void updateStatus(Users id, UserAccountStatus stat) {

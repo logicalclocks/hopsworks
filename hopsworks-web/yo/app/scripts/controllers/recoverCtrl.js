@@ -45,19 +45,31 @@ angular.module('hopsWorksApp')
 
             var self = this;
             self.working = false;
-            self.securityQuestions = SecurityQuestions.getQuestions();
             self.user = {email: '',
               securityQuestion: '',
               securityAnswer: '',
-              newPassword: '1234',
-              confirmedPassword: '1234'};
+              password: '',
+              newPassword: '',
+              confirmedPassword: ''};
+
+            self.mode = 'password_issue';
+            self.state = "login_issue";
+
+            SecurityQuestions.getQuestions().then(function(success) {
+                self.securityQuestions = success.data;
+            });
+
+            self.choose = function () {
+                self.state =  self.mode;
+            };
+
             var empty = angular.copy(self.user);
             self.send = function () {
               self.successMessage = null;
               self.errorMessage = null;
               if ($scope.recoveryForm.$valid) {
                 self.working = true;
-                AuthService.recover(self.user).then(
+                AuthService.recoverPassword(self.user).then(
                         function (success) {
                           self.user = angular.copy(empty);
                           $scope.recoveryForm.$setPristine();
@@ -66,11 +78,32 @@ angular.module('hopsWorksApp')
                           //$location.path('/login');
                         }, function (error) {
                           self.working = false;
-                          self.errorMessage = error.data.errorMsg;
-                          console.log(self.errorMessage);
+                          self.errorMessage = typeof error.data.usrMsg !== 'undefined'? error.data.usrMsg : error.data.errorMsg;
                 });
+              } else {
+                  self.errorMessage = "Missing required field.";
               }
             };
 
+            self.sendQR = function () {
+                self.successMessage = null;
+                self.errorMessage = null;
+                if ($scope.mobileRecoveryForm.$valid) {
+                    self.working = true;
+                    AuthService.recoverQRCode(self.user).then(
+                        function (success) {
+                            self.user = angular.copy(empty);
+                            $scope.mobileRecoveryForm.$setPristine();
+                            self.working = false;
+                            self.successMessage = success.data.successMessage;
+                            //$location.path('/login');
+                        }, function (error) {
+                            self.working = false;
+                            self.errorMessage = typeof error.data.usrMsg !== 'undefined'? error.data.usrMsg : error.data.errorMsg;
+                        });
+                } else {
+                    self.errorMessage = "Missing required field.";
+                }
+            };
 
           }]);

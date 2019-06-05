@@ -714,6 +714,7 @@ public class JWTController {
     final Calendar cal = Calendar.getInstance();
     cal.add(Calendar.DATE, -Constants.ONE_TIME_JWT_SIGNING_KEY_ROTATION_DAYS);
     if (jwtSigningKey != null && jwtSigningKey.getCreatedOn().before(cal.getTime())) {
+      removeMarkedKeys();//remove if there is an old marked but not deleted.
       jwtSigningKeyFacade.renameSigningKey(jwtSigningKey, Constants.OLD_ONE_TIME_JWT_SIGNING_KEY_NAME);
       try {
         jwtSigningKeyFacade.getOrCreateSigningKey(Constants.ONE_TIME_JWT_SIGNING_KEY_NAME, SignatureAlgorithm.HS256);

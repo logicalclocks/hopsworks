@@ -56,7 +56,25 @@ public enum SecurityQuestion {
   @XmlEnumValue("Name of your first pet?")
   PET("Name of your first pet?"),
   @XmlEnumValue("Name of your first love?")
-  LOVE("Name of your first love?");
+  LOVE("Name of your first love?"),
+  @XmlEnumValue("What was your childhood nickname?")
+  NICK_NAME("What was your childhood nickname?"),
+  @XmlEnumValue("What is the name of your favorite childhood friend?")
+  CHILDHOOD_FRIEND("What is the name of your favorite childhood friend?"),
+  @XmlEnumValue("What street did you live on in third grade?")
+  STREET("What street did you live on in third grade?"),
+  @XmlEnumValue("What is your oldest sibling's middle name?")
+  SIBLING_MAIDEN_NAME("What is your oldest sibling's middle name?"),
+  @XmlEnumValue("What school did you attend for sixth grade?")
+  SCHOOL("What school did you attend for sixth grade?"),
+  @XmlEnumValue("What is your oldest cousin's first and last name?")
+  COUSIN_MAIDEN_NAME("What is your oldest cousin's first and last name?"),
+  @XmlEnumValue("What was the name of your first stuffed animal?")
+  STUFFED_ANIMAL("What was the name of your first stuffed animal?"),
+  @XmlEnumValue("In what city does your nearest sibling live?")
+  SIBLING_LIVE("In what city does your nearest sibling live?"),
+  @XmlEnumValue("In what city or town was your first job?")
+  FIRST_JOB_TOWN("In what city or town was your first job?");
 
   private final String value;
 

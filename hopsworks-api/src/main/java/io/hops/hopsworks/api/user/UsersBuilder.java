@@ -102,6 +102,7 @@ public class UsersBuilder {
       dto.setEmail(user.getEmail());
       dto.setUsername(user.getUsername());
       dto.setPhoneNumber(user.getMobile());
+      dto.setTwoFactor(user.getTwoFactor());
       if (UserAccountType.REMOTE_ACCOUNT_TYPE.equals(user.getMode())) {
         dto.setAccountType(remoteUserFacade.findByUsers(user).getType().toString());
       } else {
