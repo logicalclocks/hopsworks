@@ -42,9 +42,7 @@ package io.hops.hopsworks.common.hdfs;
 import io.hops.hopsworks.common.dao.hdfs.HdfsLeDescriptorsFacade;
 import java.io.File;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.URI;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -94,9 +92,7 @@ public class DistributedFsService {
 
   private Configuration conf;
   private String hadoopConfDir;
-  private String hostname;
   private String transientDir;
-  private String serviceCertsDir;
 
   public DistributedFsService() {
   }
@@ -131,17 +127,7 @@ public class DistributedFsService {
 //    conf.setStrings("dfs.namenodes.rpc.addresses", hdfsLeDescriptorsFacade.getActiveNN().getHostname());
 //    conf.setStrings("fs.defaultFS", "hdfs://"+hdfsLeDescriptorsFacade.getActiveNN().getHostname());
     if (settings.getHopsRpcTls()) {
-      try {
-        hostname = InetAddress.getLocalHost().getHostName();
-        transientDir = settings.getHopsworksTmpCertDir();
-        serviceCertsDir = conf.get(HopsSSLSocketFactory.CryptoKeys
-                .SERVICE_CERTS_DIR.getValue(),
-            HopsSSLSocketFactory.CryptoKeys.SERVICE_CERTS_DIR.getDefaultValue());
-      } catch (UnknownHostException ex) {
-        logger.log(Level.SEVERE, "Could not determine hostname "
-            + ex.getMessage(), ex);
-        throw new RuntimeException("Could not determine hostname", ex);
-      }
+      transientDir = settings.getHopsworksTmpCertDir();
     }
   }
 
