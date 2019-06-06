@@ -141,7 +141,6 @@ public class Settings implements Serializable {
   private static final String VARIABLE_HADOOP_VERSION = "hadoop_version";
   private static final String VARIABLE_JAVA_HOME = "JAVA_HOME";
   private static final String VARIABLE_HOPSWORKS_IP = "hopsworks_ip";
-  private static final String VARIABLE_HOPSWORKS_PORT = "hopsworks_port";
   private static final String VARIABLE_KIBANA_IP = "kibana_ip";
   private static final String VARIABLE_LIVY_IP = "livy_ip";
   private static final String VARIABLE_JHS_IP = "jhs_ip";
@@ -248,7 +247,6 @@ public class Settings implements Serializable {
   private static final String VARIABLE_MAX_STATUS_POLL_RETRY = "max_status_poll_retry";
   private static final String VARIABLE_CERT_MATER_DELAY = "cert_mater_delay";
   private static final String VARIABLE_WHITELIST_USERS_LOGIN = "whitelist_users";
-  private static final String VARIABLE_RECOVERY_PATH = "recovery_endpoint";
   private static final String VARIABLE_VERIFICATION_PATH = "verification_endpoint";
   private static final String VARIABLE_ALERT_EMAIL_ADDRS = "alert_email_addrs";
   private static final String VARIABLE_FIRST_TIME_LOGIN = "first_time_login";
@@ -505,7 +503,6 @@ public class Settings implements Serializable {
       ELASTIC_REST_PORT = setIntVar(VARIABLE_ELASTIC_REST_PORT, ELASTIC_REST_PORT);
       ELASTIC_LOGS_INDEX_EXPIRATION = setLongVar(VARIABLE_ELASTIC_LOGS_INDEX_EXPIRATION, ELASTIC_LOGS_INDEX_EXPIRATION);
       HOPSWORKS_IP = setIpVar(VARIABLE_HOPSWORKS_IP, HOPSWORKS_IP);
-      HOPSWORKS_PORT = setIntVar(VARIABLE_HOPSWORKS_PORT, HOPSWORKS_PORT);
       RM_IP = setIpVar(VARIABLE_RM_IP, RM_IP);
       RM_PORT = setIntVar(VARIABLE_RM_PORT, RM_PORT);
       LOGSTASH_IP = setIpVar(VARIABLE_LOGSTASH_IP, LOGSTASH_IP);
@@ -576,7 +573,6 @@ public class Settings implements Serializable {
           CERTIFICATE_MATERIALIZER_DELAY);
       WHITELIST_USERS_LOGIN = setStrVar(VARIABLE_WHITELIST_USERS_LOGIN,
           WHITELIST_USERS_LOGIN);
-      RECOVERY_PATH = setStrVar(VARIABLE_RECOVERY_PATH, RECOVERY_PATH);
       FIRST_TIME_LOGIN = setStrVar(VARIABLE_FIRST_TIME_LOGIN, FIRST_TIME_LOGIN);
       VERIFICATION_PATH = setStrVar(VARIABLE_VERIFICATION_PATH, VERIFICATION_PATH);
       serviceKeyRotationEnabled = setBoolVar(SERVICE_KEY_ROTATION_ENABLED_KEY, serviceKeyRotationEnabled);
@@ -1013,36 +1009,12 @@ public class Settings implements Serializable {
     return Long.parseLong(HIVE_DB_DEFAULT_QUOTA);
   }
 
-  private String HOPSWORKS_EXTERNAL_IP = "127.0.0.1";
-
-  public synchronized String getHopsworksExternalIp() {
-    checkCache();
-    return HOPSWORKS_EXTERNAL_IP;
-  }
-
-  public synchronized void setHopsworksExternalIp(String ip) {
-    HOPSWORKS_EXTERNAL_IP = ip;
-  }
-
   private String HOPSWORKS_IP = "127.0.0.1";
 
   public synchronized String getHopsworksIp() {
     checkCache();
     return HOPSWORKS_IP;
   }
-
-  private Integer HOPSWORKS_PORT = 8181;
-
-  public synchronized Integer getHopsworksPort() {
-    checkCache();
-    return HOPSWORKS_PORT;
-  }
-
-
-  public synchronized String getHopsworksEndpoint() {
-    return getHopsworksIp() + ":" +  getHopsworksPort().toString();
-  }
-
 
   private String CERTS_DIR = "/srv/hops/certs-dir";
 
@@ -2325,18 +2297,11 @@ public class Settings implements Serializable {
     return "hops-examples-featurestore-" + HOPS_EXAMPLES_VERSION + ".jar";
   }
 
-  private String RECOVERY_PATH = "hopsworks-api/api/auth/recover";
-
-  public synchronized String getRecoveryEndpoint() {
-    checkCache();
-    return HOPSWORKS_IP + ":" + HOPSWORKS_PORT + "/" + RECOVERY_PATH;
-  }
-
   private String VERIFICATION_PATH = "hopsworks-api/api/auth/verify";
 
   public synchronized String getVerificationEndpoint() {
     checkCache();
-    return HOPSWORKS_IP + ":" + HOPSWORKS_PORT + "/" + VERIFICATION_PATH;
+    return getRestEndpoint() + "/" + VERIFICATION_PATH;
   }
 
   //Dela START
