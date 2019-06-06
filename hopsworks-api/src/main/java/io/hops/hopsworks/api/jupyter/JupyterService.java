@@ -255,15 +255,6 @@ public class JupyterService {
       jupyterFacade.remove(hdfsUser, jp.getPort());
       throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_SERVERS_NOT_RUNNING, Level.FINE);
     }
-    String externalIp = Ip.getHost(req.getRequestURL().toString());
-    settings.setHopsworksExternalIp(externalIp);
-    Integer port = req.getLocalPort();
-    String endpoint = externalIp + ":" + port;
-    if (endpoint.compareToIgnoreCase(jp.getHostIp()) != 0) {
-      // update the host_ip to whatever the client saw as the remote host:port
-      jp.setHostIp(endpoint);
-      jupyterFacade.update(jp);
-    }
 
     //set minutes left until notebook server is killed
     Duration durationLeft = Duration.between(new Date().toInstant(), jp.getExpires().toInstant());

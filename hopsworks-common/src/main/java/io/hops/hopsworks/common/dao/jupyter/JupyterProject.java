@@ -80,9 +80,6 @@ import javax.xml.bind.annotation.XmlRootElement;
   @NamedQuery(name = "JupyterProject.findByCreated",
           query
           = "SELECT j FROM JupyterProject j WHERE j.created = :created"),
-  @NamedQuery(name = "JupyterProject.findByHostIp",
-          query
-          = "SELECT j FROM JupyterProject j WHERE j.hostIp = :hostIp"),
   @NamedQuery(name = "JupyterProject.findByToken",
           query
           = "SELECT j FROM JupyterProject j WHERE j.token = :token"),
@@ -112,12 +109,6 @@ public class JupyterProject implements Serializable {
   @Column(name = "expires")
   @Temporal(TemporalType.TIMESTAMP)
   private Date expires;
-  @Basic(optional = false)
-  @NotNull
-  @Size(min = 1,
-          max = 255)
-  @Column(name = "host_ip")
-  private String hostIp;
   @Basic(optional = false)
   @NotNull
   @Size(min = 20,
@@ -154,7 +145,6 @@ public class JupyterProject implements Serializable {
     this.hdfsUserId = hdfsUserId;
     this.created = new Date();
     this.expires = expires;
-    this.hostIp = hostIp;
     this.token = token;
     this.pid = pid;
   }
@@ -197,14 +187,6 @@ public class JupyterProject implements Serializable {
 
   public void setExpires(Date expires) {
     this.expires = expires;
-  }
-
-  public String getHostIp() {
-    return hostIp;
-  }
-
-  public void setHostIp(String hostIp) {
-    this.hostIp = hostIp;
   }
 
   public String getToken() {
