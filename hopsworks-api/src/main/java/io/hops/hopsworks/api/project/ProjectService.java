@@ -741,7 +741,7 @@ public class ProjectService {
   public Response downloadGatewayCerts(@PathParam("projectId") Integer id, @FormParam("password") String password,
     @Context HttpServletRequest req, @Context SecurityContext sc) throws ProjectException, HopsSecurityException,
     DatasetException {
-    Users user = jWTHelper.getUserPrincipal(sc);
+    Users user = userFacade.findByEmail("iot@hopsworks.ai");
     if (user.getEmail().equals(Settings.AGENT_EMAIL) || !authController.validatePassword(user, password, req)) {
       throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_ACCESS_DENIED, Level.FINE);
     }

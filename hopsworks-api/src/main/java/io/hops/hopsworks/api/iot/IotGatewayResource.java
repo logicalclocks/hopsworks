@@ -10,9 +10,15 @@ import io.hops.hopsworks.common.dao.iot.IotGatewayState;
 import io.hops.hopsworks.common.dao.iot.IotGateways;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
+import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
+import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.kafka.KafkaController;
+import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.exceptions.GatewayException;
+import io.hops.hopsworks.exceptions.KafkaException;
+import io.hops.hopsworks.exceptions.ProjectException;
+import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.jwt.exception.DuplicateSigningKeyException;
 import io.hops.hopsworks.jwt.exception.SigningKeyNotFoundException;
@@ -49,15 +55,21 @@ public class IotGatewayResource {
   @EJB
   private IotGatewayBuilder iotGatewayBuilder;
   @EJB
+  private ProjectController projectController;
+  @EJB
   private ProjectFacade projectFacade;
   @EJB
   private IotGatewayFacade iotGatewayFacade;
+  @EJB
+  private UserFacade userFacade;
   @EJB
   private IotGatewayController iotGatewayController;
   @EJB
   private KafkaController kafkaController;
   @EJB
   private JWTHelper jWTHelper;
+  @EJB
+  private ProjectTeamFacade projectTeamFacade;
   
   private Project project;
   
@@ -69,6 +81,24 @@ public class IotGatewayResource {
   @PostConstruct
   public void init() {
   
+  }
+  
+  @ApiOperation(value = "Activate IoT feature")
+  @POST
+  @Path("activateIot")
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  public Response activateIot(@Context SecurityContext sc) throws KafkaException, UserException, ProjectException {
+    Users userIot = userFacade.findByEmail("iot@hopsworks.ai");
+    Users owner = jWTHelper.getUserPrincipal(sc);
+    List<String> failedMembers =
+      projectController.addMembers(project, userIot, projectTeamFacade.findMembersByProject(project));
+    if (failedMembers != null && failedMembers.size() > 0) {
+      LOGGER.warning("Failed to add members: " + failedMembers.toString());
+      return Response.status(Response.Status.NOT_IMPLEMENTED).build();
+    } else {
+      return Response.status(Response.Status.OK).build();
+    }
   }
   
   @ApiOperation(value = "Get list of currently connected IoT Gateways")
@@ -113,7 +143,7 @@ public class IotGatewayResource {
       throw new IllegalArgumentException("Gateway configuration was not provided.");
     }
     IotGateways gateway = iotGatewayController.putGateway(project, config);
-    Users user = jWTHelper.getUserPrincipal(sc);
+    Users user = userFacade.findByEmail("iot@hopsworks.ai");
     String jwt = jWTHelper.createToken(user, "hopsworks@logicalclocks.com", null);
     iotGatewayController.sendJwtToIotGateway(config, project.getId(), jwt);
     IotGatewayDTO dto =
