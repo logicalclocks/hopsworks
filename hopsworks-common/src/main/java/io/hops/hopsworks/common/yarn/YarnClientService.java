@@ -52,8 +52,6 @@ import javax.annotation.PreDestroy;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import java.io.File;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -68,9 +66,7 @@ public class YarnClientService {
   private BaseHadoopClientsService bhcs;
   
   private Configuration conf;
-  private String hostname;
   private String transientDir;
-  private String serviceCertsDir;
   
   public YarnClientService() {
   }
@@ -95,17 +91,7 @@ public class YarnClientService {
     conf.addResource(yarnSitePath);
     
     if (settings.getHopsRpcTls()) {
-      try {
-        hostname = InetAddress.getLocalHost().getHostName();
-        transientDir = settings.getHopsworksTmpCertDir();
-        serviceCertsDir = conf.get(HopsSSLSocketFactory.CryptoKeys
-            .SERVICE_CERTS_DIR.getValue(),
-            HopsSSLSocketFactory.CryptoKeys.SERVICE_CERTS_DIR.getDefaultValue());
-      } catch (UnknownHostException ex) {
-        LOG.log(Level.SEVERE, "Could not determine hostname " + ex
-            .getMessage(), ex);
-        throw new RuntimeException("Could not determine hostname", ex);
-      }
+      transientDir = settings.getHopsworksTmpCertDir();
     }
   }
   
