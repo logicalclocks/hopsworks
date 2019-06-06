@@ -87,7 +87,7 @@ describe "On #{ENV['OS']}" do
       context 'with authentication, and python enabled but with a non-existent HDFS-script path' do
         before :all do
           with_valid_project
-          with_python_enabled(@project[:id], "3.6.7")
+          with_python_enabled(@project[:id], "3.6")
         end
 
         after :all do
