@@ -87,7 +87,7 @@ describe "On #{ENV['OS']}" do
       context 'with authentication, and python enabled but with a non-existent HDFS-script path' do
         before :all do
           with_valid_project
-          with_python_enabled(@project[:id], "2.7")
+          with_python_enabled(@project[:id], "3.6.7")
         end
 
         after :all do
@@ -107,51 +107,10 @@ describe "On #{ENV['OS']}" do
         end
       end
 
-      context 'with authentication and python 3.6 enabled', vm: true do
+      context 'with authentication and python enabled', vm: true do
         before :all do
           with_valid_project
           with_python_enabled(@project[:id], "3.6")
-
-          # Make Serving Dir
-          mkdir("/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/", "#{@user[:username]}",
-                "#{@project[:projectname]}__Models", 750)
-          # Make Version Dir
-          mkdir("/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1", "#{@user[:username]}",
-                "#{@project[:projectname]}__Models", 750)
-          # Copy model to the servingversion dir
-          copy(SKLEARN_MODEL_TOUR_FILE_LOCATION, "/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1/",
-               "#{@user[:username]}",
-               "#{@project[:projectname]}__Models", 750, "#{@project[:projectname]}")
-          # Copy script to the servingversion dir
-          copy(SKLEARN_SCRIPT_TOUR_FILE_LOCATION, "/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1/",
-               "#{@user[:username]}",
-               "#{@project[:projectname]}__Models", 750, "#{@project[:projectname]}")
-        end
-
-        after :all do
-          purge_all_sklearn_serving_instances()
-          delete_all_sklearn_serving_instances(@project)
-        end
-
-        it "should create the serving without Kafka topic" do
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-              {name: "testModel",
-               artifactPath: "/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
-               modelVersion: 1,
-               servingType: "SKLEARN"
-              }
-          expect_status(201)
-
-          serving_list = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/"
-          kafka_topic = JSON.parse(serving_list).select {|serving| serving['name'] == "testModel"}[0]['kafkaTopicDTO']
-          expect(kafka_topic).to be nil
-        end
-      end
-
-      context 'with authentication and python 2.7 enabled', vm: true do
-        before :all do
-          with_valid_project
-          with_python_enabled(@project[:id], "2.7")
 
           # Make Serving Dir
           mkdir("/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/", "#{@user[:username]}",
@@ -314,56 +273,8 @@ describe "On #{ENV['OS']}" do
         end
       end
     end
+
     describe "#start", vm: true do
-      context 'with serving and python 2.7' do
-        before :all do
-          with_valid_project
-          with_python_enabled(@project[:id], "2.7")
-          sleep(5)
-          with_sklearn_serving(@project[:id], @project[:projectname], @user[:username])
-          sleep(5)
-        end
-
-        after :all do
-          purge_all_sklearn_serving_instances()
-          delete_all_sklearn_serving_instances(@project)
-        end
-
-        it "should be able to start a serving instance" do
-          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=start"
-          expect_status(200)
-
-          # Check if the process is running on the host
-          wait_for do
-            system "pgrep -f sklearn_flask_server.py -a"
-            $?.exitstatus == 0
-          end
-
-          # Sleep a bit to make sure that logs are propagated correctly to the index
-          sleep(30)
-
-          # Check that the logs are written in the elastic index.
-          Airborne.configure do |config|
-            config.base_url = ''
-          end
-
-          index = get "#{ENV['ELASTIC_API']}/#{@project[:projectname].downcase}_serving*/_search?q=modelname:#{@serving[:name]}"
-
-          Airborne.configure do |config|
-            config.base_url = "https://#{ENV['WEB_HOST']}:#{ENV['WEB_PORT']}"
-          end
-
-          parsed_index = JSON.parse(index)
-          expect(parsed_index['hits']['total']).to be > 0
-        end
-
-        it "should fail to start a running instance" do
-          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=start"
-          expect_status(400)
-          expect_json(errorCode: 240003)
-          expect_json(usrMsg: "Instance is already started")
-        end
-      end
       context 'with serving and python 3.6' do
         before :all do
           with_valid_project
@@ -416,10 +327,10 @@ describe "On #{ENV['OS']}" do
     end
 
     describe "#update", vm: true do
-      context 'with serving and python 2.7' do
+      context 'with serving and python enabled' do
         before :all do
           with_valid_project
-          with_python_enabled(@project[:id], "2.7")
+          with_python_enabled(@project[:id], "3.6")
           with_sklearn_serving(@project[:id], @project[:projectname], @user[:username])
 
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=start"
@@ -523,103 +434,10 @@ describe "On #{ENV['OS']}" do
           expect(serving[:kafka_topic_id]).to be nil
         end
       end
-      context 'with serving and python 3.6' do
-        before :all do
-          with_valid_project
-          with_python_enabled(@project[:id], "3.6")
-          with_sklearn_serving(@project[:id], @project[:projectname], @user[:username])
-
-          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=start"
-          expect_status(200)
-
-          wait_for do
-            system "pgrep -f sklearn_flask_server.py -a"
-            $?.exitstatus == 0
-          end
-        end
-
-        after :all do
-          purge_all_sklearn_serving_instances()
-          delete_all_sklearn_serving_instances(@project)
-        end
-
-        after :each do
-          # Check if the process is
-          wait_for do
-            system "pgrep -f sklearn_flask_server.py -a"
-            $?.exitstatus == 0
-          end
-        end
-
-        it "should be able to update the name" do
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-              {id: @serving[:id],
-               name: "testModelChanged",
-               artifactPath: "/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
-               modelVersion: 1,
-               kafkaTopicDTO: {
-                   name: @topic[:topic_name]
-               },
-               servingType: "SKLEARN"
-              }
-          expect_status(201)
-        end
-
-        it "should be able to update the version" do
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-              {id: @serving[:id],
-               name: "testModelChanged",
-               artifactPath: "/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
-               modelVersion: 2,
-               kafkaTopicDTO: {
-                   name: @topic[:topic_name]
-               },
-               servingType: "SKLEARN"
-              }
-          expect_status(201)
-        end
-
-        it "should be able to change the kafka topic it's writing to" do
-          json_result, topic_name = add_topic(@project[:id], INFERENCE_SCHEMA_NAME, INFERENCE_SCHEMA_VERSION)
-
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-              {id: @serving[:id],
-               name: "testModelChanged",
-               artifactPath: "/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
-               modelVersion: 2,
-               kafkaTopicDTO: {
-                   name: topic_name
-               },
-               servingType: "SKLEARN"
-              }
-          expect_status(201)
-
-          serving = Serving.find(@serving[:id])
-          new_topic = ProjectTopics.find_by(topic_name: topic_name, project_id: @project[:id])
-          expect(serving[:kafka_topic_id]).to be new_topic[:id]
-        end
-
-        it "should be able to stop writing to a kafka topic" do
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-              {id: @serving[:id],
-               name: "testModelChanged",
-               artifactPath: "/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
-               modelVersion: 2,
-               kafkaTopicDTO: {
-                   name: "NONE"
-               },
-               servingType: "SKLEARN"
-              }
-          expect_status(201)
-
-          serving = Serving.find(@serving[:id])
-          expect(serving[:kafka_topic_id]).to be nil
-        end
-      end
     end
 
     describe "#kill", vm: true do
-      context 'with serving and python 3.6' do
+      context 'with serving and python enabled' do
         before :all do
           with_valid_project
           with_python_enabled(@project[:id], "3.6")
@@ -682,75 +500,10 @@ describe "On #{ENV['OS']}" do
           expect(serving['status']).to eql "Stopped"
         end
       end
-
-      context 'with serving and python 2.7' do
-        before :all do
-          with_valid_project
-          with_python_enabled(@project[:id], "2.7")
-          with_sklearn_serving(@project[:id], @project[:projectname], @user[:username])
-        end
-
-        after :all do
-          purge_all_sklearn_serving_instances()
-          delete_all_sklearn_serving_instances(@project)
-        end
-
-        before :each do
-          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=start"
-          expect_status(200)
-        end
-
-        it "should be able to kill a running serving instance" do
-          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=stop"
-          expect_status(200)
-
-          # Wait a bit
-          sleep(30)
-
-          # check if the process is running on the host
-          system "pgrep -f sklearn_flask_server.py"
-          if $?.exitstatus != 1
-            raise "the process is still running"
-          end
-        end
-
-        it "should fail to kill a non running instance" do
-          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=stop"
-          expect_status(200)
-
-          # Wait a bit
-          sleep(30)
-
-          # check if the process is running on the host
-          system "pgrep -f sklearn_flask_server.py"
-          if $?.exitstatus != 1
-            raise "the process is still running"
-          end
-
-          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=stop"
-          expect_status(400)
-          expect_json(errorCode: 240003)
-          expect_json(usrMsg: "Instance is already stopped")
-        end
-
-        it "should mark the serving as not running if the process dies" do
-          # Simulate the process dying by its own
-          system "pgrep -f sklearn_flask_server.py | xargs kill -9"
-
-          # Wait a bit
-          sleep(30)
-
-          # Check that the serving is reported as dead
-          serving_list = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/"
-          serving = JSON.parse(serving_list).select {|serving| serving["name"] == @serving[:name]}[0]
-          expect(serving['status']).to eql "Stopped"
-        end
-      end
-
     end
 
     describe "#delete", vm: true do
-      context 'with serving and python 3.6' do
+      context 'with serving and python enabled' do
         before :all do
           # Make sure no sklearn serving instance is running"
           system "pgrep -f sklearn_flask_server.py | xargs kill -9"
@@ -807,70 +560,7 @@ describe "On #{ENV['OS']}" do
             $?.exitstatus == 1
           end
         end
-
       end
-
-      context 'with serving and python 2.7' do
-        before :all do
-          # Make sure no sklearn serving instance is running"
-          system "pgrep -f sklearn_flask_server.py | xargs kill -9"
-          with_valid_project
-          with_python_enabled(@project[:id], "2.7")
-
-          # Make Serving Dir
-          mkdir("/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/", "#{@user[:username]}",
-                "#{@project[:projectname]}__Models", 750)
-          # Make Version Dir
-          mkdir("/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1", "#{@user[:username]}",
-                "#{@project[:projectname]}__Models", 750)
-          # Copy model to the servingversion dir
-          copy(SKLEARN_MODEL_TOUR_FILE_LOCATION, "/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1/",
-               "#{@user[:username]}",
-               "#{@project[:projectname]}__Models", 750, "#{@project[:projectname]}")
-          # Copy script to the servingversion dir
-          copy(SKLEARN_SCRIPT_TOUR_FILE_LOCATION, "/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1/",
-               "#{@user[:username]}",
-               "#{@project[:projectname]}__Models", 750, "#{@project[:projectname]}")
-        end
-
-        after :all do
-          purge_all_sklearn_serving_instances()
-          delete_all_sklearn_serving_instances(@project)
-        end
-
-        before :each do
-          @serving = create_sklearn_serving(@project[:id], @project[:projectname])
-        end
-
-        it "should be able to delete a serving instance" do
-          delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}"
-          expect_status(200)
-        end
-
-        it "should be able to delete a running instance" do
-          # Start the serving instance
-          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=start"
-          expect_status(200)
-
-          # Wait until the service instance is running
-          wait_for do
-            system "pgrep -f sklearn_flask_server.py"
-            $?.exitstatus == 0
-          end
-
-          delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}"
-          expect_status(200)
-
-          # Check that the process has been killed
-          wait_for do
-            system "pgrep -f sklearn_flask_server.py"
-            $?.exitstatus == 1
-          end
-        end
-
-      end
-
     end
-
   end
 end
