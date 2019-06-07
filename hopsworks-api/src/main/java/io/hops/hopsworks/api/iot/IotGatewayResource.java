@@ -10,7 +10,10 @@ import io.hops.hopsworks.common.dao.iot.IotGatewayState;
 import io.hops.hopsworks.common.dao.iot.IotGateways;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
+import io.hops.hopsworks.common.dao.project.team.ProjectRoleTypes;
+import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
+import io.hops.hopsworks.common.dao.project.team.ProjectTeamPK;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.kafka.KafkaController;
@@ -44,6 +47,7 @@ import javax.ws.rs.core.UriInfo;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -89,10 +93,15 @@ public class IotGatewayResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response activateIot(@Context SecurityContext sc) throws KafkaException, UserException, ProjectException {
-    Users userIot = userFacade.findByEmail("iot@hopsworks.ai");
     Users owner = jWTHelper.getUserPrincipal(sc);
+    Users user = userFacade.findByEmail("iot@hopsworks.ai");
+    ProjectTeamPK pk = new ProjectTeamPK(project.getId(), user.getEmail());
+    ProjectTeam projectTeam = new ProjectTeam(pk);
+    projectTeam.setUser(user);
+    projectTeam.setTeamRole(ProjectRoleTypes.DATA_OWNER.getRole());
+    projectTeam.setProject(project);
     List<String> failedMembers =
-      projectController.addMembers(project, userIot, projectTeamFacade.findMembersByProject(project));
+      projectController.addMembers(project, owner, Collections.singletonList(projectTeam));
     if (failedMembers != null && failedMembers.size() > 0) {
       LOGGER.warning("Failed to add members: " + failedMembers.toString());
       return Response.status(Response.Status.NOT_IMPLEMENTED).build();

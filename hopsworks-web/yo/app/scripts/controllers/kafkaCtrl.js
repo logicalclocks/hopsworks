@@ -44,11 +44,11 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('KafkaCtrl', ['$routeParams', 'growl',
+        .controller('KafkaCtrl', ['$scope','$route', '$routeParams', 'growl',
         'KafkaService', '$location', 'ModalService', '$interval',
-        '$mdSidenav', 'TourService', 'ProjectService',
-          function ($routeParams, growl, KafkaService, $location,
-          ModalService, $interval, $mdSidenav, TourService, ProjectService) {
+        '$mdSidenav', 'TourService', 'ProjectService', 'MembersService',
+          function ($scope, $route, $routeParams, growl, KafkaService, $location,
+          ModalService, $interval, $mdSidenav, TourService, ProjectService, MembersService) {
 
             var self = this;
             self.projectId = $routeParams.projectID;
@@ -80,6 +80,7 @@ angular.module('hopsWorksApp')
             self.showIots = -1;
             self.iotGateways = [];
             self.iotNodes = [];
+            self.iotEnabled = false;
             self.schemas = [];
             self.schemaVersions = [];
            self.tourService = TourService;
@@ -328,6 +329,15 @@ angular.module('hopsWorksApp')
                     });
             };
 
+            self.activateIot = function() {
+                KafkaService.activateIot(self.projectId).then(
+                    function (success) {
+                        $route.reload();
+                    }, function (error) {
+                    }
+                )
+            };
+
             self.lala = function () {
               console.log("Step: " + self.tourService.currentStep_TourThree);
             };
@@ -501,6 +511,18 @@ angular.module('hopsWorksApp')
                   $location.path('/');
                 }
               );
+
+              MembersService.query({id: self.projectId}).$promise.then(
+                function (success) {
+                    var members = success;
+                    members.forEach(function (member) {
+                        if (member.user.email === "iot@hopsworks.ai") {
+                            self.iotEnabled = true;
+                        }
+                    });
+                },
+                function (error) {
+              });
 
               self.getAllTopics();
               self.getAllSharedTopics();

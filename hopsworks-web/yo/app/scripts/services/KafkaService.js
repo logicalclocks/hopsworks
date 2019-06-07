@@ -156,6 +156,10 @@ angular.module('hopsWorksApp')
                 };
                 return $http(req);
               },
+
+              activateIot: function (projectId) {
+                return $http.post('/api/project/' + projectId + '/gateways/activateIot')
+              },
               
               getSchemasForTopics: function (projectId){
                 return $http.get('/api/project/' + projectId + '/kafka/schemas');
