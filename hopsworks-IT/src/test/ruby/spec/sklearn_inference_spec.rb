@@ -18,6 +18,7 @@ describe "On #{ENV['OS']}" do
   describe 'inference' do
 
     after (:all) do
+      clean_projects
       purge_all_sklearn_serving_instances
     end
 
@@ -35,9 +36,16 @@ describe "On #{ENV['OS']}" do
       context 'without authentication', vm: true do
         before :all do
           with_valid_project
-          with_python_enabled(@project[:id], "2.7")
+          with_python_enabled(@project[:id], "3.6")
+          sleep(10)
           with_sklearn_serving(@project[:id], @project[:projectname], @user[:username])
+          sleep(10)
           reset_session
+        end
+
+        after :all do
+          purge_all_sklearn_serving_instances()
+          delete_all_sklearn_serving_instances(@project)
         end
 
         it "the inference should fail" do
@@ -50,8 +58,13 @@ describe "On #{ENV['OS']}" do
       context 'with authentication, python enabled and with sklearn serving', vm: true do
         before :all do
           with_valid_project
-          with_python_enabled(@project[:id], "2.7")
+          with_python_enabled(@project[:id], "3.6")
           with_sklearn_serving(@project[:id], @project[:projectname], @user[:username])
+        end
+
+        after :all do
+          purge_all_sklearn_serving_instances()
+          delete_all_sklearn_serving_instances(@project)
         end
 
         it "should fail to send a request to a non existing model" do
@@ -73,13 +86,17 @@ describe "On #{ENV['OS']}" do
             expect_status(200)
 
             # Sleep a bit to avoid race condition
-            sleep(30)
+            sleep(40)
 
             # Sleep some time while the SkLearn Flask server starts
             wait_for do
               system "pgrep -f sklearn_flask_server.py -a"
               $?.exitstatus == 0
             end
+          end
+
+          after :all do
+            purge_all_sklearn_serving_instances()
           end
 
           it "should succeeds to infer from a serving with kafka logging" do
