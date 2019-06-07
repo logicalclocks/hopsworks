@@ -220,9 +220,11 @@ public class YarnUIProxyServlet extends ProxyServlet {
       proxyRequestUri);
   
     if (settings.isLocalHost() && proxyRequestUri.contains("proxy/application")) {
-      proxyRequestUri = proxyRequestUri.replaceAll("yarnui/http://*/", "yarnui/http://localhost/");
+      proxyRequestUri = proxyRequestUri.replaceAll("yarnui/http://*:", "yarnui/http://localhost:");
     }
   
+    logger.log(Level.INFO, "YarnProxyUI Url is now: " + servletRequest.getRequestURI() + " for " +
+      proxyRequestUri);
   
     try {
       // Execute the request
@@ -411,10 +413,6 @@ public class YarnUIProxyServlet extends ProxyServlet {
       String pathInfo = servletRequest.getPathInfo();
       
       logger.log(Level.INFO, "YarnProxyUI PathInfo is: " + pathInfo);
-      
-      if (settings.isLocalHost() && pathInfo.contains("proxy/application")) {
-        pathInfo = pathInfo.replaceAll("yarnui/http://*/", "yarnui/http://localhost/");
-      }
       
       String target = "http://" + pathInfo.substring(7);
       servletRequest.setAttribute(ATTR_TARGET_URI, target);
