@@ -220,7 +220,7 @@ public class YarnUIProxyServlet extends ProxyServlet {
       proxyRequestUri);
   
     if (settings.isLocalHost() && proxyRequestUri.contains("proxy/application")) {
-      proxyRequestUri = proxyRequestUri.replaceAll("yarnui/http://*:", "yarnui/http://localhost:");
+      proxyRequestUri = proxyRequestUri.replaceAll("yarnui/http://.*:", "yarnui/http://localhost:");
     }
   
     logger.log(Level.INFO, "YarnProxyUI Url is now: " + servletRequest.getRequestURI() + " for " +
@@ -437,11 +437,6 @@ public class YarnUIProxyServlet extends ProxyServlet {
         fragment = queryString.substring(fragIdx + 2); // '#!', not '#'
         //        fragment = queryString.substring(fragIdx + 1);
         queryString = queryString.substring(0, fragIdx);
-      }
-  
-      logger.log(Level.INFO, "YarnProxyUI queryString is: " + queryString);
-      if (settings.isLocalHost() && queryString.contains("proxy/application")) {
-        queryString = queryString.replaceAll("yarnui/http://*/", "yarnui/http://localhost/");
       }
       
     } else {
