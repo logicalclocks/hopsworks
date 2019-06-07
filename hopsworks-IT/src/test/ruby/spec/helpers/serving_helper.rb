@@ -97,4 +97,13 @@ module ServingHelper
   def purge_all_sklearn_serving_instances()
     system "sudo /bin/bash -c \"pgrep -f sklearn_flask_server | xargs kill\""
   end
+
+  def delete_all_sklearn_serving_instances(project)
+    serving_list = JSON.parse(get "#{ENV['HOPSWORKS_API']}/project/#{project.id}/serving/")
+    expect_status(200)
+    serving_list.each do |serving|
+      delete "#{ENV['HOPSWORKS_API']}/project/#{project.id}/serving/#{serving["id"]}"
+      expect_status(200)
+    end
+  end
 end

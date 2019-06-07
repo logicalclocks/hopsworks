@@ -24,8 +24,8 @@ import io.hops.hopsworks.common.dao.serving.Serving;
 import io.hops.hopsworks.common.dao.serving.ServingFacade;
 import io.hops.hopsworks.common.dao.serving.ServingType;
 import io.hops.hopsworks.common.hdfs.Utils;
-import io.hops.hopsworks.exceptions.ServingException;
 import io.hops.hopsworks.common.serving.ServingWrapper;
+import io.hops.hopsworks.exceptions.ServingException;
 import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;
@@ -34,7 +34,6 @@ import java.io.FileNotFoundException;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -48,8 +47,6 @@ public class ServingUtil {
   private ServingFacade servingFacade;
   @EJB
   private InodeFacade inodeFacade;
-  
-  private final static Logger logger = Logger.getLogger(ServingUtil.class.getName());
   
   /**
    * Validates user input before creating or updating a serving. This method contains the common input validation
