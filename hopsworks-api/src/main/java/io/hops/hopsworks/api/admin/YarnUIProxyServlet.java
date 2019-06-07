@@ -218,8 +218,12 @@ public class YarnUIProxyServlet extends ProxyServlet {
     
     logger.log(Level.INFO, "YarnProxyUI Url is: " + servletRequest.getRequestURI() + " for " +
       proxyRequestUri);
-    
-    
+  
+    if (settings.isLocalHost() && proxyRequestUri.contains("proxy/application")) {
+      proxyRequestUri = proxyRequestUri.replaceAll("yarnui/http://*/", "yarnui/http://localhost/");
+    }
+  
+  
     try {
       // Execute the request
       
@@ -230,9 +234,6 @@ public class YarnUIProxyServlet extends ProxyServlet {
       HttpClient client = new HttpClient(params);
       HostConfiguration config = new HostConfiguration();
       InetAddress localAddress = InetAddress.getLocalHost();
-      //      if (settings.isLocalHost() && servletRequest.getRequestURI().contains("proxy/application")) {
-      //        localAddress = InetAddress.getByName("localhost");
-      //      }
       config.setLocalAddress(localAddress);
       
       String method = servletRequest.getMethod();
@@ -430,11 +431,6 @@ public class YarnUIProxyServlet extends ProxyServlet {
     //ex:(following '?'): name=value&foo=bar#fragment
     String queryString = servletRequest.getQueryString();
     
-    logger.log(Level.INFO, "YarnProxyUI queryString is: " + queryString);
-    if (settings.isLocalHost() && queryString.contains("proxy/application")) {
-      queryString = queryString.replaceAll("yarnui/http://*/", "yarnui/http://localhost/");
-    }
-    
     String fragment = null;
     //split off fragment from queryString, updating queryString if found
     if (queryString != null) {
@@ -444,6 +440,14 @@ public class YarnUIProxyServlet extends ProxyServlet {
         //        fragment = queryString.substring(fragIdx + 1);
         queryString = queryString.substring(0, fragIdx);
       }
+  
+      logger.log(Level.INFO, "YarnProxyUI queryString is: " + queryString);
+      if (settings.isLocalHost() && queryString.contains("proxy/application")) {
+        queryString = queryString.replaceAll("yarnui/http://*/", "yarnui/http://localhost/");
+      }
+      
+    } else {
+      logger.log(Level.INFO, "YarnProxyUI queryString is NULL");
     }
     
     queryString = rewriteQueryStringFromRequest(servletRequest, queryString);
