@@ -1688,6 +1688,12 @@ public class Settings implements Serializable {
 
   public synchronized String getRestEndpoint() {
     checkCache();
+    
+    if (isLocalHost()) {
+      return "https://localhost:" +
+        HOPSWORKS_REST_ENDPOINT.substring(HOPSWORKS_REST_ENDPOINT.lastIndexOf(":") + 1);
+    }
+    
     return "https://" + HOPSWORKS_REST_ENDPOINT;
   }
 

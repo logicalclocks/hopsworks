@@ -226,6 +226,9 @@ public class YarnUIProxyServlet extends ProxyServlet {
       HttpClient client = new HttpClient(params);
       HostConfiguration config = new HostConfiguration();
       InetAddress localAddress = InetAddress.getLocalHost();
+//      if (settings.isLocalHost() && servletRequest.getRequestURI().contains("proxy/application")) {
+//        localAddress = InetAddress.getByName("localhost");
+//      }
       config.setLocalAddress(localAddress);
 
       String method = servletRequest.getMethod();
@@ -400,8 +403,15 @@ public class YarnUIProxyServlet extends ProxyServlet {
     StringBuilder uri = new StringBuilder(500);
     if (servletRequest.getPathInfo() != null && servletRequest.getPathInfo().matches(
         "/http([a-zA-Z,:,/,.,0-9,-])+:([0-9])+(.)+")) {
-      String target = "http://" + servletRequest.getPathInfo().substring(7);
+      
+      String pathInfo = servletRequest.getPathInfo();
+        if (settings.isLocalHost() && servletRequest.getPathInfo().contains("proxy/application")) {
+        pathInfo = pathInfo.replaceAll("yarnui/http://*/", "yarnui/http://localhost/");
+      }
+  
+      String target = "http://" + pathInfo.substring(7);
       servletRequest.setAttribute(ATTR_TARGET_URI, target);
+      
       uri.append(target);
     } else {
       uri.append(getTargetUri(servletRequest));
