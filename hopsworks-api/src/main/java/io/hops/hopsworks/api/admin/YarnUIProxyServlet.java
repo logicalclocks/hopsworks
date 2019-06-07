@@ -81,11 +81,16 @@ import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Stateless
 public class YarnUIProxyServlet extends ProxyServlet {
+  
+  final static Logger logger = Logger.getLogger(YarnUIProxyServlet.class.getName());
+  
   
   private static final HashSet<String> PASS_THROUGH_HEADERS
     = new HashSet<String>(
@@ -141,6 +146,9 @@ public class YarnUIProxyServlet extends ProxyServlet {
         "app/application") || servletRequest.getRequestURI().contains("appattempt/appattempt") || servletRequest.
         getRequestURI().contains("container/container") || servletRequest.getRequestURI().contains(
         "containerlogs/container") || servletRequest.getRequestURI().contains("history/application")) {
+        
+        logger.log(Level.INFO, "YarnProxyUI Url is: " + servletRequest.getRequestURI());
+        
         String email = servletRequest.getUserPrincipal().getName();
         Pattern pattern = Pattern.compile("(application_.*?_.\\d*)");
         Type type = Type.application;
@@ -209,6 +217,10 @@ public class YarnUIProxyServlet extends ProxyServlet {
     // note: we won't transfer the protocol version because I'm not 
     // sure it would truly be compatible
     String proxyRequestUri = rewriteUrlFromRequest(servletRequest);
+    
+    logger.log(Level.INFO, "YarnProxyUI Url is: " + servletRequest.getRequestURI() + " for " +
+      proxyRequestUri);
+    
     
     try {
       // Execute the request
