@@ -220,7 +220,7 @@ public class YarnUIProxyServlet extends ProxyServlet {
       proxyRequestUri);
   
     if (settings.isLocalHost() && proxyRequestUri.contains("proxy/application")) {
-      proxyRequestUri = proxyRequestUri.replaceAll("yarnui/http://.*:", "yarnui/http://localhost:");
+      proxyRequestUri = proxyRequestUri.replaceAll("http://.*:", "http://localhost:");
     }
   
     logger.log(Level.INFO, "YarnProxyUI Url is now: " + servletRequest.getRequestURI() + " for " +
