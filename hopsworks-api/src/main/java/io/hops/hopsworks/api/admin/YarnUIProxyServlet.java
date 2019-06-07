@@ -147,8 +147,6 @@ public class YarnUIProxyServlet extends ProxyServlet {
         getRequestURI().contains("container/container") || servletRequest.getRequestURI().contains(
         "containerlogs/container") || servletRequest.getRequestURI().contains("history/application")) {
         
-        logger.log(Level.INFO, "YarnProxyUI Url is: " + servletRequest.getRequestURI());
-        
         String email = servletRequest.getUserPrincipal().getName();
         Pattern pattern = Pattern.compile("(application_.*?_.\\d*)");
         Type type = Type.application;
@@ -410,7 +408,10 @@ public class YarnUIProxyServlet extends ProxyServlet {
       "/http([a-zA-Z,:,/,.,0-9,-])+:([0-9])+(.)+")) {
       
       String pathInfo = servletRequest.getPathInfo();
-      if (settings.isLocalHost() && servletRequest.getPathInfo().contains("proxy/application")) {
+      
+      logger.log(Level.INFO, "YarnProxyUI PathInfo is: " + pathInfo);
+      
+      if (settings.isLocalHost() && pathInfo.contains("proxy/application")) {
         pathInfo = pathInfo.replaceAll("yarnui/http://*/", "yarnui/http://localhost/");
       }
       
@@ -428,6 +429,12 @@ public class YarnUIProxyServlet extends ProxyServlet {
     // Handle the query string & fragment
     //ex:(following '?'): name=value&foo=bar#fragment
     String queryString = servletRequest.getQueryString();
+    
+    logger.log(Level.INFO, "YarnProxyUI queryString is: " + queryString);
+    if (settings.isLocalHost() && queryString.contains("proxy/application")) {
+      queryString = queryString.replaceAll("yarnui/http://*/", "yarnui/http://localhost/");
+    }
+    
     String fragment = null;
     //split off fragment from queryString, updating queryString if found
     if (queryString != null) {
