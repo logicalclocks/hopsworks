@@ -323,7 +323,6 @@ angular.module('hopsWorksApp')
              * 2. Send REST call to Hopsworks for creating the serving instance
              */
             self.createOrUpdate = function () {
-                self.sendingRequest = true;
                 self.editServing.requestedInstances = self.sliderOptions.value;
 
                 // Check that all the fields are populated
@@ -366,6 +365,7 @@ angular.module('hopsWorksApp')
             };
 
             self.doCreateOrUpdate = function () {
+                self.sendingRequest = true;
                 // Send REST call to Hopsworks with the data
                 ServingService.createOrUpdate(self.projectId, self.editServing).then(
                     function (success) {
