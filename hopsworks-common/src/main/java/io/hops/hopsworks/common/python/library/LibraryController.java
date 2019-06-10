@@ -230,23 +230,23 @@ public class LibraryController {
   private List<LibraryVersionDTO> getVersions(JSONObject releases) {
     List<LibraryVersionDTO> versions = new ArrayList<>();
     Iterator<String> keys = releases.keys();
-    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+    Date releaseDate = new Date(0);
     while (keys.hasNext()) {
       String key = keys.next();
       if (releases.get(key) instanceof JSONArray) {
         JSONObject versionMeta =
           ((JSONArray) releases.get(key)).length() > 0 ? (JSONObject) ((JSONArray) releases.get(key)).get(0) : null;
         if (versionMeta != null && versionMeta.has("upload_time")) {
-          Date releaseDate = null;
           String strDate = versionMeta.getString("upload_time");
+          SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
           try {
             releaseDate = sdf.parse(strDate);
           } catch (ParseException e) {
             LOGGER.log(Level.FINE, "Failed to parse release date: {0}", strDate);
           }
-          versions.add(new LibraryVersionDTO(key, releaseDate));
         }
       }
+      versions.add(new LibraryVersionDTO(key, releaseDate));
     }
     return versions;
   }
@@ -286,7 +286,7 @@ public class LibraryController {
         }
         
         findPipLibPyPi(libName, versions);
-        if (!versions.containsKey(libName)) {
+        if (!versions.containsKey(libName) || versions.get(libName).isEmpty()) {
           //This may happen when the version is (), i.e pip search does not return a version
           String version = lineSplit[1];
           if(version.equals("()")) {
