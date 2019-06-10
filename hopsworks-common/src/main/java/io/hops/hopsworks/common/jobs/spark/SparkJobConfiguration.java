@@ -53,8 +53,19 @@ import io.hops.hopsworks.common.util.Settings;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.NONE)
 public class SparkJobConfiguration extends YarnJobConfiguration {
-  
+
+  /**
+   * Creates a SparkJobConfiguration object corresponding to Spark Dynamic allocation
+   */
   public SparkJobConfiguration() {
+  }
+
+  /**
+   * Creates a SparkJobConfiguration object with provided ExperimentType
+   * @param experimentType
+   */
+  public SparkJobConfiguration(ExperimentType experimentType) {
+    this.experimentType = experimentType;
   }
   
   @XmlElement
@@ -70,7 +81,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
   private String properties;
 
   @XmlElement
-  private ExperimentType experimentType = ExperimentType.EXPERIMENT;
+  private ExperimentType experimentType;
 
   @XmlElement
   private DistributionStrategy distributionStrategy;

@@ -181,9 +181,10 @@ public class SparkController {
   }
   
   public SparkJobConfiguration inspectProgram(String path, DistributedFileSystemOps udfso) throws JobException {
-    SparkJobConfiguration config = new SparkJobConfiguration();
+    SparkJobConfiguration config;
     //If the main program is in a jar, try to set main class from it
     if (path.endsWith(".jar")) {
+      config = new SparkJobConfiguration();
       try (JarInputStream jis = new JarInputStream(udfso.open(path))) {
         Manifest mf = jis.getManifest();
         if (mf != null) {
@@ -197,6 +198,7 @@ public class SparkController {
           "Failed to inspect jar at:" + path, ex.getMessage(), ex);
       }
     } else {
+      config = new SparkJobConfiguration(ExperimentType.EXPERIMENT);
       config.setMainClass(Settings.SPARK_PY_MAINCLASS);
     }
     config.setAppPath(path);
