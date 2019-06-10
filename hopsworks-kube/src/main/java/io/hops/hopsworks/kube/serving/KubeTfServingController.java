@@ -362,7 +362,7 @@ public class KubeTfServingController implements TfServingController {
     tfServingEnv.add(new EnvVarBuilder().withName(MODEL_NAME).withValue(tfServing.getModelName()).build());
     tfServingEnv.add(new EnvVarBuilder().withName("PROJECT_NAME").withValue(project.getName().toLowerCase()).build());
     tfServingEnv.add(new EnvVarBuilder().withName(MODEL_DIR)
-        .withValue("hdfs://" + hdfsLEFacade.getEndpoint() + tfServing.getModelPath()).build());
+        .withValue("hdfs://" + hdfsLEFacade.getRPCEndpoint() + tfServing.getModelPath()).build());
     tfServingEnv.add(new EnvVarBuilder().withName(MODEL_VERSION)
         .withValue(String.valueOf(tfServing.getVersion())).build());
     tfServingEnv.add(new EnvVarBuilder().withName("HADOOP_PROXY_USER")
