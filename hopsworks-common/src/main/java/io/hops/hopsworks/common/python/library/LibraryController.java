@@ -253,7 +253,7 @@ public class LibraryController {
   
   public HashMap<String, List<LibraryVersionDTO>> pipSearch(String library, Project project) throws ServiceException {
     
-    String env = projectUtils.getCurrentCondaEnvironment(project);
+    String env = projectUtils.getCurrentCondaBaseEnvironment(project);
     HashMap<String, List<LibraryVersionDTO>> versions = new HashMap<>();
     
     String prog = settings.getHopsworksDomainDir() + "/bin/pipsearch.sh";
