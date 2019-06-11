@@ -47,6 +47,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 
+import io.hops.hopsworks.common.jobs.spark.ExperimentType;
 import io.hops.hopsworks.common.jobs.spark.SparkJobConfiguration;
 import org.apache.commons.codec.digest.DigestUtils;
 
@@ -90,10 +91,10 @@ public class JupyterSettingsFacade {
               ThreadLocalRandom.current().nextInt()));
       js = new JupyterSettings(pk);
       js.setSecret(secret);
-      js.setJobConfig(new SparkJobConfiguration());
+      js.setJobConfig(new SparkJobConfiguration(ExperimentType.EXPERIMENT));
       persist(js);
     } else if(js.getJobConfig() == null) {
-      js.setJobConfig(new SparkJobConfiguration());
+      js.setJobConfig(new SparkJobConfiguration(ExperimentType.EXPERIMENT));
     }
     return js;
   }
