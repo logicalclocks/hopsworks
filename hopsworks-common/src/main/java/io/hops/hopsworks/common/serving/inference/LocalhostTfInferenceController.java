@@ -18,6 +18,7 @@ package io.hops.hopsworks.common.serving.inference;
 
 import io.hops.common.Pair;
 import io.hops.hopsworks.common.dao.serving.Serving;
+import io.hops.hopsworks.common.integrations.LocalhostStereotype;
 import io.hops.hopsworks.exceptions.InferenceException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -33,7 +34,6 @@ import javax.ejb.EJB;
 import javax.ejb.Singleton;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.enterprise.inject.Alternative;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -46,7 +46,7 @@ import static io.hops.hopsworks.common.serving.LocalhostServingController.PID_ST
  * <p>
  * Sends inference requests to a local tensorflow serving server to get a prediction response
  */
-@Alternative
+@LocalhostStereotype
 @Singleton
 @TransactionAttribute(TransactionAttributeType.NEVER)
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)

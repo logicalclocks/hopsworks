@@ -308,6 +308,11 @@ public class Settings implements Serializable {
   private static final String VARIABLE_KUBE_REGISTRY = "kube_registry";
   private static final String VARIABLE_KUBE_MAX_SERVING = "kube_max_serving_instances";
 
+  // Container image versions
+  private static final String VARIABLE_KUBE_TF_IMG_VERSION = "kube_tf_img_version";
+  private static final String VARIABLE_KUBE_SKLEARN_IMG_VERSION = "kube_sklearn_img_version";
+  private static final String VARIABLE_KUBE_FILEBEAT_IMG_VERSION = "kube_filebeat_img_version";
+
   // JWT Variables
   private static final String VARIABLE_JWT_SIGNATURE_ALGORITHM = "jwt_signature_algorithm";
   private static final String VARIABLE_JWT_LIFETIME_MS = "jwt_lifetime_ms";
@@ -634,6 +639,9 @@ public class Settings implements Serializable {
       KUBE_KEYSTORE_KEY = setStrVar(VARIABLE_KUBE_KEYSTORE_KEY, KUBE_KEYSTORE_KEY);
       KUBE_REGISTRY = setStrVar(VARIABLE_KUBE_REGISTRY, KUBE_REGISTRY);
       KUBE_MAX_SERVING_INSTANCES = setIntVar(VARIABLE_KUBE_MAX_SERVING, KUBE_MAX_SERVING_INSTANCES);
+      KUBE_TF_IMG_VERSION = setVar(VARIABLE_KUBE_TF_IMG_VERSION, KUBE_TF_IMG_VERSION);
+      KUBE_SKLEARN_IMG_VERSION = setVar(VARIABLE_KUBE_SKLEARN_IMG_VERSION, KUBE_SKLEARN_IMG_VERSION);
+      KUBE_FILEBEAT_IMG_VERSION = setVar(VARIABLE_KUBE_FILEBEAT_IMG_VERSION, KUBE_FILEBEAT_IMG_VERSION);
 
       JWT_SIGNATURE_ALGORITHM = setStrVar(VARIABLE_JWT_SIGNATURE_ALGORITHM, JWT_SIGNATURE_ALGORITHM);
       JWT_LIFETIME_MS = setLongVar(VARIABLE_JWT_LIFETIME_MS, JWT_LIFETIME_MS);
@@ -3247,6 +3255,24 @@ public class Settings implements Serializable {
   public synchronized Integer getKubeMaxServingInstances() {
     checkCache();
     return KUBE_MAX_SERVING_INSTANCES;
+  }
+
+  private String KUBE_TF_IMG_VERSION = "0.10.0";
+  public synchronized String getKubeTfImgVersion() {
+    checkCache();
+    return KUBE_TF_IMG_VERSION;
+  }
+
+  private String KUBE_SKLEARN_IMG_VERSION = "0.10.0";
+  public synchronized String getKubeSKLearnImgVersion() {
+    checkCache();
+    return KUBE_SKLEARN_IMG_VERSION;
+  }
+
+  private String KUBE_FILEBEAT_IMG_VERSION = "0.10.0";
+  public synchronized String getKubeFilebeatImgVersion() {
+    checkCache();
+    return KUBE_FILEBEAT_IMG_VERSION;
   }
 
   private String SERVING_MONITOR_INT = "30s";
