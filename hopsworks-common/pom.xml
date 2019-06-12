@@ -401,16 +401,8 @@
               <file>target/classes/META-INF/beans.xml</file>
               <replacements>
                 <replacement>
-                  <token>io.hops.hopsworks.common.serving.LocalhostServingController</token>
-                  <value>io.hops.hopsworks.kube.serving.KubeServingController</value>
-                </replacement>
-                <replacement>
-                  <token>io.hops.hopsworks.common.serving.inference.LocalhostTfInferenceController</token>
-                  <value>io.hops.hopsworks.kube.serving.KubeTfInferenceController</value>
-                </replacement>
-                <replacement>
-                  <token>io.hops.hopsworks.common.serving.inference.LocalhostSkLearnInferenceController</token>
-                  <value>io.hops.hopsworks.kube.serving.KubeSkLearnInferenceController</value>
+                  <token>io.hops.hopsworks.common.integrations.LocalhostStereotype</token>
+                  <value>io.hops.hopsworks.kube.common.KubeStereotype</value>
                 </replacement>
               </replacements>
             </configuration>

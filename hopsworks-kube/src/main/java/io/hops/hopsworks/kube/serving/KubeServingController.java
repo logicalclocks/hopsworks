@@ -30,13 +30,13 @@ import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.ServingException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.kube.common.KubeClientService;
+import io.hops.hopsworks.kube.common.KubeStereotype;
 import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.enterprise.inject.Alternative;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -51,7 +51,7 @@ import static io.hops.hopsworks.common.serving.util.ServingCommands.STOP;
  * Contains the common functionality between kubernetes serving controllers, the specific functionality is provided by
  * serving-type-specific controllers, e.g SkLearnServingController, servingController.
  */
-@Alternative
+@KubeStereotype
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 public class KubeServingController implements ServingController {

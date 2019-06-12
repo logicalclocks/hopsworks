@@ -11,6 +11,7 @@ import io.hops.hopsworks.common.serving.inference.InferenceHttpClient;
 import io.hops.hopsworks.common.serving.inference.SkLearnInferenceController;
 import io.hops.hopsworks.exceptions.InferenceException;
 import io.hops.hopsworks.kube.common.KubeClientService;
+import io.hops.hopsworks.kube.common.KubeStereotype;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -26,14 +27,13 @@ import javax.ejb.EJB;
 import javax.ejb.Singleton;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.enterprise.inject.Alternative;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.logging.Level;
 
-@Alternative
+@KubeStereotype
 @Singleton
 @TransactionAttribute(TransactionAttributeType.NEVER)
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
