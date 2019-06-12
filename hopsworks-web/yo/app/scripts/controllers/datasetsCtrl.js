@@ -221,6 +221,101 @@ angular.module('hopsWorksApp')
             };
 
 
+              /**
+               * Utility function that converts the dataset name to a shorter name for the UI
+               * @param dataset the dataset to get the short name of
+               * @returns short name of the dataset
+               */
+            self.shortDatasetName = function (dataset) {
+                if(self.isFeaturestore(dataset)){
+                    return "Featurestore"
+                }
+                if(self.isTrainingDatasets(dataset)){
+                    return "Training Datasets"
+                }
+                if(self.isHive(dataset)){
+                    return "Hive"
+                }
+                return dataset.name
+            }
+
+              /**
+               * Checks whether a dataset is a Hive database or not (featurestore or regular hive db will match here)
+               * @param dataset
+               * @returns true if it is a Hive db otherwise false
+               */
+            self.isHiveDB = function(dataset) {
+                if(dataset.path.includes("apps/hive/warehouse")){
+                    return true
+                } else {
+                    return false
+                }
+            }
+
+            self.isHive = function(dataset) {
+                if(dataset.path.includes("apps/hive/warehouse") && dataset.name == self.projectName + ".db"){
+                    return true
+                }
+                return false
+            }
+
+            self.isFeaturestore = function(dataset) {
+                if(dataset.path.includes("apps/hive/warehouse") && dataset.name == (self.projectName + "_featurestore.db")){
+                    return true
+                }
+                return false
+            }
+
+
+            self.isTrainingDatasets = function(dataset) {
+                if(dataset.name == self.projectName + "_Training_Datasets") {
+                    return true
+                }
+                return false
+              }
+
+              /**
+               * Gets the list of pinned datasets
+                */
+            self.getPinnedDatasets = function() {
+                var pinnedDatasets = []
+                var hiveDb = null
+                var featurestoreDb = null
+                var traningDatasets = null
+                for (var i = 0; i < self.files.length; i++) {
+                    if(self.isHive(self.files[i])){
+                        hiveDb = self.files[i]
+                        continue
+                    }
+                    if(self.isFeaturestore(self.files[i])){
+                        featurestoreDb = self.files[i]
+                        continue
+                    }
+                    if(self.isTrainingDatasets(self.files[i])){
+                        traningDatasets = self.files[i]
+                    }
+                }
+                pinnedDatasets.push(hiveDb)
+                pinnedDatasets.push(featurestoreDb)
+                pinnedDatasets.push(traningDatasets)
+                return pinnedDatasets
+            }
+
+              /**
+               * Filters the datasets for the list of non-pinned datasets
+               */
+              self.getRegularDatasets = function() {
+                  var regularDatasets = []
+                  for (var i = 0; i < self.files.length; i++) {
+                      if(!self.isHive(self.files[i]) && !self.isFeaturestore(self.files[i]) &&
+                          !self.isTrainingDatasets(self.files[i])) {
+                          regularDatasets.push(self.files[i])
+                      }
+                  }
+                  return regularDatasets
+              }
+
+
             /**
              * Get the contents of the directory at the path with the given path components and load it into the frontend.
              * @param {type} The array of path compontents to fetch. If empty, fetches the current path.
