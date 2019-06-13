@@ -57,15 +57,9 @@ angular.module('hopsWorksApp')
             self.emptyFeatures = 1
             self.wrong_values = 1;
             self.working = false;
-            self.dependenciesNotUnique = 1
 
             self.featuregroupName;
             self.featuregroupDoc = "";
-            self.dependencies = []
-            self.dependenciesWrongValue = [];
-            for (i = 0; i < self.dependencies.length; i++) {
-                self.dependenciesWrongValue.push(1)
-            }
 
             /**
              * Function called when the "create feature group" button is pressed.
@@ -74,7 +68,6 @@ angular.module('hopsWorksApp')
              */
             self.createFeaturegroup = function () {
                 self.featuregroupNameWrongValue = 1;
-                self.dependenciesNotUnique = 1;
                 self.wrong_values = 1;
                 self.featureNamesNotUnique = 1
                 self.featuregroupNameNotUnique = 1
@@ -83,14 +76,6 @@ angular.module('hopsWorksApp')
                 self.primaryKeyWrongValue = 1;
                 self.partitionKeyWrongValue = 1;
                 self.working = true;
-                for (i = 0; i < self.dependencies.length; i++) {
-                    if(!self.dependencies[i] || self.dependencies[i] === "" || self.dependencies[i] === null){
-                        self.dependenciesWrongValue[i] = -1
-                        self.wrong_values = -1;
-                    } else {
-                        self.dependenciesWrongValue[i] = 1
-                    }
-                }
                 for (i = 0; i < self.featuresNameWrongValue.length; i++) {
                     self.featuresNameWrongValue[i] = 1
                 }
@@ -166,22 +151,10 @@ angular.module('hopsWorksApp')
                         self.wrong_values = -1;
                     }
                 }
-                var hasDuplicates2 = (new Set(self.dependencies)).size !== self.dependencies.length;
-                if (hasDuplicates2) {
-                    self.dependenciesNotUnique = -1
-                    self.wrong_values = -1;
-                }
 
                 if (self.wrong_values === -1) {
                     self.working = false;
                     return;
-                }
-                for (i = 0; i < self.dependencies.length; i++) {
-                    if (self.dependencies[i].length > 7) {
-                        if (self.dependencies[i].substring(0, 7) === "hdfs://") {
-                            self.dependencies[i] = self.dependencies[i].substring(7)
-                        }
-                    }
                 }
                 for (i = 0; i < self.features.length; i++) {
                     if (!self.features[i].description || self.features[i].description.length == 0) {
@@ -190,7 +163,7 @@ angular.module('hopsWorksApp')
                 }
                 var featuregroupJson = {
                     "name": self.featuregroupName,
-                    "dependencies": self.dependencies,
+                    "dependencies": [],
                     "jobName": $scope.selected.value.name,
                     "description": self.featuregroupDoc,
                     "features": self.features,
@@ -211,20 +184,6 @@ angular.module('hopsWorksApp')
                         self.working = false;
                     });
                 growl.info("Creating feature group... wait", {title: 'Creating', ttl: 1000})
-            };
-
-            /**
-             * Function called when the user clicks the "Data Dependency" button, opens up a modal where the user
-             * can select a dataset from a file-viewer.
-             */
-            self.selectDataDependency = function (index) {
-                ModalService.selectFile('lg', '*', '', true).then(
-                    function (success) {
-                        self.dependencies[index] = success
-                    },
-                    function (error) {
-                        // Users changed their minds.
-                    });
             };
 
             /**
@@ -262,23 +221,6 @@ angular.module('hopsWorksApp')
                 self.featuresNameWrongValue.splice(index, 1);
                 self.featuresTypeWrongValue.splice(index, 1);
             };
-
-            /**
-             * Function called when the user press "add dependency" button in the create-feature-group form
-             * Adds a new dependency to the form
-             */
-            self.addNewDependency = function () {
-                self.dependencies.push("");
-            };
-
-            /**
-             * Function called when the user press "delete dependency" button in the create-feature-group form
-             * Deletes a new dependency from the form
-             */
-            self.removeNewDependency = function (index) {
-                self.dependencies.splice(index, 1);
-            };
-
 
             /**
              * Closes the modal

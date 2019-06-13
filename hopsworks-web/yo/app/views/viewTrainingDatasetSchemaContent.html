@@ -23,17 +23,18 @@
 <div class="modal-body" style="overflow: auto">
 
   <div class="row">
-    <table class="table table-hover" style="margin-left: 10px; overflow: auto" ng-if="viewTrainingDatasetSchemaContentCtrl.trainingDataset.features.length > 0">
-      <thead style="border:none;">
-      <th style="width: 33%">Column Name</th>
-      <th style="width: 33%">Column Type</th>
-      <th style="width: 33%">Column Description</th>
+    <table class="table table-hover fs-table" style="margin-left: 10px; overflow: auto"
+           ng-if="viewTrainingDatasetSchemaContentCtrl.trainingDataset.features.length > 0">
+      <thead style="border:none;" class="fs-table">
+      <th class="fs-table" style="width: 33%">Column Name</th>
+      <th class="fs-table" style="width: 33%">Column Type</th>
+      <th class="fs-table" style="width: 33%">Column Description</th>
       </thead>
-      <tbody>
-      <tr data-ng-repeat="feature in viewTrainingDatasetSchemaContentCtrl.trainingDataset.features">
-        <td> {{feature.name}}</td>
-        <td> {{feature.type}}</td>
-        <td> {{feature.description}}</td>
+      <tbody class="fs-table">
+      <tr class="fs-table" data-ng-repeat="feature in viewTrainingDatasetSchemaContentCtrl.trainingDataset.features">
+        <td class="fs-table"> {{feature.name}}</td>
+        <td class="fs-table"> {{feature.type}}</td>
+        <td class="fs-table"> {{feature.description}}</td>
       </tr>
       </tbody>
     </table>

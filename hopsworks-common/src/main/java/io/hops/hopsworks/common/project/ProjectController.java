@@ -841,7 +841,7 @@ public class ProjectController {
           "Featurestore database for project: " + project.getName());
       //Store featurestore metadata in Hopsworks
       Featurestore featurestore = featurestoreController.createProjectFeatureStore(project, featurestoreName);
-      //Create Hops Dataset of the HiveDb
+      //Create Hopsworks Dataset of the HiveDb
       hiveController.createDatasetDb(project, user, dfso, featurestoreName, DatasetType.FEATURESTORE, featurestore);
     } catch (SQLException | IOException ex) {
       LOGGER.log(Level.SEVERE, RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATURESTORE.getMessage(), ex);

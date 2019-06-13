@@ -19,8 +19,9 @@
  */
 angular.module('hopsWorksApp')
     .controller('trainingDatasetViewInfoCtrl', ['$uibModalInstance', '$scope', 'FeaturestoreService', 'ProjectService',
-        'growl', 'projectId', 'trainingDataset', 'featurestore',
-        function ($uibModalInstance, $scope, FeaturestoreService, ProjectService, growl, projectId, trainingDataset, featurestore) {
+        'JobService', '$location', 'growl', 'projectId', 'trainingDataset', 'featurestore', 'jobs',
+        function ($uibModalInstance, $scope, FeaturestoreService, ProjectService, JobService, $location, growl,
+                  projectId, trainingDataset, featurestore, jobs) {
 
             /**
              * Initialize controller state
@@ -33,6 +34,7 @@ angular.module('hopsWorksApp')
             self.size = "Not fetched"
             self.code = ""
             self.table = []
+            self.jobs = jobs
 
             /**
              * Get the API code to retrieve the featuregroup
@@ -45,6 +47,41 @@ angular.module('hopsWorksApp')
                 codeStr = codeStr + "training_dataset_version=" + trainingDataset.version + "\n"
                 codeStr = codeStr + ")"
                 return codeStr
+            };
+
+            /**
+             * Called when the launch-job button is pressed
+             */
+            self.launchJob = function (jobName) {
+                JobService.setJobFilter(jobName);
+                self.close();
+                self.goToUrl("jobs")
+            };
+
+            /**
+             * Check if a row is a regular one or need special rendering
+             */
+            self.isRegularRow = function(property) {
+                if (property == "API Retrieval Code" || property == "Job" || property == "Last Computed"){
+                    return false
+                }
+                return true
+            }
+
+            /**
+             * Check if a job of a featuregroup in the featurestore belongs to this project's jobs or another project
+             *
+             * @param jobId the jobId to lookup
+             */
+            self.isJobLocal = function (jobId) {
+                var i;
+                var jobFoundBool = false;
+                for (i = 0; i < self.jobs.length; i++) {
+                    if (self.jobs[i].id === jobId) {
+                        jobFoundBool = true
+                    }
+                }
+                return jobFoundBool
             };
 
             /**
@@ -62,7 +99,10 @@ angular.module('hopsWorksApp')
                 self.table.push({"property": "Creator", "value": self.trainingDataset.creator})
                 self.table.push({"property": "Created", "value": self.formatDate(self.trainingDataset.created)})
                 self.table.push({"property": "Data format", "value": self.trainingDataset.dataFormat})
+                self.table.push({"property": "Job", "value": "-"})
+                self.table.push({"property": "Last Computed", "value": "-"})
                 self.table.push({"property": "API Retrieval Code", "value": self.code})
+                self.fetchSize()
             };
 
             /**
@@ -95,7 +135,7 @@ angular.module('hopsWorksApp')
                     return
                 }
                 self.sizeWorking = true
-                var request = {id: self.projectId, type: "inode", inodeId: self.trainingDataset.inodeId};
+                var request = {type: "inode", inodeId: self.trainingDataset.inodeId};
                 ProjectService.getMoreInodeInfo(request).$promise.then(function (success) {
                     self.sizeWorking = false;
                     self.size = self.sizeOnDisk(success.size)
@@ -103,6 +143,26 @@ angular.module('hopsWorksApp')
                     growl.error(error.data.errorMsg, {title: 'Failed to fetch training dataset size', ttl: 5000});
                     self.sizeWorking = false;
                 });
+            };
+
+            /**
+             * Format javascript date as string (YYYY-mm-dd HH:MM:SS)
+             *
+             * @param javaDate date to format
+             * @returns {string} formatted string
+             */
+            $scope.formatDate = function (javaDate) {
+                var d = new Date(javaDate);
+                return d.getFullYear().toString() + "-" + ((d.getMonth() + 1).toString().length == 2 ? (d.getMonth() + 1).toString() : "0" + (d.getMonth() + 1).toString()) + "-" + (d.getDate().toString().length == 2 ? d.getDate().toString() : "0" + d.getDate().toString()) + " " + (d.getHours().toString().length == 2 ? d.getHours().toString() : "0" + d.getHours().toString()) + ":" + ((parseInt(d.getMinutes() / 5) * 5).toString().length == 2 ? (parseInt(d.getMinutes() / 5) * 5).toString() : "0" + (parseInt(d.getMinutes() / 5) * 5).toString()) + ":00";
+            };
+
+            /**
+             * Helper function for redirecting to another project page
+             *
+             * @param serviceName project page
+             */
+            self.goToUrl = function (serviceName) {
+                $location.path('project/' + self.projectId + '/' + serviceName);
             };
 
             /**

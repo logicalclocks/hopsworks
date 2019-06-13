@@ -23,21 +23,22 @@
 <div class="modal-body" style="overflow: auto">
 
   <div class="row">
-    <table class="table table-hover" style="margin-left: 10px; overflow: auto" ng-if="featureSchemaViewContentCtrl.featuregroup.features.length > 0">
-      <thead style="border:none;">
-      <th style="width: 20%">Feature Name</th>
-      <th style="width: 20%">Feature Type</th>
-      <th style="width: 20%">Feature Description</th>
-      <th style="width: 20%">Primary Key</th>
-      <th style="width: 20%">Partition Key</th>
+    <table class="table table-hover fs-table" style="margin-left: 10px; overflow: auto"
+           ng-if="featureSchemaViewContentCtrl.featuregroup.features.length > 0">
+      <thead style="border:none;" class="fs-table">
+      <th class="fs-table" style="width: 20%">Feature Name</th>
+      <th class="fs-table" style="width: 20%">Feature Type</th>
+      <th class="fs-table" style="width: 20%">Feature Description</th>
+      <th class="fs-table" style="width: 20%">Primary Key</th>
+      <th class="fs-table" style="width: 20%">Partition Key</th>
       </thead>
       <tbody>
-      <tr data-ng-repeat="feature in featureSchemaViewContentCtrl.featuregroup.features">
-        <td> {{feature.name}}</td>
-        <td> {{feature.type}}</td>
-        <td> {{feature.description}}</td>
-        <td> {{feature.primary}}</td>
-        <td> {{feature.partition}}</td>
+      <tr class="fs-table" data-ng-repeat="feature in featureSchemaViewContentCtrl.featuregroup.features">
+        <td class="fs-table"> {{feature.name}}</td>
+        <td class="fs-table"> {{feature.type}}</td>
+        <td class="fs-table"> {{feature.description}}</td>
+        <td class="fs-table"> {{feature.primary}}</td>
+        <td class="fs-table"> {{feature.partition}}</td>
       </tr>
       </tbody>
     </table>

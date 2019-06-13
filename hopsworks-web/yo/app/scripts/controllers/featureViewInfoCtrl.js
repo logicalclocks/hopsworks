@@ -60,11 +60,15 @@ angular.module('hopsWorksApp')
                 self.table.push({"property": "Name", "value": self.feature.name})
                 self.table.push({"property": "Type", "value": self.feature.type})
                 self.table.push({"property": "Version", "value": self.feature.version})
-                self.table.push({"property": "Primary", "value": self.feature.primary})
                 self.table.push({"property": "Description", "value": self.feature.description})
                 self.table.push({"property": "Featurestore", "value": self.featurestore.featurestoreName})
-                self.table.push({"property": "Featuregroup", "value": self.feature.featuregroup})
-                self.table.push({"property": "API Retrieval Code", "value": self.code})
+                if(self.feature.entity == "Feature Group") {
+                    self.table.push({"property": "Primary", "value": self.feature.primary})
+                    self.table.push({"property": "Feature Group", "value": self.feature.featuregroup})
+                    self.table.push({"property": "API Retrieval Code", "value": self.code})
+                } else {
+                    self.table.push({"property": "Training Dataset", "value": self.feature.trainingDataset})
+                }
             };
 
             /**

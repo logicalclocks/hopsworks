@@ -63,65 +63,6 @@
         </div>
     </div>
 
-    <div data-ng-repeat="dependency in updateTrainingDatasetCtrl.dependencies track by $index">
-        <div class="view-info">
-            <div class="col-md-12">
-                <div class="col-sm-12" style="margin-bottom: 0px">
-                    <div class="col-sm-3">
-                        <label>
-                            <button style="margin-top: 5px;" id="selectArchiveButton" class="btn btn-default"
-                                    ng-click="updateTrainingDatasetCtrl.selectDataDependency($index)">
-                                <span>Data Dependency</span>
-                            </button>
-                        </label>
-                        <i class="fa fa-info-circle" tooltip-placement="auto left"
-                           uib-tooltip='(Optional) select datasets that this training dataset depends on.
-                       E.g datasets input to feature engineering, this can be used to keep track of when a training dataset needs to be recomputed.'
-                           style="margin-left: 10px"></i>
-                    </div>
-                    <div class="col-sm-9">
-                        <input type="text" class="form-control" id="inputDataset"
-                               ng-model="updateTrainingDatasetCtrl.dependencies[$index]"
-                               placeholder="Select Dataset Dependency"
-                               value="{{dependency}}"
-                        >
-                    </div>
-                </div>
-            </div>
-            <div ng-if="updateTrainingDatasetCtrl.dependenciesWrongValue[$index] === -1" style="color: red">{{"Feature dependency cannot be empty"}}
-            </div>
-        </div>
-        <div class="view-info">
-            <div class="col-md-12">
-                <div class="col-sm-12" style="margin-bottom: 20px">
-                    <div class="col-sm-3">
-                    </div>
-                    <div class="col-sm-9">
-                        <button class="col-sm-2 btn btn-danger glyphicon glyphicon-trash" uib-tooltip="delete"
-                                ng-click="updateTrainingDatasetCtrl.removeNewDependency($index)">
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="view-info">
-        <div class="col-md-12">
-            <div class="col-sm-12" style="margin-bottom: 20px">
-                <div class="col-sm-3"></div>
-                <div class="col-sm-9">
-                    <div class="col-sm-1"></div>
-                    <button type="button" ng-click="updateTrainingDatasetCtrl.addNewDependency()"
-                            class="col-sm-10 btn btn-default btn-success control-label" style="margin-bottom: 10px">
-                        Add Dependency<i style="margin-left: 10px" class="glyphicon glyphicon-plus">
-                    </i>
-                    </button>
-                    <div class="col-sm-1"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <div class="view-info">
         <div class="col-md-12">
             <div class="col-sm-12" style="margin-bottom: 20px">
@@ -279,9 +220,6 @@
             <div class="col-sm-12">
                 <div ng-if="updateTrainingDatasetCtrl.trainingDatasetNameNotUnique === -1" style="color: red">
                     {{"The provided training dataset name already exist in this feature store"}}
-                </div>
-                <div ng-if="updateTrainingDatasetCtrl.dependenciesNotUnique === -1" style="color: red">
-                    {{"Dataset Dependencies in the same training dataset must be unique"}}
                 </div>
             </div>
         </div>

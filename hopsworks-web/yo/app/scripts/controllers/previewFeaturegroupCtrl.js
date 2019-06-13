@@ -118,5 +118,7 @@ angular.module('hopsWorksApp')
             self.close = function () {
                 $uibModalInstance.dismiss('cancel');
             };
+
+            self.fetchSample()
         }]);
 

@@ -21,36 +21,71 @@
 </div>
 <div class="modal-body" style="overflow: auto">
   <div class="row">
-    <table class="table table-hover" style="margin-left: 10px; overflow: auto">
-      <thead style="border:none;">
-      <th style="width: 10%">Property</th>
-      <th style="width: 20%">Value</th>
-
-      </thead>
-      <tbody>
-      <tr>
-          <td>
-              <button class="btn btn-primary" id="fetchSizeBtn"
-                      ng-click="trainingDatasetViewInfoCtrl.fetchSize()">
-                  Fetch Size
-                  <i ng-if="trainingDatasetViewInfoCtrl.sizeWorking" style="margin-top: 2px"
-                     class="fa fa-spinner fa-spin pull-right"></i>
-                  <i class="fa fa-info-circle" tooltip-placement="auto left"
-                     uib-tooltip="Fetches the size of the entire training dataset,
-                           if the featuregroup has a lot of nested files this is an expensive operation"
-                     style="margin-left: 10px"></i>
-              </button>
-          </td>
-          <td>{{trainingDatasetViewInfoCtrl.size}}</td>
-      </tr>
-      <tr data-ng-repeat="row in trainingDatasetViewInfoCtrl.table">
-        <td>{{row.property}}</td>
-        <td ng-if="row.property != 'API Retrieval Code'">{{row.value}}</td>
-        <td ng-if="row.property == 'API Retrieval Code'" style="white-space: pre-wrap">
+    <table class="table table-hover fs-table" style="margin-left: 10px; overflow: auto">
+      <tbody class="table-hover fs-table">
+      <tr data-ng-repeat="row in trainingDatasetViewInfoCtrl.table" class="fs-table">
+        <td style="font-weight:700;" class="fs-table">{{row.property}}</td>
+        <td class="fs-table" ng-if="trainingDatasetViewInfoCtrl.isRegularRow(row.property)">{{row.value}}</td>
+        <td class="fs-table" ng-if="row.property == 'API Retrieval Code'" style="white-space: pre-wrap">
 <pre>
 <code>{{row.value}}</code>
 </pre>
         </td>
+          <td ng-if="row.property == 'Last Computed'" class="fs-table">
+              <div ng-if="trainingDatasetViewInfoCtrl.trainingDataset.lastComputed === null">
+                  -
+              </div>
+              <div ng-if="trainingDatasetViewInfoCtrl.trainingDataset.lastComputed !== null">
+                      <span
+                              ng-if="trainingDatasetViewInfoCtrl.trainingDataset.jobStatus === 'Undefined'"
+                              style="color: #0066bb ">
+                        {{formatDate(trainingDatasetViewInfoCtrl.trainingDataset.lastComputed)}}
+                      </span>
+                  <span
+                          ng-if="trainingDatasetViewInfoCtrl.trainingDataset.jobStatus === 'Succeeded'"
+                          style="color: #00A000 ">
+                        {{formatDate(trainingDatasetViewInfoCtrl.trainingDataset.lastComputed)}}
+                      </span>
+                  <span
+                          ng-if="trainingDatasetViewInfoCtrl.trainingDataset.jobStatus === 'Failed'"
+                          style="color: #880000 ">
+                        {{formatDate(trainingDatasetViewInfoCtrl.trainingDataset.lastComputed)}}
+                      </span>
+                  <span
+                          ng-if="trainingDatasetViewInfoCtrl.trainingDataset.jobStatus === 'Killed'"
+                          style="color: #880000 ">
+                        {{formatDate(trainingDatasetViewInfoCtrl.trainingDataset.lastComputed)}}
+                      </span>
+              </div>
+          </td>
+
+          <td ng-if="row.property == 'Job'" class="fs-table">
+              <div ng-if="trainingDatasetViewInfoCtrl.trainingDataset.jobName === null">
+                  no job specified
+              </div>
+              <div ng-if="trainingDatasetViewInfoCtrl.trainingDataset.jobName !== null">
+                      <span ng-if="trainingDatasetViewInfoCtrl.isJobLocal(trainingDatasetViewInfoCtrl.trainingDataset.jobId)"
+                            style="cursor:pointer;color:black;text-decoration:underline;"
+                            ng-click="trainingDatasetViewInfoCtrl.launchJob(trainingDatasetViewInfoCtrl.trainingDataset.jobName); $event.stopPropagation();">
+                        {{trainingDatasetViewInfoCtrl.trainingDataset.jobName}}
+                      </span>
+                  <span
+                          ng-if="!trainingDatasetViewInfoCtrl.isJobLocal(trainingDatasetViewInfoCtrl.trainingDataset.jobId)"
+                          style="color: #880000 ">
+                        (The job is owned by another project)
+                      </span>
+              </div>
+          </td>          
+      </tr>
+      <tr class="fs-table">
+          <td style="font-weight:700;" class="fs-table">
+              Size
+          </td>
+          <td class="fs-table">
+              {{trainingDatasetViewInfoCtrl.size}}
+              <i ng-if="trainingDatasetViewInfoCtrl.sizeWorking" style="margin-top: 2px; text-align: center"
+                 class="fa fa-spinner fa-spin"></i>
+          </td>
       </tr>
       </tbody>
     </table>

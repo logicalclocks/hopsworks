@@ -77,9 +77,9 @@ angular.module('hopsWorksApp', [
   'ui.toggle',
   'ngFileSaver',
   'ngFileUpload',
-  'googlechart'
+  'angularMoment'
 ])
-        .config(['$routeProvider', '$httpProvider', '$compileProvider', 'flowFactoryProvider', 'accordionConfig', 
+        .config(['$routeProvider', '$httpProvider', '$compileProvider', 'flowFactoryProvider', 'accordionConfig',
           function ($routeProvider, $httpProvider, $compileProvider, flowFactoryProvider, accordionConfig) {
 
             // tensorflow cluster panes should expand faster than default 0.5s
@@ -533,7 +533,73 @@ angular.module('hopsWorksApp', [
             var result = fileManagerConfig.useBinarySizePrefixes ? binaryByteUnits[i] : decimalByteUnits[i];
             return Math.max(fileSizeInBytes, 0.1).toFixed(1) + ' ' + result;
           };
-        }])        
+        }])
+        .filter('dateRangeFilterFeaturegroups', ['$filter', function() {
+            return function(items, fromDate, toDate) {
+                var filtered = [];
+                //var from_date = Date.parse(fromDate);
+                //var to_date = Date.parse(toDate);
+                angular.forEach(items, function(item) {
+                    var createdDate = new Date(item.versionToGroups[item.activeVersion].created)
+                    if(createdDate > fromDate && createdDate < toDate) {
+                        filtered.push(item);
+                    }
+                });
+                return filtered;
+            };
+        }])
+        .filter('dateRangeFilterFeatures', ['$filter', function() {
+            return function(items, fromDate, toDate) {
+                var filtered = [];
+                //var from_date = Date.parse(fromDate);
+                // var to_date = Date.parse(toDate);
+                angular.forEach(items, function(item) {
+                    var createdDate = new Date(item.date)
+                    if(createdDate > fromDate && createdDate < toDate) {
+                        filtered.push(item);
+                    }
+                });
+                return filtered;
+            };
+        }])
+        .filter('featuresNotInFeaturegroupsFilter', ['$filter', function() {
+        return function(item) {
+            var filtered = [];
+            return filtered;
+        };
+        }])
+        .filter('featureSearchFilterByFg', ['$filter', function() {
+            return function(items, searchText) {
+                var filtered = [];
+                angular.forEach(items, function(item) {
+                    if(item.featuregroup != null) {
+                        if (item.featuregroup.indexOf(searchText) >= 0 ) {
+                            filtered.push(item);
+                        }
+                    } else {
+                        if (item.trainingDataset.indexOf(searchText) >= 0 ) {
+                            filtered.push(item);
+                        }
+                    }
+                });
+                return filtered;
+            };
+        }])
+        .filter('featureSearchFilterByFgVersion', ['$filter', function() {
+            return function(items, searchText) {
+                var filtered = [];
+                angular.forEach(items, function(item) {
+                    if(searchText != ''){
+                        if (item.version.toString() == searchText ) {
+                            filtered.push(item);
+                        }
+                    } else {
+                        filtered.push(item);
+                    }
+                });
+                return filtered;
+            };
+        }])
         .run(['$rootScope', '$routeParams', '$http', function ($rootScope, $routeParams, $http) {
             var token = localStorage.getItem("token");
             if (token) {

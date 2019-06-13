@@ -41,15 +41,9 @@ angular.module('hopsWorksApp')
             self.trainingDatasetDataFormatWrongValue = 1
             self.wrong_values = 1;
             self.working = false;
-            self.dependenciesNotUnique = 1
 
             self.trainingDatasetName;
             self.trainingDatasetDescription;
-            self.dependencies = [];
-            self.dependenciesWrongValue = [];
-            for (i = 0; i < self.dependencies.length; i++) {
-                self.dependenciesWrongValue.push(1)
-            }
             self.trainingDatasetFormat;
 
             self.dataFormats = FeaturestoreService.dataFormats()
@@ -67,19 +61,10 @@ angular.module('hopsWorksApp')
             self.createTrainingDataset = function () {
                 self.trainingDatasetNameWrongValue = 1
                 self.trainingDatasetNameNotUnique = 1
-                self.dependenciesNotUnique = 1;
                 self.trainingDatasetDataFormatWrongValue = 1
                 self.trainingDatasetDescriptionWrongValue = 1;
                 self.wrong_values = 1;
                 self.working = true;
-                for (i = 0; i < self.dependencies.length; i++) {
-                    if(!self.dependencies[i] || self.dependencies[i] === "" || self.dependencies[i] === null){
-                        self.dependenciesWrongValue[i] = -1
-                        self.wrong_values = -1;
-                    } else {
-                        self.dependenciesWrongValue[i] = 1
-                    }
-                }
                 if (!self.trainingDatasetName || self.trainingDatasetName.search(self.trainingDatasetNameRegexp) == -1 || self.trainingDatasetName.length > 256) {
                     self.trainingDatasetNameWrongValue = -1;
                     self.wrong_values = -1;
@@ -110,25 +95,13 @@ angular.module('hopsWorksApp')
                         self.wrong_values = -1;
                     }
                 }
-                var hasDuplicates2 = (new Set(self.dependencies)).size !== self.dependencies.length;
-                if(hasDuplicates2){
-                    self.dependenciesNotUnique = -1
-                    self.wrong_values = -1;
-                }
                 if (self.wrong_values === -1) {
                     self.working = false;
                     return;
                 }
-                for (i = 0; i < self.dependencies.length; i++) {
-                    if(self.dependencies[i].length > 7){
-                        if(self.dependencies[i].substring(0,7) === "hdfs://"){
-                            self.dependencies[i] = self.dependencies[i].substring(7)
-                        }
-                    }
-                }
                 var trainingDatasetJson = {
                     "name": self.trainingDatasetName,
-                    "dependencies": self.dependencies,
+                    "dependencies": [],
                     "jobName": $scope.selected.value.name,
                     "version": 1,
                     "description": self.trainingDatasetDescription,
@@ -149,37 +122,6 @@ angular.module('hopsWorksApp')
                     });
                 growl.info("Creating training dataset... wait", {title: 'Creating', ttl: 1000})
             };
-
-            /**
-             * Function called when the user clicks the "Data Dependency" button, opens up a modal where the user
-             * can select a dataset from a file-viewer.
-             */
-            self.selectDataDependency = function (index) {
-                ModalService.selectFile('lg', '*', '', true).then(
-                    function (success) {
-                        self.dependencies[index] = success
-                    },
-                    function (error) {
-                        // Users changed their minds.
-                    });
-            };
-
-            /**
-             * Function called when the user press "add dependency" button in the create-feature-group form
-             * Adds a new dependency to the form
-             */
-            self.addNewDependency = function() {
-                self.dependencies.push("");
-            };
-
-            /**
-             * Function called when the user press "delete dependency" button in the create-feature-group form
-             * Deletes a new dependency from the form
-             */
-            self.removeNewDependency = function(index) {
-                self.dependencies.splice(index, 1);
-            };
-
 
             /**
              * Closes the modal
