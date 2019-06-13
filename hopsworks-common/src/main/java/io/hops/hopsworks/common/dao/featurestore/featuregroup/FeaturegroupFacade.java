@@ -20,6 +20,7 @@ import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
 import io.hops.hopsworks.common.dao.featurestore.feature.FeatureDTO;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
+import io.hops.hopsworks.common.hive.HiveTableType;
 
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -278,6 +279,40 @@ public class FeaturegroupFacade extends AbstractFacade<Featuregroup> {
       return hdfsPathObjects.stream().map(o -> (String) o).collect(Collectors.toList());
     } catch (NoResultException e) {
       return new ArrayList<>();
+    }
+  }
+  
+  /**
+   * Gets the table type (e.g external or managed from the Hive metastore)
+   *
+   * @param hiveTableId the id of the hive table in the metastore
+   * @return the table type
+   */
+  public HiveTableType getHiveTableType(Long hiveTableId) {
+    try {
+      return HiveTableType.valueOf((String) em.createNativeQuery("SELECT `TBL_TYPE` FROM metastore.`TBLS` " +
+        "WHERE `TBL_ID`= ?1;")
+        .setParameter(1, hiveTableId)
+        .getSingleResult());
+    } catch (NoResultException e) {
+      return null;
+    }
+  }
+  
+  /**
+   * Gets the Hive Table Input Format
+   *
+   * @param hiveTableId the id of the hive table in the metastore
+   * @return the hive table format (Java class)
+   */
+  public String getHiveInputFormat(Long hiveTableId) {
+    try {
+      return (String) em.createNativeQuery("SELECT `INPUT_FORMAT` FROM metastore.`TBLS` t JOIN " +
+        "metastore.`SDS` s ON t.`SD_ID`=s.`SD_ID` WHERE t.`TBL_ID`=?1")
+        .setParameter(1, hiveTableId)
+        .getSingleResult();
+    } catch (NoResultException e) {
+      return null;
     }
   }
   

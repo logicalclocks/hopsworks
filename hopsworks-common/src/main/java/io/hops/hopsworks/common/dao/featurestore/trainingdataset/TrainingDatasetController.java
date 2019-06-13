@@ -19,14 +19,13 @@ package io.hops.hopsworks.common.dao.featurestore.trainingdataset;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
 import io.hops.hopsworks.common.dao.featurestore.FeaturestoreFacade;
-import io.hops.hopsworks.common.dao.featurestore.dependencies.FeaturestoreDependencyController;
 import io.hops.hopsworks.common.dao.featurestore.feature.FeatureDTO;
 import io.hops.hopsworks.common.dao.featurestore.stats.FeaturestoreStatisticController;
 import io.hops.hopsworks.common.dao.featurestore.stats.cluster_analysis.ClusterAnalysisDTO;
 import io.hops.hopsworks.common.dao.featurestore.stats.desc_stats.DescriptiveStatsDTO;
 import io.hops.hopsworks.common.dao.featurestore.stats.feature_correlation.FeatureCorrelationMatrixDTO;
 import io.hops.hopsworks.common.dao.featurestore.stats.feature_distributions.FeatureDistributionsDTO;
-import io.hops.hopsworks.common.dao.featurestore.trainingdataset.feature.TrainingDatasetFeatureController;
+import io.hops.hopsworks.common.dao.featurestore.feature.FeaturestoreFeatureController;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
@@ -65,9 +64,7 @@ public class TrainingDatasetController {
   @EJB
   private FeaturestoreStatisticController featurestoreStatisticController;
   @EJB
-  private FeaturestoreDependencyController featurestoreDependencyController;
-  @EJB
-  private TrainingDatasetFeatureController trainingDatasetFeatureController;
+  private FeaturestoreFeatureController featurestoreFeatureController;
 
   /**
    * Gets all trainingDatasets for a particular featurestore and project
@@ -97,7 +94,7 @@ public class TrainingDatasetController {
     String featurestoreName = featurestoreFacade.getHiveDbName(trainingDataset.getFeaturestore().getHiveDbId());
     trainingDatasetDTO.setFeaturestoreName(featurestoreName);
     trainingDatasetDTO.setHdfsStorePath(inodeFacade.getPath(trainingDataset.getInode()));
-    trainingDatasetDTO.setDependencies((List) trainingDataset.getDependencies(), inodeFacade);
+    trainingDatasetDTO.setLocation(trainingDatasetDTO.getHdfsStorePath());
     return trainingDatasetDTO;
   }
 
@@ -107,7 +104,6 @@ public class TrainingDatasetController {
    * @param project                  the project that owns the training dataset
    * @param user                     the user creating the dataset
    * @param featurestore             the featurestore linked to the training dataset
-   * @param dependencies             the inputdataset used to produce the training dataset
    * @param job                      the job used to compute the training dataset
    * @param version                  the version of the training dataset
    * @param dataFormat               the format of the training dataset
@@ -123,7 +119,7 @@ public class TrainingDatasetController {
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public TrainingDatasetDTO createTrainingDataset(
-      Project project, Users user, Featurestore featurestore, List<String> dependencies, Jobs job, Integer version,
+      Project project, Users user, Featurestore featurestore, Jobs job, Integer version,
       String dataFormat, Inode inode, Dataset trainingDatasetFolder, String description,
       FeatureCorrelationMatrixDTO featureCorrelationMatrix, DescriptiveStatsDTO descriptiveStatistics,
       FeatureDistributionsDTO featuresHistogram,
@@ -144,10 +140,9 @@ public class TrainingDatasetController {
     trainingDataset.setCreator(user);
     trainingDataset.setVersion(version);
     trainingDatasetFacade.persist(trainingDataset);
-    featurestoreDependencyController.updateFeaturestoreDependencies(null, trainingDataset, dependencies);
     featurestoreStatisticController.updateFeaturestoreStatistics(null, trainingDataset,
         featureCorrelationMatrix, descriptiveStatistics, featuresHistogram, clusterAnalysis);
-    trainingDatasetFeatureController.updateTrainingDatasetFeatures(trainingDataset, features);
+    featurestoreFeatureController.updateTrainingDatasetFeatures(trainingDataset, features);
     return convertTrainingDatasetToDTO(trainingDataset);
   }
 
@@ -237,7 +232,6 @@ public class TrainingDatasetController {
    * @param featurestore             the featurestore that the trainingDataset is linked to
    * @param id                       the id of hte trainingDataset to update
    * @param job                      the new job of the trainingDataset
-   * @param dependencies             the new dependencies of the trainingDataset
    * @param dataFormat               the new dataFormat of the trainingDataset
    * @param description              the new description of the trainingDataset
    * @param featureCorrelationMatrix feature correlation matrix data
@@ -252,7 +246,7 @@ public class TrainingDatasetController {
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public TrainingDatasetDTO updateTrainingDataset(
-      Featurestore featurestore, Integer id, Jobs job, List<String> dependencies,
+      Featurestore featurestore, Integer id, Jobs job,
       String dataFormat, String description, FeatureCorrelationMatrixDTO featureCorrelationMatrix,
       DescriptiveStatsDTO descriptiveStatistics, FeatureDistributionsDTO featuresHistogram, List<FeatureDTO> features,
       boolean updateMetadata, boolean updateStats, ClusterAnalysisDTO clusterAnalysis) throws FeaturestoreException {
@@ -265,8 +259,7 @@ public class TrainingDatasetController {
     if (updateMetadata) {
       updatedTrainingDataset = trainingDatasetFacade.updateTrainingDataset(
           trainingDataset, job, dataFormat, description);
-      trainingDatasetFeatureController.updateTrainingDatasetFeatures(updatedTrainingDataset, features);
-      featurestoreDependencyController.updateFeaturestoreDependencies(null, updatedTrainingDataset, dependencies);
+      featurestoreFeatureController.updateTrainingDatasetFeatures(updatedTrainingDataset, features);
     }
     if (updateStats) {
       featurestoreStatisticController.updateFeaturestoreStatistics(null, trainingDataset, featureCorrelationMatrix,

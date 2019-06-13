@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.api.featurestore.util;
 
+import io.hops.hopsworks.common.constants.auth.AllowedRoles;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.featurestore.feature.FeatureDTO;
 import io.hops.hopsworks.common.dao.project.Project;
@@ -52,6 +53,13 @@ public class FeaturestoreUtil {
       throws FeaturestoreException {
     StringBuilder schemaStringBuilder = new StringBuilder();
     StringBuilder partitionStringBuilder = new StringBuilder();
+    if(features.isEmpty()) {
+      schemaStringBuilder.append("(`temp` int COMMENT 'placeholder') " +
+        "COMMENT '");
+      schemaStringBuilder.append(featuregroupDoc);
+      schemaStringBuilder.append("' ");
+      return schemaStringBuilder.toString();
+    }
     List<FeatureDTO> primaryKeys = features.stream().filter(f -> f.getPrimary()).collect(Collectors.toList());
     if(primaryKeys.isEmpty()){
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.NO_PRIMARY_KEY_SPECIFIED, Level.SEVERE,
@@ -139,5 +147,30 @@ public class FeaturestoreUtil {
    */
   public String getTrainingDatasetPath(String trainingDatasetsFolderPath, String trainingDatasetName, Integer version){
     return trainingDatasetsFolderPath + "/" + trainingDatasetName + "_" + version;
+  }
+
+  /**
+   * Verify that the user is allowed to execute the requested operation based on his/hers project role
+   * <p>
+   * Only data owners are allowed to update/delete feature groups/training datasets
+   * created by someone else in the project
+   *
+   * @param featurestoreEntityDTO the featurestore entity that the operation concerns (feature group or training
+   *                              dataset)
+   * @param featurestore the featurestore that the operation concerns
+   * @param user the user requesting the operation
+   * @throws FeaturestoreException
+   */
+  public void verifyUserRole(FeaturestoreEntityDTO featurestoreEntityDTO,
+                              Featurestore featurestore, Users user, Project project)
+      throws FeaturestoreException {
+    String userRole = projectTeamFacade.findCurrentRole(project, user);
+    if (!featurestoreEntityDTO.getCreator().equals(user.getEmail()) && userRole !=
+        AllowedRoles.DATA_OWNER) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.UNAUTHORIZED_FEATURESTORE_OPERATION, Level.FINE,
+          "project: " + project.getName() + ", featurestoreId: " + featurestore.getId() +
+              ", featuregroupId: " + featurestoreEntityDTO.getId() + ", userRole:" + userRole +
+              ", creator of the featuregroup: " + featurestoreEntityDTO.getCreator());
+    }
   }
 }

@@ -1,0 +1,994 @@
+<!--
+  ~ This file is part of Hopsworks
+  ~ Copyright (C) 2018, Logical Clocks AB. All rights reserved
+  ~
+  ~ Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+  ~ the GNU Affero General Public License as published by the Free Software Foundation,
+  ~ either version 3 of the License, or (at your option) any later version.
+  ~
+  ~ Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+  ~ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+  ~ PURPOSE.  See the GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License along with this program.
+  ~ If not, see <https://www.gnu.org/licenses/>.
+  -->
+
+<div ng-controller="MainCtrl as mainCtrl">
+    <div ng-include="'nav.html'"></div>
+
+
+    <div id="wrapper" class="toggled" ng-controller="newFeaturegroupCtrl as newFeaturegroupCtrl">
+        <div class="overlay"></div>
+
+        <div ng-include="'navProject.html'"></div>
+        <div class="content-wrapper">
+            <span style="float: right;margin-top: 7px;" class="fa fa-times-circle fa-2x"
+                  ng-click="newFeaturegroupCtrl.exitToFeaturestore()"
+                  uib-tooltip="Clear state and go back to Feature Store main page."
+            > </span>
+            <uib-tabset active="newnewFeaturegroupCtrl.activeTab">
+                <uib-tab index="0" heading="{{newFeaturegroupCtrl.cachedFeaturegroupHeading}}"
+                         uib-tooltip="A Feature Group stored and managed in Hopsworks."
+                         class="fs-tab"
+                         ng-if="newFeaturegroupCtrl.featuregroupOperation === 'CREATE' || newFeaturegroupCtrl.featuregroup.featuregroupType === newFeaturegroupCtrl.cachedFeaturegroupType"
+                >
+                    <div>
+                        <div class="row">
+                            <div class="panel-header col-md-12">
+
+                                <h2 ng-if="newFeaturegroupCtrl.featuregroupOperation === 'CREATE'">
+                                    New Cached Feature Group Definition
+                                </h2>
+                                <h2 ng-if="newFeaturegroupCtrl.featuregroupOperation === 'UPDATE'">
+                                    Update Cached Feature Group: <code>{{newFeaturegroupCtrl.featuregroup.name}}</code>
+                                </h2>
+                                <h2 ng-if="newFeaturegroupCtrl.featuregroupOperation === 'NEW_VERSION'">
+                                    Create New Version of Cached Feature Group: <code>{{newFeaturegroupCtrl.featuregroup.name}}</code>
+                                </h2>
+                            </div>
+                        </div>
+                        <div uib-accordion close-others="false">
+                            <div uib-accordion-group class="panel-default"
+                                 is-open="newFeaturegroupCtrl.cached_fg_accordion1.isOpen">
+                                <div uib-accordion-heading>
+                                    <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                       uib-tooltip='The name of the Cached Feature Group
+                                       (Corresponds to Table name in Hive and MySQL Cluster)'></i>
+                                    <span style="margin-left: 20px">
+                                    {{newFeaturegroupCtrl.cached_fg_accordion1.title}}
+                                    {{newFeaturegroupCtrl.cached_fg_accordion1.value}}
+                                    </span>
+                                    <span ng-if="newFeaturegroupCtrl.cachedFeaturegroupNameWrongValue === -1"
+                                          class="glyphicon glyphicon-alert" tooltip-placement="auto left"
+                                          uib-tooltip='The provided Feature Group Name is not valid'
+                                          style="margin-left: 10px"></span>
+                                </div>
+                                <input type="text" class="form-control"
+                                       placeholder="Enter a Feature Group Name"
+                                       value="newFeaturegroupCtrl.cachedFeaturegroupName"
+                                       ng-model="newFeaturegroupCtrl.cachedFeaturegroupName"
+                                       ng-change="newFeaturegroupCtrl.cachedNameFilledIn()"
+                                       autofocus
+                                       ng-if="newFeaturegroupCtrl.featuregroupOperation === 'CREATE' || newFeaturegroupCtrl.featuregroupOperation === 'UPDATE'"
+                                >
+                                <input type="text" class="form-control"
+                                       placeholder="Enter a Feature Group Name"
+                                       value="newFeaturegroupCtrl.cachedFeaturegroupName"
+                                       ng-model="newFeaturegroupCtrl.cachedFeaturegroupName"
+                                       ng-change="newFeaturegroupCtrl.cachedNameFilledIn()"
+                                       autofocus
+                                       readonly
+                                       ng-if="newFeaturegroupCtrl.featuregroupOperation === 'NEW_VERSION'"
+                                >
+                                <div
+                                        ng-if="newFeaturegroupCtrl.cachedFeaturegroupNameWrongValue === -1"
+                                        style="color: red">
+                                    <p>
+                                        Feature Group Name shouldn't be empty and can only contain alphanumeric
+                                        characters and underscores,
+                                        maximum length is {{newFeaturegroupCtrl.cachedFeaturegroupNameMaxLength}}
+                                        characters.
+                                        Hyphens are not allowed in the name.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div uib-accordion-group class="panel-default"
+                                 is-open="newFeaturegroupCtrl.cached_fg_accordion2.isOpen"
+                                 ng-show="newFeaturegroupCtrl.cached_fg_accordion2.visible"
+                                 id="cachedFeaturegroupDocDiv">
+                                <div uib-accordion-heading>
+                                    <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                       uib-tooltip='A description of the Feature Group.'></i>
+                                    <span style="margin-left: 20px">
+                                    {{newFeaturegroupCtrl.cached_fg_accordion2.title}}
+                                    {{newFeaturegroupCtrl.cached_fg_accordion2.value}}
+                                    </span>
+                                    <span ng-if="newFeaturegroupCtrl.cachedFeaturegroupDocWrongValue === -1"
+                                          class="glyphicon glyphicon-alert" tooltip-placement="auto left"
+                                          uib-tooltip='The provided Feature Group Description is not valid'
+                                          style="margin-left: 10px"></span>
+                                </div>
+                                <input type="text" class="form-control"
+                                       placeholder="Enter a Feature Group Description"
+                                       value="newFeaturegroupCtrl.cachedFeaturegroupDoc"
+                                       ng-model="newFeaturegroupCtrl.cachedFeaturegroupDoc"
+                                       ng-change="newFeaturegroupCtrl.cachedDescriptionFilledIn()"
+                                >
+                                <div
+                                        ng-if="newFeaturegroupCtrl.cachedFeaturegroupDocWrongValue === -1"
+                                        style="color: red">
+                                    <p>
+                                        Feature Group Description should not exceed the maximum length of
+                                        {{newFeaturegroupCtrl.cachedFeaturegroupNameMaxLength}} characters.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div uib-accordion-group class="panel-default"
+                                 is-open="newFeaturegroupCtrl.cached_fg_accordion3.isOpen"
+                                 ng-show="newFeaturegroupCtrl.cached_fg_accordion3.visible"
+                                 id="featuregroupSchemaDiv">
+                                <div uib-accordion-heading>
+                                    <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                       uib-tooltip='Features are stored using a relational model where a Feature corresponds
+                                 to a Column and a Feature Group corresponds to a table (Hive Table for offline and MySQL for online).
+                                 Specify the Table schema below by adding features (columns).
+                                 If no schema is specified, it will be inferred at runtime.'></i>
+                                    <span style="margin-left: 20px">
+                                    {{newFeaturegroupCtrl.cached_fg_accordion3.title}}
+                                    {{newFeaturegroupCtrl.cached_fg_accordion3.value}}
+                                    </span>
+                                    <span ng-if="newFeaturegroupCtrl.cachedFeaturegroupFeaturesWrongValue === -1"
+                                          class="glyphicon glyphicon-alert" tooltip-placement="auto left"
+                                          uib-tooltip='The provided schema is not valid'
+                                          style="margin-left: 10px"></span>
+                                </div>
+                                <div data-ng-repeat="feature in newFeaturegroupCtrl.cachedFeaturegroupFeatures track by $index">
+                                    <div class="view-info">
+                                        <div class="col-md-12">
+                                            <div class="col-sm-12" style="margin-bottom: 20px">
+                                                <div class="col-sm-3">
+                                                    <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                                       uib-tooltip='The name of the feature, have to be unique per feature group'></i>
+                                                    <label style="margin-left:10px" class="control-label">Feature
+                                                        name:</label>
+                                                </div>
+                                                <div class="col-sm-9">
+                                                    <input type="text" class="form-control"
+                                                           placeholder="Enter a feature name"
+                                                           value="{{feature.name}}"
+                                                           ng-model="newFeaturegroupCtrl.cachedFeaturegroupFeatures[$index].name">
+                                                    <div
+                                                            ng-if="newFeaturegroupCtrl.cachedFeaturegroupFeaturesNameWrongValue[$index] === -1"
+                                                            style="color: red">
+                                                        <p>Feature Name shouldn't be empty and can only contain
+                                                            alphanumeric characters and
+                                                            underscores and max length
+                                                            is
+                                                            {{newFeaturegroupCtrl.cachedFeaturegroupFeatureNameMaxLength}}
+                                                            characters. Hyphens are not allowed in the feature name.</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="view-info">
+                                        <div class="col-md-12">
+                                            <div class="col-sm-12" style="margin-bottom: 20px">
+                                                <div class="col-sm-3">
+                                                    <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                                       uib-tooltip='The data type of the feature'></i>
+                                                    <label style="margin-left:10px">
+                                                        <button style="margin-top: 5px;" id="selectArchiveButton"
+                                                                class="btn btn-sm btn-default"
+                                                                ng-click="newFeaturegroupCtrl.selectFeatureType(newFeaturegroupCtrl.cachedFeaturegroupFeatures[$index])">
+                                                            <span>Feature type:</span>
+                                                        </button>
+                                                    </label>
+                                                </div>
+                                                <div class="col-sm-9">
+                                                    <input type="text" class="form-control"
+                                                           ng-model="newFeaturegroupCtrl.cachedFeaturegroupFeatures[$index].type"
+                                                           placeholder="Select a feature type" readonly>
+                                                    <div ng-if="newFeaturegroupCtrl.cachedFeaturegroupFeaturesTypeWrongValue[$index] === -1"
+                                                         style="color: red">
+                                                        <p>
+                                                            You must select a feature type
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="view-info">
+                                        <div class="col-md-12">
+                                            <div class="col-sm-12">
+                                                <div class="col-sm-3">
+                                                    <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                                       uib-tooltip='The feature description'></i>
+                                                    <label style="margin-left:10px" class="control-label">Feature
+                                                        description:</label>
+                                                </div>
+                                                <div class="col-sm-9">
+                                                    <input type="text" class="form-control"
+                                                           placeholder="Enter a feature description"
+                                                           value="{{feature.description}}"
+                                                           ng-model="newFeaturegroupCtrl.cachedFeaturegroupFeatures[$index].description">
+                                                    <div
+                                                            ng-if="newFeaturegroupCtrl.cachedFeaturegroupFeaturesDocWrongValue[$index] === -1"
+                                                            style="color: red">
+                                                        <p>
+                                                            Feature description should not exceed
+                                                            {{newFeaturegroupCtrl.cachedFeaturegroupFeatureDescriptionMaxLength}}
+                                                            characters
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="view-info">
+                                        <div class="col-md-12">
+                                            <div class="col-sm-12">
+                                                <div class="col-sm-3">
+                                                    <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                                       uib-tooltip='Whether this feature is the primary key of this feature group. The primary key is
+                               typically used to join several feature groups when creating training datasets'></i>
+                                                    <label style="margin-left:10px" class="control-label">
+                                                        Primary key:
+                                                    </label>
+                                                </div>
+                                                <div class="col-sm-9">
+                                                    <input type="checkbox" class="form-check-input" id="primaryKeCheck"
+                                                           ng-model="newFeaturegroupCtrl.cachedFeaturegroupFeatures[$index].primary"
+                                                           value="{{feature.primary}}">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="view-info">
+                                        <div class="col-md-12">
+                                            <div class="col-sm-12">
+                                                <div class="col-sm-3">
+                                                    <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                                       uib-tooltip='Whether to partition the Hive table of the featuregroup on this feature.
+                                       A feature can not simultaneously be a primary key and a partition key of the featuregroup'></i>
+                                                    <label style="margin-left:10px" class="control-label">
+                                                        Partition key:</label>
+                                                </div>
+                                                <div class="col-sm-9">
+                                                    <input type="checkbox" class="form-check-input"
+                                                           id="partitionKeyCheck"
+                                                           ng-model="newFeaturegroupCtrl.cachedFeaturegroupFeatures[$index].partition"
+                                                           value="{{feature.partition}}">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="view-info">
+                                        <div class="col-md-12">
+                                            <div class="col-sm-12" style="margin-bottom: 20px">
+                                                <div class="col-sm-3">
+                                                </div>
+                                                <div class="col-sm-9">
+                                                    <button class="col-sm-2 btn btn-sm btn-danger glyphicon glyphicon-trash"
+                                                            uib-tooltip="delete"
+                                                            ng-click="newFeaturegroupCtrl.removeNewCachedFeature($index)">
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="view-info">
+                                    <div class="col-md-12">
+                                        <div class="col-sm-12" style="margin-bottom: 20px">
+                                            <div class="col-sm-3">
+                                                <button type="button"
+                                                        ng-click="newFeaturegroupCtrl.addNewCachedFeature()"
+                                                        class="col-sm-10 btn btn-sm btn-default btn-success control-label"
+                                                        style="margin-bottom:
+                            10px">
+                                                    Add Feature<i style="margin-left: 10px"
+                                                                  class="glyphicon glyphicon-plus">
+                                                </i>
+                                                </button>
+                                            </div>
+                                            <div class="col-sm-9">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div ng-if="newFeaturegroupCtrl.cachedFeaturegroupFeatureNamesNotUnique === -1" style="color: red">
+                                    <p>
+                                        Feature names in the same feature group must be unique
+                                    </p>
+                                </div>
+                                <div ng-if="newFeaturegroupCtrl.cachedFeaturegroupPrimaryKeyWrongValue === -1" style="color: red">
+                                    <p>
+                                        There must be exactly one feature marked as primary key for each feature group
+                                    </p>
+                                </div>
+                                <div ng-if="newFeaturegroupCtrl.cachedFeaturegroupPartitionKeyWrongValue === -1" style="color: red">
+                                    <p>
+                                        A feature can not be marked as both primary key and partition key.
+                                    </p>
+                                </div>
+                            </div>
+                            <div uib-accordion-group class="panel-default"
+                                 is-open="newFeaturegroupCtrl.cached_fg_accordion4.isOpen"
+                                 ng-show="newFeaturegroupCtrl.cached_fg_accordion4.visible"
+                                 id="cachedFeatureGroupSqlQueryDiv"
+                                 ng-if="newFeaturegroupCtrl.featuregroupOperation === 'CREATE' || newFeaturegroupCtrl.featuregroupOperation === 'NEW_VERSION'"
+                            >
+                                <div uib-accordion-heading>
+                                    <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                       uib-tooltip='Data is inserted into Feature Groups using Data Pipelines with
+                                    Hopsworks jobs or notebooks. Inside a Hopsworks job or notebook you can use
+                                    the Feature Store API in Python or Scala to update a Feature Group.
+                                   By specifying a SQL Query below, a Hopsworks Job to run the query and insert into the
+                                   Feature Group will be created automatically.'></i>
+                                    <span style="margin-left: 20px">
+                                    {{newFeaturegroupCtrl.cached_fg_accordion4.title}}
+                                    {{newFeaturegroupCtrl.cached_fg_accordion4.value}}
+                                    </span>
+                                    <span ng-if="newFeaturegroupCtrl.cachedFeaturegroupSqlWrongValue === -1"
+                                          class="glyphicon glyphicon-alert" tooltip-placement="auto left"
+                                          uib-tooltip='The provided SQL Query is not Valid'
+                                          style="margin-left: 10px"></span>
+                                </div>
+                                <div class="view-info" style="margin-top:20px">
+                                    <div class="col-md-12">
+                                        <div class="col-sm-12" style="margin-bottom: 20px">
+                                            <div class="col-sm-3">
+                                                <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                                   uib-tooltip='Specify a SQL Query to compute the Feature Group'></i>
+                                                <label class="control-label"
+                                                       style="margin-left:20px; margin-top: 5px;">SQL
+                                                    Query: </label>
+                                            </div>
+                                            <div class="col-sm-9">
+                                            <textarea
+                                                    rows="4"
+                                                    ng-model="newFeaturegroupCtrl.cachedSqlQuery"
+                                                    style="min-width:100%"
+                                            >
+                                            </textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="view-info">
+                                    <div class="col-md-12">
+                                        <div class="col-sm-12" style="margin-bottom: 20px">
+                                            <div class="col-sm-3">
+                                            </div>
+                                            <div class="col-sm-9">
+                                                <div class="btn-group blocks" style="padding: 0px;">
+                                                    <div style="display: inline-block; vertical-align: top;">
+                                                        <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                                                            <label class="btn btn-default btn-md"
+                                                                   id="sklearn_serving_lbl"
+                                                                   ng-click="newFeaturegroupCtrl.setCachedSqlType(0);"
+                                                                   ng-class="{unset: newFeaturegroupCtrl.cachedSqlType !== 0}"
+                                                                   style="margin:2px; background:rgb(108, 117, 125); color:white; z-index:2">
+                                                                <input type="radio" value="PREDEFINED_HOPSWORKS_JOB"
+                                                                       id="PREDEFINED_HOPSWORKS_JOB">
+                                                                SparkSQL
+                                                                <i class="fa fa-info-circle"
+                                                                   uib-tooltip="SparkSQL can be used to Query Hive Databases in Hopsworks using SQL"
+                                                                   tooltip-placement="left" style="margin-left: 10px">
+                                                                </i>
+                                                            </label>
+                                                            <label class="btn btn-default btn-md"
+                                                                   ng-click="newFeaturegroupCtrl.setCachedSqlType(1);"
+                                                                   ng-class="{unset: newFeaturegroupCtrl.cachedSqlType !== 1}"
+                                                                   style="margin:2px; background:rgb(108, 117, 125); color:white; z-index:2">
+                                                                <input type="radio" value="SQL_JOB"
+                                                                       id="SQL_JOB">
+                                                                JDBC
+                                                                <i class="fa fa-info-circle"
+                                                                   uib-tooltip="JDBC can be used to query external Databases as well as Hopsworks Hive and MySQL Databases using SQL"
+                                                                   tooltip-placement="left" style="margin-left: 10px">
+                                                                </i>
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <br>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="view-info" ng-if="newFeaturegroupCtrl.cachedSqlType === 0">
+                                    <div class="col-md-12">
+                                        <div class="col-sm-12" style="margin-bottom: 20px">
+                                            <div class="col-sm-3">
+                                                <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                                   uib-tooltip='The Hive Database in Hopsworks to Query'></i>
+                                                <label style="margin-left:20px;" class="control-label">
+                                                    Hive Database :
+                                                </label>
+                                            </div>
+                                            <div class="col-sm-9">
+                                                <ui-select ng-model="newFeaturegroupCtrl.cachedHiveDbName"
+                                                           style="z-index: 100">
+                                                    <ui-select-match placeholder="Select a Hive Database">
+                                                        <span>{{$select.selected}}</span>
+                                                    </ui-select-match>
+                                                    <ui-select-choices
+                                                            repeat="db in newFeaturegroupCtrl.hiveDatabases">
+                                                        <span ng-bind="db"></span>
+                                                    </ui-select-choices>
+                                                </ui-select>
+                                                <div
+                                                        ng-if="newFeaturegroupCtrl.cachedFeaturegroupHiveDbWrongValue === -1
+                                                        && newFeaturegroupCtrl.cachedSqlType === 0"
+                                                        style="color: red">
+                                                    <p>
+                                                        Please specify a Hive Database to run the SQL query against.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="view-info" ng-if="newFeaturegroupCtrl.cachedSqlType === 1">
+                                    <div class="col-md-12">
+                                        <div class="col-sm-12" style="margin-bottom: 20px">
+                                            <div class="col-sm-3">
+                                                <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                                   uib-tooltip='The JDBC Connection to use for the Query'></i>
+                                                <label style="margin-left:20px;" class="control-label">JDBC
+                                                    Connector:</label>
+                                            </div>
+                                            <div class="col-sm-9">
+                                                <ui-select
+                                                        ng-model="newFeaturegroupCtrl.cachedFeaturegroupjdbcConnection"
+                                                        style="z-index: 100">
+                                                    <ui-select-match
+                                                            placeholder="Select one of the JDBC Connectors configured for the Feature Store">
+                                                        <span>{{$select.selected.name}}</span>
+                                                    </ui-select-match>
+                                                    <ui-select-choices
+                                                            repeat="connector in newFeaturegroupCtrl.jdbcConnectors">
+                                                        <span ng-bind="connector.name"></span>
+                                                    </ui-select-choices>
+                                                </ui-select>
+                                                <div
+                                                        ng-if="newFeaturegroupCtrl.cachedFeaturegroupJdbcConnectorWrongValue === -1
+                                                        && newFeaturegroupCtrl.cachedSqlType === 0"
+                                                        style="color: red">
+                                                    <p>
+                                                        Please specify a JDBC Connection to run the SQL query against.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="view-info" ng-if="newFeaturegroupCtrl.cachedSqlType === 1"
+                                     data-ng-repeat="argument in newFeaturegroupCtrl.cachedFeaturegroupjdbcConnection.arguments track by $index">
+                                    <div class="col-md-12">
+                                        <div class="col-sm-12" style="margin-bottom: 20px">
+                                            <div class="col-sm-3">
+                                                <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                                   uib-tooltip='Argument for the JDBC Connector. If not specified or set to "DEFAULT"
+                                               the argument will be set to default value at runtime.'></i>
+                                                <label style="margin-left:20px;" class="control-label">
+                                                    {{argument.name}}
+                                                </label>
+                                            </div>
+                                            <div class="col-sm-9">
+                                                <input type="text" class="form-control" id="argumentName"
+                                                       ng-model="newFeaturegroupCtrl.cachedFeaturegroupjdbcConnection.arguments[$index].value"
+                                                       placeholder="Argument Value">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div uib-accordion-group class="panel-default"
+                                 is-open="newFeaturegroupCtrl.cached_fg_accordion5.isOpen"
+                                 ng-show="newFeaturegroupCtrl.cached_fg_accordion5.visible"
+                            >
+                                <div uib-accordion-heading>
+                                    <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                       uib-tooltip='Creating a Cached Feature Group will define a Hive Table
+                                       for offline Feature Data and a MySQL Table for Online Feature data. If no schema is specified
+                                       a placeholder schema will be used. To insert data into the Feature Group,
+                                       use the program APIs in a Hopsworks Job or Notebook.'
+                                       ng-if="newFeaturegroupCtrl.featuregroupOperation === 'CREATE' || newFeaturegroupCtrl.featuregroupOperation === 'NEW_VERSION'"
+                                    ></i>
+                                    <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                       uib-tooltip='Updating a Cached Feature Group will update the metadata and
+                                                   the Hive and MySQL tables for storing the data.'
+                                       ng-if="newFeaturegroupCtrl.featuregroupOperation === 'UPDATE'"
+                                    ></i>
+                                    <span style="margin-left: 20px">
+                                     {{newFeaturegroupCtrl.cached_fg_accordion5.title}}
+                                    {{newFeaturegroupCtrl.cached_fg_accordion5.value}}
+                                    </span>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-1">
+                                        <button ng-click="newFeaturegroupCtrl.createCachedFeaturegroup()"
+                                                class="btn btn-default btn-success"
+                                                ng-if="newFeaturegroupCtrl.featuregroupOperation === 'CREATE' || newFeaturegroupCtrl.featuregroupOperation === 'NEW_VERSION'"
+                                        >
+                                            Create
+                                            <i ng-if="newFeaturegroupCtrl.cachedFgWorking" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
+                                        </button>
+                                        <button ng-click="newFeaturegroupCtrl.updateCachedFeaturegroup()"
+                                                class="btn btn-default btn-success"
+                                                ng-if="newFeaturegroupCtrl.featuregroupOperation === 'UPDATE'"
+                                        >
+                                            Update
+                                            <i ng-if="newFeaturegroupCtrl.cachedFgWorking" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
+                                        </button>
+                                    </div>
+                                    <div  class="col-sm-4 alert alert-warning" role="alert"
+                                          ng-show="newFeaturegroupCtrl.cachedFeaturegroupWrong_values === -1" >
+                                        There are errors in your input configuration, see error messages above.
+                                    </div>
+                                    <div class="col-sm-7">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </uib-tab>
+                <uib-tab index="1" heading="{{newFeaturegroupCtrl.onDemandFeaturegroupHeading}}"
+                         uib-tooltip="A Feature Group computed on-demand."
+                         class="fs-tab"
+                         ng-if="newFeaturegroupCtrl.featuregroupOperation === 'CREATE' || newFeaturegroupCtrl.featuregroup.featuregroupType === newFeaturegroupCtrl.onDemandFeaturegroupType"
+                >
+                    <div>
+                        <div class="row">
+                            <div class="panel-header col-md-12">
+
+                                <h2 ng-if="newFeaturegroupCtrl.featuregroupOperation === 'CREATE'">
+                                    New On-Demand Feature Group Definition
+                                </h2>
+                                <h2 ng-if="newFeaturegroupCtrl.featuregroupOperation === 'UPDATE'">
+                                    Update On-Demand Feature Group: <code>{{newFeaturegroupCtrl.featuregroup
+                                    .name}}</code>
+                                </h2>
+                                <h2 ng-if="newFeaturegroupCtrl.featuregroupOperation === 'NEW_VERSION'">
+                                    Create New Version of On-Demand Feature Group: <code>{{newFeaturegroupCtrl
+                                    .featuregroup.name}}</code>
+                                </h2>
+                            </div>
+                        </div>
+                        <div uib-accordion close-others="false">
+                            <div uib-accordion-group class="panel-default"
+                                 is-open="newFeaturegroupCtrl.on_demand_fg_accordion1.isOpen">
+                                <div uib-accordion-heading>
+                                    <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                       uib-tooltip='The name of the On-Demand Feature Group
+                                       (Corresponds to Table name in Hive and MySQL Cluster)'></i>
+                                    <span style="margin-left: 20px">
+                                    {{newFeaturegroupCtrl.on_demand_fg_accordion1.title}}
+                                    {{newFeaturegroupCtrl.on_demand_fg_accordion1.value}}
+                                    </span>
+                                    <span ng-if="newFeaturegroupCtrl.onDemandFeaturegroupNameWrongValue === -1"
+                                          class="glyphicon glyphicon-alert" tooltip-placement="auto left"
+                                          uib-tooltip='The provided Feature Group Name is not valid'
+                                          style="margin-left: 10px"></span>
+                                </div>
+                                <input type="text" class="form-control"
+                                       placeholder="Enter a Feature Group Name"
+                                       value="newFeaturegroupCtrl.onDemandFeaturegroupName"
+                                       ng-model="newFeaturegroupCtrl.onDemandFeaturegroupName"
+                                       ng-change="newFeaturegroupCtrl.onDemandNameFilledIn()"
+                                       autofocus
+                                       ng-if="newFeaturegroupCtrl.featuregroupOperation === 'CREATE' || newFeaturegroupCtrl.featuregroupOperation === 'UPDATE'"
+                                >
+                                <input type="text" class="form-control"
+                                       placeholder="Enter a Feature Group Name"
+                                       value="newFeaturegroupCtrl.onDemandFeaturegroupName"
+                                       ng-model="newFeaturegroupCtrl.onDemandFeaturegroupName"
+                                       ng-change="newFeaturegroupCtrl.onDemandNameFilledIn()"
+                                       autofocus
+                                       readonly
+                                       ng-if="newFeaturegroupCtrl.featuregroupOperation === 'NEW_VERSION'"
+                                >
+                                <div
+                                        ng-if="newFeaturegroupCtrl.onDemandFeaturegroupNameWrongValue === -1"
+                                        style="color: red">
+                                    <p>
+                                        Feature Group Name shouldn't be empty and can only contain alphanumeric
+                                        characters and underscores,
+                                        maximum length is {{newFeaturegroupCtrl.onDemandFeaturegroupNameMaxLength}}
+                                        characters.
+                                        Hyphens are not allowed in the name.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div uib-accordion-group class="panel-default"
+                                 is-open="newFeaturegroupCtrl.on_demand_fg_accordion2.isOpen"
+                                 ng-show="newFeaturegroupCtrl.on_demand_fg_accordion2.visible"
+                                 id="onDemandFeaturegroupDocDiv">
+                                <div uib-accordion-heading>
+                                    <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                       uib-tooltip='A description of the Feature Group.'></i>
+                                    <span style="margin-left: 20px">
+                                    {{newFeaturegroupCtrl.on_demand_fg_accordion2.title}}
+                                    {{newFeaturegroupCtrl.on_demand_fg_accordion2.value}}
+                                    </span>
+                                    <span ng-if="newFeaturegroupCtrl.onDemandFeaturegroupDocWrongValue === -1"
+                                          class="glyphicon glyphicon-alert" tooltip-placement="auto left"
+                                          uib-tooltip='The provided Feature Group Description is not valid'
+                                          style="margin-left: 10px"></span>
+                                </div>
+                                <input type="text" class="form-control"
+                                       placeholder="Enter a Feature Group Description"
+                                       value="newFeaturegroupCtrl.onDemandFeaturegroupDoc"
+                                       ng-model="newFeaturegroupCtrl.onDemandFeaturegroupDoc"
+                                       ng-change="newFeaturegroupCtrl.onDemandDescriptionFilledIn()"
+                                >
+                                <div
+                                        ng-if="newFeaturegroupCtrl.onDemandFeaturegroupDocWrongValue === -1"
+                                        style="color: red">
+                                    <p>
+                                        Feature Group Description should not exceed the maximum length of
+                                        {{newFeaturegroupCtrl.onDemandFeaturegroupNameMaxLength}} characters.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div uib-accordion-group class="panel-default"
+                                 is-open="newFeaturegroupCtrl.on_demand_fg_accordion3.isOpen"
+                                 ng-show="newFeaturegroupCtrl.on_demand_fg_accordion3.visible"
+                                 id="featuregroupSchemaDiv">
+                                <div uib-accordion-heading>
+                                    <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                       uib-tooltip='Features are stored using a relational model where a Feature corresponds
+                                 to a Column and a Feature Group corresponds to a table (Hive Table for offline and MySQL for online).
+                                 Specify the Table schema below by adding features (columns).
+                                 If no schema is specified, it will be inferred at runtime.'></i>
+                                    <span style="margin-left: 20px">
+                                    {{newFeaturegroupCtrl.on_demand_fg_accordion3.title}}
+                                    {{newFeaturegroupCtrl.on_demand_fg_accordion3.value}}
+                                    </span>
+                                    <span ng-if="newFeaturegroupCtrl.onDemandFeaturegroupFeaturesWrongValue === -1"
+                                          class="glyphicon glyphicon-alert" tooltip-placement="auto left"
+                                          uib-tooltip='The provided schema is not valid'
+                                          style="margin-left: 10px"></span>
+                                </div>
+                                <div data-ng-repeat="feature in newFeaturegroupCtrl.onDemandFeaturegroupFeatures track by $index">
+                                    <div class="view-info">
+                                        <div class="col-md-12">
+                                            <div class="col-sm-12" style="margin-bottom: 20px">
+                                                <div class="col-sm-3">
+                                                    <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                                       uib-tooltip='The name of the feature, have to be unique per feature group'></i>
+                                                    <label style="margin-left:10px" class="control-label">Feature
+                                                        name:</label>
+                                                </div>
+                                                <div class="col-sm-9">
+                                                    <input type="text" class="form-control"
+                                                           placeholder="Enter a feature name"
+                                                           value="{{feature.name}}"
+                                                           ng-model="newFeaturegroupCtrl.onDemandFeaturegroupFeatures[$index].name">
+                                                    <div
+                                                            ng-if="newFeaturegroupCtrl.onDemandFeaturegroupFeaturesNameWrongValue[$index] === -1"
+                                                            style="color: red">
+                                                        <p>Feature Name shouldn't be empty and can only contain
+                                                            alphanumeric characters and
+                                                            underscores and max length
+                                                            is
+                                                            {{newFeaturegroupCtrl.onDemandFeaturegroupFeatureNameMaxLength}}
+                                                            characters. Hyphens are not allowed in the feature name.</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="view-info">
+                                        <div class="col-md-12">
+                                            <div class="col-sm-12" style="margin-bottom: 20px">
+                                                <div class="col-sm-3">
+                                                    <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                                       uib-tooltip='The data type of the feature'></i>
+                                                    <label style="margin-left:10px">
+                                                        <button style="margin-top: 5px;" id="selectArchiveButton"
+                                                                class="btn btn-sm btn-default"
+                                                                ng-click="newFeaturegroupCtrl.selectFeatureType(newFeaturegroupCtrl.onDemandFeaturegroupFeatures[$index])">
+                                                            <span>Feature type:</span>
+                                                        </button>
+                                                    </label>
+                                                </div>
+                                                <div class="col-sm-9">
+                                                    <input type="text" class="form-control"
+                                                           ng-model="newFeaturegroupCtrl.onDemandFeaturegroupFeatures[$index].type"
+                                                           placeholder="Select a feature type" readonly>
+                                                    <div ng-if="newFeaturegroupCtrl.onDemandFeaturegroupFeaturesTypeWrongValue[$index] === -1"
+                                                         style="color: red">
+                                                        <p>
+                                                            You must select a feature type
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="view-info">
+                                        <div class="col-md-12">
+                                            <div class="col-sm-12">
+                                                <div class="col-sm-3">
+                                                    <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                                       uib-tooltip='The feature description'></i>
+                                                    <label style="margin-left:10px" class="control-label">Feature
+                                                        description:</label>
+                                                </div>
+                                                <div class="col-sm-9">
+                                                    <input type="text" class="form-control"
+                                                           placeholder="Enter a feature description"
+                                                           value="{{feature.description}}"
+                                                           ng-model="newFeaturegroupCtrl.onDemandFeaturegroupFeatures[$index].description">
+                                                    <div
+                                                            ng-if="newFeaturegroupCtrl.onDemandFeaturegroupFeaturesDocWrongValue[$index] === -1"
+                                                            style="color: red">
+                                                        <p>
+                                                            Feature description should not exceed
+                                                            {{newFeaturegroupCtrl.onDemandFeaturegroupFeatureDescriptionMaxLength}}
+                                                            characters
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="view-info">
+                                        <div class="col-md-12">
+                                            <div class="col-sm-12">
+                                                <div class="col-sm-3">
+                                                    <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                                       uib-tooltip='Whether this feature is the primary key of this feature group. The primary key is
+                               typically used to join several feature groups when creating training datasets'></i>
+                                                    <label style="margin-left:10px" class="control-label">
+                                                        Primary key:
+                                                    </label>
+                                                </div>
+                                                <div class="col-sm-9">
+                                                    <input type="checkbox" class="form-check-input" id="primaryKeCheck"
+                                                           ng-model="newFeaturegroupCtrl.onDemandFeaturegroupFeatures[$index].primary"
+                                                           value="{{feature.primary}}">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="view-info">
+                                        <div class="col-md-12">
+                                            <div class="col-sm-12">
+                                                <div class="col-sm-3">
+                                                    <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                                       uib-tooltip='Whether to partition the Hive table of the featuregroup on this feature.
+                                       A feature can not simultaneously be a primary key and a partition key of the featuregroup'></i>
+                                                    <label style="margin-left:10px" class="control-label">
+                                                        Partition key:</label>
+                                                </div>
+                                                <div class="col-sm-9">
+                                                    <input type="checkbox" class="form-check-input"
+                                                           id="partitionKeyCheck"
+                                                           ng-model="newFeaturegroupCtrl.onDemandFeaturegroupFeatures[$index].partition"
+                                                           value="{{feature.partition}}">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="view-info">
+                                        <div class="col-md-12">
+                                            <div class="col-sm-12" style="margin-bottom: 20px">
+                                                <div class="col-sm-3">
+                                                </div>
+                                                <div class="col-sm-9">
+                                                    <button class="col-sm-2 btn btn-sm btn-danger glyphicon glyphicon-trash"
+                                                            uib-tooltip="delete"
+                                                            ng-click="newFeaturegroupCtrl.removeNewOnDemandFeature($index)">
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="view-info">
+                                    <div class="col-md-12">
+                                        <div class="col-sm-12" style="margin-bottom: 20px">
+                                            <div class="col-sm-3">
+                                                <button type="button"
+                                                        ng-click="newFeaturegroupCtrl.addNewOnDemandFeature()"
+                                                        class="col-sm-10 btn btn-sm btn-default btn-success control-label"
+                                                        style="margin-bottom:10px">
+                                                    Add Feature<i style="margin-left: 10px"
+                                                                  class="glyphicon glyphicon-plus">
+                                                </i>
+                                                </button>
+                                            </div>
+                                            <div class="col-sm-9">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div ng-if="newFeaturegroupCtrl.onDemandFeaturegroupFeatureNamesNotUnique === -1" style="color: red">
+                                    <p>
+                                        Feature names in the same feature group must be unique
+                                    </p>
+                                </div>
+                                <div ng-if="newFeaturegroupCtrl.onDemandFeaturegroupPrimaryKeyWrongValue === -1" style="color: red">
+                                    <p>
+                                        There must be exactly one feature marked as primary key for each feature group
+                                    </p>
+                                </div>
+                                <div ng-if="newFeaturegroupCtrl.onDemandFeaturegroupPartitionKeyWrongValue === -1" style="color: red">
+                                    <p>
+                                        A feature can not be marked as both primary key and partition key.
+                                    </p>
+                                </div>
+                            </div>
+                            <div uib-accordion-group class="panel-default"
+                                 is-open="newFeaturegroupCtrl.on_demand_fg_accordion4.isOpen"
+                                 ng-show="newFeaturegroupCtrl.on_demand_fg_accordion4.visible"
+                                 id="onDemandSqlQueryDiv">
+                                <div uib-accordion-heading>
+                                    <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                       uib-tooltip='Data is inserted into Feature Groups using Data Pipelines with
+                                    Hopsworks jobs or notebooks. Inside a Hopsworks job or notebook you can use
+                                    the Feature Store API in Python or Scala to update a Feature Group.
+                                   By specifying a SQL Query below, a Hopsworks Job to run the query and insert into the
+                                   Feature Group will be created automatically.'></i>
+                                    <span style="margin-left: 20px">
+                                    {{newFeaturegroupCtrl.on_demand_fg_accordion4.title}}
+                                    {{newFeaturegroupCtrl.on_demand_fg_accordion4.value}}
+                                    </span>
+                                    <span ng-if="newFeaturegroupCtrl.onDemandFeaturegroupSqlWrongValue === -1"
+                                          class="glyphicon glyphicon-alert" tooltip-placement="auto left"
+                                          uib-tooltip='The provided SQL Query is not Valid'
+                                          style="margin-left: 10px"></span>
+                                </div>
+                                <div class="view-info" style="margin-top:20px">
+                                    <div class="col-md-12">
+                                        <div class="col-sm-12" style="margin-bottom: 20px">
+                                            <div class="col-sm-3">
+                                                <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                                   uib-tooltip='Specify a SQL Query to compute the Feature Group'></i>
+                                                <label class="control-label"
+                                                       style="margin-left:20px; margin-top: 5px;">SQL
+                                                    Query: </label>
+                                            </div>
+                                            <div class="col-sm-9">
+                                            <textarea
+                                                    rows="4"
+                                                    ng-model="newFeaturegroupCtrl.onDemandSqlQuery"
+                                                    style="min-width: 100%;"
+                                            >
+                                            </textarea>
+                                                <div
+                                                        ng-if="newFeaturegroupCtrl.onDemandFeaturegroupSqlQueryWrongValue === -1"
+                                                        style="color: red">
+                                                    <p>
+                                                        SQL Query should not be empty and not exceed
+                                                        {{newFeaturegroupCtrl.onDemandFeaturegroupSqlQueryMaxLength}} characters.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="view-info">
+                                    <div class="col-md-12">
+                                        <div class="col-sm-12" style="margin-bottom: 20px">
+                                            <div class="col-sm-3">
+                                                <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                                   uib-tooltip='The JDBC Connection to use for the Query'></i>
+                                                <label style="margin-left:20px;" class="control-label">JDBC
+                                                    Connector:</label>
+                                            </div>
+                                            <div class="col-sm-9">
+                                                <ui-select
+                                                        ng-model="newFeaturegroupCtrl.onDemandFeaturegroupjdbcConnection"
+                                                        style="z-index: 100">
+                                                    <ui-select-match
+                                                            placeholder="Select one of the JDBC Connectors configured for the Feature Store">
+                                                        <span>{{$select.selected.name}}</span>
+                                                    </ui-select-match>
+                                                    <ui-select-choices
+                                                            repeat="connector in newFeaturegroupCtrl.jdbcConnectors">
+                                                        <span ng-bind="connector.name"></span>
+                                                    </ui-select-choices>
+                                                </ui-select>
+                                                <div
+                                                        ng-if="newFeaturegroupCtrl.onDemandFeaturegroupJdbcConnectorWrongValue === -1"
+                                                        style="color: red">
+                                                    <p>
+                                                        Please specify a JDBC Connection to run the SQL query against.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="view-info"
+                                     data-ng-repeat="argument in newFeaturegroupCtrl.onDemandFeaturegroupjdbcConnection.arguments track by $index">
+                                    <div class="col-md-12">
+                                        <div class="col-sm-12" style="margin-bottom: 20px">
+                                            <div class="col-sm-3">
+                                                <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                                   uib-tooltip='Argument for the JDBC Connector. If not specified or set to "DEFAULT"
+                                               the argument will be set to default value at runtime.'></i>
+                                                <label style="margin-left:20px;" class="control-label">
+                                                    {{argument.name}}
+                                                </label>
+                                            </div>
+                                            <div class="col-sm-9">
+                                                <input type="text" class="form-control" id="argumentName"
+                                                       ng-model="newFeaturegroupCtrl.onDemandFeaturegroupjdbcConnection.arguments[$index].value"
+                                                       placeholder="Argument Value">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div uib-accordion-group class="panel-default"
+                                 is-open="newFeaturegroupCtrl.on_demand_fg_accordion5.isOpen"
+                                 ng-show="newFeaturegroupCtrl.on_demand_fg_accordion5.visible"
+                            >
+                                <div uib-accordion-heading>
+                                    <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                       uib-tooltip='Creating an On-Demand Feature Group will store a SQL Query and a JBDC Connection.
+                                                   Later on when the Feature Group needs to be fetched, the features will be computed dynamically
+                                                   by applying the SQL query to the JDBC data source.'></i>
+                                    <span style="margin-left: 20px">
+                                     {{newFeaturegroupCtrl.on_demand_fg_accordion5.title}}
+                                    {{newFeaturegroupCtrl.on_demand_fg_accordion5.value}}
+                                    </span>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-1">
+                                        <button ng-click="newFeaturegroupCtrl.createOnDemandFeaturegroup()"
+                                                class="btn btn-default btn-success"
+                                                ng-if="newFeaturegroupCtrl.featuregroupOperation === 'CREATE' || newFeaturegroupCtrl.featuregroupOperation === 'NEW_VERSION'"
+                                        >
+                                            Create
+                                            <i ng-if="newFeaturegroupCtrl.onDemandFgWorking" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
+                                        </button>
+                                        <button ng-click="newFeaturegroupCtrl.updateCachedFeaturegroup()"
+                                                class="btn btn-default btn-success"
+                                                ng-if="newFeaturegroupCtrl.featuregroupOperation === 'UPDATE'"
+                                        >
+                                            Update
+                                            <i ng-if="newFeaturegroupCtrl.onDemandFgWorking" style="margin-top: 2px"
+                                               class="fa fa-spinner fa-spin pull-right" ></i>
+                                        </button>
+                                    </div>
+                                    <div  class="col-sm-4 alert alert-warning" role="alert"
+                                          ng-show="newFeaturegroupCtrl.onDemandFeaturegroupWrong_values === -1" >
+                                        There are errors in your input configuration, see error messages above.
+                                    </div>
+                                    <div  class="col-sm-7">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </uib-tab>
+            </uib-tabset>
+        </div>
+    </div>
+</div>
+<!-- /#wrapper -->

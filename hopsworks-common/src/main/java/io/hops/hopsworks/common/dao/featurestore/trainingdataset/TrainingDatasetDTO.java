@@ -49,7 +49,7 @@ public class TrainingDatasetDTO extends FeaturestoreEntityDTO {
     setName(trainingDataset.getName());
     setInodeId(trainingDataset.getInode().getId());
     setFeatures(trainingDataset.getFeatures().stream().map(tdf -> new FeatureDTO(tdf.getName(),
-        tdf.getType(), tdf.getDescription())).collect(Collectors.toList()));
+        tdf.getType(), tdf.getDescription(), new Boolean(tdf.getPrimary() == 1), false)).collect(Collectors.toList()));
     this.size = trainingDataset.getInode().getSize();
     this.dataFormat = trainingDataset.getDataFormat();
     this.hdfsStorePath = null;

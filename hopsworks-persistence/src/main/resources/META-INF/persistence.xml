@@ -121,8 +121,12 @@
     <class>io.hops.hopsworks.common.dao.featurestore.featuregroup.Featuregroup</class>
     <class>io.hops.hopsworks.common.dao.featurestore.trainingdataset.TrainingDataset</class>
     <class>io.hops.hopsworks.common.dao.featurestore.stats.FeaturestoreStatistic</class>
-    <class>io.hops.hopsworks.common.dao.featurestore.dependencies.FeaturestoreDependency</class>
-    <class>io.hops.hopsworks.common.dao.featurestore.trainingdataset.feature.TrainingDatasetFeature</class>
+    <class>io.hops.hopsworks.common.dao.featurestore.feature.FeaturestoreFeature</class>
+    <class>io.hops.hopsworks.common.dao.featurestore.storage_connectors.jdbc.FeaturestoreJdbcConnector</class>
+    <class>io.hops.hopsworks.common.dao.featurestore.storage_connectors.s3.FeaturestoreS3Connector</class>
+    <class>io.hops.hopsworks.common.dao.featurestore.storage_connectors.hopsfs.FeaturestoreHopsfsConnector</class>
+    <class>io.hops.hopsworks.common.dao.featurestore.storage_connectors.external_sql_query.FeaturestoreExternalSQLQuery
+    </class>
     <class>io.hops.hopsworks.common.dao.maggy.MaggyDriver</class>
     <class>io.hops.hopsworks.common.dao.airflow.MaterializedJWT</class>
     <class>io.hops.hopsworks.common.dao.user.security.apiKey.ApiKey</class>

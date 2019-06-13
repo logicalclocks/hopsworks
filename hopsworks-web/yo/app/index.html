@@ -95,6 +95,7 @@
     <link rel="stylesheet" href="styles/filemgr/animations.css">
     <link rel="stylesheet" href="styles/filemgr/dialogs.css">
     <link rel="stylesheet" href="styles/filemgr/main.css">
+    <link rel="stylesheet" href="styles/featurestore.css">
     <!-- endbuild -->
 </head>
 <body ng-app="hopsWorksApp">
@@ -173,9 +174,8 @@
     <script src="bower_components/angular-bootstrap-toggle/dist/angular-bootstrap-toggle.min.js"></script>
     <script src="bower_components/angular-file-saver/dist/angular-file-saver.bundle.js"></script>
     <script src="bower_components/ng-file-upload/ng-file-upload-all.min.js"></script>
-    <script src="bower_components/angular-google-chart/ng-google-chart.js"></script>
     <script src="node_modules/apexcharts/dist/apexcharts.js"></script>
-    
+
     <!-- endbower -->
     <!-- endbuild -->
     <!-- build:js({.tmp,app}) scripts/scripts.js -->
@@ -263,24 +263,16 @@
     <script src="scripts/controllers/filemgr/selector-controller.js"></script>
     <script src="scripts/controllers/featurestoreCtrl.js"></script>
     <script src="scripts/controllers/featureSchemaViewContentCtrl.js"></script>
-    <script src="scripts/controllers/createFeaturegroupCtrl.js"></script>
-    <script src="scripts/controllers/updateFeaturegroupCtrl.js"></script>
     <script src="scripts/controllers/featurestoreViewInfoCtrl.js"></script>
     <script src="scripts/controllers/featuregroupViewInfoCtrl.js"></script>
     <script src="scripts/controllers/createNewFeaturegroupVersionCtrl.js"></script>
     <script src="scripts/controllers/selectFeatureTypeCtrl.js"></script>
     <script src="scripts/controllers/previewFeaturegroupCtrl.js"></script>
-    <script src="scripts/controllers/createTrainingDatasetCtrl.js"></script>
     <script src="scripts/controllers/trainingDatasetViewInfoCtrl.js"></script>
-    <script src="scripts/controllers/updateTrainingDatasetCtrl.js"></script>
-    <script src="scripts/controllers/createNewTrainingDatasetVersionCtrl.js"></script>
     <script src="scripts/controllers/featuregroupStatisticsCtrl.js"></script>
     <script src="scripts/controllers/featureViewInfoCtrl.js"></script>
-    <script src="scripts/controllers/viewTrainingDatasetSchemaContentCtrl.js"></script>
     <script src="scripts/controllers/trainingDatasetStatisticsCtrl.js"></script>
-    <script src="scripts/controllers/featuregroupDependenciesCtrl.js"></script>
     <script src="scripts/controllers/featurestoreStatisticModalCtrl.js"></script>
-    <script src="scripts/controllers/trainingDatasetDependenciesCtrl.js"></script>
     <script src="scripts/controllers/sparkConfigCtrl.js"></script>
     <script src="scripts/controllers/oauthCallbackCtrl.js"></script>
     <script src="scripts/controllers/errorCtrl.js"></script>
@@ -288,7 +280,12 @@
     <script src="scripts/controllers/passwordRecoveryCtrl.js"></script>
     <script src="scripts/controllers/qrRecoveryCtrl.js"></script>
     <script src="scripts/controllers/apiKeyModalCtrl.js"></script>
-    
+    <script src="scripts/controllers/updateFeaturestoreStatisticModalCtrl.js"></script>
+    <script src="scripts/controllers/newFeaturegroupCtrl.js"></script>
+    <script src="scripts/controllers/newTrainingDatasetCtrl.js"></script>
+    <script src="scripts/controllers/newStorageConnectorCtrl.js"></script>
+
+
     <!-- Services -->
     <script src="scripts/services/AuthInterceptorService.js"></script>
     <script src="scripts/services/AuthService.js"></script>

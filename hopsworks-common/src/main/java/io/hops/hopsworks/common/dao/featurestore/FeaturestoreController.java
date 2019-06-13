@@ -18,6 +18,12 @@ package io.hops.hopsworks.common.dao.featurestore;
 
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetType;
+import io.hops.hopsworks.common.dao.featurestore.storage_connectors.hopsfs.FeaturestoreHopsfsConnectorController;
+import io.hops.hopsworks.common.dao.featurestore.storage_connectors.hopsfs.FeaturestoreHopsfsConnectorDTO;
+import io.hops.hopsworks.common.dao.featurestore.storage_connectors.jdbc.FeaturestoreJdbcConnectorController;
+import io.hops.hopsworks.common.dao.featurestore.storage_connectors.jdbc.FeaturestoreJdbcConnectorDTO;
+import io.hops.hopsworks.common.dao.featurestore.storage_connectors.s3.FeaturestoreS3ConnectorDTO;
+import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFlag;
@@ -30,7 +36,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /**
@@ -42,7 +47,13 @@ public class FeaturestoreController {
   private FeaturestoreFacade featurestoreFacade;
   @EJB
   private ActivityFacade activityFacade;
-  private static final Logger LOGGER = Logger.getLogger(FeaturestoreController.class.getName());
+  @EJB
+  private InodeFacade inodeFacade;
+  @EJB
+  private FeaturestoreJdbcConnectorController featurestoreJdbcConnectorController;
+  @EJB
+  private FeaturestoreHopsfsConnectorController featurestoreHopsfsConnectorController;
+  
 
   /**
    * Retrieves a list of all featurestores for a particular project
@@ -130,11 +141,13 @@ public class FeaturestoreController {
   /**
    * Creates a new featurestore in the database
    *
-   * @param project          project of the new featurestore
-   * @param featurestoreName the name of the new featurestore
+   * @param project                 project of the new featurestore
+   * @param featurestoreName        the name of the new featurestore
+   * @param trainingDatasetsFolder  the Hopsworks dataset where training datasets are stored by default
    * @return the created featurestore
    */
-  public Featurestore createProjectFeatureStore(Project project, String featurestoreName) {
+  public Featurestore createProjectFeatureStore(Project project, String featurestoreName, Dataset
+    trainingDatasetsFolder) {
     //Get HiveDbId for the newly created Hive featurestore DB
     Long hiveDbId = featurestoreFacade.getHiveDatabaseId(featurestoreName);
     //Store featurestore metadata in Hopsworks
@@ -145,6 +158,17 @@ public class FeaturestoreController {
     featurestoreFacade.persist(featurestore);
     activityFacade.persistActivity(ActivityFacade.CREATED_FEATURESTORE +
         featurestoreName, project, project.getOwner(), ActivityFlag.SERVICE);
+    featurestoreJdbcConnectorController.createJdbcConnectorForFeaturestore(featurestore,
+      getFeaturestoreDbName(project));
+    activityFacade.persistActivity(ActivityFacade.ADDED_JDBC_CONNECTOR +
+      getFeaturestoreDbName(project), project, project.getOwner(), ActivityFlag.SERVICE);
+    featurestoreJdbcConnectorController.createJdbcConnectorForHiveWarehouse(featurestore, project.getName());
+    activityFacade.persistActivity(ActivityFacade.ADDED_JDBC_CONNECTOR +
+      project.getName(), project, project.getOwner(), ActivityFlag.SERVICE);
+    featurestoreHopsfsConnectorController.createHopsFsBackendForFeaturestoreConnector(featurestore,
+      trainingDatasetsFolder);
+    activityFacade.persistActivity(ActivityFacade.ADDED_HOPSFS_CONNECTOR +
+      trainingDatasetsFolder.getName(), project, project.getOwner(), ActivityFlag.SERVICE);
     return featurestore;
   }
 
@@ -165,6 +189,18 @@ public class FeaturestoreController {
     featurestoreDTO.setHdfsStorePath(hdfsPath);
     Long inodeId = featurestoreFacade.getFeaturestoreInodeId(featurestore.getHiveDbId());
     featurestoreDTO.setInodeId(inodeId);
+    featurestoreDTO.setFeaturestoreJdbcConnections(
+      featurestore.getFeaturestoreJdbcConnectorConnections()
+        .stream().map(fsJdbc -> new FeaturestoreJdbcConnectorDTO(fsJdbc)).collect(Collectors.toList()));
+    featurestoreDTO.setFeaturestoreS3Connections(
+      featurestore.getFeaturestoreS3ConnectorConnections()
+        .stream().map(fsS3 -> new FeaturestoreS3ConnectorDTO(fsS3)).collect(Collectors.toList()));
+    featurestoreDTO.setFeaturestoreHopsfsConnections(
+      featurestore.getHopsfsConnections().stream().map(fsHopsfs -> {
+        FeaturestoreHopsfsConnectorDTO featurestoreHopsfsConnectorDTO = new FeaturestoreHopsfsConnectorDTO(fsHopsfs);
+        featurestoreHopsfsConnectorDTO.setHopsfsPath(inodeFacade.getPath(fsHopsfs.getHopsfsDataset().getInode()));
+        return featurestoreHopsfsConnectorDTO;
+      }).collect(Collectors.toList()));
     return featurestoreDTO;
   }
 

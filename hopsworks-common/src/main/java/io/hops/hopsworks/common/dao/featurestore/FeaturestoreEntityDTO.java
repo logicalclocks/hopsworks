@@ -16,8 +16,6 @@
 
 package io.hops.hopsworks.common.dao.featurestore;
 
-import io.hops.hopsworks.common.dao.featurestore.dependencies.FeaturestoreDependency;
-import io.hops.hopsworks.common.dao.featurestore.dependencies.FeaturestoreDependencyDTO;
 import io.hops.hopsworks.common.dao.featurestore.feature.FeatureDTO;
 import io.hops.hopsworks.common.dao.featurestore.stats.FeaturestoreStatistic;
 import io.hops.hopsworks.common.dao.featurestore.stats.FeaturestoreStatisticType;
@@ -29,7 +27,6 @@ import io.hops.hopsworks.common.dao.featurestore.stats.feature_correlation.Featu
 import io.hops.hopsworks.common.dao.featurestore.stats.feature_correlation.FeatureCorrelationMatrixDTO;
 import io.hops.hopsworks.common.dao.featurestore.stats.feature_distributions.FeatureDistributionDTO;
 import io.hops.hopsworks.common.dao.featurestore.stats.feature_distributions.FeatureDistributionsDTO;
-import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.jobhistory.Execution;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.user.Users;
@@ -68,8 +65,8 @@ public abstract class FeaturestoreEntityDTO {
   private ClusterAnalysisDTO clusterAnalysis;
   private String name;
   private Integer id;
-  private List<FeaturestoreDependencyDTO> dependencies;
   private List<FeatureDTO> features;
+  private String location;
 
   public FeaturestoreEntityDTO(
       Integer featurestoreId, Date created,
@@ -83,6 +80,7 @@ public abstract class FeaturestoreEntityDTO {
     this.version = version;
     this.inodeId = null;
     this.name = null;
+    this.location = null;
     this.id = id;
     if (job != null) {
       this.jobId = job.getId();
@@ -98,7 +96,6 @@ public abstract class FeaturestoreEntityDTO {
     this.featureCorrelationMatrix = parseFeatureCorrelation(featurestoreStatistics);
     this.descriptiveStatistics = parseDescriptiveStats(featurestoreStatistics);
     this.featuresHistogram = parseFeatureDistributions(featurestoreStatistics);
-    this.dependencies = null;
   }
 
   private void extractLastComputed(Jobs job) {
@@ -267,15 +264,19 @@ public abstract class FeaturestoreEntityDTO {
   }
 
   @XmlElement
-  public List<FeaturestoreDependencyDTO> getDependencies() {
-    return dependencies;
-  }
-
-  @XmlElement
   public List<FeatureDTO> getFeatures() {
     return features;
   }
-
+  
+  @XmlElement
+  public String getLocation() {
+    return location;
+  }
+  
+  public void setLocation(String location) {
+    this.location = location;
+  }
+  
   public void setFeatures(List<FeatureDTO> features) {
     this.features = features;
   }
@@ -294,12 +295,6 @@ public abstract class FeaturestoreEntityDTO {
 
   public void setName(String name) {
     this.name = name;
-  }
-
-  public void setDependencies(List<FeaturestoreDependency> dependencies, InodeFacade inodeFacade) {
-    this.dependencies =
-        dependencies.stream().map(d -> new FeaturestoreDependencyDTO(d.getInode(), inodeFacade))
-            .collect(Collectors.toList());
   }
   
   public void setDescriptiveStatistics(
@@ -340,7 +335,6 @@ public abstract class FeaturestoreEntityDTO {
         ", featureCorrelationMatrix=" + featureCorrelationMatrix +
         ", featuresHistogram=" + featuresHistogram +
         ", clusterAnalysis=" + clusterAnalysis +
-        ", dependencies=" + dependencies +
         ", name='" + name + '\'' +
         ", id=" + id +
         '}';

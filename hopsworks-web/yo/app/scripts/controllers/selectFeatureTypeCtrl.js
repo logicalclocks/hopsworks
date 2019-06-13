@@ -18,10 +18,9 @@
  * Controller for the process of selecting a feature type for defining schemas of featuregroup/training datasets
  */
 angular.module('hopsWorksApp')
-    .controller('selectFeatureTypeCtrl', ['$uibModalInstance',
+    .controller('selectFeatureTypeCtrl', ['$uibModalInstance', 'FeaturestoreService',
         'growl', 'ModalService', '$scope',
-        function ($uibModalInstance, growl,
-                  ModalService, $scope) {
+        function ($uibModalInstance, FeaturestoreService, growl, ModalService, $scope) {
             /**
              * Initialize state
              */
@@ -31,20 +30,7 @@ angular.module('hopsWorksApp')
             self.duplicateTypeSelection = 1;
             self.noSelection = 1;
             self.wrong_values = 1;
-            self.hiveDataTypes = [
-                "None","TINYINT", "SMALLINT", "INT", "BIGINT", "FLOAT", "DOUBLE",
-                "DECIMAL", "TIMESTAMP", "DATE", "STRING",
-                "BOOLEAN", "BINARY",
-                "ARRAY <TINYINT>", "ARRAY <SMALLINT>", "ARRAY <INT>", "ARRAY <BIGINT>",
-                "ARRAY <FLOAT>", "ARRAY <DOUBLE>", "ARRAY <DECIMAL>", "ARRAY <TIMESTAMP>",
-                "ARRAY <DATE>", "ARRAY <STRING>",
-                "ARRAY <BOOLEAN>", "ARRAY <BINARY>", "ARRAY <ARRAY <FLOAT> >",
-                "ARRAY <ARRAY <INT> >", "ARRAY <ARRAY <STRING> >",
-                "MAP <FLOAT, FLOAT>", "MAP <FLOAT, STRING>", "MAP <FLOAT, INT>", "MAP <FLOAT, BINARY>",
-                "MAP <INT, INT>", "MAP <INT, STRING>", "MAP <INT, BINARY>", "MAP <INT, FLOAT>",
-                "MAP <INT, ARRAY <FLOAT> >",
-                "STRUCT < label: STRING, index: INT >", "UNIONTYPE < STRING, INT>"
-            ]
+            self.hiveDataTypes = FeaturestoreService.featureDataTypes()
             $scope.selected = self.hiveDataTypes[0]
 
 

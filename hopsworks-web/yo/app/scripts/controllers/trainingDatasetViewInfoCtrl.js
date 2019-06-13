@@ -19,50 +19,69 @@
  */
 angular.module('hopsWorksApp')
     .controller('trainingDatasetViewInfoCtrl', ['$uibModalInstance', '$scope', 'FeaturestoreService', 'ProjectService',
-        'growl', 'projectId', 'trainingDataset', 'featurestore',
-        function ($uibModalInstance, $scope, FeaturestoreService, ProjectService, growl, projectId, trainingDataset, featurestore) {
+        'JobService', '$location', 'growl', 'projectId', 'trainingDataset', 'featurestore',
+        function ($uibModalInstance, $scope, FeaturestoreService, ProjectService, JobService, $location, growl,
+                  projectId, trainingDataset, featurestore) {
 
             /**
              * Initialize controller state
              */
             var self = this;
+            //Controller Inputs
             self.projectId = projectId;
             self.trainingDataset = trainingDataset;
             self.featurestore = featurestore;
+            //State
             self.sizeWorking = false;
             self.size = "Not fetched"
-            self.code = ""
-            self.table = []
+            self.pythonCode = ""
+            self.scalaCode = ""
 
             /**
-             * Get the API code to retrieve the featuregroup
+             * Get the Python API code to retrieve the featuregroup
              */
-            self.getCode = function (trainingDataset, featurestore) {
+            self.getPythonCode = function (trainingDataset) {
                 var codeStr = "from hops import featurestore\n"
-                codeStr = codeStr + "featurestore.get_training_dataset_path(\n"
-                codeStr = codeStr + "'" + trainingDataset.name + "',\n"
-                codeStr = codeStr + "featurestore='" + trainingDataset.featurestoreName + "',\n"
-                codeStr = codeStr + "training_dataset_version=" + trainingDataset.version + "\n"
-                codeStr = codeStr + ")"
+                codeStr = codeStr + "featurestore.get_training_dataset_path('" + trainingDataset.name + "')"
                 return codeStr
             };
+
+            /**
+             * Get the Scala API code to retrieve the featuregroup
+             */
+            self.getScalaCode = function (trainingDataset) {
+                var codeStr = "import io.hops.util.Hops\n"
+                codeStr = codeStr + "Hops.getTrainingDatasetPath(('" + trainingDataset.name + "').read()"
+                return codeStr
+            };
+
+            /**
+             * Called when the launch-job button is pressed
+             */
+            self.launchJob = function (jobName) {
+                JobService.setJobFilter(jobName);
+                self.close();
+                self.goToUrl("jobs")
+            };
+
+            /**
+             * Check if a row is a regular one or need special rendering
+             */
+            self.isRegularRow = function(property) {
+                if (property == "API Retrieval Code" || property == "Job" || property == "Last Computed"){
+                    return false
+                }
+                return true
+            }
 
             /**
              * Initialization function
              */
             self.init= function () {
-                self.code = self.getCode(self.trainingDataset, self.featurestore)
-                self.table.push({"property": "Id", "value": self.trainingDataset.id})
-                self.table.push({"property": "Name", "value": self.trainingDataset.name})
-                self.table.push({"property": "Version", "value": self.trainingDataset.version})
-                self.table.push({"property": "Size", "value": self.trainingDataset.size})
-                self.table.push({"property": "Description", "value": self.trainingDataset.description})
-                self.table.push({"property": "Featurestore", "value": self.trainingDataset.featurestoreName})
-                self.table.push({"property": "HDFS path", "value": self.trainingDataset.hdfsStorePath})
-                self.table.push({"property": "Creator", "value": self.trainingDataset.creator})
-                self.table.push({"property": "Created", "value": self.formatDate(self.trainingDataset.created)})
-                self.table.push({"property": "Data format", "value": self.trainingDataset.dataFormat})
-                self.table.push({"property": "API Retrieval Code", "value": self.code})
+                self.formatCreated = self.formatDate(self.trainingDataset.created)
+                self.pythonCode = self.getPythonCode(self.trainingDataset)
+                self.scalaCode = self.getScalaCode(self.trainingDataset)
+                self.fetchSize()
             };
 
             /**
@@ -95,7 +114,7 @@ angular.module('hopsWorksApp')
                     return
                 }
                 self.sizeWorking = true
-                var request = {id: self.projectId, type: "inode", inodeId: self.trainingDataset.inodeId};
+                var request = {type: "inode", inodeId: self.trainingDataset.inodeId};
                 ProjectService.getMoreInodeInfo(request).$promise.then(function (success) {
                     self.sizeWorking = false;
                     self.size = self.sizeOnDisk(success.size)
@@ -103,6 +122,26 @@ angular.module('hopsWorksApp')
                     growl.error(error.data.errorMsg, {title: 'Failed to fetch training dataset size', ttl: 5000});
                     self.sizeWorking = false;
                 });
+            };
+
+            /**
+             * Format javascript date as string (YYYY-mm-dd HH:MM:SS)
+             *
+             * @param javaDate date to format
+             * @returns {string} formatted string
+             */
+            $scope.formatDate = function (javaDate) {
+                var d = new Date(javaDate);
+                return d.getFullYear().toString() + "-" + ((d.getMonth() + 1).toString().length == 2 ? (d.getMonth() + 1).toString() : "0" + (d.getMonth() + 1).toString()) + "-" + (d.getDate().toString().length == 2 ? d.getDate().toString() : "0" + d.getDate().toString()) + " " + (d.getHours().toString().length == 2 ? d.getHours().toString() : "0" + d.getHours().toString()) + ":" + ((parseInt(d.getMinutes() / 5) * 5).toString().length == 2 ? (parseInt(d.getMinutes() / 5) * 5).toString() : "0" + (parseInt(d.getMinutes() / 5) * 5).toString()) + ":00";
+            };
+
+            /**
+             * Helper function for redirecting to another project page
+             *
+             * @param serviceName project page
+             */
+            self.goToUrl = function (serviceName) {
+                $location.path('project/' + self.projectId + '/' + serviceName);
             };
 
             /**

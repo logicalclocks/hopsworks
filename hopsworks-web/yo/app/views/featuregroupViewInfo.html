@@ -21,54 +21,380 @@
     <h2 class="modal-title">Feature group details: {{featuregroupViewInfoCtrl.featuregroup.featuregroupName}}</h2>
 </div>
 <div class="modal-body" style="overflow: auto">
-    <div class="row">
-        <table class="table table-hover" style="margin-left: 10px; overflow: auto">
-            <thead style="border:none;">
-            <th style="width: 10%">Property</th>
-            <th style="width: 20%">Value</th>
+    <div uib-accordion close-others="false">
+        <div uib-accordion-group class="panel-default">
+            <div uib-accordion-heading>
+                <i class="fa fa-info-circle" tooltip-placement="auto left"
+                   uib-tooltip='Feature Group Metadata'></i>
+                <span style="margin-left: 20px">
+                    Feature Group Details
+                </span>
+            </div>
 
-            </thead>
-            <tbody>
-            <tr>
-                <td>
-                    <button class="btn btn-primary" id="fetchSchemaBtn"
-                            ng-click="featuregroupViewInfoCtrl.fetchSchema()">
-                        Fetch SQL Schema
-                        <i ng-if="featuregroupViewInfoCtrl.schemaWorking" style="margin-top: 2px"
-                           class="fa fa-spinner fa-spin pull-right"></i>
-                        <i class="fa fa-info-circle" tooltip-placement="auto left"
-                           uib-tooltip="Fetches the SQL statement that was used to create the Hive table"
-                           style="margin-left: 10px"></i>
-                    </button>
-                </td>
-                <td>{{featuregroupViewInfoCtrl.schema}}</td>
-            </tr>
-            <tr>
-                <td>
-                    <button class="btn btn-primary" id="fetchSizeBtn"
-                            ng-click="featuregroupViewInfoCtrl.fetchSize()">
-                        Fetch Size
-                        <i ng-if="featuregroupViewInfoCtrl.sizeWorking" style="margin-top: 2px"
-                           class="fa fa-spinner fa-spin pull-right"></i>
-                        <i class="fa fa-info-circle" tooltip-placement="auto left"
-                           uib-tooltip="Fetches the size of the entire feature group,
-                           if the feature group has a lot of nested files this is an expensive operation"
-                           style="margin-left: 10px"></i>
-                    </button>
-                </td>
-                <td>{{featuregroupViewInfoCtrl.size}}</td>
-            </tr>
-            <tr data-ng-repeat="row in featuregroupViewInfoCtrl.table">
-                <td>{{row.property}}</td>
-                <td ng-if="row.property != 'API Retrieval Code'">{{row.value}}</td>
-                <td ng-if="row.property == 'API Retrieval Code'" style="white-space: pre-wrap">
+            <table class="table table-hover fs-table" style="margin-left: 10px; overflow: auto">
+                <tbody class="fs-table">
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Id
+                    </td>
+                    <td class="fs-table">
+                        {{featuregroupViewInfoCtrl.featuregroup.id}}
+                    </td>
+                </tr>
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Name
+                    </td>
+                    <td class="fs-table">
+                        {{featuregroupViewInfoCtrl.featuregroup.name}}
+                    </td>
+                </tr>
+
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Version
+                    </td>
+                    <td class="fs-table">
+                        {{featuregroupViewInfoCtrl.featuregroup.version}}
+                    </td>
+                </tr>
+
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Description
+                    </td>
+                    <td class="fs-table">
+                        {{featuregroupViewInfoCtrl.featuregroup.description}}
+                    </td>
+                </tr>
+
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Feature Store
+                    </td>
+                    <td class="fs-table">
+                        {{featuregroupViewInfoCtrl.featuregroup.featurestoreName}}
+                    </td>
+                </tr>
+
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Creator
+                    </td>
+                    <td class="fs-table">
+                        {{featuregroupViewInfoCtrl.featuregroup.creator}}
+                    </td>
+                </tr>
+
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Created
+                    </td>
+                    <td class="fs-table">
+                        {{featuregroupViewInfoCtrl.formatCreated}}
+                    </td>
+                </tr>
+
+                </tbody>
+            </table>
+        </div>
+
+        <div uib-accordion-group class="panel-default"
+             ng-if="featuregroupViewInfoCtrl.featuregroup.featuregroupType === featuregroupViewInfoCtrl.cachedFeaturegroupType">
+            <div uib-accordion-heading>
+                <i class="fa fa-info-circle" tooltip-placement="auto left"
+                   uib-tooltip='Details about the Hive table where the historical feature data of cached
+                   feature groups in Hopsworks is stored.'></i>
+                <span style="margin-left: 20px">
+                    Offline (Hive) Table Details
+                </span>
+            </div>
+
+            <table class="table table-hover fs-table" style="margin-left: 10px; overflow: auto">
+                <tbody class="fs-table">
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        HDFS path
+                    </td>
+                    <td class="fs-table">
+                        {{featuregroupViewInfoCtrl.featuregroup.hdfsStorePaths[0]}}
+                    </td>
+                </tr>
+
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Table Type
+                    </td>
+                    <td class="fs-table">
+                        {{featuregroupViewInfoCtrl.featuregroup.hiveTableType}}
+                    </td>
+                </tr>
+
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Hive Input Format
+                    </td>
+                    <td class="fs-table">
+                        {{featuregroupViewInfoCtrl.featuregroup.inputFormat}}
+                    </td>
+                </tr>
+
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Size
+                    </td>
+                    <td class="fs-table">
+                        {{featuregroupViewInfoCtrl.size}}
+                        <i ng-if="featuregroupViewInfoCtrl.sizeWorking" style="margin-top: 2px; text-align: center;"
+                           class="fa fa-spinner fa-spin"></i>
+                    </td>
+                </tr>
+
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        SQL Schema
+                    </td>
+                    <td class="fs-table">
 <pre>
-<code>{{row.value}}</code>
+<code>{{featuregroupViewInfoCtrl.schema}}</code>
 </pre>
-                </td>
-            </tr>
-            </tbody>
-        </table>
-    </div>
+                        <i ng-if="featuregroupViewInfoCtrl.schemaWorking" style="margin-top: 2px; text-align: center;"
+                           class="fa fa-spinner fa-spin"></i>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
 
+        <div uib-accordion-group class="panel-default"
+             ng-if="featuregroupViewInfoCtrl.featuregroup.featuregroupType === featuregroupViewInfoCtrl.cachedFeaturegroupType">
+            <div uib-accordion-heading>
+                <i class="fa fa-info-circle" tooltip-placement="auto left"
+                   uib-tooltip='Details about the MySQL table where the online feature data of cached
+                   feature groups in Hopsworks is stored.'></i>
+                <span style="margin-left: 20px">
+                    Online (MySQL) Table Details
+                </span>
+            </div>
+
+            <table class="table table-hover fs-table" style="margin-left: 10px; overflow: auto">
+                <tbody class="fs-table">
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Table Type
+                    </td>
+                    <td class="fs-table">
+                        -
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div uib-accordion-group class="panel-default"
+             ng-if="featuregroupViewInfoCtrl.featuregroup.featuregroupType === featuregroupViewInfoCtrl.onDemandFeaturegroupType">
+            <div uib-accordion-heading>
+                <i class="fa fa-info-circle" tooltip-placement="auto left"
+                   uib-tooltip='Details about how the feature group is computed on-demand.'></i>
+                <span style="margin-left: 20px">
+                    On-Demand Computation Configuration
+                </span>
+            </div>
+
+            <table class="table table-hover fs-table" style="margin-left: 10px; overflow: auto">
+                <tbody class="fs-table">
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        JDBC Connector Name
+                    </td>
+                    <td class="fs-table">
+                        {{featuregroupViewInfoCtrl.featuregroup.featurestoreExternalSQLQuery.jdbcConnectorName}}
+                    </td>
+                </tr>
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        SQL
+                    </td>
+                    <td class="fs-table">
+<pre>
+<code>{{featuregroupViewInfoCtrl.featuregroup.featurestoreExternalSQLQuery.query}}</code>
+</pre>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div uib-accordion-group class="panel-default">
+            <div uib-accordion-heading>
+                <i class="fa fa-info-circle" tooltip-placement="auto left"
+                   uib-tooltip='Hopsworks Jobs that update the feature group in some way'></i>
+                <span style="margin-left: 20px">
+                    Jobs
+                </span>
+            </div>
+
+            <table class="table table-hover fs-table" style="margin-left: 10px; overflow: auto">
+                <tbody class="fs-table">
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Job Name
+                    </td>
+                    <td class="fs-table">
+                        <div ng-if="featuregroupViewInfoCtrl.featuregroup.jobName === null">
+                            no job specified
+                        </div>
+                        <div ng-if="featuregroupViewInfoCtrl.featuregroup.jobName !== null">
+                            <span style="cursor:pointer;color:black;text-decoration:underline;"
+                                  ng-click="featuregroupViewInfoCtrl.launchJob(featuregroupViewInfoCtrl.featuregroup.jobName); $event.stopPropagation();">
+                                {{featuregroupViewInfoCtrl.featuregroup.jobName}}
+                            </span>
+                        </div>
+                    </td>
+                </tr>
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Last Computed
+                    </td>
+                    <td class="fs-table">
+                        <div ng-if="featuregroupViewInfoCtrl.featuregroup.lastComputed === null">
+                            -
+                        </div>
+                        <div ng-if="featuregroupViewInfoCtrl.featuregroup.lastComputed !== null">
+                      <span
+                              ng-if="featuregroupViewInfoCtrl.featuregroup.jobStatus === 'Undefined'"
+                              style="color: #0066bb ">
+                        {{formatDate(featuregroupViewInfoCtrl.featuregroup.lastComputed)}}
+                      </span>
+                            <span
+                                    ng-if="featuregroupViewInfoCtrl.featuregroup.jobStatus === 'Succeeded'"
+                                    style="color: #00A000 ">
+                        {{formatDate(featuregroupViewInfoCtrl.featuregroup.lastComputed)}}
+                      </span>
+                            <span
+                                    ng-if="featuregroupViewInfoCtrl.featuregroup.jobStatus === 'Failed'"
+                                    style="color: #880000 ">
+                        {{formatDate(featuregroupViewInfoCtrl.featuregroup.lastComputed)}}
+                      </span>
+                            <span
+                                    ng-if="featuregroupViewInfoCtrl.featuregroup.jobStatus === 'Killed'"
+                                    style="color: #880000 ">
+                        {{formatDate(featuregroupViewInfoCtrl.featuregroup.lastComputed)}}
+                      </span>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div uib-accordion-group class="panel-default">
+            <div uib-accordion-heading>
+                <i class="fa fa-info-circle" tooltip-placement="auto left"
+                   uib-tooltip='API for reading the feature group programmatically'></i>
+                <span style="margin-left: 20px">
+                    API
+                </span>
+            </div>
+
+            <table class="table table-hover fs-table" style="margin-left: 10px; overflow: auto">
+                <tbody class="fs-table">
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Python API
+                    </td>
+                    <td class="fs-table">
+<pre>
+<code>{{featuregroupViewInfoCtrl.pythonCode}}</code>
+</pre>
+                    </td>
+                </tr>
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Scala API
+                    </td>
+                    <td class="fs-table">
+<pre>
+<code>{{featuregroupViewInfoCtrl.scalaCode}}</code>
+</pre>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div uib-accordion-group class="panel-default">
+            <div uib-accordion-heading>
+                <i class="fa fa-info-circle" tooltip-placement="auto left"
+                   uib-tooltip='The Feature Group Schema'></i>
+                <span style="margin-left: 20px">
+                    Schema
+                </span>
+            </div>
+
+            <table class="table table-hover fs-table" style="margin-left: 10px; overflow: auto"
+                   ng-if="featuregroupViewInfoCtrl.featuregroup.features.length > 0">
+                <thead style="border:none;" class="fs-table">
+                <th class="fs-table" style="width: 20%">Feature Name</th>
+                <th class="fs-table" style="width: 20%">Feature Type</th>
+                <th class="fs-table" style="width: 20%">Feature Description</th>
+                <th class="fs-table" style="width: 20%">Primary Key</th>
+                <th class="fs-table" style="width: 20%">Partition Key</th>
+                </thead>
+                <tbody>
+                <tr class="fs-table" data-ng-repeat="feature in featuregroupViewInfoCtrl.featuregroup.features">
+                    <td class="fs-table"> {{feature.name}}</td>
+                    <td class="fs-table"> {{feature.type}}</td>
+                    <td class="fs-table"> {{feature.description}}</td>
+                    <td class="fs-table"> {{feature.primary}}</td>
+                    <td class="fs-table"> {{feature.partition}}</td>
+                </tr>
+                </tbody>
+            </table>
+            <h3 style="margin-left: 10px" ng-if="featuregroupViewInfoCtrl.featuregroup.features.length == 0">
+                This feature group does not have a defined schema</h3>
+        </div>
+
+
+        <div uib-accordion-group class="panel-default"
+             ng-if="featuregroupViewInfoCtrl.featuregroup.featuregroupType === featuregroupViewInfoCtrl.cachedFeaturegroupType"
+        >
+            <div uib-accordion-heading>
+                <i class="fa fa-info-circle" tooltip-placement="auto left"
+                   uib-tooltip='Previews the data in the cached feature group. (Runs a SELECT * LIMIT 20 to the Hive table)'></i>
+                <span style="margin-left: 20px">
+                    Data Preview
+                </span>
+            </div>
+
+            <div class="row">
+                <p ng-if="featuregroupViewInfoCtrl.notFetchedSample" style="margin-left: 10px; magin-top:10px">
+                    <i ng-if="featuregroupViewInfoCtrl.sampleWorking" style="margin-top: 2px; text-align: center"
+                       class="fa fa-spinner fa-spin"></i>
+                </p>
+                <p ng-if="featuregroupViewInfoCtrl.sampleColumns.length  === 0 && !featuregroupViewInfoCtrl.notFetchedSample" style="margin-left: 10px; magin-top:10px">
+                    Feature group is empty
+                </p>
+            </div>
+            <div>
+                <table class="table table-hover fs-table" style="margin-left: 10px; overflow: auto"
+                       ng-if="featuregroupViewInfoCtrl.sampleColumns.length > 0">
+                    <thead style="border:none;" class="fs-table">
+                    <th class="fs-table" ng-repeat="col in featuregroupViewInfoCtrl.sampleColumns  track by $index">
+                        {{col}}
+                    </th>
+                    </thead>
+                    <tbody class="fs-table">
+                    <tr ng-repeat="row in featuregroupViewInfoCtrl.sample" class="fs-table">
+                        <td ng-repeat="col in featuregroupViewInfoCtrl.sampleColumns track by $index" class="fs-table">
+                            {{row[col]}}
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+
+
+        </div>
+
+    </div>
 </div>

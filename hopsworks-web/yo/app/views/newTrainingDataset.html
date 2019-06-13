@@ -1,0 +1,546 @@
+<!--
+  ~ This file is part of Hopsworks
+  ~ Copyright (C) 2018, Logical Clocks AB. All rights reserved
+  ~
+  ~ Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+  ~ the GNU Affero General Public License as published by the Free Software Foundation,
+  ~ either version 3 of the License, or (at your option) any later version.
+  ~
+  ~ Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+  ~ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+  ~ PURPOSE.  See the GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License along with this program.
+  ~ If not, see <https://www.gnu.org/licenses/>.
+  -->
+
+<div ng-controller="MainCtrl as mainCtrl">
+    <div ng-include="'nav.html'"></div>
+
+
+    <div id="wrapper" class="toggled" ng-controller="newTrainingDatasetCtrl as newTrainingDatasetCtrl">
+        <div class="overlay"></div>
+
+        <div ng-include="'navProject.html'"></div>
+        <div class="content-wrapper">
+            <span style="float: right;margin-top: 7px;" class="fa fa-times-circle fa-2x"
+                  ng-click="newTrainingDatasetCtrl.exitToFeaturestore()"
+                  uib-tooltip="Clear state and go back to Feature Store main page."
+                  ng-if="newTrainingDatasetCtrl.selectFeatureStage"
+            > </span>
+            <span style="float: right;margin-top: 7px;" class="fa fa-times-circle fa-2x"
+                  ng-click="newTrainingDatasetCtrl.exitToFeatureSearch()"
+                  uib-tooltip="Go back to the feature selection stage"
+                  ng-if="!newTrainingDatasetCtrl.selectFeatureStage"
+            > </span>
+            <div ng-if="newTrainingDatasetCtrl.selectFeatureStage">
+                <h2 style="margin-bottom: 30px;color:#555"
+                    ng-if="newTrainingDatasetCtrl.trainingDatasetOperation === 'CREATE'">
+                    Select Features to Create a Training Dataset
+                    <i class="fa fa-info-circle" tooltip-placement="auto left"
+                       uib-tooltip='Training Datasets are immutable snapshots of features in the Feature Store.
+                                   A Training Dataset can include features across multiple Feature Groups.'></i>
+                </h2>
+                <h2 style="margin-bottom: 30px;color:#555"
+                    ng-if="newTrainingDatasetCtrl.trainingDatasetOperation === 'UPDATE'">
+                    Select Features to Update the Training Dataset
+                    <code>{{newTrainingDatasetCtrl.trainingDatasetName}}</code>
+                    <i class="fa fa-info-circle" tooltip-placement="auto left"
+                       uib-tooltip='Training Datasets are immutable snapshots of features in the Feature Store.
+                                   A Training Dataset can include features across multiple Feature Groups.'></i>
+                </h2>
+                <h2 style="margin-bottom: 30px;color:#555"
+                    ng-if="newTrainingDatasetCtrl.trainingDatasetOperation === 'NEW_VERSION'">
+                    Select Features to Create a New Version of the Training Dataset
+                    <code>{{newTrainingDatasetCtrl.trainingDatasetName}}</code>
+                    <i class="fa fa-info-circle" tooltip-placement="auto left"
+                       uib-tooltip='Training Datasets are immutable snapshots of features in the Feature Store.
+                                   A Training Dataset can include features across multiple Feature Groups.'></i>
+                </h2>
+                <div class="row">
+                    <div class="col-sm-9">
+                        <div>
+                            <div class="row form-inline">
+                                <div class="col-sm-9 form-group">
+                                    <label style="color:#555">
+                                        Search:
+                                        <input class="form-control"
+                                               style="margin-left: 10px;"
+                                               ng-model="newTrainingDatasetCtrl.fFilter"
+                                               placeholder="Search for a feature"
+                                        >
+                                        <md-datepicker ng-model="newTrainingDatasetCtrl.featuresFromDate"
+                                                       md-placeholder="From"></md-datepicker>
+                                        <md-datepicker ng-model="newTrainingDatasetCtrl.featuresToDate"
+                                                       md-placeholder="To"></md-datepicker>
+                                    </label>
+                                </div>
+                                <div class="col-sm-3 form-group"
+                                     ng-if="newTrainingDatasetCtrl.fFilter != '' || newTrainingDatasetCtrl.featureSearchFgFilter != '' || newTrainingDatasetCtrl.featureSearchFgVersionFilter != ''">
+                                    <div class="pull-right btn-group">
+                                        <label>Features per page:
+                                            <input type="number" min="1"
+                                                   max="50"
+                                                   class="form-control"
+                                                   ng-model="newTrainingDatasetCtrl.featuresPageSize"
+                                                   style="width:80px">
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row" style="margin-left:15px; margin-top:10px">
+                                <div>
+                                    <label ng-click="newTrainingDatasetCtrl.setFeatureSearchFilterForm();"
+                                           style="color:#555">
+                                        <span class="glyphicon glyphicon-chevron-right"
+                                              ng-if="!newTrainingDatasetCtrl.featureSearchFilterForm"></span>
+                                        <span class="glyphicon glyphicon-chevron-down"
+                                              ng-if="newTrainingDatasetCtrl.featureSearchFilterForm"></span>
+                                        Search Settings</label>
+                                </div>
+                                <div ng-if="newTrainingDatasetCtrl.featureSearchFilterForm" class="animate-if">
+
+                                    <div class="form-group">
+                                        <form class="form-inline">
+                                            <div class="form-group">
+                                                Feature Group Filter:
+                                                <input class="form-control" style="margin-left: 10px"
+                                                       ng-model="newTrainingDatasetCtrl.featureSearchFgFilter">
+                                            </div>
+                                        </form>
+                                        <form class="form-inline">
+                                            <div class="form-group">
+                                                Version Filter:
+                                                <input class="form-control" style="margin-left: 50px"
+                                                       ng-model="newTrainingDatasetCtrl.featureSearchFgVersionFilter">
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            <div ng-if="newTrainingDatasetCtrl.fFilter != '' || newTrainingDatasetCtrl.featureSearchFgFilter != '' || newTrainingDatasetCtrl.featureSearchFgVersionFilter != ''">
+                                <div class="row search-result-header">
+                                    <div class="col-md-11 pull-left">
+                                        <h3>{{filteredResults.length}} Results found for:
+                                            {{newTrainingDatasetCtrl.fFilter | limitTo: 85 }} {{
+                                            newTrainingDatasetCtrl.fFilter > 85 ? '...' : ''}}</h3>
+                                    </div>
+                                </div>
+                                <table class="table table-hover">
+                                    <thead>
+                                    <tr>
+                                        <th style="width: 15%"
+                                            class="fs-table">
+                                            Date
+                                        </th>
+                                        <th style="width: 10%"
+                                            class="fs-table">
+                                            Time
+                                        </th>
+                                        <th style="width: 15%"
+                                            class="fs-table">
+                                            Origin
+                                        </th>
+                                        <th style="width: 20%"
+                                            class="fs-table">
+                                            Name
+                                        </th>
+                                        <th style="width: 10%"
+                                            class="fs-table"> Type
+                                        </th>
+                                        <th style="width: 15%"
+                                            class="fs-table">
+                                            Feature Group/Training Dataset
+                                        </th>
+                                        <th style="width: 5%"
+                                            class="fs-table">
+                                            Version
+                                        </th>
+                                        <th style="width: 10%"
+                                            class="fs-table">
+                                        </th>
+                                    </tr>
+                                    </thead>
+                                    <tbody class="table-hover">
+                                    <tr
+                                            dir-paginate="result in ((filteredResults = (newTrainingDatasetCtrl.features | dateRangeFilterFeatures : newTrainingDatasetCtrl.featuresFromDate : newTrainingDatasetCtrl.featuresToDate | filter:{name:newTrainingDatasetCtrl.fFilter}:false | featureSearchFilterByFg:newTrainingDatasetCtrl.featureSearchFgFilter:false | featureSearchFilterByFgVersion:newTrainingDatasetCtrl.featureSearchFgVersionFilter:false)) | itemsPerPage:newTrainingDatasetCtrl.featuresPageSize)"
+                                            class="fs-table">
+                                        <td class="fs-table">
+                                            <i class="glyphicon glyphicon-calendar"></i>
+                                            <span>{{newTrainingDatasetCtrl.getFeatureDate(result.date)}}</span>
+                                        </td>
+                                        <td class="fs-table">
+                                            <i class="glyphicon glyphicon-time"></i>
+                                            <span>{{newTrainingDatasetCtrl.getFeatureTime(result.date)}}</span>
+                                            </span>
+                                        </td>
+                                        <td class="fs-table">
+                                            <span ng-if="result.entity == 'Feature Group'">
+                                                <i class="glyphicon glyphicon-tags"></i>
+                                                <span> Feature in Feature Group</span>
+                                            </span>
+                                            <span ng-if="result.entity == 'Training Dataset'">
+                                                <i class="glyphicon glyphicon-tags"></i>
+                                                <span> Feature in Training Dataset</span>
+                                            </span>
+                                        </td>
+                                        <td class="fs-table">{{result.name}}</td>
+                                        <td class="fs-table">{{result.type}}</td>
+                                        <td class="fs-table">
+                                        <span ng-if="result.entity == 'Feature Group'">
+                                                {{result.featuregroup.name}}
+                                        </span>
+                                            <span ng-if="result.entity == 'Training Dataset'">
+                                                {{result.trainingDataset.name}}
+                                        </span>
+                                        </td>
+                                        <td class="fs-table">{{result.version}}</td>
+                                        <td class="fs-table">
+                                            <button uib-tooltip="Feature Details"
+                                                    type="button"
+                                                    class="btn btn-info btn-sm glyphicon glyphicon-eye-open"
+                                                    ng-click="newTrainingDatasetCtrl.viewFeatureInfo(result)">
+                                            </button>
+                                            <button uib-tooltip="Add feature to Training Dataset"
+                                                    type="button"
+                                                    class="btn btn-success btn-sm glyphicon glyphicon-plus"
+                                                    ng-disabled="newTrainingDatasetCtrl.featureInBasket(result)"
+                                                    ng-click="newTrainingDatasetCtrl.addFeatureToBasket(result)">
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="row divider" style="margin-bottom: 0px;"></div>
+                            <div class="row" style="margin-top: -20px">
+                                <dir-pagination-controls
+                                        ng-show="(newTrainingDatasetCtrl.features.length /newTrainingDatasetCtrl.featuresPageSize) > 1 "
+                                        max-size="15"
+                                        direction-links="true"
+                                        boundary-links="true"
+                                        class="no-margin-pagination pull-right">
+                                </dir-pagination-controls>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3">
+                        <div class="pull-left" style="margin-left:20px">
+                            <div class="row">
+                                <a ng-click="newTrainingDatasetCtrl.toggleCart()"
+                                   style="color:rgb(51, 51, 51); font-size:20px;">
+                                    <i class="fa fa-shopping-cart fa-2x"></i>
+                                    Checkout Features
+                                    <span class="shop-badge">
+                                        {{newTrainingDatasetCtrl.featureBasket.length}}
+                                    </span>
+                                </a>
+                            </div>
+                            <div class="shopping-cart row" ng-if="newTrainingDatasetCtrl.showCart" class="animate-if">
+                                <div class="shopping-cart-header">
+                                    <i class="fa fa-shopping-cart fa-2x cart-icon"></i><span class="shop-badge">{{newTrainingDatasetCtrl.featureBasket.length}}</span>
+                                    <div class="shopping-cart-total pull-right">
+                                        <span class="lighter-text">Total:</span>
+                                        <span class="main-color-text">{{newTrainingDatasetCtrl.featureBasket.length}}
+                                            Features from {{newTrainingDatasetCtrl.basketFeaturegroups().length}}
+                                            Feature Groups
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <dir-pagination-controls
+                                        pagination-id="featuresbasket"
+                                        class="pull-right"
+                                        max-size="5"
+                                        direction-links="true"
+                                        boundary-links="true"
+                                >
+                                </dir-pagination-controls>
+
+                                <ul class="shopping-cart-items"
+                                    dir-paginate="basketFeature in newTrainingDatasetCtrl.featureBasket | itemsPerPage:5 "
+                                    pagination-id="featuresbasket"
+                                >
+                                    <li
+                                            class="clearfix"
+                                    >
+                                        <button class="btn btn-xs btn-danger fa fa-trash fa-xs"
+                                                uib-tooltip="Delete"
+                                                ng-click="newTrainingDatasetCtrl.removeFeatureFromBasket($index);"></button>
+                                        <span class="item-name">{{basketFeature.name}}</span>
+                                        <span class="item-price">Type: {{basketFeature.type}}</span>
+                                        <span class="item-quantity">Feature Group: {{basketFeature.featuregroup
+                                            .name}}</span>
+                                    </li>
+                                </ul>
+                                <a class="cart-button" ng-click="newTrainingDatasetCtrl.setupQueryPlan()"
+                                   ng-disabled="newTrainingDatasetCtrl.featureBasket.length === 0"
+                                   ng-if="newTrainingDatasetCtrl.trainingDatasetOperation === 'CREATE' || newTrainingDatasetCtrl.trainingDatasetOperation === 'NEW_VERSION'"
+                                >Create Training Dataset</a>
+                                <a class="cart-button" ng-click="newTrainingDatasetCtrl.setupQueryPlan()"
+                                   ng-disabled="newTrainingDatasetCtrl.featureBasket.length === 0"
+                                   ng-if="newTrainingDatasetCtrl.trainingDatasetOperation === 'UPDATE'"
+                                >Update Training Dataset</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div ng-if="!newTrainingDatasetCtrl.selectFeatureStage">
+                <div>
+                    <div class="row">
+                        <div class="panel-header col-md-12">
+
+                            <h2 ng-if="newTrainingDatasetCtrl.trainingDatasetOperation === 'CREATE'">
+                                New Training Dataset Definition
+                            </h2>
+                            <h2 ng-if="newTrainingDatasetCtrl.trainingDatasetOperation === 'UPDATE'">
+                                Update Training Dataset: <code>{{newTrainingDatasetCtrl.trainingDataset
+                                .name}}</code>
+                            </h2>
+                            <h2 ng-if="newTrainingDatasetCtrl.trainingDatasetOperation === 'NEW_VERSION'">
+                                Create New Version of Training Dataset: <code>{{newTrainingDatasetCtrl.trainingDataset
+                                .name}}</code>
+                            </h2>
+                        </div>
+                    </div>
+                    <div uib-accordion close-others="false">
+
+                        <div uib-accordion-group class="panel-default"
+                             is-open="newTrainingDatasetCtrl.td_accordion0.isOpen">
+                            <div uib-accordion-heading>
+                                <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                   uib-tooltip='Query Plan for creating the Training Dataset'></i>
+                                <span style="margin-left: 20px">
+                                    {{newTrainingDatasetCtrl.td_accordion0.title}}
+                                    {{newTrainingDatasetCtrl.td_accordion0.value}}
+                                    </span>
+                                <span class="fa fa-database"
+                                      style="margin-left: 10px"></span>
+                                <span ng-if="newTrainingDatasetCtrl.queryPlanWrongValue === -1"
+                                      class="glyphicon glyphicon-alert" tooltip-placement="auto left"
+                                      uib-tooltip='A valid query plan could not be inferred'
+                                      style="margin-left: 10px"></span>
+                            </div>
+                            <div>
+                                <div class="row">
+                                    <div class="col-sm-2">
+                                        <span style="font-weight:bold"> Feature Groups</span>
+                                    </div>
+                                    <div class="col-sm-10">
+                                        <div class="row">
+                                            <div class="col-sm-5 fs_card card card-inverse card-success"
+                                                 ng-repeat="featuregroup in newTrainingDatasetCtrl.queryPlan.featuregroups"
+                                            >
+                                                <div class="fs_card card-block bg-success">
+                                                    Feature Group: {{featuregroup.name}}
+                                                    <br>
+                                                    Version:
+                                                    {{featuregroup.version}}
+                                                    <br>
+                                                    {{newTrainingDatasetCtrl.getSelectStr(featuregroup)}}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row" style="margin-top:20px"
+                                     ng-if="newTrainingDatasetCtrl.queryPlan.featuregroups.length > 0">
+                                    <div class="col-sm-2">
+                                        <span style="font-weight:bold"> Join Key</span>
+                                    </div>
+                                    <div class="col-sm-10">
+                                        <ui-select ng-model="newTrainingDatasetCtrl.queryPlan.joinKey"
+                                                   style="z-index: 100; margin-left:-20px"
+                                                   ng-if="newTrainingDatasetCtrl.queryPlan.possibleJoinKeys.length > 0"
+                                        >
+                                            <ui-select-match placeholder="Select a join key">
+                                                <span>{{$select.selected}}</span>
+                                            </ui-select-match>
+                                            <ui-select-choices
+                                                    repeat="key in newTrainingDatasetCtrl.queryPlan.possibleJoinKeys">
+                                                <span ng-bind="key"></span>
+                                            </ui-select-choices>
+                                        </ui-select>
+                                        <div
+                                                ng-if="newTrainingDatasetCtrl.joinKeyWrongValue === -1"
+                                                style="color: red">
+                                            <p>
+                                                No common join key exists between the feature groups where the selected
+                                                features reside. Please go back and update the feature list such that
+                                                a common join key can be found. For complex feature joins, use the
+                                                Python/Java/Scala Featurestore API directly.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div uib-accordion-group class="panel-default"
+                             is-open="newTrainingDatasetCtrl.td_accordion1.isOpen">
+                            <div uib-accordion-heading>
+                                <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                   uib-tooltip='The name of the Training Dataset'></i>
+                                <span style="margin-left: 20px">
+                                    {{newTrainingDatasetCtrl.td_accordion1.title}}
+                                    {{newTrainingDatasetCtrl.td_accordion1.value}}
+                                    </span>
+                                <span ng-if="newTrainingDatasetCtrl.trainingDatasetNameWrongValue === -1"
+                                      class="glyphicon glyphicon-alert" tooltip-placement="auto left"
+                                      uib-tooltip='The provided Training Dataset name is not valid'
+                                      style="margin-left: 10px"></span>
+                            </div>
+                            <input type="text" class="form-control"
+                                   placeholder="Enter a Training Dataset Name"
+                                   value="newTrainingDatasetCtrl.trainingDatasetName"
+                                   ng-model="newTrainingDatasetCtrl.trainingDatasetName"
+                                   ng-change="newTrainingDatasetCtrl.nameFilledIn()"
+                                   autofocus
+                                   ng-if="newTrainingDatasetCtrl.trainingDatasetOperation === 'CREATE' || newTrainingDatasetCtrl.trainingDatasetOperation === 'UPDATE'"
+                            >
+                            <input type="text" class="form-control"
+                                   placeholder="Enter a Training Dataset Name"
+                                   value="newTrainingDatasetCtrl.trainingDatasetName"
+                                   ng-model="newTrainingDatasetCtrl.trainingDatasetName"
+                                   ng-change="newTrainingDatasetCtrl.nameFilledIn()"
+                                   autofocus
+                                   readonly
+                                   ng-if="newTrainingDatasetCtrl.trainingDatasetOperation === 'NEW_VERSION'"
+                            >
+                            <div
+                                    ng-if="newTrainingDatasetCtrl.trainingDatasetNameWrongValue === -1"
+                                    style="color: red">
+                                <p>
+                                    Training dataset name shouldn't be empty and can only contain alphanumeric
+                                    characters and
+                                    underscores, maximum length is
+                                    {{newTrainingDatasetCtrl.trainingDatasetDescriptionMaxLength}}
+                                    characters. Hyphens are not allowed in the training dataset name.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div uib-accordion-group class="panel-default"
+                             is-open="newTrainingDatasetCtrl.td_accordion2.isOpen"
+                             ng-show="newTrainingDatasetCtrl.td_accordion2.visible"
+                             id="trainingDatasetDocDiv">
+                            <div uib-accordion-heading>
+                                <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                   uib-tooltip='A description of the Training Dataset.'></i>
+                                <span style="margin-left: 20px">
+                                    {{newTrainingDatasetCtrl.td_accordion2.title}}
+                                    {{newTrainingDatasetCtrl.td_accordion2.value}}
+                                    </span>
+                                <span ng-if="newTrainingDatasetCtrl.trainingDatasetDocWrongValue === -1"
+                                      class="glyphicon glyphicon-alert" tooltip-placement="auto left"
+                                      uib-tooltip='The provided Training Dataset Description is not valid'
+                                      style="margin-left: 10px"></span>
+                            </div>
+                            <input type="text" class="form-control"
+                                   placeholder="Enter a Training Dataset Description"
+                                   value="newTrainingDatasetCtrl.trainingDatasetDoc"
+                                   ng-model="newTrainingDatasetCtrl.trainingDatasetDoc"
+                                   ng-change="newTrainingDatasetCtrl.descriptionFilledIn()"
+                            >
+                            <div
+                                    ng-if="newTrainingDatasetCtrl.trainingDatasetDocWrongValue === -1"
+                                    style="color: red">
+                                <p>
+                                    Training Dataset Description should not exceed the maximum length of
+                                    {{newTrainingDatasetCtrl.trainingDatasetNameMaxLength}} characters.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div uib-accordion-group class="panel-default"
+                             is-open="newTrainingDatasetCtrl.td_accordion3.isOpen"
+                             ng-show="newTrainingDatasetCtrl.td_accordion3.visible"
+                        >
+                            <div uib-accordion-heading>
+                                <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                   uib-tooltip='The data format of the Training Dataset'></i>
+                                <span style="margin-left: 20px">
+                                    {{newTrainingDatasetCtrl.td_accordion3.title}}
+                                    {{newTrainingDatasetCtrl.td_accordion3.value}}
+                                    </span>
+                                <span ng-if="newTrainingDatasetCtrl.trainingDatasetDataFormatWrongValue === -1"
+                                      class="glyphicon glyphicon-alert" tooltip-placement="auto left"
+                                      uib-tooltip='The selected data format is not valid'
+                                      style="margin-left: 10px"></span>
+                            </div>
+                            <ui-select ng-model="newTrainingDatasetCtrl.trainingDatasetFormat"
+                                       style="z-index: 100">
+                                <ui-select-match placeholder="Select a data format for the training dataset">
+                                    <span>{{$select.selected}}</span>
+                                </ui-select-match>
+                                <ui-select-choices
+                                        repeat="dataformat in newTrainingDatasetCtrl.dataFormats">
+                                    <span ng-bind="dataformat"></span>
+                                </ui-select-choices>
+                            </ui-select>
+                            <div
+                                    ng-if="newTrainingDatasetCtrl.trainingDatasetDataFormatWrongValue === -1"
+                                    style="color: red">
+                                <p>
+                                    You must select one of the supported data formats for the training dataset.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div uib-accordion-group class="panel-default"
+                             is-open="newTrainingDatasetCtrl.td_accordion4.isOpen"
+                             ng-show="newTrainingDatasetCtrl.td_accordion4.visible"
+                        >
+                            <div uib-accordion-heading>
+                                <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                   uib-tooltip='Creating a Training Dataset will join the selected features together and store them
+                                   in the preferred data format in the selected data sink.'
+                                   ng-if="newTrainingDatasetCtrl.trainingDatasetOperation === 'CREATE' || newTrainingDatasetCtrl.trainingDatasetOperation === 'NEW_VERSION'"
+                                ></i>
+                                <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                   uib-tooltip='Updating a Training Dataset will update the associated metadata'
+                                   ng-if="newTrainingDatasetCtrl.trainingDatasetOperation === 'UPDATE'"
+                                ></i>
+                                <span style="margin-left: 20px">
+                                     {{newTrainingDatasetCtrl.td_accordion4.title}}
+                                    {{newTrainingDatasetCtrl.td_accordion4.value}}
+                                    </span>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-1">
+                                    <button ng-click="newTrainingDatasetCtrl.createTrainingDataset()"
+                                            class="btn btn-default btn-success"
+                                            ng-if="newTrainingDatasetCtrl.trainingDatasetOperation === 'CREATE' || newTrainingDatasetCtrl.trainingDatasetOperation === 'NEW_VERSION'"
+                                    >
+                                        Create
+                                        <i ng-if="newTrainingDatasetCtrl.working" style="margin-top: 2px"
+                                           class="fa fa-spinner fa-spin pull-right"></i>
+                                    </button>
+                                    <button ng-click="newTrainingDatasetCtrl.updateTrainingDataset()"
+                                            class="btn btn-default btn-success"
+                                            ng-if="newTrainingDatasetCtrl.trainingDatasetOperation === 'UPDATE'"
+                                    >
+                                        Update
+                                        <i ng-if="newTrainingDatasetCtrl.working" style="margin-top: 2px"
+                                           class="fa fa-spinner fa-spin pull-right"></i>
+                                    </button>
+                                </div>
+                                <div class="col-sm-4 alert alert-warning" role="alert"
+                                     ng-show="newTrainingDatasetCtrl.trainingDatasetWrong_values === -1">
+                                    There are errors in your input configuration, see error messages above.
+                                </div>
+                                <div class="col-sm-7">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- /#wrapper -->

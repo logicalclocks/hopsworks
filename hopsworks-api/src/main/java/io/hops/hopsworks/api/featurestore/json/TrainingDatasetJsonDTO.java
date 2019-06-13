@@ -35,18 +35,18 @@ public class TrainingDatasetJsonDTO extends FeaturestoreEntityJsonDTO{
   private String dataFormat;
 
   public TrainingDatasetJsonDTO() {
-    super(null, null, null, null,
+    super(null, null, null,
         null, null, null, null,
         false, false, null, null);
   }
 
   public TrainingDatasetJsonDTO(
-      String description, List<String> dependencies, Integer version,
+      String description, Integer version,
       String dataFormat, String trainingDatasetName, FeatureCorrelationMatrixDTO featureCorrelationMatrix,
       DescriptiveStatsDTO descriptiveStatistics, FeatureDistributionsDTO featuresHistogram,
       ClusterAnalysisDTO clusterAnalysis, List<FeatureDTO> features,
       boolean updateMetadata, boolean updateStats, String jobName) {
-    super(description, dependencies, version, trainingDatasetName, featureCorrelationMatrix,
+    super(description, version, trainingDatasetName, featureCorrelationMatrix,
         descriptiveStatistics, featuresHistogram, clusterAnalysis, updateMetadata, updateStats, features, jobName);
     this.dataFormat = dataFormat;
   }

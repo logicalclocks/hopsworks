@@ -16,9 +16,13 @@
 
 package io.hops.hopsworks.common.dao.featurestore;
 
+import io.hops.hopsworks.common.dao.featurestore.storage_connectors.hopsfs.FeaturestoreHopsfsConnector;
+import io.hops.hopsworks.common.dao.featurestore.storage_connectors.jdbc.FeaturestoreJdbcConnector;
+import io.hops.hopsworks.common.dao.featurestore.storage_connectors.s3.FeaturestoreS3Connector;
 import io.hops.hopsworks.common.dao.project.Project;
 
 import javax.persistence.Basic;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -28,12 +32,14 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.Date;
 
 /**
@@ -66,6 +72,12 @@ public class Featurestore implements Serializable {
   @NotNull
   @Column(name = "hive_db_id")
   private Long hiveDbId;
+  @OneToMany(cascade = CascadeType.ALL, mappedBy = "featurestore")
+  private Collection<FeaturestoreJdbcConnector> featurestoreJdbcConnectorConnections;
+  @OneToMany(cascade = CascadeType.ALL, mappedBy = "featurestore")
+  private Collection<FeaturestoreS3Connector> featurestoreS3ConnectorConnections;
+  @OneToMany(cascade = CascadeType.ALL, mappedBy = "featurestore")
+  private Collection<FeaturestoreHopsfsConnector> hopsfsConnections;
 
   public static long getSerialVersionUID() {
     return serialVersionUID;
@@ -102,7 +114,34 @@ public class Featurestore implements Serializable {
   public void setHiveDbId(Long hiveDbId) {
     this.hiveDbId = hiveDbId;
   }
-
+  
+  public Collection<FeaturestoreJdbcConnector> getFeaturestoreJdbcConnectorConnections() {
+    return featurestoreJdbcConnectorConnections;
+  }
+  
+  public void setFeaturestoreJdbcConnectorConnections(
+    Collection<FeaturestoreJdbcConnector> featurestoreJdbcConnectorConnections) {
+    this.featurestoreJdbcConnectorConnections = featurestoreJdbcConnectorConnections;
+  }
+  
+  public Collection<FeaturestoreS3Connector> getFeaturestoreS3ConnectorConnections() {
+    return featurestoreS3ConnectorConnections;
+  }
+  
+  public void setFeaturestoreS3ConnectorConnections(
+    Collection<FeaturestoreS3Connector> featurestoreS3ConnectorConnections) {
+    this.featurestoreS3ConnectorConnections = featurestoreS3ConnectorConnections;
+  }
+  
+  public Collection<FeaturestoreHopsfsConnector> getHopsfsConnections() {
+    return hopsfsConnections;
+  }
+  
+  public void setHopsfsConnections(
+    Collection<FeaturestoreHopsfsConnector> hopsfsConnections) {
+    this.hopsfsConnections = hopsfsConnections;
+  }
+  
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;

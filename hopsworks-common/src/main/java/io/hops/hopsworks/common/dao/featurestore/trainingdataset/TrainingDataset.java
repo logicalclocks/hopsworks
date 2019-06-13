@@ -18,9 +18,8 @@ package io.hops.hopsworks.common.dao.featurestore.trainingdataset;
 
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
-import io.hops.hopsworks.common.dao.featurestore.dependencies.FeaturestoreDependency;
+import io.hops.hopsworks.common.dao.featurestore.feature.FeaturestoreFeature;
 import io.hops.hopsworks.common.dao.featurestore.stats.FeaturestoreStatistic;
-import io.hops.hopsworks.common.dao.featurestore.trainingdataset.feature.TrainingDatasetFeature;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.user.Users;
@@ -116,9 +115,7 @@ public class TrainingDataset implements Serializable {
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "trainingDataset")
   private Collection<FeaturestoreStatistic> statistics;
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "trainingDataset")
-  private Collection<FeaturestoreDependency> dependencies;
-  @OneToMany(cascade = CascadeType.ALL, mappedBy = "trainingDataset")
-  private Collection<TrainingDatasetFeature> features;
+  private Collection<FeaturestoreFeature> features;
 
   public static long getSerialVersionUID() {
     return serialVersionUID;
@@ -228,19 +225,11 @@ public class TrainingDataset implements Serializable {
     this.statistics = statistics;
   }
 
-  public Collection<FeaturestoreDependency> getDependencies() {
-    return dependencies;
-  }
-
-  public void setDependencies(Collection<FeaturestoreDependency> dependencies) {
-    this.dependencies = dependencies;
-  }
-
-  public Collection<TrainingDatasetFeature> getFeatures() {
+  public Collection<FeaturestoreFeature> getFeatures() {
     return features;
   }
 
-  public void setFeatures(Collection<TrainingDatasetFeature> features) {
+  public void setFeatures(Collection<FeaturestoreFeature> features) {
     this.features = features;
   }
 
@@ -265,8 +254,6 @@ public class TrainingDataset implements Serializable {
     if (created != null)
       if (!created.equals(that.created)) return false;
     if (!creator.equals(that.creator)) return false;
-    if (dependencies != null)
-      if (!dependencies.equals(that.dependencies)) return false;
     if (features != null)
       if (!features.equals(that.features)) return false;
     return featurestore.equals(that.featurestore);
@@ -285,7 +272,6 @@ public class TrainingDataset implements Serializable {
     result = 31 * result + trainingDatasetFolder.hashCode();
     result = 31 * result + (created != null ? created.hashCode() : 0);
     result = 31 * result + (job != null ? job.hashCode() : 0);
-    result = 31 * result + (dependencies != null ? dependencies.hashCode() : 0);
     result = 31 * result + (features != null ? features.hashCode() : 0);
     result = 31 * result + creator.hashCode();
     return result;

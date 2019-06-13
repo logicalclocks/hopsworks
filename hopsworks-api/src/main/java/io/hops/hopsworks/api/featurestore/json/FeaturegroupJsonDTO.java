@@ -17,11 +17,13 @@
 package io.hops.hopsworks.api.featurestore.json;
 
 import io.hops.hopsworks.common.dao.featurestore.feature.FeatureDTO;
+import io.hops.hopsworks.common.dao.featurestore.featuregroup.FeaturegroupType;
 import io.hops.hopsworks.common.dao.featurestore.stats.cluster_analysis.ClusterAnalysisDTO;
 import io.hops.hopsworks.common.dao.featurestore.stats.desc_stats.DescriptiveStatsDTO;
 import io.hops.hopsworks.common.dao.featurestore.stats.feature_correlation.FeatureCorrelationMatrixDTO;
 import io.hops.hopsworks.common.dao.featurestore.stats.feature_distributions.FeatureDistributionsDTO;
 
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.List;
 
@@ -31,20 +33,63 @@ import java.util.List;
 @XmlRootElement
 public class FeaturegroupJsonDTO extends FeaturestoreEntityJsonDTO {
 
+  private FeaturegroupType featuregroupType = FeaturegroupType.CACHED_FEATURE_GROUP;
+  private Integer jdbcConnectorId;
+  private String sqlQuery;
+  
   public FeaturegroupJsonDTO() {
-    super(null, null, null, null,
+    super(null, null, null,
         null, null, null, null,
         false, false, null, null);
   }
 
   public FeaturegroupJsonDTO(
       List<FeatureDTO> features, String featuregroupName,
-      String description, List<String> dependencies, Integer version,
+      String description, Integer version,
       FeatureCorrelationMatrixDTO featureCorrelationMatrix, DescriptiveStatsDTO descriptiveStatistics,
       boolean updateMetadata,
       boolean updateStats, FeatureDistributionsDTO featuresHistogram, ClusterAnalysisDTO clusterAnalysis,
-      String jobName) {
-    super(description, dependencies, version, featuregroupName, featureCorrelationMatrix, descriptiveStatistics,
+      String jobName, FeaturegroupType featuregroupType, Integer jdbcConnectorId, String sqlQuery) {
+    super(description, version, featuregroupName, featureCorrelationMatrix, descriptiveStatistics,
         featuresHistogram, clusterAnalysis, updateMetadata, updateStats, features, jobName);
+    this.featuregroupType = featuregroupType;
+    this.jdbcConnectorId = jdbcConnectorId;
+    this.sqlQuery = sqlQuery;
+  }
+  
+  @XmlElement
+  public FeaturegroupType getFeaturegroupType() {
+    return featuregroupType;
+  }
+  
+  public void setFeaturegroupType(FeaturegroupType featuregroupType) {
+    this.featuregroupType = featuregroupType;
+  }
+  
+  @XmlElement
+  public Integer getJdbcConnectorId() {
+    return jdbcConnectorId;
+  }
+  
+  public void setJdbcConnectorId(Integer jdbcConnectorId) {
+    this.jdbcConnectorId = jdbcConnectorId;
+  }
+  
+  @XmlElement
+  public String getSqlQuery() {
+    return sqlQuery;
+  }
+  
+  public void setSqlQuery(String sqlQuery) {
+    this.sqlQuery = sqlQuery;
+  }
+  
+  @Override
+  public String toString() {
+    return "FeaturegroupJsonDTO{" +
+      "featuregroupType=" + featuregroupType +
+      ", jdbcConnectorId=" + jdbcConnectorId +
+      ", sqlQuery='" + sqlQuery + '\'' +
+      '}';
   }
 }

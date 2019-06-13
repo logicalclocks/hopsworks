@@ -16,23 +16,28 @@
 
 package io.hops.hopsworks.common.dao.featurestore.featuregroup;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
 import io.hops.hopsworks.common.dao.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.dao.featurestore.FeaturestoreFacade;
-import io.hops.hopsworks.common.dao.featurestore.dependencies.FeaturestoreDependencyController;
 import io.hops.hopsworks.common.dao.featurestore.feature.FeatureDTO;
+import io.hops.hopsworks.common.dao.featurestore.feature.FeaturestoreFeatureController;
 import io.hops.hopsworks.common.dao.featurestore.stats.FeaturestoreStatisticController;
 import io.hops.hopsworks.common.dao.featurestore.stats.cluster_analysis.ClusterAnalysisDTO;
 import io.hops.hopsworks.common.dao.featurestore.stats.desc_stats.DescriptiveStatsDTO;
 import io.hops.hopsworks.common.dao.featurestore.stats.feature_correlation.FeatureCorrelationMatrixDTO;
 import io.hops.hopsworks.common.dao.featurestore.stats.feature_distributions.FeatureDistributionsDTO;
-import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
+import io.hops.hopsworks.common.dao.featurestore.storage_connectors.external_sql_query.FeaturestoreExternalSQLQuery;
+import io.hops.hopsworks.common.dao.featurestore.storage_connectors.external_sql_query.FeaturestoreExternalSQLQueryFacade;
+import io.hops.hopsworks.common.dao.featurestore.storage_connectors.jdbc.FeaturestoreJdbcConnector;
+import io.hops.hopsworks.common.dao.featurestore.storage_connectors.jdbc.FeaturestoreJdbcConnectorFacade;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.hive.HiveTableType;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.CryptoPasswordNotFoundException;
@@ -59,6 +64,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -83,9 +89,11 @@ public class FeaturegroupController {
   @EJB
   private FeaturestoreStatisticController featurestoreStatisticController;
   @EJB
-  private FeaturestoreDependencyController featurestoreDependencyController;
+  private FeaturestoreFeatureController featurestoreFeatureController;
   @EJB
-  private InodeFacade inodeFacade;
+  private FeaturestoreJdbcConnectorFacade featurestoreJdbcConnectorFacade;
+  @EJB
+  private FeaturestoreExternalSQLQueryFacade featurestoreExternalSQLQueryFacade;
 
   private static final Logger LOGGER = Logger.getLogger(FeaturegroupController.class.getName());
   private static final String HIVE_DRIVER = "org.apache.hive.jdbc.HiveDriver";
@@ -172,6 +180,11 @@ public class FeaturegroupController {
       FeaturegroupDTO featuregroupDTO, Project project, Users user,
       Featurestore featurestore)
       throws SQLException, FeaturestoreException, HopsSecurityException {
+    if(featuregroupDTO.getFeaturegroupType() == FeaturegroupType.ON_DEMAND_FEATURE_GROUP){
+      throw new FeaturestoreException(
+        RESTCodes.FeaturestoreErrorCode.CANNOT_FETCH_HIVE_SCHEMA_FOR_ON_DEMAND_FEATUREGROUPS,
+        Level.FINE, "featuregroupId: " + featuregroupDTO.getId());
+    }
     String sqlSchema = parseSqlSchemaResult(getSQLSchemaForFeaturegroup(featuregroupDTO, project, user, featurestore));
     ColumnValueQueryResult column = new ColumnValueQueryResult("schema", sqlSchema);
     List<ColumnValueQueryResult> columns = new ArrayList<>();
@@ -187,25 +200,43 @@ public class FeaturegroupController {
    */
   private FeaturegroupDTO convertFeaturegrouptoDTO(Featuregroup featuregroup) {
     FeaturegroupDTO featuregroupDTO = new FeaturegroupDTO(featuregroup);
-    List<FeatureDTO> featureDTOs = featuregroupFacade.getHiveFeatures(featuregroup.getHiveTblId());
-    String primaryKeyName = featuregroupFacade.getHiveTablePrimaryKey(featuregroup.getHiveTblId());
-    featureDTOs.stream().filter(f -> f.getName().equals(primaryKeyName))
-        .collect(Collectors.toList()).get(0).setPrimary(true);
-    featuregroupDTO.setFeatures(featureDTOs);
-    String featuregroupName = featuregroupFacade.getHiveTableName(featuregroup.getHiveTblId());
-    int versionLength = featuregroup.getVersion().toString().length();
-    //Remove the _version suffix
-    featuregroupName = featuregroupName.substring(0, featuregroupName.length() - (1 + versionLength));
+    
+    String featuregroupName = "";
+    String featuregroupDescription = "";
+    
+    // Cached Feature Groups are Stored in Hive, Fetch Hive metadata from the metastore
+    if(featuregroup.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP) {
+      List<FeatureDTO> featureDTOs = featuregroupFacade.getHiveFeatures(featuregroup.getHiveTblId());
+      String primaryKeyName = featuregroupFacade.getHiveTablePrimaryKey(featuregroup.getHiveTblId());
+      if(!featureDTOs.isEmpty() && !Strings.isNullOrEmpty(primaryKeyName)){
+        featureDTOs.stream().filter(f -> f.getName().equals(primaryKeyName))
+          .collect(Collectors.toList()).get(0).setPrimary(true);
+      }
+      featuregroupDTO.setFeatures(featureDTOs);
+      featuregroupName = featuregroupFacade.getHiveTableName(featuregroup.getHiveTblId());
+      List<String> hdfsStorePaths = featuregroupFacade.getHiveTableHdfsPaths(featuregroup.getHiveTblId());
+      featuregroupDTO.setHdfsStorePaths(hdfsStorePaths);
+      featuregroupDescription = featuregroupFacade.getHiveTableComment(featuregroup.getHiveTblId());
+      Long inodeId = featuregroupFacade.getFeaturegroupInodeId(featuregroup.getHiveTblId());
+      featuregroupDTO.setInodeId(inodeId);
+      HiveTableType hiveTableType = featuregroupFacade.getHiveTableType(featuregroup.getHiveTblId());
+      featuregroupDTO.setHiveTableType(hiveTableType);
+      String hiveInputFormat = featuregroupFacade.getHiveInputFormat(featuregroup.getHiveTblId());
+      featuregroupDTO.setInputFormat(hiveInputFormat);
+      featuregroupDTO.setLocation(hdfsStorePaths.get(0));
+      int versionLength = featuregroup.getVersion().toString().length();
+      //Remove the _version suffix
+      featuregroupName = featuregroupName.substring(0, featuregroupName.length() - (1 + versionLength));
+    } else if(featuregroup.getFeaturegroupType() == FeaturegroupType.ON_DEMAND_FEATURE_GROUP) {
+      // On Demand Feature Groups are strored Remotely, fetch metadata from table `feature_store_external_sql_query`
+      featuregroupName = featuregroup.getFeaturestoreExternalSQLQuery().getName();
+      featuregroupDescription = featuregroup.getFeaturestoreExternalSQLQuery().getDescription();
+    }
+    //Common metadata
     featuregroupDTO.setName(featuregroupName);
     String featurestoreName = featurestoreFacade.getHiveDbName(featuregroup.getFeaturestore().getHiveDbId());
     featuregroupDTO.setFeaturestoreName(featurestoreName);
-    List<String> hdfsStorePaths = featuregroupFacade.getHiveTableHdfsPaths(featuregroup.getHiveTblId());
-    featuregroupDTO.setHdfsStorePaths(hdfsStorePaths);
-    String docComment = featuregroupFacade.getHiveTableComment(featuregroup.getHiveTblId());
-    featuregroupDTO.setDescription(docComment);
-    Long inodeId = featuregroupFacade.getFeaturegroupInodeId(featuregroup.getHiveTblId());
-    featuregroupDTO.setInodeId(inodeId);
-    featuregroupDTO.setDependencies((List) featuregroup.getDependencies(), inodeFacade);
+    featuregroupDTO.setDescription(featuregroupDescription);
     return featuregroupDTO;
   }
 
@@ -236,14 +267,13 @@ public class FeaturegroupController {
   }
 
   /**
-   * Creates a new featuregroup: Create Hive Table and store metadata in Hopsworks
+   * Creates a new cached featuregroup: Create Hive Table and store metadata in Hopsworks
    *
    * @param project                  the project of the user making the request
    * @param user                     the user who creates the featuregroup
    * @param featurestore             the featurestore that the featuregroup belongs to
    * @param featuregroupName         the name of the new featuregroup
    * @param features                 string of features separated with comma
-   * @param dependencies             dependencies to create the featuregroup (e.g input datasets to feature engineering)
    * @param job                      (optional) job to compute this feature group
    * @param version                  version of the featuregroup
    * @param featureCorrelationMatrix feature correlation data
@@ -256,10 +286,9 @@ public class FeaturegroupController {
    * @throws SQLException
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
-  public FeaturegroupDTO createFeaturegroup(
+  public FeaturegroupDTO createCachedFeaturegroup(
       Project project, Users user, Featurestore featurestore,
-      String featuregroupName, String features,
-      List<String> dependencies, Jobs job, Integer version,
+      String featuregroupName, String features, Jobs job, Integer version,
       FeatureCorrelationMatrixDTO featureCorrelationMatrix, DescriptiveStatsDTO descriptiveStatistics,
       FeatureDistributionsDTO featuresHistogram,
       ClusterAnalysisDTO clusterAnalysis)
@@ -286,8 +315,78 @@ public class FeaturegroupController {
     featuregroup.setCreator(user);
     featuregroup.setVersion(version);
     featuregroup.setHiveTblId(hiveTblId);
+    featuregroup.setFeaturestoreExternalSQLQuery(null);
+    featuregroup.setFeaturegroupType(FeaturegroupType.CACHED_FEATURE_GROUP);
     featuregroupFacade.persist(featuregroup);
-    featurestoreDependencyController.updateFeaturestoreDependencies(featuregroup, null, dependencies);
+    
+    // Store statistics
+    featurestoreStatisticController.updateFeaturestoreStatistics(featuregroup, null,
+      featureCorrelationMatrix, descriptiveStatistics, featuresHistogram, clusterAnalysis);
+    return convertFeaturegrouptoDTO(featuregroup);
+  }
+  
+  /**
+   * Create a new On-Demand Feature Group. Store featuregroup metadata and On-Demand SQL query with JDBC Connector.
+   *
+   * @param project                          the project of the user making the request
+   * @param user                             the user who creates the featuregroup
+   * @param featurestore                     the featurestore that the featuregroup belongs to
+   * @param featuregroupName                 the name of the new featuregroup
+   * @param features                         string of features separated with comma
+   * @param job                              (optional) job to compute this feature group
+   * @param version                          version of the featuregroup
+   * @param featureCorrelationMatrix         feature correlation data
+   * @param descriptiveStatistics            descriptive statistics data
+   * @param featuresHistogram                feature distributions data
+   * @param clusterAnalysis                  cluster analysis JSON
+   * @param jdbcConnectorId                  id of the featurestore jdbc connector
+   * @param sqlQuery                         the on-demand SQL query
+   * @param description                      description of the feature group
+   * @return                                 DTO of the created feature group
+   * @throws FeaturestoreException
+   */
+  @TransactionAttribute(TransactionAttributeType.NEVER)
+  public FeaturegroupDTO createOnDemandFeaturegroup(
+    Project project, Users user, Featurestore featurestore,
+    String featuregroupName, List<FeatureDTO> features, Jobs job, Integer version,
+    FeatureCorrelationMatrixDTO featureCorrelationMatrix, DescriptiveStatsDTO descriptiveStatistics,
+    FeatureDistributionsDTO featuresHistogram,
+    ClusterAnalysisDTO clusterAnalysis, Integer jdbcConnectorId, String sqlQuery, String description)
+    throws FeaturestoreException {
+    
+    String hdfsUsername = hdfsUsersController.getHdfsUserName(project, user);
+    HdfsUsers hdfsUser = hdfsUsersFacade.findByName(hdfsUsername);
+    
+    //Get JDBC Connector
+    FeaturestoreJdbcConnector featurestoreJdbcConnector = featurestoreJdbcConnectorFacade.find(jdbcConnectorId);
+    if(featurestoreJdbcConnector == null){
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ON_DEMAND_FEATUREGROUP_JDBC_CONNECTOR_NOT_FOUND,
+        Level.FINE, "jdbConnectorId: " + jdbcConnectorId);
+    }
+    
+    //Store external SQL Query metadata in Hopsworks
+    FeaturestoreExternalSQLQuery featurestoreExternalSQLQuery = new FeaturestoreExternalSQLQuery();
+    featurestoreExternalSQLQuery.setQuery(sqlQuery);
+    featurestoreExternalSQLQuery.setName(featuregroupName);
+    featurestoreExternalSQLQuery.setDescription(description);
+    featurestoreExternalSQLQuery.setFeaturestoreJdbcConnector(featurestoreJdbcConnector);
+    featurestoreExternalSQLQueryFacade.persist(featurestoreExternalSQLQuery);
+  
+    //Store schema of OnDemand Feature Group (since we don't have Hive metastore for this now)
+    featurestoreFeatureController.updateExternalFgFeatures(featurestoreExternalSQLQuery, features);
+  
+    //Store featuregroup metadata in Hopsworks
+    Featuregroup featuregroup = new Featuregroup();
+    featuregroup.setFeaturestore(featurestore);
+    featuregroup.setHdfsUserId(hdfsUser.getId());
+    featuregroup.setJob(job);
+    featuregroup.setCreated(new Date());
+    featuregroup.setCreator(user);
+    featuregroup.setVersion(version);
+    featuregroup.setHiveTblId(null);
+    featuregroup.setFeaturestoreExternalSQLQuery(featurestoreExternalSQLQuery);
+    featuregroup.setFeaturegroupType(FeaturegroupType.ON_DEMAND_FEATURE_GROUP);
+    featuregroupFacade.persist(featuregroup);
     featurestoreStatisticController.updateFeaturestoreStatistics(featuregroup, null,
       featureCorrelationMatrix, descriptiveStatistics, featuresHistogram, clusterAnalysis);
     return convertFeaturegrouptoDTO(featuregroup);
@@ -311,29 +410,29 @@ public class FeaturegroupController {
   }
 
   /**
-   * Updates metadata about a featuregroup (since only metadata is changed, the Hive table does not need
+   * Updates metadata about a cached featuregroup (since only metadata is changed, the Hive table does not need
    * to be modified)
    *
    * @param featurestore             the featurestore where the featuregroup resides
    * @param id                       the id of the featuregroup
    * @param job                      the new job to associate with the featuregroup
-   * @param dependencies             the new dependencies to associate with the featuregroup
    * @param featureCorrelationMatrix base64 string with feature correlation matrix
    * @param descriptiveStatistics    JSON string with descriptive statistics
    * @param updateMetadata           boolean flag whether to update featuregroup metadata
    * @param updateStats              boolean flag whether to update featuregroup stats
    * @param featuresHistogram        base64 string with histogram figures for features
    * @param clusterAnalysis          cluster analysis JSON string
-   * @return
+   * @return DTO of the updated feature group
    * @throws FeaturestoreException
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public FeaturegroupDTO updateFeaturegroupMetadata(
-      Featurestore featurestore, Integer id, Jobs job, List<String> dependencies,
+      Featurestore featurestore, Integer id, Jobs job,
       FeatureCorrelationMatrixDTO featureCorrelationMatrix,
       DescriptiveStatsDTO descriptiveStatistics, boolean updateMetadata, boolean updateStats,
       FeatureDistributionsDTO featuresHistogram,
-      ClusterAnalysisDTO clusterAnalysis)
+      ClusterAnalysisDTO clusterAnalysis, String featuregroupName, String description, Integer jdbcConnectorId,
+    String sqlQuery, List<FeatureDTO> featureDTOS)
       throws FeaturestoreException {
     Featuregroup featuregroup = featuregroupFacade.findByIdAndFeaturestore(id, featurestore);
     if (featuregroup == null) {
@@ -342,12 +441,19 @@ public class FeaturegroupController {
     }
     Featuregroup updatedFeaturegroup = featuregroup;
     if (updateMetadata) {
-      updatedFeaturegroup =
+      if(featuregroup.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP){
+        updatedFeaturegroup =
           featuregroupFacade.updateFeaturegroupMetadata(featuregroup, job);
-      featurestoreDependencyController.updateFeaturestoreDependencies(updatedFeaturegroup, null,
-        dependencies);
+      } else if(featuregroup.getFeaturegroupType() == FeaturegroupType.ON_DEMAND_FEATURE_GROUP){
+        verifyOnDemandFeaturegroupUserInput(featuregroupName, description, jdbcConnectorId, sqlQuery, featureDTOS);
+        FeaturestoreExternalSQLQuery featurestoreExternalSQLQuery = featuregroup.getFeaturestoreExternalSQLQuery();
+        FeaturestoreJdbcConnector featurestoreJdbcConnector = featurestoreJdbcConnectorFacade.find(jdbcConnectorId);
+        featurestoreExternalSQLQueryFacade.updateMetadata(featurestoreExternalSQLQuery, featuregroupName,
+          description, featurestoreJdbcConnector, sqlQuery);
+        featurestoreFeatureController.updateExternalFgFeatures(featurestoreExternalSQLQuery, featureDTOS);
+      }
     }
-    if (updateStats) {
+    if (updateStats && featuregroup.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP) {
       featurestoreStatisticController.updateFeaturestoreStatistics(featuregroup, null,
         featureCorrelationMatrix, descriptiveStatistics, featuresHistogram, clusterAnalysis);
     }
@@ -370,6 +476,11 @@ public class FeaturegroupController {
   public List<RowValueQueryResult> getFeaturegroupPreview(
       FeaturegroupDTO featuregroupDTO, Featurestore featurestore, Project project, Users user)
       throws SQLException, FeaturestoreException, HopsSecurityException {
+    if(featuregroupDTO.getFeaturegroupType() == FeaturegroupType.ON_DEMAND_FEATURE_GROUP) {
+      throw new FeaturestoreException(
+        RESTCodes.FeaturestoreErrorCode.PREVIEW_NOT_SUPPORTED_FOR_ON_DEMAND_FEATUREGROUPS,
+        Level.FINE, "featuregroupId: " + featuregroupDTO.getId());
+    }
     String tbl = getTblName(featuregroupDTO.getName(), featuregroupDTO.getVersion());
     String query = "SELECT * FROM " + tbl + " LIMIT 20";
     String db = featurestoreController.getFeaturestoreDbName(featurestore.getProject());
@@ -405,7 +516,7 @@ public class FeaturegroupController {
    * @param featurestore     the featurestore where the featuregroup resides
    * @param featuregroupName the name of the featuregroup
    * @param version          version of the featuregroup
-   * @return
+   * @return DTO of the featuregroup
    * @throws FeaturestoreException
    */
   public FeaturegroupDTO getFeaturegroupByFeaturestoreAndName(
@@ -427,30 +538,57 @@ public class FeaturegroupController {
   }
 
   /**
-   * Deletes a featuregroup with a particular id from a particular featurestore
+   * Deletes a featuregroup with a particular id or name from a featurestore
    *
-   * @param featurestore the featurestore that the featuregroup belongs to
-   * @param id           if of the featuregroup
-   * @param project      the project of the user making the request
-   * @param user         the user making the request
+   * @param featurestore                   the featurestore that the featuregroup belongs to
+   * @param id                             if of the featuregroup
+   * @param project                        the project of the user making the request
+   * @param user                           the user making the request
+   * @param featuregroupName               the name of the featuregroup
+   * @param featuregroupVersion            the version of the featuregroup
    * @return JSON/XML DTO of the deleted featuregroup
    * @throws SQLException
    * @throws FeaturestoreException
    * @throws HopsSecurityException
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
-  public FeaturegroupDTO deleteFeaturegroupWithIdAndFeaturestore(
-      Featurestore featurestore, Integer id, Project project, Users user)
+  public FeaturegroupDTO deleteFeaturegroupIfExists(
+      Featurestore featurestore, Integer id, Project project, Users user,
+    String featuregroupName, Integer featuregroupVersion)
       throws SQLException, FeaturestoreException, HopsSecurityException {
-    Featuregroup featuregroup = featuregroupFacade.findByIdAndFeaturestore(id, featurestore);
-    if (featuregroup == null) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_NOT_FOUND, Level.SEVERE,
+    Featuregroup featuregroup = null;
+    if(id != null && featurestore != null){
+      featuregroup = featuregroupFacade.findByIdAndFeaturestore(id, featurestore);
+      if (featuregroup == null) {
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_NOT_FOUND, Level.SEVERE,
           "Could not find feature group with id: " + id + " in feature store:" + featurestore +
-              " , project: " + project.getName());
+            " , project: " + project.getName());
+      }
+    } else {
+      if(id == null){
+        List<Featuregroup> featuregroups = featuregroupFacade.findByFeaturestore(featurestore);
+        featuregroups = featuregroups.stream().filter(fg -> {
+          FeaturegroupDTO featuregroupDTO = convertFeaturegrouptoDTO(fg);
+          return featuregroupDTO.getName().equals(featuregroupName) &&
+            featuregroupDTO.getVersion() == featuregroupVersion;
+        }).collect(Collectors.toList());
+        if(!featuregroups.isEmpty())
+          featuregroup = featuregroups.get(0);
+      } else {
+        featuregroup = featuregroupFacade.findById(id);
+      }
     }
-    FeaturegroupDTO featuregroupDTO = convertFeaturegrouptoDTO(featuregroup);
-    dropFeaturegroup(featuregroupDTO.getName(), featuregroup.getVersion(), project, user, featurestore);
-    return featuregroupDTO;
+    if(featuregroup != null){
+      FeaturegroupDTO featuregroupDTO = convertFeaturegrouptoDTO(featuregroup);
+      if(featuregroupDTO.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP){
+        dropHiveFeaturegroup(featuregroupDTO.getName(), featuregroup.getVersion(), project, user, featurestore);
+      } else {
+        featuregroupFacade.remove(featuregroup);
+      }
+      return featuregroupDTO;
+    } else {
+      return null;
+    }
   }
 
   /**
@@ -466,7 +604,7 @@ public class FeaturegroupController {
    * @throws HopsSecurityException
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
-  public void dropFeaturegroup(
+  private void dropHiveFeaturegroup(
       String featuregroupName, Integer version,
       Project project, Users user, Featurestore featurestore) throws SQLException,
       FeaturestoreException, HopsSecurityException {
@@ -604,5 +742,111 @@ public class FeaturegroupController {
     } finally {
       certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());
     }
+  }
+  
+  
+  /**
+   * Verify user input specific for creation of on-demand feature group
+   *
+   * @param featuregroupName name of the feature group
+   * @param description description of the feature group
+   * @param jdbcConnectorId JDBC connector
+   * @param features list of features for the feature group
+   * @param sqlQuery SQL Query
+   */
+  public void verifyOnDemandFeaturegroupUserInput(String featuregroupName, String description, Integer jdbcConnectorId,
+    String sqlQuery, List<FeatureDTO> features) {
+  
+    if(featuregroupName.length() > Settings.HOPS_ON_DEMAND_FEATUREGROUP_NAME_MAX_LENGTH) {
+      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_NAME.getMessage()
+        + ", the name of a on-demand feature group should be less than "
+        + Settings.HOPS_ON_DEMAND_FEATUREGROUP_NAME_MAX_LENGTH + " characters");
+    }
+  
+    if(!Strings.isNullOrEmpty(description) &&
+      description.length() > Settings.HOPS_ON_DEMAND_FEATUREGROUP_DESCRIPTION_MAX_LENGTH){
+      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_DESCRIPTION.getMessage()
+        + ", the descritpion of an on-demand feature group should be less than "
+        + Settings.HOPS_ON_DEMAND_FEATUREGROUP_DESCRIPTION_MAX_LENGTH + " " +
+        "characters");
+    }
+  
+    features.stream().forEach(f -> {
+      if(Strings.isNullOrEmpty(f.getName()) || f.getName().length() >
+        Settings.HOPS_ON_DEMAND_FEATUREGROUP_FEATURE_NAME_MAX_LENGTH){
+        throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_NAME.getMessage()
+          + ", the feature name in an on-demand feature group should be less than "
+          + Settings.HOPS_ON_DEMAND_FEATUREGROUP_FEATURE_NAME_MAX_LENGTH + " characters");
+      }
+      if(!Strings.isNullOrEmpty(f.getDescription()) &&
+        f.getDescription().length() > Settings.HOPS_ON_DEMAND_FEATUREGROUP_FEATURE_DESCRIPTION_MAX_LENGTH) {
+        throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_DESCRIPTION.getMessage()
+          + ", the feature description in an on-demand feature group should be less than "
+          + Settings.HOPS_ON_DEMAND_FEATUREGROUP_FEATURE_DESCRIPTION_MAX_LENGTH + " characters");
+      }
+    });
+    
+    if(jdbcConnectorId == null){
+      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.JDBC_CONNECTOR_ID_NOT_PROVIDED.getMessage());
+    }
+    FeaturestoreJdbcConnector featurestoreJdbcConnector = featurestoreJdbcConnectorFacade.find(jdbcConnectorId);
+    if(featurestoreJdbcConnector == null) {
+      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.JDBC_CONNECTOR_NOT_FOUND.getMessage()
+        + "JDBC connector with id: " + jdbcConnectorId + " was not found");
+    }
+    
+    if(Strings.isNullOrEmpty(sqlQuery)){
+      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.INVALID_SQL_QUERY.getMessage()
+        + ", SQL Query cannot be empty");
+    }
+  
+    if(sqlQuery.length() > Settings.HOPS_ON_DEMAND_FEATUREGROUP_SQL_QUERY_MAX_LENGTH) {
+      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.INVALID_SQL_QUERY.getMessage()
+        + ", SQL Query cannot exceed " + Settings.HOPS_ON_DEMAND_FEATUREGROUP_SQL_QUERY_MAX_LENGTH + " characters.");
+    }
+  }
+  
+  /**
+   * Verify user input specific for creation of on-demand training dataset
+   *
+   * @param featuregroupName name of the feature group
+   * @param description description of the feature group
+   * @param featureDTOS list of features for the feature group
+   */
+  public void verifyCachedFeaturegroupUserInput(String featuregroupName, String description,
+    List<FeatureDTO> featureDTOS) {
+    
+    Pattern namePattern = Pattern.compile(Settings.HOPS_FEATURESTORE_REGEX);
+  
+    if(featuregroupName.length() > Settings.HOPS_CACHED_FEATUREGROUP_NAME_MAX_LENGTH ||
+      !namePattern.matcher(featuregroupName).matches()) {
+      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_NAME.getMessage()
+        + ", the name of a cached feature group should be less than "
+        + Settings.HOPS_CACHED_FEATUREGROUP_NAME_MAX_LENGTH + " characters and match " +
+        "the regular expression: " +  Settings.HOPS_FEATURESTORE_REGEX);
+    }
+    
+    if(!Strings.isNullOrEmpty(description) && description.length() >
+      Settings.HOPS_CACHED_FEATUREGROUP_DESCRIPTION_MAX_LENGTH){
+      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_DESCRIPTION.getMessage()
+        + ", the descritpion of a cached feature group should be less than "
+        + Settings.HOPS_CACHED_FEATUREGROUP_DESCRIPTION_MAX_LENGTH + " characters");
+    }
+    
+    featureDTOS.stream().forEach(f -> {
+      if(Strings.isNullOrEmpty(f.getName()) || !namePattern.matcher(f.getName()).matches() || f.getName().length() >
+        Settings.HOPS_CACHED_FEATUREGROUP_FEATURE_NAME_MAX_LENGTH){
+        throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_NAME.getMessage()
+          + ", the feature name in a cached feature group should be less than "
+          + Settings.HOPS_CACHED_FEATUREGROUP_FEATURE_NAME_MAX_LENGTH + " characters and match " +
+          "the regular expression: " +  Settings.HOPS_FEATURESTORE_REGEX);
+      }
+      if(!Strings.isNullOrEmpty(f.getDescription()) &&
+        f.getDescription().length() > Settings.HOPS_CACHED_FEATUREGROUP_FEATURE_DESCRIPTION_MAX_LENGTH) {
+        throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_DESCRIPTION.getMessage()
+          + ", the feature description in a cached feature group should be less than "
+          + Settings.HOPS_CACHED_FEATUREGROUP_FEATURE_DESCRIPTION_MAX_LENGTH + " characters");
+      }
+    });
   }
 }

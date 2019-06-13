@@ -1247,7 +1247,43 @@ public class RESTCodes {
       "The size of the provided correlation matrix exceed the maximum size of 50 columns", Response.Status.BAD_REQUEST),
     FEATURESTORE_NAME_NOT_PROVIDED(24, "Featurestore name was not provided", Response.Status.BAD_REQUEST),
     UNAUTHORIZED_FEATURESTORE_OPERATION(25, "Only data owners are allowed to delete or update feature groups/" +
-      "training datasets that are not created by themself.", Response.Status.UNAUTHORIZED);
+      "training datasets that are not created by themself.", Response.Status.UNAUTHORIZED),
+    STORAGE_CONNECTOR_ID_NOT_PROVIDED(26, "Storage backend id not provided", Response.Status.BAD_REQUEST),
+    CANNOT_FETCH_HIVE_SCHEMA_FOR_ON_DEMAND_FEATUREGROUPS(27, "Fetching Hive Schema of On-demand feature groups is not" +
+      " supported", Response.Status.BAD_REQUEST),
+    ON_DEMAND_FEATUREGROUP_JDBC_CONNECTOR_NOT_FOUND(28, "The JDBC Connector for the on-demand feature group could not" +
+      " be found", Response.Status.BAD_REQUEST),
+    PREVIEW_NOT_SUPPORTED_FOR_ON_DEMAND_FEATUREGROUPS(29, "Fetching Hive Schema of On-demand feature groups is not" +
+      " supported", Response.Status.BAD_REQUEST),
+    CLEAR_OPERATION_NOT_SUPPORTED_FOR_ON_DEMAND_FEATUREGROUPS(30, "Clearing Feature Group contents is not supported " +
+      "for on-demand feature groups", Response.Status.BAD_REQUEST),
+    ILLEGAL_STORAGE_CONNECTOR_NAME(31, "Illegal storage connector name", Response.Status.BAD_REQUEST),
+    ILLEGAL_STORAGE_CONNECTOR_DESCRIPTION(32, "Illegal storage connector description",
+      Response.Status.BAD_REQUEST),
+    ILLEGAL_JDBC_CONNECTION_STRING(33, "Illegal JDBC Connection String",
+      Response.Status.BAD_REQUEST),
+    ILLEGAL_JDBC_CONNECTION_ARGUMENTS(34, "Illegal JDBC Connection Arguments",
+      Response.Status.BAD_REQUEST),
+    ILLEGAL_S3_CONNECTOR_BUCKET(35, "Illegal S3 connector bucket",
+      Response.Status.BAD_REQUEST),
+    ILLEGAL_S3_CONNECTOR_ACCESS_KEY(36, "Illegal S3 connector access key",
+      Response.Status.BAD_REQUEST),
+    ILLEGAL_S3_CONNECTOR_SECRET_KEY(37, "Illegal S3 connector secret key",
+      Response.Status.BAD_REQUEST),
+    ILLEGAL_HOPSFS_CONNECTOR_DATASET(38, "Illegal Hopsfs connector dataset",
+      Response.Status.BAD_REQUEST),
+    ILLEGAL_FEATUREGROUP_NAME(39, "Illegal feature group name", Response.Status.BAD_REQUEST),
+    ILLEGAL_FEATUREGROUP_DESCRIPTION(40, "Illegal feature group description",
+      Response.Status.BAD_REQUEST),
+    ILLEGAL_FEATURE_NAME(41, "Illegal feature name",
+      Response.Status.BAD_REQUEST),
+    ILLEGAL_FEATURE_DESCRIPTION(42, "Illegal feature name",
+      Response.Status.BAD_REQUEST),
+    JDBC_CONNECTOR_NOT_FOUND(43, "JDBC Connector not found",
+      Response.Status.BAD_REQUEST),
+    JDBC_CONNECTOR_ID_NOT_PROVIDED(44, "JDBC Connector Id was not provided", Response.Status.BAD_REQUEST),
+    INVALID_SQL_QUERY(45, "Invalid SQL query", Response.Status.BAD_REQUEST),
+    ;
     
     
     private int code;

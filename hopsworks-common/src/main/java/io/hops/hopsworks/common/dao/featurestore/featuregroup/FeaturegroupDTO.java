@@ -17,6 +17,8 @@
 package io.hops.hopsworks.common.dao.featurestore.featuregroup;
 
 import io.hops.hopsworks.common.dao.featurestore.FeaturestoreEntityDTO;
+import io.hops.hopsworks.common.dao.featurestore.storage_connectors.external_sql_query.FeaturestoreExternalSQLQueryDTO;
+import io.hops.hopsworks.common.hive.HiveTableType;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -30,6 +32,10 @@ import java.util.List;
 public class FeaturegroupDTO extends FeaturestoreEntityDTO {
 
   private List<String> hdfsStorePaths;
+  private String inputFormat;
+  private HiveTableType hiveTableType;
+  private FeaturegroupType featuregroupType;
+  private FeaturestoreExternalSQLQueryDTO featurestoreExternalSQLQuery;
 
   public FeaturegroupDTO() {
     super(null, null, null, null, null, null,
@@ -42,6 +48,15 @@ public class FeaturegroupDTO extends FeaturestoreEntityDTO {
         (List) featuregroup.getStatistics(), featuregroup.getJob(),
         featuregroup.getId());
     this.hdfsStorePaths = null;
+    this.inputFormat = null;
+    this.hiveTableType = null;
+    this.featuregroupType = featuregroup.getFeaturegroupType();
+    if(featuregroup.getFeaturestoreExternalSQLQuery() != null){
+      this.featurestoreExternalSQLQuery =
+        new FeaturestoreExternalSQLQueryDTO(featuregroup.getFeaturestoreExternalSQLQuery());
+      setFeatures(featurestoreExternalSQLQuery.getFeatures());
+      featurestoreExternalSQLQuery.setFeatures(null);
+    }
   }
 
   @XmlElement
@@ -53,12 +68,50 @@ public class FeaturegroupDTO extends FeaturestoreEntityDTO {
   public void setHdfsStorePaths(List<String> hdfsStorePaths) {
     this.hdfsStorePaths = hdfsStorePaths;
   }
-
+  
+  @XmlElement
+  public String getInputFormat() {
+    return inputFormat;
+  }
+  
+  public void setInputFormat(String inputFormat) {
+    this.inputFormat = inputFormat;
+  }
+  
+  @XmlElement
+  public HiveTableType getHiveTableType() {
+    return hiveTableType;
+  }
+  
+  public void setHiveTableType(HiveTableType hiveTableType) {
+    this.hiveTableType = hiveTableType;
+  }
+  
+  public FeaturegroupType getFeaturegroupType() {
+    return featuregroupType;
+  }
+  
+  public void setFeaturegroupType(FeaturegroupType featuregroupType) {
+    this.featuregroupType = featuregroupType;
+  }
+  
+  public FeaturestoreExternalSQLQueryDTO getFeaturestoreExternalSQLQuery() {
+    return featurestoreExternalSQLQuery;
+  }
+  
+  public void setFeaturestoreExternalSQLQuery(
+    FeaturestoreExternalSQLQueryDTO featurestoreExternalSQLQuery) {
+    this.featurestoreExternalSQLQuery = featurestoreExternalSQLQuery;
+  }
+  
   @Override
   public String toString() {
     return "FeaturegroupDTO{" +
-        ", hdfsStorePaths=" + hdfsStorePaths +
-        '}';
+      "hdfsStorePaths=" + hdfsStorePaths +
+      ", inputFormat='" + inputFormat + '\'' +
+      ", hiveTableType=" + hiveTableType +
+      ", featuregroupType=" + featuregroupType +
+      ", featurestoreExternalSQLQuery=" + featurestoreExternalSQLQuery +
+      '}';
   }
-
 }

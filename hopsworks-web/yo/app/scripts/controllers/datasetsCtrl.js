@@ -55,7 +55,7 @@ angular.module('hopsWorksApp')
             self.files = []; //A list of files currently displayed to the user.
             self.projectId = $routeParams.projectID; //The id of the project we're currently working in.
             self.pathArray; //An array containing all the path components of the current path. If empty: project root directory.
-            self.sharedPathArray; //An array containing all the path components of a path in a shared dataset 
+            self.sharedPathArray; //An array containing all the path components of a path in a shared dataset
             self.highlighted;
             self.currentPath = [];//used in dataset browser modal
             self.parentDS = $rootScope.parentDS;
@@ -71,7 +71,7 @@ angular.module('hopsWorksApp')
             var dataSetService = DataSetService(self.projectId); //The datasetservice for the current project.
             var delaHopsService = DelaProjectService(self.projectId);
             var delaClusterService = DelaClusterProjectService(self.projectId);
-            
+
             $scope.all_selected = false;
             self.selectedFiles = {}; //Selected files
 
@@ -137,8 +137,7 @@ angular.module('hopsWorksApp')
 
             self.goToUrl = function (serviceName) {
                 $location.path('project/' + self.projectId + '/' + serviceName);
-            };
-
+            }
             self.isSharedDs = function (name) {
               var top = name.split("::");
               if (top.length === 1) {
@@ -313,8 +312,7 @@ angular.module('hopsWorksApp')
               self.getRegularDatasets = function() {
                   var regularDatasets = []
                   for (var i = 0; i < self.files.length; i++) {
-                      if(!self.isHive(self.files[i]) && !self.isFeaturestore(self.files[i]) &&
-                          !self.isTrainingDatasets(self.files[i])) {
+                      if(!self.isHive(self.files[i]) && !self.isTrainingDatasets(self.files[i])) {
                           regularDatasets.push(self.files[i])
                       }
                   }
@@ -357,7 +355,7 @@ angular.module('hopsWorksApp')
                         self.pathArray = newPathArray;
                         self.setCurrentPathFromFiles(self.files, newPathArray);
 //                        console.log(success);
-//                        alert('Execution time: ' + (new Date().getTime() - self.dir_timing)); 
+//                        alert('Execution time: ' + (new Date().getTime() - self.dir_timing));
 //                        console.log('Execution time: ' + (new Date().getTime() - self.dir_timing));
                         if ($rootScope.selectedFile) {
                           var filePathArray = self.pathArray.concat($rootScope.selectedFile);
@@ -465,7 +463,7 @@ angular.module('hopsWorksApp')
             };
 
             /**
-             * Remove the inode at the given path. If called on a folder, will 
+             * Remove the inode at the given path. If called on a folder, will
              * remove the folder and all its contents recursively.
              * @param {type} path. The project-relative path to the inode to be removed.
              * @returns {undefined}
@@ -500,8 +498,8 @@ angular.module('hopsWorksApp')
             };
 
             /**
-             * Delete the file with the given name under the current path. 
-             * If called on a folder, will remove the folder 
+             * Delete the file with the given name under the current path.
+             * If called on a folder, will remove the folder
              * and all its contents recursively.
              * @param {type} fileName
              * @returns {undefined}
@@ -513,7 +511,7 @@ angular.module('hopsWorksApp')
             };
 
             /**
-             * Delete the dataset with the given name under the current path. 
+             * Delete the dataset with the given name under the current path.
              * @param {type} fileName
              * @returns {undefined}
              */
@@ -557,7 +555,7 @@ angular.module('hopsWorksApp')
                 }
               );
             };
-            
+
             /**
              * Makes the dataset public for anybody within the local cluster
              * @param id inodeId
@@ -584,12 +582,12 @@ angular.module('hopsWorksApp')
                   }
               );
             };
-            
+
             self.showManifest = function(publicDSId){
                 delaHopsService.getManifest(publicDSId).then(function(success){
                     var manifest = success.data;
                     ModalService.json('md','Manifest', manifest).then(function(){
-                        
+
                     });
                 });
             };
@@ -613,7 +611,7 @@ angular.module('hopsWorksApp')
                       }
               );
             };
-            
+
             self.unshareFromCluster = function (inodeId) {
 
               ModalService.confirm('sm', 'Confirm', 'Are you sure you want to make this DataSet private? ').then(
@@ -744,7 +742,7 @@ angular.module('hopsWorksApp')
                       }
               });
             };
-           
+
 
             self.isIPythonNotebook = function () {
               if (self.selected === null || self.selected === undefined) {
@@ -753,7 +751,7 @@ angular.module('hopsWorksApp')
               if (self.selected.indexOf('.') == -1) {
                 return false;
               }
-              
+
               var ext =  self.selected.split('.').pop();
               if (ext === null || ext === undefined) {
                 return false;
@@ -764,7 +762,7 @@ angular.module('hopsWorksApp')
               }
               return false;
             };
-            
+
             self.browseDataset = function (dataset) {
               if (dataset.status === true) {
                 UtilsService.setDatasetName(dataset.name);
@@ -793,7 +791,7 @@ angular.module('hopsWorksApp')
               }
 
             };
-            
+
             self.getRole = function () {
               UserService.getRole(self.projectId).then(
                 function (success) {
@@ -802,7 +800,7 @@ angular.module('hopsWorksApp')
                   self.role = "";
               });
             };
-            
+
             self.getRole();
 
 
@@ -887,7 +885,7 @@ angular.module('hopsWorksApp')
                           var destPath = success;
                           var names = [];
                           var i = 0;
-                          //Check if have have multiple files 
+                          //Check if have have multiple files
                           for (var name in self.selectedFiles) {
                             names[i] = name;
                             i++;
@@ -964,7 +962,7 @@ angular.module('hopsWorksApp')
                           var destPath = success;
                           var names = [];
                           var i = 0;
-                          //Check if have have multiple files 
+                          //Check if have have multiple files
                           for (var name in self.selectedFiles) {
                             names[i] = name;
                             i++;
@@ -1058,10 +1056,10 @@ angular.module('hopsWorksApp')
              * .. if the given path resolves to a file or a dir
              * .. if the given path is an existing file
              * .. if the given file is large enough (comprises more than 10 blocks)
-             * 
+             *
              * If all of the above are met, the compression takes place in an asynchronous operation
              * and the user gets notified when it finishes via a message
-             * 
+             *
              * @param {type} file
              * @returns {undefined}
              */
@@ -1168,10 +1166,10 @@ angular.module('hopsWorksApp')
                           showToast('Preparing Download..');
                           var downloadPathArray = self.pathArray.slice(0);
                           downloadPathArray.push(file.name);
-                          var filePath = getPath(downloadPathArray);                         
+                          var filePath = getPath(downloadPathArray);
                           dataSetService.checkFileForDownload(filePath).then(
                                   function (success) {
-                                    var token = success.data.data.value; 
+                                    var token = success.data.data.value;
                                     closeToast();
                                     dataSetService.fileDownload(filePath, token);
                                   },function (error) {
@@ -1184,25 +1182,25 @@ angular.module('hopsWorksApp')
                 growl.info("File under construction.", {title: 'Info', ttl: 5000});
               }
             };
-            
+
             var showToast = function(text) {
               var toast = $mdToast.simple()
                             .textContent(text)
                             .action('Close')
                             .position('bottom right')
                             .hideDelay(0);
-                    
+
               $mdToast.show(toast).then(function(response) {
                 if ( response == 'ok' ) {
                   $mdToast.hide();
                 }
               });
             };
-            
+
             var closeToast = function() {
               $mdToast.hide();
             };
-            
+
             /**
              * Go up to parent directory.
              * @returns {undefined}
@@ -1235,7 +1233,7 @@ angular.module('hopsWorksApp')
             self.menustyle = {
               "opacity": 0.2
             };
-            
+
             self.search = '';
             function getFilteredResults() {
               var filtered = $scope.$eval("datasetsCtrl.files | orderBy:sortKey:reverse | filter:datasetsCtrl.search");
@@ -1257,7 +1255,7 @@ angular.module('hopsWorksApp')
               // Add existing selected file (idempotent, if already added)
               // If file already selected, deselect it.
               if (event && (event.ctrlKey || event.metaKey)) {
-                
+
               } else if (event && event.shiftKey && self.isSelectedFiles() > 0) {
                 self.selected = null;
                 self.tgState = false;
@@ -1275,7 +1273,7 @@ angular.module('hopsWorksApp')
                   while (i >= selectedIndex) {
                     file = files[i];
                     self.selectedFiles[file.name] = file;
-                    self.selectedFiles[file.name].selectedIndex = i; 
+                    self.selectedFiles[file.name].selectedIndex = i;
                     i--;
                   }
                 }

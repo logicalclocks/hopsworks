@@ -1236,9 +1236,27 @@ public class Settings implements Serializable {
 
   //Featurestore constants
   public static final String HOPS_FEATURESTORE_TOUR_DATA = "featurestore_demo";
-  public static final String HOPS_FEATURESTORE_TOUR_JOB_CLASS = "io.hops.examples.featurestore.Main";
+  public static final String HOPS_FEATURESTORE_TOUR_JOB_CLASS = "io.hops.examples.featurestore_tour.Main";
   public static final String HOPS_FEATURESTORE_TOUR_JOB_NAME = "featurestore_tour_job";
   public static final String HOPS_FEATURESTORE_TOUR_JOB_INPUT_PARAM = "--input ";
+  public static final int HOPS_FEATURESTORE_STATISTICS_MAX_CORRELATIONS= 50;
+  public static final String HOPS_FEATURESTORE_REGEX = "^[a-zA-Z0-9_]+$";
+  public static final int HOPS_STORAGE_CONNECTOR_NAME_MAX_LENGTH = 1000;
+  public static final int HOPS_STORAGE_CONNECTOR_DESCRIPTION_MAX_LENGTH = 1000;
+  public static final int HOPS_JDBC_STORAGE_CONNECTOR_CONNECTIONSTRING_MAX_LENGTH = 5000;
+  public static final int HOPS_JDBC_STORAGE_CONNECTOR_ARGUMENTS_MAX_LENGTH = 2000;
+  public static final int HOPS_S3_STORAGE_CONNECTOR_BUCKET_MAX_LENGTH = 5000;
+  public static final int HOPS_S3_STORAGE_CONNECTOR_ACCESSKEY_MAX_LENGTH = 1000;
+  public static final int HOPS_S3_STORAGE_CONNECTOR_SECRETKEY_MAX_LENGTH = 1000;
+  public static final int HOPS_CACHED_FEATUREGROUP_NAME_MAX_LENGTH = 767;
+  public static final int HOPS_CACHED_FEATUREGROUP_DESCRIPTION_MAX_LENGTH = 256;
+  public static final int HOPS_CACHED_FEATUREGROUP_FEATURE_NAME_MAX_LENGTH = 767;
+  public static final int HOPS_CACHED_FEATUREGROUP_FEATURE_DESCRIPTION_MAX_LENGTH = 256;
+  public static final int HOPS_ON_DEMAND_FEATUREGROUP_NAME_MAX_LENGTH = 1000;
+  public static final int HOPS_ON_DEMAND_FEATUREGROUP_DESCRIPTION_MAX_LENGTH = 1000;
+  public static final int HOPS_ON_DEMAND_FEATUREGROUP_FEATURE_NAME_MAX_LENGTH = 1000;
+  public static final int HOPS_ON_DEMAND_FEATUREGROUP_FEATURE_DESCRIPTION_MAX_LENGTH = 10000;
+  public static final int HOPS_ON_DEMAND_FEATUREGROUP_SQL_QUERY_MAX_LENGTH = 11000;
 
   //Serving constants
   public static final String INFERENCE_SCHEMANAME = "inferenceschema";
@@ -2324,7 +2342,7 @@ public class Settings implements Serializable {
 
   public synchronized String getHopsExamplesFeaturestoreFilename() {
     checkCache();
-    return "hops-examples-featurestore-" + HOPS_EXAMPLES_VERSION + ".jar";
+    return "hops-examples-featurestore-tour-" + HOPS_EXAMPLES_VERSION + ".jar";
   }
 
   private String VERIFICATION_PATH = "/hopsworks-admin/security/validate_account.xhtml";

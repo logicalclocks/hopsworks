@@ -16,10 +16,15 @@
 
 package io.hops.hopsworks.common.dao.featurestore;
 
+import io.hops.hopsworks.common.dao.featurestore.storage_connectors.hopsfs.FeaturestoreHopsfsConnectorDTO;
+import io.hops.hopsworks.common.dao.featurestore.storage_connectors.jdbc.FeaturestoreJdbcConnectorDTO;
+import io.hops.hopsworks.common.dao.featurestore.storage_connectors.s3.FeaturestoreS3ConnectorDTO;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 import java.util.Date;
+import java.util.List;
 
 /**
  * DTO containing the human-readable information of a featurestore, can be converted to JSON or XML representation
@@ -27,7 +32,8 @@ import java.util.Date;
  */
 @XmlRootElement
 @XmlType(propOrder = {"featurestoreId", "featurestoreName", "featurestoreDescription",
-    "created", "hdfsStorePath", "projectName", "projectId", "inodeId"})
+    "created", "hdfsStorePath", "projectName", "projectId", "inodeId", "featurestoreJdbcConnections",
+    "featurestoreS3Connections", "featurestoreHopsfsConnections"})
 public class FeaturestoreDTO {
 
   private Integer featurestoreId;
@@ -38,6 +44,9 @@ public class FeaturestoreDTO {
   private Integer projectId;
   private String featurestoreDescription;
   private Long inodeId;
+  private List<FeaturestoreJdbcConnectorDTO> featurestoreJdbcConnections;
+  private List<FeaturestoreS3ConnectorDTO> featurestoreS3Connections;
+  private List<FeaturestoreHopsfsConnectorDTO> featurestoreHopsfsConnections;
 
   public FeaturestoreDTO() {
   }
@@ -92,7 +101,22 @@ public class FeaturestoreDTO {
   public Long getInodeId() {
     return inodeId;
   }
-
+  
+  @XmlElement
+  public List<FeaturestoreJdbcConnectorDTO> getFeaturestoreJdbcConnections() {
+    return featurestoreJdbcConnections;
+  }
+  
+  @XmlElement
+  public List<FeaturestoreS3ConnectorDTO> getFeaturestoreS3Connections() {
+    return featurestoreS3Connections;
+  }
+  
+  @XmlElement
+  public List<FeaturestoreHopsfsConnectorDTO> getFeaturestoreHopsfsConnections() {
+    return featurestoreHopsfsConnections;
+  }
+  
   public void setFeaturestoreDescription(String featurestoreDescription) {
     this.featurestoreDescription = featurestoreDescription;
   }
@@ -108,7 +132,22 @@ public class FeaturestoreDTO {
   public void setInodeId(Long inodeId) {
     this.inodeId = inodeId;
   }
-
+  
+  public void setFeaturestoreJdbcConnections(
+    List<FeaturestoreJdbcConnectorDTO> featurestoreJdbcConnections) {
+    this.featurestoreJdbcConnections = featurestoreJdbcConnections;
+  }
+  
+  public void setFeaturestoreS3Connections(
+    List<FeaturestoreS3ConnectorDTO> featurestoreS3Connections) {
+    this.featurestoreS3Connections = featurestoreS3Connections;
+  }
+  
+  public void setFeaturestoreHopsfsConnections(
+    List<FeaturestoreHopsfsConnectorDTO> featurestoreHopsfsConnections) {
+    this.featurestoreHopsfsConnections = featurestoreHopsfsConnections;
+  }
+  
   @Override
   public String toString() {
     return "FeaturestoreDTO{" +

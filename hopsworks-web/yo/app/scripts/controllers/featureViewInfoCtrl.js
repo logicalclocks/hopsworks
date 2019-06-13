@@ -24,31 +24,34 @@ angular.module('hopsWorksApp')
             /**
              * Initialize controller state
              */
+            //Controller Inputs
             var self = this;
             self.projectId = projectId;
             self.feature = feature
             self.featurestore = featurestore;
-            self.code = ""
+            //State
+            self.pythonCode = ""
+            self.scalaCode = ""
             self.table = []
-
-            self.pageSize = 1000; //don't show pagination controls, let the user scroll instead
-            self.featureDetailsSortKey = 'property';
-            self.featureDetailsreverse = false;
+            //Constants
+            self.cachedFeaturegroupType = FeaturestoreService.cachedFeaturegroupType()
+            self.onDemandFeaturegroupType = FeaturestoreService.onDemandFeaturegroupType()
 
             /**
-             * Get the API code to retrieve the feature
+             * Get the Python API code to retrieve the feature
              */
-            self.getCode = function (feature, featurestore) {
+            self.getPythonCode = function (feature) {
                 var codeStr = "from hops import featurestore\n"
-                codeStr = codeStr + "featurestore.get_feature(\n"
-                codeStr = codeStr + "'" + feature.name + "'"
-                codeStr = codeStr + ",\nfeaturestore="
-                codeStr = codeStr + "'" + featurestore.featurestoreName + "'"
-                codeStr = codeStr + ",\nfeaturegroup="
-                codeStr = codeStr + "'" + feature.featuregroup + "'"
-                codeStr = codeStr + ",\nfeaturegroup_version="
-                codeStr = codeStr + feature.version
-                codeStr = codeStr + ")"
+                codeStr = codeStr + "featurestore.get_feature('" + feature.name + "')"
+                return codeStr
+            };
+
+            /**
+             * Get the Scala API code to retrieve the feature
+             */
+            self.getScalaCode = function (feature) {
+                var codeStr = "import io.hops.util.Hops\n"
+                codeStr = codeStr + "Hops.getFeature('" + feature.name + "').read()"
                 return codeStr
             };
 
@@ -56,15 +59,8 @@ angular.module('hopsWorksApp')
              * Initialization function
              */
             self.init= function () {
-                self.code = self.getCode(self.feature, self.featurestore)
-                self.table.push({"property": "Name", "value": self.feature.name})
-                self.table.push({"property": "Type", "value": self.feature.type})
-                self.table.push({"property": "Version", "value": self.feature.version})
-                self.table.push({"property": "Primary", "value": self.feature.primary})
-                self.table.push({"property": "Description", "value": self.feature.description})
-                self.table.push({"property": "Featurestore", "value": self.featurestore.featurestoreName})
-                self.table.push({"property": "Featuregroup", "value": self.feature.featuregroup})
-                self.table.push({"property": "API Retrieval Code", "value": self.code})
+                self.pythonCode = self.getPythonCode(self.feature)
+                self.scalaCode = self.getScalaCode(self.feature)
             };
 
             /**

@@ -35,7 +35,6 @@ public abstract class FeaturestoreEntityJsonDTO {
 
   private String jobName;
   private String description;
-  private List<String> dependencies;
   private Integer version;
   private String name;
   private FeatureCorrelationMatrixDTO featureCorrelationMatrix;
@@ -48,12 +47,11 @@ public abstract class FeaturestoreEntityJsonDTO {
 
 
   public FeaturestoreEntityJsonDTO(
-      String description, List<String> dependencies, Integer version, String name,
+      String description, Integer version, String name,
       FeatureCorrelationMatrixDTO featureCorrelationMatrix, DescriptiveStatsDTO descriptiveStatistics,
       FeatureDistributionsDTO featuresHistogram, ClusterAnalysisDTO clusterAnalysis,
       boolean updateMetadata, boolean updateStats, List<FeatureDTO> features, String jobName) {
     this.description = description;
-    this.dependencies = dependencies;
     this.version = version;
     this.name = name;
     this.featureCorrelationMatrix = featureCorrelationMatrix;
@@ -69,11 +67,6 @@ public abstract class FeaturestoreEntityJsonDTO {
   @XmlElement
   public String getDescription() {
     return description;
-  }
-
-  @XmlElement
-  public List<String> getDependencies() {
-    return dependencies;
   }
 
   @XmlElement
@@ -130,10 +123,6 @@ public abstract class FeaturestoreEntityJsonDTO {
     this.description = description;
   }
 
-  public void setDependencies(List<String> dependencies) {
-    this.dependencies = dependencies;
-  }
-
   public void setVersion(Integer version) {
     this.version = version;
   }
@@ -179,7 +168,6 @@ public abstract class FeaturestoreEntityJsonDTO {
     return "FeaturestoreEntityJsonDTO{" +
         "jobName=" + jobName +
         ", description='" + description + '\'' +
-        ", dependencies='" + dependencies + '\'' +
         ", version=" + version +
         ", name='" + name + '\'' +
         ", featureCorrelationMatrix=" + featureCorrelationMatrix +

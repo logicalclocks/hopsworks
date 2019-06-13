@@ -20,25 +20,137 @@
   <h2 class="modal-title">Feature details: {{featureViewInfoCtrl.feature.name}}</h2>
 </div>
 <div class="modal-body" style="overflow: auto">
-  <div class="row">
-    <table class="table table-hover" style="margin-left: 10px; overflow: auto">
-      <thead style="border:none;">
-      <th style="width: 10%">Property</th>
-      <th style="width: 20%">Value</th>
+    <div uib-accordion close-others="false">
+        <div uib-accordion-group class="panel-default">
+            <div uib-accordion-heading>
+                <i class="fa fa-info-circle" tooltip-placement="auto left"
+                   uib-tooltip='Feature Metadata'></i>
+                <span style="margin-left: 20px">
+                    Feature Details
+                </span>
+            </div>
 
-      </thead>
-      <tbody>
-      <tr dir-paginate="row in featureViewInfoCtrl.table| orderBy :featureViewInfoCtrl.featureDetailsSortKey |itemsPerPage:featureViewInfoCtrl.pageSize" pagination-id="featureview" total-items="featureViewInfoCtrl.table.length" current-page="pagination.current">
-        <td>{{row.property}}</td>
-        <td ng-if="row.property != 'API Retrieval Code'">{{row.value}}</td>
-        <td ng-if="row.property == 'API Retrieval Code'" style="white-space: pre-wrap">
+            <table class="table table-hover fs-table" style="margin-left: 10px; overflow: auto">
+                <tbody class="fs-table">
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Name
+                    </td>
+                    <td class="fs-table">
+                        {{featureViewInfoCtrl.feature.name}}
+                    </td>
+                </tr>
+
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Version
+                    </td>
+                    <td class="fs-table">
+                        {{featureViewInfoCtrl.feature.version}}
+                    </td>
+                </tr>
+
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Type
+                    </td>
+                    <td class="fs-table">
+                        {{featureViewInfoCtrl.feature.type}}
+                    </td>
+                </tr>
+
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Description
+                    </td>
+                    <td class="fs-table">
+                        {{featureViewInfoCtrl.feature.description}}
+                    </td>
+                </tr>
+
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Feature Store
+                    </td>
+                    <td class="fs-table">
+                        {{featureViewInfoCtrl.featurestore.featurestoreName}}
+                    </td>
+                </tr>
+
+                <tr class="fs-table" ng-if="featureViewInfoCtrl.feature.entity == 'Feature Group'">
+                    <td style="font-weight:700;" class="fs-table">
+                        Primary
+                    </td>
+                    <td class="fs-table">
+                        {{featureViewInfoCtrl.feature.primary}}
+                    </td>
+                </tr>
+
+                <tr class="fs-table"
+                    ng-if="featureViewInfoCtrl.feature.entity == 'Feature Group' && featureViewInfoCtrl.feature.featuregroup.featuregroupType === featureViewInfoCtrl.cachedFeaturegroupType">
+                    <td style="font-weight:700;" class="fs-table">
+                        Partition Key
+                    </td>
+                    <td class="fs-table">
+                        {{featureViewInfoCtrl.feature.partition}}
+                    </td>
+                </tr>
+
+                <tr class="fs-table" ng-if="featureViewInfoCtrl.feature.entity == 'Feature Group'">
+                    <td style="font-weight:700;" class="fs-table">
+                        Feature Group
+                    </td>
+                    <td class="fs-table">
+                        {{featureViewInfoCtrl.feature.featuregroup.name}}
+                    </td>
+                </tr>
+
+                <tr class="fs-table" ng-if="featureViewInfoCtrl.feature.entity == 'Training Dataset'">
+                    <td style="font-weight:700;" class="fs-table">
+                        Training Dataset
+                    </td>
+                    <td class="fs-table">
+                        {{featureViewInfoCtrl.feature.trainingDataset.name}}
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div uib-accordion-group class="panel-default">
+            <div uib-accordion-heading>
+                <i class="fa fa-info-circle" tooltip-placement="auto left"
+                   uib-tooltip='API for reading the feature programmatically'></i>
+                <span style="margin-left: 20px">
+                    API
+                </span>
+            </div>
+
+            <table class="table table-hover fs-table" style="margin-left: 10px; overflow: auto">
+                <tbody class="fs-table">
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Python API
+                    </td>
+                    <td class="fs-table">
 <pre>
-<code>{{row.value}}</code>
+<code>{{featureViewInfoCtrl.pythonCode}}</code>
 </pre>
-        </td>
-      </tr>
-      </tbody>
-    </table>
-  </div>
-
+                    </td>
+                </tr>
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Scala API
+                    </td>
+                    <td class="fs-table">
+<pre>
+<code>{{featureViewInfoCtrl.scalaCode}}</code>
+</pre>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        
+    </div>
 </div>

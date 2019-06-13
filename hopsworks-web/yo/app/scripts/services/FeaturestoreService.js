@@ -33,22 +33,238 @@ angular.module('hopsWorksApp')
                 },
 
                 /**
-                 * Utility function that returns the regexp for training dataset names
+                 * Utility function that returns the regex for regulating names in the feature store
                  *
-                 * @returns {RegExp} for training datasets
+                 * @returns {RegExp} for storage connectors
                  */
-                trainingDatasetRegExp: function() {
+                featurestoreRegExp: function() {
                     return /^[a-zA-Z0-9_]+$/
                 },
 
                 /**
-                 * Utility function that returns the regexp hive table and column names
-                 *
-                 * @returns {RegExp} for hive
+                 * @returns max length of a storage connector name string
                  */
-                hiveRegExp: function() {
-                    return /^[a-zA-Z0-9_]+$/;
+                storageConnectorNameMaxLength: function() {
+                    return 1000;
                 },
+
+                /**
+                 * @returns max length of a storage connector description string
+                 */
+                storageConnectorDescriptionMaxLength: function() {
+                    return 1000;
+                },
+
+                /**
+                 * @returns max length of a JDBC storage connector connection string
+                 */
+                jdbcStorageConnectorConnectionStringMaxLength: function() {
+                    return 5000;
+                },
+
+                /**
+                 * @returns max length of a JDBC storage connector arguments string
+                 */
+                jdbcStorageConnectorArgumentsMaxLength: function() {
+                    return 2000;
+                },
+
+                /**
+                 * @returns max length of a S3 storage connector bucket
+                 */
+                s3StorageConnectorBucketMaxLength: function() {
+                    return 5000;
+                },
+
+                /**
+                 * @returns max length of a S3 storage connector access key
+                 */
+                s3StorageConnectorAccesskeyMaxLength: function() {
+                    return 1000;
+                },
+
+                /**
+                 * @returns max length of a S3 storage connector secret key
+                 */
+                s3StorageConnectorSecretkeyMaxLength: function() {
+                    return 1000;
+                },
+
+                /**
+                 * @returns max name length for a on-demand featuregroup
+                 */
+                onDemandFeaturegroupNameMaxLength: function() {
+                    return 1000;
+                },
+
+                /**
+                 * @returns max description length for a on demand featuregroup
+                 */
+                onDemandFeaturegroupDescriptionMaxLength: function() {
+                    return 1000;
+                },
+
+                /**
+                 * @returns max name length for a cached featuregroup
+                 */
+                cachedFeaturegroupNameMaxLength: function() {
+                    return 767;
+                },
+
+                /**
+                 * @returns max description length for a cached featuregroup
+                 */
+                cachedFeaturegroupDescriptionMaxLength: function() {
+                    return 256;
+                },
+
+                /**
+                 * @returns max name length for a feature in an on-demand feature group
+                 */
+                cachedFeaturegroupFeatureNameMaxLength: function() {
+                    return 767;
+                },
+
+                /**
+                 * @returns max description length for a feature in a cached feature group
+                 */
+                cachedFeaturegroupFeatureDescriptionMaxLength: function() {
+                    return 256;
+                },
+
+                /**
+                 * @returns max name length for a feature in an on-demand feature group
+                 */
+                onDemandFeaturegroupFeatureNameMaxLength: function() {
+                    return 1000;
+                },
+
+                /**
+                 * @returns max description length for a feature in an on demand feature group
+                 */
+                onDemandFeaturegroupFeatureDescriptionMaxLength: function() {
+                    return 10000;
+                },
+
+                /**
+                 * @returns max name length for training datasets
+                 */
+                trainingDatasetNameMaxLength: function() {
+                    return 256;
+                },
+
+                /**
+                 * @returns max description length for training datasets
+                 */
+                trainingDatasetDescriptionMaxLength: function() {
+                    return 2000;
+                },
+
+                /**
+                 * @returns max description length for training datasets
+                 */
+                onDemandFeaturegroupSqlQueryMaxLength: function() {
+                    return 11000;
+                },
+
+                /**
+                 * @returns array of feature types
+                 */
+                featureDataTypes: function() {
+                    return [
+                        "None","TINYINT", "SMALLINT", "INT", "BIGINT", "FLOAT", "DOUBLE",
+                        "DECIMAL", "TIMESTAMP", "DATE", "STRING",
+                        "BOOLEAN", "BINARY",
+                        "ARRAY <TINYINT>", "ARRAY <SMALLINT>", "ARRAY <INT>", "ARRAY <BIGINT>",
+                        "ARRAY <FLOAT>", "ARRAY <DOUBLE>", "ARRAY <DECIMAL>", "ARRAY <TIMESTAMP>",
+                        "ARRAY <DATE>", "ARRAY <STRING>",
+                        "ARRAY <BOOLEAN>", "ARRAY <BINARY>", "ARRAY <ARRAY <FLOAT> >",
+                        "ARRAY <ARRAY <INT> >", "ARRAY <ARRAY <STRING> >",
+                        "MAP <FLOAT, FLOAT>", "MAP <FLOAT, STRING>", "MAP <FLOAT, INT>", "MAP <FLOAT, BINARY>",
+                        "MAP <INT, INT>", "MAP <INT, STRING>", "MAP <INT, BINARY>", "MAP <INT, FLOAT>",
+                        "MAP <INT, ARRAY <FLOAT> >",
+                        "STRUCT < label: STRING, index: INT >", "UNIONTYPE < STRING, INT>"
+                    ]
+                },
+
+                /**
+                 * @returns cached feature group type string
+                 */
+                cachedFeaturegroupType: function() {
+                    return "CACHED_FEATURE_GROUP";
+                },
+
+                /**
+                 * @returns on demand feature group type string
+                 */
+                onDemandFeaturegroupType: function() {
+                    return "ON_DEMAND_FEATURE_GROUP";
+                },
+
+                /**
+                 * @returns jdbc connector type string
+                 */
+                jdbcConnectorType: function() {
+                    return "JDBC";
+                },
+
+                /**
+                 * @returns s3 connector type string
+                 */
+                s3ConnectorType: function() {
+                    return "S3";
+                },
+
+                /**
+                 * @returns hopsfs connector type string
+                 */
+                hopsfsConnectorType: function() {
+                    return "HopsFS";
+                },
+
+                /**
+                 * @returns Feature Group Type string
+                 */
+                featuregroupType: function() {
+                    return "Feature Group";
+                },
+
+                /**
+                 * @returns Feature Group Type string
+                 */
+                trainingDatasetType: function() {
+                    return "Training Dataset";
+                },
+
+                /**
+                 * Utility function that formats a date into a string (MMM Do YY)
+                 *
+                 * @param inputDate the date to format
+                 * @returns a formatted date string
+                 */
+                formatDate: function(inputDate) {
+                    return moment(inputDate).format('MMM Do YY')
+                },
+
+                /**
+                 * Utility function for formatting a date into a time string (HH:mm)
+                 *
+                 * @param inputDate the date to format
+                 * @returns {*} a formatted time string
+                 */
+                formatTime: function(inputDate) {
+                    return moment(inputDate).format('HH:mm')
+                },
+
+                /**
+                 * Utility function for formatting a date into a dateAndtime string ('MMMM Do YYYY, h:mm a')
+                 * @param inputDate
+                 * @returns {*} a formatted date and time string
+                 */
+                formatDateAndTime: function(inputDate) {
+                    return moment(inputDate).format('MMMM Do YYYY, h:mm a');
+                },
+
 
                 /**
                  * Sends a POST request to the backend for creating a feature group
@@ -202,6 +418,90 @@ angular.module('hopsWorksApp')
                     return $http.put('/api/project/' + projectId + '/featurestores/' +
                         featurestore.featurestoreId + "/featuregroups/" + featuregroupId,
                         JSON.stringify(featuregroupJson), {headers: {'Content-Type': 'application/json'}});
+                },
+
+                /**
+                 * Sends a POST request to the backend for creating a JDBC connector
+                 *
+                 * @param projectId project where the featuregroup will be created
+                 * @param jdbcConnectorJson the JSON payload
+                 * @param featurestore featurestore where the connector will be created
+                 *
+                 * @returns {HttpPromise}
+                 */
+                createJdbcConnector: function(projectId, jdbcConnectorJson, featurestore) {
+                    return $http.post('/api/project/' + projectId + '/featurestores/' +
+                        featurestore.featurestoreId + "/jdbcconnectors",
+                        JSON.stringify(jdbcConnectorJson), {headers: {'Content-Type': 'application/json'}});
+                },
+
+                /**
+                 * Sends a DELETE request to the backend for deleting a JDBC connector
+                 *
+                 * @param projectId the project of the featurestore
+                 * @param featurestore the featurestore
+                 * @param jdbcConnectorId the id of the JDBC connector
+                 * @returns {HttpPromise}
+                 */
+                deleteJdbcConnector: function(projectId, featurestore, jdbcConnectorId) {
+                    return $http.delete('/api/project/' + projectId + '/featurestores/' +
+                        featurestore.featurestoreId + "/jdbcconnectors/" + jdbcConnectorId);
+                },
+
+                /**
+                 * Sends a POST request to the backend for creating a s3 connector
+                 *
+                 * @param projectId project where the featuregroup will be created
+                 * @param s3ConnectorJson the JSON payload
+                 * @param featurestore featurestore where the connector will be created
+                 *
+                 * @returns {HttpPromise}
+                 */
+                createS3Connector: function(projectId, s3ConnectorJson, featurestore) {
+                    return $http.post('/api/project/' + projectId + '/featurestores/' +
+                        featurestore.featurestoreId + "/s3connectors",
+                        JSON.stringify(s3ConnectorJson), {headers: {'Content-Type': 'application/json'}});
+                },
+
+                /**
+                 * Sends a DELETE request to the backend for deleting an S3 connector
+                 *
+                 * @param projectId the project of the featurestore
+                 * @param featurestore the featurestore
+                 * @param s3ConnectorId the id of the JDBC connector
+                 * @returns {HttpPromise}
+                 */
+                deleteS3Connector: function(projectId, featurestore, s3ConnectorId) {
+                    return $http.delete('/api/project/' + projectId + '/featurestores/' +
+                        featurestore.featurestoreId + "/s3connectors/" + s3ConnectorId);
+                },
+
+                /**
+                 * Sends a POST request to the backend for creating a hopsfs connector
+                 *
+                 * @param projectId project where the featuregroup will be created
+                 * @param hopsfsConnectorJson the JSON payload
+                 * @param featurestore featurestore where the connector will be created
+                 *
+                 * @returns {HttpPromise}
+                 */
+                createHopsfsConnector: function(projectId, hopsfsConnectorJson, featurestore) {
+                    return $http.post('/api/project/' + projectId + '/featurestores/' +
+                        featurestore.featurestoreId + "/hopsfsconnectors",
+                        JSON.stringify(hopsfsConnectorJson), {headers: {'Content-Type': 'application/json'}});
+                },
+
+                /**
+                 * Sends a DELETE request to the backend for deleting a hopsfs connector
+                 *
+                 * @param projectId the project of the featurestore
+                 * @param featurestore the featurestore
+                 * @param hopsfsConnectorId the id of the hopsfs connector
+                 * @returns {HttpPromise}
+                 */
+                deleteHopsfsConnector: function(projectId, featurestore, hopsfsConnectorId) {
+                    return $http.delete('/api/project/' + projectId + '/featurestores/' +
+                        featurestore.featurestoreId + "/hopsfsconnectors/" + hopsfsConnectorId);
                 }
             };
           }]);

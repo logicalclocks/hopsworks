@@ -20,40 +20,253 @@
   <h2 class="modal-title">Training Dataset details: {{trainingDatasetViewInfoCtrl.trainingDataset.name}}</h2>
 </div>
 <div class="modal-body" style="overflow: auto">
-  <div class="row">
-    <table class="table table-hover" style="margin-left: 10px; overflow: auto">
-      <thead style="border:none;">
-      <th style="width: 10%">Property</th>
-      <th style="width: 20%">Value</th>
+    <div uib-accordion close-others="false">
+        <div uib-accordion-group class="panel-default">
+            <div uib-accordion-heading>
+                <i class="fa fa-info-circle" tooltip-placement="auto left"
+                   uib-tooltip='Training Dataset Metadata'></i>
+                <span style="margin-left: 20px">
+                    Training Dataset Details
+                </span>
+            </div>
 
-      </thead>
-      <tbody>
-      <tr>
-          <td>
-              <button class="btn btn-primary" id="fetchSizeBtn"
-                      ng-click="trainingDatasetViewInfoCtrl.fetchSize()">
-                  Fetch Size
-                  <i ng-if="trainingDatasetViewInfoCtrl.sizeWorking" style="margin-top: 2px"
-                     class="fa fa-spinner fa-spin pull-right"></i>
-                  <i class="fa fa-info-circle" tooltip-placement="auto left"
-                     uib-tooltip="Fetches the size of the entire training dataset,
-                           if the featuregroup has a lot of nested files this is an expensive operation"
-                     style="margin-left: 10px"></i>
-              </button>
-          </td>
-          <td>{{trainingDatasetViewInfoCtrl.size}}</td>
-      </tr>
-      <tr data-ng-repeat="row in trainingDatasetViewInfoCtrl.table">
-        <td>{{row.property}}</td>
-        <td ng-if="row.property != 'API Retrieval Code'">{{row.value}}</td>
-        <td ng-if="row.property == 'API Retrieval Code'" style="white-space: pre-wrap">
+            <table class="table table-hover fs-table" style="margin-left: 10px; overflow: auto">
+                <tbody class="fs-table">
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Id
+                    </td>
+                    <td class="fs-table">
+                        {{trainingDatasetViewInfoCtrl.trainingDataset.id}}
+                    </td>
+                </tr>
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Name
+                    </td>
+                    <td class="fs-table">
+                        {{trainingDatasetViewInfoCtrl.trainingDataset.name}}
+                    </td>
+                </tr>
+
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Version
+                    </td>
+                    <td class="fs-table">
+                        {{trainingDatasetViewInfoCtrl.trainingDataset.version}}
+                    </td>
+                </tr>
+
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Description
+                    </td>
+                    <td class="fs-table">
+                        {{trainingDatasetViewInfoCtrl.trainingDataset.description}}
+                    </td>
+                </tr>
+
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Feature Store
+                    </td>
+                    <td class="fs-table">
+                        {{trainingDatasetViewInfoCtrl.trainingDataset.featurestoreName}}
+                    </td>
+                </tr>
+
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Creator
+                    </td>
+                    <td class="fs-table">
+                        {{trainingDatasetViewInfoCtrl.trainingDataset.creator}}
+                    </td>
+                </tr>
+
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Created
+                    </td>
+                    <td class="fs-table">
+                        {{trainingDatasetViewInfoCtrl.formatCreated}}
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div uib-accordion-group class="panel-default">
+            <div uib-accordion-heading>
+                <i class="fa fa-info-circle" tooltip-placement="auto left"
+                   uib-tooltip='Details about how the Training Dataset is stored.'></i>
+                <span style="margin-left: 20px">
+                    Storage Details
+                </span>
+            </div>
+
+            <table class="table table-hover fs-table" style="margin-left: 10px; overflow: auto">
+                <tbody class="fs-table">
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        HDFS path
+                    </td>
+                    <td class="fs-table">
+                        {{trainingDatasetViewInfoCtrl.trainingDataset.hdfsStorePath}}
+                    </td>
+                </tr>
+
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Data format
+                    </td>
+                    <td class="fs-table">
+                        {{trainingDatasetViewInfoCtrl.trainingDataset.dataFormat}}
+                    </td>
+                </tr>
+
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Size
+                    </td>
+                    <td class="fs-table">
+                        {{trainingDatasetViewInfoCtrl.size}}
+                        <i ng-if="trainingDatasetViewInfoCtrl.sizeWorking" style="margin-top: 2px; text-align: center;"
+                           class="fa fa-spinner fa-spin"></i>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div uib-accordion-group class="panel-default">
+            <div uib-accordion-heading>
+                <i class="fa fa-info-circle" tooltip-placement="auto left"
+                   uib-tooltip='Hopsworks Jobs that update the training dataset in some way'></i>
+                <span style="margin-left: 20px">
+                    Jobs
+                </span>
+            </div>
+
+            <table class="table table-hover fs-table" style="margin-left: 10px; overflow: auto">
+                <tbody class="fs-table">
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Job Name
+                    </td>
+                    <td class="fs-table">
+                        <div ng-if="trainingDatasetViewInfoCtrl.trainingDataset.jobName === null">
+                            no job specified
+                        </div>
+                        <div ng-if="trainingDatasetViewInfoCtrl.trainingDataset.jobName !== null">
+                            <span style="cursor:pointer;color:black;text-decoration:underline;"
+                                  ng-click="trainingDatasetViewInfoCtrl.launchJob(trainingDatasetViewInfoCtrl.trainingDataset.jobName); $event.stopPropagation();">
+                                {{trainingDatasetViewInfoCtrl.trainingDataset.jobName}}
+                            </span>
+                        </div>
+                    </td>
+                </tr>
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Last Computed
+                    </td>
+                    <td class="fs-table">
+                        <div ng-if="trainingDatasetViewInfoCtrl.trainingDataset.lastComputed === null">
+                            -
+                        </div>
+                        <div ng-if="trainingDatasetViewInfoCtrl.trainingDataset.lastComputed !== null">
+                      <span
+                              ng-if="trainingDatasetViewInfoCtrl.trainingDataset.jobStatus === 'Undefined'"
+                              style="color: #0066bb ">
+                        {{formatDate(trainingDatasetViewInfoCtrl.trainingDataset.lastComputed)}}
+                      </span>
+                            <span
+                                    ng-if="trainingDatasetViewInfoCtrl.trainingDataset.jobStatus === 'Succeeded'"
+                                    style="color: #00A000 ">
+                        {{formatDate(trainingDatasetViewInfoCtrl.trainingDataset.lastComputed)}}
+                      </span>
+                            <span
+                                    ng-if="trainingDatasetViewInfoCtrl.trainingDataset.jobStatus === 'Failed'"
+                                    style="color: #880000 ">
+                        {{formatDate(trainingDatasetViewInfoCtrl.trainingDataset.lastComputed)}}
+                      </span>
+                            <span
+                                    ng-if="trainingDatasetViewInfoCtrl.trainingDataset.jobStatus === 'Killed'"
+                                    style="color: #880000 ">
+                        {{formatDate(trainingDatasetViewInfoCtrl.trainingDataset.lastComputed)}}
+                      </span>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div uib-accordion-group class="panel-default">
+            <div uib-accordion-heading>
+                <i class="fa fa-info-circle" tooltip-placement="auto left"
+                   uib-tooltip='API for reading the training dataset programmatically'></i>
+                <span style="margin-left: 20px">
+                    API
+                </span>
+            </div>
+
+            <table class="table table-hover fs-table" style="margin-left: 10px; overflow: auto">
+                <tbody class="fs-table">
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Python API
+                    </td>
+                    <td class="fs-table">
 <pre>
-<code>{{row.value}}</code>
+<code>{{trainingDatasetViewInfoCtrl.pythonCode}}</code>
 </pre>
-        </td>
-      </tr>
-      </tbody>
-    </table>
-  </div>
+                    </td>
+                </tr>
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Scala API
+                    </td>
+                    <td class="fs-table">
+<pre>
+<code>{{trainingDatasetViewInfoCtrl.scalaCode}}</code>
+</pre>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
 
+        <div uib-accordion-group class="panel-default">
+            <div uib-accordion-heading>
+                <i class="fa fa-info-circle" tooltip-placement="auto left"
+                   uib-tooltip='The Training Dataset Schema'></i>
+                <span style="margin-left: 20px">
+                    Schema
+                </span>
+            </div>
+
+            <table class="table table-hover fs-table" style="margin-left: 10px; overflow: auto"
+                   ng-if="trainingDatasetViewInfoCtrl.trainingDataset.features.length > 0">
+                <thead style="border:none;" class="fs-table">
+                <th class="fs-table" style="width: 20%">Feature Name</th>
+                <th class="fs-table" style="width: 20%">Feature Type</th>
+                <th class="fs-table" style="width: 20%">Feature Description</th>
+                <th class="fs-table" style="width: 20%">Primary Key</th>
+                </thead>
+                <tbody>
+                <tr class="fs-table" data-ng-repeat="feature in trainingDatasetViewInfoCtrl.trainingDataset.features">
+                    <td class="fs-table"> {{feature.name}}</td>
+                    <td class="fs-table"> {{feature.type}}</td>
+                    <td class="fs-table"> {{feature.description}}</td>
+                    <td class="fs-table"> {{feature.primary}}</td>
+                </tr>
+                </tbody>
+            </table>
+            <h3 style="margin-left: 10px" ng-if="trainingDatasetViewInfoCtrl.trainingDataset.features.length == 0">
+                This training dataset does not have a defined schema</h3>
+        </div>
+        
+    </div>
 </div>
