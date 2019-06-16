@@ -168,7 +168,7 @@ public class KubeSkLearnServingController {
 
     Container skLeanContainer = new ContainerBuilder()
         .withName("sklearn")
-        .withImage(settings.getKubeRegistry() + "/sklearn:0.10.0")
+        .withImage(settings.getKubeRegistry() + "/sklearn:" + settings.getKubeSKLearnImgVersion())
         .withImagePullPolicy(settings.getKubeImagePullPolicy())
         .withEnv(servingEnv)
         .withVolumeMounts(secretMount, logMount, pythonEnvMount)
@@ -176,8 +176,7 @@ public class KubeSkLearnServingController {
 
     Container fileBeatContainer = new ContainerBuilder()
         .withName("filebeat")
-        // TODO(Fabio): add current version
-        .withImage(settings.getKubeRegistry() + "/filebeat")
+        .withImage(settings.getKubeRegistry() + "/filebeat:" + settings.getKubeFilebeatImgVersion())
         .withImagePullPolicy(settings.getKubeImagePullPolicy())
         .withEnv(fileBeatEnv)
         .withVolumeMounts(logMount)

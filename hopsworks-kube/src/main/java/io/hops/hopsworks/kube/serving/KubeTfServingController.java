@@ -143,7 +143,7 @@ public class KubeTfServingController {
 
     Container tfContainer = new ContainerBuilder()
         .withName("tf-serving")
-        .withImage(settings.getKubeRegistry() + "/tf")
+        .withImage(settings.getKubeRegistry() + "/tf:" + settings.getKubeTfImgVersion())
         .withImagePullPolicy(settings.getKubeImagePullPolicy())
         .withEnv(tfServingEnv)
         .withVolumeMounts(secretMount, logMount)
@@ -151,7 +151,7 @@ public class KubeTfServingController {
 
     Container fileBeatContainer = new ContainerBuilder()
         .withName("filebeat")
-        .withImage(settings.getKubeRegistry() + "/filebeat")
+        .withImage(settings.getKubeRegistry() + "/filebeat:" + settings.getKubeFilebeatImgVersion())
         .withImagePullPolicy(settings.getKubeImagePullPolicy())
         .withEnv(fileBeatEnv)
         .withVolumeMounts(logMount)
