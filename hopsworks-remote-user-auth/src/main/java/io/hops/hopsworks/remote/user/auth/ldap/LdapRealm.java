@@ -98,13 +98,12 @@ public class LdapRealm {
   private String[] returningAttrs;
   private Hashtable ldapProperties;
   
-  @Resource(lookup = "ldap/LdapResource")
+  @Resource(name = "ldap/LdapResource")
   private DirContext dirContext;
   
   @PostConstruct
   public void init() {
-    if (Boolean.parseBoolean(settings.getLDAPAuthStatus()) == false && Boolean.parseBoolean(settings.getKRBAuthStatus())
-      == false) {
+    if (!settings.isLdapEnabled() && !settings.isKrbEnabled()) {
       throw new IllegalStateException("LDAP not enabled.");
     }
     ldapProperties = getLdapBindProps();
