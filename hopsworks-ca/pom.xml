@@ -141,21 +141,4 @@
       </plugin>
     </plugins>
   </build>
-
-  <profiles>
-    <profile>
-      <id>kube</id>
-      <activation>
-        <activeByDefault>false</activeByDefault>
-      </activation>
-      <dependencies>
-        <dependency>
-          <groupId>io.hops.hopsworks</groupId>
-          <artifactId>hopsworks-kube</artifactId>
-          <version>0.10.0-SNAPSHOT</version>
-          <type>ejb</type>
-        </dependency>
-      </dependencies>
-    </profile>
-  </profiles>
 </project>
