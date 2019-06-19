@@ -134,6 +134,7 @@
     <class>io.hops.hopsworks.common.dao.rstudio.RStudioProject</class>
     <class>io.hops.hopsworks.common.dao.rstudio.RStudioSettings</class>
 
+    <class>io.hops.hopsworks.ca.dao.ConfEntry</class>
 
     <class>io.hops.hopsworks.jwt.dao.InvalidJwt</class>
     <class>io.hops.hopsworks.jwt.dao.JwtSigningKey</class>
