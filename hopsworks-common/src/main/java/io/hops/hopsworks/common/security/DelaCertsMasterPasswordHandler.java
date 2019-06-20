@@ -40,10 +40,13 @@ package io.hops.hopsworks.common.security;
 
 import io.hops.hopsworks.common.dao.dela.certs.ClusterCertificate;
 import io.hops.hopsworks.common.dao.dela.certs.ClusterCertificateFacade;
-import io.hops.hopsworks.exceptions.EncryptionMasterPasswordException;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.EncryptionMasterPasswordException;
 
-import java.util.ArrayList;
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,72 +54,72 @@ import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- * Handler for clusters certificates for Dela when the master encryption password changes.
- * If something goes wrong during update, the old passwords are kept in the database.
- * The handler needs to register with the CertificateMgmService.
- * @see CertificatesMgmService#init()
- */
-public class DelaCertsMasterPasswordHandler implements CertificatesMgmService
-    .MasterPasswordChangeHandler<ClusterCertificateFacade> {
-  private final Logger LOG = Logger.getLogger(DelaCertsMasterPasswordHandler.class.getName());
-  private final Map<String, String> oldPasswordsForRollback;
-  private final Settings settings;
+@Stateless
+@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+public class DelaCertsMasterPasswordHandler implements MasterPasswordHandler {
+  private final Logger LOGGER = Logger.getLogger(DelaCertsMasterPasswordHandler.class.getName());
   
+  @EJB
   private ClusterCertificateFacade clusterCertificateFacade;
+  @EJB
+  private Settings settings;
   
-  DelaCertsMasterPasswordHandler(Settings settings) {
-    this.settings = settings;
-    oldPasswordsForRollback = new HashMap<>();
+  @Override
+  public void pre() {
+  
   }
   
   @Override
-  public void setFacade(ClusterCertificateFacade certsFacade) {
-    this.clusterCertificateFacade = certsFacade;
-  }
-  
-  @Override
-  public List<String> handleMasterPasswordChange(String oldMasterPassword, String newMasterPassword)
-      throws EncryptionMasterPasswordException {
-    List<String> updatedCertsName = new ArrayList<>();
+  public MasterPasswordChangeResult perform(String oldMasterPassword, String newMasterPassword) {
+    StringBuilder successLog = new StringBuilder();
+    successLog.append("Performing change of master password for Dela certificates\n");
+    Map<String, String> items2rollback = new HashMap<>();
     
     Optional<List<ClusterCertificate>> maybe = clusterCertificateFacade.getAllClusterCerts();
     if (maybe.isPresent()) {
+      LOGGER.log(Level.INFO, "Updating Dela certs with new Hopsworks master encryption password");
       String mapKey = null, oldPassword, newEncCertPassword;
       try {
         for (ClusterCertificate cert : maybe.get()) {
           mapKey = cert.getClusterName();
           oldPassword = cert.getCertificatePassword();
-          oldPasswordsForRollback.putIfAbsent(mapKey, oldPassword);
+          items2rollback.putIfAbsent(mapKey, oldPassword);
           newEncCertPassword = getNewUserPassword(settings.getHopsSiteClusterPswd().get(), oldPassword,
               oldMasterPassword, newMasterPassword);
           cert.setCertificatePassword(newEncCertPassword);
-          clusterCertificateFacade.saveClusterCerts(cert);
-          updatedCertsName.add(mapKey);
+          clusterCertificateFacade.updateClusterCerts(cert);
+          successLog.append("Updated certificate: ").append(mapKey).append("\n");
         }
       } catch (Exception ex) {
         String errorMsg = "Something went wrong while updating master encryption password for Cluster Certificates. " +
             "Cluster certificate provoked the error was: " + mapKey;
-        LOG.log(Level.SEVERE, errorMsg + " rolling back...", ex);
-        throw new EncryptionMasterPasswordException(errorMsg);
+        LOGGER.log(Level.SEVERE, errorMsg + " rolling back...", ex);
+        return new MasterPasswordChangeResult<>(items2rollback,
+            new EncryptionMasterPasswordException(errorMsg));
       }
     }
-    return updatedCertsName;
+    return new MasterPasswordChangeResult<>(successLog, items2rollback, null);
   }
   
   @Override
-  public void rollback() {
-    LOG.log(Level.FINE, "Rolling back");
-    for (Map.Entry<String, String> cert : oldPasswordsForRollback.entrySet()) {
+  @SuppressWarnings("unchecked")
+  public void rollback(MasterPasswordChangeResult result) {
+    LOGGER.log(Level.INFO, "Rolling back Dela certificates");
+    Map<String, String> items2rollback = (HashMap<String, String>) result.getRollbackItems();
+    for (Map.Entry<String, String> cert : items2rollback.entrySet()) {
       String key = cert.getKey();
       String value = cert.getValue();
       Optional<ClusterCertificate> optional = clusterCertificateFacade.getClusterCert(key);
       if (optional.isPresent()) {
         ClusterCertificate cc = optional.get();
         cc.setCertificatePassword(value);
-        clusterCertificateFacade.saveClusterCerts(cc);
+        clusterCertificateFacade.updateClusterCerts(cc);
       }
     }
-    oldPasswordsForRollback.clear();
+  }
+  
+  @Override
+  public void post() {
+  
   }
 }

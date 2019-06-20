@@ -658,5 +658,4 @@ public class UsersController {
       userFacade.removeByEmail(u.getEmail());
     }
   }
-
 }
