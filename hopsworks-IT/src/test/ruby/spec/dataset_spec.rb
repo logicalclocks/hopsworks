@@ -346,6 +346,19 @@ describe "On #{ENV['OS']}" do
           ds = json_body.detect { |d| d[:name] == "testdir"}
           expect(ds).to be_present
         end
+        it "share dataset with a name that already exists" do
+          projectname = "project_#{short_random_id}"
+          project = create_project_by_name(projectname)
+          dsname = "dataset_#{short_random_id}"
+          create_dataset_by_name(project, dsname)
+          ds = create_dataset_by_name(@project, dsname)
+          request_dataset_access(project, ds[:inode_id])
+          share_dataset(@project, dsname, project)
+          get_datasets_in(project, "#{@project[:projectname]}::#{dsname}")
+          expect_status(200)
+          get_datasets_in(project, dsname)
+          expect_status(200)
+        end
       end
     end
 
