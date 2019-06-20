@@ -346,7 +346,7 @@ describe "On #{ENV['OS']}" do
           ds = json_body.detect { |d| d[:name] == "testdir"}
           expect(ds).to be_present
         end
-        it "share dataset with a name that already exists" do
+        it "should be able to see content shared dataset with a name that already exist in the target project" do
           projectname = "project_#{short_random_id}"
           project = create_project_by_name(projectname)
           dsname = "dataset_#{short_random_id}"
