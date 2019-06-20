@@ -138,7 +138,6 @@ public class YarnJobsMonitor {
         }
 
         // This is here to do bookkeeping. Remove from the map all the executions which have finished copying the logs
-        //
         copyLogsFutures.entrySet().removeIf(futureResult -> futureResult.getValue().isDone());
       } catch (Exception ex) {
         LOGGER.log(Level.SEVERE, "Error while monitoring jobs", ex);
