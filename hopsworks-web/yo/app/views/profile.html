@@ -121,13 +121,15 @@
            ng-src="https://www.gravatar.com/avatar/{{profileCtrl.emailHash}}?d=retro&s=200"/>
     </div>
   </div>
+
+  <!-- Begin tabs -->
+  <uib-tabset active="indextab">
+      <uib-tab index="0" heading="Login Credentials">
   <form method="post"
         name="credentialsForm"
-        ng-submit="profileCtrl.changeLoginCredentials()"
+        ng-submit="profileCtrl.changeLoginCredentials(credentialsForm.$valid)"
         class="form-validate"
         novalidate>
-
-    <legend>Login Credentials</legend>
 
     <div class="form-group has-feedback">
       <label class="text-muted">Email address</label>
@@ -251,6 +253,43 @@
       </div>
     </div>
   </form>
+
+</uib-tab>
+
+<!-- API keys -->
+<uib-tab index="1" heading="Third-party API keys">
+  <!-- Changes should also be applied in the case of a remote user (below) -->
+  <!-- Shame! Copy paste for the moment -->
+    <form method="post"
+    name="apiKeysForm"
+    ng-submit="profileCtrl.addApiKey(apiKeysForm.$valid)"
+    class="form-validate"
+    novalidate>
+
+      <div class="form-group has-feedback">
+        <label class="text-muted">Key name</label>
+        <input name="api_key_name" ng-model="profileCtrl.new_api_key.name"
+               class="form-control" required>
+      </div>
+
+      <div class="form-group has-feedback">
+        <label class="text-muted">API key</label>
+        <input name="api_key" ng-model="profileCtrl.new_api_key.key"
+               class="form-control" required>
+      </div>
+
+      <div class="row form-actions">
+          <div class="col-xs-3 col-sm-3 col-md-3 pull-right">
+            <button class="btn btn-block btn-primary" type="submit"
+              ng-disabled="apiKeysForm.$invalid">
+              <i ng-if="profileCtrl.apiKeysWorking" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
+              Add
+            </button>
+          </div>
+        </div>
+    </form>
+</uib-tab>
+</uib-tabset>
 </div>
 </div>
 <!-- Remote user -->
@@ -303,5 +342,40 @@
              ng-src="https://www.gravatar.com/avatar/{{profileCtrl.emailHash}}?d=retro&s=200"/>
       </div>
     </div>
+    <uib-tabset active="indextab">
+        <!-- API keys -->
+        <!-- It should be a copy of API keys tab when user is local (above) -->
+        <uib-tab index="0" heading="Third-party API keys">
+          <form method="post"
+            name="apiKeysForm"
+            ng-submit="profileCtrl.addApiKey(apiKeysForm.$valid)"
+            class="form-validate"
+            novalidate>
+    
+          <div class="form-group has-feedback">
+            <label class="text-muted">Key name</label>
+            <input name="api_key_name" ng-model="profileCtrl.new_api_key.name"
+                   class="form-control" required>
+          </div>
+    
+          <div class="form-group has-feedback">
+            <label class="text-muted">API key</label>
+            <input name="api_key" ng-model="profileCtrl.new_api_key.key"
+                   class="form-control" required>
+          </div>
+    
+          <div class="row form-actions">
+              <div class="col-xs-3 col-sm-3 col-md-3 pull-right">
+                <button class="btn btn-block btn-primary" type="submit"
+                  ng-disabled="apiKeysForm.$invalid">
+                  <i ng-if="profileCtrl.apiKeysWorking" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
+                  Add
+                </button>
+              </div>
+            </div>
+          </form>
+        </uib-tab>
+    </uib-tabset>
   </div>
+ 
 </div>

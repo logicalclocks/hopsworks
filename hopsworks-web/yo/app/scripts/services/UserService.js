@@ -68,6 +68,9 @@ angular.module('hopsWorksApp')
               },
               getQR: function (pwd) {
                 return $http.post('/api/users/getQRCode', "password=" + pwd);
+              },
+              add_new_api_key: function(api_key) {
+                return $http.post("/api/users/apiKey", TransformRequest.jQueryStyle(api_key))
               }
             };
           }]);

@@ -47,6 +47,7 @@ angular.module('hopsWorksApp')
             self.working = false;
             self.credentialWorking = false;
             self.twoFactorWorking = false;
+            self.apiKeysWorking = false;
             self.noPassword = false;
             self.otp = $cookies.get('otp');
             self.emailHash = '';
@@ -66,6 +67,11 @@ angular.module('hopsWorksApp')
               confirmedPassword: ''
             };
             
+            self.new_api_key = {
+              name: '',
+              key: ''
+            };
+
             self.twoFactorAuth = {
               password: '',
               twoFactor: ''
@@ -103,9 +109,9 @@ angular.module('hopsWorksApp')
               });
             };
 
-            self.changeLoginCredentials = function () {
+            self.changeLoginCredentials = function (isFormValid) {
               self.credentialWorking = true;
-              if ($scope.credentialsForm.$valid) {
+              if (isFormValid) {
                 UserService.changeLoginCredentials(self.loginCredes).then(
                         function (success) {
                           self.credentialWorking = false;
@@ -115,6 +121,23 @@ angular.module('hopsWorksApp')
                           self.errorMsg = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : "";
                           growl.error(self.errorMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 1});
                 });
+              }
+            };
+
+            self.addApiKey = function(isFormValid) {
+              self.apiKeysWorking = true;
+              if (isFormValid) {
+                UserService.add_new_api_key(self.new_api_key).then(
+                  function (success) {
+                    // Do something
+                    console.log("Successfully added new API key " + self.new_api_key.name)
+                    self.apiKeysWorking = false;
+                  }, function (error) {
+                    // Do something
+                    console.log("Error adding new API key " + self.new_api_key.name)
+                    self.apiKeysWorking = false;
+                  }
+                );
               }
             };
             

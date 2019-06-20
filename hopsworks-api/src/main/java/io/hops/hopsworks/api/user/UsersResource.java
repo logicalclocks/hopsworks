@@ -193,6 +193,20 @@ public class UsersResource {
   }
 
   @POST
+  @Path("apiKey")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response apiKey(@FormParam("name") String keyName, @FormParam("key") String key,
+      @Context SecurityContext sc) throws UserException {
+    Users user = jWTHelper.getUserPrincipal(sc);
+    // TODO(Antonis): Fix stuff here
+    LOGGER.log(Level.INFO, ">>> Antonis Adding new API key for user " + user.getUsername());
+    LOGGER.log(Level.INFO, ">>> Key name: " + keyName + " Key: " + key);
+    RESTApiJsonResponse response = new RESTApiJsonResponse();
+    response.setSuccessMessage("Added new API key");
+    return Response.ok().entity(response).build();
+  }
+  
+  @POST
   @Path("securityQA")
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Updates logedin User\'s security quesion and answer.", response = RESTApiJsonResponse.class)
