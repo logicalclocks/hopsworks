@@ -50,7 +50,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -59,6 +58,8 @@ import javax.ejb.EJB;
 import javax.ejb.Schedule;
 import javax.ejb.Singleton;
 import javax.ejb.Timer;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 
 import io.hops.hopsworks.common.yarn.YarnClientService;
 import io.hops.hopsworks.common.yarn.YarnClientWrapper;
@@ -69,6 +70,7 @@ import org.apache.hadoop.yarn.exceptions.YarnException;
 
 @Singleton
 @DependsOn("Settings")
+@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 public class YarnJobsMonitor {
 
   private static final Logger LOGGER = Logger.getLogger(YarnJobsMonitor.class.getName());
@@ -86,7 +88,7 @@ public class YarnJobsMonitor {
 
   Map<String, YarnMonitor> monitors = new HashMap<>();
   Map<String, Integer> failures = new HashMap<>();
-  private final Map<ApplicationId, CopyLogsFutureResult> copyLogsFutures = new HashMap<>();
+  private final Map<ApplicationId, Future<Execution>> copyLogsFutures = new HashMap<>();
 
   @Schedule(persistent = false,
       second = "*/5",
@@ -134,21 +136,10 @@ public class YarnJobsMonitor {
           failures.remove(appID);
           monitors.remove(appID);
         }
-  
-        Iterator<Map.Entry<ApplicationId, CopyLogsFutureResult>> futureResultIter =
-            copyLogsFutures.entrySet().iterator();
-        while (futureResultIter.hasNext()) {
-          Map.Entry<ApplicationId, CopyLogsFutureResult> futureResult = futureResultIter.next();
-          if (futureResult.getValue().execFuture.isDone()) {
-            try {
-              execFinalizer.finalize(futureResult.getValue().execFuture.get(),
-                futureResult.getValue().jobState);
-            } catch (ExecutionException | InterruptedException ex) {
-              LOGGER.log(Level.SEVERE, ex.getMessage(), ex);
-            }
-            futureResultIter.remove();
-          }
-        }
+
+        // This is here to do bookkeeping. Remove from the map all the executions which have finished copying the logs
+        //
+        copyLogsFutures.entrySet().removeIf(futureResult -> futureResult.getValue().isDone());
       } catch (Exception ex) {
         LOGGER.log(Level.SEVERE, "Error while monitoring jobs", ex);
       }
@@ -172,8 +163,7 @@ public class YarnJobsMonitor {
         exec = executionFacade.updateState(exec, JobState.AGGREGATING_LOGS);
         // Async call
         Future<Execution> futureResult = execFinalizer.copyLogs(exec);
-        copyLogsFutures.put(monitor.getApplicationId(),
-            new CopyLogsFutureResult(futureResult, JobState.getJobState(appState)));
+        copyLogsFutures.put(monitor.getApplicationId(), futureResult);
         return null;
       }
     } catch (IOException | YarnException ex) {
@@ -191,14 +181,11 @@ public class YarnJobsMonitor {
       try {
         LOGGER.log(Level.SEVERE, "Killing application, {0}, because unable to poll for status.", exec);
         monitor.cancelJob(monitor.getApplicationId().toString());
-        exec = updateState(JobState.KILLED, exec);
         exec = updateFinalStatus(JobFinalStatus.KILLED, exec);
         exec = updateProgress(0, exec);
         execFinalizer.finalize(exec, JobState.KILLED);
       } catch (YarnException | IOException ex) {
-        LOGGER.
-            log(Level.SEVERE, "Failed to cancel execution, " + exec + " after failing to poll for status.", ex);
-        exec = updateState(JobState.FRAMEWORK_FAILURE, exec);
+        LOGGER.log(Level.SEVERE, "Failed to cancel execution, " + exec + " after failing to poll for status.", ex);
         execFinalizer.finalize(exec, JobState.FRAMEWORK_FAILURE);
       }
       return null;
@@ -216,16 +203,5 @@ public class YarnJobsMonitor {
 
   private Execution updateFinalStatus(JobFinalStatus finalStatus, Execution execution) {
     return executionFacade.updateFinalStatus(execution, finalStatus);
-  }
-  
-  private class CopyLogsFutureResult {
-    private final Future<Execution> execFuture;
-    private final JobState jobState;
-    
-    private CopyLogsFutureResult(Future<Execution> execFuture,
-        JobState jobState) {
-      this.execFuture = execFuture;
-      this.jobState = jobState;
-    }
   }
 }
