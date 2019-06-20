@@ -2636,6 +2636,9 @@ public class ProjectController {
    */
   public void adminProjectUpdate(Project newProjectState, QuotasDTO quotas) throws ProjectException {
     Project currentProject = projectFacade.findByName(newProjectState.getName());
+    if (currentProject == null) {
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE);
+    }
 
     // Set (un)archived status only if changed
     if (newProjectState.getArchived() != null && (currentProject.getArchived() != newProjectState.getArchived())) {

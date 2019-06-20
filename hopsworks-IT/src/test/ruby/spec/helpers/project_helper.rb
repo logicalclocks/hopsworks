@@ -50,7 +50,6 @@ module ProjectHelper
     get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent"
     if response.code != 200 # project and logged in user not the same
       @project = create_project_tour(type)
-
     end
   end
 

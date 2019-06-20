@@ -42,17 +42,8 @@ describe "On #{ENV['OS']}" do
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/python/environments/#{version}?action=create&pythonKernelEnable=true"
         expect_status(201)
 
-        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/settings"
-        expect_status(200)
+        secret_dir, staging_dir, settings = start_jupyter(project)
 
-        settings = json_body
-        settings[:distributionStrategy] = ""
-        staging_dir = settings[:privateDir]
-
-        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/start", JSON(settings)
-        expect_status(200)
-        secret_dir = json_body[:secret]
-        
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/running"
         expect_status(200)
 
@@ -69,9 +60,8 @@ describe "On #{ENV['OS']}" do
         expect(File.file? tstore_file).to be true
         password_file = File.join(path2secret, "#{project_username}__cert.key")
         expect(File.file? password_file).to be true
-        
-        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/stop"
-        expect_status(200)
+
+        stop_jupyter(@project)
 
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/running"
         expect_status(404)
@@ -83,14 +73,7 @@ describe "On #{ENV['OS']}" do
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/python/environments/#{version}?action=create&pythonKernelEnable=true"
         expect_status(201)
 
-        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/settings"
-        expect_status(200)
-
-        settings = json_body
-        settings[:distributionStrategy] = ""
-
-        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/start", JSON(settings)
-        expect_status(200)
+        secret_dir, staging_dir, settings = start_jupyter(project)
 
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/start", JSON(settings)
         expect_status(400)
@@ -98,8 +81,7 @@ describe "On #{ENV['OS']}" do
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/running"
         expect_status(200)
 
-        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/stop"
-        expect_status(200)
+        stop_jupyter(@project)
 
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/running"
         expect_status(404)
@@ -111,20 +93,12 @@ describe "On #{ENV['OS']}" do
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/python/environments/#{version}?action=create&pythonKernelEnable=true"
         expect_status(201)
 
-        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/settings"
-        expect_status(200)
-
-        settings = json_body
-        settings[:distributionStrategy] = ""
-
-        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/start", JSON(settings)
-        expect_status(200)
+        secret_dir, staging_dir, settings = start_jupyter(project)
 
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/running"
         expect_status(200)
 
-        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/stop"
-        expect_status(200)
+        stop_jupyter(@project)
 
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/running"
         expect_status(404)
@@ -132,8 +106,7 @@ describe "On #{ENV['OS']}" do
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/start", JSON(settings)
         expect_status(200)
 
-        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/stop"
-        expect_status(200)
+        stop_jupyter(@project)
 
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/running"
         expect_status(404)
@@ -143,15 +116,7 @@ describe "On #{ENV['OS']}" do
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/python/environments/#{version}?action=create&pythonKernelEnable=true"
         expect_status(201)
 
-        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/settings"
-        expect_status(200)
-
-        settings = json_body
-        settings[:distributionStrategy] = ""
-        settings[:shutdownLevel] = 0
-
-        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/start", JSON(settings)
-        expect_status(200)
+        secret_dir, staging_dir, settings = start_jupyter(project)
 
         # There is a potential race condition here if the timer runs just before this call
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/running"
@@ -170,15 +135,7 @@ describe "On #{ENV['OS']}" do
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/python/environments/#{version}?action=create&pythonKernelEnable=true"
         expect_status(201)
 
-        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/settings"
-        expect_status(200)
-
-        settings = json_body
-        settings[:distributionStrategy] = ""
-        settings[:shutdownLevel] = 6
-
-        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/start", JSON(settings)
-        expect_status(200)
+        secret_dir, staging_dir, settings = start_jupyter(project)
 
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/running"
         expect_status(200)
@@ -214,6 +171,32 @@ describe "On #{ENV['OS']}" do
         python_file = json_body.detect { |d| d[:name] == "mnist.py" }
         expect(python_file).to be_present
       end
+    end
+  end
+
+  describe "Jupyter quota" do
+    before :all do
+      with_admin_session
+      with_valid_project
+    end
+
+    it 'it should not be able to start Jupyter with 0 quota and payment type PREPAID' do
+      set_yarn_quota(@project, 0)
+      set_payment_type(@project, "PREPAID")
+      start_jupyter(@project, expected_status=412)
+    end
+
+    it 'should not be able to start Jupyter with negative quota and payment type PREPAID' do
+      set_yarn_quota(@project, -10)
+      set_payment_type(@project, "PREPAID")
+      start_jupyter(@project, expected_status=412)
+    end
+
+    it 'should be able to start Jupyter with 0 quota and payment type NOLIMIT' do
+      set_yarn_quota(@project, 0)
+      set_payment_type(@project, "NOLIMIT")
+      start_jupyter(@project, expected_status=200)
+      stop_jupyter(@project)
     end
   end
 end

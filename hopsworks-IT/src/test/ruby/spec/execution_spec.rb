@@ -418,5 +418,47 @@ describe "On #{ENV['OS']}" do
         end
       end
     end
+
+    describe "#quota" do
+      before :all do
+        with_admin_session
+        with_valid_project
+        create_sparktour_job(@project, "quota1", 'jar', nil)
+      end
+
+      it 'should not be able to run jobs with 0 quota and payment type PREPAID' do
+        set_yarn_quota(@project, 0)
+        set_payment_type(@project, "PREPAID")
+        start_execution(@project[:id], "quota1")
+        expect_status(412)
+      end
+
+      it 'should not be able to run jobs with negative quota and payment type PREPAID' do
+        set_yarn_quota(@project, -10)
+        set_payment_type(@project, "PREPAID")
+        start_execution(@project[:id], "quota1")
+        expect_status(412)
+      end
+
+      it 'should not kill the running job if the quota goes negative' do
+        set_yarn_quota(@project, 1)
+        set_payment_type(@project, "PREPAID")
+        start_execution(@project[:id], "quota1")
+        expect_status(201)
+        execution_id = json_body[:id]
+
+        wait_for_execution do
+          get_execution(@project[:id], "quota1", execution_id)
+          json_body[:state].eql? "FINISHED"
+        end
+      end
+
+      it 'should be able to run jobs with 0 quota and payment type NOLIMIT' do
+        set_yarn_quota(@project, 0)
+        set_payment_type(@project, "NOLIMIT")
+        start_execution(@project[:id], "quota1")
+        expect_status(201)
+      end
+    end
   end
 end
