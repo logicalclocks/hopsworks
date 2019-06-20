@@ -252,11 +252,9 @@ public class HiveController {
   public void dropDatabases(Project project, DistributedFileSystemOps dfso, boolean forceCleanup)
       throws IOException {
     // To avoid case sensitive bugs, check if the project has a Hive database
-    Dataset projectDs = datasetFacade.findByNameAndProjectId(project,
-        project.getName().toLowerCase() + ".db");
-    Dataset featurestoreDs = datasetFacade.findByNameAndProjectId(project,
-        project.getName().toLowerCase() + "_featurestore.db");
-
+    Dataset projectDs = datasetController.getByProjectAndDsName(project, null, project.getName().toLowerCase() + ".db");
+    Dataset featurestoreDs =
+      datasetController.getByProjectAndDsName(project, null, project.getName().toLowerCase() + "_featurestore.db");
     if ((projectDs != null && projectDs.getType() == DatasetType.HIVEDB)
         || forceCleanup) {
       dropDatabase(project, dfso, project.getName());

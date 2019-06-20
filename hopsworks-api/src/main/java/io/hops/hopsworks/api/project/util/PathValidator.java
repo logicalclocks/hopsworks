@@ -69,7 +69,7 @@ public class PathValidator {
   @EJB
   private ProjectFacade projectFacade;
   @EJB
-  private DatasetController datasetContoller;
+  private DatasetController datasetController;
   @EJB
   private InodeFacade inodeFacade;
   @EJB
@@ -120,8 +120,7 @@ public class PathValidator {
   }
 
 
-  private void buildFullPath(Project project, String path,
-                             DsPath dsPath) throws DatasetException {
+  private void buildFullPath(Project project, String path, DsPath dsPath) throws DatasetException {
     //Strip leading slashes.
     while (path.startsWith("/")) {
       path = path.substring(1);
@@ -130,6 +129,7 @@ public class PathValidator {
 
     String dsName = pathComponents[0];
     boolean shared = false;
+    String parentProjectName = null;
 
     if (pathComponents[0].contains(Settings.SHARED_FILE_SEPARATOR)) {
       //we can split the string and get the project name
@@ -137,11 +137,11 @@ public class PathValidator {
       if (shardDS.length != 2) {
         throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_FOUND, Level.FINE);
       }
+      parentProjectName = shardDS[0];
       dsName = shardDS[1];
       shared = true;
     }
-
-    Dataset ds = datasetFacade.findByNameAndProjectId(project, dsName);
+    Dataset ds = datasetController.getByProjectAndDsName(project, parentProjectName, dsName);
     if (ds == null) {
       throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_FOUND, Level.FINE);
     }
@@ -156,11 +156,11 @@ public class PathValidator {
         pathComponents.length);
 
     if (dsRelativePathStr.isEmpty()) {
-      dsPath.setFullPath(datasetContoller.getDatasetPath(ds));
+      dsPath.setFullPath(datasetController.getDatasetPath(ds));
     } else {
       Path dsRelativePath = new Path(dsRelativePathStr);
       dsPath.setDsRelativePath(dsRelativePath);
-      dsPath.setFullPath(new Path(datasetContoller.getDatasetPath(ds), dsRelativePath));
+      dsPath.setFullPath(new Path(datasetController.getDatasetPath(ds), dsRelativePath));
     }
   }
 
@@ -171,7 +171,7 @@ public class PathValidator {
     if (project == null) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE);
     }
-    Dataset ds = datasetFacade.findByNameAndProjectId(project, pathComponents[3]);
+    Dataset ds = datasetController.getByProjectAndDsName(project,null, pathComponents[3]);
     if (ds == null) {
       throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_FOUND, Level.FINE);
     }
@@ -199,7 +199,7 @@ public class PathValidator {
       throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_FOUND, Level.FINE);
     }
 
-    Project owningProject = datasetContoller.getOwningProject(dss.get(0));
+    Project owningProject = datasetController.getOwningProject(dss.get(0));
     Dataset originalDataset = datasetFacade.findByProjectAndInode(owningProject,
         dss.get(0).getInode());
 

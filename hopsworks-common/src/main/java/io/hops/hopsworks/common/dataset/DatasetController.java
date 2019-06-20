@@ -184,7 +184,7 @@ public class DatasetController {
         //set the dataset meta enabled. Support 3 level indexing
         if (searchable) {
           dfso.setMetaEnabled(dsPath);
-          Dataset logDs = datasetFacade.findByNameAndProjectId(project, dataSetName);
+          Dataset logDs = getByProjectAndDsName(project,null, dataSetName);
           logDataset(logDs, OperationType.Add);
         }
       } catch (Exception e) {
@@ -571,6 +571,20 @@ public class DatasetController {
         dfso.unsetMetaEnabled(dspath);
       }
     }
+  }
+  
+  /**
+   * Get a top level dataset
+   * @param currentProject
+   * @param parentProjectName
+   * @param dsName
+   * @return
+   */
+  public Dataset getByProjectAndDsName(Project currentProject, String parentProjectName, String dsName) {
+    Inode parentInode = inodes.getProjectRoot(parentProjectName == null? currentProject.getName() : parentProjectName);
+    Inode dsInode = inodes.findByInodePK(parentInode, dsName, HopsUtils.calculatePartitionId(parentInode.getId(),
+      dsName, 3));
+    return datasetFacade.findByProjectAndInode(currentProject, dsInode);
   }
   
 }

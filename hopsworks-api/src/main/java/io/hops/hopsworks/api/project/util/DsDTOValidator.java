@@ -41,7 +41,6 @@ package io.hops.hopsworks.api.project.util;
 
 import io.hops.hopsworks.common.dao.dataset.DataSetDTO;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
-import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.exceptions.DatasetException;
@@ -53,9 +52,7 @@ import java.util.logging.Level;
 
 @Stateless
 public class DsDTOValidator {
-
-  @EJB
-  private DatasetFacade datasetFacade;
+  
   @EJB
   private DatasetController datasetController;
 
@@ -87,7 +84,7 @@ public class DsDTOValidator {
     }
 
     // Check if the dataset exists and user can share it
-    Dataset ds = datasetFacade.findByNameAndProjectId(project, dto.getName());
+    Dataset ds = datasetController.getByProjectAndDsName(project,null, dto.getName());
 
     if (ds == null) {
       throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_FOUND, Level.FINE);
