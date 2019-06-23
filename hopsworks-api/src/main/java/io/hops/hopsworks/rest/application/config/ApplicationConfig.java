@@ -55,6 +55,7 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.api.exception.mapper.RESTApiThrowableMapper.class);
     register(io.hops.hopsworks.api.filter.ProjectAuthFilter.class);
     register(io.hops.hopsworks.api.filter.AuthFilter.class);
+    register(io.hops.hopsworks.api.filter.apiKey.ApiKeyFilter.class);
     register(io.hops.hopsworks.api.filter.JWTAutoRenewFilter.class);
     register(io.hops.hopsworks.api.jwt.JWTResource.class);
     register(io.hops.hopsworks.api.jobs.executions.ExecutionsResource.class);
@@ -78,6 +79,8 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.api.user.AuthService.class);
     register(io.hops.hopsworks.api.airflow.AirflowService.class);
     register(io.hops.hopsworks.api.user.UsersResource.class);
+    register(io.hops.hopsworks.api.user.apiKey.ApiKeyResource.class);
+    
     register(io.hops.hopsworks.api.util.BannerService.class);
     register(io.hops.hopsworks.api.util.ClusterUtilisationService.class);
     register(io.hops.hopsworks.api.util.DownloadService.class);

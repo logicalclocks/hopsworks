@@ -223,7 +223,16 @@ angular.module('hopsWorksApp', [
                           }]
                       }
                     })
-
+                    .when('/settings', {
+                        templateUrl: 'views/userSettings.html',
+                        controller: 'ProfileCtrl as profileCtrl',
+                        resolve: {
+                            auth: ['$q','AuthGuardService',
+                                function ($q, AuthGuardService) {
+                                    return AuthGuardService.guardSession($q);
+                                }]
+                        }
+                    })
                     .when('/project/:projectID/datasets', {
                       templateUrl: 'views/datasets.html',
                       controller: 'ProjectCtrl as projectCtrl',

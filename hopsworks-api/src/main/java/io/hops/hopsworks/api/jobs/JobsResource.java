@@ -19,6 +19,7 @@ package io.hops.hopsworks.api.jobs;
 import com.google.common.base.Strings;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
+import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.jobs.executions.ExecutionsResource;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.Pagination;
@@ -32,6 +33,7 @@ import io.hops.hopsworks.common.dao.jobs.description.YarnAppUrlsDTO;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.dao.user.security.apiKey.ApiScope;
 import io.hops.hopsworks.common.jobs.AppInfoDTO;
 import io.hops.hopsworks.common.jobs.JobController;
 import io.hops.hopsworks.common.jobs.configuration.JobConfiguration;
@@ -125,6 +127,7 @@ public class JobsResource {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getAll(
     @BeanParam Pagination pagination,
     @BeanParam JobsBeanParam jobsBeanParam,
@@ -146,6 +149,7 @@ public class JobsResource {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getJob(@PathParam("name") String name,
     @BeanParam JobsBeanParam jobsBeanParam,
     @Context UriInfo uriInfo) throws JobException {
@@ -164,6 +168,7 @@ public class JobsResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response put (
     YarnJobConfiguration config,
     @Context HttpServletRequest req,
@@ -200,6 +205,7 @@ public class JobsResource {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response delete(
     @ApiParam(value = "id", required = true) @PathParam("name") String name,
     @Context HttpServletRequest req,
@@ -229,6 +235,7 @@ public class JobsResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response updateSchedule(ScheduleDTO schedule,
     @PathParam("name") String name,
     @Context HttpServletRequest req,
@@ -258,6 +265,7 @@ public class JobsResource {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response unscheduleJob(@PathParam("name") String name, @Context HttpServletRequest req) throws JobException {
     if(Strings.isNullOrEmpty(name)) {
       throw new IllegalArgumentException("job name was not provided or it was not set.");
@@ -278,6 +286,7 @@ public class JobsResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response inspect (
     @ApiParam (value = "spark job type", example = "spark") @PathParam("jobtype") JobType jobtype,
     @ApiParam(value = "path", example = "/Projects/demo_spark_admin000/Resources/spark-examples.jar",

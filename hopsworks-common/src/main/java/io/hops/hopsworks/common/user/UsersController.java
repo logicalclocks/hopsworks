@@ -55,7 +55,6 @@ import io.hops.hopsworks.common.dao.user.security.audit.RolesAuditAction;
 import io.hops.hopsworks.common.dao.user.security.audit.RolesAuditFacade;
 import io.hops.hopsworks.common.dao.user.security.audit.UserAuditActions;
 import io.hops.hopsworks.common.dao.user.security.ua.SecurityQuestion;
-import io.hops.hopsworks.common.dao.user.security.ua.SecurityUtils;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountType;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
@@ -63,6 +62,8 @@ import io.hops.hopsworks.common.dao.user.sshkey.SshKeyDTO;
 import io.hops.hopsworks.common.dao.user.sshkey.SshKeys;
 import io.hops.hopsworks.common.dao.user.sshkey.SshKeysPK;
 import io.hops.hopsworks.common.dao.user.sshkey.SshkeysFacade;
+import io.hops.hopsworks.common.security.utils.Secret;
+import io.hops.hopsworks.common.security.utils.SecurityUtils;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.common.util.EmailBean;
@@ -80,7 +81,6 @@ import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -117,11 +117,13 @@ public class UsersController {
   private AuthController authController;
   @EJB
   private AccountAuditFacade auditManager;
+  @EJB
+  private SecurityUtils securityUtils;
 
   // To send the user the QR code image
   private byte[] qrCode;
 
-  public byte[] registerUser(UserDTO newUser, HttpServletRequest req) throws NoSuchAlgorithmException, UserException {
+  public byte[] registerUser(UserDTO newUser, HttpServletRequest req) throws UserException {
     userValidator.isValidNewUser(newUser);
     Users user = createNewUser(newUser, UserAccountStatus.NEW_MOBILE_ACCOUNT, UserAccountType.M_ACCOUNT_TYPE);
     addAddress(user);
@@ -190,23 +192,20 @@ public class UsersController {
    * @param accountStatus
    * @param accountType
    * @return
-   * @throws NoSuchAlgorithmException
    */
-  public Users createNewUser(UserDTO newUser, UserAccountStatus accountStatus, UserAccountType accountType)
-    throws NoSuchAlgorithmException {
-    String otpSecret = SecurityUtils.calculateSecretKey();
-    String activationKey = SecurityUtils.generateSecureRandom(SecurityUtils.RANDOM_KEY_LEN);
+  public Users createNewUser(UserDTO newUser, UserAccountStatus accountStatus, UserAccountType accountType) {
+    String otpSecret = securityUtils.calculateSecretKey();
+    String activationKey = securityUtils.generateSecureRandomString();
     String uname = generateUsername(newUser.getEmail());
     List<BbcGroup> groups = new ArrayList<>();
-    String salt = authController.generateSalt();
-    String password = authController.getPasswordHash(newUser.getChosenPassword(), salt);
+    Secret secret = securityUtils.generateSecret(newUser.getChosenPassword());
     Timestamp now = new Timestamp(new Date().getTime());
     SecurityQuestion secQuestion = SecurityQuestion.getQuestion(newUser.getSecurityQuestion());
-    String secAnswer = authController.getHash(newUser.getSecurityAnswer().toLowerCase());
-    Users user = new Users(uname, password, newUser.getEmail(), newUser.getFirstName(), newUser.getLastName(), now, "-",
-      "-", accountStatus, otpSecret, activationKey, now, ValidationKeyType.EMAIL, secQuestion, secAnswer, accountType,
-      now, newUser.getTelephoneNum(), settings.getMaxNumProjPerUser(), newUser.isTwoFactor(), salt,
-      newUser.getToursState());
+    String secAnswer = securityUtils.getHash(newUser.getSecurityAnswer().toLowerCase());
+    Users user = new Users(uname, secret.getSha256HexDigest(), newUser.getEmail(), newUser.getFirstName(),
+      newUser.getLastName(), now, "-", "-", accountStatus, otpSecret, activationKey, now, ValidationKeyType.EMAIL,
+      secQuestion, secAnswer, accountType, now, newUser.getTelephoneNum(), settings.getMaxNumProjPerUser(),
+      newUser.isTwoFactor(), secret.getSalt(), newUser.getToursState());
     user.setBbcGroupCollection(groups);
     return user;
   }
@@ -224,11 +223,10 @@ public class UsersController {
   public Users createNewAgent(String email, String fname, String lname, String pwd, String title) {
     String uname = generateUsername(email);
     List<BbcGroup> groups = new ArrayList<>();
-    String salt = authController.generateSalt();
-    String password = authController.getPasswordHash(pwd, salt);
-    Users user = new Users(uname, password, email, fname, lname, new Timestamp(new Date().getTime()), title, "-",
-      UserAccountStatus.NEW_MOBILE_ACCOUNT, UserAccountType.M_ACCOUNT_TYPE, new Timestamp(new Date().getTime()), 0,
-      salt);
+    Secret secret = securityUtils.generateSecret(pwd);
+    Users user = new Users(uname, secret.getSha256HexDigest(), email, fname, lname, new Timestamp(new Date().getTime()),
+      title, "-", UserAccountStatus.NEW_MOBILE_ACCOUNT, UserAccountType.M_ACCOUNT_TYPE,
+      new Timestamp(new Date().getTime()), 0, secret.getSalt());
     user.setBbcGroupCollection(groups);
     return user;
   }
@@ -245,11 +243,10 @@ public class UsersController {
   public Users createNewRemoteUser(String email, String fname, String lname, String pwd, UserAccountStatus accStatus) {
     String uname = generateUsername(email);
     List<BbcGroup> groups = new ArrayList<>();
-    String salt = authController.generateSalt();
-    String password = authController.getPasswordHash(pwd, salt);
-    Users user = new Users(uname, password, email, fname, lname, new Timestamp(new Date().getTime()), "-", "-"
-      , accStatus, UserAccountType.REMOTE_ACCOUNT_TYPE, new Timestamp(new Date().getTime()),
-      settings.getMaxNumProjPerUser(), salt);
+    Secret secret = securityUtils.generateSecret(pwd);
+    Users user = new Users(uname, secret.getSha256HexDigest(), email, fname, lname, new Timestamp(new Date().getTime()),
+      "-", "-", accStatus, UserAccountType.REMOTE_ACCOUNT_TYPE, new Timestamp(new Date().getTime()),
+      settings.getMaxNumProjPerUser(), secret.getSalt());
     user.setBbcGroupCollection(groups);
     addAddress(user);
     addOrg(user);
@@ -325,8 +322,8 @@ public class UsersController {
   }
   
   private byte[] recoverQRCode(Users user, HttpServletRequest req) {
-    String random = SecurityUtils.getRandomPassword(Settings.PASSWORD_MIN_LENGTH);
-    updateSecret(user.getUid(), random);
+    String random = securityUtils.calculateSecretKey();
+    updateSecret(user, random);
     auditManager.registerAccountChange(user, AccountsAuditActions.RECOVERY.name(), AccountsAuditActions.SUCCESS.name(),
       "Reset QR code.", user, req);
     return getQrCode(user);
@@ -612,22 +609,14 @@ public class UsersController {
 
   }
 
-  public void resetSecQuestion(int id, SecurityQuestion question, String ans) {
-    Users p = userFacade.find(id);
-    p.setSecurityQuestion(question);
-    p.setSecurityAnswer(ans);
-    userFacade.update(p);
-  }
-
   public void updateStatus(Users id, UserAccountStatus stat) {
     id.setStatus(stat);
     userFacade.update(id);
   }
 
-  public void updateSecret(int id, String sec) {
-    Users p = userFacade.find(id);
-    p.setSecret(sec);
-    userFacade.update(p);
+  public void updateSecret(Users user, String sec) {
+    user.setSecret(sec);
+    userFacade.update(user);
   }
 
   public void increaseNumCreatedProjects(int id) {

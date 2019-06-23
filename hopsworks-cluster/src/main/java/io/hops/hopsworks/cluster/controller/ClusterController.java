@@ -48,10 +48,10 @@ import io.hops.hopsworks.common.dao.user.cluster.ClusterCert;
 import io.hops.hopsworks.common.dao.user.cluster.ClusterCertFacade;
 import io.hops.hopsworks.common.dao.user.cluster.RegistrationStatusEnum;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountsAuditActions;
-import io.hops.hopsworks.common.dao.user.security.ua.SecurityUtils;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
 import io.hops.hopsworks.common.security.CertificatesController;
+import io.hops.hopsworks.common.security.utils.SecurityUtils;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.UserException;
@@ -105,6 +105,8 @@ public class ClusterController {
   private UsersController usersCtrl;
   @EJB
   private CertificatesController certificatesController;
+  @EJB
+  private SecurityUtils securityUtils;
 
   public void registerClusterNewUser(ClusterDTO cluster, HttpServletRequest req, boolean autoValidate)
     throws MessagingException, UserException {
@@ -201,7 +203,7 @@ public class ClusterController {
     String commonName = cluster.getOrganizationName() + "_" + cluster.getOrganizationalUnitName();
     clusterCert = new ClusterCert(commonName, cluster.getOrganizationName(), cluster.getOrganizationalUnitName(),
       RegistrationStatusEnum.REGISTRATION_PENDING, clusterAgent);
-    clusterCert.setValidationKey(SecurityUtils.getRandomPassword(VALIDATION_KEY_LEN));
+    clusterCert.setValidationKey(securityUtils.generateSecureRandomString(VALIDATION_KEY_LEN));
     clusterCert.setValidationKeyDate(new Date());
     clusterCertFacade.save(clusterCert);
     return clusterCert;
@@ -235,7 +237,7 @@ public class ClusterController {
     }
     checkUserPasswordAndStatus(cluster, clusterAgent, req);
 
-    clusterCert.setValidationKey(SecurityUtils.getRandomPassword(VALIDATION_KEY_LEN));
+    clusterCert.setValidationKey(securityUtils.generateSecureRandomString(VALIDATION_KEY_LEN));
     clusterCert.setRegistrationStatus(RegistrationStatusEnum.UNREGISTRATION_PENDING);
     clusterCert.setValidationKeyDate(new Date());
     clusterCertFacade.update(clusterCert);

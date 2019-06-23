@@ -42,6 +42,7 @@ import com.google.api.client.repackaged.com.google.common.base.Strings;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
+import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.metadata.wscomm.ResponseBuilder;
 import io.hops.hopsworks.api.metadata.wscomm.message.UploadedTemplateMessage;
@@ -57,6 +58,7 @@ import io.hops.hopsworks.common.dao.metadata.db.TemplateFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.dao.user.security.apiKey.ApiScope;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.FolderNameValidator;
 import io.hops.hopsworks.exceptions.DatasetException;
@@ -255,6 +257,7 @@ public class UploadService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.DATASET_CREATE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response testMethod(@Context HttpServletRequest request, @Context SecurityContext sc) throws IOException, 
       DatasetException, ProjectException {
     configureUploader(sc);
@@ -314,8 +317,8 @@ public class UploadService {
   @Consumes(MediaType.MULTIPART_FORM_DATA)
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens = {Audience.API},
-      allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.DATASET_CREATE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response uploadMethod(
       @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail,

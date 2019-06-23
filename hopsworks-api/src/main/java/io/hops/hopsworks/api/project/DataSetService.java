@@ -42,6 +42,7 @@ package io.hops.hopsworks.api.project;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
+import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.project.util.DsDTOValidator;
 import io.hops.hopsworks.api.project.util.DsPath;
@@ -71,6 +72,7 @@ import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFlag;
+import io.hops.hopsworks.common.dao.user.security.apiKey.ApiScope;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.FilePreviewDTO;
 import io.hops.hopsworks.exceptions.DatasetException;
@@ -299,6 +301,7 @@ public class DataSetService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.DATASET_VIEW}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response findDataSetsInProjectID() {
 
     List<InodeView> kids = new ArrayList<>();
@@ -336,6 +339,7 @@ public class DataSetService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.DATASET_VIEW}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getDirContent(@PathParam("path") String path) throws DatasetException, ProjectException {
     DsPath dsPath = pathValidator.validatePath(this.project, path);
     String fullPath = dsPath.getFullPath().toString();
@@ -369,6 +373,7 @@ public class DataSetService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.DATASET_VIEW}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getFile(@PathParam("path") String path) throws DatasetException, ProjectException {
 
     DsPath dsPath = pathValidator.validatePath(this.project, path);
@@ -579,6 +584,7 @@ public class DataSetService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.DATASET_CREATE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response createTopLevelDataSet(DataSetDTO dataSet, @Context SecurityContext sc)
     throws DatasetException, HopsSecurityException {
 
@@ -616,6 +622,7 @@ public class DataSetService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.DATASET_CREATE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response createDataSetDir(DataSetDTO dataSetName, @Context SecurityContext sc) throws DatasetException,
       HopsSecurityException, ProjectException {
 
@@ -646,6 +653,7 @@ public class DataSetService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.DATASET_DELETE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response removedataSetdir(@PathParam("fileName") String fileName, @Context SecurityContext sc) throws
       DatasetException, ProjectException {
     boolean success = false;
@@ -784,6 +792,7 @@ public class DataSetService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.DATASET_DELETE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response removefile(@PathParam("fileName") String fileName, @Context SecurityContext sc) throws
       DatasetException, ProjectException {
     boolean success = false;
@@ -936,6 +945,7 @@ public class DataSetService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.DATASET_VIEW}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response checkFileExists(@PathParam("path") String path, @Context SecurityContext sc) throws DatasetException,
     ProjectException {
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -984,6 +994,7 @@ public class DataSetService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.DATASET_VIEW}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response filePreview(@PathParam("path") String path, @QueryParam("mode") String mode,
           @Context SecurityContext sc) throws DatasetException, ProjectException {
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -1076,6 +1087,7 @@ public class DataSetService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.DATASET_VIEW}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response isDir(@PathParam("path") String path) throws DatasetException, ProjectException {
 
     DsPath dsPath = pathValidator.validatePath(this.project, path);

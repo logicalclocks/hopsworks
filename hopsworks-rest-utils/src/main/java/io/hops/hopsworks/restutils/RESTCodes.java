@@ -1452,5 +1452,48 @@ public class RESTCodes {
       return range;
     }
   }
+  
+  public enum ApiKeyErrorCode implements RESTErrorCode {
+    
+    KEY_NOT_CREATED(1, "Api key could not be created", Response.Status.BAD_REQUEST),
+    KEY_NOT_FOUND(2, "Api key not found", Response.Status.UNAUTHORIZED),
+    KEY_ROLE_CONTROL_EXCEPTION(3, "No valid role found for this invocation", Response.Status.FORBIDDEN),
+    KEY_SCOPE_CONTROL_EXCEPTION(4, "No valid scope found for this invocation", Response.Status.FORBIDDEN),
+    KEY_SCOPE_NOT_SPECIFIED(5, "Api key scope can not be empty", Response.Status.BAD_REQUEST),
+    KEY_SCOPE_EMPTY(6, "Api key scope can not be empty", Response.Status.BAD_REQUEST),
+    KEY_NAME_EXIST(7, "Api key name already exists", Response.Status.BAD_REQUEST),
+    KEY_NAME_NOT_SPECIFIED(8, "Api key name not specified", Response.Status.BAD_REQUEST);
+    
+    private Integer code;
+    private String message;
+    private Response.StatusType respStatus;
+    private final int range = 300000;
+  
+    ApiKeyErrorCode(Integer code, String message, Response.StatusType respStatus) {
+      this.code = range + code;
+      this.message = message;
+      this.respStatus = respStatus;
+    }
+    
+    @Override
+    public Response.StatusType getRespStatus() {
+      return respStatus;
+    }
+    
+    @Override
+    public Integer getCode() {
+      return code;
+    }
+    
+    @Override
+    public String getMessage() {
+      return message;
+    }
+    
+    @Override
+    public int getRange() {
+      return range;
+    }
+  }
 
 }

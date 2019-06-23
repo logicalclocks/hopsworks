@@ -51,10 +51,11 @@ import io.hops.hopsworks.common.dao.user.security.audit.AccountsAuditActions;
 import io.hops.hopsworks.common.dao.user.security.audit.RolesAuditAction;
 import io.hops.hopsworks.common.dao.user.security.audit.UserAuditActions;
 import io.hops.hopsworks.common.dao.user.security.ua.SecurityQuestion;
-import io.hops.hopsworks.common.dao.user.security.ua.SecurityUtils;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountType;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
+import io.hops.hopsworks.common.security.utils.Secret;
+import io.hops.hopsworks.common.security.utils.SecurityUtils;
 import io.hops.hopsworks.common.util.FormatUtils;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.exceptions.UserException;
@@ -62,7 +63,6 @@ import io.hops.hopsworks.common.security.CertificatesMgmService;
 import io.hops.hopsworks.common.util.EmailBean;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
-import org.apache.commons.codec.digest.DigestUtils;
 
 import javax.ejb.EJB;
 import javax.ejb.EJBException;
@@ -103,6 +103,8 @@ public class AuthController {
   private ProjectFacade projectFacade;
   @EJB
   private CertificatesMgmService certificatesMgmService;
+  @EJB
+  private SecurityUtils securityUtils;
 
   private void validateUser(Users user) {
     if (user == null) {
@@ -158,8 +160,8 @@ public class AuthController {
   public boolean validatePassword(Users user, String password, HttpServletRequest req) {
     validateUser(user);
     String userPwdHash = user.getPassword();
-    String pwdHash = getPasswordHash(password, user.getSalt());
-    if (!userPwdHash.equals(pwdHash)) {
+    Secret secret = new Secret(password, user.getSalt());
+    if (!userPwdHash.equals(secret.getSha256HexDigest())) {
       registerFalseLogin(user, req);
       LOGGER.log(Level.FINEST, "False login attempt by user: {0}", user.getEmail());
       return false;
@@ -183,7 +185,7 @@ public class AuthController {
       return false;
     }
     if (!user.getSecurityQuestion().getValue().equalsIgnoreCase(securityQ)
-        || !user.getSecurityAnswer().equals(DigestUtils.sha256Hex(securityAnswer.toLowerCase()))) {
+        || !user.getSecurityAnswer().equals(securityUtils.getHash(securityAnswer.toLowerCase()))) {
       registerFalseLogin(user, req);
       LOGGER.log(Level.FINEST, "False Security Question attempt by user: {0}", user.getEmail());
       return false;
@@ -372,10 +374,10 @@ public class AuthController {
       resetToken = user.getValidationKey();
       validForHour = diffMillis(user.getValidationKeyUpdated());
     } else {
-      resetToken = SecurityUtils.generateSecureRandom(SecurityUtils.RANDOM_KEY_LEN);
+      resetToken = securityUtils.generateSecureRandomString();
       setValidationKey(user, resetToken, isPassword ? ValidationKeyType.PASSWORD : ValidationKeyType.QR_RESET);
     }
-    sendRecoveryValidationKey(user, url, SecurityUtils.urlEncode(resetToken), isPassword, validForHour, req);
+    sendRecoveryValidationKey(user, url, securityUtils.urlEncode(resetToken), isPassword, validForHour, req);
   }
   
   private long diffMillis(Date date) {
@@ -413,7 +415,7 @@ public class AuthController {
     if (user == null) {
       throw new IllegalArgumentException("User not set.");
     }
-    String activationKey = SecurityUtils.generateSecureRandom(SecurityUtils.RANDOM_KEY_LEN);
+    String activationKey = securityUtils.generateSecureRandomString();
     sendEmailValidationKey(user, activationKey, req);
     accountAuditFacade.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
       AccountsAuditActions.SUCCESS.name(), "New validation key", user, req);
@@ -434,7 +436,7 @@ public class AuthController {
     String path = FormatUtils.getUserURL(req) + settings.getEmailVerificationEndpoint();
     String subject = UserAccountsEmailMessages.ACCOUNT_REQUEST_SUBJECT;
     String msg = UserAccountsEmailMessages.buildMobileRequestMessageRest(path, user.getUsername()
-        + SecurityUtils.urlEncode(activationKey), validForHour);
+        + securityUtils.urlEncode(activationKey), validForHour);
     emailBean.sendEmail(user.getEmail(), Message.RecipientType.TO, subject, msg);
   }
 
@@ -478,27 +480,6 @@ public class AuthController {
   }
 
   /**
-   * Hash password + salt
-   *
-   * @param password
-   * @param salt
-   * @return
-   */
-  public String getPasswordHash(String password, String salt) {
-    return getHash(getPasswordPlusSalt(password, salt));
-  }
-
-  /**
-   * Returns the hash of the value
-   *
-   * @param val
-   * @return
-   */
-  public String getHash(String val) {
-    return DigestUtils.sha256Hex(val);
-  }
-
-  /**
    * Change password to the given password. Will generate a new salt
    *
    * @param user
@@ -507,11 +488,10 @@ public class AuthController {
    */
   @TransactionAttribute(TransactionAttributeType.REQUIRED)
   public void changePassword(Users user, String password, HttpServletRequest req) {
-    String salt = generateSalt();
-    String passwordWithSalt = getPasswordHash(password, salt);
+    Secret secret = securityUtils.generateSecret(password);
     String oldPassword = user.getPassword();
-    user.setPassword(passwordWithSalt);
-    user.setSalt(salt);
+    user.setPassword(secret.getSha256HexDigest());
+    user.setSalt(secret.getSalt());
     user.setPasswordChanged(new Timestamp(new Date().getTime()));
     userFacade.update(user);
     resetProjectCertPassword(user, oldPassword);
@@ -529,7 +509,7 @@ public class AuthController {
    */
   public void changeSecQA(Users user, String securityQuestion, String securityAnswer, HttpServletRequest req) {
     user.setSecurityQuestion(SecurityQuestion.getQuestion(securityQuestion));
-    user.setSecurityAnswer(DigestUtils.sha256Hex(securityAnswer.toLowerCase()));
+    user.setSecurityAnswer(securityUtils.getHash(securityAnswer.toLowerCase()));
     userFacade.update(user);
     accountAuditFacade.registerAccountChange(user, AccountsAuditActions.SECQUESTION.name(),
         AccountsAuditActions.SUCCESS.name(), "Changed Security Question.", user, req);
@@ -681,14 +661,5 @@ public class AuthController {
       return false;
     }
     return user.getBbcGroupCollection().contains(group);
-  }
-
-  /**
-   * Generates a salt value with SALT_LENGTH
-   *
-   * @return
-   */
-  public String generateSalt() {
-    return SecurityUtils.generateSecureRandom(SecurityUtils.SALT_LENGTH);
   }
 }

@@ -72,8 +72,8 @@ public class AuthFilter extends JWTFilter {
   }
 
   @Override
-  public void preJWTFilter(ContainerRequestContext requestContext) throws IOException {
-
+  public boolean preJWTFilter(ContainerRequestContext requestContext) throws IOException {
+    return true;
   }
 
   @Override

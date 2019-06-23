@@ -45,8 +45,9 @@ public abstract class JWTFilter implements ContainerRequestFilter {
 
   @Override
   public final void filter(ContainerRequestContext requestContext) throws IOException {
-    preJWTFilter(requestContext);
-    jwtFilter(requestContext);
+    if (preJWTFilter(requestContext)) {
+      jwtFilter(requestContext);
+    }
   }
 
   public void jwtFilter(ContainerRequestContext requestContext) throws IOException {
@@ -54,8 +55,8 @@ public abstract class JWTFilter implements ContainerRequestFilter {
     String authorizationHeader = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
     Object responseEntity;
     if (authorizationHeader == null) {
-      LOGGER.log(Level.FINEST, "Token not provided.");
-      responseEntity = responseEntity(Response.Status.UNAUTHORIZED, "Token not provided.");
+      LOGGER.log(Level.FINEST, "Authorization header not set.");
+      responseEntity = responseEntity(Response.Status.UNAUTHORIZED, "Authorization header not set.");
       requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).header(HttpHeaders.WWW_AUTHENTICATE,
           WWW_AUTHENTICATE_VALUE).entity(responseEntity).build());
       return;
@@ -140,7 +141,7 @@ public abstract class JWTFilter implements ContainerRequestFilter {
 
   public abstract boolean isTokenValid(DecodedJWT jwt);
 
-  public abstract void preJWTFilter(ContainerRequestContext requestContext) throws IOException;
+  public abstract boolean preJWTFilter(ContainerRequestContext requestContext) throws IOException;
 
   public abstract void postJWTFilter(ContainerRequestContext requestContext, DecodedJWT jwt) throws IOException;
 
