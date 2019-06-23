@@ -30,6 +30,7 @@ public class LibraryVersionDTO {
   
   public LibraryVersionDTO(String version) {
     this.version = version;
+    this.uploadTime = new Date(0);
   }
   
   public LibraryVersionDTO(String version, Date uploadTime) {

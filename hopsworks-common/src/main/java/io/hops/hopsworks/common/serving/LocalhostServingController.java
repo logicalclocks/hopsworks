@@ -21,6 +21,7 @@ import io.hops.hopsworks.common.dao.serving.Serving;
 import io.hops.hopsworks.common.dao.serving.ServingFacade;
 import io.hops.hopsworks.common.dao.serving.ServingType;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.integrations.LocalhostStereotype;
 import io.hops.hopsworks.common.serving.sklearn.LocalhostSkLearnServingController;
 import io.hops.hopsworks.common.serving.tf.LocalhostTfServingController;
 import io.hops.hopsworks.common.serving.util.KafkaServingHelper;
@@ -36,7 +37,6 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.enterprise.inject.Alternative;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -47,7 +47,7 @@ import java.util.logging.Level;
  * Contains the common functionality between localhost serving controllers, the specific functionality is provided by
  * serving-type-specific controllers, e.g SkLearnServingController, tfServingController.
  */
-@Alternative
+@LocalhostStereotype
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 public class LocalhostServingController implements ServingController {
