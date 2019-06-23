@@ -422,7 +422,7 @@ describe "On #{ENV['OS']}" do
     describe "#quota" do
       before :all do
         @cookies = with_admin_session
-        with_valid_tour_project("spark", false)
+        with_valid_tour_project("spark")
       end
 
       after :all do
