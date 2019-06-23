@@ -31,7 +31,7 @@ describe "On #{ENV['OS']}" do
     end
     context 'with authentication create, delete, get' do
       before :all do
-        with_valid_tour_project("spark")
+        with_valid_tour_project("spark", true)
       end
       after :each do
         clean_jobs(@project[:id])
@@ -107,7 +107,7 @@ describe "On #{ENV['OS']}" do
   describe 'deleting running jobs' do
     context 'with authentication' do
       before :all do
-        with_valid_tour_project("spark")
+        with_valid_tour_project("spark", true)
       end
       after :each do
         clean_jobs(@project[:id])
@@ -142,7 +142,7 @@ describe "On #{ENV['OS']}" do
   describe 'job sort, filter, offset and limit' do
     context 'with authentication' do
       before :all do
-        with_valid_tour_project("spark")
+        with_valid_tour_project("spark", true)
         create_sparktour_job(@project, job_spark_1, "jar", nil)
         create_sparktour_job(@project, job_spark_2, "jar", nil)
         create_sparktour_job(@project, "demo_py_job_1", "py", nil)

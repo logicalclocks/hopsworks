@@ -33,7 +33,7 @@ describe "On #{ENV['OS']}" do
       job_types.each do |type|
         context 'with authentication and executable ' + type do
           before :all do
-            with_valid_tour_project("spark")
+            with_valid_tour_project("spark", true)
           end
           after :each do
             clean_jobs(@project[:id])
@@ -147,7 +147,7 @@ describe "On #{ENV['OS']}" do
         $execution_ids = []
         context 'with authentication' do
           before :all do
-            with_valid_tour_project("spark")
+            with_valid_tour_project("spark", true)
             create_sparktour_job(@project, $job_spark_1, 'jar', nil)
             #start 3 executions
             for i in 0..2 do
@@ -422,13 +422,13 @@ describe "On #{ENV['OS']}" do
     describe "#quota" do
       before :all do
         with_admin_session
-        with_valid_project
-        create_sparktour_job(@project, "quota1", 'jar', nil)
+        with_valid_tour_project("spark", false)
       end
 
       it 'should not be able to run jobs with 0 quota and payment type PREPAID' do
         set_yarn_quota(@project, 0)
         set_payment_type(@project, "PREPAID")
+        create_sparktour_job(@project, "quota1", 'jar', nil)
         start_execution(@project[:id], "quota1")
         expect_status(412)
       end
@@ -436,19 +436,21 @@ describe "On #{ENV['OS']}" do
       it 'should not be able to run jobs with negative quota and payment type PREPAID' do
         set_yarn_quota(@project, -10)
         set_payment_type(@project, "PREPAID")
-        start_execution(@project[:id], "quota1")
+        create_sparktour_job(@project, "quota2", 'jar', nil)
+        start_execution(@project[:id], "quota2")
         expect_status(412)
       end
 
       it 'should not kill the running job if the quota goes negative' do
         set_yarn_quota(@project, 1)
         set_payment_type(@project, "PREPAID")
-        start_execution(@project[:id], "quota1")
+        create_sparktour_job(@project, "quota3", 'jar', nil)
+        start_execution(@project[:id], "quota3")
         expect_status(201)
         execution_id = json_body[:id]
 
         wait_for_execution do
-          get_execution(@project[:id], "quota1", execution_id)
+          get_execution(@project[:id], "quota3", execution_id)
           json_body[:state].eql? "FINISHED"
         end
       end
@@ -456,7 +458,8 @@ describe "On #{ENV['OS']}" do
       it 'should be able to run jobs with 0 quota and payment type NOLIMIT' do
         set_yarn_quota(@project, 0)
         set_payment_type(@project, "NOLIMIT")
-        start_execution(@project[:id], "quota1")
+        create_sparktour_job(@project, "quota4", 'jar', nil)
+        start_execution(@project[:id], "quota4")
         expect_status(201)
       end
     end

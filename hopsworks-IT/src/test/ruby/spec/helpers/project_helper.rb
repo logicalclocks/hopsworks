@@ -45,11 +45,11 @@ module ProjectHelper
     end
   end
 
-  def with_valid_tour_project(type)
-    @project ||= create_project_tour(type)
+  def with_valid_tour_project(type, create_session)
+    @project ||= create_project_tour(type, create_session)
     get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent"
     if response.code != 200 # project and logged in user not the same
-      @project = create_project_tour(type)
+      @project = create_project_tour(type, create_session)
     end
   end
 
@@ -73,8 +73,11 @@ module ProjectHelper
     get_project_by_name(new_project[:projectName])
   end
 
-  def create_project_tour(tourtype)
-    with_valid_session
+  def create_project_tour(tourtype, create_session)
+    if (create_session)
+      with_valid_session
+    end
+
     post "#{ENV['HOPSWORKS_API']}/project/starterProject/#{tourtype}"
     expect_status(201)
     expect_json(description: regex("A demo project*"))
