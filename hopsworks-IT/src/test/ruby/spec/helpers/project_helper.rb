@@ -37,8 +37,8 @@
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 =end
 module ProjectHelper
-  def with_valid_project(create_session=true)
-    @project ||= create_project(create_session)
+  def with_valid_project
+    @project ||= create_project
     get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent"
     if response.code != 200 # project and logged in user not the same
       @project = create_project
@@ -53,7 +53,7 @@ module ProjectHelper
     end
   end
 
-  def create_project()
+  def create_project
     with_valid_session
     new_project = {projectName: "ProJect_#{short_random_id}", description:"", status: 0, services: ["JOBS","JUPYTER","HIVE","KAFKA","SERVING", "FEATURESTORE"],
                    projectTeam:[], retentionPeriod: ""}
