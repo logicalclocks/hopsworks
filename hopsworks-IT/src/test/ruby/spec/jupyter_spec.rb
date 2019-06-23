@@ -42,7 +42,7 @@ describe "On #{ENV['OS']}" do
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/python/environments/#{version}?action=create&pythonKernelEnable=true"
         expect_status(201)
 
-        secret_dir, staging_dir, settings = start_jupyter(project)
+        secret_dir, staging_dir, settings = start_jupyter(@project)
 
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/running"
         expect_status(200)
@@ -73,7 +73,7 @@ describe "On #{ENV['OS']}" do
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/python/environments/#{version}?action=create&pythonKernelEnable=true"
         expect_status(201)
 
-        secret_dir, staging_dir, settings = start_jupyter(project)
+        secret_dir, staging_dir, settings = start_jupyter(@project)
 
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/start", JSON(settings)
         expect_status(400)
@@ -93,7 +93,7 @@ describe "On #{ENV['OS']}" do
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/python/environments/#{version}?action=create&pythonKernelEnable=true"
         expect_status(201)
 
-        secret_dir, staging_dir, settings = start_jupyter(project)
+        secret_dir, staging_dir, settings = start_jupyter(@project)
 
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/running"
         expect_status(200)
@@ -116,7 +116,7 @@ describe "On #{ENV['OS']}" do
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/python/environments/#{version}?action=create&pythonKernelEnable=true"
         expect_status(201)
 
-        secret_dir, staging_dir, settings = start_jupyter(project)
+        secret_dir, staging_dir, settings = start_jupyter(@project)
 
         # There is a potential race condition here if the timer runs just before this call
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/running"
@@ -135,7 +135,7 @@ describe "On #{ENV['OS']}" do
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/python/environments/#{version}?action=create&pythonKernelEnable=true"
         expect_status(201)
 
-        secret_dir, staging_dir, settings = start_jupyter(project)
+        secret_dir, staging_dir, settings = start_jupyter(@project)
 
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/running"
         expect_status(200)

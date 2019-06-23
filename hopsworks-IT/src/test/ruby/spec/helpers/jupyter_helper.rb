@@ -30,7 +30,7 @@ module JupyterHelper
   end
 
   def stop_jupyter(project)
-    get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/stop"
+    get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jupyter/stop"
     expect_status(200)
   end
 end
