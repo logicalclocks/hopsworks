@@ -176,8 +176,12 @@ describe "On #{ENV['OS']}" do
 
   describe "Jupyter quota" do
     before :all do
-      with_admin_session
+      @cookies = with_admin_session
       with_valid_project
+    end
+
+    after :all do
+      @cookies = nil
     end
 
     it 'it should not be able to start Jupyter with 0 quota and payment type PREPAID' do
@@ -194,6 +198,13 @@ describe "On #{ENV['OS']}" do
 
     it 'should be able to start Jupyter with 0 quota and payment type NOLIMIT' do
       set_yarn_quota(@project, 0)
+      set_payment_type(@project, "NOLIMIT")
+      start_jupyter(@project, expected_status=200)
+      stop_jupyter(@project)
+    end
+
+    it 'should be able to start Jupyter with negative quota and payment type NOLIMIT' do
+      set_yarn_quota(@project, -10)
       set_payment_type(@project, "NOLIMIT")
       start_jupyter(@project, expected_status=200)
       stop_jupyter(@project)

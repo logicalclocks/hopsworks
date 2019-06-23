@@ -33,7 +33,7 @@ describe "On #{ENV['OS']}" do
       job_types.each do |type|
         context 'with authentication and executable ' + type do
           before :all do
-            with_valid_tour_project("spark", true)
+            with_valid_tour_project("spark")
           end
           after :each do
             clean_jobs(@project[:id])
@@ -147,7 +147,7 @@ describe "On #{ENV['OS']}" do
         $execution_ids = []
         context 'with authentication' do
           before :all do
-            with_valid_tour_project("spark", true)
+            with_valid_tour_project("spark")
             create_sparktour_job(@project, $job_spark_1, 'jar', nil)
             #start 3 executions
             for i in 0..2 do
@@ -421,8 +421,12 @@ describe "On #{ENV['OS']}" do
 
     describe "#quota" do
       before :all do
-        with_admin_session
+        @cookies = with_admin_session
         with_valid_tour_project("spark", false)
+      end
+
+      after :all do
+        @cookies = nil
       end
 
       it 'should not be able to run jobs with 0 quota and payment type PREPAID' do
@@ -460,6 +464,14 @@ describe "On #{ENV['OS']}" do
         set_payment_type(@project, "NOLIMIT")
         create_sparktour_job(@project, "quota4", 'jar', nil)
         start_execution(@project[:id], "quota4")
+        expect_status(201)
+      end
+
+      it 'should be able to run jobs with negative quota and payment type NOLIMIT' do
+        set_yarn_quota(@project, -10)
+        set_payment_type(@project, "NOLIMIT")
+        create_sparktour_job(@project, "quota5", 'jar', nil)
+        start_execution(@project[:id], "quota5")
         expect_status(201)
       end
     end

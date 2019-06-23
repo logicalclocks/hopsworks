@@ -20,7 +20,7 @@ describe "On #{ENV['OS']}" do
 
     describe "create feature store tour project and run example feature engineering job" do
       before :all do
-        with_valid_tour_project("featurestore", true)
+        with_valid_tour_project("featurestore")
       end
 
       it "should have copied a sample .jar job, notebooks and data to the project's datasets" do
