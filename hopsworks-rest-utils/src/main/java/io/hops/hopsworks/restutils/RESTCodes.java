@@ -168,8 +168,6 @@ public class RESTCodes {
     PYTHON_LIB_NOT_INSTALLED(64,
         "This python library is not installed for this project. Cannot remove/upgrade " +
             "op", Response.Status.NOT_MODIFIED),
-    PROJECT_QUOTA_INSUFFICIENT(65, "This project is out of credits",
-        Response.Status.PRECONDITION_FAILED),
     ANACONDA_NOT_ENABLED(66, "First enable Anaconda. Click on 'Python' -> Activate Anaconda",
         Response.Status.PRECONDITION_FAILED),
     TENSORBOARD_ELASTIC_INDEX_NOT_FOUND(67, "Could not find elastic index for TensorBoard.",
