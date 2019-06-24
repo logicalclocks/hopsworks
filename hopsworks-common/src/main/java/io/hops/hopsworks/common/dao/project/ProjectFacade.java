@@ -311,7 +311,18 @@ public class ProjectFacade extends AbstractFacade<Project> {
       return null;
     }
   }
-
+  
+  public Project findByNameCaseInsensitive(String name) {
+    TypedQuery<Project> query = em.createNamedQuery("Project.findByNameCaseInsensitive",
+        Project.class);
+    query.setParameter("name", name);
+    try {
+      return query.getSingleResult();
+    } catch (NoResultException e) {
+      return null;
+    }
+  }
+    
   public boolean numProjectsLimitReached(Users user) {
     if (user.getMaxNumProjects() > 0 && user.getNumCreatedProjects() >= user.getMaxNumProjects()) {
       return true;

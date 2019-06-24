@@ -355,8 +355,7 @@ public class ProjectService {
   @Produces(MediaType.APPLICATION_JSON)
   public Response getDatasetInfo(@PathParam("inodeId") Long inodeId) throws DatasetException {
     Inode inode = inodes.findById(inodeId);
-    Inode parent = inodes.findParent(inode);
-    Project proj = projectFacade.findByName(parent.getInodePK().getName());
+    Project proj = datasetController.getOwningProject(inode);
     Dataset ds = datasetFacade.findByProjectAndInode(proj, inode);
 
     if (ds == null) {
