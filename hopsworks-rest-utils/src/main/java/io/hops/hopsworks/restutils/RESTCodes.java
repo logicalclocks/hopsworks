@@ -831,7 +831,9 @@ public class RESTCodes {
     TWO_FA_DISABLED(45, "2-factor authentication is disabled.", Response.Status.PRECONDITION_FAILED),
     TRANSITION_STATUS_ERROR(46, "The user can't transition from current status to requested status",
       Response.Status.BAD_REQUEST),
-    ACCESS_CONTROL(47, "Client not authorized for this invocation.", Response.Status.FORBIDDEN);
+    ACCESS_CONTROL(47, "Client not authorized for this invocation.", Response.Status.FORBIDDEN),
+    THIRD_PARTY_API_KEY_EMPTY(48, "API key is empty", Response.Status.BAD_REQUEST),
+    THIRD_PARTY_API_KEY_EXISTS(49, "Same API key already exists", Response.Status.BAD_REQUEST);
 
     private Integer code;
     private String message;

@@ -52,6 +52,7 @@ import io.hops.hopsworks.common.dao.user.BbcGroup;
 import io.hops.hopsworks.common.dao.user.BbcGroupFacade;
 import io.hops.hopsworks.common.dao.user.UserProjectDTO;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.dao.user.security.ThirdPartyApiKeyPlaintext;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.exceptions.ProjectException;
@@ -75,6 +76,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.List;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -109,6 +111,8 @@ public class UsersResource {
   private JWTHelper jWTHelper;
   @EJB
   private UsersBuilder usersBuilder;
+  @EJB
+  private ThirdPartyApiKeysBuilder thirdPartyApiKeysBuilder;
 
   @GET
   @Produces(MediaType.APPLICATION_JSON)
@@ -195,15 +199,26 @@ public class UsersResource {
   @POST
   @Path("apiKey")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response apiKey(@FormParam("name") String keyName, @FormParam("key") String key,
+  public Response addApiKey(@FormParam("name") String keyName, @FormParam("key") String key,
       @Context SecurityContext sc) throws UserException {
     Users user = jWTHelper.getUserPrincipal(sc);
     // TODO(Antonis): Fix stuff here
     LOGGER.log(Level.INFO, ">>> Antonis Adding new API key for user " + user.getUsername());
     LOGGER.log(Level.INFO, ">>> Key name: " + keyName + " Key: " + key);
+    userController.addThirdPartyApiKey(user, keyName, key);
     RESTApiJsonResponse response = new RESTApiJsonResponse();
     response.setSuccessMessage("Added new API key");
     return Response.ok().entity(response).build();
+  }
+  
+  @GET
+  @Path("apiKey")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response getAllApiKeys(@Context SecurityContext sc) throws UserException {
+    Users user = jWTHelper.getUserPrincipal(sc);
+    List<ThirdPartyApiKeyPlaintext> apiKeys = userController.findAllThirdPartyApiKeysForUser(user);
+    ThirdPartyApiKeyDTO dto = thirdPartyApiKeysBuilder.build(apiKeys);
+    return Response.ok().entity(dto).build();
   }
   
   @POST

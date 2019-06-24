@@ -56,6 +56,7 @@ public class UserProfileDTO extends RestDTO<UserDTO> {
   private Integer maxNumProjects;
   private Integer numCreatedProjects;
   private Integer numActiveProjects;
+  private ThirdPartyApiKeyDTO thirdPartyApiKeys;
 
   public UserProfileDTO() {
   }
@@ -154,5 +155,13 @@ public class UserProfileDTO extends RestDTO<UserDTO> {
   
   public void setUsername(String username) {
     this.username = username;
+  }
+  
+  public ThirdPartyApiKeyDTO getThirdPartyApiKeys() {
+    return thirdPartyApiKeys;
+  }
+  
+  public void setThirdPartyApiKeys(ThirdPartyApiKeyDTO thirdPartyApiKeys) {
+    this.thirdPartyApiKeys = thirdPartyApiKeys;
   }
 }

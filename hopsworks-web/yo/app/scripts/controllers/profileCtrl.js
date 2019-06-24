@@ -129,13 +129,12 @@ angular.module('hopsWorksApp')
               if (isFormValid) {
                 UserService.add_new_api_key(self.new_api_key).then(
                   function (success) {
-                    // Do something
-                    console.log("Successfully added new API key " + self.new_api_key.name)
                     self.apiKeysWorking = false;
+                    growl.success("Added new API key", {title: 'Success', ttl: 5000, referenceId: 1});
                   }, function (error) {
-                    // Do something
-                    console.log("Error adding new API key " + self.new_api_key.name)
                     self.apiKeysWorking = false;
+                    self.errorMsg = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : "";
+                    growl.error(self.errorMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 1});
                   }
                 );
               }
