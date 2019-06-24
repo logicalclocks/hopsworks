@@ -518,16 +518,35 @@ public class DatasetController {
       case HIVEDB:
         // Project name is the same of database name
         String dbName = ds.getInode().getInodePK().getName();
-        return projectFacade.findByName(dbName.substring(0, dbName.lastIndexOf('.')));
+        return projectFacade.findByNameCaseInsensitive(dbName.substring(0, dbName.lastIndexOf('.')));
       case FEATURESTORE:
         // Project name is the same as the database name minus _featurestore.db
         dbName = ds.getInode().getInodePK().getName();
-        return projectFacade.findByName(dbName.substring(0, dbName.lastIndexOf('_')));
+        return projectFacade.findByNameCaseInsensitive(dbName.substring(0, dbName.lastIndexOf('_')));
       default:
         return null;
     }
   }
 
+  public Project getOwningProject(Inode ds) {
+    Inode parent = inodes.findParent(ds);
+    Project proj = projectFacade.findByName(parent.getInodePK().getName());
+    if (proj == null) {
+      String datasetName = ds.getInodePK().getName();
+      //a hive database
+      if (datasetName.endsWith(".db")) {
+        String projectName;
+        if (datasetName.endsWith("_featurestore.db")) {
+          projectName = datasetName.substring(0, datasetName.lastIndexOf("_"));
+        } else {
+          projectName = datasetName.substring(0, datasetName.lastIndexOf("."));
+        }
+        proj = projectFacade.findByNameCaseInsensitive(projectName);
+      }
+    }
+    return proj;
+  }
+    
   /**
    *
    * @param project
