@@ -261,7 +261,7 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
             },
-            shareDataset: function (size, dsName, permissions) {
+            shareDataset: function (size, dsName, dsType, permissions) {
                 var modalInstance = $uibModal.open({
                     templateUrl: 'views/shareDataset.html',
                     controller: 'ShareDatasetCtrl as shareDatasetCtrl',
@@ -283,12 +283,15 @@ angular.module('hopsWorksApp')
                         },
                         permissions: function () {
                             return permissions;
+                        },
+                        dsType: function(){
+                           return dsType;
                         }
                     }
                 });
                 return modalInstance.result;
             },
-            permissions: function (size, dsName, permissions) {
+            permissions: function (size, dsName, dsType, permissions) {
                 var modalInstance = $uibModal.open({
                     templateUrl: 'views/datasetPermissions.html',
                     controller: 'ShareDatasetCtrl as shareDatasetCtrl',
@@ -310,12 +313,15 @@ angular.module('hopsWorksApp')
                         },
                         permissions: function () {
                             return permissions;
+                        },
+                        dsType: function(){
+                            return dsType;
                         }
                     }
                 });
                 return modalInstance.result;
             },
-            unshareDataset: function (size, dsName) {
+            unshareDataset: function (size, dsName, dsType) {
                 var modalInstance = $uibModal.open({
                     templateUrl: 'views/unshareDataset.html',
                     controller: 'UnshareDatasetCtrl as unshareDatasetCtrl',
@@ -334,6 +340,9 @@ angular.module('hopsWorksApp')
                             }],
                         dsName: function () {
                             return dsName;
+                        },
+                        dsType: function(){
+                            return dsType;
                         }
                     }
                 });

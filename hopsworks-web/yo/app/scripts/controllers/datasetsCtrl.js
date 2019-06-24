@@ -220,6 +220,13 @@ angular.module('hopsWorksApp')
               });
             };
 
+            var replaceName = function (name, shortName) {
+                var index = name.indexOf('::');
+                if (index === -1) {
+                    return shortName;
+                }
+                return name.substring(0, index + 2) + shortName;
+            };
 
               /**
                * Utility function that converts the dataset name to a shorter name for the UI
@@ -228,16 +235,16 @@ angular.module('hopsWorksApp')
                */
             self.shortDatasetName = function (dataset) {
                 if(self.isFeaturestore(dataset)){
-                    return "Featurestore"
+                    return replaceName(dataset.name, "Featurestore");
                 }
                 if(self.isTrainingDatasets(dataset)){
-                    return "Training Datasets"
+                    return replaceName(dataset.name, "Training Datasets");
                 }
                 if(self.isHive(dataset)){
-                    return "Hive"
+                    return replaceName(dataset.name, "Hive");
                 }
                 return dataset.name
-            }
+            };
 
               /**
                * Checks whether a dataset is a Hive database or not (featurestore or regular hive db will match here)
@@ -250,56 +257,54 @@ angular.module('hopsWorksApp')
                 } else {
                     return false
                 }
-            }
-
-            self.isHive = function(dataset) {
-                if(dataset.path.includes("apps/hive/warehouse") && dataset.name == self.projectName + ".db"){
-                    return true
-                }
-                return false
-            }
+            };
 
             self.isFeaturestore = function(dataset) {
-                if(dataset.path.includes("apps/hive/warehouse") && dataset.name == (self.projectName + "_featurestore.db")){
+                if(dataset.path.includes("apps/hive/warehouse") && dataset.name.includes("_featurestore.db")){
                     return true
                 }
                 return false
-            }
+            };
 
+            self.isHive = function(dataset) {
+                if(dataset.path.includes("apps/hive/warehouse") && dataset.name.includes(".db") && !self.isFeaturestore(dataset)){
+                    return true
+                }
+                return false
+            };
 
             self.isTrainingDatasets = function(dataset) {
-                if(dataset.name == self.projectName + "_Training_Datasets") {
+                if(dataset.name.includes("_Training_Datasets")) {
                     return true
                 }
                 return false
-              }
+            };
 
               /**
                * Gets the list of pinned datasets
                 */
             self.getPinnedDatasets = function() {
-                var pinnedDatasets = []
-                var hiveDb = null
-                var featurestoreDb = null
-                var traningDatasets = null
+                var pinnedDatasets;
+                var hiveDb = [];
+                var featurestoreDb = [];
+                var traningDatasets = [];
                 for (var i = 0; i < self.files.length; i++) {
                     if(self.isHive(self.files[i])){
-                        hiveDb = self.files[i]
+                        hiveDb.push(self.files[i]);
                         continue
                     }
                     if(self.isFeaturestore(self.files[i])){
-                        featurestoreDb = self.files[i]
+                        featurestoreDb.push(self.files[i]);
                         continue
                     }
                     if(self.isTrainingDatasets(self.files[i])){
-                        traningDatasets = self.files[i]
+                        traningDatasets.push(self.files[i]);
                     }
                 }
-                pinnedDatasets.push(hiveDb)
-                pinnedDatasets.push(featurestoreDb)
-                pinnedDatasets.push(traningDatasets)
-                return pinnedDatasets
-            }
+                pinnedDatasets = hiveDb.concat(featurestoreDb);
+                pinnedDatasets = pinnedDatasets.concat(traningDatasets);
+                return pinnedDatasets;
+            };
 
               /**
                * Filters the datasets for the list of non-pinned datasets
@@ -313,7 +318,7 @@ angular.module('hopsWorksApp')
                       }
                   }
                   return regularDatasets
-              }
+              };
 
 
             /**
@@ -1119,8 +1124,8 @@ angular.module('hopsWorksApp')
              * Opens a modal dialog for sharing.
              * @returns {undefined}
              */
-            self.share = function (name) {
-              ModalService.shareDataset('md', name).then(
+            self.share = function (dataset) {
+              ModalService.shareDataset('md', dataset.name, dataset.type).then(
                       function (success) {
                         growl.success(success.data.successMessage, {title: 'Success', ttl: 5000});
                         getDirContents();
@@ -1134,8 +1139,8 @@ angular.module('hopsWorksApp')
              * @param {type} permissions
              * @returns {undefined}
              */
-            self.permissions = function (name, permissions) {
-              ModalService.permissions('md', name, permissions).then(
+            self.permissions = function (dataset, permissions) {
+              ModalService.permissions('md', dataset.name, dataset.type, permissions).then(
                       function (success) {
                         growl.success(success.data.successMessage, {title: 'Success', ttl: 5000});
                         getDirContents();
@@ -1148,8 +1153,8 @@ angular.module('hopsWorksApp')
              * @param {type} name
              * @returns {undefined}
              */
-            self.unshare = function (name) {
-              ModalService.unshareDataset('md', name).then(
+            self.unshare = function (dataset) {
+              ModalService.unshareDataset('md', dataset.name, dataset.type).then(
                       function (success) {
                         growl.success(success.data.successMessage, {title: 'Success', ttl: 5000});
                         getDirContents();

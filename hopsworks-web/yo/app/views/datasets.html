@@ -204,17 +204,20 @@
                               </a>
                               <ul class="dropdown-menu">
                                 <li ng-if="dataset.permission === 'rwxrwx--T' || dataset.permission === 'rwxrwx---'">
-                                  <a tabindex="-1" ng-click="datasetsCtrl.permissions(dataset.name, 'OWNER_ONLY'); $event.stopPropagation();">
+                                  <a tabindex="-1"
+                                     ng-click="datasetsCtrl.permissions(dataset, 'OWNER_ONLY'); $event.stopPropagation();">
                                     <span><i class="fa fa-lock"></i> Owner only</span>
                                   </a>
                                 </li>
                                 <li ng-if="dataset.permission !== 'rwxrwx--T'">
-                                  <a tabindex="-1" ng-click="datasetsCtrl.permissions(dataset.name, 'GROUP_WRITABLE_SB'); $event.stopPropagation();">
+                                  <a tabindex="-1"
+                                     ng-click="datasetsCtrl.permissions(dataset, 'GROUP_WRITABLE_SB'); $event.stopPropagation();">
                                     <span><i class="fa fa-user"></i> Group writable & sticky bit set</span>
                                   </a>
                                 </li>
                                 <li ng-if="dataset.permission !== 'rwxrwx---'">
-                                  <a tabindex="-1" ng-click="datasetsCtrl.permissions(dataset.name, 'GROUP_WRITABLE'); $event.stopPropagation();">
+                                  <a tabindex="-1"
+                                     ng-click="datasetsCtrl.permissions(dataset, 'GROUP_WRITABLE'); $event.stopPropagation();">
                                     <span><i class="fa fa-users"></i> Group writable</span>
                                   </a>
                                 </li>
@@ -263,7 +266,7 @@
                               <a tabindex="-1"><span><i class="fa fa-share-alt"></i> Share with</span></a>
                               <ul class="dropdown-menu">
                                 <li ng-if="dataset.publicDs === 0">
-                                  <a tabindex="-1" ng-click="datasetsCtrl.share(dataset.name)">
+                                  <a tabindex="-1" ng-click="datasetsCtrl.share(dataset)">
                                     <span><i class="fa fa-book"></i> Project</span>
                                   </a>
                                 </li>
@@ -284,7 +287,7 @@
                               <a tabindex="-1"><span><i class="fa fa-undo"></i> UnShare from</span></a>
                               <ul class="dropdown-menu">
                                 <li ng-if="dataset.sharedWith > 0">
-                                  <a tabindex="-1" ng-click="datasetsCtrl.unshare(dataset.name)">
+                                  <a tabindex="-1" ng-click="datasetsCtrl.unshare(dataset)">
                                     <span><i class="fa fa-book"></i> Project</span>
                                   </a>
                                 </li>
@@ -411,17 +414,20 @@
                             </a>
                             <ul class="dropdown-menu">
                               <li ng-if="dataset.permission === 'rwxrwx--T' || dataset.permission === 'rwxrwx---'">
-                                <a tabindex="-1" ng-click="datasetsCtrl.permissions(dataset.name, 'OWNER_ONLY'); $event.stopPropagation();">
+                                <a tabindex="-1"
+                                   ng-click="datasetsCtrl.permissions(dataset, 'OWNER_ONLY'); $event.stopPropagation();">
                                   <span><i class="fa fa-lock"></i> Owner only</span>
                                 </a>
                               </li>
                               <li ng-if="dataset.permission !== 'rwxrwx--T'">
-                                <a tabindex="-1" ng-click="datasetsCtrl.permissions(dataset.name, 'GROUP_WRITABLE_SB'); $event.stopPropagation();">
+                                <a tabindex="-1"
+                                   ng-click="datasetsCtrl.permissions(dataset, 'GROUP_WRITABLE_SB'); $event.stopPropagation();">
                                   <span><i class="fa fa-user"></i> Group writable & sticky bit set</span>
                                 </a>
                               </li>
                               <li ng-if="dataset.permission !== 'rwxrwx---'">
-                                <a tabindex="-1" ng-click="datasetsCtrl.permissions(dataset.name, 'GROUP_WRITABLE'); $event.stopPropagation();">
+                                <a tabindex="-1"
+                                   ng-click="datasetsCtrl.permissions(dataset, 'GROUP_WRITABLE'); $event.stopPropagation();">
                                   <span><i class="fa fa-users"></i> Group writable</span>
                                 </a>
                               </li>
@@ -470,7 +476,7 @@
                             <a tabindex="-1"><span><i class="fa fa-share-alt"></i> Share with</span></a>
                             <ul class="dropdown-menu">
                               <li ng-if="dataset.publicDs === 0">
-                                <a tabindex="-1" ng-click="datasetsCtrl.share(dataset.name)">
+                                <a tabindex="-1" ng-click="datasetsCtrl.share(dataset)">
                                   <span><i class="fa fa-book"></i> Project</span>
                                 </a>
                               </li>
@@ -491,7 +497,7 @@
                             <a tabindex="-1"><span><i class="fa fa-undo"></i> UnShare from</span></a>
                             <ul class="dropdown-menu">
                               <li ng-if="dataset.sharedWith > 0">
-                                <a tabindex="-1" ng-click="datasetsCtrl.unshare(dataset.name)">
+                                <a tabindex="-1" ng-click="datasetsCtrl.unshare(dataset)">
                                   <span><i class="fa fa-book"></i> Project</span>
                                 </a>
                               </li>

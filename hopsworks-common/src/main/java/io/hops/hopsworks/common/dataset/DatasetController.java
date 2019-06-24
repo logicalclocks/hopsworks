@@ -574,14 +574,15 @@ public class DatasetController {
   }
   
   /**
-   * Get a top level dataset
+   * Get a top level dataset by project name or parent path. If parent path is null the project name is used as parent
    * @param currentProject
-   * @param parentProjectName
+   * @param parentPath
    * @param dsName
    * @return
    */
-  public Dataset getByProjectAndDsName(Project currentProject, String parentProjectName, String dsName) {
-    Inode parentInode = inodes.getProjectRoot(parentProjectName == null? currentProject.getName() : parentProjectName);
+  public Dataset getByProjectAndDsName(Project currentProject, String parentPath, String dsName) {
+    Inode parentInode = inodes.getInodeAtPath(parentPath == null? Utils.getProjectPath(currentProject.getName()) :
+      parentPath);
     Inode dsInode = inodes.findByInodePK(parentInode, dsName, HopsUtils.calculatePartitionId(parentInode.getId(),
       dsName, 3));
     return datasetFacade.findByProjectAndInode(currentProject, dsInode);

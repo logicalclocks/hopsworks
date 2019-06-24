@@ -314,7 +314,8 @@ describe "On #{ENV['OS']}" do
           permissions = "GROUP_WRITABLE_SB"
           ds = create_dataset_by_name(@project, dsname)
           share_dataset(@project, dsname, project)
-          put "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/permissions", {name: dsname, permissions: permissions }
+          put "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/permissions", {name: dsname, permissions:
+              permissions, type: "DATASET" }
           expect_status(400)
         end
         it "should fail to write on a non editable shared dataset" do

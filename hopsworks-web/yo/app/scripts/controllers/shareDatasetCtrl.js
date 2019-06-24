@@ -38,13 +38,13 @@
  */
 
 angular.module('hopsWorksApp')
-    .controller('ShareDatasetCtrl', ['$scope','$uibModalInstance', 'DataSetService', '$routeParams', 'growl', 'ProjectService', 'dsName', 'permissions', 'ModalService',
-        function ($scope, $uibModalInstance, DataSetService, $routeParams, growl, ProjectService, dsName, permissions, ModalService) {
+    .controller('ShareDatasetCtrl', ['$scope','$uibModalInstance', 'DataSetService', '$routeParams', 'growl', 'ProjectService', 'dsName', 'dsType', 'permissions', 'ModalService',
+        function ($scope, $uibModalInstance, DataSetService, $routeParams, growl, ProjectService, dsName, dsType, permissions, ModalService) {
 
             var self = this;
             self.datasets = [];
             self.projects = [];
-            self.dataSet = {'name': dsName, 'description': "", 'projectId': "", 'permissions': permissions};
+            self.dataSet = {'name': dsName, 'description': "", 'projectId': "", 'permissions': permissions, type: dsType};
             self.pId = $routeParams.projectID;
             var dataSetService = DataSetService(self.pId);
             var defaultPermissions = 'OWNER_ONLY';
