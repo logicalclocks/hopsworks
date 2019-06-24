@@ -324,8 +324,11 @@ describe "On #{ENV['OS']}" do
           dsname = "dataset_#{short_random_id}"
           ds = create_dataset_by_name(@project, dsname)
           share_dataset(@project, dsname, project)
+          # Accept dataset
+          get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/accept/#{ds[:inode_id]}"
+          # try to write
           post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset",
-               {name: "#{"#{@project[:projectname]}::#{dsname}/testdir"}"}
+               {name: "#{@project[:projectname]}::#{dsname}/testdir"}
           expect_status(403)
         end
         it "should write in an editable shared dataset" do
