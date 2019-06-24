@@ -279,8 +279,8 @@ public class JupyterService {
 
     if (project.getPaymentType().equals(PaymentType.PREPAID)) {
       YarnProjectsQuota projectQuota = yarnProjectsQuotaFacade.findByProjectName(project.getName());
-      if (projectQuota == null || projectQuota.getQuotaRemaining() < 0) {
-        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_QUOTA_INSUFFICIENT, Level.FINE);
+      if (projectQuota == null || projectQuota.getQuotaRemaining() <= 0) {
+        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_QUOTA_ERROR, Level.FINE);
       }
     }
 

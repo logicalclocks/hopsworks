@@ -49,6 +49,9 @@ import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstate;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.jobs.description.YarnAppUrlsDTO;
+import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuota;
+import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuotaFacade;
+import io.hops.hopsworks.common.dao.project.PaymentType;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
@@ -132,6 +135,8 @@ public class ExecutionController {
   @EJB
   private YarnApplicationstateFacade yarnApplicationstateFacade;
   @EJB
+  private YarnProjectsQuotaFacade yarnProjectsQuotaFacade;
+  @EJB
   private AsynchronousJobExecutor async;
 
   private static final Logger LOGGER = Logger.getLogger(ExecutionController.class.getName());
@@ -152,7 +157,15 @@ public class ExecutionController {
           "Cannot start an execution while another one for the same job has not finished.");
       }
     }
-    
+
+    // A user should not be able to start a job if the project is prepaid and it doesn't have quota.
+    if(job.getProject().getPaymentType().equals(PaymentType.PREPAID)){
+      YarnProjectsQuota projectQuota = yarnProjectsQuotaFacade.findByProjectName(job.getProject().getName());
+      if(projectQuota == null || projectQuota.getQuotaRemaining() <= 0){
+        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_QUOTA_ERROR, Level.FINE);
+      }
+    }
+
     Execution exec;
     switch (job.getJobType()) {
       case FLINK:

@@ -41,6 +41,7 @@ package io.hops.hopsworks.kmon.cluster;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
@@ -60,7 +61,7 @@ public class ClusterStatusController {
   private HostServicesFacade hostServicesFacade;
   @ManagedProperty("#{param.cluster}")
   private String cluster;
-  private static final Logger logger = Logger.getLogger(ClusterStatusController.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(ClusterStatusController.class.getName());
   private List<GroupInfo> group = new ArrayList<>();
   private Health clusterHealth;
   private boolean found;
@@ -71,7 +72,7 @@ public class ClusterStatusController {
 
   @PostConstruct
   public void init() {
-    logger.info("init ClusterStatusController");
+    LOGGER.log(Level.FINE, "init ClusterStatusController");
     loadServices();
     loadCluster();
   }
