@@ -281,7 +281,7 @@ describe "On #{ENV['OS']}" do
         it "should share a HiveDB" do
           projectname = "project_#{short_random_id}"
           project = create_project_by_name(projectname)
-          share_dataset(@project, "#{@project[:projectname].downcase}.db", project)
+          share_dataset(@project, "#{@project[:projectname].downcase}.db", project, type="HIVEDB")
           datasets = get_all_datasets(project)
           shared_ds = datasets.detect { |e| e[:name] == "#{@project[:projectname].downcase}::#{@project[:projectname].downcase}.db" }
           expect(shared_ds).not_to be_nil
@@ -314,8 +314,8 @@ describe "On #{ENV['OS']}" do
           permissions = "GROUP_WRITABLE_SB"
           ds = create_dataset_by_name(@project, dsname)
           share_dataset(@project, dsname, project)
-          put "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/permissions", {name: dsname, permissions:
-              permissions, type: "DATASET" }
+          put "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/permissions",
+              {name: "#{@project[:projectname]}::#{dsname}", permissions: permissions}
           expect_status(400)
         end
         it "should fail to write on a non editable shared dataset" do
@@ -324,7 +324,8 @@ describe "On #{ENV['OS']}" do
           dsname = "dataset_#{short_random_id}"
           ds = create_dataset_by_name(@project, dsname)
           share_dataset(@project, dsname, project)
-          post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset", {name: "#{dsname + "/testdir"}"}
+          post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset",
+               {name: "#{"#{@project[:projectname]}::#{dsname}/testdir"}"}
           expect_status(403)
         end
         it "should write in an editable shared dataset" do
@@ -340,7 +341,7 @@ describe "On #{ENV['OS']}" do
           get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/accept/#{ds[:inode_id]}"
           # Create a directory - from the "target" project
           post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset",
-               {name: "#{@project[:projectname] + "::" + dsname + "/testdir"}"}
+               {name: "#{"#{@project[:projectname]}::#{dsname}/testdir"}"}
           expect_status(200)
           # Check if the directory is present
           get_datasets_in(@project, dsname)

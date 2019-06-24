@@ -46,6 +46,7 @@ import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
+import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -129,7 +130,7 @@ public class PathValidator {
 
     String dsName = pathComponents[0];
     boolean shared = false;
-    String parentProjectName = null;
+    String parentProjectPath = null;
 
     if (pathComponents[0].contains(Settings.SHARED_FILE_SEPARATOR)) {
       //we can split the string and get the project name
@@ -137,11 +138,11 @@ public class PathValidator {
       if (shardDS.length != 2) {
         throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_FOUND, Level.FINE);
       }
-      parentProjectName = shardDS[0];
+      parentProjectPath = Utils.getProjectPath(shardDS[0]);
       dsName = shardDS[1];
       shared = true;
     }
-    Dataset ds = datasetController.getByProjectAndDsName(project, parentProjectName, dsName);
+    Dataset ds = datasetController.getByProjectAndDsName(project, parentProjectPath, dsName);
     if (ds == null) {
       throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_FOUND, Level.FINE);
     }
