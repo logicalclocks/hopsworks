@@ -14,12 +14,13 @@
  If not, see <https://www.gnu.org/licenses/>.
 =end
 module JupyterHelper
-  def start_jupyter(project, expected_status=200)
+  def start_jupyter(project, expected_status=200, shutdownLevel=6)
     get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jupyter/settings"
     expect_status(200)
 
     settings = json_body
     settings[:distributionStrategy] = ""
+    settings[:shutdownLevel] = shutdownLevel
     staging_dir = settings[:privateDir]
 
     post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jupyter/start", JSON(settings)
