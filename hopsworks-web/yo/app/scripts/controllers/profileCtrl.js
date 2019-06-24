@@ -67,6 +67,8 @@ angular.module('hopsWorksApp')
               confirmedPassword: ''
             };
             
+            self.third_party_api_keys = [];
+
             self.new_api_key = {
               name: '',
               key: ''
@@ -124,11 +126,41 @@ angular.module('hopsWorksApp')
               }
             };
 
+
+            self.load_third_party_api_keys = function () {
+              self.apiKeysWorking = true;
+              UserService.load_third_party_api_keys().then(
+                function (success) {
+                  self.third_party_api_keys = success.data.items
+                  self.apiKeysWorking = false;
+                }, function (error) {
+                  self.apiKeysWorking = false;
+                  self.errorMsg = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : "";
+                  growl.error(self.errorMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 1});
+                }
+              );
+            }
+
+            self.delete_third_party_api_key = function (key) {
+              self.apiKeysWorking = true;
+              UserService.delete_third_party_api_key(key.name).then(
+                function (success) {
+                  self.load_third_party_api_keys();
+                  self.apiKeysWorking = false;
+                }, function (error) {
+                  self.apiKeysWorking = false;
+                  self.errorMsg = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : "";
+                  growl.error(self.errorMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 1});
+                }
+              );
+            }
+
             self.addApiKey = function(isFormValid) {
               self.apiKeysWorking = true;
               if (isFormValid) {
                 UserService.add_new_api_key(self.new_api_key).then(
                   function (success) {
+                    self.load_third_party_api_keys();
                     self.apiKeysWorking = false;
                     growl.success("Added new API key", {title: 'Success', ttl: 5000, referenceId: 1});
                   }, function (error) {

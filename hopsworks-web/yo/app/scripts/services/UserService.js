@@ -71,6 +71,12 @@ angular.module('hopsWorksApp')
               },
               add_new_api_key: function(api_key) {
                 return $http.post("/api/users/apiKey", TransformRequest.jQueryStyle(api_key))
+              },
+              load_third_party_api_keys: function () {
+                return $http.get("/api/users/apiKey")
+              },
+              delete_third_party_api_key: function (keyName) {
+                return $http.delete("/api/users/apiKey/" + keyName);
               }
             };
           }]);

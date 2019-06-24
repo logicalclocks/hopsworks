@@ -36,6 +36,6 @@ public class ThirdPartyApiKeysBuilder {
   }
   
   private ThirdPartyApiKeyDTO buildDTO(ThirdPartyApiKeyPlaintext key) {
-    return new ThirdPartyApiKeyDTO(key.getKeyName());
+    return new ThirdPartyApiKeyDTO(key.getKeyName(), key.getAddedOn());
   }
 }

@@ -22,6 +22,7 @@ import io.hops.hopsworks.common.dao.user.security.ThirdPartyApiKey;
 import io.hops.hopsworks.common.dao.user.security.ThirdPartyApiKeyId;
 import io.hops.hopsworks.common.dao.user.security.ThirdPartyApiKeyPlaintext;
 import io.hops.hopsworks.common.dao.user.security.ThirdPartyApiKeysFacade;
+import io.hops.hopsworks.common.util.DateUtils;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.restutils.RESTCodes;
 
@@ -44,6 +45,9 @@ public class ThirdPartyApiKeysController {
   private ThirdPartyApiKeysFacade thirdPartyApiKeysFacade;
   
   public void addApiKey(Users user, String keyName, String key) throws UserException {
+    if (user == null) {
+      throw new UserException(RESTCodes.UserErrorCode.USER_DOES_NOT_EXIST, Level.FINE);
+    }
     if (Strings.isNullOrEmpty(keyName) || Strings.isNullOrEmpty(key)) {
       throw new UserException(RESTCodes.UserErrorCode.THIRD_PARTY_API_KEY_EMPTY, Level.FINE,
           "Third party API key is either null or empty", "3rd party API key name or key is empty or null");
@@ -54,23 +58,35 @@ public class ThirdPartyApiKeysController {
       throw new UserException(RESTCodes.UserErrorCode.THIRD_PARTY_API_KEY_EXISTS, Level.FINE,
           "API key already exists", "API key with name " + keyName + " already exists for user " + user.getUsername());
     }
-    apiKey = new ThirdPartyApiKey(id, string2bytes(key));
+    apiKey = new ThirdPartyApiKey(id, string2bytes(key), DateUtils.localDateTime2Date(DateUtils.getNow()));
     thirdPartyApiKeysFacade.persist(apiKey);
   }
   
-  public List<ThirdPartyApiKeyPlaintext> getAllApiKeysForUser(Users user) {
+  public List<ThirdPartyApiKeyPlaintext> getAllApiKeysForUser(Users user) throws UserException {
+    if (user == null) {
+      throw new UserException(RESTCodes.UserErrorCode.USER_DOES_NOT_EXIST, Level.FINE);
+    }
     List<ThirdPartyApiKey> keys = thirdPartyApiKeysFacade.findAllForUser(user);
     return keys.stream()
         .map(c -> decrypt(user, c))
         .collect(Collectors.toList());
   }
   
-  public ThirdPartyApiKey getApiKey(Users user, String keyName) {
-    return null;
+  public void deleteApiKey(Users user, String keyName) throws UserException {
+    if (user == null) {
+      throw new UserException(RESTCodes.UserErrorCode.USER_DOES_NOT_EXIST, Level.FINE);
+    }
+    if (Strings.isNullOrEmpty(keyName)) {
+      throw new UserException(RESTCodes.UserErrorCode.THIRD_PARTY_API_KEY_EMPTY, Level.FINE,
+          "Third party API key is either null or empty", "3rd party API key name or key is empty or null");
+    }
+    ThirdPartyApiKeyId keyId = new ThirdPartyApiKeyId(user.getUid(), keyName);
+    thirdPartyApiKeysFacade.deleteKey(keyId);
   }
   
   private ThirdPartyApiKeyPlaintext decrypt(Users user, ThirdPartyApiKey ciphered) {
-    return ThirdPartyApiKeyPlaintext.newInstance(user, ciphered.getId().getName(), bytes2string(ciphered.getKey()));
+    return ThirdPartyApiKeyPlaintext.newInstance(user, ciphered.getId().getName(), bytes2string(ciphered.getKey()),
+        ciphered.getAddedOn());
   }
   
   private byte[] string2bytes(String str) {

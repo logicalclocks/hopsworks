@@ -18,14 +18,18 @@ package io.hops.hopsworks.api.user;
 
 import io.hops.hopsworks.common.api.RestDTO;
 
+import java.util.Date;
+
 public class ThirdPartyApiKeyDTO extends RestDTO<ThirdPartyApiKeyDTO> {
   
   private String name;
+  private Date addedOn;
   
-  public ThirdPartyApiKeyDTO() {};
+  public ThirdPartyApiKeyDTO() {}
   
-  public ThirdPartyApiKeyDTO(String name) {
+  public ThirdPartyApiKeyDTO(String name, Date addedOn) {
     this.name = name;
+    this.addedOn = addedOn;
   }
   
   public String getName() {
@@ -34,5 +38,13 @@ public class ThirdPartyApiKeyDTO extends RestDTO<ThirdPartyApiKeyDTO> {
   
   public void setName(String name) {
     this.name = name;
+  }
+  
+  public Date getAddedOn() {
+    return addedOn;
+  }
+  
+  public void setAddedOn(Date addedOn) {
+    this.addedOn = addedOn;
   }
 }

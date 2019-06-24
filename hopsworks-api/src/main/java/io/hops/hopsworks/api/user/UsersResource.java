@@ -54,6 +54,7 @@ import io.hops.hopsworks.common.dao.user.UserProjectDTO;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.security.ThirdPartyApiKeyPlaintext;
 import io.hops.hopsworks.common.project.ProjectController;
+import io.hops.hopsworks.common.user.ThirdPartyApiKeysController;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.UserException;
@@ -68,6 +69,7 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -111,6 +113,8 @@ public class UsersResource {
   private JWTHelper jWTHelper;
   @EJB
   private UsersBuilder usersBuilder;
+  @EJB
+  private ThirdPartyApiKeysController thirdPartyApiKeysController;
   @EJB
   private ThirdPartyApiKeysBuilder thirdPartyApiKeysBuilder;
 
@@ -205,7 +209,8 @@ public class UsersResource {
     // TODO(Antonis): Fix stuff here
     LOGGER.log(Level.INFO, ">>> Antonis Adding new API key for user " + user.getUsername());
     LOGGER.log(Level.INFO, ">>> Key name: " + keyName + " Key: " + key);
-    userController.addThirdPartyApiKey(user, keyName, key);
+    thirdPartyApiKeysController.addApiKey(user, keyName, key);
+    
     RESTApiJsonResponse response = new RESTApiJsonResponse();
     response.setSuccessMessage("Added new API key");
     return Response.ok().entity(response).build();
@@ -216,9 +221,19 @@ public class UsersResource {
   @Produces(MediaType.APPLICATION_JSON)
   public Response getAllApiKeys(@Context SecurityContext sc) throws UserException {
     Users user = jWTHelper.getUserPrincipal(sc);
-    List<ThirdPartyApiKeyPlaintext> apiKeys = userController.findAllThirdPartyApiKeysForUser(user);
+    List<ThirdPartyApiKeyPlaintext> apiKeys = thirdPartyApiKeysController.getAllApiKeysForUser(user);
     ThirdPartyApiKeyDTO dto = thirdPartyApiKeysBuilder.build(apiKeys);
     return Response.ok().entity(dto).build();
+  }
+  
+  @DELETE
+  @Path("apiKey/{keyName}")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response deleteApiKey(@PathParam("keyName") String keyName, @Context SecurityContext sc)
+    throws UserException {
+    Users user = jWTHelper.getUserPrincipal(sc);
+    thirdPartyApiKeysController.deleteApiKey(user, keyName);
+    return Response.ok().build();
   }
   
   @POST

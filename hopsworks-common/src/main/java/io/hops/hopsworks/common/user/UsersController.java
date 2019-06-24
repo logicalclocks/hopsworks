@@ -47,7 +47,6 @@ import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.security.Address;
 import io.hops.hopsworks.common.dao.user.security.Organization;
-import io.hops.hopsworks.common.dao.user.security.ThirdPartyApiKeyPlaintext;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountAudit;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountsAuditActions;
@@ -118,8 +117,6 @@ public class UsersController {
   private AuthController authController;
   @EJB
   private AccountAuditFacade auditManager;
-  @EJB
-  private ThirdPartyApiKeysController thirdPartyApiKeysController;
 
   // To send the user the QR code image
   private byte[] qrCode;
@@ -660,20 +657,5 @@ public class UsersController {
       }
       userFacade.removeByEmail(u.getEmail());
     }
-  }
-  
-  public void addThirdPartyApiKey(Users user, String keyName, String key) throws UserException {
-    if (user == null) {
-      throw new UserException(RESTCodes.UserErrorCode.USER_DOES_NOT_EXIST, Level.FINE);
-    }
-    thirdPartyApiKeysController.addApiKey(user, keyName, key);
-  }
-  
-  public List<ThirdPartyApiKeyPlaintext> findAllThirdPartyApiKeysForUser(Users user) throws UserException {
-    if (user == null) {
-      throw new UserException(RESTCodes.UserErrorCode.USER_DOES_NOT_EXIST, Level.FINE);
-    }
-    
-    return thirdPartyApiKeysController.getAllApiKeysForUser(user);
   }
 }

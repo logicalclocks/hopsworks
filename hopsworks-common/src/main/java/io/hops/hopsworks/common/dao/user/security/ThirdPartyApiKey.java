@@ -22,7 +22,10 @@ import javax.persistence.Entity;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 import java.io.Serializable;
+import java.util.Date;
 
 @Entity
 @Table(name = "users_third_party_api_keys", catalog = "hopsworks")
@@ -40,11 +43,17 @@ public class ThirdPartyApiKey implements Serializable {
           nullable = false)
   private byte[] key;
   
+  @Column(name = "added_on",
+          nullable = false)
+  @Temporal(TemporalType.TIMESTAMP)
+  private Date addedOn;
+  
   public ThirdPartyApiKey() {}
   
-  public ThirdPartyApiKey(ThirdPartyApiKeyId id, byte[] key) {
+  public ThirdPartyApiKey(ThirdPartyApiKeyId id, byte[] key, Date addedOn) {
     this.id = id;
     this.key = key;
+    this.addedOn = addedOn;
   }
   
   public ThirdPartyApiKeyId getId() {
@@ -61,5 +70,13 @@ public class ThirdPartyApiKey implements Serializable {
   
   public void setKey(byte[] key) {
     this.key = key;
+  }
+  
+  public Date getAddedOn() {
+    return addedOn;
+  }
+  
+  public void setAddedOn(Date addedOn) {
+    this.addedOn = addedOn;
   }
 }

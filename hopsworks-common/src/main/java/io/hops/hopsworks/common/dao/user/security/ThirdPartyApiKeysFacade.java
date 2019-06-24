@@ -45,4 +45,11 @@ public class ThirdPartyApiKeysFacade {
         .setParameter("uid", user.getUid())
         .getResultList();
   }
+  
+  public void deleteKey(ThirdPartyApiKeyId id) {
+    ThirdPartyApiKey key = findById(id);
+    if (key != null) {
+      entityManager.remove(key);
+    }
+  }
 }
