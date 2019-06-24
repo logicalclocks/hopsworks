@@ -419,5 +419,62 @@ describe "On #{ENV['OS']}" do
         end
       end
     end
+
+    describe "#quota" do
+      before :all do
+        @cookies = with_admin_session
+        with_valid_tour_project("spark")
+      end
+
+      after :all do
+        @cookies = nil
+      end
+
+      it 'should not be able to run jobs with 0 quota and payment type PREPAID' do
+        set_yarn_quota(@project, 0)
+        set_payment_type(@project, "PREPAID")
+        create_sparktour_job(@project, "quota1", 'jar', nil)
+        start_execution(@project[:id], "quota1")
+        expect_status(412)
+      end
+
+      it 'should not be able to run jobs with negative quota and payment type PREPAID' do
+        set_yarn_quota(@project, -10)
+        set_payment_type(@project, "PREPAID")
+        create_sparktour_job(@project, "quota2", 'jar', nil)
+        start_execution(@project[:id], "quota2")
+        expect_status(412)
+      end
+
+      it 'should not kill the running job if the quota goes negative' do
+        set_yarn_quota(@project, 1)
+        set_payment_type(@project, "PREPAID")
+        create_sparktour_job(@project, "quota3", 'jar', nil)
+        start_execution(@project[:id], "quota3")
+        expect_status(201)
+        execution_id = json_body[:id]
+
+        wait_for_execution do
+          get_execution(@project[:id], "quota3", execution_id)
+          json_body[:state].eql? "FINISHED"
+        end
+      end
+
+      it 'should be able to run jobs with 0 quota and payment type NOLIMIT' do
+        set_yarn_quota(@project, 0)
+        set_payment_type(@project, "NOLIMIT")
+        create_sparktour_job(@project, "quota4", 'jar', nil)
+        start_execution(@project[:id], "quota4")
+        expect_status(201)
+      end
+
+      it 'should be able to run jobs with negative quota and payment type NOLIMIT' do
+        set_yarn_quota(@project, -10)
+        set_payment_type(@project, "NOLIMIT")
+        create_sparktour_job(@project, "quota5", 'jar', nil)
+        start_execution(@project[:id], "quota5")
+        expect_status(201)
+      end
+    end
   end
 end
