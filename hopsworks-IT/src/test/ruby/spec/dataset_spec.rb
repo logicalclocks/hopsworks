@@ -146,6 +146,34 @@ describe "On #{ENV['OS']}" do
           expect_json_types :array
           expect_status(200)
         end
+        it "should fail to return dataset list from Projects if path contains ../" do
+          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent/Logs/../../../Projects"
+          expect_json_types :array
+          expect_status(400)
+          expect_json(errorCode: 110018)
+        end
+        it "should fail to return dataset list from Projects if path contains ../" do
+          project = get_project
+          newUser = create_user
+          create_session(newUser[:email],"Pass123")
+          projectname = "project_#{short_random_id}"
+          project1 = create_project_by_name(projectname)
+          get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/getFile/Logs/../../../Projects/#{project[:name]}/Logs/README.md"
+          expect_json_types :array
+          expect_status(400)
+          expect_json(errorCode: 110018)
+        end
+        it "should fail to return dataset list from Projects if path contains ../" do
+          project = get_project
+          newUser = create_user
+          create_session(newUser[:email],"Pass123")
+          projectname = "project_#{short_random_id}"
+          project1 = create_project_by_name(projectname)
+          get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/fileExists/Logs/../../../Projects/#{project[:name]}/Logs/README.md"
+          expect_json_types :array
+          expect_status(400)
+          expect_json(errorCode: 110018)
+        end
       end
     end
     describe "#delete" do
@@ -172,6 +200,30 @@ describe "On #{ENV['OS']}" do
           create_session(member[:email],"Pass123")
           delete "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/Logs"
           expect_status(500)
+          reset_session
+        end
+
+        it "should fail to delete dataset in another project with .. in path" do
+          project = get_project
+          newUser = create_user
+          create_session(newUser[:email],"Pass123")
+          projectname = "project_#{short_random_id}"
+          project1 = create_project_by_name(projectname)
+          delete "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/file/Logs/../../../Projects/#{project[:name]}/Logs/README.md"
+          expect_status(400)
+          expect_json(errorCode: 110018)
+          reset_session
+        end
+
+        it "should fail to delete dataset in another project with .. in path" do
+          project = get_project
+          newUser = create_user
+          create_session(newUser[:email],"Pass123")
+          projectname = "project_#{short_random_id}"
+          project1 = create_project_by_name(projectname)
+          delete "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/corrupted/Logs/../../../Projects/#{project[:name]}/Logs/README.md"
+          expect_status(400)
+          expect_json(errorCode: 110018)
           reset_session
         end
       end

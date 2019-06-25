@@ -160,7 +160,8 @@ public class PathValidator {
     } else {
       Path dsRelativePath = new Path(dsRelativePathStr);
       dsPath.setDsRelativePath(dsRelativePath);
-      dsPath.setFullPath(new Path(datasetController.getDatasetPath(ds), dsRelativePath));
+      Path fullPath = new Path(datasetController.getDatasetPath(ds), dsRelativePath);
+      dsPath.setFullPath(fullPath);
     }
   }
   
@@ -214,7 +215,9 @@ public class PathValidator {
     StringBuilder pathBuilder = new StringBuilder();
     int i;
     for (i = start; i < stop -1 ; i++) {
-      pathBuilder.append(pathComponents[i]).append(File.separator);
+      if (!pathComponents[i].isEmpty() && !pathComponents[i].equals("..")) {
+        pathBuilder.append(pathComponents[i]).append(File.separator);
+      }
     }
     // avoid putting the / at the end of the path
     if (i == stop -1) {
