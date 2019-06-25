@@ -435,7 +435,6 @@ angular.module('hopsWorksApp')
               }
 
               getProjectName();
-              getDirContents();
 
               self.tgState = false;
             };
