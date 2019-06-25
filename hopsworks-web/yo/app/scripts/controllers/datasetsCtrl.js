@@ -855,8 +855,8 @@ angular.module('hopsWorksApp')
                 var destPath = success;
                 // Get the relative path of this DataSet, relative to the project home directory
                 // replace only first occurrence 
-                var relPath = destPath.replace(self.projectName + "/", "").replace("Projects/", "");
-                var finalPath = relPath + "/" + name;
+                //var relPath = destPath.replace(self.projectName + "/", "").replace("Projects/", "");
+                var finalPath = destPath + "/" + name;
 
                 dataSetService.copy(inodeId, finalPath).then(
                         function (success) {
@@ -887,7 +887,7 @@ angular.module('hopsWorksApp')
                           var destPath = success;
                           // Get the relative path of this DataSet, relative to the project home directory
                           // replace only first occurrence 
-                          var relPath = destPath.replace(self.projectName + "/", "").replace("Projects/", "");
+                          //var relPath = destPath.replace(self.projectName + "/", "").replace("Projects/", "");
                           //var finalPath = relPath + "/" + name;
                           var names = [];
                           var i = 0;
@@ -898,7 +898,7 @@ angular.module('hopsWorksApp')
                           }
                           var errorCode = -1;
                           for (var name in self.selectedFiles) {
-                            dataSetService.copy(self.selectedFiles[name].id, relPath + "/" + name).then(
+                            dataSetService.copy(self.selectedFiles[name].id, destPath + "/" + name).then(
                                     function (success) {
                                       //If we copied the last file
                                       if (name === names[names.length - 1]) {
@@ -935,8 +935,8 @@ angular.module('hopsWorksApp')
                         var destPath = success;
                         // Get the relative path of this DataSet, relative to the project home directory
                         // replace only first occurrence 
-                        var relPath = destPath.replace(self.projectName + "/", "").replace("Projects/", "");
-                        var finalPath = relPath + "/" + name;
+                        //var relPath = destPath.replace(self.projectName + "/", "").replace("Projects/", "");
+                        var finalPath = destPath + "/" + name;
 
                         dataSetService.move(inodeId, finalPath).then(
                                 function (success) {
@@ -973,7 +973,7 @@ angular.module('hopsWorksApp')
                           var destPath = success;
                           // Get the relative path of this DataSet, relative to the project home directory
                           // replace only first occurrence 
-                          var relPath = destPath.replace(self.projectName + "/", "").replace("Projects/", "");
+                          //var relPath = destPath.replace(self.projectName + "/", "").replace("Projects/", "");
                           //var finalPath = relPath + "/" + name;
                           var names = [];
                           var i = 0;
@@ -985,7 +985,7 @@ angular.module('hopsWorksApp')
 
                           var errorCode = -1;
                           for (var name in self.selectedFiles) {
-                            dataSetService.move(self.selectedFiles[name].id, relPath + "/" + name).then(
+                            dataSetService.move(self.selectedFiles[name].id, destPath + "/" + name).then(
                                     function (success) {
                                       //If we moved the last file
                                       if (name === names[names.length - 1]) {

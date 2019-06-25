@@ -585,6 +585,11 @@ public class DatasetController {
       parentPath);
     Inode dsInode = inodes.findByInodePK(parentInode, dsName, HopsUtils.calculatePartitionId(parentInode.getId(),
       dsName, 3));
+    if (dsInode == null && dsName.endsWith(".db")) { //if hive parent is not project
+      parentInode = inodes.getInodeAtPath(settings.getHiveWarehouse());
+      dsInode = inodes.findByInodePK(parentInode, dsName, HopsUtils.calculatePartitionId(parentInode.getId(),
+        dsName, 3));
+    }
     return datasetFacade.findByProjectAndInode(currentProject, dsInode);
   }
   

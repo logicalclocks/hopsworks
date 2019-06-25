@@ -101,12 +101,12 @@ public class PathValidator {
       path = urlMatcher.group(2);
       dsPath.setFullPath(new Path(path));
       String[] pathComponents = path.split("/");
-      buildProjectDsRelativePath(pathComponents, dsPath);
+      buildProjectDsRelativePath(project, pathComponents, dsPath);
     } else if (path.startsWith(File.separator + Settings.DIR_ROOT)) {
       // Case /Projects/project1/ds/dsRelativePath
       dsPath.setFullPath(new Path(path));
       String[] pathComponents = path.split("/");
-      buildProjectDsRelativePath(pathComponents, dsPath);
+      buildProjectDsRelativePath(project, pathComponents, dsPath);
     } else if (path.startsWith(this.settings.getHiveWarehouse())) {
       // Case /apps/hive/warehouse/project1.db/dsRelativePath
       dsPath.setFullPath(new Path(path));
@@ -153,8 +153,7 @@ public class PathValidator {
     }
     dsPath.setDs(ds);
 
-    String dsRelativePathStr = buildRelativePath(pathComponents, 1,
-        pathComponents.length);
+    String dsRelativePathStr = buildRelativePath(pathComponents, 1, pathComponents.length);
 
     if (dsRelativePathStr.isEmpty()) {
       dsPath.setFullPath(datasetController.getDatasetPath(ds));
@@ -164,30 +163,28 @@ public class PathValidator {
       dsPath.setFullPath(new Path(datasetController.getDatasetPath(ds), dsRelativePath));
     }
   }
-
-  private void buildProjectDsRelativePath(String[] pathComponents,
-                                          DsPath dsPath) throws ProjectException, DatasetException {
+  
+  private void buildProjectDsRelativePath(Project project, String[] pathComponents, DsPath dsPath)
+    throws ProjectException, DatasetException {
     // Start by 1 as the first component is ""
-    Project project = projectFacade.findByName(pathComponents[2]);
-    if (project == null) {
+    Project destProject = projectFacade.findByName(pathComponents[2]);
+    if (project == null || destProject == null) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE);
     }
-    Dataset ds = datasetController.getByProjectAndDsName(project,null, pathComponents[3]);
+    Dataset ds = datasetController.getByProjectAndDsName(project, dsPath.getFullPath().toString(), pathComponents[3]);
     if (ds == null) {
       throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_FOUND, Level.FINE);
     }
     dsPath.setDs(ds);
-
-    String dsRelativePathStr = buildRelativePath(pathComponents, 4,
-        pathComponents.length);
+    
+    String dsRelativePathStr = buildRelativePath(pathComponents, 4, pathComponents.length);
     if (!dsRelativePathStr.isEmpty()) {
       dsPath.setDsRelativePath(new Path(dsRelativePathStr));
     }
   }
 
-  private void buildHiveDsRelativePath(Project project,
-                                       String[] pathComponents,
-                                       DsPath dsPath) throws DatasetException {
+  private void buildHiveDsRelativePath(Project project, String[] pathComponents, DsPath dsPath)
+    throws DatasetException {
     String dsPathStr = File.separator + buildRelativePath(pathComponents, 1, 5);
     Inode dsInode = inodeFacade.getInodeAtPath(dsPathStr);
 
