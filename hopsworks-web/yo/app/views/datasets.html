@@ -323,7 +323,7 @@
                           <a>
                              <span class="corner"></span>
                             <div ng-if="dataset.status === false" data-toggle="tooltip" title="Shared Dataset. Click on this dataset to accept/reject it." class="icon" ng-click="datasetsCtrl.browseDataset(dataset)">
-                              <i class="glyphicon" ng-class="{'glyphicon-eye-open' : datasetsCtrl.selected !== dataset.name}"></i>
+                              <i class="glyphicon glyphicon-eye-open"></i>
                             </div>
                             <div ng-if="dataset.status === true" data-toggle="tooltip" title="Click here to enter this dataset" class="icon" ng-click="datasetsCtrl.browseDataset(dataset)">
                               <i ng-show="!dataset.downloading && !datasetsCtrl.isHiveDB(dataset)" class="glyphicon"

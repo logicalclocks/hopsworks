@@ -215,9 +215,10 @@ public class PathValidator {
     StringBuilder pathBuilder = new StringBuilder();
     int i;
     for (i = start; i < stop -1 ; i++) {
-      if (!pathComponents[i].isEmpty() && !pathComponents[i].equals("..")) {
-        pathBuilder.append(pathComponents[i]).append(File.separator);
-      }
+//      if (!pathComponents[i].isEmpty() && !pathComponents[i].equals("..")) {
+//        pathBuilder.append(pathComponents[i]).append(File.separator);
+//      }
+      pathBuilder.append(pathComponents[i]).append(File.separator);
     }
     // avoid putting the / at the end of the path
     if (i == stop -1) {

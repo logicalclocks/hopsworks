@@ -148,31 +148,97 @@ describe "On #{ENV['OS']}" do
         end
         it "should fail to return dataset list from Projects if path contains ../" do
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent/Logs/../../../Projects"
-          expect_json_types :array
           expect_status(400)
           expect_json(errorCode: 110018)
+          reset_session
         end
-        it "should fail to return dataset list from Projects if path contains ../" do
+        it "should fail to check if a dataset is a dir for a project if path contains ../" do
           project = get_project
           newUser = create_user
           create_session(newUser[:email],"Pass123")
           projectname = "project_#{short_random_id}"
           project1 = create_project_by_name(projectname)
-          get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/getFile/Logs/../../../Projects/#{project[:name]}/Logs/README.md"
-          expect_json_types :array
+          get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/isDir/Logs/../../../Projects/#{project[:projectname]}/Logs/README.md"
           expect_status(400)
           expect_json(errorCode: 110018)
+          reset_session
         end
-        it "should fail to return dataset list from Projects if path contains ../" do
+        it "should fail to count file blocks to a project if path contains ../" do
           project = get_project
           newUser = create_user
           create_session(newUser[:email],"Pass123")
           projectname = "project_#{short_random_id}"
           project1 = create_project_by_name(projectname)
-          get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/fileExists/Logs/../../../Projects/#{project[:name]}/Logs/README.md"
-          expect_json_types :array
+          get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/countFileBlocks/Logs/../../../Projects/#{project[:projectname]}/Logs/README.md"
           expect_status(400)
           expect_json(errorCode: 110018)
+          reset_session
+        end
+        it "should fail to upload file to a project if path contains ../" do
+          project = get_project
+          newUser = create_user
+          create_session(newUser[:email],"Pass123")
+          projectname = "project_#{short_random_id}"
+          project1 = create_project_by_name(projectname)
+          get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/upload/Logs/../../../Projects/#{project[:projectname]}/Logs/someFile.txt"
+          expect_status(400)
+          expect_json(errorCode: 110018)
+          reset_session
+        end
+        it "should fail to return dataset list from Projects if path contains .." do
+          project = get_project
+          newUser = create_user
+          create_session(newUser[:email],"Pass123")
+          projectname = "project_#{short_random_id}"
+          project1 = create_project_by_name(projectname)
+          get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/getContent/Logs/../../../Projects/#{project[:projectname]}/Logs/README.md"
+          expect_status(400)
+          expect_json(errorCode: 110018)
+          reset_session
+        end
+        it "should fail to return file from other Projects if path contains .." do
+          project = get_project
+          newUser = create_user
+          create_session(newUser[:email],"Pass123")
+          projectname = "project_#{short_random_id}"
+          project1 = create_project_by_name(projectname)
+          get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/getFile/Logs/../../../Projects/#{project[:projectname]}/Logs/README.md"
+          expect_status(400)
+          expect_json(errorCode: 110018)
+          reset_session
+        end
+        it "should fail to return file exists from another project if path contains ../" do
+          project = get_project
+          newUser = create_user
+          create_session(newUser[:email],"Pass123")
+          projectname = "project_#{short_random_id}"
+          project1 = create_project_by_name(projectname)
+          get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/fileExists/Logs/../../../Projects/#{project[:projectname]}/Logs/README.md"
+          expect_status(404)
+          expect_json(errorCode: 110008)
+          reset_session
+        end
+        it "should fail to preview a file from another project if path contains ../" do
+          project = get_project
+          newUser = create_user
+          create_session(newUser[:email],"Pass123")
+          projectname = "project_#{short_random_id}"
+          project1 = create_project_by_name(projectname)
+          get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/filePreview/Logs/../../../Projects/#{project[:projectname]}/Logs/README.md"
+          expect_status(404)
+          expect_json(errorCode: 110008)
+          reset_session
+        end
+        it "should fail to check for download a file from another project if path contains ../" do
+          project = get_project
+          newUser = create_user
+          create_session(newUser[:email],"Pass123")
+          projectname = "project_#{short_random_id}"
+          project1 = create_project_by_name(projectname)
+          get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/checkFileForDownload/Logs/../../../Projects/#{project[:projectname]}/Logs/README.md"
+          expect_status(404)
+          expect_json(errorCode: 110008)
+          reset_session
         end
       end
     end
@@ -209,7 +275,7 @@ describe "On #{ENV['OS']}" do
           create_session(newUser[:email],"Pass123")
           projectname = "project_#{short_random_id}"
           project1 = create_project_by_name(projectname)
-          delete "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/file/Logs/../../../Projects/#{project[:name]}/Logs/README.md"
+          delete "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/file/Logs/../../../Projects/#{project[:projectname]}/Logs/README.md"
           expect_status(400)
           expect_json(errorCode: 110018)
           reset_session
@@ -221,9 +287,9 @@ describe "On #{ENV['OS']}" do
           create_session(newUser[:email],"Pass123")
           projectname = "project_#{short_random_id}"
           project1 = create_project_by_name(projectname)
-          delete "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/corrupted/Logs/../../../Projects/#{project[:name]}/Logs/README.md"
-          expect_status(400)
-          expect_json(errorCode: 110018)
+          delete "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/corrupted/Logs/../../../Projects/#{project[:projectname]}/Logs/README.md"
+          expect_status(500)
+          expect_json(errorCode: 110007)
           reset_session
         end
       end
@@ -598,6 +664,29 @@ describe "On #{ENV['OS']}" do
             ds = json_body.detect { |d| d[:name] == "testDir" }
             !ds.nil?
           end
+        end
+
+        it "should fail to zip a dataset from other projects if path contains ../" do
+          project = get_project
+          newUser = create_user
+          create_session(newUser[:email],"Pass123")
+          projectname = "project_#{short_random_id}"
+          project1 = create_project_by_name(projectname)
+          get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/zip/Logs/../../../Projects/#{project[:projectname]}/Logs/README.md"
+          expect_status(400)
+          expect_json(errorCode: 110018)
+          reset_session
+        end
+        it "should fail to unzip a dataset from other projects if path contains ../" do
+          project = get_project
+          newUser = create_user
+          create_session(newUser[:email],"Pass123")
+          projectname = "project_#{short_random_id}"
+          project1 = create_project_by_name(projectname)
+          get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/unzip/Logs/../../../Projects/#{project[:projectname]}/Logs/README.md"
+          expect_status(400)
+          expect_json(errorCode: 110018)
+          reset_session
         end
       end
     end
