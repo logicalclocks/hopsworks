@@ -55,21 +55,13 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.LogAggregationStatus;
 import org.apache.hadoop.yarn.client.api.YarnClient;
-import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.logaggregation.AggregatedLogFormat;
 import org.apache.hadoop.yarn.logaggregation.AggregatedLogFormat.ContainerLogsReader;
 
 public class YarnLogUtil {
 
-  private static final Logger LOGGER = Logger.getLogger(YarnLogUtil.class.
-          getName());
-
-  private enum Result {
-    FAILED,
-    SUCCESS,
-    TIMEOUT
-  }
+  private static final Logger LOGGER = Logger.getLogger(YarnLogUtil.class.getName());
 
   public static void writeLog(DistributedFileSystemOps dfs, String dst,
       String message, Exception exception) {
@@ -110,8 +102,12 @@ public class YarnLogUtil {
   
     LogAggregationStatus logAggregationStatus = waitForLogAggregation(monitor.getYarnClient(),
         monitor.getApplicationId());
-    
-    
+    if (logAggregationStatus == null) {
+      // Status might be null if there were issues starting the application
+      // most likely on the yarn side.
+      return;
+    }
+
     PrintStream writer = null;
     String[] srcs;
     try {   
@@ -141,8 +137,7 @@ public class YarnLogUtil {
       }
     } catch (Exception ex) {
       if (writer != null) {
-        writer.print(YarnLogUtil.class.getName()
-                + ": Failed to get aggregated logs.\n" + ex.getMessage());
+        writer.print(YarnLogUtil.class.getName() + ": Failed to get aggregated logs.\n" + ex.getMessage());
       }
       LOGGER.log(Level.SEVERE, null, ex);
     } finally {
@@ -176,6 +171,12 @@ public class YarnLogUtil {
   }
 
   private static boolean isFinal(LogAggregationStatus status){
+    if (status == null) {
+      // Status might be null if there were issues starting the application
+      // most likely on the yarn side.
+      return true;
+    }
+
     switch(status) {
       case RUNNING:
       case RUNNING_WITH_FAILURE:
@@ -199,19 +200,16 @@ public class YarnLogUtil {
         location = new Path(src);
         LOGGER.log(Level.FINE, "Copying log from {0}", src);
         try {
-          reader = new LogReader(dfs.getConf(), dfs,
-                  new Path(src));
+          reader = new LogReader(dfs.getConf(), dfs, location);
           valueStream = reader.next(key);
           while (valueStream != null) {
             containerNames.add(key);
             valueStream = reader.next(key);
           }
           reader.close();
-          reader = new LogReader(dfs.getConf(), dfs,
-                  new Path(src));
+          reader = new LogReader(dfs.getConf(), dfs, location);
         } catch (FileNotFoundException e) {
-          LOGGER.log(Level.FINE,
-                  "Logs not available. Aggregation may have failed.");
+          LOGGER.log(Level.FINE, "Logs not available. Aggregation may have failed.");
           return;
         } catch (IOException e) {
           LOGGER.log(Level.SEVERE, "Error getting logs");
@@ -265,8 +263,6 @@ public class YarnLogUtil {
         reader.close();
         reader = new LogReader(dfs.getConf(), dfs,
                 new Path(src));
-      } catch (FileNotFoundException e) {
-        return false;
       } catch (IOException e) {
         return false;
       }
@@ -358,54 +354,6 @@ public class YarnLogUtil {
     return foundLog;
   }
 
-  private static Result waitForAggregatedLogFileCreation(String path,
-          DistributedFileSystemOps dfs) throws
-          IOException {
-
-    boolean created = false;
-    //If retain seconds not set deffault to 24hours.
-    long maxWait = dfs.getConf().getLong(
-            YarnConfiguration.LOG_AGGREGATION_RETAIN_SECONDS, 86400);
-    maxWait = (maxWait > 0 ? maxWait : 86400);
-    long startTime = System.currentTimeMillis();
-    long endTime = System.currentTimeMillis();
-    long retries = 0l;
-    long wait;
-    long fileSize = 0l;
-    long pFileSize = 0l;
-    String[] paths;
-    while (!created && (endTime - startTime) / 1000 < maxWait) {
-      paths = getAggregatedLogFilePaths(path, dfs);
-      created = logFilesReady(paths, dfs);
-      if (created) {
-        retries++;//wait any way to be sure there are no more logs 
-      }
-      for (String path1 : paths) {
-        fileSize += getFileLen(path1, dfs);
-      }
-      wait = (long) Math.pow(2, retries);
-      try {
-        Thread.sleep(wait * 1000);
-      } catch (InterruptedException ex) {
-      }
-      if (pFileSize == fileSize) {
-        retries++;
-      }
-      retries++;
-      pFileSize = fileSize;
-      endTime = System.currentTimeMillis();
-      paths = getAggregatedLogFilePaths(path, dfs);
-      created = logFilesReady(paths, dfs);
-    }
-    if ((endTime - startTime) / 1000 >= maxWait) {
-      return Result.TIMEOUT;
-    } else if (created) {
-      return Result.SUCCESS;
-    } else {
-      return Result.FAILED;
-    }
-  }
-
   /**
    * Given a path to an aggregated log returns the full path to the log file.
    */
@@ -435,26 +383,6 @@ public class YarnLogUtil {
       paths[i] = path + File.separator + fileStatus[i].getPath().getName();
     }
     return paths;
-  }
-
-  private static long getFileLen(String path, DistributedFileSystemOps dfs) {
-    Path location = new Path(path);
-    FileStatus fileStatus;
-    try {
-      if (!dfs.exists(path)) {
-        return 0l;
-      }
-      if (dfs.isDir(path)) {
-        return 0l;
-      }
-      fileStatus = dfs.getFileStatus(location);
-      if (fileStatus == null) {
-        return 0l;
-      }
-    } catch (IOException ex) {
-      return 0l;
-    }
-    return fileStatus.getLen();
   }
 
   private static boolean logFilesReady(String[] paths,
