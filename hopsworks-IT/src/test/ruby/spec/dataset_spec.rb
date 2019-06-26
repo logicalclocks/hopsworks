@@ -170,8 +170,8 @@ describe "On #{ENV['OS']}" do
           projectname = "project_#{short_random_id}"
           project1 = create_project_by_name(projectname)
           get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/countFileBlocks/Logs/../../../Projects/#{project[:projectname]}/Logs/README.md"
-          expect_status(200)#Always returns 200
-          expect_json(errorCode: 110018)
+          expect_status(200)# Always returns 200 but if file does not exist blocks = -1
+          expect(response).to include("-1")
           reset_session
         end
         it "should fail to upload file to a project if path contains ../" do
@@ -180,9 +180,14 @@ describe "On #{ENV['OS']}" do
           create_session(newUser[:email],"Pass123")
           projectname = "project_#{short_random_id}"
           project1 = create_project_by_name(projectname)
-          get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/upload/Logs/../../../Projects/#{project[:projectname]}/Logs/someFile.txt"
-          expect_status(400)
-          expect_json(errorCode: 110028)# it checks relative path so it gets 'Name of dir is invalid'.
+          file = "templateId=-1&flowChunkNumber=1&flowChunkSize=1048576&flowCurrentChunkSize=3372&flowTotalSize=3372
+&flowIdentifier=3372-someFiletxt&flowFilename=someFile.txt&flowRelativePath=someFile.txt&flowTotalChunks=1"
+          get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/upload/Logs/../../../Projects/#{project[:projectname]}/Logs/?#{file}"
+          expect_status(204)
+          expect_json(response).to be_empty
+          get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/getContent/Logs/Projects/#{project[:projectname]}/Logs/"
+          ds = json_body.detect { |d| d[:name] == "someFile.txt" }
+          expect(ds).to be_present
           reset_session
         end
         it "should fail to return dataset list from Projects if path contains .." do
@@ -292,7 +297,7 @@ describe "On #{ENV['OS']}" do
           reset_session
         end
 
-        it "should fail to delete dataset in another project with .. in path" do
+        it "should fail to delete corrupted(owned by glassfish and size=0) file in another project with .. in path" do
           project = get_project
           newUser = create_user
           create_session(newUser[:email],"Pass123")
@@ -684,8 +689,8 @@ describe "On #{ENV['OS']}" do
           projectname = "project_#{short_random_id}"
           project1 = create_project_by_name(projectname)
           get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/zip/Logs/../../../Projects/#{project[:projectname]}/Logs/README.md"
-          expect_status(403)
-          expect_json(errorCode: 110050)#file permission check is done so it returns "Permission denied."
+          expect_status(404)
+          expect_json(errorCode: 110008)
           reset_session
         end
         it "should fail to unzip a dataset from other projects if path contains ../" do
@@ -695,8 +700,8 @@ describe "On #{ENV['OS']}" do
           projectname = "project_#{short_random_id}"
           project1 = create_project_by_name(projectname)
           get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/unzip/Logs/../../../Projects/#{project[:projectname]}/Logs/README.md.zip"
-          expect_status(403)
-          expect_json(errorCode: 110050)#file permission check is done so it returns "Permission denied."
+          expect_status(404)
+          expect_json(errorCode: 110008)
           reset_session
         end
       end
