@@ -13,6 +13,8 @@
  You should have received a copy of the GNU Affero General Public License along with this program.
  If not, see <https://www.gnu.org/licenses/>.
 =end
+require 'jwt'
+
 describe "On #{ENV['OS']}" do
   describe "Renew service JWT" do
     before :all do
@@ -81,8 +83,12 @@ describe "On #{ENV['OS']}" do
         end
 
         it "should be able to renew master jwt" do
-          not_before = Time.now.to_i
-          new_expiration = not_before + 300
+
+          now = Time.now
+          not_before = now.strftime("%Y-%m-%dT%H:%M:%S.%L%z")
+          exp = now + 300
+          new_expiration = exp.strftime("%Y-%m-%dT%H:%M:%S.%L%z")
+          
           # Use one-time token
           Airborne.configure do |config|
             config.headers = {}
@@ -92,9 +98,10 @@ describe "On #{ENV['OS']}" do
           put "#{ENV['HOPSWORKS_API']}/jwt/service",
               {
                 token: @master_token,
-                expiration: new_expiration,
+                expiresAt: new_expiration,
                 nbf: not_before
               }
+
           expect_status(200)
           
           new_master_token = json_body[:jwt][:token]
@@ -104,6 +111,14 @@ describe "On #{ENV['OS']}" do
 
           expect(new_one_time_tokens.length).to eql(5)
 
+          master_jwt = JWT.decode new_master_token, nil, false
+
+          exp_response = Time.at(master_jwt[0]['exp'])
+          nbf_response = Time.at(master_jwt[0]['nbf'])
+          # Do not compare milliseconds, there might be different due to conversion
+          expect(now.strftime("%Y-%m-%dT%H:%M:%S%z")).to eql(nbf_response.strftime("%Y-%m-%dT%H:%M:%S%z"))
+          expect(exp.strftime("%Y-%m-%dT%H:%M:%S%z")).to eql(exp_response.strftime("%Y-%m-%dT%H:%M:%S%z"))
+          
           # Previous token should still be valid
           Airborne.configure do |config|
             config.headers["Authorization"] = "Bearer #{@master_token}"
