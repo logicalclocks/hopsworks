@@ -191,7 +191,7 @@ describe "On #{ENV['OS']}" do
           create_session(newUser[:email],"Pass123")
           projectname = "project_#{short_random_id}"
           project1 = create_project_by_name(projectname)
-          get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/getContent/Logs/../../../Projects/#{project[:projectname]}/Logs/README.md"
+          get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/getContent/Logs/../../../Projects/#{project[:projectname]}/"
           expect_status(400)
           expect_json(errorCode: 110018)
           reset_session
@@ -214,7 +214,7 @@ describe "On #{ENV['OS']}" do
           projectname = "project_#{short_random_id}"
           project1 = create_project_by_name(projectname)
           get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/fileExists/Logs/../../../Projects/#{project[:projectname]}/Logs/README.md"
-          expect_status(404)
+          expect_status(400)
           expect_json(errorCode: 110008)
           reset_session
         end
@@ -225,7 +225,7 @@ describe "On #{ENV['OS']}" do
           projectname = "project_#{short_random_id}"
           project1 = create_project_by_name(projectname)
           get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/filePreview/Logs/../../../Projects/#{project[:projectname]}/Logs/README.md"
-          expect_status(404)
+          expect_status(400)
           expect_json(errorCode: 110008)
           reset_session
         end
@@ -236,7 +236,7 @@ describe "On #{ENV['OS']}" do
           projectname = "project_#{short_random_id}"
           project1 = create_project_by_name(projectname)
           get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/checkFileForDownload/Logs/../../../Projects/#{project[:projectname]}/Logs/README.md"
-          expect_status(404)
+          expect_status(400)
           expect_json(errorCode: 110008)
           reset_session
         end
@@ -287,9 +287,11 @@ describe "On #{ENV['OS']}" do
           create_session(newUser[:email],"Pass123")
           projectname = "project_#{short_random_id}"
           project1 = create_project_by_name(projectname)
-          delete "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/corrupted/Logs/../../../Projects/#{project[:projectname]}/Logs/README.md"
-          expect_status(500)
-          expect_json(errorCode: 110007)
+          hopsworks_user = getHopsworksUser()
+          touchz("/Projects/#{project[:projectname]}/Logs/corrupted.txt", hopsworks_user, hopsworks_user)
+          delete "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/corrupted/Logs/../../../Projects/#{project[:projectname]}/Logs/corrupted.txt"
+          expect_status(400)
+          expect_json(errorCode: 110018)
           reset_session
         end
       end
@@ -674,7 +676,7 @@ describe "On #{ENV['OS']}" do
           project1 = create_project_by_name(projectname)
           get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/zip/Logs/../../../Projects/#{project[:projectname]}/Logs/README.md"
           expect_status(400)
-          expect_json(errorCode: 110018)
+          expect_json(errorCode: 110008)
           reset_session
         end
         it "should fail to unzip a dataset from other projects if path contains ../" do
@@ -683,9 +685,9 @@ describe "On #{ENV['OS']}" do
           create_session(newUser[:email],"Pass123")
           projectname = "project_#{short_random_id}"
           project1 = create_project_by_name(projectname)
-          get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/unzip/Logs/../../../Projects/#{project[:projectname]}/Logs/README.md"
+          get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/unzip/Logs/../../../Projects/#{project[:projectname]}/Logs/README.md.zip"
           expect_status(400)
-          expect_json(errorCode: 110018)
+          expect_json(errorCode: 110008)
           reset_session
         end
       end

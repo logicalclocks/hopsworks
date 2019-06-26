@@ -62,8 +62,6 @@ import io.hops.hopsworks.common.dao.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeView;
-import io.hops.hopsworks.common.dao.jobhistory.Execution;
-import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.metadata.Template;
 import io.hops.hopsworks.common.dao.metadata.db.TemplateFacade;
 import io.hops.hopsworks.common.dao.project.Project;
@@ -77,7 +75,6 @@ import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.FilePreviewDTO;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
-import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
@@ -85,10 +82,6 @@ import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.jobs.JobController;
-import io.hops.hopsworks.common.jobs.configuration.JobConfiguration;
-import io.hops.hopsworks.common.jobs.erasureCode.ErasureCodeJob;
-import io.hops.hopsworks.common.jobs.erasureCode.ErasureCodeJobConfiguration;
-import io.hops.hopsworks.common.jobs.configuration.JobType;
 import io.hops.hopsworks.common.jobs.yarn.YarnJobsMonitor;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.OSProcessExecutor;
@@ -103,6 +96,7 @@ import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.hadoop.security.AccessControlException;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -209,22 +203,21 @@ public class DataSetService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response unzip(@PathParam("path") String path, @Context SecurityContext sc) throws DatasetException,
-      ProjectException {
+    ProjectException {
 
     Response.Status resp = Response.Status.OK;
     DsPath dsPath = pathValidator.validatePath(this.project, path);
     String fullPath = dsPath.getFullPath().toString();
-
+    // HDFS_USERNAME is the next param to the bash script
+    Users user = jWTHelper.getUserPrincipal(sc);
+    String hdfsUser = hdfsUsersController.getHdfsUserName(project, user);
+    datasetController.checkFileExists(dsPath.getFullPath(), hdfsUser);
     String localDir = DigestUtils.sha256Hex(fullPath);
     String stagingDir = settings.getStagingDir() + File.separator + localDir;
 
     File unzipDir = new File(stagingDir);
     unzipDir.mkdirs();
     settings.addUnzippingState(fullPath);
-
-    // HDFS_USERNAME is the next param to the bash script
-    Users user = jWTHelper.getUserPrincipal(sc);
-    String hdfsUser = hdfsUsersController.getHdfsUserName(project, user);
 
     ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
         .addCommand(settings.getHopsworksDomainDir() + "/bin/unzip-background.sh")
@@ -259,22 +252,21 @@ public class DataSetService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response zip(@PathParam("path") String path, @Context SecurityContext sc) throws DatasetException,
-      ProjectException {
+    ProjectException {
 
     Response.Status resp = Response.Status.OK;
     DsPath dsPath = pathValidator.validatePath(this.project, path);
     String fullPath = dsPath.getFullPath().toString();
-
+    // HDFS_USERNAME is the next param to the bash script
+    Users user = jWTHelper.getUserPrincipal(sc);
+    String hdfsUser = hdfsUsersController.getHdfsUserName(project, user);
+    datasetController.checkFileExists(dsPath.getFullPath(), hdfsUser);
     String localDir = DigestUtils.sha256Hex(fullPath);
     String stagingDir = settings.getStagingDir() + File.separator + localDir;
 
     File zipDir = new File(stagingDir);
     zipDir.mkdirs();
     settings.addZippingState(fullPath);
-
-    // HDFS_USERNAME is the next param to the bash script
-    Users user = jWTHelper.getUserPrincipal(sc);
-    String hdfsUser = hdfsUsersController.getHdfsUserName(project, user);
 
     ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
         .addCommand(settings.getHopsworksDomainDir() + "/bin/zip-background.sh")
@@ -857,7 +849,6 @@ public class DataSetService {
   public Response moveFile(@Context SecurityContext sc, MoveDTO dto) throws DatasetException, ProjectException,
       HopsSecurityException {
     Users user = jWTHelper.getUserPrincipal(sc);
-    String username = hdfsUsersController.getHdfsUserName(project, user);
 
     Inode sourceInode = inodes.findById(dto.getInodeId());
     dsUpdateOperations.moveDatasetFile(project, user, sourceInode, dto.getDestPath());
@@ -945,37 +936,15 @@ public class DataSetService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response checkFileExists(@PathParam("path") String path, @Context SecurityContext sc) throws
-      DatasetException, ProjectException {
+  public Response checkFileExists(@PathParam("path") String path, @Context SecurityContext sc) throws DatasetException,
+    ProjectException {
     Users user = jWTHelper.getUserPrincipal(sc);
     String username = hdfsUsersController.getHdfsUserName(project, user);
-
     DsPath dsPath = pathValidator.validatePath(this.project, path);
     dsPath.validatePathExists(inodes, false);
     org.apache.hadoop.fs.Path filePath = dsPath.getFullPath();
 
-    DistributedFileSystemOps udfso = null;
-    FSDataInputStream is = null;
-    try {
-      udfso = dfs.getDfsOps(username);
-
-      //tests if the user have permission to access this path
-      is = udfso.open(filePath);
-    } catch (IOException ex) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.INODE_NOT_FOUND, Level.WARNING, "path: " + path,
-        ex.getMessage(), ex);
-    } finally {
-      if (is != null) {
-        try {
-          is.close();
-        } catch (IOException ex) {
-          LOGGER.log(Level.SEVERE, "Error while closing stream.", ex);
-        }
-      }
-      if (udfso != null) {
-        dfs.closeDfsClient(udfso);
-      }
-    }
+    datasetController.checkFileExists(filePath, username);
     Response.ResponseBuilder response = Response.ok();
     return response.build();
   }
@@ -994,11 +963,12 @@ public class DataSetService {
     DsPath dsPath = pathValidator.validatePath(this.project, path);
     Project owningProject = datasetController.getOwningProject(dsPath.getDs());
     RESTApiJsonResponse response = new RESTApiJsonResponse();
+    String username = hdfsUsersController.getHdfsUserName(project, user);
     //User must be accessing a dataset directly, not by being shared with another project.
     //For example, DS1 of project1 is shared with project2. User must be a member of project1 to download files
     if (owningProject.equals(project) && datasetController.isDownloadAllowed(project, user, dsPath.getFullPath().
         toString())) {
-      checkFileExists(path, sc);
+      datasetController.checkFileExists(dsPath.getFullPath(), username);
       String token = jWTHelper.createOneTimeToken(user, dsPath.getFullPath().toString(), null);
       if (token != null && !token.isEmpty()) {
         response.setData(token);
@@ -1030,10 +1000,10 @@ public class DataSetService {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     try {
       udfso = dfs.getDfsOps(username);
-
+  
       //tests if the user have permission to access this path
       is = udfso.open(fullPath);
-
+  
       //Get file type first. If it is not a known image type, display its
       //binary contents instead
       String fileExtension = "txt"; // default file  type
@@ -1042,7 +1012,7 @@ public class DataSetService {
         fileExtension = fileName.substring(fileName.lastIndexOf(".")).replace(".", "").toUpperCase();
       }
       long fileSize = udfso.getFileStatus(fullPath).getLen();
-
+  
       FilePreviewDTO filePreviewDTO = null;
       if (HopsUtils.isInEnum(fileExtension, FilePreviewImageTypes.class)) {
         //If it is an image smaller than 10MB download it otherwise thrown an error
@@ -1053,7 +1023,7 @@ public class DataSetService {
           is.readFully(imageInBytes);
           String base64Image = new Base64().encodeAsString(imageInBytes);
           filePreviewDTO = new FilePreviewDTO(Settings.FILE_PREVIEW_IMAGE_TYPE,
-              fileExtension.toLowerCase(), base64Image);
+            fileExtension.toLowerCase(), base64Image);
         } else {
           throw new DatasetException(RESTCodes.DatasetErrorCode.IMAGE_SIZE_INVALID, Level.FINE);
         }
@@ -1061,11 +1031,11 @@ public class DataSetService {
         try (DataInputStream dis = new DataInputStream(is)) {
           int sizeThreshold = Settings.FILE_PREVIEW_TXT_SIZE_BYTES; //in bytes
           if (fileSize > sizeThreshold && !fileName.endsWith(Settings.README_FILE)
-              && mode.equals(Settings.FILE_PREVIEW_MODE_TAIL)) {
+            && mode.equals(Settings.FILE_PREVIEW_MODE_TAIL)) {
             dis.skipBytes((int) (fileSize - sizeThreshold));
           } else if (fileName.endsWith(Settings.README_FILE) && fileSize > Settings.FILE_PREVIEW_TXT_SIZE_BYTES) {
             throw new DatasetException(RESTCodes.DatasetErrorCode.FILE_PREVIEW_ERROR, Level.FINE,
-                "File must be smaller than " + Settings.FILE_PREVIEW_TXT_SIZE_BYTES / 1024 + " KB to be previewed");
+              "File must be smaller than " + Settings.FILE_PREVIEW_TXT_SIZE_BYTES / 1024 + " KB to be previewed");
           } else if ((int) fileSize < sizeThreshold) {
             sizeThreshold = (int) fileSize;
           }
@@ -1073,11 +1043,14 @@ public class DataSetService {
           dis.readFully(headContent, 0, sizeThreshold);
           //File content
           filePreviewDTO = new FilePreviewDTO(Settings.FILE_PREVIEW_TEXT_TYPE, fileExtension.toLowerCase(),
-              new String(headContent));
+            new String(headContent));
         }
       }
-
+  
       json.setData(filePreviewDTO);
+    } catch (AccessControlException ae) {
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_ACCESS_PERMISSION_DENIED, Level.SEVERE,
+        "path: " + path, ae.getMessage(), ae);
     } catch (IOException ex) {
       throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OPERATION_ERROR, Level.SEVERE, "path: " + path,
         ex.getMessage(), ex);
@@ -1153,41 +1126,41 @@ public class DataSetService {
     return this.downloader;
   }
 
-  @Path("compressFile/{path: .+}")
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response compressFile(@PathParam("path") String path, @Context SecurityContext sc)
-    throws JobException, DatasetException, ProjectException {
-    Users user = jWTHelper.getUserPrincipal(sc);
-
-    DsPath dsPath = pathValidator.validatePath(this.project, path);
-    org.apache.hadoop.fs.Path fullPath = dsPath.getFullPath();
-    Dataset ds = dsPath.getDs();
-    if (ds.isShared() && ds.getEditable() == DatasetPermissions.OWNER_ONLY && !ds.isPublicDs()) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.COMPRESSION_ERROR, Level.FINE);
-    }
-
-    ErasureCodeJobConfiguration ecConfig = (ErasureCodeJobConfiguration) JobConfiguration.JobConfigurationFactory.
-            getJobConfigurationTemplate(JobType.ERASURE_CODING);
-    ecConfig.setFilePath(fullPath.toString());
-
-    //persist the job in the database
-    Jobs jobdesc = null;
-    jobdesc = this.jobcontroller.putJob(user, project, null, ecConfig);
-    //instantiate the job
-    ErasureCodeJob encodeJob = new ErasureCodeJob(jobdesc, this.async, user,
-            settings.getHadoopSymbolicLinkDir(), jobsMonitor);
-    //persist a job execution instance in the database and get its id
-    Execution exec = encodeJob.requestExecutionId();
-      //start the actual job execution i.e. compress the file in a different thread
-    this.async.startExecution(encodeJob);
-
-    String response = "File compression runs in background";
-    RESTApiJsonResponse json = new RESTApiJsonResponse();
-    json.setSuccessMessage(response);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            json).build();
-  }
+//  @Path("compressFile/{path: .+}")
+//  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
+//  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+//  public Response compressFile(@PathParam("path") String path, @Context SecurityContext sc)
+//    throws JobException, DatasetException, ProjectException {
+//    Users user = jWTHelper.getUserPrincipal(sc);
+//
+//    DsPath dsPath = pathValidator.validatePath(this.project, path);
+//    org.apache.hadoop.fs.Path fullPath = dsPath.getFullPath();
+//    Dataset ds = dsPath.getDs();
+//    if (ds.isShared() && ds.getEditable() == DatasetPermissions.OWNER_ONLY && !ds.isPublicDs()) {
+//      throw new DatasetException(RESTCodes.DatasetErrorCode.COMPRESSION_ERROR, Level.FINE);
+//    }
+//
+//    ErasureCodeJobConfiguration ecConfig = (ErasureCodeJobConfiguration) JobConfiguration.JobConfigurationFactory.
+//            getJobConfigurationTemplate(JobType.ERASURE_CODING);
+//    ecConfig.setFilePath(fullPath.toString());
+//
+//    //persist the job in the database
+//    Jobs jobdesc = null;
+//    jobdesc = this.jobcontroller.putJob(user, project, null, ecConfig);
+//    //instantiate the job
+//    ErasureCodeJob encodeJob = new ErasureCodeJob(jobdesc, this.async, user,
+//            settings.getHadoopSymbolicLinkDir(), jobsMonitor);
+//    //persist a job execution instance in the database and get its id
+//    Execution exec = encodeJob.requestExecutionId();
+//      //start the actual job execution i.e. compress the file in a different thread
+//    this.async.startExecution(encodeJob);
+//
+//    String response = "File compression runs in background";
+//    RESTApiJsonResponse json = new RESTApiJsonResponse();
+//    json.setSuccessMessage(response);
+//    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+//            json).build();
+//  }
 
   /**
    * Upload methods

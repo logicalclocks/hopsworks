@@ -67,6 +67,7 @@ import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.restutils.RESTCodes;
+import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
@@ -591,6 +592,33 @@ public class DatasetController {
         dsName, 3));
     }
     return datasetFacade.findByProjectAndInode(currentProject, dsInode);
+  }
+  
+  public void checkFileExists(Path filePath, String username) throws DatasetException {
+    DistributedFileSystemOps udfso = null;
+    FSDataInputStream is = null;
+    try {
+      udfso = dfs.getDfsOps(username);
+      //tests if the user have permission to access this path
+      is = udfso.open(filePath);
+    } catch (AccessControlException ae) {
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_ACCESS_PERMISSION_DENIED, Level.SEVERE,
+        "path: " + filePath.toString(), ae.getMessage(), ae);
+    } catch (IOException ex) {
+      throw new DatasetException(RESTCodes.DatasetErrorCode.INODE_NOT_FOUND, Level.WARNING, "path: " +
+        filePath.toString(), ex.getMessage(), ex);
+    } finally {
+      if (is != null) {
+        try {
+          is.close();
+        } catch (IOException ex) {
+          LOGGER.log(Level.SEVERE, "Error while closing stream.", ex);
+        }
+      }
+      if (udfso != null) {
+        dfs.closeDfsClient(udfso);
+      }
+    }
   }
   
 }
