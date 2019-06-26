@@ -182,7 +182,7 @@ describe "On #{ENV['OS']}" do
           project1 = create_project_by_name(projectname)
           get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/upload/Logs/../../../Projects/#{project[:projectname]}/Logs/someFile.txt"
           expect_status(400)
-          expect_json(errorCode: 110018)
+          expect_json(errorCode: 110028)# it checks relative path so it gets 'Name of dir is invalid'.
           reset_session
         end
         it "should fail to return dataset list from Projects if path contains .." do
@@ -192,6 +192,17 @@ describe "On #{ENV['OS']}" do
           projectname = "project_#{short_random_id}"
           project1 = create_project_by_name(projectname)
           get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/getContent/Logs/../../../Projects/#{project[:projectname]}/"
+          expect_status(400)
+          expect_json(errorCode: 110018)
+          reset_session
+        end
+        it "should fail to return dataset list from Projects if path contains ../../Projects/../../Projects" do
+          project = get_project
+          newUser = create_user
+          create_session(newUser[:email],"Pass123")
+          projectname = "project_#{short_random_id}"
+          project1 = create_project_by_name(projectname)
+          get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/getContent/Logs/../../Projects/../../Projects/#{project[:projectname]}/"
           expect_status(400)
           expect_json(errorCode: 110018)
           reset_session
@@ -214,8 +225,8 @@ describe "On #{ENV['OS']}" do
           projectname = "project_#{short_random_id}"
           project1 = create_project_by_name(projectname)
           get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/fileExists/Logs/../../../Projects/#{project[:projectname]}/Logs/README.md"
-          expect_status(400)
-          expect_json(errorCode: 110008)
+          expect_status(403)
+          expect_json(errorCode: 110050)#file permission check is done so it returns "Permission denied."
           reset_session
         end
         it "should fail to preview a file from another project if path contains ../" do
@@ -236,8 +247,8 @@ describe "On #{ENV['OS']}" do
           projectname = "project_#{short_random_id}"
           project1 = create_project_by_name(projectname)
           get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/checkFileForDownload/Logs/../../../Projects/#{project[:projectname]}/Logs/README.md"
-          expect_status(400)
-          expect_json(errorCode: 110008)
+          expect_status(403)
+          expect_json(errorCode: 110050)#file permission check is done so it returns "Permission denied."
           reset_session
         end
       end
@@ -673,8 +684,8 @@ describe "On #{ENV['OS']}" do
           projectname = "project_#{short_random_id}"
           project1 = create_project_by_name(projectname)
           get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/zip/Logs/../../../Projects/#{project[:projectname]}/Logs/README.md"
-          expect_status(400)
-          expect_json(errorCode: 110008)
+          expect_status(403)
+          expect_json(errorCode: 110050)#file permission check is done so it returns "Permission denied."
           reset_session
         end
         it "should fail to unzip a dataset from other projects if path contains ../" do
@@ -684,19 +695,8 @@ describe "On #{ENV['OS']}" do
           projectname = "project_#{short_random_id}"
           project1 = create_project_by_name(projectname)
           get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/unzip/Logs/../../../Projects/#{project[:projectname]}/Logs/README.md.zip"
-          expect_status(400)
-          expect_json(errorCode: 110008)
-          reset_session
-        end
-        it "should fail to unzip a dataset from other projects if path contains ../../p/../" do
-          project = get_project
-          newUser = create_user
-          create_session(newUser[:email],"Pass123")
-          projectname = "project_#{short_random_id}"
-          project1 = create_project_by_name(projectname)
-          get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/unzip/Logs/../../Projects/../../Projects/#{project[:projectname]}/Logs/README.md.zip"
-          expect_status(400)
-          expect_json(errorCode: 110008)
+          expect_status(403)
+          expect_json(errorCode: 110050)#file permission check is done so it returns "Permission denied."
           reset_session
         end
       end
