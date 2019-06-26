@@ -207,7 +207,7 @@ describe "On #{ENV['OS']}" do
           expect_json(errorCode: 110018)
           reset_session
         end
-        it "should fail to return file exists from another project if path contains ../" do
+        it "should fail to check if file exists from another project if path contains ../" do
           project = get_project
           newUser = create_user
           create_session(newUser[:email],"Pass123")
@@ -601,9 +601,7 @@ describe "On #{ENV['OS']}" do
           readme = json_body.detect { |inode| inode[:name] == "README.md" }
 
           # Copy README.md to the subdirectory
-          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/copy",
-               {destPath: "/Projects/#{@project[:projectname]}/#{dirname}/README.md",
-                inodeId: readme[:id]}
+          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/copy", {destPath: "/Projects/#{@project[:projectname]}/#{dirname}/README.md", inodeId: readme[:id]}
           expect_status(200)
 
           # Log in as project owner, if the project owner is in the dataset group, it should be able to preview
@@ -686,6 +684,17 @@ describe "On #{ENV['OS']}" do
           projectname = "project_#{short_random_id}"
           project1 = create_project_by_name(projectname)
           get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/unzip/Logs/../../../Projects/#{project[:projectname]}/Logs/README.md.zip"
+          expect_status(400)
+          expect_json(errorCode: 110008)
+          reset_session
+        end
+        it "should fail to unzip a dataset from other projects if path contains ../../p/../" do
+          project = get_project
+          newUser = create_user
+          create_session(newUser[:email],"Pass123")
+          projectname = "project_#{short_random_id}"
+          project1 = create_project_by_name(projectname)
+          get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/unzip/Logs/../../Projects/../../Projects/#{project[:projectname]}/Logs/README.md.zip"
           expect_status(400)
           expect_json(errorCode: 110008)
           reset_session

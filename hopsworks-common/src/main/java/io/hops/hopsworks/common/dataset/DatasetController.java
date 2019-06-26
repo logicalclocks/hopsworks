@@ -58,16 +58,15 @@ import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFlag;
-import io.hops.hopsworks.common.hdfs.Utils;
-import io.hops.hopsworks.exceptions.DatasetException;
-import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.DatasetException;
+import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.restutils.RESTCodes;
-import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
@@ -577,13 +576,13 @@ public class DatasetController {
   /**
    * Get a top level dataset by project name or parent path. If parent path is null the project name is used as parent
    * @param currentProject
-   * @param parentPath
+   * @param inodeParentPath
    * @param dsName
    * @return
    */
-  public Dataset getByProjectAndDsName(Project currentProject, String parentPath, String dsName) {
-    Inode parentInode = inodes.getInodeAtPath(parentPath == null? Utils.getProjectPath(currentProject.getName()) :
-      parentPath);
+  public Dataset getByProjectAndDsName(Project currentProject, String inodeParentPath, String dsName) {
+    Inode parentInode = inodes.getInodeAtPath(inodeParentPath == null? Utils.getProjectPath(currentProject.getName()) :
+      inodeParentPath);
     Inode dsInode = inodes.findByInodePK(parentInode, dsName, HopsUtils.calculatePartitionId(parentInode.getId(),
       dsName, 3));
     if (dsInode == null && dsName.endsWith(".db")) { //if hive parent is not project
@@ -596,28 +595,24 @@ public class DatasetController {
   
   public void checkFileExists(Path filePath, String username) throws DatasetException {
     DistributedFileSystemOps udfso = null;
-    FSDataInputStream is = null;
+    boolean exist;
     try {
       udfso = dfs.getDfsOps(username);
-      //tests if the user have permission to access this path
-      is = udfso.open(filePath);
+      exist = udfso.exists(filePath);
     } catch (AccessControlException ae) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_ACCESS_PERMISSION_DENIED, Level.SEVERE,
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_ACCESS_PERMISSION_DENIED, Level.FINE,
         "path: " + filePath.toString(), ae.getMessage(), ae);
     } catch (IOException ex) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.INODE_NOT_FOUND, Level.WARNING, "path: " +
+      throw new DatasetException(RESTCodes.DatasetErrorCode.INODE_NOT_FOUND, Level.FINE, "path: " +
         filePath.toString(), ex.getMessage(), ex);
     } finally {
-      if (is != null) {
-        try {
-          is.close();
-        } catch (IOException ex) {
-          LOGGER.log(Level.SEVERE, "Error while closing stream.", ex);
-        }
-      }
       if (udfso != null) {
         dfs.closeDfsClient(udfso);
       }
+    }
+    if (!exist) {
+      throw new DatasetException(RESTCodes.DatasetErrorCode.INODE_NOT_FOUND, Level.FINE,
+        "path: " + filePath.toString());
     }
   }
   

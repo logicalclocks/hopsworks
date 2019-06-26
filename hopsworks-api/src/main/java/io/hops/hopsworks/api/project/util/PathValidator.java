@@ -172,7 +172,8 @@ public class PathValidator {
     if (project == null || destProject == null) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE);
     }
-    Dataset ds = datasetController.getByProjectAndDsName(project, dsPath.getFullPath().toString(), pathComponents[3]);
+    Dataset ds = datasetController.getByProjectAndDsName(project, Utils.getProjectPath(pathComponents[2]),
+      pathComponents[3]);
     if (ds == null) {
       throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_FOUND, Level.FINE);
     }
