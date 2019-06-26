@@ -51,7 +51,7 @@ import io.hops.hopsworks.common.dao.jupyter.JupyterSettings;
 import io.hops.hopsworks.common.dao.jupyter.JupyterSettingsFacade;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterDTO;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
-import io.hops.hopsworks.common.dao.jupyter.config.JupyterProcessMgr;
+import io.hops.hopsworks.common.dao.jupyter.config.JupyterManager;
 import io.hops.hopsworks.common.dao.project.PaymentType;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
@@ -59,13 +59,13 @@ import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.jupyter.JupyterController;
 import io.hops.hopsworks.common.jupyter.JupyterJWTManager;
 import io.hops.hopsworks.common.livy.LivyController;
 import io.hops.hopsworks.common.livy.LivyMsg;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.util.HopsUtils;
-import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.util.Ip;
 import io.hops.hopsworks.common.util.OSProcessExecutor;
 import io.hops.hopsworks.common.util.Settings;
@@ -80,6 +80,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -102,6 +103,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -116,8 +118,8 @@ public class JupyterService {
   private ProjectFacade projectFacade;
   @EJB
   private NoCacheResponse noCacheResponse;
-  @EJB
-  private JupyterProcessMgr jupyterProcessFacade;
+  @Inject
+  private JupyterManager jupyterManager;
   @EJB
   private JupyterFacade jupyterFacade;
   @EJB
@@ -248,7 +250,7 @@ public class JupyterService {
       throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_SERVERS_NOT_FOUND, Level.FINE);
     }
     // Check to make sure the jupyter notebook server is running
-    boolean running = jupyterProcessFacade.pingServerJupyterUser(jp.getPid());
+    boolean running = jupyterManager.pingServerJupyterUser(jp);
     // if the notebook is not running but we have a database entry for it,
     // we should remove the DB entry (and restart the notebook server).
     if (!running) {
@@ -275,7 +277,6 @@ public class JupyterService {
 
     Users hopsworksUser = jWTHelper.getUserPrincipal(sc);
     String hdfsUser = hdfsUsersController.getHdfsUserName(project, hopsworksUser);
-    String realName = hopsworksUser.getFname() + " " + hopsworksUser.getLname();
 
     if (project.getPaymentType().equals(PaymentType.PREPAID)) {
       YarnProjectsQuota projectQuota = yarnProjectsQuotaFacade.findByProjectName(project.getName());
@@ -304,23 +305,23 @@ public class JupyterService {
       String allowOrigin = allowOriginScheme + "://" + allowOriginHost + allowOriginPortStr;
       try {
         jupyterSettingsFacade.update(jupyterSettings);
-        dto = jupyterProcessFacade.startServerAsJupyterUser(project, configSecret, hdfsUser, realName,
+        dto = jupyterManager.startJupyterServer(project, configSecret, hdfsUser, hopsworksUser,
           jupyterSettings, allowOrigin);
+        jupyterJWTManager.materializeJWT(hopsworksUser, project, jupyterSettings, dto.getPid(), dto.getPort(),
+          JUPYTER_JWT_AUD);
         HopsUtils.materializeCertificatesForUserCustomDir(project.getName(), user.getUsername(),
             settings.getHdfsTmpCertDir(), dfso, certificateMaterializer, settings, dto.getCertificatesDir());
         // When Livy launches a job it will look in the standard directory for the certificates
         // We materialize them twice but most probably other operations will need them too, so it is OK
         // Remember to remove both when stopping Jupyter server or an exception is thrown
         certificateMaterializer.materializeCertificatesLocal(user.getUsername(), project.getName());
-        
-        jupyterJWTManager.materializeJWT(hopsworksUser, project, jupyterSettings, JUPYTER_JWT_AUD);
-      } catch (ServiceException ex) {
+        jupyterManager.waitForStartup(project, hopsworksUser);
+      } catch (ServiceException | TimeoutException ex) {
+        jupyterController.shutdownQuietly(project, hdfsUser, hopsworksUser, configSecret, dto.getPid(), dto.getPort());
         throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_START_ERROR, Level.SEVERE, ex.getMessage(),
             null, ex);
       } catch (IOException ex) {
-        certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());
-        HopsUtils.cleanupCertificatesForUserCustomDir(user.getUsername(), project.getName(),
-            settings.getHdfsTmpCertDir(), certificateMaterializer, dto.getCertificatesDir(), settings);
+        jupyterController.shutdownQuietly(project, hdfsUser, hopsworksUser, configSecret, dto.getPid(), dto.getPort());
         throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_MATERIALIZATION_ERROR, Level.SEVERE,
           ex.getMessage(), null, ex);
       } finally {

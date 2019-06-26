@@ -41,7 +41,8 @@ package io.hops.hopsworks.admin.jupyter;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
-import io.hops.hopsworks.common.dao.jupyter.config.JupyterProcessMgr;
+import io.hops.hopsworks.common.dao.jupyter.config.JupyterManager;
+import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -49,23 +50,24 @@ import io.hops.hopsworks.common.jupyter.JupyterController;
 import io.hops.hopsworks.exceptions.ServiceException;
 
 import javax.ejb.EJB;
+import javax.enterprise.context.RequestScoped;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
+import javax.inject.Inject;
 import java.io.Serializable;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @ManagedBean(name = "JupyterNotebooks")
-@ViewScoped
+@RequestScoped
 public class JupyterNotebooksBean implements Serializable {
 
   private static final Logger LOGGER = Logger.getLogger(JupyterNotebooksBean.class.getName());
 
-  @EJB
-  private JupyterProcessMgr jupyterProcessFacade;
+  @Inject
+  private JupyterManager jupyterManager;
   @EJB
   private HdfsUsersFacade hdfsUsersFacade;
   @EJB
@@ -74,8 +76,10 @@ public class JupyterNotebooksBean implements Serializable {
   private HdfsUsersController hdfsUsersController;
   @EJB
   private UserFacade userFacade;
+  @EJB
+  ProjectFacade projectFacade;
 
-  public String action;
+  private String action;
 
   private List<JupyterProject> filteredNotebooks;
 
@@ -94,7 +98,7 @@ public class JupyterNotebooksBean implements Serializable {
   }
 
   public List<JupyterProject> getAllNotebooks() {
-    this.allNotebooks = jupyterProcessFacade.getAllNotebooks();
+    this.allNotebooks = jupyterManager.getAllNotebooks();
     return this.allNotebooks;
   }
 
@@ -119,10 +123,9 @@ public class JupyterNotebooksBean implements Serializable {
     String hdfsUser = getHdfsUser(notebook);
     try {
       if (hdfsUser.compareTo("Orphaned") == 0) {
-        jupyterProcessFacade.killServerJupyterUser(hdfsUser, "", notebook.getPid(), notebook.getPort());
+        jupyterController.shutdownOrphan(notebook.getPid(), notebook.getPort());
       } else {
-        String username = hdfsUsersController.getUserName(hdfsUser);
-        Users user = userFacade.findByUsername(username);
+        Users user = userFacade.findByUsername(hdfsUsersController.getUserName(hdfsUser));
         jupyterController.shutdown(notebook.getProjectId(), hdfsUser, user, notebook.getSecret(),
           notebook.getPid(), notebook.getPort());
       }
