@@ -593,6 +593,12 @@ public class DatasetController {
     return datasetFacade.findByProjectAndInode(currentProject, dsInode);
   }
   
+  /**
+   * Checks if a path exists. Will require a read access to the path.
+   * @param filePath
+   * @param username
+   * @throws DatasetException
+   */
   public void checkFileExists(Path filePath, String username) throws DatasetException {
     DistributedFileSystemOps udfso = null;
     boolean exist;

@@ -170,7 +170,7 @@ describe "On #{ENV['OS']}" do
           projectname = "project_#{short_random_id}"
           project1 = create_project_by_name(projectname)
           get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/countFileBlocks/Logs/../../../Projects/#{project[:projectname]}/Logs/README.md"
-          expect_status(400)
+          expect_status(200)#Always returns 200
           expect_json(errorCode: 110018)
           reset_session
         end
@@ -225,8 +225,8 @@ describe "On #{ENV['OS']}" do
           projectname = "project_#{short_random_id}"
           project1 = create_project_by_name(projectname)
           get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/fileExists/Logs/../../../Projects/#{project[:projectname]}/Logs/README.md"
-          expect_status(403)
-          expect_json(errorCode: 110050)#file permission check is done so it returns "Permission denied."
+          expect_status(400)
+          expect_json(errorCode: 110018)
           reset_session
         end
         it "should fail to preview a file from another project if path contains ../" do
@@ -237,7 +237,7 @@ describe "On #{ENV['OS']}" do
           project1 = create_project_by_name(projectname)
           get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/filePreview/Logs/../../../Projects/#{project[:projectname]}/Logs/README.md"
           expect_status(400)
-          expect_json(errorCode: 110008)
+          expect_json(errorCode: 110018)
           reset_session
         end
         it "should fail to check for download a file from another project if path contains ../" do
@@ -247,8 +247,8 @@ describe "On #{ENV['OS']}" do
           projectname = "project_#{short_random_id}"
           project1 = create_project_by_name(projectname)
           get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/checkFileForDownload/Logs/../../../Projects/#{project[:projectname]}/Logs/README.md"
-          expect_status(403)
-          expect_json(errorCode: 110050)#file permission check is done so it returns "Permission denied."
+          expect_status(404)
+          expect_json(errorCode: 110008)
           reset_session
         end
       end
@@ -287,8 +287,8 @@ describe "On #{ENV['OS']}" do
           projectname = "project_#{short_random_id}"
           project1 = create_project_by_name(projectname)
           delete "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/file/Logs/../../../Projects/#{project[:projectname]}/Logs/README.md"
-          expect_status(400)
-          expect_json(errorCode: 110018)
+          expect_status(200)#returns 200 if file not found
+          expect(test_file("/Projects/#{project[:projectname]}/Logs/README.md")).to eq(0)
           reset_session
         end
 
@@ -301,8 +301,8 @@ describe "On #{ENV['OS']}" do
           hopsworks_user = getHopsworksUser()
           touchz("/Projects/#{project[:projectname]}/Logs/corrupted.txt", hopsworks_user, hopsworks_user)
           delete "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/corrupted/Logs/../../../Projects/#{project[:projectname]}/Logs/corrupted.txt"
-          expect_status(400)
-          expect_json(errorCode: 110018)
+          expect_status(500)# throws INODE_DELETION_ERROR with 500 status
+          expect_json(errorCode: 110007)
           reset_session
         end
       end
