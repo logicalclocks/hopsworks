@@ -180,11 +180,13 @@ describe "On #{ENV['OS']}" do
           create_session(newUser[:email],"Pass123")
           projectname = "project_#{short_random_id}"
           project1 = create_project_by_name(projectname)
-          file = "templateId=-1&flowChunkNumber=1&flowChunkSize=1048576&flowCurrentChunkSize=3372&flowTotalSize=3372
-&flowIdentifier=3372-someFiletxt&flowFilename=someFile.txt&flowRelativePath=someFile.txt&flowTotalChunks=1"
-          get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/upload/Logs/../../../Projects/#{project[:projectname]}/Logs/?#{file}"
+          file = URI.encode_www_form({templateId: -1, flowChunkNumber: 1, flowChunkSize: 1048576,
+                                      flowCurrentChunkSize: 3195, flowTotalSize: 3195,
+                                      flowIdentifier: "3195-someFiletxt", flowFilename: "someFile.txt",
+                                      flowRelativePath: "someFile.txt", flowTotalChunks: 1})
+          get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/upload/Logs/../../../Projects/#{project[:projectname]}/Logs/?#{file}", {content_type: "multipart/form-data"}
           expect_status(204)
-          expect_json(response).to be_empty
+          expect(response).to be_empty
           get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/getContent/Logs/Projects/#{project[:projectname]}/Logs/"
           ds = json_body.detect { |d| d[:name] == "someFile.txt" }
           expect(ds).to be_present
@@ -293,7 +295,7 @@ describe "On #{ENV['OS']}" do
           project1 = create_project_by_name(projectname)
           delete "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/file/Logs/../../../Projects/#{project[:projectname]}/Logs/README.md"
           expect_status(200)#returns 200 if file not found
-          expect(test_file("/Projects/#{project[:projectname]}/Logs/README.md")).to eq(0)
+          expect(test_file("/Projects/#{project[:projectname]}/Logs/README.md")).to eq(true)
           reset_session
         end
 
