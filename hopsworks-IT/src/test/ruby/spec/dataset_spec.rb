@@ -185,7 +185,7 @@ describe "On #{ENV['OS']}" do
                                       flowIdentifier: "3195-someFiletxt", flowFilename: "someFile.txt",
                                       flowRelativePath: "someFile.txt", flowTotalChunks: 1})
           get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/upload/Logs/../../../Projects/#{project[:projectname]}/Logs/?#{file}", {content_type: "multipart/form-data"}
-          expect_status(204)
+          expect_status(204)# will upload to project1/dataset/getContent/Logs/Projects/project/Logs/
           expect(response).to be_empty
           get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/getContent/Logs/Projects/#{project[:projectname]}/Logs/"
           ds = json_body.detect { |d| d[:name] == "someFile.txt" }
