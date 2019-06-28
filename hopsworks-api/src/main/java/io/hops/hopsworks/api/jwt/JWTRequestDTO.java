@@ -18,8 +18,9 @@ package io.hops.hopsworks.api.jwt;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
-import java.util.Date;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+import java.util.Date;
 
 @XmlRootElement
 @ApiModel(value = "Specification for generating new JWT")
@@ -28,7 +29,9 @@ public class JWTRequestDTO {
   private String subject;
   private String[] audiences;
   private String keyName;
+  @XmlJavaTypeAdapter(DateTimeAdapter.class)
   private Date expiresAt;
+  @XmlJavaTypeAdapter(DateTimeAdapter.class)
   private Date nbf;
   private boolean renewable;
   private int expLeeway;
