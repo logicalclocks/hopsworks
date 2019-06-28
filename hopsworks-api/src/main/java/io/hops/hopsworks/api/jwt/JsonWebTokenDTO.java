@@ -20,13 +20,16 @@ import io.swagger.annotations.ApiModelProperty;
 
 import java.util.Date;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 @XmlRootElement
 @ApiModel(value = "Specification to renew an existing JWT")
 public class JsonWebTokenDTO {
 
   private String token;
+  @XmlJavaTypeAdapter(DateTimeAdapter.class)
   private Date expiresAt;
+  @XmlJavaTypeAdapter(DateTimeAdapter.class)
   private Date nbf;
 
   public JsonWebTokenDTO() {
