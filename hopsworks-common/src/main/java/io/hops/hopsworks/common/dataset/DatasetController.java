@@ -590,6 +590,9 @@ public class DatasetController {
       dsInode = inodes.findByInodePK(parentInode, dsName, HopsUtils.calculatePartitionId(parentInode.getId(),
         dsName, 3));
     }
+    if (currentProject == null || dsInode == null) {
+      return null;
+    }
     return datasetFacade.findByProjectAndInode(currentProject, dsInode);
   }
   
