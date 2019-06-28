@@ -108,7 +108,7 @@ public class PathValidator {
       String[] pathComponents = path.split("/");
       buildProjectDsRelativePath(project, pathComponents, dsPath);
     } else if (path.startsWith(this.settings.getHiveWarehouse())) {
-      // Case /apps/hive/warehouse/project1.db/dsRelativePath
+      // Case /apps/hive/warehouse/project1.db/
       dsPath.setFullPath(new Path(path));
       String[] pathComponents = path.split("/");
       buildHiveDsRelativePath(project, pathComponents, dsPath);

@@ -220,7 +220,7 @@ angular.module('hopsWorksApp')
              * can select a dataset from a file-viewer.
              */
             self.selectDataDependency = function (index) {
-                ModalService.selectFile('lg', '*', '', true).then(
+                ModalService.selectFile('lg', self.projectId, '*', '', true).then(
                     function (success) {
                         self.dependencies[index] = success
                     },

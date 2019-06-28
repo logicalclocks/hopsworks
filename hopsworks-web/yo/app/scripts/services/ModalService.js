@@ -506,7 +506,7 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
             },
-            selectFile: function (size, regex, errorMsg, dirAllowed) {
+            selectFile: function (size, projectId, regex, errorMsg, dirAllowed) {
                 var modalInstance = $uibModal.open({
                     templateUrl: 'views/selectFile.html',
                     controller: 'SelectFileCtrl as selectFileCtrl',
@@ -523,6 +523,9 @@ angular.module('hopsWorksApp')
                                         return $q.reject(err);
                                     });
                             }],
+                        projectId: function () {
+                            return projectId;
+                        },
                         regex: function () {
                             return regex;
                         },
@@ -563,7 +566,7 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
             },
-            selectDir: function (size, regex, errorMsg, dirAllowed) {
+            selectDir: function (size, projectId, regex, errorMsg, dirAllowed) {
                 var modalInstance = $uibModal.open({
                     templateUrl: 'views/selectDir.html',
                     controller: 'SelectFileCtrl as selectFileCtrl',
@@ -580,6 +583,9 @@ angular.module('hopsWorksApp')
                                         return $q.reject(err);
                                     });
                             }],
+                        projectId: function () {
+                            return projectId;
+                        },
                         regex: function () {
                             return regex;
                         },
@@ -615,66 +621,6 @@ angular.module('hopsWorksApp')
                         },
                         errorMsg: function () {
                             return errorMsg;
-                        }
-                    }
-                });
-                return modalInstance.result;
-            },
-            selectLocalFile: function (size, regex, errorMsg, dirAllowed) {
-                var modalInstance = $uibModal.open({
-                    templateUrl: 'views/selectLocalFile.html',
-                    controller: 'SelectFileCtrl as selectFileCtrl',
-                    size: size,
-                    resolve: {
-                        auth: ['$q', '$location', 'AuthService',
-                            function ($q, $location, AuthService) {
-                                return AuthService.session().then(
-                                    function (success) {
-                                    },
-                                    function (err) {
-                                        $location.path('/login');
-                                        $location.replace();
-                                        return $q.reject(err);
-                                    });
-                            }],
-                        regex: function () {
-                            return regex;
-                        },
-                        errorMsg: function () {
-                            return errorMsg;
-                        },
-                        dirAllowed: function () {
-                            return dirAllowed;
-                        }
-                    }
-                });
-                return modalInstance.result;
-            },
-            selectLocalDir: function (size, regex, errorMsg, dirAllowed) {
-                var modalInstance = $uibModal.open({
-                    templateUrl: 'views/selectLocalDir.html',
-                    controller: 'SelectFileCtrl as selectFileCtrl',
-                    size: size,
-                    resolve: {
-                        auth: ['$q', '$location', 'AuthService',
-                            function ($q, $location, AuthService) {
-                                return AuthService.session().then(
-                                    function (success) {
-                                    },
-                                    function (err) {
-                                        $location.path('/login');
-                                        $location.replace();
-                                        return $q.reject(err);
-                                    });
-                            }],
-                        regex: function () {
-                            return regex;
-                        },
-                        errorMsg: function () {
-                            return errorMsg;
-                        },
-                        dirAllowed: function () {
-                            return dirAllowed;
                         }
                     }
                 });

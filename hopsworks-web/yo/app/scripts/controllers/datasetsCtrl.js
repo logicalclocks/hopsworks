@@ -137,7 +137,8 @@ angular.module('hopsWorksApp')
 
             self.goToUrl = function (serviceName) {
                 $location.path('project/' + self.projectId + '/' + serviceName);
-            }
+            };
+
             self.isSharedDs = function (name) {
               var top = name.split("::");
               if (top.length === 1) {
@@ -851,11 +852,10 @@ angular.module('hopsWorksApp')
 
 
             self.copy = function (inodeId, name) {
-              ModalService.selectDir('lg', "/[^]*/", "problem selecting folder").then(function (success) {
+              ModalService.selectDir('lg', self.projectId, "/[^]*/", "problem selecting folder").then(function (success) {
                 var destPath = success;
                 // Get the relative path of this DataSet, relative to the project home directory
-                // replace only first occurrence 
-                //var relPath = destPath.replace(self.projectName + "/", "").replace("Projects/", "");
+                // replace only first occurrence
                 var finalPath = destPath + "/" + name;
 
                 dataSetService.copy(inodeId, finalPath).then(
@@ -882,13 +882,9 @@ angular.module('hopsWorksApp')
                 }
               } else if (Object.keys(self.selectedFiles).length !== 0 && self.selectedFiles.constructor === Object) {
 
-                ModalService.selectDir('lg', "/[^]*/", "problem selecting folder").then(
+                ModalService.selectDir('lg', self.projectId, "/[^]*/", "problem selecting folder").then(
                         function (success) {
                           var destPath = success;
-                          // Get the relative path of this DataSet, relative to the project home directory
-                          // replace only first occurrence 
-                          //var relPath = destPath.replace(self.projectName + "/", "").replace("Projects/", "");
-                          //var finalPath = relPath + "/" + name;
                           var names = [];
                           var i = 0;
                           //Check if have have multiple files 
@@ -929,19 +925,15 @@ angular.module('hopsWorksApp')
 
 
             self.move = function (inodeId, name) {
-              ModalService.selectDir('lg', "/[^]*/",
-                      "problem selecting folder").then(
+              ModalService.selectDir('lg', self.projectId, "/[^]*/", "problem selecting folder").then(
                       function (success) {
                         var destPath = success;
-                        // Get the relative path of this DataSet, relative to the project home directory
-                        // replace only first occurrence 
-                        //var relPath = destPath.replace(self.projectName + "/", "").replace("Projects/", "");
                         var finalPath = destPath + "/" + name;
 
                         dataSetService.move(inodeId, finalPath).then(
                                 function (success) {
                                   getDirContents();
-                                  growl.success(success.data.successMessage, {title: 'Moved successfully. Opened dest dir: ' + relPath, ttl: 2000});
+                                  growl.success(success.data.successMessage, {title: 'Moved ' + name + ' successfully.', ttl: 2000});
                                 }, function (error) {
                                     if (typeof error.data.usrMsg !== 'undefined') {
                                         growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
@@ -967,14 +959,9 @@ angular.module('hopsWorksApp')
                 }
               } else if (Object.keys(self.selectedFiles).length !== 0 && self.selectedFiles.constructor === Object) {
 
-                ModalService.selectDir('lg', "/[^]*/",
-                        "problem selecting folder").then(
+                ModalService.selectDir('lg', self.projectId, "/[^]*/", "problem selecting folder").then(
                         function (success) {
                           var destPath = success;
-                          // Get the relative path of this DataSet, relative to the project home directory
-                          // replace only first occurrence 
-                          //var relPath = destPath.replace(self.projectName + "/", "").replace("Projects/", "");
-                          //var finalPath = relPath + "/" + name;
                           var names = [];
                           var i = 0;
                           //Check if have have multiple files 
