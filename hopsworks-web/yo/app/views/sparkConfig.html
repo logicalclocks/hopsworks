@@ -258,7 +258,7 @@
                 </div>
                 <div class="col-md-2 jupyter-left"></div>
                 <div class="col-md-9 pull-right" style="font-weight: bold; color: orange;">
-                <div ng-if="sparkConfigCtrl.jobConfig['spark.executor.gpus'] > 1">
+                <div ng-if="sparkConfigCtrl.jobConfig['spark.executor.gpus'] > 1 && !(sparkConfigCtrl.sparkType === 'SPARK_STATIC' || sparkConfigCtrl.sparkType === 'SPARK_DYNAMIC')">
                     <i class="fa fa-warning" style="color:orange;" uib-tooltip="Each Executor which runs the python code is allocated this number of GPUs. Make sure your code can actually use the configured number, otherwise the unused GPUs should be made available for other users."></i> <strong>&nbsp;Only set to greater than 1 if your wrapper function uses more than 1 GPU.</strong>
                 </div>
                 </div>
