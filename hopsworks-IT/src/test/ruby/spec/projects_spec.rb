@@ -253,6 +253,9 @@ describe "On #{ENV['OS']}" do
         before :all do
           with_valid_project
         end
+        before :each do
+          check_project_limit()
+        end
         it "should delete project" do
           # Start Jupyter to put X.509 to HDFS
           @project = create_env_and_update_project(@project, "3.6", true)
