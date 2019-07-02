@@ -94,6 +94,11 @@ public class ThirdPartyApiKeysController {
     }
     ThirdPartyApiKeyId id = new ThirdPartyApiKeyId(user.getUid(), keyName);
     ThirdPartyApiKey key = thirdPartyApiKeysFacade.findById(id);
+    if (key == null) {
+      throw new UserException(RESTCodes.UserErrorCode.THIRD_PARTY_API_KEY_EXISTS, Level.FINE,
+          "Could not find API key for user",
+          "Could not find API key with name " + keyName + " for user " + user.getUsername());
+    }
     return decrypt(user, key);
   }
   
