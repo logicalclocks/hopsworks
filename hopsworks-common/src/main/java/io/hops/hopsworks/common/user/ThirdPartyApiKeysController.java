@@ -44,6 +44,11 @@ import java.util.stream.Collectors;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
+/**
+ * Stateless bean for managing Third-party API keys of users
+ * Keys are encrypted with Hopsworks master encryption password
+ * before persisted in the database.
+ */
 public class ThirdPartyApiKeysController {
   private static final Logger LOG = Logger.getLogger(ThirdPartyApiKeysController.class.getName());
   
@@ -56,6 +61,16 @@ public class ThirdPartyApiKeysController {
   @EJB
   private UserFacade userFacade;
   
+  /**
+   * Adds a new API key. The key is encrypted before persisted in the database.
+   * It throws an exception if a key with the same name already exists for the
+   * same user.
+   *
+   * @param user User to add the key
+   * @param keyName Identifier of the key
+   * @param key The key itself
+   * @throws UserException
+   */
   public void addApiKey(Users user, String keyName, String key) throws UserException {
     if (user == null) {
       throw new UserException(RESTCodes.UserErrorCode.USER_DOES_NOT_EXIST, Level.FINE);
@@ -79,6 +94,14 @@ public class ThirdPartyApiKeysController {
     }
   }
   
+  /**
+   * Gets all the API key names associated with a user. The actually key is not
+   * returned, nor decrypted.
+   *
+   * @param user The user to fetch the API keys for
+   * @return A view of all key names associated with the user
+   * @throws UserException
+   */
   public List<ThirdPartyApiKeyPlaintext> getAllApiKeysForUser(Users user) throws UserException {
     if (user == null) {
       throw new UserException(RESTCodes.UserErrorCode.USER_DOES_NOT_EXIST, Level.FINE);
@@ -89,6 +112,14 @@ public class ThirdPartyApiKeysController {
         .collect(Collectors.toList());
   }
   
+  /**
+   * Deletes an API key associated with a user. It does NOT throw an exception if
+   * the key does not exist
+   *
+   * @param user The user who owns the key
+   * @param keyName The name of the key
+   * @throws UserException
+   */
   public void deleteApiKey(Users user, String keyName) throws UserException {
     if (user == null) {
       throw new UserException(RESTCodes.UserErrorCode.USER_DOES_NOT_EXIST, Level.FINE);
@@ -101,10 +132,22 @@ public class ThirdPartyApiKeysController {
     thirdPartyApiKeysFacade.deleteKey(keyId);
   }
   
+  /**
+   * Get all API keys that exist in the system encrypted.
+   * It is used for handling a Hopsworks master encryption password change
+   * @return A list with all API keys in the system encrypted
+   */
   public List<ThirdPartyApiKey> getAllCipheredApiKeys() {
     return thirdPartyApiKeysFacade.findAll();
   }
   
+  /**
+   * Gets a decrypted API key
+   * @param user The user associated with the key
+   * @param keyName The key identifier
+   * @return The API key decrypted along with some metadata
+   * @throws UserException
+   */
   public ThirdPartyApiKeyPlaintext getApiKey(Users user, String keyName) throws UserException {
     if (user == null) {
       throw new UserException(RESTCodes.UserErrorCode.USER_DOES_NOT_EXIST, Level.FINE);
@@ -128,10 +171,26 @@ public class ThirdPartyApiKeysController {
     }
   }
   
+  /**
+   * Constructs an API key view without the actual key
+   *
+   * @param user
+   * @param ciphered
+   * @return
+   */
   private ThirdPartyApiKeyPlaintext constructApiKeyView(Users user, ThirdPartyApiKey ciphered) {
     return ThirdPartyApiKeyPlaintext.newInstance(user, ciphered.getId().getName(), "", ciphered.getAddedOn());
   }
   
+  /**
+   * Decrypts an encrypted API key
+   *
+   * @param user
+   * @param ciphered
+   * @return
+   * @throws IOException
+   * @throws GeneralSecurityException
+   */
   private ThirdPartyApiKeyPlaintext decrypt(Users user, ThirdPartyApiKey ciphered)
       throws IOException, GeneralSecurityException {
     String password = certificatesMgmService.getMasterEncryptionPassword();
@@ -154,6 +213,15 @@ public class ThirdPartyApiKeysController {
         ciphered.getAddedOn());
   }
   
+  /**
+   * Encrypts an API key.
+   *
+   * @param key
+   * @return Encrypted key along with cryptographic primitives. The structure is the following:
+   * Salt(64 bytes), InitializationVector(12 bytes), EncryptedPayload
+   * @throws IOException
+   * @throws GeneralSecurityException
+   */
   private byte[] encryptKey(String key) throws IOException, GeneralSecurityException {
     String password = certificatesMgmService.getMasterEncryptionPassword();
     SymmetricEncryptionDescriptor descriptor = new SymmetricEncryptionDescriptor.Builder()
@@ -166,10 +234,23 @@ public class ThirdPartyApiKeysController {
         descriptor.getOutput());
   }
   
+  /**
+   * Utility method to convert a String to byte array
+   * using the system's default charset
+   *
+   * @param str
+   * @return
+   */
   private byte[] string2bytes(String str) {
     return str.getBytes(Charset.defaultCharset());
   }
   
+  /**
+   * Utility method to convert a byte array to String
+   * using the system's default charset
+   * @param bytes
+   * @return
+   */
   private String bytes2string(byte[] bytes) {
     return new String(bytes, Charset.defaultCharset());
   }

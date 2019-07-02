@@ -203,6 +203,7 @@ public class UsersResource {
   @POST
   @Path("apiKey")
   @Produces(MediaType.APPLICATION_JSON)
+  @ApiOperation(value = "Stores a third-party API key for user")
   public Response addApiKey(@FormParam("name") String keyName, @FormParam("key") String key,
       @Context SecurityContext sc) throws UserException {
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -216,6 +217,7 @@ public class UsersResource {
   @GET
   @Path("apiKey")
   @Produces(MediaType.APPLICATION_JSON)
+  @ApiOperation(value = "Retrieves all third-party API key names of a user", response = ThirdPartyApiKeyDTO.class)
   public Response getAllApiKeys(@Context SecurityContext sc) throws UserException {
     Users user = jWTHelper.getUserPrincipal(sc);
     List<ThirdPartyApiKeyPlaintext> apiKeys = thirdPartyApiKeysController.getAllApiKeysForUser(user);
@@ -226,6 +228,7 @@ public class UsersResource {
   @DELETE
   @Path("apiKey/{keyName}")
   @Produces(MediaType.APPLICATION_JSON)
+  @ApiOperation(value = "Deletes an API key by its name")
   public Response deleteApiKey(@PathParam("keyName") String keyName, @Context SecurityContext sc)
     throws UserException {
     Users user = jWTHelper.getUserPrincipal(sc);
