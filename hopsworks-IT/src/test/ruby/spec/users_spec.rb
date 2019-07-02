@@ -528,5 +528,66 @@ describe "On #{ENV['OS']}" do
         end
       end
     end
+
+    describe "Third-party API keys" do
+      before :each do
+        with_valid_session()
+      end
+      
+      it "should be able to add keys" do
+        keyname = "my_api_key_name"
+        key = "my_api_key"
+        post "#{ENV['HOPSWORKS_API']}/users/apiKey",
+             URI.encode_www_form({ name: keyname, key: key}),
+             { content_type: 'application/x-www-form-urlencoded'}
+        expect_status(200)
+
+        get "#{ENV['HOPSWORKS_API']}/users/apiKey"
+        expect_status(200)
+        keys = json_body[:items]
+        found = false
+        keys.each do |key|
+          if key[:name].eql? keyname
+               found = true
+          end
+        end
+        expect(found).to be true
+      end
+
+      it "should be able to delete key" do
+        keyname = "another_api_key_name"
+        post "#{ENV['HOPSWORKS_API']}/users/apiKey",
+             URI.encode_www_form({ name: keyname, key: "another_key"}),
+             { content_type: 'application/x-www-form-urlencoded'}
+        expect_status(200)
+
+        delete "#{ENV['HOPSWORKS_API']}/users/apiKey/#{keyname}"
+        expect_status(200)
+
+        get "#{ENV['HOPSWORKS_API']}/users/apiKey"
+        keys = json_body[:items]
+        expect(keys).to be nil
+      end
+
+      it "should not be able to add duplicate key" do
+        keyname = "my_api_key_name"
+        post "#{ENV['HOPSWORKS_API']}/users/apiKey",
+             URI.encode_www_form({ name: keyname, key: "some_key"}),
+             { content_type: 'application/x-www-form-urlencoded'}
+        expect_status(200)
+
+        post "#{ENV['HOPSWORKS_API']}/users/apiKey",
+             URI.encode_www_form({ name: keyname, key: "another_key"}),
+             { content_type: 'application/x-www-form-urlencoded'}
+        expect_status(400)
+      end
+
+      it "should not be able to add empty key" do
+        post "#{ENV['HOPSWORKS_API']}/users/apiKey",
+             URI.encode_www_form({ name: "", key: "some_key"}),
+             { content_type: 'application/x-www-form-urlencoded'}
+        expect_status(400)
+      end
+    end
   end
 end

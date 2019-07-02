@@ -136,8 +136,6 @@ public class SystemAdminService {
       
       RESTApiJsonResponse response = noCacheResponse.buildJsonResponse(Response.Status.CREATED,
           String.valueOf(operationId));
-      //RESTApiJsonResponse response = noCacheResponse.buildJsonResponse(Response.Status.NO_CONTENT, ResponseMessages
-      //    .MASTER_ENCRYPTION_PASSWORD_CHANGE);
       
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).entity(response).build();
     } catch (EncryptionMasterPasswordException ex) {

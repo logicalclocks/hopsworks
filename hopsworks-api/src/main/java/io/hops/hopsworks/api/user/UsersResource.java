@@ -206,9 +206,6 @@ public class UsersResource {
   public Response addApiKey(@FormParam("name") String keyName, @FormParam("key") String key,
       @Context SecurityContext sc) throws UserException {
     Users user = jWTHelper.getUserPrincipal(sc);
-    // TODO(Antonis): Fix stuff here
-    LOGGER.log(Level.INFO, ">>> Antonis Adding new API key for user " + user.getUsername());
-    LOGGER.log(Level.INFO, ">>> Key name: " + keyName + " Key: " + key);
     thirdPartyApiKeysController.addApiKey(user, keyName, key);
     
     RESTApiJsonResponse response = new RESTApiJsonResponse();
