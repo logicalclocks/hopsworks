@@ -38,6 +38,8 @@
  */
 package io.hops.hopsworks.common.security;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import io.hops.hopsworks.common.dao.certificates.CertsFacade;
 import io.hops.hopsworks.common.dao.command.SystemCommand;
 import io.hops.hopsworks.common.dao.command.SystemCommandFacade;
@@ -76,6 +78,7 @@ import java.nio.file.attribute.PosixFilePermissions;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -104,8 +107,17 @@ public class CertificatesMgmService {
   @Any
   private Instance<MasterPasswordHandler> handlers;
   
+  public enum UPDATE_STATUS {
+    OK,
+    WORKING,
+    FAILED,
+    NOT_FOUND
+  }
+  
   private File masterPasswordFile;
   private final Map<Class, MasterPasswordChangeResult> handlersResult = new HashMap<>();
+  private Cache<Integer, UPDATE_STATUS> updateStatus;
+  private Random rand;
 
   public CertificatesMgmService() {
   
@@ -155,6 +167,11 @@ public class CertificatesMgmService {
             + ", it should be 700");
       }
       
+      updateStatus = CacheBuilder.newBuilder()
+          .maximumSize(100)
+          .expireAfterWrite(12L, TimeUnit.HOURS)
+          .build();
+      rand = new Random();
     } catch (UnsupportedOperationException ex) {
       LOG.log(Level.WARNING, "Associated filesystem is not POSIX compliant. " +
           "Continue without checking the permissions of " + masterPasswordFile.getAbsolutePath()
@@ -195,6 +212,17 @@ public class CertificatesMgmService {
     }
   }
   
+  public Integer initUpdateOperation() {
+    Integer operationId = rand.nextInt();
+    updateStatus.put(operationId, UPDATE_STATUS.WORKING);
+    return operationId;
+  }
+  
+  public UPDATE_STATUS getOperationStatus(Integer operationId) {
+    UPDATE_STATUS status = updateStatus.getIfPresent(operationId);
+    return status != null ? status : UPDATE_STATUS.NOT_FOUND;
+  }
+  
   /**
    * Decrypt secrets using the old master password and encrypt them with the new
    * Both for project specific and project generic certificates
@@ -205,23 +233,26 @@ public class CertificatesMgmService {
   @Asynchronous
   @Lock(LockType.WRITE)
   @AccessTimeout(value = 500)
-  public void resetMasterEncryptionPassword(String newMasterPasswd, String userRequested) {
+  public void resetMasterEncryptionPassword(Integer operationId, String newMasterPasswd, String userRequested) {
     try {
       String newDigest = DigestUtils.sha256Hex(newMasterPasswd);
       callUpdateHandlers(newDigest);
       updateMasterEncryptionPassword(newDigest);
       StringBuilder successLog = gatherLogs();
       sendSuccessfulMessage(successLog, userRequested);
+      updateStatus.put(operationId, UPDATE_STATUS.OK);
       LOG.log(Level.INFO, "Master encryption password changed!");
     } catch (EncryptionMasterPasswordException ex) {
       String errorMsg = "*** Master encryption password update failed!!! Rolling back...";
       LOG.log(Level.SEVERE, errorMsg, ex);
+      updateStatus.put(operationId, UPDATE_STATUS.FAILED);
       callRollbackHandlers();
       sendUnsuccessfulMessage(errorMsg + "\n" + ex.getMessage(), userRequested);
     } catch (IOException ex) {
       String errorMsg = "*** Failed to write new encryption password to file: " + masterPasswordFile.getAbsolutePath()
           + ". Rolling back...";
       LOG.log(Level.SEVERE, errorMsg, ex);
+      updateStatus.put(operationId, UPDATE_STATUS.FAILED);
       callRollbackHandlers();
       sendUnsuccessfulMessage(errorMsg + "\n" + ex.getMessage(), userRequested);
     } finally {
