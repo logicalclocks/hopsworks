@@ -254,7 +254,7 @@ describe "On #{ENV['OS']}" do
           with_valid_project
         end
         before :each do
-          check_project_limit()
+          check_project_limit(1)
         end
         it "should delete project" do
           # Start Jupyter to put X.509 to HDFS
@@ -297,6 +297,14 @@ describe "On #{ENV['OS']}" do
         end
         it "should delete and recreate featurestore tour" do
           project = create_project_tour("featurestore")
+          job_name = "featurestore_tour_job"
+          wait_for_execution do
+            get_executions(project[:id], job_name, "")
+            execution_id = json_body[:items][0][:id]
+            stop_execution(project[:id], job_name)
+            get_execution(project[:id], job_name, execution_id)
+            json_body[:state].eql? "KILLED"
+          end
           delete_project(project)
           project = create_project_tour("featurestore")
           delete_project(project)
