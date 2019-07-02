@@ -84,6 +84,19 @@ public class ThirdPartyApiKeysController {
     thirdPartyApiKeysFacade.deleteKey(keyId);
   }
   
+  public ThirdPartyApiKeyPlaintext getApiKey(Users user, String keyName) throws UserException {
+    if (user == null) {
+      throw new UserException(RESTCodes.UserErrorCode.USER_DOES_NOT_EXIST, Level.FINE);
+    }
+    if (Strings.isNullOrEmpty(keyName)) {
+      throw new UserException(RESTCodes.UserErrorCode.THIRD_PARTY_API_KEY_EMPTY, Level.FINE,
+          "Third party API key is either null or empty", "3rd party API key name or key is empty or null");
+    }
+    ThirdPartyApiKeyId id = new ThirdPartyApiKeyId(user.getUid(), keyName);
+    ThirdPartyApiKey key = thirdPartyApiKeysFacade.findById(id);
+    return decrypt(user, key);
+  }
+  
   private ThirdPartyApiKeyPlaintext decrypt(Users user, ThirdPartyApiKey ciphered) {
     return ThirdPartyApiKeyPlaintext.newInstance(user, ciphered.getId().getName(), bytes2string(ciphered.getKey()),
         ciphered.getAddedOn());
