@@ -40,9 +40,18 @@ public class ThirdPartyApiKeysFacade {
     entityManager.persist(apiKey);
   }
   
+  public void update(ThirdPartyApiKey apiKey) {
+    entityManager.merge(apiKey);
+  }
+  
   public List<ThirdPartyApiKey> findAllForUser(Users user) {
     return entityManager.createNamedQuery("ThirdPartyApiKey.findByUser", ThirdPartyApiKey.class)
         .setParameter("uid", user.getUid())
+        .getResultList();
+  }
+  
+  public List<ThirdPartyApiKey> findAll() {
+    return entityManager.createNamedQuery("ThirdPartyApiKey.findAll", ThirdPartyApiKey.class)
         .getResultList();
   }
   

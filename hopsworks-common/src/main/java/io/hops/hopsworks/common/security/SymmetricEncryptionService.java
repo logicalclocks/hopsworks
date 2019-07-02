@@ -99,6 +99,34 @@ public class SymmetricEncryptionService {
         .build();
   }
   
+  // [salt(64),iv(12),payload)]
+  public byte[] mergePayloadWithCryptoPrimitives(byte[] salt, byte[] iv, byte[] payload) {
+    byte[] payloadWithPrimitives = new byte[salt.length + iv.length + payload.length];
+    System.arraycopy(salt, 0, payloadWithPrimitives, 0, salt.length);
+    System.arraycopy(iv, 0, payloadWithPrimitives, salt.length, iv.length);
+    System.arraycopy(payload, 0, payloadWithPrimitives, salt.length + iv.length, payload.length);
+    return payloadWithPrimitives;
+  }
+  
+  // [salt(64),
+  //  iv(12),
+  //  payload)]
+  public byte[][] splitPayloadFromCryptoPrimitives(byte[] payloadWithCryptoPrimitives) {
+    byte[] salt = new byte[SALT_LENGTH];
+    byte[] iv = new byte[IV_LENGTH];
+    byte[] ciphertext = new byte[payloadWithCryptoPrimitives.length - SALT_LENGTH - IV_LENGTH];
+  
+    System.arraycopy(payloadWithCryptoPrimitives, 0, salt, 0, salt.length);
+    System.arraycopy(payloadWithCryptoPrimitives, salt.length, iv, 0, iv.length);
+    System.arraycopy(payloadWithCryptoPrimitives, salt.length + iv.length, ciphertext, 0, ciphertext.length);
+    byte[][] splitPayload = new byte[3][];
+    splitPayload[0] = salt;
+    splitPayload[1] = iv;
+    splitPayload[2] = ciphertext;
+    
+    return splitPayload;
+  }
+  
   private void clearPasswords(KeySpec keySpec, SymmetricEncryptionDescriptor descriptor) {
     if (keySpec instanceof PBEKeySpec) {
       ((PBEKeySpec) keySpec).clearPassword();

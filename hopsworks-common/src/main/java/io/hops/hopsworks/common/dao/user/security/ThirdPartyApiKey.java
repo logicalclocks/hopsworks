@@ -31,7 +31,9 @@ import java.util.Date;
 @Table(name = "users_third_party_api_keys", catalog = "hopsworks")
 @NamedQueries({
     @NamedQuery(name = "ThirdPartyApiKey.findByUser",
-                query = "SELECT k FROM ThirdPartyApiKey k WHERE k.id.uid = :uid")
+                query = "SELECT k FROM ThirdPartyApiKey k WHERE k.id.uid = :uid"),
+    @NamedQuery(name = "ThirdPartyApiKey.findAll",
+                query = "SELECT k FROM ThirdPartyApiKey k")
   })
 public class ThirdPartyApiKey implements Serializable {
   private static final long serialVersionUID = 1L;

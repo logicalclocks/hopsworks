@@ -17,6 +17,7 @@
 package io.hops.hopsworks.common.user;
 
 import com.google.common.base.Strings;
+import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.security.ThirdPartyApiKey;
 import io.hops.hopsworks.common.dao.user.security.ThirdPartyApiKeyId;
@@ -52,6 +53,8 @@ public class ThirdPartyApiKeysController {
   private SymmetricEncryptionService symmetricEncryptionService;
   @EJB
   private CertificatesMgmService certificatesMgmService;
+  @EJB
+  private UserFacade userFacade;
   
   public void addApiKey(Users user, String keyName, String key) throws UserException {
     if (user == null) {
@@ -98,6 +101,10 @@ public class ThirdPartyApiKeysController {
     thirdPartyApiKeysFacade.deleteKey(keyId);
   }
   
+  public List<ThirdPartyApiKey> getAllCipheredApiKeys() {
+    return thirdPartyApiKeysFacade.findAll();
+  }
+  
   public ThirdPartyApiKeyPlaintext getApiKey(Users user, String keyName) throws UserException {
     if (user == null) {
       throw new UserException(RESTCodes.UserErrorCode.USER_DOES_NOT_EXIST, Level.FINE);
@@ -128,26 +135,21 @@ public class ThirdPartyApiKeysController {
   private ThirdPartyApiKeyPlaintext decrypt(Users user, ThirdPartyApiKey ciphered)
       throws IOException, GeneralSecurityException {
     String password = certificatesMgmService.getMasterEncryptionPassword();
-    byte[] payloadWithPrimitives = ciphered.getKey();
-    
-    byte[] salt = new byte[SymmetricEncryptionService.SALT_LENGTH];
-    byte[] iv = new byte[SymmetricEncryptionService.IV_LENGTH];
-    byte[] ciphertext = new byte[payloadWithPrimitives.length - SymmetricEncryptionService.SALT_LENGTH
-        - SymmetricEncryptionService.IV_LENGTH];
-    
-    System.arraycopy(payloadWithPrimitives, 0, salt, 0, salt.length);
-    System.arraycopy(payloadWithPrimitives, salt.length, iv, 0, iv.length);
-    System.arraycopy(payloadWithPrimitives, salt.length + iv.length, ciphertext, 0, ciphertext.length);
+  
+    // [salt(64),iv(12),payload)]
+    byte[][] split = symmetricEncryptionService.splitPayloadFromCryptoPrimitives(ciphered.getKey());
     
     SymmetricEncryptionDescriptor descriptor = new SymmetricEncryptionDescriptor.Builder()
         .setPassword(password)
-        .setInput(ciphertext)
-        .setIV(iv)
-        .setSalt(salt)
+        .setSalt(split[0])
+        .setIV(split[1])
+        .setInput(split[2])
         .build();
     descriptor = symmetricEncryptionService.decrypt(descriptor);
     
     byte[] plaintext = descriptor.getOutput();
+    
+    
     return ThirdPartyApiKeyPlaintext.newInstance(user, ciphered.getId().getName(), bytes2string(plaintext),
         ciphered.getAddedOn());
   }
@@ -159,17 +161,9 @@ public class ThirdPartyApiKeysController {
         .setPassword(password)
         .build();
     descriptor = symmetricEncryptionService.encrypt(descriptor);
-    byte[] salt = descriptor.getSalt();
-    byte[] iv = descriptor.getIv();
-    byte[] output = descriptor.getOutput();
     
-    // Final payload will be [SALT(64),IV(12),ENCRYPTED_KEY]
-    byte[] payloadWithPrimitives = new byte[salt.length + iv.length + output.length];
-    System.arraycopy(salt, 0, payloadWithPrimitives, 0, salt.length);
-    System.arraycopy(iv, 0, payloadWithPrimitives, salt.length, iv.length);
-    System.arraycopy(output, 0, payloadWithPrimitives, salt.length + iv.length, output.length);
-    
-    return payloadWithPrimitives;
+    return symmetricEncryptionService.mergePayloadWithCryptoPrimitives(descriptor.getSalt(), descriptor.getIv(),
+        descriptor.getOutput());
   }
   
   private byte[] string2bytes(String str) {
