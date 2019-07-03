@@ -61,6 +61,7 @@ import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuota;
 import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuotaFacade;
 import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
+import io.hops.hopsworks.common.dao.jupyter.config.JupyterManager;
 import io.hops.hopsworks.common.dao.kafka.KafkaFacade;
 import io.hops.hopsworks.common.dao.log.operation.OperationType;
 import io.hops.hopsworks.common.dao.log.operation.OperationsLog;
@@ -207,6 +208,8 @@ public class ProjectController {
   private OperationsLogFacade operationsLogFacade;
   @EJB
   private EnvironmentController environmentController;
+  @Inject
+  private JupyterManager jupyterManager;
   @EJB
   private JobFacade jobFacade;
   @EJB

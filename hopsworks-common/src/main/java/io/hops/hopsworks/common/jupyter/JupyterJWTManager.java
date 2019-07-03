@@ -25,7 +25,7 @@ import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
 import io.hops.hopsworks.common.dao.jupyter.JupyterSettings;
 import io.hops.hopsworks.common.dao.jupyter.JupyterSettingsFacade;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
-import io.hops.hopsworks.common.dao.jupyter.config.JupyterProcessMgr;
+import io.hops.hopsworks.common.dao.jupyter.config.JupyterManager;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
@@ -57,16 +57,10 @@ import javax.ejb.TimerConfig;
 import javax.ejb.TimerService;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.inject.Inject;
 import java.io.IOException;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.attribute.GroupPrincipal;
-import java.nio.file.attribute.PosixFileAttributeView;
-import java.nio.file.attribute.PosixFilePermission;
-import java.nio.file.attribute.UserPrincipalLookupService;
 import java.security.GeneralSecurityException;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -77,10 +71,14 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import static java.util.logging.Level.INFO;
+import static java.util.logging.Level.WARNING;
 
 @Singleton
 @Startup
@@ -88,19 +86,7 @@ import java.util.logging.Logger;
 @DependsOn("Settings")
 public class JupyterJWTManager {
   private static final Logger LOG = Logger.getLogger(JupyterJWTManager.class.getName());
-  private static final String TOKEN_FILE_NAME = "token.jwt";
-  
-  private static final Set<PosixFilePermission> TOKEN_FILE_PERMISSIONS = new HashSet<>();
-  
-  static {
-    TOKEN_FILE_PERMISSIONS.add(PosixFilePermission.OWNER_READ);
-    TOKEN_FILE_PERMISSIONS.add(PosixFilePermission.OWNER_WRITE);
-    TOKEN_FILE_PERMISSIONS.add(PosixFilePermission.OWNER_EXECUTE);
-    
-    TOKEN_FILE_PERMISSIONS.add(PosixFilePermission.GROUP_READ);
-    TOKEN_FILE_PERMISSIONS.add(PosixFilePermission.GROUP_WRITE);
-    TOKEN_FILE_PERMISSIONS.add(PosixFilePermission.GROUP_EXECUTE);
-  }
+  public static final String TOKEN_FILE_NAME = "token.jwt";
   
   private final TreeSet<JupyterJWT> jupyterJWTs = new TreeSet<>(new Comparator<JupyterJWT>() {
     @Override
@@ -117,7 +103,9 @@ public class JupyterJWTManager {
       }
     }
   });
-  
+
+  private final HashMap<PidAndPort, JupyterJWT> pidAndPortToJWT = new HashMap<>();
+
   @EJB
   private Settings settings;
   @EJB
@@ -130,14 +118,16 @@ public class JupyterJWTManager {
   private HdfsUsersController hdfsUsersController;
   @EJB
   private JupyterFacade jupyterFacade;
-  @EJB
-  private JupyterProcessMgr jupyterProcessMgr;
+  @Inject
+  private JupyterManager jupyterManager;
   @EJB
   private JupyterSettingsFacade jupyterSettingsFacade;
   @EJB
   private ProjectFacade projectFacade;
   @EJB
   private UserFacade userFacade;
+  @Inject
+  private JupyterJWTTokenWriter jupyterJWTTokenWriter;
   @Resource
   private TimerService timerService;
   
@@ -152,9 +142,19 @@ public class JupyterJWTManager {
     long monitorInterval = 5000L;
     timerService.createIntervalTimer(1000L, monitorInterval, new TimerConfig("Jupyter JWT renewal service", false));
   }
-  
+
+  private void addToken(JupyterJWT jupyterJWT) {
+    jupyterJWTs.add(jupyterJWT);
+    pidAndPortToJWT.put(jupyterJWT.pidAndPort, jupyterJWT);
+  }
+
+  private void removeToken(PidAndPort pidAndPort) {
+    JupyterJWT jupyterJWT = pidAndPortToJWT.remove(pidAndPort);
+    jupyterJWTs.remove(jupyterJWT);
+  }
+
   private void recover() {
-    LOG.log(Level.INFO, "Starting Jupyter JWT manager recovery");
+    LOG.log(INFO, "Starting Jupyter JWT manager recovery");
     List<MaterializedJWT> failed2recover = new ArrayList<>();
     
     // Get state from the database
@@ -181,7 +181,7 @@ public class JupyterJWTManager {
       }
       
       // Check if Jupyter is still running
-      if (!jupyterProcessMgr.pingServerJupyterUser(jupyterProject.getPid())) {
+      if (!jupyterManager.pingServerJupyterUser(jupyterProject)) {
         LOG.log(Level.FINEST, "Jupyter server is not running for " + materializedJWT.getIdentifier()
           + " Skip recovering...");
         failed2recover.add(materializedJWT);
@@ -193,10 +193,11 @@ public class JupyterJWTManager {
       Path tokenFile = constructTokenFilePath(jupyterSettings);
       String token = null;
       JupyterJWT jupyterJWT = null;
+      PidAndPort pidAndPort = new PidAndPort(jupyterProject.getPid(), jupyterProject.getPort());
       try {
         token = FileUtils.readFileToString(tokenFile.toFile());
         DecodedJWT decodedJWT = jwtController.verifyToken(token, settings.getJWTIssuer());
-        jupyterJWT = new JupyterJWT(project, user, DateUtils.date2LocalDateTime(decodedJWT.getExpiresAt()));
+        jupyterJWT = new JupyterJWT(project, user, pidAndPort, DateUtils.date2LocalDateTime(decodedJWT.getExpiresAt()));
         jupyterJWT.token = token;
         jupyterJWT.tokenFile = tokenFile;
         LOG.log(Level.FINE, "Successfully read existing JWT from local filesystem");
@@ -215,10 +216,10 @@ public class JupyterJWTManager {
           token = jwtController.createToken(settings.getJWTSigningKeyName(), false, settings.getJWTIssuer(),
               audience, DateUtils.localDateTime2Date(expirationDate), DateUtils.localDateTime2Date(DateUtils.getNow()),
               user.getUsername(), claims, SignatureAlgorithm.valueOf(settings.getJWTSignatureAlg()));
-          jupyterJWT = new JupyterJWT(project, user, expirationDate);
+          jupyterJWT = new JupyterJWT(project, user, pidAndPort, expirationDate);
           jupyterJWT.token = token;
           jupyterJWT.tokenFile = tokenFile;
-          writeToken2file(jupyterJWT);
+          jupyterJWTTokenWriter.writeToken(settings, jupyterJWT);
           LOG.log(Level.FINE, "Generated new Jupyter JWT cause could not recover existing");
         } catch (IOException recIOEx) {
           LOG.log(Level.WARNING, "Failed to recover Jupyter JWT for " + materializedJWT.getIdentifier()
@@ -241,14 +242,14 @@ public class JupyterJWTManager {
           continue;
         }
       }
-      jupyterJWTs.add(jupyterJWT);
+      addToken(jupyterJWT);
     }
     
     // Remove from the database entries that we failed to recover
     for (MaterializedJWT failedRecovery : failed2recover) {
       materializedJWTFacade.delete(failedRecovery.getIdentifier());
     }
-    LOG.log(Level.INFO, "Finished Jupyter JWT recovery");
+    LOG.log(INFO, "Finished Jupyter JWT recovery");
   }
   
   private Path constructTokenFilePath(JupyterSettings jupyterSettings) {
@@ -257,13 +258,13 @@ public class JupyterJWTManager {
   
   @Lock(LockType.WRITE)
   @AccessTimeout(value = 2000)
-  public void materializeJWT(Users user, Project project, JupyterSettings jupyterSettings, String[] audience)
-    throws ServiceException {
+  public void materializeJWT(Users user, Project project, JupyterSettings jupyterSettings, Long pid,
+      Integer port, String[] audience) throws ServiceException {
     MaterializedJWTID materialID = new MaterializedJWTID(project.getId(), user.getUid(),
       MaterializedJWTID.USAGE.JUPYTER);
     if (!materializedJWTFacade.exists(materialID)) {
       LocalDateTime expirationDate = LocalDateTime.now().plus(settings.getJWTLifetimeMs(), ChronoUnit.MILLIS);
-      JupyterJWT jupyterJWT = new JupyterJWT(project, user, expirationDate);
+      JupyterJWT jupyterJWT = new JupyterJWT(project, user, new PidAndPort(pid, port), expirationDate);
       try {
         String[] roles = usersController.getUserRoles(user).toArray(new String[1]);
         MaterializedJWT materializedJWT = new MaterializedJWT(materialID);
@@ -280,9 +281,9 @@ public class JupyterJWTManager {
         jupyterJWT.tokenFile = constructTokenFilePath(jupyterSettings);
         
         jupyterJWT.token = token;
-        writeToken2file(jupyterJWT);
+        jupyterJWTTokenWriter.writeToken(settings, jupyterJWT);
         
-        jupyterJWTs.add(jupyterJWT);
+        addToken(jupyterJWT);
       } catch (GeneralSecurityException | JWTException ex) {
         LOG.log(Level.SEVERE, "Error generating Jupyter JWT for " + jupyterJWT, ex);
         materializedJWTFacade.delete(materialID);
@@ -307,9 +308,6 @@ public class JupyterJWTManager {
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   @Timeout
   public void monitorJupyterJWT() {
-    // First clean stale JWTs
-    cleanStaleJWTs();
-    
     // Renew the rest of them
     Set<JupyterJWT> renewedJWTs = new HashSet<>(this.jupyterJWTs.size());
     Iterator<JupyterJWT> jupyterJWTs = this.jupyterJWTs.iterator();
@@ -326,12 +324,10 @@ public class JupyterJWTManager {
           newToken = jwtController.renewToken(element.token, DateUtils.localDateTime2Date(newExpirationDate),
               DateUtils.localDateTime2Date(now), true, new HashMap<>(3));
           
-          JupyterJWT renewedJWT = new JupyterJWT(element.project, element.user, newExpirationDate);
+          JupyterJWT renewedJWT = new JupyterJWT(element.project, element.user, element.pidAndPort, newExpirationDate);
           renewedJWT.tokenFile = element.tokenFile;
           renewedJWT.token = newToken;
-          writeToken2file(renewedJWT);
-          
-          jupyterJWTs.remove();
+          jupyterJWTTokenWriter.writeToken(settings, renewedJWT);
           renewedJWTs.add(renewedJWT);
         } catch (JWTException ex) {
           LOG.log(Level.WARNING, "Could not renew Jupyter JWT for " + element, ex);
@@ -351,104 +347,37 @@ public class JupyterJWTManager {
         break;
       }
     }
-    this.jupyterJWTs.addAll(renewedJWTs);
+    renewedJWTs.forEach(t -> {
+      removeToken(t.pidAndPort);
+      addToken(t);
+    });
   }
-  
-  private void cleanStaleJWTs() {
-    Iterator<JupyterJWT> jupyterJWTs = this.jupyterJWTs.iterator();
-    while (jupyterJWTs.hasNext()) {
-      JupyterJWT element = jupyterJWTs.next();
-      try {
-        MaterializedJWTID materializedJWTID = new MaterializedJWTID(element.project.getId(), element.user.getUid(),
-          MaterializedJWTID.USAGE.JUPYTER);
-        MaterializedJWT material = materializedJWTFacade.findById(materializedJWTID);
-        boolean isStillValid = false;
-        
-        if (material != null) {
-          isStillValid = isJupyterRunning(element);
-        }
-        
-        if (!isStillValid) {
-          FileUtils.deleteQuietly(element.tokenFile.toFile());
-          if (material != null) {
-            materializedJWTFacade.delete(materializedJWTID);
-          }
-          jupyterJWTs.remove();
-          jwtController.invalidate(element.token);
-        }
-      } catch (Exception ex) {
-        // Catch everything and do not fail. If we failed to determine the status of Jupyter, we renew the token
-        // to be safe
-        LOG.log(Level.FINE, "Could not determine if Jupyter JWT for " + element + " is still valid. Renewing it...");
+
+  @Lock(LockType.WRITE)
+  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+  public void cleanJWT(Long pid, Integer port) {
+    Optional<JupyterJWT> optional = Optional.ofNullable(pidAndPortToJWT.get(new PidAndPort(pid, port)));
+
+    if (!optional.isPresent()) {
+      LOG.log(WARNING, "JupyterJWT not found for pid " + pid + " and port " + port);
+      return;
+    }
+
+    JupyterJWT element = optional.get();
+    try {
+      MaterializedJWTID materializedJWTID = new MaterializedJWTID(element.project.getId(), element.user.getUid(),
+        MaterializedJWTID.USAGE.JUPYTER);
+      MaterializedJWT material = materializedJWTFacade.findById(materializedJWTID);
+      jupyterJWTTokenWriter.deleteToken(element);
+      if (material != null) {
+        materializedJWTFacade.delete(materializedJWTID);
       }
-    }
-  }
-  
-  private boolean isJupyterRunning(JupyterJWT jupyterJWT) {
-    String hdfsUsername = hdfsUsersController.getHdfsUserName(jupyterJWT.project, jupyterJWT.user);
-    JupyterProject jupyterProject = jupyterFacade.findByUser(hdfsUsername);
-    
-    return jupyterProject != null && jupyterProcessMgr.pingServerJupyterUser(jupyterProject.getPid());
-  }
-  
-  private void writeToken2file(JupyterJWT jupyterJWT) throws IOException {
-    FileUtils.writeStringToFile(jupyterJWT.tokenFile.toFile(), jupyterJWT.token);
-  
-    String groupName = settings.getJupyterGroup();
-    UserPrincipalLookupService lookupService = FileSystems.getDefault().getUserPrincipalLookupService();
-    GroupPrincipal group = lookupService.lookupPrincipalByGroupName(groupName);
-    Files.getFileAttributeView(jupyterJWT.tokenFile, PosixFileAttributeView.class,
-      LinkOption.NOFOLLOW_LINKS).setGroup(group);
-  
-    Files.setPosixFilePermissions(jupyterJWT.tokenFile, TOKEN_FILE_PERMISSIONS);
-  }
-  
-  private final class JupyterJWT {
-    private final Project project;
-    private final Users user;
-    private final LocalDateTime expiration;
-    private Path tokenFile;
-    private String token;
-    
-    private JupyterJWT(JupyterJWT jupyterJWT) {
-      this(jupyterJWT.project, jupyterJWT.user, jupyterJWT.expiration);
-      this.tokenFile = jupyterJWT.tokenFile;
-    }
-    
-    private JupyterJWT(Project project, Users user, LocalDateTime expiration) {
-      this.project = project;
-      this.user = user;
-      this.expiration = expiration;
-    }
-    
-    private boolean maybeRenew(LocalDateTime now) {
-      return now.isAfter(expiration) || now.isEqual(expiration);
-    }
-    
-    @Override
-    public int hashCode() {
-      int result = 17;
-      result = 31 * result + project.getId();
-      result = 31 * result + user.getUid();
-      return result;
-    }
-    
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      
-      if (o instanceof JupyterJWT) {
-        JupyterJWT other = (JupyterJWT) o;
-        return user.getUid().equals(other.user.getUid()) && project.getId().equals(other.project.getId());
-      }
-      return false;
-    }
-    
-    @Override
-    public String toString() {
-      return "(" + project.getName() + "/" + user.getUsername() + ")";
+      removeToken(element.pidAndPort);
+      jwtController.invalidate(element.token);
+    } catch (Exception ex) {
+      // Catch everything and do not fail. If we failed to determine the status of Jupyter, we renew the token
+      // to be safe
+      LOG.log(Level.FINE, "Could not determine if Jupyter JWT for " + element + " is still valid. Renewing it...");
     }
   }
 }
