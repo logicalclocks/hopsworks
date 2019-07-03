@@ -133,6 +133,19 @@ public class ThirdPartyApiKeysController {
   }
   
   /**
+   * Deletes all API keys associated with a user
+   *
+   * @param user User who owns the keys
+   * @throws UserException
+   */
+  public void deleteApiKeys(Users user) throws UserException {
+    if (user == null) {
+      throw new UserException(RESTCodes.UserErrorCode.USER_DOES_NOT_EXIST, Level.FINE);
+    }
+    thirdPartyApiKeysFacade.deleteKeysForUser(user);
+  }
+  
+  /**
    * Get all API keys that exist in the system encrypted.
    * It is used for handling a Hopsworks master encryption password change
    * @return A list with all API keys in the system encrypted
@@ -159,7 +172,7 @@ public class ThirdPartyApiKeysController {
     ThirdPartyApiKeyId id = new ThirdPartyApiKeyId(user.getUid(), keyName);
     ThirdPartyApiKey key = thirdPartyApiKeysFacade.findById(id);
     if (key == null) {
-      throw new UserException(RESTCodes.UserErrorCode.THIRD_PARTY_API_KEY_EXISTS, Level.FINE,
+      throw new UserException(RESTCodes.UserErrorCode.THIRD_PARTY_API_KEY_EMPTY, Level.FINE,
           "Could not find API key for user",
           "Could not find API key with name " + keyName + " for user " + user.getUsername());
     }

@@ -132,6 +132,9 @@ angular.module('hopsWorksApp')
               UserService.load_third_party_api_keys().then(
                 function (success) {
                   self.third_party_api_keys = success.data.items
+                  if (!self.third_party_api_keys) {
+                    self.third_party_api_keys = []
+                  }
                   self.apiKeysWorking = false;
                 }, function (error) {
                   self.apiKeysWorking = false;
@@ -170,6 +173,17 @@ angular.module('hopsWorksApp')
                   }
                 );
               }
+            };
+
+            self.delete_all_third_party_api_keys = function() {
+              UserService.delete_all_third_party_api_keys().then(
+                function (success) {
+                  self.third_party_api_keys = []
+                }, function (error) {
+                  self.errorMsg = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : "";
+                  growl.error(self.errorMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 1});
+                }
+              );
             };
             
             self.changeTwoFactor = function() {

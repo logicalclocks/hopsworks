@@ -537,12 +537,12 @@ describe "On #{ENV['OS']}" do
       it "should be able to add keys" do
         keyname = "my_api_key_name"
         key = "my_api_key"
-        post "#{ENV['HOPSWORKS_API']}/users/apiKey",
+        post "#{ENV['HOPSWORKS_API']}/users/apiKeys",
              URI.encode_www_form({ name: keyname, key: key}),
              { content_type: 'application/x-www-form-urlencoded'}
         expect_status(200)
 
-        get "#{ENV['HOPSWORKS_API']}/users/apiKey"
+        get "#{ENV['HOPSWORKS_API']}/users/apiKeys"
         expect_status(200)
         keys = json_body[:items]
         found = false
@@ -556,37 +556,57 @@ describe "On #{ENV['OS']}" do
 
       it "should be able to delete key" do
         keyname = "another_api_key_name"
-        post "#{ENV['HOPSWORKS_API']}/users/apiKey",
+        post "#{ENV['HOPSWORKS_API']}/users/apiKeys",
              URI.encode_www_form({ name: keyname, key: "another_key"}),
              { content_type: 'application/x-www-form-urlencoded'}
         expect_status(200)
 
-        delete "#{ENV['HOPSWORKS_API']}/users/apiKey/#{keyname}"
+        delete "#{ENV['HOPSWORKS_API']}/users/apiKeys/#{keyname}"
         expect_status(200)
 
-        get "#{ENV['HOPSWORKS_API']}/users/apiKey"
-        keys = json_body[:items]
-        expect(keys).to be nil
+        get "#{ENV['HOPSWORKS_API']}/users/apiKeys"
+        expect_json_types(items: :null)
       end
 
       it "should not be able to add duplicate key" do
         keyname = "my_api_key_name"
-        post "#{ENV['HOPSWORKS_API']}/users/apiKey",
+        post "#{ENV['HOPSWORKS_API']}/users/apiKeys",
              URI.encode_www_form({ name: keyname, key: "some_key"}),
              { content_type: 'application/x-www-form-urlencoded'}
         expect_status(200)
 
-        post "#{ENV['HOPSWORKS_API']}/users/apiKey",
+        post "#{ENV['HOPSWORKS_API']}/users/apiKeys",
              URI.encode_www_form({ name: keyname, key: "another_key"}),
              { content_type: 'application/x-www-form-urlencoded'}
-        expect_status(400)
+        expect_status(409)
       end
 
+      it "should be able to delete all keys" do
+        NUM_OF_KEYS = 10
+        (1..NUM_OF_KEYS).each do |idx|
+          keyname = "api_key-#{idx}"
+          post "#{ENV['HOPSWORKS_API']}/users/apiKeys",
+               URI.encode_www_form({ name: keyname, key: "some_key"}),
+               { content_type: 'application/x-www-form-urlencoded'}
+          expect_status(200)
+        end
+
+        get "#{ENV['HOPSWORKS_API']}/users/apiKeys"
+        expect_json_types(items: :array_of_objects)
+        expect_json(items: -> (items){ expect(items.size()).to eq(NUM_OF_KEYS)})
+
+        delete "#{ENV['HOPSWORKS_API']}/users/apiKeys"
+        expect_status(200)
+
+        get "#{ENV['HOPSWORKS_API']}/users/apiKeys"
+        expect_json_types(items: :null)
+      end
+      
       it "should not be able to add empty key" do
-        post "#{ENV['HOPSWORKS_API']}/users/apiKey",
+        post "#{ENV['HOPSWORKS_API']}/users/apiKeys",
              URI.encode_www_form({ name: "", key: "some_key"}),
              { content_type: 'application/x-www-form-urlencoded'}
-        expect_status(400)
+        expect_status(404)
       end
     end
   end

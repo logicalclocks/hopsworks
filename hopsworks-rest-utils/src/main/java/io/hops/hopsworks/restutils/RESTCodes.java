@@ -832,8 +832,8 @@ public class RESTCodes {
     TRANSITION_STATUS_ERROR(46, "The user can't transition from current status to requested status",
       Response.Status.BAD_REQUEST),
     ACCESS_CONTROL(47, "Client not authorized for this invocation.", Response.Status.FORBIDDEN),
-    THIRD_PARTY_API_KEY_EMPTY(48, "API key is empty", Response.Status.BAD_REQUEST),
-    THIRD_PARTY_API_KEY_EXISTS(49, "Same API key already exists", Response.Status.BAD_REQUEST),
+    THIRD_PARTY_API_KEY_EMPTY(48, "API key is empty", Response.Status.NOT_FOUND),
+    THIRD_PARTY_API_KEY_EXISTS(49, "Same API key already exists", Response.Status.CONFLICT),
     THIRD_PARTY_API_KEY_ENCRYPTION_ERROR(50, "Error encrypting/decrypting API key",
         Response.Status.INTERNAL_SERVER_ERROR);
 

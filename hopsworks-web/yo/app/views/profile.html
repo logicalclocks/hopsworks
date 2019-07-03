@@ -241,24 +241,23 @@
       <uib-tab ng-click="profileCtrl.load_third_party_api_keys()" index="1" heading="Third-party API keys">
         <!-- Changes should also be applied in the case of a remote user (below) -->
         <!-- Shame! Copy paste for the moment -->
-        <form method="post" name="apiKeysForm" ng-submit="profileCtrl.addApiKey(apiKeysForm.$valid)"
-          class="form-validate" novalidate>
-
+        <form method="post" name="apiKeysForm" ng-submit="profileCtrl.addApiKey(apiKeysForm.$valid)" class="form-validate"
+          novalidate>
+      
           <div class="form-group has-feedback">
             <label class="text-muted">Key name</label>
             <input name="api_key_name" ng-model="profileCtrl.new_api_key.name" class="form-control" required>
           </div>
-
+      
           <div class="form-group has-feedback">
             <label class="text-muted">API key</label>
             <input name="api_key" ng-model="profileCtrl.new_api_key.key" class="form-control" required>
           </div>
-
+      
           <div class="row form-actions">
             <div class="col-xs-3 col-sm-3 col-md-3 pull-right">
               <button class="btn btn-block btn-primary" type="submit" ng-disabled="apiKeysForm.$invalid">
-                <i ng-if="profileCtrl.apiKeysWorking" style="margin-top: 2px"
-                  class="fa fa-spinner fa-spin pull-right"></i>
+                <i ng-if="profileCtrl.apiKeysWorking" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right"></i>
                 Add
               </button>
             </div>
@@ -285,6 +284,10 @@
             </tr>
           </tbody>
         </table>
+        <button class="btn btn-block btn-danger" type="button" ng-click="profileCtrl.delete_all_third_party_api_keys()"
+          ng-disabled="profileCtrl.third_party_api_keys.length == 0">
+          Delete all
+        </button>
       </uib-tab>
       <!-- End of API keys -->
     </uib-tabset>
@@ -344,51 +347,53 @@
     <uib-tabset active="indextab">
       <!-- API keys -->
       <!-- It should be a copy of API keys tab when user is local (above) -->
-      <uib-tab ng-click="profileCtrl.load_third_party_api_keys()" index="0" heading="Third-party API keys">
-        <form method="post" name="apiKeysForm" ng-submit="profileCtrl.addApiKey(apiKeysForm.$valid)"
-          class="form-validate" novalidate>
-
-          <div class="form-group has-feedback">
-            <label class="text-muted">Key name</label>
-            <input name="api_key_name" ng-model="profileCtrl.new_api_key.name" class="form-control" required>
+      <form method="post" name="apiKeysForm" ng-submit="profileCtrl.addApiKey(apiKeysForm.$valid)" class="form-validate"
+        novalidate>
+    
+        <div class="form-group has-feedback">
+          <label class="text-muted">Key name</label>
+          <input name="api_key_name" ng-model="profileCtrl.new_api_key.name" class="form-control" required>
+        </div>
+    
+        <div class="form-group has-feedback">
+          <label class="text-muted">API key</label>
+          <input name="api_key" ng-model="profileCtrl.new_api_key.key" class="form-control" required>
+        </div>
+    
+        <div class="row form-actions">
+          <div class="col-xs-3 col-sm-3 col-md-3 pull-right">
+            <button class="btn btn-block btn-primary" type="submit" ng-disabled="apiKeysForm.$invalid">
+              <i ng-if="profileCtrl.apiKeysWorking" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right"></i>
+              Add
+            </button>
           </div>
-
-          <div class="form-group has-feedback">
-            <label class="text-muted">API key</label>
-            <input name="api_key" ng-model="profileCtrl.new_api_key.key" class="form-control" required>
-          </div>
-
-          <div class="row form-actions">
-            <div class="col-xs-3 col-sm-3 col-md-3 pull-right">
-              <button class="btn btn-block btn-primary" type="submit" ng-disabled="apiKeysForm.$invalid">
-                <i ng-if="profileCtrl.apiKeysWorking" style="margin-top: 2px"
-                  class="fa fa-spinner fa-spin pull-right"></i>
-                Add
+        </div>
+      </form>
+      <table st-table="profileCtrl.third_party_api_keys" class="table table-striped"
+        ng-show="profileCtrl.third_party_api_keys.length > 0">
+        <thead>
+          <tr>
+            <th st-sort="name" style="width: 40%" class="col-sm-7">Key name</th>
+            <th class="col-sm-1" style="width: 57%">Added on</th>
+            <th class="col-sm-1" style="width: 3%">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="key in profileCtrl.third_party_api_keys">
+            <td>{{ key.name }}</td>
+            <td>{{ key.addedOn }}</td>
+            <td>
+              <button class="btn btn-danger glyphicon glyphicon-trash" uib-tooltip="Delete"
+                ng-click="profileCtrl.delete_third_party_api_key(key)">
               </button>
-            </div>
-          </div>
-        </form>
-        <table st-table="profileCtrl.third_party_api_keys" class="table table-striped"
-          ng-show="profileCtrl.third_party_api_keys.length > 0">
-          <thead>
-            <tr>
-              <th st-sort="name" style="width: 40%" class="col-sm-7">Key name</th>
-              <th class="col-sm-1" style="width: 57%">Added on</th>
-              <th class="col-sm-1" style="width: 3%">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr ng-repeat="key in profileCtrl.third_party_api_keys">
-              <td>{{ key.name }}</td>
-              <td>{{ key.addedOn }}</td>
-              <td>
-                <button class="btn btn-danger glyphicon glyphicon-trash" uib-tooltip="Delete"
-                  ng-click="profileCtrl.delete_third_party_api_key(key)">
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <button class="btn btn-block btn-danger" type="button" ng-click="profileCtrl.delete_all_third_party_api_keys()"
+        ng-disabled="profileCtrl.third_party_api_keys.length == 0">
+        Delete all
+      </button>
       </uib-tab>
       <!-- End of API keys -->
     </uib-tabset>

@@ -61,4 +61,11 @@ public class ThirdPartyApiKeysFacade {
       entityManager.remove(key);
     }
   }
+  
+  public void deleteKeysForUser(Users user) {
+    List<ThirdPartyApiKey> keys = findAllForUser(user);
+    for (ThirdPartyApiKey key : keys) {
+      entityManager.remove(key);
+    }
+  }
 }

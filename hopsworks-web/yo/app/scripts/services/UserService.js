@@ -70,13 +70,16 @@ angular.module('hopsWorksApp')
                 return $http.post('/api/users/getQRCode', "password=" + pwd);
               },
               add_new_api_key: function(api_key) {
-                return $http.post("/api/users/apiKey", TransformRequest.jQueryStyle(api_key))
+                return $http.post("/api/users/apiKeys", TransformRequest.jQueryStyle(api_key))
               },
               load_third_party_api_keys: function () {
-                return $http.get("/api/users/apiKey")
+                return $http.get("/api/users/apiKeys")
               },
               delete_third_party_api_key: function (keyName) {
-                return $http.delete("/api/users/apiKey/" + keyName);
+                return $http.delete("/api/users/apiKeys/" + keyName);
+              },
+              delete_all_third_party_api_keys: function () {
+                return $http.delete("/api/users/apiKeys");
               }
             };
           }]);
