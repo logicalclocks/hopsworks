@@ -61,6 +61,7 @@ import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuota;
 import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuotaFacade;
 import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
+import io.hops.hopsworks.common.dao.jupyter.config.JupyterManager;
 import io.hops.hopsworks.common.dao.kafka.KafkaFacade;
 import io.hops.hopsworks.common.dao.log.operation.OperationType;
 import io.hops.hopsworks.common.dao.log.operation.OperationsLog;
@@ -207,6 +208,8 @@ public class ProjectController {
   private OperationsLogFacade operationsLogFacade;
   @EJB
   private EnvironmentController environmentController;
+  @Inject
+  private JupyterManager jupyterManager;
   @EJB
   private JobFacade jobFacade;
   @EJB
@@ -2232,13 +2235,13 @@ public class ProjectController {
       JobException, GenericException, ServiceException {
 
     Users user = userFacade.findByEmail(username);
-    datasetController.createDataset(user, project, Settings.HOPS_TOUR_DATASET,
-      "files for guide projects", -1, false, true, true, dfso);
     if (null != projectType) {
       String projectPath = Utils.getProjectPath(project.getName());
 
       switch (projectType) {
         case SPARK:
+          datasetController.createDataset(user, project, Settings.HOPS_TOUR_DATASET,
+              "files for guide projects", -1, false, true, true, dfso);
           String exampleDir = settings.getSparkDir() + Settings.SPARK_EXAMPLES_DIR + "/";
           try {
             File dir = new File(exampleDir);
@@ -2268,6 +2271,8 @@ public class ProjectController {
           }
           break;
         case KAFKA:
+          datasetController.createDataset(user, project, Settings.HOPS_TOUR_DATASET,
+              "files for guide projects", -1, false, true, true, dfso);
           // Get the JAR from /user/<super user>
           String kafkaExampleSrc = "/user/" + settings.getSparkUser() + "/"
               + settings.getHopsExamplesSparkFilename();
@@ -2286,49 +2291,36 @@ public class ProjectController {
           }
           break;
         case DEEP_LEARNING:
-          // Get the mnist.py and tfr records from /user/<super user>/tensorflow_demo
-          //Depending on tour type, copy files
+          datasetController.createDataset(user, project, Settings.HOPS_DL_TOUR_DATASET,
+              "sample training data for notebooks", -1, false, true, true, dfso);
           String DLDataSrc = "/user/" + settings.getHdfsSuperUser() + "/" + Settings.HOPS_DEEP_LEARNING_TOUR_DATA
               + "/*";
-          String DLDataDst = projectPath + Settings.HOPS_TOUR_DATASET;
+          String DLDataDst = projectPath + Settings.HOPS_DL_TOUR_DATASET;
+          String DLNotebooksSrc = "/user/" + settings.getHdfsSuperUser() + "/" +
+              Settings.HOPS_DEEP_LEARNING_TOUR_NOTEBOOKS;
+          String DLNotebooksDst = projectPath + Settings.HOPS_TOUR_DATASET_JUPYTER;
           try {
             udfso.copyInHdfs(new Path(DLDataSrc), new Path(DLDataDst));
-            String datasetGroup = hdfsUsersController.getHdfsGroupName(project, Settings.HOPS_TOUR_DATASET);
+            String datasetGroup = hdfsUsersController.getHdfsGroupName(project, Settings.HOPS_DL_TOUR_DATASET);
             String userHdfsName = hdfsUsersController.getHdfsUserName(project, user);
-            Inode parent = inodes.getInodeAtPath(DLDataDst);
-            List<Inode> children = new ArrayList<>();
-            inodes.getAllChildren(parent, children);
-            for (Inode child : children) {
-              if (child.getHdfsUser() != null && !child.getHdfsUser().getName().equals(userHdfsName)) {
-                Path path = new Path(inodes.getPath(child));
-                udfso.setPermission(path, udfso.getParentPermission(path));
-                udfso.setOwner(path, userHdfsName, datasetGroup);
-              }
-            }
-            //Move notebooks to Jupyter Dataset
-            if (projectType == TourProjectType.DEEP_LEARNING) {
-              String DLNotebooksSrc = DLDataDst + "/notebooks";
-              String DLNotebooksDst = projectPath + Settings.HOPS_TOUR_DATASET_JUPYTER;
-              udfso.copyInHdfs(new Path(DLNotebooksSrc + "/*"), new Path(DLNotebooksDst));
-              datasetGroup = hdfsUsersController.getHdfsGroupName(project, Settings.HOPS_TOUR_DATASET_JUPYTER);
-              Inode parentJupyterDs = inodes.getInodeAtPath(DLNotebooksDst);
-              List<Inode> childrenJupyterDs = new ArrayList<>();
-              inodes.getAllChildren(parentJupyterDs, childrenJupyterDs);
-              for (Inode child : childrenJupyterDs) {
-                if (child.getHdfsUser() != null) {
-                  Path path = new Path(inodes.getPath(child));
-                  udfso.setPermission(path, udfso.getParentPermission(path));
-                  udfso.setOwner(path, userHdfsName, datasetGroup);
-                }
-              }
-              udfso.rm(new Path(DLNotebooksSrc), true);
-            }
+            Inode tourDs = inodes.getInodeAtPath(DLDataDst);
+            datasetController.recChangeOwnershipAndPermission(new Path(DLDataDst),
+                FsPermission.createImmutable(tourDs.getPermission()),
+                userHdfsName, datasetGroup, dfso, udfso);
+            udfso.copyInHdfs(new Path(DLNotebooksSrc + "/*"), new Path(DLNotebooksDst));
+            datasetGroup = hdfsUsersController.getHdfsGroupName(project, Settings.HOPS_TOUR_DATASET_JUPYTER);
+            Inode jupyterDS = inodes.getInodeAtPath(DLNotebooksDst);
+            datasetController.recChangeOwnershipAndPermission(new Path(DLNotebooksDst),
+                FsPermission.createImmutable(jupyterDS.getPermission()),
+                userHdfsName, datasetGroup, dfso, udfso);
           } catch (IOException ex) {
             throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_TOUR_FILES_ERROR, Level.SEVERE,
               "project: " + project.getName(), ex.getMessage(), ex);
           }
           break;
         case FEATURESTORE:
+          datasetController.createDataset(user, project, Settings.HOPS_TOUR_DATASET,
+              "files for guide projects", -1, false, true, true, dfso);
           // Get the JAR from /user/<super user>
           String featurestoreExampleJarSrc = "/user/" + settings.getSparkUser() + "/"
               + settings.getHopsExamplesFeaturestoreFilename();
@@ -2336,7 +2328,7 @@ public class ProjectController {
               + Settings.HOPS_TOUR_DATASET + "/" + settings.getHopsExamplesFeaturestoreFilename();
           // Get the sample data and notebooks from /user/<super user>/featurestore_demo/
           String featurestoreExampleDataSrc = "/user/" + settings.getHdfsSuperUser() + "/" +
-              Settings.HOPS_FEATURESTORE_TOUR_DATA + "/*";
+              Settings.HOPS_FEATURESTORE_TOUR_DATA + "/data";
           String featurestoreExampleDataDst = projectPath + Settings.HOPS_TOUR_DATASET;
 
           try {
@@ -2351,33 +2343,21 @@ public class ProjectController {
             udfso.copyInHdfs(new Path(featurestoreExampleDataSrc), new Path(featurestoreExampleDataDst));
             datasetGroup = hdfsUsersController.getHdfsGroupName(project, Settings.HOPS_TOUR_DATASET);
             userHdfsName = hdfsUsersController.getHdfsUserName(project, user);
-            Inode parent = inodes.getInodeAtPath(featurestoreExampleDataDst);
-            List<Inode> children = new ArrayList<>();
-            inodes.getAllChildren(parent, children);
-            for (Inode child : children) {
-              if (child.getHdfsUser() != null && !child.getHdfsUser().getName().equals(userHdfsName)) {
-                Path path = new Path(inodes.getPath(child));
-                udfso.setPermission(path, udfso.getParentPermission(path));
-                udfso.setOwner(path, userHdfsName, datasetGroup);
-              }
-            }
+            Inode featurestoreDataDst = inodes.getInodeAtPath(featurestoreExampleDataDst);
+            datasetController.recChangeOwnershipAndPermission(new Path(featurestoreExampleDataDst),
+                FsPermission.createImmutable(featurestoreDataDst.getPermission()),
+                userHdfsName, datasetGroup, dfso, udfso);
             //Move example notebooks to Jupyter dataset
-            String featurestoreExampleNotebooksSrc = featurestoreExampleDataDst + "/notebooks";
+            String featurestoreExampleNotebooksSrc = "/user/" + settings.getHdfsSuperUser() + "/" +
+                Settings.HOPS_FEATURESTORE_TOUR_DATA + "/notebooks";
             String featurestoreExampleNotebooksDst = projectPath + Settings.HOPS_TOUR_DATASET_JUPYTER;
             udfso.copyInHdfs(new Path(featurestoreExampleNotebooksSrc + "/*"),
                 new Path(featurestoreExampleNotebooksDst));
             datasetGroup = hdfsUsersController.getHdfsGroupName(project, Settings.HOPS_TOUR_DATASET_JUPYTER);
-            Inode parentJupyterDs = inodes.getInodeAtPath(featurestoreExampleNotebooksDst);
-            List<Inode> childrenJupyterDs = new ArrayList<>();
-            inodes.getAllChildren(parentJupyterDs, childrenJupyterDs);
-            for (Inode child : childrenJupyterDs) {
-              if (child.getHdfsUser() != null) {
-                Path path = new Path(inodes.getPath(child));
-                udfso.setPermission(path, udfso.getParentPermission(path));
-                udfso.setOwner(path, userHdfsName, datasetGroup);
-              }
-            }
-            udfso.rm(new Path(featurestoreExampleNotebooksSrc), true);
+            Inode featurestoreNotebooksDst = inodes.getInodeAtPath(featurestoreExampleNotebooksDst);
+            datasetController.recChangeOwnershipAndPermission(new Path(featurestoreExampleNotebooksDst),
+                FsPermission.createImmutable(featurestoreNotebooksDst.getPermission()),
+                userHdfsName, datasetGroup, dfso, udfso);
           } catch (IOException ex) {
             throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_TOUR_FILES_ERROR, Level.SEVERE,
                 "project: " + project.getName(), ex.getMessage(), ex);

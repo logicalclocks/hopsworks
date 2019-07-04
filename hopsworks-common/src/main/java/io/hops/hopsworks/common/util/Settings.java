@@ -292,7 +292,6 @@ public class Settings implements Serializable {
   private static final String VARIABLE_SERVING_CONNECTION_POOL_SIZE = "serving_connection_pool_size";
   private static final String VARIABLE_SERVING_MAX_ROUTE_CONNECTIONS = "serving_max_route_connections";
 
-
   /*
    * -------------------- Kubernetes ---------------
    */
@@ -313,6 +312,14 @@ public class Settings implements Serializable {
   private static final String VARIABLE_KUBE_TF_IMG_VERSION = "kube_tf_img_version";
   private static final String VARIABLE_KUBE_SKLEARN_IMG_VERSION = "kube_sklearn_img_version";
   private static final String VARIABLE_KUBE_FILEBEAT_IMG_VERSION = "kube_filebeat_img_version";
+  private static final String VARIABLE_KUBE_JUPYTER_IMG_VERSION = "kube_jupyter_img_version";
+
+  private static final String VARIABLE_KUBE_API_MAX_ATTEMPTS = "kube_api_max_attempts";
+
+  /*
+   * -------------------- Jupyter ---------------
+   */
+  private static final String VARIABLE_JUPYTER_HOST = "jupyter_host";
 
   // JWT Variables
   private static final String VARIABLE_JWT_SIGNATURE_ALGORITHM = "jwt_signature_algorithm";
@@ -644,6 +651,10 @@ public class Settings implements Serializable {
       KUBE_TF_IMG_VERSION = setVar(VARIABLE_KUBE_TF_IMG_VERSION, KUBE_TF_IMG_VERSION);
       KUBE_SKLEARN_IMG_VERSION = setVar(VARIABLE_KUBE_SKLEARN_IMG_VERSION, KUBE_SKLEARN_IMG_VERSION);
       KUBE_FILEBEAT_IMG_VERSION = setVar(VARIABLE_KUBE_FILEBEAT_IMG_VERSION, KUBE_FILEBEAT_IMG_VERSION);
+      KUBE_JUPYTER_IMG_VERSION = setVar(VARIABLE_KUBE_JUPYTER_IMG_VERSION, KUBE_JUPYTER_IMG_VERSION);
+      KUBE_API_MAX_ATTEMPTS = setIntVar(VARIABLE_KUBE_API_MAX_ATTEMPTS, KUBE_API_MAX_ATTEMPTS);
+
+      JUPYTER_HOST = setStrVar(VARIABLE_JUPYTER_HOST, JUPYTER_HOST);
 
       JWT_SIGNATURE_ALGORITHM = setStrVar(VARIABLE_JWT_SIGNATURE_ALGORITHM, JWT_SIGNATURE_ALGORITHM);
       JWT_LIFETIME_MS = setLongVar(VARIABLE_JWT_LIFETIME_MS, JWT_LIFETIME_MS);
@@ -1196,6 +1207,7 @@ public class Settings implements Serializable {
   public static final String SPARK_LOCRSC_APP_JAR = "__app__.jar";
 
   public static final String HOPS_TOUR_DATASET = "TestJob";
+  public static final String HOPS_DL_TOUR_DATASET = "TourData";
   public static final String HOPS_TOUR_DATASET_JUPYTER = "Jupyter";
   public static final String JUPYTER_SPARKMAGIC_PREFIX = "jupyter-sparkmagic-session-";
   // Distribution-defined classpath to add to processes
@@ -1222,7 +1234,8 @@ public class Settings implements Serializable {
   public static final String HADOOP_USER_NAME = "HADOOP_USER_NAME";
   public static final String YARNTF_HOME_DIR = "YARNTF_HOME_DIR";
   public static final String YARNTF_STAGING_DIR = ".yarntfStaging";
-  public static final String HOPS_DEEP_LEARNING_TOUR_DATA = "tensorflow_demo";
+  public static final String HOPS_DEEP_LEARNING_TOUR_DATA = "tensorflow_demo/data";
+  public static final String HOPS_DEEP_LEARNING_TOUR_NOTEBOOKS = "tensorflow_demo/notebooks";
 
   //Featurestore constants
   public static final String HOPS_FEATURESTORE_TOUR_DATA = "featurestore_demo";
@@ -3264,6 +3277,12 @@ public class Settings implements Serializable {
     checkCache();
     return KUBE_MAX_SERVING_INSTANCES;
   }
+  
+  private Integer KUBE_API_MAX_ATTEMPTS = 12;
+  public synchronized Integer getKubeAPIMaxAttempts() {
+    checkCache();
+    return KUBE_API_MAX_ATTEMPTS;
+  }
 
   private String KUBE_TF_IMG_VERSION = "0.10.0";
   public synchronized String getKubeTfImgVersion() {
@@ -3283,6 +3302,12 @@ public class Settings implements Serializable {
     return KUBE_FILEBEAT_IMG_VERSION;
   }
 
+  private String KUBE_JUPYTER_IMG_VERSION = "0.10.0";
+  public synchronized String getJupyterImgVersion() {
+    checkCache();
+    return KUBE_JUPYTER_IMG_VERSION;
+  }
+
   private String SERVING_MONITOR_INT = "30s";
 
   public synchronized String getServingMonitorInt() {
@@ -3300,6 +3325,13 @@ public class Settings implements Serializable {
   public synchronized int getServingMaxRouteConnections() {
     checkCache();
     return SERVING_MAX_ROUTE_CONNECTIONS;
+  }
+
+  private String JUPYTER_HOST = "localhost";
+
+  public synchronized String getJupyterHost() {
+    checkCache();
+    return JUPYTER_HOST;
   }
 
   private String JWT_SIGNATURE_ALGORITHM = "HS512";

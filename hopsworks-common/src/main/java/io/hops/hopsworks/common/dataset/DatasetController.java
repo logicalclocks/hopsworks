@@ -343,7 +343,7 @@ public class DatasetController {
         Path childPath = new Path(dirInode.getR(), child.getInodePK().getName());
 
         if (username != null && group != null && dfso != null) {
-          dfso.setOwner(path, username, group);
+          dfso.setOwner(childPath, username, group);
         }
         udfso.setPermission(childPath, permission);
 
