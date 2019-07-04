@@ -15,16 +15,19 @@
  */
 package io.hops.hopsworks.util.helpers;
 
+import io.hops.hopsworks.WebDriverFactory;
 import io.hops.hopsworks.util.DBHelper;
 import io.hops.hopsworks.util.Helpers;
 import io.hops.hopsworks.util.JavascriptExec;
 import io.hops.hopsworks.util.User;
 import org.openqa.selenium.By;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.Select;
 
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
 
@@ -33,6 +36,16 @@ public class RegistrationHelper {
   public static final String EMAIL_VALIDATION_URL = "hopsworks-admin/security/validate_account.xhtml?key=";
   public static final String ADMIN = "HOPS_ADMIN";
   public static final String USER = "HOPS_USER";
+  
+  private static void gotoRegisterPage (WebDriver driver) {
+    driver.manage().timeouts().implicitlyWait(1, TimeUnit.SECONDS);
+    try {
+      driver.findElement(By.name("registerForm"));
+    } catch (NoSuchElementException | Error e) {
+      driver.findElement(By.linkText("Register")).click();
+    }
+    driver.manage().timeouts().implicitlyWait(WebDriverFactory.IMPLICIT_WAIT_TIMEOUT, TimeUnit.SECONDS);
+  }
   
   private static void registerTest(String firstName, String lastName, String email, String password, boolean twoFactor,
     WebDriver driver, DBHelper dbHelper) {
@@ -61,7 +74,7 @@ public class RegistrationHelper {
   
   private static void register(String firstName, String lastName, String email, String password, boolean twoFactor,
     WebDriver driver, DBHelper dbHelper) {
-    driver.findElement(By.linkText("Register")).click();
+    gotoRegisterPage(driver);
     registerTest(firstName, lastName, email, password, twoFactor, driver, dbHelper);
     if (twoFactor) {
       assertEquals("Four steps, and you're there...", driver.findElement(

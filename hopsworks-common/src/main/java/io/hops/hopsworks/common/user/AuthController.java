@@ -265,7 +265,7 @@ public class AuthController {
       throw new UserException(RESTCodes.UserErrorCode.INCORRECT_VALIDATION_KEY, Level.FINE);
     }
     if (diffMillis(user.getValidationKeyUpdated()) <  TimeUnit.SECONDS.toMillis(5)) {
-      resetValidationKey(user);// will this get rolled back?
+      resetValidationKey(user);
       throw new UserException(RESTCodes.UserErrorCode.INCORRECT_VALIDATION_KEY, Level.FINE);
     }
     resetFalseLogin(user);

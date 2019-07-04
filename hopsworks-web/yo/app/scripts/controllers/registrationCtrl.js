@@ -70,7 +70,6 @@ angular.module('hopsWorksApp')
 
             SecurityQuestions.getQuestions().then(function(success) {
               self.securityQuestions = success.data;
-              console.log("self.securityQuestions", self.securityQuestions);
             });
 
             self.userEmail ='';
