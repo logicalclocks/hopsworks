@@ -686,7 +686,7 @@ public class KafkaFacade {
     }
     return null;
   }
-
+  
   public List<AclDTO> getTopicAcls(String topicName, Project project) throws KafkaException {
     ProjectTopics pt = null;
     try {

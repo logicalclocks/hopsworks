@@ -39,6 +39,7 @@
 
 package io.hops.hopsworks.rest.application.config;
 
+import io.hops.hopsworks.api.iot.IotGatewayResource;
 import io.swagger.annotations.Api;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -89,6 +90,8 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.api.serving.ServingConfResource.class);
     register(io.hops.hopsworks.api.featurestore.FeaturestoreService.class);
     register(io.hops.hopsworks.api.host.machine.MachineTypeResource.class);
+//    register(io.hops.hopsworks.api.iot.IoTGatewayResource.class);
+    register(IotGatewayResource.class);
 
     // admin
     register(io.hops.hopsworks.api.admin.UsersAdmin.class);

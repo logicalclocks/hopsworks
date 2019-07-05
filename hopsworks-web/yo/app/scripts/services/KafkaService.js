@@ -124,6 +124,42 @@ angular.module('hopsWorksApp')
                 };
                 return $http(req);
               },
+
+              getIotGateways: function (projectId) {
+                return $http.get('/api/project/' + projectId + '/gateways');
+              },
+
+              blockIotGateway: function (projectId, gatewayName) {
+                return $http.post('/api/project/' + projectId + '/gateways/' + gatewayName + '/blocked')
+              },
+
+              unblockIotGateway: function (projectId, gatewayName) {
+                return $http.delete('/api/project/' + projectId + '/gateways/' + gatewayName + '/blocked')
+              },
+
+              getIotGatewayDetails: function (projectId, gatewayName) {
+                return $http.get('/api/project/' + projectId + '/gateways/' + gatewayName)
+              },
+
+              getIotNodes: function (projectId, gatewayName) {
+                return $http.get('/api/project/' + projectId + '/gateways/' + gatewayName + '/nodes')
+              },
+
+              registerIotGateway: function (projectId, gatewayDetails) {
+                var req = {
+                    method: 'PUT',
+                    url: '/api/project/' + projectId + '/gateways',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    data: gatewayDetails
+                };
+                return $http(req);
+              },
+
+              activateIot: function (projectId) {
+                return $http.post('/api/project/' + projectId + '/gateways/activateIot')
+              },
               
               getSchemasForTopics: function (projectId){
                 return $http.get('/api/project/' + projectId + '/kafka/schemas');

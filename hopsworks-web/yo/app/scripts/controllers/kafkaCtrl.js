@@ -44,11 +44,11 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('KafkaCtrl', ['$routeParams', 'growl',
+        .controller('KafkaCtrl', ['$scope','$route', '$routeParams', 'growl',
         'KafkaService', '$location', 'ModalService', '$interval',
-        '$mdSidenav', 'TourService', 'ProjectService',
-          function ($routeParams, growl, KafkaService, $location,
-          ModalService, $interval, $mdSidenav, TourService, ProjectService) {
+        '$mdSidenav', 'TourService', 'ProjectService', 'MembersService',
+          function ($scope, $route, $routeParams, growl, KafkaService, $location,
+          ModalService, $interval, $mdSidenav, TourService, ProjectService, MembersService) {
 
             var self = this;
             self.projectId = $routeParams.projectID;
@@ -71,18 +71,22 @@ angular.module('hopsWorksApp')
             self.role = "*";
            // self.activeId = -1;
             self.selectedProjectName="";
-            
+
             self.users =[];
             self.project;
-           
+
             self.showTopics = 1;
             self.showSchemas = -1;
+            self.showIots = -1;
+            self.iotGateways = [];
+            self.iotNodes = [];
+            self.iotEnabled = false;
             self.schemas = [];
             self.schemaVersions = [];
            self.tourService = TourService;
 
             self.selectAcl = function (acl, topicName) {
-              if (self.activeId === acl.id) { 
+              if (self.activeId === acl.id) {
                 return;
               }
               self.projectName = acl.projectName;
@@ -92,7 +96,7 @@ angular.module('hopsWorksApp')
               self.host = acl.host;
               self.role = acl.role;
               self.activeId = acl.id;
-              
+
               KafkaService.aclUsers(self.projectId, topicName).then(
                     function (success) {
                         self.users = success.data;
@@ -103,7 +107,7 @@ angular.module('hopsWorksApp')
                           growl.error("", {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
                       }
                    });
-              
+
             };
 
             self.updateAcl = function (topicName, aclId){
@@ -123,7 +127,7 @@ angular.module('hopsWorksApp')
                         } else {
                             growl.error("", {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
                         }
-                            
+
                         });
             };
 
@@ -167,7 +171,7 @@ angular.module('hopsWorksApp')
                     growl.warning(error.data.errorMsg, {title: 'Warning', ttl: 5000, referenceId: 10});
                });
             };
-            
+
             /**
              * Navigate to the new job page.
              * @returns {undefined}
@@ -187,7 +191,7 @@ angular.module('hopsWorksApp')
             };
 
             self.listSchemas = function () {
-                
+
                 KafkaService.getSchemasForTopics(self.projectId).then(
                  function (success) {
                  self.schemas = success.data;
@@ -202,14 +206,14 @@ angular.module('hopsWorksApp')
                         growl.error("", {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
                     }
                  });
-            
-                
+
+
             };
-            
+
             self.deleteSchema = function(schemaName, index){
-                
+
                 if(!self.schemaVersions[index]>0){
-                  growl.info("Delete aborted", {title: 'Schema version not selected', ttl: 2000});  
+                  growl.info("Delete aborted", {title: 'Schema version not selected', ttl: 2000});
                     return;
                 }
                  ModalService.confirm("sm", "Delete Schema (" + schemaName + ")",
@@ -229,14 +233,14 @@ angular.module('hopsWorksApp')
                     growl.info("Delete aborted", {title: 'Info', ttl: 2000});
                     });
             };
-            
+
             self.viewSchemaContent = function(schemaName, index){
-                
+
                 if(!self.schemaVersions[index]>0){
                      growl.info("Please select schema version", {title: 'Schema version not selected', ttl: 2000});
                 return;
                 }
-                
+
                ModalService.viewSchemaContent('lg', self.projectId, schemaName, self.schemaVersions[index]).then(
                       function (success) {
 
@@ -244,18 +248,94 @@ angular.module('hopsWorksApp')
                 //The user changed their mind.
               });
             };
-            
+
             self.updateSchemaContent = function(schema){
-                
+
                 //increment the version number
                 self.version = Math.max.apply(null,schema.versions);
-                
+
                  ModalService.updateSchemaContent('lg', self.projectId, schema.name, self.version).then(
                       function (success) {
                          self.listSchemas();
                       }, function (error) {
                 //The user changed their mind.
               });
+            };
+
+            self.addIotGateway = function() {
+                ModalService.addIotGateway('lg', self.projectId)
+                    .then(
+                        function (success) {
+                            growl.success(success.data, {title: 'New IoT Gateway added successfully.', ttl: 2000});
+                            self.listIotGateways();
+                        }, function (error) {
+                            if (typeof error.data.usrMsg !== 'undefined') {
+                                growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
+                            } else {
+                                growl.error("", {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
+                            }
+                        });
+                self.listIotGateways();
+            };
+
+            self.listIotGateways = function () {
+                KafkaService.getIotGateways(self.projectId).then(
+                    function (success) {
+                          self.iotGateways = success.data.items;
+                      }, function (error) {
+                          if (typeof error.data.usrMsg !== 'undefined') {
+                              growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
+                          } else {
+                              growl.error("", {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
+                          }
+                    });
+            };
+
+            self.blockIotGateway = function(name) {
+              KafkaService.blockIotGateway(self.projectId, name).then(
+                  function (success) {
+                      self.listIotGateways();
+                  }, function (error) {
+                      self.listIotGateways();
+                  }
+              )
+            };
+
+            self.unblockIotGateway = function(name) {
+                KafkaService.unblockIotGateway(self.projectId, name).then(
+                    function (success) {
+                        self.listIotGateways();
+                    }, function (error) {
+                        self.listIotGateways();
+                    }
+                )
+            };
+
+            self.viewIotNodes = function(name) {
+              ModalService.viewIotNodes('lg', self.projectId, name).then(
+                function (success) {
+
+                }, function (error) {
+                    //The user changed their mind.
+                });
+            };
+
+            self.viewIotGatewayDetails = function(gatewayName) {
+                ModalService.viewIotGatewayDetails('lg', self.projectId, gatewayName).then(
+                    function (success) {
+
+                    }, function (error) {
+                        //The user changed their mind.
+                    });
+            };
+
+            self.activateIot = function() {
+                KafkaService.activateIot(self.projectId).then(
+                    function (success) {
+                        $route.reload();
+                    }, function (error) {
+                    }
+                )
             };
 
             self.lala = function () {
@@ -324,7 +404,7 @@ angular.module('hopsWorksApp')
             };
 
             self.addAcl = function (topicName) {
-                
+
                 ModalService.createTopicAcl('lg', self.projectId, topicName).then(
                       function (success) {
                           growl.success(success.data.successMessage, {title: 'New acl added for the topic: '+topicName, ttl: 5000});
@@ -347,7 +427,7 @@ angular.module('hopsWorksApp')
               });
 
             };
-            
+
             self.shareTopic = function(topicName) {
               ModalService.selectProject('lg', true, self.projectId,
                       "Select a Project to share the topic with.").then(
@@ -369,7 +449,7 @@ angular.module('hopsWorksApp')
                 //The user changed their mind.
               });
             };
-            
+
             //operation done from topic
             self.unshareTopic = function(topicName, project) {
 
@@ -385,7 +465,7 @@ angular.module('hopsWorksApp')
                                 }
                         });
             };
-            
+
             //operation done from project
             self.unshareTopicFromProject =function (topicName){
                 KafkaService.unshareTopicFromProject(self.projectId, topicName).then(
@@ -400,10 +480,10 @@ angular.module('hopsWorksApp')
                                     }
                         });
             };
-            
+
             self.topicIsSharedTo = function (topicName) {
                 KafkaService.topicIsSharedTo(this.projectId, topicName).then(
-                        function (success) {                         
+                        function (success) {
                            for(var i =0;i<self.topics.length;i++){
                               if(self.topics[i].name === topicName){
                                   self.topics[i].shares=success.data;
@@ -432,16 +512,29 @@ angular.module('hopsWorksApp')
                 }
               );
 
+              MembersService.query({id: self.projectId}).$promise.then(
+                function (success) {
+                    var members = success;
+                    members.forEach(function (member) {
+                        if (member.user.email === "iot@hopsworks.ai") {
+                            self.iotEnabled = true;
+                        }
+                    });
+                },
+                function (error) {
+              });
+
               self.getAllTopics();
               self.getAllSharedTopics();
              };
-            
+
             self.init();
 
             self.showTopic = function(){
               if (self.projectIsGuide) {
                 self.tourService.currentStep_TourThree = 3;
               }
+              self.showIots = -1;
               self.showSchemas = -1;
               self.showTopics = 1;
             };
@@ -450,11 +543,19 @@ angular.module('hopsWorksApp')
               if (self.projectIsGuide) {
                 self.tourService.currentStep_TourThree = 1;
               }
+              self.showIots = -1;
               self.showSchemas = 1;
               self.showTopics = -1;
               self.listSchemas();
             };
-              
+
+            self.showIot = function () {
+                self.showSchemas = -1;
+                self.showTopics = -1;
+                self.showIots = 1;
+                self.listIotGateways();
+            }
+
           }]);
 
 
