@@ -1225,13 +1225,6 @@ public class Settings implements Serializable {
       = "org.apache.flink.yarn.ApplicationMaster";
   public static final int FLINK_APP_MASTER_MEMORY = 768;
 
-  //TensorFlow constants
-  public static final String TENSORFLOW_DEFAULT_OUTPUT_PATH = "Logs/TensorFlow/";
-  private static final String TENSORFLOW_JAR = "hops-tensorflow-0.0.1.jar";
-  //Used to pass the project user to yarn containers for tensorflow
-  public static final String HADOOP_USER_NAME = "HADOOP_USER_NAME";
-  public static final String YARNTF_HOME_DIR = "YARNTF_HOME_DIR";
-  public static final String YARNTF_STAGING_DIR = ".yarntfStaging";
   public static final String HOPS_DEEP_LEARNING_TOUR_DATA = "tensorflow_demo/data";
   public static final String HOPS_DEEP_LEARNING_TOUR_NOTEBOOKS = "tensorflow_demo/notebooks";
 
@@ -1247,10 +1240,6 @@ public class Settings implements Serializable {
 
   //Kafka constants
   public static final Set<String> KAFKA_SCHEMA_BLACKLIST = new HashSet<>(Arrays.asList(INFERENCE_SCHEMANAME));
-
-  public String getTensorFlowJarPath(String tfUser) {
-    return "hdfs:///user/" + tfUser + "/" + TENSORFLOW_JAR;
-  }
 
   public synchronized String getLocalFlinkJarPath() {
     return getFlinkDir() + "/flink.jar";
