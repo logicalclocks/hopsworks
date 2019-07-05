@@ -125,18 +125,6 @@ public class DatasetFacade extends AbstractFacade<Dataset> {
       return Optional.empty();
     }
   }
-
-  public Dataset findByNameAndProjectId(Project project, String name) {
-    TypedQuery<Dataset> query = em.createNamedQuery(
-      "Dataset.findByNameAndProjectId",
-      Dataset.class);
-    query.setParameter("name", name).setParameter("project", project);
-    try {
-      return query.getSingleResult();
-    } catch (NoResultException e) {
-      return null;
-    }
-  }
   
   public List<Project> findProjectSharedWith(Project project, Inode inode) {
     List<Dataset> datasets = findByInode(inode);
@@ -154,7 +142,7 @@ public class DatasetFacade extends AbstractFacade<Dataset> {
   }
 
   /**
-   * Find by project and dataset name
+   * Find by project and dataset inode
    * <p/>
    * @param project
    * @param inode

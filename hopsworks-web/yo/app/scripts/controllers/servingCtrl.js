@@ -96,7 +96,7 @@ angular.module('hopsWorksApp')
                         });
                 }
                 if (self.editServing.servingType == "SKLEARN") {
-                    ModalService.selectFile('lg', self.sklearnScriptRegex, self.sklearnSelectScriptErrorMsg,
+                    ModalService.selectFile('lg', self.projectId, self.sklearnScriptRegex, self.sklearnSelectScriptErrorMsg,
                         false).then(
                         function (success) {
                             var projectName = UtilsService.getProjectName();
