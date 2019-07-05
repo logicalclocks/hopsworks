@@ -63,6 +63,7 @@ public class TfLibMappingUtil {
 
     if(!Strings.isNullOrEmpty(tfLibMapping.getCudaVersion())) {
       ldPathBuilder.append(CUDA_BASE_PATH + tfLibMapping.getCudaVersion() + "/lib64" + File.pathSeparator);
+      ldPathBuilder.append(CUDA_BASE_PATH + tfLibMapping.getCudaVersion() + "/extras/CUPTI/lib64" + File.pathSeparator);
     }
 
     if(!Strings.isNullOrEmpty(tfLibMapping.getNcclVersion())) {

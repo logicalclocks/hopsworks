@@ -82,7 +82,7 @@ Frontend dependencies
 * github.com/mmathias01/google-charts [MIT](https://github.com/mmathias01/google-charts/blob/master/LICENSE)
 * github.com/apexcharts/apexcharts.js [MIT](https://github.com/apexcharts/apexcharts.js/blob/master/LICENSE)
 
-Backend Dependecies
+Backend Dependencies
 
 * com.101tec:zkclient:jar:0.9 [ApacheV2](http://www.apache.org/licenses/LICENSE-2.0)
 * com.google.code.gson:gson:jar:2.2 [ApacheV2](https://github.com/google/gson/blob/master/LICENSE)
@@ -95,7 +95,6 @@ Backend Dependecies
 * commons-logging:commons-logging:jar:1.2 [ApacheV2](http://www.apache.org/licenses/LICENSE-2.0.txt)
 * io.hops:hadoop-client:jar:2.8.2.3 [ApacheV2](https://github.com/hopshadoop/hops/blob/master/LICENSE.txt)
 * io.hops.hive:hive-jdbc:jar:2.3.0 [ApacheV2](https://github.com/hopshadoop/hive/blob/master/LICENSE)
-* io.hops:hops-tensorflow:jar:0.0.1 - [ApacheV2](https://github.com/hopshadoop/hops-tensorflow/blob/master/LICENSE)
 * io.hops:service-proxy-core:jar:4.4.3-SNAPSHOT [ApacheV2](http://www.membrane-soa.org/service-proxy/)
 * io.swagger:swagger-jersey2-jaxrs:jar:1.5.10 [ApacheV2](https://swagger.io/license/)
 * javax:javaee-api:jar:7.0 [CDDL 1.1 or GPL 2](https://github.com/javaee/glassfish/blob/master/LICENSE)
