@@ -77,6 +77,8 @@ public class DelaDatasetController {
   @EJB
   private DatasetFacade datasetFacade;
   @EJB
+  private DatasetController datasetController;
+  @EJB
   private HdfsUsersController hdfsUsersBean;
   @EJB
   private DistributedFsService dfs;
@@ -147,7 +149,7 @@ public class DelaDatasetController {
 
     datasetCtrl.createDataset(user, project, name, description, -1, true, false, false,
       dfs.getDfsOps());
-    return datasetFacade.findByNameAndProjectId(project, name);
+    return datasetController.getByProjectAndDsName(project, null, name);
   }
   
   public List<Dataset> getLocalPublicDatasets() {

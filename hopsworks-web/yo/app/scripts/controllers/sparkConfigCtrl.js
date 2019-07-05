@@ -31,6 +31,7 @@ angular.module('hopsWorksApp')
             self.jars = [];
             self.archives = [];
             self.files = [];
+            self.projectId = $routeParams.projectID;
 
             self.loc = $location.url().split('#')[0];
 
@@ -244,7 +245,7 @@ angular.module('hopsWorksApp')
 
             this.selectFile = function(reason) {
 
-                ModalService.selectFile('lg', self.selectFileRegexes[reason.toUpperCase()],
+                ModalService.selectFile('lg', self.projectId, self.selectFileRegexes[reason.toUpperCase()],
                     self.selectFileErrorMsgs[reason.toUpperCase()], false).then(
                     function(success) {
                         self.onFileSelected(reason, "hdfs://" + success);

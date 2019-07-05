@@ -75,7 +75,7 @@
                     <input class="form-control" style="margin-left: 10px;" ng-model="jobsCtrl.jobFilter"
                            ng-model-options="{debounce: 700}" ng-change="jobsCtrl.untoggle(job, $index)">
                     <i class="fa fa-info-circle"
-                       uib-tooltip="Case sensitive search name, type, owner. Select date range to search based on jobs creation date."></i>
+                       uib-tooltip="Case sensitive search name, type, owner. Select date range to search based on jobs creation date." tooltip-placement="bottom"></i>
                     <md-datepicker ng-change="jobsCtrl.storeDates('jobsFromDate');jobsCtrl.getAllJobsStatus()"
                                    ng-model="jobsCtrl.jobsFromDate"
                                    md-placeholder="From"></md-datepicker>

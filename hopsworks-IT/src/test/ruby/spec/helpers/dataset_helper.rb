@@ -90,8 +90,9 @@ module DatasetHelper
     Dataset.where(projectId: "#{project[:id]}", inode_name: name).first
   end
   
-  def share_dataset(project1, dsname, project2)
-    post "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/shareDataSet", {name: dsname, projectId: project2[:id]}
+  def share_dataset(project1, dsname, project2, type="DATASET")
+    post "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/shareDataSet", {name: dsname, projectId:
+        project2[:id], type: type}
   end
   
   def request_dataset_access(project, inode)
