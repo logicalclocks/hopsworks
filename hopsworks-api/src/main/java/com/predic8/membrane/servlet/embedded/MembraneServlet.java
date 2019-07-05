@@ -25,16 +25,10 @@ import javax.ejb.EJB;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import org.apache.commons.collections4.map.CaseInsensitiveMap;
 
 import java.net.URI;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -51,9 +45,6 @@ public class MembraneServlet extends HttpServlet {
   Settings settings;
 
   private String jupyterHost;
-
-  private static final String ORIGIN = "Origin";
-  private static final String WEBSOCKET_ORIGIN = "Sec-Websocket-Origin";
 
   /*
    * For websockets, the following paths are used by JupyterHub:
@@ -80,14 +71,6 @@ public class MembraneServlet extends HttpServlet {
           throws ServletException, IOException {
 
     String externalIp = Ip.getHost(req.getRequestURL().toString());
-
-    // See HOPSWORKS-1185 for an explanation
-    String requestUrl = req.getRequestURL().toString();
-    MutableHttpServletRequest mutableRequest = new MutableHttpServletRequest(req);
-    mutableRequest.putHeader(ORIGIN,
-        requestUrl.substring(0, requestUrl.indexOf("/", 7)));
-    mutableRequest.putHeader(WEBSOCKET_ORIGIN,
-        requestUrl.substring(0, requestUrl.indexOf("/", 7)));
 
     StringBuilder urlBuf = new StringBuilder("http://");
     urlBuf.append(jupyterHost);
@@ -124,52 +107,9 @@ public class MembraneServlet extends HttpServlet {
       Router router = new HopsRouter();
       router.add(sp);
       router.init();
-      new HopsServletHandler(mutableRequest, resp, router.getTransport(), targetUriObj).run();
+      new HopsServletHandler(req, resp, router.getTransport(), targetUriObj).run();
     } catch (Exception ex) {
       LOGGER.log(Level.SEVERE, null, ex);
-    }
-  }
-
-  private class MutableHttpServletRequest extends HttpServletRequestWrapper {
-
-    // holds custom header and value mapping
-    private final CaseInsensitiveMap<String, String> customHeaders;
-
-    public MutableHttpServletRequest(HttpServletRequest request) {
-      super(request);
-      this.customHeaders = new CaseInsensitiveMap<>();
-
-      // now add the headers from the wrapped request object
-      @SuppressWarnings("unchecked")
-      Enumeration<String> e = request.getHeaderNames();
-      while (e.hasMoreElements()) {
-        String n = e.nextElement();
-        customHeaders.put(n, request.getHeader(n));
-      }
-    }
-
-    public void putHeader(String name, String value) {
-      this.customHeaders.put(name, value);
-    }
-
-    @Override
-    public String getHeader(String name) {
-      return customHeaders.get(name);
-    }
-
-    @Override
-    public Enumeration<String> getHeaders(String name) {
-      Set<String> headers = new HashSet<>();
-      if (customHeaders.containsKey(name)) {
-        headers.add(customHeaders.get(name));
-      }
-      return Collections.enumeration(headers);
-    }
-
-    @Override
-    public Enumeration<String> getHeaderNames() {
-      // create a set of the custom header names
-      return Collections.enumeration(new HashSet<String>(customHeaders.keySet()));
     }
   }
 }
