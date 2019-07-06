@@ -16,12 +16,16 @@
 
 package io.hops.hopsworks.common.dao.featurestore.featuregroup;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.hops.hopsworks.common.dao.featurestore.FeaturestoreEntityDTO;
-import io.hops.hopsworks.common.dao.featurestore.storageconnector.external_sql_query.FeaturestoreExternalSQLQueryDTO;
-import io.hops.hopsworks.common.hive.HiveTableType;
+import io.hops.hopsworks.common.dao.featurestore.featuregroup.cached_featuregroup.CachedFeaturegroupDTO;
+import io.hops.hopsworks.common.dao.featurestore.featuregroup.on_demand_featuregroup.OnDemandFeaturegroupDTO;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlSeeAlso;
 import java.util.List;
 
 /**
@@ -29,17 +33,17 @@ import java.util.List;
  * using jaxb.
  */
 @XmlRootElement
+@XmlSeeAlso({CachedFeaturegroupDTO.class, OnDemandFeaturegroupDTO.class})
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY)
+@JsonSubTypes({
+    @JsonSubTypes.Type(value = CachedFeaturegroupDTO.class, name = "CachedFeaturegroupDTO"),
+    @JsonSubTypes.Type(value = OnDemandFeaturegroupDTO.class, name = "OnDemandFeaturegroupDTO")})
 public class FeaturegroupDTO extends FeaturestoreEntityDTO {
 
-  private List<String> hdfsStorePaths;
-  private String inputFormat;
-  private HiveTableType hiveTableType;
   private FeaturegroupType featuregroupType;
-  private FeaturestoreExternalSQLQueryDTO featurestoreExternalSQLQuery;
 
   public FeaturegroupDTO() {
-    super(null, null, null, null, null, null,
-        null);
   }
 
   public FeaturegroupDTO(Featuregroup featuregroup) {
@@ -47,46 +51,10 @@ public class FeaturegroupDTO extends FeaturestoreEntityDTO {
         featuregroup.getCreator(), featuregroup.getVersion(),
         (List) featuregroup.getStatistics(), featuregroup.getJob(),
         featuregroup.getId());
-    this.hdfsStorePaths = null;
-    this.inputFormat = null;
-    this.hiveTableType = null;
     this.featuregroupType = featuregroup.getFeaturegroupType();
-    if(featuregroup.getFeaturestoreExternalSQLQuery() != null){
-      this.featurestoreExternalSQLQuery =
-        new FeaturestoreExternalSQLQueryDTO(featuregroup.getFeaturestoreExternalSQLQuery());
-      setFeatures(featurestoreExternalSQLQuery.getFeatures());
-      featurestoreExternalSQLQuery.setFeatures(null);
-    }
   }
 
   @XmlElement
-  public List<String> getHdfsStorePaths() {
-    return hdfsStorePaths;
-  }
-
-
-  public void setHdfsStorePaths(List<String> hdfsStorePaths) {
-    this.hdfsStorePaths = hdfsStorePaths;
-  }
-  
-  @XmlElement
-  public String getInputFormat() {
-    return inputFormat;
-  }
-  
-  public void setInputFormat(String inputFormat) {
-    this.inputFormat = inputFormat;
-  }
-  
-  @XmlElement
-  public HiveTableType getHiveTableType() {
-    return hiveTableType;
-  }
-  
-  public void setHiveTableType(HiveTableType hiveTableType) {
-    this.hiveTableType = hiveTableType;
-  }
-  
   public FeaturegroupType getFeaturegroupType() {
     return featuregroupType;
   }
@@ -94,24 +62,13 @@ public class FeaturegroupDTO extends FeaturestoreEntityDTO {
   public void setFeaturegroupType(FeaturegroupType featuregroupType) {
     this.featuregroupType = featuregroupType;
   }
-  
-  public FeaturestoreExternalSQLQueryDTO getFeaturestoreExternalSQLQuery() {
-    return featurestoreExternalSQLQuery;
-  }
-  
-  public void setFeaturestoreExternalSQLQuery(
-    FeaturestoreExternalSQLQueryDTO featurestoreExternalSQLQuery) {
-    this.featurestoreExternalSQLQuery = featurestoreExternalSQLQuery;
-  }
-  
+
   @Override
   public String toString() {
     return "FeaturegroupDTO{" +
-      "hdfsStorePaths=" + hdfsStorePaths +
-      ", inputFormat='" + inputFormat + '\'' +
-      ", hiveTableType=" + hiveTableType +
-      ", featuregroupType=" + featuregroupType +
-      ", featurestoreExternalSQLQuery=" + featurestoreExternalSQLQuery +
-      '}';
+        "featuregroupType=" + featuregroupType +
+        '}';
   }
+
+
 }

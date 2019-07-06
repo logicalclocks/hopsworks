@@ -16,7 +16,7 @@
 
 package io.hops.hopsworks.common.dao.featurestore.feature;
 
-import io.hops.hopsworks.common.dao.featurestore.storageconnector.external_sql_query.FeaturestoreExternalSQLQuery;
+import io.hops.hopsworks.common.dao.featurestore.featuregroup.on_demand_featuregroup.OnDemandFeaturegroup;
 import io.hops.hopsworks.common.dao.featurestore.trainingdataset.TrainingDataset;
 
 import javax.persistence.Basic;
@@ -52,8 +52,8 @@ public class FeaturestoreFeature implements Serializable {
   private Integer id;
   @JoinColumn(name = "training_dataset_id", referencedColumnName = "id")
   private TrainingDataset trainingDataset;
-  @JoinColumn(name = "feature_store_external_sql_query_id", referencedColumnName = "id")
-  private FeaturestoreExternalSQLQuery featurestoreExternalSQLQuery;
+  @JoinColumn(name = "on_demand_feature_group_id", referencedColumnName = "id")
+  private OnDemandFeaturegroup onDemandFeaturegroup;
   @Basic(optional = false)
   @Column(name = "description")
   private String description;
@@ -118,16 +118,15 @@ public class FeaturestoreFeature implements Serializable {
   public void setPrimary(int primary) {
     this.primary = primary;
   }
-  
-  public FeaturestoreExternalSQLQuery getFeaturestoreExternalSQLQuery() {
-    return featurestoreExternalSQLQuery;
+
+  public OnDemandFeaturegroup getOnDemandFeaturegroup() {
+    return onDemandFeaturegroup;
   }
-  
-  public void setFeaturestoreExternalSQLQuery(
-    FeaturestoreExternalSQLQuery featurestoreExternalSQLQuery) {
-    this.featurestoreExternalSQLQuery = featurestoreExternalSQLQuery;
+
+  public void setOnDemandFeaturegroup(OnDemandFeaturegroup onDemandFeaturegroup) {
+    this.onDemandFeaturegroup = onDemandFeaturegroup;
   }
-  
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
@@ -138,7 +137,7 @@ public class FeaturestoreFeature implements Serializable {
     if (primary != that.primary) return false;
     if (!id.equals(that.id)) return false;
     if (!trainingDataset.equals(that.trainingDataset)) return false;
-    if (!featurestoreExternalSQLQuery.equals(that.featurestoreExternalSQLQuery)) return false;
+    if (!onDemandFeaturegroup.equals(that.onDemandFeaturegroup)) return false;
     if (!description.equals(that.description)) return false;
     if (!name.equals(that.name)) return false;
     return type.equals(that.type);
@@ -148,7 +147,7 @@ public class FeaturestoreFeature implements Serializable {
   public int hashCode() {
     int result = id.hashCode();
     result = 31 * result + trainingDataset.hashCode();
-    result = 31 * result + featurestoreExternalSQLQuery.hashCode();
+    result = 31 * result + onDemandFeaturegroup.hashCode();
     result = 31 * result + description.hashCode();
     result = 31 * result + name.hashCode();
     result = 31 * result + type.hashCode();

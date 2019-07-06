@@ -16,7 +16,7 @@
 
 package io.hops.hopsworks.common.dao.featurestore.feature;
 
-import io.hops.hopsworks.common.dao.featurestore.storageconnector.external_sql_query.FeaturestoreExternalSQLQuery;
+import io.hops.hopsworks.common.dao.featurestore.featuregroup.on_demand_featuregroup.OnDemandFeaturegroup;
 import io.hops.hopsworks.common.dao.featurestore.trainingdataset.TrainingDataset;
 
 import javax.ejb.EJB;
@@ -92,47 +92,47 @@ public class FeaturestoreFeatureController {
   
   
   /**
-   * Updates the features of an external Feature Group, first deletes all existing features for the external Feature
+   * Updates the features of an on-demand Feature Group, first deletes all existing features for the on-demand Feature
    * Group and then insert the new ones.
    *
-   * @param featurestoreExternalSQLQuery the external feature group to update
+   * @param onDemandFeaturegroup the on-demand featuregroup to update
    * @param features the new features
    */
-  public void updateExternalFgFeatures(
-    FeaturestoreExternalSQLQuery featurestoreExternalSQLQuery, List<FeatureDTO> features) {
+  public void updateOnDemandFeaturegroupFeatures(
+      OnDemandFeaturegroup onDemandFeaturegroup, List<FeatureDTO> features) {
     if(features == null) {
       return;
     }
-    removeFeatures((List) featurestoreExternalSQLQuery.getFeatures());
-    insertExternalFeaturegroupFeatures(featurestoreExternalSQLQuery, features);
+    removeFeatures((List) onDemandFeaturegroup.getFeatures());
+    insertOnDemandFeaturegroupFeatures(onDemandFeaturegroup, features);
   }
   
   /**
    * Inserts a list of features into the database
    *
-   * @param featurestoreExternalSQLQuery the traning dataset that the features are linked to
+   * @param onDemandFeaturegroup the on-demand feature group that the features are linked to
    * @param features the list of features to insert
    */
-  private void insertExternalFeaturegroupFeatures(
-    FeaturestoreExternalSQLQuery featurestoreExternalSQLQuery, List<FeatureDTO> features) {
-    List<FeaturestoreFeature> featurestoreFeatures = convertFeaturesToExternalFeaturegroupFeatures(
-      featurestoreExternalSQLQuery, features);
+  private void insertOnDemandFeaturegroupFeatures(
+    OnDemandFeaturegroup onDemandFeaturegroup, List<FeatureDTO> features) {
+    List<FeaturestoreFeature> featurestoreFeatures = convertFeaturesToOnDemandFeaturegroupFeatures(
+      onDemandFeaturegroup, features);
     featurestoreFeatures.forEach(tdf -> featurestoreFeatureFacade.persist(tdf));
   }
   
   /**
    * Utility method that converts a list of featureDTOs to FeaturestoreFeature entities
    *
-   * @param featurestoreExternalSQLQuery the external featuregroup that the features are linked to
+   * @param onDemandFeaturegroup the on-demand featuregroup that the features are linked to
    * @param features the list of feature DTOs to convert
    * @return a list of FeaturestoreFeature entities
    */
-  private List<FeaturestoreFeature> convertFeaturesToExternalFeaturegroupFeatures(
-    FeaturestoreExternalSQLQuery featurestoreExternalSQLQuery, List<FeatureDTO> features) {
+  private List<FeaturestoreFeature> convertFeaturesToOnDemandFeaturegroupFeatures(
+    OnDemandFeaturegroup onDemandFeaturegroup, List<FeatureDTO> features) {
     return features.stream().map(f -> {
       FeaturestoreFeature featurestoreFeature = new FeaturestoreFeature();
       featurestoreFeature.setName(f.getName());
-      featurestoreFeature.setFeaturestoreExternalSQLQuery(featurestoreExternalSQLQuery);
+      featurestoreFeature.setOnDemandFeaturegroup(onDemandFeaturegroup);
       featurestoreFeature.setDescription(f.getDescription());
       featurestoreFeature.setPrimary(f.getPrimary()? 1 : 0);
       featurestoreFeature.setType(f.getType());

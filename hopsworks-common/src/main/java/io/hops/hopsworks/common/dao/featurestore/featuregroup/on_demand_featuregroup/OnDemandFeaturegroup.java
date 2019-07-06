@@ -14,46 +14,49 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.common.dao.featurestore.storageconnector.external_sql_query;
+package io.hops.hopsworks.common.dao.featurestore.featuregroup.on_demand_featuregroup;
 
 import io.hops.hopsworks.common.dao.featurestore.feature.FeaturestoreFeature;
+import io.hops.hopsworks.common.dao.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.common.dao.featurestore.storageconnector.jdbc.FeaturestoreJdbcConnector;
 
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.MapsId;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
 import java.util.Collection;
 
 /**
- * Entity class representing the feature_store_external_sql_query table in Hopsworks database.
+ * Entity class representing the on_demand_feature_group table in Hopsworks database.
  * An instance of this class represents a row in the database.
  */
 @Entity
-@Table(name = "feature_store_external_sql_query", catalog = "hopsworks")
+@Table(name = "on_demand_feature_group", catalog = "hopsworks")
 @XmlRootElement
 @NamedQueries({
-    @NamedQuery(name = "FeaturestoreExternalSQLQuery.findAll", query = "SELECT fsq FROM " +
-      "FeaturestoreExternalSQLQuery fsq"),
-    @NamedQuery(name = "FeaturestoreExternalSQLQuery.findById",
-        query = "SELECT fsq FROM FeaturestoreExternalSQLQuery fsq WHERE fsq.id = :id")})
-public class FeaturestoreExternalSQLQuery implements Serializable {
+    @NamedQuery(name = "OnDemandFeaturegroup.findAll", query = "SELECT onDmdFg FROM " +
+      "OnDemandFeaturegroup onDmdFg"),
+    @NamedQuery(name = "OnDemandFeaturegroup.findById",
+        query = "SELECT onDmdFg FROM OnDemandFeaturegroup onDmdFg WHERE onDmdFg.id = :id")})
+public class OnDemandFeaturegroup implements Serializable {
   private static final long serialVersionUID = 1L;
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  @Basic(optional = false)
-  @Column(name = "id")
+  @Column(name = "feature_group_id")
   private Integer id;
+  @MapsId
+  @OneToOne
+  @JoinColumn(name = "feature_group_id", referencedColumnName = "id")
+  private Featuregroup featuregroup;
   @Basic(optional = false)
   @Column(name = "query")
   private String query;
@@ -64,19 +67,19 @@ public class FeaturestoreExternalSQLQuery implements Serializable {
   private String name;
   @JoinColumn(name = "jdbc_connector_id", referencedColumnName = "id")
   private FeaturestoreJdbcConnector featurestoreJdbcConnector;
-  @OneToMany(cascade = CascadeType.ALL, mappedBy = "featurestoreExternalSQLQuery")
+  @OneToMany(cascade = CascadeType.ALL, mappedBy = "onDemandFeaturegroup")
   private Collection<FeaturestoreFeature> features;
+
+  public Featuregroup getFeaturegroup() {
+    return featuregroup;
+  }
+
+  public void setFeaturegroup(Featuregroup featuregroup) {
+    this.featuregroup = featuregroup;
+  }
 
   public static long getSerialVersionUID() {
     return serialVersionUID;
-  }
-
-  public Integer getId() {
-    return id;
-  }
-
-  public void setId(Integer id) {
-    this.id = id;
   }
   
   public String getQuery() {
@@ -119,19 +122,23 @@ public class FeaturestoreExternalSQLQuery implements Serializable {
   public void setFeatures(Collection<FeaturestoreFeature> features) {
     this.features = features;
   }
-  
+
+  public Integer getId() {
+    return id;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
       return true;
     }
-    if (!(o instanceof FeaturestoreExternalSQLQuery)) {
+    if (!(o instanceof OnDemandFeaturegroup)) {
       return false;
     }
+
+    OnDemandFeaturegroup that = (OnDemandFeaturegroup) o;
     
-    FeaturestoreExternalSQLQuery that = (FeaturestoreExternalSQLQuery) o;
-    
-    if (!id.equals(that.id)) {
+    if (!featuregroup.equals(that.featuregroup)) {
       return false;
     }
     if (!query.equals(that.query)) {
@@ -150,7 +157,7 @@ public class FeaturestoreExternalSQLQuery implements Serializable {
   
   @Override
   public int hashCode() {
-    int result = id.hashCode();
+    int result = featuregroup.hashCode();
     result = 31 * result + query.hashCode();
     result = 31 * result + description.hashCode();
     result = 31 * result + name.hashCode();

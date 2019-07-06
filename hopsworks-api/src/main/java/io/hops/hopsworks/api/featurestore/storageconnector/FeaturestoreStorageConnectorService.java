@@ -16,7 +16,6 @@
 
 package io.hops.hopsworks.api.featurestore.storageconnector;
 
-import io.hops.hopsworks.api.featurestore.FeaturestoreService;
 import io.hops.hopsworks.api.featurestore.util.FeaturestoreUtil;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
@@ -82,7 +81,7 @@ public class FeaturestoreStorageConnectorService {
 
   private Project project;
   private Featurestore featurestore;
-  private static final Logger LOGGER = Logger.getLogger(FeaturestoreService.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(FeaturestoreStorageConnectorService.class.getName());
 
   /**
    * Set the project of the featurestore (provided by parent resource)

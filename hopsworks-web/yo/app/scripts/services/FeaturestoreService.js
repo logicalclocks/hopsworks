@@ -237,10 +237,24 @@ angular.module('hopsWorksApp')
                 },
 
                 /**
-                 * @returns jdbc connector DTO type string
+                 * @returns hopsfs connector DTO type string
                  */
                 hopsfsConnectorDTO: function() {
                     return "featurestoreHopsfsConnectorDTO";
+                },
+
+                /**
+                 * @returns cachedFeaturegroupDTO connector DTO type string
+                 */
+                cachedFeaturegroupDTO: function() {
+                    return "cachedFeaturegroupDTO";
+                },
+
+                /**
+                 * @returns onDemandFeaturegroupDTO connector DTO type string
+                 */
+                onDemandFeaturegroupDTO: function() {
+                    return "onDemandFeaturegroupDTO";
                 },
 
                 /**

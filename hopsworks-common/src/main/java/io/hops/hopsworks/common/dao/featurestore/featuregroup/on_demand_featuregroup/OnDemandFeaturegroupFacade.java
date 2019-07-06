@@ -14,7 +14,7 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.common.dao.featurestore.storageconnector.external_sql_query;
+package io.hops.hopsworks.common.dao.featurestore.featuregroup.on_demand_featuregroup;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.featurestore.storageconnector.jdbc.FeaturestoreJdbcConnector;
@@ -29,55 +29,55 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * A facade for the feature_store_external_sql_query table in the Hopsworks database,
+ * A facade for the on_demand_feature_group table in the Hopsworks database,
  * use this interface when performing database operations against the table.
  */
 @Stateless
-public class FeaturestoreExternalSQLQueryFacade extends AbstractFacade<FeaturestoreExternalSQLQuery> {
+public class OnDemandFeaturegroupFacade extends AbstractFacade<OnDemandFeaturegroup> {
   private static final Logger LOGGER = Logger.getLogger(
-    FeaturestoreExternalSQLQueryFacade.class.getName());
+    OnDemandFeaturegroupFacade.class.getName());
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
-  public FeaturestoreExternalSQLQueryFacade() {
-    super(FeaturestoreExternalSQLQuery.class);
+  public OnDemandFeaturegroupFacade() {
+    super(OnDemandFeaturegroup.class);
   }
 
   /**
-   * A transaction to persist an external SQL query for the featurestore in the database
+   * A transaction to persist an on-demand featuregroup for the featurestore in the database
    *
-   * @param featurestoreExternalSQLQuery the featurestore JDBC connection to persist
+   * @param onDemandFeaturegroup the on-demand featuregroup to persist
    */
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  public void persist(FeaturestoreExternalSQLQuery featurestoreExternalSQLQuery) {
+  public void persist(OnDemandFeaturegroup onDemandFeaturegroup) {
     try {
-      em.persist(featurestoreExternalSQLQuery);
+      em.persist(onDemandFeaturegroup);
       em.flush();
     } catch (ConstraintViolationException cve) {
-      LOGGER.log(Level.WARNING, "Could not persist the new external SQL query", cve);
+      LOGGER.log(Level.WARNING, "Could not persist the new on demand feature group", cve);
       throw cve;
     }
   }
   
   /**
-   * Updates an existing Featurestore External SQL Query
+   * Updates an existing On Demand Feature Group
    *
-   * @param featurestoreExternalSQLQuery the entity to update
+   * @param onDemandFeaturegroup the entity to update
    * @param featuregroupName the new name
    * @param description the new description
    * @param jdbcConnector the new JDBC connector
    * @param sqlQuery the new SQL query
    * @return the updated entity
    */
-  public FeaturestoreExternalSQLQuery updateMetadata(FeaturestoreExternalSQLQuery featurestoreExternalSQLQuery,
+  public OnDemandFeaturegroup updateMetadata(OnDemandFeaturegroup onDemandFeaturegroup,
     String featuregroupName, String description, FeaturestoreJdbcConnector jdbcConnector,
     String sqlQuery) {
-    featurestoreExternalSQLQuery.setName(featuregroupName);
-    featurestoreExternalSQLQuery.setDescription(description);
-    featurestoreExternalSQLQuery.setFeaturestoreJdbcConnector(jdbcConnector);
-    featurestoreExternalSQLQuery.setQuery(sqlQuery);
-    em.merge(featurestoreExternalSQLQuery);
-    return featurestoreExternalSQLQuery;
+    onDemandFeaturegroup.setName(featuregroupName);
+    onDemandFeaturegroup.setDescription(description);
+    onDemandFeaturegroup.setFeaturestoreJdbcConnector(jdbcConnector);
+    onDemandFeaturegroup.setQuery(sqlQuery);
+    em.merge(onDemandFeaturegroup);
+    return onDemandFeaturegroup;
   }
 
   /**

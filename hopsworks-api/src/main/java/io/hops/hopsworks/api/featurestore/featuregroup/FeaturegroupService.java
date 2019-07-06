@@ -16,8 +16,6 @@
 
 package io.hops.hopsworks.api.featurestore.featuregroup;
 
-import io.hops.hopsworks.api.featurestore.FeaturestoreService;
-import io.hops.hopsworks.api.featurestore.featuregroup.json.FeaturegroupJsonDTO;
 import io.hops.hopsworks.api.featurestore.util.FeaturestoreUtil;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
@@ -28,15 +26,12 @@ import io.hops.hopsworks.common.dao.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.dao.featurestore.FeaturestoreDTO;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.FeaturegroupDTO;
-import io.hops.hopsworks.common.dao.featurestore.featuregroup.FeaturegroupType;
-import io.hops.hopsworks.common.dao.featurestore.featuregroup.RowValueQueryResult;
+import io.hops.hopsworks.common.dao.featurestore.featuregroup.cached_featuregroup.RowValueQueryResult;
 import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
-import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFlag;
-import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
@@ -57,6 +52,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
@@ -93,7 +89,7 @@ public class FeaturegroupService {
 
   private Project project;
   private Featurestore featurestore;
-  private static final Logger LOGGER = Logger.getLogger(FeaturestoreService.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(FeaturegroupService.class.getName());
 
   /**
    * Set the project of the featurestore (provided by parent resource)
@@ -139,7 +135,7 @@ public class FeaturegroupService {
   /**
    * Endpoint for creating a new featuregroup in a featurestore
    *
-   * @param featuregroupJsonDTO JSON payload for the new featuregroup
+   * @param featuregroupDTO JSON payload for the new featuregroup
    * @return JSON information about the created featuregroup
    * @throws FeaturestoreException
    * @throws HopsSecurityException
@@ -151,43 +147,12 @@ public class FeaturegroupService {
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Create feature group in a featurestore",
       response = FeaturegroupDTO.class)
-  public Response createFeaturegroup(@Context SecurityContext sc, FeaturegroupJsonDTO featuregroupJsonDTO)
+  public Response createFeaturegroup(@Context SecurityContext sc, FeaturegroupDTO featuregroupDTO)
       throws FeaturestoreException, HopsSecurityException {
-    if (featuregroupJsonDTO.getFeatureCorrelationMatrix() != null &&
-        featuregroupJsonDTO.getFeatureCorrelationMatrix().getFeatureCorrelations().size() >
-            Settings.HOPS_FEATURESTORE_STATISTICS_MAX_CORRELATIONS) {
-      throw new IllegalArgumentException(
-          RESTCodes.FeaturestoreErrorCode.CORRELATION_MATRIX_EXCEED_MAX_SIZE.getMessage());
-    }
     Users user = jWTHelper.getUserPrincipal(sc);
-    Jobs job = null;
-    if (featuregroupJsonDTO.getJobName() != null) {
-      job = jobFacade.findByProjectAndName(project, featuregroupJsonDTO.getJobName());
-    }
     try {
-      featuregroupController.deleteFeaturegroupIfExists(featurestore, null, project, user,
-          featuregroupJsonDTO.getName(), featuregroupJsonDTO.getVersion());
-      FeaturegroupDTO featuregroupDTO = null;
-      if(featuregroupJsonDTO.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP){
-        featuregroupController.verifyCachedFeaturegroupUserInput(featuregroupJsonDTO.getName(),
-            featuregroupJsonDTO.getDescription(), featuregroupJsonDTO.getFeatures());
-        String featureStr = featurestoreUtil.makeCreateTableColumnsStr(featuregroupJsonDTO.getFeatures(),
-            featuregroupJsonDTO.getDescription());
-        featuregroupDTO = featuregroupController.createCachedFeaturegroup(project, user, featurestore,
-            featuregroupJsonDTO.getName(), featureStr, job, featuregroupJsonDTO.getVersion(),
-            featuregroupJsonDTO.getFeatureCorrelationMatrix(), featuregroupJsonDTO.getDescriptiveStatistics(),
-            featuregroupJsonDTO.getFeaturesHistogram(), featuregroupJsonDTO.getClusterAnalysis());
-      } else {
-        featuregroupController.verifyOnDemandFeaturegroupUserInput(featuregroupJsonDTO.getName(),
-            featuregroupJsonDTO.getDescription(), featuregroupJsonDTO.getJdbcConnectorId(),
-            featuregroupJsonDTO.getSqlQuery(), featuregroupJsonDTO.getFeatures());
-        featuregroupDTO = featuregroupController.createOnDemandFeaturegroup(project, user, featurestore,
-            featuregroupJsonDTO.getName(), featuregroupJsonDTO.getFeatures(), job, featuregroupJsonDTO.getVersion(),
-            featuregroupJsonDTO.getFeatureCorrelationMatrix(), featuregroupJsonDTO.getDescriptiveStatistics(),
-            featuregroupJsonDTO.getFeaturesHistogram(), featuregroupJsonDTO.getClusterAnalysis(),
-            featuregroupJsonDTO.getJdbcConnectorId(), featuregroupJsonDTO.getSqlQuery(),
-            featuregroupJsonDTO.getDescription());
-      }
+      featuregroupController.deleteFeaturegroupIfExists(featurestore, featuregroupDTO, user);
+      featuregroupController.createFeaturegroup(featurestore, featuregroupDTO, user);
       activityFacade.persistActivity(ActivityFacade.CREATED_FEATUREGROUP + featuregroupDTO.getName(),
           project, user, ActivityFlag.SERVICE);
       GenericEntity<FeaturegroupDTO> featuregroupGeneric =
@@ -253,8 +218,10 @@ public class FeaturegroupService {
         featuregroupId);
     featurestoreUtil.verifyUserRole(featuregroupDTO, featurestore, user, project);
     try {
+      featuregroupDTO = new FeaturegroupDTO();
+      featuregroupDTO.setId(featuregroupId);
       featuregroupDTO = featuregroupController.
-          deleteFeaturegroupIfExists(featurestore, featuregroupId, project, user, null, null);
+          deleteFeaturegroupIfExists(featurestore, featuregroupDTO, user);
       activityFacade.persistActivity(ActivityFacade.DELETED_FEATUREGROUP + featuregroupDTO.getName(),
           project, user, ActivityFlag.SERVICE);
       GenericEntity<FeaturegroupDTO> featuregroupGeneric =
@@ -295,7 +262,7 @@ public class FeaturegroupService {
       FeaturegroupDTO featuregroupDTO =
           featuregroupController.getFeaturegroupWithIdAndFeaturestore(featurestore, featuregroupId);
       List<RowValueQueryResult> featuresPreview =
-          featuregroupController.getFeaturegroupPreview(featuregroupDTO, featurestore, project, user);
+          featuregroupController.getFeaturegroupPreview(featuregroupDTO, featurestore, user);
       GenericEntity<List<RowValueQueryResult>> featuresdataGeneric =
           new GenericEntity<List<RowValueQueryResult>>(featuresPreview) {};
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featuresdataGeneric).build();
@@ -334,10 +301,8 @@ public class FeaturegroupService {
     try {
       FeaturegroupDTO featuregroupDTO =
           featuregroupController.getFeaturegroupWithIdAndFeaturestore(featurestore, featuregroupId);
-      RowValueQueryResult schema =
-          featuregroupController.getSchema(featuregroupDTO, project, user, featurestore);
-      GenericEntity<RowValueQueryResult> schemaGeneric =
-          new GenericEntity<RowValueQueryResult>(schema) {};
+      RowValueQueryResult schema = featuregroupController.getDDLSchema(featuregroupDTO, user, featurestore);
+      GenericEntity<RowValueQueryResult> schemaGeneric = new GenericEntity<RowValueQueryResult>(schema) {};
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(schemaGeneric).build();
     } catch (SQLException e) {
       LOGGER.log(Level.SEVERE,
@@ -381,39 +346,15 @@ public class FeaturegroupService {
     //Verify that the user has the data-owner role or is the creator of the featuregroup
     FeaturegroupDTO oldFeaturegroupDTO = featuregroupController.getFeaturegroupWithIdAndFeaturestore(featurestore,
         featuregroupId);
-    if(oldFeaturegroupDTO.getFeaturegroupType() == FeaturegroupType.ON_DEMAND_FEATURE_GROUP){
-      throw new FeaturestoreException(
-          RESTCodes.FeaturestoreErrorCode.CLEAR_OPERATION_NOT_SUPPORTED_FOR_ON_DEMAND_FEATUREGROUPS,
-          Level.FINE, "featuregroupId: " + featuregroupId);
-    }
     featurestoreUtil.verifyUserRole(oldFeaturegroupDTO, featurestore, user, project);
-    Jobs job = null;
-    if (oldFeaturegroupDTO.getJobId() != null) {
-      job = jobFacade.findByProjectAndId(project, oldFeaturegroupDTO.getJobId());
-    }
-    String featureStr = featurestoreUtil.makeCreateTableColumnsStr(oldFeaturegroupDTO.getFeatures(),
-        oldFeaturegroupDTO.getDescription());
     try {
-      featuregroupController.deleteFeaturegroupIfExists(featurestore, featuregroupId, project,
-          user, null, null);
-    } catch (SQLException e) {
-      LOGGER.log(Level.SEVERE, RESTCodes.FeaturestoreErrorCode.COULD_NOT_DELETE_FEATUREGROUP.getMessage(), e);
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_DELETE_FEATUREGROUP, Level.SEVERE,
-          "project: " + project.getName() + ", featurestoreId: " + featurestore.getId() +
-              ", featuregroupId: " + featuregroupId, e.getMessage(), e);
-    }
-    try {
-      FeaturegroupDTO newFeaturegroupDTO = featuregroupController.createCachedFeaturegroup(project, user, featurestore,
-          oldFeaturegroupDTO.getName(), featureStr,
-          job, oldFeaturegroupDTO.getVersion(), oldFeaturegroupDTO.getFeatureCorrelationMatrix(),
-          oldFeaturegroupDTO.getDescriptiveStatistics(), oldFeaturegroupDTO.getFeaturesHistogram(),
-          oldFeaturegroupDTO.getClusterAnalysis());
-      GenericEntity<FeaturegroupDTO> featuregroupGeneric =
-          new GenericEntity<FeaturegroupDTO>(newFeaturegroupDTO) {};
+      FeaturegroupDTO newFeaturegroupDTO = featuregroupController.clearFeaturegroup(featurestore, oldFeaturegroupDTO,
+          user);
+      GenericEntity<FeaturegroupDTO> featuregroupGeneric = new GenericEntity<FeaturegroupDTO>(newFeaturegroupDTO) {};
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featuregroupGeneric).build();
     } catch (SQLException e) {
-      LOGGER.log(Level.SEVERE, RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATUREGROUP.getMessage(), e);
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATUREGROUP, Level.SEVERE,
+      LOGGER.log(Level.SEVERE, RESTCodes.FeaturestoreErrorCode.COULD_NOT_CLEAR_FEATUREGROUP.getMessage(), e);
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CLEAR_FEATUREGROUP, Level.SEVERE,
           "project: " + project.getName() + ", featurestoreId: " + featurestore.getId() +
               ", featuregroupId: " + featuregroupId, e.getMessage(), e);
     }
@@ -424,7 +365,7 @@ public class FeaturegroupService {
    * Since the schema is not changed, the data does not need to be dropped.
    *
    * @param featuregroupId id of the featuregroup to update
-   * @param featuregroupJsonDTO updated metadata
+   * @param featuregroupDTO updated metadata
    * @return JSON representation of the updated featuregroup
    * @throws FeaturestoreException
    */
@@ -436,39 +377,31 @@ public class FeaturegroupService {
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Update featuregroup contents",
       response = FeaturegroupDTO.class)
-  public Response updateFeaturegroupMetadata(
+  public Response updateFeaturegroup(
       @Context SecurityContext sc, @ApiParam(value = "Id of the featuregroup", required = true)
-      @PathParam("featuregroupId") Integer featuregroupId, FeaturegroupJsonDTO featuregroupJsonDTO)
+      @PathParam("featuregroupId") Integer featuregroupId,
+      @ApiParam(value = "updateMetadata", example = "true", required = true)  @QueryParam("updateMetadata")
+          Boolean updateMetadata, @ApiParam(value = "updateStats", example = "true", required = true)
+      @QueryParam("updateStats") Boolean updateStats, FeaturegroupDTO featuregroupDTO)
       throws FeaturestoreException {
     if (featuregroupId == null) {
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_ID_NOT_PROVIDED.getMessage());
     }
-    if (featuregroupJsonDTO.isUpdateStats() &&
-        featuregroupJsonDTO.getFeatureCorrelationMatrix() != null &&
-        featuregroupJsonDTO.getFeatureCorrelationMatrix().getFeatureCorrelations().size() >
-            Settings.HOPS_FEATURESTORE_STATISTICS_MAX_CORRELATIONS) {
-      throw new IllegalArgumentException(
-          RESTCodes.FeaturestoreErrorCode.CORRELATION_MATRIX_EXCEED_MAX_SIZE.getMessage());
-    }
     Users user = jWTHelper.getUserPrincipal(sc);
-    FeaturegroupDTO featuregroupDTO = featuregroupController.getFeaturegroupWithIdAndFeaturestore(featurestore,
+    FeaturegroupDTO oldFeaturegroupDTO = featuregroupController.getFeaturegroupWithIdAndFeaturestore(featurestore,
         featuregroupId);
-    featurestoreUtil.verifyUserRole(featuregroupDTO, featurestore, user, project);
-    Jobs job = null;
-    if (featuregroupJsonDTO.getJobName() != null && !featuregroupJsonDTO.getJobName().isEmpty()) {
-      job = jobFacade.findByProjectAndName(project, featuregroupJsonDTO.getJobName());
+    featurestoreUtil.verifyUserRole(oldFeaturegroupDTO, featurestore, user, project);
+    featuregroupDTO.setId(featuregroupId);
+    FeaturegroupDTO updatedFeaturegroupDTO = null;
+    if(updateMetadata) {
+      updatedFeaturegroupDTO = featuregroupController.updateFeaturegroupMetadata(featurestore, featuregroupDTO);
     }
-    FeaturegroupDTO updatedFeaturegroupDTO = featuregroupController.updateFeaturegroupMetadata(
-        featurestore, featuregroupId, job,
-        featuregroupJsonDTO.getFeatureCorrelationMatrix(), featuregroupJsonDTO.getDescriptiveStatistics(),
-        featuregroupJsonDTO.isUpdateMetadata(), featuregroupJsonDTO.isUpdateStats(),
-        featuregroupJsonDTO.getFeaturesHistogram(), featuregroupJsonDTO.getClusterAnalysis(),
-        featuregroupJsonDTO.getName(), featuregroupJsonDTO.getDescription(), featuregroupJsonDTO.getJdbcConnectorId(),
-        featuregroupJsonDTO.getSqlQuery(), featuregroupJsonDTO.getFeatures());
-    activityFacade.persistActivity(ActivityFacade.EDITED_FEATUREGROUP +
-        updatedFeaturegroupDTO.getName(), project, user, ActivityFlag.SERVICE);
-    GenericEntity<FeaturegroupDTO> featuregroupGeneric =
-        new GenericEntity<FeaturegroupDTO>(updatedFeaturegroupDTO) {};
+    if(updateStats){
+      updatedFeaturegroupDTO = featuregroupController.updateFeaturegroupStats(featurestore, featuregroupDTO);
+    }
+    activityFacade.persistActivity(ActivityFacade.EDITED_FEATUREGROUP + updatedFeaturegroupDTO.getName(),
+        project, user, ActivityFlag.SERVICE);
+    GenericEntity<FeaturegroupDTO> featuregroupGeneric = new GenericEntity<FeaturegroupDTO>(updatedFeaturegroupDTO) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featuregroupGeneric).build();
   }
 }

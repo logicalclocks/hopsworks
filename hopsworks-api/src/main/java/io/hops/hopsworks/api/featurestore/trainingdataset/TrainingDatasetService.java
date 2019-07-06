@@ -16,7 +16,6 @@
 
 package io.hops.hopsworks.api.featurestore.trainingdataset;
 
-import io.hops.hopsworks.api.featurestore.FeaturestoreService;
 import io.hops.hopsworks.api.featurestore.trainingdataset.json.TrainingDatasetJsonDTO;
 import io.hops.hopsworks.api.featurestore.util.FeaturestoreUtil;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
@@ -99,7 +98,7 @@ public class TrainingDatasetService {
 
   private Project project;
   private Featurestore featurestore;
-  private static final Logger LOGGER = Logger.getLogger(FeaturestoreService.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(TrainingDatasetService.class.getName());
 
   /**
    * Set the project of the featurestore (provided by parent resource)
@@ -239,7 +238,7 @@ public class TrainingDatasetService {
    * @throws ProjectException
    */
   @DELETE
-  @Path("/{featurestoreId}/trainingdatasets/{trainingdatasetid}")
+  @Path("/{trainingdatasetid}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
@@ -279,7 +278,7 @@ public class TrainingDatasetService {
    * @throws ProjectException
    */
   @PUT
-  @Path("/{featurestoreId}/trainingdatasets/{trainingdatasetid}")
+  @Path("/{trainingdatasetid}")
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})

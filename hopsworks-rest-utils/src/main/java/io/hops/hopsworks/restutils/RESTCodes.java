@@ -1283,7 +1283,11 @@ public class RESTCodes {
     INVALID_SQL_QUERY(44, "Invalid SQL query", Response.Status.BAD_REQUEST),
     S3_CONNECTOR_NOT_FOUND(45, "S3 Connector not found", Response.Status.BAD_REQUEST),
     HOPSFS_CONNECTOR_NOT_FOUND(46, "HopsFs Connector not found", Response.Status.BAD_REQUEST),
-    STORAGE_CONNECTOR_TYPE_NOT_PROVIDED(47, "Storage Connector Type was not provided", Response.Status.BAD_REQUEST);
+    STORAGE_CONNECTOR_TYPE_NOT_PROVIDED(47, "Storage Connector Type was not provided", Response.Status.BAD_REQUEST),
+    COULD_NOT_CLEAR_FEATUREGROUP(48, "Could not clear contents of feature group",
+        Response.Status.INTERNAL_SERVER_ERROR),
+    ILLEGAL_FEATUREGROUP_TYPE(49, "The provided feature group type was not recognized",
+        Response.Status.BAD_REQUEST);
     
     
     private int code;

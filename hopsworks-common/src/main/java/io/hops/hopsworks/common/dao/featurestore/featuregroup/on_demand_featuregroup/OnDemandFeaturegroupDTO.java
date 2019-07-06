@@ -14,15 +14,14 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.common.dao.featurestore.storageconnector.external_sql_query;
+package io.hops.hopsworks.common.dao.featurestore.featuregroup.on_demand_featuregroup;
 
 import io.hops.hopsworks.common.dao.featurestore.feature.FeatureDTO;
+import io.hops.hopsworks.common.dao.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.dao.featurestore.storageconnector.jdbc.FeaturestoreJdbcConnector;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
-import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -30,35 +29,32 @@ import java.util.stream.Collectors;
  * JSON or XML representation using jaxb.
  */
 @XmlRootElement
-@XmlType(propOrder = {"jdbcConnectorId", "jdbcConnectorName", "name", "description", "query", "id", "features"})
-public class FeaturestoreExternalSQLQueryDTO {
+public class OnDemandFeaturegroupDTO extends FeaturegroupDTO {
   
   private Integer jdbcConnectorId;
   private String jdbcConnectorName;
   private String name;
   private String description;
   private String query;
-  private Integer id;
-  private List<FeatureDTO> features;
   
-  public FeaturestoreExternalSQLQueryDTO() {
+  public OnDemandFeaturegroupDTO() {
+    super();
   }
   
-  public FeaturestoreExternalSQLQueryDTO(FeaturestoreExternalSQLQuery featurestoreExternalSQLQuery) {
-    if (featurestoreExternalSQLQuery.getFeaturestoreJdbcConnector() != null) {
-      FeaturestoreJdbcConnector featurestoreJdbcConnector = featurestoreExternalSQLQuery.getFeaturestoreJdbcConnector();
+  public OnDemandFeaturegroupDTO(OnDemandFeaturegroup onDemandFeaturegroup) {
+    super(onDemandFeaturegroup.getFeaturegroup());
+    if (onDemandFeaturegroup.getFeaturestoreJdbcConnector() != null) {
+      FeaturestoreJdbcConnector featurestoreJdbcConnector = onDemandFeaturegroup.getFeaturestoreJdbcConnector();
       this.jdbcConnectorId = featurestoreJdbcConnector.getId();
       this.jdbcConnectorName = featurestoreJdbcConnector.getName();
     }
-    this.name = featurestoreExternalSQLQuery.getName();
-    this.description = featurestoreExternalSQLQuery.getDescription();
-    this.query = featurestoreExternalSQLQuery.getQuery();
-    this.id = featurestoreExternalSQLQuery.getId();
-    this.features = featurestoreExternalSQLQuery.getFeatures().stream().map(fgFeature ->
-      new FeatureDTO(fgFeature.getName(), fgFeature.getType(), fgFeature.getDescription(),
-        new Boolean(fgFeature.getPrimary() == 1),
-        false))
-      .collect(Collectors.toList());
+    this.name = onDemandFeaturegroup.getName();
+    this.description = onDemandFeaturegroup.getDescription();
+    this.query = onDemandFeaturegroup.getQuery();
+    setFeatures(onDemandFeaturegroup.getFeatures().stream().map(fgFeature ->
+        new FeatureDTO(fgFeature.getName(), fgFeature.getType(), fgFeature.getDescription(),
+            new Boolean(fgFeature.getPrimary() == 1),
+            false)).collect(Collectors.toList()));
   }
   
   @XmlElement
@@ -98,24 +94,6 @@ public class FeaturestoreExternalSQLQueryDTO {
   }
   
   @XmlElement
-  public Integer getId() {
-    return id;
-  }
-  
-  public void setId(Integer id) {
-    this.id = id;
-  }
-  
-  @XmlElement
-  public List<FeatureDTO> getFeatures() {
-    return features;
-  }
-  
-  public void setFeatures(List<FeatureDTO> features) {
-    this.features = features;
-  }
-  
-  @XmlElement
   public String getJdbcConnectorName() {
     return jdbcConnectorName;
   }
@@ -123,17 +101,15 @@ public class FeaturestoreExternalSQLQueryDTO {
   public void setJdbcConnectorName(String jdbcConnectorName) {
     this.jdbcConnectorName = jdbcConnectorName;
   }
-  
+
   @Override
   public String toString() {
-    return "FeaturestoreExternalSQLQueryDTO{" +
-      "jdbcConnectorId=" + jdbcConnectorId +
-      ", jdbcConnectorName='" + jdbcConnectorName + '\'' +
-      ", name='" + name + '\'' +
-      ", description='" + description + '\'' +
-      ", query='" + query + '\'' +
-      ", id=" + id +
-      ", features=" + features +
-      '}';
+    return "OnDemandFeaturegroupDTO{" +
+        "jdbcConnectorId=" + jdbcConnectorId +
+        ", jdbcConnectorName='" + jdbcConnectorName + '\'' +
+        ", name='" + name + '\'' +
+        ", description='" + description + '\'' +
+        ", query='" + query + '\'' +
+        '}';
   }
 }

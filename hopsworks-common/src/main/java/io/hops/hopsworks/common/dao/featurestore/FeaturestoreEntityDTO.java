@@ -16,7 +16,11 @@
 
 package io.hops.hopsworks.common.dao.featurestore;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.hops.hopsworks.common.dao.featurestore.feature.FeatureDTO;
+import io.hops.hopsworks.common.dao.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.dao.featurestore.stats.FeaturestoreStatistic;
 import io.hops.hopsworks.common.dao.featurestore.stats.FeaturestoreStatisticType;
 import io.hops.hopsworks.common.dao.featurestore.stats.cluster_analysis.ClusterAnalysisDTO;
@@ -27,12 +31,14 @@ import io.hops.hopsworks.common.dao.featurestore.stats.feature_correlation.Featu
 import io.hops.hopsworks.common.dao.featurestore.stats.feature_correlation.FeatureCorrelationMatrixDTO;
 import io.hops.hopsworks.common.dao.featurestore.stats.feature_distributions.FeatureDistributionDTO;
 import io.hops.hopsworks.common.dao.featurestore.stats.feature_distributions.FeatureDistributionsDTO;
+import io.hops.hopsworks.common.dao.featurestore.trainingdataset.TrainingDatasetDTO;
 import io.hops.hopsworks.common.dao.jobhistory.Execution;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.user.Users;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlSeeAlso;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -47,6 +53,12 @@ import java.util.stream.Collectors;
  * and training dataset entities.
  */
 @XmlRootElement
+@XmlSeeAlso({FeaturegroupDTO.class, TrainingDatasetDTO.class})
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY)
+@JsonSubTypes({
+    @JsonSubTypes.Type(value = FeaturegroupDTO.class, name = "FeaturegroupDTO"),
+    @JsonSubTypes.Type(value = TrainingDatasetDTO.class, name = "TrainingDatasetDTO")})
 public abstract class FeaturestoreEntityDTO {
   private Integer featurestoreId;
   private String featurestoreName;
@@ -67,6 +79,9 @@ public abstract class FeaturestoreEntityDTO {
   private Integer id;
   private List<FeatureDTO> features;
   private String location;
+
+  public FeaturestoreEntityDTO() {
+  }
 
   public FeaturestoreEntityDTO(
       Integer featurestoreId, Date created,
@@ -316,7 +331,43 @@ public abstract class FeaturestoreEntityDTO {
     ClusterAnalysisDTO clusterAnalysis) {
     this.clusterAnalysis = clusterAnalysis;
   }
-  
+
+  public void setId(Integer id) {
+    this.id = id;
+  }
+
+  public void setFeaturestoreId(Integer featurestoreId) {
+    this.featurestoreId = featurestoreId;
+  }
+
+  public void setCreated(Date created) {
+    this.created = created;
+  }
+
+  public void setCreator(String creator) {
+    this.creator = creator;
+  }
+
+  public void setJobId(Integer jobId) {
+    this.jobId = jobId;
+  }
+
+  public void setJobName(String jobName) {
+    this.jobName = jobName;
+  }
+
+  public void setLastComputed(Date lastComputed) {
+    this.lastComputed = lastComputed;
+  }
+
+  public void setJobStatus(String jobStatus) {
+    this.jobStatus = jobStatus;
+  }
+
+  public void setVersion(Integer version) {
+    this.version = version;
+  }
+
   @Override
   public String toString() {
     return "FeaturestoreEntityDTO{" +

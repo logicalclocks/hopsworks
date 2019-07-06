@@ -36,7 +36,6 @@ public class TrainingDatasetDTO extends FeaturestoreEntityDTO {
   private Long size;
 
   public TrainingDatasetDTO() {
-    super(null, null, null, null, null, null, null);
   }
 
   public TrainingDatasetDTO(TrainingDataset trainingDataset) {

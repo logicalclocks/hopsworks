@@ -17,8 +17,9 @@
 package io.hops.hopsworks.common.dao.featurestore.featuregroup;
 
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
+import io.hops.hopsworks.common.dao.featurestore.featuregroup.cached_featuregroup.CachedFeaturegroup;
+import io.hops.hopsworks.common.dao.featurestore.featuregroup.on_demand_featuregroup.OnDemandFeaturegroup;
 import io.hops.hopsworks.common.dao.featurestore.stats.FeaturestoreStatistic;
-import io.hops.hopsworks.common.dao.featurestore.storageconnector.external_sql_query.FeaturestoreExternalSQLQuery;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.user.Users;
 
@@ -36,6 +37,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
+import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -96,8 +99,13 @@ public class Featuregroup implements Serializable {
   @Enumerated(EnumType.ORDINAL)
   @Column(name = "feature_group_type")
   private FeaturegroupType featuregroupType = FeaturegroupType.CACHED_FEATURE_GROUP;
-  @JoinColumn(name = "feature_store_external_sql_query_id", referencedColumnName = "id")
-  private FeaturestoreExternalSQLQuery featurestoreExternalSQLQuery;
+  @OneToOne(cascade = CascadeType.ALL)
+  @PrimaryKeyJoinColumn(name="id", referencedColumnName="feature_group_id")
+  private OnDemandFeaturegroup onDemandFeaturegroup;
+  @OneToOne(cascade = CascadeType.ALL)
+  @PrimaryKeyJoinColumn(name="id", referencedColumnName="feature_group_id")
+  private CachedFeaturegroup cachedFeaturegroup;
+
 
 
   public static long getSerialVersionUID() {
@@ -183,16 +191,23 @@ public class Featuregroup implements Serializable {
   public void setFeaturegroupType(FeaturegroupType featuregroupType) {
     this.featuregroupType = featuregroupType;
   }
-  
-  public FeaturestoreExternalSQLQuery getFeaturestoreExternalSQLQuery() {
-    return featurestoreExternalSQLQuery;
+
+  public OnDemandFeaturegroup getOnDemandFeaturegroup() {
+    return onDemandFeaturegroup;
   }
-  
-  public void setFeaturestoreExternalSQLQuery(
-    FeaturestoreExternalSQLQuery featurestoreExternalSQLQuery) {
-    this.featurestoreExternalSQLQuery = featurestoreExternalSQLQuery;
+
+  public void setOnDemandFeaturegroup(OnDemandFeaturegroup onDemandFeaturegroup) {
+    this.onDemandFeaturegroup = onDemandFeaturegroup;
   }
-  
+
+  public CachedFeaturegroup getCachedFeaturegroup() {
+    return cachedFeaturegroup;
+  }
+
+  public void setCachedFeaturegroup(CachedFeaturegroup cachedFeaturegroup) {
+    this.cachedFeaturegroup = cachedFeaturegroup;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
@@ -211,7 +226,6 @@ public class Featuregroup implements Serializable {
     if (created != null)
       if (!created.equals(that.created)) return false;
     if (!creator.equals(that.creator)) return false;
-    if (!featurestoreExternalSQLQuery.equals(that.featurestoreExternalSQLQuery)) return false;
     if (featuregroupType != null ? !featuregroupType.equals(that.featuregroupType) :
       that.featuregroupType != null) return false;
     return featurestore.equals(that.featurestore);
@@ -222,13 +236,11 @@ public class Featuregroup implements Serializable {
     int result = id != null ? id.hashCode() : 0;
     result = 31 * result + featurestore.hashCode();
     result = 31 * result + hdfsUserId.hashCode();
-    result = 31 * result + hiveTblId.hashCode();
     result = 31 * result + version.hashCode();
     result = 31 * result + (created != null ? created.hashCode() : 0);
     result = 31 * result + (job != null ? job.hashCode() : 0);
     result = 31 * result + creator.hashCode();
     result = 31 * result + (featuregroupType != null ? featuregroupType.hashCode() : 0);
-    result = 31 * result + featurestoreExternalSQLQuery.hashCode();
     return result;
   }
 }

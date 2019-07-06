@@ -31,7 +31,7 @@ angular.module('hopsWorksApp')
             self.projectName = StorageService.get("projectName");
             self.featuregroupOperation = StorageService.get("featuregroup_operation");
             self.featuregroup = StorageService.get(self.projectId + "_featuregroup");
-            self.storageConnectors = StorageService.get(self.projectId + "_featurestore_storageconnectors")
+            self.storageConnectors = StorageService.get(self.projectId + "_storageconnectors")
             self.jdbcConnectors = []
 
             //State
@@ -113,6 +113,8 @@ angular.module('hopsWorksApp')
             self.cachedFeaturegroupType = FeaturestoreService.cachedFeaturegroupType()
             self.onDemandFeaturegroupSqlQueryMaxLength = FeaturestoreService.onDemandFeaturegroupSqlQueryMaxLength()
             self.jdbcConnectorType = FeaturestoreService.jdbcConnectorType()
+            self.cachedFeaturegroupDTOType = FeaturestoreService.cachedFeaturegroupDTO()
+            self.onDemandFeaturegroupDTOType = FeaturestoreService.onDemandFeaturegroupDTO()
 
             //front-end variables
             self.cached_fg_accordion1 = {
@@ -282,7 +284,7 @@ angular.module('hopsWorksApp')
             self.preProcessConnectors = function () {
                 self.jdbcConnectors = []
                 for (var i = 0; i < self.storageConnectors.length; i++) {
-                    if(self.storageConnectors[i].type == self.jdbcConnectorType){
+                    if(self.storageConnectors[i].storageConnectorType == self.jdbcConnectorType){
                         var args = self.storageConnectors[i].arguments
                         args = args + ''
                         var argsList = args.split(",")
@@ -738,18 +740,13 @@ angular.module('hopsWorksApp')
                 }
                 var featuregroupJson = {
                     "name": self.onDemandFeaturegroupName,
-                    "jobName": null,
                     "description": self.onDemandFeaturegroupDoc,
                     "features": self.onDemandFeaturegroupFeatures,
                     "version": 1,
-                    "featureCorrelationMatrix": null,
-                    "descriptiveStatistics": null,
-                    "updateMetadata": false,
-                    "updateStats": false,
-                    "featuresHistogram": null,
                     "featuregroupType": self.onDemandFeaturegroupType,
                     "jdbcConnectorId": self.onDemandFeaturegroupjdbcConnection.id,
-                    "sqlQuery": self.onDemandSqlQuery
+                    "query": self.onDemandSqlQuery,
+                    "type": self.onDemandFeaturegroupDTOType
                 }
                 ModalService.confirm('sm', 'If a Feature Group with the same name and version already' +
                     ' exists in the Feature Store, it will be overridden.')
@@ -782,18 +779,13 @@ angular.module('hopsWorksApp')
 
                 var featuregroupJson = {
                     "name": self.onDemandFeaturegroupName,
-                    "jobName": null,
                     "description": self.onDemandFeaturegroupDoc,
                     "features": self.onDemandFeaturegroupFeatures,
                     "version": 1,
-                    "featureCorrelationMatrix": null,
-                    "descriptiveStatistics": null,
-                    "updateMetadata": false,
-                    "updateStats": false,
-                    "featuresHistogram": null,
                     "featuregroupType": self.onDemandFeaturegroupType,
                     "jdbcConnectorId": self.onDemandFeaturegroupjdbcConnection.id,
-                    "sqlQuery": self.onDemandSqlQuery
+                    "query": self.onDemandSqlQuery,
+                    "type": self.onDemandFeaturegroupDTOType
                 }
 
                 FeaturestoreService.updateFeaturegroupMetadata(self.projectId, self.featurestore, self.oldFeaturegroupId, featuregroupJson).then(
@@ -823,18 +815,11 @@ angular.module('hopsWorksApp')
                 }
                 var featuregroupJson = {
                     "name": self.cachedFeaturegroupName,
-                    "jobName": null,
                     "description": self.cachedFeaturegroupDoc,
                     "features": self.cachedFeaturegroupFeatures,
                     "version": self.version,
-                    "featureCorrelationMatrix": null,
-                    "descriptiveStatistics": null,
-                    "updateMetadata": false,
-                    "updateStats": false,
-                    "featuresHistogram": null,
                     "featuregroupType": self.cachedFeaturegroupType,
-                    "jdbcConnectorId": null,
-                    "sqlQuery": null
+                    "type": self.cachedFeaturegroupDTOType
                 }
                 ModalService.confirm('sm', 'This is a cached feature group, updating the feature group Hive' +
                     ' metadata' +
@@ -887,18 +872,11 @@ angular.module('hopsWorksApp')
                 }
                 var featuregroupJson = {
                     "name": self.cachedFeaturegroupName,
-                    "jobName": null,
                     "description": self.cachedFeaturegroupDoc,
                     "features": self.cachedFeaturegroupFeatures,
                     "version": 1,
-                    "featureCorrelationMatrix": null,
-                    "descriptiveStatistics": null,
-                    "updateMetadata": false,
-                    "updateStats": false,
-                    "featuresHistogram": null,
                     "featuregroupType": self.cachedFeaturegroupType,
-                    "jdbcConnectorId": null,
-                    "sqlQuery": null
+                    "type": self.cachedFeaturegroupDTOType
                 }
                 if (self.cachedSqlQuery != null && self.cachedSqlQuery && self.cachedSqlQuery != undefined) {
                     var jobName = "create_featuregroup_" + self.cachedFeaturegroupName + "_" + new Date().getTime()

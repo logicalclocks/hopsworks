@@ -286,14 +286,14 @@ angular.module('hopsWorksApp')
                 for (var i = 0; i < self.storageConnectors.length; i++) {
                     self.storageConnectors[i].canDelete = self.canNotDeleteStorageConnector(
                         self.storageConnectors[i].name)
-                    if(self.storageConnectors[i].type === self.jdbcConnectorType){
+                    if(self.storageConnectors[i].storageConnectorType === self.jdbcConnectorType){
                         self.storageConnectors[i].info = "Connection String: <code>" +
                             self.storageConnectors[i].connectionString +
                             "</code> | Additional arguments: <code>" +
                             self.storageConnectors[i].arguments + "</code>"
                     }
 
-                    if(self.storageConnectors[i].type === self.s3ConnectorType){
+                    if(self.storageConnectors[i].storageConnectorType === self.s3ConnectorType){
                         self.storageConnectors[i].info = "S3 Bucket: <code>" +
                             self.storageConnectors[i].bucket
                             + "</code> | accessKey: <code>" + self.storageConnectors[i].accessKey
@@ -301,7 +301,7 @@ angular.module('hopsWorksApp')
                             "</code>"
                     }
 
-                    if(self.storageConnectors[i].type === self.hopsfsConnectorType){
+                    if(self.storageConnectors[i].storageConnectorType === self.hopsfsConnectorType){
                         self.storageConnectors[i].info = "HopsFs Path: <code>" +
                             self.storageConnectors[i].hopsfsPath
                             + "</code>"
@@ -371,9 +371,9 @@ angular.module('hopsWorksApp')
                 FeaturestoreService.getStorageConnectors(self.projectId, featurestore).then(
                     function (success) {
                         self.storageConnectors = success.data
+                        StorageService.store(self.projectId + "_storageconnectors", success.data);
                         self.storageConnectorsLoaded = true
                         self.setupStorageConnectors()
-                        StorageService.store(self.projectId + "_feturestore_storageconnectors", self.storageConnectors);
                         self.stopLoading()
                     },
                     function (error) {
