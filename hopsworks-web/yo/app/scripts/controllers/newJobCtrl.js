@@ -625,7 +625,7 @@ angular.module('hopsWorksApp')
              * @returns {undefined}
              */
             this.selectFile = function (reason, parameter) {
-              ModalService.selectFile('lg', self.selectFileRegexes[reason],
+              ModalService.selectFile('lg', self.projectId, self.selectFileRegexes[reason],
                       self.selectFileErrorMsgs["PYSPARK"], false).then(
                       function (success) {
                         self.onFileSelected(reason, success);
@@ -640,7 +640,7 @@ angular.module('hopsWorksApp')
              * @returns {undefined}
              */
             this.selectDir = function (reason, parameter) {
-              ModalService.selectDir('lg', self.selectFileRegexes[reason],
+              ModalService.selectDir('lg', self.projectId, self.selectFileRegexes[reason],
                       self.selectFileErrorMsgs["PYSPARK"]).then(
                       function (success) {
                         self.onFileSelected(reason, success);

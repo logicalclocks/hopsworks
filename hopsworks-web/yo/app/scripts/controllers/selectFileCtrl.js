@@ -42,14 +42,15 @@
  * Controller for the file selection dialog. 
  */
 angular.module('hopsWorksApp')
-    .controller('SelectFileCtrl', ['$uibModalInstance', 'growl', 'regex', 'errorMsg','dirAllowed',
-        function ($uibModalInstance, growl, regex, errorMsg, dirAllowed) {
+    .controller('SelectFileCtrl', ['$uibModalInstance', 'DatasetBrowserService', 'growl', 'projectId', 'regex', 'errorMsg','dirAllowed',
+        function ($uibModalInstance, DatasetBrowserService, growl, projectId, regex, errorMsg, dirAllowed) {
 
             var self = this;
             self.dirAllowed = dirAllowed;
             self.isDir = true;
             self.selected = -1;
-
+            self.datasetBrowser = new DatasetBrowserService(projectId, "ALL", 114);
+            self.datasetBrowser.getAll();
             /**
              * Close the modal dialog.
              * @returns {undefined}
@@ -58,15 +59,13 @@ angular.module('hopsWorksApp')
                 $uibModalInstance.dismiss('cancel');
             };
 
-            self.confirmSelection = function (datasetsCtrl, isDirectory) {
-                var destPath = angular.copy(datasetsCtrl.currentPath);
-                // destPath.splice(0, 1); // remove project name to get relative path
-                var selectedFilePath = "/" + destPath.join('/');
+            self.confirmSelection = function (isDirectory) {
+                var selectedFilePath = self.datasetBrowser.fullPath;
                 if (typeof selectedFilePath === "undefined" || selectedFilePath.length < 1) {
                     growl.error("Please select a file.", {title: "No file selected", ttl: 5000, referenceId: 114});
-                } else if (self.isDir !== isDirectory) {
+                } else if (self.datasetBrowser.isDir !== isDirectory) {
                     var msg;
-                    if (!self.isDir) {
+                    if (!self.datasetBrowser.isDir) {
                         msg = "You should select a directory."
                     } else {
                         msg = "You should select a file."
@@ -74,28 +73,6 @@ angular.module('hopsWorksApp')
                     growl.error(errorMsg, {title: msg, ttl: 5000, referenceId: 114});
                 } else {
                     $uibModalInstance.close(selectedFilePath);
-                }
-            };
-
-            self.click = function (datasetsCtrl, file, index) {
-                if (file.dir) {
-                    self.isDir = true;
-                    self.selected = -1;
-                    datasetsCtrl.openDir(file);
-                } else {
-                    self.isDir = false;
-                    self.selected = index;
-                    datasetsCtrl.setCurrentPath(file.path);
-                }
-            };
-
-            self.back = function (datasetsCtrl) {
-                self.isDir = true;
-                self.selected = -1;
-                if (datasetsCtrl.pathArray.length <= 1) {
-                    datasetsCtrl.getAllDatasets();
-                } else {
-                    datasetsCtrl.back();
                 }
             };
 

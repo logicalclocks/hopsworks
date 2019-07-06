@@ -139,11 +139,6 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>io.hops</groupId>
-      <artifactId>hops-tensorflow</artifactId>
-      <version>0.0.1</version>
-    </dependency>
-    <dependency>
       <groupId>org.apache.kafka</groupId>
       <artifactId>kafka_2.11</artifactId>
       <version>1.1.0</version>

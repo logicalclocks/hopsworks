@@ -58,14 +58,14 @@ import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFlag;
-import io.hops.hopsworks.common.hdfs.Utils;
-import io.hops.hopsworks.exceptions.DatasetException;
-import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.DatasetException;
+import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
@@ -184,7 +184,7 @@ public class DatasetController {
         //set the dataset meta enabled. Support 3 level indexing
         if (searchable) {
           dfso.setMetaEnabled(dsPath);
-          Dataset logDs = datasetFacade.findByNameAndProjectId(project, dataSetName);
+          Dataset logDs = getByProjectAndDsName(project,null, dataSetName);
           logDataset(logDs, OperationType.Add);
         }
       } catch (Exception e) {
@@ -589,6 +589,58 @@ public class DatasetController {
         Path dspath = getDatasetPath(dataset);
         dfso.unsetMetaEnabled(dspath);
       }
+    }
+  }
+  
+  /**
+   * Get a top level dataset by project name or parent path. If parent path is null the project name is used as parent
+   * @param currentProject
+   * @param inodeParentPath
+   * @param dsName
+   * @return
+   */
+  public Dataset getByProjectAndDsName(Project currentProject, String inodeParentPath, String dsName) {
+    Inode parentInode = inodes.getInodeAtPath(inodeParentPath == null? Utils.getProjectPath(currentProject.getName()) :
+      inodeParentPath);
+    Inode dsInode = inodes.findByInodePK(parentInode, dsName, HopsUtils.calculatePartitionId(parentInode.getId(),
+      dsName, 3));
+    if (dsInode == null && dsName.endsWith(".db")) { //if hive parent is not project
+      parentInode = inodes.getInodeAtPath(settings.getHiveWarehouse());
+      dsInode = inodes.findByInodePK(parentInode, dsName, HopsUtils.calculatePartitionId(parentInode.getId(),
+        dsName, 3));
+    }
+    if (currentProject == null || dsInode == null) {
+      return null;
+    }
+    return datasetFacade.findByProjectAndInode(currentProject, dsInode);
+  }
+  
+  /**
+   * Checks if a path exists. Will require a read access to the path.
+   * @param filePath
+   * @param username
+   * @throws DatasetException
+   */
+  public void checkFileExists(Path filePath, String username) throws DatasetException {
+    DistributedFileSystemOps udfso = null;
+    boolean exist;
+    try {
+      udfso = dfs.getDfsOps(username);
+      exist = udfso.exists(filePath);
+    } catch (AccessControlException ae) {
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_ACCESS_PERMISSION_DENIED, Level.FINE,
+        "path: " + filePath.toString(), ae.getMessage(), ae);
+    } catch (IOException ex) {
+      throw new DatasetException(RESTCodes.DatasetErrorCode.INODE_NOT_FOUND, Level.FINE, "path: " +
+        filePath.toString(), ex.getMessage(), ex);
+    } finally {
+      if (udfso != null) {
+        dfs.closeDfsClient(udfso);
+      }
+    }
+    if (!exist) {
+      throw new DatasetException(RESTCodes.DatasetErrorCode.INODE_NOT_FOUND, Level.FINE,
+        "path: " + filePath.toString());
     }
   }
   

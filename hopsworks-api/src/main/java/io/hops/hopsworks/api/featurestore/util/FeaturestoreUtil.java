@@ -17,9 +17,9 @@
 package io.hops.hopsworks.api.featurestore.util;
 
 import io.hops.hopsworks.common.dao.dataset.Dataset;
-import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
 import io.hops.hopsworks.common.dao.featurestore.feature.FeatureDTO;
 import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
 public class FeaturestoreUtil {
 
   @EJB
-  private DatasetFacade datasetFacade;
+  private DatasetController datasetController;
   private static final Logger LOGGER = Logger.getLogger(FeaturestoreUtil.class.getName());
   /**
    * Returns a String with Columns from a JSON featuregroup
@@ -115,7 +115,7 @@ public class FeaturestoreUtil {
    * @return the training dataset for the project
    */
   public Dataset getTrainingDatasetFolder(Project project){
-    return datasetFacade.findByNameAndProjectId(project, getTrainingDatasetFolderName(project));
+    return datasetController.getByProjectAndDsName(project,null, getTrainingDatasetFolderName(project));
   }
 
   /**

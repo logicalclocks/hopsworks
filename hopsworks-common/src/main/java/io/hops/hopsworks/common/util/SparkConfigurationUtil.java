@@ -57,11 +57,11 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
           Settings.SPARK_YARN_IS_PYTHON_ENV,
           HopsUtils.OVERWRITE,
           "true"));
-
-      addToSparkEnvironment(sparkProps, "PATH", "{{PWD}}" + File.pathSeparator +
-          settings.getAnacondaProjectDir(project) + "/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
-        HopsUtils.APPEND_PATH);
     }
+
+    addToSparkEnvironment(sparkProps, "PATH", "{{PWD}}" + File.pathSeparator +
+        settings.getAnacondaProjectDir(project) + "/bin:" + settings.getHadoopSymbolicLinkDir() + "/bin" +
+        ":/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin", HopsUtils.APPEND_PATH);
 
     sparkProps.put(Settings.SPARK_PYSPARK_PYTHON_OPTION, new ConfigProperty(
       Settings.SPARK_PYSPARK_PYTHON_OPTION, HopsUtils.IGNORE,

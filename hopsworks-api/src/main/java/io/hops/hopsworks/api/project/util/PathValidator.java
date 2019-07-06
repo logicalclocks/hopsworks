@@ -46,6 +46,7 @@ import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
+import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -69,7 +70,7 @@ public class PathValidator {
   @EJB
   private ProjectFacade projectFacade;
   @EJB
-  private DatasetController datasetContoller;
+  private DatasetController datasetController;
   @EJB
   private InodeFacade inodeFacade;
   @EJB
@@ -100,14 +101,14 @@ public class PathValidator {
       path = urlMatcher.group(2);
       dsPath.setFullPath(new Path(path));
       String[] pathComponents = path.split("/");
-      buildProjectDsRelativePath(pathComponents, dsPath);
+      buildProjectDsRelativePath(project, pathComponents, dsPath);
     } else if (path.startsWith(File.separator + Settings.DIR_ROOT)) {
       // Case /Projects/project1/ds/dsRelativePath
       dsPath.setFullPath(new Path(path));
       String[] pathComponents = path.split("/");
-      buildProjectDsRelativePath(pathComponents, dsPath);
+      buildProjectDsRelativePath(project, pathComponents, dsPath);
     } else if (path.startsWith(this.settings.getHiveWarehouse())) {
-      // Case /apps/hive/warehouse/project1.db/dsRelativePath
+      // Case /apps/hive/warehouse/project1.db/
       dsPath.setFullPath(new Path(path));
       String[] pathComponents = path.split("/");
       buildHiveDsRelativePath(project, pathComponents, dsPath);
@@ -120,8 +121,7 @@ public class PathValidator {
   }
 
 
-  private void buildFullPath(Project project, String path,
-                             DsPath dsPath) throws DatasetException {
+  private void buildFullPath(Project project, String path, DsPath dsPath) throws DatasetException {
     //Strip leading slashes.
     while (path.startsWith("/")) {
       path = path.substring(1);
@@ -130,6 +130,7 @@ public class PathValidator {
 
     String dsName = pathComponents[0];
     boolean shared = false;
+    String parentProjectPath = null;
 
     if (pathComponents[0].contains(Settings.SHARED_FILE_SEPARATOR)) {
       //we can split the string and get the project name
@@ -137,11 +138,11 @@ public class PathValidator {
       if (shardDS.length != 2) {
         throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_FOUND, Level.FINE);
       }
+      parentProjectPath = Utils.getProjectPath(shardDS[0]);
       dsName = shardDS[1];
       shared = true;
     }
-
-    Dataset ds = datasetFacade.findByNameAndProjectId(project, dsName);
+    Dataset ds = datasetController.getByProjectAndDsName(project, parentProjectPath, dsName);
     if (ds == null) {
       throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_FOUND, Level.FINE);
     }
@@ -152,41 +153,40 @@ public class PathValidator {
     }
     dsPath.setDs(ds);
 
-    String dsRelativePathStr = buildRelativePath(pathComponents, 1,
-        pathComponents.length);
+    String dsRelativePathStr = buildRelativePath(pathComponents, 1, pathComponents.length);
 
     if (dsRelativePathStr.isEmpty()) {
-      dsPath.setFullPath(datasetContoller.getDatasetPath(ds));
+      dsPath.setFullPath(datasetController.getDatasetPath(ds));
     } else {
       Path dsRelativePath = new Path(dsRelativePathStr);
       dsPath.setDsRelativePath(dsRelativePath);
-      dsPath.setFullPath(new Path(datasetContoller.getDatasetPath(ds), dsRelativePath));
+      Path fullPath = new Path(datasetController.getDatasetPath(ds), dsRelativePath);
+      dsPath.setFullPath(fullPath);
     }
   }
-
-  private void buildProjectDsRelativePath(String[] pathComponents,
-                                          DsPath dsPath) throws ProjectException, DatasetException {
+  
+  private void buildProjectDsRelativePath(Project project, String[] pathComponents, DsPath dsPath)
+    throws ProjectException, DatasetException {
     // Start by 1 as the first component is ""
-    Project project = projectFacade.findByName(pathComponents[2]);
-    if (project == null) {
+    Project destProject = projectFacade.findByName(pathComponents[2]);
+    if (project == null || destProject == null) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE);
     }
-    Dataset ds = datasetFacade.findByNameAndProjectId(project, pathComponents[3]);
+    Dataset ds = datasetController.getByProjectAndDsName(project, Utils.getProjectPath(pathComponents[2]),
+      pathComponents[3]);
     if (ds == null) {
       throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_FOUND, Level.FINE);
     }
     dsPath.setDs(ds);
-
-    String dsRelativePathStr = buildRelativePath(pathComponents, 4,
-        pathComponents.length);
+    
+    String dsRelativePathStr = buildRelativePath(pathComponents, 4, pathComponents.length);
     if (!dsRelativePathStr.isEmpty()) {
       dsPath.setDsRelativePath(new Path(dsRelativePathStr));
     }
   }
 
-  private void buildHiveDsRelativePath(Project project,
-                                       String[] pathComponents,
-                                       DsPath dsPath) throws DatasetException {
+  private void buildHiveDsRelativePath(Project project, String[] pathComponents, DsPath dsPath)
+    throws DatasetException {
     String dsPathStr = File.separator + buildRelativePath(pathComponents, 1, 5);
     Inode dsInode = inodeFacade.getInodeAtPath(dsPathStr);
 
@@ -199,7 +199,7 @@ public class PathValidator {
       throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_FOUND, Level.FINE);
     }
 
-    Project owningProject = datasetContoller.getOwningProject(dss.get(0));
+    Project owningProject = datasetController.getOwningProject(dss.get(0));
     Dataset originalDataset = datasetFacade.findByProjectAndInode(owningProject,
         dss.get(0).getInode());
 
@@ -216,7 +216,9 @@ public class PathValidator {
     StringBuilder pathBuilder = new StringBuilder();
     int i;
     for (i = start; i < stop -1 ; i++) {
-      pathBuilder.append(pathComponents[i]).append(File.separator);
+      if (!pathComponents[i].isEmpty() && !pathComponents[i].equals("..")) {
+        pathBuilder.append(pathComponents[i]).append(File.separator);
+      }
     }
     // avoid putting the / at the end of the path
     if (i == stop -1) {
