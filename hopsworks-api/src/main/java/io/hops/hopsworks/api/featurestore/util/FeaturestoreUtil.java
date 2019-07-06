@@ -19,6 +19,7 @@ package io.hops.hopsworks.api.featurestore.util;
 import io.hops.hopsworks.common.constants.auth.AllowedRoles;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.featurestore.feature.FeatureDTO;
+import io.hops.hopsworks.common.dao.featurestore.storageconnector.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.util.Settings;
@@ -158,6 +159,7 @@ public class FeaturestoreUtil {
    * @param featurestoreEntityDTO the featurestore entity that the operation concerns (feature group or training
    *                              dataset)
    * @param featurestore the featurestore that the operation concerns
+   * @param project the project of the featurestore
    * @param user the user requesting the operation
    * @throws FeaturestoreException
    */
@@ -165,12 +167,34 @@ public class FeaturestoreUtil {
                               Featurestore featurestore, Users user, Project project)
       throws FeaturestoreException {
     String userRole = projectTeamFacade.findCurrentRole(project, user);
-    if (!featurestoreEntityDTO.getCreator().equals(user.getEmail()) && userRole !=
-        AllowedRoles.DATA_OWNER) {
+    if (!featurestoreEntityDTO.getCreator().equals(user.getEmail()) &&
+        !userRole.equalsIgnoreCase(AllowedRoles.DATA_OWNER)) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.UNAUTHORIZED_FEATURESTORE_OPERATION, Level.FINE,
           "project: " + project.getName() + ", featurestoreId: " + featurestore.getId() +
               ", featuregroupId: " + featurestoreEntityDTO.getId() + ", userRole:" + userRole +
               ", creator of the featuregroup: " + featurestoreEntityDTO.getCreator());
+    }
+  }
+
+  /**
+   * Verify that the user is allowed to execute the requested operation based on his/hers project role.
+   *
+   * Only data owners are allowed to delete storage connectors for the feature store
+   *
+   * @param featurestore the featurestore that the operation concerns
+   * @param user the user making the request
+   * @param project the project of the featurestore
+   * @param storageConnectorDTO the storage connector taht the operation concerns
+   * @throws FeaturestoreException
+   */
+  public void verifyUserRole(Featurestore featurestore, Users user, Project project, FeaturestoreStorageConnectorDTO
+      storageConnectorDTO)
+      throws FeaturestoreException {
+    String userRole = projectTeamFacade.findCurrentRole(project, user);
+    if (!userRole.equalsIgnoreCase(AllowedRoles.DATA_OWNER)) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.UNAUTHORIZED_FEATURESTORE_OPERATION, Level.FINE,
+          "project: " + project.getName() + ", featurestoreId: " + featurestore.getId() +
+              ", storageConnectorId: " + storageConnectorDTO.getId() + ", userRole:" + userRole);
     }
   }
 }

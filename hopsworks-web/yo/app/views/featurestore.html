@@ -754,11 +754,11 @@
                             class="fs-table">
                             <td class="fs-table">
                                 <i class="sub_icon fa fa-database fa-2x"
-                                   ng-if="connector.type==featurestoreCtrl.jdbcConnectorType"></i>
+                                   ng-if="connector.storageConnectorType==featurestoreCtrl.jdbcConnectorType"></i>
                                 <i class="sub_icon glyphicon glyphicon-folder-close fa-2x"
-                                   ng-if="connector.type==featurestoreCtrl.hopsfsConnectorType"></i>
+                                   ng-if="connector.storageConnectorType==featurestoreCtrl.hopsfsConnectorType"></i>
                                 <i class="sub_icon fa fa-cloud fa-2x"
-                                   ng-if="connector.type==featurestoreCtrl.s3ConnectorType"></i>
+                                   ng-if="connector.storageConnectorType==featurestoreCtrl.s3ConnectorType"></i>
                             </td>
                             <td class="fs-table">{{connector.name}}</td>
                             <td class="fs-table">{{connector.type}}</td>

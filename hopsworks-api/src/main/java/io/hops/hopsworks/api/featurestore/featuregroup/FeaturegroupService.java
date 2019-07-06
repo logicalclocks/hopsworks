@@ -14,10 +14,10 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.api.featurestore.featuregroups;
+package io.hops.hopsworks.api.featurestore.featuregroup;
 
 import io.hops.hopsworks.api.featurestore.FeaturestoreService;
-import io.hops.hopsworks.api.featurestore.json.FeaturegroupJsonDTO;
+import io.hops.hopsworks.api.featurestore.featuregroup.json.FeaturegroupJsonDTO;
 import io.hops.hopsworks.api.featurestore.util.FeaturestoreUtil;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
@@ -69,7 +69,7 @@ import java.util.logging.Logger;
 
 /**
  * A Stateless RESTful service for the featuregroups in a featurestore on Hopsworks.
- * Base URL: project/projectId/featurestores/featurestoreId/
+ * Base URL: project/projectId/featurestores/featurestoreId/featuregroups/
  */
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -133,9 +133,7 @@ public class FeaturegroupService {
         getFeaturegroupsForFeaturestore(featurestore);
     GenericEntity<List<FeaturegroupDTO>> featuregroupsGeneric =
         new GenericEntity<List<FeaturegroupDTO>>(featuregroups) {};
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK)
-        .entity(featuregroupsGeneric)
-        .build();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featuregroupsGeneric).build();
   }
 
   /**
@@ -225,9 +223,7 @@ public class FeaturegroupService {
         featuregroupController.getFeaturegroupWithIdAndFeaturestore(featurestore, featuregroupId);
     GenericEntity<FeaturegroupDTO> featuregroupGeneric =
         new GenericEntity<FeaturegroupDTO>(featuregroupDTO) {};
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK)
-        .entity(featuregroupGeneric)
-        .build();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featuregroupGeneric).build();
   }
 
   /**
@@ -263,9 +259,7 @@ public class FeaturegroupService {
           project, user, ActivityFlag.SERVICE);
       GenericEntity<FeaturegroupDTO> featuregroupGeneric =
           new GenericEntity<FeaturegroupDTO>(featuregroupDTO) {};
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK)
-          .entity(featuregroupGeneric)
-          .build();
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featuregroupGeneric).build();
     } catch (SQLException e) {
       LOGGER.log(Level.SEVERE, RESTCodes.FeaturestoreErrorCode.COULD_NOT_DELETE_FEATUREGROUP.getMessage(), e);
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_DELETE_FEATUREGROUP, Level.SEVERE,
@@ -304,9 +298,7 @@ public class FeaturegroupService {
           featuregroupController.getFeaturegroupPreview(featuregroupDTO, featurestore, project, user);
       GenericEntity<List<RowValueQueryResult>> featuresdataGeneric =
           new GenericEntity<List<RowValueQueryResult>>(featuresPreview) {};
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK)
-          .entity(featuresdataGeneric)
-          .build();
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featuresdataGeneric).build();
     } catch (SQLException e) {
       LOGGER.log(Level.SEVERE, RESTCodes.FeaturestoreErrorCode.COULD_NOT_PREVIEW_FEATUREGROUP.getMessage(), e);
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_PREVIEW_FEATUREGROUP, Level.SEVERE,
@@ -346,9 +338,7 @@ public class FeaturegroupService {
           featuregroupController.getSchema(featuregroupDTO, project, user, featurestore);
       GenericEntity<RowValueQueryResult> schemaGeneric =
           new GenericEntity<RowValueQueryResult>(schema) {};
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK)
-          .entity(schemaGeneric)
-          .build();
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(schemaGeneric).build();
     } catch (SQLException e) {
       LOGGER.log(Level.SEVERE,
           RESTCodes.FeaturestoreErrorCode.COULD_NOT_FETCH_FEATUREGROUP_SHOW_CREATE_SCHEMA.getMessage(), e);

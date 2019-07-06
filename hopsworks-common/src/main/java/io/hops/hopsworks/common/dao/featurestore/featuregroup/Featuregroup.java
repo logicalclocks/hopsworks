@@ -18,7 +18,7 @@ package io.hops.hopsworks.common.dao.featurestore.featuregroup;
 
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
 import io.hops.hopsworks.common.dao.featurestore.stats.FeaturestoreStatistic;
-import io.hops.hopsworks.common.dao.featurestore.storage_connectors.external_sql_query.FeaturestoreExternalSQLQuery;
+import io.hops.hopsworks.common.dao.featurestore.storageconnector.external_sql_query.FeaturestoreExternalSQLQuery;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.user.Users;
 

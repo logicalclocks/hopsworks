@@ -14,9 +14,9 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.common.dao.featurestore.storage_connectors.external_sql_query;
+package io.hops.hopsworks.common.dao.featurestore.storageconnector.external_sql_query;
 
-import io.hops.hopsworks.common.dao.featurestore.storage_connectors.jdbc.FeaturestoreJdbcConnector;
+import io.hops.hopsworks.common.dao.featurestore.storageconnector.jdbc.FeaturestoreJdbcConnector;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;

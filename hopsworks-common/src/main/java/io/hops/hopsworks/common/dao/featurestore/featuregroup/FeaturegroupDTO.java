@@ -17,7 +17,7 @@
 package io.hops.hopsworks.common.dao.featurestore.featuregroup;
 
 import io.hops.hopsworks.common.dao.featurestore.FeaturestoreEntityDTO;
-import io.hops.hopsworks.common.dao.featurestore.storage_connectors.external_sql_query.FeaturestoreExternalSQLQueryDTO;
+import io.hops.hopsworks.common.dao.featurestore.storageconnector.external_sql_query.FeaturestoreExternalSQLQueryDTO;
 import io.hops.hopsworks.common.hive.HiveTableType;
 
 import javax.xml.bind.annotation.XmlElement;

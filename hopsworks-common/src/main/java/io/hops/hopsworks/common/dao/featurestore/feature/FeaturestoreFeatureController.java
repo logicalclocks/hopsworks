@@ -16,7 +16,7 @@
 
 package io.hops.hopsworks.common.dao.featurestore.feature;
 
-import io.hops.hopsworks.common.dao.featurestore.storage_connectors.external_sql_query.FeaturestoreExternalSQLQuery;
+import io.hops.hopsworks.common.dao.featurestore.storageconnector.external_sql_query.FeaturestoreExternalSQLQuery;
 import io.hops.hopsworks.common.dao.featurestore.trainingdataset.TrainingDataset;
 
 import javax.ejb.EJB;

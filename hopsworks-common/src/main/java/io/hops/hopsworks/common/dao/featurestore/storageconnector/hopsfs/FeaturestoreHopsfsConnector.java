@@ -14,8 +14,9 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.common.dao.featurestore.storage_connectors.jdbc;
+package io.hops.hopsworks.common.dao.featurestore.storageconnector.hopsfs;
 
+import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
 
 import javax.persistence.Basic;
@@ -25,6 +26,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
@@ -32,18 +34,23 @@ import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
 
 /**
- * Entity class representing the feature_store_jdbc_connector table in Hopsworks database.
+ * Entity class representing the feature_store_hopsfs table in Hopsworks database.
  * An instance of this class represents a row in the database.
  */
 @Entity
-@Table(name = "feature_store_jdbc_connector", catalog = "hopsworks")
+@Table(name = "feature_store_hopsfs_connector", catalog = "hopsworks")
 @XmlRootElement
 @NamedQueries({
-    @NamedQuery(name = "FeaturestoreJdbcConnector.findAll", query = "SELECT fsjdbc FROM FeaturestoreJdbcConnector " +
-      "fsjdbc"),
-    @NamedQuery(name = "FeaturestoreJdbcConnector.findById",
-        query = "SELECT fsjdbc FROM FeaturestoreJdbcConnector fsjdbc WHERE fsjdbc.id = :id")})
-public class FeaturestoreJdbcConnector implements Serializable {
+    @NamedQuery(name = "FeaturestoreHopsfsConnector.findAll", query = "SELECT fshopsfs FROM " +
+      "FeaturestoreHopsfsConnector " +
+      "fshopsfs"),
+    @NamedQuery(name = "FeaturestoreHopsfsConnector.findById",
+        query = "SELECT fshopsfs FROM FeaturestoreHopsfsConnector fshopsfs WHERE fshopsfs.id = :id"),
+    @NamedQuery(name = "FeaturestoreHopsfsConnector.findByFeaturestore", query = "SELECT fshopsfs " +
+        "FROM FeaturestoreHopsfsConnector fshopsfs WHERE fshopsfs.featurestore = :featurestore"),
+    @NamedQuery(name = "FeaturestoreHopsfsConnector.findByFeaturestoreAndId", query = "SELECT fshopsfs " +
+        "FROM FeaturestoreHopsfsConnector fshopsfs WHERE fshopsfs.featurestore = :featurestore AND fshopsfs.id = :id")})
+public class FeaturestoreHopsfsConnector implements Serializable {
   private static final long serialVersionUID = 1L;
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -52,11 +59,9 @@ public class FeaturestoreJdbcConnector implements Serializable {
   private Integer id;
   @JoinColumn(name = "feature_store_id", referencedColumnName = "id")
   private Featurestore featurestore;
-  @Basic(optional = false)
-  @Column(name = "connection_string")
-  private String connectionString;
-  @Column(name = "arguments")
-  private String arguments;
+  @JoinColumn(name = "hopsfs_dataset", referencedColumnName = "id")
+  @ManyToOne(optional = false)
+  private Dataset hopsfsDataset;
   @Column(name = "description")
   private String description;
   @Basic(optional = false)
@@ -83,20 +88,12 @@ public class FeaturestoreJdbcConnector implements Serializable {
     this.featurestore = featurestore;
   }
   
-  public String getConnectionString() {
-    return connectionString;
+  public Dataset getHopsfsDataset() {
+    return hopsfsDataset;
   }
   
-  public void setConnectionString(String connectionString) {
-    this.connectionString = connectionString;
-  }
-  
-  public String getArguments() {
-    return arguments;
-  }
-  
-  public void setArguments(String arguments) {
-    this.arguments = arguments;
+  public void setHopsfsDataset(Dataset hopsfsDataset) {
+    this.hopsfsDataset = hopsfsDataset;
   }
   
   public String getDescription() {
@@ -118,21 +115,21 @@ public class FeaturestoreJdbcConnector implements Serializable {
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
-    if (!(o instanceof FeaturestoreJdbcConnector)) return false;
+    if (!(o instanceof FeaturestoreHopsfsConnector)) return false;
     
-    FeaturestoreJdbcConnector that = (FeaturestoreJdbcConnector) o;
+    FeaturestoreHopsfsConnector
+      that = (FeaturestoreHopsfsConnector) o;
     
     if (!id.equals(that.id)) return false;
     if (!featurestore.equals(that.featurestore)) return false;
-    if (!connectionString.equals(that.connectionString)) return false;
-    return connectionString.equals(that.connectionString);
+    return hopsfsDataset.equals(that.hopsfsDataset);
   }
   
   @Override
   public int hashCode() {
     int result = id.hashCode();
     result = 31 * result + featurestore.hashCode();
-    result = 31 * result + connectionString.hashCode();
+    result = 31 * result + hopsfsDataset.hashCode();
     return result;
   }
 }

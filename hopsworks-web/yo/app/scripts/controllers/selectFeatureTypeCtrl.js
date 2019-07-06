@@ -30,7 +30,7 @@ angular.module('hopsWorksApp')
             self.duplicateTypeSelection = 1;
             self.noSelection = 1;
             self.wrong_values = 1;
-            self.hiveDataTypes = FeaturestoreService.featureDataTypes()
+            self.hiveDataTypes = FeaturestoreService.suggestedFeatureDataTypes()
             $scope.selected = self.hiveDataTypes[0]
 
 

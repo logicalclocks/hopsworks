@@ -168,9 +168,9 @@ angular.module('hopsWorksApp')
                 },
 
                 /**
-                 * @returns array of feature types
+                 * @returns array of suggested feature type alternatives
                  */
-                featureDataTypes: function() {
+                suggestedFeatureDataTypes: function() {
                     return [
                         "None","TINYINT", "SMALLINT", "INT", "BIGINT", "FLOAT", "DOUBLE",
                         "DECIMAL", "TIMESTAMP", "DATE", "STRING",
@@ -209,6 +209,13 @@ angular.module('hopsWorksApp')
                 },
 
                 /**
+                 * @returns jdbc connector DTO type string
+                 */
+                jdbcConnectorDTO: function() {
+                    return "featurestoreJdbcConnectorDTO";
+                },
+
+                /**
                  * @returns s3 connector type string
                  */
                 s3ConnectorType: function() {
@@ -216,10 +223,24 @@ angular.module('hopsWorksApp')
                 },
 
                 /**
+                 * @returns s3 connector DTO type string
+                 */
+                s3ConnectorDTO: function() {
+                    return "featurestoreS3ConnectorDTO";
+                },
+
+                /**
                  * @returns hopsfs connector type string
                  */
                 hopsfsConnectorType: function() {
                     return "HopsFS";
+                },
+
+                /**
+                 * @returns jdbc connector DTO type string
+                 */
+                hopsfsConnectorDTO: function() {
+                    return "featurestoreHopsfsConnectorDTO";
                 },
 
                 /**
@@ -421,87 +442,46 @@ angular.module('hopsWorksApp')
                 },
 
                 /**
-                 * Sends a POST request to the backend for creating a JDBC connector
+                 * GET request for all storage connectors for a particular featurestore
                  *
-                 * @param projectId project where the featuregroup will be created
-                 * @param jdbcConnectorJson the JSON payload
-                 * @param featurestore featurestore where the connector will be created
-                 *
+                 * @param projectId project of the active user
+                 * @param featurestore featurestore to get storage connectors from
                  * @returns {HttpPromise}
                  */
-                createJdbcConnector: function(projectId, jdbcConnectorJson, featurestore) {
-                    return $http.post('/api/project/' + projectId + '/featurestores/' +
-                        featurestore.featurestoreId + "/jdbcconnectors",
-                        JSON.stringify(jdbcConnectorJson), {headers: {'Content-Type': 'application/json'}});
+                getStorageConnectors: function(projectId, featurestore) {
+                    return $http.get('/api/project/' + projectId + '/featurestores/' +
+                        featurestore.featurestoreId + "/storageconnectors");
                 },
 
                 /**
-                 * Sends a DELETE request to the backend for deleting a JDBC connector
+                 * Sends a POST request to the backend for creating a new storage connector
+                 *
+                 * @param projectId project where the featuregroup will be created
+                 * @param storageConnectorJson the JSON payload
+                 * @param featurestore featurestore where the connector will be created
+                 * @param storageConnectorType the type of the storage connector
+                 *
+                 * @returns {HttpPromise}
+                 */
+                createStorageConnector: function(projectId, storageConnectorJson, featurestore, storageConnectorType) {
+                    return $http.post('/api/project/' + projectId + '/featurestores/' +
+                        featurestore.featurestoreId + "/storageconnectors/" + storageConnectorType,
+                        JSON.stringify(storageConnectorJson), {headers: {'Content-Type': 'application/json'}});
+                },
+
+                /**
+                 * Sends a DELETE request to the backend for deleting a Storage connector
                  *
                  * @param projectId the project of the featurestore
                  * @param featurestore the featurestore
-                 * @param jdbcConnectorId the id of the JDBC connector
+                 * @param storageConnectorId the id of the JDBC connector
+                 * @param storageConnectorType the type of the storage connector
                  * @returns {HttpPromise}
                  */
-                deleteJdbcConnector: function(projectId, featurestore, jdbcConnectorId) {
+                deleteStorageConnector: function(projectId, featurestore, storageConnectorId, storageConnectorType) {
                     return $http.delete('/api/project/' + projectId + '/featurestores/' +
-                        featurestore.featurestoreId + "/jdbcconnectors/" + jdbcConnectorId);
-                },
-
-                /**
-                 * Sends a POST request to the backend for creating a s3 connector
-                 *
-                 * @param projectId project where the featuregroup will be created
-                 * @param s3ConnectorJson the JSON payload
-                 * @param featurestore featurestore where the connector will be created
-                 *
-                 * @returns {HttpPromise}
-                 */
-                createS3Connector: function(projectId, s3ConnectorJson, featurestore) {
-                    return $http.post('/api/project/' + projectId + '/featurestores/' +
-                        featurestore.featurestoreId + "/s3connectors",
-                        JSON.stringify(s3ConnectorJson), {headers: {'Content-Type': 'application/json'}});
-                },
-
-                /**
-                 * Sends a DELETE request to the backend for deleting an S3 connector
-                 *
-                 * @param projectId the project of the featurestore
-                 * @param featurestore the featurestore
-                 * @param s3ConnectorId the id of the JDBC connector
-                 * @returns {HttpPromise}
-                 */
-                deleteS3Connector: function(projectId, featurestore, s3ConnectorId) {
-                    return $http.delete('/api/project/' + projectId + '/featurestores/' +
-                        featurestore.featurestoreId + "/s3connectors/" + s3ConnectorId);
-                },
-
-                /**
-                 * Sends a POST request to the backend for creating a hopsfs connector
-                 *
-                 * @param projectId project where the featuregroup will be created
-                 * @param hopsfsConnectorJson the JSON payload
-                 * @param featurestore featurestore where the connector will be created
-                 *
-                 * @returns {HttpPromise}
-                 */
-                createHopsfsConnector: function(projectId, hopsfsConnectorJson, featurestore) {
-                    return $http.post('/api/project/' + projectId + '/featurestores/' +
-                        featurestore.featurestoreId + "/hopsfsconnectors",
-                        JSON.stringify(hopsfsConnectorJson), {headers: {'Content-Type': 'application/json'}});
-                },
-
-                /**
-                 * Sends a DELETE request to the backend for deleting a hopsfs connector
-                 *
-                 * @param projectId the project of the featurestore
-                 * @param featurestore the featurestore
-                 * @param hopsfsConnectorId the id of the hopsfs connector
-                 * @returns {HttpPromise}
-                 */
-                deleteHopsfsConnector: function(projectId, featurestore, hopsfsConnectorId) {
-                    return $http.delete('/api/project/' + projectId + '/featurestores/' +
-                        featurestore.featurestoreId + "/hopsfsconnectors/" + hopsfsConnectorId);
+                        featurestore.featurestoreId + "/storageconnectors/" + storageConnectorType + "/" +
+                        storageConnectorId);
                 }
             };
           }]);

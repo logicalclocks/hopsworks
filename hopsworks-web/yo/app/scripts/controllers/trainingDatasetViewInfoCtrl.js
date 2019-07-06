@@ -51,7 +51,7 @@ angular.module('hopsWorksApp')
              */
             self.getScalaCode = function (trainingDataset) {
                 var codeStr = "import io.hops.util.Hops\n"
-                codeStr = codeStr + "Hops.getTrainingDatasetPath(('" + trainingDataset.name + "').read()"
+                codeStr = codeStr + "Hops.getTrainingDatasetPath('" + trainingDataset.name + "').read()"
                 return codeStr
             };
 

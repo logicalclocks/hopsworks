@@ -28,6 +28,7 @@ angular.module('hopsWorksApp')
             //Controller Input
             self.projectId = $routeParams.projectID;
             self.featurestore = StorageService.get(self.projectId + "_featurestore")
+            self.storageConnectors = StorageService.get(self.projectId + "_featurestore_storageconnectors")
 
             //Input Variables
             self.storageConnectorName = ""
@@ -55,6 +56,12 @@ angular.module('hopsWorksApp')
             self.s3StorageConnectorBucketMaxLength = FeaturestoreService.s3StorageConnectorBucketMaxLength();
             self.s3StorageConnectorAccesskeyMaxLength = FeaturestoreService.s3StorageConnectorAccesskeyMaxLength();
             self.s3StorageConnectorSecretkeyMaxLength = FeaturestoreService.s3StorageConnectorSecretkeyMaxLength();
+            self.hopsfsConnectorType = FeaturestoreService.hopsfsConnectorType()
+            self.s3ConnectorType = FeaturestoreService.s3ConnectorType()
+            self.jdbcConnectorType = FeaturestoreService.jdbcConnectorType()
+            self.s3ConnectorDTOType = FeaturestoreService.s3ConnectorDTO()
+            self.jdbcConnectorDTOType = FeaturestoreService.jdbcConnectorDTO()
+            self.hopsfsConnectorDTOType = FeaturestoreService.hopsfsConnectorDTO()
 
 
             /**
@@ -271,9 +278,12 @@ angular.module('hopsWorksApp')
                     "description": self.storageConnectorDescription
                 }
                 if(self.storageConnectorType === 0){
-                    storageConnectorJson["jdbcArguments"] = self.jdbcArguments
-                    storageConnectorJson["jdbcConnectionString"] = self.jdbcConnectionString
-                    FeaturestoreService.createJdbcConnector(self.projectId, storageConnectorJson, self.featurestore).then(
+                    storageConnectorJson["storageConnectorType"] = self.jdbcConnectorType
+                    storageConnectorJson["type"] = self.jdbcConnectorDTOType
+                    storageConnectorJson["arguments"] = self.jdbcArguments
+                    storageConnectorJson["connectionString"] = self.jdbcConnectionString
+                    FeaturestoreService.createStorageConnector(self.projectId, storageConnectorJson, self.featurestore,
+                        self.jdbcConnectorType).then(
                         function (success) {
                             self.working = false;
                             growl.success("JDBC Storage Connector created", {title: 'Success', ttl: 1000});
@@ -284,10 +294,13 @@ angular.module('hopsWorksApp')
                         });
                 }
                 if(self.storageConnectorType === 1){
-                    storageConnectorJson["s3Bucket"] = self.s3Bucket
-                    storageConnectorJson["s3SecretKey"] = self.s3SecretKey
-                    storageConnectorJson["s3AccessKey"] = self.s3AccessKey
-                    FeaturestoreService.createS3Connector(self.projectId, storageConnectorJson, self.featurestore).then(
+                    storageConnectorJson["type"] = self.s3ConnectorDTOType
+                    storageConnectorJson["storageConnectorType"] = self.s3ConnectorType
+                    storageConnectorJson["bucket"] = self.s3Bucket
+                    storageConnectorJson["secretKey"] = self.s3SecretKey
+                    storageConnectorJson["accessKey"] = self.s3AccessKey
+                    FeaturestoreService.createStorageConnector(self.projectId, storageConnectorJson, self.featurestore,
+                    self.s3ConnectorType).then(
                         function (success) {
                             self.working = false;
                             growl.success("S3 Storage Connector created", {title: 'Success', ttl: 1000});
@@ -298,8 +311,11 @@ angular.module('hopsWorksApp')
                         });
                 }
                 if(self.storageConnectorType === 2){
-                    storageConnectorJson["hopsFsDataset"] = self.hopsFsDataset.name
-                    FeaturestoreService.createHopsfsConnector(self.projectId, storageConnectorJson, self.featurestore).then(
+                    storageConnectorJson["type"] = self.hopsfsConnectorDTOType
+                    storageConnectorJson["storageConnectorType"] = self.hopsfsConnectorType
+                    storageConnectorJson["datasetName"] = self.hopsFsDataset.name
+                    FeaturestoreService.createStorageConnector(self.projectId, storageConnectorJson, self.featurestore,
+                        self.hopsfsConnectorType).then(
                         function (success) {
                             self.working = false;
                             growl.success("HopsFS Storage Connector created", {title: 'Success', ttl: 1000});
@@ -317,14 +333,8 @@ angular.module('hopsWorksApp')
              */
             self.getStorageConnectorNames = function () {
                 self.storageConnectorNames = []
-                for (var i = 0; i < self.featurestore.featurestoreJdbcConnections.length; i++) {
-                    self.storageConnectorNames.push(self.featurestore.featurestoreJdbcConnections[i].name)
-                }
-                for (var i = 0; i < self.featurestore.featurestoreS3Connections.length; i++) {
-                    self.storageConnectorNames.push(self.featurestore.featurestoreS3Connections[i].name)
-                }
-                for (var i = 0; i < self.featurestore.featurestoreHopsfsConnections.length; i++) {
-                    self.storageConnectorNames.push(self.featurestore.featurestoreHopsfsConnections[i].name)
+                for (var i = 0; i < self.storageConnectors.length; i++) {
+                    self.storageConnectorNames.push(self.storageConnectors[i].name)
                 }
             }
 

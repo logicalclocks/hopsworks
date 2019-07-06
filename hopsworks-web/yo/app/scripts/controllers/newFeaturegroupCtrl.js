@@ -31,6 +31,7 @@ angular.module('hopsWorksApp')
             self.projectName = StorageService.get("projectName");
             self.featuregroupOperation = StorageService.get("featuregroup_operation");
             self.featuregroup = StorageService.get(self.projectId + "_featuregroup");
+            self.storageConnectors = StorageService.get(self.projectId + "_featurestore_storageconnectors")
             self.jdbcConnectors = []
 
             //State
@@ -111,6 +112,7 @@ angular.module('hopsWorksApp')
             self.onDemandFeaturegroupType = FeaturestoreService.onDemandFeaturegroupType()
             self.cachedFeaturegroupType = FeaturestoreService.cachedFeaturegroupType()
             self.onDemandFeaturegroupSqlQueryMaxLength = FeaturestoreService.onDemandFeaturegroupSqlQueryMaxLength()
+            self.jdbcConnectorType = FeaturestoreService.jdbcConnectorType()
 
             //front-end variables
             self.cached_fg_accordion1 = {
@@ -279,23 +281,25 @@ angular.module('hopsWorksApp')
              */
             self.preProcessConnectors = function () {
                 self.jdbcConnectors = []
-                for (var i = 0; i < self.featurestore.featurestoreJdbcConnections.length; i++) {
-                    var args = self.featurestore.featurestoreJdbcConnections[i].arguments
-                    args = args + ''
-                    var argsList = args.split(",")
-                    var newArgs = []
-                    for (var j = 0; j < argsList.length; j++) {
-                        newArgs.push({
-                            "name": argsList[j],
-                            "value": "DEFAULT"
+                for (var i = 0; i < self.storageConnectors.length; i++) {
+                    if(self.storageConnectors[i].type == self.jdbcConnectorType){
+                        var args = self.storageConnectors[i].arguments
+                        args = args + ''
+                        var argsList = args.split(",")
+                        var newArgs = []
+                        for (var j = 0; j < argsList.length; j++) {
+                            newArgs.push({
+                                "name": argsList[j],
+                                "value": "DEFAULT"
+                            })
+                        }
+                        self.jdbcConnectors.push({
+                            "name": self.storageConnectors[i].name,
+                            "arguments": newArgs,
+                            "connectionString": self.storageConnectors[i].connectionString,
+                            "id": self.storageConnectors[i].id
                         })
                     }
-                    self.jdbcConnectors.push({
-                        "name": self.featurestore.featurestoreJdbcConnections[i].name,
-                        "arguments": newArgs,
-                        "connectionString": self.featurestore.featurestoreJdbcConnections[i].connectionString,
-                        "id": self.featurestore.featurestoreJdbcConnections[i].id
-                    })
                 }
 
                 if (self.featuregroupOperation === 'CREATE' && self.jdbcConnectors.length > 0) {

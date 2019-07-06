@@ -16,9 +16,9 @@
 
 package io.hops.hopsworks.common.dao.featurestore;
 
-import io.hops.hopsworks.common.dao.featurestore.storage_connectors.hopsfs.FeaturestoreHopsfsConnector;
-import io.hops.hopsworks.common.dao.featurestore.storage_connectors.jdbc.FeaturestoreJdbcConnector;
-import io.hops.hopsworks.common.dao.featurestore.storage_connectors.s3.FeaturestoreS3Connector;
+import io.hops.hopsworks.common.dao.featurestore.storageconnector.hopsfs.FeaturestoreHopsfsConnector;
+import io.hops.hopsworks.common.dao.featurestore.storageconnector.jdbc.FeaturestoreJdbcConnector;
+import io.hops.hopsworks.common.dao.featurestore.storageconnector.s3.FeaturestoreS3Connector;
 import io.hops.hopsworks.common.dao.project.Project;
 
 import javax.persistence.Basic;

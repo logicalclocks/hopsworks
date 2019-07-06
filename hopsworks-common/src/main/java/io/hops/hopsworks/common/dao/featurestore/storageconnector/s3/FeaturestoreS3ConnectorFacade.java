@@ -14,16 +14,20 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.common.dao.featurestore.storage_connectors.s3;
+package io.hops.hopsworks.common.dao.featurestore.storageconnector.s3;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
+import io.hops.hopsworks.common.dao.featurestore.Featurestore;
 
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
 import javax.validation.ConstraintViolationException;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -55,6 +59,36 @@ public class FeaturestoreS3ConnectorFacade extends AbstractFacade<FeaturestoreS3
     } catch (ConstraintViolationException cve) {
       LOGGER.log(Level.WARNING, "Could not persist the new s3 connection", cve);
       throw cve;
+    }
+  }
+
+  /**
+   * Retrieves all s3 connectors for a particular featurestore
+   *
+   * @param featurestore featurestore get s3 connectors for
+   * @return list of s3 connectors
+   */
+  public List<FeaturestoreS3Connector> findByFeaturestore(Featurestore featurestore) {
+    TypedQuery<FeaturestoreS3Connector> q = em.createNamedQuery("FeaturestoreS3Connector.findByFeaturestore",
+        FeaturestoreS3Connector.class).setParameter("featurestore", featurestore);
+    return q.getResultList();
+  }
+
+  /**
+   * Retrieves a particular s3 connector given its Id and featurestore from the database
+   *
+   * @param id           id of the s3 connector
+   * @param featurestore featurestore of the connector
+   * @return a single FeaturestoreS3Connector entity
+   */
+  public FeaturestoreS3Connector findByIdAndFeaturestore(Integer id, Featurestore featurestore) {
+    try {
+      return em.createNamedQuery("FeaturestoreS3Connector.findByFeaturestoreAndId", FeaturestoreS3Connector.class)
+          .setParameter("featurestore", featurestore)
+          .setParameter("id", id)
+          .getSingleResult();
+    } catch (NoResultException e) {
+      return null;
     }
   }
 

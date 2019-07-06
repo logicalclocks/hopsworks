@@ -14,16 +14,20 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.common.dao.featurestore.storage_connectors.jdbc;
+package io.hops.hopsworks.common.dao.featurestore.storageconnector.jdbc;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
+import io.hops.hopsworks.common.dao.featurestore.Featurestore;
 
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
 import javax.validation.ConstraintViolationException;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -55,6 +59,35 @@ public class FeaturestoreJdbcConnectorFacade extends AbstractFacade<Featurestore
     } catch (ConstraintViolationException cve) {
       LOGGER.log(Level.WARNING, "Could not persist the new JDBC connection", cve);
       throw cve;
+    }
+  }
+
+  /**
+   * Retrieves all jdbc connectors for a particular featurestore
+   *
+   * @param featurestore featurestore get jdbc connectors for
+   * @return list of JDBC connectors
+   */
+  public List<FeaturestoreJdbcConnector> findByFeaturestore(Featurestore featurestore) {
+    TypedQuery<FeaturestoreJdbcConnector> q = em.createNamedQuery("FeaturestoreJdbcConnector.findByFeaturestore",
+        FeaturestoreJdbcConnector.class).setParameter("featurestore", featurestore);
+    return q.getResultList();
+  }
+
+  /**
+   * Retrieves a particular jdbc connector given its Id and featurestore from the database
+   *
+   * @param id           id of the jdbc connector
+   * @param featurestore featurestore of the connector
+   * @return a single FeaturestoreJdbcConnector entity
+   */
+  public FeaturestoreJdbcConnector findByIdAndFeaturestore(Integer id, Featurestore featurestore) {
+    try {
+      return em.createNamedQuery("FeaturestoreJdbcConnector.findByFeaturestoreAndId",
+          FeaturestoreJdbcConnector.class).setParameter("featurestore", featurestore).setParameter("id", id)
+          .getSingleResult();
+    } catch (NoResultException e) {
+      return null;
     }
   }
 

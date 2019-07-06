@@ -14,7 +14,7 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.common.dao.featurestore.storage_connectors.s3;
+package io.hops.hopsworks.common.dao.featurestore.storageconnector.s3;
 
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
 
@@ -41,7 +41,11 @@ import java.io.Serializable;
 @NamedQueries({
     @NamedQuery(name = "FeaturestoreS3Connector.findAll", query = "SELECT fss FROM FeaturestoreS3Connector fss"),
     @NamedQuery(name = "FeaturestoreS3Connector.findById",
-        query = "SELECT fss FROM FeaturestoreS3Connector fss WHERE fss.id = :id")})
+        query = "SELECT fss FROM FeaturestoreS3Connector fss WHERE fss.id = :id"),
+    @NamedQuery(name = "FeaturestoreS3Connector.findByFeaturestore", query = "SELECT fss " +
+        "FROM FeaturestoreS3Connector fss WHERE fss.featurestore = :featurestore"),
+    @NamedQuery(name = "FeaturestoreS3Connector.findByFeaturestoreAndId", query = "SELECT fss " +
+        "FROM FeaturestoreS3Connector fss WHERE fss.featurestore = :featurestore AND fss.id = :id")})
 public class FeaturestoreS3Connector implements Serializable {
   private static final long serialVersionUID = 1L;
   @Id

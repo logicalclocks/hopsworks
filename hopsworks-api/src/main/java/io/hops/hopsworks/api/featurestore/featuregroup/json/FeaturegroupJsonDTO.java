@@ -14,8 +14,9 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.api.featurestore.json;
+package io.hops.hopsworks.api.featurestore.featuregroup.json;
 
+import io.hops.hopsworks.api.featurestore.json.FeaturestoreEntityJsonDTO;
 import io.hops.hopsworks.common.dao.featurestore.feature.FeatureDTO;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.FeaturegroupType;
 import io.hops.hopsworks.common.dao.featurestore.stats.cluster_analysis.ClusterAnalysisDTO;

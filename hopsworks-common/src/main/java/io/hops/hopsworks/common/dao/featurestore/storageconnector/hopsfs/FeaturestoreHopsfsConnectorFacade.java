@@ -14,21 +14,25 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.common.dao.featurestore.storage_connectors.hopsfs;
+package io.hops.hopsworks.common.dao.featurestore.storageconnector.hopsfs;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
+import io.hops.hopsworks.common.dao.featurestore.Featurestore;
 
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
 import javax.validation.ConstraintViolationException;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * A facade for the feature_store_jdbc table in the Hopsworks database,
+ * A facade for the feature_store_hopsfs_connector table in the Hopsworks database,
  * use this interface when performing database operations against the table.
  */
 @Stateless
@@ -43,9 +47,9 @@ public class FeaturestoreHopsfsConnectorFacade extends AbstractFacade<Featuresto
   }
 
   /**
-   * A transaction to persist a jdbc connection for the featurestore in the database
+   * A transaction to persist a hopsfs connection for the featurestore in the database
    *
-   * @param featurestoreHopsfsConnector the featurestore JDBC connection to persist
+   * @param featurestoreHopsfsConnector the featurestore hopsfs connection to persist
    */
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   public void persist(FeaturestoreHopsfsConnector featurestoreHopsfsConnector) {
@@ -53,8 +57,37 @@ public class FeaturestoreHopsfsConnectorFacade extends AbstractFacade<Featuresto
       em.persist(featurestoreHopsfsConnector);
       em.flush();
     } catch (ConstraintViolationException cve) {
-      LOGGER.log(Level.WARNING, "Could not persist the new JDBC connection", cve);
+      LOGGER.log(Level.WARNING, "Could not persist the new HopsFS connector", cve);
       throw cve;
+    }
+  }
+
+  /**
+   * Retrieves all hopsfs connectors for a particular featurestore
+   *
+   * @param featurestore featurestore get hopsfs connectors for
+   * @return list of hopsfs connectors
+   */
+  public List<FeaturestoreHopsfsConnector> findByFeaturestore(Featurestore featurestore) {
+    TypedQuery<FeaturestoreHopsfsConnector> q = em.createNamedQuery("FeaturestoreHopsfsConnector.findByFeaturestore",
+        FeaturestoreHopsfsConnector.class).setParameter("featurestore", featurestore);
+    return q.getResultList();
+  }
+
+  /**
+   * Retrieves a particular hopsfs connector given its Id and featurestore from the database
+   *
+   * @param id           id of the hopsfs connector
+   * @param featurestore featurestore of the connector
+   * @return a single FeaturestoreHopsfsConnector entity
+   */
+  public FeaturestoreHopsfsConnector findByIdAndFeaturestore(Integer id, Featurestore featurestore) {
+    try {
+      return em.createNamedQuery("FeaturestoreHopsfsConnector.findByFeaturestoreAndId",
+          FeaturestoreHopsfsConnector.class).setParameter("featurestore", featurestore).setParameter("id", id)
+          .getSingleResult();
+    } catch (NoResultException e) {
+      return null;
     }
   }
 

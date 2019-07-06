@@ -14,8 +14,9 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.api.featurestore.json;
+package io.hops.hopsworks.api.featurestore.trainingdataset.json;
 
+import io.hops.hopsworks.api.featurestore.json.FeaturestoreEntityJsonDTO;
 import io.hops.hopsworks.common.dao.featurestore.feature.FeatureDTO;
 import io.hops.hopsworks.common.dao.featurestore.stats.cluster_analysis.ClusterAnalysisDTO;
 import io.hops.hopsworks.common.dao.featurestore.stats.desc_stats.DescriptiveStatsDTO;
@@ -30,7 +31,7 @@ import java.util.List;
  * DTO representing the JSON payload from REST-clients when creating/updating featuregroups
  */
 @XmlRootElement
-public class TrainingDatasetJsonDTO extends FeaturestoreEntityJsonDTO{
+public class TrainingDatasetJsonDTO extends FeaturestoreEntityJsonDTO {
 
   private String dataFormat;
 

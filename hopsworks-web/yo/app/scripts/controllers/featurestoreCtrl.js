@@ -38,6 +38,7 @@ angular.module('hopsWorksApp')
             self.featurestores = [];
             self.features = [];
             self.trainingDatasets = [];
+            self.storageConnectors = [];
             self.featuregroups = [];
             self.featuregroupsPageSize = 10;
             self.trainingDatasetsPageSize = 10;
@@ -60,6 +61,7 @@ angular.module('hopsWorksApp')
             self.loadingText = "";
             self.featuregroupsLoaded = false;
             self.trainingDatasetsLoaded = false;
+            self.storageConnectorsLoaded = false;
             self.quotaLoaded = false;
             self.tourService = TourService;
             self.tourService.currentStep_TourNine = 0; //Feature store tour
@@ -91,7 +93,6 @@ angular.module('hopsWorksApp')
             self.featureSearchFgFilter = ""
             self.featureSearchFgVersionFilter = ""
             self.fgFeatures = []
-            self.storageConnectors = []
 
             //Constants
             self.hopsfsConnectorType = FeaturestoreService.hopsfsConnectorType()
@@ -251,7 +252,8 @@ angular.module('hopsWorksApp')
                 if(self.featuregroupsLoaded && self.trainingDatasetsLoaded) {
                     self.collectAllFeatures();
                 }
-                if (self.featuregroupsLoaded && self.trainingDatasetsLoaded && self.quotaLoaded) {
+                if (self.featuregroupsLoaded && self.trainingDatasetsLoaded && self.quotaLoaded
+                    && self.storageConnectorsLoaded) {
                     var tabIndex = StorageService.get(self.projectId + "_featurestore_tab")
                     if(tabIndex != null && tabIndex != undefined && tabIndex != false){
                         $scope.featurestoreSelectedTab = tabIndex
@@ -278,52 +280,53 @@ angular.module('hopsWorksApp')
             }
 
             /**
+             * Convert storage connectors into a more human-readable list to display in the UI
+             */
+            self.setupStorageConnectors = function() {
+                for (var i = 0; i < self.storageConnectors.length; i++) {
+                    self.storageConnectors[i].canDelete = self.canNotDeleteStorageConnector(
+                        self.storageConnectors[i].name)
+                    if(self.storageConnectors[i].type === self.jdbcConnectorType){
+                        self.storageConnectors[i].info = "Connection String: <code>" +
+                            self.storageConnectors[i].connectionString +
+                            "</code> | Additional arguments: <code>" +
+                            self.storageConnectors[i].arguments + "</code>"
+                    }
+
+                    if(self.storageConnectors[i].type === self.s3ConnectorType){
+                        self.storageConnectors[i].info = "S3 Bucket: <code>" +
+                            self.storageConnectors[i].bucket
+                            + "</code> | accessKey: <code>" + self.storageConnectors[i].accessKey
+                            + "</code> | secretKey: <code>" + self.storageConnectors[i].secretKey +
+                            "</code>"
+                    }
+
+                    if(self.storageConnectors[i].type === self.hopsfsConnectorType){
+                        self.storageConnectors[i].info = "HopsFs Path: <code>" +
+                            self.storageConnectors[i].hopsfsPath
+                            + "</code>"
+                    }
+                }
+            }
+
+            /**
              * Delete a storage connector
              *
              * @param connector the connector to delete
              */
             self.deleteStorageConnector = function (connector) {
-                if(connector.type === self.jdbcConnectorType){
-                    FeaturestoreService.deleteJdbcConnector(self.projectId, self.featurestore, connector.id).then(
-                        function (success) {
-                            self.getFeaturestores()
-                            growl.success("Storage connector deleted", {title: 'Success', ttl: 1000});
-                        },
-                        function (error) {
-                            growl.error(error.data.errorMsg, {
-                                title: 'Failed to delete the storage connector',
-                                ttl: 15000
-                            });
+                FeaturestoreService.deleteStorageConnector(self.projectId, self.featurestore, connector.id,
+                    connector.storageConnectorType).then(
+                    function (success) {
+                        self.getStorageConnectors(self.featurestore);
+                        growl.success("Storage connector deleted", {title: 'Success', ttl: 1000});
+                    },
+                    function (error) {
+                        growl.error(error.data.errorMsg, {
+                            title: 'Failed to delete the storage connector',
+                            ttl: 15000
                         });
-                }
-
-                if(connector.type === self.s3ConnectorType){
-                    FeaturestoreService.deleteS3Connector(self.projectId, self.featurestore, connector.id).then(
-                        function (success) {
-                            self.getFeaturestores()
-                            growl.success("Storage connector deleted", {title: 'Success', ttl: 1000});
-                        },
-                        function (error) {
-                            growl.error(error.data.errorMsg, {
-                                title: 'Failed to delete the storage connector',
-                                ttl: 15000
-                            });
-                        });
-                }
-
-                if(connector.type === self.hopsfsConnectorType){
-                    FeaturestoreService.deleteHopsfsConnector(self.projectId, self.featurestore, connector.id).then(
-                        function (success) {
-                            self.getFeaturestores()
-                            growl.success("Storage connector deleted", {title: 'Success', ttl: 1000});
-                        },
-                        function (error) {
-                            growl.error(error.data.errorMsg, {
-                                title: 'Failed to delete the storage connector',
-                                ttl: 15000
-                            });
-                        });
-                }
+                    });
                 growl.info("Deleting storage connector... wait", {title: 'Deleting', ttl: 1000})
             }
 
@@ -360,49 +363,27 @@ angular.module('hopsWorksApp')
 
 
             /**
-             * Group JDBC, S3, and HopsFS storage connectors into a single list
+             * Retrieves a list of all storage connectors for a given featurestore
+             *
+             * @param featurestore the featurestore to query
              */
-            self.setupStorageConnectors = function() {
-                self.storageConnectors = []
-                for (var i = 0; i < self.featurestore.featurestoreJdbcConnections.length; i++) {
-                    self.storageConnectors.push({
-                        "name": self.featurestore.featurestoreJdbcConnections[i].name,
-                        "description": self.featurestore.featurestoreJdbcConnections[i].description,
-                        "type": self.jdbcConnectorType,
-                        "info": "Connection String: <code>" +
-                            self.featurestore.featurestoreJdbcConnections[i].connectionString +
-                            "</code> | Additional arguments: <code>" +
-                            self.featurestore.featurestoreJdbcConnections[i].arguments + "</code>",
-                        "canDelete": self.canNotDeleteStorageConnector(self.featurestore.featurestoreJdbcConnections[i].name),
-                        "id": self.featurestore.featurestoreJdbcConnections[i].id
-                    })
-                }
-
-                for (var i = 0; i < self.featurestore.featurestoreHopsfsConnections.length; i++) {
-                    self.storageConnectors.push({
-                        "name": self.featurestore.featurestoreHopsfsConnections[i].name,
-                        "description": self.featurestore.featurestoreHopsfsConnections[i].description,
-                        "type": self.hopsfsConnectorType,
-                        "info": "HopsFs Path: <code>" + self.featurestore.featurestoreHopsfsConnections[i].hopsfsPath
-                            + "</code>",
-                        "canDelete": self.canNotDeleteStorageConnector(self.featurestore.featurestoreHopsfsConnections[i].name),
-                        "id": self.featurestore.featurestoreHopsfsConnections[i].id
-                    })
-                }
-
-                for (var i = 0; i < self.featurestore.featurestoreS3Connections.length; i++) {
-                    self.storageConnectors.push({
-                        "name": self.featurestore.featurestoreS3Connections[i].name,
-                        "description": self.featurestore.featurestoreS3Connections[i].description,
-                        "type": self.s3ConnectorType,
-                        "info": "S3 Bucket: <code>" + self.featurestore.featurestoreS3Connections[i].bucket
-                            + "</code> | accessKey: <code>" + self.featurestore.featurestoreS3Connections[i].accessKey
-                            + "</code> | secretKey: <code>" + self.featurestore.featurestoreS3Connections[i].secretKey +
-                            "</code>",
-                        "canDelete": self.canNotDeleteStorageConnector(self.featurestore.featurestoreS3Connections[i].name),
-                        "id": self.featurestore.featurestoreS3Connections[i].id
-                    })
-                }
+            self.getStorageConnectors = function(featurestore) {
+                FeaturestoreService.getStorageConnectors(self.projectId, featurestore).then(
+                    function (success) {
+                        self.storageConnectors = success.data
+                        self.storageConnectorsLoaded = true
+                        self.setupStorageConnectors()
+                        StorageService.store(self.projectId + "_feturestore_storageconnectors", self.storageConnectors);
+                        self.stopLoading()
+                    },
+                    function (error) {
+                        self.storageConnectorsLoaded = true
+                        self.stopLoading()
+                        growl.error(error.data.errorMsg, {
+                            title: 'Failed to fetch the storage connectors for the featurestore',
+                            ttl: 15000
+                        });
+                    });
             }
 
             /**
@@ -436,8 +417,8 @@ angular.module('hopsWorksApp')
                     if(self.featurestores[i].featurestoreName === fs.featurestoreName) {
                         self.featurestore = self.featurestores[i];
                         StorageService.store(self.projectId + "_featurestore", self.featurestore);
-                        self.setupStorageConnectors()
                         self.fetchFeaturestoreSize();
+                        self.getStorageConnectors(self.featurestore);
                         self.getTrainingDatasets(self.featurestore);
                         self.getFeaturegroups(self.featurestore);
                         return
@@ -459,6 +440,7 @@ angular.module('hopsWorksApp')
                         StorageService.store(self.projectId + "_featurestore", self.featurestore);
                         self.setupStorageConnectors()
                         self.fetchFeaturestoreSize();
+                        self.getStorageConnectors(self.featurestore);
                         self.getTrainingDatasets(self.featurestore);
                         self.getFeaturegroups(self.featurestore);
                         return
@@ -899,6 +881,7 @@ angular.module('hopsWorksApp')
             self.onSelectFeaturestoreCallback = function (featurestore) {
                 self.featurestore = featurestore;
                 self.startLoading("Loading Feature store data...");
+                self.getStorageConnectors(featurestore);
                 self.getTrainingDatasets(featurestore);
                 self.getFeaturegroups(featurestore);
                 self.fetchFeaturestoreSize();
