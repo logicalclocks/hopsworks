@@ -16,13 +16,18 @@
 
 package io.hops.hopsworks.common.dao.featurestore.settings;
 
+import io.hops.hopsworks.common.dao.featurestore.featuregroup.FeaturegroupType;
+import io.hops.hopsworks.common.dao.featurestore.storageconnector.FeaturestoreStorageConnectorType;
+import io.hops.hopsworks.common.dao.featurestore.trainingdataset.TrainingDatasetType;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.Arrays;
 import java.util.List;
 
 /**
- * DTO containing the feature store client settings
+ * DTO containing the feature store client settings (source of truth for JS client, Python Client, Java Client, and
+ * Scala Client to the Feature Store
  */
 @XmlRootElement
 public class FeaturestoreClientSettingsDTO {
@@ -51,6 +56,37 @@ public class FeaturestoreClientSettingsDTO {
   public static int HOPSFS_TRAINING_DATASET_NAME_MAX_LENGTH = 256;
   public static int TRAINING_DATASET_FEATURE_NAME_MAX_LENGTH = 1000;
   public static int TRAINING_DATASET_FEATURE_DESCRIPTION_MAX_LENGTH = 10000;
+  public static String ON_DEMAND_FEATUREGROUP_TYPE = FeaturegroupType.ON_DEMAND_FEATURE_GROUP.name();
+  public static String CACHED_FEATUREGROUP_TYPE = FeaturegroupType.CACHED_FEATURE_GROUP.name();
+  public static String JCBC_CONNECTOR_TYPE = FeaturestoreStorageConnectorType.JDBC.name();
+  public static String HOPSFS_CONNECTOR_TYPE = FeaturestoreStorageConnectorType.HopsFS.name();
+  public static String S3_CONNECTOR_TYPE = FeaturestoreStorageConnectorType.S3.name();
+  public static String CACHED_FEATUREGROUP_DTO_TYPE = "cachedFeaturegroupDTO";
+  public static String ON_DEMAND_FEATUREGROUP_DTO_TYPE = "onDemandFeaturegroupDTO";
+  public static String HOPSFS_TRAINING_DATASET_TYPE = TrainingDatasetType.HOPSFS_TRAINING_DATASET.name();
+  public static String EXTERNAL_TRAINING_DATASET_TYPE = TrainingDatasetType.EXTERNAL_TRAINING_DATASET.name();
+  public static String HOPSFS_TRAINING_DATASET_DTO_TYPE = "hopsfsTrainingDatasetDTO";
+  public static String EXTERNAL_TRAINING_DATASET_DTO_TYPE = "externalTrainingDatasetDTO";
+  public static int TRAINING_DATASET_DESCRIPTION_MAX_LENGTH = 10000;
+  public static String S3_CONNECTOR_DTO_TYPE = "featurestoreS3ConnectorDTO";
+  public static String JDBC_CONNECTOR_DTO_TYPE = "featurestoreJdbcConnectorDTO";
+  public static String HOPSFS_CONNECTOR_DTO_TYPE = "featurestoreHopsfsConnectorDTO";
+  public static String FEATUREGROUP_TPYE = "FEATURE GROUP";
+  public static String TRAINING_DATASET_TPYE = "FEATURE GROUP";
+  public static List<String> SUGGESTED_FEATURE_TYPES = Arrays.asList(new String[]{
+    "None","TINYINT", "SMALLINT", "INT", "BIGINT", "FLOAT", "DOUBLE",
+    "DECIMAL", "TIMESTAMP", "DATE", "STRING",
+    "BOOLEAN", "BINARY",
+    "ARRAY <TINYINT>", "ARRAY <SMALLINT>", "ARRAY <INT>", "ARRAY <BIGINT>",
+    "ARRAY <FLOAT>", "ARRAY <DOUBLE>", "ARRAY <DECIMAL>", "ARRAY <TIMESTAMP>",
+    "ARRAY <DATE>", "ARRAY <STRING>",
+    "ARRAY <BOOLEAN>", "ARRAY <BINARY>", "ARRAY <ARRAY <FLOAT> >",
+    "ARRAY <ARRAY <INT> >", "ARRAY <ARRAY <STRING> >",
+    "MAP <FLOAT, FLOAT>", "MAP <FLOAT, STRING>", "MAP <FLOAT, INT>", "MAP <FLOAT, BINARY>",
+    "MAP <INT, INT>", "MAP <INT, STRING>", "MAP <INT, BINARY>", "MAP <INT, FLOAT>",
+    "MAP <INT, ARRAY <FLOAT> >",
+    "STRUCT < label: STRING, index: INT >", "UNIONTYPE < STRING, INT>"
+  });
   
   
   public FeaturestoreClientSettingsDTO() {
@@ -165,11 +201,102 @@ public class FeaturestoreClientSettingsDTO {
   public int getTrainingDatasetFeatureNameMaxLength() {
     return TRAINING_DATASET_FEATURE_NAME_MAX_LENGTH;
   }
+  
   @XmlElement
   public int getTrainingDatasetFeatureDescriptionMaxLength() {
     return TRAINING_DATASET_FEATURE_DESCRIPTION_MAX_LENGTH;
   }
   
+  @XmlElement
+  public String getOnDemandFeaturegroupType() {
+    return ON_DEMAND_FEATUREGROUP_TYPE;
+  }
+  
+  @XmlElement
+  public String getCachedFeaturegroupType() {
+    return CACHED_FEATUREGROUP_TYPE;
+  }
+  
+  @XmlElement
+  public static String getJcbcConnectorType() {
+    return JCBC_CONNECTOR_TYPE;
+  }
+  
+  @XmlElement
+  public String getHopsfsConnectorType() {
+    return HOPSFS_CONNECTOR_TYPE;
+  }
+  
+  @XmlElement
+  public String getS3ConnectorType() {
+    return S3_CONNECTOR_TYPE;
+  }
+  
+  @XmlElement
+  public String getCachedFeaturegroupDtoType() {
+    return CACHED_FEATUREGROUP_DTO_TYPE;
+  }
+  
+  @XmlElement
+  public String getOnDemandFeaturegroupDtoType() {
+    return ON_DEMAND_FEATUREGROUP_DTO_TYPE;
+  }
+  
+  @XmlElement
+  public String getHopsfsTrainingDatasetType() {
+    return HOPSFS_TRAINING_DATASET_TYPE;
+  }
+  
+  @XmlElement
+  public String getExternalTrainingDatasetType() {
+    return EXTERNAL_TRAINING_DATASET_TYPE;
+  }
+  
+  @XmlElement
+  public String getHopsfsTrainingDatasetDtoType() {
+    return HOPSFS_TRAINING_DATASET_DTO_TYPE;
+  }
+  
+  @XmlElement
+  public String getExternalTrainingDatasetDtoType() {
+    return EXTERNAL_TRAINING_DATASET_DTO_TYPE;
+  }
+  
+  @XmlElement
+  public int getTrainingDatasetDescriptionMaxLength() {
+    return TRAINING_DATASET_DESCRIPTION_MAX_LENGTH;
+  }
+  
+  @XmlElement
+  public String getS3ConnectorDtoType() {
+    return S3_CONNECTOR_DTO_TYPE;
+  }
+  
+  @XmlElement
+  public String getJdbcConnectorDtoType() {
+    return JDBC_CONNECTOR_DTO_TYPE;
+  }
+  
+  @XmlElement
+  public String getHopsfsConnectorDtoType() {
+    return HOPSFS_CONNECTOR_DTO_TYPE;
+  }
+  
+  @XmlElement
+  public String getFeaturegroupTpye() {
+    return FEATUREGROUP_TPYE;
+  }
+  
+  @XmlElement
+  public String getTrainingDatasetTpye() {
+    return TRAINING_DATASET_TPYE;
+  }
+  
+  @XmlElement
+  public List<String> getSuggestedFeatureTypes() {
+    return SUGGESTED_FEATURE_TYPES;
+  }
+
   public void setFeaturestoreStatisticsMaxCorrelations(int featurestoreStatisticsMaxCorrelations) {
     FEATURESTORE_STATISTICS_MAX_CORRELATIONS = featurestoreStatisticsMaxCorrelations;
   }
@@ -263,5 +390,77 @@ public class FeaturestoreClientSettingsDTO {
   
   public void setTrainingDatasetFeatureDescriptionMaxLength(int trainingDatasetFeatureDescriptionMaxLength) {
     TRAINING_DATASET_FEATURE_DESCRIPTION_MAX_LENGTH = trainingDatasetFeatureDescriptionMaxLength;
+  }
+  
+  public void setOnDemandFeaturegroupType(String onDemandFeaturegroupType) {
+    ON_DEMAND_FEATUREGROUP_TYPE = onDemandFeaturegroupType;
+  }
+  
+  public void setCachedFeaturegroupType(String cachedFeaturegroupType) {
+    CACHED_FEATUREGROUP_TYPE = cachedFeaturegroupType;
+  }
+  
+  public void setJcbcConnectorType(String jcbcConnectorType) {
+    JCBC_CONNECTOR_TYPE = jcbcConnectorType;
+  }
+  
+  public void setHopsfsConnectorType(String hopsfsConnectorType) {
+    HOPSFS_CONNECTOR_TYPE = hopsfsConnectorType;
+  }
+  
+  public void setS3ConnectorType(String s3ConnectorType) {
+    S3_CONNECTOR_TYPE = s3ConnectorType;
+  }
+  
+  public void setCachedFeaturegroupDtoType(String cachedFeaturegroupDtoType) {
+    CACHED_FEATUREGROUP_DTO_TYPE = cachedFeaturegroupDtoType;
+  }
+  
+  public void setOnDemandFeaturegroupDtoType(String onDemandFeaturegroupDtoType) {
+    ON_DEMAND_FEATUREGROUP_DTO_TYPE = onDemandFeaturegroupDtoType;
+  }
+  
+  public void setHopsfsTrainingDatasetType(String hopsfsTrainingDatasetType) {
+    HOPSFS_TRAINING_DATASET_TYPE = hopsfsTrainingDatasetType;
+  }
+  
+  public void setExternalTrainingDatasetType(String externalTrainingDatasetType) {
+    EXTERNAL_TRAINING_DATASET_TYPE = externalTrainingDatasetType;
+  }
+  
+  public void setHopsfsTrainingDatasetDtoType(String hopsfsTrainingDatasetDtoType) {
+    HOPSFS_TRAINING_DATASET_DTO_TYPE = hopsfsTrainingDatasetDtoType;
+  }
+  
+  public void setExternalTrainingDatasetDtoType(String externalTrainingDatasetDtoType) {
+    EXTERNAL_TRAINING_DATASET_DTO_TYPE = externalTrainingDatasetDtoType;
+  }
+  
+  public void setTrainingDatasetDescriptionMaxLength(int trainingDatasetDescriptionMaxLength) {
+    TRAINING_DATASET_DESCRIPTION_MAX_LENGTH = trainingDatasetDescriptionMaxLength;
+  }
+  
+  public void setS3ConnectorDtoType(String s3ConnectorDtoType) {
+    S3_CONNECTOR_DTO_TYPE = s3ConnectorDtoType;
+  }
+  
+  public void setJdbcConnectorDtoType(String jdbcConnectorDtoType) {
+    JDBC_CONNECTOR_DTO_TYPE = jdbcConnectorDtoType;
+  }
+  
+  public void setHopsfsConnectorDtoType(String hopsfsConnectorDtoType) {
+    HOPSFS_CONNECTOR_DTO_TYPE = hopsfsConnectorDtoType;
+  }
+  
+  public void setFeaturegroupTpye(String featuregroupTpye) {
+    FEATUREGROUP_TPYE = featuregroupTpye;
+  }
+  
+  public void setTrainingDatasetTpye(String trainingDatasetTpye) {
+    TRAINING_DATASET_TPYE = trainingDatasetTpye;
+  }
+  
+  public void setSuggestedFeatureTypes(List<String> suggestedFeatureTypes) {
+    SUGGESTED_FEATURE_TYPES = suggestedFeatureTypes;
   }
 }

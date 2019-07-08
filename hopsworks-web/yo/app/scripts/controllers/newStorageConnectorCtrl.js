@@ -29,6 +29,7 @@ angular.module('hopsWorksApp')
             self.projectId = $routeParams.projectID;
             self.featurestore = StorageService.get(self.projectId + "_featurestore")
             self.storageConnectors = StorageService.get(self.projectId + "_featurestore_storageconnectors")
+            self.settings = StorageService.get(self.projectId + "_fssettings")
 
             //Input Variables
             self.storageConnectorName = ""
@@ -47,21 +48,21 @@ angular.module('hopsWorksApp')
             self.phase = 0
 
             //Constants
-            self.storageConnectorNameRegexp = FeaturestoreService.featurestoreRegExp()
+            self.storageConnectorNameRegexp = self.settings.featurestoreRegex
             self.dataSetService = DataSetService(self.projectId); //The datasetservice for the current project.
-            self.storageConnectorNameMaxLength = FeaturestoreService.storageConnectorNameMaxLength();
-            self.storageConnectorDescriptionMaxLength = FeaturestoreService.storageConnectorDescriptionMaxLength();
-            self.jdbcStorageConnectorConnectionStringMaxLength = FeaturestoreService.jdbcStorageConnectorConnectionStringMaxLength();
-            self.jdbcStorageConnectorArgumentsMaxLength = FeaturestoreService.jdbcStorageConnectorArgumentsMaxLength();
-            self.s3StorageConnectorBucketMaxLength = FeaturestoreService.s3StorageConnectorBucketMaxLength();
-            self.s3StorageConnectorAccesskeyMaxLength = FeaturestoreService.s3StorageConnectorAccesskeyMaxLength();
-            self.s3StorageConnectorSecretkeyMaxLength = FeaturestoreService.s3StorageConnectorSecretkeyMaxLength();
-            self.hopsfsConnectorType = FeaturestoreService.hopsfsConnectorType()
-            self.s3ConnectorType = FeaturestoreService.s3ConnectorType()
-            self.jdbcConnectorType = FeaturestoreService.jdbcConnectorType()
-            self.s3ConnectorDTOType = FeaturestoreService.s3ConnectorDTO()
-            self.jdbcConnectorDTOType = FeaturestoreService.jdbcConnectorDTO()
-            self.hopsfsConnectorDTOType = FeaturestoreService.hopsfsConnectorDTO()
+            self.storageConnectorNameMaxLength = self.settings.storageConnectorNameMaxLength
+            self.storageConnectorDescriptionMaxLength = self.settings.storageConnectorDescriptionMaxLength
+            self.jdbcStorageConnectorConnectionStringMaxLength = self.settings.jdbcStorageConnectorConnectionstringMaxLength
+            self.jdbcStorageConnectorArgumentsMaxLength = self.settings.jdbcStorageConnectorArgumentsMaxLength
+            self.s3StorageConnectorBucketMaxLength = self.settings.s3StorageConnectorBucketMaxLength
+            self.s3StorageConnectorAccesskeyMaxLength = self.settings.s3StorageConnectorAccesskeyMaxLength;
+            self.s3StorageConnectorSecretkeyMaxLength = self.settings.s3StorageConnectorSecretkeyMaxLength;
+            self.hopsfsConnectorType = self.settings.hopsfsConnectorType
+            self.s3ConnectorType = self.settings.s3ConnectorType
+            self.jdbcConnectorType = self.settings.jdbcConnectorType
+            self.s3ConnectorDTOType = self.settings.s3ConnectorDTOType
+            self.jdbcConnectorDTOType = self.settings.jdbcConnectorDTOType
+            self.hopsfsConnectorDTOType = self.settings.hopsfsConnectorDTOType
 
 
             /**

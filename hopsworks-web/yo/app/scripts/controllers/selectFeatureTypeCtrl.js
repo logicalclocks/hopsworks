@@ -19,19 +19,26 @@
  */
 angular.module('hopsWorksApp')
     .controller('selectFeatureTypeCtrl', ['$uibModalInstance', 'FeaturestoreService',
-        'growl', 'ModalService', '$scope',
-        function ($uibModalInstance, FeaturestoreService, growl, ModalService, $scope) {
+        'growl', 'ModalService', '$scope', 'settings',
+        function ($uibModalInstance, FeaturestoreService, growl, ModalService, $scope, settings) {
             /**
              * Initialize state
              */
             var self = this;
+
+            //Controller Inputs
+            self.settings = settings
+
+            //State
             self.customType;
             self.predefinedType;
             self.duplicateTypeSelection = 1;
             self.noSelection = 1;
             self.wrong_values = 1;
-            self.hiveDataTypes = FeaturestoreService.suggestedFeatureDataTypes()
             $scope.selected = self.hiveDataTypes[0]
+
+            //Constants
+            self.hiveDataTypes = self.settings.suggestedFeatureDataTypes()
 
 
             /**

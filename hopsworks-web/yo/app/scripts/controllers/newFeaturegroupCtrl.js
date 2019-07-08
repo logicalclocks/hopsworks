@@ -101,21 +101,21 @@ angular.module('hopsWorksApp')
 
             //Constants
             self.hiveDatabases = [self.featurestore.featurestoreName, self.projectName]
-            self.hiveRegexp = FeaturestoreService.featurestoreRegExp();
-            self.cachedFeaturegroupNameMaxLength = FeaturestoreService.cachedFeaturegroupNameMaxLength()
-            self.cachedFeaturegroupDescriptionMaxLength = FeaturestoreService.cachedFeaturegroupDescriptionMaxLength()
-            self.cachedFeaturegroupFeatureNameMaxLength = FeaturestoreService.cachedFeaturegroupFeatureNameMaxLength()
-            self.cachedFeaturegroupFeatureDescriptionMaxLength = FeaturestoreService.cachedFeaturegroupFeatureDescriptionMaxLength()
-            self.onDemandFeaturegroupNameMaxLength = FeaturestoreService.onDemandFeaturegroupNameMaxLength()
-            self.onDemandFeaturegroupDescriptionMaxLength = FeaturestoreService.onDemandFeaturegroupDescriptionMaxLength()
-            self.onDemandFeaturegroupFeatureNameMaxLength = FeaturestoreService.onDemandFeaturegroupFeatureNameMaxLength()
-            self.onDemandFeaturegroupFeatureDescriptionMaxLength = FeaturestoreService.onDemandFeaturegroupFeatureDescriptionMaxLength()
-            self.onDemandFeaturegroupType = FeaturestoreService.onDemandFeaturegroupType()
-            self.cachedFeaturegroupType = FeaturestoreService.cachedFeaturegroupType()
-            self.onDemandFeaturegroupSqlQueryMaxLength = FeaturestoreService.onDemandFeaturegroupSqlQueryMaxLength()
-            self.jdbcConnectorType = FeaturestoreService.jdbcConnectorType()
-            self.cachedFeaturegroupDTOType = FeaturestoreService.cachedFeaturegroupDTO()
-            self.onDemandFeaturegroupDTOType = FeaturestoreService.onDemandFeaturegroupDTO()
+            self.hiveRegexp = self.settings.featurestoreRegex;
+            self.cachedFeaturegroupNameMaxLength = self.settings.cachedFeaturegroupFeatureNameMaxLength
+            self.cachedFeaturegroupDescriptionMaxLength = self.settings.cachedFeaturegroupFeatureDescriptionMaxLength
+            self.cachedFeaturegroupFeatureNameMaxLength = self.settings.cachedFeaturegroupFeatureNameMaxLength
+            self.cachedFeaturegroupFeatureDescriptionMaxLength = self.settings.cachedFeaturegroupFeatureDescriptionMaxLength
+            self.onDemandFeaturegroupNameMaxLength = self.settings.onDemandFeaturegroupNameMaxLength
+            self.onDemandFeaturegroupDescriptionMaxLength = self.settings.onDemandFeaturegroupDescriptionMaxLength
+            self.onDemandFeaturegroupFeatureNameMaxLength = self.settings.onDemandFeaturegroupFeatureNameMaxLength
+            self.onDemandFeaturegroupFeatureDescriptionMaxLength = self.settings.onDemandFeaturegroupFeatureDescriptionMaxLength
+            self.onDemandFeaturegroupType = self.settings.onDemandFeaturegroupType
+            self.cachedFeaturegroupType = self.settings.cachedFeaturegroupType
+            self.onDemandFeaturegroupSqlQueryMaxLength = self.settings.onDemandFeaturegroupSqlQueryMaxLength
+            self.jdbcConnectorType = self.settings.jdbcConnectorType
+            self.cachedFeaturegroupDTOType = self.settings.cachedFeaturegroupDTOType
+            self.onDemandFeaturegroupDTOType = self.settings.onDemandFeaturegroupDTOType
 
             //front-end variables
             self.cached_fg_accordion1 = {
@@ -465,7 +465,7 @@ angular.module('hopsWorksApp')
              * @param feature the feature to define the type for
              */
             self.selectFeatureType = function (feature) {
-                ModalService.selectFeatureType('lg').then(
+                ModalService.selectFeatureType('lg', self.settings).then(
                     function (success) {
                         feature.type = success
                     },

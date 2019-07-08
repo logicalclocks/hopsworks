@@ -33,6 +33,7 @@ angular.module('hopsWorksApp')
             self.trainingDatasetOperation = StorageService.get("trainingdataset_operation");
             self.trainingDataset = StorageService.get(self.projectId + "_trainingDataset");
             self.storageConnectors = StorageService.get(self.projectId + "_storageconnectors")
+            self.settings = StorageService.get(self.projectId + "_fssettings")
 
             //State
             self.showCart = false
@@ -64,15 +65,15 @@ angular.module('hopsWorksApp')
             self.sinkType = 0
 
             //Constants
-            self.trainingDatasetNameMaxLength = FeaturestoreService.trainingDatasetNameMaxLength()
-            self.trainingDatasetDescriptionMaxLength = FeaturestoreService.trainingDatasetDescriptionMaxLength()
-            self.dataFormats = FeaturestoreService.dataFormats()
-            self.hopsfsTrainingDatasetType = FeaturestoreService.hopsfsTrainingDatasetType()
-            self.hopsfsTrainingDatasetTypeDTO = FeaturestoreService.hopsfsTrainingDatasetTypeDTO()
-            self.externalTrainingDatasetType = FeaturestoreService.externalTrainingDatasetType()
-            self.externalTrainingDatasetTypeDTO = FeaturestoreService.externalTrainingDatasetTypeDTO()
-            self.s3ConnectorType = FeaturestoreService.s3ConnectorType()
-            self.hopsfsConnectorType = FeaturestoreService.hopsfsConnectorType()
+            self.trainingDatasetNameMaxLength = self.settings.hopsfsTrainingDatasetNameMaxLength
+            self.trainingDatasetDescriptionMaxLength = self.settings.trainingDatasetDescriptionMaxLength
+            self.dataFormats = self.settings.trainingDatasetDataFormats
+            self.hopsfsTrainingDatasetType = self.settings.hopsfsTrainingDatasetType
+            self.hopsfsTrainingDatasetTypeDTO = self.settings.hopsfsTrainingDatastDTOType
+            self.externalTrainingDatasetType = self.settings.externalTrainingDatasetType
+            self.externalTrainingDatasetTypeDTO = self.settings.externalTrainingDatasetDTOType
+            self.s3ConnectorType = self.settings.s3ConnectorType
+            self.hopsfsConnectorType = self.settings.hopsfsConnectorType
 
             //Input Variables
             self.trainingDatasetName = ""

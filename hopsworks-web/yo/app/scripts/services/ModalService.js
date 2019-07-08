@@ -1319,7 +1319,7 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
             },
-            viewFeatureInfo: function (size, projectId, feature, featurestore) {
+            viewFeatureInfo: function (size, projectId, feature, featurestore, settings) {
                 var modalInstance = $uibModal.open({
                     templateUrl: 'views/featureViewInfo.html',
                     controller: 'featureViewInfoCtrl as featureViewInfoCtrl',
@@ -1344,12 +1344,15 @@ angular.module('hopsWorksApp')
                         },
                         featurestore: function () {
                             return featurestore;
+                        },
+                        settings: function () {
+                            return settings;
                         }
                     }
                 });
                 return modalInstance.result;
             },
-            viewFeaturegroupInfo: function (size, projectId, featuregroup, featurestore) {
+            viewFeaturegroupInfo: function (size, projectId, featuregroup, featurestore, settings) {
                 var modalInstance = $uibModal.open({
                     templateUrl: 'views/featuregroupViewInfo.html',
                     controller: 'featuregroupViewInfoCtrl as featuregroupViewInfoCtrl',
@@ -1373,6 +1376,9 @@ angular.module('hopsWorksApp')
                             return featuregroup;
                         },
                         featurestore: function () {
+                            return featurestore;
+                        },
+                        settings: function () {
                             return featurestore;
                         }
                     }
@@ -1409,7 +1415,7 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
             },
-            selectFeatureType: function (size) {
+            selectFeatureType: function (size, settings) {
                 var modalInstance = $uibModal.open({
                     templateUrl: 'views/selectFeatureType.html',
                     controller: 'selectFeatureTypeCtrl as selectFeatureTypeCtrl',
@@ -1426,6 +1432,9 @@ angular.module('hopsWorksApp')
                                         return $q.reject(err);
                                     });
                             }],
+                        settings: function () {
+                            return settings;
+                        },
                     }
                 });
                 return modalInstance.result;

@@ -18,8 +18,9 @@
  * Controller for the Feature-Info view
  */
 angular.module('hopsWorksApp')
-    .controller('featureViewInfoCtrl', ['$uibModalInstance', '$scope', 'FeaturestoreService', 'growl', 'projectId', 'feature', 'featurestore',
-        function ($uibModalInstance, $scope, FeaturestoreService, growl, projectId, feature, featurestore) {
+    .controller('featureViewInfoCtrl', ['$uibModalInstance', '$scope', 'FeaturestoreService', 'growl', 'projectId',
+        'feature', 'featurestore', settings,
+        function ($uibModalInstance, $scope, FeaturestoreService, growl, projectId, feature, featurestore, settings) {
 
             /**
              * Initialize controller state
@@ -29,13 +30,14 @@ angular.module('hopsWorksApp')
             self.projectId = projectId;
             self.feature = feature
             self.featurestore = featurestore;
+            self.settings = settings
             //State
             self.pythonCode = ""
             self.scalaCode = ""
             self.table = []
             //Constants
-            self.cachedFeaturegroupType = FeaturestoreService.cachedFeaturegroupType()
-            self.onDemandFeaturegroupType = FeaturestoreService.onDemandFeaturegroupType()
+            self.cachedFeaturegroupType = self.settings.cachedFeaturegroupType
+            self.onDemandFeaturegroupType = self.settings.onDemandFeaturegroupType
 
             /**
              * Get the Python API code to retrieve the feature

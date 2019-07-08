@@ -90,18 +90,16 @@ angular.module('hopsWorksApp')
             self.featuresFromDate.setMinutes(self.featuresFromDate.getMinutes() - 60*24*30*4);
             self.searchInFeaturegroups = true
             self.searchInTrainingDatasets = true
-            self.featuregroupType = FeaturestoreService.featuregroupType()
-            self.trainingDatasetType = FeaturestoreService.trainingDatasetType()
+            self.featuregroupType = ""
+            self.trainingDatasetType = ""
             self.featureSearchFgFilter = ""
             self.featureSearchFgVersionFilter = ""
             self.fgFeatures = []
 
             //Constants
-            self.hopsfsConnectorType = FeaturestoreService.hopsfsConnectorType()
-            self.s3ConnectorType = FeaturestoreService.s3ConnectorType()
-            self.jdbcConnectorType = FeaturestoreService.jdbcConnectorType()
-            self.onDemandFeaturegroupType = FeaturestoreService.onDemandFeaturegroupType()
-            self.cachedFeaturegroupType = FeaturestoreService.cachedFeaturegroupType()
+            self.hopsfsConnectorType = ""
+            self.s3ConnectorType = ""
+            self.jdbcConnectorType = ""
 
 
             /**
@@ -251,8 +249,11 @@ angular.module('hopsWorksApp')
              * Function to stop the loading screen
              */
             self.stopLoading = function () {
-                if(self.featuregroupsLoaded && self.trainingDatasetsLoaded) {
+                if(self.featuregroupsLoaded && self.trainingDatasetsLoaded && self.settingsLoaded) {
                     self.collectAllFeatures();
+                }
+                if(self.storageConnectorsLoaded && self.settingsLoaded) {
+                    self.setupStorageConnectors()
                 }
                 if (self.featuregroupsLoaded && self.trainingDatasetsLoaded && self.quotaLoaded
                     && self.storageConnectorsLoaded && self.settingsLoaded) {
@@ -373,10 +374,13 @@ angular.module('hopsWorksApp')
                 FeaturestoreService.getFeaturestoreSettings(self.projectId).then(
                     function (success) {
                         self.settings = success.data
+                        self.hopsfsConnectorType = self.settings.hopsfsConnectorType
+                        self.s3ConnectorType = self.settings.s3ConnectorType
+                        self.jdbcConnectorType = self.settings.jdbcConnectorType
+                        self.featuregroupType = self.settings.featuregroupType
+                        self.trainingDatasetType = self.settings.trainingDatasetType
                         StorageService.store(self.projectId + "_fssettings", success.data);
                         self.settingsLoaded = true
-                        console.log("received fs settings:")
-                        console.log(self.settings)
                         self.stopLoading()
                     },
                     function (error) {
@@ -400,7 +404,6 @@ angular.module('hopsWorksApp')
                         self.storageConnectors = success.data
                         StorageService.store(self.projectId + "_storageconnectors", success.data);
                         self.storageConnectorsLoaded = true
-                        self.setupStorageConnectors()
                         self.stopLoading()
                     },
                     function (error) {
@@ -815,7 +818,7 @@ angular.module('hopsWorksApp')
              * @param featuregroup
              */
             self.viewFeaturegroupInfo = function (featuregroup) {
-                ModalService.viewFeaturegroupInfo('lg', self.projectId, featuregroup, self.featurestore).then(
+                ModalService.viewFeaturegroupInfo('lg', self.projectId, featuregroup, self.featurestore, self.settings).then(
                     function (success) {
                     }, function (error) {
                     });
@@ -1153,7 +1156,7 @@ angular.module('hopsWorksApp')
              * @param feature
              */
             self.viewFeatureInfo = function (feature) {
-                ModalService.viewFeatureInfo('lg', self.projectId, feature, self.featurestore).then(
+                ModalService.viewFeatureInfo('lg', self.projectId, feature, self.featurestore, self.settings).then(
                     function (success) {
                     }, function (error) {
                     });
