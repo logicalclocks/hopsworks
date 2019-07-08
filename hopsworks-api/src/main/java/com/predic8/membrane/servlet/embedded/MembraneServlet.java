@@ -97,7 +97,5 @@ public class MembraneServlet extends HttpServlet {
     } catch (Exception ex) {
       LOGGER.log(Level.SEVERE, null, ex);
     }
-
   }
-
 }

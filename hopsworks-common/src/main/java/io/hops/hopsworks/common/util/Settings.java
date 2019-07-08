@@ -313,6 +313,8 @@ public class Settings implements Serializable {
   private static final String VARIABLE_KUBE_SKLEARN_IMG_VERSION = "kube_sklearn_img_version";
   private static final String VARIABLE_KUBE_FILEBEAT_IMG_VERSION = "kube_filebeat_img_version";
 
+  private static final String VARIABLE_JUPYTER_ORIGIN_SCHEME = "jupyter_origin_scheme";
+
   // JWT Variables
   private static final String VARIABLE_JWT_SIGNATURE_ALGORITHM = "jwt_signature_algorithm";
   private static final String VARIABLE_JWT_LIFETIME_MS = "jwt_lifetime_ms";
@@ -466,6 +468,7 @@ public class Settings implements Serializable {
       HOPSWORKS_USER = setVar(VARIABLE_HOPSWORKS_USER, HOPSWORKS_USER);
       JUPYTER_USER = setVar(VARIABLE_JUPYTER_USER, JUPYTER_USER);
       JUPYTER_GROUP = setVar(VARIABLE_JUPYTER_GROUP, JUPYTER_GROUP);
+      JUPYTER_ORIGIN_SCHEME = setVar(VARIABLE_JUPYTER_ORIGIN_SCHEME, JUPYTER_ORIGIN_SCHEME);
       AIRFLOW_USER = setVar(VARIABLE_AIRFLOW_USER, AIRFLOW_USER);
       HDFS_SUPERUSER = setVar(VARIABLE_HDFS_SUPERUSER, HDFS_SUPERUSER);
       YARN_SUPERUSER = setVar(VARIABLE_YARN_SUPERUSER, YARN_SUPERUSER);
@@ -1566,6 +1569,12 @@ public class Settings implements Serializable {
     return JUPYTER_GROUP;
   }
 
+  private String JUPYTER_ORIGIN_SCHEME = "https";
+
+  public synchronized String getJupyterOriginScheme() {
+    checkCache();
+    return JUPYTER_ORIGIN_SCHEME;
+  }
 
   private long JUPYTER_WS_PING_INTERVAL_MS = 10000L;
 
