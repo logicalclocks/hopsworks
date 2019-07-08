@@ -16,11 +16,11 @@
 
 package io.hops.hopsworks.common.dao.featurestore.trainingdataset;
 
-import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
 import io.hops.hopsworks.common.dao.featurestore.feature.FeaturestoreFeature;
 import io.hops.hopsworks.common.dao.featurestore.stats.FeaturestoreStatistic;
-import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
+import io.hops.hopsworks.common.dao.featurestore.trainingdataset.external_trainingdataset.ExternalTrainingDataset;
+import io.hops.hopsworks.common.dao.featurestore.trainingdataset.hopsfs_trainingdataset.HopsfsTrainingDataset;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.user.Users;
 
@@ -28,19 +28,22 @@ import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinColumns;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
 import java.util.Collection;
@@ -67,23 +70,6 @@ public class TrainingDataset implements Serializable {
   @Basic(optional = false)
   @Column(name = "id")
   private Integer id;
-  @JoinColumns({
-      @JoinColumn(name = "inode_pid",
-          referencedColumnName = "parent_id"),
-      @JoinColumn(name = "inode_name",
-          referencedColumnName = "name"),
-      @JoinColumn(name = "partition_id",
-          referencedColumnName = "partition_id")})
-  @ManyToOne(optional = false)
-  private Inode inode;
-  @Basic(optional = false)
-  @Column(name = "inode_name",
-      updatable = false,
-      insertable = false)
-  private String name;
-  @JoinColumn(name = "training_dataset_folder", referencedColumnName = "id")
-  @ManyToOne(optional = false)
-  private Dataset trainingDatasetFolder;
   @JoinColumn(name = "feature_store_id", referencedColumnName = "id")
   @ManyToOne(optional = false)
   private Featurestore featurestore;
@@ -116,6 +102,16 @@ public class TrainingDataset implements Serializable {
   private Collection<FeaturestoreStatistic> statistics;
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "trainingDataset")
   private Collection<FeaturestoreFeature> features;
+  @NotNull
+  @Enumerated(EnumType.ORDINAL)
+  @Column(name = "training_dataset_type")
+  private TrainingDatasetType trainingDatasetType = TrainingDatasetType.HOPSFS_TRAINING_DATASET;
+  @JoinColumn(name = "hopsfs_training_dataset_id", referencedColumnName = "id")
+  @OneToOne
+  private HopsfsTrainingDataset hopsfsTrainingDataset;
+  @JoinColumn(name = "external_training_dataset_id", referencedColumnName = "id")
+  @OneToOne
+  private ExternalTrainingDataset externalTrainingDataset;
 
   public static long getSerialVersionUID() {
     return serialVersionUID;
@@ -185,30 +181,6 @@ public class TrainingDataset implements Serializable {
     this.dataFormat = dataFormat;
   }
 
-  public Inode getInode() {
-    return inode;
-  }
-
-  public void setInode(Inode inode) {
-    this.inode = inode;
-  }
-
-  public String getName() {
-    return name;
-  }
-
-  public void setName(String name) {
-    this.name = name;
-  }
-
-  public Dataset getTrainingDatasetFolder() {
-    return trainingDatasetFolder;
-  }
-
-  public void setTrainingDatasetFolder(Dataset trainingDatasetFolder) {
-    this.trainingDatasetFolder = trainingDatasetFolder;
-  }
-
   public String getDescription() {
     return description;
   }
@@ -232,7 +204,35 @@ public class TrainingDataset implements Serializable {
   public void setFeatures(Collection<FeaturestoreFeature> features) {
     this.features = features;
   }
-
+  
+  public HopsfsTrainingDataset getHopsfsTrainingDataset() {
+    return hopsfsTrainingDataset;
+  }
+  
+  public void setHopsfsTrainingDataset(
+    HopsfsTrainingDataset hopsfsTrainingDataset) {
+    this.hopsfsTrainingDataset = hopsfsTrainingDataset;
+  }
+  
+  public ExternalTrainingDataset getExternalTrainingDataset() {
+    return externalTrainingDataset;
+  }
+  
+  public void setExternalTrainingDataset(
+    ExternalTrainingDataset externalTrainingDataset) {
+    this.externalTrainingDataset = externalTrainingDataset;
+  }
+  
+  @XmlElement
+  public TrainingDatasetType getTrainingDatasetType() {
+    return trainingDatasetType;
+  }
+  
+  public void setTrainingDatasetType(
+    TrainingDatasetType trainingDatasetType) {
+    this.trainingDatasetType = trainingDatasetType;
+  }
+  
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
@@ -247,10 +247,8 @@ public class TrainingDataset implements Serializable {
     if (!hdfsUserId.equals(that.hdfsUserId)) return false;
     if (!version.equals(that.version)) return false;
     if (!dataFormat.equals(that.dataFormat)) return false;
-    if (!inode.equals(that.inode)) return false;
     if (!description.equals(that.description)) return false;
-    if (!trainingDatasetFolder.equals(that.trainingDatasetFolder)) return false;
-    if (!name.equals(that.name)) return false;
+    if (!trainingDatasetType.equals(that.trainingDatasetType)) return false;
     if (created != null)
       if (!created.equals(that.created)) return false;
     if (!creator.equals(that.creator)) return false;
@@ -266,10 +264,8 @@ public class TrainingDataset implements Serializable {
     result = 31 * result + hdfsUserId.hashCode();
     result = 31 * result + dataFormat.hashCode();
     result = 31 * result + version.hashCode();
-    result = 31 * result + inode.hashCode();
     result = 31 * result + description.hashCode();
-    result = 31 * result + name.hashCode();
-    result = 31 * result + trainingDatasetFolder.hashCode();
+    result = 31 * result + trainingDatasetType.hashCode();
     result = 31 * result + (created != null ? created.hashCode() : 0);
     result = 31 * result + (job != null ? job.hashCode() : 0);
     result = 31 * result + (features != null ? features.hashCode() : 0);

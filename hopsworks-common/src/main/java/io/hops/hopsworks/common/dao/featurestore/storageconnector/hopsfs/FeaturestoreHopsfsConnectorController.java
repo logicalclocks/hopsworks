@@ -20,9 +20,9 @@ import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
+import io.hops.hopsworks.common.dao.featurestore.settings.FeaturestoreClientSettingsDTO;
 import io.hops.hopsworks.common.dao.featurestore.storageconnector.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
-import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.restutils.RESTCodes;
 
@@ -119,14 +119,15 @@ public class FeaturestoreHopsfsConnectorController {
           "cannot be empty");
     }
   
-    Pattern namePattern = Pattern.compile(Settings.HOPS_FEATURESTORE_REGEX);
+    Pattern namePattern = Pattern.compile(FeaturestoreClientSettingsDTO.FEATURESTORE_REGEX);
   
-    if(featurestoreHopsfsConnectorDTO.getName().length() > Settings.HOPS_STORAGE_CONNECTOR_NAME_MAX_LENGTH ||
-        !namePattern.matcher(featurestoreHopsfsConnectorDTO.getName()).matches()) {
+    if(featurestoreHopsfsConnectorDTO.getName().length() >
+      FeaturestoreClientSettingsDTO.STORAGE_CONNECTOR_NAME_MAX_LENGTH
+      || !namePattern.matcher(featurestoreHopsfsConnectorDTO.getName()).matches()) {
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_NAME.getMessage()
         + ", the name should be less than " +
-        Settings.HOPS_STORAGE_CONNECTOR_NAME_MAX_LENGTH + " characters and match " +
-        "the regular expression: " +  Settings.HOPS_FEATURESTORE_REGEX);
+        FeaturestoreClientSettingsDTO.STORAGE_CONNECTOR_NAME_MAX_LENGTH + " characters and match " +
+        "the regular expression: " +  FeaturestoreClientSettingsDTO.FEATURESTORE_REGEX);
     }
   
     if(featurestore.getHopsfsConnections().stream()
@@ -136,10 +137,11 @@ public class FeaturestoreHopsfsConnectorController {
     }
   
     if(featurestoreHopsfsConnectorDTO.getDescription().length() >
-        Settings.HOPS_STORAGE_CONNECTOR_DESCRIPTION_MAX_LENGTH) {
+      FeaturestoreClientSettingsDTO.STORAGE_CONNECTOR_DESCRIPTION_MAX_LENGTH) {
       throw new IllegalArgumentException(
         RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_DESCRIPTION.getMessage() +
-        ", the description should be less than: " + Settings.HOPS_STORAGE_CONNECTOR_DESCRIPTION_MAX_LENGTH);
+        ", the description should be less than: "
+          + FeaturestoreClientSettingsDTO.STORAGE_CONNECTOR_DESCRIPTION_MAX_LENGTH);
     }
     Dataset dataset = datasetFacade.findByNameAndProjectId(featurestore.getProject(),
         featurestoreHopsfsConnectorDTO.getDatasetName());

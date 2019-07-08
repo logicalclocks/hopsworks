@@ -18,6 +18,7 @@ package io.hops.hopsworks.common.dao.featurestore.storageconnector.jdbc;
 
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
+import io.hops.hopsworks.common.dao.featurestore.settings.FeaturestoreClientSettingsDTO;
 import io.hops.hopsworks.common.dao.featurestore.storageconnector.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
@@ -140,13 +141,14 @@ public class FeaturestoreJdbcConnectorController {
           "cannot be empty");
     }
   
-    Pattern namePattern = Pattern.compile(Settings.HOPS_FEATURESTORE_REGEX);
+    Pattern namePattern = Pattern.compile(FeaturestoreClientSettingsDTO.FEATURESTORE_REGEX);
   
-    if(featurestoreJdbcConnectorDTO.getName().length() > Settings.HOPS_STORAGE_CONNECTOR_NAME_MAX_LENGTH ||
+    if(featurestoreJdbcConnectorDTO.getName().length() >
+      FeaturestoreClientSettingsDTO.STORAGE_CONNECTOR_NAME_MAX_LENGTH ||
         !namePattern.matcher(featurestoreJdbcConnectorDTO.getName()).matches()) {
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_NAME.getMessage()
-      + ", the name should be less than " + Settings.HOPS_STORAGE_CONNECTOR_NAME_MAX_LENGTH + " characters and match " +
-        "the regular expression: " +  Settings.HOPS_FEATURESTORE_REGEX);
+      + ", the name should be less than " + FeaturestoreClientSettingsDTO.STORAGE_CONNECTOR_NAME_MAX_LENGTH
+        + " characters and match " + "the regular expression: " +  FeaturestoreClientSettingsDTO.FEATURESTORE_REGEX);
     }
   
     if(featurestore.getFeaturestoreJdbcConnectorConnections().stream()
@@ -155,27 +157,29 @@ public class FeaturestoreJdbcConnectorController {
         ", the storage connector name should be unique, there already exists a JDBC connector with the same name ");
     }
     
-    if(featurestoreJdbcConnectorDTO.getDescription().length() > Settings.HOPS_STORAGE_CONNECTOR_DESCRIPTION_MAX_LENGTH){
+    if(featurestoreJdbcConnectorDTO.getDescription().length() >
+      FeaturestoreClientSettingsDTO.STORAGE_CONNECTOR_DESCRIPTION_MAX_LENGTH){
       throw new IllegalArgumentException(
         RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_DESCRIPTION.getMessage() +
-        ", the description should be less than: " + Settings.HOPS_STORAGE_CONNECTOR_DESCRIPTION_MAX_LENGTH);
+        ", the description should be less than: " +
+          FeaturestoreClientSettingsDTO.STORAGE_CONNECTOR_DESCRIPTION_MAX_LENGTH);
     }
     
     if(Strings.isNullOrEmpty(featurestoreJdbcConnectorDTO.getConnectionString())
       || featurestoreJdbcConnectorDTO.getConnectionString().length()
-        > Settings.HOPS_JDBC_STORAGE_CONNECTOR_CONNECTIONSTRING_MAX_LENGTH) {
+        > FeaturestoreClientSettingsDTO.JDBC_STORAGE_CONNECTOR_CONNECTIONSTRING_MAX_LENGTH) {
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_JDBC_CONNECTION_STRING.getMessage() +
         ", the JDBC connection string should not be empty and not exceed: " +
-        Settings.HOPS_JDBC_STORAGE_CONNECTOR_CONNECTIONSTRING_MAX_LENGTH + " characters");
+        FeaturestoreClientSettingsDTO.JDBC_STORAGE_CONNECTOR_CONNECTIONSTRING_MAX_LENGTH + " characters");
     }
   
     if(!Strings.isNullOrEmpty(featurestoreJdbcConnectorDTO.getArguments())
         && featurestoreJdbcConnectorDTO.getArguments().length() >
-      Settings.HOPS_JDBC_STORAGE_CONNECTOR_ARGUMENTS_MAX_LENGTH) {
+      FeaturestoreClientSettingsDTO.JDBC_STORAGE_CONNECTOR_ARGUMENTS_MAX_LENGTH) {
       throw new IllegalArgumentException(
         RESTCodes.FeaturestoreErrorCode.ILLEGAL_JDBC_CONNECTION_ARGUMENTS.getMessage() +
         ", the JDBC connection arguments should not exceed: " +
-        Settings.HOPS_JDBC_STORAGE_CONNECTOR_ARGUMENTS_MAX_LENGTH + " characters");
+          FeaturestoreClientSettingsDTO.JDBC_STORAGE_CONNECTOR_ARGUMENTS_MAX_LENGTH + " characters");
     }
   }
 

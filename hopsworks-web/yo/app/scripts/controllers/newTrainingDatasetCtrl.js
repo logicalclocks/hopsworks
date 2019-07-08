@@ -32,6 +32,7 @@ angular.module('hopsWorksApp')
             self.features = StorageService.get(self.projectId + "_fgFeatures");
             self.trainingDatasetOperation = StorageService.get("trainingdataset_operation");
             self.trainingDataset = StorageService.get(self.projectId + "_trainingDataset");
+            self.storageConnectors = StorageService.get(self.projectId + "_storageconnectors")
 
             //State
             self.showCart = false
@@ -56,11 +57,22 @@ angular.module('hopsWorksApp')
                 "possibleJoinKeys": []
             }
             self.version = 1
+            self.s3Connectors = []
+            self.hopsfsConnectors = []
+            self.selectedS3Connector = null
+            self.selectedHopsfsConnector = null
+            self.sinkType = 0
 
             //Constants
             self.trainingDatasetNameMaxLength = FeaturestoreService.trainingDatasetNameMaxLength()
             self.trainingDatasetDescriptionMaxLength = FeaturestoreService.trainingDatasetDescriptionMaxLength()
             self.dataFormats = FeaturestoreService.dataFormats()
+            self.hopsfsTrainingDatasetType = FeaturestoreService.hopsfsTrainingDatasetType()
+            self.hopsfsTrainingDatasetTypeDTO = FeaturestoreService.hopsfsTrainingDatasetTypeDTO()
+            self.externalTrainingDatasetType = FeaturestoreService.externalTrainingDatasetType()
+            self.externalTrainingDatasetTypeDTO = FeaturestoreService.externalTrainingDatasetTypeDTO()
+            self.s3ConnectorType = FeaturestoreService.s3ConnectorType()
+            self.hopsfsConnectorType = FeaturestoreService.hopsfsConnectorType()
 
             //Input Variables
             self.trainingDatasetName = ""
@@ -80,6 +92,9 @@ angular.module('hopsWorksApp')
             self.joinKeyWrongValue = 1;
             //Data format flags
             self.trainingDatasetDataFormatWrongValue = 1
+            //Output sink flags
+            self.sinkWrongValue = 1;
+            self.trainingDatasetSinkNotSelected = 1
 
             //front-end variables
             self.td_accordion0 = {
@@ -114,13 +129,36 @@ angular.module('hopsWorksApp')
                 "title": "Create"
             };
 
+            self.td_accordion5 = {
+                "isOpen": false,
+                "visible": false,
+                "value": "",
+                "title": "Output Location"
+            };
+
             /**
              * Perform initialization of variables that require it
              */
             self.initVariables = function () {
                 self.trainingDatasetFormat = self.dataFormats[1]
-                if (self.trainingDatasetOperation === 'CREATE') {
-                    return;
+                //self.projectName + "_Training_Datasets"
+                self.s3Connectors = []
+                self.selectedS3Connector = null
+                self.hopsfsConnectors = []
+                self.selectedHopsfsConnector = null;
+                for (var i = 0; i < self.storageConnectors.length; i++) {
+                    if(self.storageConnectors[i].storageConnectorType == self.s3ConnectorType){
+                        self.s3Connectors.push(self.storageConnectors[i])
+                    }
+                    if(self.storageConnectors[i].storageConnectorType == self.hopsfsConnectorType){
+                        self.hopsfsConnectors.push(self.storageConnectors[i])
+                        if(self.storageConnectors[i].name === self.projectName + "_Training_Datasets"){
+                            self.selectedHopsfsConnector = self.storageConnectors[i]
+                        }
+                    }
+                }
+                if(self.selectedHopsfsConnector === null && self.hopsfsConnectors.length > 0){
+                    self.selectedHopsfsConnector = self.hopsfsConnectors[0]
                 }
                 if (self.trainingDataset != null &&
                     (self.trainingDatasetOperation === 'UPDATE' || self.trainingDatasetOperation === 'NEW_VERSION')) {
@@ -149,7 +187,6 @@ angular.module('hopsWorksApp')
                         self.version = self.trainingDataset.version + 1
                     }
                 }
-
             }
 
             /**
@@ -162,6 +199,8 @@ angular.module('hopsWorksApp')
                 self.queryPlanWrongValue = 1;
                 self.joinKeyWrongValue = 1
                 self.trainingDatasetWrong_values = 1;
+                self.trainingDatasetSinkNotSelected = 1
+                self.sinkWrongValue = 1
                 self.working = true;
                 if (!self.trainingDatasetName || self.trainingDatasetName.search(self.trainingDatasetNameRegexp) == -1
                     || self.trainingDatasetName.length > self.trainingDatasetNameMaxLength) {
@@ -189,6 +228,18 @@ angular.module('hopsWorksApp')
                     self.trainingDatasetWrong_values = -1;
                     self.queryPlanWrongValue = -1;
                     self.joinKeyWrongValue = -1;
+                }
+                if(self.sinkType === 1 && (self.selectedS3Connector === null || !self.selectedS3Connector
+                    || self.selectedS3Connector === null)){
+                    self.trainingDatasetSinkNotSelected = -1
+                    self.sinkWrongValue = -1
+                    self.trainingDatasetWrong_values = -1;
+                }
+                if(self.sinkType === 0 && (self.selectedHopsfsConnector === null || !self.selectedHopsfsConnector
+                    || self.selectedHopsfsConnector === null)){
+                    self.trainingDatasetSinkNotSelected = -1
+                    self.sinkWrongValue = -1
+                    self.trainingDatasetWrong_values = -1;
                 }
             }
 
@@ -222,6 +273,8 @@ angular.module('hopsWorksApp')
                         self.td_accordion3.isOpen = false;
                         self.td_accordion4.visible = true;
                         self.td_accordion4.isOpen = true;
+                        self.td_accordion5.visible = true;
+                        self.td_accordion5.isOpen = false;
                     }
                     self.td_accordion2.value = " - " + self.trainingDatasetDoc; //Edit panel title
                 }
@@ -501,7 +554,11 @@ angular.module('hopsWorksApp')
                     "featuresHistogram": null,
                     "features": self.featureBasket,
                     "updateMetadata": true,
-                    "updateStats": false
+                    "updateStats": false,
+                    "trainingDatasetType":self.hopsfsTrainingDatasetType,
+                    "type": self.hopsfsTrainingDatasetTypeDTO,
+                    "hopsfsConnectorId" : self.selectedHopsfsConnector.id,
+                    "hopsfsConnectorName" : self.selectedHopsfsConnector.name
                 }
                 var runConfig = self.setupHopsworksCreateTdJob(jobName)
                 JobService.putJob(self.projectId, runConfig).then(
@@ -553,7 +610,11 @@ angular.module('hopsWorksApp')
                     "featureCorrelationMatrix": null,
                     "descriptiveStatistics": null,
                     "featuresHistogram": null,
-                    "features": self.featureBasket
+                    "features": self.featureBasket,
+                    "trainingDatasetType":self.hopsfsTrainingDatasetType,
+                    "type": self.hopsfsTrainingDatasetTypeDTO,
+                    "hopsfsConnectorId" : self.selectedHopsfsConnector.id,
+                    "hopsfsConnectorName" : self.selectedHopsfsConnector.name
                 }
                 var runConfig = self.setupHopsworksCreateTdJob(jobName)
                 JobService.putJob(self.projectId, runConfig).then(
@@ -647,6 +708,15 @@ angular.module('hopsWorksApp')
                     "spark.tensorflow.num.ps": 0,
                 }
                 return runConfig
+            }
+
+            /**
+             * Update the sink type for the training dataset
+             *
+             * @param sinkType the new type
+             */
+            self.setSinkType = function (sinkType) {
+                self.sinkType = sinkType
             }
 
             /**

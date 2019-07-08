@@ -18,8 +18,8 @@ package io.hops.hopsworks.common.dao.featurestore.storageconnector.s3;
 
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
+import io.hops.hopsworks.common.dao.featurestore.settings.FeaturestoreClientSettingsDTO;
 import io.hops.hopsworks.common.dao.featurestore.storageconnector.FeaturestoreStorageConnectorDTO;
-import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.restutils.RESTCodes;
 
@@ -93,14 +93,15 @@ public class FeaturestoreS3ConnectorController {
           "cannot be empty");
     }
   
-    Pattern namePattern = Pattern.compile(Settings.HOPS_FEATURESTORE_REGEX);
+    Pattern namePattern = Pattern.compile(FeaturestoreClientSettingsDTO.FEATURESTORE_REGEX);
   
-    if(featurestoreS3ConnectorDTO.getName().length() > Settings.HOPS_STORAGE_CONNECTOR_NAME_MAX_LENGTH ||
+    if(featurestoreS3ConnectorDTO.getName().length() >
+      FeaturestoreClientSettingsDTO.STORAGE_CONNECTOR_NAME_MAX_LENGTH ||
         !namePattern.matcher(featurestoreS3ConnectorDTO.getName()).matches()) {
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_NAME.getMessage()
         + ", the name should be less than "
-        + Settings.HOPS_STORAGE_CONNECTOR_NAME_MAX_LENGTH + " characters and match " +
-        "the regular expression: " +  Settings.HOPS_FEATURESTORE_REGEX);
+        + FeaturestoreClientSettingsDTO.STORAGE_CONNECTOR_NAME_MAX_LENGTH + " characters and match " +
+        "the regular expression: " +  FeaturestoreClientSettingsDTO.FEATURESTORE_REGEX);
     }
   
     if(featurestore.getFeaturestoreS3ConnectorConnections().stream()
@@ -109,32 +110,36 @@ public class FeaturestoreS3ConnectorController {
         ", the storage connector name should be unique, there already exists a S3 connector with the same name ");
     }
   
-    if(featurestoreS3ConnectorDTO.getDescription().length() > Settings.HOPS_STORAGE_CONNECTOR_DESCRIPTION_MAX_LENGTH){
+    if(featurestoreS3ConnectorDTO.getDescription().length()
+      > FeaturestoreClientSettingsDTO.STORAGE_CONNECTOR_DESCRIPTION_MAX_LENGTH){
       throw new IllegalArgumentException(
         RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_DESCRIPTION.getMessage() +
-        ", the description should be less than: " + Settings.HOPS_STORAGE_CONNECTOR_DESCRIPTION_MAX_LENGTH);
+        ", the description should be less than: " +
+          FeaturestoreClientSettingsDTO.STORAGE_CONNECTOR_DESCRIPTION_MAX_LENGTH);
     }
     
     if(Strings.isNullOrEmpty(featurestoreS3ConnectorDTO.getBucket()) ||
-        featurestoreS3ConnectorDTO.getBucket().length() > Settings.HOPS_S3_STORAGE_CONNECTOR_BUCKET_MAX_LENGTH) {
+        featurestoreS3ConnectorDTO.getBucket().length() >
+          FeaturestoreClientSettingsDTO.S3_STORAGE_CONNECTOR_BUCKET_MAX_LENGTH) {
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_S3_CONNECTOR_BUCKET.getMessage() +
         ", the S3 bucket string should not be empty and not exceed: " +
-        Settings.HOPS_S3_STORAGE_CONNECTOR_BUCKET_MAX_LENGTH + " characters");
+        FeaturestoreClientSettingsDTO.S3_STORAGE_CONNECTOR_BUCKET_MAX_LENGTH + " characters");
     }
   
     if(!Strings.isNullOrEmpty(featurestoreS3ConnectorDTO.getAccessKey()) &&
-        featurestoreS3ConnectorDTO.getAccessKey().length() > Settings.HOPS_S3_STORAGE_CONNECTOR_ACCESSKEY_MAX_LENGTH) {
+        featurestoreS3ConnectorDTO.getAccessKey().length()
+          > FeaturestoreClientSettingsDTO.S3_STORAGE_CONNECTOR_ACCESSKEY_MAX_LENGTH) {
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_S3_CONNECTOR_ACCESS_KEY.getMessage() +
         ", the S3 access key should not exceed: " +
-        Settings.HOPS_S3_STORAGE_CONNECTOR_ACCESSKEY_MAX_LENGTH + " characters");
+        FeaturestoreClientSettingsDTO.S3_STORAGE_CONNECTOR_ACCESSKEY_MAX_LENGTH + " characters");
     }
   
     if(!Strings.isNullOrEmpty(featurestoreS3ConnectorDTO.getSecretKey()) &&
         featurestoreS3ConnectorDTO.getSecretKey().length() >
-      Settings.HOPS_S3_STORAGE_CONNECTOR_SECRETKEY_MAX_LENGTH) {
+          FeaturestoreClientSettingsDTO.S3_STORAGE_CONNECTOR_SECRETKEY_MAX_LENGTH) {
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_S3_CONNECTOR_SECRET_KEY.getMessage() +
         ", the S3 secret key should not exceed: " +
-        Settings.HOPS_S3_STORAGE_CONNECTOR_SECRETKEY_MAX_LENGTH + " characters");
+        FeaturestoreClientSettingsDTO.S3_STORAGE_CONNECTOR_SECRETKEY_MAX_LENGTH + " characters");
     }
   }
 

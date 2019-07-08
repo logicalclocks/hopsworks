@@ -39,6 +39,7 @@ angular.module('hopsWorksApp')
             self.features = [];
             self.trainingDatasets = [];
             self.storageConnectors = [];
+            self.settings = null;
             self.featuregroups = [];
             self.featuregroupsPageSize = 10;
             self.trainingDatasetsPageSize = 10;
@@ -62,6 +63,7 @@ angular.module('hopsWorksApp')
             self.featuregroupsLoaded = false;
             self.trainingDatasetsLoaded = false;
             self.storageConnectorsLoaded = false;
+            self.settingsLoaded = false;
             self.quotaLoaded = false;
             self.tourService = TourService;
             self.tourService.currentStep_TourNine = 0; //Feature store tour
@@ -253,7 +255,7 @@ angular.module('hopsWorksApp')
                     self.collectAllFeatures();
                 }
                 if (self.featuregroupsLoaded && self.trainingDatasetsLoaded && self.quotaLoaded
-                    && self.storageConnectorsLoaded) {
+                    && self.storageConnectorsLoaded && self.settingsLoaded) {
                     var tabIndex = StorageService.get(self.projectId + "_featurestore_tab")
                     if(tabIndex != null && tabIndex != undefined && tabIndex != false){
                         $scope.featurestoreSelectedTab = tabIndex
@@ -353,7 +355,7 @@ angular.module('hopsWorksApp')
                         }
                     },
                     function (error) {
-                        growl.error(error.data.errorMsg, {
+                        growl.error(error, {
                             title: 'Failed to fetch list of featurestores',
                             ttl: 15000
                         });
@@ -364,6 +366,31 @@ angular.module('hopsWorksApp')
 
             /**
              * Retrieves a list of all storage connectors for a given featurestore
+             *
+             * @param featurestore the featurestore to query
+             */
+            self.getFeaturestoreSettings = function() {
+                FeaturestoreService.getFeaturestoreSettings(self.projectId).then(
+                    function (success) {
+                        self.settings = success.data
+                        StorageService.store(self.projectId + "_fssettings", success.data);
+                        self.settingsLoaded = true
+                        console.log("received fs settings:")
+                        console.log(self.settings)
+                        self.stopLoading()
+                    },
+                    function (error) {
+                        self.settingsLoaded = true
+                        self.stopLoading()
+                        growl.error(error.data.errorMsg, {
+                            title: 'Failed to fetch the feature store settings',
+                            ttl: 15000
+                        });
+                    });
+            }
+
+            /**
+             * Get Feature Store Settings
              *
              * @param featurestore the featurestore to query
              */
@@ -896,12 +923,14 @@ angular.module('hopsWorksApp')
                 self.getProjectName();
                 self.getFeaturestores();
                 self.getFeaturestoreQuota();
+                self.getFeaturestoreSettings();
             };
 
             self.refresh = function () {
                 self.startLoading("Loading Feature store data...");
                 self.getFeaturestores();
                 self.getFeaturestoreQuota();
+                self.getFeaturestoreSettings();
             }
 
             /**

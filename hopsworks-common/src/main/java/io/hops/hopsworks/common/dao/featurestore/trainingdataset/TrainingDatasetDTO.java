@@ -16,11 +16,17 @@
 
 package io.hops.hopsworks.common.dao.featurestore.trainingdataset;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.hops.hopsworks.common.dao.featurestore.FeaturestoreEntityDTO;
 import io.hops.hopsworks.common.dao.featurestore.feature.FeatureDTO;
+import io.hops.hopsworks.common.dao.featurestore.trainingdataset.external_trainingdataset.ExternalTrainingDatasetDTO;
+import io.hops.hopsworks.common.dao.featurestore.trainingdataset.hopsfs_trainingdataset.HopsfsTrainingDatasetDTO;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlSeeAlso;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -29,11 +35,16 @@ import java.util.stream.Collectors;
  * using jaxb.
  */
 @XmlRootElement
+@XmlSeeAlso({HopsfsTrainingDatasetDTO.class, ExternalTrainingDatasetDTO.class})
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY)
+@JsonSubTypes({
+  @JsonSubTypes.Type(value = HopsfsTrainingDatasetDTO.class, name = "HopsfsTrainingDatasetDTO"),
+  @JsonSubTypes.Type(value = ExternalTrainingDatasetDTO.class, name = "ExternalTrainingDatasetDTO")})
 public class TrainingDatasetDTO extends FeaturestoreEntityDTO {
-
-  private String hdfsStorePath;
+  
   private String dataFormat;
-  private Long size;
+  private TrainingDatasetType trainingDatasetType;
 
   public TrainingDatasetDTO() {
   }
@@ -45,39 +56,36 @@ public class TrainingDatasetDTO extends FeaturestoreEntityDTO {
         (List) trainingDataset.getStatistics(), trainingDataset.getJob(),
         trainingDataset.getId());
     setDescription(trainingDataset.getDescription());
-    setName(trainingDataset.getName());
-    setInodeId(trainingDataset.getInode().getId());
     setFeatures(trainingDataset.getFeatures().stream().map(tdf -> new FeatureDTO(tdf.getName(),
         tdf.getType(), tdf.getDescription(), new Boolean(tdf.getPrimary() == 1), false)).collect(Collectors.toList()));
-    this.size = trainingDataset.getInode().getSize();
     this.dataFormat = trainingDataset.getDataFormat();
-    this.hdfsStorePath = null;
+    this.trainingDatasetType = trainingDataset.getTrainingDatasetType();
   }
-
-  @XmlElement
-  public String getHdfsStorePath() {
-    return hdfsStorePath;
-  }
-
+  
   @XmlElement
   public String getDataFormat() {
     return dataFormat;
   }
-
+  
+  public void setDataFormat(String dataFormat) {
+    this.dataFormat = dataFormat;
+  }
+  
   @XmlElement
-  public Long getSize() {
-    return size;
+  public TrainingDatasetType getTrainingDatasetType() {
+    return trainingDatasetType;
   }
-
-  public void setHdfsStorePath(String hdfsStorePath) {
-    this.hdfsStorePath = hdfsStorePath;
+  
+  public void setTrainingDatasetType(
+    TrainingDatasetType trainingDatasetType) {
+    this.trainingDatasetType = trainingDatasetType;
   }
-
+  
   @Override
   public String toString() {
     return "TrainingDatasetDTO{" +
-        ", hdfsStorePath='" + hdfsStorePath + '\'' +
-        ", dataFormat='" + dataFormat + '\'' +
-        '}';
+      "dataFormat='" + dataFormat + '\'' +
+      ", trainingDatasetType=" + trainingDatasetType +
+      '}';
   }
 }

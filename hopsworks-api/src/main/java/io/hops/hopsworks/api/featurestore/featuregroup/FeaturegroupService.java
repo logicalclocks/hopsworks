@@ -27,7 +27,6 @@ import io.hops.hopsworks.common.dao.featurestore.FeaturestoreDTO;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.cached_featuregroup.RowValueQueryResult;
-import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
@@ -78,8 +77,6 @@ public class FeaturegroupService {
   private FeaturestoreController featurestoreController;
   @EJB
   private FeaturegroupController featuregroupController;
-  @EJB
-  private JobFacade jobFacade;
   @EJB
   private FeaturestoreUtil featurestoreUtil;
   @EJB
@@ -387,11 +384,11 @@ public class FeaturegroupService {
     if (featuregroupId == null) {
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_ID_NOT_PROVIDED.getMessage());
     }
+    featuregroupDTO.setId(featuregroupId);
     Users user = jWTHelper.getUserPrincipal(sc);
     FeaturegroupDTO oldFeaturegroupDTO = featuregroupController.getFeaturegroupWithIdAndFeaturestore(featurestore,
         featuregroupId);
     featurestoreUtil.verifyUserRole(oldFeaturegroupDTO, featurestore, user, project);
-    featuregroupDTO.setId(featuregroupId);
     FeaturegroupDTO updatedFeaturegroupDTO = null;
     if(updateMetadata) {
       updatedFeaturegroupDTO = featuregroupController.updateFeaturegroupMetadata(featurestore, featuregroupDTO);

@@ -16,26 +16,32 @@
 
 package io.hops.hopsworks.common.dao.featurestore.trainingdataset;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
+import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
 import io.hops.hopsworks.common.dao.featurestore.FeaturestoreFacade;
-import io.hops.hopsworks.common.dao.featurestore.feature.FeatureDTO;
-import io.hops.hopsworks.common.dao.featurestore.stats.FeaturestoreStatisticController;
-import io.hops.hopsworks.common.dao.featurestore.stats.cluster_analysis.ClusterAnalysisDTO;
-import io.hops.hopsworks.common.dao.featurestore.stats.desc_stats.DescriptiveStatsDTO;
-import io.hops.hopsworks.common.dao.featurestore.stats.feature_correlation.FeatureCorrelationMatrixDTO;
-import io.hops.hopsworks.common.dao.featurestore.stats.feature_distributions.FeatureDistributionsDTO;
 import io.hops.hopsworks.common.dao.featurestore.feature.FeaturestoreFeatureController;
+import io.hops.hopsworks.common.dao.featurestore.settings.FeaturestoreClientSettingsDTO;
+import io.hops.hopsworks.common.dao.featurestore.stats.FeaturestoreStatisticController;
+import io.hops.hopsworks.common.dao.featurestore.trainingdataset.external_trainingdataset.ExternalTrainingDataset;
+import io.hops.hopsworks.common.dao.featurestore.trainingdataset.external_trainingdataset.ExternalTrainingDatasetController;
+import io.hops.hopsworks.common.dao.featurestore.trainingdataset.external_trainingdataset.ExternalTrainingDatasetDTO;
+import io.hops.hopsworks.common.dao.featurestore.trainingdataset.hopsfs_trainingdataset.HopsfsTrainingDataset;
+import io.hops.hopsworks.common.dao.featurestore.trainingdataset.hopsfs_trainingdataset.HopsfsTrainingDatasetController;
+import io.hops.hopsworks.common.dao.featurestore.trainingdataset.hopsfs_trainingdataset.HopsfsTrainingDatasetDTO;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
+import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.restutils.RESTCodes;
-import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -65,6 +71,14 @@ public class TrainingDatasetController {
   private FeaturestoreStatisticController featurestoreStatisticController;
   @EJB
   private FeaturestoreFeatureController featurestoreFeatureController;
+  @EJB
+  private JobFacade jobFacade;
+  @EJB
+  private DatasetFacade datasetFacade;
+  @EJB
+  private HopsfsTrainingDatasetController hopsfsTrainingDatasetController;
+  @EJB
+  private ExternalTrainingDatasetController externalTrainingDatasetController;
 
   /**
    * Gets all trainingDatasets for a particular featurestore and project
@@ -84,65 +98,100 @@ public class TrainingDatasetController {
    * @return JSON/XML DTO of the trainingDataset
    */
   private TrainingDatasetDTO convertTrainingDatasetToDTO(TrainingDataset trainingDataset) {
-    TrainingDatasetDTO trainingDatasetDTO = new TrainingDatasetDTO(trainingDataset);
-    int versionLength = trainingDataset.getVersion().toString().length();
-    String trainingDatasetNameWithVersion = trainingDataset.getInode().getInodePK().getName();
-    //Remove the _version suffix
-    String trainingDatasetName = trainingDatasetNameWithVersion.substring
-        (0, trainingDatasetNameWithVersion.length() - (1 + versionLength));
-    trainingDatasetDTO.setName(trainingDatasetName);
     String featurestoreName = featurestoreFacade.getHiveDbName(trainingDataset.getFeaturestore().getHiveDbId());
-    trainingDatasetDTO.setFeaturestoreName(featurestoreName);
-    trainingDatasetDTO.setHdfsStorePath(inodeFacade.getPath(trainingDataset.getInode()));
-    trainingDatasetDTO.setLocation(trainingDatasetDTO.getHdfsStorePath());
-    return trainingDatasetDTO;
+    switch (trainingDataset.getTrainingDatasetType()) {
+      case HOPSFS_TRAINING_DATASET:
+        HopsfsTrainingDatasetDTO hopsfsTrainingDatasetDTO = new HopsfsTrainingDatasetDTO(trainingDataset);
+        int versionLength = trainingDataset.getVersion().toString().length();
+        String trainingDatasetNameWithVersion =
+          trainingDataset.getHopsfsTrainingDataset().getInode().getInodePK().getName();
+        //Remove the _version suffix
+        String trainingDatasetName = trainingDatasetNameWithVersion.substring
+          (0, trainingDatasetNameWithVersion.length() - (1 + versionLength));
+        hopsfsTrainingDatasetDTO.setName(trainingDatasetName);
+        hopsfsTrainingDatasetDTO.setHdfsStorePath(
+          inodeFacade.getPath(trainingDataset.getHopsfsTrainingDataset().getInode()));
+        hopsfsTrainingDatasetDTO.setLocation(hopsfsTrainingDatasetDTO.getHdfsStorePath());
+        hopsfsTrainingDatasetDTO.setFeaturestoreName(featurestoreName);
+        return hopsfsTrainingDatasetDTO;
+      case EXTERNAL_TRAINING_DATASET:
+        ExternalTrainingDatasetDTO externalTrainingDatasetDTO = new ExternalTrainingDatasetDTO(trainingDataset);
+        externalTrainingDatasetDTO.setName(trainingDataset.getExternalTrainingDataset().getName());
+        externalTrainingDatasetDTO.setFeaturestoreName(featurestoreName);
+        return externalTrainingDatasetDTO;
+      default:
+        throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_TYPE.getMessage()
+          + ", Recognized training dataset types are: " + TrainingDatasetType.HOPSFS_TRAINING_DATASET + ", and: " +
+          TrainingDatasetType.EXTERNAL_TRAINING_DATASET + ". The provided training dataset type was not recognized: "
+          + trainingDataset.getTrainingDatasetType());
+    }
   }
 
   /**
    * Creates a new 'managed' training dataset with extended metadata stored in Hopsworks
    *
-   * @param project                  the project that owns the training dataset
    * @param user                     the user creating the dataset
    * @param featurestore             the featurestore linked to the training dataset
-   * @param job                      the job used to compute the training dataset
-   * @param version                  the version of the training dataset
-   * @param dataFormat               the format of the training dataset
-   * @param inode                    the inode where the training dataset is stored
-   * @param trainingDatasetFolder    the Hopsworks dataset-folder where the training dataset is stored
-   * @param description              a description of the training dataset
-   * @param featureCorrelationMatrix feature correlation data
-   * @param descriptiveStatistics    descriptive statistics data
-   * @param featuresHistogram        feature distributions data
-   * @param clusterAnalysis          clusterAnalysis data
-   * @param features                 schema of the training dataset
+   * @param trainingDatasetDTO       user input data
    * @return JSON/XML DTO of the trainingDataset
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
-  public TrainingDatasetDTO createTrainingDataset(
-      Project project, Users user, Featurestore featurestore, Jobs job, Integer version,
-      String dataFormat, Inode inode, Dataset trainingDatasetFolder, String description,
-      FeatureCorrelationMatrixDTO featureCorrelationMatrix, DescriptiveStatsDTO descriptiveStatistics,
-      FeatureDistributionsDTO featuresHistogram,
-      List<FeatureDTO> features, ClusterAnalysisDTO clusterAnalysis) {
-
-    String hdfsUsername = hdfsUsersController.getHdfsUserName(project, user);
+  public TrainingDatasetDTO createTrainingDataset(Users user, Featurestore featurestore,
+    TrainingDatasetDTO trainingDatasetDTO) throws FeaturestoreException {
+    
+    //Verify input
+    verifyTrainingDatasetInput(trainingDatasetDTO, featurestore);
+    verifyStatisticsInput(trainingDatasetDTO);
+    
+    //Get username
+    String hdfsUsername = hdfsUsersController.getHdfsUserName(featurestore.getProject(), user);
     HdfsUsers hdfsUser = hdfsUsersFacade.findByName(hdfsUsername);
+  
+    //Get job
+    Jobs job = null;
+    if (trainingDatasetDTO.getJobName() != null && !trainingDatasetDTO.getJobName().isEmpty()) {
+      job = jobFacade.findByProjectAndName(featurestore.getProject(), trainingDatasetDTO.getJobName());
+    }
+  
+    //Create specific dataset type
+    HopsfsTrainingDataset hopsfsTrainingDataset = null;
+    ExternalTrainingDataset externalTrainingDataset = null;
+    switch (trainingDatasetDTO.getTrainingDatasetType()) {
+      case HOPSFS_TRAINING_DATASET:
+        hopsfsTrainingDataset =
+          hopsfsTrainingDatasetController.createHopsfsTrainingDataset((HopsfsTrainingDatasetDTO) trainingDatasetDTO);
+        break;
+      case EXTERNAL_TRAINING_DATASET:
+        externalTrainingDataset = externalTrainingDatasetController.createExternalTrainingDataset(
+          (ExternalTrainingDatasetDTO) trainingDatasetDTO);
+        break;
+      default:
+        throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_TYPE.getMessage()
+          + ", Recognized training dataset types are: " + TrainingDatasetType.HOPSFS_TRAINING_DATASET + ", and: " +
+          TrainingDatasetType.EXTERNAL_TRAINING_DATASET + ". The provided training dataset type was not recognized: "
+          + trainingDatasetDTO.getTrainingDatasetType());
+    }
+    
     //Store trainingDataset metadata in Hopsworks
     TrainingDataset trainingDataset = new TrainingDataset();
-    trainingDataset.setInode(inode);
-    trainingDataset.setDataFormat(dataFormat);
-    trainingDataset.setTrainingDatasetFolder(trainingDatasetFolder);
-    trainingDataset.setDescription(description);
+    trainingDataset.setHopsfsTrainingDataset(hopsfsTrainingDataset);
+    trainingDataset.setExternalTrainingDataset(externalTrainingDataset);
+    trainingDataset.setDataFormat(trainingDatasetDTO.getDataFormat());
+    trainingDataset.setDescription(trainingDatasetDTO.getDescription());
     trainingDataset.setFeaturestore(featurestore);
     trainingDataset.setHdfsUserId(hdfsUser.getId());
     trainingDataset.setJob(job);
     trainingDataset.setCreated(new Date());
     trainingDataset.setCreator(user);
-    trainingDataset.setVersion(version);
+    trainingDataset.setVersion(trainingDatasetDTO.getVersion());
     trainingDatasetFacade.persist(trainingDataset);
+  
+    // Store statistics
     featurestoreStatisticController.updateFeaturestoreStatistics(null, trainingDataset,
-        featureCorrelationMatrix, descriptiveStatistics, featuresHistogram, clusterAnalysis);
-    featurestoreFeatureController.updateTrainingDatasetFeatures(trainingDataset, features);
+        trainingDatasetDTO.getFeatureCorrelationMatrix(), trainingDatasetDTO.getDescriptiveStatistics(),
+      trainingDatasetDTO.getFeaturesHistogram(), trainingDatasetDTO.getClusterAnalysis());
+    // Store features
+    featurestoreFeatureController.updateTrainingDatasetFeatures(trainingDataset, trainingDatasetDTO.getFeatures());
     return convertTrainingDatasetToDTO(trainingDataset);
   }
 
@@ -177,7 +226,13 @@ public class TrainingDatasetController {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_NOT_FOUND,
           Level.FINE, "trainingDatasetId: " + id);
     }
-    return trainingDataset.getInode();
+    if(trainingDataset.getTrainingDatasetType() != TrainingDatasetType.HOPSFS_TRAINING_DATASET){
+      throw new IllegalArgumentException(
+        RESTCodes.FeaturestoreErrorCode.CAN_ONLY_GET_INODE_FOR_HOPSFS_TRAINING_DATASETS.getMessage() +
+        "Training Dataset Type: " + trainingDataset.getTrainingDatasetType());
+    } else {
+      return trainingDataset.getHopsfsTrainingDataset().getInode();
+    }
   }
 
   /**
@@ -221,7 +276,19 @@ public class TrainingDatasetController {
       Featurestore featurestore, Integer id) {
     TrainingDataset trainingDataset = trainingDatasetFacade.findByIdAndFeaturestore(id, featurestore);
     TrainingDatasetDTO trainingDatasetDTO = convertTrainingDatasetToDTO(trainingDataset);
-    trainingDatasetFacade.remove(trainingDataset);
+    switch(trainingDataset.getTrainingDatasetType()) {
+      case HOPSFS_TRAINING_DATASET:
+        hopsfsTrainingDatasetController.removeHopsfsTrainingDataset(trainingDataset.getHopsfsTrainingDataset());
+        break;
+      case EXTERNAL_TRAINING_DATASET:
+        externalTrainingDatasetController.removeExternalTrainingDataset(trainingDataset.getExternalTrainingDataset());
+        break;
+      default:
+        throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_TYPE.getMessage()
+          + ", Recognized training dataset types are: " + TrainingDatasetType.HOPSFS_TRAINING_DATASET + ", and: " +
+          TrainingDatasetType.EXTERNAL_TRAINING_DATASET + ". The provided training dataset type was not recognized: "
+          + trainingDataset.getTrainingDatasetType());
+    }
     return trainingDatasetDTO;
   }
 
@@ -230,31 +297,21 @@ public class TrainingDatasetController {
    * Updates a training dataset with new metadata
    *
    * @param featurestore             the featurestore that the trainingDataset is linked to
-   * @param id                       the id of hte trainingDataset to update
-   * @param job                      the new job of the trainingDataset
-   * @param dataFormat               the new dataFormat of the trainingDataset
-   * @param description              the new description of the trainingDataset
-   * @param featureCorrelationMatrix feature correlation matrix data
-   * @param descriptiveStatistics    descriptive statistics data
-   * @param featuresHistogram        feature distributions data
-   * @param clusterAnalysis          cluster analysis data
-   * @param features                 training dataset schema
-   * @param updateMetadata           boolean flag whether to update featuregroup metadata
-   * @param updateStats              boolean flag whether to update featuregroup stats
+   * @param trainingDatasetDTO       the user input data for updating the training dataset
+   *
    * @return a JSON/XML DTO of the updated training dataset
    * @throws FeaturestoreException
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public TrainingDatasetDTO updateTrainingDataset(
-      Featurestore featurestore, Integer id, Jobs job,
-      String dataFormat, String description, FeatureCorrelationMatrixDTO featureCorrelationMatrix,
-      DescriptiveStatsDTO descriptiveStatistics, FeatureDistributionsDTO featuresHistogram, List<FeatureDTO> features,
-      boolean updateMetadata, boolean updateStats, ClusterAnalysisDTO clusterAnalysis) throws FeaturestoreException {
-    TrainingDataset trainingDataset = trainingDatasetFacade.findByIdAndFeaturestore(id, featurestore);
+      Featurestore featurestore, TrainingDatasetDTO trainingDatasetDTO) throws FeaturestoreException {
+    TrainingDataset trainingDataset = trainingDatasetFacade.findByIdAndFeaturestore(trainingDatasetDTO.getId(),
+      featurestore);
     if (trainingDataset == null) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_NOT_FOUND,
-          Level.FINE, "training dataset id: " + id);
+          Level.FINE, "training dataset id: " + trainingDatasetDTO.getId());
     }
+    /*
     TrainingDataset updatedTrainingDataset = trainingDataset;
     if (updateMetadata) {
       updatedTrainingDataset = trainingDatasetFacade.updateTrainingDataset(
@@ -262,10 +319,99 @@ public class TrainingDatasetController {
       featurestoreFeatureController.updateTrainingDatasetFeatures(updatedTrainingDataset, features);
     }
     if (updateStats) {
-      featurestoreStatisticController.updateFeaturestoreStatistics(null, trainingDataset, featureCorrelationMatrix,
+      featurestoreStatisticController.updateFeaturestoreStatistics(null, trainingDataset,
+        featureCorrelationMatrix,
           descriptiveStatistics, featuresHistogram, clusterAnalysis);
     }
     return convertTrainingDatasetToDTO(updatedTrainingDataset);
+    */
+    return null;
+  }
+  
+  /**
+   * Helper function that gets the Dataset where all the training dataset in the featurestore resides within the project
+   *
+   * @param project the project to get the dataset for
+   * @return the training dataset for the project
+   */
+  public Dataset getTrainingDatasetFolder(Project project){
+    return datasetFacade.findByNameAndProjectId(project, getTrainingDatasetFolderName(project));
+  }
+  
+  /**
+   * Returns the training dataset folder name of a project (projectname_Training_Datasets)
+   *
+   * @param project the project to get the folder name for
+   * @return the name of the folder
+   */
+  public String getTrainingDatasetFolderName(Project project){
+    return project.getName() + "_" + Settings.ServiceDataset.TRAININGDATASETS.getName();
+  }
+  
+  /**
+   * Helper function that gets the training dataset path from a folder and training dataset name.
+   * (path_to_folder/trainingdatasetName_version)
+   *
+   * @param trainingDatasetsFolderPath the path to the dataset folder
+   * @param trainingDatasetName the name of the training dataset
+   * @param version the version of the training dataset
+   * @return the path to the training dataset as a child-file of the training dataset folder
+   */
+  public String getTrainingDatasetPath(String trainingDatasetsFolderPath, String trainingDatasetName, Integer version){
+    return trainingDatasetsFolderPath + "/" + trainingDatasetName + "_" + version;
+  }
+  
+  /**
+   * Verifies statistics user input for a feature group
+   *
+   * @param trainingDatasetDTO DTO containing the feature group statistics
+   */
+  public void verifyStatisticsInput(TrainingDatasetDTO trainingDatasetDTO) {
+    if (trainingDatasetDTO.getFeatureCorrelationMatrix() != null &&
+      trainingDatasetDTO.getFeatureCorrelationMatrix().getFeatureCorrelations().size() >
+        FeaturestoreClientSettingsDTO.FEATURESTORE_STATISTICS_MAX_CORRELATIONS) {
+      throw new IllegalArgumentException(
+        RESTCodes.FeaturestoreErrorCode.CORRELATION_MATRIX_EXCEED_MAX_SIZE.getMessage());
+    }
+  }
+  
+  /**
+   * Verify user input
+   *
+   * @param trainingDatasetDTO the provided user input
+   * @param featurestore    the feature store to perform the operation against
+   */
+  public void verifyTrainingDatasetInput(TrainingDatasetDTO trainingDatasetDTO, Featurestore featurestore) {
+    if (featurestore == null) {
+      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_NOT_FOUND.getMessage());
+    }
+    if (trainingDatasetDTO.getTrainingDatasetType() != TrainingDatasetType.HOPSFS_TRAINING_DATASET &&
+      trainingDatasetDTO.getTrainingDatasetType() != TrainingDatasetType.EXTERNAL_TRAINING_DATASET) {
+      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_TYPE.getMessage()
+        + ", Recognized Training Dataset types are: " + TrainingDatasetType.HOPSFS_TRAINING_DATASET + ", and: " +
+        TrainingDatasetType.EXTERNAL_TRAINING_DATASET+ ". The provided training dataset type was not recognized: "
+        + trainingDatasetDTO.getTrainingDatasetType());
+    }
+    if (trainingDatasetDTO.getVersion() == null) {
+      throw new IllegalArgumentException(
+        RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_VERSION_NOT_PROVIDED.getMessage());
+    }
+  
+    trainingDatasetDTO.getFeatures().stream().forEach(f -> {
+      if(Strings.isNullOrEmpty(f.getName()) || f.getName().length() >
+        FeaturestoreClientSettingsDTO.TRAINING_DATASET_FEATURE_NAME_MAX_LENGTH){
+        throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_NAME.getMessage()
+          + ", the feature name in a training dataset group should be less than "
+          + FeaturestoreClientSettingsDTO.TRAINING_DATASET_FEATURE_NAME_MAX_LENGTH + " characters");
+      }
+      if(!Strings.isNullOrEmpty(f.getDescription()) &&
+        f.getDescription().length() >
+          FeaturestoreClientSettingsDTO.TRAINING_DATASET_FEATURE_DESCRIPTION_MAX_LENGTH) {
+        throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_DESCRIPTION.getMessage()
+          + ", the feature description in a training dataset should be less than "
+          + FeaturestoreClientSettingsDTO.TRAINING_DATASET_FEATURE_DESCRIPTION_MAX_LENGTH + " characters");
+      }
+    });
   }
 
 }

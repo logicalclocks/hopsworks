@@ -490,6 +490,148 @@
                         </div>
 
                         <div uib-accordion-group class="panel-default"
+                             is-open="newTrainingDatasetCtrl.td_accordion5.isOpen"
+                             ng-show="newTrainingDatasetCtrl.td_accordion5.visible"
+                        >
+                            <div uib-accordion-heading>
+                                <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                   uib-tooltip='The sink where the training dataset will be written'></i>
+                                <span style="margin-left: 20px">
+                                    {{newTrainingDatasetCtrl.td_accordion5.title}}
+                                    {{newTrainingDatasetCtrl.td_accordion5.value}}
+                                    </span>
+                                <span ng-if="newTrainingDatasetCtrl.sinkWrongValue === -1"
+                                      class="glyphicon glyphicon-alert" tooltip-placement="auto left"
+                                      uib-tooltip='The selected output sink is not valid'
+                                      style="margin-left: 10px"></span>
+                            </div>
+
+                            <div class="view-info">
+                                <div class="col-md-12">
+                                    <div class="col-sm-12" style="margin-bottom: 20px">
+                                        <div class="col-sm-3">
+                                        </div>
+                                        <div class="col-sm-9">
+                                            <div class="btn-group blocks" style="padding: 0px;">
+                                                <div style="display: inline-block; vertical-align: top;">
+                                                    <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                                                        <label class="btn btn-default btn-md"
+                                                               id="hopsfs_sink_type"
+                                                               ng-click="newTrainingDatasetCtrl.setSinkType(0);"
+                                                               ng-class="{unset: newTrainingDatasetCtrl.sinkType !== 0}"
+                                                               style="margin:2px; background:rgb(108, 117, 125); color:white; z-index:2">
+                                                            <input type="radio" value="HOPSFS_SINK"
+                                                                   id="HOPSFS_SINK">
+                                                            HopsFS Connector
+                                                            <i class="fa fa-info-circle"
+                                                               uib-tooltip="To store the training dataset on HopsFS
+                                                               in your project, select a configured HopsFS connector"
+                                                               tooltip-placement="left" style="margin-left: 10px">
+                                                            </i>
+                                                        </label>
+                                                        <label class="btn btn-default btn-md"
+                                                               ng-click="newTrainingDatasetCtrl.setSinkType(1);"
+                                                               ng-class="{unset: newTrainingDatasetCtrl.sinkType !== 1}"
+                                                               style="margin:2px; background:rgb(108, 117, 125); color:white; z-index:2">
+                                                            <input type="radio" value="SQL_JOB"
+                                                                   id="SQL_JOB">
+                                                            S3 Connector
+                                                            <i class="fa fa-info-circle"
+                                                               uib-tooltip="To store the training dataset on S3,
+                                                               select a configured S3 connector"
+                                                               tooltip-placement="left" style="margin-left: 10px">
+                                                            </i>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <br>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="view-info" ng-if="newTrainingDatasetCtrl.sinkType === 0">
+                                <div class="col-md-12">
+                                    <div class="col-sm-12" style="margin-bottom: 20px">
+                                        <div class="col-sm-3">
+                                            <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                               uib-tooltip='The HopsFS Connector to use for storing the Training Dataset'></i>
+                                            <label style="margin-left:20px;" class="control-label">
+                                                HopsFS connector:
+                                            </label>
+                                        </div>
+                                        <div class="col-sm-9">
+                                            <ui-select ng-model="newTrainingDatasetCtrl.selectedHopsfsConnector"
+                                                       style="z-index: 100"
+                                                       ng-if="newTrainingDatasetCtrl.hopsfsConnectors.length > 0"
+                                            >
+                                                <ui-select-match placeholder="Select a HopsFS Connector">
+                                                    <span>{{$select.selected.name}}</span>
+                                                </ui-select-match>
+                                                <ui-select-choices
+                                                        repeat="hopsfs in newTrainingDatasetCtrl.hopsfsConnectors">
+                                                    <span ng-bind="hopsfs.name"></span>
+                                                </ui-select-choices>
+                                            </ui-select>
+                                            <div ng-if="newTrainingDatasetCtrl.hopsfsConnectors.length === 0">
+                                                No HopsFS Connectors have been configured for this Feature Store
+                                            </div>
+                                            <div
+                                                    ng-if="newTrainingDatasetCtrl.trainingDatasetSinkNotSelected === -1"
+                                                    style="color: red">
+                                                <p>
+                                                    You must select one of the configured HopsFS or S3 connectors as output sink for
+                                                    the training dataset.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="view-info" ng-if="newTrainingDatasetCtrl.sinkType === 1">
+                                <div class="col-md-12">
+                                    <div class="col-sm-12" style="margin-bottom: 20px">
+                                        <div class="col-sm-3">
+                                            <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                               uib-tooltip='The S3 Connector to use for storing the Training Dataset'></i>
+                                            <label style="margin-left:20px;" class="control-label">
+                                                S3 connector:
+                                            </label>
+                                        </div>
+                                        <div class="col-sm-9">
+                                            <ui-select ng-model="newTrainingDatasetCtrl.selectedS3Connector"
+                                                       style="z-index: 100"
+                                                       ng-if="newTrainingDatasetCtrl.s3Connectors.length > 0"
+                                            >
+                                                <ui-select-match placeholder="Select a S3 Connector">
+                                                    <span>{{$select.selected.name}}</span>
+                                                </ui-select-match>
+                                                <ui-select-choices
+                                                        repeat="s3 in newTrainingDatasetCtrl.s3Connectors">
+                                                    <span ng-bind="s3.name"></span>
+                                                </ui-select-choices>
+                                            </ui-select>
+                                            <div ng-if="newTrainingDatasetCtrl.s3Connectors.length === 0">
+                                                No S3 Connectors have been configured for this Feature Store
+                                            </div>
+                                            <div
+                                                    ng-if="newTrainingDatasetCtrl.trainingDatasetSinkNotSelected === -1"
+                                                    style="color: red">
+                                                <p>
+                                                    You must select one of the configured HopsFS or S3 connectors as output sink for
+                                                    the training dataset.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div uib-accordion-group class="panel-default"
                              is-open="newTrainingDatasetCtrl.td_accordion4.isOpen"
                              ng-show="newTrainingDatasetCtrl.td_accordion4.visible"
                         >

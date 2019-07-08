@@ -87,9 +87,6 @@ public class Featuregroup implements Serializable {
   @ManyToOne(optional = false)
   private Users creator;
   @Basic(optional = false)
-  @Column(name = "hive_tbl_id")
-  private Long hiveTblId;
-  @Basic(optional = false)
   @NotNull
   @Column(name = "version")
   private Integer version;
@@ -160,14 +157,6 @@ public class Featuregroup implements Serializable {
     this.job = job;
   }
 
-  public Long getHiveTblId() {
-    return hiveTblId;
-  }
-
-  public void setHiveTblId(Long hiveTblId) {
-    this.hiveTblId = hiveTblId;
-  }
-
   public Integer getVersion() {
     return version;
   }
@@ -222,7 +211,6 @@ public class Featuregroup implements Serializable {
     if (!featurestore.equals(that.featurestore)) return false;
     if (!hdfsUserId.equals(that.hdfsUserId)) return false;
     if (!version.equals(that.version)) return false;
-    if (!hiveTblId.equals(that.hiveTblId)) return false;
     if (created != null)
       if (!created.equals(that.created)) return false;
     if (!creator.equals(that.creator)) return false;

@@ -28,6 +28,7 @@ import io.hops.hopsworks.common.dao.featurestore.FeaturestoreDTO;
 import io.hops.hopsworks.common.dao.featurestore.app.FeaturestoreMetadataDTO;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.FeaturegroupDTO;
+import io.hops.hopsworks.common.dao.featurestore.settings.FeaturestoreClientSettingsDTO;
 import io.hops.hopsworks.common.dao.featurestore.trainingdataset.TrainingDatasetController;
 import io.hops.hopsworks.common.dao.featurestore.trainingdataset.TrainingDatasetDTO;
 import io.hops.hopsworks.common.dao.project.Project;
@@ -142,6 +143,25 @@ public class FeaturestoreService {
   }
 
   /**
+   * Endpoint for getting a featurestore's settings
+   **
+   * @return JSON representation of the featurestore settings
+   */
+  @GET
+  @Path("/settings")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiOperation(value = "Get featurestore settings",
+    response = FeaturestoreClientSettingsDTO.class)
+  public Response getFeaturestoreSettings() {
+    GenericEntity<FeaturestoreClientSettingsDTO> featurestoreClientSettingsDTO =
+      new GenericEntity<FeaturestoreClientSettingsDTO>(new FeaturestoreClientSettingsDTO()) {
+      };
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featurestoreClientSettingsDTO).build();
+  }
+  
+  /**
    * Endpoint for getting a featurestore by name. This method will be removed after HOPSWORKS-860.
    *
    * @param featurestoreName the name of the featurestore
@@ -152,7 +172,7 @@ public class FeaturestoreService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiOperation(value = "Get featurestore with specific Id",
+  @ApiOperation(value = "Get featurestore with specific name",
     response = FeaturestoreDTO.class)
   public Response getFeaturestoreByName(
     @ApiParam(value = "Id of the featurestore", required = true)

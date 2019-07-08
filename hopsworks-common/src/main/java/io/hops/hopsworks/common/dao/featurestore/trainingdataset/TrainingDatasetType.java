@@ -14,18 +14,16 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.common.dao.featurestore.storageconnector;
+package io.hops.hopsworks.common.dao.featurestore.trainingdataset;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Type of Storage Connector
+ * Type of the Training Dataset
  */
-public enum FeaturestoreStorageConnectorType {
-  @JsonProperty("HopsFS")
-  HopsFS,
-  @JsonProperty("JDBC")
-  JDBC,
-  @JsonProperty("S3")
-  S3;
+public enum TrainingDatasetType {
+  @JsonProperty("HOPSFS_TRAINING_DATASET")
+  HOPSFS_TRAINING_DATASET,
+  @JsonProperty("EXTERNAL_TRAINING_DATASET")
+  EXTERNAL_TRAINING_DATASET,
 }

@@ -33,6 +33,7 @@ angular.module('hopsWorksApp')
             self.featuregroup = StorageService.get(self.projectId + "_featuregroup");
             self.storageConnectors = StorageService.get(self.projectId + "_storageconnectors")
             self.jdbcConnectors = []
+            self.settings = StorageService.get(self.projectId + "_fssettings")
 
             //State
             self.cachedPhase = 0;

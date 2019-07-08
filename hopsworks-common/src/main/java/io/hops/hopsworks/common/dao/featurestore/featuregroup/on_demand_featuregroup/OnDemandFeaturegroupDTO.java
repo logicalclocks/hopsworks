@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2019, Logical Clocks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -25,8 +25,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 import java.util.stream.Collectors;
 
 /**
- * DTO containing the human-readable information of an external SQL query for a feature store, can be converted to
- * JSON or XML representation using jaxb.
+ * DTO containing the human-readable information of an on-demand featuregroup in the feature store, can be
+ * converted to JSON or XML representation using jaxb.
  */
 @XmlRootElement
 public class OnDemandFeaturegroupDTO extends FeaturegroupDTO {
@@ -104,7 +104,7 @@ public class OnDemandFeaturegroupDTO extends FeaturegroupDTO {
 
   @Override
   public String toString() {
-    return "OnDemandFeaturegroupDTO{" +
+    return "HopsfsTrainingDatasetDTO{" +
         "jdbcConnectorId=" + jdbcConnectorId +
         ", jdbcConnectorName='" + jdbcConnectorName + '\'' +
         ", name='" + name + '\'' +

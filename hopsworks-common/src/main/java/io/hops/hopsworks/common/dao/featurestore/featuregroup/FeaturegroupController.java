@@ -22,6 +22,7 @@ import io.hops.hopsworks.common.dao.featurestore.featuregroup.cached_featuregrou
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.cached_featuregroup.RowValueQueryResult;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.on_demand_featuregroup.OnDemandFeaturegroupController;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.on_demand_featuregroup.OnDemandFeaturegroupDTO;
+import io.hops.hopsworks.common.dao.featurestore.settings.FeaturestoreClientSettingsDTO;
 import io.hops.hopsworks.common.dao.featurestore.stats.FeaturestoreStatisticController;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
@@ -29,7 +30,6 @@ import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
-import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -232,7 +232,7 @@ public class FeaturegroupController {
           featuregroupFacade.updateFeaturegroupMetadata(featuregroup, job);
       } else if(featuregroup.getFeaturegroupType() == FeaturegroupType.ON_DEMAND_FEATURE_GROUP){
         verifyOnDemandFeaturegroupUserInput(featuregroupName, description, jdbcConnectorId, sqlQuery, featureDTOS);
-        OnDemandFeaturegroup onDemandFeaturegroup = featuregroup.getOnDemandFeaturegroup();
+        HopsfsTrainingDataset onDemandFeaturegroup = featuregroup.getOnDemandFeaturegroup();
         FeaturestoreJdbcConnector featurestoreJdbcConnector = featurestoreJdbcConnectorFacade.find(jdbcConnectorId);
         onDemandFeaturegroupFacade.updateMetadata(onDemandFeaturegroup, featuregroupName,
           description, featurestoreJdbcConnector, sqlQuery);
@@ -272,7 +272,7 @@ public class FeaturegroupController {
   public void verifyStatisticsInput(FeaturegroupDTO featuregroupDTO) {
     if (featuregroupDTO.getFeatureCorrelationMatrix() != null &&
         featuregroupDTO.getFeatureCorrelationMatrix().getFeatureCorrelations().size() >
-            Settings.HOPS_FEATURESTORE_STATISTICS_MAX_CORRELATIONS) {
+            FeaturestoreClientSettingsDTO.FEATURESTORE_STATISTICS_MAX_CORRELATIONS) {
       throw new IllegalArgumentException(
           RESTCodes.FeaturestoreErrorCode.CORRELATION_MATRIX_EXCEED_MAX_SIZE.getMessage());
     }
@@ -362,7 +362,7 @@ public class FeaturegroupController {
               FeaturegroupType.CACHED_FEATURE_GROUP + ". The provided feature group type was not recognized: "
               + featuregroup.getFeaturegroupType());
       }
-      return featuregroupDTO;
+      return convertedFeaturegroupDTO;
     } else {
       return null;
     }

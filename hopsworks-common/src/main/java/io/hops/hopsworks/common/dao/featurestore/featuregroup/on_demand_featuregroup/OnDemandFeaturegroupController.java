@@ -18,9 +18,9 @@ package io.hops.hopsworks.common.dao.featurestore.featuregroup.on_demand_feature
 
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.Featuregroup;
+import io.hops.hopsworks.common.dao.featurestore.settings.FeaturestoreClientSettingsDTO;
 import io.hops.hopsworks.common.dao.featurestore.storageconnector.jdbc.FeaturestoreJdbcConnector;
 import io.hops.hopsworks.common.dao.featurestore.storageconnector.jdbc.FeaturestoreJdbcConnectorFacade;
-import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.restutils.RESTCodes;
 
@@ -39,18 +39,6 @@ public class OnDemandFeaturegroupController {
   private OnDemandFeaturegroupFacade onDemandFeaturegroupFacade;
   @EJB
   private FeaturestoreJdbcConnectorFacade featurestoreJdbcConnectorFacade;
-  
-  /**
-   * Persists a JDBC connection for the feature store
-   *
-   * @param name name of the connection
-   * @param description description of the connection
-   * @param featurestore the feature store
-   * @param arguments name of missing arguments for the JDBC string (e.g passwords and similar that should not be
-   *                  stored plaintext in the db)
-   * @param connectionString the JDBC connection string (arguments will be appended at runtime)
-   * @return a DTO representing the created entity
-   */
   
   /**
    * Persists an on demand feature group
@@ -90,33 +78,35 @@ public class OnDemandFeaturegroupController {
    */
   public void verifyOnDemandFeaturegroupUserInput(OnDemandFeaturegroupDTO onDemandFeaturegroupDTO) {
 
-    if(onDemandFeaturegroupDTO.getName().length() > Settings.HOPS_ON_DEMAND_FEATUREGROUP_NAME_MAX_LENGTH) {
+    if(onDemandFeaturegroupDTO.getName().length() >
+      FeaturestoreClientSettingsDTO.ON_DEMAND_FEATUREGROUP_NAME_MAX_LENGTH) {
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_NAME.getMessage()
           + ", the name of a on-demand feature group should be less than "
-          + Settings.HOPS_ON_DEMAND_FEATUREGROUP_NAME_MAX_LENGTH + " characters");
+          + FeaturestoreClientSettingsDTO.ON_DEMAND_FEATUREGROUP_NAME_MAX_LENGTH + " characters");
     }
 
     if(!Strings.isNullOrEmpty(onDemandFeaturegroupDTO.getDescription()) &&
         onDemandFeaturegroupDTO.getDescription().length()
-            > Settings.HOPS_ON_DEMAND_FEATUREGROUP_DESCRIPTION_MAX_LENGTH){
+            > FeaturestoreClientSettingsDTO.ON_DEMAND_FEATUREGROUP_DESCRIPTION_MAX_LENGTH){
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_DESCRIPTION.getMessage()
           + ", the descritpion of an on-demand feature group should be less than "
-          + Settings.HOPS_ON_DEMAND_FEATUREGROUP_DESCRIPTION_MAX_LENGTH + " " +
+          + FeaturestoreClientSettingsDTO.ON_DEMAND_FEATUREGROUP_DESCRIPTION_MAX_LENGTH + " " +
           "characters");
     }
 
     onDemandFeaturegroupDTO.getFeatures().stream().forEach(f -> {
       if(Strings.isNullOrEmpty(f.getName()) || f.getName().length() >
-          Settings.HOPS_ON_DEMAND_FEATUREGROUP_FEATURE_NAME_MAX_LENGTH){
+          FeaturestoreClientSettingsDTO.ON_DEMAND_FEATUREGROUP_FEATURE_NAME_MAX_LENGTH){
         throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_NAME.getMessage()
             + ", the feature name in an on-demand feature group should be less than "
-            + Settings.HOPS_ON_DEMAND_FEATUREGROUP_FEATURE_NAME_MAX_LENGTH + " characters");
+            + FeaturestoreClientSettingsDTO.ON_DEMAND_FEATUREGROUP_FEATURE_NAME_MAX_LENGTH + " characters");
       }
       if(!Strings.isNullOrEmpty(f.getDescription()) &&
-          f.getDescription().length() > Settings.HOPS_ON_DEMAND_FEATUREGROUP_FEATURE_DESCRIPTION_MAX_LENGTH) {
+          f.getDescription().length() >
+            FeaturestoreClientSettingsDTO.ON_DEMAND_FEATUREGROUP_FEATURE_DESCRIPTION_MAX_LENGTH) {
         throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_DESCRIPTION.getMessage()
             + ", the feature description in an on-demand feature group should be less than "
-            + Settings.HOPS_ON_DEMAND_FEATUREGROUP_FEATURE_DESCRIPTION_MAX_LENGTH + " characters");
+            + FeaturestoreClientSettingsDTO.ON_DEMAND_FEATUREGROUP_FEATURE_DESCRIPTION_MAX_LENGTH + " characters");
       }
     });
 
@@ -135,9 +125,12 @@ public class OnDemandFeaturegroupController {
           + ", SQL Query cannot be empty");
     }
 
-    if(onDemandFeaturegroupDTO.getQuery().length() > Settings.HOPS_ON_DEMAND_FEATUREGROUP_SQL_QUERY_MAX_LENGTH) {
+    if(onDemandFeaturegroupDTO.getQuery().length() >
+      FeaturestoreClientSettingsDTO.ON_DEMAND_FEATUREGROUP_SQL_QUERY_MAX_LENGTH) {
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.INVALID_SQL_QUERY.getMessage()
-          + ", SQL Query cannot exceed " + Settings.HOPS_ON_DEMAND_FEATUREGROUP_SQL_QUERY_MAX_LENGTH + " characters.");
+          + ", SQL Query cannot exceed " +
+        FeaturestoreClientSettingsDTO.ON_DEMAND_FEATUREGROUP_SQL_QUERY_MAX_LENGTH + " " +
+        "characters.");
     }
   }
 

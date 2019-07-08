@@ -1287,7 +1287,16 @@ public class RESTCodes {
     COULD_NOT_CLEAR_FEATUREGROUP(48, "Could not clear contents of feature group",
         Response.Status.INTERNAL_SERVER_ERROR),
     ILLEGAL_FEATUREGROUP_TYPE(49, "The provided feature group type was not recognized",
-        Response.Status.BAD_REQUEST);
+        Response.Status.BAD_REQUEST),
+    ILLEGAL_TRAINING_DATASET_TYPE(50, "The provided training dataset type was not recognized",
+      Response.Status.BAD_REQUEST),
+    CAN_ONLY_GET_INODE_FOR_HOPSFS_TRAINING_DATASETS(51, "Getting the inode id of a non-hopsfs training dataset is not" +
+      " supported", Response.Status.BAD_REQUEST),
+    TRAINING_DATASET_VERSION_NOT_PROVIDED(52, "Training Dataset version was not provided",
+      Response.Status.BAD_REQUEST),
+    ILLEGAL_TRAINING_DATASET_NAME(53, "Illegal training dataset name", Response.Status.BAD_REQUEST),
+    S3_CONNECTOR_ID_NOT_PROVIDED(54, "S3 Connector Id was not provided", Response.Status.BAD_REQUEST),
+    HOPSFS_CONNECTOR_ID_NOT_PROVIDED(55, "HopsFS Connector Id was not provided", Response.Status.BAD_REQUEST);
     
     
     private int code;

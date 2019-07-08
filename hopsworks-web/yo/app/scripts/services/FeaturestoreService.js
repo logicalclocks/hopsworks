@@ -188,6 +188,34 @@ angular.module('hopsWorksApp')
                 },
 
                 /**
+                 * @returns hopsfs training dataset type string
+                 */
+                hopsfsTrainingDatasetType: function() {
+                    return "HOPSFS_TRAINING_DATASET";
+                },
+
+                /**
+                 * @returns hopsfs training dataset DTO type string
+                 */
+                hopsfsTrainingDatasetTypeDTO: function() {
+                    return "hopsfsTrainingDatasetDTO";
+                },
+
+                /**
+                 * @returns external training dataset DTO type string
+                 */
+                externalTrainingDatasetTypeDTO: function() {
+                    return "externalTrainingDatasetDTO";
+                },
+
+                /**
+                 * @returns external training dataset type string
+                 */
+                externalTrainingDatasetType: function() {
+                    return "EXTERNAL_TRAINING_DATASET";
+                },
+
+                /**
                  * @returns cached feature group type string
                  */
                 cachedFeaturegroupType: function() {
@@ -465,6 +493,16 @@ angular.module('hopsWorksApp')
                 getStorageConnectors: function(projectId, featurestore) {
                     return $http.get('/api/project/' + projectId + '/featurestores/' +
                         featurestore.featurestoreId + "/storageconnectors");
+                },
+
+                /**
+                 * GET request for the settings of Hopsworks featurestores
+                 *
+                 * @param projectId project of the active user
+                 * @returns {HttpPromise}
+                 */
+                getFeaturestoreSettings: function(projectId) {
+                    return $http.get('/api/project/' + projectId + '/featurestores/settings');
                 },
 
                 /**

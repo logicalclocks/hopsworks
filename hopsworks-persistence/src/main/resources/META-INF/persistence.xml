@@ -127,6 +127,8 @@
     <class>io.hops.hopsworks.common.dao.featurestore.storageconnector.hopsfs.FeaturestoreHopsfsConnector</class>
     <class>io.hops.hopsworks.common.dao.featurestore.featuregroup.on_demand_featuregroup.OnDemandFeaturegroup</class>
     <class>io.hops.hopsworks.common.dao.featurestore.featuregroup.cached_featuregroup.CachedFeaturegroup</class>
+    <class>io.hops.hopsworks.common.dao.featurestore.trainingdataset.hopsfs_trainingdataset.HopsfsTrainingDataset</class>
+    <class>io.hops.hopsworks.common.dao.featurestore.trainingdataset.external_trainingdataset.ExternalTrainingDataset</class>
     <class>io.hops.hopsworks.common.dao.maggy.MaggyDriver</class>
     <class>io.hops.hopsworks.common.dao.airflow.MaterializedJWT</class>
     <class>io.hops.hopsworks.common.dao.user.security.apiKey.ApiKey</class>
