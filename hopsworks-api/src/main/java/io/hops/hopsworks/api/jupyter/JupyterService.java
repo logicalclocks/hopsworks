@@ -298,11 +298,10 @@ public class JupyterService {
       String configSecret = DigestUtils.sha256Hex(Integer.toString(ThreadLocalRandom.current().nextInt()));
       JupyterDTO dto = null;
       DistributedFileSystemOps dfso = dfsService.getDfsOps();
-      String allowOriginScheme = uriInfo.getBaseUri().getScheme();
       String allowOriginHost = uriInfo.getBaseUri().getHost();
       int allowOriginPort = uriInfo.getBaseUri().getPort();
       String allowOriginPortStr = allowOriginPort != -1 ? ":" + allowOriginPort : "";
-      String allowOrigin = allowOriginScheme + "://" + allowOriginHost + allowOriginPortStr;
+      String allowOrigin = settings.getJupyterOriginScheme() + "://" + allowOriginHost + allowOriginPortStr;
       try {
         jupyterSettingsFacade.update(jupyterSettings);
         dto = jupyterManager.startJupyterServer(project, configSecret, hdfsUser, hopsworksUser,
