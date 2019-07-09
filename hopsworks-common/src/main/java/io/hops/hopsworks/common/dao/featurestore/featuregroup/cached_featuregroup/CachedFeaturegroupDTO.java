@@ -17,6 +17,7 @@
 package io.hops.hopsworks.common.dao.featurestore.featuregroup.cached_featuregroup;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.hops.hopsworks.common.dao.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.hive.HiveTableType;
 
@@ -36,15 +37,16 @@ public class CachedFeaturegroupDTO extends FeaturegroupDTO {
   private List<String> hdfsStorePaths;
   private String inputFormat;
   private HiveTableType hiveTableType;
+  private Long inodeId;
 
 
   public CachedFeaturegroupDTO() {
     super();
   }
   
-  public CachedFeaturegroupDTO(CachedFeaturegroup cachedFeaturegroup) {
-    super(cachedFeaturegroup.getFeaturegroup());
-    this.hiveTableId = cachedFeaturegroup.getHiveTableId();
+  public CachedFeaturegroupDTO(Featuregroup featuregroup) {
+    super(featuregroup);
+    this.hiveTableId = featuregroup.getCachedFeaturegroup().getHiveTableId();
   }
 
   @XmlElement
@@ -82,14 +84,24 @@ public class CachedFeaturegroupDTO extends FeaturegroupDTO {
   public void setHiveTableType(HiveTableType hiveTableType) {
     this.hiveTableType = hiveTableType;
   }
-
+  
+  @XmlElement
+  public Long getInodeId() {
+    return inodeId;
+  }
+  
+  public void setInodeId(Long inodeId) {
+    this.inodeId = inodeId;
+  }
+  
   @Override
   public String toString() {
     return "CachedFeaturegroupDTO{" +
-        "hiveTableId=" + hiveTableId +
-        ", hdfsStorePaths=" + hdfsStorePaths +
-        ", inputFormat='" + inputFormat + '\'' +
-        ", hiveTableType=" + hiveTableType +
-        '}';
+      "hiveTableId=" + hiveTableId +
+      ", hdfsStorePaths=" + hdfsStorePaths +
+      ", inputFormat='" + inputFormat + '\'' +
+      ", hiveTableType=" + hiveTableType +
+      ", inodeId=" + inodeId +
+      '}';
   }
 }

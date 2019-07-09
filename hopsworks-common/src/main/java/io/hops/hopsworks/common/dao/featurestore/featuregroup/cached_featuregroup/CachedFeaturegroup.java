@@ -16,17 +16,14 @@
 
 package io.hops.hopsworks.common.dao.featurestore.featuregroup.cached_featuregroup;
 
-import io.hops.hopsworks.common.dao.featurestore.featuregroup.Featuregroup;
-
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.MapsId;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
-import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
@@ -46,26 +43,16 @@ import java.io.Serializable;
 public class CachedFeaturegroup implements Serializable {
   private static final long serialVersionUID = 1L;
   @Id
-  @Column(name = "feature_group_id")
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Basic(optional = false)
+  @Column(name = "id")
   private Integer id;
-  @MapsId
-  @OneToOne
-  @JoinColumn(name = "feature_group_id", referencedColumnName = "id")
-  private Featuregroup featuregroup;
   @Basic(optional = false)
   @Column(name = "offline_feature_group")
   private Long hiveTableId;
 
   public static long getSerialVersionUID() {
     return serialVersionUID;
-  }
-
-  public Featuregroup getFeaturegroup() {
-    return featuregroup;
-  }
-
-  public void setFeaturegroup(Featuregroup featuregroup) {
-    this.featuregroup = featuregroup;
   }
 
   public Long getHiveTableId() {
@@ -88,14 +75,12 @@ public class CachedFeaturegroup implements Serializable {
     CachedFeaturegroup that = (CachedFeaturegroup) o;
 
     if (!id.equals(that.id)) return false;
-    if (!featuregroup.equals(that.featuregroup)) return false;
     return hiveTableId.equals(that.hiveTableId);
   }
 
   @Override
   public int hashCode() {
     int result = id.hashCode();
-    result = 31 * result + featuregroup.hashCode();
     result = 31 * result + hiveTableId.hashCode();
     return result;
   }

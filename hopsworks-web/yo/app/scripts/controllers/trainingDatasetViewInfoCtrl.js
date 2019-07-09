@@ -19,9 +19,9 @@
  */
 angular.module('hopsWorksApp')
     .controller('trainingDatasetViewInfoCtrl', ['$uibModalInstance', '$scope', 'FeaturestoreService', 'ProjectService',
-        'JobService', '$location', 'growl', 'projectId', 'trainingDataset', 'featurestore',
+        'JobService', '$location', 'growl', 'projectId', 'trainingDataset', 'featurestore', 'settings',
         function ($uibModalInstance, $scope, FeaturestoreService, ProjectService, JobService, $location, growl,
-                  projectId, trainingDataset, featurestore) {
+                  projectId, trainingDataset, featurestore, settings) {
 
             /**
              * Initialize controller state
@@ -31,11 +31,15 @@ angular.module('hopsWorksApp')
             self.projectId = projectId;
             self.trainingDataset = trainingDataset;
             self.featurestore = featurestore;
+            self.settings = settings;
             //State
             self.sizeWorking = false;
             self.size = "Not fetched"
             self.pythonCode = ""
             self.scalaCode = ""
+            //Constants
+            self.hopsfsTrainingDatasetType = self.settings.hopsfsTrainingDatasetType
+            self.externalTrainingDatasetType = self.settings.externalTrainingDatasetType
 
             /**
              * Get the Python API code to retrieve the featuregroup

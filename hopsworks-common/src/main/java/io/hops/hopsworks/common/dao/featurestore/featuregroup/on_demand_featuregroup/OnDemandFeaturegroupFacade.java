@@ -17,7 +17,6 @@
 package io.hops.hopsworks.common.dao.featurestore.featuregroup.on_demand_featuregroup;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.common.dao.featurestore.storageconnector.jdbc.FeaturestoreJdbcConnector;
 
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -63,19 +62,9 @@ public class OnDemandFeaturegroupFacade extends AbstractFacade<OnDemandFeaturegr
    * Updates an existing On Demand Feature Group
    *
    * @param onDemandFeaturegroup the entity to update
-   * @param featuregroupName the new name
-   * @param description the new description
-   * @param jdbcConnector the new JDBC connector
-   * @param sqlQuery the new SQL query
    * @return the updated entity
    */
-  public OnDemandFeaturegroup updateMetadata(OnDemandFeaturegroup onDemandFeaturegroup,
-    String featuregroupName, String description, FeaturestoreJdbcConnector jdbcConnector,
-    String sqlQuery) {
-    onDemandFeaturegroup.setName(featuregroupName);
-    onDemandFeaturegroup.setDescription(description);
-    onDemandFeaturegroup.setFeaturestoreJdbcConnector(jdbcConnector);
-    onDemandFeaturegroup.setQuery(sqlQuery);
+  public OnDemandFeaturegroup updateMetadata(OnDemandFeaturegroup onDemandFeaturegroup) {
     em.merge(onDemandFeaturegroup);
     return onDemandFeaturegroup;
   }

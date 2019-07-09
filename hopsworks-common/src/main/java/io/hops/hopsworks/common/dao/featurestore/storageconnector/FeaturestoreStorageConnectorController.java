@@ -139,8 +139,7 @@ public class FeaturestoreStorageConnectorController {
    * @return JSON/XML DTOs of the deleted storage connector
    */
   public FeaturestoreStorageConnectorDTO deleteStorageConnectorWithTypeAndId(
-      FeaturestoreStorageConnectorType featurestoreStorageConnectorType, Integer storageConnectorId)
-      throws FeaturestoreException {
+      FeaturestoreStorageConnectorType featurestoreStorageConnectorType, Integer storageConnectorId) {
     switch(featurestoreStorageConnectorType) {
       case S3:
         return featurestoreS3ConnectorController.removeFeaturestoreS3Connector(storageConnectorId);

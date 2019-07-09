@@ -29,6 +29,8 @@ import io.hops.hopsworks.common.dao.featurestore.app.FeaturestoreMetadataDTO;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.dao.featurestore.settings.FeaturestoreClientSettingsDTO;
+import io.hops.hopsworks.common.dao.featurestore.storageconnector.FeaturestoreStorageConnectorController;
+import io.hops.hopsworks.common.dao.featurestore.storageconnector.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.common.dao.featurestore.trainingdataset.TrainingDatasetController;
 import io.hops.hopsworks.common.dao.featurestore.trainingdataset.TrainingDatasetDTO;
 import io.hops.hopsworks.common.dao.project.Project;
@@ -54,7 +56,6 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.List;
-import java.util.logging.Logger;
 
 /**
  * A Stateless RESTful service for the featurestore service on Hopsworks.
@@ -75,6 +76,8 @@ public class FeaturestoreService {
   private TrainingDatasetController trainingDatasetController;
   @EJB
   private ProjectFacade projectFacade;
+  @EJB
+  private FeaturestoreStorageConnectorController featurestoreStorageConnectorController;
   @Inject
   private FeaturegroupService featuregroupService;
   @Inject
@@ -83,8 +86,6 @@ public class FeaturestoreService {
   private FeaturestoreStorageConnectorService featurestoreStorageConnectorService;
 
   private Project project;
-
-  private static final Logger LOGGER = Logger.getLogger(FeaturestoreService.class.getName());
 
   /**
    * Set the project of the featurestore (provided by parent resource)
@@ -160,7 +161,7 @@ public class FeaturestoreService {
       };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featurestoreClientSettingsDTO).build();
   }
-  
+
   /**
    * Endpoint for getting a featurestore by name. This method will be removed after HOPSWORKS-860.
    *
@@ -216,8 +217,11 @@ public class FeaturestoreService {
     List<FeaturegroupDTO> featuregroups = featuregroupController.getFeaturegroupsForFeaturestore(featurestore);
     List<TrainingDatasetDTO> trainingDatasets =
         trainingDatasetController.getTrainingDatasetsForFeaturestore(featurestore);
+    List<FeaturestoreStorageConnectorDTO> storageConnectors =
+      featurestoreStorageConnectorController.getAllStorageConnectorsForFeaturestore(featurestore);
     FeaturestoreMetadataDTO featurestoreMetadataDTO =
-        new FeaturestoreMetadataDTO(featurestoreDTO, featuregroups, trainingDatasets);
+        new FeaturestoreMetadataDTO(featurestoreDTO, featuregroups, trainingDatasets,
+          new FeaturestoreClientSettingsDTO(), storageConnectors);
     GenericEntity<FeaturestoreMetadataDTO> featurestoreMetadataGeneric =
         new GenericEntity<FeaturestoreMetadataDTO>(featurestoreMetadataDTO) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK)

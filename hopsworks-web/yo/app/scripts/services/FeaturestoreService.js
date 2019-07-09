@@ -88,9 +88,10 @@ angular.module('hopsWorksApp')
                  * @param featurestore the featurestore linked to the training dataset
                  * @returns {HttpPromise}
                  */
-                updateTrainingDataset: function(projectId, trainingDatasetId, trainingDatasetJson, featurestore) {
+                updateTrainingDatasetMetadata: function(projectId, trainingDatasetId, trainingDatasetJson, featurestore) {
                     return $http.put('/api/project/' + projectId + '/featurestores/' +
-                        featurestore.featurestoreId + "/trainingdatasets/" + trainingDatasetId,
+                        featurestore.featurestoreId + "/trainingdatasets/" + trainingDatasetId +
+                        "?updateMetadata=true&updateStats=false",
                         JSON.stringify(trainingDatasetJson), {headers: {'Content-Type': 'application/json'}});
                 },
 
@@ -202,7 +203,8 @@ angular.module('hopsWorksApp')
                  */
                 updateFeaturegroupMetadata: function(projectId, featurestore, featuregroupId, featuregroupJson) {
                     return $http.put('/api/project/' + projectId + '/featurestores/' +
-                        featurestore.featurestoreId + "/featuregroups/" + featuregroupId,
+                        featurestore.featurestoreId + "/featuregroups/" + featuregroupId +
+                        "?updateMetadata=true&updateStats=false",
                         JSON.stringify(featuregroupJson), {headers: {'Content-Type': 'application/json'}});
                 },
 

@@ -60,9 +60,9 @@ angular.module('hopsWorksApp')
             self.hopsfsConnectorType = self.settings.hopsfsConnectorType
             self.s3ConnectorType = self.settings.s3ConnectorType
             self.jdbcConnectorType = self.settings.jdbcConnectorType
-            self.s3ConnectorDTOType = self.settings.s3ConnectorDTOType
-            self.jdbcConnectorDTOType = self.settings.jdbcConnectorDTOType
-            self.hopsfsConnectorDTOType = self.settings.hopsfsConnectorDTOType
+            self.s3ConnectorDTOType = self.settings.s3ConnectorDtoType
+            self.jdbcConnectorDTOType = self.settings.jdbcConnectorDtoType
+            self.hopsfsConnectorDTOType = self.settings.hopsfsConnectorDtoType
 
 
             /**

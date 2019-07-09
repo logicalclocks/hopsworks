@@ -114,8 +114,8 @@ angular.module('hopsWorksApp')
             self.cachedFeaturegroupType = self.settings.cachedFeaturegroupType
             self.onDemandFeaturegroupSqlQueryMaxLength = self.settings.onDemandFeaturegroupSqlQueryMaxLength
             self.jdbcConnectorType = self.settings.jdbcConnectorType
-            self.cachedFeaturegroupDTOType = self.settings.cachedFeaturegroupDTOType
-            self.onDemandFeaturegroupDTOType = self.settings.onDemandFeaturegroupDTOType
+            self.cachedFeaturegroupDTOType = self.settings.cachedFeaturegroupDtoType
+            self.onDemandFeaturegroupDTOType = self.settings.onDemandFeaturegroupDtoType
 
             //front-end variables
             self.cached_fg_accordion1 = {
@@ -197,10 +197,8 @@ angular.module('hopsWorksApp')
                     self.cachedFeaturegroupName = self.featuregroup.name
                     self.onDemandFeaturegroupDoc = self.featuregroup.description
                     self.cachedFeaturegroupDoc = self.featuregroup.description
-                    if (self.featuregroup.featurestoreExternalSQLQuery != null) {
-                        self.onDemandSqlQuery = self.featuregroup.featurestoreExternalSQLQuery.query
-                        self.cachedSqlQuery = self.featuregroup.featurestoreExternalSQLQuery.query
-                    }
+                    self.onDemandSqlQuery = self.featuregroup.query
+                    self.cachedSqlQuery = self.featuregroup.query
                     self.version = self.featuregroup.version;
                     self.oldFeaturegroupId = self.featuregroup.id
                     if (self.featuregroup.featuregroupType === self.onDemandFeaturegroupType) {
@@ -238,10 +236,8 @@ angular.module('hopsWorksApp')
                     self.cachedFeaturegroupName = self.featuregroup.name
                     self.onDemandFeaturegroupDoc = self.featuregroup.description
                     self.cachedFeaturegroupDoc = self.featuregroup.description
-                    if (self.featuregroup.featurestoreExternalSQLQuery != null) {
-                        self.onDemandSqlQuery = self.featuregroup.featurestoreExternalSQLQuery.query
-                        self.cachedSqlQuery = self.featuregroup.featurestoreExternalSQLQuery.query
-                    }
+                    self.onDemandSqlQuery = self.featuregroup.query
+                    self.cachedSqlQuery = self.featuregroup.query
                     self.version = self.featuregroup.version + 1
                     self.oldFeaturegroupId = self.featuregroup.id
                     if (self.featuregroup.featuregroupType === self.onDemandFeaturegroupType) {
@@ -310,13 +306,13 @@ angular.module('hopsWorksApp')
                     self.onDemandFeaturegroupjdbcConnection = self.jdbcConnectors[0];
                 }
                 if ((self.featuregroupOperation === 'UPDATE' || self.featuregroupOperation === 'NEW_VERSION') && self.jdbcConnectors.length > 0) {
-                    if (self.featuregroup.featurestoreExternalSQLQuery == null || self.featuregroup.featurestoreExternalSQLQuery.jdbcConnectorId == null) {
+                    if (self.featuregroup.jdbcConnectorId == null) {
                         self.cachedFeaturegroupjdbcConnection = self.jdbcConnectors[0];
                         self.onDemandFeaturegroupjdbcConnection = self.jdbcConnectors[0];
                     } else {
                         var i;
                         for (i = 0; i < self.jdbcConnectors.length; i++) {
-                            if (self.jdbcConnectors[i].id === self.featuregroup.featurestoreExternalSQLQuery.jdbcConnectorId) {
+                            if (self.jdbcConnectors[i].id === self.featuregroup.jdbcConnectorId) {
                                 self.cachedFeaturegroupjdbcConnection = self.jdbcConnectors[i];
                                 self.onDemandFeaturegroupjdbcConnection = self.jdbcConnectors[i];
                             }

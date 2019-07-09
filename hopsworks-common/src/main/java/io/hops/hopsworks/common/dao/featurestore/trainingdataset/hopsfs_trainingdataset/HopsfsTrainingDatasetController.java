@@ -19,6 +19,7 @@ package io.hops.hopsworks.common.dao.featurestore.trainingdataset.hopsfs_trainin
 import io.hops.hopsworks.common.dao.featurestore.settings.FeaturestoreClientSettingsDTO;
 import io.hops.hopsworks.common.dao.featurestore.storageconnector.hopsfs.FeaturestoreHopsfsConnector;
 import io.hops.hopsworks.common.dao.featurestore.storageconnector.hopsfs.FeaturestoreHopsfsConnectorFacade;
+import io.hops.hopsworks.common.dao.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
@@ -31,7 +32,7 @@ import javax.ejb.TransactionAttributeType;
 import java.util.logging.Level;
 
 /**
- * Class controlling the interaction with the on_demand_feature_group table and required business logic
+ * Class controlling the interaction with the hopsfs_training_dataset table and required business logic
  */
 @Stateless
 public class HopsfsTrainingDatasetController {
@@ -84,7 +85,7 @@ public class HopsfsTrainingDatasetController {
    *
    * @param hopsfsTrainingDatasetDTO the input data to use when creating the feature group
    */
-  public void verifyHopsfsTrainingDatasetInput(HopsfsTrainingDatasetDTO hopsfsTrainingDatasetDTO) {
+  private void verifyHopsfsTrainingDatasetInput(HopsfsTrainingDatasetDTO hopsfsTrainingDatasetDTO) {
     if(hopsfsTrainingDatasetDTO.getName().length() >
       FeaturestoreClientSettingsDTO.HOPSFS_TRAINING_DATASET_NAME_MAX_LENGTH) {
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_NAME.getMessage()
@@ -101,6 +102,37 @@ public class HopsfsTrainingDatasetController {
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.HOPSFS_CONNECTOR_NOT_FOUND.getMessage()
         + "HopsFS connector with id: " + hopsfsTrainingDatasetDTO.getHopsfsConnectorId() + " was not found");
     }
+  }
+  
+  /**
+   * Converts a Hopsfs Training Dataset entity into a DTO representation
+   *
+   * @param trainingDataset the entity to convert
+   * @return the converted DTO representation
+   */
+  public HopsfsTrainingDatasetDTO convertHopsfsTrainingDatasetToDTO(TrainingDataset trainingDataset) {
+    HopsfsTrainingDatasetDTO hopsfsTrainingDatasetDTO = new HopsfsTrainingDatasetDTO(trainingDataset);
+    int versionLength = trainingDataset.getVersion().toString().length();
+    String trainingDatasetNameWithVersion =
+      trainingDataset.getHopsfsTrainingDataset().getInode().getInodePK().getName();
+    //Remove the _version suffix
+    String trainingDatasetName = trainingDatasetNameWithVersion.substring
+      (0, trainingDatasetNameWithVersion.length() - (1 + versionLength));
+    hopsfsTrainingDatasetDTO.setName(trainingDatasetName);
+    hopsfsTrainingDatasetDTO.setHdfsStorePath(
+      inodeFacade.getPath(trainingDataset.getHopsfsTrainingDataset().getInode()));
+    hopsfsTrainingDatasetDTO.setLocation(hopsfsTrainingDatasetDTO.getHdfsStorePath());
+    return hopsfsTrainingDatasetDTO;
+  }
+  
+  /**
+   * No extra metadata to update for HopsFS training dataset, the added metadata is linked to the inode, and to update
+   * the inode the trainingdataset should be deleted and re-created.
+   *
+   * @param hopsfsTrainingDatasetDTO metadata DTO
+   */
+  public void updateHopsfsTrainingDatasetMetadata(HopsfsTrainingDataset hopsfsTrainingDataset,
+    HopsfsTrainingDatasetDTO hopsfsTrainingDatasetDTO) {
   }
 
 }

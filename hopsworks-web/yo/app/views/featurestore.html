@@ -92,7 +92,7 @@
                                       ng-show="featurestoreCtrl.featuregroupsSortKey == 'created'"
                                       ng-class="{'glyphicon-chevron-up':featurestoreCtrl.featuregroupsReverse,'glyphicon-chevron-down':!featurestoreCtrl.featuregroupsReverse}"></span>
                             </th>
-                            <th style="width: 20%" ng-click="featurestoreCtrl.featuregroupsSort('type')"
+                            <th style="width: 20%" ng-click="featurestoreCtrl.featuregroupsSort('featuregroupType')"
                                 class="fs-table">
                                 Type
                                 <i class="fa fa-info-circle" tooltip-placement="auto left"
@@ -100,7 +100,7 @@
                                    On-Demand Feature Groups are computed dynamically using an JDBC Connection and SQL."
                                    style="margin-left: 10px"></i>
                                 <span class="glyphicon sort-icon"
-                                      ng-show="featurestoreCtrl.featuregroupsSortKey == 'type'"
+                                      ng-show="featurestoreCtrl.featuregroupsSortKey == 'featuregroupType'"
                                       ng-class="{'glyphicon-chevron-up':featurestoreCtrl.featuregroupsReverse,'glyphicon-chevron-down':!featurestoreCtrl.featuregroupsReverse}"></span>
                             </th>
                             <th style="width: 10%" class="fs-table">
@@ -121,10 +121,10 @@
                                 {{featurestoreCtrl.createdOn(featuregroup.versionToGroups[featuregroup.activeVersion].created)}}
                             </td>
                             <td class="fs-table">
-                                <span ng-if="featuregroup.versionToGroups[featuregroup.activeVersion].featuregroupType === featurestoreCtrl.onDemandFeaturegroupType">
+                                <span ng-if="featuregroup.versionToGroups[featuregroup.activeVersion].featuregroupType == featurestoreCtrl.onDemandFeaturegroupType">
                                     ON DEMAND
                                 </span>
-                                <span ng-if="featuregroup.versionToGroups[featuregroup.activeVersion].featuregroupType === featurestoreCtrl.cachedFeaturegroupType">
+                                <span ng-if="featuregroup.versionToGroups[featuregroup.activeVersion].featuregroupType == featurestoreCtrl.cachedFeaturegroupType">
                                     CACHED
                                 </span>
                             </td>
@@ -254,11 +254,12 @@
                                       ng-show="featurestoreCtrl.trainingDatasetsSortKey == 'created'"
                                       ng-class="{'glyphicon-chevron-up':featurestoreCtrl.trainingDatasetsReverse,'glyphicon-chevron-down':!featurestoreCtrl.trainingDatasetsReverse}"></span>
                             </th>
-                            <th style="width: 20%" ng-click="featurestoreCtrl.trainingDatasetsSort('location')"
+                            <th style="width: 20%"
+                                ng-click="featurestoreCtrl.trainingDatasetsSort('trainingDatasetType')"
                                 class="fs-table">
-                                Location
+                                Storage Type
                                 <span class="glyphicon sort-icon"
-                                      ng-show="featurestoreCtrl.trainingDatasetsSortKey == 'location'"
+                                      ng-show="featurestoreCtrl.trainingDatasetsSortKey == 'trainingDatasetType'"
                                       ng-class="{'glyphicon-chevron-up':featurestoreCtrl.trainingDatasetsReverse,'glyphicon-chevron-down':!featurestoreCtrl.trainingDatasetsReverse}"></span>
                             </th>
                             <th style="width: 15%" ng-click="featurestoreCtrl.trainingDatasetsSort('dataFormat')"
@@ -289,7 +290,14 @@
                                 {{featurestoreCtrl.createdOn(td.versionToGroups[td.activeVersion].created)}}
                             </td>
                             <td class="fs-table">
-                                {{td.versionToGroups[td.activeVersion].location}}
+                                <span
+                                        ng-if="td.versionToGroups[td.activeVersion].trainingDatasetType==featurestoreCtrl.hopsfsTrainingDatasetType">
+                                    HopsFS
+                                </span>
+                                <span
+                                        ng-if="td.versionToGroups[td.activeVersion].trainingDatasetType==featurestoreCtrl.s3TrainingDatasetType">
+                                    S3
+                                </span>
                             </td>
                             <td class="fs-table">{{td.versionToGroups[td.activeVersion].dataFormat}}</td>
                             <td class="fs-table">
@@ -330,7 +338,7 @@
                                                    ng-click="featurestoreCtrl.newTrainingDatasetVersion(td.versionToGroups, td.versions); $event.stopPropagation();">
                                                 Create new Training Dataset version</a></li>
                                             <li><a role="menuitem"
-                                                   ng-click="featurestoreCtrl.updateTrainingDataset(td.versionToGroups[td.activeVersion]); $event.stopPropagatphicion();">
+                                                   ng-click="featurestoreCtrl.updateTrainingDatasetMetadata(td.versionToGroups[td.activeVersion]); $event.stopPropagatphicion();">
                                                 Edit Training Dataset</a></li>
                                             <li><a role="menuitem"
                                                    ng-click="featurestoreCtrl.viewTrainingDatasetInfo(td.versionToGroups[td.activeVersion]);">
@@ -479,6 +487,7 @@
                                         </th>
                                         <th style="width: 10%"
                                             class="fs-table">
+                                            Actions
                                         </th>
                                     </tr>
                                     </thead>
@@ -508,20 +517,22 @@
                                         <td class="fs-table">{{result.name}}</td>
                                         <td class="fs-table">{{result.type}}</td>
                                         <td class="fs-table">
-                                        <span ng-if="result.entity == 'Feature Group'">
+                                        <span ng-if="result.entity == featurestoreCtrl.featuregroupType">
                                                 {{result.featuregroup.name}}
                                         </span>
-                                            <span ng-if="result.entity == 'Training Dataset'">
+                                            <span ng-if="result.entity == featurestoreCtrl.trainingDatasetType">
                                                 {{result.trainingDataset.name}}
                                         </span>
                                         </td>
                                         <td class="fs-table">{{result.version}}</td>
                                         <td class="fs-table">
-                                            <button uib-tooltip="Feature Details"
-                                                    type="button"
-                                                    class="btn btn-info btn-sm glyphicon glyphicon-eye-open"
-                                                    ng-click="featurestoreCtrl.viewFeatureInfo(result)">
-                                            </button>
+                                            <div class="btn-group fs-btn" role="group">
+                                                <button uib-tooltip="Feature Details"
+                                                        type="button"
+                                                        class="btn btn-info btn-sm glyphicon glyphicon-eye-open"
+                                                        ng-click="featurestoreCtrl.viewFeatureInfo(result)">
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                     </tbody>
@@ -728,30 +739,64 @@
                         No Storage Connectors to Show
                     </h3>
 
+                    <div class="row form-inline" ng-show="featurestoreCtrl.storageConnectors.length > 0">
+                        <div class="col-sm-9 form-group">
+                            <label style="color:#555">
+                                Search:
+                                <input class="form-control"
+                                       style="margin-left: 10px;"
+                                       ng-model="featurestoreCtrl.scFilter">
+                            </label>
+                        </div>
+                        <div class="col-sm-3 form-group">
+                            <div class="pull-right btn-group">
+                                <label>Storage Connectors per page:
+                                    <input type="number" min="1"
+                                           max="50"
+                                           class="form-control" ng-model="featurestoreCtrl.storageConnectorsPageSize"
+                                           style="width:80px">
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
                     <table class="table table-hover" ng-show="featurestoreCtrl.storageConnectors.length > 0">
                         <thead>
                         <tr>
-                            <th style="width: 5%" class="fs-table">
+                            <th style="width: 10%" class="fs-table">
                             </th>
-                            <th style="width: 20%" class="fs-table">
+                            <th style="width: 25%" class="fs-table"
+                                ng-click="featurestoreCtrl.storageConnectorsSort('name')">
                                 Name
+                                <span class="glyphicon sort-icon"
+                                      ng-show="featurestoreCtrl.storageConnectorsSortKey == 'name'"
+                                      ng-class="{'glyphicon-chevron-up':featurestoreCtrl.storageConnectorsReverse,'glyphicon-chevron-down':!featurestoreCtrl.storageConnectorsReverse}"></span>
                             </th>
-                            <th style="width: 15%" class="fs-table">
+                            <th style="width: 20%" class="fs-table"
+                                ng-click="featurestoreCtrl.storageConnectorsSort('storageConnectorType')">
                                 Type
+                                <span class="glyphicon sort-icon"
+                                      ng-show="featurestoreCtrl.storageConnectorsSortKey == 'storageConnectorType'"
+                                      ng-class="{'glyphicon-chevron-up':featurestoreCtrl.storageConnectorsReverse,'glyphicon-chevron-down':!featurestoreCtrl.storageConnectorsReverse}"></span>
                             </th>
-                            <th style="width: 25%" class="fs-table">
+                            <th style="width: 35%" class="fs-table"
+                                ng-click="featurestoreCtrl.storageConnectorsSort('description')">
                                 Description
-                            </th>
-                            <th style="width: 25%" class="fs-table">
-                                Info
+                                <span class="glyphicon sort-icon"
+                                      ng-show="featurestoreCtrl.storageConnectorsSortKey == 'description'"
+                                      ng-class="{'glyphicon-chevron-up':featurestoreCtrl.storageConnectorsReverse,'glyphicon-chevron-down':!featurestoreCtrl.storageConnectorsReverse}"></span>
                             </th>
                             <th style="width: 10%" id="connectorActionCol" class="fs-table">
+                                Actions
                             </th>
                         </tr>
                         </thead>
                         <tbody class="table-hover">
-                        <tr ng-repeat="connector in featurestoreCtrl.storageConnectors"
-                            class="fs-table">
+                        <tr
+                                dir-paginate="connector in featurestoreCtrl.storageConnectors | orderBy :featurestoreCtrl.storageConnectorsSortFn:featurestoreCtrl.storageConnectorsReverse | filter:featurestoreCtrl.scFilter:false | itemsPerPage:featurestoreCtrl.storageConnectorsPageSize"
+                                class="fs-table"
+                                pagination-id="storageconnectorstable"
+                        >
                             <td class="fs-table">
                                 <i class="sub_icon fa fa-database fa-2x"
                                    ng-if="connector.storageConnectorType==featurestoreCtrl.jdbcConnectorType"></i>
@@ -763,16 +808,30 @@
                             <td class="fs-table">{{connector.name}}</td>
                             <td class="fs-table">{{connector.storageConnectorType}}</td>
                             <td class="fs-table">{{connector.description}}</td>
-                            <td class="fs-table"><span ng-bind-html="connector.info"></span></td>
                             <td class="fs-table">
-                                <button class="btn btn-danger glyphicon glyphicon-trash pull-right"
-                                        ng-disabled="connector.canDelete"
-                                        uib-tooltip="Delete"
-                                        ng-click="featurestoreCtrl.deleteStorageConnector(connector)"></button>
+                                <div class="btn-group fs-btn" role="group">
+                                    <button class="btn btn-danger glyphicon glyphicon-trash"
+                                            ng-disabled="connector.canDelete"
+                                            uib-tooltip="Delete"
+                                            ng-click="featurestoreCtrl.deleteStorageConnector(connector)"></button>
+                                    <button uib-tooltip="Storage Connector Details"
+                                            type="button"
+                                            class="btn btn-info btn-sm glyphicon glyphicon-eye-open"
+                                            ng-click="featurestoreCtrl.viewStorageConnectorInfo(connector)">
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                         </tbody>
                     </table>
+                    <dir-pagination-controls
+                            pagination-id="storageconnectorstable"
+                            class="pull-right"
+                            max-size="5"
+                            direction-links="true"
+                            boundary-links="true"
+                    >
+                    </dir-pagination-controls>
                 </uib-tab>
             </uib-tabset>
         </div>

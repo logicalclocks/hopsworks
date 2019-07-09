@@ -121,7 +121,7 @@ public class FeaturegroupService {
   @ApiOperation(value = "Get the list of feature groups for a featurestore",
       response = FeaturegroupDTO.class,
       responseContainer = "List")
-  public Response getFeaturegroupsForFeaturestore() throws FeaturestoreException {
+  public Response getFeaturegroupsForFeaturestore() {
     List<FeaturegroupDTO> featuregroups = featuregroupController.
         getFeaturegroupsForFeaturestore(featurestore);
     GenericEntity<List<FeaturegroupDTO>> featuregroupsGeneric =
@@ -134,7 +134,6 @@ public class FeaturegroupService {
    *
    * @param featuregroupDTO JSON payload for the new featuregroup
    * @return JSON information about the created featuregroup
-   * @throws FeaturestoreException
    * @throws HopsSecurityException
    */
   @POST
@@ -177,10 +176,8 @@ public class FeaturegroupService {
       response = FeaturegroupDTO.class)
   public Response getFeatureGroupFromFeatureStore(@ApiParam(value = "Id of the featuregroup", required = true)
       @PathParam("featuregroupId")
-          Integer featuregroupId) throws FeaturestoreException {
-    if (featuregroupId == null) {
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_ID_NOT_PROVIDED.getMessage());
-    }
+          Integer featuregroupId) {
+    verifyIdProvided(featuregroupId);
     FeaturegroupDTO featuregroupDTO =
         featuregroupController.getFeaturegroupWithIdAndFeaturestore(featurestore, featuregroupId);
     GenericEntity<FeaturegroupDTO> featuregroupGeneric =
@@ -206,9 +203,7 @@ public class FeaturegroupService {
   public Response deleteFeatureGroupFromFeatureStore(
       @Context SecurityContext sc, @ApiParam(value = "Id of the featuregroup", required = true)
       @PathParam("featuregroupId") Integer featuregroupId) throws FeaturestoreException, HopsSecurityException {
-    if (featuregroupId == null) {
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_ID_NOT_PROVIDED.getMessage());
-    }
+    verifyIdProvided(featuregroupId);
     Users user = jWTHelper.getUserPrincipal(sc);
     //Verify that the user has the data-owner role or is the creator of the featuregroup
     FeaturegroupDTO featuregroupDTO = featuregroupController.getFeaturegroupWithIdAndFeaturestore(featurestore,
@@ -251,9 +246,7 @@ public class FeaturegroupService {
   public Response getFeatureGroupPreview(
       @Context SecurityContext sc, @ApiParam(value = "Id of the featuregroup", required = true)
       @PathParam("featuregroupId") Integer featuregroupId) throws FeaturestoreException, HopsSecurityException {
-    if (featuregroupId == null) {
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_ID_NOT_PROVIDED.getMessage());
-    }
+    verifyIdProvided(featuregroupId);
     Users user = jWTHelper.getUserPrincipal(sc);
     try {
       FeaturegroupDTO featuregroupDTO =
@@ -291,9 +284,7 @@ public class FeaturegroupService {
           SecurityContext sc,
       @ApiParam(value = "Id of the featuregroup", required = true)
       @PathParam("featuregroupId") Integer featuregroupId) throws FeaturestoreException, HopsSecurityException {
-    if (featuregroupId == null) {
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_ID_NOT_PROVIDED.getMessage());
-    }
+    verifyIdProvided(featuregroupId);
     Users user = jWTHelper.getUserPrincipal(sc);
     try {
       FeaturegroupDTO featuregroupDTO =
@@ -336,9 +327,7 @@ public class FeaturegroupService {
   public Response deleteFeaturegroupContents(
       @Context SecurityContext sc, @ApiParam(value = "Id of the featuregroup", required = true)
       @PathParam("featuregroupId") Integer featuregroupId) throws FeaturestoreException, HopsSecurityException {
-    if (featuregroupId == null) {
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_ID_NOT_PROVIDED.getMessage());
-    }
+    verifyIdProvided(featuregroupId);
     Users user = jWTHelper.getUserPrincipal(sc);
     //Verify that the user has the data-owner role or is the creator of the featuregroup
     FeaturegroupDTO oldFeaturegroupDTO = featuregroupController.getFeaturegroupWithIdAndFeaturestore(featurestore,
@@ -377,28 +366,44 @@ public class FeaturegroupService {
   public Response updateFeaturegroup(
       @Context SecurityContext sc, @ApiParam(value = "Id of the featuregroup", required = true)
       @PathParam("featuregroupId") Integer featuregroupId,
-      @ApiParam(value = "updateMetadata", example = "true", required = true)  @QueryParam("updateMetadata")
-          Boolean updateMetadata, @ApiParam(value = "updateStats", example = "true", required = true)
+      @ApiParam(value = "updateMetadata", example = "true", defaultValue = "false")  @QueryParam("updateMetadata")
+          Boolean updateMetadata, @ApiParam(value = "updateStats", example = "true", defaultValue = "false")
       @QueryParam("updateStats") Boolean updateStats, FeaturegroupDTO featuregroupDTO)
       throws FeaturestoreException {
-    if (featuregroupId == null) {
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_ID_NOT_PROVIDED.getMessage());
-    }
+    updateMetadata = featurestoreUtil.updateMetadataGetOrDefault(updateMetadata);
+    updateStats = featurestoreUtil.updateStatsGetOrDefault(updateStats);
+    verifyIdProvided(featuregroupId);
     featuregroupDTO.setId(featuregroupId);
     Users user = jWTHelper.getUserPrincipal(sc);
     FeaturegroupDTO oldFeaturegroupDTO = featuregroupController.getFeaturegroupWithIdAndFeaturestore(featurestore,
         featuregroupId);
     featurestoreUtil.verifyUserRole(oldFeaturegroupDTO, featurestore, user, project);
     FeaturegroupDTO updatedFeaturegroupDTO = null;
-    if(updateMetadata) {
-      updatedFeaturegroupDTO = featuregroupController.updateFeaturegroupMetadata(featurestore, featuregroupDTO);
-    }
-    if(updateStats){
-      updatedFeaturegroupDTO = featuregroupController.updateFeaturegroupStats(featurestore, featuregroupDTO);
-    }
-    activityFacade.persistActivity(ActivityFacade.EDITED_FEATUREGROUP + updatedFeaturegroupDTO.getName(),
+    if(updateMetadata || updateStats){
+      if(updateMetadata) {
+        updatedFeaturegroupDTO = featuregroupController.updateFeaturegroupMetadata(featurestore, featuregroupDTO);
+      }
+      if(updateStats){
+        updatedFeaturegroupDTO = featuregroupController.updateFeaturegroupStats(featurestore, featuregroupDTO);
+      }
+      activityFacade.persistActivity(ActivityFacade.EDITED_FEATUREGROUP + updatedFeaturegroupDTO.getName(),
         project, user, ActivityFlag.SERVICE);
-    GenericEntity<FeaturegroupDTO> featuregroupGeneric = new GenericEntity<FeaturegroupDTO>(updatedFeaturegroupDTO) {};
+      GenericEntity<FeaturegroupDTO> featuregroupGeneric =
+        new GenericEntity<FeaturegroupDTO>(updatedFeaturegroupDTO) {};
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featuregroupGeneric).build();
+    }
+    GenericEntity<FeaturegroupDTO> featuregroupGeneric = new GenericEntity<FeaturegroupDTO>(featuregroupDTO) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featuregroupGeneric).build();
+  }
+  
+  /**
+   * Verify that the user id was provided as a path param
+   *
+   * @param featuregroupId the feature group id to verify
+   */
+  private void verifyIdProvided(Integer featuregroupId) {
+    if (featuregroupId == null) {
+      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_ID_NOT_PROVIDED.getMessage());
+    }
   }
 }

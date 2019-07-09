@@ -69,11 +69,13 @@ angular.module('hopsWorksApp')
             self.trainingDatasetDescriptionMaxLength = self.settings.trainingDatasetDescriptionMaxLength
             self.dataFormats = self.settings.trainingDatasetDataFormats
             self.hopsfsTrainingDatasetType = self.settings.hopsfsTrainingDatasetType
-            self.hopsfsTrainingDatasetTypeDTO = self.settings.hopsfsTrainingDatastDTOType
+            self.hopsfsTrainingDatasetTypeDTO = self.settings.hopsfsTrainingDatasetDtoType
             self.externalTrainingDatasetType = self.settings.externalTrainingDatasetType
-            self.externalTrainingDatasetTypeDTO = self.settings.externalTrainingDatasetDTOType
+            self.externalTrainingDatasetTypeDTO = self.settings.externalTrainingDatasetDtoType
             self.s3ConnectorType = self.settings.s3ConnectorType
             self.hopsfsConnectorType = self.settings.hopsfsConnectorType
+            self.featuregroupType = self.settings.featuregroupType
+            self.trainingDatasetType = self.settings.trainingDatasetType
 
             //Input Variables
             self.trainingDatasetName = ""
@@ -345,7 +347,7 @@ angular.module('hopsWorksApp')
              * @param feature
              */
             self.viewFeatureInfo = function (feature) {
-                ModalService.viewFeatureInfo('lg', self.projectId, feature, self.featurestore).then(
+                ModalService.viewFeatureInfo('lg', self.projectId, feature, self.featurestore, self.settings).then(
                     function (success) {
                     }, function (error) {
                     });
@@ -537,7 +539,7 @@ angular.module('hopsWorksApp')
             /**
              * Updates a training dataset
              */
-            self.updateTrainingDataset = function () {
+            self.updateTrainingDatasetMetadata = function () {
                 self.validateTrainingDatasetInput()
                 if (self.trainingDatasetWrong_values === -1) {
                     self.working = false;
@@ -568,7 +570,7 @@ angular.module('hopsWorksApp')
                             title: 'Success',
                             ttl: 1000
                         });
-                        FeaturestoreService.updateTrainingDataset(self.projectId, self.trainingDataset.id,
+                        FeaturestoreService.updateTrainingDatasetMetadata(self.projectId, self.trainingDataset.id,
                             trainingDatasetJson, self.featurestore).then(
                             function (success) {
                                 self.working = false;

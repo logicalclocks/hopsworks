@@ -1,0 +1,185 @@
+<!--
+  ~ This file is part of Hopsworks
+  ~ Copyright (C) 2018, Logical Clocks AB. All rights reserved
+  ~
+  ~ Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+  ~ the GNU Affero General Public License as published by the Free Software Foundation,
+  ~ either version 3 of the License, or (at your option) any later version.
+  ~
+  ~ Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+  ~ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+  ~ PURPOSE.  See the GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License along with this program.
+  ~ If not, see <https://www.gnu.org/licenses/>.
+  -->
+
+<div class="modal-header">
+  <button class="close" ng-click="storageConnectorViewInfoCtrl.close()" data-dismiss="modal" aria-hidden="true"
+          type="button">&times;</button>
+  <h2 class="modal-title">Storage Connector Details: {{storageConnectorViewInfoCtrl.storageConnector.name}}</h2>
+</div>
+<div class="modal-body" style="overflow: auto">
+    <div uib-accordion close-others="false">
+        <div uib-accordion-group class="panel-default">
+            <div uib-accordion-heading>
+                <i class="fa fa-info-circle" tooltip-placement="auto left"
+                   uib-tooltip='Storage Connector Metadata'></i>
+                <span style="margin-left: 20px">
+                    Storage Connector Details
+                </span>
+            </div>
+
+            <table class="table table-hover fs-table" style="margin-left: 10px; overflow: auto">
+                <tbody class="fs-table">
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Name
+                    </td>
+                    <td class="fs-table">
+                        {{storageConnectorViewInfoCtrl.storageConnector.name}}
+                    </td>
+                </tr>
+
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Type
+                    </td>
+                    <td class="fs-table">
+                        {{storageConnectorViewInfoCtrl.storageConnector.storageConnectorType}}
+                    </td>
+                </tr>
+
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Description
+                    </td>
+                    <td class="fs-table">
+                        {{storageConnectorViewInfoCtrl.storageConnector.description}}
+                    </td>
+                </tr>
+
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Feature Store
+                    </td>
+                    <td class="fs-table">
+                        {{storageConnectorViewInfoCtrl.featurestore.featurestoreName}}
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div uib-accordion-group class="panel-default"
+             ng-if="storageConnectorViewInfoCtrl.storageConnector.storageConnectorType == storageConnectorViewInfoCtrl.jdbcConnectorType">
+            <div uib-accordion-heading>
+                <i class="fa fa-info-circle" tooltip-placement="auto left"
+                   uib-tooltip='JDBC Connector Details'></i>
+                <span style="margin-left: 20px">
+                    JDBC Connector
+                </span>
+            </div>
+
+            <table class="table table-hover fs-table" style="margin-left: 10px; overflow: auto">
+                <tbody class="fs-table">
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Connection String
+                    </td>
+                    <td class="fs-table">
+                        {{storageConnectorViewInfoCtrl.storageConnector.connectionString}}
+                    </td>
+                </tr>
+
+                <tr class="fs-table" ng-repeat="argument in storageConnectorViewInfoCtrl.storageConnector.arguments">
+                    <td style="font-weight:700;" class="fs-table">
+                        {{argument.name}}
+                    </td>
+                    <td class="fs-table">
+                        {{argument.value}}
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div uib-accordion-group class="panel-default"
+             ng-if="storageConnectorViewInfoCtrl.storageConnector.storageConnectorType == storageConnectorViewInfoCtrl.s3ConnectorType">
+            <div uib-accordion-heading>
+                <i class="fa fa-info-circle" tooltip-placement="auto left"
+                   uib-tooltip='S3 Connector Details'></i>
+                <span style="margin-left: 20px">
+                    S3 Connector
+                </span>
+            </div>
+
+            <table class="table table-hover fs-table" style="margin-left: 10px; overflow: auto">
+                <tbody class="fs-table">
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Bucket
+                    </td>
+                    <td class="fs-table">
+                        {{storageConnectorViewInfoCtrl.storageConnector.bucket}}
+                    </td>
+                </tr>
+
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Access Key
+                    </td>
+                    <td class="fs-table">
+                        {{storageConnectorViewInfoCtrl.storageConnector.accessKey}}
+                    </td>
+                </tr>
+
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Secret Key
+                    </td>
+                    <td class="fs-table">
+                        {{storageConnectorViewInfoCtrl.storageConnector.secretKey}}
+                    </td>
+                </tr>
+
+                </tbody>
+            </table>
+        </div>
+
+        <div uib-accordion-group class="panel-default"
+             ng-if="storageConnectorViewInfoCtrl.storageConnector.storageConnectorType == storageConnectorViewInfoCtrl.hopsfsConnectorType">
+            <div uib-accordion-heading>
+                <i class="fa fa-info-circle" tooltip-placement="auto left"
+                   uib-tooltip='HopsFS Connector Details'></i>
+                <span style="margin-left: 20px">
+                    HopsFS Connector
+                </span>
+            </div>
+
+            <table class="table table-hover fs-table" style="margin-left: 10px; overflow: auto">
+                <tbody class="fs-table">
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Dataset Name
+                    </td>
+                    <td class="fs-table">
+                        {{storageConnectorViewInfoCtrl.storageConnector.datasetName}}
+                    </td>
+                </tr>
+
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        HopsFS Path
+                    </td>
+                    <td class="fs-table">
+                        {{storageConnectorViewInfoCtrl.storageConnector.hopsfsPath}}
+                    </td>
+                </tr>
+
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</div>

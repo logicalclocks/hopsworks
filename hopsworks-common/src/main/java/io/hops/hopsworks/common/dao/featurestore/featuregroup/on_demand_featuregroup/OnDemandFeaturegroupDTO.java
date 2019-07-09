@@ -17,6 +17,7 @@
 package io.hops.hopsworks.common.dao.featurestore.featuregroup.on_demand_featuregroup;
 
 import io.hops.hopsworks.common.dao.featurestore.feature.FeatureDTO;
+import io.hops.hopsworks.common.dao.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.dao.featurestore.storageconnector.jdbc.FeaturestoreJdbcConnector;
 
@@ -33,27 +34,26 @@ public class OnDemandFeaturegroupDTO extends FeaturegroupDTO {
   
   private Integer jdbcConnectorId;
   private String jdbcConnectorName;
-  private String name;
-  private String description;
   private String query;
   
   public OnDemandFeaturegroupDTO() {
     super();
   }
   
-  public OnDemandFeaturegroupDTO(OnDemandFeaturegroup onDemandFeaturegroup) {
-    super(onDemandFeaturegroup.getFeaturegroup());
-    if (onDemandFeaturegroup.getFeaturestoreJdbcConnector() != null) {
-      FeaturestoreJdbcConnector featurestoreJdbcConnector = onDemandFeaturegroup.getFeaturestoreJdbcConnector();
+  public OnDemandFeaturegroupDTO(Featuregroup featuregroup) {
+    super(featuregroup);
+    if (featuregroup.getOnDemandFeaturegroup().getFeaturestoreJdbcConnector() != null) {
+      FeaturestoreJdbcConnector featurestoreJdbcConnector =
+        featuregroup.getOnDemandFeaturegroup().getFeaturestoreJdbcConnector();
       this.jdbcConnectorId = featurestoreJdbcConnector.getId();
       this.jdbcConnectorName = featurestoreJdbcConnector.getName();
     }
-    this.name = onDemandFeaturegroup.getName();
-    this.description = onDemandFeaturegroup.getDescription();
-    this.query = onDemandFeaturegroup.getQuery();
-    setFeatures(onDemandFeaturegroup.getFeatures().stream().map(fgFeature ->
+    setName(featuregroup.getOnDemandFeaturegroup().getName());
+    setDescription(featuregroup.getOnDemandFeaturegroup().getDescription());
+    this.query = featuregroup.getOnDemandFeaturegroup().getQuery();
+    setFeatures(featuregroup.getOnDemandFeaturegroup().getFeatures().stream().map(fgFeature ->
         new FeatureDTO(fgFeature.getName(), fgFeature.getType(), fgFeature.getDescription(),
-            new Boolean(fgFeature.getPrimary() == 1),
+            fgFeature.getPrimary() == 1,
             false)).collect(Collectors.toList()));
   }
   
@@ -64,24 +64,6 @@ public class OnDemandFeaturegroupDTO extends FeaturegroupDTO {
   
   public void setJdbcConnectorId(Integer jdbcConnectorId) {
     this.jdbcConnectorId = jdbcConnectorId;
-  }
-  
-  @XmlElement
-  public String getName() {
-    return name;
-  }
-  
-  public void setName(String name) {
-    this.name = name;
-  }
-  
-  @XmlElement
-  public String getDescription() {
-    return description;
-  }
-  
-  public void setDescription(String description) {
-    this.description = description;
   }
   
   @XmlElement
@@ -107,8 +89,6 @@ public class OnDemandFeaturegroupDTO extends FeaturegroupDTO {
     return "HopsfsTrainingDatasetDTO{" +
         "jdbcConnectorId=" + jdbcConnectorId +
         ", jdbcConnectorName='" + jdbcConnectorName + '\'' +
-        ", name='" + name + '\'' +
-        ", description='" + description + '\'' +
         ", query='" + query + '\'' +
         '}';
   }

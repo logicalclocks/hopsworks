@@ -18,7 +18,6 @@ package io.hops.hopsworks.common.dao.featurestore.trainingdataset;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
-import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -130,18 +129,10 @@ public class TrainingDatasetFacade extends AbstractFacade<TrainingDataset> {
   /**
    * Updates metadata about a training dataset
    *
-   * @param trainingDataset the training dataset to update
-   * @param job             the new job of the training dataset
-   * @param dataFormat      the new format of the training dataset
-   * @param description     the new description of the training dataset
+   * @param trainingDataset      the training dataset to update
    * @return
    */
-  public TrainingDataset updateTrainingDataset(
-      TrainingDataset trainingDataset, Jobs job,
-      String dataFormat, String description) {
-    trainingDataset.setJob(job);
-    trainingDataset.setDataFormat(dataFormat);
-    trainingDataset.setDescription(description);
+  public TrainingDataset updateTrainingDatasetMetadata(TrainingDataset trainingDataset) {
     em.merge(trainingDataset);
     return trainingDataset;
   }

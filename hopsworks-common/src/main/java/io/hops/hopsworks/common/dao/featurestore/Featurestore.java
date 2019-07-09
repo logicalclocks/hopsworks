@@ -148,12 +148,10 @@ public class Featurestore implements Serializable {
     if (!(o instanceof Featurestore)) return false;
 
     Featurestore that = (Featurestore) o;
-
-    if (id != null)
-      if (!id.equals(that.id)) return false;
+    
+    if (id != null  && !id.equals(that.id)) return false;
     if (!project.equals(that.project)) return false;
-    if (created != null && that.created != null)
-      if (!created.equals(that.created)) return false;
+    if (created != null && that.created != null && !created.equals(that.created)) return false;
     return hiveDbId.equals(that.hiveDbId);
   }
 

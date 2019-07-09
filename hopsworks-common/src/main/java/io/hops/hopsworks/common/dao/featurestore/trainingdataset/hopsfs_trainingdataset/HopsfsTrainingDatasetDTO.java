@@ -33,6 +33,7 @@ public class HopsfsTrainingDatasetDTO extends TrainingDatasetDTO {
   private Long size;
   private Integer hopsfsConnectorId;
   private String hopsfsConnectorName;
+  private Long inodeId;
   
   
   public HopsfsTrainingDatasetDTO() {
@@ -83,6 +84,15 @@ public class HopsfsTrainingDatasetDTO extends TrainingDatasetDTO {
     this.hopsfsConnectorName = hopsfsConnectorName;
   }
   
+  @XmlElement
+  public Long getInodeId() {
+    return inodeId;
+  }
+  
+  public void setInodeId(Long inodeId) {
+    this.inodeId = inodeId;
+  }
+  
   @Override
   public String toString() {
     return "HopsfsTrainingDatasetDTO{" +
@@ -90,6 +100,7 @@ public class HopsfsTrainingDatasetDTO extends TrainingDatasetDTO {
       ", size=" + size +
       ", hopsfsConnectorId=" + hopsfsConnectorId +
       ", hopsfsConnectorName='" + hopsfsConnectorName + '\'' +
+      ", inodeId=" + inodeId +
       '}';
   }
 }

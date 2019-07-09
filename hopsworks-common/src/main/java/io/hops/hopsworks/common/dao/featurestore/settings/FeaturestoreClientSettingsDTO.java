@@ -58,7 +58,7 @@ public class FeaturestoreClientSettingsDTO {
   public static int TRAINING_DATASET_FEATURE_DESCRIPTION_MAX_LENGTH = 10000;
   public static String ON_DEMAND_FEATUREGROUP_TYPE = FeaturegroupType.ON_DEMAND_FEATURE_GROUP.name();
   public static String CACHED_FEATUREGROUP_TYPE = FeaturegroupType.CACHED_FEATURE_GROUP.name();
-  public static String JCBC_CONNECTOR_TYPE = FeaturestoreStorageConnectorType.JDBC.name();
+  public static String JDBC_CONNECTOR_TYPE = FeaturestoreStorageConnectorType.JDBC.name();
   public static String HOPSFS_CONNECTOR_TYPE = FeaturestoreStorageConnectorType.HopsFS.name();
   public static String S3_CONNECTOR_TYPE = FeaturestoreStorageConnectorType.S3.name();
   public static String CACHED_FEATUREGROUP_DTO_TYPE = "cachedFeaturegroupDTO";
@@ -71,8 +71,8 @@ public class FeaturestoreClientSettingsDTO {
   public static String S3_CONNECTOR_DTO_TYPE = "featurestoreS3ConnectorDTO";
   public static String JDBC_CONNECTOR_DTO_TYPE = "featurestoreJdbcConnectorDTO";
   public static String HOPSFS_CONNECTOR_DTO_TYPE = "featurestoreHopsfsConnectorDTO";
-  public static String FEATUREGROUP_TPYE = "FEATURE GROUP";
-  public static String TRAINING_DATASET_TPYE = "FEATURE GROUP";
+  public static String FEATUREGROUP_TYPE = "FEATURE GROUP";
+  public static String TRAINING_DATASET_TYPE = "TRAINING DATASET";
   public static List<String> SUGGESTED_FEATURE_TYPES = Arrays.asList(new String[]{
     "None","TINYINT", "SMALLINT", "INT", "BIGINT", "FLOAT", "DOUBLE",
     "DECIMAL", "TIMESTAMP", "DATE", "STRING",
@@ -218,8 +218,8 @@ public class FeaturestoreClientSettingsDTO {
   }
   
   @XmlElement
-  public static String getJcbcConnectorType() {
-    return JCBC_CONNECTOR_TYPE;
+  public static String getJdbcConnectorType() {
+    return JDBC_CONNECTOR_TYPE;
   }
   
   @XmlElement
@@ -283,13 +283,13 @@ public class FeaturestoreClientSettingsDTO {
   }
   
   @XmlElement
-  public String getFeaturegroupTpye() {
-    return FEATUREGROUP_TPYE;
+  public String getFeaturegroupType() {
+    return FEATUREGROUP_TYPE;
   }
   
   @XmlElement
-  public String getTrainingDatasetTpye() {
-    return TRAINING_DATASET_TPYE;
+  public String getTrainingDatasetType() {
+    return TRAINING_DATASET_TYPE;
   }
   
   @XmlElement
@@ -400,8 +400,8 @@ public class FeaturestoreClientSettingsDTO {
     CACHED_FEATUREGROUP_TYPE = cachedFeaturegroupType;
   }
   
-  public void setJcbcConnectorType(String jcbcConnectorType) {
-    JCBC_CONNECTOR_TYPE = jcbcConnectorType;
+  public void setJdbcConnectorType(String jdbcConnectorType) {
+    JDBC_CONNECTOR_TYPE = jdbcConnectorType;
   }
   
   public void setHopsfsConnectorType(String hopsfsConnectorType) {
@@ -452,12 +452,12 @@ public class FeaturestoreClientSettingsDTO {
     HOPSFS_CONNECTOR_DTO_TYPE = hopsfsConnectorDtoType;
   }
   
-  public void setFeaturegroupTpye(String featuregroupTpye) {
-    FEATUREGROUP_TPYE = featuregroupTpye;
+  public void setFeaturegroupType(String featuregroupType) {
+    FEATUREGROUP_TYPE = featuregroupType;
   }
   
-  public void setTrainingDatasetTpye(String trainingDatasetTpye) {
-    TRAINING_DATASET_TPYE = trainingDatasetTpye;
+  public void setTrainingDatasetType(String trainingDatasetType) {
+    TRAINING_DATASET_TYPE = trainingDatasetType;
   }
   
   public void setSuggestedFeatureTypes(List<String> suggestedFeatureTypes) {

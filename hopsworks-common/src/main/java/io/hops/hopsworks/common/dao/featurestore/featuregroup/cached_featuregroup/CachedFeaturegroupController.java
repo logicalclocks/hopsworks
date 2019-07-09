@@ -206,13 +206,12 @@ public class CachedFeaturegroupController {
    * Persists a cached feature group
    *
    * @param featurestore the featurestore of the feature group
-   * @param featuregroup the featuregroup
    * @param cachedFeaturegroupDTO the user input data to use when creating the cached feature group
-   * @return a DTO representation of the created cached feature group
+   * @return the created entity
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
-  public CachedFeaturegroupDTO createCachedFeaturegroup(
-      Featurestore featurestore, Featuregroup featuregroup, CachedFeaturegroupDTO cachedFeaturegroupDTO, Users user)
+  public CachedFeaturegroup createCachedFeaturegroup(
+      Featurestore featurestore, CachedFeaturegroupDTO cachedFeaturegroupDTO, Users user)
       throws FeaturestoreException, HopsSecurityException, SQLException {
     //Verify User Input
     verifyCachedFeaturegroupUserInput(cachedFeaturegroupDTO);
@@ -228,45 +227,48 @@ public class CachedFeaturegroupController {
     Long hiveTblId = cachedFeaturegroupFacade.getHiveTableId(tableName, featurestore.getHiveDbId());
     //Persist cached feature group
     CachedFeaturegroup cachedFeaturegroup = new CachedFeaturegroup();
-    cachedFeaturegroup.setFeaturegroup(featuregroup);
     cachedFeaturegroup.setHiveTableId(hiveTblId);
     cachedFeaturegroupFacade.persist(cachedFeaturegroup);
-    return convertCachedFeaturegroupToDTO(cachedFeaturegroup);
+    return cachedFeaturegroup;
   }
 
   /**
    * Converts a CachedFeaturegroup entity into a DTO representation
    *
-   * @param cachedFeaturegroup the entity to convert
+   * @param featuregroup the entity to convert
    * @return the converted DTO representation
    */
-  public CachedFeaturegroupDTO convertCachedFeaturegroupToDTO(CachedFeaturegroup cachedFeaturegroup) {
-    CachedFeaturegroupDTO cachedFeaturegroupDTO = new CachedFeaturegroupDTO(cachedFeaturegroup);
-    List<FeatureDTO> featureDTOs = cachedFeaturegroupFacade.getHiveFeatures(cachedFeaturegroup.getHiveTableId());
-    String primaryKeyName = cachedFeaturegroupFacade.getHiveTablePrimaryKey(cachedFeaturegroup.getHiveTableId());
+  public CachedFeaturegroupDTO convertCachedFeaturegroupToDTO(Featuregroup featuregroup) {
+    CachedFeaturegroupDTO cachedFeaturegroupDTO = new CachedFeaturegroupDTO(featuregroup);
+    List<FeatureDTO> featureDTOs =
+      cachedFeaturegroupFacade.getHiveFeatures(featuregroup.getCachedFeaturegroup().getHiveTableId());
+    String primaryKeyName = cachedFeaturegroupFacade.getHiveTablePrimaryKey(
+      featuregroup.getCachedFeaturegroup().getHiveTableId());
     if(!featureDTOs.isEmpty() && !Strings.isNullOrEmpty(primaryKeyName)){
       featureDTOs.stream().filter(f -> f.getName().equals(primaryKeyName))
           .collect(Collectors.toList()).get(0).setPrimary(true);
     }
     cachedFeaturegroupDTO.setFeatures(featureDTOs);
-    String featuregroupName = cachedFeaturegroupFacade.getHiveTableName(cachedFeaturegroup.getHiveTableId());
+    String featuregroupName = cachedFeaturegroupFacade.getHiveTableName(
+      featuregroup.getCachedFeaturegroup().getHiveTableId());
     //Remove the _version suffix
     int versionLength = cachedFeaturegroupDTO.getVersion().toString().length();
     featuregroupName = featuregroupName.substring(0, featuregroupName.length() - (1 + versionLength));
     cachedFeaturegroupDTO.setName(featuregroupName);
-    List<String> hdfsStorePaths = cachedFeaturegroupFacade.getHiveTableHdfsPaths(cachedFeaturegroup.getHiveTableId());
+    List<String> hdfsStorePaths = cachedFeaturegroupFacade.getHiveTableHdfsPaths(
+      featuregroup.getCachedFeaturegroup().getHiveTableId());
     cachedFeaturegroupDTO.setHdfsStorePaths(hdfsStorePaths);
     cachedFeaturegroupDTO.setDescription(cachedFeaturegroupFacade.getHiveTableComment(
-        cachedFeaturegroup.getHiveTableId()));
-    Long inodeId = cachedFeaturegroupFacade.getHiveTableInodeId(cachedFeaturegroup.getHiveTableId());
+        featuregroup.getCachedFeaturegroup().getHiveTableId()));
+    Long inodeId = cachedFeaturegroupFacade.getHiveTableInodeId(featuregroup.getCachedFeaturegroup().getHiveTableId());
     cachedFeaturegroupDTO.setInodeId(inodeId);
-    HiveTableType hiveTableType = cachedFeaturegroupFacade.getHiveTableType(cachedFeaturegroup.getHiveTableId());
+    HiveTableType hiveTableType = cachedFeaturegroupFacade.getHiveTableType(
+      featuregroup.getCachedFeaturegroup().getHiveTableId());
     cachedFeaturegroupDTO.setHiveTableType(hiveTableType);
-    String hiveInputFormat = cachedFeaturegroupFacade.getHiveInputFormat(cachedFeaturegroup.getHiveTableId());
+    String hiveInputFormat = cachedFeaturegroupFacade.getHiveInputFormat(
+      featuregroup.getCachedFeaturegroup().getHiveTableId());
     cachedFeaturegroupDTO.setInputFormat(hiveInputFormat);
     cachedFeaturegroupDTO.setLocation(hdfsStorePaths.get(0));
-    cachedFeaturegroupDTO.setFeaturestoreName(featurestoreFacade.getHiveDbName(
-        cachedFeaturegroup.getFeaturegroup().getFeaturestore().getHiveDbId()));
     return cachedFeaturegroupDTO;
   }
 

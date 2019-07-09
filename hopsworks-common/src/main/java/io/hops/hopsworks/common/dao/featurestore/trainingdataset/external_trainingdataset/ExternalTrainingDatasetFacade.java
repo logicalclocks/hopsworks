@@ -57,6 +57,18 @@ public class ExternalTrainingDatasetFacade extends AbstractFacade<ExternalTraini
       throw cve;
     }
   }
+  
+  /**
+   * Updates metadata about a external training dataset
+   *
+   * @param externalTrainingDataset the external training dataset to update
+   * @return
+   */
+  public ExternalTrainingDataset updateExternalTrainingDatasetMetadata(
+    ExternalTrainingDataset externalTrainingDataset) {
+    em.merge(externalTrainingDataset);
+    return externalTrainingDataset;
+  }
 
   /**
    * Gets the entity manager of the facade

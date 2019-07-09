@@ -29,6 +29,9 @@ angular.module('hopsWorksApp')
             //Controller Inputs
             self.settings = settings
 
+            //Constants
+            self.hiveDataTypes = self.settings.suggestedFeatureTypes
+
             //State
             self.customType;
             self.predefinedType;
@@ -37,8 +40,6 @@ angular.module('hopsWorksApp')
             self.wrong_values = 1;
             $scope.selected = self.hiveDataTypes[0]
 
-            //Constants
-            self.hiveDataTypes = self.settings.suggestedFeatureDataTypes()
 
 
             /**

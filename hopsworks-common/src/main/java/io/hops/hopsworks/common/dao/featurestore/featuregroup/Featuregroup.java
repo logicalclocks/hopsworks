@@ -38,7 +38,6 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
-import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -96,14 +95,12 @@ public class Featuregroup implements Serializable {
   @Enumerated(EnumType.ORDINAL)
   @Column(name = "feature_group_type")
   private FeaturegroupType featuregroupType = FeaturegroupType.CACHED_FEATURE_GROUP;
-  @OneToOne(cascade = CascadeType.ALL)
-  @PrimaryKeyJoinColumn(name="id", referencedColumnName="feature_group_id")
+  @JoinColumn(name = "on_demand_feature_group_id", referencedColumnName = "id")
+  @OneToOne
   private OnDemandFeaturegroup onDemandFeaturegroup;
-  @OneToOne(cascade = CascadeType.ALL)
-  @PrimaryKeyJoinColumn(name="id", referencedColumnName="feature_group_id")
+  @JoinColumn(name = "cached_feature_group_id", referencedColumnName = "id")
+  @OneToOne
   private CachedFeaturegroup cachedFeaturegroup;
-
-
 
   public static long getSerialVersionUID() {
     return serialVersionUID;
@@ -203,16 +200,12 @@ public class Featuregroup implements Serializable {
     if (!(o instanceof Featuregroup)) return false;
 
     Featuregroup that = (Featuregroup) o;
-
-    if (id != null)
-      if (!id.equals(that.id)) return false;
-    if (job != null)
-      if (!job.equals(that.job)) return false;
+    if (id != null && !id.equals(that.id)) return false;
+    if (job != null && !job.equals(that.job)) return false;
     if (!featurestore.equals(that.featurestore)) return false;
     if (!hdfsUserId.equals(that.hdfsUserId)) return false;
     if (!version.equals(that.version)) return false;
-    if (created != null)
-      if (!created.equals(that.created)) return false;
+    if (created != null && !created.equals(that.created)) return false;
     if (!creator.equals(that.creator)) return false;
     if (featuregroupType != null ? !featuregroupType.equals(that.featuregroupType) :
       that.featuregroupType != null) return false;

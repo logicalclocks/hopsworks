@@ -239,21 +239,17 @@ public class TrainingDataset implements Serializable {
     if (!(o instanceof TrainingDataset)) return false;
 
     TrainingDataset that = (TrainingDataset) o;
-
-    if (id != null)
-      if (!id.equals(that.id)) return false;
-    if (job != null)
-      if (!job.equals(that.job)) return false;
+    
+    if (id != null && !id.equals(that.id)) return false;
+    if (job != null && !job.equals(that.job)) return false;
     if (!hdfsUserId.equals(that.hdfsUserId)) return false;
     if (!version.equals(that.version)) return false;
     if (!dataFormat.equals(that.dataFormat)) return false;
     if (!description.equals(that.description)) return false;
     if (!trainingDatasetType.equals(that.trainingDatasetType)) return false;
-    if (created != null)
-      if (!created.equals(that.created)) return false;
+    if (created != null && !created.equals(that.created)) return false;
     if (!creator.equals(that.creator)) return false;
-    if (features != null)
-      if (!features.equals(that.features)) return false;
+    if (features != null && !features.equals(that.features)) return false;
     return featurestore.equals(that.featurestore);
   }
 

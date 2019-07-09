@@ -29,7 +29,6 @@ import io.hops.hopsworks.restutils.RESTCodes;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Utility functions for the featurestore service
@@ -119,6 +118,34 @@ public class FeaturestoreUtil {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.UNAUTHORIZED_FEATURESTORE_OPERATION, Level.FINE,
           "project: " + project.getName() + ", featurestoreId: " + featurestore.getId() +
               ", storageConnectorId: " + storageConnectorDTO.getId() + ", userRole:" + userRole);
+    }
+  }
+
+  /**
+   * Return default updateMetadata query parameter value if not specified
+   *
+   * @param updateMetadata the query parameter provided by the user
+   * @return the default value
+   */
+  public Boolean updateMetadataGetOrDefault(Boolean updateMetadata) {
+    if(updateMetadata == null){
+      return false;
+    } else {
+      return updateMetadata;
+    }
+  }
+
+  /**
+   * Return default updateStats query parameter value if not specified
+   *
+   * @param updateStats the query parameter provided by the user
+   * @return the default value
+   */
+  public Boolean updateStatsGetOrDefault(Boolean updateStats) {
+    if(updateStats == null){
+      return false;
+    } else {
+      return updateStats;
     }
   }
 }

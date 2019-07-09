@@ -70,7 +70,6 @@ public abstract class FeaturestoreEntityDTO {
   private Date lastComputed;
   private String jobStatus;
   private Integer version;
-  private Long inodeId;
   private DescriptiveStatsDTO descriptiveStatistics;
   private FeatureCorrelationMatrixDTO featureCorrelationMatrix;
   private FeatureDistributionsDTO featuresHistogram;
@@ -93,7 +92,6 @@ public abstract class FeaturestoreEntityDTO {
     this.created = created;
     this.creator = creator.getEmail();
     this.version = version;
-    this.inodeId = null;
     this.name = null;
     this.location = null;
     this.id = id;
@@ -234,11 +232,6 @@ public abstract class FeaturestoreEntityDTO {
   }
 
   @XmlElement
-  public Long getInodeId() {
-    return inodeId;
-  }
-
-  @XmlElement
   public Integer getFeaturestoreId() {
     return featurestoreId;
   }
@@ -302,10 +295,6 @@ public abstract class FeaturestoreEntityDTO {
 
   public void setDescription(String description) {
     this.description = description;
-  }
-
-  public void setInodeId(Long inodeId) {
-    this.inodeId = inodeId;
   }
 
   public void setName(String name) {
@@ -381,7 +370,6 @@ public abstract class FeaturestoreEntityDTO {
         ", lastComputed='" + lastComputed + '\'' +
         ", jobStatus='" + jobStatus + '\'' +
         ", version=" + version +
-        ", inodeId=" + inodeId +
         ", descriptiveStatistics=" + descriptiveStatistics +
         ", featureCorrelationMatrix=" + featureCorrelationMatrix +
         ", featuresHistogram=" + featuresHistogram +

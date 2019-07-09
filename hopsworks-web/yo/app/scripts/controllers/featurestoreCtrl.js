@@ -43,6 +43,7 @@ angular.module('hopsWorksApp')
             self.featuregroups = [];
             self.featuregroupsPageSize = 10;
             self.trainingDatasetsPageSize = 10;
+            self.storageConnectorsPageSize = 10;
             self.featuresPageSize = 10;
             self.currentPage = 1;
             self.featurestore = null;
@@ -50,12 +51,15 @@ angular.module('hopsWorksApp')
             self.featuregroupsSortKey = 'name';
             self.trainingDatasetsSortKey = 'name';
             self.featuresSortKey = 'name';
+            self.storageConnectorsSortKey = 'name';
             self.featuregroupsReverse = false;
             self.trainingDatasetsReverse = false;
             self.featuresReverse = false;
+            self.storageConnectorsReverse = false;
             self.tdFilter = "";
             self.fgFilter = "";
             self.fFilter = "";
+            self.scFilter = "";
             self.featuregroupsDictList = [];
             self.trainingDatasetsDictList = [];
             self.loading = false;
@@ -90,8 +94,6 @@ angular.module('hopsWorksApp')
             self.featuresFromDate.setMinutes(self.featuresFromDate.getMinutes() - 60*24*30*4);
             self.searchInFeaturegroups = true
             self.searchInTrainingDatasets = true
-            self.featuregroupType = ""
-            self.trainingDatasetType = ""
             self.featureSearchFgFilter = ""
             self.featureSearchFgVersionFilter = ""
             self.fgFeatures = []
@@ -100,6 +102,10 @@ angular.module('hopsWorksApp')
             self.hopsfsConnectorType = ""
             self.s3ConnectorType = ""
             self.jdbcConnectorType = ""
+            self.hopsfsTrainingDatasetType = ""
+            self.externalTrainingDatasetType = ""
+            self.featuregroupType = ""
+            self.trainingDatasetType = ""
 
 
             /**
@@ -186,6 +192,17 @@ angular.module('hopsWorksApp')
             }
 
             /**
+             * Called when clicking the sort-arrow in the UI of storage connectors table
+             *
+             * @param keyname
+             */
+            self.storageConnectorsSort = function (keyname) {
+                self.sortKey = keyname;   //set the sortKey to the param passed
+                self.storageConnectorsSortKey = keyname
+                self.storageConnectorsReverse = !self.storageConnectorsReverse; //if true make it false and vice versa
+            };
+
+            /**
              * Called when clicking the sort-arrow in the UI of featuregroup table
              *
              * @param keyname
@@ -261,7 +278,7 @@ angular.module('hopsWorksApp')
                     if(tabIndex != null && tabIndex != undefined && tabIndex != false){
                         $scope.featurestoreSelectedTab = tabIndex
                     }
-                    StorageService.store(self.projectId + "_featurestore_tab", 0);3
+                    StorageService.store(self.projectId + "_featurestore_tab", 0);
                     self.loading = false;
                     self.loadingText = "";
                 }
@@ -379,6 +396,10 @@ angular.module('hopsWorksApp')
                         self.jdbcConnectorType = self.settings.jdbcConnectorType
                         self.featuregroupType = self.settings.featuregroupType
                         self.trainingDatasetType = self.settings.trainingDatasetType
+                        self.onDemandFeaturegroupType = self.settings.onDemandFeaturegroupType
+                        self.cachedFeaturegroupType = self.settings.cachedFeaturegroupType
+                        self.hopsfsTrainingDatasetType = self.settings.hopsfsTrainingDatasetType
+                        self.externalTrainingDatasetType = self.settings.externalTrainingDatasetType
                         StorageService.store(self.projectId + "_fssettings", success.data);
                         self.settingsLoaded = true
                         self.stopLoading()
@@ -494,7 +515,7 @@ angular.module('hopsWorksApp')
              *
              * @param trainingDataset
              */
-            self.updateTrainingDataset = function (trainingDataset) {
+            self.updateTrainingDatasetMetadata = function (trainingDataset) {
                 StorageService.store("trainingdataset_operation", "UPDATE");
                 StorageService.store(self.projectId + "_fgFeatures", self.fgFeatures);
                 StorageService.store(self.projectId + "_trainingDataset", trainingDataset);
@@ -744,10 +765,26 @@ angular.module('hopsWorksApp')
                 if(self.featuregroupsSortKey == "created"){
                     return featuregroup.versionToGroups[featuregroup.activeVersion].created
                 }
-                if(self.featuregroupsSortKey == "type"){
-                    return featuregroup.versionToGroups[featuregroup.activeVersion].type
+                if(self.featuregroupsSortKey == "featuregroupType"){
+                    return featuregroup.versionToGroups[featuregroup.activeVersion].featuregroupType
                 }
                 return featuregroup.name
+            }
+
+            /**
+             * Returns the sort field for a storage connector
+             *
+             * @param storageConnector the storageConnector to sort
+             * @returns {*}
+             */
+            self.storageConnectorsSortFn = function (storageConnector) {
+                if(self.storageConnectorsSortKey == "storageConnectorType"){
+                    return storageConnector.storageConnectorType
+                }
+                if(self.storageConnectorsSortKey == "description"){
+                    return storageConnector.description
+                }
+                return storageConnector.name
             }
 
             /**
@@ -830,7 +867,8 @@ angular.module('hopsWorksApp')
              * @param trainingDataset
              */
             self.viewTrainingDatasetInfo = function (trainingDataset) {
-                ModalService.viewTrainingDatasetInfo('lg', self.projectId, trainingDataset, self.featurestore).then(
+                ModalService.viewTrainingDatasetInfo('lg', self.projectId, trainingDataset, self.featurestore,
+                    self.settings).then(
                     function (success) {
                     }, function (error) {
                     });
@@ -1157,6 +1195,18 @@ angular.module('hopsWorksApp')
              */
             self.viewFeatureInfo = function (feature) {
                 ModalService.viewFeatureInfo('lg', self.projectId, feature, self.featurestore, self.settings).then(
+                    function (success) {
+                    }, function (error) {
+                    });
+            };
+
+            /**
+             * Opens the modal to view storage connector information
+             *
+             * @param storageConnector the connector to inspect
+             */
+            self.viewStorageConnectorInfo = function (storageConnector) {
+                ModalService.storageConnectorViewInfo('lg', self.projectId, storageConnector, self.featurestore, self.settings).then(
                     function (success) {
                     }, function (error) {
                     });

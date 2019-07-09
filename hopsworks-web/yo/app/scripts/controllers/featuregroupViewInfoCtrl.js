@@ -19,7 +19,7 @@
  */
 angular.module('hopsWorksApp')
     .controller('featuregroupViewInfoCtrl', ['$uibModalInstance', '$scope', 'FeaturestoreService', 'ProjectService',
-        'JobService', '$location', 'growl', 'projectId', 'featuregroup', 'featurestore', 'settings'
+        'JobService', '$location', 'growl', 'projectId', 'featuregroup', 'featurestore', 'settings',
         function ($uibModalInstance, $scope, FeaturestoreService, ProjectService, JobService, $location, growl,
                   projectId, featuregroup, featurestore, settings) {
 
@@ -49,8 +49,8 @@ angular.module('hopsWorksApp')
             self.notFetchedSample = true;
 
             //Constants
-            self.cachedFeaturegroupType = self.settings.cachedFeaturegroupType()
-            self.onDemandFeaturegroupType = self.settings.onDemandFeaturegroupType()
+            self.cachedFeaturegroupType = self.settings.cachedFeaturegroupType
+            self.onDemandFeaturegroupType = self.settings.onDemandFeaturegroupType
 
             /**
              * Get the API code to retrieve the featuregroup with the Python API

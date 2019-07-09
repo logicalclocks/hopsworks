@@ -19,7 +19,7 @@
  */
 angular.module('hopsWorksApp')
     .controller('featureViewInfoCtrl', ['$uibModalInstance', '$scope', 'FeaturestoreService', 'growl', 'projectId',
-        'feature', 'featurestore', settings,
+        'feature', 'featurestore', 'settings',
         function ($uibModalInstance, $scope, FeaturestoreService, growl, projectId, feature, featurestore, settings) {
 
             /**

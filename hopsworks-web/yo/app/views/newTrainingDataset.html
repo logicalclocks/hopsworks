@@ -158,6 +158,7 @@
                                         </th>
                                         <th style="width: 10%"
                                             class="fs-table">
+                                            Actions
                                         </th>
                                     </tr>
                                     </thead>
@@ -187,26 +188,28 @@
                                         <td class="fs-table">{{result.name}}</td>
                                         <td class="fs-table">{{result.type}}</td>
                                         <td class="fs-table">
-                                        <span ng-if="result.entity == 'Feature Group'">
+                                        <span ng-if="result.entity == newTrainingDatasetCtrl.featuregroupType">
                                                 {{result.featuregroup.name}}
                                         </span>
-                                            <span ng-if="result.entity == 'Training Dataset'">
+                                            <span ng-if="result.entity == newTrainingDatasetCtrl.trainingDatasetType">
                                                 {{result.trainingDataset.name}}
                                         </span>
                                         </td>
                                         <td class="fs-table">{{result.version}}</td>
                                         <td class="fs-table">
-                                            <button uib-tooltip="Feature Details"
-                                                    type="button"
-                                                    class="btn btn-info btn-sm glyphicon glyphicon-eye-open"
-                                                    ng-click="newTrainingDatasetCtrl.viewFeatureInfo(result)">
-                                            </button>
-                                            <button uib-tooltip="Add feature to Training Dataset"
-                                                    type="button"
-                                                    class="btn btn-success btn-sm glyphicon glyphicon-plus"
-                                                    ng-disabled="newTrainingDatasetCtrl.featureInBasket(result)"
-                                                    ng-click="newTrainingDatasetCtrl.addFeatureToBasket(result)">
-                                            </button>
+                                            <div class="btn-group fs-btn" role="group">
+                                                <button uib-tooltip="Feature Details"
+                                                        type="button"
+                                                        class="btn btn-info btn-sm glyphicon glyphicon-eye-open"
+                                                        ng-click="newTrainingDatasetCtrl.viewFeatureInfo(result)">
+                                                </button>
+                                                <button uib-tooltip="Add feature to Training Dataset"
+                                                        type="button"
+                                                        class="btn btn-success btn-sm glyphicon glyphicon-plus"
+                                                        ng-disabled="newTrainingDatasetCtrl.featureInBasket(result)"
+                                                        ng-click="newTrainingDatasetCtrl.addFeatureToBasket(result)">
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                     </tbody>
@@ -660,7 +663,7 @@
                                         <i ng-if="newTrainingDatasetCtrl.working" style="margin-top: 2px"
                                            class="fa fa-spinner fa-spin pull-right"></i>
                                     </button>
-                                    <button ng-click="newTrainingDatasetCtrl.updateTrainingDataset()"
+                                    <button ng-click="newTrainingDatasetCtrl.updateTrainingDatasetMetadata()"
                                             class="btn btn-default btn-success"
                                             ng-if="newTrainingDatasetCtrl.trainingDatasetOperation === 'UPDATE'"
                                     >

@@ -55,7 +55,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import java.util.List;
-import java.util.logging.Logger;
 
 /**
  * A Stateless RESTful service for the storage connectors in a featurestore on Hopsworks.
@@ -81,7 +80,6 @@ public class FeaturestoreStorageConnectorService {
 
   private Project project;
   private Featurestore featurestore;
-  private static final Logger LOGGER = Logger.getLogger(FeaturestoreStorageConnectorService.class.getName());
 
   /**
    * Set the project of the featurestore (provided by parent resource)
@@ -108,7 +106,6 @@ public class FeaturestoreStorageConnectorService {
    * Endpoint for getting all storage connectors in a featurestore
    *
    * @return a JSON representation of all the storage connectors in the feature store
-   * @throws FeaturestoreException
    */
   @GET
   @Produces(MediaType.APPLICATION_JSON)
@@ -116,7 +113,7 @@ public class FeaturestoreStorageConnectorService {
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Get all storage connectors of a feature store",
       response = FeaturestoreStorageConnectorDTO.class, responseContainer = "List")
-  public Response getStorageConnectors() throws FeaturestoreException {
+  public Response getStorageConnectors() {
     List<FeaturestoreStorageConnectorDTO> featurestoreStorageConnectorDTOS =
         featurestoreStorageConnectorController.getAllStorageConnectorsForFeaturestore(featurestore);
     GenericEntity<List<FeaturestoreStorageConnectorDTO>> featurestoreStorageConnectorsGeneric =
@@ -130,7 +127,6 @@ public class FeaturestoreStorageConnectorService {
    *
    * @param connectorType type of the storage connector, e.g S3, JDBC or HopsFS
    * @return a JSON representation of all the storage connectors with the provided type in the feature store
-   * @throws FeaturestoreException
    */
   @GET
   @Path("/{connectorType : JDBC|S3|HopsFS}")
@@ -141,8 +137,7 @@ public class FeaturestoreStorageConnectorService {
       response = FeaturestoreStorageConnectorDTO.class, responseContainer = "List")
   public Response getStorageConnectorsOfType(
       @ApiParam (value = "storage connector type", example = "JDBC")
-      @PathParam("connectorType") FeaturestoreStorageConnectorType connectorType)
-      throws FeaturestoreException {
+      @PathParam("connectorType") FeaturestoreStorageConnectorType connectorType) {
     if (connectorType == null) {
       throw new IllegalArgumentException(
           RESTCodes.FeaturestoreErrorCode.STORAGE_CONNECTOR_TYPE_NOT_PROVIDED.getMessage());
@@ -199,7 +194,6 @@ public class FeaturestoreStorageConnectorService {
    *
    * @param connectorType type of the storage connector, e.g S3, JDBC or HopsFS
    * @return a JSON representation of the connector
-   * @throws FeaturestoreException
    */
   @POST
   @Path("/{connectorType : JDBC|S3|HopsFS}")
@@ -213,7 +207,7 @@ public class FeaturestoreStorageConnectorService {
       @Context SecurityContext sc,
       @ApiParam (value = "storage connector type", example = "JDBC", required=true)
       @PathParam("connectorType") FeaturestoreStorageConnectorType connectorType,
-      FeaturestoreStorageConnectorDTO featurestoreStorageConnectorDTO) throws FeaturestoreException {
+      FeaturestoreStorageConnectorDTO featurestoreStorageConnectorDTO) {
     if (connectorType == null) {
       throw new IllegalArgumentException(
           RESTCodes.FeaturestoreErrorCode.STORAGE_CONNECTOR_TYPE_NOT_PROVIDED.getMessage());

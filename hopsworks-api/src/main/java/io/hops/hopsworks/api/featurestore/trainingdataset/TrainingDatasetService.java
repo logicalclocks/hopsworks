@@ -26,12 +26,14 @@ import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
 import io.hops.hopsworks.common.dao.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.dao.featurestore.FeaturestoreDTO;
+import io.hops.hopsworks.common.dao.featurestore.storageconnector.hopsfs.FeaturestoreHopsfsConnector;
+import io.hops.hopsworks.common.dao.featurestore.storageconnector.hopsfs.FeaturestoreHopsfsConnectorFacade;
 import io.hops.hopsworks.common.dao.featurestore.trainingdataset.TrainingDatasetController;
 import io.hops.hopsworks.common.dao.featurestore.trainingdataset.TrainingDatasetDTO;
 import io.hops.hopsworks.common.dao.featurestore.trainingdataset.TrainingDatasetType;
+import io.hops.hopsworks.common.dao.featurestore.trainingdataset.hopsfs_trainingdataset.HopsfsTrainingDatasetDTO;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
-import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
@@ -58,13 +60,14 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import java.util.List;
-import java.util.logging.Logger;
+import java.util.logging.Level;
 
 /**
  * A Stateless RESTful service for the training datasets in a featurestore on Hopsworks.
@@ -82,8 +85,6 @@ public class TrainingDatasetService {
   @EJB
   private TrainingDatasetController trainingDatasetController;
   @EJB
-  private JobFacade jobFacade;
-  @EJB
   private FeaturestoreUtil featurestoreUtil;
   @EJB
   private ActivityFacade activityFacade;
@@ -93,10 +94,11 @@ public class TrainingDatasetService {
   private InodeFacade inodeFacade;
   @EJB
   private DsUpdateOperations dsUpdateOperations;
+  @EJB
+  private FeaturestoreHopsfsConnectorFacade featurestoreHopsfsConnectorFacade;
 
   private Project project;
   private Featurestore featurestore;
-  private static final Logger LOGGER = Logger.getLogger(TrainingDatasetService.class.getName());
 
   /**
    * Set the project of the featurestore (provided by parent resource)
@@ -123,7 +125,6 @@ public class TrainingDatasetService {
    * Endpoint for getting a list of all training datasets in the feature store.
    *
    * @return a JSON representation of the training datasets in the features store
-   * @throws FeaturestoreException
    */
   @GET
   @Produces(MediaType.APPLICATION_JSON)
@@ -131,7 +132,7 @@ public class TrainingDatasetService {
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Get the list of training datasets for a featurestore",
       response = TrainingDatasetDTO.class, responseContainer = "List")
-  public Response getTrainingDatasetsForFeaturestore() throws FeaturestoreException {
+  public Response getTrainingDatasetsForFeaturestore() {
     List<TrainingDatasetDTO> trainingDatasetDTOs =
         trainingDatasetController.getTrainingDatasetsForFeaturestore(featurestore);
     GenericEntity<List<TrainingDatasetDTO>> trainingDatasetsGeneric =
@@ -159,29 +160,46 @@ public class TrainingDatasetService {
   public Response createTrainingDataset(@Context SecurityContext sc, TrainingDatasetDTO trainingDatasetDTO)
     throws DatasetException, HopsSecurityException, ProjectException, FeaturestoreException {
     Users user = jWTHelper.getUserPrincipal(sc);
-    Dataset trainingDatasetsFolder = trainingDatasetController.getTrainingDatasetFolder(featurestore.getProject());
-    String trainingDatasetDirectoryName = trainingDatasetController.getTrainingDatasetPath(
-        inodeFacade.getPath(trainingDatasetsFolder.getInode()),
-        trainingDatasetDTO.getName(), trainingDatasetDTO.getVersion());
-    org.apache.hadoop.fs.Path fullPath = null;
-    try {
-      fullPath = dsUpdateOperations.createDirectoryInDataset(project, user, trainingDatasetDirectoryName,
-          trainingDatasetDTO.getDescription(), -1, true);
-    } catch (DatasetException e) {
-      if (e.getErrorCode() == RESTCodes.DatasetErrorCode.DATASET_SUBDIR_ALREADY_EXISTS) {
-        dsUpdateOperations.deleteDatasetFile(project, user, trainingDatasetDirectoryName);
-        fullPath = dsUpdateOperations.createDirectoryInDataset(project, user, trainingDatasetDirectoryName,
-            trainingDatasetDTO.getDescription(), -1, true);
-      } else {
-        throw e;
+    TrainingDatasetDTO createdTrainingDatasetDTO = null;
+    if(trainingDatasetDTO.getTrainingDatasetType() == TrainingDatasetType.HOPSFS_TRAINING_DATASET){
+      HopsfsTrainingDatasetDTO hopsfsTrainingDatasetDTO = (HopsfsTrainingDatasetDTO) trainingDatasetDTO;
+      if(hopsfsTrainingDatasetDTO.getHopsfsConnectorId() == null) {
+        throw new IllegalArgumentException(
+          RESTCodes.FeaturestoreErrorCode.HOPSFS_CONNECTOR_ID_NOT_PROVIDED.getMessage());
       }
+      FeaturestoreHopsfsConnector featurestoreHopsfsConnector = featurestoreHopsfsConnectorFacade.find(
+        hopsfsTrainingDatasetDTO.getHopsfsConnectorId());
+      if(featurestoreHopsfsConnector == null){
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.HOPSFS_CONNECTOR_NOT_FOUND,
+          Level.FINE, "hopsfsConnector: " + hopsfsTrainingDatasetDTO.getHopsfsConnectorId());
+      }
+      Dataset trainingDatasetsFolder = featurestoreHopsfsConnector.getHopsfsDataset();
+      String trainingDatasetDirectoryName = trainingDatasetController.getTrainingDatasetPath(
+        inodeFacade.getPath(trainingDatasetsFolder.getInode()),
+        hopsfsTrainingDatasetDTO.getName(), hopsfsTrainingDatasetDTO.getVersion());
+      org.apache.hadoop.fs.Path fullPath = null;
+      try {
+        fullPath = dsUpdateOperations.createDirectoryInDataset(project, user, trainingDatasetDirectoryName,
+          hopsfsTrainingDatasetDTO.getDescription(), -1, true);
+      } catch (DatasetException e) {
+        if (e.getErrorCode() == RESTCodes.DatasetErrorCode.DATASET_SUBDIR_ALREADY_EXISTS) {
+          dsUpdateOperations.deleteDatasetFile(project, user, trainingDatasetDirectoryName);
+          fullPath = dsUpdateOperations.createDirectoryInDataset(project, user, trainingDatasetDirectoryName,
+            hopsfsTrainingDatasetDTO.getDescription(), -1, true);
+        } else {
+          throw e;
+        }
+      }
+      Inode inode = inodeFacade.getInodeAtPath(fullPath.toString());
+      hopsfsTrainingDatasetDTO.setInodeId(inode.getId());
+      createdTrainingDatasetDTO = trainingDatasetController.createTrainingDataset(user, featurestore,
+        hopsfsTrainingDatasetDTO);
+    } else {
+      createdTrainingDatasetDTO = trainingDatasetController.createTrainingDataset(user, featurestore,
+        trainingDatasetDTO);
     }
-    Inode inode = inodeFacade.getInodeAtPath(fullPath.toString());
-    trainingDatasetDTO.setInodeId(inode.getId());
-    TrainingDatasetDTO createdTrainingDatasetDTO = trainingDatasetController.createTrainingDataset(user, featurestore,
-      trainingDatasetDTO);
-    activityFacade.persistActivity(ActivityFacade.CREATED_TRAINING_DATASET + createdTrainingDatasetDTO.getName(),
-        project, user, ActivityFlag.SERVICE);
+    activityFacade.persistActivity(ActivityFacade.CREATED_TRAINING_DATASET +
+        createdTrainingDatasetDTO.getName(), project, user, ActivityFlag.SERVICE);
     GenericEntity<TrainingDatasetDTO> createdTrainingDatasetDTOGeneric =
         new GenericEntity<TrainingDatasetDTO>(createdTrainingDatasetDTO) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).entity(createdTrainingDatasetDTOGeneric)
@@ -204,9 +222,7 @@ public class TrainingDatasetService {
       response = TrainingDatasetDTO.class)
   public Response getTrainingDatasetWithId(@ApiParam(value = "Id of the training dataset", required = true)
       @PathParam("trainingdatasetid") Integer trainingdatasetid) throws FeaturestoreException {
-    if (trainingdatasetid == null) {
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_ID_NOT_PROVIDED.getMessage());
-    }
+    verifyIdProvided(trainingdatasetid);
     TrainingDatasetDTO trainingDatasetDTO =
         trainingDatasetController.getTrainingDatasetWithIdAndFeaturestore(featurestore, trainingdatasetid);
     GenericEntity<TrainingDatasetDTO> trainingDatasetGeneric =
@@ -234,9 +250,7 @@ public class TrainingDatasetService {
       @Context SecurityContext sc, @ApiParam(value = "Id of the training dataset", required = true)
       @PathParam("trainingdatasetid") Integer trainingdatasetid) throws FeaturestoreException, DatasetException,
       ProjectException, HopsSecurityException {
-    if (trainingdatasetid == null) {
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_ID_NOT_PROVIDED.getMessage());
-    }
+    verifyIdProvided(trainingdatasetid);
     Users user = jWTHelper.getUserPrincipal(sc);
     TrainingDatasetDTO trainingDatasetDTO = trainingDatasetController.getTrainingDatasetWithIdAndFeaturestore(
         featurestore, trainingdatasetid);
@@ -273,45 +287,78 @@ public class TrainingDatasetService {
       response = TrainingDatasetDTO.class)
   public Response updateTrainingDataset(
       @Context SecurityContext sc, @ApiParam(value = "Id of the training dataset", required = true)
-      @PathParam("trainingdatasetid") Integer trainingdatasetid, TrainingDatasetDTO trainingDatasetDTO)
+      @PathParam("trainingdatasetid") Integer trainingdatasetid,
+    @ApiParam(value = "updateMetadata", example = "true", defaultValue = "false")
+    @QueryParam("updateMetadata") Boolean updateMetadata,
+    @ApiParam(value = "updateStats", example = "true", defaultValue = "false")
+    @QueryParam("updateStats") Boolean updateStats,
+    TrainingDatasetDTO trainingDatasetDTO)
       throws FeaturestoreException, DatasetException, ProjectException, HopsSecurityException {
-    if (trainingdatasetid == null) {
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_ID_NOT_PROVIDED.getMessage());
-    }
+    updateMetadata = featurestoreUtil.updateMetadataGetOrDefault(updateMetadata);
+    updateStats = featurestoreUtil.updateStatsGetOrDefault(updateStats);
+    verifyIdProvided(trainingdatasetid);
     trainingDatasetDTO.setId(trainingdatasetid);
     Users user = jWTHelper.getUserPrincipal(sc);
     TrainingDatasetDTO oldTrainingDatasetDTO =
-        trainingDatasetController.getTrainingDatasetWithIdAndFeaturestore(featurestore, trainingdatasetid);
-    if (!oldTrainingDatasetDTO.getName().equals(trainingDatasetDTO.getName())
-      && trainingDatasetDTO.getTrainingDatasetType() == TrainingDatasetType.HOPSFS_TRAINING_DATASET) {
-      Inode inode =
+      trainingDatasetController.getTrainingDatasetWithIdAndFeaturestore(featurestore, trainingdatasetid);
+    if(updateMetadata){
+      if (trainingDatasetDTO.getTrainingDatasetType() == TrainingDatasetType.HOPSFS_TRAINING_DATASET &&
+        !oldTrainingDatasetDTO.getName().equals(trainingDatasetDTO.getName())) {
+        Inode inode =
           trainingDatasetController.getInodeWithTrainingDatasetIdAndFeaturestore(featurestore, trainingdatasetid);
-      Dataset trainingDatasetsFolder = trainingDatasetController.getTrainingDatasetFolder(featurestore.getProject());
-      String trainingDatasetDirectoryName = trainingDatasetController.getTrainingDatasetPath(
+        Dataset trainingDatasetsFolder = trainingDatasetController.getTrainingDatasetFolder(featurestore.getProject());
+        String trainingDatasetDirectoryName = trainingDatasetController.getTrainingDatasetPath(
           inodeFacade.getPath(trainingDatasetsFolder.getInode()),
           trainingDatasetDTO.getName(), trainingDatasetDTO.getVersion());
-      org.apache.hadoop.fs.Path fullPath =
+        org.apache.hadoop.fs.Path fullPath =
           dsUpdateOperations.moveDatasetFile(project, user, inode, trainingDatasetDirectoryName);
-      Inode newInode = inodeFacade.getInodeAtPath(fullPath.toString());
-      trainingDatasetDTO.setInodeId(newInode.getId());
-      TrainingDatasetDTO newTrainingDatasetDTO = trainingDatasetController.createTrainingDataset(user,
+        Inode newInode = inodeFacade.getInodeAtPath(fullPath.toString());
+        HopsfsTrainingDatasetDTO hopsfsTrainingDatasetDTO = (HopsfsTrainingDatasetDTO) trainingDatasetDTO;
+        hopsfsTrainingDatasetDTO.setInodeId(newInode.getId());
+        TrainingDatasetDTO newTrainingDatasetDTO = trainingDatasetController.createTrainingDataset(user,
+          featurestore, hopsfsTrainingDatasetDTO);
+        return persistAndReturnEditedTrainingDatsetActivity(newTrainingDatasetDTO, user);
+      } else {
+        TrainingDatasetDTO updatedTrainingDatasetDTO = trainingDatasetController.updateTrainingDatasetMetadata(
           featurestore, trainingDatasetDTO);
-      activityFacade.persistActivity(ActivityFacade.EDITED_TRAINING_DATASET + newTrainingDatasetDTO.getName(),
-          project, user, ActivityFlag.SERVICE);
-      GenericEntity<TrainingDatasetDTO> trainingDatasetGeneric =
-          new GenericEntity<TrainingDatasetDTO>(newTrainingDatasetDTO) {};
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(trainingDatasetGeneric).build();
-    } else {
-      TrainingDatasetDTO updatedTrainingDatasetDTO = trainingDatasetController.updateTrainingDataset(featurestore,
-          trainingDatasetDTO);
-      activityFacade.persistActivity(ActivityFacade.EDITED_TRAINING_DATASET +
-          updatedTrainingDatasetDTO.getName(),
-          project, user, ActivityFlag.SERVICE);
-      GenericEntity<TrainingDatasetDTO> updatedTrainingDatasetGeneric =
-          new GenericEntity<TrainingDatasetDTO>(updatedTrainingDatasetDTO) {};
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(updatedTrainingDatasetGeneric)
-        .build();
+        return persistAndReturnEditedTrainingDatsetActivity(updatedTrainingDatasetDTO, user);
+      }
     }
+    if(updateStats) {
+      TrainingDatasetDTO updatedTrainingDatasetDTO = trainingDatasetController.updateTrainingDatasetStats(featurestore,
+        trainingDatasetDTO);
+      return persistAndReturnEditedTrainingDatsetActivity(updatedTrainingDatasetDTO, user);
+    }
+    GenericEntity<TrainingDatasetDTO> trainingDatasetDTOGenericEntity =
+      new GenericEntity<TrainingDatasetDTO>(trainingDatasetDTO) {};
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(trainingDatasetDTOGenericEntity)
+      .build();
+  }
+  
+  /**
+   * Verify that the user id was provided as a path param
+   *
+   * @param trainingDatasetId the training dataset id to verify
+   */
+  private void verifyIdProvided(Integer trainingDatasetId) {
+    if (trainingDatasetId == null) {
+      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_ID_NOT_PROVIDED.getMessage());
+    }
+  }
+  
+  /**
+   * Persistthe activity of editing a training dataset and return the response to the client
+   *
+   * @param trainingDatasetDTO DTO of the update training dataset
+   * @param user the user making the request
+   * @return JSON response of the DTO
+   */
+  private Response persistAndReturnEditedTrainingDatsetActivity(TrainingDatasetDTO trainingDatasetDTO, Users user) {
+    activityFacade.persistActivity(ActivityFacade.EDITED_TRAINING_DATASET + trainingDatasetDTO.getName(),
+      project, user, ActivityFlag.SERVICE);
+    GenericEntity<TrainingDatasetDTO> trainingDatasetGeneric =
+      new GenericEntity<TrainingDatasetDTO>(trainingDatasetDTO) {};
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(trainingDatasetGeneric).build();
   }
 
 }

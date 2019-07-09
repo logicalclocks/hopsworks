@@ -136,8 +136,8 @@ public class FeaturestoreFeature implements Serializable {
 
     if (primary != that.primary) return false;
     if (!id.equals(that.id)) return false;
-    if (!trainingDataset.equals(that.trainingDataset)) return false;
-    if (!onDemandFeaturegroup.equals(that.onDemandFeaturegroup)) return false;
+    if (trainingDataset != null && !trainingDataset.equals(that.trainingDataset)) return false;
+    if (onDemandFeaturegroup != null && !onDemandFeaturegroup.equals(that.onDemandFeaturegroup)) return false;
     if (!description.equals(that.description)) return false;
     if (!name.equals(that.name)) return false;
     return type.equals(that.type);
@@ -146,8 +146,6 @@ public class FeaturestoreFeature implements Serializable {
   @Override
   public int hashCode() {
     int result = id.hashCode();
-    result = 31 * result + trainingDataset.hashCode();
-    result = 31 * result + onDemandFeaturegroup.hashCode();
     result = 31 * result + description.hashCode();
     result = 31 * result + name.hashCode();
     result = 31 * result + type.hashCode();

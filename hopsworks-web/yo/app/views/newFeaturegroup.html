@@ -573,8 +573,7 @@
                                  is-open="newFeaturegroupCtrl.on_demand_fg_accordion1.isOpen">
                                 <div uib-accordion-heading>
                                     <i class="fa fa-info-circle" tooltip-placement="auto left"
-                                       uib-tooltip='The name of the On-Demand Feature Group
-                                       (Corresponds to Table name in Hive and MySQL Cluster)'></i>
+                                       uib-tooltip='The name of the On-Demand Feature Group'></i>
                                     <span style="margin-left: 20px">
                                     {{newFeaturegroupCtrl.on_demand_fg_accordion1.title}}
                                     {{newFeaturegroupCtrl.on_demand_fg_accordion1.value}}
@@ -653,7 +652,8 @@
                                 <div uib-accordion-heading>
                                     <i class="fa fa-info-circle" tooltip-placement="auto left"
                                        uib-tooltip='Features are stored using a relational model where a Feature corresponds
-                                 to a Column and a Feature Group corresponds to a table (Hive Table for offline and MySQL for online).
+                                 to a Column and a Feature Group corresponds to a table for for on-demand feature groups the table
+                                 can be stored in any JDBC compliant backend (potentially outside of Hopsworks).
                                  Specify the Table schema below by adding features (columns).
                                  If no schema is specified, it will be inferred at runtime.'></i>
                                     <span style="margin-left: 20px">
@@ -772,26 +772,6 @@
 
                                     <div class="view-info">
                                         <div class="col-md-12">
-                                            <div class="col-sm-12">
-                                                <div class="col-sm-3">
-                                                    <i class="fa fa-info-circle" tooltip-placement="auto left"
-                                                       uib-tooltip='Whether to partition the Hive table of the featuregroup on this feature.
-                                       A feature can not simultaneously be a primary key and a partition key of the featuregroup'></i>
-                                                    <label style="margin-left:10px" class="control-label">
-                                                        Partition key:</label>
-                                                </div>
-                                                <div class="col-sm-9">
-                                                    <input type="checkbox" class="form-check-input"
-                                                           id="partitionKeyCheck"
-                                                           ng-model="newFeaturegroupCtrl.onDemandFeaturegroupFeatures[$index].partition"
-                                                           value="{{feature.partition}}">
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="view-info">
-                                        <div class="col-md-12">
                                             <div class="col-sm-12" style="margin-bottom: 20px">
                                                 <div class="col-sm-3">
                                                 </div>
@@ -833,11 +813,6 @@
                                         There must be exactly one feature marked as primary key for each feature group
                                     </p>
                                 </div>
-                                <div ng-if="newFeaturegroupCtrl.onDemandFeaturegroupPartitionKeyWrongValue === -1" style="color: red">
-                                    <p>
-                                        A feature can not be marked as both primary key and partition key.
-                                    </p>
-                                </div>
                             </div>
                             <div uib-accordion-group class="panel-default"
                                  is-open="newFeaturegroupCtrl.on_demand_fg_accordion4.isOpen"
@@ -845,11 +820,8 @@
                                  id="onDemandSqlQueryDiv">
                                 <div uib-accordion-heading>
                                     <i class="fa fa-info-circle" tooltip-placement="auto left"
-                                       uib-tooltip='Data is inserted into Feature Groups using Data Pipelines with
-                                    Hopsworks jobs or notebooks. Inside a Hopsworks job or notebook you can use
-                                    the Feature Store API in Python or Scala to update a Feature Group.
-                                   By specifying a SQL Query below, a Hopsworks Job to run the query and insert into the
-                                   Feature Group will be created automatically.'></i>
+                                       uib-tooltip='On-Demand Feature Groups are computed on-demand when required using
+                                       a SQL query on a JDBC compliant database. Specify the SQL query and backend below.'></i>
                                     <span style="margin-left: 20px">
                                     {{newFeaturegroupCtrl.on_demand_fg_accordion4.title}}
                                     {{newFeaturegroupCtrl.on_demand_fg_accordion4.value}}

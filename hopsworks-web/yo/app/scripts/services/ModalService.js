@@ -1352,6 +1352,39 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
             },
+            storageConnectorViewInfo: function (size, projectId, storageConnector, featurestore, settings) {
+                var modalInstance = $uibModal.open({
+                    templateUrl: 'views/storageConnectorViewInfo.html',
+                    controller: 'storageConnectorViewInfoCtrl as storageConnectorViewInfoCtrl',
+                    size: size,
+                    resolve: {
+                        auth: ['$q', '$location', 'AuthService',
+                            function ($q, $location, AuthService) {
+                                return AuthService.session().then(
+                                    function (success) {
+                                    },
+                                    function (err) {
+                                        $location.path('/login');
+                                        $location.replace();
+                                        return $q.reject(err);
+                                    });
+                            }],
+                        projectId: function () {
+                            return projectId;
+                        },
+                        storageConnector: function () {
+                            return storageConnector;
+                        },
+                        featurestore: function () {
+                            return featurestore;
+                        },
+                        settings: function () {
+                            return settings;
+                        }
+                    }
+                });
+                return modalInstance.result;
+            },
             viewFeaturegroupInfo: function (size, projectId, featuregroup, featurestore, settings) {
                 var modalInstance = $uibModal.open({
                     templateUrl: 'views/featuregroupViewInfo.html',
@@ -1379,13 +1412,13 @@ angular.module('hopsWorksApp')
                             return featurestore;
                         },
                         settings: function () {
-                            return featurestore;
+                            return settings;
                         }
                     }
                 });
                 return modalInstance.result;
             },
-            viewTrainingDatasetInfo: function (size, projectId, trainingDataset, featurestore) {
+            viewTrainingDatasetInfo: function (size, projectId, trainingDataset, featurestore, settings) {
                 var modalInstance = $uibModal.open({
                     templateUrl: 'views/trainingDatasetViewInfo.html',
                     controller: 'trainingDatasetViewInfoCtrl as trainingDatasetViewInfoCtrl',
@@ -1410,6 +1443,9 @@ angular.module('hopsWorksApp')
                         },
                         featurestore: function () {
                             return featurestore;
+                        },
+                        settings: function () {
+                            return settings;
                         }
                     }
                 });
