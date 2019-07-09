@@ -40,13 +40,14 @@
 'use strict'
 
 angular.module('hopsWorksApp')
-        .controller('ProfileCtrl', ['UserService', '$location', '$scope', 'md5', 'growl', '$uibModalInstance','$cookies',
-          function (UserService, $location, $scope, md5, growl, $uibModalInstance, $cookies) {
+        .controller('ProfileCtrl', ['UserService', '$location', '$scope', 'md5', 'growl', '$uibModalInstance','$cookies', 'ProjectService',
+          function (UserService, $location, $scope, md5, growl, $uibModalInstance, $cookies, ProjectService) {
 
             var self = this;
             self.working = false;
             self.credentialWorking = false;
             self.twoFactorWorking = false;
+            self.secretsWorking = false;
             self.noPassword = false;
             self.otp = $cookies.get('otp');
             self.emailHash = '';
@@ -66,6 +67,15 @@ angular.module('hopsWorksApp')
               confirmedPassword: ''
             };
             
+            self.secrets = [];
+
+            self.secret = {
+              name: '',
+              secret: '',
+              visibility: 'PRIVATE',
+              scope: -1
+            };
+
             self.twoFactorAuth = {
               password: '',
               twoFactor: ''
@@ -103,9 +113,9 @@ angular.module('hopsWorksApp')
               });
             };
 
-            self.changeLoginCredentials = function () {
+            self.changeLoginCredentials = function (isFormValid) {
               self.credentialWorking = true;
-              if ($scope.credentialsForm.$valid) {
+              if (isFormValid) {
                 UserService.changeLoginCredentials(self.loginCredes).then(
                         function (success) {
                           self.credentialWorking = false;
@@ -116,6 +126,101 @@ angular.module('hopsWorksApp')
                           growl.error(self.errorMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 1});
                 });
               }
+            };
+
+
+            self.load_secrets = function () {
+              self.secretsWorking = true;
+              UserService.load_secrets().then(
+                function (success) {
+                  self.secrets = success.data.items
+                  if (!self.secrets) {
+                    self.secrets = []
+                  }
+                  self.secretsWorking = false;
+                }, function (error) {
+                  self.secretsWorking = false;
+                  self.errorMsg = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : "";
+                  growl.error(self.errorMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 1});
+                }
+              );
+            }
+
+            self.delete_secret = function (secret) {
+              self.secretsWorking = true;
+              UserService.delete_secret(secret.name).then(
+                function (success) {
+                  self.load_secrets();
+                  self.secretsWorking = false;
+                }, function (error) {
+                  self.secretsWorking = false;
+                  self.errorMsg = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : "";
+                  growl.error(self.errorMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 1});
+                }
+              );
+            }
+
+            self.selected_secret_project_vis
+
+            self.add_secret = function(isFormValid) {
+              self.secretsWorking = true;
+              if (isFormValid) {
+                if (self.secret.visibility.toUpperCase() === 'PROJECT') {
+                  if (!self.selected_secret_project_vis) {
+                    growl.error('Visibility is Project but no project has been selected',
+                      {title: 'Could not add Secret', ttl: 5000, referenceId: 1})
+                      return;
+                  }
+                  self.secret.scope = self.selected_secret_project_vis.id
+                }
+                UserService.add_secret(self.secret).then(
+                  function (success) {
+                    self.load_secrets();
+                    self.secretsWorking = false;
+                    growl.success("Added new secret", {title: 'Success', ttl: 3000, referenceId: 1});
+                  }, function (error) {
+                    self.secretsWorking = false;
+                    self.errorMsg = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : "";
+                    growl.error(self.errorMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 1});
+                  }
+                );
+              }
+            };
+
+            self.user_projects = [];
+            self.project_visibility_selected = function () {
+              self.user_projects = []
+              ProjectService.projects().$promise.then(
+                function(success) {
+                  for (var i = 0; i < success.length; i++) {
+                    var name = success[i].project.name
+                    var id = success[i].project.id
+                    var project = {
+                      name: name,
+                      id: id
+                    }
+                    self.user_projects.push(project)
+                  }
+                }, function(error) {
+                  self.errorMsg = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : "";
+                  growl.error(self.errorMsg, {title: error.data.errorMsg, ttl: 3000, referenceId: 1});
+                }
+              )
+            }
+
+            self.private_visibility_selected = function () {
+              self.user_projects = []
+            }
+
+            self.delete_all_secrets = function() {
+              UserService.delete_all_secrets().then(
+                function (success) {
+                  self.secrets = []
+                }, function (error) {
+                  self.errorMsg = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : "";
+                  growl.error(self.errorMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 1});
+                }
+              );
             };
             
             self.changeTwoFactor = function() {

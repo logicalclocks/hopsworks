@@ -74,6 +74,10 @@ public class ClusterCertificateFacade {
     em.persist(clusterCertificate);
   }
   
+  public void updateClusterCerts(ClusterCertificate clusterCertificate) {
+    em.merge(clusterCertificate);
+  }
+  
   public Optional<ClusterCertificate> getClusterCert(String clusterName) {
     TypedQuery<ClusterCertificate> query = em.createNamedQuery(ClusterCertificate.QUERY_BY_NAME,
       ClusterCertificate.class)

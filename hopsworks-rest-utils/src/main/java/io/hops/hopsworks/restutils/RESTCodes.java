@@ -832,7 +832,10 @@ public class RESTCodes {
     TWO_FA_DISABLED(45, "2-factor authentication is disabled.", Response.Status.PRECONDITION_FAILED),
     TRANSITION_STATUS_ERROR(46, "The user can't transition from current status to requested status",
       Response.Status.BAD_REQUEST),
-    ACCESS_CONTROL(47, "Client not authorized for this invocation.", Response.Status.FORBIDDEN);
+    ACCESS_CONTROL(47, "Client not authorized for this invocation.", Response.Status.FORBIDDEN),
+    SECRET_EMPTY(48, "Secret is empty", Response.Status.NOT_FOUND),
+    SECRET_EXISTS(49, "Same Secret already exists", Response.Status.CONFLICT),
+    SECRET_ENCRYPTION_ERROR(50, "Error encrypting/decrypting Secret", Response.Status.INTERNAL_SERVER_ERROR);
 
     private Integer code;
     private String message;
