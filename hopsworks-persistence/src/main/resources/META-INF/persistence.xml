@@ -139,6 +139,8 @@
     <class>io.hops.hopsworks.jwt.dao.InvalidJwt</class>
     <class>io.hops.hopsworks.jwt.dao.JwtSigningKey</class>
 
+    <class>io.hops.hopsworks.common.dao.user.security.secrets.Secret</class>
+
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <shared-cache-mode>NONE</shared-cache-mode>
     <validation-mode>NONE</validation-mode>
