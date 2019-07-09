@@ -925,6 +925,12 @@ angular.module('hopsWorksApp')
             };
 
 
+            self.goToDataValidation = function (featureGroup) {
+                StorageService.store("dv_featuregroup",
+                    featureGroup.versionToGroups[featureGroup.activeVersion]);
+                $location.path('project/' + self.projectId + "/featurestore/datavalidation");
+            }
+
             /**
              * Called when a new featurestore is selected in the dropdown list in the UI
              *
