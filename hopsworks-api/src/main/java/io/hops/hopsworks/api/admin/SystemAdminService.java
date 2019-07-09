@@ -46,7 +46,6 @@ import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.common.agent.AgentLivenessMonitor;
-import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.host.Hosts;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.dao.user.Users;
@@ -132,18 +131,35 @@ public class SystemAdminService {
     try {
       Users user = jWTHelper.getUserPrincipal(sc);
       certificatesMgmService.checkPassword(oldPassword, user.getEmail());
-      certificatesMgmService.resetMasterEncryptionPassword(newPassword, user.getEmail());
-  
-      RESTApiJsonResponse response = noCacheResponse.buildJsonResponse(Response.Status.NO_CONTENT, ResponseMessages
-          .MASTER_ENCRYPTION_PASSWORD_CHANGE);
-  
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(response).build();
+      Integer operationId = certificatesMgmService.initUpdateOperation();
+      certificatesMgmService.resetMasterEncryptionPassword(operationId, newPassword, user.getEmail());
+      
+      RESTApiJsonResponse response = noCacheResponse.buildJsonResponse(Response.Status.CREATED,
+          String.valueOf(operationId));
+      
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).entity(response).build();
     } catch (EncryptionMasterPasswordException ex) {
       throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_ACCESS_DENIED, Level.SEVERE, null,
         ex.getMessage(), ex);
     } catch (IOException ex) {
       throw new HopsSecurityException(RESTCodes.SecurityErrorCode.MASTER_ENCRYPTION_PASSWORD_ACCESS_ERROR,
         Level.SEVERE, null, ex.getMessage(), ex);
+    }
+  }
+  
+  @GET
+  @Path("/encryptionPass/{opId}")
+  public Response getUpdatePasswordStatus(@PathParam("opId") Integer operationId) {
+    CertificatesMgmService.UPDATE_STATUS status = certificatesMgmService.getOperationStatus(operationId);
+    switch (status) {
+      case OK:
+        return noCacheResponse.getNoCacheCORSResponseBuilder(Response.Status.OK).build();
+      case FAILED:
+        return noCacheResponse.getNoCacheCORSResponseBuilder(Response.Status.INTERNAL_SERVER_ERROR).build();
+      case WORKING:
+        return noCacheResponse.getNoCacheCORSResponseBuilder(Response.Status.FOUND).build();
+      default:
+        return noCacheResponse.getNoCacheCORSResponseBuilder(Response.Status.NOT_FOUND).build();
     }
   }
   
