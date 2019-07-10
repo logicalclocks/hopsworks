@@ -39,7 +39,6 @@
 package io.hops.hopsworks.api.admin;
 
 import io.hops.hopsworks.api.kibana.ProxyServlet;
-import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstate;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
@@ -48,27 +47,7 @@ import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.project.ProjectDTO;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.InetAddress;
-import java.net.URI;
-import java.net.URLEncoder;
-import java.nio.charset.Charset;
-import java.util.Arrays;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import javax.ejb.EJB;
-import javax.ejb.Stateless;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.core.Response;
-
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.ProjectException;
 import org.apache.commons.httpclient.HostConfiguration;
 import org.apache.commons.httpclient.HttpClient;
@@ -84,9 +63,44 @@ import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
 import org.apache.http.client.utils.URIUtils;
 
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.core.Response;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.InetAddress;
+import java.net.URI;
+import java.net.URLEncoder;
+import java.nio.charset.Charset;
+import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 @Stateless
 public class YarnUIProxyServlet extends ProxyServlet {
-
+  
+  final static Logger logger = Logger.getLogger(YarnUIProxyServlet.class.getName());
+  
+  
+  private static final HashSet<String> PASS_THROUGH_HEADERS
+    = new HashSet<String>(
+    Arrays
+      .asList("User-Agent", "user-agent", "Accept", "accept",
+        "Accept-Encoding", "accept-encoding",
+        "Accept-Language",
+        "accept-language",
+        "Accept-Charset", "accept-charset"));
+  String isRemoving = null;
   @EJB
   private Settings settings;
   @EJB
@@ -97,19 +111,9 @@ public class YarnUIProxyServlet extends ProxyServlet {
   private HdfsUsersController hdfsUsersBean;
   @EJB
   private ProjectController projectController;
-
-  private static final HashSet<String> PASS_THROUGH_HEADERS
-      = new HashSet<String>(
-          Arrays
-              .asList("User-Agent", "user-agent", "Accept", "accept",
-                  "Accept-Encoding", "accept-encoding",
-                  "Accept-Language",
-                  "accept-language",
-                  "Accept-Charset", "accept-charset"));
-
+  
   protected void initTarget() throws ServletException {
     // TODO - should get the Kibana URI from Settings.java
-//    targetUri = Settings.getKibanaUri();
     targetUri = settings.getYarnWebUIAddress();
     if (!targetUri.contains("http://")) {
       targetUri = "http://" + targetUri;
@@ -122,32 +126,27 @@ public class YarnUIProxyServlet extends ProxyServlet {
       targetUriObj = new URI(targetUri);
     } catch (Exception e) {
       throw new ServletException("Trying to process targetUri init parameter: "
-          + e, e);
+        + e, e);
     }
     targetHost = URIUtils.extractHost(targetUriObj);
   }
-
-  enum Type {
-    application,
-    appAttempt,
-    container;
-  }
-
+  
   @Override
   protected void service(HttpServletRequest servletRequest,
-      HttpServletResponse servletResponse)
-      throws ServletException, IOException {
-
+    HttpServletResponse servletResponse)
+    throws ServletException, IOException {
+    
     if (servletRequest.getUserPrincipal() == null || (!servletRequest.isUserInRole("HOPS_ADMIN") && !servletRequest.
-        isUserInRole("HOPS_USER"))) {
+      isUserInRole("HOPS_USER"))) {
       servletResponse.sendError(403, "User is not logged in");
       return;
     }
     if (!servletRequest.isUserInRole("HOPS_ADMIN")) {
       if (servletRequest.getRequestURI().contains("proxy/application") || servletRequest.getRequestURI().contains(
-          "app/application") || servletRequest.getRequestURI().contains("appattempt/appattempt") || servletRequest.
-          getRequestURI().contains("container/container") || servletRequest.getRequestURI().contains(
-          "containerlogs/container") || servletRequest.getRequestURI().contains("history/application")) {
+        "app/application") || servletRequest.getRequestURI().contains("appattempt/appattempt") || servletRequest.
+        getRequestURI().contains("container/container") || servletRequest.getRequestURI().contains(
+        "containerlogs/container") || servletRequest.getRequestURI().contains("history/application")) {
+        
         String email = servletRequest.getUserPrincipal().getName();
         Pattern pattern = Pattern.compile("(application_.*?_.\\d*)");
         Type type = Type.application;
@@ -155,7 +154,7 @@ public class YarnUIProxyServlet extends ProxyServlet {
           pattern = Pattern.compile("(appattempt_.*?_.\\d*)");
           type = Type.appAttempt;
         } else if (servletRequest.getRequestURI().contains("container/container") || servletRequest.getRequestURI().
-            contains("containerlogs/container")) {
+          contains("containerlogs/container")) {
           pattern = Pattern.compile("(container_e.*?_.*?_.\\d*)");
           type = Type.container;
         }
@@ -169,10 +168,10 @@ public class YarnUIProxyServlet extends ProxyServlet {
             appId = appId.replaceAll("container_e.*?_", "application_");
           }
           YarnApplicationstate appState = yarnApplicationstateFacade.findByAppId(
-              appId);
+            appId);
           if (appState == null) {
             servletResponse.sendError(Response.Status.BAD_REQUEST.getStatusCode(),
-                "You don't have the access right for this application");
+              "You don't have the access right for this application");
             return;
           }
           String projectName = hdfsUsersBean.getProjectName(appState.getAppuser());
@@ -182,7 +181,7 @@ public class YarnUIProxyServlet extends ProxyServlet {
           } catch (ProjectException ex) {
             throw new ServletException(ex);
           }
-
+          
           boolean inTeam = false;
           for (ProjectTeam pt : project.getProjectTeam()) {
             if (pt.getUser().equals(user)) {
@@ -192,49 +191,59 @@ public class YarnUIProxyServlet extends ProxyServlet {
           }
           if (!inTeam) {
             servletResponse.sendError(Response.Status.BAD_REQUEST.getStatusCode(),
-                "You don't have the access right for this application");
+              "You don't have the access right for this application");
             return;
           }
         }
       } else {
         if (!servletRequest.getRequestURI().contains("/static/")) {
           servletResponse.sendError(Response.Status.BAD_REQUEST.getStatusCode(),
-              "You don't have the access right for this page");
+            "You don't have the access right for this page");
           return;
         }
       }
     }
-
+    
     if (servletRequest.getAttribute(ATTR_TARGET_URI) == null) {
       servletRequest.setAttribute(ATTR_TARGET_URI, targetUri);
     }
     if (servletRequest.getAttribute(ATTR_TARGET_HOST) == null) {
       servletRequest.setAttribute(ATTR_TARGET_HOST, targetHost);
     }
-
+    
     // Make the Request
     // note: we won't transfer the protocol version because I'm not 
     // sure it would truly be compatible
     String proxyRequestUri = rewriteUrlFromRequest(servletRequest);
-
+    
+    logger.log(Level.INFO, "YarnProxyUI Url is: " + servletRequest.getRequestURI() + " for " +
+      proxyRequestUri);
+  
+    if (settings.isLocalHost() && proxyRequestUri.contains("proxy/application")) {
+      proxyRequestUri = proxyRequestUri.replaceAll("http://.*:", "http://localhost:");
+    }
+  
+    logger.log(Level.INFO, "YarnProxyUI Url is now: " + servletRequest.getRequestURI() + " for " +
+      proxyRequestUri);
+  
     try {
       // Execute the request
-
+      
       HttpClientParams params = new HttpClientParams();
       params.setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
       params.setBooleanParameter(HttpClientParams.ALLOW_CIRCULAR_REDIRECTS,
-          true);
+        true);
       HttpClient client = new HttpClient(params);
       HostConfiguration config = new HostConfiguration();
       InetAddress localAddress = InetAddress.getLocalHost();
       config.setLocalAddress(localAddress);
-
+      
       String method = servletRequest.getMethod();
       HttpMethod m;
       if (method.equalsIgnoreCase("PUT")) {
         m = new PutMethod(proxyRequestUri);
         RequestEntity requestEntity = new InputStreamRequestEntity(servletRequest.getInputStream(), servletRequest.
-            getContentType());
+          getContentType());
         ((PutMethod) m).setRequestEntity(requestEntity);
       } else {
         m = new GetMethod(proxyRequestUri);
@@ -248,7 +257,7 @@ public class YarnUIProxyServlet extends ProxyServlet {
           //but we don't want to accept encoding for the html because we
           //need to be able to parse it
           if (headerName.equalsIgnoreCase("accept-encoding") && (servletRequest.getPathInfo() == null
-              || !servletRequest.getPathInfo().contains(".js"))) {
+            || !servletRequest.getPathInfo().contains(".js"))) {
             continue;
           } else {
             m.setRequestHeader(headerName, value);
@@ -258,25 +267,25 @@ public class YarnUIProxyServlet extends ProxyServlet {
       String user = servletRequest.getRemoteUser();
       if (user != null && !user.isEmpty()) {
         m.setRequestHeader("Cookie", "proxy-user" + "="
-            + URLEncoder.encode(user, "ASCII"));
+          + URLEncoder.encode(user, "ASCII"));
       }
-
+      
       client.executeMethod(config, m);
-
+      
       // Process the response
       int statusCode = m.getStatusCode();
-
+      
       // Pass the response code. This method with the "reason phrase" is 
       //deprecated but it's the only way to pass the reason along too.
       //noinspection deprecation
       servletResponse.setStatus(statusCode, m.getStatusLine().
-          getReasonPhrase());
-
+        getReasonPhrase());
+      
       copyResponseHeaders(m, servletRequest, servletResponse);
-
+      
       // Send the content to the client
       copyResponseEntity(m, servletResponse, servletRequest.isUserInRole("HOPS_ADMIN"));
-
+      
     } catch (Exception e) {
       if (e instanceof RuntimeException) {
         throw (RuntimeException) e;
@@ -289,27 +298,28 @@ public class YarnUIProxyServlet extends ProxyServlet {
         throw (IOException) e;
       }
       throw new RuntimeException(e);
-
+      
     }
   }
-
+  
   protected void copyResponseEntity(HttpMethod method,
-      HttpServletResponse servletResponse, boolean isAdmin) throws IOException {
+    HttpServletResponse servletResponse, boolean isAdmin) throws IOException {
     InputStream entity = method.getResponseBodyAsStream();
     if (entity != null) {
       OutputStream servletOutputStream = servletResponse.getOutputStream();
       if (servletResponse.getHeader("Content-Type") == null || servletResponse.getHeader("Content-Type").
-          contains("html") || servletResponse.getHeader("Content-Type").contains("application/json")) {
+        contains("html") || servletResponse.getHeader("Content-Type").contains("application/json")) {
         String inputLine;
         BufferedReader br = new BufferedReader(new InputStreamReader(entity));
-
+        
         try {
           int contentSize = 0;
-          String source = "http://" + method.getURI().getHost() + ":" + method.getURI().getPort();
+          String hostname = method.getURI().getHost();
+          String source = "http://" + hostname + ":" + method.getURI().getPort();
           while ((inputLine = br.readLine()) != null) {
             String outputLine = hopify(inputLine, source, isAdmin) + "\n";
             byte[] output = outputLine.getBytes(Charset.forName("UTF-8"));
-            servletOutputStream.write(output);       
+            servletOutputStream.write(output);
             contentSize += output.length;
           }
           br.close();
@@ -322,74 +332,73 @@ public class YarnUIProxyServlet extends ProxyServlet {
       }
     }
   }
-
+  
   protected void copyResponseHeaders(HttpMethod method,
-      HttpServletRequest servletRequest,
-      HttpServletResponse servletResponse) {
+    HttpServletRequest servletRequest,
+    HttpServletResponse servletResponse) {
     for (org.apache.commons.httpclient.Header header : method.getResponseHeaders()) {
       if (hopByHopHeaders.containsHeader(header.getName())) {
         continue;
       }
       if (header.getName().equalsIgnoreCase("Content-Length") && (method.getResponseHeader("Content-Type") == null
-          || method.getResponseHeader("Content-Type").getValue().contains("html") || servletResponse.getHeader(
-          "Content-Type").contains("application/json"))) {
+        || method.getResponseHeader("Content-Type").getValue().contains("html") || servletResponse.getHeader(
+        "Content-Type").contains("application/json"))) {
         continue;
       }
       if (header.getName().
-          equalsIgnoreCase(org.apache.http.cookie.SM.SET_COOKIE) || header.
-          getName().equalsIgnoreCase(org.apache.http.cookie.SM.SET_COOKIE2)) {
+        equalsIgnoreCase(org.apache.http.cookie.SM.SET_COOKIE) || header.
+        getName().equalsIgnoreCase(org.apache.http.cookie.SM.SET_COOKIE2)) {
         copyProxyCookie(servletRequest, servletResponse, header.getValue());
       } else {
         servletResponse.addHeader(header.getName(), header.getValue());
       }
     }
   }
-
+  
   private String hopify(String ui, String source, boolean isAdmin) {
-    if(!isAdmin){
+    if (!isAdmin) {
       ui = removeUnusable(ui);
     }
     
     ui = ui.replaceAll("(?<=(href|src)=\")/(?=[a-zA-Z])",
-        "/hopsworks-api/yarnui/" + source + "/");
+      "/hopsworks-api/yarnui/" + source + "/");
     ui = ui.replaceAll("(?<=(href|src)=\')/(?=[a-zA-Z])",
-        "/hopsworks-api/yarnui/" + source + "/");
+      "/hopsworks-api/yarnui/" + source + "/");
     ui = ui.replaceAll("(?<=(href|src)=\")//", "/hopsworks-api/yarnui/");
     ui = ui.replaceAll("(?<=(href|src)=\')//", "/hopsworks-api/yarnui/");
     ui = ui.replaceAll("(?<=(href|src)=\")(?=http)",
-        "/hopsworks-api/yarnui/");
+      "/hopsworks-api/yarnui/");
     ui = ui.replaceAll("(?<=(href|src)=\')(?=http)",
-        "/hopsworks-api/yarnui/");
+      "/hopsworks-api/yarnui/");
     ui = ui.replaceAll("(?<=(href|src)=\")(?=[a-zA-Z])",
-        "/hopsworks-api/yarnui/" + source + "/");
+      "/hopsworks-api/yarnui/" + source + "/");
     ui = ui.replaceAll("(?<=(href|src)=\')(?=[a-zA-Z])",
-        "/hopsworks-api/yarnui/" + source + "/");
+      "/hopsworks-api/yarnui/" + source + "/");
     ui = ui.replaceAll("(?<=(url: '))/(?=[a-zA-Z])", "/hopsworks-api/yarnui/");
     ui = ui.replaceAll("(?<=(location\\.href = '))/(?=[a-zA-Z])", "/hopsworks-api/yarnui/");
     ui = ui.replaceAll("(?<=\"(stdout\"|stderr\") : \")(?=[a-zA-Z])",
-        "/hopsworks-api/yarnui/");
+      "/hopsworks-api/yarnui/");
     ui = ui.replaceAll("for full log", "for latest " + settings.getSparkUILogsOffset()
-        + " bytes of logs");
+      + " bytes of logs");
     ui = ui.replace("/?start=0", "/?start=-" + settings.getSparkUILogsOffset());
     return ui;
-
-  }
-
-  String isRemoving = null;
-  private String removeUnusable(String ui){
     
-    if(ui.contains("<div id=\"user\">") || ui.contains("<tfoot>") || ui.contains("<td id=\"navcell\">")){
-      isRemoving=ui;
+  }
+  
+  private String removeUnusable(String ui) {
+    
+    if (ui.contains("<div id=\"user\">") || ui.contains("<tfoot>") || ui.contains("<td id=\"navcell\">")) {
+      isRemoving = ui;
       return "";
     }
-    if(isRemoving!=null){
-      if(isRemoving.contains("<div id=\"user\">") && ui.contains("<div id=\"logo\">")){
+    if (isRemoving != null) {
+      if (isRemoving.contains("<div id=\"user\">") && ui.contains("<div id=\"logo\">")) {
         isRemoving = null;
         return ui;
-      } else if(isRemoving.contains("<tfoot>") && ui.contains("</tfoot>")){
+      } else if (isRemoving.contains("<tfoot>") && ui.contains("</tfoot>")) {
         isRemoving = null;
-      } else if(isRemoving.contains("<td id=\"navcell\">") && ui.contains("</td>")){
-        isRemoving=null;
+      } else if (isRemoving.contains("<td id=\"navcell\">") && ui.contains("</td>")) {
+        isRemoving = null;
       }
       return "";
     }
@@ -399,9 +408,15 @@ public class YarnUIProxyServlet extends ProxyServlet {
   protected String rewriteUrlFromRequest(HttpServletRequest servletRequest) {
     StringBuilder uri = new StringBuilder(500);
     if (servletRequest.getPathInfo() != null && servletRequest.getPathInfo().matches(
-        "/http([a-zA-Z,:,/,.,0-9,-])+:([0-9])+(.)+")) {
-      String target = "http://" + servletRequest.getPathInfo().substring(7);
+      "/http([a-zA-Z,:,/,.,0-9,-])+:([0-9])+(.)+")) {
+      
+      String pathInfo = servletRequest.getPathInfo();
+      
+      logger.log(Level.INFO, "YarnProxyUI PathInfo is: " + pathInfo);
+      
+      String target = "http://" + pathInfo.substring(7);
       servletRequest.setAttribute(ATTR_TARGET_URI, target);
+      
       uri.append(target);
     } else {
       uri.append(getTargetUri(servletRequest));
@@ -413,33 +428,37 @@ public class YarnUIProxyServlet extends ProxyServlet {
     // Handle the query string & fragment
     //ex:(following '?'): name=value&foo=bar#fragment
     String queryString = servletRequest.getQueryString();
+    
     String fragment = null;
     //split off fragment from queryString, updating queryString if found
     if (queryString != null) {
       int fragIdx = queryString.indexOf('#');
       if (fragIdx >= 0) {
         fragment = queryString.substring(fragIdx + 2); // '#!', not '#'
-//        fragment = queryString.substring(fragIdx + 1);
+        //        fragment = queryString.substring(fragIdx + 1);
         queryString = queryString.substring(0, fragIdx);
       }
+      
+    } else {
+      logger.log(Level.INFO, "YarnProxyUI queryString is NULL");
     }
-
+    
     queryString = rewriteQueryStringFromRequest(servletRequest, queryString);
     if (queryString != null && queryString.length() > 0) {
       uri.append('?');
       uri.append(encodeUriQuery(queryString));
     }
-
+    
     if (doSendUrlFragment && fragment != null) {
       uri.append('#');
       uri.append(encodeUriQuery(fragment));
     }
     return uri.toString();
   }
-
+  
   @Override
   protected void copyRequestHeaders(HttpServletRequest servletRequest,
-      HttpRequest proxyRequest) {
+    HttpRequest proxyRequest) {
     // Get an Enumeration of all of the header names sent by the client
     Enumeration enumerationOfHeaderNames = servletRequest.getHeaderNames();
     while (enumerationOfHeaderNames.hasMoreElements()) {
@@ -452,7 +471,7 @@ public class YarnUIProxyServlet extends ProxyServlet {
         continue;
       }
       if (headerName.equalsIgnoreCase("accept-encoding") && (servletRequest.getPathInfo() == null || !servletRequest.
-          getPathInfo().contains(".js"))) {
+        getPathInfo().contains(".js"))) {
         continue;
       }
       Enumeration headers = servletRequest.getHeaders(headerName);
@@ -474,5 +493,11 @@ public class YarnUIProxyServlet extends ProxyServlet {
       }
     }
   }
-
+  
+  enum Type {
+    application,
+    appAttempt,
+    container;
+  }
+  
 }
