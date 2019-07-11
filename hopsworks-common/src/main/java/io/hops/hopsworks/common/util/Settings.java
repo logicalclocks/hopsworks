@@ -3451,7 +3451,7 @@ public class Settings implements Serializable {
     return CLOUD;
   }
   
-    public Boolean isCloud() {
+  public Boolean isCloud() {
     return getCloudProvider().isEmpty();
   }
   
