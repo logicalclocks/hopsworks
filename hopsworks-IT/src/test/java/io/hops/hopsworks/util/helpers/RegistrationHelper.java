@@ -52,6 +52,7 @@ public class RegistrationHelper {
     boolean twoFactorEnabled = dbHelper.isTwoFactorEnabled();
     if (twoFactor && !twoFactorEnabled) {
       Helpers.enableTwoFactor(driver, dbHelper);
+      gotoRegisterPage(driver);
     }
     Helpers.waitForElement(By.name("registerForm"), driver);
     driver.findElement(By.name("first_name")).sendKeys(firstName);
