@@ -1894,6 +1894,7 @@ public class Settings implements Serializable {
   public static final String SERVER_TRUSTSTORE_PROPERTY = "server.truststore";
   public static final String KAFKA_CONSUMER_GROUPS = "hopsworks.kafka.consumergroups";
   public static final String HOPSWORKS_REST_ENDPOINT_PROPERTY = "hopsworks.restendpoint";
+  public static final String HOPSUTIL_INSECURE_PROPERTY = "hopsutil.insecure";
   public static final String HOPSWORKS_ELASTIC_ENDPOINT_PROPERTY = "hopsworks.elastic.endpoint";
 
   private int FILE_PREVIEW_IMAGE_SIZE = 10000000;
