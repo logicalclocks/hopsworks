@@ -16,6 +16,9 @@
 
 describe "On #{ENV['OS']}" do
   describe "admin ops" do
+    after :all do
+      reset_session
+    end
     describe "#change master encryption password" do
       
       context "without authentication" do
