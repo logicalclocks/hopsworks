@@ -93,6 +93,18 @@ public class FeaturestoreS3ConnectorFacade extends AbstractFacade<FeaturestoreS3
   }
 
   /**
+   * Updates a s3 connector
+   *
+   * @param featurestoreS3Connector the s3 connector to update
+   * @return the updated connector
+   */
+  public FeaturestoreS3Connector updateS3Connector(
+      FeaturestoreS3Connector featurestoreS3Connector) {
+    em.merge(featurestoreS3Connector);
+    return featurestoreS3Connector;
+  }
+
+  /**
    * Gets the entity manager of the facade
    *
    * @return entity manager

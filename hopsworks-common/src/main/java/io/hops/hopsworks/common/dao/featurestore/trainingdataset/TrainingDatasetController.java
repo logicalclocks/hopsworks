@@ -18,7 +18,6 @@ package io.hops.hopsworks.common.dao.featurestore.trainingdataset;
 
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
-import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
 import io.hops.hopsworks.common.dao.featurestore.FeaturestoreFacade;
 import io.hops.hopsworks.common.dao.featurestore.feature.FeatureDTO;
@@ -32,13 +31,13 @@ import io.hops.hopsworks.common.dao.featurestore.trainingdataset.hopsfs_training
 import io.hops.hopsworks.common.dao.featurestore.trainingdataset.hopsfs_trainingdataset.HopsfsTrainingDatasetController;
 import io.hops.hopsworks.common.dao.featurestore.trainingdataset.hopsfs_trainingdataset.HopsfsTrainingDatasetDTO;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
-import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
@@ -68,15 +67,13 @@ public class TrainingDatasetController {
   @EJB
   private FeaturestoreFacade featurestoreFacade;
   @EJB
-  private InodeFacade inodeFacade;
-  @EJB
   private FeaturestoreStatisticController featurestoreStatisticController;
   @EJB
   private FeaturestoreFeatureController featurestoreFeatureController;
   @EJB
   private JobFacade jobFacade;
   @EJB
-  private DatasetFacade datasetFacade;
+  private DatasetController datasetController;
   @EJB
   private HopsfsTrainingDatasetController hopsfsTrainingDatasetController;
   @EJB
@@ -346,7 +343,8 @@ public class TrainingDatasetController {
    * @return the training dataset for the project
    */
   public Dataset getTrainingDatasetFolder(Project project){
-    return datasetFacade.findByNameAndProjectId(project, getTrainingDatasetFolderName(project));
+    return datasetController.getByProjectAndDsName(project,
+        null, getTrainingDatasetFolderName(project));
   }
   
   /**

@@ -35,6 +35,7 @@ angular.module('hopsWorksApp')
             self.hopsfsConnectorType = self.settings.hopsfsConnectorType
             self.s3ConnectorType = self.settings.s3ConnectorType
             self.jdbcConnectorType = self.settings.jdbcConnectorType
+            self.preProcessedArgs = []
 
 
             /**
@@ -52,7 +53,7 @@ angular.module('hopsWorksApp')
                             "value": "DEFAULT"
                         })
                     }
-                    self.storageConnector.arguments = newArgs
+                    self.preProcessedArgs = newArgs
                 }
             }
 

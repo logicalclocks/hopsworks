@@ -227,6 +227,7 @@ public class OnDemandFeaturegroupController {
    * @param onDemandFeaturegroup the on-demand feature group
    * @return the deleted entity
    */
+  @TransactionAttribute(TransactionAttributeType.NEVER)
   public OnDemandFeaturegroup removeOnDemandFeaturegroup(OnDemandFeaturegroup onDemandFeaturegroup){
     onDemandFeaturegroupFacade.remove(onDemandFeaturegroup);
     return onDemandFeaturegroup;

@@ -221,7 +221,7 @@ public class CachedFeaturegroupController {
     String db = featurestoreController.getFeaturestoreDbName(featurestore.getProject());
     String tableName = getTblName(cachedFeaturegroupDTO.getName(), cachedFeaturegroupDTO.getVersion());
     String query = "CREATE TABLE " + db + ".`" + tableName + "` " +
-        featureStr + " STORED AS " + settings.getFeaturestoreDbDefaultStorageFormat();
+        featureStr + "STORED AS " + settings.getFeaturestoreDbDefaultStorageFormat();
     executeUpdateHiveQuery(query, db, featurestore.getProject(), user);
     //Get HiveTblId of the newly created table from the metastore
     Long hiveTblId = cachedFeaturegroupFacade.getHiveTableId(tableName, featurestore.getHiveDbId());
@@ -339,15 +339,17 @@ public class CachedFeaturegroupController {
       stmt.executeUpdate(query);
     } catch (SQLException e) {
       //Hive throws a generic HiveSQLException not a specific AuthorizationException
-      if (e.getMessage().toLowerCase().contains("permission denied"))
+      if (e.getMessage().toLowerCase().contains("permission denied")){
         throw new HopsSecurityException(RESTCodes.SecurityErrorCode.HDFS_ACCESS_CONTROL, Level.FINE,
             "project: " + project.getName() +
                 ", hive database: " + databaseName + " hive query: " + query, e.getMessage(), e);
-      else
+      }
+      else{
         throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.HIVE_UPDATE_STATEMENT_ERROR, Level.SEVERE,
             "project: " + project.getName() +
                 ", hive database: " + databaseName + " hive query: " + query,
             e.getMessage(), e);
+      }
     } finally {
       if (stmt != null) {
         stmt.close();

@@ -92,6 +92,18 @@ public class FeaturestoreJdbcConnectorFacade extends AbstractFacade<Featurestore
   }
 
   /**
+   * Updates a jdbc connector
+   *
+   * @param featurestoreJdbcConnector the jdbc connector to update
+   * @return the updated connector
+   */
+  public FeaturestoreJdbcConnector updateJdbcConnector(
+      FeaturestoreJdbcConnector featurestoreJdbcConnector) {
+    em.merge(featurestoreJdbcConnector);
+    return featurestoreJdbcConnector;
+  }
+
+  /**
    * Gets the entity manager of the facade
    *
    * @return entity manager

@@ -267,7 +267,7 @@ angular.module('hopsWorksApp')
             };
 
             self.isHive = function(dataset) {
-                if(dataset.path.includes("apps/hive/warehouse") && dataset.name.includes(".db") && !self.isFeaturestore(dataset)){
+                if(dataset.path.includes("apps/hive/warehouse") && dataset.name.includes(".db")){
                     return true
                 }
                 return false

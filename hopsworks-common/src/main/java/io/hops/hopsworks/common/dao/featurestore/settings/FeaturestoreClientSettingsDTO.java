@@ -87,6 +87,13 @@ public class FeaturestoreClientSettingsDTO {
     "MAP <INT, ARRAY <FLOAT> >",
     "STRUCT < label: STRING, index: INT >", "UNIONTYPE < STRING, INT>"
   });
+  public static String FEATURESTORE_UTIL_4J_MAIN_CLASS = "io.hops.examples.featurestore_util4j.Main";
+  public static String FEATURESTORE_UTIL_4J_ARGS_DATASET = "Resources";
+  public static String FEATURESTORE_UTIL_PYTHON_MAIN_CLASS = "org.apache.spark.deploy.PythonRunner";
+  public static String FEATURESTORE_UTIL_4J_EXECUTABLE =
+      "/user/spark/hops-examples-featurestore-util4j-1.0.0-SNAPSHOT.jar";
+  public static String FEATURESTORE_UTIL_PYTHON_EXECUTABLE =
+      "/user/spark/featurestore_util.py";
   
   
   public FeaturestoreClientSettingsDTO() {
@@ -218,7 +225,7 @@ public class FeaturestoreClientSettingsDTO {
   }
   
   @XmlElement
-  public static String getJdbcConnectorType() {
+  public String getJdbcConnectorType() {
     return JDBC_CONNECTOR_TYPE;
   }
   
@@ -295,6 +302,31 @@ public class FeaturestoreClientSettingsDTO {
   @XmlElement
   public List<String> getSuggestedFeatureTypes() {
     return SUGGESTED_FEATURE_TYPES;
+  }
+
+  @XmlElement
+  public String getFeaturestoreUtil4jMainClass() {
+    return FEATURESTORE_UTIL_4J_MAIN_CLASS;
+  }
+
+  @XmlElement
+  public String getFeaturestoreUtil4jArgsDataset() {
+    return FEATURESTORE_UTIL_4J_ARGS_DATASET;
+  }
+
+  @XmlElement
+  public String getFeaturestoreUtilPythonMainClass() {
+    return FEATURESTORE_UTIL_PYTHON_MAIN_CLASS;
+  }
+
+  @XmlElement
+  public String getFeaturestoreUtil4jExecutable() {
+    return FEATURESTORE_UTIL_4J_EXECUTABLE;
+  }
+
+  @XmlElement
+  public String getFeaturestoreUtilPythonExecutable() {
+    return FEATURESTORE_UTIL_PYTHON_EXECUTABLE;
   }
 
   public void setFeaturestoreStatisticsMaxCorrelations(int featurestoreStatisticsMaxCorrelations) {
@@ -462,5 +494,25 @@ public class FeaturestoreClientSettingsDTO {
   
   public void setSuggestedFeatureTypes(List<String> suggestedFeatureTypes) {
     SUGGESTED_FEATURE_TYPES = suggestedFeatureTypes;
+  }
+
+  public void setFeaturestoreUtil4jMainClass(String featurestoreUtil4jMainClass) {
+    FEATURESTORE_UTIL_4J_MAIN_CLASS = featurestoreUtil4jMainClass;
+  }
+
+  public void setFeaturestoreUtil4jArgsDataset(String featurestoreUtil4jArgsDataset) {
+    FEATURESTORE_UTIL_4J_ARGS_DATASET = featurestoreUtil4jArgsDataset;
+  }
+
+  public void setFeaturestoreUtilPythonMainClass(String featurestoreUtilPythonMainClass) {
+    FEATURESTORE_UTIL_PYTHON_MAIN_CLASS = featurestoreUtilPythonMainClass;
+  }
+
+  public void setFeaturestoreUtil4jExecutable(String featurestoreUtil4jExecutable) {
+    FEATURESTORE_UTIL_4J_EXECUTABLE = featurestoreUtil4jExecutable;
+  }
+
+  public void setFeaturestoreUtilPythonExecutable(String featurestoreUtilPythonExecutable) {
+    FEATURESTORE_UTIL_PYTHON_EXECUTABLE = featurestoreUtilPythonExecutable;
   }
 }

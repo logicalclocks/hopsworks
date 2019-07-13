@@ -27,11 +27,15 @@
                   ng-click="newStorageConnectorCtrl.exitToFeaturestore()"
                   uib-tooltip="Clear state and go back to Feature Store main page."
             > </span>
-            <h2 style="margin-bottom: 30px;color:#555">
+            <h2 style="margin-bottom: 30px;color:#555" ng-if="newStorageConnectorCtrl.storageConnectorOperation === 'CREATE'">
                 Create Storage Connector for Feature Store Data
                 <i class="fa fa-info-circle" tooltip-placement="auto left"
                    uib-tooltip='The storage connector can be used to manage feature data in external storage backends,
                    such as S3 or DB2 (over JDBC).'></i>
+            </h2>
+
+            <h2 style="margin-bottom: 30px;color:#555" ng-if="newStorageConnectorCtrl.storageConnectorOperation === 'UPDATE'">
+                Update Storage Connector: <span style="font-weight:700">{{newStorageConnectorCtrl.storageConnectorName}}</span>
             </h2>
 
             <div uib-accordion close-others="false">
@@ -63,8 +67,6 @@
                             Storage Connector name shouldn't be empty and can only contain alphanumeric characters and
                             underscores,
                             maximum length is {{newStorageConnectorCtrl.storageConnectorNameMaxLength}} characters.
-                            Hyphens are not allowed in the
-                            storage connector name.
                         </p>
                     </div>
                     <div ng-if="newStorageConnectorCtrl.storageConnectorNameNotUnique === -1" style="color: red">
@@ -120,7 +122,7 @@
                               style="margin-left: 10px"></span>
                     </div>
 
-                    <div class="view-info">
+                    <div class="view-info" ng-if="newStorageConnectorCtrl.storageConnectorOperation === 'CREATE'">
                         <div class="col-md-12">
                             <div class="col-sm-12" style="margin-bottom: 20px">
                                 <div class="col-sm-3">
@@ -386,8 +388,17 @@
                         <div class="col-sm-1">
                             <button ng-click="newStorageConnectorCtrl.createStorageConnector()"
                                     class="btn btn-default btn-success"
+                                    ng-if="newStorageConnectorCtrl.storageConnectorOperation === 'CREATE'"
                             >
                                 Create
+                                <i ng-if="newStorageConnectorCtrl.working" style="margin-top: 2px"
+                                   class="fa fa-spinner fa-spin pull-right"></i>
+                            </button>
+                            <button ng-click="newStorageConnectorCtrl.updateStorageConnector()"
+                                    class="btn btn-default btn-success"
+                                    ng-if="newStorageConnectorCtrl.storageConnectorOperation === 'UPDATE'"
+                            >
+                                Update
                                 <i ng-if="newStorageConnectorCtrl.working" style="margin-top: 2px"
                                    class="fa fa-spinner fa-spin pull-right"></i>
                             </button>

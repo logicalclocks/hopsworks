@@ -87,6 +87,7 @@ public class FeaturegroupController {
    * @throws HopsSecurityException
    * @throws SQLException
    */
+  @TransactionAttribute(TransactionAttributeType.NEVER)
   public FeaturegroupDTO clearFeaturegroup(Featurestore featurestore, FeaturegroupDTO featuregroupDTO, Users user)
       throws FeaturestoreException, HopsSecurityException, SQLException {
     switch (featuregroupDTO.getFeaturegroupType()) {

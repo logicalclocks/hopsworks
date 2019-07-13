@@ -76,6 +76,12 @@ angular.module('hopsWorksApp')
             self.hopsfsConnectorType = self.settings.hopsfsConnectorType
             self.featuregroupType = self.settings.featuregroupType
             self.trainingDatasetType = self.settings.trainingDatasetType
+            self.featurestoreUtil4jMainClass = self.settings.featurestoreUtil4jMainClass
+            self.featurestoreUtilPythonMainClass = self.settings.featurestoreUtilPythonMainClass
+            self.featurestoreUtil4JExecutable = self.settings.featurestoreUtil4jExecutable
+            self.featurestoreUtilPythonExecutable = self.settings.featurestoreUtilPythonExecutable
+            self.sparkJobType = "SPARK"
+            self.pySparkJobType = "PYSPARK"
 
             //Input Variables
             self.trainingDatasetName = ""
@@ -310,34 +316,6 @@ angular.module('hopsWorksApp')
                     self.showCart = false
                 } else {
                     self.showCart = true
-                }
-            }
-
-            /**
-             * Gets the human readable time of creation for a feature
-             *
-             * @param date the feature date
-             * @returns {string}
-             */
-            self.getFeatureTime = function (date) {
-                if (date != null) {
-                    return FeaturestoreService.formatTime(date)
-                } else {
-                    return '-'
-                }
-            }
-
-            /**
-             * Gets the human readable date of creation for a feature
-             *
-             * @param date the feature date
-             * @returns {string}
-             */
-            self.getFeatureDate = function (date) {
-                if (date != null) {
-                    return FeaturestoreService.formatDate(date)
-                } else {
-                    return '-'
                 }
             }
 
@@ -619,76 +597,97 @@ angular.module('hopsWorksApp')
                     "hopsfsConnectorId" : self.selectedHopsfsConnector.id,
                     "hopsfsConnectorName" : self.selectedHopsfsConnector.name
                 }
-                var runConfig = self.setupHopsworksCreateTdJob(jobName)
-                JobService.putJob(self.projectId, runConfig).then(
+                var utilArgs = self.setupJobArgs(jobName + "_args.json")
+                FeaturestoreService.writeUtilArgstoHdfs(self.projectId, utilArgs).then(
                     function (success) {
-                        growl.success("Spark Job for Creating Training Dataset Configured", {
-                            title: 'Success',
-                            ttl: 1000
-                        });
-                        FeaturestoreService.createTrainingDataset(self.projectId, trainingDatasetJson, self.featurestore).then(
+                        growl.success("Featurestore util args written to HDFS", {title: 'Success', ttl: 1000});
+                        var hdfsPath = success.data.successMessage
+                        var runConfig = self.setupHopsworksCreateTdJob(jobName, hdfsPath)
+                        JobService.putJob(self.projectId, runConfig).then(
                             function (success) {
-                                self.working = false;
-                                growl.success("New training dataset created", {title: 'Success', ttl: 1000});
-                                JobService.setJobFilter(jobName);
-                                self.goToUrl("jobs")
+                                growl.success("Spark Job for Creating Training Dataset Configured", {
+                                    title: 'Success',
+                                    ttl: 1000
+                                });
+                                FeaturestoreService.createTrainingDataset(self.projectId, trainingDatasetJson, self.featurestore).then(
+                                    function (success) {
+                                        self.working = false;
+                                        growl.success("New training dataset created", {title: 'Success', ttl: 1000});
+                                        JobService.setJobFilter(jobName);
+                                        self.goToUrl("jobs")
+                                    }, function (error) {
+                                        growl.error(error.data.errorMsg, {
+                                            title: 'Failed to create training dataset',
+                                            ttl: 15000
+                                        });
+                                        self.working = false;
+                                    });
+                                growl.info("Creating new training dataset... wait", {title: 'Creating', ttl: 1000})
                             }, function (error) {
                                 growl.error(error.data.errorMsg, {
-                                    title: 'Failed to create training dataset',
-                                    ttl: 15000
+                                    title: 'Failed to configure spark job for creating the' +
+                                    ' training dataset', ttl: 15000
                                 });
                                 self.working = false;
                             });
-                        growl.info("Creating new training dataset... wait", {title: 'Creating', ttl: 1000})
                     }, function (error) {
                         growl.error(error.data.errorMsg, {
-                            title: 'Failed to configure spark job for creating the' +
-                                ' training dataset', ttl: 15000
+                            title: 'Failed to setup featurestore util job arguments',
+                            ttl: 15000
                         });
                         self.working = false;
                     });
+                growl.info("Settings up job arguments... wait", {title: 'Creating', ttl: 1000})
             };
 
-            self.setupHopsworksCreateTdJob = function (jobName) {
+            /**
+             * Sets up the JSON input arguments for a job to create a new training dataset using the Feature Store API
+             * and Spark
+             *
+             * @param fileName name of the file to save the JSON
+             * @returns the configured JSON
+             */
+            self.setupJobArgs = function(fileName) {
+                var argsJson = {
+                    "operation": "create_td",
+                    "featurestore": self.featurestore.featurestoreName,
+                    "features": self.featureBasket,
+                    "featuregroups": self.queryPlan.featuregroups,
+                    "trainingDataset": self.trainingDatasetName,
+                    "dataFormat": self.trainingDatasetFormat,
+                    "version": 1,
+                    "joinKey": self.queryPlan.joinKey,
+                    "description": self.trainingDatasetDoc,
+                    "fileName": fileName,
+                    "descriptiveStats": false,
+                    "featureCorrelation": false,
+                    "clusterAnalysis": false,
+                    "featureHistograms": false,
+                    "statColumns": []
+                }
+                return argsJson
+            }
+
+            /**
+             * Sets up the job configuration for creating a training dataset using Spark and the Featurestore API
+             *
+             * @param jobName name of the job
+             * @param argsPath HDSF path to the input arguments
+             * @returns the configured json
+             */
+            self.setupHopsworksCreateTdJob = function (jobName, argsPath) {
                 var path = ""
                 var mainClass = ""
                 var jobType = ""
                 if (self.trainingDatasetFormat == "petastorm" || self.trainingDatasetFormat == "npy") {
-                    path = "hdfs:///Projects/" + self.projectName + "/Resources/featurestore_util.py"
-                    mainClass = "org.apache.spark.deploy.PythonRunner"
-                    jobType = "PYSPARK"
+                    path = self.featurestoreUtilPythonExecutable
+                    mainClass = self.settings.featurestoreUtilPythonMainClass
+                    jobType = self.pySparkJobType
                 } else {
-                    path = "hdfs:///Projects/" + self.projectName +
-                        "/Resources/hops-examples-featurestore-util4j-1.0.0-SNAPSHOT.jar"
-                    mainClass = "io.hops.examples.featurestore_util4j.Main"
-                    jobType = "SPARK"
+                    path = self.featurestoreUtil4JExecutable
+                    mainClass = self.settings.featurestoreUtil4jMainClass
+                    jobType = self.sparkJobType
                 }
-                var cmdArgs = ""
-                cmdArgs = cmdArgs + "--operation create_td "
-                cmdArgs = cmdArgs + "--featurestore " + self.featurestore.featurestoreName + " ";
-                cmdArgs = cmdArgs + "--features "
-                for (var j = 0; j < self.featureBasket.length; j++) {
-                    cmdArgs = cmdArgs + self.featureBasket[j].name
-                    if (j < self.featureBasket.length - 1) {
-                        cmdArgs = cmdArgs + ","
-                    } else {
-                        cmdArgs = cmdArgs + " "
-                    }
-                }
-                cmdArgs = cmdArgs + "--featuregroups "
-                for (var j = 0; j < self.queryPlan.featuregroups.length; j++) {
-                    cmdArgs = cmdArgs + self.queryPlan.featuregroups[j].name + ":" + self.queryPlan.featuregroups[j].version
-                    if (j < self.queryPlan.featuregroups.length - 1) {
-                        cmdArgs = cmdArgs + ","
-                    } else {
-                        cmdArgs = cmdArgs + " "
-                    }
-                }
-                cmdArgs = cmdArgs + "--trainingdataset " + self.trainingDatasetName + " "
-                cmdArgs = cmdArgs + "--version 1 "
-                cmdArgs = cmdArgs + "--dataformat " + self.trainingDatasetFormat + " "
-                cmdArgs = cmdArgs + "--joinkey " + self.queryPlan.joinKey + " "
-                cmdArgs = cmdArgs + "--description " + self.trainingDatasetDoc
                 var runConfig = {
                     type: "sparkJobConfiguration",
                     appName: jobName,
@@ -698,7 +697,7 @@ angular.module('hopsWorksApp')
                     jobType: jobType,
                     appPath: path,
                     mainClass: mainClass,
-                    args: cmdArgs,
+                    args: "--input " + argsPath,
                     "spark.blacklist.enabled": false,
                     "spark.dynamicAllocation.enabled": true,
                     "spark.dynamicAllocation.initialExecutors": 1,
@@ -720,6 +719,15 @@ angular.module('hopsWorksApp')
              */
             self.setSinkType = function (sinkType) {
                 self.sinkType = sinkType
+            }
+
+            /**
+             * Returns a formatted date string
+             *
+             * @param dateStr the date string to format
+             */
+            self.createdOn = function(dateStr) {
+                return FeaturestoreService.formatDateAndTime(new Date(dateStr))
             }
 
             /**

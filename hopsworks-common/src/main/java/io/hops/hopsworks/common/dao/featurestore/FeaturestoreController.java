@@ -18,17 +18,33 @@ package io.hops.hopsworks.common.dao.featurestore;
 
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetType;
+import io.hops.hopsworks.common.dao.featurestore.app.FeaturestoreUtilJobDTO;
+import io.hops.hopsworks.common.dao.featurestore.settings.FeaturestoreClientSettingsDTO;
 import io.hops.hopsworks.common.dao.featurestore.storageconnector.hopsfs.FeaturestoreHopsfsConnectorController;
 import io.hops.hopsworks.common.dao.featurestore.storageconnector.jdbc.FeaturestoreJdbcConnectorController;
-import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFlag;
+import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
+import io.hops.hopsworks.common.hdfs.DistributedFsService;
+import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.restutils.RESTCodes;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.Path;
+import org.eclipse.persistence.jaxb.JAXBContextFactory;
+import org.eclipse.persistence.jaxb.MarshallerProperties;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.ws.rs.core.MediaType;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+import java.io.IOException;
+import java.io.StringWriter;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -45,11 +61,19 @@ public class FeaturestoreController {
   @EJB
   private ActivityFacade activityFacade;
   @EJB
-  private InodeFacade inodeFacade;
-  @EJB
   private FeaturestoreJdbcConnectorController featurestoreJdbcConnectorController;
   @EJB
   private FeaturestoreHopsfsConnectorController featurestoreHopsfsConnectorController;
+  @EJB
+  private HdfsUsersController hdfsUsersController;
+  @EJB
+  private DistributedFsService distributedFsService;
+
+  private static JAXBContext featurestoreUtilJobArgsJaxbContext = null;
+  private static Marshaller featurestoreUtilJobArgsMarshaller = null;
+  private static final String FEATURESTORE_UTIL_ARGS_PATH = Path.SEPARATOR + Settings.DIR_ROOT + Path.SEPARATOR
+      + "%s" + Path.SEPARATOR + FeaturestoreClientSettingsDTO.FEATURESTORE_UTIL_4J_ARGS_DATASET + Path.SEPARATOR + "%s";
+  private static final String HDFS_FILE_PATH = "hdfs://%s";
   
 
   /**
@@ -155,11 +179,12 @@ public class FeaturestoreController {
     featurestoreFacade.persist(featurestore);
     activityFacade.persistActivity(ActivityFacade.CREATED_FEATURESTORE +
         featurestoreName, project, project.getOwner(), ActivityFlag.SERVICE);
-    featurestoreJdbcConnectorController.createJdbcConnectorForFeaturestore(featurestore,
-      getFeaturestoreDbName(project));
+    featurestoreJdbcConnectorController.createDefaultJdbcConnectorForFeaturestore(featurestore,
+      getFeaturestoreDbName(project), "JDBC connection to Hopsworks Project Feature Store Hive Database");
     activityFacade.persistActivity(ActivityFacade.ADDED_FEATURESTORE_STORAGE_CONNECTOR +
       getFeaturestoreDbName(project), project, project.getOwner(), ActivityFlag.SERVICE);
-    featurestoreJdbcConnectorController.createJdbcConnectorForHiveWarehouse(featurestore, project.getName());
+    featurestoreJdbcConnectorController.createDefaultJdbcConnectorForFeaturestore(featurestore, project.getName(),
+      "JDBC connection to Hopsworks Project Hive Warehouse");
     activityFacade.persistActivity(ActivityFacade.ADDED_FEATURESTORE_STORAGE_CONNECTOR +
       project.getName(), project, project.getOwner(), ActivityFlag.SERVICE);
     featurestoreHopsfsConnectorController.createHopsFsBackendForFeaturestoreConnector(featurestore,
@@ -197,6 +222,67 @@ public class FeaturestoreController {
    */
   public String getFeaturestoreDbName(Project project) {
     return project.getName() + "_featurestore";
+  }
+
+
+  /**
+   * Writes JSON input for featurestore Util Job to HDFS as a JSON file
+   *
+   * @param user           user making the request
+   * @param project        project of the user
+   * @param featurestoreUtilJobDTO     the JSON DTO
+   * @return HDFS path where the JSON file was written
+   * @throws FeaturestoreException
+   * @throws JAXBException
+   */
+  public String writeUtilArgsToHdfs(Users user, Project project, FeaturestoreUtilJobDTO featurestoreUtilJobDTO)
+      throws FeaturestoreException, JAXBException {
+    if(featurestoreUtilJobArgsMarshaller == null){
+      try {
+        featurestoreUtilJobArgsJaxbContext =
+            JAXBContextFactory.createContext(new Class[]{FeaturestoreUtilJobDTO.class}, null);
+        featurestoreUtilJobArgsMarshaller = featurestoreUtilJobArgsJaxbContext.createMarshaller();
+        featurestoreUtilJobArgsMarshaller.setProperty(MarshallerProperties.JSON_INCLUDE_ROOT, false);
+        featurestoreUtilJobArgsMarshaller.setProperty(MarshallerProperties.MEDIA_TYPE, MediaType.APPLICATION_JSON);
+      } catch (JAXBException e) {
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_INITIALIZATION_ERROR,
+            Level.SEVERE, "Error initialization feature store controller");
+      }
+    }
+    StringWriter sw = new StringWriter();
+    featurestoreUtilJobArgsMarshaller.marshal(featurestoreUtilJobDTO, sw);
+    Path hdfsPath = new Path(String.format(FEATURESTORE_UTIL_ARGS_PATH, project.getName(),
+        featurestoreUtilJobDTO.getFileName()));
+    writeToHDFS(project, user, hdfsPath, sw.toString());
+    return String.format(HDFS_FILE_PATH, hdfsPath.toString());
+  }
+
+  /**
+   * Writes a string to a new file in HDFS
+   *
+   * @param project              project of the user
+   * @param user                 user making the request
+   * @param path2file            the hdfs path
+   * @param content              the content to write
+   * @throws FeaturestoreException
+   */
+  private void writeToHDFS(Project project, Users user, Path path2file, String content) throws FeaturestoreException {
+    String hdfsUsername = hdfsUsersController.getHdfsUserName(project, user);
+    DistributedFileSystemOps udfso = null;
+    try {
+      udfso = distributedFsService.getDfsOps(hdfsUsername);
+      try (FSDataOutputStream outStream = udfso.create(path2file)) {
+        outStream.writeChars(content);
+        outStream.hflush();
+      } catch (IOException ex) {
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_UTIL_ARGS_FAILURE,
+            Level.WARNING, "Failed to write featurestore util args to HDFS",  ex.getMessage(), ex);
+      }
+    } finally {
+      if (udfso != null) {
+        distributedFsService.closeDfsClient(udfso);
+      }
+    }
   }
 
 }

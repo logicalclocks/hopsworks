@@ -92,6 +92,18 @@ public class FeaturestoreHopsfsConnectorFacade extends AbstractFacade<Featuresto
   }
 
   /**
+   * Updates a hopsfs connector
+   *
+   * @param featurestoreHopsfsConnector the hopsfs connector to update
+   * @return the updated connector
+   */
+  public FeaturestoreHopsfsConnector updateHopsfsConnector(
+      FeaturestoreHopsfsConnector featurestoreHopsfsConnector) {
+    em.merge(featurestoreHopsfsConnector);
+    return featurestoreHopsfsConnector;
+  }
+
+  /**
    * Gets the entity manager of the facade
    *
    * @return entity manager

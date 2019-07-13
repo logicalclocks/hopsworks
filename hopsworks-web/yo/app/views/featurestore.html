@@ -447,12 +447,14 @@
                                 </div>
                             </div>
 
-                            <div ng-if="featurestoreCtrl.fFilter != '' || featurestoreCtrl.featureSearchFgFilter != '' || featurestoreCtrl.featureSearchFgVersionFilter != ''">
+                            <div>
                                 <div class="row search-result-header">
                                     <div class="col-md-11 pull-left">
-                                        <h3>{{filteredResults.length}} Results found for:
-                                            {{featurestoreCtrl.fFilter | limitTo: 85 }} {{
-                                            featurestoreCtrl.fFilter > 85 ? '...' : ''}}</h3>
+                                        <h3>{{filteredResults.length}} Results found <span
+                                                ng-if="featurestoreCtrl.fFilter != ''">
+                                        for: {{featurestoreCtrl.fFilter | limitTo: 85 }} {{featurestoreCtrl.fFilter > 85 ? '...' : ''}}
+                                        </span>
+                                        </h3>
                                     </div>
                                 </div>
                                 <table class="table table-hover">
@@ -460,24 +462,20 @@
                                     <tr>
                                         <th style="width: 15%"
                                             class="fs-table">
-                                            Date
-                                        </th>
-                                        <th style="width: 10%"
-                                            class="fs-table">
-                                            Time
+                                            Created
                                         </th>
                                         <th style="width: 15%"
                                             class="fs-table">
                                             Origin
                                         </th>
-                                        <th style="width: 20%"
+                                        <th style="width: 25%"
                                             class="fs-table">
                                             Name
                                         </th>
                                         <th style="width: 10%"
                                             class="fs-table"> Type
                                         </th>
-                                        <th style="width: 15%"
+                                        <th style="width: 20%"
                                             class="fs-table">
                                             Feature Group/Training Dataset
                                         </th>
@@ -496,31 +494,25 @@
                                             dir-paginate="result in ((filteredResults = (featurestoreCtrl.features | orderBy:featurestoreCtrl.featuresSortKey:featurestoreCtrl.featuresReverse | dateRangeFilterFeatures : featurestoreCtrl.featuresFromDate : featurestoreCtrl.featuresToDate | filter: (!featurestoreCtrl.searchInFeaturegroups || '') && { entity: '!' + featurestoreCtrl.featuregroupType} | filter: (!featurestoreCtrl.searchInTrainingDatasets || '') && { entity: '!' + featurestoreCtrl.trainingDatasetType} | filter:{name:featurestoreCtrl.fFilter}:false | featureSearchFilterByFg:featurestoreCtrl.featureSearchFgFilter:false | featureSearchFilterByFgVersion:featurestoreCtrl.featureSearchFgVersionFilter:false)) | itemsPerPage:featurestoreCtrl.featuresPageSize)"
                                             class="fs-table">
                                         <td class="fs-table">
-                                            <i class="glyphicon glyphicon-calendar"></i>
-                                            <span>{{featurestoreCtrl.getFeatureDate(result.date)}}</span>
+                                            {{featurestoreCtrl.createdOn(result.date)}}
                                         </td>
                                         <td class="fs-table">
-                                            <i class="glyphicon glyphicon-time"></i>
-                                            <span>{{featurestoreCtrl.getFeatureTime(result.date)}}</span>
-                                            </span>
-                                        </td>
-                                        <td class="fs-table">
-                                            <span ng-if="result.entity == 'Feature Group'">
+                                            <span ng-if="result.entity === 1">
                                                 <i class="glyphicon glyphicon-tags"></i>
-                                                <span> Feature in Feature Group</span>
+                                                <span style="margin-left:5px"> Feature in Feature Group</span>
                                             </span>
-                                            <span ng-if="result.entity == 'Training Dataset'">
+                                            <span ng-if="result.entity === 0">
                                                 <i class="glyphicon glyphicon-tags"></i>
-                                                <span> Feature in Training Dataset</span>
+                                                <span style="margin-left:5px"> Feature in Training Dataset</span>
                                             </span>
                                         </td>
                                         <td class="fs-table">{{result.name}}</td>
                                         <td class="fs-table">{{result.type}}</td>
                                         <td class="fs-table">
-                                        <span ng-if="result.entity == featurestoreCtrl.featuregroupType">
+                                        <span ng-if="result.entity === 1">
                                                 {{result.featuregroup.name}}
                                         </span>
-                                            <span ng-if="result.entity == featurestoreCtrl.trainingDatasetType">
+                                            <span ng-if="result.entity === 0">
                                                 {{result.trainingDataset.name}}
                                         </span>
                                         </td>
@@ -530,7 +522,9 @@
                                                 <button uib-tooltip="Feature Details"
                                                         type="button"
                                                         class="btn btn-info btn-sm glyphicon glyphicon-eye-open"
-                                                        ng-click="featurestoreCtrl.viewFeatureInfo(result)">
+                                                        ng-click="featurestoreCtrl.viewFeatureInfo(result)"
+                                                        style="background-color:rgb(51, 122, 183); border:rgb(51, 122, 183);"
+                                                >
                                                 </button>
                                             </div>
                                         </td>
@@ -672,47 +666,21 @@
                                 </div>
                             </div>
                             <div class="col-sm-4">
-
-                                <div class="fs_card card card-block text-center docs_link">
-                                    <h4 class="fs_card card-title fs_card_title" style="color:#555">Documentation</h4>
-                                    <p>
-                                        <a class="third after fs-doc-link"
-                                           href="https://hopsworks.readthedocs.io/en/0.9/user_guide/hopsworks/featurestore.html">
-                                            General Documentation
-                                        </a>
-                                    </p>
-                                    <p>
-                                        <a class="third after fs-doc-link" href="http://hops-py.logicalclocks.com/">
-                                            Python API
-                                        </a>
-                                    </p>
-                                    <p>
-                                        <a class="third after fs-doc-link"
-                                           href="http://snurran.sics.se/hops/hops-util-javadoc/0.10.0/">
-                                            Java/Scala API
-                                        </a>
-                                    </p>
-                                    <p>
-                                        <a class="third after fs-doc-link"
-                                           href="https://github.com/logicalclocks/hops-examples">
-                                            Examples
-                                        </a>
-                                    </p>
+                                <div id="quotaChart"
+                                     ng-if="featurestoreCtrl.featurestoreHdfsQuota() != null"
+                                     style="margin-left:150px">
+                                </div>
+                                <div style="margin-top:40px">
+                                    <small class="text-muted" ng-if="featurestoreCtrl.featurestoreHdfsQuota() != null"
+                                           style="margin-left:130px;">
+                                        {{featurestoreCtrl.featurestoreHdfsUsage()}} of
+                                        {{featurestoreCtrl.featurestoreHdfsQuota()}} used (project Feature Store quota).
+                                    </small>
                                 </div>
                             </div>
                         </div>
                         <div class="row" style="margin-top:15px">
-                            <div id="quotaChart"
-                                 ng-if="featurestoreCtrl.featurestoreHdfsQuota() != null"
-                                 style="margin-left:150px">
-                            </div>
-                            <div style="margin-top:40px">
-                                <small class="text-muted" ng-if="featurestoreCtrl.featurestoreHdfsQuota() != null"
-                                       style="margin-left:130px;">
-                                    {{featurestoreCtrl.featurestoreHdfsUsage()}} of
-                                    {{featurestoreCtrl.featurestoreHdfsQuota()}} used (project Feature Store quota).
-                                </small>
-                            </div>
+
                         </div>
                     </div>
                 </uib-tab>
@@ -816,9 +784,15 @@
                                             ng-click="featurestoreCtrl.deleteStorageConnector(connector)"></button>
                                     <button uib-tooltip="Storage Connector Details"
                                             type="button"
-                                            class="btn btn-info btn-sm glyphicon glyphicon-eye-open"
-                                            ng-click="featurestoreCtrl.viewStorageConnectorInfo(connector)">
+                                            class="btn btn-info glyphicon glyphicon-eye-open"
+                                            ng-click="featurestoreCtrl.viewStorageConnectorInfo(connector)"
+                                            style="background-color:rgb(51, 122, 183); border:rgb(51, 122, 183);"
+                                    >
                                     </button>
+                                    <button class="btn btn-info glyphicon glyphicon-edit" uib-tooltip="Edit"
+                                            style="margin-right:-3px"
+                                            ng-disabled="connector.canDelete"
+                                            ng-click="featurestoreCtrl.updateStorageConnector(connector); $event.stopPropagation();"></button>
                                 </div>
                             </td>
                         </tr>

@@ -1180,7 +1180,7 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
             },
-            viewFeaturegroupStatistics: function (size, projectId, featuregroup, projectName, featurestore) {
+            viewFeaturegroupStatistics: function (size, projectId, featuregroup, projectName, featurestore, settings) {
                 var modalInstance = $uibModal.open({
                     templateUrl: 'views/featuregroupStatistics.html',
                     controller: 'featuregroupStatisticsCtrl as featuregroupStatisticsCtrl',
@@ -1208,6 +1208,9 @@ angular.module('hopsWorksApp')
                         },
                         featurestore: function () {
                             return featurestore;
+                        },
+                        settings: function () {
+                            return settings;
                         }
                     }
                 });
@@ -1250,7 +1253,7 @@ angular.module('hopsWorksApp')
                 return modalInstance.result;
             },
             updateFeaturestoreStatistic: function (size, projectId, featuregroup, trainingDataset, projectName,
-                                                   featurestore) {
+                                                   featurestore, settings) {
                 var modalInstance = $uibModal.open({
                     templateUrl: 'views/featurestoreUpdateStatisticModal.html',
                     controller: 'updateFeaturestoreStatisticModalCtrl as updateFeaturestoreStatisticModalCtrl',
@@ -1281,12 +1284,16 @@ angular.module('hopsWorksApp')
                         },
                         projectName: function () {
                             return projectName;
+                        },
+                        settings: function () {
+                            return settings;
                         }
                     }
                 });
                 return modalInstance.result;
             },
-            viewTrainingDatasetStatistics: function (size, projectId, trainingDataset, projectName, featurestore) {
+            viewTrainingDatasetStatistics: function (size, projectId, trainingDataset, projectName, featurestore,
+                                                     settings) {
                 var modalInstance = $uibModal.open({
                     templateUrl: 'views/trainingDatasetStatistics.html',
                     controller: 'trainingDatasetStatisticsCtrl as trainingDatasetStatisticsCtrl',
@@ -1314,6 +1321,9 @@ angular.module('hopsWorksApp')
                         },
                         projectName: function () {
                             return projectName;
+                        },
+                        settings: function () {
+                            return settings;
                         }
                     }
                 });

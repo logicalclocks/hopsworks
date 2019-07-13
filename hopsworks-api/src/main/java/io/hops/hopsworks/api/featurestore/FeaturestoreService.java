@@ -22,10 +22,12 @@ import io.hops.hopsworks.api.featurestore.trainingdataset.TrainingDatasetService
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
+import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
 import io.hops.hopsworks.common.dao.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.dao.featurestore.FeaturestoreDTO;
 import io.hops.hopsworks.common.dao.featurestore.app.FeaturestoreMetadataDTO;
+import io.hops.hopsworks.common.dao.featurestore.app.FeaturestoreUtilJobDTO;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.dao.featurestore.settings.FeaturestoreClientSettingsDTO;
@@ -35,8 +37,11 @@ import io.hops.hopsworks.common.dao.featurestore.trainingdataset.TrainingDataset
 import io.hops.hopsworks.common.dao.featurestore.trainingdataset.TrainingDatasetDTO;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
+import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.hops.hopsworks.restutils.JsonResponse;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -48,13 +53,18 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
+import javax.xml.bind.JAXBException;
 import java.util.List;
 
 /**
@@ -78,6 +88,10 @@ public class FeaturestoreService {
   private ProjectFacade projectFacade;
   @EJB
   private FeaturestoreStorageConnectorController featurestoreStorageConnectorController;
+  @EJB
+  private JWTHelper jWTHelper;
+  @EJB
+  private Settings settings;
   @Inject
   private FeaturegroupService featuregroupService;
   @Inject
@@ -156,10 +170,19 @@ public class FeaturestoreService {
   @ApiOperation(value = "Get featurestore settings",
     response = FeaturestoreClientSettingsDTO.class)
   public Response getFeaturestoreSettings() {
-    GenericEntity<FeaturestoreClientSettingsDTO> featurestoreClientSettingsDTO =
+    FeaturestoreClientSettingsDTO featurestoreClientSettingsDTO = new FeaturestoreClientSettingsDTO();
+    featurestoreClientSettingsDTO.setFeaturestoreUtil4jExecutable("hdfs:///user" + org.apache.hadoop.fs.Path.SEPARATOR
+        + settings.getSparkUser() + org.apache.hadoop.fs.Path.SEPARATOR
+        + settings.getHopsExamplesFeaturestoreUtil4JFilename());
+    featurestoreClientSettingsDTO.setFeaturestoreUtilPythonExecutable("hdfs:///user"
+        + org.apache.hadoop.fs.Path.SEPARATOR
+        + settings.getSparkUser() + org.apache.hadoop.fs.Path.SEPARATOR
+        + settings.getHopsExamplesFeaturestoreUtilPythonFilename());
+    GenericEntity<FeaturestoreClientSettingsDTO> featurestoreClientSettingsDTOGeneric =
       new GenericEntity<FeaturestoreClientSettingsDTO>(new FeaturestoreClientSettingsDTO()) {
       };
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featurestoreClientSettingsDTO).build();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featurestoreClientSettingsDTOGeneric)
+        .build();
   }
 
   /**
@@ -281,6 +304,26 @@ public class FeaturestoreService {
     }
     featurestoreStorageConnectorService.setFeaturestoreId(featurestoreId);
     return featurestoreStorageConnectorService;
+  }
+
+  /**
+   * Endpoint for uploading job-arguments to hdfs for featurestore utility jobs
+   **
+   * @return HDFS path to the uploaded arguments
+   */
+  @POST
+  @Path("/util")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiOperation(value = "Upload json input for featurestore-util jobs")
+  public Response newFeaturestoreUtil(@Context SecurityContext sc, FeaturestoreUtilJobDTO featurestoreUtilJobDTO)
+      throws FeaturestoreException, JAXBException {
+    Users user = jWTHelper.getUserPrincipal(sc);
+    String hdfsPath = featurestoreController.writeUtilArgsToHdfs(user, project, featurestoreUtilJobDTO);
+    JsonResponse jsonResponse = noCacheResponse.buildJsonResponse(Response.Status.OK, hdfsPath);
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(jsonResponse).build();
   }
 
 }

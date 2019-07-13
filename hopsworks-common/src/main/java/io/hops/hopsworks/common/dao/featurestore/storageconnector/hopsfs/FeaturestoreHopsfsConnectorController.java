@@ -18,11 +18,11 @@ package io.hops.hopsworks.common.dao.featurestore.storageconnector.hopsfs;
 
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
-import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
 import io.hops.hopsworks.common.dao.featurestore.settings.FeaturestoreClientSettingsDTO;
 import io.hops.hopsworks.common.dao.featurestore.storageconnector.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
+import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.restutils.RESTCodes;
 
@@ -30,7 +30,6 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import java.util.List;
 import java.util.logging.Level;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -43,10 +42,10 @@ public class FeaturestoreHopsfsConnectorController {
   @EJB
   private InodeFacade inodeFacade;
   @EJB
-  private DatasetFacade datasetFacade;
+  private DatasetController datasetController;
   
   /**
-   * Creates a HopsFS storage backend for a feature store
+   * Creates a HopsFS storage connector for a feature store
    *
    * @param featurestore the featurestore
    * @param featurestoreHopsfsConnectorDTO the input data to use when creating the connector
@@ -55,8 +54,8 @@ public class FeaturestoreHopsfsConnectorController {
   public FeaturestoreHopsfsConnectorDTO createFeaturestoreHopsfsConnector(
       Featurestore featurestore, FeaturestoreHopsfsConnectorDTO featurestoreHopsfsConnectorDTO) {
     verifyUserInput(featurestore, featurestoreHopsfsConnectorDTO);
-    Dataset dataset = datasetFacade.findByNameAndProjectId(featurestore.getProject(),
-        featurestoreHopsfsConnectorDTO.getDatasetName());
+    Dataset dataset = datasetController.getByProjectAndDsName(featurestore.getProject(),
+        null, featurestoreHopsfsConnectorDTO.getDatasetName());
     FeaturestoreHopsfsConnector featurestoreHopsfsConnector = new FeaturestoreHopsfsConnector();
     featurestoreHopsfsConnector.setName(featurestoreHopsfsConnectorDTO.getName());
     featurestoreHopsfsConnector.setDescription(featurestoreHopsfsConnectorDTO.getDescription());
@@ -64,6 +63,42 @@ public class FeaturestoreHopsfsConnectorController {
     featurestoreHopsfsConnector.setFeaturestore(featurestore);
     featurestoreHopsfsConnectorFacade.persist(featurestoreHopsfsConnector);
     return convertHopsfsConnectorToDTO(featurestoreHopsfsConnector);
+  }
+
+  /**
+   * Updates a HopsFS storage connector for a feature store
+   *
+   * @param featurestore the featurestore
+   * @param featurestoreHopsfsConnectorDTO the input data to use when updating the connector
+   * @param storageConnectorId id of the storage connector to update
+   * @returns a DTO representing the updated entity
+   * @throws FeaturestoreException FeaturestoreException
+   */
+  public FeaturestoreHopsfsConnectorDTO updateFeaturestoreHopsfsConnector(
+      Featurestore featurestore, FeaturestoreHopsfsConnectorDTO featurestoreHopsfsConnectorDTO,
+      Integer storageConnectorId) throws FeaturestoreException {
+    FeaturestoreHopsfsConnector featurestoreHopsfsConnector = verifyHopsfStorageConnectorId(storageConnectorId,
+        featurestore);
+    if(!Strings.isNullOrEmpty(featurestoreHopsfsConnectorDTO.getDatasetName())){
+      verifyHopsfsConnectorDatasetName(featurestoreHopsfsConnectorDTO.getDatasetName(), featurestore);
+      Dataset dataset = datasetController.getByProjectAndDsName(featurestore.getProject(),
+          null, featurestoreHopsfsConnectorDTO.getDatasetName());
+      featurestoreHopsfsConnector.setHopsfsDataset(dataset);
+    }
+    if(!Strings.isNullOrEmpty(featurestoreHopsfsConnectorDTO.getName())){
+      verifyHopsfsConnectorName(featurestoreHopsfsConnectorDTO.getName(), featurestore, true);
+      featurestoreHopsfsConnector.setName(featurestoreHopsfsConnectorDTO.getName());
+    }
+    if(!Strings.isNullOrEmpty(featurestoreHopsfsConnectorDTO.getDescription())){
+      verifyHopsfsConnectorDescription(featurestoreHopsfsConnectorDTO.getDescription());
+      featurestoreHopsfsConnector.setDescription(featurestoreHopsfsConnectorDTO.getDescription());
+    }
+    if(featurestore != null) {
+      featurestoreHopsfsConnector.setFeaturestore(featurestore);
+    }
+    FeaturestoreHopsfsConnector updatedFeaturestoreHopsfsConnector =
+        featurestoreHopsfsConnectorFacade.updateHopsfsConnector(featurestoreHopsfsConnector);
+    return convertHopsfsConnectorToDTO(updatedFeaturestoreHopsfsConnector);
   }
   
   /**
@@ -96,6 +131,97 @@ public class FeaturestoreHopsfsConnectorController {
     featurestoreHopsfsConnectorFacade.remove(featurestoreHopsfsConnector);
     return featurestoreHopsfsConnectorDTO;
   }
+
+  /**
+   * Verifies that the id exists in the database
+   *
+   * @param storageConnectorId the id to verfiy
+   * @return the storage connector with the given id
+   * @throws FeaturestoreException
+   */
+  private FeaturestoreHopsfsConnector verifyHopsfStorageConnectorId(
+      Integer storageConnectorId, Featurestore featurestore) throws FeaturestoreException {
+    FeaturestoreHopsfsConnector featurestoreHopsfsConnector =
+        featurestoreHopsfsConnectorFacade.findByIdAndFeaturestore(storageConnectorId, featurestore);
+    if (featurestoreHopsfsConnector == null) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.HOPSFS_CONNECTOR_NOT_FOUND,
+          Level.FINE, "HopsFsConnectorId: " + storageConnectorId);
+    }
+    return featurestoreHopsfsConnector;
+  }
+
+  /**
+   * Verify user input name
+   *
+   * @param name the user input to verify
+   * @param featurestore the featurestore to query
+   * @param edit boolean flag whether the validation if for updating an existing connector or creating a new one
+   */
+  private void verifyHopsfsConnectorName(String name, Featurestore featurestore, Boolean edit){
+    if (Strings.isNullOrEmpty(name)) {
+      throw new IllegalArgumentException(
+          RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_NAME.getMessage() +
+              ", the storage connector name cannot be empty");
+    }
+
+    if(name.length() >
+        FeaturestoreClientSettingsDTO.STORAGE_CONNECTOR_NAME_MAX_LENGTH) {
+      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_NAME.getMessage()
+          + ", the name should be less than " +
+          FeaturestoreClientSettingsDTO.STORAGE_CONNECTOR_NAME_MAX_LENGTH + " characters.");
+    }
+
+    if(!edit){
+      if(featurestore.getHopsfsConnections().stream()
+          .anyMatch(hopsfsCon -> hopsfsCon.getName().equalsIgnoreCase(name))) {
+        throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_NAME.getMessage()
+            + ", the storage connector name should be unique, there already exists a HopsFS connector " +
+            "with the same name ");
+      }
+    }
+  }
+
+  /**
+   * Verify user featurestore
+   *
+   * @param featurestore the user input to verify
+   */
+  private void verifyFeaturestoreInput(Featurestore featurestore){
+    if (featurestore == null) {
+      throw new IllegalArgumentException("Featurestore was not found");
+    }
+  }
+
+  /**
+   * Verify user input description
+   *
+   * @param description the user input to verify
+   */
+  private void verifyHopsfsConnectorDescription(String description) {
+    if(description.length() >
+        FeaturestoreClientSettingsDTO.STORAGE_CONNECTOR_DESCRIPTION_MAX_LENGTH) {
+      throw new IllegalArgumentException(
+          RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_DESCRIPTION.getMessage() +
+              ", the description should be less than: "
+              + FeaturestoreClientSettingsDTO.STORAGE_CONNECTOR_DESCRIPTION_MAX_LENGTH);
+    }
+  }
+
+  /**
+   * Verify user input dataset name
+   *
+   * @param datasetName the user input to verify
+   * @param featurestore the featurestore to query
+   */
+  private void verifyHopsfsConnectorDatasetName(String datasetName, Featurestore featurestore){
+    Dataset dataset = datasetController.getByProjectAndDsName(featurestore.getProject(),
+        null, datasetName);
+    if(dataset == null){
+      throw new IllegalArgumentException(
+          RESTCodes.FeaturestoreErrorCode.ILLEGAL_HOPSFS_CONNECTOR_DATASET.getMessage() +
+              ", the dataset could not be found");
+    }
+  }
   
   /**
    * Validates user input for creating a new HopsFS connector in a featurestore
@@ -103,54 +229,15 @@ public class FeaturestoreHopsfsConnectorController {
    * @param featurestore the featurestore
    * @param featurestoreHopsfsConnectorDTO the input data to use when creating the connector
    */
-  public void verifyUserInput(Featurestore featurestore,
+  private void verifyUserInput(Featurestore featurestore,
                               FeaturestoreHopsfsConnectorDTO featurestoreHopsfsConnectorDTO) {
-    if (featurestore == null) {
-      throw new IllegalArgumentException("Featurestore was not found");
-    }
-
     if (featurestoreHopsfsConnectorDTO == null) {
       throw new IllegalArgumentException("Input data is null");
     }
-    
-    if (Strings.isNullOrEmpty(featurestoreHopsfsConnectorDTO.getName())) {
-      throw new IllegalArgumentException(
-        RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_NAME.getMessage() + ", the storage connector name " +
-          "cannot be empty");
-    }
-  
-    Pattern namePattern = Pattern.compile(FeaturestoreClientSettingsDTO.FEATURESTORE_REGEX);
-  
-    if(featurestoreHopsfsConnectorDTO.getName().length() >
-      FeaturestoreClientSettingsDTO.STORAGE_CONNECTOR_NAME_MAX_LENGTH
-      || !namePattern.matcher(featurestoreHopsfsConnectorDTO.getName()).matches()) {
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_NAME.getMessage()
-        + ", the name should be less than " +
-        FeaturestoreClientSettingsDTO.STORAGE_CONNECTOR_NAME_MAX_LENGTH + " characters and match " +
-        "the regular expression: " +  FeaturestoreClientSettingsDTO.FEATURESTORE_REGEX);
-    }
-  
-    if(featurestore.getHopsfsConnections().stream()
-      .anyMatch(hopsfsCon -> hopsfsCon.getName().equalsIgnoreCase(featurestoreHopsfsConnectorDTO.getName()))) {
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_NAME.getMessage() +
-        ", the storage connector name should be unique, there already exists a HopsFS connector with the same name ");
-    }
-  
-    if(featurestoreHopsfsConnectorDTO.getDescription().length() >
-      FeaturestoreClientSettingsDTO.STORAGE_CONNECTOR_DESCRIPTION_MAX_LENGTH) {
-      throw new IllegalArgumentException(
-        RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_DESCRIPTION.getMessage() +
-        ", the description should be less than: "
-          + FeaturestoreClientSettingsDTO.STORAGE_CONNECTOR_DESCRIPTION_MAX_LENGTH);
-    }
-    Dataset dataset = datasetFacade.findByNameAndProjectId(featurestore.getProject(),
-        featurestoreHopsfsConnectorDTO.getDatasetName());
-    if(dataset == null){
-      throw new IllegalArgumentException(
-        RESTCodes.FeaturestoreErrorCode.ILLEGAL_HOPSFS_CONNECTOR_DATASET.getMessage() +
-        ", the dataset could not be found");
-    }
-    
+    verifyFeaturestoreInput(featurestore);
+    verifyHopsfsConnectorName(featurestoreHopsfsConnectorDTO.getName(), featurestore, false);
+    verifyHopsfsConnectorDescription(featurestoreHopsfsConnectorDTO.getDescription());
+    verifyHopsfsConnectorDatasetName(featurestoreHopsfsConnectorDTO.getDatasetName(), featurestore);
   }
 
   /**
@@ -176,12 +263,8 @@ public class FeaturestoreHopsfsConnectorController {
    */
   public FeaturestoreHopsfsConnectorDTO getHopsFsConnectorWithIdAndFeaturestore(Featurestore featurestore, Integer id)
       throws FeaturestoreException {
-    FeaturestoreHopsfsConnector featurestoreHopsfsConnector =
-        featurestoreHopsfsConnectorFacade.findByIdAndFeaturestore(id, featurestore);
-    if (featurestoreHopsfsConnector == null) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.HOPSFS_CONNECTOR_NOT_FOUND,
-          Level.FINE, "HopsFsConnectorId: " + id);
-    }
+    FeaturestoreHopsfsConnector featurestoreHopsfsConnector = verifyHopsfStorageConnectorId(id,
+        featurestore);
     return convertHopsfsConnectorToDTO(featurestoreHopsfsConnector);
   }
 

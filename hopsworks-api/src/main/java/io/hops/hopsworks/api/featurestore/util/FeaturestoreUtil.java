@@ -18,9 +18,12 @@ package io.hops.hopsworks.api.featurestore.util;
 
 import io.hops.hopsworks.common.constants.auth.AllowedRoles;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
-import io.hops.hopsworks.common.dao.featurestore.feature.FeatureDTO;
+import io.hops.hopsworks.common.dao.featurestore.Featurestore;
+import io.hops.hopsworks.common.dao.featurestore.FeaturestoreEntityDTO;
 import io.hops.hopsworks.common.dao.featurestore.storageconnector.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
+import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
@@ -38,7 +41,8 @@ public class FeaturestoreUtil {
 
   @EJB
   private DatasetController datasetController;
-  private static final Logger LOGGER = Logger.getLogger(FeaturestoreUtil.class.getName());
+  @EJB
+  private ProjectTeamFacade projectTeamFacade;
 
   /**
    * Helper function that gets the Dataset where all the training dataset in the featurestore resides within the project
@@ -87,7 +91,7 @@ public class FeaturestoreUtil {
    * @throws FeaturestoreException
    */
   public void verifyUserRole(FeaturestoreEntityDTO featurestoreEntityDTO,
-                              Featurestore featurestore, Users user, Project project)
+                             Featurestore featurestore, Users user, Project project)
       throws FeaturestoreException {
     String userRole = projectTeamFacade.findCurrentRole(project, user);
     if (!featurestoreEntityDTO.getCreator().equals(user.getEmail()) &&

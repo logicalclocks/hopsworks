@@ -19,9 +19,9 @@
  */
 angular.module('hopsWorksApp')
     .controller('trainingDatasetStatisticsCtrl', ['$uibModalInstance', '$scope', 'FeaturestoreService', 'ModalService',
-        'growl', 'projectId', 'trainingDataset', 'projectName', 'featurestore',
+        'growl', 'projectId', 'trainingDataset', 'projectName', 'featurestore', 'settings',
         function ($uibModalInstance, $scope, FeaturestoreService, ModalService, growl, projectId,
-                  trainingDataset, projectName, featurestore) {
+                  trainingDataset, projectName, featurestore, settings) {
 
             /**
              * Initialize controller state
@@ -31,6 +31,7 @@ angular.module('hopsWorksApp')
             self.trainingDataset = trainingDataset;
             self.projectName = projectName;
             self.featurestore = featurestore
+            self.settings = settings;
 
             /**
              * Function for preprocessing the spark descriptive statistics to a format that is suitable to
@@ -356,7 +357,7 @@ angular.module('hopsWorksApp')
              */
             self.updateStatistics = function(){
                 ModalService.updateFeaturestoreStatistic('lg', self.projectId, trainingDataset, true, self.projectName,
-                    self.featurestore).then(
+                    self.featurestore, self.settings).then(
                     function (success) {
                         $uibModalInstance.close(success)
                     }, function (error) {

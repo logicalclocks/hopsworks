@@ -19,23 +19,35 @@
  */
 angular.module('hopsWorksApp')
     .controller('updateFeaturestoreStatisticModalCtrl', ['$uibModalInstance', '$scope', 'FeaturestoreService', 'JobService',
-        '$location', 'growl', 'projectId', 'featuregroup', 'trainingDataset', 'projectName', 'featurestore',
+        '$location', 'growl', 'projectId', 'featuregroup', 'trainingDataset', 'projectName', 'featurestore', 'settings',
         function ($uibModalInstance, $scope, FeaturestoreService, JobService, $location, growl, projectId, featuregroup,
-                  trainingDataset, projectName, featurestore) {
+                  trainingDataset, projectName, featurestore, settings) {
 
             /**
              * Initialize controller state
              */
             var self = this;
+            //Controller Inputs
             self.projectId = projectId;
             self.featuregroup = featuregroup;
             self.trainingDataset = trainingDataset
+            self.projectName = projectName;
+            self.featurestore = featurestore;
+            self.settings=settings;
+
+            //State
             self.clusterAnalysis = true
             self.featureCorrelations = true
             self.descriptiveStats = true
             self.featureHistograms = true
-            self.projectName = projectName;
-            self.featurestore = featurestore;
+
+            //Constants
+            self.featurestoreUtil4jMainClass = self.settings.featurestoreUtil4jMainClass
+            self.featurestoreUtilPythonMainClass = self.settings.featurestoreUtilPythonMainClass
+            self.featurestoreUtil4JExecutable = self.settings.featurestoreUtil4jExecutable
+            self.featurestoreUtilPythonExecutable = self.settings.featurestoreUtilPythonExecutable
+            self.sparkJobType = "SPARK"
+            self.pySparkJobType = "PYSPARK"
 
 
             /**
@@ -100,37 +112,15 @@ angular.module('hopsWorksApp')
             };
 
             /**
-             * Creates a spark job for updating the featuegroup statistics using the featurestore_util.py script
+             * Configures the job for updating the statistics
+             *
+             * @param jobName name of the job
+             * @param argsPath HDFS path to input arguments
              */
-            self.updateStatistics = function () {
-                var path = "hdfs:///Projects/" + self.projectName + "/Resources/hops-examples-featurestore-util4j-1.0.0-SNAPSHOT.jar"
-                var mainClass = "io.hops.examples.featurestore_util4j.Main"
-                var jobType = "SPARK"
-                var cmdArgs = ""
-                var jobName = ""
-                if(!self.trainingDataset){
-                    jobName = "update_featuregroup_statistics_" + self.featuregroup.name + "_" + new Date().getTime()
-                    cmdArgs = cmdArgs + "--featuregroup '" + self.featuregroup.name + "' "
-                    cmdArgs = cmdArgs + "--operation 'update_fg_stats' "
-                } else {
-                    jobName = "update_trainingdataset_statistics_" + self.featuregroup.name + "_" + new Date().getTime()
-                    cmdArgs = cmdArgs + "--trainingdataset '" + self.featuregroup.name + "' "
-                    cmdArgs = cmdArgs + "--operation 'update_td_stats' "
-                }
-                if(self.descriptiveStats){
-                    cmdArgs = cmdArgs + "--descriptivestats "
-                }
-                if(self.featureCorrelations) {
-                    cmdArgs = cmdArgs + "--featurecorrelation "
-                }
-                if(self.clusterAnalysis) {
-                    cmdArgs = cmdArgs + "--clusteranalysis "
-                }
-                if(self.featureHistograms) {
-                    cmdArgs = cmdArgs + "--featurehistograms "
-                }
-                cmdArgs = cmdArgs + "--version '" + self.featuregroup.version + "' "
-                cmdArgs = cmdArgs + "--featurestore '" + self.featurestore.featurestoreName + "' ";
+            self.setupUpdateStatsJob = function (jobName, argsPath) {
+                var path = self.featurestoreUtil4JExecutable
+                var mainClass = self.featurestoreUtil4jMainClass
+                var jobType = self.sparkJobType
                 var runConfig = {
                     type: "sparkJobConfiguration",
                     appName: jobName,
@@ -140,7 +130,7 @@ angular.module('hopsWorksApp')
                     jobType: jobType,
                     appPath: path,
                     mainClass: mainClass,
-                    args: cmdArgs,
+                    args: "--input " + argsPath,
                     "spark.blacklist.enabled": false,
                     "spark.dynamicAllocation.enabled": true,
                     "spark.dynamicAllocation.initialExecutors": 1,
@@ -150,20 +140,77 @@ angular.module('hopsWorksApp')
                     "spark.executor.gpus": 0,
                     "spark.executor.instances": 1,
                     "spark.executor.memory": 4000,
-                    "spark.tensorflow.num.ps": 0,
+                    "spark.tensorflow.num.ps": 0
                 }
-                JobService.putJob(self.projectId, runConfig).then(
-                    function (success) {
-                        self.working = false;
-                        JobService.setJobFilter(jobName);
-                        $uibModalInstance.close(success)
-                        self.goToUrl("jobs")
-                        growl.success("Spark job for Updating the statistics configured", {title: 'Success', ttl: 1000});
-                    }, function (error) {
-                        growl.error(error.data.errorMsg, {title: 'Failed to configure spark job for updating the' +
-                        ' statistics', ttl: 15000});
-                        self.working = false;
-                    });
+                return runConfig
             }
 
+            /**
+             * Configures the JSON input to the job for updating the statistics
+             *
+             * @param fileName name of the file to save the JSON
+             * @param operation the operation name
+             * @returns the configured JSON
+             */
+            self.setupJobArgs = function (fileName, operation) {
+                var argsJson = {
+                    "operation": operation,
+                    "featurestore": self.featurestore.featurestoreName,
+                    "version": self.featuregroup.version,
+                    "fileName": fileName,
+                    "descriptiveStats": self.descriptiveStats,
+                    "featureCorrelation": self.featureCorrelations,
+                    "clusterAnalysis": self.clusterAnalysis,
+                    "featureHistograms": self.featureHistograms,
+                    "statColumns": []
+                }
+                if(self.trainingDataset){
+                    argsJson["trainingDataset"] = self.featuregroup.name
+                } else {
+                    argsJson["featuregroup"] = self.featuregroup.name
+                }
+                return argsJson
+            }
+
+            /**
+             * Creates a spark job for updating the featuegroup statistics using the featurestore_util.py script
+             */
+            self.updateStatistics = function () {
+                self.working = true;
+                var jobName = ""
+                var operation = ""
+                if(!self.trainingDataset){
+                    jobName = "update_featuregroup_statistics_" + self.featuregroup.name + "_" + new Date().getTime()
+                    operation = 'update_fg_stats'
+                } else {
+                    jobName = "update_trainingdataset_statistics_" + self.featuregroup.name + "_" + new Date().getTime()
+                    operation = 'update_td_stats'
+                }
+                var utilArgs = self.setupJobArgs(jobName + "_args.json", operation)
+                FeaturestoreService.writeUtilArgstoHdfs(self.projectId, utilArgs).then(
+                    function (success) {
+                        growl.success("Featurestore util args written to HDFS", {title: 'Success', ttl: 1000});
+                        var hdfsPath = success.data.successMessage
+                        var runConfig = self.setupUpdateStatsJob(jobName, hdfsPath)
+                        JobService.putJob(self.projectId, runConfig).then(
+                            function (success) {
+                                self.working = false;
+                                JobService.setJobFilter(jobName);
+                                $uibModalInstance.close(success)
+                                self.goToUrl("jobs")
+                                growl.success("Spark job for Updating the statistics configured", {title: 'Success', ttl: 1000});
+                            }, function (error) {
+                                growl.error(error.data.errorMsg, {title: 'Failed to configure spark job for updating the' +
+                                ' statistics', ttl: 15000});
+                                self.working = false;
+                            });
+                    }, function (error) {
+                        growl.error(error.data.errorMsg, {
+                            title: 'Failed to setup featurestore util job arguments',
+                            ttl: 15000
+                        });
+                        self.working = false;
+                    });
+                growl.info("Settings up job arguments... wait", {title: 'Creating', ttl: 1000})
+            }
         }]);

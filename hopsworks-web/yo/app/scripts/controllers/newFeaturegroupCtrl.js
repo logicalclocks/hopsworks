@@ -116,6 +116,12 @@ angular.module('hopsWorksApp')
             self.jdbcConnectorType = self.settings.jdbcConnectorType
             self.cachedFeaturegroupDTOType = self.settings.cachedFeaturegroupDtoType
             self.onDemandFeaturegroupDTOType = self.settings.onDemandFeaturegroupDtoType
+            self.featurestoreUtil4jMainClass = self.settings.featurestoreUtil4jMainClass
+            self.featurestoreUtilPythonMainClass = self.settings.featurestoreUtilPythonMainClass
+            self.featurestoreUtil4JExecutable = self.settings.featurestoreUtil4jExecutable
+            self.featurestoreUtilPythonExecutable = self.settings.featurestoreUtilPythonExecutable
+            self.sparkJobType = "SPARK"
+            self.pySparkJobType = "PYSPARK"
 
             //front-end variables
             self.cached_fg_accordion1 = {
@@ -188,6 +194,7 @@ angular.module('hopsWorksApp')
                     self.cachedFeaturegroupHeading = 'Create Cached Feature Group'
                     self.onDemandFeaturegroupHeading = 'Create On-Demand Feature Group'
                     self.activeTab = 0
+                    self.cachedHiveDbName = self.hiveDatabases[0]
                     return;
                 }
                 if (self.featuregroup != null && self.featuregroupOperation === 'UPDATE') {
@@ -199,6 +206,8 @@ angular.module('hopsWorksApp')
                     self.cachedFeaturegroupDoc = self.featuregroup.description
                     self.onDemandSqlQuery = self.featuregroup.query
                     self.cachedSqlQuery = self.featuregroup.query
+                    self.onDemandFeaturegroupFeatures = self.featuregroup.features
+                    self.cachedFeaturegroupFeatures = self.featuregroup.features
                     self.version = self.featuregroup.version;
                     self.oldFeaturegroupId = self.featuregroup.id
                     if (self.featuregroup.featuregroupType === self.onDemandFeaturegroupType) {
@@ -420,7 +429,7 @@ angular.module('hopsWorksApp')
 
             /**
              * Function called when the user press "delete Feature" button in the create-feature-group form
-             * for a cached featuer group, Deletes a new feature
+             * for a cached feature group, Deletes a new feature
              */
             self.removeNewCachedFeature = function (index) {
                 self.cachedFeaturegroupFeatures.splice(index, 1);
@@ -495,7 +504,7 @@ angular.module('hopsWorksApp')
                 self.onDemandFeaturegroupNameWrongValue = 1;
                 self.onDemandFeaturegroupWrong_values = 1;
                 self.onDemandFeaturegroupFeatureNamesNotUnique = 1
-                self.onDemandFeatuergroupFeaturesDocWrongValue = 1;
+                self.onDemandFeaturegroupFeaturesDocWrongValue = 1;
                 self.onDemandFeaturegroupPrimaryKeyWrongValue = 1;
                 self.onDemandFeaturegroupPartitionKeyWrongValue = 1;
                 self.onDemandSqlQueryWrongValue = 1
@@ -512,8 +521,8 @@ angular.module('hopsWorksApp')
                     self.onDemandFeaturegroupFeaturesTypeWrongValue[i] = 1
                 }
 
-                for (i = 0; i < self.onDemandFeatuergroupFeaturesDocWrongValue.length; i++) {
-                    self.onDemandFeatuergroupFeaturesDocWrongValue[i] = 1
+                for (i = 0; i < self.onDemandFeaturegroupFeaturesDocWrongValue.length; i++) {
+                    self.onDemandFeaturegroupFeaturesDocWrongValue[i] = 1
                 }
 
                 //Validate Name and Description
@@ -553,7 +562,7 @@ angular.module('hopsWorksApp')
                     }
                     if (self.onDemandFeaturegroupFeatures[i].description && self.onDemandFeaturegroupFeatures[i].description.length >
                         self.onDemandFeaturegroupFeatureDescriptionMaxLength) {
-                        self.onDemandFeatuergroupFeaturesDocWrongValue[i] = -1
+                        self.onDemandFeaturegroupFeaturesDocWrongValue[i] = -1
                         self.onDemandFeaturegroupWrong_values = -1;
                         self.onDemandFeaturegroupFeaturesWrongValue = -1;
                     }
@@ -611,7 +620,7 @@ angular.module('hopsWorksApp')
                 self.cachedFeaturegroupNameWrongValue = 1;
                 self.cachedFeaturegroupWrong_values = 1;
                 self.cachedFeaturegroupFeatureNamesNotUnique = 1
-                self.cachedFeatuergroupFeaturesDocWrongValue = 1;
+                self.cachedFeaturegroupFeaturesDocWrongValue = 1;
                 self.cachedFeaturegroupPrimaryKeyWrongValue = 1;
                 self.cachedFeaturegroupPartitionKeyWrongValue = 1;
                 self.cachedSqlQueryWrongValue = 1
@@ -739,7 +748,7 @@ angular.module('hopsWorksApp')
                     "name": self.onDemandFeaturegroupName,
                     "description": self.onDemandFeaturegroupDoc,
                     "features": self.onDemandFeaturegroupFeatures,
-                    "version": 1,
+                    "version": self.version,
                     "featuregroupType": self.onDemandFeaturegroupType,
                     "jdbcConnectorId": self.onDemandFeaturegroupjdbcConnection.id,
                     "query": self.onDemandSqlQuery,
@@ -778,7 +787,7 @@ angular.module('hopsWorksApp')
                     "name": self.onDemandFeaturegroupName,
                     "description": self.onDemandFeaturegroupDoc,
                     "features": self.onDemandFeaturegroupFeatures,
-                    "version": 1,
+                    "version": self.version,
                     "featuregroupType": self.onDemandFeaturegroupType,
                     "jdbcConnectorId": self.onDemandFeaturegroupjdbcConnection.id,
                     "query": self.onDemandSqlQuery,
@@ -871,104 +880,83 @@ angular.module('hopsWorksApp')
                     "name": self.cachedFeaturegroupName,
                     "description": self.cachedFeaturegroupDoc,
                     "features": self.cachedFeaturegroupFeatures,
-                    "version": 1,
+                    "version": self.version,
                     "featuregroupType": self.cachedFeaturegroupType,
                     "type": self.cachedFeaturegroupDTOType
                 }
                 if (self.cachedSqlQuery != null && self.cachedSqlQuery && self.cachedSqlQuery != undefined) {
                     var jobName = "create_featuregroup_" + self.cachedFeaturegroupName + "_" + new Date().getTime()
-                    var mainClass = "io.hops.examples.featurestore_util4j.Main"
-                    var jobType = "SPARK"
-                    var path = "hdfs:///Projects/" + self.projectName +
-                        "/Resources/hops-examples-featurestore-util4j-1.0.0-SNAPSHOT.jar"
-                    var cmdArgs = ""
-                    cmdArgs = cmdArgs + "--featurestore " + self.featurestore.featurestoreName + " ";
-                    cmdArgs = cmdArgs + "--featuregroup " + self.cachedFeaturegroupName + " ";
-                    cmdArgs = cmdArgs + "--version 1 "
-                    cmdArgs = cmdArgs + "--description " + self.cachedFeaturegroupDoc + " "
-                    cmdArgs = cmdArgs + "--sqlquery " + self.cachedSqlQuery + " "
-                    var runConfig = {
-                        type: "sparkJobConfiguration",
-                        appName: jobName,
-                        amQueue: "default",
-                        amMemory: 4000,
-                        amVCores: 1,
-                        jobType: jobType,
-                        appPath: path,
-                        mainClass: mainClass,
-                        args: cmdArgs,
-                        "spark.blacklist.enabled": false,
-                        "spark.dynamicAllocation.enabled": true,
-                        "spark.dynamicAllocation.initialExecutors": 1,
-                        "spark.dynamicAllocation.maxExecutors": 10,
-                        "spark.dynamicAllocation.minExecutors": 1,
-                        "spark.executor.cores": 1,
-                        "spark.executor.gpus": 0,
-                        "spark.executor.instances": 1,
-                        "spark.executor.memory": 4000,
-                        "spark.tensorflow.num.ps": 0
+                    var operation = ""
+                    var hiveDatabase = ""
+                    var jdbcString = ""
+                    var jdbcArguments = []
+                    if (self.cachedSqlType != null && self.cachedSqlType === 0) {
+                        operation = "spark_sql_create_fg"
+                        hiveDatabase = self.cachedHiveDbName
                     }
-                    featuregroupJson["jobName"] = jobName
-                    if (self.cachedSqlType != null && self.cachedSqlType && self.cachedSqlType === 0) {
-                        cmdArgs = cmdArgs + "--hivedb " + self.cachedHiveDbName + " "
-                        cmdArgs = cmdArgs + "--operation spark_sql_create_fg "
-                        runConfig["args"] = cmdArgs
-                    }
-                    if (self.cachedSqlType != null && self.cachedSqlType && self.cachedSqlType === 0) {
-                        cmdArgs = cmdArgs + "--jdbcstring " + self.cachedFeaturegroupjdbcConnection.connectionString + " "
-                        var argumentsString = ""
+                    if (self.cachedSqlType != null && self.cachedSqlType === 1) {
+                        jdbcString = self.cachedFeaturegroupjdbcConnection.connectionString
                         for (var j = 0; j < self.cachedFeaturegroupjdbcConnection.arguments.length; j++) {
-                            argumentsString = argumentsString + self.cachedFeaturegroupjdbcConnection.arguments[j].name
                             var value = "DEFAULT"
-                            if (argumentsString + self.cachedFeaturegroupjdbcConnection.arguments[j].value != ""
-                                && argumentsString + self.cachedFeaturegroupjdbcConnection.arguments[j].value
-                                && argumentsString + self.cachedFeaturegroupjdbcConnection.arguments[j].value != null) {
+                            if (self.cachedFeaturegroupjdbcConnection.arguments[j].value != ""
+                                && self.cachedFeaturegroupjdbcConnection.arguments[j].value
+                                && self.cachedFeaturegroupjdbcConnection.arguments[j].value != null) {
                                 value = self.cachedFeaturegroupjdbcConnection.arguments[j].value
                             }
-                            argumentsString = argumentsString + ":" + value
-                            if (j < self.cachedFeaturegroupjdbcConnection.arguments.length - 1) {
-                                argumentsString = argumentsString + ","
-                            } else {
-                                argumentsString = argumentsString + " "
-                            }
+                            self.cachedFeaturegroupjdbcConnection.arguments[j].value = value
+                            jdbcArguments.push(self.cachedFeaturegroupjdbcConnection.arguments[j].name + "," +
+                                self.cachedFeaturegroupjdbcConnection.arguments[j].value)
                         }
-                        cmdArgs = cmdArgs + "--jdbcarguments " + argumentsString
-                        cmdArgs = cmdArgs + "--operation jdbc_sql_create_fg "
-                        runConfig["args"] = cmdArgs
+                        operation = "jdbc_sql_create_fg"
                     }
+                    var utilArgs = self.setupCreateCachedFeaturegroupJobArgs(jobName + "_args.json", operation,
+                        hiveDatabase, jdbcString, jdbcArguments)
                     ModalService.confirm('sm', 'If a Feature Group with the same name and version already' +
                         ' exists in the Feature Store, it will be overridden.')
                         .then(function (success) {
-                            JobService.putJob(self.projectId, runConfig).then(
+                            FeaturestoreService.writeUtilArgstoHdfs(self.projectId, utilArgs).then(
                                 function (success) {
-                                    growl.success("SQL Job for Creating Feature Group configured successfully", {
-                                        title: 'Success',
-                                        ttl: 1000
-                                    });
-                                    FeaturestoreService.createFeaturegroup(self.projectId, featuregroupJson, self.featurestore).then(
+                                    growl.success("Featurestore util args written to HDFS", {title: 'Success', ttl: 1000});
+                                    var hdfsPath = success.data.successMessage
+                                    var runConfig = self.setupHopsworksCreateFgJob(jobName, hdfsPath)
+                                    JobService.putJob(self.projectId, runConfig).then(
                                         function (success) {
-                                            self.cachedFgWorking = false;
-                                            JobService.setJobFilter(jobName);
-                                            self.goToUrl("jobs")
-                                            growl.success("Feature group metadata created and SQL Job Configured.", {
+                                            growl.success("SQL Job for Creating Feature Group configured successfully", {
                                                 title: 'Success',
                                                 ttl: 1000
                                             });
+                                            FeaturestoreService.createFeaturegroup(self.projectId, featuregroupJson, self.featurestore).then(
+                                                function (success) {
+                                                    self.cachedFgWorking = false;
+                                                    JobService.setJobFilter(jobName);
+                                                    self.goToUrl("jobs")
+                                                    growl.success("Feature group metadata created and SQL Job Configured.", {
+                                                        title: 'Success',
+                                                        ttl: 1000
+                                                    });
+                                                }, function (error) {
+                                                    growl.error(error.data.errorMsg, {
+                                                        title: 'Failed to create feature group',
+                                                        ttl: 15000
+                                                    });
+                                                    self.cachedFgWorking = false;
+                                                });
+                                            growl.info("Creating feature group... wait", {title: 'Creating', ttl: 1000})
                                         }, function (error) {
                                             growl.error(error.data.errorMsg, {
-                                                title: 'Failed to create feature group',
-                                                ttl: 15000
+                                                title: 'Failed to configure spark job for creating the' +
+                                                ' feature group', ttl: 15000
                                             });
                                             self.cachedFgWorking = false;
-                                        });
-                                    growl.info("Creating feature group... wait", {title: 'Creating', ttl: 1000})
+                                        })
                                 }, function (error) {
                                     growl.error(error.data.errorMsg, {
-                                        title: 'Failed to configure spark job for creating the' +
-                                        ' feature group', ttl: 15000
+                                        title: 'Failed to setup featurestore util job arguments',
+                                        ttl: 15000
                                     });
                                     self.cachedFgWorking = false;
-                                })
+                                });
+                            growl.info("Settings up job arguments... wait", {title: 'Creating', ttl: 1000})
                         }, function (error) {
                             self.cachedFgWorking = false;
                         });
@@ -994,6 +982,74 @@ angular.module('hopsWorksApp')
                         });
                 }
             };
+
+            /**
+             * Configures the JSON for creating a new hopsworks job for creating a feature group
+             *
+             * @param jobName name of the job
+             * @param argsPath HDFS path to the input arguments to the job
+             * @returns the configured JSON
+             */
+            self.setupHopsworksCreateFgJob = function (jobName, argsPath) {
+                var path = self.featurestoreUtil4JExecutable
+                var mainClass = self.settings.featurestoreUtil4jMainClass
+                var jobType = self.sparkJobType
+                var runConfig = {
+                    type: "sparkJobConfiguration",
+                    appName: jobName,
+                    amQueue: "default",
+                    amMemory: 4000,
+                    amVCores: 1,
+                    jobType: jobType,
+                    appPath: path,
+                    mainClass: mainClass,
+                    args: "--input " + argsPath,
+                    "spark.blacklist.enabled": false,
+                    "spark.dynamicAllocation.enabled": true,
+                    "spark.dynamicAllocation.initialExecutors": 1,
+                    "spark.dynamicAllocation.maxExecutors": 10,
+                    "spark.dynamicAllocation.minExecutors": 1,
+                    "spark.executor.cores": 1,
+                    "spark.executor.gpus": 0,
+                    "spark.executor.instances": 1,
+                    "spark.executor.memory": 4000,
+                    "spark.tensorflow.num.ps": 0,
+                }
+                return runConfig
+            }
+
+            /**
+             * Configured the JSON input to a job for creating a new feature group using SQL, Spark,
+             * and the Featurestore API
+             *
+             * @param fileName name of the file to save the input arguments
+             * @param operation the operation the job will perform
+             * @param hiveDatabase the hive database to query
+             * @param jdbcString the jdbcConnectionString for the job
+             * @param jdbcArguments the jdbc connection string arguments
+             * @returns the configured JSON
+             */
+            self.setupCreateCachedFeaturegroupJobArgs = function(fileName, operation, hiveDatabase, jdbcString,
+                                                                 jdbcArguments) {
+                var argsJson = {
+                    "operation": operation,
+                    "featurestore": self.featurestore.featurestoreName,
+                    "featuregroup": self.cachedFeaturegroupName,
+                    "version": 1,
+                    "description": self.cachedFeaturegroupDoc,
+                    "sqlQuery": self.cachedSqlQuery,
+                    "hiveDatabase": hiveDatabase,
+                    "jdbcString": jdbcString,
+                    "jdbcArguments": jdbcArguments,
+                    "fileName": fileName,
+                    "descriptiveStats": false,
+                    "featureCorrelation": false,
+                    "clusterAnalysis": false,
+                    "featureHistograms": false,
+                    "statColumns": []
+                }
+                return argsJson
+            }
 
             /**
              * Helper function for redirecting to another project page

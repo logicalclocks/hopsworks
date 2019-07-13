@@ -30,6 +30,8 @@ angular.module('hopsWorksApp')
             self.featurestore = StorageService.get(self.projectId + "_featurestore")
             self.storageConnectors = StorageService.get(self.projectId + "_featurestore_storageconnectors")
             self.settings = StorageService.get(self.projectId + "_fssettings")
+            self.storageConnectorOperation = StorageService.get("connector_operation");
+            self.storageConnector = StorageService.get(self.projectId + "_connector");
 
             //Input Variables
             self.storageConnectorName = ""
@@ -48,7 +50,6 @@ angular.module('hopsWorksApp')
             self.phase = 0
 
             //Constants
-            self.storageConnectorNameRegexp = self.settings.featurestoreRegex
             self.dataSetService = DataSetService(self.projectId); //The datasetservice for the current project.
             self.storageConnectorNameMaxLength = self.settings.storageConnectorNameMaxLength
             self.storageConnectorDescriptionMaxLength = self.settings.storageConnectorDescriptionMaxLength
@@ -108,6 +109,53 @@ angular.module('hopsWorksApp')
                 "title": "Create"
             };
 
+
+            /**
+             * Perform initialization of variables that require it
+             */
+            self.initVariables = function () {
+                var j = 0;
+                if(self.storageConnectorOperation === "UPDATE") {
+                    self.accordion4.title = "Update"
+                    self.accordion4.visible = true
+                    self.accordion4.isOpen = true
+                    self.accordion3.visible = true
+                    self.accordion3.isOpen = false
+                    self.accordion2.visible = true
+                    self.accordion2.isOpen = false
+                    self.accordion1.visible = true
+                    self.accordion1.isOpen = true
+                    self.storageConnectorName = self.storageConnector.name
+                    self.storageConnectorDescription = self.storageConnector.description
+                    if(self.storageConnector.storageConnectorType === self.jdbcConnectorType) {
+                        self.storageConnectorType = 0;
+                        self.jdbcConnectionString = self.storageConnector.connectionString;
+                        var args = self.storageConnector.arguments
+                        args = args + ''
+                        var argsList = args.split(",")
+                        self.jdbcArguments = argsList
+                    }
+                    if(self.storageConnector.storageConnectorType === self.s3ConnectorType) {
+                        self.storageConnectorType = 1
+                        self.s3Bucket = self.storageConnector.bucket
+                        self.s3SecretKey = self.storageConnector.secretKey
+                        self.s3AccessKey = self.storageConnector.accessKey
+                    }
+                    if(self.storageConnector.storageConnectorType === self.hopsfsConnectorType) {
+                        self.storageConnectorType = 2
+                        for (var i = 0; i < self.datasets.length; i++) {
+                            if(self.datasets[i].name === self.storageConnector.datasetName){
+                                j = i;
+                            }
+                        }
+                    }
+                }
+
+                if(self.datasets.length > 0){
+                    self.hopsFsDataset = self.datasets[j];
+                }
+            }
+
             /**
              * Validates user input for creating new storage connector
              */
@@ -128,8 +176,7 @@ angular.module('hopsWorksApp')
                     self.jdbcArgumentsWrongValue[i] = 1
                 }
 
-                if (!self.storageConnectorName || self.storageConnectorName === "" ||
-                    self.storageConnectorName.search(self.storageConnectorNameRegexp) == -1
+                if (!self.storageConnectorName || self.storageConnectorName === ""
                     || self.storageConnectorName.length > self.storageConnectorNameMaxLength) {
                     self.storageConnectorNameWrongValue = -1;
                     self.wrong_values = -1;
@@ -228,15 +275,17 @@ angular.module('hopsWorksApp')
              * @returns {undefined}
              */
             self.descriptionFilledIn = function () {
-                if (self.phase === 1) {
-                    if (!self.storageConnectorDescription) {
-                        self.storageConnectorDescription = "-";
+                if(self.storageConnectorOperation === "CREATE"){
+                    if (self.phase === 1) {
+                        if (!self.storageConnectorDescription) {
+                            self.storageConnectorDescription = "-";
+                        }
+                        self.phase = 2;
+                        self.accordion3.visible = true;
+                        self.accordion3.isOpen = true;
+                        self.accordion4.visible = true;
+                        self.accordion4.isOpen = true;
                     }
-                    self.phase = 2;
-                    self.accordion3.visible = true;
-                    self.accordion3.isOpen = true;
-                    self.accordion4.visible = true;
-                    self.accordion4.isOpen = true;
                 }
             };
 
@@ -246,15 +295,17 @@ angular.module('hopsWorksApp')
              * @returns {undefined}
              */
             self.nameFilledIn = function () {
-                if (self.phase === 0) {
-                    if (!self.storageConnectorName) {
-                        self.storageConnectorName = "Connector-" + Math.round(new Date().getTime() / 1000);
+                if(self.storageConnectorOperation === "CREATE"){
+                    if (self.phase === 0) {
+                        if (!self.storageConnectorName) {
+                            self.storageConnectorName = "Connector-" + Math.round(new Date().getTime() / 1000);
+                        }
+                        self.phase = 1;
+                        self.accordion2.isOpen = true; //Open description selection
+                        self.accordion2.visible = true; //Display description selection
                     }
-                    self.phase = 1;
-                    self.accordion2.isOpen = true; //Open description selection
-                    self.accordion2.visible = true; //Display description selection
+                    self.accordion1.value = " - " + self.storageConnectorName; //Edit panel title
                 }
-                self.accordion1.value = " - " + self.storageConnectorName; //Edit panel title
             };
 
             /**
@@ -264,6 +315,70 @@ angular.module('hopsWorksApp')
                 StorageService.store(self.projectId + "_featurestore_tab", 4);
                 $location.path('project/' + self.projectId + '/featurestore');
             };
+
+            /**
+             * Updates an existing storage connector
+             */
+            self.updateStorageConnector = function () {
+                self.validateStorageConnectorInput()
+                if (self.wrong_values === -1) {
+                    self.working = false;
+                    return;
+                }
+                var storageConnectorJson = {
+                    "name": self.storageConnectorName,
+                    "description": self.storageConnectorDescription
+                }
+                if(self.storageConnectorType === 0){
+                    storageConnectorJson["storageConnectorType"] = self.jdbcConnectorType
+                    storageConnectorJson["type"] = self.jdbcConnectorDTOType
+                    storageConnectorJson["arguments"] = self.jdbcArguments.join(",")
+                    storageConnectorJson["connectionString"] = self.jdbcConnectionString
+                    FeaturestoreService.updateStorageConnector(self.projectId, storageConnectorJson, self.featurestore,
+                        self.jdbcConnectorType, self.storageConnector.id).then(
+                        function (success) {
+                            self.working = false;
+                            growl.success("JDBC Storage Connector updated", {title: 'Success', ttl: 1000});
+                            self.exitToFeaturestore()
+                        }, function (error) {
+                            growl.error(error.data.errorMsg, {title: 'Failed to update storage connector', ttl: 15000});
+                            self.working = false;
+                        });
+                }
+                if(self.storageConnectorType === 1){
+                    storageConnectorJson["type"] = self.s3ConnectorDTOType
+                    storageConnectorJson["storageConnectorType"] = self.s3ConnectorType
+                    storageConnectorJson["bucket"] = self.s3Bucket
+                    storageConnectorJson["secretKey"] = self.s3SecretKey
+                    storageConnectorJson["accessKey"] = self.s3AccessKey
+                    FeaturestoreService.updateStorageConnector(self.projectId, storageConnectorJson, self.featurestore,
+                        self.s3ConnectorType, self.storageConnector.id).then(
+                        function (success) {
+                            self.working = false;
+                            growl.success("S3 Storage Connector updated", {title: 'Success', ttl: 1000});
+                            self.exitToFeaturestore()
+                        }, function (error) {
+                            growl.error(error.data.errorMsg, {title: 'Failed to update storage connector', ttl: 15000});
+                            self.working = false;
+                        });
+                }
+                if(self.storageConnectorType === 2){
+                    storageConnectorJson["type"] = self.hopsfsConnectorDTOType
+                    storageConnectorJson["storageConnectorType"] = self.hopsfsConnectorType
+                    storageConnectorJson["datasetName"] = self.hopsFsDataset.name
+                    FeaturestoreService.updateStorageConnector(self.projectId, storageConnectorJson, self.featurestore,
+                        self.hopsfsConnectorType, self.storageConnector.id).then(
+                        function (success) {
+                            self.working = false;
+                            growl.success("HopsFS Storage Connector updated", {title: 'Success', ttl: 1000});
+                            self.exitToFeaturestore()
+                        }, function (error) {
+                            growl.error(error.data.errorMsg, {title: 'Failed to update storage connector', ttl: 15000});
+                            self.working = false;
+                        });
+                }
+                growl.info("Updating Storage Connector... wait", {title: 'Updating..', ttl: 1000})
+            }
 
             /**
              * Creates a storage connector
@@ -281,7 +396,7 @@ angular.module('hopsWorksApp')
                 if(self.storageConnectorType === 0){
                     storageConnectorJson["storageConnectorType"] = self.jdbcConnectorType
                     storageConnectorJson["type"] = self.jdbcConnectorDTOType
-                    storageConnectorJson["arguments"] = self.jdbcArguments
+                    storageConnectorJson["arguments"] = self.jdbcArguments.join(",")
                     storageConnectorJson["connectionString"] = self.jdbcConnectionString
                     FeaturestoreService.createStorageConnector(self.projectId, storageConnectorJson, self.featurestore,
                         self.jdbcConnectorType).then(
@@ -376,9 +491,7 @@ angular.module('hopsWorksApp')
                 self.dataSetService.getContents(path).then(
                     function (success) {
                         self.datasets = success.data;
-                        if(self.datasets.length > 0){
-                            self.hopsFsDataset = self.datasets[0];
-                        }
+                        self.initVariables()
                     }, function (error) {
                         growl.error(error.data.errorMsg, {title: 'Failed to fetch datasets in project', ttl: 15000});
                     });

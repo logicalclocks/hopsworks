@@ -27,7 +27,6 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import java.util.List;
 import java.util.logging.Level;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -58,6 +57,47 @@ public class FeaturestoreS3ConnectorController {
     featurestoreS3ConnectorFacade.persist(featurestoreS3Connector);
     return new FeaturestoreS3ConnectorDTO(featurestoreS3Connector);
   }
+
+  /**
+   * Updates a S3 connection as a backend for a feature store
+   *
+   * @param featurestore the featurestore
+   * @param featurestoreS3ConnectorDTO the data to use when creating the storage connector
+   * @param storageConnectorId the id of the connector
+   * @return DTO of the updated entity
+   * @throws FeaturestoreException
+   */
+  public FeaturestoreS3ConnectorDTO updateFeaturestoreS3Connector(
+      Featurestore featurestore, FeaturestoreS3ConnectorDTO featurestoreS3ConnectorDTO,
+      Integer storageConnectorId) throws FeaturestoreException {
+    FeaturestoreS3Connector featurestoreS3Connector = verifyS3ConnectorId(storageConnectorId, featurestore);
+    if(!Strings.isNullOrEmpty(featurestoreS3ConnectorDTO.getName())){
+      verifyS3ConnectorName(featurestoreS3ConnectorDTO.getName(), featurestore, true);
+      featurestoreS3Connector.setName(featurestoreS3ConnectorDTO.getName());
+    }
+    if(!Strings.isNullOrEmpty(featurestoreS3ConnectorDTO.getDescription())){
+      verifyS3ConnectorDescription(featurestoreS3ConnectorDTO.getDescription());
+      featurestoreS3Connector.setDescription(featurestoreS3ConnectorDTO.getDescription());
+    }
+    if(!Strings.isNullOrEmpty(featurestoreS3ConnectorDTO.getAccessKey())){
+      verifyS3ConnectorAccessKey(featurestoreS3ConnectorDTO.getAccessKey());
+      featurestoreS3Connector.setAccessKey(featurestoreS3ConnectorDTO.getAccessKey());
+    }
+    if(!Strings.isNullOrEmpty(featurestoreS3ConnectorDTO.getSecretKey())){
+      verifyS3ConnectorSecretKey(featurestoreS3ConnectorDTO.getSecretKey());
+      featurestoreS3Connector.setSecretKey(featurestoreS3ConnectorDTO.getSecretKey());
+    }
+    if(!Strings.isNullOrEmpty(featurestoreS3ConnectorDTO.getBucket())){
+      verifyS3ConnectorSecretKey(featurestoreS3ConnectorDTO.getBucket());
+      featurestoreS3Connector.setBucket(featurestoreS3ConnectorDTO.getBucket());
+    }
+    if(featurestore != null){
+      featurestoreS3Connector.setFeaturestore(featurestore);
+    }
+    FeaturestoreS3Connector updatedFeaturestoreS3Connector =
+        featurestoreS3ConnectorFacade.updateS3Connector(featurestoreS3Connector);
+    return new FeaturestoreS3ConnectorDTO(updatedFeaturestoreS3Connector);
+  }
   
   /**
    * Removes an S3 connection from the feature store
@@ -70,77 +110,139 @@ public class FeaturestoreS3ConnectorController {
     featurestoreS3ConnectorFacade.remove(featurestoreS3Connector);
     return featurestoreS3ConnectorDTO;
   }
+
+  /**
+   * Verifies a storage connector id
+   *
+   * @param s3ConnectorId the id to verify
+   * @param featurestore the featurestore to query
+   * @return the storage connector with the given id
+   * @throws FeaturestoreException
+   */
+  private FeaturestoreS3Connector verifyS3ConnectorId(
+      Integer s3ConnectorId, Featurestore featurestore) throws FeaturestoreException {
+    FeaturestoreS3Connector featurestoreS3Connector =
+        featurestoreS3ConnectorFacade.findByIdAndFeaturestore(s3ConnectorId, featurestore);
+    if (featurestoreS3Connector == null) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.S3_CONNECTOR_NOT_FOUND,
+          Level.FINE, "s3ConnectorId: " + s3ConnectorId);
+    }
+    return featurestoreS3Connector;
+  }
+
+  /**
+   * Validates the featurestore to query
+   *
+   * @param featurestore the featurestore to validate
+   */
+  private void verifyFeaturestore(Featurestore featurestore){
+    if (featurestore == null) {
+      throw new IllegalArgumentException("Featurestore was not found");
+    }
+  }
+
+  /**
+   * Validates user input name string
+   * @param name the input to validate
+   * @param featurestore the featurestore of the connector
+   * @param edit boolean flag whether the validation if for updating an existing connector or creating a new one
+   */
+  private void verifyS3ConnectorName(String name, Featurestore featurestore, Boolean edit) {
+    if (Strings.isNullOrEmpty(name)) {
+      throw new IllegalArgumentException(
+          RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_NAME.getMessage() +
+              ", the storage connector name cannot be empty");
+    }
+    if(name.length() >
+        FeaturestoreClientSettingsDTO.STORAGE_CONNECTOR_NAME_MAX_LENGTH) {
+      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_NAME.getMessage()
+          + ", the name should be less than "
+          + FeaturestoreClientSettingsDTO.STORAGE_CONNECTOR_NAME_MAX_LENGTH + " characters.");
+    }
+    if(!edit){
+      if(featurestore.getFeaturestoreS3ConnectorConnections().stream()
+          .anyMatch(s3Con -> s3Con.getName().equalsIgnoreCase(name))) {
+        throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_NAME.getMessage() +
+            ", the storage connector name should be unique, there already exists a S3 connector with the same name ");
+      }
+    }
+  }
+
+  /**
+   * Validates user input description string
+   * @param  description the input to validate
+   */
+  private void verifyS3ConnectorDescription(String description) {
+    if(description.length()
+        > FeaturestoreClientSettingsDTO.STORAGE_CONNECTOR_DESCRIPTION_MAX_LENGTH){
+      throw new IllegalArgumentException(
+          RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_DESCRIPTION.getMessage() +
+              ", the description should be less than: " +
+              FeaturestoreClientSettingsDTO.STORAGE_CONNECTOR_DESCRIPTION_MAX_LENGTH);
+    }
+  }
+
+  /**
+   * Validates user input bucket
+   * @param bucket the input to validate
+   */
+  private void verifyS3ConnectorBucket(String bucket){
+    if(Strings.isNullOrEmpty(bucket) ||
+        bucket.length() >
+            FeaturestoreClientSettingsDTO.S3_STORAGE_CONNECTOR_BUCKET_MAX_LENGTH) {
+      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_S3_CONNECTOR_BUCKET.getMessage() +
+          ", the S3 bucket string should not be empty and not exceed: " +
+          FeaturestoreClientSettingsDTO.S3_STORAGE_CONNECTOR_BUCKET_MAX_LENGTH + " characters");
+    }
+  }
+
+  /**
+   * Validates user input access key string
+   * @param accessKey the input to validate
+   */
+  private void verifyS3ConnectorAccessKey(String accessKey) {
+    if(!Strings.isNullOrEmpty(accessKey) &&
+        accessKey.length()
+            > FeaturestoreClientSettingsDTO.S3_STORAGE_CONNECTOR_ACCESSKEY_MAX_LENGTH) {
+      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_S3_CONNECTOR_ACCESS_KEY.getMessage() +
+          ", the S3 access key should not exceed: " +
+          FeaturestoreClientSettingsDTO.S3_STORAGE_CONNECTOR_ACCESSKEY_MAX_LENGTH + " characters");
+    }
+  }
+
+  /**
+   * Validates user input secret key string
+   * @param secretKey the input to validate
+   */
+  private void verifyS3ConnectorSecretKey(String secretKey) {
+    if(!Strings.isNullOrEmpty(secretKey) &&
+        secretKey.length() >
+            FeaturestoreClientSettingsDTO.S3_STORAGE_CONNECTOR_SECRETKEY_MAX_LENGTH) {
+      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_S3_CONNECTOR_SECRET_KEY.getMessage() +
+          ", the S3 secret key should not exceed: " +
+          FeaturestoreClientSettingsDTO.S3_STORAGE_CONNECTOR_SECRETKEY_MAX_LENGTH + " characters");
+    }
+  }
+
+
   
   /**
    * Validates user input for creating a new S3 connector in a featurestore
    *
-   * @param featurestore the featuerstore
+   * @param featurestore the featurestore
    * @param featurestoreS3ConnectorDTO the data to use when creating the storage connector
    */
-  public void verifyUserInput(Featurestore featurestore, FeaturestoreS3ConnectorDTO featurestoreS3ConnectorDTO){
-  
-    if (featurestore == null) {
-      throw new IllegalArgumentException("Featurestore was not found");
-    }
+  private void verifyUserInput(Featurestore featurestore, FeaturestoreS3ConnectorDTO featurestoreS3ConnectorDTO){
 
     if (featurestoreS3ConnectorDTO == null) {
       throw new IllegalArgumentException("Null input data");
     }
-  
-    if (Strings.isNullOrEmpty(featurestoreS3ConnectorDTO.getName())) {
-      throw new IllegalArgumentException(
-        RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_NAME.getMessage() + ", the storage connector name " +
-          "cannot be empty");
-    }
-  
-    Pattern namePattern = Pattern.compile(FeaturestoreClientSettingsDTO.FEATURESTORE_REGEX);
-  
-    if(featurestoreS3ConnectorDTO.getName().length() >
-      FeaturestoreClientSettingsDTO.STORAGE_CONNECTOR_NAME_MAX_LENGTH ||
-        !namePattern.matcher(featurestoreS3ConnectorDTO.getName()).matches()) {
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_NAME.getMessage()
-        + ", the name should be less than "
-        + FeaturestoreClientSettingsDTO.STORAGE_CONNECTOR_NAME_MAX_LENGTH + " characters and match " +
-        "the regular expression: " +  FeaturestoreClientSettingsDTO.FEATURESTORE_REGEX);
-    }
-  
-    if(featurestore.getFeaturestoreS3ConnectorConnections().stream()
-      .anyMatch(s3Con -> s3Con.getName().equalsIgnoreCase(featurestoreS3ConnectorDTO.getName()))) {
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_NAME.getMessage() +
-        ", the storage connector name should be unique, there already exists a S3 connector with the same name ");
-    }
-  
-    if(featurestoreS3ConnectorDTO.getDescription().length()
-      > FeaturestoreClientSettingsDTO.STORAGE_CONNECTOR_DESCRIPTION_MAX_LENGTH){
-      throw new IllegalArgumentException(
-        RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_DESCRIPTION.getMessage() +
-        ", the description should be less than: " +
-          FeaturestoreClientSettingsDTO.STORAGE_CONNECTOR_DESCRIPTION_MAX_LENGTH);
-    }
-    
-    if(Strings.isNullOrEmpty(featurestoreS3ConnectorDTO.getBucket()) ||
-        featurestoreS3ConnectorDTO.getBucket().length() >
-          FeaturestoreClientSettingsDTO.S3_STORAGE_CONNECTOR_BUCKET_MAX_LENGTH) {
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_S3_CONNECTOR_BUCKET.getMessage() +
-        ", the S3 bucket string should not be empty and not exceed: " +
-        FeaturestoreClientSettingsDTO.S3_STORAGE_CONNECTOR_BUCKET_MAX_LENGTH + " characters");
-    }
-  
-    if(!Strings.isNullOrEmpty(featurestoreS3ConnectorDTO.getAccessKey()) &&
-        featurestoreS3ConnectorDTO.getAccessKey().length()
-          > FeaturestoreClientSettingsDTO.S3_STORAGE_CONNECTOR_ACCESSKEY_MAX_LENGTH) {
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_S3_CONNECTOR_ACCESS_KEY.getMessage() +
-        ", the S3 access key should not exceed: " +
-        FeaturestoreClientSettingsDTO.S3_STORAGE_CONNECTOR_ACCESSKEY_MAX_LENGTH + " characters");
-    }
-  
-    if(!Strings.isNullOrEmpty(featurestoreS3ConnectorDTO.getSecretKey()) &&
-        featurestoreS3ConnectorDTO.getSecretKey().length() >
-          FeaturestoreClientSettingsDTO.S3_STORAGE_CONNECTOR_SECRETKEY_MAX_LENGTH) {
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_S3_CONNECTOR_SECRET_KEY.getMessage() +
-        ", the S3 secret key should not exceed: " +
-        FeaturestoreClientSettingsDTO.S3_STORAGE_CONNECTOR_SECRETKEY_MAX_LENGTH + " characters");
-    }
+    verifyFeaturestore(featurestore);
+    verifyS3ConnectorName(featurestoreS3ConnectorDTO.getName(),featurestore, false);
+    verifyS3ConnectorDescription(featurestoreS3ConnectorDTO.getDescription());
+    verifyS3ConnectorBucket(featurestoreS3ConnectorDTO.getBucket());
+    verifyS3ConnectorAccessKey(featurestoreS3ConnectorDTO.getAccessKey());
+    verifyS3ConnectorSecretKey(featurestoreS3ConnectorDTO.getSecretKey());
   }
 
   /**
@@ -164,12 +266,7 @@ public class FeaturestoreS3ConnectorController {
    */
   public FeaturestoreS3ConnectorDTO getS3ConnectorWithIdAndFeaturestore(Featurestore featurestore, Integer id)
       throws FeaturestoreException {
-    FeaturestoreS3Connector featurestoreS3Connector =
-        featurestoreS3ConnectorFacade.findByIdAndFeaturestore(id, featurestore);
-    if (featurestoreS3Connector == null) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.S3_CONNECTOR_NOT_FOUND,
-          Level.FINE, "s3ConnectorId: " + id);
-    }
+    FeaturestoreS3Connector featurestoreS3Connector = verifyS3ConnectorId(id, featurestore);
     return new FeaturestoreS3ConnectorDTO(featurestoreS3Connector);
   }
 }

@@ -844,8 +844,8 @@ public class ProjectController {
       hiveController.createDatabase(featurestoreName,
           "Featurestore database for project: " + project.getName());
       //Store featurestore metadata in Hopsworks
-      Dataset trainingDatasets = datasetFacade.findByNameAndProjectId(project,
-        project.getName() + "_" + Settings.ServiceDataset.TRAININGDATASETS.getName());
+      Dataset trainingDatasets = datasetController.getByProjectAndDsName(project,
+          null, project.getName() + "_" + Settings.ServiceDataset.TRAININGDATASETS.getName());
       Featurestore featurestore = featurestoreController.createProjectFeatureStore(project, featurestoreName,
         trainingDatasets);
       //Create Hopsworks Dataset of the HiveDb
@@ -2327,9 +2327,9 @@ public class ProjectController {
               "files for guide projects", -1, false, true, true, dfso);
           // Get the JAR from /user/<super user>
           String featurestoreExampleJarSrc = "/user/" + settings.getSparkUser() + "/"
-              + settings.getHopsExamplesFeaturestoreFilename();
+              + settings.getHopsExamplesFeaturestoreTourFilename();
           String featurestoreExampleJarDst = projectPath
-              + Settings.HOPS_TOUR_DATASET + "/" + settings.getHopsExamplesFeaturestoreFilename();
+              + Settings.HOPS_TOUR_DATASET + "/" + settings.getHopsExamplesFeaturestoreTourFilename();
           // Get the sample data and notebooks from /user/<super user>/featurestore_demo/
           String featurestoreExampleDataSrc = "/user/" + settings.getHdfsSuperUser() + "/" +
               Settings.HOPS_FEATURESTORE_TOUR_DATA + "/data";
