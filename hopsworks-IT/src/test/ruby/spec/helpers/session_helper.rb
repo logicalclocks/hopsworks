@@ -397,8 +397,8 @@ module SessionHelper
   end
 
   def validate_user_rest(key)
-    post "#{ENV['HOPSWORKS_API']}/auth/validate/email", URI.encode_www_form({key: key}), {content_type:
-                                                                                              'application/x-www-form-urlencoded'}
+    post "#{ENV['HOPSWORKS_API']}/auth/validate/email", URI.encode_www_form({key: key}),
+         {content_type: 'application/x-www-form-urlencoded'}
   end
 
   def validate_user_jsf(key)
@@ -411,13 +411,13 @@ module SessionHelper
   end
 
   def validate_recovery_key(key)
-    post "#{ENV['HOPSWORKS_API']}/auth/reset/validate", URI.encode_www_form({key: key}), {content_type:
-                                                                                              'application/x-www-form-urlencoded'}
+    post "#{ENV['HOPSWORKS_API']}/auth/reset/validate", URI.encode_www_form({key: key}),
+         {content_type: 'application/x-www-form-urlencoded'}
   end
 
   def reset_password(key, newPwd, confirmPwd)
-    post "#{ENV['HOPSWORKS_API']}/auth/reset/password", URI.encode_www_form({key: key, newPassword: newPwd,
-                                                                             confirmPassword: confirmPwd}), {content_type: 'application/x-www-form-urlencoded'}
+    post "#{ENV['HOPSWORKS_API']}/auth/reset/password", URI.encode_www_form(
+        {key: key, newPassword: newPwd, confirmPassword: confirmPwd}), {content_type: 'application/x-www-form-urlencoded'}
   end
 
   def start_qr_recovery(email, password)
@@ -426,8 +426,8 @@ module SessionHelper
   end
 
   def reset_qr_code(key)
-    post "#{ENV['HOPSWORKS_API']}/auth/reset/qrCode", URI.encode_www_form({key: key}), {content_type:
-                                                                                            'application/x-www-form-urlencoded'}
+    post "#{ENV['HOPSWORKS_API']}/auth/reset/qrCode", URI.encode_www_form({key: key}),
+         {content_type: 'application/x-www-form-urlencoded'}
   end
 
 end

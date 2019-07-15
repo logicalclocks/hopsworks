@@ -205,10 +205,7 @@ public class AuthController {
       throw new IllegalArgumentException("User not set.");
     }
     userStatusValidator.checkStatus(user.getStatus());
-    if (!validatePassword(user, password, req)) {
-      return false;
-    }
-    return true;
+    return validatePassword(user, password, req);
   }
   
   /**
@@ -222,10 +219,7 @@ public class AuthController {
    */
   public boolean checkUserPasswordAndStatus(Users user, String password, HttpServletRequest req) throws UserException {
     checkUserStatus(user, false);
-    if (!validatePassword(user, password, req)) {
-      return false;
-    }
-    return true;
+    return validatePassword(user, password, req);
   }
   
   /**
@@ -240,10 +234,7 @@ public class AuthController {
   public boolean validateSecurityQAndStatus(Users user, String securityQ, String securityAnswer, HttpServletRequest req)
     throws UserException {
     checkUserStatus(user, false);
-    if (!validateSecurityQA(user, securityQ, securityAnswer, req)) {
-      return false;
-    }
-    return true;
+    return validateSecurityQA(user, securityQ, securityAnswer, req);
   }
   
   private Users getUserFromKey(String key) {
@@ -606,8 +597,7 @@ public class AuthController {
   }
   
   private boolean isUserAgent(Users user) {
-    BbcGroup group = bbcGroupFacade.findByGroupName("AGENT");
-    return user.getBbcGroupCollection().contains(group);
+    return isUserInRole(user,"AGENT");
   }
 
   /**

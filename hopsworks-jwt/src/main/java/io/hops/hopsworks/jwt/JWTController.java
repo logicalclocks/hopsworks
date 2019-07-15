@@ -708,7 +708,6 @@ public class JWTController {
     return count;
   }
   
-//  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public boolean markOldSigningKeys() {
     JwtSigningKey jwtSigningKey = jwtSigningKeyFacade.findByName(Constants.ONE_TIME_JWT_SIGNING_KEY_NAME);
     final Calendar cal = Calendar.getInstance();
@@ -726,7 +725,6 @@ public class JWTController {
     return false;
   }
   
-//  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public void removeMarkedKeys() {
     JwtSigningKey jwtSigningKey = jwtSigningKeyFacade.findByName(Constants.OLD_ONE_TIME_JWT_SIGNING_KEY_NAME);
     if (jwtSigningKey != null) {

@@ -132,7 +132,7 @@ public class UsersController {
         // Notify user about the request if not test user.
         authController.sendEmailValidationKey(user, user.getValidationKey(), req);
       }
-      // Only register the user if i can send the email
+      // Only register the user if i can send the email. To prevent fake emails
       userFacade.persist(user);
       qrCode = QRCodeGenerator.getQRCodeBytes(newUser.getEmail(), Settings.ISSUER, user.getSecret());
       accountAuditFacade.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),

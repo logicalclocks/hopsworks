@@ -332,7 +332,7 @@ public class AuthService {
       @Context HttpServletRequest req) throws UserException, MessagingException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     userController.sendPasswordRecoveryEmail(email, securityQuestion, securityAnswer, req);
-    json.setSuccessMessage(ResponseMessages.PASSWORD_RESET_LINK);
+    json.setSuccessMessage(ResponseMessages.PASSWORD_RESET);
     return Response.ok(json).build();
   }
   
@@ -343,7 +343,7 @@ public class AuthService {
     @Context HttpServletRequest req) throws UserException, MessagingException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     userController.sendQRRecoveryEmail(email, password, req);
-    json.setSuccessMessage(ResponseMessages.QR_CODE_RESET_LINK);
+    json.setSuccessMessage(ResponseMessages.QR_CODE_RESET);
     return Response.ok(json).build();
   }
   

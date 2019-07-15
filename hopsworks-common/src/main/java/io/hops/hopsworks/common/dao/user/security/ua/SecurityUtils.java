@@ -42,13 +42,13 @@ package io.hops.hopsworks.common.dao.user.security.ua;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.security.NoSuchAlgorithmException;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.codec.binary.Base32;
 import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.Random;
 import java.util.UUID;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class SecurityUtils {
@@ -98,19 +98,13 @@ public class SecurityUtils {
     byte[] bytes = new byte[length];
     RANDOM.nextBytes(bytes);
     byte[] encoded = Base64.getEncoder().encode(bytes);
-    String rand = "";
-    try {
-      rand = new String(encoded, "UTF-8");
-    } catch (UnsupportedEncodingException ex) {
-      LOGGER.log(Level.SEVERE, "Generate salt encoding failed", ex);
-    }
-    return rand;
+    return new String(encoded, StandardCharsets.UTF_8);
   }
   
   public static String urlEncode(String key) {
     String urlEncoded;
     try {
-      urlEncoded = URLEncoder.encode(key, "UTF-8");
+      urlEncoded = URLEncoder.encode(key, StandardCharsets.UTF_8.toString());
     } catch (UnsupportedEncodingException e) {
       throw new IllegalStateException(e);
     }
