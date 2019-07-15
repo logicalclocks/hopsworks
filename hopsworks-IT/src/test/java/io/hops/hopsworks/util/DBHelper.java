@@ -26,22 +26,28 @@ import java.sql.SQLException;
 public class DBHelper {
   private static final String DB_HOST_ENV = "DB_HOST";
   private static final String DB_PORT_ENV = "DB_PORT";
+  private static final String DB_USER_ENV = "DB_USER";
+  private static final String DB_PASSWORD_ENV = "DB_PASSWORD";
   private static final String DEFAULT_PORT = "3306";
   private static final String DEFAULT_HOST = "127.0.0.1";
   private static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";
   private static final String DB_URL = "jdbc:mysql://%%s%%/hopsworks";
-  private static final String USER = "kthfs";
-  private static final String PASSWORD = "kthfs";
+  private static final String DEFAULT_USER = "kthfs";
+  private static final String DEFAULT_PASSWORD = "kthfs";
   private static final int NUM_RETRIES = 10;
   private Connection conn;
   
   public DBHelper() {
     String dbHost = (System.getenv(DB_HOST_ENV) != null) ? System.getenv(DB_HOST_ENV) : DEFAULT_HOST;
     String dbPort = (System.getenv(DB_PORT_ENV) != null) ? System.getenv(DB_PORT_ENV) : DEFAULT_PORT;
+    
+    String dbUser = (System.getenv(DB_USER_ENV) != null) ? System.getenv(DB_USER_ENV) : DEFAULT_USER;
+    String dbPassword = (System.getenv(DB_PASSWORD_ENV) != null) ? System.getenv(DB_PASSWORD_ENV) : DEFAULT_PASSWORD;
+    
     String dbURL = DB_URL.replace("%%s%%", dbHost + ":" + dbPort);
     try {
       Class.forName(JDBC_DRIVER);
-      this.conn = DriverManager.getConnection(dbURL, USER, PASSWORD);
+      this.conn = DriverManager.getConnection(dbURL, dbUser, dbPassword);
     } catch (ClassNotFoundException | SQLException ex) {
       ex.printStackTrace();
     }
