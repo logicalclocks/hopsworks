@@ -35,8 +35,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Obs! This code is here as it should be used both for Jupyter and for running
- * notebooks as jobs
+ * This code is here as it should be used both for PySpark apps running TensorFlow in both Jupyter and Jobs to set the
+ * correct LD_LIBRARY_PATH for loading .so files required by different TF versions
  */
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -53,22 +53,30 @@ public class TfLibMappingUtil {
   @EJB
   private EnvironmentController environmentController;
 
-  private String buildTfLdLibraryPath(TfLibMapping tfLibMapping) {
+  private String buildTfLdLibraryPath(TfLibMapping tfLibMapping, Project project) {
 
     StringBuilder ldPathBuilder = new StringBuilder();
 
+    //.so library for CUDNN
     if(!Strings.isNullOrEmpty(tfLibMapping.getCudnnVersion())) {
       ldPathBuilder.append(CUDNN_BASE_PATH + tfLibMapping.getCudnnVersion() + "/lib64" + File.pathSeparator);
     }
 
+    //.so libraries for CUDA
     if(!Strings.isNullOrEmpty(tfLibMapping.getCudaVersion())) {
       ldPathBuilder.append(CUDA_BASE_PATH + tfLibMapping.getCudaVersion() + "/lib64" + File.pathSeparator);
       ldPathBuilder.append(CUDA_BASE_PATH + tfLibMapping.getCudaVersion() + "/extras/CUPTI/lib64" + File.pathSeparator);
     }
 
+    //.so library for NCCL
     if(!Strings.isNullOrEmpty(tfLibMapping.getNcclVersion())) {
       ldPathBuilder.append(NCCL_BASE_PATH + tfLibMapping.getNcclVersion() + "/lib" + File.pathSeparator);
     }
+
+    //.so library for RCCL
+    ldPathBuilder.append(settings.getAnacondaProjectDir(project) + "/lib/python" +
+        project.getPythonVersion() + "/site-packages" + "/tensorflow/include/external/local_config_rocm/rocm/rocm/lib"
+        + File.pathSeparator);
 
     return ldPathBuilder.toString();
   }
@@ -76,11 +84,11 @@ public class TfLibMappingUtil {
   public String getTfLdLibraryPath(Project project) {
     // Get information about which version of TensorFlow the user is running
     TfLibMapping tfLibMapping = findTfMappingForProject(project);
-    // No tensorflow-gpu
+    // Not supported TF version
     if (tfLibMapping == null) {
       return "";
     }
-    return buildTfLdLibraryPath(tfLibMapping);
+    return buildTfLdLibraryPath(tfLibMapping, project);
   }
 
   public TfLibMapping findTfMappingForProject(Project project) {
@@ -93,7 +101,9 @@ public class TfLibMappingUtil {
 
     if(command == null) {
       return project.getPythonDepCollection().stream()
-              .filter(dep -> dep.getDependency().equals("tensorflow") || dep.getDependency().equals("tensorflow-gpu"))
+              .filter(dep -> dep.getDependency().equals("tensorflow")
+                  || dep.getDependency().equals("tensorflow-gpu")
+                  || dep.getDependency().equals("tensorflow-rocm"))
               .findAny()
               .map(tfDep -> tfLibMappingFacade.findByTfVersion(tfDep.getVersion()))
               .orElse(null);
