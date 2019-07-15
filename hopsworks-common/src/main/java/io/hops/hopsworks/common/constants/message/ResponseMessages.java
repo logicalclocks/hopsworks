@@ -42,8 +42,8 @@ package io.hops.hopsworks.common.constants.message;
 public class ResponseMessages {
   public final static String PASSWORD_RESET_SUCCESSFUL
           = "Your password was successfully reset, your new password have been sent to your email.";
-  public final static String PASSWORD_RESET = "Your password rest email has been sent. Please check your inbox.";
-  public final static String QR_CODE_RESET = "Your QR code rest email has been sent. Please check your inbox.";
+  public final static String PASSWORD_RESET = "Your password reset email has been sent. Please check your inbox.";
+  public final static String QR_CODE_RESET = "Your QR code reset email has been sent. Please check your inbox.";
   public final static String PASSWORD_CHANGED = "Your password was successfully changed.";
   public final static String SEC_QA_CHANGED = "Your have successfully updated your security question and answer.";
   public final static String PROFILE_UPDATED
