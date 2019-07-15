@@ -1853,7 +1853,8 @@ public class Settings implements Serializable {
   public static final int IS_ONLINE = 1;
   public static final int IS_OFFLINE = 0;
 
-  public static final int ALLOWED_FALSE_LOGINS = 20;
+  public static final int ALLOWED_FALSE_LOGINS = 5;
+  public static final int ALLOWED_AGENT_FALSE_LOGINS = 20;
 
   //hopsworks user prefix username prefix
   public static final String USERNAME_PREFIX = "meb";
@@ -2315,7 +2316,12 @@ public class Settings implements Serializable {
     return "hops-examples-featurestore-" + HOPS_EXAMPLES_VERSION + ".jar";
   }
 
-  private String VERIFICATION_PATH = "hopsworks-api/api/auth/verify";
+  private String VERIFICATION_PATH = "/hopsworks-admin/security/validate_account.xhtml";
+  
+  public synchronized String getEmailVerificationEndpoint() {
+    checkCache();
+    return VERIFICATION_PATH;
+  }
 
   public synchronized String getVerificationEndpoint() {
     checkCache();

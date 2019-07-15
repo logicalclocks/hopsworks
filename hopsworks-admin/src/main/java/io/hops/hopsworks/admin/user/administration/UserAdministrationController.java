@@ -21,13 +21,12 @@ import io.hops.hopsworks.common.dao.user.BbcGroup;
 import io.hops.hopsworks.common.dao.user.BbcGroupFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.security.ua.SecurityUtils;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountType;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
+import io.hops.hopsworks.common.user.AuthController;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.EmailBean;
-import io.hops.hopsworks.common.util.FormatUtils;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -52,6 +51,8 @@ public class UserAdministrationController {
   private static final Logger LOGGER = Logger.getLogger(UserAdministrationController.class.getName());
   @EJB
   protected UsersController usersController;
+  @EJB
+  private AuthController authController;
   @EJB
   private EmailBean emailBean;
   @EJB
@@ -154,13 +155,8 @@ public class UserAdministrationController {
   public void resendAccountVerificationEmail(Users user) {
     FacesContext context = FacesContext.getCurrentInstance();
     HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
-    String activationKey = SecurityUtils.getRandomPassword(64);
     try {
-      emailBean.sendEmail(user.getEmail(), Message.RecipientType.TO, UserAccountsEmailMessages.ACCOUNT_REQUEST_SUBJECT,
-        UserAccountsEmailMessages.buildMobileRequestMessage(FormatUtils.getUserURL(request), user.getUsername()
-          + activationKey));
-      user.setValidationKey(activationKey);
-      userFacade.update(user);
+      authController.sendNewValidationKey(user, request);
       MessagesController.addInfoMessage("Account verification Email Successfully Resent");
     } catch (MessagingException e) {
       MessagesController.addSecurityErrorMessage("Could not send email to " + user.getEmail() + ". " + e.getMessage());

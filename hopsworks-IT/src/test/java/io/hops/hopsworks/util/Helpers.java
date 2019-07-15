@@ -20,56 +20,40 @@ import java.net.URL;
 import java.time.Duration;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import static org.junit.Assert.assertEquals;
+
+import io.hops.hopsworks.util.helpers.LoginHelper;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedCondition;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 public class Helpers {
-
-  private final WebDriver driver;
-
-  public Helpers(WebDriver driver) {
-    this.driver = driver;
-  }
-
-  public void login(String username, String password) {
-    driverGet("hopsworks/#!/login");
-    driver.findElement(By.id("login_inputEmail")).clear();
-    driver.findElement(By.id("login_inputEmail")).sendKeys(username);
-    driver.findElement(By.id("login_inputPassword")).sendKeys(password);
-    driver.findElement(By.name("loginForm")).submit();
-    assertEquals("admin@hopsworks.ai", driver.findElement(By.id("navbarProfile")).getText());
-  }
-
-  public void enableTwoFactor() {
-    driverGet("hopsworks-admin/security/protected/admin/refreshVariables.xhtml");
+  
+  public static void enableTwoFactor(WebDriver driver, DBHelper dbHelper) {
+    LoginHelper.loginAsAdmin(driver, dbHelper);
+    driverGet("hopsworks-admin/security/protected/admin/refreshVariables.xhtml", driver);
     driver.findElement(By.id("updateVariablesForm:variablesTable:idColumn:filter")).click();
     driver.findElement(By.id("updateVariablesForm:variablesTable:idColumn:filter")).clear();
     driver.findElement(By.id("updateVariablesForm:variablesTable:idColumn:filter")).sendKeys("twofactor_auth");
-    wait(By.xpath("(.//*[normalize-space(text()) and normalize-space(.)='Reload variables'])[1]/following::span[1]"), 
-        "(1 of 1)");
+    wait(By.xpath("(.//*[normalize-space(text()) and normalize-space(.)='Reload variables'])[1]/following::span[1]"),
+      "(1 of 1)", driver);
     driver.findElement(By.xpath(".//*[contains(@class, 'ui-icon-pencil')]")).click();
     driver.findElement(By.id("updateVariablesForm:variablesTable:0:j_idt17")).click();
     driver.findElement(By.id("updateVariablesForm:variablesTable:0:j_idt17")).clear();
-    driver.findElement(By.id("updateVariablesForm:variablesTable:0:j_idt17")).sendKeys("true"); 
+    driver.findElement(By.id("updateVariablesForm:variablesTable:0:j_idt17")).sendKeys("true");
     driver.findElement(By.xpath(".//*[contains(@class, 'ui-icon-check')]")).click();
     assertEquals("Updated variable : twofactor_auth to: true", driver.findElement(
-        By.xpath("(.//*[normalize-space(text()) and normalize-space(.)='Updated variable : twofactor_auth to: true'])"
-            + "[1]/following::p[1]")).getText());
+      By.xpath("(.//*[normalize-space(text()) and normalize-space(.)='Updated variable : twofactor_auth to: true'])"
+        + "[1]/following::p[1]")).getText());
+    driverGet("hopsworks", driver);
+    LoginHelper.logout(driver);
   }
-
-  public void logout() {
-    driverGet("hopsworks/");
-    if (driver.findElement(By.id("navbarProfile")) != null) {
-      driver.findElement(By.id("navbarProfile")).click();
-      driver.findElement(By.linkText("Sign out")).click();
-    }
-  }
-
-  public void driverGet(String path) {
+  
+  public static void driverGet(String path, WebDriver driver) {
     String urlStr = driver.getCurrentUrl();
     URL url;
     try {
@@ -81,15 +65,60 @@ public class Helpers {
       Logger.getLogger(Helpers.class.getName()).log(Level.SEVERE, null, ex);
     }
   }
-
-  public WebElement waitForElement(By by) {
-    return (new WebDriverWait(driver, 600).pollingEvery(Duration.ofSeconds(5))).until((ExpectedCondition<WebElement>) (
-        WebDriver d) -> d.findElement(by));
+  
+  public static WebElement waitForElement(By by, WebDriver driver) {
+    return (new WebDriverWait(driver, 60).pollingEvery(Duration.ofSeconds(5))).until((ExpectedCondition<WebElement>) (
+      WebDriver d) -> d.findElement(by));
   }
-
-  private boolean wait(By by, String txt) {
+  
+  public static boolean wait(By by, String txt, WebDriver driver) {
     return (new WebDriverWait(driver, 100)).until((ExpectedCondition<Boolean>) (WebDriver d) -> d.findElement(by).
-        getText().equals(txt));
+      getText().equals(txt));
   }
-
+  
+  public static WebElement waitForElementVisibility(By by, WebDriver driver) {
+    WebElement element = driver.findElement(by);
+    WebDriverWait wait = new WebDriverWait(driver, 60);
+    wait.until(ExpectedConditions.visibilityOf(element));
+    return element;
+  }
+  
+  public static void testTogglePassword(By element, By xpath, StringBuffer verificationErrors, WebDriver driver) {
+    String content = driver.findElement(element).getAttribute("type");
+    try {
+      assertEquals(content, "password");
+    } catch (Error e) {
+      verificationErrors.append("Default password type should be password but found ")
+        .append(content)
+        .append(e.getMessage()).append("/n");
+    }
+    driver.findElement(xpath).click();
+    content = driver.findElement(element).getAttribute("type");
+    try {
+      assertEquals(content, "text");
+    } catch (Error e) {
+      verificationErrors.append("When clicked password type should be text but found ")
+        .append(content)
+        .append(e.getMessage()).append("/n");
+    }
+    driver.findElement(xpath).click();
+    content = driver.findElement(element).getAttribute("type");
+    try {
+      assertEquals(content, "password");
+    } catch (Error e) {
+      verificationErrors.append("When clicked again password type should be password but found ")
+        .append(content)
+        .append(e.getMessage()).append("/n");
+    }
+  }
+  
+  public static void assertEqualsElementText(String msg, By element, StringBuffer verificationErrors,
+    WebDriver driver) {
+    Helpers.waitForElement(element, driver);
+    try {
+      assertEquals(msg, driver.findElement(element).getText());
+    } catch (Error e) {
+      verificationErrors.append(e.toString()).append("/n");
+    }
+  }
 }

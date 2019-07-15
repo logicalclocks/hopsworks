@@ -58,12 +58,7 @@
       <to-view-id>/security/qrcode.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
-    
-    <navigation-case>
-      <from-outcome>reset_password</from-outcome>
-      <to-view-id>/security/reset_password.xhtml</to-view-id>
-      <redirect/>
-    </navigation-case>
+
     <navigation-case>
       <from-outcome>password_changed</from-outcome>
       <to-view-id>/security/password_changed.xhtml</to-view-id>
@@ -96,12 +91,6 @@
     <navigation-case>
       <from-outcome>mobile_recovery</from-outcome>
       <to-view-id>/security/mobile_recovery.xhtml</to-view-id>
-      <redirect/>
-    </navigation-case>
-    
-    <navigation-case>
-      <from-outcome>validate_code</from-outcome>
-      <to-view-id>/security/validate_code.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
     

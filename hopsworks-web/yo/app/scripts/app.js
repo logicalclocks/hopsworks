@@ -184,6 +184,31 @@ angular.module('hopsWorksApp', [
                       templateUrl: 'views/recover.html',
                       controller: 'RecoverCtrl as recoverCtrl'
                     })
+                    .when('/passwordRecovery', {
+                        templateUrl: 'views/passwordRecovery.html',
+                        controller: 'PasswordRecoveryCtrl as recoveryCtrl',
+                        resolve: {
+                            validate: ['$q', '$location', 'AuthService',
+                                function ($q, $location, AuthService) {
+                                  var key = {key: decodeURIComponent($location.search()['key'])};
+                                  return AuthService.validateRecoveryKey(key).then(
+                                    function (success) {
+                                       return $q.promise;
+                                    },
+                                    function (err) {
+                                       var msg = typeof err.data !== 'undefined' ?  err.data.errorMsg : "Invalid key.";
+                                       msg = typeof err.data.usrMsg !== 'undefined' ? err.data.usrMsg : msg;
+                                       $location.path('/error').search({e: msg});
+                                       $location.replace();
+                                       return $q.reject(err);
+                                    });
+                            }]
+                        }
+                    })
+                    .when('/qrRecovery', {
+                        templateUrl: 'views/qrRecovery.html',
+                        controller: 'QrRecoveryCtrl as recoveryCtrl'
+                    })
                     .when('/qrCode/:mode/:QR*', {
                       templateUrl: 'views/qrCode.html',
                       controller: 'RegCtrl as regCtrl'

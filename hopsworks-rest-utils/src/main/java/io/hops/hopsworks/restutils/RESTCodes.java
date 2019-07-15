@@ -823,8 +823,8 @@ public class RESTCodes {
     INCORRECT_DEACTIVATION_LENGTH(38, "The message should have a length between 5 and 500 characters",
         Response.Status.BAD_REQUEST),
     TMP_CODE_INVALID(39, "The temporary code was wrong.", Response.Status.UNAUTHORIZED),
-    INCORRECT_CREDENTIALS(40, "Incorrect email or password.", Response.Status.UNAUTHORIZED),
-    INCORRECT_VALIDATION_KEY(41, "Incorrect validation key", Response.Status.UNAUTHORIZED),
+    INCORRECT_CREDENTIALS(40, "Incorrect email or password.", Response.Status.BAD_REQUEST),
+    INCORRECT_VALIDATION_KEY(41, "Incorrect validation key", Response.Status.BAD_REQUEST),
     ACCOUNT_ALREADY_VERIFIED(42, "User is already verified", Response.Status.CONFLICT),
     TWO_FA_ENABLE_ERROR(43, "Cannot enable 2-factor authentication.",
         Response.Status.INTERNAL_SERVER_ERROR),
@@ -835,7 +835,8 @@ public class RESTCodes {
     ACCESS_CONTROL(47, "Client not authorized for this invocation.", Response.Status.FORBIDDEN),
     SECRET_EMPTY(48, "Secret is empty", Response.Status.NOT_FOUND),
     SECRET_EXISTS(49, "Same Secret already exists", Response.Status.CONFLICT),
-    SECRET_ENCRYPTION_ERROR(50, "Error encrypting/decrypting Secret", Response.Status.INTERNAL_SERVER_ERROR);
+    SECRET_ENCRYPTION_ERROR(50, "Error encrypting/decrypting Secret", Response.Status.INTERNAL_SERVER_ERROR),
+    ACCOUNT_NOT_ACTIVE(51, "This account is not active", Response.Status.BAD_REQUEST);
 
     private Integer code;
     private String message;

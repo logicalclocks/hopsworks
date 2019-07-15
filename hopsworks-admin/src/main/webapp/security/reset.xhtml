@@ -52,28 +52,37 @@
   </h:head>
   <h:body>
     <h:form>
-      <p:panel id="loginPnl" header="Login" style="width: 400px; margin: 150px auto;">
-        <h:panelGrid id="loginPanel" columns="3" cellpadding="5">
-          <h:outputText value="New password" />
-          <p:password id="pwd1" value="#{resetPassword.passwd1}"
-                      match="pwd2" label="Password 1" 
-                      required="true" 
-                      requiredMessage="Enter new password"/>
-          <p:watermark for="pwd1" value="Enter new password" />
-          <h:outputText value="Repeat password" />
-          <p:password id="pwd2" value="#{resetPassword.passwd2}"
-                      label="Password 2" 
-                      required="true"
-                      requiredMessage="Repeat the password"/>
-          <p:watermark for="pwd2" value="Repeat the password" />
-        </h:panelGrid>
-        <p:messages id="messages"  autoUpdate="true" showDetail="false" closable="true"/>
-        <div style="margin-left: 215px;">
-          <h:panelGrid columns="2">
-            <p:commandButton  type="submit" value="Save" action="#{resetPassword.changePassword()}"></p:commandButton>
-            <p:commandButton type="submit" value="Cancel" action="#{resetPassword.logout()}" process="@this"/>
+      <p:panel id="loginPnl" header="Reset password" style="width: 400px; margin: 150px auto;">
+        <h:panelGroup rendered="#{!recoverPassword.keyError}">
+          <h:panelGrid id="loginPanel" columns="3" cellpadding="5">
+            <h:outputText value="New password"/>
+            <p:password id="pwd1" value="#{recoverPassword.passwd1}"
+                        match="pwd2" label="Password 1"
+                        required="true"
+                        requiredMessage="Enter new password"/>
+            <p:watermark for="pwd1" value="Enter new password"/>
+            <h:outputText value="Repeat password"/>
+            <p:password id="pwd2" value="#{recoverPassword.passwd2}"
+                        label="Password 2"
+                        required="true"
+                        requiredMessage="Repeat the password"/>
+            <p:watermark for="pwd2" value="Repeat the password"/>
           </h:panelGrid>
-        </div>
+          <p:messages id="messages" autoUpdate="true" showDetail="false" closable="true"/>
+          <div style="margin-left: 215px;">
+            <h:panelGrid columns="2">
+              <p:commandButton type="submit" value="Save"
+                               action="#{recoverPassword.changePassword()}"></p:commandButton>
+              <p:commandButton type="submit" value="Cancel" action="#{recoverPassword.cancel()}" process="@this"/>
+            </h:panelGrid>
+          </div>
+        </h:panelGroup>
+        <h:panelGroup rendered="#{recoverPassword.keyError}">
+          <p:messages autoUpdate="true" showDetail="true"/>
+          <div style="display: flex; justify-content: flex-end">
+            <p:commandButton value="Back to login page" action="#{recoverPassword.cancel()}"/>
+          </div>
+        </h:panelGroup>
       </p:panel>
     </h:form>
   </h:body>

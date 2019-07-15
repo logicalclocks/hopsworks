@@ -49,14 +49,13 @@ import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountsAuditActions;
 import io.hops.hopsworks.common.dao.user.security.audit.RolesAuditAction;
-import io.hops.hopsworks.common.dao.user.security.ua.SecurityUtils;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
+import io.hops.hopsworks.common.user.AuthController;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.common.util.EmailBean;
-import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.Api;
 
@@ -102,9 +101,9 @@ public class UsersAdmin {
   @EJB
   private EmailBean emailBean;
   @EJB
-  private Settings settings;
-  @EJB
   private JWTHelper jWTHelper;
+  @EJB
+  private AuthController authController;
 
   @GET
   @Path("/users")
@@ -248,7 +247,7 @@ public class UsersAdmin {
     Users u = userFacade.findByEmail(email);
     if (u != null) {
       if (u.getStatus().equals(UserAccountStatus.NEW_MOBILE_ACCOUNT)) {
-        u = resendAccountVerificationEmail(u);
+        u = resendAccountVerificationEmail(u, req);
       } else {
         throw new UserException(RESTCodes.UserErrorCode.TRANSITION_STATUS_ERROR, Level.WARNING,
           "status: "+ u.getStatus().name() + ", to pending status");
@@ -285,15 +284,10 @@ public class UsersAdmin {
     }
   }
 
-  private Users resendAccountVerificationEmail(Users user) throws ServiceException {
+  private Users resendAccountVerificationEmail(Users user, HttpServletRequest req) throws ServiceException {
     try {
-      String activationKey = SecurityUtils.getRandomPassword(64);
-      emailBean.sendEmail(user.getEmail(), Message.RecipientType.TO,
-          UserAccountsEmailMessages.ACCOUNT_REQUEST_SUBJECT,
-          UserAccountsEmailMessages.buildMobileRequestMessageRest(settings.getVerificationEndpoint(), user.getUsername()
-              + activationKey));
-      user.setValidationKey(activationKey);
-      return userFacade.update(user);
+      authController.sendNewValidationKey(user, req);
+      return user;
     } catch (MessagingException e) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.EMAIL_SENDING_FAILURE, Level.SEVERE, null, e.getMessage(),
         e);

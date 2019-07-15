@@ -39,35 +39,26 @@
 
 package io.hops.hopsworks.admin.user.account;
 
-import io.hops.hopsworks.common.dao.user.UserFacade;
+import io.hops.hopsworks.common.user.UsersController;
+import io.hops.hopsworks.exceptions.UserException;
+import io.hops.hopsworks.restutils.RESTCodes;
+
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
+import javax.ejb.EJBException;
+import javax.enterprise.context.RequestScoped;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
-import javax.enterprise.context.RequestScoped;
 import javax.faces.context.FacesContext;
 import javax.persistence.PersistenceException;
-import javax.persistence.QueryTimeoutException;
 import javax.servlet.http.HttpServletRequest;
-import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.security.audit.AccountsAuditActions;
-import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
-import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
-import io.hops.hopsworks.common.dao.user.security.ua.UserAccountType;
-import io.hops.hopsworks.common.user.UsersController;
-import io.hops.hopsworks.common.util.Settings;
 
 @ManagedBean
 @RequestScoped
 public class AccountVerification {
 
   @EJB
-  private UserFacade userFacade;
-  @EJB
   protected UsersController usersController;
-
-  @EJB
-  private AccountAuditFacade am;
 
   @ManagedProperty("#{param.key}")
   private String key;
@@ -81,80 +72,28 @@ public class AccountVerification {
 
   @PostConstruct
   public void init() {
-    if (key != null) {
-      username = key.substring(0, Settings.USERNAME_LENGTH);
-      // get the 8 char username
-      String secret = key.substring(Settings.USERNAME_LENGTH,
-              key.length());
-      valid = validateKey(secret);
-    }
+    valid = validate(key);
   }
-
-  private boolean validateKey(String key) {
-
-    // If user loged in invalidate session first  
+  
+  private boolean validate(String key) {
     FacesContext ctx = FacesContext.getCurrentInstance();
-    HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().
-            getRequest();
-
-    Users user = null;
-
+    HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().getRequest();
     try {
-      user = userFacade.findByUsername(username);
-    } catch (QueryTimeoutException ex) {
-      dbDown = true;
-      return false;
+      usersController.validateKey(key, req);
+      return true;
     } catch (PersistenceException ex) {
       dbDown = true;
+    } catch (EJBException | IllegalArgumentException e) {
       return false;
-    }
-
-    if (user == null) {
-      userNotFound = true;
-      return false;
-    }
-
-    if (!user.getStatus().equals(UserAccountStatus.NEW_MOBILE_ACCOUNT)
-            && user.getMode().equals(UserAccountType.M_ACCOUNT_TYPE)) {
-      am.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
-              AccountsAuditActions.FAILED.name(),
-              "Could not verify the account due to wrong status.", user, req);
-
-      if (user.getStatus().equals(UserAccountStatus.ACTIVATED_ACCOUNT)) {
-        this.alreadyRegistered = true;
-      }
-      if (user.getStatus().equals(UserAccountStatus.VERIFIED_ACCOUNT)) {
+    } catch (UserException ue) {
+      if (RESTCodes.UserErrorCode.ACCOUNT_INACTIVE.equals(ue.getErrorCode())) {
         this.alreadyValidated = true;
+      } else if (RESTCodes.UserErrorCode.ACCOUNT_ALREADY_VERIFIED.equals(ue.getErrorCode())) {
+        this.alreadyRegistered = true;
+      } else {
+        this.userNotFound = true;
       }
-
-      return false;
     }
-
-    if (key.equals(user.getValidationKey())) {
-      usersController.changeAccountStatus(user.getUid(), "",
-              UserAccountStatus.VERIFIED_ACCOUNT);
-      am.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
-              AccountsAuditActions.SUCCESS.name(),
-              "Verified account email address.", user, req);
-      usersController.resetKey(user.getUid());
-      return true;
-    }
-
-    int val = user.getFalseLogin();
-    usersController.increaseLockNum(user.getUid(), val + 1);
-
-    // if more than 5 times false logins set as spam
-    if (val > Settings.ACCOUNT_VALIDATION_TRIES) {
-      usersController.changeAccountStatus(user.getUid(), UserAccountStatus.SPAM_ACCOUNT.
-              toString(),
-              UserAccountStatus.SPAM_ACCOUNT);
-      usersController.resetKey(user.getUid());
-      am.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
-              AccountsAuditActions.FAILED.name(),
-              "Too many false activation attemps.", user, req);
-
-    }
-
     return false;
   }
 
