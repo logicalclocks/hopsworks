@@ -19,7 +19,6 @@ package io.hops.hopsworks.common.dao.featurestore.featuregroup.cached_featuregro
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
 import io.hops.hopsworks.common.dao.featurestore.FeaturestoreController;
-import io.hops.hopsworks.common.dao.featurestore.FeaturestoreFacade;
 import io.hops.hopsworks.common.dao.featurestore.feature.FeatureDTO;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.FeaturegroupDTO;
@@ -69,8 +68,6 @@ public class CachedFeaturegroupController {
   private Settings settings;
   @EJB
   private FeaturestoreController featurestoreController;
-  @EJB
-  private FeaturestoreFacade featurestoreFacade;
 
 
   private static final Logger LOGGER = Logger.getLogger(CachedFeaturegroupController.class.getName());
@@ -450,15 +447,17 @@ public class CachedFeaturegroupController {
    * Verify user input specific for creation of on-demand training dataset
    *
    * @param cachedFeaturegroupDTO the user input data for creating the feature group
+   * @throws FeaturestoreException
    */
-  public void verifyCachedFeaturegroupUserInput(CachedFeaturegroupDTO cachedFeaturegroupDTO) {
+  public void verifyCachedFeaturegroupUserInput(CachedFeaturegroupDTO cachedFeaturegroupDTO)
+    throws FeaturestoreException {
 
     Pattern namePattern = Pattern.compile(FeaturestoreClientSettingsDTO.FEATURESTORE_REGEX);
 
     if(cachedFeaturegroupDTO.getName().length() > FeaturestoreClientSettingsDTO.CACHED_FEATUREGROUP_NAME_MAX_LENGTH ||
         !namePattern.matcher(cachedFeaturegroupDTO.getName()).matches()) {
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_NAME.getMessage()
-          + ", the name of a cached feature group should be less than "
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_NAME, Level.FINE,
+          ", the name of a cached feature group should be less than "
           + FeaturestoreClientSettingsDTO.CACHED_FEATUREGROUP_NAME_MAX_LENGTH + " characters and match " +
           "the regular expression: " +  FeaturestoreClientSettingsDTO.FEATURESTORE_REGEX);
     }
@@ -466,26 +465,29 @@ public class CachedFeaturegroupController {
     if(!Strings.isNullOrEmpty(cachedFeaturegroupDTO.getDescription()) &&
         cachedFeaturegroupDTO.getDescription().length() >
           FeaturestoreClientSettingsDTO.CACHED_FEATUREGROUP_DESCRIPTION_MAX_LENGTH){
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_DESCRIPTION.getMessage()
-          + ", the descritpion of a cached feature group should be less than "
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_DESCRIPTION, Level.FINE,
+          ", the descritpion of a cached feature group should be less than "
           + FeaturestoreClientSettingsDTO.CACHED_FEATUREGROUP_DESCRIPTION_MAX_LENGTH + " characters");
     }
-
-    cachedFeaturegroupDTO.getFeatures().stream().forEach(f -> {
-      if(Strings.isNullOrEmpty(f.getName()) || !namePattern.matcher(f.getName()).matches() || f.getName().length() >
-          FeaturestoreClientSettingsDTO.CACHED_FEATUREGROUP_FEATURE_NAME_MAX_LENGTH){
-        throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_NAME.getMessage()
-            + ", the feature name in a cached feature group should be less than "
-            + FeaturestoreClientSettingsDTO.CACHED_FEATUREGROUP_FEATURE_NAME_MAX_LENGTH + " characters and match " +
-            "the regular expression: " +  FeaturestoreClientSettingsDTO.FEATURESTORE_REGEX);
-      }
-      if(!Strings.isNullOrEmpty(f.getDescription()) && f.getDescription().length() >
-            FeaturestoreClientSettingsDTO.CACHED_FEATUREGROUP_FEATURE_DESCRIPTION_MAX_LENGTH) {
-        throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_DESCRIPTION.getMessage()
-            + ", the feature description in a cached feature group should be less than "
-            + FeaturestoreClientSettingsDTO.CACHED_FEATUREGROUP_FEATURE_DESCRIPTION_MAX_LENGTH + " characters");
-      }
-    });
+    
+    if(!cachedFeaturegroupDTO.getFeatures().stream().filter(f -> {
+      return (Strings.isNullOrEmpty(f.getName()) || !namePattern.matcher(f.getName()).matches() || f.getName().length()
+        > FeaturestoreClientSettingsDTO.CACHED_FEATUREGROUP_FEATURE_NAME_MAX_LENGTH);
+    }).collect(Collectors.toList()).isEmpty()) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_NAME, Level.FINE,
+        ", the feature name in a cached feature group should be less than "
+          + FeaturestoreClientSettingsDTO.CACHED_FEATUREGROUP_FEATURE_NAME_MAX_LENGTH + " characters and match " +
+          "the regular expression: " +  FeaturestoreClientSettingsDTO.FEATURESTORE_REGEX);
+    }
+  
+    if(!cachedFeaturegroupDTO.getFeatures().stream().filter(f -> {
+      return (!Strings.isNullOrEmpty(f.getDescription()) && f.getDescription().length() >
+        FeaturestoreClientSettingsDTO.CACHED_FEATUREGROUP_FEATURE_DESCRIPTION_MAX_LENGTH);
+    }).collect(Collectors.toList()).isEmpty()) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_DESCRIPTION, Level.FINE,
+        ", the feature description in a cached feature group should be less than "
+        + FeaturestoreClientSettingsDTO.CACHED_FEATUREGROUP_FEATURE_DESCRIPTION_MAX_LENGTH + " characters");
+    }
   }
 
   /**

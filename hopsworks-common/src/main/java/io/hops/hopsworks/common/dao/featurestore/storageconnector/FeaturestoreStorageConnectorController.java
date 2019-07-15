@@ -119,10 +119,11 @@ public class FeaturestoreStorageConnectorController {
    * @param featurestoreStorageConnectorType the type of the storage connector
    * @param featurestoreStorageConnectorDTO the data to use when creating the storage connector
    * @return A JSON/XML DTOs representation of the created storage connector
+   * @throws FeaturestoreException
    */
   public FeaturestoreStorageConnectorDTO createStorageConnectorWithType(
       Featurestore featurestore, FeaturestoreStorageConnectorType featurestoreStorageConnectorType,
-      FeaturestoreStorageConnectorDTO featurestoreStorageConnectorDTO) {
+      FeaturestoreStorageConnectorDTO featurestoreStorageConnectorDTO) throws FeaturestoreException {
     switch(featurestoreStorageConnectorType) {
       case S3:
         return featurestoreS3ConnectorController.createFeaturestoreS3Connector(featurestore,

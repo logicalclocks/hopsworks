@@ -18,7 +18,6 @@ package io.hops.hopsworks.common.dao.featurestore.featuregroup;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
-import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -135,12 +134,9 @@ public class FeaturegroupFacade extends AbstractFacade<Featuregroup> {
    * to be modified)
    *
    * @param featuregroup the featuregroup to update
-   * @param job the new job of the featuregroup
    * @return the updated featuregroup entity
    */
-  public Featuregroup updateFeaturegroupMetadata(
-    Featuregroup featuregroup, Jobs job) {
-    featuregroup.setJob(job);
+  public Featuregroup updateFeaturegroupMetadata(Featuregroup featuregroup) {
     em.merge(featuregroup);
     return featuregroup;
   }

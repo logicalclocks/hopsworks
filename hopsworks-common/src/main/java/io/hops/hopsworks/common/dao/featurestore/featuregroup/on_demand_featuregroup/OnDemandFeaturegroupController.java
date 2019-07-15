@@ -31,6 +31,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.util.List;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 /**
  * Class controlling the interaction with the on_demand_feature_group table and required business logic
@@ -82,10 +83,11 @@ public class OnDemandFeaturegroupController {
    *
    * @param onDemandFeaturegroup the on-demand feature group to update
    * @param onDemandFeaturegroupDTO the metadata DTO
+   * @throws FeaturestoreException
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
-  public void updateOnDemandFeaturergroupMetadata(OnDemandFeaturegroup onDemandFeaturegroup,
-    OnDemandFeaturegroupDTO onDemandFeaturegroupDTO) {
+  public void updateOnDemandFeaturegroupMetadata(OnDemandFeaturegroup onDemandFeaturegroup,
+    OnDemandFeaturegroupDTO onDemandFeaturegroupDTO) throws FeaturestoreException {
     
     if(!Strings.isNullOrEmpty(onDemandFeaturegroupDTO.getName())){
       verifyOnDemandFeaturegroupName(onDemandFeaturegroupDTO.getName());
@@ -117,16 +119,17 @@ public class OnDemandFeaturegroupController {
   /**
    * Verifies the name of an on-demand feature group
    * @param name
+   * @throws FeaturestoreException
    */
-  public void verifyOnDemandFeaturegroupName(String name){
+  public void verifyOnDemandFeaturegroupName(String name) throws FeaturestoreException {
     if(Strings.isNullOrEmpty(name)){
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_NAME.getMessage()
-        + ", the name of an on-demand feature group should not be empty ");
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_NAME, Level.FINE,
+        ", the name of an on-demand feature group should not be empty ");
     }
     if(name.length() >
       FeaturestoreClientSettingsDTO.ON_DEMAND_FEATUREGROUP_NAME_MAX_LENGTH) {
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_NAME.getMessage()
-        + ", the name of an on-demand feature group should be less than "
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_NAME, Level.FINE,
+        ", the name of an on-demand feature group should be less than "
         + FeaturestoreClientSettingsDTO.ON_DEMAND_FEATUREGROUP_NAME_MAX_LENGTH + " characters");
     }
   }
@@ -135,13 +138,14 @@ public class OnDemandFeaturegroupController {
    * Verifies the description of an on-demand feature group
    *
    * @param description the description to verify
+   * @throws FeaturestoreException
    */
-  private void verifyOnDemandFeaturegroupDescription(String description) {
+  private void verifyOnDemandFeaturegroupDescription(String description) throws FeaturestoreException {
     if(!Strings.isNullOrEmpty(description) &&
       description.length()
         > FeaturestoreClientSettingsDTO.ON_DEMAND_FEATUREGROUP_DESCRIPTION_MAX_LENGTH){
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_DESCRIPTION.getMessage()
-        + ", the descritpion of an on-demand feature group should be less than "
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_DESCRIPTION, Level.FINE,
+        ", the descritpion of an on-demand feature group should be less than "
         + FeaturestoreClientSettingsDTO.ON_DEMAND_FEATUREGROUP_DESCRIPTION_MAX_LENGTH + " " +
         "characters");
     }
@@ -152,22 +156,24 @@ public class OnDemandFeaturegroupController {
    *
    * @param featureDTOs the feature list to verify
    */
-  private void verifyOnDemandFeaturegroupFeatures(List<FeatureDTO> featureDTOs) {
-    featureDTOs.stream().forEach(f -> {
-      if(Strings.isNullOrEmpty(f.getName()) || f.getName().length() >
-        FeaturestoreClientSettingsDTO.ON_DEMAND_FEATUREGROUP_FEATURE_NAME_MAX_LENGTH){
-        throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_NAME.getMessage()
-          + ", the feature name in an on-demand feature group should be less than "
+  private void verifyOnDemandFeaturegroupFeatures(List<FeatureDTO> featureDTOs) throws FeaturestoreException {
+    if(!featureDTOs.stream().filter(f -> {
+      return (Strings.isNullOrEmpty(f.getName()) || f.getName().length() >
+        FeaturestoreClientSettingsDTO.ON_DEMAND_FEATUREGROUP_FEATURE_NAME_MAX_LENGTH);
+    }).collect(Collectors.toList()).isEmpty()){
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_NAME, Level.FINE,
+        ", the feature name in an on-demand feature group should be less than "
           + FeaturestoreClientSettingsDTO.ON_DEMAND_FEATUREGROUP_FEATURE_NAME_MAX_LENGTH + " characters");
-      }
-      if(!Strings.isNullOrEmpty(f.getDescription()) &&
+    }
+    if(!featureDTOs.stream().filter(f -> {
+      return (!Strings.isNullOrEmpty(f.getDescription()) &&
         f.getDescription().length() >
-          FeaturestoreClientSettingsDTO.ON_DEMAND_FEATUREGROUP_FEATURE_DESCRIPTION_MAX_LENGTH) {
-        throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_DESCRIPTION.getMessage()
-          + ", the feature description in an on-demand feature group should be less than "
+          FeaturestoreClientSettingsDTO.ON_DEMAND_FEATUREGROUP_FEATURE_DESCRIPTION_MAX_LENGTH);
+    }).collect(Collectors.toList()).isEmpty()){
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_DESCRIPTION, Level.FINE,
+        ", the feature description in an on-demand feature group should be less than "
           + FeaturestoreClientSettingsDTO.ON_DEMAND_FEATUREGROUP_FEATURE_DESCRIPTION_MAX_LENGTH + " characters");
-      }
-    });
+    }
   }
   
   /**
@@ -175,16 +181,18 @@ public class OnDemandFeaturegroupController {
    *
    * @param jdbcConnectorId the JDBC connector id to verify
    * @returns the jdbc connector with the given id if it passed the validation
+   * @throws FeaturestoreException
    */
-  private FeaturestoreJdbcConnector verifyOnDemandFeaturegroupJdbcConnector(Integer jdbcConnectorId) {
+  private FeaturestoreJdbcConnector verifyOnDemandFeaturegroupJdbcConnector(Integer jdbcConnectorId)
+    throws FeaturestoreException {
     if(jdbcConnectorId == null){
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.JDBC_CONNECTOR_ID_NOT_PROVIDED.getMessage());
     }
     FeaturestoreJdbcConnector featurestoreJdbcConnector =
       featurestoreJdbcConnectorFacade.find(jdbcConnectorId);
     if(featurestoreJdbcConnector == null) {
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.JDBC_CONNECTOR_NOT_FOUND.getMessage()
-        + "JDBC connector with id: " + jdbcConnectorId + " was not found");
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.JDBC_CONNECTOR_NOT_FOUND, Level.FINE,
+        "JDBC connector with id: " + jdbcConnectorId + " was not found");
     }
     return featurestoreJdbcConnector;
   }
@@ -193,17 +201,18 @@ public class OnDemandFeaturegroupController {
    * Verifies the user input SQL query for an on-demand feature group
    *
    * @param query the query to verify
+   * @throws FeaturestoreException
    */
-  private void verifyOnDemandFeaturegroupSqlQuery(String query){
+  private void verifyOnDemandFeaturegroupSqlQuery(String query) throws FeaturestoreException {
     if(Strings.isNullOrEmpty(query)){
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.INVALID_SQL_QUERY.getMessage()
-        + ", SQL Query cannot be empty");
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.INVALID_SQL_QUERY, Level.FINE,
+        ", SQL Query cannot be empty");
     }
   
     if(query.length() >
       FeaturestoreClientSettingsDTO.ON_DEMAND_FEATUREGROUP_SQL_QUERY_MAX_LENGTH) {
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.INVALID_SQL_QUERY.getMessage()
-        + ", SQL Query cannot exceed " +
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.INVALID_SQL_QUERY, Level.FINE,
+        ", SQL Query cannot exceed " +
         FeaturestoreClientSettingsDTO.ON_DEMAND_FEATUREGROUP_SQL_QUERY_MAX_LENGTH + "characters.");
     }
   }
@@ -212,8 +221,10 @@ public class OnDemandFeaturegroupController {
    * Verify user input specific for creation of on-demand feature group
    *
    * @param onDemandFeaturegroupDTO the input data to use when creating the feature group
+   * @throws FeaturestoreException
    */
-  private void verifyOnDemandFeaturegroupUserInput(OnDemandFeaturegroupDTO onDemandFeaturegroupDTO) {
+  private void verifyOnDemandFeaturegroupUserInput(OnDemandFeaturegroupDTO onDemandFeaturegroupDTO)
+    throws FeaturestoreException {
     verifyOnDemandFeaturegroupName(onDemandFeaturegroupDTO.getName());
     verifyOnDemandFeaturegroupDescription(onDemandFeaturegroupDTO.getDescription());
     verifyOnDemandFeaturegroupFeatures(onDemandFeaturegroupDTO.getFeatures());

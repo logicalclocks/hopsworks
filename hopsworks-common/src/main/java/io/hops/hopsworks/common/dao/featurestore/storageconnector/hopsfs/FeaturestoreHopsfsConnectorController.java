@@ -50,9 +50,11 @@ public class FeaturestoreHopsfsConnectorController {
    * @param featurestore the featurestore
    * @param featurestoreHopsfsConnectorDTO the input data to use when creating the connector
    * @returns a DTO representing the created entity
+   * @throws FeaturestoreException
    */
   public FeaturestoreHopsfsConnectorDTO createFeaturestoreHopsfsConnector(
-      Featurestore featurestore, FeaturestoreHopsfsConnectorDTO featurestoreHopsfsConnectorDTO) {
+      Featurestore featurestore, FeaturestoreHopsfsConnectorDTO featurestoreHopsfsConnectorDTO)
+    throws FeaturestoreException {
     verifyUserInput(featurestore, featurestoreHopsfsConnectorDTO);
     Dataset dataset = datasetController.getByProjectAndDsName(featurestore.getProject(),
         null, featurestoreHopsfsConnectorDTO.getDatasetName());
@@ -106,8 +108,10 @@ public class FeaturestoreHopsfsConnectorController {
    *
    * @param featurestore the featurestore
    * @param hopsfsDataset the HopsFS dataset
+   * @throws FeaturestoreException
    */
-  public void createHopsFsBackendForFeaturestoreConnector(Featurestore featurestore, Dataset hopsfsDataset) {
+  public void createHopsFsBackendForFeaturestoreConnector(Featurestore featurestore, Dataset hopsfsDataset)
+    throws FeaturestoreException {
     String name = hopsfsDataset.getName();
     String description = "HopsFS backend for storing Training Datasets of the Hopsworks Feature Store";
     FeaturestoreHopsfsConnectorDTO featurestoreHopsfsConnectorDTO = new FeaturestoreHopsfsConnectorDTO();
@@ -156,26 +160,27 @@ public class FeaturestoreHopsfsConnectorController {
    * @param name the user input to verify
    * @param featurestore the featurestore to query
    * @param edit boolean flag whether the validation if for updating an existing connector or creating a new one
+   * @throws FeaturestoreException
    */
-  private void verifyHopsfsConnectorName(String name, Featurestore featurestore, Boolean edit){
+  private void verifyHopsfsConnectorName(String name, Featurestore featurestore, Boolean edit)
+    throws FeaturestoreException {
     if (Strings.isNullOrEmpty(name)) {
-      throw new IllegalArgumentException(
-          RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_NAME.getMessage() +
-              ", the storage connector name cannot be empty");
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_NAME,
+              Level.FINE, ", the storage connector name cannot be empty");
     }
 
     if(name.length() >
         FeaturestoreClientSettingsDTO.STORAGE_CONNECTOR_NAME_MAX_LENGTH) {
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_NAME.getMessage()
-          + ", the name should be less than " +
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_NAME, Level.FINE,
+          ", the name should be less than " +
           FeaturestoreClientSettingsDTO.STORAGE_CONNECTOR_NAME_MAX_LENGTH + " characters.");
     }
 
     if(!edit){
       if(featurestore.getHopsfsConnections().stream()
           .anyMatch(hopsfsCon -> hopsfsCon.getName().equalsIgnoreCase(name))) {
-        throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_NAME.getMessage()
-            + ", the storage connector name should be unique, there already exists a HopsFS connector " +
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_NAME, Level.FINE,
+            ", the storage connector name should be unique, there already exists a HopsFS connector " +
             "with the same name ");
       }
     }
@@ -196,12 +201,12 @@ public class FeaturestoreHopsfsConnectorController {
    * Verify user input description
    *
    * @param description the user input to verify
+   * @throws FeaturestoreException
    */
-  private void verifyHopsfsConnectorDescription(String description) {
+  private void verifyHopsfsConnectorDescription(String description) throws FeaturestoreException {
     if(description.length() >
         FeaturestoreClientSettingsDTO.STORAGE_CONNECTOR_DESCRIPTION_MAX_LENGTH) {
-      throw new IllegalArgumentException(
-          RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_DESCRIPTION.getMessage() +
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_DESCRIPTION, Level.FINE,
               ", the description should be less than: "
               + FeaturestoreClientSettingsDTO.STORAGE_CONNECTOR_DESCRIPTION_MAX_LENGTH);
     }
@@ -212,13 +217,15 @@ public class FeaturestoreHopsfsConnectorController {
    *
    * @param datasetName the user input to verify
    * @param featurestore the featurestore to query
+   * @throws FeaturestoreException
    */
-  private void verifyHopsfsConnectorDatasetName(String datasetName, Featurestore featurestore){
+  private void verifyHopsfsConnectorDatasetName(String datasetName, Featurestore featurestore)
+    throws FeaturestoreException {
     Dataset dataset = datasetController.getByProjectAndDsName(featurestore.getProject(),
         null, datasetName);
     if(dataset == null){
-      throw new IllegalArgumentException(
-          RESTCodes.FeaturestoreErrorCode.ILLEGAL_HOPSFS_CONNECTOR_DATASET.getMessage() +
+      throw new FeaturestoreException(
+          RESTCodes.FeaturestoreErrorCode.ILLEGAL_HOPSFS_CONNECTOR_DATASET, Level.FINE,
               ", the dataset could not be found");
     }
   }
@@ -228,9 +235,11 @@ public class FeaturestoreHopsfsConnectorController {
    *
    * @param featurestore the featurestore
    * @param featurestoreHopsfsConnectorDTO the input data to use when creating the connector
+   * @throws FeaturestoreException
    */
   private void verifyUserInput(Featurestore featurestore,
-                              FeaturestoreHopsfsConnectorDTO featurestoreHopsfsConnectorDTO) {
+                              FeaturestoreHopsfsConnectorDTO featurestoreHopsfsConnectorDTO)
+    throws FeaturestoreException {
     if (featurestoreHopsfsConnectorDTO == null) {
       throw new IllegalArgumentException("Input data is null");
     }

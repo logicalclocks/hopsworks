@@ -166,9 +166,10 @@ public class FeaturestoreController {
    * @param featurestoreName        the name of the new featurestore
    * @param trainingDatasetsFolder  the Hopsworks dataset where training datasets are stored by default
    * @return the created featurestore
+   * @throws FeaturestoreException
    */
   public Featurestore createProjectFeatureStore(Project project, String featurestoreName, Dataset
-    trainingDatasetsFolder) {
+    trainingDatasetsFolder) throws FeaturestoreException {
     //Get HiveDbId for the newly created Hive featurestore DB
     Long hiveDbId = featurestoreFacade.getHiveDatabaseId(featurestoreName);
     //Store featurestore metadata in Hopsworks

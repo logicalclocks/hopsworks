@@ -43,9 +43,10 @@ public class FeaturestoreS3ConnectorController {
    * @param featurestore the featurestore
    * @param featurestoreS3ConnectorDTO the data to use when creating the storage connector
    * @return DTO of the created entity
+   * @throws FeaturestoreException
    */
   public FeaturestoreS3ConnectorDTO createFeaturestoreS3Connector(
-      Featurestore featurestore, FeaturestoreS3ConnectorDTO featurestoreS3ConnectorDTO){
+      Featurestore featurestore, FeaturestoreS3ConnectorDTO featurestoreS3ConnectorDTO) throws FeaturestoreException {
     verifyUserInput(featurestore, featurestoreS3ConnectorDTO);
     FeaturestoreS3Connector featurestoreS3Connector = new FeaturestoreS3Connector();
     featurestoreS3Connector.setAccessKey(featurestoreS3ConnectorDTO.getAccessKey());
@@ -146,23 +147,24 @@ public class FeaturestoreS3ConnectorController {
    * @param name the input to validate
    * @param featurestore the featurestore of the connector
    * @param edit boolean flag whether the validation if for updating an existing connector or creating a new one
+   * @throws FeaturestoreException
    */
-  private void verifyS3ConnectorName(String name, Featurestore featurestore, Boolean edit) {
+  private void verifyS3ConnectorName(String name, Featurestore featurestore, Boolean edit)
+    throws FeaturestoreException {
     if (Strings.isNullOrEmpty(name)) {
-      throw new IllegalArgumentException(
-          RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_NAME.getMessage() +
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_NAME, Level.FINE,
               ", the storage connector name cannot be empty");
     }
     if(name.length() >
         FeaturestoreClientSettingsDTO.STORAGE_CONNECTOR_NAME_MAX_LENGTH) {
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_NAME.getMessage()
-          + ", the name should be less than "
-          + FeaturestoreClientSettingsDTO.STORAGE_CONNECTOR_NAME_MAX_LENGTH + " characters.");
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_NAME, Level.FINE,
+          ", the name should be less than " + FeaturestoreClientSettingsDTO.STORAGE_CONNECTOR_NAME_MAX_LENGTH + " " +
+            "characters.");
     }
     if(!edit){
       if(featurestore.getFeaturestoreS3ConnectorConnections().stream()
           .anyMatch(s3Con -> s3Con.getName().equalsIgnoreCase(name))) {
-        throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_NAME.getMessage() +
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_NAME, Level.FINE,
             ", the storage connector name should be unique, there already exists a S3 connector with the same name ");
       }
     }
@@ -171,12 +173,13 @@ public class FeaturestoreS3ConnectorController {
   /**
    * Validates user input description string
    * @param  description the input to validate
+   * @throws FeaturestoreException
    */
-  private void verifyS3ConnectorDescription(String description) {
+  private void verifyS3ConnectorDescription(String description) throws FeaturestoreException {
     if(description.length()
         > FeaturestoreClientSettingsDTO.STORAGE_CONNECTOR_DESCRIPTION_MAX_LENGTH){
-      throw new IllegalArgumentException(
-          RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_DESCRIPTION.getMessage() +
+      throw new FeaturestoreException(
+          RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_DESCRIPTION, Level.FINE,
               ", the description should be less than: " +
               FeaturestoreClientSettingsDTO.STORAGE_CONNECTOR_DESCRIPTION_MAX_LENGTH);
     }
@@ -184,13 +187,15 @@ public class FeaturestoreS3ConnectorController {
 
   /**
    * Validates user input bucket
+   *
    * @param bucket the input to validate
+   * @throws FeaturestoreException
    */
-  private void verifyS3ConnectorBucket(String bucket){
+  private void verifyS3ConnectorBucket(String bucket) throws FeaturestoreException {
     if(Strings.isNullOrEmpty(bucket) ||
         bucket.length() >
             FeaturestoreClientSettingsDTO.S3_STORAGE_CONNECTOR_BUCKET_MAX_LENGTH) {
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_S3_CONNECTOR_BUCKET.getMessage() +
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_S3_CONNECTOR_BUCKET, Level.FINE,
           ", the S3 bucket string should not be empty and not exceed: " +
           FeaturestoreClientSettingsDTO.S3_STORAGE_CONNECTOR_BUCKET_MAX_LENGTH + " characters");
     }
@@ -198,27 +203,31 @@ public class FeaturestoreS3ConnectorController {
 
   /**
    * Validates user input access key string
+   *
    * @param accessKey the input to validate
+   * @throws FeaturestoreException
    */
-  private void verifyS3ConnectorAccessKey(String accessKey) {
+  private void verifyS3ConnectorAccessKey(String accessKey) throws FeaturestoreException {
     if(!Strings.isNullOrEmpty(accessKey) &&
         accessKey.length()
             > FeaturestoreClientSettingsDTO.S3_STORAGE_CONNECTOR_ACCESSKEY_MAX_LENGTH) {
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_S3_CONNECTOR_ACCESS_KEY.getMessage() +
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_S3_CONNECTOR_ACCESS_KEY, Level.FINE,
           ", the S3 access key should not exceed: " +
-          FeaturestoreClientSettingsDTO.S3_STORAGE_CONNECTOR_ACCESSKEY_MAX_LENGTH + " characters");
+            FeaturestoreClientSettingsDTO.S3_STORAGE_CONNECTOR_ACCESSKEY_MAX_LENGTH + " characters");
     }
   }
 
   /**
    * Validates user input secret key string
+   *
    * @param secretKey the input to validate
+   * @throws FeaturestoreException
    */
-  private void verifyS3ConnectorSecretKey(String secretKey) {
+  private void verifyS3ConnectorSecretKey(String secretKey) throws FeaturestoreException {
     if(!Strings.isNullOrEmpty(secretKey) &&
         secretKey.length() >
             FeaturestoreClientSettingsDTO.S3_STORAGE_CONNECTOR_SECRETKEY_MAX_LENGTH) {
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_S3_CONNECTOR_SECRET_KEY.getMessage() +
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_S3_CONNECTOR_SECRET_KEY, Level.FINE,
           ", the S3 secret key should not exceed: " +
           FeaturestoreClientSettingsDTO.S3_STORAGE_CONNECTOR_SECRETKEY_MAX_LENGTH + " characters");
     }
@@ -231,8 +240,10 @@ public class FeaturestoreS3ConnectorController {
    *
    * @param featurestore the featurestore
    * @param featurestoreS3ConnectorDTO the data to use when creating the storage connector
+   * @throws FeaturestoreException
    */
-  private void verifyUserInput(Featurestore featurestore, FeaturestoreS3ConnectorDTO featurestoreS3ConnectorDTO){
+  private void verifyUserInput(Featurestore featurestore, FeaturestoreS3ConnectorDTO featurestoreS3ConnectorDTO)
+    throws FeaturestoreException {
 
     if (featurestoreS3ConnectorDTO == null) {
       throw new IllegalArgumentException("Null input data");

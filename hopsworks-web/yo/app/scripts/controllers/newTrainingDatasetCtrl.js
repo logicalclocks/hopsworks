@@ -440,7 +440,8 @@ angular.module('hopsWorksApp')
                     self.inferJoinCol(self.queryPlan.featuregroups)
                     var featuregroupToFeatures = {}
                     for (var i = 0; i < self.queryPlan.features.length; i++) {
-                        var key = self.queryPlan.features[i].featuregroup.name + "_" + self.queryPlan.features[i].featuregroup.version
+                        var key = self.queryPlan.features[i].featuregroup.name + "_" +
+                            self.queryPlan.features[i].featuregroup.version
                         if (key in featuregroupToFeatures) {
                             featuregroupToFeatures[key].push(self.queryPlan.features[i])
                         } else {
@@ -461,6 +462,10 @@ angular.module('hopsWorksApp')
                         self.joinKeyWrongValue = -1;
                     }
                     self.selectFeatureStage = false;
+                    console.log("featureBasket:")
+                    console.log(self.featureBasket)
+                    console.log("query plan:")
+                    console.log(self.queryPlan.features)
                 }
             };
 

@@ -139,10 +139,7 @@ public class FeaturestoreStorageConnectorService {
   public Response getStorageConnectorsOfType(
       @ApiParam (value = "storage connector type", example = "JDBC")
       @PathParam("connectorType") FeaturestoreStorageConnectorType connectorType) {
-    if (connectorType == null) {
-      throw new IllegalArgumentException(
-          RESTCodes.FeaturestoreErrorCode.STORAGE_CONNECTOR_TYPE_NOT_PROVIDED.getMessage());
-    }
+    verifyStorageConnectorType(connectorType);
     List<FeaturestoreStorageConnectorDTO> featurestoreStorageConnectorDTOS =
         featurestoreStorageConnectorController.getAllStorageConnectorsForFeaturestoreWithType(featurestore,
             connectorType);
@@ -173,14 +170,7 @@ public class FeaturestoreStorageConnectorService {
       @ApiParam(value = "Id of the storage connector", required = true)
       @PathParam("connectorId") Integer connectorId)
       throws FeaturestoreException {
-    if (connectorType == null) {
-      throw new IllegalArgumentException(
-          RESTCodes.FeaturestoreErrorCode.STORAGE_CONNECTOR_TYPE_NOT_PROVIDED.getMessage());
-    }
-    if (connectorId == null) {
-      throw new IllegalArgumentException(
-          RESTCodes.FeaturestoreErrorCode.STORAGE_CONNECTOR_ID_NOT_PROVIDED.getMessage());
-    }
+    verifyStorageConnectorTypeAndId(connectorType, connectorId);
     FeaturestoreStorageConnectorDTO featurestoreStorageConnectorDTO =
         featurestoreStorageConnectorController.getStorageConnectorForFeaturestoreWithTypeAndId(featurestore,
             connectorType, connectorId);
@@ -195,6 +185,7 @@ public class FeaturestoreStorageConnectorService {
    *
    * @param connectorType type of the storage connector, e.g S3, JDBC or HopsFS
    * @return a JSON representation of the connector
+   * @throws FeaturestoreException
    */
   @POST
   @Path("/{connectorType : JDBC|S3|HopsFS}")
@@ -208,11 +199,8 @@ public class FeaturestoreStorageConnectorService {
       @Context SecurityContext sc,
       @ApiParam (value = "storage connector type", example = "JDBC", required=true)
       @PathParam("connectorType") FeaturestoreStorageConnectorType connectorType,
-      FeaturestoreStorageConnectorDTO featurestoreStorageConnectorDTO) {
-    if (connectorType == null) {
-      throw new IllegalArgumentException(
-          RESTCodes.FeaturestoreErrorCode.STORAGE_CONNECTOR_TYPE_NOT_PROVIDED.getMessage());
-    }
+      FeaturestoreStorageConnectorDTO featurestoreStorageConnectorDTO) throws FeaturestoreException {
+    verifyStorageConnectorType(connectorType);
     Users user = jWTHelper.getUserPrincipal(sc);
     FeaturestoreStorageConnectorDTO createdFeaturestoreStorageConnectorDTO =
         featurestoreStorageConnectorController.createStorageConnectorWithType(featurestore, connectorType,
@@ -221,7 +209,7 @@ public class FeaturestoreStorageConnectorService {
         featurestoreStorageConnectorDTO.getName(), project, user, ActivityFlag.SERVICE);
     GenericEntity<FeaturestoreStorageConnectorDTO> featurestoreStorageConnectorDTOGenericEntity =
         new GenericEntity<FeaturestoreStorageConnectorDTO>(createdFeaturestoreStorageConnectorDTO) {};
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK)
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED)
         .entity(featurestoreStorageConnectorDTOGenericEntity).build();
   }
 
@@ -247,14 +235,7 @@ public class FeaturestoreStorageConnectorService {
       @ApiParam(value = "Id of the storage connector", required = true)
       @PathParam("connectorId") Integer connectorId)
       throws FeaturestoreException {
-    if (connectorType == null) {
-      throw new IllegalArgumentException(
-          RESTCodes.FeaturestoreErrorCode.STORAGE_CONNECTOR_TYPE_NOT_PROVIDED.getMessage());
-    }
-    if (connectorId == null) {
-      throw new IllegalArgumentException(
-          RESTCodes.FeaturestoreErrorCode.STORAGE_CONNECTOR_ID_NOT_PROVIDED.getMessage());
-    }
+    verifyStorageConnectorTypeAndId(connectorType, connectorId);
     Users user = jWTHelper.getUserPrincipal(sc);
     FeaturestoreStorageConnectorDTO featurestoreStorageConnectorDTO =
         featurestoreStorageConnectorController.getStorageConnectorForFeaturestoreWithTypeAndId(featurestore,
@@ -293,14 +274,7 @@ public class FeaturestoreStorageConnectorService {
       @PathParam("connectorId") Integer connectorId,
       FeaturestoreStorageConnectorDTO featurestoreStorageConnectorInputDTO)
       throws FeaturestoreException {
-    if (connectorType == null) {
-      throw new IllegalArgumentException(
-          RESTCodes.FeaturestoreErrorCode.STORAGE_CONNECTOR_TYPE_NOT_PROVIDED.getMessage());
-    }
-    if (connectorId == null) {
-      throw new IllegalArgumentException(
-          RESTCodes.FeaturestoreErrorCode.STORAGE_CONNECTOR_ID_NOT_PROVIDED.getMessage());
-    }
+    verifyStorageConnectorTypeAndId(connectorType, connectorId);
     FeaturestoreStorageConnectorDTO featurestoreStorageConnectorDTO =
         featurestoreStorageConnectorController.updateStorageConnectorWithType(featurestore,
             connectorType, featurestoreStorageConnectorInputDTO, connectorId);
@@ -308,5 +282,42 @@ public class FeaturestoreStorageConnectorService {
         new GenericEntity<FeaturestoreStorageConnectorDTO>(featurestoreStorageConnectorDTO) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK)
         .entity(featurestoreStorageConnectorDTOGenericEntity).build();
+  }
+  
+  
+  /**
+   * Verify path parameters (storage connector type and id)
+   *
+   * @param connectorType type provided as a path parameter to a request
+   * @param connectorId id provided as a path parameter to a request
+   */
+  private void verifyStorageConnectorTypeAndId(FeaturestoreStorageConnectorType connectorType,
+    Integer connectorId) {
+    verifyStorageConnectorType(connectorType);
+    verifyStorageConnectorId(connectorId);
+  }
+  
+  /**
+   * Verify path parameters (storage connector id)
+   *
+   * @param connectorId id provided as a path parameter to a request
+   */
+  private void verifyStorageConnectorId(Integer connectorId) {
+    if (connectorId == null) {
+      throw new IllegalArgumentException(
+        RESTCodes.FeaturestoreErrorCode.STORAGE_CONNECTOR_ID_NOT_PROVIDED.getMessage());
+    }
+  }
+  
+  /**
+   * Verify path parameters (storage connector type)
+   *
+   * @param connectorType type provided as a path parameter to a request
+   */
+  private void verifyStorageConnectorType(FeaturestoreStorageConnectorType connectorType) {
+    if (connectorType == null) {
+      throw new IllegalArgumentException(
+        RESTCodes.FeaturestoreErrorCode.STORAGE_CONNECTOR_TYPE_NOT_PROVIDED.getMessage());
+    }
   }
 }

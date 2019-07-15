@@ -347,7 +347,7 @@ public class TrainingDatasetService {
   }
   
   /**
-   * Persistthe activity of editing a training dataset and return the response to the client
+   * Persist the activity of editing a training dataset and return the response to the client
    *
    * @param trainingDatasetDTO DTO of the update training dataset
    * @param user the user making the request

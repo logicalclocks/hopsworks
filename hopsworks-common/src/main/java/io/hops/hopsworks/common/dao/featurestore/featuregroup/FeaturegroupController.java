@@ -216,16 +216,17 @@ public class FeaturegroupController {
    * @param featurestore    the featurestore where the featuregroup resides
    * @param featuregroupDTO the updated featuregroup metadata
    * @return DTO of the updated feature group
+   * @throws FeaturestoreException
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public FeaturegroupDTO updateFeaturegroupMetadata(
-      Featurestore featurestore, FeaturegroupDTO featuregroupDTO) {
+      Featurestore featurestore, FeaturegroupDTO featuregroupDTO) throws FeaturestoreException {
     Featuregroup featuregroup = verifyFeaturegroupId(featuregroupDTO.getId(), featurestore);
-    if(featuregroup.getFeaturegroupType() == FeaturegroupType.ON_DEMAND_FEATURE_GROUP){
-      onDemandFeaturegroupController.updateOnDemandFeaturergroupMetadata(featuregroup.getOnDemandFeaturegroup(),
+    if (featuregroup.getFeaturegroupType() == FeaturegroupType.ON_DEMAND_FEATURE_GROUP) {
+      onDemandFeaturegroupController.updateOnDemandFeaturegroupMetadata(featuregroup.getOnDemandFeaturegroup(),
         (OnDemandFeaturegroupDTO) featuregroupDTO);
     }
-    return  convertFeaturegrouptoDTO(featuregroup);
+    return convertFeaturegrouptoDTO(featuregroup);
   }
 
   /**
@@ -307,8 +308,8 @@ public class FeaturegroupController {
           onDemandFeaturegroupController.removeOnDemandFeaturegroup(featuregroup.getOnDemandFeaturegroup());
           break;
         default:
-          throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_TYPE.getMessage()
-              + ", Recognized Feature group types are: " + FeaturegroupType.ON_DEMAND_FEATURE_GROUP + ", and: " +
+          throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_TYPE, Level.FINE,
+              ", Recognized Feature group types are: " + FeaturegroupType.ON_DEMAND_FEATURE_GROUP + ", and: " +
               FeaturegroupType.CACHED_FEATURE_GROUP + ". The provided feature group type was not recognized: "
               + featuregroup.getFeaturegroupType());
       }
@@ -341,8 +342,8 @@ public class FeaturegroupController {
             RESTCodes.FeaturestoreErrorCode.PREVIEW_NOT_SUPPORTED_FOR_ON_DEMAND_FEATUREGROUPS,
             Level.FINE, "featuregroupId: " + featuregroupDTO.getId());
       default:
-        throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_TYPE.getMessage()
-            + ", Recognized Feature group types are: " + FeaturegroupType.ON_DEMAND_FEATURE_GROUP + ", and: " +
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_TYPE, Level.FINE,
+            ", Recognized Feature group types are: " + FeaturegroupType.ON_DEMAND_FEATURE_GROUP + ", and: " +
             FeaturegroupType.CACHED_FEATURE_GROUP + ". The provided feature group type was not recognized: "
             + featuregroupDTO.getFeaturegroupType());
     }
@@ -370,8 +371,8 @@ public class FeaturegroupController {
             RESTCodes.FeaturestoreErrorCode.CANNOT_FETCH_HIVE_SCHEMA_FOR_ON_DEMAND_FEATUREGROUPS,
             Level.FINE, "featuregroupId: " + featuregroupDTO.getId());
       default:
-        throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_TYPE.getMessage()
-            + ", Recognized Feature group types are: " + FeaturegroupType.ON_DEMAND_FEATURE_GROUP + ", and: " +
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_TYPE, Level.FINE,
+            ", Recognized Feature group types are: " + FeaturegroupType.ON_DEMAND_FEATURE_GROUP + ", and: " +
             FeaturegroupType.CACHED_FEATURE_GROUP + ". The provided feature group type was not recognized: "
             + featuregroupDTO.getFeaturegroupType());
     }
@@ -403,15 +404,17 @@ public class FeaturegroupController {
    *
    * @param featuregroupDTO the provided user input
    * @param featurestore    the feature store to perform the operation against
+   * @throws FeaturestoreException
    */
-  public void verifyFeaturegroupUserInput(FeaturegroupDTO featuregroupDTO, Featurestore featurestore) {
+  public void verifyFeaturegroupUserInput(FeaturegroupDTO featuregroupDTO, Featurestore featurestore)
+    throws FeaturestoreException {
     if (featurestore == null) {
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_NOT_FOUND.getMessage());
     }
     if (featuregroupDTO.getFeaturegroupType() != FeaturegroupType.CACHED_FEATURE_GROUP &&
         featuregroupDTO.getFeaturegroupType() != FeaturegroupType.ON_DEMAND_FEATURE_GROUP) {
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_TYPE.getMessage()
-          + ", Recognized Feature group types are: " + FeaturegroupType.ON_DEMAND_FEATURE_GROUP + ", and: " +
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_TYPE, Level.FINE,
+          ", Recognized Feature group types are: " + FeaturegroupType.ON_DEMAND_FEATURE_GROUP + ", and: " +
           FeaturegroupType.CACHED_FEATURE_GROUP + ". The provided feature group type was not recognized: "
           + featuregroupDTO.getFeaturegroupType());
     }

@@ -95,6 +95,7 @@ public class TrainingDatasetController {
    *
    * @param trainingDataset trainingDataset entity
    * @return JSON/XML DTO of the trainingDataset
+   * @throws FeaturestoreException
    */
   private TrainingDatasetDTO convertTrainingDatasetToDTO(TrainingDataset trainingDataset) {
     String featurestoreName = featurestoreFacade.getHiveDbName(trainingDataset.getFeaturestore().getHiveDbId());
@@ -110,8 +111,8 @@ public class TrainingDatasetController {
         externalTrainingDatasetDTO.setFeaturestoreName(featurestoreName);
         return externalTrainingDatasetDTO;
       default:
-        throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_TYPE.getMessage()
-          + ", Recognized training dataset types are: " + TrainingDatasetType.HOPSFS_TRAINING_DATASET + ", and: " +
+        throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_TYPE.getMessage() +
+          ", Recognized training dataset types are: " + TrainingDatasetType.HOPSFS_TRAINING_DATASET + ", and: " +
           TrainingDatasetType.EXTERNAL_TRAINING_DATASET + ". The provided training dataset type was not recognized: "
           + trainingDataset.getTrainingDatasetType());
     }
@@ -156,8 +157,8 @@ public class TrainingDatasetController {
           (ExternalTrainingDatasetDTO) trainingDatasetDTO);
         break;
       default:
-        throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_TYPE.getMessage()
-          + ", Recognized training dataset types are: " + TrainingDatasetType.HOPSFS_TRAINING_DATASET + ", and: " +
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_TYPE, Level.FINE,
+          ", Recognized training dataset types are: " + TrainingDatasetType.HOPSFS_TRAINING_DATASET + ", and: " +
           TrainingDatasetType.EXTERNAL_TRAINING_DATASET + ". The provided training dataset type was not recognized: "
           + trainingDatasetDTO.getTrainingDatasetType());
     }
@@ -174,6 +175,7 @@ public class TrainingDatasetController {
     trainingDataset.setCreated(new Date());
     trainingDataset.setCreator(user);
     trainingDataset.setVersion(trainingDatasetDTO.getVersion());
+    trainingDataset.setTrainingDatasetType(trainingDatasetDTO.getTrainingDatasetType());
     trainingDatasetFacade.persist(trainingDataset);
   
     // Store statistics
@@ -191,6 +193,7 @@ public class TrainingDatasetController {
    * @param id           if of the trainingDataset
    * @param featurestore the featurestore that the trainingDataset belongs to
    * @return XML/JSON DTO of the trainingDataset
+   * @throws FeaturestoreException
    */
   public TrainingDatasetDTO getTrainingDatasetWithIdAndFeaturestore(Featurestore featurestore, Integer id)
       throws FeaturestoreException {
@@ -208,6 +211,7 @@ public class TrainingDatasetController {
    * @param id           if of the trainingDataset
    * @param featurestore the featurestore that the trainingDataset belongs to
    * @return inode of the training dataset
+   * @throws FeaturestoreException
    */
   public Inode getInodeWithTrainingDatasetIdAndFeaturestore(Featurestore featurestore, Integer id)
       throws FeaturestoreException {
@@ -217,8 +221,8 @@ public class TrainingDatasetController {
           Level.FINE, "trainingDatasetId: " + id);
     }
     if(trainingDataset.getTrainingDatasetType() != TrainingDatasetType.HOPSFS_TRAINING_DATASET){
-      throw new IllegalArgumentException(
-        RESTCodes.FeaturestoreErrorCode.CAN_ONLY_GET_INODE_FOR_HOPSFS_TRAINING_DATASETS.getMessage() +
+      throw new FeaturestoreException(
+        RESTCodes.FeaturestoreErrorCode.CAN_ONLY_GET_INODE_FOR_HOPSFS_TRAINING_DATASETS, Level.FINE,
         "Training Dataset Type: " + trainingDataset.getTrainingDatasetType());
     } else {
       return trainingDataset.getHopsfsTrainingDataset().getInode();
@@ -260,10 +264,11 @@ public class TrainingDatasetController {
    * @param id           if od the trainingDataset
    * @param featurestore the featurestore that the trainingDataset belongs to
    * @return JSON/XML DTO of the deleted trainingDataset
+   * @throws FeaturestoreException
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public TrainingDatasetDTO deleteTrainingDatasetWithIdAndFeaturestore(
-      Featurestore featurestore, Integer id) {
+      Featurestore featurestore, Integer id) throws FeaturestoreException {
     TrainingDataset trainingDataset = trainingDatasetFacade.findByIdAndFeaturestore(id, featurestore);
     TrainingDatasetDTO trainingDatasetDTO = convertTrainingDatasetToDTO(trainingDataset);
     switch(trainingDataset.getTrainingDatasetType()) {
@@ -274,8 +279,8 @@ public class TrainingDatasetController {
         externalTrainingDatasetController.removeExternalTrainingDataset(trainingDataset.getExternalTrainingDataset());
         break;
       default:
-        throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_TYPE.getMessage()
-          + ", Recognized training dataset types are: " + TrainingDatasetType.HOPSFS_TRAINING_DATASET + ", and: " +
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_TYPE, Level.FINE,
+          ", Recognized training dataset types are: " + TrainingDatasetType.HOPSFS_TRAINING_DATASET + ", and: " +
           TrainingDatasetType.EXTERNAL_TRAINING_DATASET + ". The provided training dataset type was not recognized: "
           + trainingDataset.getTrainingDatasetType());
     }
@@ -288,12 +293,12 @@ public class TrainingDatasetController {
    *
    * @param featurestore             the featurestore that the trainingDataset is linked to
    * @param trainingDatasetDTO       the user input data for updating the training dataset
-   *
    * @return a JSON/XML DTO of the updated training dataset
+   * @throws FeaturestoreException
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public TrainingDatasetDTO updateTrainingDatasetMetadata(
-      Featurestore featurestore, TrainingDatasetDTO trainingDatasetDTO) {
+      Featurestore featurestore, TrainingDatasetDTO trainingDatasetDTO) throws FeaturestoreException {
     TrainingDataset trainingDataset = verifyTrainingDatasetId(trainingDatasetDTO.getId(), featurestore);
     
     if(!Strings.isNullOrEmpty(trainingDatasetDTO.getDataFormat())){
@@ -313,6 +318,13 @@ public class TrainingDatasetController {
       case EXTERNAL_TRAINING_DATASET:
         externalTrainingDatasetController.updateExternalTrainingDatasetMetadata(
           trainingDataset.getExternalTrainingDataset(), (ExternalTrainingDatasetDTO) trainingDatasetDTO);
+        break;
+      default:
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_TYPE, Level.FINE,
+          ", Recognized training dataset types are: " + TrainingDatasetType.HOPSFS_TRAINING_DATASET + ", and: " +
+            TrainingDatasetType.EXTERNAL_TRAINING_DATASET + ". The provided training dataset type was not recognized: "
+            + trainingDatasetDTO.getTrainingDatasetType());
+        
     }
     return convertTrainingDatasetToDTO(updatedTrainingDataset);
   }
@@ -415,12 +427,13 @@ public class TrainingDatasetController {
    * Verify training dataset type
    *
    * @param trainingDatasetType the training dataset type to verify
+   * @throws FeaturestoreException
    */
-  private void verifyTrainingDatasetType(TrainingDatasetType trainingDatasetType) {
+  private void verifyTrainingDatasetType(TrainingDatasetType trainingDatasetType) throws FeaturestoreException {
     if (trainingDatasetType != TrainingDatasetType.HOPSFS_TRAINING_DATASET &&
       trainingDatasetType != TrainingDatasetType.EXTERNAL_TRAINING_DATASET) {
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_TYPE.getMessage()
-        + ", Recognized Training Dataset types are: " + TrainingDatasetType.HOPSFS_TRAINING_DATASET + ", and: " +
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_TYPE, Level.FINE,
+        ", Recognized Training Dataset types are: " + TrainingDatasetType.HOPSFS_TRAINING_DATASET + ", and: " +
         TrainingDatasetType.EXTERNAL_TRAINING_DATASET+ ". The provided training dataset type was not recognized: "
         + trainingDatasetType);
     }
@@ -430,16 +443,17 @@ public class TrainingDatasetController {
    * Verify user input training dataset version
    *
    * @param version the version to verify
+   * @throws FeaturestoreException
    */
-  private void verifyTrainingDatasetVersion(Integer version) {
+  private void verifyTrainingDatasetVersion(Integer version) throws FeaturestoreException {
     if (version == null) {
       throw new IllegalArgumentException(
         RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_VERSION_NOT_PROVIDED.getMessage());
     }
     if(version <= 0) {
-      throw new IllegalArgumentException(
-        RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_VERSION.getMessage() + " version cannot be negative " +
-          "or zero");
+      throw new FeaturestoreException(
+        RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_VERSION, Level.FINE,
+        " version cannot be negative or zero");
     }
   }
   
@@ -447,11 +461,12 @@ public class TrainingDatasetController {
    * Verfiy user input data format
    *
    * @param dataFormat the data format to verify
+   * @throws FeaturestoreException
    */
-  private void verifyTrainingDatasetDataFormat(String dataFormat) {
+  private void verifyTrainingDatasetDataFormat(String dataFormat) throws FeaturestoreException {
     if (!FeaturestoreClientSettingsDTO.TRAINING_DATASET_DATA_FORMATS.contains(dataFormat)) {
-      throw new IllegalArgumentException(
-        RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_VERSION_NOT_PROVIDED.getMessage() + ", the recognized " +
+      throw new FeaturestoreException(
+        RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_DATA_FORMAT, Level.FINE, ", the recognized " +
           "training dataset formats are: " +
           StringUtils.join(FeaturestoreClientSettingsDTO.TRAINING_DATASET_DATA_FORMATS) + ". The provided data " +
           "format:" + dataFormat + " was not recognized.");
@@ -462,14 +477,15 @@ public class TrainingDatasetController {
    * Verify user input training dataset description
    *
    * @param description the description to verify
+   * @throws FeaturestoreException
    */
-  private void verifyTrainingDatasetDescriptiopn(String description) {
+  private void verifyTrainingDatasetDescriptiopn(String description) throws FeaturestoreException {
     if(!Strings.isNullOrEmpty(description) &&
       description.length()
         > FeaturestoreClientSettingsDTO.TRAINING_DATASET_DESCRIPTION_MAX_LENGTH){
-      throw new IllegalArgumentException(
-        RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_DESCRIPTION.getMessage()
-        + ", the description of a training dataset should be less than "
+      throw new FeaturestoreException(
+        RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_DESCRIPTION, Level.FINE,
+        ", the description of a training dataset should be less than "
         + FeaturestoreClientSettingsDTO.TRAINING_DATASET_DESCRIPTION_MAX_LENGTH + " " + "characters");
     }
   }
@@ -478,23 +494,26 @@ public class TrainingDatasetController {
    * Verify user input features
    *
    * @param featureDTOS the features to verify
+   * @throws FeaturestoreException
    */
-  private void verifyTrainingDatasetFeatures(List<FeatureDTO> featureDTOS) {
-    featureDTOS.stream().forEach(f -> {
-      if(Strings.isNullOrEmpty(f.getName()) || f.getName().length() >
-        FeaturestoreClientSettingsDTO.TRAINING_DATASET_FEATURE_NAME_MAX_LENGTH){
-        throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_NAME.getMessage()
-          + ", the feature name in a training dataset group should be less than "
-          + FeaturestoreClientSettingsDTO.TRAINING_DATASET_FEATURE_NAME_MAX_LENGTH + " characters");
+  private void verifyTrainingDatasetFeatures(List<FeatureDTO> featureDTOS) throws FeaturestoreException {
+    if (featureDTOS != null && !featureDTOS.isEmpty()) {
+      if(!featureDTOS.stream().filter(f -> {
+        return (Strings.isNullOrEmpty(f.getName()) || f.getName().length() >
+          FeaturestoreClientSettingsDTO.TRAINING_DATASET_FEATURE_NAME_MAX_LENGTH);
+      }).collect(Collectors.toList()).isEmpty()){
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_NAME, Level.FINE,
+          ", the feature name in a training dataset group should be less than "
+            + FeaturestoreClientSettingsDTO.TRAINING_DATASET_FEATURE_NAME_MAX_LENGTH + " characters");
       }
-      if(!Strings.isNullOrEmpty(f.getDescription()) &&
-        f.getDescription().length() >
-          FeaturestoreClientSettingsDTO.TRAINING_DATASET_FEATURE_DESCRIPTION_MAX_LENGTH) {
-        throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_DESCRIPTION.getMessage()
-          + ", the feature description in a training dataset should be less than "
+      if(!featureDTOS.stream().filter(f -> {
+        return (!Strings.isNullOrEmpty(f.getDescription()));
+      }).collect(Collectors.toList()).isEmpty()){
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_DESCRIPTION, Level.FINE,
+          ", the feature description in a training dataset should be less than "
           + FeaturestoreClientSettingsDTO.TRAINING_DATASET_FEATURE_DESCRIPTION_MAX_LENGTH + " characters");
       }
-    });
+    }
   }
   
   
@@ -504,8 +523,10 @@ public class TrainingDatasetController {
    *
    * @param trainingDatasetDTO the provided user input
    * @param featurestore    the feature store to perform the operation against
+   * @throws FeaturestoreException
    */
-  private void verifyTrainingDatasetInput(TrainingDatasetDTO trainingDatasetDTO, Featurestore featurestore) {
+  private void verifyTrainingDatasetInput(TrainingDatasetDTO trainingDatasetDTO, Featurestore featurestore)
+    throws FeaturestoreException {
     verifyFeaturestore(featurestore);
     verifyTrainingDatasetType(trainingDatasetDTO.getTrainingDatasetType());
     verifyTrainingDatasetVersion(trainingDatasetDTO.getVersion());

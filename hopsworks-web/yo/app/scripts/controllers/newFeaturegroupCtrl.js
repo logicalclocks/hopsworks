@@ -247,6 +247,8 @@ angular.module('hopsWorksApp')
                     self.cachedFeaturegroupDoc = self.featuregroup.description
                     self.onDemandSqlQuery = self.featuregroup.query
                     self.cachedSqlQuery = self.featuregroup.query
+                    self.onDemandFeaturegroupFeatures = self.featuregroup.features
+                    self.cachedFeaturegroupFeatures = self.featuregroup.features
                     self.version = self.featuregroup.version + 1
                     self.oldFeaturegroupId = self.featuregroup.id
                     if (self.featuregroup.featuregroupType === self.onDemandFeaturegroupType) {

@@ -48,9 +48,11 @@ public class FeaturestoreJdbcConnectorController {
    * @param featurestore the feature store
    * @param featurestoreJdbcConnectorDTO input to data to use when creating the storage connector
    * @return a DTO representing the created entity
+   * @throws FeaturestoreException
    */
   public FeaturestoreJdbcConnectorDTO createFeaturestoreJdbcConnector(
-      Featurestore featurestore, FeaturestoreJdbcConnectorDTO featurestoreJdbcConnectorDTO){
+      Featurestore featurestore, FeaturestoreJdbcConnectorDTO featurestoreJdbcConnectorDTO)
+    throws FeaturestoreException {
     verifyUserInput(featurestore, featurestoreJdbcConnectorDTO);
     FeaturestoreJdbcConnector featurestoreJdbcConnector = new FeaturestoreJdbcConnector();
     featurestoreJdbcConnector.setName(featurestoreJdbcConnectorDTO.getName());
@@ -112,9 +114,10 @@ public class FeaturestoreJdbcConnectorController {
    *
    * @param featurestore the featurestore
    * @param databaseName name of the Hive database
+   * @throws FeaturestoreException
    */
   public void createDefaultJdbcConnectorForFeaturestore(Featurestore featurestore, String databaseName,
-    String description) {
+    String description) throws FeaturestoreException {
     String hiveEndpoint = settings.getHiveServerHostName(false);
     String connectionString = "jdbc:hive2://" + hiveEndpoint + "/" + databaseName + ";" +
       "auth=noSasl;ssl=true;twoWay=true;";
@@ -168,23 +171,24 @@ public class FeaturestoreJdbcConnectorController {
    * @param name the user input to validate
    * @param featurestore the featurestore to query
    * @param edit boolean flag whether the validation if for updating an existing connector or creating a new one
+   * @throws FeaturestoreException
    */
-  private void verifyJdbcConnectorName(String name, Featurestore featurestore, Boolean edit){
+  private void verifyJdbcConnectorName(String name, Featurestore featurestore, Boolean edit)
+    throws FeaturestoreException {
     if (Strings.isNullOrEmpty(name)) {
-      throw new IllegalArgumentException(
-          RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_NAME.getMessage() +
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_NAME, Level.FINE,
               ", the storage connector name cannot be empty");
     }
     if(name.length() >
         FeaturestoreClientSettingsDTO.STORAGE_CONNECTOR_NAME_MAX_LENGTH) {
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_NAME.getMessage()
-          + ", the name should be less than " + FeaturestoreClientSettingsDTO.STORAGE_CONNECTOR_NAME_MAX_LENGTH
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_NAME, Level.FINE,
+          ", the name should be less than " + FeaturestoreClientSettingsDTO.STORAGE_CONNECTOR_NAME_MAX_LENGTH
           + " characters, the provided name was: " + name);
     }
     if(!edit){
       if(featurestore.getFeaturestoreJdbcConnectorConnections().stream()
           .anyMatch(jdbcCon -> jdbcCon.getName().equalsIgnoreCase(name))) {
-        throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_NAME.getMessage() +
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_NAME, Level.FINE,
             ", the storage connector name should be unique, there already exists a JDBC connector with the same name ");
       }
     }
@@ -205,12 +209,13 @@ public class FeaturestoreJdbcConnectorController {
    * Verifies user input description
    *
    * @param description the user input to validate
+   * @throws FeaturestoreException
    */
-  private void verifyJdbcConnectorDescription(String description) {
+  private void verifyJdbcConnectorDescription(String description) throws FeaturestoreException {
     if(description.length() >
         FeaturestoreClientSettingsDTO.STORAGE_CONNECTOR_DESCRIPTION_MAX_LENGTH){
-      throw new IllegalArgumentException(
-          RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_DESCRIPTION.getMessage() +
+      throw new FeaturestoreException(
+          RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_DESCRIPTION, Level.FINE,
               ", the description should be less than: " +
               FeaturestoreClientSettingsDTO.STORAGE_CONNECTOR_DESCRIPTION_MAX_LENGTH);
     }
@@ -220,12 +225,13 @@ public class FeaturestoreJdbcConnectorController {
    * Verifies user input JDBC connection string
    *
    * @param connectionString the user input to validate
+   * @throws FeaturestoreException
    */
-  private void verifyJdbcConnectorConnectionString(String connectionString) {
+  private void verifyJdbcConnectorConnectionString(String connectionString) throws FeaturestoreException {
     if(Strings.isNullOrEmpty(connectionString)
         || connectionString.length()
         > FeaturestoreClientSettingsDTO.JDBC_STORAGE_CONNECTOR_CONNECTIONSTRING_MAX_LENGTH) {
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_JDBC_CONNECTION_STRING.getMessage() +
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_JDBC_CONNECTION_STRING, Level.FINE,
           ", the JDBC connection string should not be empty and not exceed: " +
           FeaturestoreClientSettingsDTO.JDBC_STORAGE_CONNECTOR_CONNECTIONSTRING_MAX_LENGTH + " characters");
     }
@@ -235,13 +241,14 @@ public class FeaturestoreJdbcConnectorController {
    * Verifies user input JDBC arguments
    *
    * @param arguments the user input to validate
+   * @throws FeaturestoreException
    */
-  private void verifyJdbcConnectorArguments(String arguments) {
+  private void verifyJdbcConnectorArguments(String arguments) throws FeaturestoreException {
     if(!Strings.isNullOrEmpty(arguments)
         && arguments.length() >
         FeaturestoreClientSettingsDTO.JDBC_STORAGE_CONNECTOR_ARGUMENTS_MAX_LENGTH) {
-      throw new IllegalArgumentException(
-          RESTCodes.FeaturestoreErrorCode.ILLEGAL_JDBC_CONNECTION_ARGUMENTS.getMessage() +
+      throw new FeaturestoreException(
+          RESTCodes.FeaturestoreErrorCode.ILLEGAL_JDBC_CONNECTION_ARGUMENTS, Level.FINE,
               ", the JDBC connection arguments should not exceed: " +
               FeaturestoreClientSettingsDTO.JDBC_STORAGE_CONNECTOR_ARGUMENTS_MAX_LENGTH + " characters");
     }
@@ -252,8 +259,10 @@ public class FeaturestoreJdbcConnectorController {
    *
    * @param featurestore the featurestore
    * @param featurestoreJdbcConnectorDTO input to data to use when creating the storage connector
+   * @throws FeaturestoreException
    */
-  private void verifyUserInput(Featurestore featurestore, FeaturestoreJdbcConnectorDTO featurestoreJdbcConnectorDTO){
+  private void verifyUserInput(Featurestore featurestore, FeaturestoreJdbcConnectorDTO featurestoreJdbcConnectorDTO)
+    throws FeaturestoreException {
     if(featurestoreJdbcConnectorDTO == null){
       throw new IllegalArgumentException("Input data is null");
     }

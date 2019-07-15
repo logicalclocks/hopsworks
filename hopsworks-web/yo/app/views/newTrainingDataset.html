@@ -171,11 +171,11 @@
                                         <td class="fs-table">
                                             <span ng-if="result.entity === 1">
                                                 <i class="glyphicon glyphicon-tags"></i>
-                                                <span> Feature in Feature Group</span>
+                                                <span style="margin-left:5px"> Feature in Feature Group</span>
                                             </span>
                                             <span ng-if="result.entity === 0">
                                                 <i class="glyphicon glyphicon-tags"></i>
-                                                <span> Feature in Training Dataset</span>
+                                                <span style="margin-left:5px"> Feature in Training Dataset</span>
                                             </span>
                                         </td>
                                         <td class="fs-table">{{result.name}}</td>
@@ -212,7 +212,7 @@
                             <div class="row divider" style="margin-bottom: 0px;"></div>
                             <div class="row" style="margin-top: -20px">
                                 <dir-pagination-controls
-                                        ng-if="newTrainingDatasetCtrl.fFilter != '' || newTrainingDatasetCtrl.featureSearchFgFilter != '' || newTrainingDatasetCtrl.featureSearchFgVersionFilter != ''"
+                                        ng-if="filteredResults.length > 0"
                                         max-size="15"
                                         direction-links="true"
                                         boundary-links="true"

@@ -44,7 +44,7 @@ public class ExternalTrainingDatasetController {
    * Persists an external training dataset
    *
    * @param externalTrainingDatasetDTO the user input data to use when creating the external training dataset
-   * @return
+   * @return the created training dataset
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public ExternalTrainingDataset createExternalTrainingDataset(ExternalTrainingDatasetDTO externalTrainingDatasetDTO)
@@ -59,6 +59,7 @@ public class ExternalTrainingDatasetController {
         Level.FINE, "hopsfsConnector: " + externalTrainingDatasetDTO.getS3ConnectorId());
     }
     ExternalTrainingDataset externalTrainingDataset = new ExternalTrainingDataset();
+    externalTrainingDataset.setName(externalTrainingDatasetDTO.getName());
     externalTrainingDataset.setFeaturestoreS3Connector(featurestoreS3Connector);
     externalTrainingDatasetFacade.persist(externalTrainingDataset);
     return externalTrainingDataset;
@@ -78,16 +79,17 @@ public class ExternalTrainingDatasetController {
    * Verify the name of an external training dataset
    *
    * @param name the name
+   * @throws FeaturestoreException
    */
-  private void verifyExternalTrainingDatasetName(String name) {
+  private void verifyExternalTrainingDatasetName(String name) throws FeaturestoreException {
     if(Strings.isNullOrEmpty(name)){
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_NAME.getMessage()
-        + ", the name of an external training dataset should not be empty ");
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_NAME, Level.FINE,
+        ", the name of an external training dataset should not be empty ");
     }
     if(name.length() >
       FeaturestoreClientSettingsDTO.EXTERNAL_TRAINING_DATASET_NAME_MAX_LENGTH) {
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_NAME.getMessage()
-        + ", the name of an external training dataset should be less than "
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_NAME, Level.FINE,
+        ", the name of an external training dataset should be less than "
         + FeaturestoreClientSettingsDTO.EXTERNAL_TRAINING_DATASET_NAME_MAX_LENGTH + " characters");
     }
   }
@@ -97,16 +99,18 @@ public class ExternalTrainingDatasetController {
    *
    * @param s3ConnectorId the connector id to verify
    * @return if the verification passed, returns the connector
+   * @throws FeaturestoreException
    */
-  private FeaturestoreS3Connector verifyExternalTrainingDatasetS3ConnectorId(Integer s3ConnectorId) {
+  private FeaturestoreS3Connector verifyExternalTrainingDatasetS3ConnectorId(Integer s3ConnectorId)
+    throws FeaturestoreException {
     if(s3ConnectorId == null){
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.S3_CONNECTOR_ID_NOT_PROVIDED.getMessage());
     }
     FeaturestoreS3Connector featurestoreS3Connector =
       featurestoreS3ConnectorFacade.find(s3ConnectorId);
     if(featurestoreS3Connector == null) {
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.S3_CONNECTOR_NOT_FOUND.getMessage()
-        + "S3 connector with id: " + s3ConnectorId + " was not found");
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.S3_CONNECTOR_NOT_FOUND, Level.FINE,
+        "S3 connector with id: " + s3ConnectorId + " was not found");
     }
     return featurestoreS3Connector;
   }
@@ -129,8 +133,10 @@ public class ExternalTrainingDatasetController {
    * Verify user input specific for creation of external training dataset
    *
    * @param externalTrainingDatasetDTO the input data to use when creating the external training dataset
+   * @throws FeaturestoreException
    */
-  private void verifyExternalTrainingDatasetInput(ExternalTrainingDatasetDTO externalTrainingDatasetDTO) {
+  private void verifyExternalTrainingDatasetInput(ExternalTrainingDatasetDTO externalTrainingDatasetDTO)
+    throws FeaturestoreException {
     verifyExternalTrainingDatasetName(externalTrainingDatasetDTO.getName());
     verifyExternalTrainingDatasetS3ConnectorId(externalTrainingDatasetDTO.getS3ConnectorId());
   }
@@ -140,10 +146,11 @@ public class ExternalTrainingDatasetController {
    *
    * @param externalTrainingDataset the external training dataset to update
    * @param externalTrainingDatasetDTO the metadata DTO
+   * @throws FeaturestoreException
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public void updateExternalTrainingDatasetMetadata(ExternalTrainingDataset externalTrainingDataset,
-    ExternalTrainingDatasetDTO externalTrainingDatasetDTO) {
+    ExternalTrainingDatasetDTO externalTrainingDatasetDTO) throws FeaturestoreException {
     
     if(!Strings.isNullOrEmpty(externalTrainingDatasetDTO.getName())){
       verifyExternalTrainingDatasetName(externalTrainingDatasetDTO.getName());

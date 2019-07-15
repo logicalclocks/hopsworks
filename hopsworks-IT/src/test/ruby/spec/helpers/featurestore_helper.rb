@@ -24,12 +24,155 @@ module FeaturestoreHelper
     return featurestore_id
   end
 
-  def create_featuregroup(project_id, featurestore_id)
+  def create_cached_featuregroup(project_id, featurestore_id, features = nil, featuregroup_name = nil)
+    type = "cachedFeaturegroupDTO"
+    featuregroupType = "CACHED_FEATURE_GROUP"
+    if features == nil
+      features = [
+          {
+              type: "INT",
+              name: "testfeature",
+              description: "testfeaturedescription",
+              primary: true
+          }
+      ]
+    end
+    if featuregroup_name == nil
+      featuregroup_name = "featuregroup_#{random_id}"
+    end
     create_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups"
-    featuregroup_name = "featuregroup_#{random_id}"
     json_data = {
         name: featuregroup_name,
-        dependencies: [],
+        jobName: nil,
+        features: features,
+        description: "testfeaturegroupdescription",
+        version: 1,
+        type: type,
+        featuregroupType: featuregroupType
+    }
+    json_data = json_data.to_json
+    json_result = post create_featuregroup_endpoint, json_data
+    return json_result, featuregroup_name
+  end
+
+  def create_hopsfs_connector(project_id, featurestore_id, datasetName = "Resources")
+    type = "featurestoreHopsfsConnectorDTO"
+    storageConnectorType = "HopsFS"
+    create_hopsfs_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/storageconnectors/HopsFS"
+    hopsfs_connector_name = "hopsfs_connector_#{random_id}"
+    json_data = {
+        name: hopsfs_connector_name,
+        description: "testhopsfsconnectordescription",
+        type: type,
+        storageConnectorType: storageConnectorType,
+        datasetName: datasetName
+    }
+    json_data = json_data.to_json
+    json_result = post create_hopsfs_connector_endpoint, json_data
+    return json_result, hopsfs_connector_name
+  end
+
+  def update_hopsfs_connector(project_id, featurestore_id, connector_id, datasetName = "Resources")
+    type = "featurestoreHopsfsConnectorDTO"
+    storageConnectorType = "HopsFS"
+    update_hopsfs_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/storageconnectors/HopsFS/" + connector_id.to_s
+    hopsfs_connector_name = "hopsfs_connector_#{random_id}"
+    json_data = {
+        name: hopsfs_connector_name,
+        description: "testhopsfsconnectordescription",
+        type: type,
+        storageConnectorType: storageConnectorType,
+        datasetName: datasetName
+    }
+    json_data = json_data.to_json
+    json_result = put update_hopsfs_connector_endpoint, json_data
+    return json_result, hopsfs_connector_name
+  end
+
+  def create_jdbc_connector(project_id, featurestore_id, connectionString = "jdbc://test")
+    type = "featurestoreJdbcConnectorDTO"
+    storageConnectorType = "JDBC"
+    create_jdbc_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/storageconnectors/JDBC"
+    jdbc_connector_name = "jdbc_connector_#{random_id}"
+    json_data = {
+        name: jdbc_connector_name,
+        description: "testfeaturegroupdescription",
+        type: type,
+        storageConnectorType: storageConnectorType,
+        connectionString: connectionString,
+        arguments: "test1,test2"
+    }
+    json_data = json_data.to_json
+    json_result = post create_jdbc_connector_endpoint, json_data
+    return json_result, jdbc_connector_name
+  end
+
+  def update_jdbc_connector(project_id, featurestore_id, connector_id, connectionString = "jdbc://test")
+    type = "featurestoreJdbcConnectorDTO"
+    storageConnectorType = "JDBC"
+    update_jdbc_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/storageconnectors/JDBC/" + connector_id.to_s
+    jdbc_connector_name = "jdbc_connector_#{random_id}"
+    json_data = {
+        name: jdbc_connector_name,
+        description: "testfeaturegroupdescription",
+        type: type,
+        storageConnectorType: storageConnectorType,
+        connectionString: connectionString,
+        arguments: "test1,test2"
+    }
+    json_data = json_data.to_json
+    json_result = put update_jdbc_connector_endpoint, json_data
+    return json_result, jdbc_connector_name
+  end
+
+  def create_s3_connector(project_id, featurestore_id, bucket = "test")
+    type = "featurestoreS3ConnectorDTO"
+    storageConnectorType = "S3"
+    create_s3_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/storageconnectors/S3"
+    s3_connector_name = "s3_connector_#{random_id}"
+    json_data = {
+        name: s3_connector_name,
+        description: "tests3connectordescription",
+        type: type,
+        storageConnectorType: storageConnectorType,
+        bucket: bucket,
+        secretKey: "test",
+        accessKey: "test"
+    }
+    json_data = json_data.to_json
+    json_result = post create_s3_connector_endpoint, json_data
+    return json_result, s3_connector_name
+  end
+
+  def update_s3_connector(project_id, featurestore_id, connector_id, bucket = "test")
+    type = "featurestoreS3ConnectorDTO"
+    storageConnectorType = "S3"
+    update_s3_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/storageconnectors/S3/" + connector_id.to_s
+    s3_connector_name = "s3_connector_#{random_id}"
+    json_data = {
+        name: s3_connector_name,
+        description: "tests3connectordescription",
+        type: type,
+        storageConnectorType: storageConnectorType,
+        bucket: bucket,
+        secretKey: "test",
+        accessKey: "test"
+    }
+    json_data = json_data.to_json
+    json_result = put update_s3_connector_endpoint, json_data
+    return json_result, s3_connector_name
+  end
+
+  def create_on_demand_featuregroup(project_id, featurestore_id, jdbcconnectorId, query = nil)
+    type = "onDemandFeaturegroupDTO"
+    featuregroupType = "ON_DEMAND_FEATURE_GROUP"
+    create_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups"
+    featuregroup_name = "featuregroup_#{random_id}"
+    if query == nil
+      query = "SELECT * FROM test"
+    end
+    json_data = {
+        name: featuregroup_name,
         jobName: nil,
         features: [
             {
@@ -40,91 +183,152 @@ module FeaturestoreHelper
             }
         ],
         description: "testfeaturegroupdescription",
-        version: 1
+        version: 1,
+        type: type,
+        jdbcConnectorId: jdbcconnectorId,
+        query: query,
+        featuregroupType: featuregroupType
     }
     json_data = json_data.to_json
     json_result = post create_featuregroup_endpoint, json_data
     return json_result, featuregroup_name
   end
 
-  def update_version_featuregroup(project_id, featurestore_id, featuregroup_name, featuregroup_version)
-    update_featuregroup_version_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups"
+  def update_on_demand_featuregroup(project_id, featurestore_id, jdbcconnectorId, featuregroup_id, featuregroup_version, query = nil, featuregroup_name = nil)
+    type = "onDemandFeaturegroupDTO"
+    featuregroupType = "ON_DEMAND_FEATURE_GROUP"
+    update_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s + "?updateMetadata=true"
+    if featuregroup_name == nil
+      featuregroup_name = "featuregroup_#{random_id}"
+    end
+    if query == nil
+      query = "SELECT * FROM test"
+    end
     json_data = {
         name: featuregroup_name,
-        dependencies: [],
         jobName: nil,
         features: [
             {
                 type: "INT",
-                name: "testfeature_newversion",
-                description: "testfeaturedescription_newversion",
+                name: "testfeature",
+                description: "testfeaturedescription",
                 primary: true
             }
         ],
-        description: "testfeaturegroupdescription_newversion",
-        version: featuregroup_version
+        description: "testfeaturegroupdescription",
+        version: featuregroup_version,
+        type: type,
+        jdbcConnectorId: jdbcconnectorId,
+        query: query,
+        featuregroupType: featuregroupType
     }
     json_data = json_data.to_json
-    json_result = post update_featuregroup_version_endpoint, json_data
-    return json_result
+    json_result = put update_featuregroup_endpoint, json_data
+    return json_result, featuregroup_name
   end
 
-  def update_featuregroup_metadata(project_id, featurestore_id, featuregroup_id, featuregroup_version)
-    update_featuregroup_metadata_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s
+  def update_cached_featuregroup_metadata(project_id, featurestore_id, featuregroup_id, featuregroup_version)
+    type = "cachedFeaturegroupDTO"
+    featuregroupType = "CACHED_FEATURE_GROUP"
+    update_featuregroup_metadata_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s + "?updateMetadata=true"
     json_data = {
         name: "",
-        dependencies: [],
         jobName: nil,
-        features: [
-        ],
+        features: [],
         description: "",
-        version: featuregroup_version
+        version: featuregroup_version,
+        type: type,
+        featuregroupType: featuregroupType
     }
     json_data = json_data.to_json
     json_result = put update_featuregroup_metadata_endpoint, json_data
     return json_result
   end
 
-  def update_training_dataset_metadata(project_id, featurestore_id, training_dataset_id, training_dataset_version)
-    update_training_dataset_metadata_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/trainingdatasets/" + training_dataset_id.to_s
+  def update_hopsfs_training_dataset_metadata(project_id, featurestore_id, training_dataset_id, dataFormat, hopsfs_connector)
+    type = "hopsfsTrainingDatasetDTO"
+    trainingDatasetType = "HOPSFS_TRAINING_DATASET"
+    update_training_dataset_metadata_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/trainingdatasets/" + training_dataset_id.to_s + "?updateMetadata=true"
     json_data = {
         name: "new_dataset_name",
-        dependencies: [],
         jobName: nil,
         description: "new_testtrainingdatasetdescription",
-        version: training_dataset_version,
-        dataFormat: "tfrecords"
+        version: 1,
+        dataFormat: dataFormat,
+        type: type,
+        trainingDatasetType: trainingDatasetType,
+        hopsfsConnectorId: hopsfs_connector.id,
+        hopsfsConnectorName: hopsfs_connector.name
     }
     json_data = json_data.to_json
     json_result = put update_training_dataset_metadata_endpoint, json_data
     return json_result
   end
 
-  def create_training_dataset(project_id, featurestore_id)
+  def update_external_training_dataset_metadata(project_id, featurestore_id, training_dataset_id, name, s3_connector_id)
+    type = "externalTrainingDatasetDTO"
+    trainingDatasetType = "EXTERNAL_TRAINING_DATASET"
+    update_training_dataset_metadata_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/trainingdatasets/" + training_dataset_id.to_s + "?updateMetadata=true"
+    json_data = {
+        name: name,
+        jobName: nil,
+        description: "new_testtrainingdatasetdescription",
+        version: 1,
+        dataFormat: "parquet",
+        type: type,
+        trainingDatasetType: trainingDatasetType,
+        s3ConnectorId: s3_connector_id
+    }
+    json_data = json_data.to_json
+    json_result = put update_training_dataset_metadata_endpoint, json_data
+    return json_result
+  end
+
+  def create_hopsfs_training_dataset(project_id, featurestore_id, hopsfs_connector, data_format = nil)
+    type = "hopsfsTrainingDatasetDTO"
+    trainingDatasetType = "HOPSFS_TRAINING_DATASET"
     create_training_dataset_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/trainingdatasets"
     training_dataset_name = "training_dataset_#{random_id}"
+    if data_format == nil
+      data_format = "tfrecords"
+    end
+    if hopsfs_connector == nil
+      connector_id = nil
+      connector_name = nil
+    else
+      connector_id = hopsfs_connector.id
+      connector_name = hopsfs_connector.name
+    end
     json_data = {
         name: training_dataset_name,
-        dependencies: [],
         jobName: nil,
         description: "testtrainingdatasetdescription",
         version: 1,
-        dataFormat: "tfrecords"
+        dataFormat: data_format,
+        type: type,
+        trainingDatasetType: trainingDatasetType,
+        hopsfsConnectorId: connector_id,
+        hopsfsConnectorName: connector_name
     }
     json_data = json_data.to_json
     json_result = post create_training_dataset_endpoint, json_data
     return json_result, training_dataset_name
   end
 
-  def update_version_training_dataset(project_id, featurestore_id, training_dataset_name, version)
+  def create_external_training_dataset(project_id, featurestore_id, s3_connector_id)
+    type = "externalTrainingDatasetDTO"
+    trainingDatasetType = "EXTERNAL_TRAINING_DATASET"
     create_training_dataset_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/trainingdatasets"
+    training_dataset_name = "training_dataset_#{random_id}"
     json_data = {
         name: training_dataset_name,
-        dependencies: [],
         jobName: nil,
-        description: "testtrainingdatasetdescription2",
-        version: version,
-        dataFormat: "parquet"
+        description: "testtrainingdatasetdescription",
+        version: 1,
+        dataFormat: "tfrecords",
+        type: type,
+        trainingDatasetType: trainingDatasetType,
+        s3ConnectorId: s3_connector_id
     }
     json_data = json_data.to_json
     json_result = post create_training_dataset_endpoint, json_data
@@ -135,12 +339,13 @@ module FeaturestoreHelper
     return "featurestore_tour_job"
   end
 
-  def create_featuregroup_with_partition(project_id, featurestore_id)
+  def create_cached_featuregroup_with_partition(project_id, featurestore_id)
+    type = "cachedFeaturegroupDTO"
+    featuregroupType = "CACHED_FEATURE_GROUP"
     create_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups"
     featuregroup_name = "featuregroup_#{random_id}"
     json_data = {
         name: featuregroup_name,
-        dependencies: [],
         jobName: nil,
         features: [
             {
@@ -159,11 +364,43 @@ module FeaturestoreHelper
             }
         ],
         description: "testfeaturegroupdescription",
-        version: 1
+        version: 1,
+        type: type,
+        featuregroupType: featuregroupType
     }
     json_data = json_data.to_json
     json_result = post create_featuregroup_endpoint, json_data
     return json_result, featuregroup_name
   end
 
+  def with_jdbc_connector(project_id)
+    featurestore_id = get_featurestore_id(project_id)
+    json_result, connector_name = create_jdbc_connector(project_id, featurestore_id, "jdbc://test2")
+    parsed_json = JSON.parse(json_result)
+    expect_status(201)
+    connector_id = parsed_json["id"]
+    @jdbc_connector_id = connector_id
+  end
+
+  def get_jdbc_connector_id
+    return @jdbc_connector_id
+  end
+
+  def get_hopsfs_training_datasets_connector(project_name)
+    connector_name = project_name + "_Training_Datasets"
+    return FeatureStoreHopsfsConnector.find_by(name: connector_name)
+  end
+
+  def get_s3_connector_id
+    return @s3_connector_id
+  end
+
+  def with_s3_connector(project_id)
+    featurestore_id = get_featurestore_id(project_id)
+    json_result, connector_name = create_s3_connector(project_id, featurestore_id, "testbucket")
+    parsed_json = JSON.parse(json_result)
+    expect_status(201)
+    connector_id = parsed_json["id"]
+    @s3_connector_id = connector_id
+  end
 end

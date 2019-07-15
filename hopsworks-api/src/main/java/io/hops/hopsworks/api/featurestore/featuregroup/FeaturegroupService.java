@@ -148,11 +148,12 @@ public class FeaturegroupService {
     Users user = jWTHelper.getUserPrincipal(sc);
     try {
       featuregroupController.deleteFeaturegroupIfExists(featurestore, featuregroupDTO, user);
-      featuregroupController.createFeaturegroup(featurestore, featuregroupDTO, user);
-      activityFacade.persistActivity(ActivityFacade.CREATED_FEATUREGROUP + featuregroupDTO.getName(),
+      FeaturegroupDTO createdFeaturegroup = featuregroupController.createFeaturegroup(featurestore, featuregroupDTO,
+        user);
+      activityFacade.persistActivity(ActivityFacade.CREATED_FEATUREGROUP + createdFeaturegroup.getName(),
           project, user, ActivityFlag.SERVICE);
       GenericEntity<FeaturegroupDTO> featuregroupGeneric =
-          new GenericEntity<FeaturegroupDTO>(featuregroupDTO) {};
+          new GenericEntity<FeaturegroupDTO>(createdFeaturegroup) {};
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).entity(featuregroupGeneric).build();
     } catch (SQLException e) {
       LOGGER.log(Level.SEVERE, RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATUREGROUP.getMessage(), e);

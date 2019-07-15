@@ -59,10 +59,6 @@ public class HopsfsTrainingDatasetController {
     //Get HopsFS Connector
     FeaturestoreHopsfsConnector featurestoreHopsfsConnector = featurestoreHopsfsConnectorFacade.find(
       hopsfsTrainingDatasetDTO.getHopsfsConnectorId());
-    if(featurestoreHopsfsConnector == null){
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.HOPSFS_CONNECTOR_NOT_FOUND,
-        Level.FINE, "hopsfsConnector: " + hopsfsTrainingDatasetDTO.getHopsfsConnectorId());
-    }
     HopsfsTrainingDataset hopsfsTrainingDataset = new HopsfsTrainingDataset();
     hopsfsTrainingDataset.setInode(inode);
     hopsfsTrainingDataset.setFeaturestoreHopsfsConnector(featurestoreHopsfsConnector);
@@ -79,29 +75,50 @@ public class HopsfsTrainingDatasetController {
   public void removeHopsfsTrainingDataset(HopsfsTrainingDataset hopsfsTrainingDataset) {
     hopsfsTrainingDatasetFacade.remove(hopsfsTrainingDataset);
   }
+  
+  /**
+   * Verify hopsfsconnectorid
+   *
+   * @param hopsfsConnectorId the id to verify
+   * @throws FeaturestoreException
+   */
+  private void verifyHopsfsTrainingDatasetConnectorId(Integer hopsfsConnectorId) throws FeaturestoreException {
+    if(hopsfsConnectorId == null){
+      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.HOPSFS_CONNECTOR_ID_NOT_PROVIDED.getMessage());
+    }
+    FeaturestoreHopsfsConnector featurestoreHopsfsConnector =
+      featurestoreHopsfsConnectorFacade.find(hopsfsConnectorId);
+    if(featurestoreHopsfsConnector == null) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.HOPSFS_CONNECTOR_NOT_FOUND, Level.FINE,
+        "HopsFS connector with id: " + hopsfsConnectorId + " was not found");
+    }
+  }
+  
+  /**
+   * Verify hopsfs training dataset name
+   *
+   * @param hopsfsTrainingDatasetName the name to verify
+   * @throws FeaturestoreException
+   */
+  private void verifyHopsfsTrainingDatasetName(String hopsfsTrainingDatasetName) throws FeaturestoreException {
+    if(hopsfsTrainingDatasetName.length() >
+      FeaturestoreClientSettingsDTO.HOPSFS_TRAINING_DATASET_NAME_MAX_LENGTH) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_NAME, Level.FINE,
+        ", the name of a hopsfs training dataset should be less than "
+          + FeaturestoreClientSettingsDTO.HOPSFS_TRAINING_DATASET_NAME_MAX_LENGTH + " characters");
+    }
+  }
 
   /**
    * Verify user input specific for creation of hopsfs training dataset
    *
    * @param hopsfsTrainingDatasetDTO the input data to use when creating the feature group
+   * @throws FeaturestoreException
    */
-  private void verifyHopsfsTrainingDatasetInput(HopsfsTrainingDatasetDTO hopsfsTrainingDatasetDTO) {
-    if(hopsfsTrainingDatasetDTO.getName().length() >
-      FeaturestoreClientSettingsDTO.HOPSFS_TRAINING_DATASET_NAME_MAX_LENGTH) {
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_NAME.getMessage()
-        + ", the name of a hopsfs training dataset should be less than "
-        + FeaturestoreClientSettingsDTO.HOPSFS_TRAINING_DATASET_NAME_MAX_LENGTH + " characters");
-    }
-    
-    if(hopsfsTrainingDatasetDTO.getHopsfsConnectorId() == null){
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.HOPSFS_CONNECTOR_ID_NOT_PROVIDED.getMessage());
-    }
-    FeaturestoreHopsfsConnector featurestoreHopsfsConnector =
-      featurestoreHopsfsConnectorFacade.find(hopsfsTrainingDatasetDTO.getHopsfsConnectorId());
-    if(featurestoreHopsfsConnector == null) {
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.HOPSFS_CONNECTOR_NOT_FOUND.getMessage()
-        + "HopsFS connector with id: " + hopsfsTrainingDatasetDTO.getHopsfsConnectorId() + " was not found");
-    }
+  private void verifyHopsfsTrainingDatasetInput(HopsfsTrainingDatasetDTO hopsfsTrainingDatasetDTO)
+    throws FeaturestoreException {
+    verifyHopsfsTrainingDatasetName(hopsfsTrainingDatasetDTO.getName());
+    verifyHopsfsTrainingDatasetConnectorId(hopsfsTrainingDatasetDTO.getHopsfsConnectorId());
   }
   
   /**
