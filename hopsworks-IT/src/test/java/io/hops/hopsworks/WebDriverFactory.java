@@ -54,6 +54,8 @@ public class WebDriverFactory {
   private static final String BROWSER_ENV = "BROWSER";
   private static final String BROWSER_UI_ENV = "HEADLESS";
   private static final String HOPSWORKS_URL_ENV = "HOPSWORKS_URL";
+  
+  public static final long IMPLICIT_WAIT_TIMEOUT = 60;
 
   public static WebDriver getWebDriver() {
     WebDriver driver = null;
@@ -100,7 +102,7 @@ public class WebDriverFactory {
       url = "https://localhost:8181/hopsworks/";
     }
 
-    driver.manage().timeouts().implicitlyWait(60, TimeUnit.SECONDS);
+    driver.manage().timeouts().implicitlyWait(IMPLICIT_WAIT_TIMEOUT, TimeUnit.SECONDS);
     driver.get(url);
     driver.manage().window().maximize();
     return driver;

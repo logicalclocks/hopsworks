@@ -57,8 +57,8 @@
   </h:head>
   <h:body >
     <h:form>
-      <p:panel id="loginPnl" header="Security Question" style="width: 350px; margin: 150px auto;">
-        <h:panelGrid id="loginPanel" columns="3" cellpadding="5">
+      <p:panel id="loginPnl" header="Security Question" style="width: 400px; margin: 150px auto;">
+        <h:panelGrid id="loginPanel">
           <p:inputText id="uname" 
                        required="true"  
                        requiredMessage="Please enter your email address."
@@ -67,11 +67,22 @@
             <f:validateRegex pattern="^[_A-Za-z0-9-\+]+(\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\.[A-Za-z0-9]+)*(\.[A-Za-z]{2,})$" />
           </p:inputText>
           <p:watermark for="uname" value="Email Address" />
+          <p:selectOneMenu id="securityQuestions"
+                           required="true"
+                           requiredMessage="Please select your security question."
+                           value="#{resetPassword.question}">
+            <f:selectItem itemLabel="Select question" itemValue="" />
+            <f:selectItems value="#{resetPassword.securityQuestions}" />
+          </p:selectOneMenu>
+          <p:password id="answer" required="true"
+                       requiredMessage="Please enter your security answer."
+                       value="#{resetPassword.answer}"></p:password>
+          <p:watermark for="answer" value="Security answer" />
         </h:panelGrid>
         <p:messages id="messages" autoUpdate="true" closable="true"/>
         <div style="margin-left: 165px;">
           <h:panelGrid columns="2">
-            <p:commandButton value="Continue" ajax="false" action="#{resetPassword.findQuestion}" > </p:commandButton>
+            <p:commandButton value="Continue" ajax="false" action="#{resetPassword.sendPasswordResetEmail()}" > </p:commandButton>
             <p:commandButton styleClass="team_button button-save" type="submit" value="Cancel" action="#{facesContext.externalContext.redirect('/hopsworks')}" process="@this" />
           </h:panelGrid>
         </div>

@@ -88,6 +88,10 @@ module SessionHelper
       config.headers["Authorization"] = @token
     end
   end
+
+  def try_login(user, password)
+    post "#{ENV['HOPSWORKS_API']}/auth/login", URI.encode_www_form({ email: user.email, password: password}), { content_type: 'application/x-www-form-urlencoded'}
+  end
   
   def register_user(params={})
     user = {}
@@ -319,6 +323,12 @@ module SessionHelper
     user.save
     user
   end
+
+  def set_status(user, status)
+    user.status = status
+    user.save
+    user
+  end
   
   def create_users()
     user = {}
@@ -385,4 +395,39 @@ module SessionHelper
   def get_user
     @user
   end
+
+  def validate_user_rest(key)
+    post "#{ENV['HOPSWORKS_API']}/auth/validate/email", URI.encode_www_form({key: key}),
+         {content_type: 'application/x-www-form-urlencoded'}
+  end
+
+  def validate_user_jsf(key)
+    get "#{ENV['HOPSWORKS_ADMIN']}/security/validate_account.xhtml", {params: {key: key}}
+  end
+
+  def start_password_reset(email, securityQuestion, securityAnswer)
+    post "#{ENV['HOPSWORKS_API']}/auth/recover/password", URI.encode_www_form({email: email, securityQuestion:
+        securityQuestion, securityAnswer: securityAnswer}), {content_type: 'application/x-www-form-urlencoded'}
+  end
+
+  def validate_recovery_key(key)
+    post "#{ENV['HOPSWORKS_API']}/auth/reset/validate", URI.encode_www_form({key: key}),
+         {content_type: 'application/x-www-form-urlencoded'}
+  end
+
+  def reset_password(key, newPwd, confirmPwd)
+    post "#{ENV['HOPSWORKS_API']}/auth/reset/password", URI.encode_www_form(
+        {key: key, newPassword: newPwd, confirmPassword: confirmPwd}), {content_type: 'application/x-www-form-urlencoded'}
+  end
+
+  def start_qr_recovery(email, password)
+    post "#{ENV['HOPSWORKS_API']}/auth/recover/qrCode", URI.encode_www_form({email: email, password: password}), {
+        content_type: 'application/x-www-form-urlencoded'}
+  end
+
+  def reset_qr_code(key)
+    post "#{ENV['HOPSWORKS_API']}/auth/reset/qrCode", URI.encode_www_form({key: key}),
+         {content_type: 'application/x-www-form-urlencoded'}
+  end
+
 end

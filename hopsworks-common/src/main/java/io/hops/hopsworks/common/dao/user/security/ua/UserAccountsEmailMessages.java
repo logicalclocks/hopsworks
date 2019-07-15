@@ -39,6 +39,8 @@
 
 package io.hops.hopsworks.common.dao.user.security.ua;
 
+import java.util.concurrent.TimeUnit;
+
 public class UserAccountsEmailMessages {
 
   /*
@@ -86,12 +88,18 @@ public class UserAccountsEmailMessages {
    */
   public final static String ACCOUNT_PASSWORD_RECOVERY_SUBJECT
           = "You have requested to recover your password";
+  
+  /*
+   * Subject of password recovery
+   */
+  public final static String ACCOUNT_MOBILE_RECOVERY_SUBJECT
+    = "You have requested to recover a lost device";
 
   /*
    * Subject of password rest
    */
-  public final static String ACCOUNT_PASSWORD_RESET
-          = "Your password has been reset";
+  public final static String ACCOUNT_PASSWORD_RESET = "Your password has been reset";
+  public final static String ACCOUNT_QR_RESET = "Your QR code has been reset";
 
   /*
    * Subject of rejected accounts
@@ -150,25 +158,22 @@ public class UserAccountsEmailMessages {
    * @param key
    * @return
    */
-  public static String buildMobileRequestMessageRest(String path, String key) {
+  public static String buildMobileRequestMessageRest(String path, String key, long validFor) {
 
     String message;
 
-    String l1 = GREETINGS_HEADER + ",\n\n"
-            + "We received an account request for Hopsworks on your behalf.\n\n";
-    String l2
-            = "Please click on the following link to verify your email address. We"
-            + " will activate your account within "
-            + ACCOUNT_ACITVATION_PERIOD
-            + " hours after validating your email address.\n\n\n";
+    String l1 = GREETINGS_HEADER + ",\n\n" + "We received an account request for Hopsworks on your behalf.\n\n";
+    String l2 = "Please click on the following link to verify your email address. We will activate your account within "
+            + ACCOUNT_ACITVATION_PERIOD + " hours after validating your email address.\n\n\n";
 
     String url = path + "?key=" + key;
 
     String l3 = "To confirm your email click " + url + " \n\n";
-    String l4 = "If you have any questions please contact "
-            + HOPSWORKS_SUPPORT_EMAIL;
+    String l4 = "If you did not request an account, please ignore this email. This link is only valid for"
+      + formatTime(validFor) + ". \n\n";
+    String l5 = "If you have any questions please contact " + HOPSWORKS_SUPPORT_EMAIL;
 
-    message = l1 + l2 + l3 + l4;
+    message = l1 + l2 + l3 + l4 + l5;
 
     return message;
   }
@@ -180,24 +185,57 @@ public class UserAccountsEmailMessages {
    * @param key
    * @return
    */
-  public static String buildPasswordRecoveryMessage(String path, String key) {
+  public static String buildPasswordRecoveryMessage(String path, String key, long validFor) {
 
     String message;
 
-    String l1 = GREETINGS_HEADER + ",\n\n"
-            + "We received a password recovery request for Hopsworks on your behalf.\n\n";
-    String l2
-            = "Please click on the following link to recover your password: \n";
+    String l1 = GREETINGS_HEADER + ",\n\n We received a password recovery request for Hopsworks on your behalf.\n\n";
+    String l2 = "Please click on the following link to recover your password: \n";
 
-    String url = path + "?key=" + key;
+    String url = path + "/hopsworks/#!/passwordRecovery?key=" + key;
 
     String l3 = url + " \n\n";
-    String l4 = "If you have any questions please contact "
-            + HOPSWORKS_SUPPORT_EMAIL;
+    String l4 = "If you did not request a password reset, please ignore this email. This password reset link is only " +
+      "valid for " + formatTime(validFor) + ". \n\n";
+    String l5 = "If you have any questions please contact " + HOPSWORKS_SUPPORT_EMAIL;
 
-    message = l1 + l2 + l3 + l4;
+    message = l1 + l2 + l3 + l4 + l5;
 
     return message;
+  }
+  
+  public static String buildQRRecoveryMessage(String path, String key, long validFor) {
+    
+    String message;
+    
+    String l1 = GREETINGS_HEADER + ",\n\n We received a lost mobile recovery request for Hopsworks on your behalf.\n\n";
+    String l2 = "Please click on the following link to recover your QR code: \n";
+    
+    String url = path + "/hopsworks/#!/qrRecovery?key=" + key;
+    
+    String l3 = url + " \n\n";
+    String l4 = "If you did not request a QR code reset, please ignore this email. This QR code reset link is only " +
+      "valid for " + formatTime(validFor) + ". \n\n";
+    String l5 = "If you have any questions please contact " + HOPSWORKS_SUPPORT_EMAIL;
+  
+    message = l1 + l2 + l3 + l4 + l5;
+    
+    return message;
+  }
+  
+  public static String formatTime(long validForMs) {
+    long hh = TimeUnit.MILLISECONDS.toHours(validForMs);
+    long mm = TimeUnit.MILLISECONDS.toMinutes(validForMs) % 60;
+    StringBuilder validFor = new StringBuilder();
+    if (hh > 0) {
+      validFor.append(hh).append(hh == 1? " hour" : " hours");
+    }
+    if (hh > 0 && mm > 0) {
+      validFor.append(" and ").append(mm).append(mm == 1? " minute" : " minutes");
+    } else if (mm > 0) {
+      validFor.append(mm).append(mm == 1? " minute" : " minutes");
+    }
+    return validFor.toString();
   }
   
   public static String accountBlockedMessage() {
@@ -301,6 +339,15 @@ public class UserAccountsEmailMessages {
 
     return message;
   }
+  
+  public static String buildQRResetMessage() {
+    String message;
+    String l1 = GREETINGS_HEADER + ",\n\n A lost device has been reported on Hopsworks.\n\n";
+    String l2 = "Your QR code has been changed successfully.\n\n\n";
+    String l3 = "If you have any questions please contact " + HOPSWORKS_SUPPORT_EMAIL;
+    message = l1 + l2 + l3;
+    return message;
+  }
 
   public static String accountActivatedMessage(String username) {
     String message;
@@ -379,7 +426,7 @@ public class UserAccountsEmailMessages {
 
     String url = path + "/hopsworks-cluster/api/cluster/unregister/confirm/" + key;
 
-    String l3 = "To confirm your this request click " + url + " \n\n";
+    String l3 = "To confirm this request click " + url + " \n\n";
     String l4 = "If you have any questions please contact " + HOPSWORKS_SUPPORT_EMAIL;
 
     message = l1 + l2 + l3 + l4;

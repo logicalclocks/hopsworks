@@ -75,6 +75,8 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+
+import io.hops.hopsworks.common.user.ValidationKeyType;
 import org.codehaus.jackson.annotate.JsonIgnore;
 
 @Entity
@@ -220,6 +222,12 @@ public class Users implements Serializable {
   @Size(max = 128)
   @Column(name = "validation_key")
   private String validationKey;
+  @Column(name = "validation_key_updated")
+  @Temporal(TemporalType.TIMESTAMP)
+  private Date validationKeyUpdated;
+  @Enumerated(EnumType.STRING)
+  @Column(name = "validation_key_type")
+  private ValidationKeyType validationKeyType;
   @Enumerated(EnumType.STRING)
   @Column(name = "security_question")
   private SecurityQuestion securityQuestion;
@@ -339,9 +347,9 @@ public class Users implements Serializable {
   }
 
   public Users(String username, String password, String email, String fname, String lname, Date activated, String title,
-      String orcid, UserAccountStatus status, String secret, String validationKey, SecurityQuestion securityQuestion,
-      String securityAnswer, UserAccountType mode, Date passwordChanged, String mobile, Integer maxNumProjects,
-      boolean twoFactor, String salt, int toursState) {
+    String orcid, UserAccountStatus status, String secret, String validationKey, Date validationKeyUpdated,
+    ValidationKeyType validationKeyType, SecurityQuestion securityQuestion, String securityAnswer, UserAccountType mode,
+    Date passwordChanged, String mobile, Integer maxNumProjects, boolean twoFactor, String salt, int toursState) {
     this.username = username;
     this.password = password;
     this.email = email;
@@ -353,6 +361,8 @@ public class Users implements Serializable {
     this.status = status;
     this.secret = secret;
     this.validationKey = validationKey;
+    this.validationKeyUpdated = validationKeyUpdated;
+    this.validationKeyType = validationKeyType;
     this.securityQuestion = securityQuestion;
     this.securityAnswer = securityAnswer;
     this.mode = mode;
@@ -525,6 +535,24 @@ public class Users implements Serializable {
 
   public void setValidationKey(String validationKey) {
     this.validationKey = validationKey;
+  }
+  @XmlTransient
+  @JsonIgnore
+  public Date getValidationKeyUpdated() {
+    return validationKeyUpdated;
+  }
+  
+  public void setValidationKeyUpdated(Date validationKeyUpdated) {
+    this.validationKeyUpdated = validationKeyUpdated;
+  }
+  @XmlTransient
+  @JsonIgnore
+  public ValidationKeyType getValidationKeyType() {
+    return validationKeyType;
+  }
+  
+  public void setValidationKeyType(ValidationKeyType validationKeyType) {
+    this.validationKeyType = validationKeyType;
   }
 
   @XmlTransient

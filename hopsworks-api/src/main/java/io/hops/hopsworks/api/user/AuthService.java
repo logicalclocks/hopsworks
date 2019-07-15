@@ -54,7 +54,6 @@ import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.jwt.JWTController;
 import io.hops.hopsworks.jwt.JsonWebToken;
 import io.hops.hopsworks.restutils.RESTCodes;
-import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.common.user.AuthController;
 import io.hops.hopsworks.common.user.UserStatusValidator;
@@ -83,7 +82,6 @@ import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
@@ -322,51 +320,70 @@ public class AuthService {
       json.setSuccessMessage("We registered your account request. Please validate you email and we will "
           + "review your account within 48 hours.");
     }
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+    return Response.ok(json).build();
   }
 
   @POST
-  @Path("recoverPassword")
+  @Path("/recover/password")
   @Produces(MediaType.APPLICATION_JSON)
   public Response recoverPassword(@FormParam("email") String email,
       @FormParam("securityQuestion") String securityQuestion,
       @FormParam("securityAnswer") String securityAnswer,
-      @Context HttpServletRequest req) throws UserException, ServiceException {
+      @Context HttpServletRequest req) throws UserException, MessagingException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
-    userController.recoverPassword(email, securityQuestion, securityAnswer, req);
-    json.setSuccessMessage(ResponseMessages.PASSWORD_RESET_SUCCESSFUL);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+    userController.sendPasswordRecoveryEmail(email, securityQuestion, securityAnswer, req);
+    json.setSuccessMessage(ResponseMessages.PASSWORD_RESET);
+    return Response.ok(json).build();
   }
-
-  @GET
-  @Path("/validation/{key}")
+  
+  @POST
+  @Path("/recover/qrCode")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response validateUserEmail(@Context HttpServletRequest req, @PathParam("key") String key)
-      throws UserException {
-    authController.validateKey(key, req);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
+  public Response recoverQRCode(@FormParam("email") String email, @FormParam("password") String password,
+    @Context HttpServletRequest req) throws UserException, MessagingException {
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
+    userController.sendQRRecoveryEmail(email, password, req);
+    json.setSuccessMessage(ResponseMessages.QR_CODE_RESET);
+    return Response.ok(json).build();
+  }
+  
+  @POST
+  @Path("/reset/validate")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response validatePasswordRecovery(@FormParam("key") String key, @Context HttpServletRequest req)
+    throws UserException {
+    userController.checkRecoveryKey(key, req);
+    return Response.ok().build();
+  }
+  
+  @POST
+  @Path("/reset/password")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response passwordRecovery(@FormParam("key") String key, @FormParam("newPassword") String newPassword,
+    @FormParam("confirmPassword") String confirmPassword, @Context HttpServletRequest req) throws UserException,
+    MessagingException {
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
+    userController.changePassword(key, newPassword, confirmPassword, req);
+    json.setSuccessMessage(ResponseMessages.PASSWORD_CHANGED);
+    return Response.ok(json).build();
+  }
+  
+  @POST
+  @Path("/reset/qrCode")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response qrCodeRecovery(@FormParam("key") String key, @Context HttpServletRequest req)
+    throws UserException, MessagingException {
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
+    json.setQRCode(userController.recoverQRCode(key, req));
+    return Response.ok(json).build();
   }
 
   @POST
-  @Path("/validation/{key}")
+  @Path("/validate/email")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response validateUserMail(@Context HttpServletRequest req, @PathParam("key") String key) throws UserException {
-    authController.validateKey(key, req);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
-  }
-
-  @POST
-  @Path("/recovery")
-  @Produces(MediaType.TEXT_PLAIN)
-  public Response sendNewValidationKey(@Context HttpServletRequest req,
-      @FormParam("email") String email) throws MessagingException {
-    Users u = userFacade.findByEmail(email);
-    if (u == null || statusValidator.isBlockedAccount(u)) {
-      //if account blocked then ignore the request
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
-    }
-    authController.sendNewValidationKey(u, req);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
+  public Response validateUserMail(@FormParam("key") String key, @Context HttpServletRequest req) throws UserException {
+    authController.validateEmail(key, req);
+    return Response.ok().build();
   }
 
   private void logoutAndInvalidateSession(HttpServletRequest req) throws UserException, InvalidationException {

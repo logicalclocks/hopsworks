@@ -148,7 +148,7 @@
                           ng-model="regCtrl.newUser.securityQuestion" required
                           class="form-control ">
                     <option value="">Select security question</option>
-                    <option ng-repeat="question in regCtrl.securityQuestions" value="{{question}}">{{question}}</option>
+                    <option ng-repeat="question in regCtrl.securityQuestions" value="{{question.value}}">{{question.value}}</option>
                     </select>
                     <span ng-show="(registerForm.$submitted || registerForm.sec_question.$dirty) &amp;&amp; registerForm.sec_question.$error.required"
                         class="text-danger ng-hide">This field is required</span>
@@ -161,7 +161,7 @@
                          autocomplete="off"
                          ng-model="regCtrl.newUser.securityAnswer" required
                          class="form-control"
-                         type="text">
+                         type="password" show-hide-password/>
                   <span ng-show="(registerForm.$submitted || registerForm.sec_answer.$dirty) &amp;&amp; registerForm.sec_answer.$error.required"
                         class="text-danger ng-hide">This field is required</span>
                 </div>

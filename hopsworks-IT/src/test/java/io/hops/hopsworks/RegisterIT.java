@@ -15,76 +15,69 @@
  */
 package io.hops.hopsworks;
 
+import io.hops.hopsworks.util.DBHelper;
 import io.hops.hopsworks.util.Helpers;
 import io.hops.hopsworks.util.JavascriptExec;
-import java.time.Duration;
-import java.util.Random;
+
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import io.hops.hopsworks.util.helpers.RegistrationHelper;
 import org.junit.After;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.support.ui.ExpectedCondition;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.Select;
-import org.openqa.selenium.support.ui.WebDriverWait;
 
 public class RegisterIT {
-
+  
   private static final Logger LOGGER = Logger.getLogger(RegisterIT.class.getName());
   private WebDriver driver;
+  private DBHelper dbHelper;
   private final StringBuffer verificationErrors = new StringBuffer();
-
+  
   @Before
   public void startUp() {
     driver = WebDriverFactory.getWebDriver();
+    dbHelper = new DBHelper();
     driver.findElement(By.linkText("Register")).click();
-    waitForElement(By.name("registerForm"));
+    Helpers.waitForElement(By.name("registerForm"), driver);
   }
-
+  
+  
   private WebElement registerUser(boolean twoFactor) {
-    Random rand = new Random();
-    String firstName = "user_" + rand.nextInt(100000);
-    String lastName = "user_" + rand.nextInt(100000);
-    String email = firstName + "@kth.se";
-    String password = "12345Ab";
-    driver.findElement(By.name("first_name")).sendKeys(firstName);
-    driver.findElement(By.name("last_name")).sendKeys(lastName);
-    driver.findElement(By.name("user_email")).sendKeys(email);
-    driver.findElement(By.name("phone_number")).sendKeys("1234567890");
-    driver.findElement(By.id("id-password")).sendKeys(password);
-    driver.findElement(By.name("user_password_confirm")).sendKeys(password);
-    Select seqQA = new Select(driver.findElement(By.name("sec_question")));
-    seqQA.selectByVisibleText("Name of your first pet?");
-    driver.findElement(By.name("sec_answer")).sendKeys("pet");
-    driver.findElement(By.name("user_agreed")).click();
-    WebElement testUserElement = driver.findElement(By.name("test_user"));
-    JavascriptExec.jsClick(driver, testUserElement);
-    if (twoFactor) {
-      driver.findElement(By.name("2FactorAuth")).click();
-    }
-    driver.findElement(By.name("registerForm")).submit();
+    RegistrationHelper.registerUserTest(twoFactor, driver, dbHelper);
     By by;
     if (twoFactor) {
       by = By.id("qr_code_panel");
     } else {
       by = By.xpath("//div[contains(@class, \"panel-body\")]/div[2]");
     }
-    WebElement element = waitForElementVisibility(by);
+    WebElement element = Helpers.waitForElementVisibility(by, driver);
     return element;
   }
-
+  
+  @Test
+  public void testSecurityAnswerTypeToggle() {
+    By element = By.name("sec_answer");
+    By xpath = By.xpath("(.//input[@name='sec_answer'])/following::span");
+    driver.findElement(element).click();
+    driver.findElement(element).clear();
+    driver.findElement(element).sendKeys("Some answer");
+    Helpers.testTogglePassword(element, xpath, verificationErrors, driver);
+  }
+  
   @Test
   public void testEmailConstraint() {
     driver.findElement(By.name("user_email")).sendKeys("user1234@kth.");
     String attribute = driver.findElement(By.xpath("(.//input[@name='user_email'])/following::span[3]")).
-        getAttribute("aria-hidden");
+      getAttribute("aria-hidden");
     LOGGER.log(Level.INFO, "Email Constraint. {0}", attribute);
     try {
       assertEquals("false", attribute);
@@ -94,7 +87,7 @@ public class RegisterIT {
     driver.findElement(By.name("user_email")).clear();
     driver.findElement(By.name("user_email")).sendKeys("user1234@kth.se");
     attribute = driver.findElement(By.xpath("(.//input[@name='user_email'])/following::span[3]")).
-        getAttribute("aria-hidden");
+      getAttribute("aria-hidden");
     try {
       assertEquals("true", attribute);
     } catch (Error e) {
@@ -102,11 +95,12 @@ public class RegisterIT {
     }
     driver.findElement(By.name("user_email")).clear();
   }
-
+  
   @Test
   public void testPassword() {
     driver.findElement(By.id("id-password")).sendKeys("12345A");
-    String attribute = waitForElement(By.xpath("(.//input[@name='user_password'])/../../../following::div/span[3]")).
+    String attribute =
+      Helpers.waitForElement(By.xpath("(.//input[@name='user_password'])/../../../following::div/span[3]"), driver).
         getAttribute("aria-hidden");
     LOGGER.log(Level.INFO, "invalid password. {0}", attribute);
     try {
@@ -116,7 +110,8 @@ public class RegisterIT {
     }
     driver.findElement(By.id("id-password")).clear();
     driver.findElement(By.id("id-password")).sendKeys("12345a");
-    attribute = waitForElement(By.xpath("(.//input[@name='user_password'])/../../../following::div/span[3]")).
+    attribute =
+      Helpers.waitForElement(By.xpath("(.//input[@name='user_password'])/../../../following::div/span[3]"), driver).
         getAttribute("aria-hidden");
     LOGGER.log(Level.INFO, "invalid password. {0}", attribute);
     try {
@@ -126,7 +121,8 @@ public class RegisterIT {
     }
     driver.findElement(By.id("id-password")).clear();
     driver.findElement(By.id("id-password")).sendKeys("12345Ab");
-    attribute = waitForElement(By.xpath("(.//input[@name='user_password'])/../../../following::div/span[3]")).
+    attribute =
+      Helpers.waitForElement(By.xpath("(.//input[@name='user_password'])/../../../following::div/span[3]"), driver).
         getAttribute("aria-hidden");
     try {
       assertEquals("true", attribute);
@@ -135,13 +131,13 @@ public class RegisterIT {
     }
     driver.findElement(By.id("id-password")).clear();
   }
-
+  
   @Test
   public void testPasswordMatch() {
     driver.findElement(By.id("id-password")).sendKeys("12345Ab");
     driver.findElement(By.name("user_password_confirm")).sendKeys("12345A");
-    String attribute = waitForElement(By.xpath("(.//input[@name='user_password'])/../../../following::div/span[4]")).
-        getAttribute("aria-hidden");
+    String attribute = Helpers.waitForElement(By.xpath("(.//input[@name='user_password'])/../../." +
+      "./following::div/span[4]"), driver).getAttribute("aria-hidden");
     try {
       assertEquals("false", attribute);
     } catch (Error e) {
@@ -149,8 +145,8 @@ public class RegisterIT {
     }
     driver.findElement(By.name("user_password_confirm")).clear();
     driver.findElement(By.name("user_password_confirm")).sendKeys("12345Ab");
-    attribute = waitForElement(By.xpath("(.//input[@name='user_password'])/../../../following::div/span[4]")).
-        getAttribute("aria-hidden");
+    attribute = Helpers.waitForElement(By.xpath("(.//input[@name='user_password'])/../../../following::div/span[4]"),
+      driver).getAttribute("aria-hidden");
     try {
       assertEquals("true", attribute);
     } catch (Error e) {
@@ -159,12 +155,12 @@ public class RegisterIT {
     driver.findElement(By.id("id-password")).clear();
     driver.findElement(By.name("user_password_confirm")).clear();
   }
-
+  
   @Test
-  public void testRegister() throws Exception {
+  public void testRegister() {
     WebElement element = registerUser(false);
-    String attribute = waitForElement(By.xpath("//div[contains(@class, \"panel-body\")]/div[3]")).getAttribute(
-        "aria-hidden");
+    String attribute = Helpers.waitForElement(By.xpath("//div[contains(@class, \"panel-body\")]/div[3]"), driver)
+      .getAttribute("aria-hidden");
     try {
       assertEquals("true", attribute);
     } catch (Error e) {
@@ -175,19 +171,12 @@ public class RegisterIT {
       assertEquals("false", attribute);
     } catch (Error e) {
       verificationErrors.append("Should show success message. ").append(element.getText())
-          .append(e.getMessage()).append("\n");
+        .append(e.getMessage()).append("\n");
     }
   }
-
+  
   @Test
-  public void testRegisterTwoFactor() throws Exception {
-    //enable 2factor
-    Helpers helpers = new Helpers(driver);
-    helpers.login("admin@hopsworks.ai", "admin");
-    helpers.enableTwoFactor();
-    helpers.logout();
-    driver.findElement(By.linkText("Register")).click();
-    waitForElement(By.name("registerForm"));
+  public void testRegisterTwoFactor() {
     registerUser(true);
     String URL = driver.getCurrentUrl();
     try {
@@ -195,7 +184,7 @@ public class RegisterIT {
     } catch (Error e) {
       verificationErrors.append("Should show qr code. ").append(URL).append(e.getMessage()).append("/n");
     }
-    WebElement image = waitForElementVisibility(By.id("qr_code_img"));
+    WebElement image = Helpers.waitForElementVisibility(By.id("qr_code_img"), driver);
     boolean loaded = JavascriptExec.checkImageLoaded(driver, image);
     try {
       assertTrue(loaded);
@@ -203,7 +192,7 @@ public class RegisterIT {
       verificationErrors.append("Should load qr code image. ").append(URL).append(e.getMessage()).append("/n");
     }
     driver.findElement(By.xpath("//div[contains(@class, \"panel-body\")]/a")).click();
-    waitForElementVisibility(By.name("loginForm"));
+    Helpers.waitForElementVisibility(By.name("loginForm"), driver);
     URL = driver.getCurrentUrl();
     try {
       assertTrue(URL.contains("/login"));
@@ -211,28 +200,43 @@ public class RegisterIT {
       verificationErrors.append("Should goto login page. ").append(URL).append(e.getMessage()).append("/n");
     }
   }
-
+  
+  @Test
+  public void emailValidation() {
+    driver.findElement(By.linkText("Sign in")).click();
+    String email = RegistrationHelper.registerUser(false, driver, dbHelper);
+    String key = dbHelper.getValidationKey(email);
+    Helpers.driverGet(RegistrationHelper.EMAIL_VALIDATION_URL + key + "1", driver);
+    By ev = By.xpath(
+      "(.//*[normalize-space(text()) and normalize-space(.)='Email Address Verification'])[1]/following::p[1]");
+    String emailVerification = driver.findElement(ev).getText();
+    try {
+      assertEquals("The email address you are trying to validate does not exist in the system.", emailVerification);
+    } catch (Error e) {
+      verificationErrors.append(e.getMessage()).append("/n");
+    }
+    Helpers.driverGet(RegistrationHelper.EMAIL_VALIDATION_URL + key, driver);
+    emailVerification = driver.findElement(ev).getText();
+    try {
+      assertEquals("You have successfully validated your email address, but your account still has to be approved" +
+        " by an administrator. Hopefully soon!", emailVerification);
+    } catch (Error e) {
+      verificationErrors.append(e.getMessage()).append("/n");
+    }
+  }
+  
   @After
   public void tearDown() {
     if (driver != null) {
       driver.quit();
+    }
+    if (dbHelper != null) {
+      dbHelper.closeConnection();
     }
     String verificationErrorString = verificationErrors.toString();
     if (!"".equals(verificationErrorString)) {
       fail(verificationErrorString);
     }
     LOGGER.log(Level.INFO, "Finshed register test.");
-  }
-
-  private WebElement waitForElement(By by) {
-    return (new WebDriverWait(driver, 600).pollingEvery(Duration.ofSeconds(5))).until((ExpectedCondition<WebElement>) (
-        WebDriver d ) -> d.findElement(by));
-  }
-
-  private WebElement waitForElementVisibility(By by) {
-    WebElement element = driver.findElement(by);
-    WebDriverWait wait = new WebDriverWait(driver, 60);
-    wait.until(ExpectedConditions.visibilityOf(element));
-    return element;
   }
 }

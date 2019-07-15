@@ -54,7 +54,7 @@ public class UserStatusValidator {
     if (status.equals(UserAccountStatus.NEW_MOBILE_ACCOUNT)) {
       throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_INACTIVE, Level.FINE);
     }
-    if (status.equals(UserAccountStatus.BLOCKED_ACCOUNT)) {
+    if (status.equals(UserAccountStatus.BLOCKED_ACCOUNT) || status.equals(UserAccountStatus.SPAM_ACCOUNT)) {
       throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_BLOCKED, Level.FINE);
     }
     if (status.equals(UserAccountStatus.DEACTIVATED_ACCOUNT)) {
@@ -67,6 +67,23 @@ public class UserStatusValidator {
       throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_NOT_APPROVED, Level.FINE);
     }
     return true;
+  }
+  
+  public void checkNewUserStatus(UserAccountStatus status) throws UserException {
+    switch (status) {
+      case NEW_MOBILE_ACCOUNT:
+        return;
+      case VERIFIED_ACCOUNT:
+        throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_INACTIVE, Level.FINE);
+      case ACTIVATED_ACCOUNT:
+        throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_ALREADY_VERIFIED, Level.FINE);
+      case LOST_MOBILE:
+        throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_LOST_DEVICE, Level.FINE);
+      case DEACTIVATED_ACCOUNT:
+        throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_DEACTIVATED, Level.FINE);
+      default:
+        throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_BLOCKED, Level.FINE);
+    }
   }
 
   public boolean isNewAccount(Users user) {
