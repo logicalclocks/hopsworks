@@ -20,5 +20,5 @@ else
   scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o IdentitiesOnly=yes ../hopsworks-web/yo/bower.json vagrant@${SERVER}:/srv/hops/domains/domain1/docroot/app
   scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o IdentitiesOnly=yes ../hopsworks-web/yo/.bowerrc vagrant@${SERVER}:/srv/hops/domains/domain1/docroot/app
 fi
-ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o IdentitiesOnly=yes vagrant@${SERVER} "cd /srv/hops/domains/domain1/docroot/app && sudo npm install -g bower-npm-resolver && bower install"
+ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o IdentitiesOnly=yes vagrant@${SERVER} "cd /srv/hops/domains/domain1/docroot/app && sudo npm install && bower install"
 touch $LAST
