@@ -456,7 +456,7 @@
                                 <label class="text-muted">Key name</label>
                                 <input name="key_name" ng-model="profileCtrl.key.name"
                                        class="form-control"
-                                       ng-minlength="4"
+                                       ng-minlength="4" ng-maxlength="40"
                                        required
                                        type="text"/>
                                 <span ng-show="(apiKeyForm.$submitted || apiKeyForm.key_name.$dirty) && apiKeyForm.key_name.$error.required"

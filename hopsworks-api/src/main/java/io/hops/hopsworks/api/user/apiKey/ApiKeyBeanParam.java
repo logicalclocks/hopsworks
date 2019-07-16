@@ -29,9 +29,9 @@ public class ApiKeyBeanParam {
   private String sortBy;
   private final Set<ApiKeySortBy> sortBySet;
   @QueryParam("filter_by")
-  @ApiParam(value = "ex. filter_by=name:key, created:2019-01-01T00:00:00.000, created_lt:2019-01-01-00:00:00, " +
-    "created_gt:2019-01-01-00:00:00, modified:2019-01-01-00:00:00, modified_lt:2019-01-01-00:00:00, " +
-    "modified_gt:2019-01-01-00:00:00",
+  @ApiParam(value = "ex. filter_by=name:key, created:2019-01-01T00:00:00.000, created_lt:2019-01-01T00:00:00.000, " +
+    "created_gt:2019-01-01T00:00:00.000, modified:2019-01-01T00:00:00.000, modified_lt:2019-01-01T00:00:00.000, " +
+    "modified_gt:2019-01-01T00:00:00.000",
     allowMultiple = true)
   private Set<ApiKeyFilterBy> filter;
   
