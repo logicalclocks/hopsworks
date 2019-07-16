@@ -216,14 +216,14 @@ public class YarnUIProxyServlet extends ProxyServlet {
     // sure it would truly be compatible
     String proxyRequestUri = rewriteUrlFromRequest(servletRequest);
     
-    logger.log(Level.INFO, "YarnProxyUI Url is: " + servletRequest.getRequestURI() + " for " +
+    logger.log(Level.FINE, "YarnProxyUI Url is: " + servletRequest.getRequestURI() + " for " +
       proxyRequestUri);
   
     if (settings.isLocalHost() && proxyRequestUri.contains("proxy/application")) {
       proxyRequestUri = proxyRequestUri.replaceAll("http://.*:", "http://localhost:");
     }
   
-    logger.log(Level.INFO, "YarnProxyUI Url is now: " + servletRequest.getRequestURI() + " for " +
+    logger.log(Level.FINE, "YarnProxyUI Url is now: " + servletRequest.getRequestURI() + " for " +
       proxyRequestUri);
   
     try {
@@ -412,7 +412,7 @@ public class YarnUIProxyServlet extends ProxyServlet {
       
       String pathInfo = servletRequest.getPathInfo();
       
-      logger.log(Level.INFO, "YarnProxyUI PathInfo is: " + pathInfo);
+      logger.log(Level.FINE, "YarnProxyUI PathInfo is: " + pathInfo);
       
       String target = "http://" + pathInfo.substring(7);
       servletRequest.setAttribute(ATTR_TARGET_URI, target);
@@ -440,7 +440,7 @@ public class YarnUIProxyServlet extends ProxyServlet {
       }
       
     } else {
-      logger.log(Level.INFO, "YarnProxyUI queryString is NULL");
+      logger.log(Level.FINE, "YarnProxyUI queryString is NULL");
     }
     
     queryString = rewriteQueryStringFromRequest(servletRequest, queryString);

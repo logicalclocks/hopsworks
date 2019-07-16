@@ -3452,7 +3452,7 @@ public class Settings implements Serializable {
   }
   
   public Boolean isCloud() {
-    return getCloudProvider().isEmpty();
+    return !getCloudProvider().isEmpty();
   }
   
   public Boolean isHopsUtilInsecure() {
