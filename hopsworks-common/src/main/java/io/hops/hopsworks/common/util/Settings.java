@@ -146,6 +146,8 @@ public class Settings implements Serializable {
   private static final String VARIABLE_JHS_IP = "jhs_ip";
   private static final String VARIABLE_RM_IP = "rm_ip";
   private static final String VARIABLE_RM_PORT = "rm_port";
+  private static final String VARIABLE_LOCALHOST = "localhost";
+  private static final String VARIABLE_CLOUD= "cloud";
   private static final String VARIABLE_LOGSTASH_IP = "logstash_ip";
   private static final String VARIABLE_LOGSTASH_PORT = "logstash_port";
   private static final String VARIABLE_LOGSTASH_PORT_TF_SERVING = "logstash_port_tf_serving";
@@ -468,6 +470,8 @@ public class Settings implements Serializable {
   private void populateCache() {
     if (!cached) {
       ADMIN_EMAIL = setVar(VARIABLE_ADMIN_EMAIL, ADMIN_EMAIL);
+      LOCALHOST = setBoolVar(VARIABLE_LOCALHOST, LOCALHOST);
+      CLOUD = setStrVar(VARIABLE_CLOUD, CLOUD);
       PYTHON_KERNEL = setBoolVar(VARIABLE_PYTHON_KERNEL, PYTHON_KERNEL);
       JAVA_HOME = setVar(VARIABLE_JAVA_HOME, JAVA_HOME);
       TWOFACTOR_AUTH = setVar(VARIABLE_TWOFACTOR_AUTH, TWOFACTOR_AUTH);
@@ -1704,6 +1708,12 @@ public class Settings implements Serializable {
 
   public synchronized String getRestEndpoint() {
     checkCache();
+    
+    if (isLocalHost()) {
+      return "https://localhost:" +
+        HOPSWORKS_REST_ENDPOINT.substring(HOPSWORKS_REST_ENDPOINT.lastIndexOf(":") + 1);
+    }
+    
     return "https://" + HOPSWORKS_REST_ENDPOINT;
   }
 
@@ -1881,6 +1891,7 @@ public class Settings implements Serializable {
   public static final String SERVER_TRUSTSTORE_PROPERTY = "server.truststore";
   public static final String KAFKA_CONSUMER_GROUPS = "hopsworks.kafka.consumergroups";
   public static final String HOPSWORKS_REST_ENDPOINT_PROPERTY = "hopsworks.restendpoint";
+  public static final String HOPSUTIL_INSECURE_PROPERTY = "hopsutil.insecure";
   public static final String HOPSWORKS_ELASTIC_ENDPOINT_PROPERTY = "hopsworks.elastic.endpoint";
 
   private int FILE_PREVIEW_IMAGE_SIZE = 10000000;
@@ -3437,5 +3448,27 @@ public class Settings implements Serializable {
     checkCache();
     return FEATURESTORE_DB_DEFAULT_STORAGE_FORMAT;
   }
-
+  
+  private Boolean LOCALHOST = false;
+  
+  public synchronized Boolean isLocalHost() {
+    checkCache();
+    return LOCALHOST;
+  }
+  
+  private String CLOUD = "";
+  
+  public synchronized String getCloudProvider() {
+    checkCache();
+    return CLOUD;
+  }
+  
+  public Boolean isCloud() {
+    return !getCloudProvider().isEmpty();
+  }
+  
+  public Boolean isHopsUtilInsecure() {
+    return isCloud() || isLocalHost();
+  }
+  
 }
