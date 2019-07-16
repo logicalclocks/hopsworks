@@ -1,7 +1,9 @@
 {
   "name": "hopsworks",
   "version": "0.0.1",
-  "dependencies": {},
+  "dependencies": {
+    "apexcharts": "^3.6.8"
+  },
   "repository": {},
   "devDependencies": {
     "globule": "^1.0.0",
@@ -33,8 +35,7 @@
     "karma-jasmine": "^1.0.2",
     "karma-phantomjs-launcher": "^1.0.0",
     "load-grunt-tasks": "^3.5.0",
-    "time-grunt": "^1.3.0",
-    "bower-npm-resolver": "^0.9.1"
+    "time-grunt": "^1.3.0"
   },
   "engines": {
     "node": ">=0.10.0"
