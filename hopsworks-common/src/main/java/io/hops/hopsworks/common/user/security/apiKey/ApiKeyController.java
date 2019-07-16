@@ -83,6 +83,9 @@ public class ApiKeyController {
     if (keyName == null || keyName.isEmpty()) {
       throw new ApiKeyException(RESTCodes.ApiKeyErrorCode.KEY_NAME_NOT_SPECIFIED, Level.FINE);
     }
+    if (keyName.length() > 45) {
+      throw new ApiKeyException(RESTCodes.ApiKeyErrorCode.KEY_NAME_NOT_VALID, Level.FINE);
+    }
     if (scopes == null || scopes.isEmpty()) {
       throw new ApiKeyException(RESTCodes.ApiKeyErrorCode.KEY_SCOPE_NOT_SPECIFIED, Level.FINE);
     }

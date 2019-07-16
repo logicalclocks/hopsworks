@@ -1462,7 +1462,8 @@ public class RESTCodes {
     KEY_SCOPE_NOT_SPECIFIED(5, "Api key scope can not be empty", Response.Status.BAD_REQUEST),
     KEY_SCOPE_EMPTY(6, "Api key scope can not be empty", Response.Status.BAD_REQUEST),
     KEY_NAME_EXIST(7, "Api key name already exists", Response.Status.BAD_REQUEST),
-    KEY_NAME_NOT_SPECIFIED(8, "Api key name not specified", Response.Status.BAD_REQUEST);
+    KEY_NAME_NOT_SPECIFIED(8, "Api key name not specified", Response.Status.BAD_REQUEST),
+    KEY_NAME_NOT_VALID(8, "Api key name not valid", Response.Status.BAD_REQUEST);
     
     private Integer code;
     private String message;
