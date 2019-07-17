@@ -784,8 +784,8 @@ public class DataSetService {
    * @param fileName
    * @param sc
    * @return
-   * @throws io.hops.hopsworks.common.exception.DatasetException
-   * @throws io.hops.hopsworks.common.exception.ProjectException
+   * @throws DatasetException
+   * @throws ProjectException
    */
   @DELETE
   @Path("file/{fileName: .+}")
@@ -846,8 +846,8 @@ public class DataSetService {
    * @param sc
    * @param dto
    * @return
-   * @throws io.hops.hopsworks.common.exception.DatasetException
-   * @throws io.hops.hopsworks.common.exception.ProjectException
+   * @throws DatasetException
+   * @throws ProjectException
    */
   @POST
   @Path("move")
@@ -855,6 +855,8 @@ public class DataSetService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.DATASET_CREATE, ApiScope.DATASET_DELETE},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response moveFile(@Context SecurityContext sc, MoveDTO dto) throws DatasetException, ProjectException,
       HopsSecurityException {
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -873,8 +875,8 @@ public class DataSetService {
    * @param sc
    * @param dto
    * @return
-   * @throws io.hops.hopsworks.common.exception.DatasetException
-   * @throws io.hops.hopsworks.common.exception.ProjectException
+   * @throws DatasetException
+   * @throws ProjectException
    */
   @POST
   @Path("copy")
@@ -882,6 +884,7 @@ public class DataSetService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.DATASET_CREATE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response copyFile(@Context SecurityContext sc, MoveDTO dto) throws DatasetException, ProjectException {
     Users user = jWTHelper.getUserPrincipal(sc);
     String username = hdfsUsersController.getHdfsUserName(project, user);
