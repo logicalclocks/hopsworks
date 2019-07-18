@@ -185,5 +185,31 @@ describe "On #{ENV['OS']}" do
         end
       end
     end
+    describe 'with Api key' do
+      before(:all) do
+        @key = create_api_key('jobKey', %w(INFERENCE))
+        @invalid_key = create_api_key('jobKey', %w(JOB DATASET_VIEW DATASET_CREATE DATASET_DELETE))
+        reset_session
+      end
+      context 'with invalid scope' do
+        before(:all) do
+          set_api_key_to_header(@invalid_key)
+        end
+        it 'should fail to access inference end-point' do
+          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict"
+          expect_json(errorCode: 200003)
+          expect_status(401)
+        end
+      end
+      context 'with valid scope' do
+        before(:all) do
+          set_api_key_to_header(@key)
+        end
+        it 'should get ' do
+          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict"
+          expect_status(200)
+        end
+      end
+    end
   end
 end

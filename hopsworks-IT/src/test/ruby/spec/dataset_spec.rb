@@ -778,5 +778,74 @@ describe "On #{ENV['OS']}" do
         end
       end 
     end
+    describe 'with Api key' do
+      before(:all) do
+        with_valid_project
+        @key_view = create_api_key('jobKey', %w(DATASET_VIEW))
+        @key_create = create_api_key('jobKey', %w(DATASET_CREATE))
+        @key_delete = create_api_key('jobKey', %w(DATASET_DELETE))
+        @invalid_key = create_api_key('jobKey', %w(JOB INFERENCE))
+      end
+      context 'with invalid scope' do
+        before(:all) do
+          set_api_key_to_header(@invalid_key)
+        end
+        it 'should fail to access datasets' do
+          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent"
+          expect_json(errorCode: 200003)
+          expect_status(401)
+        end
+        it 'should fail to create a dataset' do
+          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/createTopLevelDataSet",
+               {name: "dataset_#{Time.now.to_i}", description: "test dataset", searchable: true, generateReadme: true}
+          expect_json(errorCode: 200003)
+          expect_status(401)
+        end
+        it 'should fail to delete a dataset' do
+          delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/Logs"
+          expect_status(401)
+        end
+      end
+      context 'with valid scope' do
+        it 'should get ' do
+          set_api_key_to_header(@key_view)
+          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent"
+          expect_status(200)
+        end
+        it 'should create' do
+          set_api_key_to_header(@key_create)
+          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/createTopLevelDataSet",
+               {name: "dataset_#{Time.now.to_i}", description: "test dataset", searchable: true, generateReadme: true}
+          expect_status(201)
+        end
+        it 'should move a dataset' do
+          set_api_key_to_header(@key_create)
+          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/",
+               {name: "Resources/test1", description:"", searchable: true, generateReadme: true}
+          expect_status(200)
+          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent/Resources"
+          new_ds = json_body.detect { |e| e[:name] == "test1" }
+          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/move",
+               {inodeId:new_ds[:id], destPath:"/Projects/#{@project[:name]}/Logs/test1"}
+          expect_status(200)
+        end
+        it 'should copy a dataset' do
+          set_api_key_to_header(@key_create)
+          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/",
+               {name: "Resources/test2", description:"", searchable: true, generateReadme: true}
+          expect_status(200)
+          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent/Resources"
+          new_ds = json_body.detect { |e| e[:name] == "test2" }
+          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/copy",
+               {inodeId:new_ds[:id], destPath:"/Projects/#{@project[:name]}/Logs/test2"}
+          expect_status(200)
+        end
+        it 'should delete' do
+          set_api_key_to_header(@key_delete)
+          delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/Logs"
+          expect_status(200)
+        end
+      end
+    end
   end
 end
