@@ -444,7 +444,7 @@ describe "On #{ENV['OS']}" do
       end
       it 'should create' do
         create_sparktour_job(@project, "test_api_job", "jar", nil)
-        expect_status(200)
+        expect_status(201)
       end
       it 'should delete' do
         delete_job(@project[:id], "test_api_job")
