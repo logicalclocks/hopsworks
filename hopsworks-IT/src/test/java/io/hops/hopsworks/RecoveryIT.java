@@ -133,7 +133,7 @@ public class RecoveryIT {
     driver.findElement(SECURITY_ANSWER).clear();
     driver.findElement(SECURITY_ANSWER).sendKeys("pet");
     driver.findElement(PASSWORD_RECOVERY_FORM).submit();
-    assertEqualsElementText("Your password rest email has been sent. Please check your inbox.",
+    assertEqualsElementText("Your password reset email has been sent. Please check your inbox.",
       PASSWORD_RECOVERY_SUCCESS);
     String key = dbHelper.getValidationKey(user.getEmail());
     Helpers.driverGet(PASSWORD_RECOVERY_URL + key + "1", driver);//wrong key
@@ -166,7 +166,7 @@ public class RecoveryIT {
     driver.findElement(PASSWORD_INPUT).clear();
     driver.findElement(PASSWORD_INPUT).sendKeys(password);
     driver.findElement(DEVICE_RECOVERY_FORM).submit();
-    assertEqualsElementText("Your QR code rest email has been sent. Please check your inbox.",
+    assertEqualsElementText("Your QR code reset email has been sent. Please check your inbox.",
       DEVICE_RECOVERY_FORM_SUCCESS);
     String key = dbHelper.getValidationKey(user.getEmail());
     Helpers.driverGet(QR_CODE_RECOVERY_URL + key + "1", driver);//wrong key
