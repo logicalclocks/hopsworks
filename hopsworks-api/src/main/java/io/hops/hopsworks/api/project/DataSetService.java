@@ -331,8 +331,8 @@ public class DataSetService {
    * <p/>
    * @param path
    * @return
-   * @throws io.hops.hopsworks.common.exception.DatasetException
-   * @throws io.hops.hopsworks.common.exception.ProjectException
+   * @throws DatasetException
+   * @throws ProjectException
    */
   @GET
   @Path("/getContent/{path: .+}")

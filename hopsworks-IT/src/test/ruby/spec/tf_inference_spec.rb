@@ -187,8 +187,8 @@ describe "On #{ENV['OS']}" do
     end
     describe 'with Api key' do
       before(:all) do
-        @key = create_api_key('jobKey', %w(INFERENCE))
-        @invalid_key = create_api_key('jobKey', %w(JOB DATASET_VIEW DATASET_CREATE DATASET_DELETE))
+        @key = create_api_key('inferenceKey', %w(INFERENCE))
+        @invalid_key = create_api_key('inferenceKey_invalid', %w(JOB DATASET_VIEW DATASET_CREATE DATASET_DELETE))
         reset_session
       end
       context 'with invalid scope' do
