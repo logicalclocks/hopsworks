@@ -483,12 +483,11 @@ public class AuthController {
    * Change password to the given password. Will generate a new salt
    *
    * @param user
-   * @param password
+   * @param secret
    * @param req
    */
   @TransactionAttribute(TransactionAttributeType.REQUIRED)
-  public void changePassword(Users user, String password, HttpServletRequest req) {
-    Secret secret = securityUtils.generateSecret(password);
+  public void changePassword(Users user, Secret secret, HttpServletRequest req) {
     String oldPassword = user.getPassword();
     user.setPassword(secret.getSha256HexDigest());
     user.setSalt(secret.getSalt());

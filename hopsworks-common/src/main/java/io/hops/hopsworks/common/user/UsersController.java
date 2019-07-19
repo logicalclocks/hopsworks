@@ -361,7 +361,8 @@ public class UsersController {
     throws UserException {
     if (userValidator.isValidPassword(newPassword, confirmedPassword)) {
       try {
-        authController.changePassword(user, newPassword, req);
+        Secret secret = securityUtils.generateSecret(newPassword);
+        authController.changePassword(user, secret, req);
       } catch (Exception ex) {
         throw new UserException(RESTCodes.UserErrorCode.PASSWORD_RESET_UNSUCCESSFUL, Level.SEVERE, null,
           ex.getMessage(), ex);
