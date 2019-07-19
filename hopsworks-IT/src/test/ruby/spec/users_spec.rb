@@ -511,7 +511,7 @@ describe "On #{ENV['OS']}" do
         describe "Users invalid query" do
           it 'should return invalid query error code if filter by param is invalid.' do
             get "#{ENV['HOPSWORKS_API']}/users?filter_by=false_login_lt:bla"
-            expect(json_body[:errorCode]).to eq(270000) 
+            expect(json_body[:errorCode]).to eq(310000)
           end
           it 'should return invalid query error code if filter by key is invalid.' do
             get "#{ENV['HOPSWORKS_API']}/users?filter_by=false_login_ls:bla"

@@ -314,7 +314,7 @@ describe "On #{ENV['OS']}" do
           describe "Activities invalid query" do
             it 'should return invalid query error code filter by param is invalid.' do
               get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/activities?filter_by=flag_neq:bla"
-              expect(json_body[:errorCode]).to eq(270000)
+              expect(json_body[:errorCode]).to eq(310000)
             end
             it 'should return invalid query error code filter by key is invalid.' do
               get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/activities?filter_by=flag_nq:bla"
@@ -630,7 +630,7 @@ describe "On #{ENV['OS']}" do
           describe "Activities invalid query" do
             it 'should return invalid query error code if filter by parm is invalid.' do
               get "#{ENV['HOPSWORKS_API']}/users/activities?filter_by=flag_neq:bla"
-              expect(json_body[:errorCode]).to eq(270000)
+              expect(json_body[:errorCode]).to eq(310000)
             end
             it 'should return invalid query error code if filter by key is invalid.' do
               get "#{ENV['HOPSWORKS_API']}/users/activities?filter_by=flag_nq:bla"
