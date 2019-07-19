@@ -141,6 +141,15 @@
       </dependencies>
     </profile>
     <profile>
+      <id>noSeleniumTest</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <properties>
+        <maven.test.skip>true</maven.test.skip>
+      </properties>
+    </profile>
+    <profile>
       <id>deploy-ear</id>
       <activation>
         <activeByDefault>false</activeByDefault>
