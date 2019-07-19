@@ -15,6 +15,7 @@
  */
 package io.hops.hopsworks;
 
+import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.restutils.RESTCodes.ActivitiesErrorCode;
 import io.hops.hopsworks.restutils.RESTCodes.CAErrorCode;
 import io.hops.hopsworks.restutils.RESTCodes.DatasetErrorCode;
@@ -36,9 +37,14 @@ import io.hops.hopsworks.restutils.RESTCodes.UserErrorCode;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 
 import static junit.framework.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
@@ -46,27 +52,36 @@ import static org.junit.Assert.assertFalse;
 
 public class TestRESTCodes {
   
-  private List<RESTErrorCode> values = new ArrayList<>();
+  private HashMap<String, List<RESTErrorCode>> values = new HashMap<>();
+  private HashMap<String, Integer> ranges = new HashMap<>();
   
   @Before
   public void getRESTErrorCodes() {
-    values.addAll(Arrays.asList(CAErrorCode.values()));
-    values.addAll(Arrays.asList(DatasetErrorCode.values()));
-    values.addAll(Arrays.asList(DelaErrorCode.values()));
-    values.addAll(Arrays.asList(DelaCSRErrorCode.values()));
-    values.addAll(Arrays.asList(ServingErrorCode.values()));
-    values.addAll(Arrays.asList(ProjectErrorCode.values()));
-    values.addAll(Arrays.asList(SecurityErrorCode.values()));
-    values.addAll(Arrays.asList(GenericErrorCode.values()));
-    values.addAll(Arrays.asList(ServiceErrorCode.values()));
-    values.addAll(Arrays.asList(RequestErrorCode.values()));
-    values.addAll(Arrays.asList(KafkaErrorCode.values()));
-    values.addAll(Arrays.asList(JobErrorCode.values()));
-    values.addAll(Arrays.asList(MetadataErrorCode.values()));
-    values.addAll(Arrays.asList(UserErrorCode.values()));
-    values.addAll(Arrays.asList(ActivitiesErrorCode.values()));
-    values.addAll(Arrays.asList(ResourceErrorCode.values()));
-    values.addAll(Arrays.asList(FeaturestoreErrorCode.values()));
+    RESTCodes restCodes = new RESTCodes();
+    Class<?>[] classes = restCodes.getClass().getClasses();
+    Method method;
+    for (Class enumClass : classes) {
+      try {
+        method = enumClass.getMethod("values");
+        RESTErrorCode[] obj = (RESTErrorCode[]) method.invoke(null);
+        values.put(enumClass.getName(), Arrays.asList(obj));
+        ranges.put(enumClass.getName(), obj[0].getRange());
+      } catch (ClassCastException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+      }
+    }
+  }
+  
+  @Test
+  public void testDuplicateErrorCodeRange() {
+    Set<String> keySet = ranges.keySet();
+    for (String key : keySet) {
+      for (String key1 : keySet) {
+        if (key.equals(key1)) {
+          continue;
+        }
+        assertFalse("errorCode-1: " + key + ", errorCode-2: "+ key1, ranges.get(key).equals(ranges.get(key1)));
+      }
+    }
   }
   
   /**
@@ -74,29 +89,39 @@ public class TestRESTCodes {
    */
   @Test
   public void detectDuplicateErrorCodes() {
-    
-    
-    //Find duplicate error codes
-    for (int i = 0; i < values.size(); i++) {
-      for (int j = i+1; j < values.size(); j++) {
-        assertFalse("errorCode-1: " +values.get(i).toString()+ ", errorCode-2:"+ values.get(j).toString(),
-          values.get(i).getCode().equals(values.get(j).getCode()));
-      }
+    Set<String> keySet = ranges.keySet();
+    List<RESTErrorCode> restErrorCodes;
+    for (String key : keySet) {
+      restErrorCodes = values.get(key);
+      //Find duplicate error codes
+      for (int i = 0; i < restErrorCodes.size(); i++) {
+        for (int j = i + 1; j < restErrorCodes.size(); j++) {
+          assertFalse(key +
+            " errorCode-1: " + restErrorCodes.get(i).toString() + ", errorCode-2: " + restErrorCodes.get(j).toString(),
+            restErrorCodes.get(i).getCode().equals(restErrorCodes.get(j).getCode()));
+        }
       
+      }
     }
+  
   }
+  
   
   /**
    * Validates the enums only contain error codes within the range assigned to them.
    */
   @Test
   public void validateErrorCodes() {
-    
-    for (RESTErrorCode errorCode : values) {
-      assertTrue(errorCode.toString(), errorCode.getCode() >= errorCode.getRange());
-      assertTrue(errorCode.toString(), errorCode.getCode() < errorCode.getRange() + 10000);
+    Set<String> keySet = ranges.keySet();
+    List<RESTErrorCode> restErrorCodes;
+    for (String key : keySet) {
+      restErrorCodes = values.get(key);
+      for (RESTErrorCode errorCode : restErrorCodes) {
+        assertTrue(errorCode.toString(), errorCode.getCode() >= errorCode.getRange());
+        assertTrue(errorCode.toString(), errorCode.getCode() < errorCode.getRange() + 10000);
+      }
     }
-    
+  
   }
   
   
