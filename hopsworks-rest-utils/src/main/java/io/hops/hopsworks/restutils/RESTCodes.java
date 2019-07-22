@@ -1275,7 +1275,7 @@ public class RESTCodes {
       Response.Status.BAD_REQUEST),
     ILLEGAL_FEATURE_NAME(40, "Illegal feature name",
       Response.Status.BAD_REQUEST),
-    ILLEGAL_FEATURE_DESCRIPTION(41, "Illegal feature name",
+    ILLEGAL_FEATURE_DESCRIPTION(41, "Illegal feature description",
       Response.Status.BAD_REQUEST),
     JDBC_CONNECTOR_NOT_FOUND(42, "JDBC Connector not found",
       Response.Status.BAD_REQUEST),

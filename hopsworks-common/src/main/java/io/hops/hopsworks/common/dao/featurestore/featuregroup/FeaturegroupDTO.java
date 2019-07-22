@@ -49,7 +49,7 @@ public class FeaturegroupDTO extends FeaturestoreEntityDTO {
   public FeaturegroupDTO(Featuregroup featuregroup) {
     super(featuregroup.getFeaturestore().getId(), featuregroup.getCreated(),
         featuregroup.getCreator(), featuregroup.getVersion(),
-        (List) featuregroup.getStatistics(), featuregroup.getJob(),
+        (List) featuregroup.getStatistics(), (List) featuregroup.getJobs(),
         featuregroup.getId());
     this.featuregroupType = featuregroup.getFeaturegroupType();
   }

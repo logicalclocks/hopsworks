@@ -25,10 +25,15 @@ import io.hops.hopsworks.common.dao.featurestore.featuregroup.cached_featuregrou
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.on_demand_featuregroup.OnDemandFeaturegroup;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.on_demand_featuregroup.OnDemandFeaturegroupController;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.on_demand_featuregroup.OnDemandFeaturegroupDTO;
+import io.hops.hopsworks.common.dao.featurestore.jobs.FeaturestoreJobController;
+import io.hops.hopsworks.common.dao.featurestore.jobs.FeaturestoreJobDTO;
 import io.hops.hopsworks.common.dao.featurestore.settings.FeaturestoreClientSettingsDTO;
 import io.hops.hopsworks.common.dao.featurestore.stats.FeaturestoreStatisticController;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
+import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
+import io.hops.hopsworks.common.dao.jobs.description.Jobs;
+import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
@@ -40,6 +45,7 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
@@ -64,6 +70,10 @@ public class FeaturegroupController {
   private OnDemandFeaturegroupController onDemandFeaturegroupController;
   @EJB
   private FeaturestoreFacade featurestoreFacade;
+  @EJB
+  private FeaturestoreJobController featurestoreJobController;
+  @EJB
+  private JobFacade jobFacade;
 
   /**
    * Gets all featuregroups for a particular featurestore and project, using the userCerts to query Hive
@@ -154,7 +164,6 @@ public class FeaturegroupController {
     Featuregroup featuregroup = new Featuregroup();
     featuregroup.setFeaturestore(featurestore);
     featuregroup.setHdfsUserId(hdfsUser.getId());
-    featuregroup.setJob(null);
     featuregroup.setCreated(new Date());
     featuregroup.setCreator(user);
     featuregroup.setVersion(featuregroupDTO.getVersion());
@@ -167,8 +176,31 @@ public class FeaturegroupController {
     featurestoreStatisticController.updateFeaturestoreStatistics(featuregroup, null,
         featuregroupDTO.getFeatureCorrelationMatrix(), featuregroupDTO.getDescriptiveStatistics(),
         featuregroupDTO.getFeaturesHistogram(), featuregroupDTO.getClusterAnalysis());
+  
+    //Get jobs
+    List<Jobs> jobs = getJobs(featuregroupDTO.getJobs(), featurestore.getProject());
+    
+    //Store jobs
+    featurestoreJobController.insertJobs(featuregroup, jobs);
     
     return convertFeaturegrouptoDTO(featuregroup);
+  }
+  
+  /**
+   * Lookup jobs by list of jobNames
+   *
+   * @param jobDTOs the DTOs with the job names
+   * @param project the project that owns the jobs
+   * @return a list of job entities
+   */
+  private List<Jobs> getJobs(List<FeaturestoreJobDTO> jobDTOs, Project project) {
+    if(jobDTOs != null) {
+      return jobDTOs.stream().filter(jobDTO -> jobDTO != null && jobDTO.getJobName() != null
+          && !jobDTO.getJobName().isEmpty()).map(jobDTO -> jobDTO.getJobName()).distinct().map(jobName ->
+          jobFacade.findByProjectAndName(project, jobName)).collect(Collectors.toList());
+    } else {
+      return new ArrayList<>();
+    }
   }
 
   /**
@@ -222,6 +254,11 @@ public class FeaturegroupController {
   public FeaturegroupDTO updateFeaturegroupMetadata(
       Featurestore featurestore, FeaturegroupDTO featuregroupDTO) throws FeaturestoreException {
     Featuregroup featuregroup = verifyFeaturegroupId(featuregroupDTO.getId(), featurestore);
+    //Get jobs
+    List<Jobs> jobs = getJobs(featuregroupDTO.getJobs(), featurestore.getProject());
+    //Store jobs
+    featurestoreJobController.insertJobs(featuregroup, jobs);
+    //Update on-demand feature group metadata
     if (featuregroup.getFeaturegroupType() == FeaturegroupType.ON_DEMAND_FEATURE_GROUP) {
       onDemandFeaturegroupController.updateOnDemandFeaturegroupMetadata(featuregroup.getOnDemandFeaturegroup(),
         (OnDemandFeaturegroupDTO) featuregroupDTO);

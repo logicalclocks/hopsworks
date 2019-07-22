@@ -380,6 +380,8 @@ public class FeaturegroupService {
         featuregroupId);
     featurestoreUtil.verifyUserRole(oldFeaturegroupDTO, featurestore, user, project);
     FeaturegroupDTO updatedFeaturegroupDTO = null;
+    LOGGER.severe("updateMetadata:" + updateMetadata);
+    LOGGER.severe("updateStats:" + updateStats);
     if(updateMetadata || updateStats){
       if(updateMetadata) {
         updatedFeaturegroupDTO = featuregroupController.updateFeaturegroupMetadata(featurestore, featuregroupDTO);

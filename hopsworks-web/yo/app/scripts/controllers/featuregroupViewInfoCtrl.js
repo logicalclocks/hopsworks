@@ -93,18 +93,34 @@ angular.module('hopsWorksApp')
                 var j;
                 if(rawSample.length > 0){
                     for (i = 0; i < rawSample[0].columns.length; i++) {
-                        columns.push(rawSample[0].columns[i].name)
+                        columns.push(self.removeTableNameFromColName(rawSample[0].columns[i].name))
                     }
                 }
                 for (i = 0; i < rawSample.length; i++) {
                     sampleRow = {}
                     for (j = 0; j < rawSample[i].columns.length; j++) {
-                        sampleRow[rawSample[i].columns[j].name] = rawSample[i].columns[j].value
+                        sampleRow[self.removeTableNameFromColName(rawSample[i].columns[j].name)] = rawSample[i].columns[j].value
                     }
                     samples.push(sampleRow)
                 }
                 self.sampleColumns = columns
                 self.sample = samples
+                console.log("sampleColumns:")
+                console.log(self.sampleColumns)
+                console.log("sample:")
+                console.log(self.sample)
+                console.log("rawsample:")
+                console.log(rawSample)
+            }
+
+            /**
+             * Previews are prepended with table name and a dot. Remove this prefix to make the UI more readable
+             *
+             * @param colName the colName to preprocess
+             * @returns truncated colName
+             */
+            self.removeTableNameFromColName = function(colName) {
+                return colName.replace(self.featuregroup.name + "_" + self.featuregroup.version + ".", "")
             }
 
 

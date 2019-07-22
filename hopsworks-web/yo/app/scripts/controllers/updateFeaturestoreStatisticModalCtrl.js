@@ -18,10 +18,11 @@
  * Controller for the update-statistic-view
  */
 angular.module('hopsWorksApp')
-    .controller('updateFeaturestoreStatisticModalCtrl', ['$uibModalInstance', '$scope', 'FeaturestoreService', 'JobService',
-        '$location', 'growl', 'projectId', 'featuregroup', 'trainingDataset', 'projectName', 'featurestore', 'settings',
-        function ($uibModalInstance, $scope, FeaturestoreService, JobService, $location, growl, projectId, featuregroup,
-                  trainingDataset, projectName, featurestore, settings) {
+    .controller('updateFeaturestoreStatisticModalCtrl', ['$uibModalInstance', '$scope', 'FeaturestoreService',
+        'StorageService', '$location', 'growl', 'projectId', 'featuregroup', 'trainingDataset',
+        'projectName', 'featurestore', 'settings',
+        function ($uibModalInstance, $scope, FeaturestoreService, StorageService, $location, growl,
+                  projectId, featuregroup, trainingDataset, projectName, featurestore, settings) {
 
             /**
              * Initialize controller state
@@ -34,6 +35,7 @@ angular.module('hopsWorksApp')
             self.projectName = projectName;
             self.featurestore = featurestore;
             self.settings=settings;
+            self.newJobName = self.projectId + "_newjob";
 
             //State
             self.clusterAnalysis = true
@@ -173,6 +175,65 @@ angular.module('hopsWorksApp')
             }
 
             /**
+             * Setup jobState for redirecting to 'newjob' page
+             *
+             * @param runConfig the job runConfig
+             * @returns the jobState
+             */
+            self.setupJobState = function (runConfig) {
+                var jobState = {}
+                jobState.accordion1 = {//Contains the job name
+                    "isOpen": false,
+                    "visible": true,
+                    "value": "",
+                    "title": "Job name - " + runConfig.appName
+                };
+                jobState.accordion2 = {//Contains the job type
+                    "isOpen": false,
+                    "visible": true,
+                    "value": "",
+                    "title": "Job type - " + runConfig.jobType
+                };
+                if (runConfig.jobType === self.sparkJobType) {
+                    jobState.accordion3 = {// Contains the main execution file (jar, workflow,...)
+                        "isOpen": false,
+                        "visible": true,
+                        "value": "",
+                        "title": "App file (.jar, .py or .ipynb) - " + runConfig.path
+                    };
+                    jobState.jobtype = 1
+                }
+                if (runConfig.jobType === self.pySparkJobType) {
+                    jobState.accordion3 = {// Contains the main execution file (jar, workflow,...)
+                        "isOpen": false,
+                        "visible": true,
+                        "value": "",
+                        "title": "App file (.py or .ipynb) - " + runConfig.path
+                    };
+                    jobState.jobtype = 2
+                }
+                jobState.accordion4 = {// Contains the job setup (main class, input variables,...)
+                    "isOpen": false,
+                    "visible": true,
+                    "value": "",
+                    "title": "Job details"
+                };
+                jobState.accordion5 = {//Contains the configuration and creation
+                    "isOpen": true,
+                    "visible": true,
+                    "value": "",
+                    "title": "Configure and create"
+                };
+                jobState.phase = 5
+                jobState.jobname = runConfig.appName
+                jobState.runConfig = runConfig
+                jobState.sparkState = {
+                    "selectedJar": runConfig.path
+                }
+                return jobState
+            }
+
+            /**
              * Creates a spark job for updating the featuegroup statistics using the featurestore_util.py script
              */
             self.updateStatistics = function () {
@@ -192,18 +253,10 @@ angular.module('hopsWorksApp')
                         growl.success("Featurestore util args written to HDFS", {title: 'Success', ttl: 1000});
                         var hdfsPath = success.data.successMessage
                         var runConfig = self.setupUpdateStatsJob(jobName, hdfsPath)
-                        JobService.putJob(self.projectId, runConfig).then(
-                            function (success) {
-                                self.working = false;
-                                JobService.setJobFilter(jobName);
-                                $uibModalInstance.close(success)
-                                self.goToUrl("jobs")
-                                growl.success("Spark job for Updating the statistics configured", {title: 'Success', ttl: 1000});
-                            }, function (error) {
-                                growl.error(error.data.errorMsg, {title: 'Failed to configure spark job for updating the' +
-                                ' statistics', ttl: 15000});
-                                self.working = false;
-                            });
+                        var jobState = self.setupJobState(runConfig)
+                        StorageService.store(self.newJobName, jobState);
+                        $uibModalInstance.close(success);
+                        self.goToUrl("newjob")
                     }, function (error) {
                         growl.error(error.data.errorMsg, {
                             title: 'Failed to setup featurestore util job arguments',

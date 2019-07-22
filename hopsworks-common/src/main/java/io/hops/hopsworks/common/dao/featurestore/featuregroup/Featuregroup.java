@@ -19,8 +19,8 @@ package io.hops.hopsworks.common.dao.featurestore.featuregroup;
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.cached_featuregroup.CachedFeaturegroup;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.on_demand_featuregroup.OnDemandFeaturegroup;
+import io.hops.hopsworks.common.dao.featurestore.jobs.FeaturestoreJob;
 import io.hops.hopsworks.common.dao.featurestore.stats.FeaturestoreStatistic;
-import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.user.Users;
 
 import javax.persistence.Basic;
@@ -71,9 +71,6 @@ public class Featuregroup implements Serializable {
   @JoinColumn(name = "feature_store_id", referencedColumnName = "id")
   @ManyToOne(optional = false)
   private Featurestore featurestore;
-  @JoinColumn(name = "job_id", referencedColumnName = "id")
-  @ManyToOne(optional = false)
-  private Jobs job;
   @Basic(optional = false)
   @NotNull
   @Column(name = "hdfs_user_id")
@@ -101,6 +98,8 @@ public class Featuregroup implements Serializable {
   @JoinColumn(name = "cached_feature_group_id", referencedColumnName = "id")
   @OneToOne
   private CachedFeaturegroup cachedFeaturegroup;
+  @OneToMany(cascade = CascadeType.ALL, mappedBy = "featuregroup")
+  private Collection<FeaturestoreJob> jobs;
 
   public static long getSerialVersionUID() {
     return serialVersionUID;
@@ -146,14 +145,6 @@ public class Featuregroup implements Serializable {
     this.creator = creator;
   }
 
-  public Jobs getJob() {
-    return job;
-  }
-
-  public void setJob(Jobs job) {
-    this.job = job;
-  }
-
   public Integer getVersion() {
     return version;
   }
@@ -193,7 +184,15 @@ public class Featuregroup implements Serializable {
   public void setCachedFeaturegroup(CachedFeaturegroup cachedFeaturegroup) {
     this.cachedFeaturegroup = cachedFeaturegroup;
   }
-
+  
+  public Collection<FeaturestoreJob> getJobs() {
+    return jobs;
+  }
+  
+  public void setJobs(Collection<FeaturestoreJob> jobs) {
+    this.jobs = jobs;
+  }
+  
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
@@ -201,7 +200,6 @@ public class Featuregroup implements Serializable {
 
     Featuregroup that = (Featuregroup) o;
     if (id != null && !id.equals(that.id)) return false;
-    if (job != null && !job.equals(that.job)) return false;
     if (!featurestore.equals(that.featurestore)) return false;
     if (!hdfsUserId.equals(that.hdfsUserId)) return false;
     if (!version.equals(that.version)) return false;
@@ -219,7 +217,6 @@ public class Featuregroup implements Serializable {
     result = 31 * result + hdfsUserId.hashCode();
     result = 31 * result + version.hashCode();
     result = 31 * result + (created != null ? created.hashCode() : 0);
-    result = 31 * result + (job != null ? job.hashCode() : 0);
     result = 31 * result + creator.hashCode();
     result = 31 * result + (featuregroupType != null ? featuregroupType.hashCode() : 0);
     return result;

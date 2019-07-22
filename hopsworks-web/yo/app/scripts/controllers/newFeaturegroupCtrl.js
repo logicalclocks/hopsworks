@@ -20,8 +20,8 @@
  */
 angular.module('hopsWorksApp')
     .controller('newFeaturegroupCtrl', ['$routeParams', 'growl',
-        '$location', 'StorageService', 'FeaturestoreService', 'ModalService', 'JobService',
-        function ($routeParams, growl, $location, StorageService, FeaturestoreService, ModalService, JobService) {
+        '$location', 'StorageService', 'FeaturestoreService', 'ModalService',
+        function ($routeParams, growl, $location, StorageService, FeaturestoreService, ModalService) {
 
             var self = this;
 
@@ -34,6 +34,7 @@ angular.module('hopsWorksApp')
             self.storageConnectors = StorageService.get(self.projectId + "_storageconnectors")
             self.jdbcConnectors = []
             self.settings = StorageService.get(self.projectId + "_fssettings")
+            self.newJobName = self.projectId + "_newjob";
 
             //State
             self.cachedPhase = 0;
@@ -754,7 +755,8 @@ angular.module('hopsWorksApp')
                     "featuregroupType": self.onDemandFeaturegroupType,
                     "jdbcConnectorId": self.onDemandFeaturegroupjdbcConnection.id,
                     "query": self.onDemandSqlQuery,
-                    "type": self.onDemandFeaturegroupDTOType
+                    "type": self.onDemandFeaturegroupDTOType,
+                    "jobs": []
                 }
                 ModalService.confirm('sm', 'If a Feature Group with the same name and version already' +
                     ' exists in the Feature Store, it will be overridden.')
@@ -793,7 +795,8 @@ angular.module('hopsWorksApp')
                     "featuregroupType": self.onDemandFeaturegroupType,
                     "jdbcConnectorId": self.onDemandFeaturegroupjdbcConnection.id,
                     "query": self.onDemandSqlQuery,
-                    "type": self.onDemandFeaturegroupDTOType
+                    "type": self.onDemandFeaturegroupDTOType,
+                    "jobs": []
                 }
 
                 FeaturestoreService.updateFeaturegroupMetadata(self.projectId, self.featurestore, self.oldFeaturegroupId, featuregroupJson).then(
@@ -827,7 +830,8 @@ angular.module('hopsWorksApp')
                     "features": self.cachedFeaturegroupFeatures,
                     "version": self.version,
                     "featuregroupType": self.cachedFeaturegroupType,
-                    "type": self.cachedFeaturegroupDTOType
+                    "type": self.cachedFeaturegroupDTOType,
+                    "jobs": []
                 }
                 ModalService.confirm('sm', 'This is a cached feature group, updating the feature group Hive' +
                     ' metadata' +
@@ -884,7 +888,8 @@ angular.module('hopsWorksApp')
                     "features": self.cachedFeaturegroupFeatures,
                     "version": self.version,
                     "featuregroupType": self.cachedFeaturegroupType,
-                    "type": self.cachedFeaturegroupDTOType
+                    "type": self.cachedFeaturegroupDTOType,
+                    "jobs": []
                 }
                 if (self.cachedSqlQuery != null && self.cachedSqlQuery && self.cachedSqlQuery != undefined) {
                     var jobName = "create_featuregroup_" + self.cachedFeaturegroupName + "_" + new Date().getTime()
@@ -921,36 +926,24 @@ angular.module('hopsWorksApp')
                                     growl.success("Featurestore util args written to HDFS", {title: 'Success', ttl: 1000});
                                     var hdfsPath = success.data.successMessage
                                     var runConfig = self.setupHopsworksCreateFgJob(jobName, hdfsPath)
-                                    JobService.putJob(self.projectId, runConfig).then(
+                                    FeaturestoreService.createFeaturegroup(self.projectId, featuregroupJson, self.featurestore).then(
                                         function (success) {
-                                            growl.success("SQL Job for Creating Feature Group configured successfully", {
+                                            self.cachedFgWorking = false;
+                                            growl.success("Feature group metadata created and SQL Job Configured.", {
                                                 title: 'Success',
                                                 ttl: 1000
                                             });
-                                            FeaturestoreService.createFeaturegroup(self.projectId, featuregroupJson, self.featurestore).then(
-                                                function (success) {
-                                                    self.cachedFgWorking = false;
-                                                    JobService.setJobFilter(jobName);
-                                                    self.goToUrl("jobs")
-                                                    growl.success("Feature group metadata created and SQL Job Configured.", {
-                                                        title: 'Success',
-                                                        ttl: 1000
-                                                    });
-                                                }, function (error) {
-                                                    growl.error(error.data.errorMsg, {
-                                                        title: 'Failed to create feature group',
-                                                        ttl: 15000
-                                                    });
-                                                    self.cachedFgWorking = false;
-                                                });
-                                            growl.info("Creating feature group... wait", {title: 'Creating', ttl: 1000})
+                                            var jobState = self.setupJobState(runConfig)
+                                            StorageService.store(self.newJobName, jobState);
+                                            self.goToUrl("newjob")
                                         }, function (error) {
                                             growl.error(error.data.errorMsg, {
-                                                title: 'Failed to configure spark job for creating the' +
-                                                ' feature group', ttl: 15000
+                                                title: 'Failed to create feature group',
+                                                ttl: 15000
                                             });
                                             self.cachedFgWorking = false;
-                                        })
+                                        });
+                                    growl.info("Creating feature group... wait", {title: 'Creating', ttl: 1000})
                                 }, function (error) {
                                     growl.error(error.data.errorMsg, {
                                         title: 'Failed to setup featurestore util job arguments',
@@ -1018,6 +1011,65 @@ angular.module('hopsWorksApp')
                     "spark.tensorflow.num.ps": 0,
                 }
                 return runConfig
+            }
+
+            /**
+             * Setup jobState for redirecting to 'newjob' page
+             *
+             * @param runConfig the job runConfig
+             * @returns the jobState
+             */
+            self.setupJobState = function (runConfig) {
+                var jobState = {}
+                jobState.accordion1 = {//Contains the job name
+                    "isOpen": false,
+                    "visible": true,
+                    "value": "",
+                    "title": "Job name - " + runConfig.appName
+                };
+                jobState.accordion2 = {//Contains the job type
+                    "isOpen": false,
+                    "visible": true,
+                    "value": "",
+                    "title": "Job type - " + runConfig.jobType
+                };
+                if (runConfig.jobType === self.sparkJobType) {
+                    jobState.accordion3 = {// Contains the main execution file (jar, workflow,...)
+                        "isOpen": false,
+                        "visible": true,
+                        "value": "",
+                        "title": "App file (.jar, .py or .ipynb) - " + runConfig.path
+                    };
+                    jobState.jobtype = 1
+                }
+                if (runConfig.jobType === self.pySparkJobType) {
+                    jobState.accordion3 = {// Contains the main execution file (jar, workflow,...)
+                        "isOpen": false,
+                        "visible": true,
+                        "value": "",
+                        "title": "App file (.py or .ipynb) - " + runConfig.path
+                    };
+                    jobState.jobtype = 2
+                }
+                jobState.accordion4 = {// Contains the job setup (main class, input variables,...)
+                    "isOpen": false,
+                    "visible": true,
+                    "value": "",
+                    "title": "Job details"
+                };
+                jobState.accordion5 = {//Contains the configuration and creation
+                    "isOpen": true,
+                    "visible": true,
+                    "value": "",
+                    "title": "Configure and create"
+                };
+                jobState.phase = 5
+                jobState.jobname = runConfig.appName
+                jobState.runConfig = runConfig
+                jobState.sparkState = {
+                    "selectedJar": runConfig.path
+                }
+                return jobState
             }
 
             /**

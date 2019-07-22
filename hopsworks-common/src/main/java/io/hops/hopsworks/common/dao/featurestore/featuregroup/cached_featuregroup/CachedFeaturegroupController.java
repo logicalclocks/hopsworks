@@ -109,7 +109,7 @@ public class CachedFeaturegroupController {
           "trustStorePassword=" + password + ";" +
           "sslKeyStore=" + certificateMaterializer.getUserTransientKeystorePath(project, user) + ";" +
           "keyStorePassword=" + password;
-
+  
       return DriverManager.getConnection(jdbcString);
     } catch (FileNotFoundException | CryptoPasswordNotFoundException e) {
       LOGGER.log(Level.SEVERE, "Could not find user certificates for authenticating with Hive: " +
@@ -196,7 +196,11 @@ public class CachedFeaturegroupController {
     String tbl = getTblName(featuregroupDTO.getName(), featuregroupDTO.getVersion());
     String query = "SELECT * FROM " + tbl + " LIMIT 20";
     String db = featurestoreController.getFeaturestoreDbName(featurestore.getProject());
-    return executeReadHiveQuery(query, db, featurestore.getProject(), user);
+    try {
+      return executeReadHiveQuery(query, db, featurestore.getProject(), user);
+    } catch(Exception e) {
+      return executeReadHiveQuery(query, db, featurestore.getProject(), user);
+    }
   }
 
   /**
@@ -219,7 +223,11 @@ public class CachedFeaturegroupController {
     String tableName = getTblName(cachedFeaturegroupDTO.getName(), cachedFeaturegroupDTO.getVersion());
     String query = "CREATE TABLE " + db + ".`" + tableName + "` " +
         featureStr + "STORED AS " + settings.getFeaturestoreDbDefaultStorageFormat();
-    executeUpdateHiveQuery(query, db, featurestore.getProject(), user);
+    try{
+      executeUpdateHiveQuery(query, db, featurestore.getProject(), user);
+    } catch(Exception e) { //Retry once
+      executeUpdateHiveQuery(query, db, featurestore.getProject(), user);
+    }
     //Get HiveTblId of the newly created table from the metastore
     Long hiveTblId = cachedFeaturegroupFacade.getHiveTableId(tableName, featurestore.getHiveDbId());
     //Persist cached feature group
@@ -308,7 +316,11 @@ public class CachedFeaturegroupController {
     String db = featurestoreController.getFeaturestoreDbName(featurestore.getProject());
     String tableName = getTblName(featuregroupDTO.getName(), featuregroupDTO.getVersion());
     String query = "DROP TABLE IF EXISTS `" + tableName + "`";
-    executeUpdateHiveQuery(query, db, featurestore.getProject(), user);
+    try {
+      executeUpdateHiveQuery(query, db, featurestore.getProject(), user);
+    } catch (Exception e) { //Retry once
+      executeUpdateHiveQuery(query, db, featurestore.getProject(), user);
+    }
   }
 
   /**
@@ -481,7 +493,10 @@ public class CachedFeaturegroupController {
     }
   
     if(!cachedFeaturegroupDTO.getFeatures().stream().filter(f -> {
-      return (!Strings.isNullOrEmpty(f.getDescription()) && f.getDescription().length() >
+      if(Strings.isNullOrEmpty(f.getDescription())){
+        f.setDescription("-");
+      }
+      return (f.getDescription().length() >
         FeaturestoreClientSettingsDTO.CACHED_FEATUREGROUP_FEATURE_DESCRIPTION_MAX_LENGTH);
     }).collect(Collectors.toList()).isEmpty()) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_DESCRIPTION, Level.FINE,

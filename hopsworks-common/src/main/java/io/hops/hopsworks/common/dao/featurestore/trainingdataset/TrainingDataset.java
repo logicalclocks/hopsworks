@@ -18,10 +18,10 @@ package io.hops.hopsworks.common.dao.featurestore.trainingdataset;
 
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
 import io.hops.hopsworks.common.dao.featurestore.feature.FeaturestoreFeature;
+import io.hops.hopsworks.common.dao.featurestore.jobs.FeaturestoreJob;
 import io.hops.hopsworks.common.dao.featurestore.stats.FeaturestoreStatistic;
 import io.hops.hopsworks.common.dao.featurestore.trainingdataset.external_trainingdataset.ExternalTrainingDataset;
 import io.hops.hopsworks.common.dao.featurestore.trainingdataset.hopsfs_trainingdataset.HopsfsTrainingDataset;
-import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.user.Users;
 
 import javax.persistence.Basic;
@@ -43,7 +43,6 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
 import java.util.Collection;
@@ -73,9 +72,6 @@ public class TrainingDataset implements Serializable {
   @JoinColumn(name = "feature_store_id", referencedColumnName = "id")
   @ManyToOne(optional = false)
   private Featurestore featurestore;
-  @JoinColumn(name = "job_id", referencedColumnName = "id")
-  @ManyToOne(optional = false)
-  private Jobs job;
   @Basic(optional = false)
   @NotNull
   @Column(name = "hdfs_user_id")
@@ -102,6 +98,8 @@ public class TrainingDataset implements Serializable {
   private Collection<FeaturestoreStatistic> statistics;
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "trainingDataset")
   private Collection<FeaturestoreFeature> features;
+  @OneToMany(cascade = CascadeType.ALL, mappedBy = "trainingDataset")
+  private Collection<FeaturestoreJob> jobs;
   @NotNull
   @Enumerated(EnumType.ORDINAL)
   @Column(name = "training_dataset_type")
@@ -155,14 +153,6 @@ public class TrainingDataset implements Serializable {
 
   public void setCreator(Users creator) {
     this.creator = creator;
-  }
-
-  public Jobs getJob() {
-    return job;
-  }
-
-  public void setJob(Jobs job) {
-    this.job = job;
   }
 
   public Integer getVersion() {
@@ -223,7 +213,6 @@ public class TrainingDataset implements Serializable {
     this.externalTrainingDataset = externalTrainingDataset;
   }
   
-  @XmlElement
   public TrainingDatasetType getTrainingDatasetType() {
     return trainingDatasetType;
   }
@@ -231,6 +220,14 @@ public class TrainingDataset implements Serializable {
   public void setTrainingDatasetType(
     TrainingDatasetType trainingDatasetType) {
     this.trainingDatasetType = trainingDatasetType;
+  }
+  
+  public Collection<FeaturestoreJob> getJobs() {
+    return jobs;
+  }
+  
+  public void setJobs(Collection<FeaturestoreJob> jobs) {
+    this.jobs = jobs;
   }
   
   @Override
@@ -241,7 +238,6 @@ public class TrainingDataset implements Serializable {
     TrainingDataset that = (TrainingDataset) o;
     
     if (id != null && !id.equals(that.id)) return false;
-    if (job != null && !job.equals(that.job)) return false;
     if (!hdfsUserId.equals(that.hdfsUserId)) return false;
     if (!version.equals(that.version)) return false;
     if (!dataFormat.equals(that.dataFormat)) return false;
@@ -263,7 +259,6 @@ public class TrainingDataset implements Serializable {
     result = 31 * result + description.hashCode();
     result = 31 * result + trainingDatasetType.hashCode();
     result = 31 * result + (created != null ? created.hashCode() : 0);
-    result = 31 * result + (job != null ? job.hashCode() : 0);
     result = 31 * result + (features != null ? features.hashCode() : 0);
     result = 31 * result + creator.hashCode();
     return result;

@@ -157,22 +157,24 @@ public class OnDemandFeaturegroupController {
    * @param featureDTOs the feature list to verify
    */
   private void verifyOnDemandFeaturegroupFeatures(List<FeatureDTO> featureDTOs) throws FeaturestoreException {
-    if(!featureDTOs.stream().filter(f -> {
-      return (Strings.isNullOrEmpty(f.getName()) || f.getName().length() >
-        FeaturestoreClientSettingsDTO.ON_DEMAND_FEATUREGROUP_FEATURE_NAME_MAX_LENGTH);
-    }).collect(Collectors.toList()).isEmpty()){
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_NAME, Level.FINE,
-        ", the feature name in an on-demand feature group should be less than "
-          + FeaturestoreClientSettingsDTO.ON_DEMAND_FEATUREGROUP_FEATURE_NAME_MAX_LENGTH + " characters");
-    }
-    if(!featureDTOs.stream().filter(f -> {
-      return (!Strings.isNullOrEmpty(f.getDescription()) &&
-        f.getDescription().length() >
-          FeaturestoreClientSettingsDTO.ON_DEMAND_FEATUREGROUP_FEATURE_DESCRIPTION_MAX_LENGTH);
-    }).collect(Collectors.toList()).isEmpty()){
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_DESCRIPTION, Level.FINE,
-        ", the feature description in an on-demand feature group should be less than "
-          + FeaturestoreClientSettingsDTO.ON_DEMAND_FEATUREGROUP_FEATURE_DESCRIPTION_MAX_LENGTH + " characters");
+    if(featureDTOs != null && !featureDTOs.isEmpty()) {
+      if(!featureDTOs.stream().filter(f -> {
+        return (Strings.isNullOrEmpty(f.getName()) || f.getName().length() >
+          FeaturestoreClientSettingsDTO.ON_DEMAND_FEATUREGROUP_FEATURE_NAME_MAX_LENGTH);
+      }).collect(Collectors.toList()).isEmpty()){
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_NAME, Level.FINE,
+          ", the feature name in an on-demand feature group should be less than "
+            + FeaturestoreClientSettingsDTO.ON_DEMAND_FEATUREGROUP_FEATURE_NAME_MAX_LENGTH + " characters");
+      }
+      if(!featureDTOs.stream().filter(f -> {
+        return (!Strings.isNullOrEmpty(f.getDescription()) &&
+          f.getDescription().length() >
+            FeaturestoreClientSettingsDTO.ON_DEMAND_FEATUREGROUP_FEATURE_DESCRIPTION_MAX_LENGTH);
+      }).collect(Collectors.toList()).isEmpty()){
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_DESCRIPTION, Level.FINE,
+          ", the feature description in an on-demand feature group should be less than "
+            + FeaturestoreClientSettingsDTO.ON_DEMAND_FEATUREGROUP_FEATURE_DESCRIPTION_MAX_LENGTH + " characters");
+      }
     }
   }
   

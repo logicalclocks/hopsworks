@@ -197,52 +197,47 @@
                 </span>
             </div>
 
-            <table class="table table-hover fs-table" style="margin-left: 10px; overflow: auto">
+            <h3 style="margin-left: 10px" ng-if="trainingDatasetViewInfoCtrl.trainingDataset.jobs.length === 0">
+                No jobs have been linked to this training dataset
+            </h3>
+
+            <table class="table table-hover fs-table" style="margin-left: 10px; overflow: auto" ng-if="trainingDatasetViewInfoCtrl.trainingDataset.jobs.length > 0">
+                <thead style="border:none;" class="fs-table">
+                <th class="fs-table" style="width: 50%">Job Name</th>
+                <th class="fs-table" style="width: 50%">Last Computed</th>
+                </thead>
                 <tbody class="fs-table">
-                <tr class="fs-table">
-                    <td style="font-weight:700;" class="fs-table">
-                        Job Name
-                    </td>
+                <tr class="fs-table" data-ng-repeat="job in trainingDatasetViewInfoCtrl.trainingDataset.jobs">
                     <td class="fs-table">
-                        <div ng-if="trainingDatasetViewInfoCtrl.trainingDataset.jobName === null">
-                            no job specified
-                        </div>
-                        <div ng-if="trainingDatasetViewInfoCtrl.trainingDataset.jobName !== null">
                             <span style="cursor:pointer;color:black;text-decoration:underline;"
-                                  ng-click="trainingDatasetViewInfoCtrl.launchJob(trainingDatasetViewInfoCtrl.trainingDataset.jobName); $event.stopPropagation();">
-                                {{trainingDatasetViewInfoCtrl.trainingDataset.jobName}}
+                                  ng-click="trainingDatasetViewInfoCtrl.launchJob(job.jobName); $event.stopPropagation();">
+                                {{job.jobName}}
                             </span>
-                        </div>
-                    </td>
-                </tr>
-                <tr class="fs-table">
-                    <td style="font-weight:700;" class="fs-table">
-                        Last Computed
                     </td>
                     <td class="fs-table">
-                        <div ng-if="trainingDatasetViewInfoCtrl.trainingDataset.lastComputed === null">
+                        <div ng-if="job.lastComputed === null">
                             -
                         </div>
-                        <div ng-if="trainingDatasetViewInfoCtrl.trainingDataset.lastComputed !== null">
+                        <div ng-if="job.lastComputed !== null">
                       <span
-                              ng-if="trainingDatasetViewInfoCtrl.trainingDataset.jobStatus === 'Undefined'"
+                              ng-if="job.jobStatus === 'Undefined'"
                               style="color: #0066bb ">
-                        {{formatDate(trainingDatasetViewInfoCtrl.trainingDataset.lastComputed)}}
+                        {{formatDate(job.lastComputed)}}
                       </span>
                             <span
-                                    ng-if="trainingDatasetViewInfoCtrl.trainingDataset.jobStatus === 'Succeeded'"
+                                    ng-if="job.jobStatus === 'Succeeded'"
                                     style="color: #00A000 ">
-                        {{formatDate(trainingDatasetViewInfoCtrl.trainingDataset.lastComputed)}}
+                        {{formatDate(job.lastComputed)}}
                       </span>
                             <span
-                                    ng-if="trainingDatasetViewInfoCtrl.trainingDataset.jobStatus === 'Failed'"
+                                    ng-if="job.jobStatus === 'Failed'"
                                     style="color: #880000 ">
-                        {{formatDate(trainingDatasetViewInfoCtrl.trainingDataset.lastComputed)}}
+                        {{formatDate(job.lastComputed)}}
                       </span>
                             <span
-                                    ng-if="trainingDatasetViewInfoCtrl.trainingDataset.jobStatus === 'Killed'"
+                                    ng-if="job.jobStatus === 'Killed'"
                                     style="color: #880000 ">
-                        {{formatDate(trainingDatasetViewInfoCtrl.trainingDataset.lastComputed)}}
+                        {{formatDate(job.lastComputed)}}
                       </span>
                         </div>
                     </td>

@@ -177,7 +177,12 @@
                 </span>
             </div>
 
-            <table class="table table-hover fs-table" style="margin-left: 10px; overflow: auto">
+            <h3 style="margin-left: 10px" ng-if="true">
+                Online feature serving have not been enabled for this feature group
+            </h3>
+
+            <!-- TODO when we add online feature store, add the info here-->
+            <table class="table table-hover fs-table" style="margin-left: 10px; overflow: auto" ng-if="false">
                 <tbody class="fs-table">
                 <tr class="fs-table">
                     <td style="font-weight:700;" class="fs-table">
@@ -234,52 +239,47 @@
                 </span>
             </div>
 
-            <table class="table table-hover fs-table" style="margin-left: 10px; overflow: auto">
+            <h3 style="margin-left: 10px" ng-if="featuregroupViewInfoCtrl.featuregroup.jobs.length === 0">
+                No jobs have been linked to this feature group
+            </h3>
+
+            <table class="table table-hover fs-table" style="margin-left: 10px; overflow: auto" ng-if="featuregroupViewInfoCtrl.featuregroup.jobs.length > 0">
+                <thead style="border:none;" class="fs-table">
+                <th class="fs-table" style="width: 50%">Job Name</th>
+                <th class="fs-table" style="width: 50%">Last Computed</th>
+                </thead>
                 <tbody class="fs-table">
-                <tr class="fs-table">
-                    <td style="font-weight:700;" class="fs-table">
-                        Job Name
-                    </td>
+                <tr class="fs-table" data-ng-repeat="job in featuregroupViewInfoCtrl.featuregroup.jobs">
                     <td class="fs-table">
-                        <div ng-if="featuregroupViewInfoCtrl.featuregroup.jobName === null">
-                            no job specified
-                        </div>
-                        <div ng-if="featuregroupViewInfoCtrl.featuregroup.jobName !== null">
                             <span style="cursor:pointer;color:black;text-decoration:underline;"
-                                  ng-click="featuregroupViewInfoCtrl.launchJob(featuregroupViewInfoCtrl.featuregroup.jobName); $event.stopPropagation();">
-                                {{featuregroupViewInfoCtrl.featuregroup.jobName}}
+                                  ng-click="featuregroupViewInfoCtrl.launchJob(job.jobName); $event.stopPropagation();">
+                                {{job.jobName}}
                             </span>
-                        </div>
-                    </td>
-                </tr>
-                <tr class="fs-table">
-                    <td style="font-weight:700;" class="fs-table">
-                        Last Computed
                     </td>
                     <td class="fs-table">
-                        <div ng-if="featuregroupViewInfoCtrl.featuregroup.lastComputed === null">
+                        <div ng-if="job.lastComputed === null">
                             -
                         </div>
-                        <div ng-if="featuregroupViewInfoCtrl.featuregroup.lastComputed !== null">
+                        <div ng-if="job.lastComputed !== null">
                       <span
-                              ng-if="featuregroupViewInfoCtrl.featuregroup.jobStatus === 'Undefined'"
+                              ng-if="job.jobStatus === 'Undefined'"
                               style="color: #0066bb ">
-                        {{formatDate(featuregroupViewInfoCtrl.featuregroup.lastComputed)}}
+                        {{formatDate(job.lastComputed)}}
                       </span>
                             <span
-                                    ng-if="featuregroupViewInfoCtrl.featuregroup.jobStatus === 'Succeeded'"
+                                    ng-if="job.jobStatus === 'Succeeded'"
                                     style="color: #00A000 ">
-                        {{formatDate(featuregroupViewInfoCtrl.featuregroup.lastComputed)}}
+                        {{formatDate(job.lastComputed)}}
                       </span>
                             <span
-                                    ng-if="featuregroupViewInfoCtrl.featuregroup.jobStatus === 'Failed'"
+                                    ng-if="job.jobStatus === 'Failed'"
                                     style="color: #880000 ">
-                        {{formatDate(featuregroupViewInfoCtrl.featuregroup.lastComputed)}}
+                        {{formatDate(job.lastComputed)}}
                       </span>
                             <span
-                                    ng-if="featuregroupViewInfoCtrl.featuregroup.jobStatus === 'Killed'"
+                                    ng-if="job.jobStatus === 'Killed'"
                                     style="color: #880000 ">
-                        {{formatDate(featuregroupViewInfoCtrl.featuregroup.lastComputed)}}
+                        {{formatDate(job.lastComputed)}}
                       </span>
                         </div>
                     </td>
@@ -358,6 +358,7 @@
 
         <div uib-accordion-group class="panel-default"
              ng-if="featuregroupViewInfoCtrl.featuregroup.featuregroupType === featuregroupViewInfoCtrl.cachedFeaturegroupType"
+             style="overflow-x: scroll"
         >
             <div uib-accordion-heading>
                 <i class="fa fa-info-circle" tooltip-placement="auto left"
@@ -372,7 +373,8 @@
                     <i ng-if="featuregroupViewInfoCtrl.sampleWorking" style="margin-top: 2px; text-align: center"
                        class="fa fa-spinner fa-spin"></i>
                 </p>
-                <p ng-if="featuregroupViewInfoCtrl.sampleColumns.length  === 0 && !featuregroupViewInfoCtrl.notFetchedSample" style="margin-left: 10px; magin-top:10px">
+                <p ng-if="featuregroupViewInfoCtrl.sampleColumns.length  === 0 && !featuregroupViewInfoCtrl.notFetchedSample"
+                   style="margin-left: 10px; magin-top:10px">
                     Feature group is empty
                 </p>
             </div>
@@ -394,7 +396,7 @@
                 </table>
 
 
-        </div>
+            </div>
 
+        </div>
     </div>
-</div>

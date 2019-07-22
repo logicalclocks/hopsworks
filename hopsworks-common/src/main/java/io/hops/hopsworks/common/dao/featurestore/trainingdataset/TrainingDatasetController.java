@@ -22,6 +22,8 @@ import io.hops.hopsworks.common.dao.featurestore.Featurestore;
 import io.hops.hopsworks.common.dao.featurestore.FeaturestoreFacade;
 import io.hops.hopsworks.common.dao.featurestore.feature.FeatureDTO;
 import io.hops.hopsworks.common.dao.featurestore.feature.FeaturestoreFeatureController;
+import io.hops.hopsworks.common.dao.featurestore.jobs.FeaturestoreJobController;
+import io.hops.hopsworks.common.dao.featurestore.jobs.FeaturestoreJobDTO;
 import io.hops.hopsworks.common.dao.featurestore.settings.FeaturestoreClientSettingsDTO;
 import io.hops.hopsworks.common.dao.featurestore.stats.FeaturestoreStatisticController;
 import io.hops.hopsworks.common.dao.featurestore.trainingdataset.external_trainingdataset.ExternalTrainingDataset;
@@ -48,6 +50,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
@@ -78,6 +81,8 @@ public class TrainingDatasetController {
   private HopsfsTrainingDatasetController hopsfsTrainingDatasetController;
   @EJB
   private ExternalTrainingDatasetController externalTrainingDatasetController;
+  @EJB
+  FeaturestoreJobController featurestoreJobController;
 
   /**
    * Gets all trainingDatasets for a particular featurestore and project
@@ -138,12 +143,6 @@ public class TrainingDatasetController {
     String hdfsUsername = hdfsUsersController.getHdfsUserName(featurestore.getProject(), user);
     HdfsUsers hdfsUser = hdfsUsersFacade.findByName(hdfsUsername);
   
-    //Get job
-    Jobs job = null;
-    if (trainingDatasetDTO.getJobName() != null && !trainingDatasetDTO.getJobName().isEmpty()) {
-      job = jobFacade.findByProjectAndName(featurestore.getProject(), trainingDatasetDTO.getJobName());
-    }
-  
     //Create specific dataset type
     HopsfsTrainingDataset hopsfsTrainingDataset = null;
     ExternalTrainingDataset externalTrainingDataset = null;
@@ -171,7 +170,6 @@ public class TrainingDatasetController {
     trainingDataset.setDescription(trainingDatasetDTO.getDescription());
     trainingDataset.setFeaturestore(featurestore);
     trainingDataset.setHdfsUserId(hdfsUser.getId());
-    trainingDataset.setJob(job);
     trainingDataset.setCreated(new Date());
     trainingDataset.setCreator(user);
     trainingDataset.setVersion(trainingDatasetDTO.getVersion());
@@ -182,9 +180,34 @@ public class TrainingDatasetController {
     featurestoreStatisticController.updateFeaturestoreStatistics(null, trainingDataset,
         trainingDatasetDTO.getFeatureCorrelationMatrix(), trainingDatasetDTO.getDescriptiveStatistics(),
       trainingDatasetDTO.getFeaturesHistogram(), trainingDatasetDTO.getClusterAnalysis());
+    
     // Store features
     featurestoreFeatureController.updateTrainingDatasetFeatures(trainingDataset, trainingDatasetDTO.getFeatures());
+  
+    //Get jobs
+    List<Jobs> jobs = getJobs(trainingDatasetDTO.getJobs(), featurestore.getProject());
+    
+    //Store jobs
+    featurestoreJobController.insertJobs(trainingDataset, jobs);
+    
     return convertTrainingDatasetToDTO(trainingDataset);
+  }
+  
+  /**
+   * Lookup jobs by list of jobNames
+   *
+   * @param jobDTOs the DTOs with the job names
+   * @param project the project that owns the jobs
+   * @return a list of job entities
+   */
+  private List<Jobs> getJobs(List<FeaturestoreJobDTO> jobDTOs, Project project) {
+    if(jobDTOs != null){
+      return jobDTOs.stream().filter(jobDTO -> jobDTO != null && jobDTO.getJobName() != null
+          && !jobDTO.getJobName().isEmpty()).map(jobDTO -> jobDTO.getJobName()).distinct().map(jobName ->
+          jobFacade.findByProjectAndName(project, jobName)).collect(Collectors.toList());
+    } else {
+      return new ArrayList<>();
+    }
   }
 
   /**
@@ -300,6 +323,14 @@ public class TrainingDatasetController {
   public TrainingDatasetDTO updateTrainingDatasetMetadata(
       Featurestore featurestore, TrainingDatasetDTO trainingDatasetDTO) throws FeaturestoreException {
     TrainingDataset trainingDataset = verifyTrainingDatasetId(trainingDatasetDTO.getId(), featurestore);
+  
+    //Get jobs
+    List<Jobs> jobs = getJobs(trainingDatasetDTO.getJobs(), featurestore.getProject());
+    //Store jobs
+    featurestoreJobController.insertJobs(trainingDataset, jobs);
+  
+    // Store features
+    featurestoreFeatureController.updateTrainingDatasetFeatures(trainingDataset, trainingDatasetDTO.getFeatures());
     
     if(!Strings.isNullOrEmpty(trainingDatasetDTO.getDataFormat())){
       verifyTrainingDatasetDataFormat(trainingDatasetDTO.getDataFormat());
@@ -507,8 +538,12 @@ public class TrainingDatasetController {
             + FeaturestoreClientSettingsDTO.TRAINING_DATASET_FEATURE_NAME_MAX_LENGTH + " characters");
       }
       if(!featureDTOS.stream().filter(f -> {
-        return (!Strings.isNullOrEmpty(f.getDescription()));
-      }).collect(Collectors.toList()).isEmpty()){
+        if(Strings.isNullOrEmpty(f.getDescription())){
+          f.setDescription("-");
+        }
+        return (f.getDescription().length() >
+          FeaturestoreClientSettingsDTO.TRAINING_DATASET_FEATURE_DESCRIPTION_MAX_LENGTH);
+      }).collect(Collectors.toList()).isEmpty()) {
         throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_DESCRIPTION, Level.FINE,
           ", the feature description in a training dataset should be less than "
           + FeaturestoreClientSettingsDTO.TRAINING_DATASET_FEATURE_DESCRIPTION_MAX_LENGTH + " characters");
