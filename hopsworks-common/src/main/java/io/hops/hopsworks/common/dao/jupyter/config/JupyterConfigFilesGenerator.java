@@ -202,7 +202,8 @@ public class JupyterConfigFilesGenerator {
         "jupyter_certs_dir", certsDir,
         "secret_dir", this.settings.getStagingDir() + Settings.PRIVATE_DIRS + js.getSecret(),
         "allow_origin", allowOrigin,
-        "ws_ping_interval", String.valueOf(settings.getJupyterWSPingInterval())
+        "ws_ping_interval", String.valueOf(settings.getJupyterWSPingInterval()),
+        "hopsworks_project_id", Integer.toString(project.getId())
       ).toString();
   }
   
