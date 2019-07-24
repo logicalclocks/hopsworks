@@ -155,8 +155,8 @@ public class JupyterConfigFilesGenerator {
     return true;
   }
   
-  public String pythonKernelName() {
-    return "python";
+  public String pythonKernelName(String pythonVersion) {
+    return "python" + pythonVersion.charAt(0);
   }
   
   public String pythonKernelPath(String kernelsDir, String pythonKernelName) {
@@ -286,7 +286,7 @@ public class JupyterConfigFilesGenerator {
     boolean createdCustomJs = false;
     
     if (!jupyter_config_file.exists()) {
-      String pythonKernelName = pythonKernelName();
+      String pythonKernelName = pythonKernelName(project.getPythonVersion());
       if (settings.isPythonKernelEnabled() && !project.getPythonVersion().contains("X")) {
         String pythonKernelPath = pythonKernelPath(kernelsDir, pythonKernelName);
         File pythonKernelFile = new File(pythonKernelPath, JUPYTER_CUSTOM_KERNEL);
