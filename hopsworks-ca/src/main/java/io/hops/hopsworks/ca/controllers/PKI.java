@@ -70,6 +70,9 @@ public class PKI {
   private final static long TEN_YEARS = 3650;
   private static final Map<String, TimeUnit> TIME_SUFFIXES;
 
+  private final Pattern SUBJECT_PATTERN = Pattern.compile("(([\\w\\.]+\\s?)=(\\s?[\\w\\.\\-]+))");
+  private static final String SUBJECT = "subject=";
+
   static {
     TIME_SUFFIXES = new HashMap<>(5);
     TIME_SUFFIXES.put("ms", TimeUnit.MILLISECONDS);
@@ -146,16 +149,16 @@ public class PKI {
     if (subject == null || subject.isEmpty()) {
       return null;
     }
-    String[] parts = subject.split("/");
-    String[] keyVal;
+
+    // Remove front subject= before using the regex
+    subject = subject.replaceFirst(SUBJECT, "");
+    Matcher matcher = SUBJECT_PATTERN.matcher(subject);
+
     HashMap<String, String> keyValStore = new HashMap<>();
-    for (String part : parts) {
-      keyVal = part.split("=");
-      if (keyVal.length < 2) {
-        continue;
-      }
-      keyValStore.put(keyVal[0], keyVal[1]);
+    while (matcher.find()) {
+      keyValStore.put(matcher.group(2).trim(), matcher.group(3).trim());
     }
+
     return keyValStore;
   }
 
