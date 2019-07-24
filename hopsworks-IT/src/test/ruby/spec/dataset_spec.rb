@@ -792,13 +792,13 @@ describe "On #{ENV['OS']}" do
         end
         it 'should fail to access datasets' do
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent"
-          expect_json(errorCode: 300004)
+          expect_json(errorCode: 320004)
           expect_status(403)
         end
         it 'should fail to create a dataset' do
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/createTopLevelDataSet",
                {name: "dataset_#{Time.now.to_i}", description: "test dataset", searchable: true, generateReadme: true}
-          expect_json(errorCode: 300004)
+          expect_json(errorCode: 320004)
           expect_status(403)
         end
         it 'should fail to delete a dataset' do

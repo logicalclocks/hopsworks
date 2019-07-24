@@ -1463,12 +1463,12 @@ public class RESTCodes {
     KEY_SCOPE_EMPTY(6, "Api key scope can not be empty", Response.Status.BAD_REQUEST),
     KEY_NAME_EXIST(7, "Api key name already exists", Response.Status.BAD_REQUEST),
     KEY_NAME_NOT_SPECIFIED(8, "Api key name not specified", Response.Status.BAD_REQUEST),
-    KEY_NAME_NOT_VALID(8, "Api key name not valid", Response.Status.BAD_REQUEST);
+    KEY_NAME_NOT_VALID(9, "Api key name not valid", Response.Status.BAD_REQUEST);
     
     private Integer code;
     private String message;
     private Response.StatusType respStatus;
-    private final int range = 300000;
+    private final int range = 320000;
   
     ApiKeyErrorCode(Integer code, String message, Response.StatusType respStatus) {
       this.code = range + code;

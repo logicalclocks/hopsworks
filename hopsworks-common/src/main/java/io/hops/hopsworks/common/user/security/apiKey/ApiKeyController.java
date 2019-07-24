@@ -38,7 +38,6 @@ import javax.ejb.TransactionAttributeType;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -95,8 +94,7 @@ public class ApiKeyController {
     }
     Secret secret = generateApiKey();
     Date date = new Date();
-    Timestamp now = new Timestamp(date.getTime());
-    apiKey = new ApiKey(user, secret.getPrefix(), secret.getSha256HexDigest(), secret.getSalt(), now, now, keyName);
+    apiKey = new ApiKey(user, secret.getPrefix(), secret.getSha256HexDigest(), secret.getSalt(), date, date, keyName);
     List<ApiKeyScope> keyScopes = getKeyScopes(scopes, apiKey);
     apiKey.setApiKeyScopeCollection(keyScopes);
     apiKeyFacade.save(apiKey);
@@ -212,7 +210,7 @@ public class ApiKeyController {
     if (!scopes.isEmpty()) {
       newScopes = getKeyScopes(scopes, apiKey);
       apiKey.getApiKeyScopeCollection().addAll(newScopes);
-      apiKey.setModified(new Timestamp(new Date().getTime()));
+      apiKey.setModified(new Date());
       apiKey = apiKeyFacade.update(apiKey);
     }
     return apiKey;
@@ -234,6 +232,7 @@ public class ApiKeyController {
       for (ApiKeyScope apiKeyScope : oldScopes) {
         if (apiKeyScope.getScope().equals(scope)) {
           toRemove.add(apiKeyScope);
+          break;
         }
       }
     }
@@ -243,7 +242,7 @@ public class ApiKeyController {
       for (ApiKeyScope apiKeyScope : toRemove) {
         apiKeyScopeFacade.remove(apiKeyScope);
       }
-      apiKey.setModified(new Timestamp(new Date().getTime()));
+      apiKey.setModified(new Date());
       apiKey = apiKeyFacade.update(apiKey);
     } else if (removed && apiKey.getApiKeyScopeCollection().isEmpty()) {
       throw new ApiKeyException(RESTCodes.ApiKeyErrorCode.KEY_SCOPE_EMPTY, Level.FINE);
@@ -294,7 +293,7 @@ public class ApiKeyController {
     }
     if (update) {
       apiKey.setApiKeyScopeCollection(toKeep);
-      apiKey.setModified(new Timestamp(new Date().getTime()));
+      apiKey.setModified(new Date());
       apiKey = apiKeyFacade.update(apiKey);
     }
     return apiKey;

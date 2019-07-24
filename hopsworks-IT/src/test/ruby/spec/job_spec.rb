@@ -421,12 +421,12 @@ describe "On #{ENV['OS']}" do
       end
       it 'should fail to access job' do
         get_jobs(@project[:id], "")
-        expect_json(errorCode: 300004)
+        expect_json(errorCode: 320004)
         expect_status(403)
       end
       it 'should fail to create job' do
         create_sparktour_job(@project, job_spark_1, "jar", nil)
-        expect_json(errorCode: 300004)
+        expect_json(errorCode: 320004)
         expect_status(403)
       end
       it 'should fail to delete' do

@@ -106,4 +106,15 @@ module ServingHelper
       expect_status(200)
     end
   end
+
+  def start_serving(project, serving)
+    post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/serving/#{serving[:id]}?action=start"
+    expect_status(200)
+
+    # Sleep some time while the TfServing server starts
+    wait_for do
+      system "pgrep -f #{serving[:name]} -a"
+      $?.exitstatus == 0
+    end
+  end
 end
