@@ -37,29 +37,13 @@
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 =end
 
+require 'openssl'
+
 describe "On #{ENV['OS']}" do
   describe "#CA certificates" do
 
     # Test csr
     before :all do
-      @csr = "-----BEGIN CERTIFICATE REQUEST-----\n" +
-          "MIICuTCCAaECAQAwdDELMAkGA1UEBhMCU0UxEjAQBgNVBAgMCVN0b2NraG9sbTEL" +
-          "MAkGA1UEBwwCU0UxCjAIBgNVBAsMATExCzAJBgNVBAoMAlNFMQ0wCwYDVQQDDAR0" +
-          "ZXN0MRwwGgYJKoZIhvcNAQkBFg1hZ2VudEBob3BzLmlvMIIBIjANBgkqhkiG9w0B" +
-          "AQEFAAOCAQ8AMIIBCgKCAQEApc1xai9zyHlc/su4w34Qas67OooqagykHpkk8dBH" +
-          "yGcB7BLhxpgqC3odZJ6PoepPugYETcDCCgYMNxoke/TOaTpXwD+wX4Nwl1zMgzVf" +
-          "D8aZQ+Ns9Rjf8vF3P+KDL3UCUxmNuX17Vew2jfrEQMap7CC38+Ss4eUCehc0num1" +
-          "IbIyH1pv/Qa/7akscjVbfVWFZ5JlahzIbSRByPQtx2lBzMwxn/dydnfol+uu5tEZ" +
-          "Uk0Pjr9h8n0ujI+MTfrAgUuYCDCYU+gX1hU9CiWTpghlzxwt3djG/hc/ZBK/50Bm" +
-          "ds6db+u/oRoPQV/JW36bBYifaLmKfwuBwJC78YNdRgyaIQIDAQABoAAwDQYJKoZI" +
-          "hvcNAQELBQADggEBAB4tuWccPaUHaGAygm+7WoVIPn5dtpqHcvj6rBc3VHRDRHKL" +
-          "GVp0gjDYqVdxV54qTm8fBLGz2zB27kR1lVp+ctwqE/HZ9uCJOMcG1P1ZSrMExEF/" +
-          "re2SaLDKhtrOYBWS+6ZERv7ndzRjn9Q2BBeyBkmRfLT4TSXVmhUVas2JAD6jrlei" +
-          "ai2Nga3rPpSL/2SOG+uuKwv83yC5rnT+6KIAV+MxOTXuz7QXGAxKtts7iPE8ShFf" +
-          "DOnceMjdaX/jqJnf/6UdO02/tYqL59XJldeFe2WuflOrNE5pArdAhZiqkSUgm6ox" +
-          "V7eQcEU4CJXHJArObgFdbE50nm9cFdW36DPmZAc=\n" +
-          "-----END CERTIFICATE REQUEST-----"
-
       @certs_dir = Variables.find_by(id: "certs_dir").value
 
       @subject = "/C=SE/ST=Stockholm/L=SE/O=SE/OU=1/CN=test/emailAddress=agent@hops.io"
@@ -72,7 +56,7 @@ describe "On #{ENV['OS']}" do
         end
 
         it 'should fail to sign the certificate' do
-          post "#{ENV['HOPSWORKS_CA']}/certificate/host", {csr: @csr}
+          post "#{ENV['HOPSWORKS_CA']}/certificate/host", {csr: generate_csr(@subject)}
           expect_status(403)
         end
       end
@@ -88,7 +72,7 @@ describe "On #{ENV['OS']}" do
         end
 
         it 'should sign the host certificate', vm: true do
-          post "#{ENV['HOPSWORKS_CA']}/certificate/host", {csr: @csr}
+          post "#{ENV['HOPSWORKS_CA']}/certificate/host", {csr: generate_csr(@subject)}
           expect_status(200)
 
           # Check that the certificate is on the local fs. this assumes you are running the
@@ -97,7 +81,7 @@ describe "On #{ENV['OS']}" do
         end
 
         it 'should fail to sign the same host certificate twice', vm: true do
-          post "#{ENV['HOPSWORKS_CA']}/certificate/host", {csr: @csr}
+          post "#{ENV['HOPSWORKS_CA']}/certificate/host", {csr: generate_csr(@subject)}
           expect_status(400)
 
           # Check that the certificate is on the local fs. this assumes you are running the
@@ -117,6 +101,51 @@ describe "On #{ENV['OS']}" do
           expect_status(204)
         end
 
+        it 'should sign a certificate with - in the hostname' do
+          subject = "/C=SE/ST=Stockholm/L=SE/O=SE/OU=1/CN=test-hello-hello/emailAddress=agent@hops.io"
+          post "#{ENV['HOPSWORKS_CA']}/certificate/host", {csr: generate_csr(subject)}
+          expect_status(200)
+
+          # Check that the certificate is on the local fs. this assumes you are running the
+          # tests on a proper vm
+          check_certificate_exists(@certs_dir + "/intermediate/", "test-hello-hello__1", subject)
+        end
+      end
+
+      context 'with Openssl 1.1' do
+        before :all do
+          with_agent_session
+        end
+
+        context 'it should sign a certificate comma separated', vm: true do
+          subject = 'C=SE,ST=Stockholm,L=SE,O=SE,OU=1,CN=testreg,emailAddress=agent@hops.io'
+          post "#{ENV['HOPSWORKS_CA']}/certificate/host", {csr: generate_csr(subject)}
+          expect_status(200)
+
+          # Check that the certificate is on the local fs. this assumes you are running the
+          # tests on a proper vm
+          check_certificate_exists(@certs_dir + "/intermediate/", "testreq__1", subject)
+        end
+
+        context 'it should sign a certificate separated by /', vm: true  do
+          subject = 'C=SE/ST=Stockholm/L=SE/O=SE/OU=2/CN=testreg/emailAddress=agent@hops.io'
+          post "#{ENV['HOPSWORKS_CA']}/certificate/host", {csr: generate_csr(subject)}
+          expect_status(200)
+
+          # Check that the certificate is on the local fs. this assumes you are running the
+          # tests on a proper vm
+          check_certificate_exists(@certs_dir + "/intermediate/", "testreq__2", subject)
+        end
+
+        context 'it should sign a certificate with spaces in between', vm: true do
+          subject  =  'C = SE,ST = Stockholm,L = SE,O = SE,OU = 3,CN = testreg,emailAddress = agent@hops.io'
+          post "#{ENV['HOPSWORKS_CA']}/certificate/host", {csr: generate_csr(subject)}
+          expect_status(200)
+
+          # Check that the certificate is on the local fs. this assumes you are running the
+          # tests on a proper vm
+          check_certificate_exists(@certs_dir + "/intermediate/", "testreq__1", subject)
+        end
       end
     end
 
@@ -127,7 +156,7 @@ describe "On #{ENV['OS']}" do
         end
 
         it 'should fail to sign the certificate' do
-          post "#{ENV['HOPSWORKS_CA']}/certificate/app", {csr: @csr}
+          post "#{ENV['HOPSWORKS_CA']}/certificate/app", {csr: generate_csr(@subject)}
           expect_status(403)
         end
       end
@@ -143,7 +172,7 @@ describe "On #{ENV['OS']}" do
         end
 
         it 'should sign the app certificate', vm: true do
-          post "#{ENV['HOPSWORKS_CA']}/certificate/app", {csr: @csr}
+          post "#{ENV['HOPSWORKS_CA']}/certificate/app", {csr: generate_csr(@subject)}
           expect_status(200)
 
           # Check that the certificate is on the local fs. this assumes you are running the
@@ -153,7 +182,7 @@ describe "On #{ENV['OS']}" do
         end
 
         it 'should fail to sign the same app certificate twice', vm: true do
-          post "#{ENV['HOPSWORKS_CA']}/certificate/app", {csr: @csr}
+          post "#{ENV['HOPSWORKS_CA']}/certificate/app", {csr: generate_csr(@subject)}
           expect_status(400)
 
           # Check that the certificate is on the local fs. this assumes you are running the
@@ -182,7 +211,7 @@ describe "On #{ENV['OS']}" do
         end
 
         it 'should fail to sign the certificate' do
-          post "#{ENV['HOPSWORKS_CA']}/certificate/project", {csr: @csr}
+          post "#{ENV['HOPSWORKS_CA']}/certificate/project", {csr: generate_csr(@subject)}
           expect_status(403)
         end
       end
@@ -198,7 +227,7 @@ describe "On #{ENV['OS']}" do
         end
 
         it 'should sign the project certificate', vm: true do
-          post "#{ENV['HOPSWORKS_CA']}/certificate/project", {csr: @csr}
+          post "#{ENV['HOPSWORKS_CA']}/certificate/project", {csr: generate_csr(@subject)}
           expect_status(200)
 
           # Check that the certificate is on the local fs. this assumes you are running the
@@ -207,7 +236,7 @@ describe "On #{ENV['OS']}" do
         end
 
         it 'should fail to sign the same project certificate twice', vm: true do
-          post "#{ENV['HOPSWORKS_CA']}/certificate/project", {csr: @csr}
+          post "#{ENV['HOPSWORKS_CA']}/certificate/project", {csr: generate_csr(@subject)}
           expect_status(400)
 
           # Check that the certificate is on the local fs. this assumes you are running the
