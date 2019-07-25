@@ -117,7 +117,7 @@ describe "On #{ENV['OS']}" do
           with_agent_session
         end
 
-        context 'it should sign a certificate comma separated', vm: true do
+        it 'should sign a certificate comma separated', vm: true do
           subject = 'C=SE,ST=Stockholm,L=SE,O=SE,OU=1,CN=testreg,emailAddress=agent@hops.io'
           post "#{ENV['HOPSWORKS_CA']}/certificate/host", {csr: generate_csr(subject)}
           expect_status(200)
@@ -127,7 +127,7 @@ describe "On #{ENV['OS']}" do
           check_certificate_exists(@certs_dir + "/intermediate/", "testreq__1", subject)
         end
 
-        context 'it should sign a certificate separated by /', vm: true  do
+        it 'should sign a certificate separated by /', vm: true  do
           subject = 'C=SE/ST=Stockholm/L=SE/O=SE/OU=2/CN=testreg/emailAddress=agent@hops.io'
           post "#{ENV['HOPSWORKS_CA']}/certificate/host", {csr: generate_csr(subject)}
           expect_status(200)
@@ -137,7 +137,7 @@ describe "On #{ENV['OS']}" do
           check_certificate_exists(@certs_dir + "/intermediate/", "testreq__2", subject)
         end
 
-        context 'it should sign a certificate with spaces in between', vm: true do
+        it 'should sign a certificate with spaces in between', vm: true do
           subject  =  'C = SE,ST = Stockholm,L = SE,O = SE,OU = 3,CN = testreg,emailAddress = agent@hops.io'
           post "#{ENV['HOPSWORKS_CA']}/certificate/host", {csr: generate_csr(subject)}
           expect_status(200)
