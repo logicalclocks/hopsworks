@@ -45,15 +45,14 @@ module CaHelper
     expect(File.exist?(ca_path + "certs/" + cert_name + ".cert.pem")).to be true
     expect(File.zero?(ca_path + "certs/" + cert_name + ".cert.pem")).to be false
 
-    # No matter what's the openssl version the index.txt format still has / and no spaces
-    subject.gsub! " ", ""
+    # No matter what's the openssl version the index.txt format still has /
     subject.gsub! ",", "/"
 
     File.open(ca_path + "index.txt") do |index|
       index.extend(File::Tail)
       index.backward(1).tail { |line|
         if line.match("^V").nil?  || line.match(subject).nil?
-          raise "Certificate hasn't been revoked"
+          raise "Certificate hasn't been signed"
         else
           return
         end
@@ -68,8 +67,7 @@ module CaHelper
   def check_certificate_revoked(ca_path, cert_name, subject)
     expect(File.exist?(ca_path + "certs/" + cert_name + ".cert.pem")).to be false
 
-    # No matter what's the openssl version the index.txt format still has / and no spaces
-    subject.gsub! " ", ""
+    # No matter what's the openssl version the index.txt format still has /
     subject.gsub! ",", "/"
 
     File.open(ca_path + "index.txt") do |index|
@@ -123,6 +121,6 @@ module CaHelper
     request.public_key = key.public_key
     request.sign(key, OpenSSL::Digest::SHA1.new)
 
-    request
+    request.to_pem
   end
 end

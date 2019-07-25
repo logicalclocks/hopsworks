@@ -124,27 +124,17 @@ describe "On #{ENV['OS']}" do
 
           # Check that the certificate is on the local fs. this assumes you are running the
           # tests on a proper vm
-          check_certificate_exists(@certs_dir + "/intermediate/", "testreq__1", subject)
+          check_certificate_exists(@certs_dir + "/intermediate/", "testreg__1", subject)
         end
 
         it 'should sign a certificate separated by /', vm: true  do
-          subject = 'C=SE/ST=Stockholm/L=SE/O=SE/OU=2/CN=testreg/emailAddress=agent@hops.io'
+          subject = '/C=SE/ST=Stockholm/L=SE/O=SE/OU=2/CN=testreg/emailAddress=agent@hops.io'
           post "#{ENV['HOPSWORKS_CA']}/certificate/host", {csr: generate_csr(subject)}
           expect_status(200)
 
           # Check that the certificate is on the local fs. this assumes you are running the
           # tests on a proper vm
-          check_certificate_exists(@certs_dir + "/intermediate/", "testreq__2", subject)
-        end
-
-        it 'should sign a certificate with spaces in between', vm: true do
-          subject  =  'C = SE,ST = Stockholm,L = SE,O = SE,OU = 3,CN = testreg,emailAddress = agent@hops.io'
-          post "#{ENV['HOPSWORKS_CA']}/certificate/host", {csr: generate_csr(subject)}
-          expect_status(200)
-
-          # Check that the certificate is on the local fs. this assumes you are running the
-          # tests on a proper vm
-          check_certificate_exists(@certs_dir + "/intermediate/", "testreq__1", subject)
+          check_certificate_exists(@certs_dir + "/intermediate/", "testreg__2", subject)
         end
       end
     end
