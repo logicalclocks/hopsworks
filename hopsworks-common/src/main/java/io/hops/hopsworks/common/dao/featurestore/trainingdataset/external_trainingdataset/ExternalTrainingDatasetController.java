@@ -92,6 +92,7 @@ public class ExternalTrainingDatasetController {
         ", the name of an external training dataset should be less than "
         + FeaturestoreClientSettingsDTO.EXTERNAL_TRAINING_DATASET_NAME_MAX_LENGTH + " characters");
     }
+    
   }
   
   /**
@@ -125,7 +126,9 @@ public class ExternalTrainingDatasetController {
     ExternalTrainingDatasetDTO externalTrainingDatasetDTO = new ExternalTrainingDatasetDTO(trainingDataset);
     externalTrainingDatasetDTO.setName(trainingDataset.getExternalTrainingDataset().getName());
     externalTrainingDatasetDTO.setLocation(
-      trainingDataset.getExternalTrainingDataset().getFeaturestoreS3Connector().getBucket());
+      "s3a://" + trainingDataset.getExternalTrainingDataset().getFeaturestoreS3Connector().getBucket() + "/" +
+        FeaturestoreClientSettingsDTO.S3_BUCKET_TRAINING_DATASETS_FOLDER + "/" +
+        trainingDataset.getExternalTrainingDataset().getName() + "_" + trainingDataset.getVersion());
     return externalTrainingDatasetDTO;
   }
 

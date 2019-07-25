@@ -90,6 +90,7 @@ public class TrainingDatasetController {
    * @param featurestore featurestore to query trainingDatasets for
    * @return list of XML/JSON DTOs of the trainingDatasets
    */
+  @TransactionAttribute(TransactionAttributeType.NEVER)
   public List<TrainingDatasetDTO> getTrainingDatasetsForFeaturestore(Featurestore featurestore) {
     List<TrainingDataset> trainingDatasets = trainingDatasetFacade.findByFeaturestore(featurestore);
     return trainingDatasets.stream().map(td -> convertTrainingDatasetToDTO(td)).collect(Collectors.toList());
@@ -152,6 +153,8 @@ public class TrainingDatasetController {
           hopsfsTrainingDatasetController.createHopsfsTrainingDataset((HopsfsTrainingDatasetDTO) trainingDatasetDTO);
         break;
       case EXTERNAL_TRAINING_DATASET:
+        removeExternalTrainingDatasetIfExists(featurestore, trainingDatasetDTO.getName(),
+          trainingDatasetDTO.getVersion());
         externalTrainingDataset = externalTrainingDatasetController.createExternalTrainingDataset(
           (ExternalTrainingDatasetDTO) trainingDatasetDTO);
         break;
@@ -218,6 +221,7 @@ public class TrainingDatasetController {
    * @return XML/JSON DTO of the trainingDataset
    * @throws FeaturestoreException
    */
+  @TransactionAttribute(TransactionAttributeType.NEVER)
   public TrainingDatasetDTO getTrainingDatasetWithIdAndFeaturestore(Featurestore featurestore, Integer id)
       throws FeaturestoreException {
     TrainingDataset trainingDataset = trainingDatasetFacade.findByIdAndFeaturestore(id, featurestore);
@@ -262,6 +266,7 @@ public class TrainingDatasetController {
    * @return the trainindataset with the specific name in the specific featurestore & project
    * @throws FeaturestoreException
    */
+  @TransactionAttribute(TransactionAttributeType.NEVER)
   public TrainingDatasetDTO getTrainingDatasetByFeaturestoreAndName(
       Project project, Featurestore featurestore, String trainingDatasetName, int version)
       throws FeaturestoreException {
@@ -551,8 +556,6 @@ public class TrainingDatasetController {
     }
   }
   
-  
-  
   /**
    * Verify user input
    *
@@ -568,6 +571,30 @@ public class TrainingDatasetController {
     verifyTrainingDatasetDataFormat(trainingDatasetDTO.getDataFormat());
     verifyTrainingDatasetDescriptiopn(trainingDatasetDTO.getDescription());
     verifyTrainingDatasetFeatures(trainingDatasetDTO.getFeatures());
+  }
+  
+  /**
+   * Checks whether an external training dataset with the provided name and version already exists, and if so, deletes
+   * it (overwrite semantics for creating new training datasets, for hopsfs training datasets this is enforced
+   * by foreign key on the inode with ON DELETE CASCADE, but not for external training datasets)
+   *
+   * @param featurestore the featurestore to query
+   * @param externalTrainingDatasetName the name of the external training dataset
+   * @param externalTrainingDatasetVersion the version of the external training dataset
+   */
+  private void removeExternalTrainingDatasetIfExists(Featurestore featurestore, String externalTrainingDatasetName,
+    Integer externalTrainingDatasetVersion) {
+    List<TrainingDataset> trainingDatasets = trainingDatasetFacade.findByFeaturestore(featurestore);
+    trainingDatasets.stream().filter(td -> {
+      return (
+        td.getTrainingDatasetType() == TrainingDatasetType.EXTERNAL_TRAINING_DATASET &&
+          td.getExternalTrainingDataset().getName() == externalTrainingDatasetName &&
+          td.getVersion() == externalTrainingDatasetVersion
+        );
+      }
+    ).collect(Collectors.toList());
+    trainingDatasets.forEach(td ->
+      externalTrainingDatasetController.removeExternalTrainingDataset(td.getExternalTrainingDataset()));
   }
 
 }

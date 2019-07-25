@@ -216,12 +216,12 @@ public class UsersResource {
     Users user = jWTHelper.getUserPrincipal(sc);
     secretsController.add(user, secret.getName(), secret.getSecret(), secret.getVisibility(),
         secret.getProjectIdScope());
-    
+
     RESTApiJsonResponse response = new RESTApiJsonResponse();
     response.setSuccessMessage("Added new secret");
     return Response.ok().entity(response).build();
   }
-  
+
   @GET
   @Path("secrets")
   @Produces(MediaType.APPLICATION_JSON)
@@ -232,7 +232,7 @@ public class UsersResource {
     SecretDTO dto = secretsBuilder.build(secrets, false);
     return Response.ok().entity(dto).build();
   }
-  
+
   @GET
   @Path("secrets/shared")
   @Produces(MediaType.APPLICATION_JSON)
@@ -245,7 +245,7 @@ public class UsersResource {
     SecretDTO dto = secretsBuilder.build(Arrays.asList(secret), true);
     return Response.ok().entity(dto).build();
   }
-  
+
   @GET
   @Path("secrets/{secretName}")
   @Produces(MediaType.APPLICATION_JSON)
@@ -256,7 +256,7 @@ public class UsersResource {
     SecretDTO dto = secretsBuilder.build(Arrays.asList(secret), true);
     return Response.ok().entity(dto).build();
   }
-  
+
   @DELETE
   @Path("secrets/{secretName}")
   @Produces(MediaType.APPLICATION_JSON)
@@ -267,7 +267,7 @@ public class UsersResource {
     secretsController.delete(user, name);
     return Response.ok().build();
   }
-  
+
   @DELETE
   @Path("secrets")
   @Produces(MediaType.APPLICATION_JSON)
@@ -277,7 +277,7 @@ public class UsersResource {
     secretsController.deleteAll(user);
     return Response.ok().build();
   }
-  
+
   @POST
   @Path("securityQA")
   @Produces(MediaType.APPLICATION_JSON)
@@ -362,7 +362,7 @@ public class UsersResource {
   public UserActivitiesResource activities() {
     return this.activitiesResource;
   }
-  
+
   @Path("apiKey")
   public ApiKeyResource apiKey() {
     return this.apiKeyResource;

@@ -146,6 +146,9 @@ public class FeaturegroupService {
   public Response createFeaturegroup(@Context SecurityContext sc, FeaturegroupDTO featuregroupDTO)
       throws FeaturestoreException, HopsSecurityException {
     Users user = jWTHelper.getUserPrincipal(sc);
+    if(featuregroupDTO == null){
+      throw new IllegalArgumentException("Input JSON for creating a new Feature Group cannot be null");
+    }
     try {
       featuregroupController.deleteFeaturegroupIfExists(featurestore, featuregroupDTO, user);
       FeaturegroupDTO createdFeaturegroup = featuregroupController.createFeaturegroup(featurestore, featuregroupDTO,
@@ -371,6 +374,9 @@ public class FeaturegroupService {
           Boolean updateMetadata, @ApiParam(value = "updateStats", example = "true", defaultValue = "false")
       @QueryParam("updateStats") Boolean updateStats, FeaturegroupDTO featuregroupDTO)
       throws FeaturestoreException {
+    if(featuregroupDTO == null){
+      throw new IllegalArgumentException("Input JSON for updating Feature Group cannot be null");
+    }
     updateMetadata = featurestoreUtil.updateMetadataGetOrDefault(updateMetadata);
     updateStats = featurestoreUtil.updateStatsGetOrDefault(updateStats);
     verifyIdProvided(featuregroupId);
@@ -380,8 +386,6 @@ public class FeaturegroupService {
         featuregroupId);
     featurestoreUtil.verifyUserRole(oldFeaturegroupDTO, featurestore, user, project);
     FeaturegroupDTO updatedFeaturegroupDTO = null;
-    LOGGER.severe("updateMetadata:" + updateMetadata);
-    LOGGER.severe("updateStats:" + updateStats);
     if(updateMetadata || updateStats){
       if(updateMetadata) {
         updatedFeaturegroupDTO = featuregroupController.updateFeaturegroupMetadata(featurestore, featuregroupDTO);

@@ -94,6 +94,7 @@ public class FeaturestoreClientSettingsDTO {
       "/user/spark/hops-examples-featurestore-util4j-1.0.0-SNAPSHOT.jar";
   public static String FEATURESTORE_UTIL_PYTHON_EXECUTABLE =
       "/user/spark/featurestore_util.py";
+  public static String S3_BUCKET_TRAINING_DATASETS_FOLDER = "TRAINING_DATASETS";
   
   
   public FeaturestoreClientSettingsDTO() {
@@ -328,7 +329,12 @@ public class FeaturestoreClientSettingsDTO {
   public String getFeaturestoreUtilPythonExecutable() {
     return FEATURESTORE_UTIL_PYTHON_EXECUTABLE;
   }
-
+  
+  @XmlElement
+  public String getS3BucketTrainingDatasetsFolder() {
+    return S3_BUCKET_TRAINING_DATASETS_FOLDER;
+  }
+  
   public void setFeaturestoreStatisticsMaxCorrelations(int featurestoreStatisticsMaxCorrelations) {
     FEATURESTORE_STATISTICS_MAX_CORRELATIONS = featurestoreStatisticsMaxCorrelations;
   }
@@ -514,5 +520,9 @@ public class FeaturestoreClientSettingsDTO {
 
   public void setFeaturestoreUtilPythonExecutable(String featurestoreUtilPythonExecutable) {
     FEATURESTORE_UTIL_PYTHON_EXECUTABLE = featurestoreUtilPythonExecutable;
+  }
+  
+  public void setS3BucketTrainingDatasetsFolder(String s3BucketTrainingDatasetsFolder) {
+    S3_BUCKET_TRAINING_DATASETS_FOLDER = s3BucketTrainingDatasetsFolder;
   }
 }

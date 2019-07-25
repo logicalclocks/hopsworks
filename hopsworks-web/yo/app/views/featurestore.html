@@ -295,8 +295,8 @@
                                     HopsFS
                                 </span>
                                 <span
-                                        ng-if="td.versionToGroups[td.activeVersion].trainingDatasetType==featurestoreCtrl.s3TrainingDatasetType">
-                                    S3
+                                        ng-if="td.versionToGroups[td.activeVersion].trainingDatasetType==featurestoreCtrl.externalTrainingDatasetType">
+                                    External
                                 </span>
                             </td>
                             <td class="fs-table">{{td.versionToGroups[td.activeVersion].dataFormat}}</td>
@@ -491,7 +491,7 @@
                                     </thead>
                                     <tbody class="table-hover">
                                     <tr
-                                            dir-paginate="result in ((filteredResults = (featurestoreCtrl.features | orderBy:featurestoreCtrl.featuresSortKey:featurestoreCtrl.featuresReverse | dateRangeFilterFeatures : featurestoreCtrl.featuresFromDate : featurestoreCtrl.featuresToDate | filter: (!featurestoreCtrl.searchInFeaturegroups || '') && { entity: '!' + 1} | filter: (!featurestoreCtrl.searchInTrainingDatasets || '') && { entity: '!' + 1} | filter:{name:featurestoreCtrl.fFilter}:false | featureSearchFilterByFg:featurestoreCtrl.featureSearchFgFilter:false | featureSearchFilterByFgVersion:featurestoreCtrl.featureSearchFgVersionFilter:false)) | itemsPerPage:featurestoreCtrl.featuresPageSize)"
+                                            dir-paginate="result in ((filteredResults = (featurestoreCtrl.features | orderBy:featurestoreCtrl.featuresSortKey:featurestoreCtrl.featuresReverse | dateRangeFilterFeatures : featurestoreCtrl.featuresFromDate : featurestoreCtrl.featuresToDate | filter: (!featurestoreCtrl.searchInFeaturegroups || '') && { entity: '!' + 1} | filter: (!featurestoreCtrl.searchInTrainingDatasets || '') && { entity: '!' + 0} | filter:{name:featurestoreCtrl.fFilter}:false | featureSearchFilterByFg:featurestoreCtrl.featureSearchFgFilter:false | featureSearchFilterByFgVersion:featurestoreCtrl.featureSearchFgVersionFilter:false)) | itemsPerPage:featurestoreCtrl.featuresPageSize)"
                                             class="fs-table">
                                         <td class="fs-table">
                                             {{featurestoreCtrl.createdOn(result.date)}}

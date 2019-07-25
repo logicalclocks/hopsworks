@@ -200,6 +200,10 @@ public class FeaturestoreStorageConnectorService {
       @ApiParam (value = "storage connector type", example = "JDBC", required=true)
       @PathParam("connectorType") FeaturestoreStorageConnectorType connectorType,
       FeaturestoreStorageConnectorDTO featurestoreStorageConnectorDTO) throws FeaturestoreException {
+    if(featurestoreStorageConnectorDTO == null){
+      throw new IllegalArgumentException("Input JSON for creating a new Feature Store Storage Connector Cannot be " +
+        "null");
+    }
     verifyStorageConnectorType(connectorType);
     Users user = jWTHelper.getUserPrincipal(sc);
     FeaturestoreStorageConnectorDTO createdFeaturestoreStorageConnectorDTO =
@@ -274,6 +278,10 @@ public class FeaturestoreStorageConnectorService {
       @PathParam("connectorId") Integer connectorId,
       FeaturestoreStorageConnectorDTO featurestoreStorageConnectorInputDTO)
       throws FeaturestoreException {
+    if(featurestoreStorageConnectorInputDTO== null){
+      throw new IllegalArgumentException("Input JSON for updating a Feature Store Storage Connector Cannot be " +
+        "null");
+    }
     verifyStorageConnectorTypeAndId(connectorType, connectorId);
     FeaturestoreStorageConnectorDTO featurestoreStorageConnectorDTO =
         featurestoreStorageConnectorController.updateStorageConnectorWithType(featurestore,

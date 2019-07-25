@@ -159,6 +159,9 @@ public class TrainingDatasetService {
       response = TrainingDatasetDTO.class)
   public Response createTrainingDataset(@Context SecurityContext sc, TrainingDatasetDTO trainingDatasetDTO)
     throws DatasetException, HopsSecurityException, ProjectException, FeaturestoreException {
+    if(trainingDatasetDTO == null){
+      throw new IllegalArgumentException("Input JSON for creating a new Training Dataset cannot be null");
+    }
     Users user = jWTHelper.getUserPrincipal(sc);
     TrainingDatasetDTO createdTrainingDatasetDTO = null;
     if(trainingDatasetDTO.getTrainingDatasetType() == TrainingDatasetType.HOPSFS_TRAINING_DATASET){
@@ -255,11 +258,15 @@ public class TrainingDatasetService {
     TrainingDatasetDTO trainingDatasetDTO = trainingDatasetController.getTrainingDatasetWithIdAndFeaturestore(
         featurestore, trainingdatasetid);
     featurestoreUtil.verifyUserRole(trainingDatasetDTO, featurestore, user, project);
-    Dataset trainingDatasetsFolder = trainingDatasetController.getTrainingDatasetFolder(featurestore.getProject());
-    String trainingDatasetDirectoryName = trainingDatasetController.getTrainingDatasetPath(
+    if(trainingDatasetDTO.getTrainingDatasetType() == TrainingDatasetType.HOPSFS_TRAINING_DATASET) {
+      Dataset trainingDatasetsFolder = trainingDatasetController.getTrainingDatasetFolder(featurestore.getProject());
+      String trainingDatasetDirectoryName = trainingDatasetController.getTrainingDatasetPath(
         inodeFacade.getPath(trainingDatasetsFolder.getInode()),
         trainingDatasetDTO.getName(), trainingDatasetDTO.getVersion());
-    dsUpdateOperations.deleteDatasetFile(project, user, trainingDatasetDirectoryName);
+      dsUpdateOperations.deleteDatasetFile(project, user, trainingDatasetDirectoryName);
+    } else {
+      trainingDatasetController.deleteTrainingDatasetWithIdAndFeaturestore(featurestore, trainingdatasetid);
+    }
     activityFacade.persistActivity(ActivityFacade.DELETED_TRAINING_DATASET + trainingDatasetDTO.getName(),
         project, user, ActivityFlag.SERVICE);
     GenericEntity<TrainingDatasetDTO> trainingDatasetGeneric =
@@ -294,6 +301,9 @@ public class TrainingDatasetService {
     @QueryParam("updateStats") Boolean updateStats,
     TrainingDatasetDTO trainingDatasetDTO)
       throws FeaturestoreException, DatasetException, ProjectException, HopsSecurityException {
+    if(trainingDatasetDTO == null){
+      throw new IllegalArgumentException("Input JSON for updating a Training Dataset cannot be null");
+    }
     updateMetadata = featurestoreUtil.updateMetadataGetOrDefault(updateMetadata);
     updateStats = featurestoreUtil.updateStatsGetOrDefault(updateStats);
     verifyIdProvided(trainingdatasetid);

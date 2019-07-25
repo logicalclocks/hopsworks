@@ -32,6 +32,7 @@ public class ExternalTrainingDatasetDTO extends TrainingDatasetDTO {
   
   private Integer s3ConnectorId;
   private String s3ConnectorName;
+  private String s3ConnectorBucket;
   
   public ExternalTrainingDatasetDTO() {
     super();
@@ -41,6 +42,7 @@ public class ExternalTrainingDatasetDTO extends TrainingDatasetDTO {
     super(trainingDataset);
     this.s3ConnectorId = trainingDataset.getExternalTrainingDataset().getFeaturestoreS3Connector().getId();
     this.s3ConnectorName = trainingDataset.getExternalTrainingDataset().getFeaturestoreS3Connector().getName();
+    this.s3ConnectorBucket = trainingDataset.getExternalTrainingDataset().getFeaturestoreS3Connector().getBucket();
   }
   
   @XmlElement
@@ -61,11 +63,21 @@ public class ExternalTrainingDatasetDTO extends TrainingDatasetDTO {
     this.s3ConnectorName = s3ConnectorName;
   }
   
+  @XmlElement
+  public String getS3ConnectorBucket() {
+    return s3ConnectorBucket;
+  }
+  
+  public void setS3ConnectorBucket(String s3ConnectorBucket) {
+    this.s3ConnectorBucket = s3ConnectorBucket;
+  }
+  
   @Override
   public String toString() {
     return "ExternalTrainingDatasetDTO{" +
       "s3ConnectorId=" + s3ConnectorId +
       ", s3ConnectorName='" + s3ConnectorName + '\'' +
+      ", s3ConnectorBucket='" + s3ConnectorBucket + '\'' +
       '}';
   }
 }

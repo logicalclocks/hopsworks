@@ -39,6 +39,8 @@ import org.eclipse.persistence.jaxb.MarshallerProperties;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.ws.rs.core.MediaType;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -82,6 +84,7 @@ public class FeaturestoreController {
    * @param project the project to retrieve featurestores for
    * @return a list of DTOs for the featurestores
    */
+  @TransactionAttribute(TransactionAttributeType.NEVER)
   public List<FeaturestoreDTO> getFeaturestoresForProject(Project project) {
     List<Featurestore> featurestores = getProjectFeaturestores(project);
     return featurestores.stream().map(fs -> convertFeaturestoretoDTO(fs)).collect(Collectors.toList());
@@ -93,6 +96,7 @@ public class FeaturestoreController {
    * @param project the project to list featurestores for
    * @return a list of featurestore entities
    */
+  @TransactionAttribute(TransactionAttributeType.NEVER)
   private List<Featurestore> getProjectFeaturestores(Project project){
     Collection<Dataset> dsInProject = project.getDatasetCollection();
     Collection<Dataset> featurestoresDsInproject =
@@ -107,6 +111,7 @@ public class FeaturestoreController {
    * @param featurestoreName the name of the featurestore
    * @return a list of DTOs for the featurestores
    */
+  @TransactionAttribute(TransactionAttributeType.NEVER)
   public FeaturestoreDTO getFeaturestoreForProjectWithName(Project project, String featurestoreName)
       throws FeaturestoreException {
     List<Featurestore> featurestores = getProjectFeaturestores(project);
@@ -131,6 +136,7 @@ public class FeaturestoreController {
    * @return a DTO representation of the featurestore
    * @throws FeaturestoreException
    */
+  @TransactionAttribute(TransactionAttributeType.NEVER)
   public FeaturestoreDTO getFeaturestoreForProjectWithId(Project project, Integer featurestoreId)
       throws FeaturestoreException {
     List<Featurestore> featurestores = getProjectFeaturestores(project);
@@ -150,6 +156,7 @@ public class FeaturestoreController {
    * @param id the id of the featurestore
    * @return featurestore entity with the given id
    */
+  @TransactionAttribute(TransactionAttributeType.NEVER)
   public Featurestore getFeaturestoreWithId(Integer id) throws FeaturestoreException {
     Featurestore featurestore = featurestoreFacade.findById(id);
     if (featurestore == null) {
@@ -168,6 +175,7 @@ public class FeaturestoreController {
    * @return the created featurestore
    * @throws FeaturestoreException
    */
+  @TransactionAttribute(TransactionAttributeType.NEVER)
   public Featurestore createProjectFeatureStore(Project project, String featurestoreName, Dataset
     trainingDatasetsFolder) throws FeaturestoreException {
     //Get HiveDbId for the newly created Hive featurestore DB

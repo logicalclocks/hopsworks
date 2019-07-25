@@ -114,6 +114,9 @@ angular.module('hopsWorksApp')
              * this can potentially be a long running operation if the directory is deeply nested
              */
             self.fetchSize = function () {
+                if(self.trainingDataset.trainingDatasetType == self.externalTrainingDatasetType){
+                    return
+                }
                 if(self.sizeWorking){
                     return
                 }

@@ -320,6 +320,9 @@ public class FeaturestoreService {
   @ApiOperation(value = "Upload json input for featurestore-util jobs")
   public Response newFeaturestoreUtil(@Context SecurityContext sc, FeaturestoreUtilJobDTO featurestoreUtilJobDTO)
       throws FeaturestoreException, JAXBException {
+    if(featurestoreUtilJobDTO == null){
+      throw new IllegalArgumentException("Input JSON for creating a new Feature Store Util Job cannot be null");
+    }
     Users user = jWTHelper.getUserPrincipal(sc);
     String hdfsPath = featurestoreController.writeUtilArgsToHdfs(user, project, featurestoreUtilJobDTO);
     JsonResponse jsonResponse = noCacheResponse.buildJsonResponse(Response.Status.OK, hdfsPath);

@@ -81,6 +81,7 @@ public class FeaturegroupController {
    * @param featurestore featurestore to query featuregroups for
    * @return list of XML/JSON DTOs of the featuregroups
    */
+  @TransactionAttribute(TransactionAttributeType.NEVER)
   public List<FeaturegroupDTO> getFeaturegroupsForFeaturestore(Featurestore featurestore) {
     List<Featuregroup> featuregroups = featuregroupFacade.findByFeaturestore(featurestore);
     return featuregroups.stream().map(fg -> convertFeaturegrouptoDTO(fg)).collect(Collectors.toList());
