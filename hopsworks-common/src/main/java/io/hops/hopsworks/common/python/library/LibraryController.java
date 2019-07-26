@@ -21,6 +21,9 @@ import io.hops.hopsworks.common.dao.python.CondaCommandFacade;
 import io.hops.hopsworks.common.dao.python.LibraryFacade;
 import io.hops.hopsworks.common.dao.python.PythonDep;
 import io.hops.hopsworks.common.python.commands.CommandsController;
+import io.hops.hopsworks.common.util.OSProcessExecutor;
+import io.hops.hopsworks.common.util.ProcessDescriptor;
+import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.GenericException;
@@ -35,9 +38,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.Response;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -66,6 +67,8 @@ public class LibraryController {
   private Settings settings;
   @EJB
   private LibraryFacade libraryFacade;
+  @EJB
+  private OSProcessExecutor osProcessExecutor;
   
   public PythonDep getPythonDep(String dependency, Project project) {
     return libraryFacade.findByDependencyAndProject(dependency, project);
@@ -115,94 +118,71 @@ public class LibraryController {
   }
   
   public HashMap<String, List<LibraryVersionDTO>> condaSearch(String library, String url) throws ServiceException {
-    
     HashMap<String, List<LibraryVersionDTO>> libVersions = new HashMap<>();
-    
     String prog = settings.getHopsworksDomainDir() + "/bin/condasearch.sh";
-    ProcessBuilder pb = new ProcessBuilder(prog, url, library);
-    try {
-      Process process = pb.start();
-      BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
-      String line;
-      String foundLib = "";
-      String foundVersion;
-      
-      while ((line = br.readLine()) != null) {
-        // returns key,value  pairs
-        String[] libVersion = line.split(",");
-        if (libVersion.length != 2) {
-          throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_FORMAT_ERROR, Level.WARNING);
-        }
-        String key = libVersion[0];
-        String value = libVersion[1];
-        // if the key starts with a letter, it is a library name, otherwise it's a version number
-        // Output searching for 'pandas' looks like this:
-        // Loading,channels:
-        // pandas-datareader,0.2.0
-        // 0.2.0,py34_0
-        //....
-        // pandasql,0.3.1
-        // 0.3.1,np16py27_0
-        //....
-        // 0.4.2,np18py33_0
-        //
-        // Skip the first line
-        if (key.compareToIgnoreCase("Loading") == 0 || value.compareToIgnoreCase("channels:") == 0) {
-          continue;
+    String[] lines = search(prog, library, null, url);
+    String[] libVersion;
+    String foundLib = "";
+    String foundVersion;
+    for (String line : lines) {
+      libVersion = line.split(",");
+      if (libVersion.length != 2) {
+        throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_FORMAT_ERROR, Level.WARNING);
+      }
+      String key = libVersion[0];
+      String value = libVersion[1];
+      // if the key starts with a letter, it is a library name, otherwise it's a version number
+      // Output searching for 'pandas' looks like this:
+      // Loading,channels:
+      // pandas-datareader,0.2.0
+      // 0.2.0,py34_0
+      //....
+      // pandasql,0.3.1
+      // 0.3.1,np16py27_0
+      //....
+      // 0.4.2,np18py33_0
+      //
+      // Skip the first line
+      if (key.compareToIgnoreCase("Loading") == 0 || value.compareToIgnoreCase("channels:") == 0) {
+        continue;
         // Skip No, match line
-        } else if (key.equalsIgnoreCase("no") && value.equalsIgnoreCase("match")) {
-          continue;
-        }
-        
-        // First row is sometimes empty
-        if (key.isEmpty()) {
-          continue;
-        }
-        if (key.contains("Name") || key.contains("#")) {
-          continue;
-        }
-        char c = key.charAt(0);
-        if (c >= 'a' && c <= 'z') {
-          foundLib = key;
-          foundVersion = value;
-        } else {
-          foundVersion = key;
-        }
-        
-        if (!libVersions.containsKey(foundLib)) {
-          List<LibraryVersionDTO> versions = new LinkedList<>();
-          versions.add(new LibraryVersionDTO(foundVersion));
-          libVersions.put(foundLib, versions);
-        } else {
-          LibraryVersionDTO libraryVersionDTO = new LibraryVersionDTO(foundVersion);
-          if(!libVersions.get(foundLib).contains(libraryVersionDTO)) {
-            libVersions.get(foundLib).add(0, libraryVersionDTO);
-          }
+      } else if (key.equalsIgnoreCase("no") && value.equalsIgnoreCase("match")) {
+        continue;
+      }
+  
+      // First row is sometimes empty
+      if (key.isEmpty()) {
+        continue;
+      }
+      if (key.contains("Name") || key.contains("#")) {
+        continue;
+      }
+      char c = key.charAt(0);
+      if (c >= 'a' && c <= 'z') {
+        foundLib = key;
+        foundVersion = value;
+      } else {
+        foundVersion = key;
+      }
+      if (!libVersions.containsKey(foundLib)) {
+        List<LibraryVersionDTO> versions = new LinkedList<>();
+        versions.add(new LibraryVersionDTO(foundVersion));
+        libVersions.put(foundLib, versions);
+      } else {
+        LibraryVersionDTO libraryVersionDTO = new LibraryVersionDTO(foundVersion);
+        if (!libVersions.get(foundLib).contains(libraryVersionDTO)) {
+          libVersions.get(foundLib).add(0, libraryVersionDTO);
         }
       }
-      int errCode = process.waitFor();
-      if (errCode == 2) {
-        throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_ERROR, Level.SEVERE,
-          "errCode: " + errCode);
-      } else if (errCode == 1) {
-        throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_NOT_FOUND, Level.SEVERE,
-          "errCode: " + errCode);
-      }
-      
-      // if empty
-      if (libVersions.isEmpty()) {
-        throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_NOT_FOUND, Level.FINE);
-      }
-      
-      return libVersions;
-    } catch (IOException | InterruptedException ex) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_ERROR, Level.SEVERE, "lib: " + library,
-        ex.getMessage(), ex);
     }
+    // if empty
+    if (libVersions.isEmpty()) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_NOT_FOUND, Level.FINE);
+    }
+    return libVersions;
   }
   
-  private void findPipLibPyPi(String libName, HashMap<String, List<LibraryVersionDTO>> versions)
-  {
+  private void findPipLibPyPi(String libName, HashMap<String, List<LibraryVersionDTO>> versions) {
     Response resp = null;
     try {
       resp = ClientBuilder.newClient()
@@ -257,71 +237,80 @@ public class LibraryController {
     HashMap<String, List<LibraryVersionDTO>> versions = new HashMap<>();
     
     String prog = settings.getHopsworksDomainDir() + "/bin/pipsearch.sh";
-    ProcessBuilder pb = new ProcessBuilder(prog, library, env);
+    String[] lines = search(prog, library, env, null);
+    library = library.toLowerCase();
+    String[] lineSplit;
+    for (String line : lines) {
+      lineSplit = line.split(" +");
+      if (line.length() == 0 || lineSplit.length < 2) {
+        continue;
+      }
+      String libName = lineSplit[0];
+      if (!libName.toLowerCase().startsWith(library)) {
+        continue;
+      }
+      findPipLibPyPi(libName, versions);
+      if (!versions.containsKey(libName) || versions.get(libName).isEmpty()) {
+        //This may happen when the version is (), i.e pip search does not return a version
+        String version = lineSplit[1];
+        if (version.equals("()")) {
+          List<LibraryVersionDTO> versionList = new ArrayList<>();
+          versionList.add(new LibraryVersionDTO(""));
+          versions.put(libName, versionList);
+        } else {
+          version = version.replaceAll("[()]", "").trim();
+          List<LibraryVersionDTO> versionList = new ArrayList<>();
+          versionList.add(new LibraryVersionDTO(version));
+          versions.put(libName, versionList);
+        }
+      }
+    }
+    // if empty
+    if (versions.isEmpty()) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_NOT_FOUND, Level.FINE);
+    }
+    return versions;
+  }
+  
+  private String[] search(String program, String library, String env, String url)
+    throws ServiceException {
+    ProcessDescriptor.Builder pdBuilder = new ProcessDescriptor.Builder();
+    pdBuilder.addCommand(program);
+    if (url != null && !url.isEmpty()) {
+      pdBuilder.addCommand(url);
+      pdBuilder.addCommand(library);
+    }
+    if (env != null && !env.isEmpty()) {
+      pdBuilder.addCommand(library);
+      pdBuilder.addCommand(env);
+    }
+    ProcessResult processResult;
+    ProcessDescriptor processDescriptor = pdBuilder.redirectErrorStream(true)
+      .setWaitTimeout(5L, TimeUnit.MINUTES)
+      .build();
     try {
-      Process process = pb.start();
-      
-      BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
-      String line;
-      library = library.toLowerCase();
-      
-      // Sample pip search format
-      // go-defer (1.0.1)      - Go's defer for Python
-      String[] lineSplit = null;
-      
-      while ((line = br.readLine()) != null) {
-        
-        // line could be a continuation of a comment
-        // currently it is indented
-        lineSplit = line.split(" +");
-        
-        if (line.length() == 0 || lineSplit.length < 2) {
-          continue;
-        }
-        
-        String libName = lineSplit[0];
-        
-        if (!libName.toLowerCase().startsWith(library)) {
-          continue;
-        }
-        
-        findPipLibPyPi(libName, versions);
-        if (!versions.containsKey(libName) || versions.get(libName).isEmpty()) {
-          //This may happen when the version is (), i.e pip search does not return a version
-          String version = lineSplit[1];
-          if(version.equals("()")) {
-            List<LibraryVersionDTO> versionList = new ArrayList<>();
-            versionList.add(new LibraryVersionDTO(""));
-            versions.put(libName, versionList);
-          } else {
-            version = version.replaceAll("[()]", "").trim();
-            List<LibraryVersionDTO> versionList = new ArrayList<>();
-            versionList.add(new LibraryVersionDTO(version));
-            versions.put(libName, versionList);
-          }
-        }
-      }
-      
-      boolean exited = process.waitFor(10L, TimeUnit.MINUTES);
-      int errCode = process.exitValue();
+      processResult = osProcessExecutor.execute(processDescriptor);
+      boolean exited = processResult.processExited();
+      int errCode = processResult.getExitCode();
+      LOGGER.log(Level.SEVERE, "Search result: {0}", processResult);
       if (!exited) {
-        throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_ERROR, Level.SEVERE,
-          "errCode: " + errCode);
+        throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_ERROR, Level.WARNING,
+          "errCode: " + errCode + ", " + processResult.getStderr());
       }
-      if (errCode == 2) {
-        throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_ERROR, Level.SEVERE,
-          "errCode: " + errCode);
-      } else if (errCode == 1) {
-        throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_NOT_FOUND, Level.SEVERE,
-          "errCode: " + 1);
+      if (errCode == 1 || errCode == 23) { // 1 for conda, 23 for pip
+        throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_NOT_FOUND, Level.WARNING,
+          "errCode: " + errCode + ", " + processResult.getStderr());
+      } else if (errCode != 0) {
+        throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_ERROR, Level.WARNING,
+          "errCode: " + errCode + ", " + processResult.getStderr());
       }
-      
-      return versions;
-      
-    } catch (IOException | InterruptedException ex) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_ERROR, Level.SEVERE,
+    } catch (IOException ex) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_ERROR, Level.WARNING,
         "lib: " + library, ex.getMessage(), ex);
     }
+    String result = processResult.getStdout();
+    String[] lines = (result != null && !result.isEmpty())? result.split("\n") : new String[0];
+    return lines;
   }
-
+  
 }
