@@ -292,7 +292,6 @@ public class LibraryController {
       processResult = osProcessExecutor.execute(processDescriptor);
       boolean exited = processResult.processExited();
       int errCode = processResult.getExitCode();
-      LOGGER.log(Level.SEVERE, "Search result: {0}", processResult);
       if (!exited) {
         throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_ERROR, Level.WARNING,
           "errCode: " + errCode + ", " + processResult.getStderr());
