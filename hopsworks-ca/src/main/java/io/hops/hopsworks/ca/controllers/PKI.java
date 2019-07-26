@@ -70,6 +70,12 @@ public class PKI {
   private final static long TEN_YEARS = 3650;
   private static final Map<String, TimeUnit> TIME_SUFFIXES;
 
+  private static final Pattern SUBJECT_PATTERN = Pattern.compile("(([\\w\\.]+\\s?)=(\\s?[\\w\\.\\-@~\\+\\?%]+))");
+  private static final String SUBJECT = "subject=";
+
+  private static final String CERTIFICATE_TYPE_NOT_RECOGNIZED_ERR = "Certificate type not recognized";
+  private static final String CA_TYPE_NOT_RECOGNIZED_ERR = "CA type not recognized";
+
   static {
     TIME_SUFFIXES = new HashMap<>(5);
     TIME_SUFFIXES.put("ms", TimeUnit.MILLISECONDS);
@@ -107,7 +113,7 @@ public class PKI {
       case DELA: case KUBE: case PROJECT:
         return getExpirationDateASN1(TimeUnit.MILLISECONDS.convert(TEN_YEARS, TimeUnit.DAYS));
       default:
-        throw new IllegalArgumentException("Certificate type not recognized");
+        throw new IllegalArgumentException(CERTIFICATE_TYPE_NOT_RECOGNIZED_ERR);
     }
   }
 
@@ -142,20 +148,20 @@ public class PKI {
     return dateFormat.format(new Date(System.currentTimeMillis() + validityMS)) + 'Z';
   }
 
-  public HashMap<String, String> getKeyValuesFromSubject(String subject) {
+  public Map<String, String> getKeyValuesFromSubject(String subject) {
     if (subject == null || subject.isEmpty()) {
       return null;
     }
-    String[] parts = subject.split("/");
-    String[] keyVal;
+
+    // Remove front subject= before using the regex
+    subject = subject.replaceFirst(SUBJECT, "");
+    Matcher matcher = SUBJECT_PATTERN.matcher(subject);
+
     HashMap<String, String> keyValStore = new HashMap<>();
-    for (String part : parts) {
-      keyVal = part.split("=");
-      if (keyVal.length < 2) {
-        continue;
-      }
-      keyValStore.put(keyVal[0], keyVal[1]);
+    while (matcher.find()) {
+      keyValStore.put(matcher.group(2).trim(), matcher.group(3).trim());
     }
+
     return keyValStore;
   }
 
@@ -172,7 +178,7 @@ public class PKI {
       case KUBE:
         return CAType.KUBECA;
       default:
-        throw new IllegalArgumentException("Certificate type not recognized");
+        throw new IllegalArgumentException(CERTIFICATE_TYPE_NOT_RECOGNIZED_ERR);
     }
   }
 
@@ -191,7 +197,7 @@ public class PKI {
       case KUBECA:
         return CAConf.getString(CAConfKeys.CERTS_DIR) + "/kube";
       default:
-        throw new IllegalArgumentException("CA type not recognized");
+        throw new IllegalArgumentException(CA_TYPE_NOT_RECOGNIZED_ERR);
     }
   }
 
@@ -202,7 +208,7 @@ public class PKI {
       case KUBECA:
         return CAConf.getString(CAConfKeys.KUBE_CA_PASSWORD);
       default:
-        throw new IllegalArgumentException("CA type not recognized");
+        throw new IllegalArgumentException(CA_TYPE_NOT_RECOGNIZED_ERR);
     }
   }
 
@@ -215,7 +221,7 @@ public class PKI {
       case KUBECA:
         return Paths.get(getCAParentPath(CAType.KUBECA), "kube-ca.cnf");
       default:
-        throw new IllegalArgumentException("CA type not recognized");
+        throw new IllegalArgumentException(CA_TYPE_NOT_RECOGNIZED_ERR);
     }
   }
 
@@ -236,7 +242,7 @@ public class PKI {
       case KUBECA:
         return Paths.get(getCAParentPath(CAType.KUBECA), "crl", "kube-ca.crl.pem");
       default:
-        throw new IllegalArgumentException("CA type not recognized");
+        throw new IllegalArgumentException(CA_TYPE_NOT_RECOGNIZED_ERR);
     }
   }
 
@@ -249,7 +255,7 @@ public class PKI {
       case KUBECA:
         return "v3_ext";
       default:
-        throw new IllegalArgumentException("CA type not recognized");
+        throw new IllegalArgumentException(CA_TYPE_NOT_RECOGNIZED_ERR);
     }
   }
 
@@ -270,7 +276,7 @@ public class PKI {
       case KUBECA:
         return getCertPath(caType, "kube-ca");
       default:
-        throw new IllegalArgumentException("CA type not recognized");
+        throw new IllegalArgumentException(CA_TYPE_NOT_RECOGNIZED_ERR);
     }
   }
 
@@ -285,12 +291,10 @@ public class PKI {
     switch (caType) {
       case ROOT:
         return getCertPath(caType,"ca");
-      case INTERMEDIATE:
-        return getCertPath(caType, "ca-chain");
-      case KUBECA:
+      case INTERMEDIATE: case KUBECA:
         return getCertPath(caType, "ca-chain");
       default:
-        throw new IllegalArgumentException("CA type not recognized");
+        throw new IllegalArgumentException(CA_TYPE_NOT_RECOGNIZED_ERR);
     }
   }
 
