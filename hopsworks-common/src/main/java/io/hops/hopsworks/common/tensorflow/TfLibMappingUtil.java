@@ -46,6 +46,8 @@ public class TfLibMappingUtil {
   private static final String CUDA_BASE_PATH = LIB_PATH + "/cuda-";
   private static final String CUDNN_BASE_PATH = LIB_PATH + "/cudnn-";
   private static final String NCCL_BASE_PATH = LIB_PATH + "/nccl";
+  private static final String ROCM_RCCL_PATH = "/site-packages/tensorflow" +
+      "/include/external/local_config_rocm/rocm/rocm/lib";
   @EJB
   private TfLibMappingFacade tfLibMappingFacade;
   @EJB
@@ -75,7 +77,7 @@ public class TfLibMappingUtil {
 
     //.so library for RCCL
     ldPathBuilder.append(settings.getAnacondaProjectDir(project) + "/lib/python" +
-        project.getPythonVersion() + "/site-packages" + "/tensorflow/include/external/local_config_rocm/rocm/rocm/lib"
+        project.getPythonVersion() + ROCM_RCCL_PATH
         + File.pathSeparator);
 
     return ldPathBuilder.toString();
