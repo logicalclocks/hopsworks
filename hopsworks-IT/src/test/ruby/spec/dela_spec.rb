@@ -18,24 +18,6 @@ describe "On #{ENV['OS']}" do
   describe 'Dela' do
 
     before :all do
-      @csr = "-----BEGIN CERTIFICATE REQUEST-----\n" +
-          "MIICuTCCAaECAQAwdDELMAkGA1UEBhMCU0UxEjAQBgNVBAgMCVN0b2NraG9sbTEL" +
-          "MAkGA1UEBwwCU0UxCjAIBgNVBAsMATExCzAJBgNVBAoMAlNFMQ0wCwYDVQQDDAR0" +
-          "ZXN0MRwwGgYJKoZIhvcNAQkBFg1hZ2VudEBob3BzLmlvMIIBIjANBgkqhkiG9w0B" +
-          "AQEFAAOCAQ8AMIIBCgKCAQEApc1xai9zyHlc/su4w34Qas67OooqagykHpkk8dBH" +
-          "yGcB7BLhxpgqC3odZJ6PoepPugYETcDCCgYMNxoke/TOaTpXwD+wX4Nwl1zMgzVf" +
-          "D8aZQ+Ns9Rjf8vF3P+KDL3UCUxmNuX17Vew2jfrEQMap7CC38+Ss4eUCehc0num1" +
-          "IbIyH1pv/Qa/7akscjVbfVWFZ5JlahzIbSRByPQtx2lBzMwxn/dydnfol+uu5tEZ" +
-          "Uk0Pjr9h8n0ujI+MTfrAgUuYCDCYU+gX1hU9CiWTpghlzxwt3djG/hc/ZBK/50Bm" +
-          "ds6db+u/oRoPQV/JW36bBYifaLmKfwuBwJC78YNdRgyaIQIDAQABoAAwDQYJKoZI" +
-          "hvcNAQELBQADggEBAB4tuWccPaUHaGAygm+7WoVIPn5dtpqHcvj6rBc3VHRDRHKL" +
-          "GVp0gjDYqVdxV54qTm8fBLGz2zB27kR1lVp+ctwqE/HZ9uCJOMcG1P1ZSrMExEF/" +
-          "re2SaLDKhtrOYBWS+6ZERv7ndzRjn9Q2BBeyBkmRfLT4TSXVmhUVas2JAD6jrlei" +
-          "ai2Nga3rPpSL/2SOG+uuKwv83yC5rnT+6KIAV+MxOTXuz7QXGAxKtts7iPE8ShFf" +
-          "DOnceMjdaX/jqJnf/6UdO02/tYqL59XJldeFe2WuflOrNE5pArdAhZiqkSUgm6ox" +
-          "V7eQcEU4CJXHJArObgFdbE50nm9cFdW36DPmZAc=\n" +
-          "-----END CERTIFICATE REQUEST-----"
-
       @certs_dir = Variables.find_by(id: "certs_dir").value
       @subject = "/C=SE/ST=Stockholm/L=SE/O=SE/OU=1/CN=test/emailAddress=agent@hops.io"
 
@@ -51,7 +33,7 @@ describe "On #{ENV['OS']}" do
     end
 
     it 'should fail to sign the certificate with no db entry in the db' do
-      post "#{ENV['HOPSWORKS_DELA_TRACKER']}/cluster/certificate", {csr: @csr}
+      post "#{ENV['HOPSWORKS_DELA_TRACKER']}/cluster/certificate", {csr: generate_csr(@subject)}
       expect_status(400)
     end
 
@@ -74,7 +56,7 @@ describe "On #{ENV['OS']}" do
                          organization_name: "SE",
                          organizational_unit_name: "1",
                          registration_status: "Registered")
-      post "#{ENV['HOPSWORKS_DELA_TRACKER']}/cluster/certificate", {csr: @csr}
+      post "#{ENV['HOPSWORKS_DELA_TRACKER']}/cluster/certificate", {csr: generate_csr(@subject)}
       expect_status(200)
 
       # Check that the certificate is on the local fs. this assumes you are running the
@@ -83,7 +65,7 @@ describe "On #{ENV['OS']}" do
     end
 
     it 'should fail to sign twice a certificate for the same cluster' do
-      post "#{ENV['HOPSWORKS_DELA_TRACKER']}/cluster/certificate", {csr: @csr}
+      post "#{ENV['HOPSWORKS_DELA_TRACKER']}/cluster/certificate", {csr: generate_csr(@subject)}
       expect_status(400)
     end
 
