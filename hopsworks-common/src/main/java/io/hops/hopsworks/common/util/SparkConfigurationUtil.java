@@ -80,6 +80,14 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
             new ConfigProperty(Settings.SPARK_YARN_APPMASTER_ENV + "HIP_VISIBLE_DEVICES",
                     HopsUtils.IGNORE, "-1"));
 
+    sparkProps.put(Settings.SPARK_YARN_APPMASTER_ENV + "EXECUTOR_GPUS",
+        new ConfigProperty(Settings.SPARK_YARN_APPMASTER_ENV + "EXECUTOR_GPUS",
+            HopsUtils.IGNORE, "0"));
+
+    sparkProps.put(Settings.SPARK_EXECUTOR_ENV + "EXECUTOR_GPUS",
+        new ConfigProperty(Settings.SPARK_EXECUTOR_ENV + "EXECUTOR_GPUS",
+            HopsUtils.IGNORE, Integer.toString(sparkJobConfiguration.getExecutorGpus())));
+
     sparkProps.put(Settings.SPARK_SUBMIT_DEPLOYMODE, new ConfigProperty(Settings.SPARK_SUBMIT_DEPLOYMODE,
       HopsUtils.OVERWRITE,"cluster"));
 
