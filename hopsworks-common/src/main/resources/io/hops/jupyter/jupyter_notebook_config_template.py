@@ -25,7 +25,7 @@ c.JupyterConsoleApp.kernel_name="PySpark"
 
 c.KernelSpecManager.whitelist = {'pysparkkernel', 'sparkkernel', 'sparkrkernel','pythonwithpixiedustspark22'
 %%python-kernel%% }
-c.KernelSpecMAnager.ensure_native_kernel=False
+c.KernelSpecManager.ensure_native_kernel=False
 
 #Available kernels:
 #  sparkkernel                   /usr/local/share/jupyter/kernels/sparkkernel
