@@ -1,6 +1,6 @@
 {
-  "display_name": "python",
-  "language": "python3",
+  "display_name": "python-%%hdfs_user%%",
+  "language": "python",
   "argv": [
     "%%anaconda_home%%/bin/python",
     "-m",
