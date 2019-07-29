@@ -45,13 +45,16 @@ import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
-import io.hops.hopsworks.common.constants.message.ResponseMessages;
+import io.hops.hopsworks.common.agent.AgentLivenessMonitor;
 import io.hops.hopsworks.common.dao.host.Hosts;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.util.Variables;
+import io.hops.hopsworks.common.util.RemoteCommandResult;
+import io.hops.hopsworks.common.security.ServiceJWTKeepAlive;
 import io.hops.hopsworks.exceptions.EncryptionMasterPasswordException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
+import io.hops.hopsworks.jwt.exception.JWTException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.common.security.CertificatesMgmService;
@@ -105,6 +108,10 @@ public class SystemAdminService {
   private HostsFacade hostsFacade;
   @EJB
   private JWTHelper jWTHelper;
+  @EJB
+  private AgentLivenessMonitor agentLivenessMonitor;
+  @EJB
+  private ServiceJWTKeepAlive serviceJWTKeepAlive;
   
   /**
    * Admin endpoint that changes the master encryption password used to encrypt the certificates' password
@@ -124,18 +131,35 @@ public class SystemAdminService {
     try {
       Users user = jWTHelper.getUserPrincipal(sc);
       certificatesMgmService.checkPassword(oldPassword, user.getEmail());
-      certificatesMgmService.resetMasterEncryptionPassword(newPassword, user.getEmail());
-  
-      RESTApiJsonResponse response = noCacheResponse.buildJsonResponse(Response.Status.NO_CONTENT, ResponseMessages
-          .MASTER_ENCRYPTION_PASSWORD_CHANGE);
-  
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(response).build();
+      Integer operationId = certificatesMgmService.initUpdateOperation();
+      certificatesMgmService.resetMasterEncryptionPassword(operationId, newPassword, user.getEmail());
+      
+      RESTApiJsonResponse response = noCacheResponse.buildJsonResponse(Response.Status.CREATED,
+          String.valueOf(operationId));
+      
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).entity(response).build();
     } catch (EncryptionMasterPasswordException ex) {
       throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_ACCESS_DENIED, Level.SEVERE, null,
         ex.getMessage(), ex);
     } catch (IOException ex) {
       throw new HopsSecurityException(RESTCodes.SecurityErrorCode.MASTER_ENCRYPTION_PASSWORD_ACCESS_ERROR,
         Level.SEVERE, null, ex.getMessage(), ex);
+    }
+  }
+  
+  @GET
+  @Path("/encryptionPass/{opId}")
+  public Response getUpdatePasswordStatus(@PathParam("opId") Integer operationId) {
+    CertificatesMgmService.UPDATE_STATUS status = certificatesMgmService.getOperationStatus(operationId);
+    switch (status) {
+      case OK:
+        return noCacheResponse.getNoCacheCORSResponseBuilder(Response.Status.OK).build();
+      case FAILED:
+        return noCacheResponse.getNoCacheCORSResponseBuilder(Response.Status.INTERNAL_SERVER_ERROR).build();
+      case WORKING:
+        return noCacheResponse.getNoCacheCORSResponseBuilder(Response.Status.FOUND).build();
+      default:
+        return noCacheResponse.getNoCacheCORSResponseBuilder(Response.Status.NOT_FOUND).build();
     }
   }
   
@@ -174,7 +198,7 @@ public class SystemAdminService {
   @GET
   @Path("/hosts")
   public Response getAllClusterNodes() {
-    List<Hosts> allNodes = hostsFacade.find();
+    List<Hosts> allNodes = hostsFacade.findAllHosts();
     
     List<Hosts> responseList = new ArrayList<>(allNodes.size());
     // Send only hostID and hostname
@@ -278,5 +302,73 @@ public class SystemAdminService {
       response = noCacheResponse.buildJsonResponse(Response.Status.NO_CONTENT, "Key rotation commands " +
         "issued");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NO_CONTENT).entity(response).build();
+  }
+  
+  @POST
+  @Path("/kagent/{hostname}")
+  public Response startAgent(@PathParam("hostname") String hostname) throws ServiceException {
+    if (Strings.isNullOrEmpty(hostname)) {
+      throw new IllegalArgumentException("Hostname should not be null or empty");
+    }
+    Hosts host = hostsFacade.findByHostname(hostname);
+    if (host == null) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.HOST_NOT_FOUND, Level.FINE, "Host " + hostname + " does " +
+          "not exist");
+    }
+    RemoteCommandResult result = agentLivenessMonitor.start(host);
+    
+    if (result.getExitCode() == 0) {
+      return Response.ok().build();
+    }
+    
+    String responseMessage = "Exit code: " + result.getExitCode() + " Reason: " + result.getStdout();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NO_CONTENT).entity(responseMessage).build();
+  }
+  
+  @DELETE
+  @Path("/kagent/{hostname}")
+  public Response stopAgent(@PathParam("hostname") String hostname) throws ServiceException {
+    if (Strings.isNullOrEmpty(hostname)) {
+      throw new IllegalArgumentException("Hostname should not be null or empty");
+    }
+    Hosts host = hostsFacade.findByHostname(hostname);
+    if (host == null) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.HOST_NOT_FOUND, Level.FINE, "Host " + hostname + " does " +
+          "not exist");
+    }
+    RemoteCommandResult result = agentLivenessMonitor.stop(host);
+    
+    if (result.getExitCode() == 0) {
+      return Response.ok().build();
+    }
+  
+    String responseMessage = "Exit code: " + result.getExitCode() + " Reason: " + result.getStdout();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NO_CONTENT).entity(responseMessage).build();
+  }
+  
+  @PUT
+  @Path("/kagent/{hostname}")
+  public Response restartAgent(@PathParam("hostname") String hostname) throws ServiceException {
+    if (Strings.isNullOrEmpty(hostname)) {
+      throw new IllegalArgumentException("Hostname should not be null or empty");
+    }
+    Hosts host = hostsFacade.findByHostname(hostname);
+    if (host == null) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.HOST_NOT_FOUND, Level.FINE, "Host " + hostname + " does " +
+          "not exist");
+    }
+    RemoteCommandResult result = agentLivenessMonitor.restart(host);
+    if (result.getExitCode() == 0) {
+      return Response.ok().build();
+    }
+    String responseMessage = "Exit code: " + result.getExitCode() + " Reason: " + result.getStdout();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NO_CONTENT).entity(responseMessage).build();
+  }
+  
+  @PUT
+  @Path("/servicetoken")
+  public Response renewServiceJWT() throws JWTException {
+    serviceJWTKeepAlive.forceRenewServiceToken();
+    return Response.noContent().build();
   }
 }

@@ -227,3 +227,12 @@ textarea.form-control {
 .styleSelect {
   overflow: hidden;
 }
+
+#tapProfile .tab-content {
+  padding: 10px;
+}
+
+#tapProfile .form-actions {
+  background-color: rgba(0,0,0,.03);
+  padding: 0px;
+}

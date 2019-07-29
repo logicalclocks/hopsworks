@@ -16,8 +16,8 @@
 
 package io.hops.hopsworks.api.agent;
 
-import io.hops.hopsworks.common.dao.pythonDeps.CondaCommands;
-import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade;
+import io.hops.hopsworks.common.dao.python.CondaCommandFacade;
+import io.hops.hopsworks.common.dao.python.CondaCommands;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -28,16 +28,16 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class CondaCommandView {
   
-  private PythonDepsFacade.CondaOp op;
+  private CondaCommandFacade.CondaOp op;
   private String user;
   @XmlElement(name = "proj")
   private String project;
   private Integer id;
   private String arg;
-  private PythonDepsFacade.CondaStatus status;
+  private CondaCommandFacade.CondaStatus status;
   private String version;
   private String channelUrl;
-  private PythonDepsFacade.CondaInstallType installType;
+  private CondaCommandFacade.CondaInstallType installType;
   private String lib;
   private String environmentYml;
   private Boolean installJupyter;
@@ -59,13 +59,13 @@ public class CondaCommandView {
     this.environmentYml = builder.environmentYml;
     this.installJupyter = builder.installJupyter;
   }
-  
+
   @ApiModelProperty(value = "Operation to be performed", required = true)
-  public PythonDepsFacade.CondaOp getOp() {
+  public CondaCommandFacade.CondaOp getOp() {
     return op;
   }
   
-  public void setOp(PythonDepsFacade.CondaOp op) {
+  public void setOp(CondaCommandFacade.CondaOp op) {
     this.op = op;
   }
   
@@ -104,13 +104,13 @@ public class CondaCommandView {
   public void setArg(String arg) {
     this.arg = arg;
   }
-  
+
   @ApiModelProperty(value = "Status of comamnd", required = true)
-  public PythonDepsFacade.CondaStatus getStatus() {
+  public CondaCommandFacade.CondaStatus getStatus() {
     return status;
   }
   
-  public void setStatus(PythonDepsFacade.CondaStatus status) {
+  public void setStatus(CondaCommandFacade.CondaStatus status) {
     this.status = status;
   }
   
@@ -131,13 +131,13 @@ public class CondaCommandView {
   public void setChannelUrl(String channelUrl) {
     this.channelUrl = channelUrl;
   }
-  
+
   @ApiModelProperty(value = "Type of Conda installation")
-  public PythonDepsFacade.CondaInstallType getInstallType() {
+  public CondaCommandFacade.CondaInstallType getInstallType() {
     return installType;
   }
   
-  public void setInstallType(PythonDepsFacade.CondaInstallType installType) {
+  public void setInstallType(CondaCommandFacade.CondaInstallType installType) {
     this.installType = installType;
   }
   
@@ -186,22 +186,22 @@ public class CondaCommandView {
   }
   
   public static class Builder {
-    private PythonDepsFacade.CondaOp op;
+    private CondaCommandFacade.CondaOp op;
     private String user;
     private String project;
     private Integer id;
     private String arg;
-    private PythonDepsFacade.CondaStatus status;
+    private CondaCommandFacade.CondaStatus status;
     private String version;
     private String channelUrl;
-    private PythonDepsFacade.CondaInstallType installType;
+    private CondaCommandFacade.CondaInstallType installType;
     private String lib;
     private String environmentYml;
     private Boolean installJupyter;
     
     public Builder() {}
     
-    public Builder setCondaOp(PythonDepsFacade.CondaOp op) {
+    public Builder setCondaOp(CondaCommandFacade.CondaOp op) {
       this.op = op;
       return this;
     }
@@ -226,7 +226,7 @@ public class CondaCommandView {
       return this;
     }
     
-    public Builder setStatus(PythonDepsFacade.CondaStatus status) {
+    public Builder setStatus(CondaCommandFacade.CondaStatus status) {
       this.status = status;
       return this;
     }
@@ -241,7 +241,7 @@ public class CondaCommandView {
       return this;
     }
     
-    public Builder setInstallType(PythonDepsFacade.CondaInstallType installType) {
+    public Builder setInstallType(CondaCommandFacade.CondaInstallType installType) {
       this.installType = installType;
       return this;
     }

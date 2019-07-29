@@ -40,6 +40,8 @@
 package io.hops.hopsworks.common.hdfs;
 
 import com.google.common.base.CharMatcher;
+import io.hops.hopsworks.common.util.Settings;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.StringReader;
@@ -82,8 +84,8 @@ public final class Utils {
     return path.substring(0, startName);
   }
 
-  public static String getHdfsRootPath(String projectname) {
-    return "/Projects/" + projectname + "/";
+  public static String getProjectPath(String projectname) {
+    return "/" + Settings.DIR_ROOT + "/" + projectname + "/";
   }
 
   public static String ensurePathEndsInSlash(String path) {

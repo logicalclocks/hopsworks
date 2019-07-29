@@ -51,6 +51,7 @@ import javax.faces.event.AbortProcessingException;
 import javax.faces.event.ValueChangeEvent;
 import javax.faces.event.ValueChangeListener;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
+import io.hops.hopsworks.common.dao.user.activity.ActivityFlag;
 
 @ManagedBean(name = "valueChangeMB",
         eager = true)
@@ -86,7 +87,7 @@ public class ValueChangeMB implements Serializable, ValueChangeListener {
       projectTeamController.updateTeamRole(sessionState.getActiveProject(),
               email, role.getRole());
       activityFacade.persistActivity(ActivityFacade.CHANGE_ROLE + email + " to " + role, sessionState.getActiveProject()
-          , sessionState.getLoggedInUsername(), ActivityFacade.ActivityFlag.MEMBER);
+          , sessionState.getLoggedInUsername(), ActivityFlag.MEMBER);
     } catch (Exception ejb) {
       //addErrorMessageToUserAction("Error: Update failed.");
       return "Failed";

@@ -25,7 +25,7 @@ c.JupyterConsoleApp.kernel_name="PySpark"
 
 c.KernelSpecManager.whitelist = {'pysparkkernel', 'sparkkernel', 'sparkrkernel','pythonwithpixiedustspark22'
 %%python-kernel%% }
-c.KernelSpecMAnager.ensure_native_kernel=False
+c.KernelSpecManager.ensure_native_kernel=False
 
 #Available kernels:
 #  sparkkernel                   /usr/local/share/jupyter/kernels/sparkkernel
@@ -42,3 +42,11 @@ c.NotebookApp.tornado_settings = {
     }
 }
 
+
+import os
+os.environ['REST_ENDPOINT'] = "%%hopsworks_endpoint%%"
+os.environ['ELASTIC_ENDPOINT'] = "%%elastic_endpoint%%"
+os.environ['HADOOP_USER_NAME'] = "%%hdfs_user%%"
+os.environ['JUPYTER_CERTS_DIR'] = "%%jupyter_certs_dir%%"
+os.environ['HOPSWORKS_PROJECT_ID'] = "%%hopsworks_project_id%%"
+os.environ['HADOOP_HOME'] = "%%hadoop_home%%"

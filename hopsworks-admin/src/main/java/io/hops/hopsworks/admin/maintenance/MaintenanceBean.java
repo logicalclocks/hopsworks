@@ -61,6 +61,9 @@ public class MaintenanceBean implements Serializable {
 
   @EJB
   private MessageController messageController;
+  
+  @EJB
+  private Settings settings;
 
   public MaintenanceBean() {
   }
@@ -91,7 +94,7 @@ public class MaintenanceBean implements Serializable {
 
     if (status == 1) {
       messageController.sendToMany(userFacade.findAllUsers(), userFacade.
-              findByEmail(Settings.SITE_EMAIL),
+              findByEmail(settings.getAdminEmail()),
               "Administration Message", message, "");
     }
   }

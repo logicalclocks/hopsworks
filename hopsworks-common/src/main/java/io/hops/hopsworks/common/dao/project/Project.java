@@ -65,7 +65,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 import io.hops.hopsworks.common.dao.tensorflow.TensorBoard;
-import io.hops.hopsworks.common.dao.serving.TfServing;
+import io.hops.hopsworks.common.dao.serving.Serving;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.project.service.ProjectServices;
@@ -74,8 +74,8 @@ import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
 import io.hops.hopsworks.common.dao.jupyter.JupyterSettings;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
-import io.hops.hopsworks.common.dao.pythonDeps.CondaCommands;
-import io.hops.hopsworks.common.dao.pythonDeps.PythonDep;
+import io.hops.hopsworks.common.dao.python.CondaCommands;
+import io.hops.hopsworks.common.dao.python.PythonDep;
 import io.hops.hopsworks.common.dao.user.activity.Activity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -139,7 +139,7 @@ public class Project implements Serializable {
   private Collection<JupyterSettings> jupyterSettingsCollection;
   @OneToMany(cascade = CascadeType.ALL,
       mappedBy = "project")
-  private Collection<TfServing> tfServingCollection;
+  private Collection<Serving> servingCollection;
   @OneToMany(cascade = CascadeType.ALL,
           mappedBy = "project")
   private Collection<TensorBoard> tensorBoardCollection;
@@ -482,12 +482,12 @@ public class Project implements Serializable {
 
   @XmlTransient
   @JsonIgnore
-  public Collection<TfServing> getTfServingCollection() {
-    return tfServingCollection;
+  public Collection<Serving> getServingCollection() {
+    return servingCollection;
   }
 
-  public void setTfServingCollection(Collection<TfServing> tfServingCollection) {
-    this.tfServingCollection = tfServingCollection;
+  public void setServingCollection(Collection<Serving> servingCollection) {
+    this.servingCollection = servingCollection;
   }
 
   @XmlTransient

@@ -59,14 +59,6 @@ angular.module('hopsWorksApp')
             self.openIdProviders = [];
 
 
-            self.showDefaultPassword = function() {
-              if (self.firstTime === false || self.adminPasswordChanged === true ||
-                      self.user.email !== 'admin@kth.se') {
-                return false;
-              }
-              return true;
-            };
-
             var getAnnouncement = function () {
               BannerService.findBanner().then(
                       function (success) {
@@ -84,8 +76,6 @@ angular.module('hopsWorksApp')
               BannerService.isFirstTime().then(
                       function (success) {
                         self.firstTime = true;
-                        self.user.email = "admin@kth.se";
-//                        self.user.password = "admin";
                         self.user.toursState = 0;
                       }, function (error) {
                 self.firstTime = false;
@@ -97,7 +87,7 @@ angular.module('hopsWorksApp')
                         self.adminPasswordChanged = true;
                       }, function (error) {
                 self.adminPasswordChanged = false;
-                self.announcement = "Security risk: change the current default password for the 'admin@kth.se' account."
+                self.announcement = "Security risk: change the current default password for the default admin account."
               });
             };
             self.enterAdminPassword = function () {
@@ -123,22 +113,17 @@ angular.module('hopsWorksApp')
                         $cookies.put("email", self.user.email);
                         $location.path('/');
                       }, function (error) {
-                self.working = false;
-                if (error.data !== undefined && error.data.errorCode === 120002) {
-                  self.errorMessage = "";
-                  self.emailHash = md5.createHash(self.user.email || '');
-                  self.secondFactorRequired = true;
-                } else if (error.data !== undefined &&
-                        error.data !== null &&
-                        error.data.errorMsg !== undefined &&
-                        error.data.errorMsg !== null) {
-                  self.errorMessage = error.data.errorMsg;
-                }
-              if (typeof error.data.usrMsg !== 'undefined') {
-                  growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
-              } else {
-                  growl.error("", {title: error.data.errorMsg, ttl: 8000});
-              }
+                        self.working = false;
+                        if (error.data !== undefined && error.data.errorCode === 120002) {
+                          self.errorMessage = "";
+                          self.emailHash = md5.createHash(self.user.email || '');
+                          self.secondFactorRequired = true;
+                        } else if (error.data !== undefined &&
+                                error.data !== null &&
+                                error.data.errorMsg !== undefined &&
+                                error.data.errorMsg !== null) {
+                          self.errorMessage = error.data.errorMsg;
+                        }
               });
             };
             

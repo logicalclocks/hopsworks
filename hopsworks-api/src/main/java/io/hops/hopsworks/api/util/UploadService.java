@@ -400,12 +400,15 @@ public class UploadService {
             return noCacheResponse.getNoCacheResponseBuilder(
                 Response.Status.NOT_ACCEPTABLE).entity(json).build();
           }
-
         }
-
+  
+        /**
+         * Metadata do not belong to a specific Project, so there is no project specific
+         * user. Do every HDFS operation as superuser
+         */
         //If the user has a role in the owning project of the Dataset and that is Data Owner
         //perform operation as superuser
-        if (!Strings.isNullOrEmpty(role) && role.equals(AllowedProjectRoles.DATA_OWNER)) {
+        if ((!Strings.isNullOrEmpty(role) && role.equals(AllowedProjectRoles.DATA_OWNER)) || this.isTemplate) {
           dfsOps = dfs.getDfsOps();
         } else {
           dfsOps = dfs.getDfsOps(username);
@@ -413,7 +416,9 @@ public class UploadService {
 
         dfsOps.copyToHDFSFromLocal(true, stagingFilePath, location.toString());
         dfsOps.setPermission(location, dfsOps.getParentPermission(location));
-        dfsOps.setOwner(location, username, dfsOps.getFileStatus(location).getGroup());
+        if (!this.isTemplate) {
+          dfsOps.setOwner(location, username, dfsOps.getFileStatus(location).getGroup());
+        }
         logger.log(Level.INFO, "Copied to HDFS");
 
         if (templateid != 0 && templateid != -1) {

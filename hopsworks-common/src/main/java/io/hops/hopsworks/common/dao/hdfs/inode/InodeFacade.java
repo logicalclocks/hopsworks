@@ -40,12 +40,12 @@
 package io.hops.hopsworks.common.dao.hdfs.inode;
 
 import io.hops.common.Pair;
-import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import io.hops.hopsworks.common.dao.AbstractFacade;
+import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
+import io.hops.hopsworks.common.hdfs.Utils;
+import io.hops.hopsworks.common.util.HopsUtils;
+import io.hops.hopsworks.common.util.Settings;
+
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -53,10 +53,12 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
-import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
-import io.hops.hopsworks.common.util.HopsUtils;
-import io.hops.hopsworks.common.util.Settings;
-import io.hops.hopsworks.common.dao.AbstractFacade;
+import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Stateless
 public class InodeFacade extends AbstractFacade<Inode> {
@@ -278,7 +280,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
   }
 
   /**
-   * Check whether the given path exists.
+   * Check whether the given path exists. (Path should not include hdfs://)
    * <p/>
    * @param path The path to search for.
    * @return True if the path exist (i.e. there is an Inode on this path), false
@@ -307,7 +309,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
    * @return The sought for Inode, or null if this Inode does not exist.
    */
   public Inode getProjectRoot(String name) {
-    return getInode("/" + Settings.DIR_ROOT + "/" + name);
+    return getInode(Utils.getProjectPath(name));
   }
 
   /**
@@ -360,8 +362,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
    */
   public boolean isProjectRoot(Inode i) {
     Inode parent = findParent(i);
-    if (!parent.getInodePK().getName().equals(
-            Settings.DIR_ROOT)) {
+    if (!parent.getInodePK().getName().equals(Settings.DIR_ROOT)) {
       return false;
     } else {
       //A node is the project root if its parent has the name $DIR_ROOT and its 

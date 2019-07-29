@@ -77,9 +77,6 @@ angular.module('hopsWorksApp')
                           return response;
                         });
               },
-              recover: function (user) {
-                return $http.post('/api/auth/recoverPassword', TransformRequest.jQueryStyle(user));
-              },
               register: function (user) {
 
                 var regReq = {
@@ -91,6 +88,21 @@ angular.module('hopsWorksApp')
                   data: user
                 };
                 return $http(regReq);
+              },
+              recoverPassword: function (user) {
+                return $http.post('/api/auth/recover/password', TransformRequest.jQueryStyle(user));
+              },
+              recoverQRCode: function (user) {
+                return $http.post('/api/auth/recover/qrCode', TransformRequest.jQueryStyle(user));
+              },
+              validateRecoveryKey: function (key) {
+                return $http.post('/api/auth/reset/validate', TransformRequest.jQueryStyle(key));
+              },
+              passwordRecovery: function (user) {
+                return $http.post('/api/auth/reset/password', TransformRequest.jQueryStyle(user));
+              },
+              qrCodeRecovery: function (key) {
+                return $http.post('/api/auth/reset/qrCode', TransformRequest.jQueryStyle(key));
               },
               saveToken: function (token) {
                 if (token) {

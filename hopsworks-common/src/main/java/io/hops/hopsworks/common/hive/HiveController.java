@@ -51,6 +51,7 @@ import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
+import io.hops.hopsworks.common.dao.user.activity.ActivityFlag;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -60,6 +61,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -99,26 +101,28 @@ public class HiveController {
 
   private Connection conn;
   private String jdbcString = null;
-
-  private void initConnection() throws SQLException {
+  
+  @PostConstruct
+  public void init() {
     try {
       // Load Hive JDBC Driver
       Class.forName(driver);
-
-      // Create connection url
-      String hiveEndpoint = settings.getHiveServerHostName(false);
-      jdbcString = "jdbc:hive2://" + hiveEndpoint + "/default;" +
-          "auth=noSasl;ssl=true;twoWay=true;" +
-          "sslTrustStore=" + bhcs.getSuperTrustStorePath() + ";" +
-          "trustStorePassword=" + bhcs.getSuperTrustStorePassword() + ";" +
-          "sslKeyStore=" + bhcs.getSuperKeystorePath() + ";" +
-          "keyStorePassword=" + bhcs.getSuperKeystorePassword();
-
-      conn = DriverManager.getConnection(jdbcString);
     } catch (ClassNotFoundException e) {
-      logger.log(Level.SEVERE, "Error opening Hive JDBC connection: " +
-          e);
+      logger.log(Level.SEVERE, "Could not load the Hive driver: " + driver, e);
     }
+  }
+
+  private void initConnection() throws SQLException {
+    // Create connection url
+    String hiveEndpoint = settings.getHiveServerHostName(false);
+    jdbcString = "jdbc:hive2://" + hiveEndpoint + "/default;" +
+      "auth=noSasl;ssl=true;twoWay=true;" +
+      "sslTrustStore=" + bhcs.getSuperTrustStorePath() + ";" +
+      "trustStorePassword=" + bhcs.getSuperTrustStorePassword() + ";" +
+      "sslKeyStore=" + bhcs.getSuperKeystorePath() + ";" +
+      "keyStorePassword=" + bhcs.getSuperKeystorePassword();
+  
+    conn = DriverManager.getConnection(jdbcString);
   }
 
   @PreDestroy
@@ -174,7 +178,6 @@ public class HiveController {
     // Persist Hive db as dataset in the Hopsworks database
     Dataset dbDataset = new Dataset(dbInode, project);
     dbDataset.setType(datasetType);
-    dbDataset.setDescription(buildDescription(dbName));
     dbDataset.setSearchable(true);
     dbDataset.setFeaturestore(featurestore);
     datasetFacade.persistDataset(dbDataset);
@@ -182,8 +185,7 @@ public class HiveController {
     dfso.setMetaEnabled(dbPath);
     datasetController.logDataset(dbDataset, OperationType.Add);
   
-    activityFacade.persistActivity(ActivityFacade.NEW_DATA + dbDataset.getName(), project, user,
-      ActivityFacade.ActivityFlag.DATASET);
+    activityFacade.persistActivity(ActivityFacade.NEW_DATA + dbDataset.getName(), project, user, ActivityFlag.DATASET);
 
     try {
       // Assign database directory to the user and project group
@@ -226,11 +228,10 @@ public class HiveController {
    * @param dbName name of the database
    * @param dbComment description of the database
    * @throws SQLException
-   * @throws IOException
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public void createDatabase(String dbName, String dbComment)
-      throws SQLException, IOException {
+      throws SQLException {
     if (conn == null || conn.isClosed()) {
       initConnection();
     }
@@ -251,11 +252,10 @@ public class HiveController {
   public void dropDatabases(Project project, DistributedFileSystemOps dfso, boolean forceCleanup)
       throws IOException {
     // To avoid case sensitive bugs, check if the project has a Hive database
-    Dataset projectDs = datasetFacade.findByNameAndProjectId(project,
-        project.getName().toLowerCase() + ".db");
-    Dataset featurestoreDs = datasetFacade.findByNameAndProjectId(project,
-        project.getName().toLowerCase() + "_featurestore.db");
-
+    Dataset projectDs = datasetController
+      .getByProjectAndDsName(project, this.settings.getHiveWarehouse(), project.getName().toLowerCase() + ".db");
+    Dataset featurestoreDs = datasetController.getByProjectAndDsName(project, this.settings.getHiveWarehouse(),
+      project.getName().toLowerCase() + "_featurestore.db");
     if ((projectDs != null && projectDs.getType() == DatasetType.HIVEDB)
         || forceCleanup) {
       dropDatabase(project, dfso, project.getName());
@@ -279,15 +279,5 @@ public class HiveController {
   public Path getDbPath(String dbName) {
     return new Path(settings.getHiveWarehouse(), dbName.toLowerCase() + ".db");
   }
-
-  private String buildDescription(String projectName) {
-    return "Use the following configuration settings to connect to Hive from external clients:<br>" +
-        "Url: jdbc:hive2://" + settings.getHiveServerHostName(true) + "/" + projectName + "<br>" +
-        "Authentication: noSasl<br>" +
-        "SSL: enabled - TrustStore and its password<br>" +
-        "Username: your Hopsworks email address<br>" +
-        "Password: your Hopsworks password";
-  }
-
 
 }

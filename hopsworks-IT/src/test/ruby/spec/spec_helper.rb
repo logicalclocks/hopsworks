@@ -52,12 +52,10 @@ if RUBY_PLATFORM == "java"
 end
 
 begin
-  mysql_socket = ENV.fetch('MYSQL_SOCKET', '/tmp/mysql.sock')
   ActiveRecord::Base.establish_connection ({
     :adapter => "#{mysql_adapter}",
     :host => ENV['DB_HOST'],
     :port => ENV['DB_PORT'],
-    :socket => mysql_socket,
     :database => "hopsworks",
     :username => "kthfs",
     :password => "kthfs"})
@@ -88,6 +86,11 @@ RSpec.configure do |config|
   config.include JobHelper
   config.include ExecutionHelper
   config.include FeaturestoreHelper
+  config.include AgentHelper
+  config.include PythonHelper
+  config.include QuotaHelper
+  config.include JupyterHelper
+  config.include UsersHelper
   # uncomment next line if you need to clean hdfs and hopsworks db before test.
   # config.before(:suite) { clean_test_data }
   config.after(:suite) {
@@ -107,31 +110,25 @@ end
 
 Airborne.configure do |config|
   config.base_url = "https://#{ENV['WEB_HOST']}:#{ENV['WEB_PORT']}"
+  config.timeout = 120
 end
 
 def clean_test_data
   puts "Cleaning test data ..."
   require 'net/ssh'
-  require 'net/ssh/shell'
   if ENV['RSPEC_SSH'] && ENV['RSPEC_SSH']=="true"
     Net::SSH.start("#{ENV['RSPEC_SSH_HOST']}", "#{ENV['RSPEC_SSH_USER']}") do |ssh|
-      ssh.shell do |sh|
-        puts "Remote HDFS Clean-up starting..."
-        sh.execute("cd #{ENV['RSPEC_SSH_USER_DIR']}")
-        sh.execute("vagrant ssh -c 'sudo -u #{ENV['RSPEC_VAGRANT_HDFS_USER']} -H sh -c \" /srv/hops/hadoop/bin/hadoop fs -rm -f -R -skipTrash /Projects \" ' ")
-        puts "Remote HDFS Clean-up finished."
+      puts "Remote HDFS Clean-up starting..."
+      ssh.exec!("cd #{ENV['RSPEC_SSH_USER_DIR']}; vagrant ssh -c 'sudo -u #{ENV['RSPEC_VAGRANT_HDFS_USER']} -H sh -c \" /srv/hops/hadoop/bin/hadoop fs -rm -f -R -skipTrash /Projects \" '")
+      puts "Remote HDFS Clean-up finished."
 
-        puts "Database Clean-up starting..."
-        sh.execute("vagrant ssh -c  'sudo -u #{ENV['RSPEC_VAGRANT_MYSQL_USER']} -H sh -c \" /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh -e \\\" DROP DATABASE IF EXISTS hopsworks \\\" \" ' ")       
-        sh.execute("vagrant ssh -c  'sudo -u #{ENV['RSPEC_VAGRANT_MYSQL_USER']} -H sh -c \" /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh -e \\\" CREATE DATABASE IF NOT EXISTS hopsworks CHARACTER SET latin1 \\\" \" ' ")
-        sh.execute("vagrant ssh -c  'sudo -u root -H sh -c \" /srv/hops/domains/domain1/flyway/flyway migrate \" ' ")
-        sh.execute("vagrant ssh -c  'sudo -u root -H sh -c \" cat /srv/hops/domains/domain1/flyway/dml/*.sql | /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks \" ' ")
-        sh.execute("vagrant ssh -c  'sudo -u root -H sh -c \" /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks -e \\\" UPDATE hosts SET registered=1; \\\" \" ' ")
-        res = sh.execute("exit")
-        res.on_finish do |val1, val2|
-        puts "Database Clean-up finished."
-        end
-      end
+      puts "Database Clean-up starting..."
+      sh.exec!("cd #{ENV['RSPEC_SSH_USER_DIR']}; vagrant ssh -c  'sudo -u #{ENV['RSPEC_VAGRANT_MYSQL_USER']} -H sh -c \" /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh -e \\\" DROP DATABASE IF EXISTS hopsworks \\\" \" ' ")
+      sh.exec!("cd #{ENV['RSPEC_SSH_USER_DIR']}; vagrant ssh -c  'sudo -u #{ENV['RSPEC_VAGRANT_MYSQL_USER']} -H sh -c \" /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh -e \\\" CREATE DATABASE IF NOT EXISTS hopsworks CHARACTER SET latin1 \\\" \" ' ")
+      sh.exec!("cd #{ENV['RSPEC_SSH_USER_DIR']}; vagrant ssh -c  'sudo -u root -H sh -c \" /srv/hops/domains/domain1/flyway/flyway migrate \" ' ")
+      sh.exec!("cd #{ENV['RSPEC_SSH_USER_DIR']}; vagrant ssh -c  'sudo -u root -H sh -c \" cat /srv/hops/domains/domain1/flyway/dml/*.sql | /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks \" ' ")
+      sh.exec("cd #{ENV['RSPEC_SSH_USER_DIR']}; vagrant ssh -c  'sudo -u root -H sh -c \" /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks -e \\\" UPDATE hosts SET registered=1; \\\" \" ' ")
+      puts "Database Clean-up finished."
     end
   else
     puts "Vagrant HDFS Clean-up starting..."

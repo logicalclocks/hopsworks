@@ -16,7 +16,6 @@
 
 package io.hops.hopsworks.common.experiments;
 
-import io.hops.hopsworks.common.dao.hdfs.HdfsLeDescriptors;
 import io.hops.hopsworks.common.dao.hdfs.HdfsLeDescriptorsFacade;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
@@ -35,6 +34,8 @@ import org.apache.commons.codec.digest.DigestUtils;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Date;
@@ -45,6 +46,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Stateless
+@TransactionAttribute(TransactionAttributeType.NEVER)
 public class TensorBoardController {
   @EJB
   private TensorBoardFacade tensorBoardFacade;
@@ -136,6 +138,7 @@ public class TensorBoardController {
    * @param project
    * @param user
    */
+  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public void cleanup(Project project, Users user) throws TensorBoardException {
     TensorBoard tb = tensorBoardFacade.findForProjectAndUser(project, user);
     this.cleanup(tb);
@@ -145,6 +148,7 @@ public class TensorBoardController {
    * Stop and cleanup a TensorBoard
    * @param tb
    */
+  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public void cleanup(TensorBoard tb) throws TensorBoardException {
     if (tb != null) {
       if(tensorBoardProcessMgr.ping(tb.getPid()) == 0) {
@@ -175,9 +179,7 @@ public class TensorBoardController {
    * @return HDFS path with updated namenode host:port
    */
   public String replaceNN(String hdfsPath)  {
-    HdfsLeDescriptors descriptor = hdfsLeDescriptorsFacade.findEndpoint();
-
-    String endPoint = descriptor.getRpcAddresses().split(",")[0].replaceAll(",", "");
+    String endPoint = hdfsLeDescriptorsFacade.getRPCEndpoint();
 
     Pattern urlPattern = Pattern.compile("([a-zA-Z0-9\\-\\.]{2,255}:[0-9]{1,6})(/.*$)");
     Matcher urlMatcher = urlPattern.matcher(hdfsPath);

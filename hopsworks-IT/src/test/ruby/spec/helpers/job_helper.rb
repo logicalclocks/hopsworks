@@ -18,10 +18,10 @@ module JobHelper
   def create_sparktour_job(project, job_name, type, job_conf)
 
     # need to enable python for conversion .ipynb to .py works
-    get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/enabled"
-    if response.code == 503
-        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/enable/2.7/true"
-        expect_status(200)
+    get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/python/environments"
+    if response.code == 404
+       post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/python/environments/2.7?action=create&pythonKernelEnable=true"
+       expect_status(201)
     end
 
     if type.eql? "jar"

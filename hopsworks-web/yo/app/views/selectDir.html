@@ -46,30 +46,36 @@
 </div>
 <div class="modal-body">
 
-  <div class="table-responsive" style="overflow: hidden;" ng-controller="DatasetsCtrl as datasetsCtrl">
-    <div ng-controller="ProjectCtrl as projectCtrl" class="row">
-      >> /{{ projectCtrl.currentProject.projectName}}
-      <span data-ng-repeat="path in datasetsCtrl.pathArray track by $index">/
-        {{path}}</span>
+  <div class="table-responsive" style="overflow: hidden;">
+    <div class="row">
+      >> {{ selectFileCtrl.datasetBrowser.projectName}}/{{ selectFileCtrl.datasetBrowser.relativePath}}
     </div>
+    <div growl reference="114" class="pull-right" ></div>
     <table class="table table-hover" >
-      <tbody ng-model="datasetsCtrl.files">
-        <tr ng-click="selectFileCtrl.back(datasetsCtrl)">
-          <td style="padding: 0px">&nbsp &nbsp
-            <a style="font-size:25px">..</a>
-          </td>
-        </tr>
-        <tr ng-repeat="file in datasetsCtrl.files| filter:{status: true} | orderBy: 'name'"
-            ng-class="{ 'highlight': datasetsCtrl.selected === {{ $index}}, 'expanded' : expanded }"
-            ng-click="selectFileCtrl.select(file.path, file.dir); selectFileCtrl.click(datasetsCtrl, file, true); datasetsCtrl.select($index, file, $event)"
-            >
-          <td>
-            <i ng-show="file.dir" class="glyphicon glyphicon-folder-close" style="padding-right: 10px; color: #757575;"></i>
-            <i ng-show="!file.dir" class="glyphicon glyphicon-file" style="padding-right: 10px; color: #757575;"></i>
-            {{file.name}}
-          </td>
-        </tr>
+      <tbody>
+      <tr ng-click="selectFileCtrl.datasetBrowser.back(datasetsCtrl)">
+        <td style="padding: 0px">&nbsp &nbsp
+          <a style="font-size:25px">..</a>
+        </td>
+      </tr>
+      <a href="selectFile.html"></a>
+      <tr ng-repeat="file in selectFileCtrl.datasetBrowser.files | filter:{status: true} | orderBy: 'name'"
+          ng-class="{ 'highlight': selectFileCtrl.datasetBrowser.selected === {{ $index}}, 'expanded' : expanded }"
+          ng-click="selectFileCtrl.datasetBrowser.select(file, $index)">
+        <td>
+          <i ng-show="file.dir" class="glyphicon glyphicon-folder-close" style="padding-right: 10px; color: #757575;"></i>
+          <i ng-show="!file.dir" class="glyphicon glyphicon-file" style="padding-right: 10px; color: #757575;"></i>
+          {{file.name}}
+        </td>
+      </tr>
       </tbody>
+      <tfoot>
+      <tr>
+        <td>
+          <div class="loader loader-sm" ng-show="selectFileCtrl.datasetBrowser.working" style="position: static;"></div>
+        </td>
+      </tr>
+      </tfoot>
     </table>
     <button ng-click="selectFileCtrl.confirmSelection(true)" class="btn btn-default">Select</button>
   </div>

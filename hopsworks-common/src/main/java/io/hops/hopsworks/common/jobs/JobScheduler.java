@@ -42,13 +42,9 @@ package io.hops.hopsworks.common.jobs;
 import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
-import io.hops.hopsworks.exceptions.GenericException;
-import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.common.jobs.configuration.ScheduleDTO;
 import io.hops.hopsworks.common.jobs.configuration.ScheduleDTO.TimeUnit;
 import io.hops.hopsworks.common.jobs.execution.ExecutionController;
-import io.hops.hopsworks.exceptions.ProjectException;
-import io.hops.hopsworks.exceptions.ServiceException;
 
 import javax.annotation.Resource;
 import javax.ejb.EJB;
@@ -88,29 +84,33 @@ public class JobScheduler {
    * @param timer
    */
   @Timeout
-  public void timeout(Timer timer) throws GenericException, JobException, ServiceException, ProjectException {
+  public void timeout(Timer timer) {
     Serializable jobId = timer.getInfo();
-    //Valid id?
-    if (!(jobId instanceof Integer)) {
-      logger.log(Level.WARNING,
-        "Trying to run a scheduled execution, but info is not " + jobId.getClass().getSimpleName());
-      return;
-    }
-    //Valid job?
-    Jobs job = jobFacade.find(jobId);
+    try {
+      //Valid id?
+      if (!(jobId instanceof Integer)) {
+        logger.log(Level.WARNING,
+                "Trying to run a scheduled execution, but info is not " + jobId.getClass().getSimpleName());
+        return;
+      }
+      //Valid job?
+      Jobs job = jobFacade.find(jobId);
 
-    //Make sure the job is valid (still exists in DB and user still in the project where the job is)
-    if (job == null) {
-      logger.log(Level.WARNING, "Trying to run a job with non-existing id, canceling timer.");
-      timer.cancel();
-      return;
-    } else if(projectTeamFacade.findCurrentRole(job.getProject(), job.getCreator()) == null) {
-      logger.log(Level.INFO, "Trying to run a job created by a user no longer in this project, canceling timer.");
-      timer.cancel();
-      return;
+      //Make sure the job is valid (still exists in DB and user still in the project where the job is)
+      if (job == null) {
+        logger.log(Level.WARNING, "Trying to run a job with non-existing id, canceling timer.");
+        timer.cancel();
+        return;
+      } else if (projectTeamFacade.findCurrentRole(job.getProject(), job.getCreator()) == null) {
+        logger.log(Level.INFO, "Trying to run a job created by a user no longer in this project, canceling timer.");
+        timer.cancel();
+        return;
+      }
+      //Run scheduled job
+      executionController.start(job, job.getCreator());
+    } catch(Exception e) {
+      logger.log(Level.SEVERE, "Failed to start an execution for job " + jobId, e);
     }
-    //Yes! Now execute!
-    executionController.start(job, job.getCreator());
   }
 
   /**

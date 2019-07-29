@@ -35,10 +35,11 @@ import javax.xml.bind.annotation.XmlRootElement;
  * 12. Security error codes start  with "20".
  * 14. CA error codes start with "22".
  * 15. DelaCSR error codes start with "23".
- * 16. TfServing error codes start with "24".
+ * 16. Serving error codes start with "24".
  * 17. Inference error codes start with "25".
  * 18. Activities error codes start with "26".
- * 18. Featurestore error codes start with "27".
+ * 19. Featurestore error codes start with "27".
+ * 20. Python error codes start with "28".
  */
 
 @XmlRootElement
@@ -167,8 +168,6 @@ public class RESTCodes {
     PYTHON_LIB_NOT_INSTALLED(64,
         "This python library is not installed for this project. Cannot remove/upgrade " +
             "op", Response.Status.NOT_MODIFIED),
-    PROJECT_QUOTA_INSUFFICIENT(65, "This project is out of credits",
-        Response.Status.PRECONDITION_FAILED),
     ANACONDA_NOT_ENABLED(66, "First enable Anaconda. Click on 'Python' -> Activate Anaconda",
         Response.Status.PRECONDITION_FAILED),
     TENSORBOARD_ELASTIC_INDEX_NOT_FOUND(67, "Could not find elastic index for TensorBoard.",
@@ -181,7 +180,8 @@ public class RESTCodes {
     PROJECT_SERVICE_NOT_FOUND(71, "service was not found.", Response.Status.BAD_REQUEST),
     QUOTA_REQUEST_NOT_COMPLETE(72, "Please specify both " + "namespace and space quota.", Response.Status.BAD_REQUEST),
     RESERVED_PROJECT_NAME(73, "Not allowed - reserved project name, pick another project name.",
-        Response.Status.BAD_REQUEST);
+        Response.Status.BAD_REQUEST),
+    PROJECT_ANACONDA_ENABLE_ERROR(74, "Failed to enable conda.", Response.Status.INTERNAL_SERVER_ERROR);
 
 
     private Integer code;
@@ -291,7 +291,8 @@ public class RESTCodes {
         Response.Status.BAD_REQUEST),
     DOWNLOAD_NOT_ALLOWED(48, "Downloading files is not allowed. Please contact the system administrator for further " +
       "information.", Response.Status.FORBIDDEN),
-    DATASET_REQUEST_ERROR(49, "Could not send dataset request", Response.Status.INTERNAL_SERVER_ERROR);
+    DATASET_REQUEST_ERROR(49, "Could not send dataset request", Response.Status.INTERNAL_SERVER_ERROR),
+    DATASET_ACCESS_PERMISSION_DENIED(50, "Permission denied.", Response.Status.FORBIDDEN);
 
 
     private Integer code;
@@ -516,12 +517,12 @@ public class RESTCodes {
     JUPYTER_STOP_ERROR(17, "Couldn't stop Jupyter Notebook Server.",
         Response.Status.INTERNAL_SERVER_ERROR),
     INVALID_YML(18, "Invalid .yml file", Response.Status.BAD_REQUEST),
-    INVALID_YML_SIZE(19, ".yml file too large. Maximum size is 0 bytes",
-        Response.Status.INTERNAL_SERVER_ERROR),
+    INVALID_YML_SIZE(19, ".yml file too large. Maximum size is 10000 bytes",
+      Response.Status.INTERNAL_SERVER_ERROR),
     ANACONDA_FROM_YML_ERROR(20, "Failed to create Anaconda environment from .yml file.",
-        Response.Status.INTERNAL_SERVER_ERROR),
-    PYTHON_INVALID_VERSION(21, "Invalid version of python (valid: '2.7', and '3.5', and '3.6'",
-        Response.Status.BAD_REQUEST),
+      Response.Status.INTERNAL_SERVER_ERROR),
+    PYTHON_INVALID_VERSION(21, "Invalid version of python (valid: '2.7', and '3.6'",
+      Response.Status.BAD_REQUEST),
     ANACONDA_REPO_ERROR(22, "Problem adding the repo.", Response.Status.INTERNAL_SERVER_ERROR),
     ANACONDA_OP_IN_PROGRESS(23,
         "A conda environment operation is currently executing (create/remove/list). Wait " +
@@ -554,10 +555,10 @@ public class RESTCodes {
     TENSORFLOW_VERSION_NOT_SUPPORTED(41,
         "We currently do not support this version of TensorFlow. Update to a " +
             "newer version or contact an admin", Response.Status.BAD_REQUEST),
-    SERVICE_GENERIC_ERROR(42, "Generic error while enabling the service",
-        Response.Status.INTERNAL_SERVER_ERROR),
-    JUPYTER_SERVER_ALREADY_RUNNING(43, "Jupyter Notebook Server is already running",
-      Response.Status.BAD_REQUEST);
+    SERVICE_GENERIC_ERROR(42, "Generic error while enabling the service", Response.Status.INTERNAL_SERVER_ERROR),
+    JUPYTER_SERVER_ALREADY_RUNNING(43, "Jupyter Notebook Server is already running", Response.Status.BAD_REQUEST),
+    ERROR_EXECUTING_REMOTE_COMMAND(44, "Error executing command over SSH", Response.Status.INTERNAL_SERVER_ERROR),
+    OPERATION_NOT_SUPPORTED(45, "Supplied operation is not supported", Response.Status.BAD_REQUEST);
 
     private Integer code;
     private String message;
@@ -616,7 +617,11 @@ public class RESTCodes {
     ACL_NOT_FOUND(12, "ACL not found.", Response.Status.NOT_FOUND),
     ACL_NOT_FOR_TOPIC(13, "ACL does not belong to the specified topic", Response.Status.BAD_REQUEST),
     SCHEMA_IN_USE(14, "Schema is currently used by topics. topic", Response.Status.PRECONDITION_FAILED),
-    BAD_NUM_PARTITION(15, "Invalid number of partitions", Response.Status.BAD_REQUEST);
+    BAD_NUM_PARTITION(15, "Invalid number of partitions", Response.Status.BAD_REQUEST),
+    CREATE_SCHEMA_RESERVED_NAME(16, "The provided schema name is reserved",
+      Response.Status.METHOD_NOT_ALLOWED),
+    DELETE_RESERVED_SCHEMA(17, "The schema is reserved and cannot be deleted",
+      Response.Status.METHOD_NOT_ALLOWED);
 
 
     private Integer code;
@@ -818,8 +823,8 @@ public class RESTCodes {
     INCORRECT_DEACTIVATION_LENGTH(38, "The message should have a length between 5 and 500 characters",
         Response.Status.BAD_REQUEST),
     TMP_CODE_INVALID(39, "The temporary code was wrong.", Response.Status.UNAUTHORIZED),
-    INCORRECT_CREDENTIALS(40, "Incorrect email or password.", Response.Status.UNAUTHORIZED),
-    INCORRECT_VALIDATION_KEY(41, "Incorrect validation key", Response.Status.UNAUTHORIZED),
+    INCORRECT_CREDENTIALS(40, "Incorrect email or password.", Response.Status.BAD_REQUEST),
+    INCORRECT_VALIDATION_KEY(41, "Incorrect validation key", Response.Status.BAD_REQUEST),
     ACCOUNT_ALREADY_VERIFIED(42, "User is already verified", Response.Status.CONFLICT),
     TWO_FA_ENABLE_ERROR(43, "Cannot enable 2-factor authentication.",
         Response.Status.INTERNAL_SERVER_ERROR),
@@ -827,8 +832,12 @@ public class RESTCodes {
     TWO_FA_DISABLED(45, "2-factor authentication is disabled.", Response.Status.PRECONDITION_FAILED),
     TRANSITION_STATUS_ERROR(46, "The user can't transition from current status to requested status",
       Response.Status.BAD_REQUEST),
-    ACCESS_CONTROL(47, "Client not authorized for this invocation.", Response.Status.FORBIDDEN);
-    
+    ACCESS_CONTROL(47, "Client not authorized for this invocation.", Response.Status.FORBIDDEN),
+    SECRET_EMPTY(48, "Secret is empty", Response.Status.NOT_FOUND),
+    SECRET_EXISTS(49, "Same Secret already exists", Response.Status.CONFLICT),
+    SECRET_ENCRYPTION_ERROR(50, "Error encrypting/decrypting Secret", Response.Status.INTERNAL_SERVER_ERROR),
+    ACCOUNT_NOT_ACTIVE(51, "This account is not active", Response.Status.BAD_REQUEST);
+
     private Integer code;
     private String message;
     private Response.StatusType respStatus;
@@ -1005,14 +1014,14 @@ public class RESTCodes {
     }
   }
 
-  public enum TfServingErrorCode implements RESTErrorCode {
+  public enum ServingErrorCode implements RESTErrorCode {
 
-    INSTANCENOTFOUND(0, "TFServing instance not found", Response.Status.NOT_FOUND),
-    DELETIONERROR(1, "TFServing instance could not be deleted",
+    INSTANCENOTFOUND(0, "Serving instance not found", Response.Status.NOT_FOUND),
+    DELETIONERROR(1, "Serving instance could not be deleted",
         Response.Status.INTERNAL_SERVER_ERROR),
-    UPDATEERROR(2, "TFServing instance could not be updated", Response.Status.INTERNAL_SERVER_ERROR),
-    LIFECYCLEERROR(3, "TFServing instance could not be started/stopped", Response.Status.BAD_REQUEST),
-    LIFECYCLEERRORINT(4, "TFServing instance could not be started/stopped",
+    UPDATEERROR(2, "Serving instance could not be updated", Response.Status.INTERNAL_SERVER_ERROR),
+    LIFECYCLEERROR(3, "Serving instance could not be started/stopped", Response.Status.BAD_REQUEST),
+    LIFECYCLEERRORINT(4, "Serving instance could not be started/stopped",
         Response.Status.INTERNAL_SERVER_ERROR),
     STATUSERROR(5, "Error getting TFServing instance status", Response.Status.INTERNAL_SERVER_ERROR),
     PATHNOTFOUND(6, "Model Path not found", Response.Status.BAD_REQUEST),
@@ -1020,7 +1029,12 @@ public class RESTCodes {
     COMMANDNOTPROVIDED(8, "Command not provided", Response.Status.BAD_REQUEST),
     SPECNOTPROVIDED(9, "TFServing spec not provided", Response.Status.BAD_REQUEST),
     BAD_TOPIC(10, "Topic provided cannot be used for Serving logging", Response.Status.BAD_REQUEST),
-    DUPLICATEDENTRY(11, "An entry with the same name already exists in this project", Response.Status.BAD_REQUEST);
+    DUPLICATEDENTRY(11, "An entry with the same name already exists in this project",
+      Response.Status.BAD_REQUEST),
+    PYTHON_ENVIRONMENT_NOT_ENABLED(12, "Python environment has not been enabled in this project, " +
+      "which is required for serving SkLearn Models", Response.Status.BAD_REQUEST),
+    UPDATE_SERVING_TYPE_ERROR(13, "The serving type of a serving cannot be updated.",
+      Response.Status.BAD_REQUEST);
 
 
     private Integer code;
@@ -1029,7 +1043,7 @@ public class RESTCodes {
     public final int range = 240000;
 
 
-    TfServingErrorCode(Integer code, String message, Response.StatusType respStatus) {
+    ServingErrorCode(Integer code, String message, Response.StatusType respStatus) {
       this.code = range + code;
       this.message = message;
       this.respStatus = respStatus;
@@ -1098,7 +1112,7 @@ public class RESTCodes {
       return range;
     }
   }
-  
+
   public enum ActivitiesErrorCode implements RESTErrorCode {
 
     FORBIDDEN(0, "You are not allow to perform this action.", Response.Status.FORBIDDEN),
@@ -1135,43 +1149,7 @@ public class RESTCodes {
       return range;
     }
   }
-  
-  public enum ResourceErrorCode implements RESTErrorCode {
 
-    INVALID_QUERY_PARAMETER(0, "Invalid query.", Response.Status.NOT_FOUND);
-
-    private int code;
-    private String message;
-    private Response.Status respStatus;
-    public final int range = 270000;
-
-    ResourceErrorCode(Integer code, String message, Response.Status respStatus) {
-      this.code = range + code;
-      this.message = message;
-      this.respStatus = respStatus;
-    }
-
-    @Override
-    public Integer getCode() {
-      return code;
-    }
-
-    @Override
-    public String getMessage() {
-      return message;
-    }
-
-    @Override
-    public Response.StatusType getRespStatus() {
-      return respStatus;
-    }
-
-    @Override
-    public int getRange() {
-      return range;
-    }
-  }
-  
   /**
    * Provides http status codes not available in Response.StatusType.
    */
@@ -1376,7 +1354,7 @@ public class RESTCodes {
     public Integer getCode() {
       return code;
     }
-    
+
     @Override
     public String getMessage() {
       return message;
@@ -1387,4 +1365,92 @@ public class RESTCodes {
       return range;
     }
   }
+
+  public enum PythonErrorCode implements RESTErrorCode {
+
+    ANACONDA_ENVIRONMENT_NOT_FOUND(0, "No Anaconda environment created for this project.",
+            Response.Status.NOT_FOUND),
+    ANACONDA_ENVIRONMENT_ALREADY_INITIALIZED(1, "Anaconda environment already created for this project.",
+            Response.Status.CONFLICT),
+    PYTHON_SEARCH_TYPE_NOT_SUPPORTED(2, "The supplied search is not supported, only pip and conda are currently " +
+            "supported.", Response.Status.BAD_REQUEST),
+    PYTHON_LIBRARY_NOT_FOUND(3, "Library could not be found.", Response.Status.NOT_FOUND),
+    YML_FILE_MISSING_PYTHON_VERSION(4, "No python binary version was found in the environment yaml file.",
+            Response.Status.BAD_REQUEST),
+    NOT_MATCHING_PYTHON_VERSIONS(5, "The supplied yaml files have mismatching python versions.",
+            Response.Status.BAD_REQUEST),
+    CONDA_INSTALL_REQUIRES_CHANNEL(6, "Conda package manager requires that a conda channel is selected in which the " +
+            "library is located", Response.Status.BAD_REQUEST),
+    INSTALL_TYPE_NOT_SUPPORTED(7, "The provided install type is not supported", Response.Status.BAD_REQUEST),
+    CONDA_COMMAND_NOT_FOUND(8, "Command not found.", Response.Status.BAD_REQUEST),
+    MACHINE_TYPE_NOT_SPECIFIED(9, "Machine type not specified.", Response.Status.BAD_REQUEST),
+    VERSION_NOT_SPECIFIED(10, "Version not specified.", Response.Status.BAD_REQUEST);
+
+    private int code;
+    private String message;
+    private Response.Status respStatus;
+    public final int range = 300000;
+
+    PythonErrorCode(Integer code, String message, Response.Status respStatus) {
+      this.code = range + code;
+      this.message = message;
+      this.respStatus = respStatus;
+    }
+
+    @Override
+    public Integer getCode() {
+      return code;
+    }
+
+    @Override
+    public String getMessage() {
+      return message;
+    }
+
+    public Response.StatusType getRespStatus() {
+      return respStatus;
+    }
+
+    @Override
+    public int getRange() {
+      return range;
+    }
+  }
+  
+  public enum ResourceErrorCode implements RESTErrorCode {
+    
+    INVALID_QUERY_PARAMETER(0, "Invalid query.", Response.Status.NOT_FOUND);
+    
+    private int code;
+    private String message;
+    private Response.Status respStatus;
+    public final int range = 310000;
+    
+    ResourceErrorCode(Integer code, String message, Response.Status respStatus) {
+      this.code = range + code;
+      this.message = message;
+      this.respStatus = respStatus;
+    }
+    
+    @Override
+    public Integer getCode() {
+      return code;
+    }
+    
+    @Override
+    public String getMessage() {
+      return message;
+    }
+    
+    @Override
+    public Response.StatusType getRespStatus() {
+      return respStatus;
+    }
+    
+    @Override
+    public int getRange() {
+      return range;
+    }
+  }
+
 }

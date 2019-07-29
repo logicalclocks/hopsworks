@@ -38,33 +38,10 @@
  */
 package io.hops.hopsworks.api.jupyter;
 
-import io.hops.hopsworks.api.filter.NoCacheResponse;
-
-import java.time.Duration;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.logging.Logger;
-import javax.ejb.EJB;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-import javax.enterprise.context.RequestScoped;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.GET;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.POST;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.Path;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
+import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jwt.JWTHelper;
-import io.hops.hopsworks.common.jupyter.JupyterController;
-import io.hops.hopsworks.common.livy.LivyController;
-import io.hops.hopsworks.common.livy.LivyMsg;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuota;
@@ -74,48 +51,75 @@ import io.hops.hopsworks.common.dao.jupyter.JupyterSettings;
 import io.hops.hopsworks.common.dao.jupyter.JupyterSettingsFacade;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterDTO;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
-import io.hops.hopsworks.common.dao.jupyter.config.JupyterProcessMgr;
+import io.hops.hopsworks.common.dao.jupyter.config.JupyterManager;
 import io.hops.hopsworks.common.dao.project.PaymentType;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.exceptions.HopsSecurityException;
-import io.hops.hopsworks.exceptions.ProjectException;
-import io.hops.hopsworks.restutils.RESTCodes;
-import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.hdfs.Utils;
+import io.hops.hopsworks.common.jupyter.JupyterController;
+import io.hops.hopsworks.common.jupyter.JupyterJWTManager;
+import io.hops.hopsworks.common.livy.LivyController;
+import io.hops.hopsworks.common.livy.LivyMsg;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Ip;
 import io.hops.hopsworks.common.util.OSProcessExecutor;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.HopsSecurityException;
+import io.hops.hopsworks.exceptions.ProjectException;
+import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.commons.codec.digest.DigestUtils;
 
+import javax.ejb.EJB;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import javax.enterprise.context.RequestScoped;
+import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.logging.Level;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
+import java.io.IOException;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class JupyterService {
 
   private static final Logger LOGGER = Logger.getLogger(JupyterService.class.getName());
-
+  private static final String[] JUPYTER_JWT_AUD = new String[]{Audience.API};
+  
   @EJB
   private ProjectFacade projectFacade;
   @EJB
   private NoCacheResponse noCacheResponse;
-  @EJB
-  private JupyterProcessMgr jupyterProcessFacade;
+  @Inject
+  private JupyterManager jupyterManager;
   @EJB
   private JupyterFacade jupyterFacade;
   @EJB
@@ -140,6 +144,8 @@ public class JupyterService {
   private OSProcessExecutor osProcessExecutor;
   @EJB
   private JupyterController jupyterController;
+  @EJB
+  private JupyterJWTManager jupyterJWTManager;
 
   private Integer projectId;
   // No @EJB annotation for Project, it's injected explicitly in ProjectService.
@@ -244,21 +250,12 @@ public class JupyterService {
       throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_SERVERS_NOT_FOUND, Level.FINE);
     }
     // Check to make sure the jupyter notebook server is running
-    boolean running = jupyterProcessFacade.pingServerJupyterUser(jp.getPid());
+    boolean running = jupyterManager.pingServerJupyterUser(jp);
     // if the notebook is not running but we have a database entry for it,
     // we should remove the DB entry (and restart the notebook server).
     if (!running) {
       jupyterFacade.remove(hdfsUser, jp.getPort());
       throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_SERVERS_NOT_RUNNING, Level.FINE);
-    }
-    String externalIp = Ip.getHost(req.getRequestURL().toString());
-    settings.setHopsworksExternalIp(externalIp);
-    Integer port = req.getLocalPort();
-    String endpoint = externalIp + ":" + port;
-    if (endpoint.compareToIgnoreCase(jp.getHostIp()) != 0) {
-      // update the host_ip to whatever the client saw as the remote host:port
-      jp.setHostIp(endpoint);
-      jupyterFacade.update(jp);
     }
 
     //set minutes left until notebook server is killed
@@ -274,18 +271,17 @@ public class JupyterService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response startNotebookServer(JupyterSettings jupyterSettings, @Context HttpServletRequest req, 
+  public Response startNotebookServer(JupyterSettings jupyterSettings, @Context HttpServletRequest req,
       @Context SecurityContext sc, @Context UriInfo uriInfo) throws ProjectException, HopsSecurityException,
     ServiceException {
 
     Users hopsworksUser = jWTHelper.getUserPrincipal(sc);
     String hdfsUser = hdfsUsersController.getHdfsUserName(project, hopsworksUser);
-    String realName = hopsworksUser.getFname() + " " + hopsworksUser.getLname();
 
     if (project.getPaymentType().equals(PaymentType.PREPAID)) {
       YarnProjectsQuota projectQuota = yarnProjectsQuotaFacade.findByProjectName(project.getName());
-      if (projectQuota == null || projectQuota.getQuotaRemaining() < 0) {
-        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_QUOTA_INSUFFICIENT, Level.FINE);
+      if (projectQuota == null || projectQuota.getQuotaRemaining() <= 0) {
+        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_QUOTA_ERROR, Level.FINE);
       }
     }
 
@@ -302,28 +298,29 @@ public class JupyterService {
       String configSecret = DigestUtils.sha256Hex(Integer.toString(ThreadLocalRandom.current().nextInt()));
       JupyterDTO dto = null;
       DistributedFileSystemOps dfso = dfsService.getDfsOps();
-      String allowOriginScheme = uriInfo.getBaseUri().getScheme();
       String allowOriginHost = uriInfo.getBaseUri().getHost();
       int allowOriginPort = uriInfo.getBaseUri().getPort();
       String allowOriginPortStr = allowOriginPort != -1 ? ":" + allowOriginPort : "";
-      String allowOrigin = allowOriginScheme + "://" + allowOriginHost + allowOriginPortStr;
+      String allowOrigin = settings.getJupyterOriginScheme() + "://" + allowOriginHost + allowOriginPortStr;
       try {
         jupyterSettingsFacade.update(jupyterSettings);
-        dto = jupyterProcessFacade.startServerAsJupyterUser(project, configSecret, hdfsUser, realName,
+        dto = jupyterManager.startJupyterServer(project, configSecret, hdfsUser, hopsworksUser,
           jupyterSettings, allowOrigin);
+        jupyterJWTManager.materializeJWT(hopsworksUser, project, jupyterSettings, dto.getPid(), dto.getPort(),
+          JUPYTER_JWT_AUD);
         HopsUtils.materializeCertificatesForUserCustomDir(project.getName(), user.getUsername(),
             settings.getHdfsTmpCertDir(), dfso, certificateMaterializer, settings, dto.getCertificatesDir());
         // When Livy launches a job it will look in the standard directory for the certificates
         // We materialize them twice but most probably other operations will need them too, so it is OK
         // Remember to remove both when stopping Jupyter server or an exception is thrown
         certificateMaterializer.materializeCertificatesLocal(user.getUsername(), project.getName());
-      } catch (ServiceException ex) {
+        jupyterManager.waitForStartup(project, hopsworksUser);
+      } catch (ServiceException | TimeoutException ex) {
+        jupyterController.shutdownQuietly(project, hdfsUser, hopsworksUser, configSecret, dto.getPid(), dto.getPort());
         throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_START_ERROR, Level.SEVERE, ex.getMessage(),
             null, ex);
       } catch (IOException ex) {
-        certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());
-        HopsUtils.cleanupCertificatesForUserCustomDir(user.getUsername(), project.getName(),
-            settings.getHdfsTmpCertDir(), certificateMaterializer, dto.getCertificatesDir(), settings);
+        jupyterController.shutdownQuietly(project, hdfsUser, hopsworksUser, configSecret, dto.getPid(), dto.getPort());
         throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_MATERIALIZATION_ERROR, Level.SEVERE,
           ex.getMessage(), null, ex);
       } finally {
@@ -385,7 +382,7 @@ public class JupyterService {
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response convertIPythonNotebook(@PathParam("path") String path,
       @Context SecurityContext sc) throws ServiceException {
-    String ipynbPath = settings.getProjectPath(this.project.getName()) + "/" + path;
+    String ipynbPath = Utils.getProjectPath(this.project.getName()) + "/" + path;
     int extensionIndex = ipynbPath.lastIndexOf(".ipynb");
     StringBuilder pathBuilder = new StringBuilder(ipynbPath.substring(0, extensionIndex)).append(".py");
     String pyAppPath = pathBuilder.toString();

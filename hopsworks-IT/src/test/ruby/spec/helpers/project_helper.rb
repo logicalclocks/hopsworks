@@ -50,13 +50,12 @@ module ProjectHelper
     get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent"
     if response.code != 200 # project and logged in user not the same
       @project = create_project_tour(type)
-
     end
   end
 
   def create_project
     with_valid_session
-    new_project = {projectName: "project_#{short_random_id}", description:"", status: 0, services: ["JOBS","JUPYTER","HIVE","KAFKA","SERVING", "FEATURESTORE"],
+    new_project = {projectName: "ProJect_#{short_random_id}", description:"", status: 0, services: ["JOBS","JUPYTER","HIVE","KAFKA","SERVING", "FEATURESTORE"],
                    projectTeam:[], retentionPeriod: ""}
     post "#{ENV['HOPSWORKS_API']}/project", new_project
     expect_status(201)
@@ -102,6 +101,10 @@ module ProjectHelper
 
   def get_project
     @project
+  end
+
+  def update_project
+    @project = get_project_by_name(name)
   end
 
   def get_project_by_name(name)

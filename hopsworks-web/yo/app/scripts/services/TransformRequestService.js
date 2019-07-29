@@ -49,7 +49,7 @@ angular.module('hopsWorksApp')
                   if (requestStr) {
                     requestStr += '&' + key + '=' + encodeURIComponent(data[key]);
                   } else {
-                    requestStr = key + '=' + data[key];
+                    requestStr = key + '=' + encodeURIComponent(data[key]);
                   }
                 }
               }

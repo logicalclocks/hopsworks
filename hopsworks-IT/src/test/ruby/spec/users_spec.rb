@@ -511,7 +511,7 @@ describe "On #{ENV['OS']}" do
         describe "Users invalid query" do
           it 'should return invalid query error code if filter by param is invalid.' do
             get "#{ENV['HOPSWORKS_API']}/users?filter_by=false_login_lt:bla"
-            expect(json_body[:errorCode]).to eq(270000) 
+            expect(json_body[:errorCode]).to eq(310000)
           end
           it 'should return invalid query error code if filter by key is invalid.' do
             get "#{ENV['HOPSWORKS_API']}/users?filter_by=false_login_ls:bla"
@@ -527,6 +527,145 @@ describe "On #{ENV['OS']}" do
           end
         end
       end
+    end
+
+    describe "Secrets" do
+      before :each do
+        with_valid_session()
+        with_valid_project()
+      end
+      
+      it "should be able to add Secret" do
+        private_secret_name = "my_private_secret"
+        shared_secret_name = "my_shared_secret"
+        secret = "my_secret"
+        
+        add_private_secret private_secret_name, secret
+        expect_status(200)
+
+        add_shared_secret shared_secret_name, secret, @project[:id]
+        expect_status(200)
+
+        get_secrets_name
+        expect_status(200)
+        secrets = json_body[:items]
+        private_found = false
+        shared_found = false
+        
+        secrets.each do |secret|
+          if secret[:name].eql? private_secret_name
+               private_found = true
+          end
+
+          if secret[:name].eql? shared_secret_name
+               shared_found = true
+          end
+        end
+        expect(private_found).to be true
+        expect(shared_found).to be true
+      end
+
+      it "should be able to delete a Secret" do
+        secret_name = "another_secret_name"
+        
+        add_private_secret secret_name, "secret"
+        expect_status(200)
+        
+        delete_secret secret_name
+        expect_status(200)
+
+        get_secrets_name
+        expect_json_types(items: :null)
+      end
+
+      it "should not be able to add duplicate Secret" do
+        secret_name = "my_secret_name"
+        add_private_secret secret_name, "secret"
+        expect_status(200)
+
+        add_private_secret secret_name, "another_secret"
+        expect_status(409)
+      end
+
+      it "should be able to delete all secrets" do
+        NUM_OF_SECRETS = 10
+        (1..NUM_OF_SECRETS).each do |idx|
+          secret_name = "secret-#{idx}"
+          add_private_secret secret_name, "some_secret"
+          expect_status(200)
+        end
+
+        get_secrets_name
+        expect_json_types(items: :array_of_objects)
+        expect_json(items: -> (items){ expect(items.size()).to eq(NUM_OF_SECRETS)})
+
+        delete_secrets
+        expect_status(200)
+
+        get_secrets_name
+        expect_json_types(items: :null)
+      end
+      
+      it "should not be able to add empty secret" do
+        add_private_secret "", "secret"
+        expect_status(404)
+      end
+
+      it "member of Project should be able to access only Shared secret" do
+        private_secret_name = "private_secret"
+        shared_secret_name = "shared_secret"
+        add_private_secret private_secret_name, "secret"
+        expect_status(200)
+
+        add_shared_secret shared_secret_name, "another_secret", @project[:id]
+        expect_status(200)
+
+        owner_username = @user[:username]
+        # Create user and add it as member to project
+        member = create_user
+        add_member(member[:email], "Data scientist")
+        create_session(member[:email], "Pass123")
+        
+        get_private_secret private_secret_name
+        expect_status(404)
+        # Private secret should not be available
+        get_shared_secret private_secret_name, owner_username
+        expect_status(403)
+
+        get_shared_secret shared_secret_name, owner_username
+        expect_status(200)
+
+        # Create 
+        not_member = create_user
+        create_session(not_member[:email], "Pass123")
+        get_shared_secret shared_secret_name, owner_username
+        expect_status(403)        
+      end
+
+      it "member of Project should not be able to delete secret he does not own" do
+        shared_secret_name = "shared_secret_1"
+        add_shared_secret shared_secret_name, "secret", @project[:id]
+        expect_status(200)
+        owner = @user
+        
+        not_member = create_user
+        create_session not_member[:email], "Pass123"
+
+        delete_secret shared_secret_name
+        expect_status(200)
+
+        create_session owner[:email], "Pass123"
+        get_secrets_name
+        expect_status(200)
+        secrets = json_body[:items]
+        found = false
+        secrets.each do |secret|
+          if secret[:name].eql? shared_secret_name
+            found = true
+          end
+        end
+        expect(found).to be true      
+      end      
     end
   end
 end

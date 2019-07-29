@@ -159,12 +159,7 @@ public class JupyterFacade {
   public JupyterProject saveServer(String host,
       Project project, String secretConfig, int port,
       int hdfsUserId, String token, long pid, Date expires) {
-    JupyterProject jp = null;
-    String ip;
-    ip = host + ":" + settings.getHopsworksPort();
-    jp = new JupyterProject(project, secretConfig, port, hdfsUserId, ip, token,
-        pid, expires);
-
+    JupyterProject jp = new JupyterProject(project, secretConfig, port, hdfsUserId, host, token, pid, expires);
     persist(jp);
     return jp;
   }
@@ -181,8 +176,7 @@ public class JupyterFacade {
     }
   }
 
-  public String getProjectPath(JupyterProject jp, String projectName,
-      String hdfsUser) {
+  public String getProjectPath(JupyterProject jp, String projectName, String hdfsUser) {
     return settings.getJupyterDir() + File.separator
         + Settings.DIR_ROOT + File.separator + projectName
         + File.separator + hdfsUser + File.separator + jp.getSecret();

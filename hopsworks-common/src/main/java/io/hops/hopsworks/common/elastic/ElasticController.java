@@ -46,6 +46,7 @@ import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
+import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.exceptions.ServiceException;
@@ -125,6 +126,8 @@ public class ElasticController {
   private ProjectFacade projectFacade;
   @EJB
   private DatasetFacade datasetFacade;
+  @EJB
+  private DatasetController datasetController;
 
   private static final Logger LOG = Logger.getLogger(ElasticController.class.getName());
 
@@ -300,7 +303,7 @@ public class ElasticController {
       project = projectFacade.find(projectId);
     }
 
-    Dataset dataset = datasetFacade.findByNameAndProjectId(project, dsName);
+    Dataset dataset = datasetController.getByProjectAndDsName(project,null, dsName);
     final long datasetId = dataset.getInodeId();
 
     //hit the indices - execute the queries

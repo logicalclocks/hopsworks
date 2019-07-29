@@ -40,9 +40,8 @@ package io.hops.hopsworks.admin.maintenance;
 
 import io.hops.hopsworks.common.dao.host.Hosts;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
-import io.hops.hopsworks.common.dao.pythonDeps.CondaCommands;
-import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade;
-import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade.CondaStatus;
+import io.hops.hopsworks.common.dao.python.CondaCommandFacade;
+import io.hops.hopsworks.common.dao.python.CondaCommands;
 import io.hops.hopsworks.common.security.CertificatesMgmService;
 import io.hops.hopsworks.common.util.OSProcessExecutor;
 import io.hops.hopsworks.common.util.ProcessDescriptor;
@@ -92,9 +91,10 @@ public class NodesBean implements Serializable {
   @EJB
   private CertificatesMgmService certificatesMgmService;
   @EJB
-  private PythonDepsFacade pythonDepsFacade;
-  @EJB
   private OSProcessExecutor osProcessExecutor;
+  @EJB
+  private CondaCommandFacade condaCommandsFacade;
+
 
   @Resource(lookup = "concurrent/kagentExecutorService")
   private ManagedExecutorService executorService;
@@ -182,7 +182,7 @@ public class NodesBean implements Serializable {
 
   @PostConstruct
   public void init() {
-    allNodes = hostsFacade.find();
+    allNodes = hostsFacade.findAllHosts();
   }
 
   public List<Hosts> getAllNodes() {
@@ -269,9 +269,9 @@ public class NodesBean implements Serializable {
   public String condaStyle(String hostname) {
     Hosts h = hostsFacade.findByHostname(hostname);
     if (h != null) {
-      List<CondaCommands> listCommands = pythonDepsFacade.findByHost(h);
+      List<CondaCommands> listCommands = condaCommandsFacade.findByHost(h);
       for (CondaCommands cc : listCommands) {
-        if (cc.getStatus() == CondaStatus.FAILED) {
+        if (cc.getStatus() == CondaCommandFacade.CondaStatus.FAILED) {
           return "condaOutOfSync";
         }
       }

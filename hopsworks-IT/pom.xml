@@ -43,13 +43,13 @@
   <parent>
     <groupId>io.hops</groupId>
     <artifactId>hopsworks</artifactId>
-    <version>0.10.0-SNAPSHOT</version>
+    <version>1.0.0-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
   <groupId>io.hops.hopsworks</groupId>
   <artifactId>hopsworks-IT</artifactId>
   <packaging>jar</packaging>
-  <version>0.10.0-SNAPSHOT</version>
+  <version>1.0.0-SNAPSHOT</version>
   <name>Hopsworks: Integration Test</name>
   <properties>
     <!-- deploy lib versions -->
@@ -60,10 +60,13 @@
     <commons.lang3.version>3.8.1</commons.lang3.version>
     <plugin.failsafe.version>2.16</plugin.failsafe.version>
     <!-- Glassfish conf -->
+    <!--suppress UnresolvedMavenProperty -->
     <glassfish.hostname>${env.GLASSFISH_HOST_NAME}</glassfish.hostname>
     <glassfish.admin>adminuser</glassfish.admin>
     <glassfish.passwd>adminpw</glassfish.passwd>
+    <!--suppress UnresolvedMavenProperty -->
     <glassfish.port>${env.GLASSFISH_HTTP_PORT}</glassfish.port>
+    <!--suppress UnresolvedMavenProperty -->
     <glassfish.admin_port>${env.GLASSFISH_ADMIN_PORT}</glassfish.admin_port>
     <glassfish.domain>domain1</glassfish.domain>
   </properties>
@@ -122,6 +125,30 @@
     </plugins>
   </build>
   <profiles>
+    <profile>
+      <id>mysql</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+<!--        <property><name>!maven.test.skip</name></property>-->
+      </activation>
+      <dependencies>
+        <dependency>
+          <groupId>mysql</groupId>
+          <artifactId>mysql-connector-java</artifactId>
+          <scope>test</scope>
+          <version>5.1.6</version>
+        </dependency>
+      </dependencies>
+    </profile>
+    <profile>
+      <id>noSeleniumTest</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <properties>
+        <maven.test.skip>true</maven.test.skip>
+      </properties>
+    </profile>
     <profile>
       <id>deploy-ear</id>
       <activation>

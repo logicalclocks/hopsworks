@@ -57,13 +57,15 @@ import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
-import io.hops.hopsworks.exceptions.DatasetException;
-import io.hops.hopsworks.exceptions.HopsSecurityException;
+import io.hops.hopsworks.common.dao.user.activity.ActivityFlag;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.DatasetException;
+import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
@@ -75,7 +77,6 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.persistence.NonUniqueResultException;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -148,9 +149,7 @@ public class DatasetController {
     FolderNameValidator.isValidName(dataSetName, false);
     //Logic
     boolean success;
-    String dsPath = File.separator + Settings.DIR_ROOT + File.separator
-        + project.getName();
-    dsPath = dsPath + File.separator + dataSetName;
+    String dsPath = Utils.getProjectPath(project.getName()) + dataSetName;
     Inode parent = inodes.getProjectRoot(project.getName());
     Inode ds = inodes.findByInodePK(parent, dataSetName,
         HopsUtils.dataSetPartitionId(parent, dataSetName));
@@ -178,29 +177,26 @@ public class DatasetController {
         }
         datasetFacade.persistDataset(newDS);
         activityFacade.persistActivity(ActivityFacade.NEW_DATA + dataSetName,
-            project, user, ActivityFacade.ActivityFlag.DATASET);
+            project, user, ActivityFlag.DATASET);
         // creates a dataset and adds user as owner.
         hdfsUsersBean.addDatasetUsersGroups(user, project, newDS, dfso);
 
         //set the dataset meta enabled. Support 3 level indexing
         if (searchable) {
           dfso.setMetaEnabled(dsPath);
-          Dataset logDs = datasetFacade.findByNameAndProjectId(project, dataSetName);
+          Dataset logDs = getByProjectAndDsName(project,null, dataSetName);
           logDataset(logDs, OperationType.Add);
         }
       } catch (Exception e) {
         try {
-          dfso.rm(new Path(dsPath), true);//if dataset persist fails rm ds folder.
+          dfso.rm(new Path(dsPath), true); //if dataset persist fails rm ds folder.
         } catch (IOException ex) {
-          if (e.getCause() instanceof NonUniqueResultException) {
-            throw new DatasetException(RESTCodes.DatasetErrorCode.DESTINATION_EXISTS, Level.SEVERE,
-              "path: " + dataSetName,
-              ex.getMessage(), ex);
-          }
-          throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OPERATION_ERROR, Level.SEVERE,
-            "Could not cleanup failed dataset create operation at path: " + dataSetName,
-            ex.getMessage(), ex);
+          // Dataset clean up failed. Log the exception for further debugging.
+          LOGGER.log(Level.SEVERE, "Could not cleanup dataset dir after exception: " + dsPath, ex);
         }
+
+        throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OPERATION_ERROR, Level.SEVERE,
+            "Could not create dataset: " + dataSetName, e.getMessage(), e);
       }
     } else {
       throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OPERATION_ERROR, Level.INFO,
@@ -347,7 +343,7 @@ public class DatasetController {
         Path childPath = new Path(dirInode.getR(), child.getInodePK().getName());
 
         if (username != null && group != null && dfso != null) {
-          dfso.setOwner(path, username, group);
+          dfso.setOwner(childPath, username, group);
         }
         udfso.setPermission(childPath, permission);
 
@@ -414,9 +410,7 @@ public class DatasetController {
       //Generate README.md for the Default Datasets
       readmeFile = String.format(Settings.README_TEMPLATE, dsName, description);
       StringBuilder readmeSb = new StringBuilder();
-      readmeSb.append(File.separator).append(Settings.DIR_ROOT)
-          .append(File.separator).append(project)
-          .append(File.separator).append(dsName)
+      readmeSb.append(Utils.getProjectPath(project)).append(dsName)
           .append(File.separator).append(Settings.README_FILE);
 
       readMeFilePath = readmeSb.toString();
@@ -498,7 +492,7 @@ public class DatasetController {
     switch (ds.getType()) {
       case DATASET:
         Project owningProject = getOwningProject(ds);
-        path = new Path(settings.getProjectPath(owningProject.getName()),
+        path = new Path(Utils.getProjectPath(owningProject.getName()),
             ds.getInode().getInodePK().getName());
         break;
       case FEATURESTORE:
@@ -524,16 +518,35 @@ public class DatasetController {
       case HIVEDB:
         // Project name is the same of database name
         String dbName = ds.getInode().getInodePK().getName();
-        return projectFacade.findByName(dbName.substring(0, dbName.lastIndexOf('.')));
+        return projectFacade.findByNameCaseInsensitive(dbName.substring(0, dbName.lastIndexOf('.')));
       case FEATURESTORE:
         // Project name is the same as the database name minus _featurestore.db
         dbName = ds.getInode().getInodePK().getName();
-        return projectFacade.findByName(dbName.substring(0, dbName.lastIndexOf('_')));
+        return projectFacade.findByNameCaseInsensitive(dbName.substring(0, dbName.lastIndexOf('_')));
       default:
         return null;
     }
   }
 
+  public Project getOwningProject(Inode ds) {
+    Inode parent = inodes.findParent(ds);
+    Project proj = projectFacade.findByName(parent.getInodePK().getName());
+    if (proj == null) {
+      String datasetName = ds.getInodePK().getName();
+      //a hive database
+      if (datasetName.endsWith(".db")) {
+        String projectName;
+        if (datasetName.endsWith("_featurestore.db")) {
+          projectName = datasetName.substring(0, datasetName.lastIndexOf("_"));
+        } else {
+          projectName = datasetName.substring(0, datasetName.lastIndexOf("."));
+        }
+        proj = projectFacade.findByNameCaseInsensitive(projectName);
+      }
+    }
+    return proj;
+  }
+    
   /**
    *
    * @param project
@@ -576,6 +589,58 @@ public class DatasetController {
         Path dspath = getDatasetPath(dataset);
         dfso.unsetMetaEnabled(dspath);
       }
+    }
+  }
+  
+  /**
+   * Get a top level dataset by project name or parent path. If parent path is null the project name is used as parent
+   * @param currentProject
+   * @param inodeParentPath
+   * @param dsName
+   * @return
+   */
+  public Dataset getByProjectAndDsName(Project currentProject, String inodeParentPath, String dsName) {
+    Inode parentInode = inodes.getInodeAtPath(inodeParentPath == null? Utils.getProjectPath(currentProject.getName()) :
+      inodeParentPath);
+    Inode dsInode = inodes.findByInodePK(parentInode, dsName, HopsUtils.calculatePartitionId(parentInode.getId(),
+      dsName, 3));
+    if (dsInode == null && dsName.endsWith(".db")) { //if hive parent is not project
+      parentInode = inodes.getInodeAtPath(settings.getHiveWarehouse());
+      dsInode = inodes.findByInodePK(parentInode, dsName, HopsUtils.calculatePartitionId(parentInode.getId(),
+        dsName, 3));
+    }
+    if (currentProject == null || dsInode == null) {
+      return null;
+    }
+    return datasetFacade.findByProjectAndInode(currentProject, dsInode);
+  }
+  
+  /**
+   * Checks if a path exists. Will require a read access to the path.
+   * @param filePath
+   * @param username
+   * @throws DatasetException
+   */
+  public void checkFileExists(Path filePath, String username) throws DatasetException {
+    DistributedFileSystemOps udfso = null;
+    boolean exist;
+    try {
+      udfso = dfs.getDfsOps(username);
+      exist = udfso.exists(filePath);
+    } catch (AccessControlException ae) {
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_ACCESS_PERMISSION_DENIED, Level.FINE,
+        "path: " + filePath.toString(), ae.getMessage(), ae);
+    } catch (IOException ex) {
+      throw new DatasetException(RESTCodes.DatasetErrorCode.INODE_NOT_FOUND, Level.FINE, "path: " +
+        filePath.toString(), ex.getMessage(), ex);
+    } finally {
+      if (udfso != null) {
+        dfs.closeDfsClient(udfso);
+      }
+    }
+    if (!exist) {
+      throw new DatasetException(RESTCodes.DatasetErrorCode.INODE_NOT_FOUND, Level.FINE,
+        "path: " + filePath.toString());
     }
   }
   

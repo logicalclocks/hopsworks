@@ -22,7 +22,7 @@ import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
 import io.hops.hopsworks.common.dao.jupyter.JupyterSettings;
 import io.hops.hopsworks.common.dao.jupyter.JupyterSettingsFacade;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
-import io.hops.hopsworks.common.dao.jupyter.config.JupyterProcessMgr;
+import io.hops.hopsworks.common.dao.jupyter.config.JupyterManager;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
@@ -40,16 +40,19 @@ import io.hops.hopsworks.common.util.OSProcessExecutor;
 import io.hops.hopsworks.common.util.ProcessDescriptor;
 import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.common.util.Settings;
-import org.apache.commons.codec.digest.DigestUtils;
-import org.json.JSONArray;
-import org.json.JSONObject;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.restutils.RESTCodes;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.io.FileUtils;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.inject.Inject;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Calendar;
@@ -59,6 +62,8 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import static java.util.logging.Level.INFO;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -74,8 +79,8 @@ public class JupyterController {
   private LivyController livyController;
   @EJB
   private JupyterFacade jupyterFacade;
-  @EJB
-  private JupyterProcessMgr jupyterProcessMgr;
+  @Inject
+  private JupyterManager jupyterManager;
   @EJB
   private ElasticController elasticController;
   @EJB
@@ -92,6 +97,8 @@ public class JupyterController {
   private JupyterSettingsFacade jupyterSettingsFacade;
   @EJB
   private HdfsUsersFacade hdfsUsersFacade;
+  @EJB
+  private JupyterJWTManager jupyterJWTManager;
 
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public void convertIPythonNotebook(String hdfsUsername, String notebookPath, Project project, String pyPath)
@@ -127,6 +134,24 @@ public class JupyterController {
     }
   }
 
+  public void shutdownOrphan(Long pid, Integer port) throws ServiceException {
+    try {
+      jupyterManager.stopOrphanedJupyterServer(pid, port);
+    } finally {
+      jupyterJWTManager.cleanJWT(pid, port);
+    }
+  }
+
+  public void shutdownQuietly(Project project, String hdfsUser, Users user, String secret,
+      long pid, int port) {
+    try {
+      shutdown(project, hdfsUser, user, secret, pid, port);
+    } catch (Exception e) {
+      LOGGER.log(INFO, "Encountered exception while cleaning up", e);
+    }
+    jupyterJWTManager.cleanJWT(pid, port);
+  }
+
   public void shutdown(Project project, String hdfsUser, Users user, String secret,
                               long pid, int port) throws ServiceException {
     // We need to stop the jupyter notebook server with the PID
@@ -149,28 +174,32 @@ public class JupyterController {
       }
       retries--;
     }
-    String jupyterHomePath = jupyterProcessMgr.getJupyterHome(hdfsUser, project, secret);
+    String jupyterHomePath = jupyterManager.getJupyterHome(settings, hdfsUser, project, secret);
 
     // stop the server, remove the user in this project's local dirs
     // This method also removes the corresponding row for the Notebook process in the JupyterProject table.
-    jupyterProcessMgr.killServerJupyterUser(hdfsUser, jupyterHomePath, pid, port);
-
-    String[] project_user = hdfsUser.split(HdfsUsersController.USER_NAME_DELIMITER);
-    DistributedFileSystemOps dfso = dfsService.getDfsOps();
     try {
-      String certificatesDir = Paths.get(jupyterHomePath, "certificates").toString();
-      HopsUtils.cleanupCertificatesForUserCustomDir(project_user[1], project
-        .getName(), settings.getHdfsTmpCertDir(), certificateMaterializer, certificatesDir, settings);
-      certificateMaterializer.removeCertificatesLocal(project_user[1], project.getName());
+      jupyterManager.stopJupyterServer(project, user, hdfsUser, jupyterHomePath, pid, port);
     } finally {
-      if (dfso != null) {
-        dfsService.closeDfsClient(dfso);
+      String[] project_user = hdfsUser.split(HdfsUsersController.USER_NAME_DELIMITER);
+      DistributedFileSystemOps dfso = dfsService.getDfsOps();
+      try {
+        String certificatesDir = Paths.get(jupyterHomePath, "certificates").toString();
+        HopsUtils.cleanupCertificatesForUserCustomDir(project_user[1], project
+            .getName(), settings.getHdfsTmpCertDir(), certificateMaterializer, certificatesDir, settings);
+        certificateMaterializer.removeCertificatesLocal(project_user[1], project.getName());
+      } finally {
+        if (dfso != null) {
+          dfsService.closeDfsClient(dfso);
+        }
       }
+      FileUtils.deleteQuietly(new File(jupyterHomePath));
+      jupyterJWTManager.cleanJWT(pid, port);
+      for(LivyMsg.Session session: sessions) {
+        updateRunningExperimentAsKilled(project, session);
+      }
+      livyController.deleteAllLivySessions(hdfsUser);
     }
-    for(LivyMsg.Session session: sessions) {
-      updateRunningExperimentAsKilled(project, session);
-    }
-    livyController.deleteAllLivySessions(hdfsUser);
   }
 
   public void stopSession(Project project, Users user, String appId) {
@@ -223,7 +252,7 @@ public class JupyterController {
       shutdown(project, hdfsUser.getName(), user,
         jp.getSecret(), jp.getPid(), jp.getPort());
     }
-    jupyterProcessMgr.projectCleanup(project);
+    jupyterManager.projectCleanup(project);
   }
 
   public JupyterSettings updateExpirationDate(Project project, Users user, JupyterSettings jupyterSettings) {

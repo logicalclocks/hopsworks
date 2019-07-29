@@ -39,7 +39,7 @@
 
 package io.hops.hopsworks.common.dao.command;
 
-import io.hops.hopsworks.common.dao.pythonDeps.CondaCommands;
+import io.hops.hopsworks.common.dao.python.CondaCommands;
 
 import java.util.List;
 

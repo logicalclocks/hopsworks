@@ -3,20 +3,20 @@
 source "https://rubygems.org"
 
 gem "rspec", "3.4.0"
-gem 'hops-airborne', '0.2.16'
+gem 'hops-airborne', '0.2.17'
 gem 'safe_attributes'
 gem 'activerecord', '4.2.6'
 gem 'mysql2', '0.4.4'
-gem 'net-ssh', '~> 2.1.0'
+gem 'net-ssh', '~> 5.2.0'
 gem 'session', '3.2.0'
 gem 'coderay', '1.1.1'
 gem 'rspec_junit_formatter'
 gem 'file-tail'
+gem 'jwt', '2.2.1'
 
 group :development do
   gem 'dotenv'
   gem 'byebug'
-  gem 'net-ssh-shell'
 end
 
 # gem "factory_girl", "~> 4"

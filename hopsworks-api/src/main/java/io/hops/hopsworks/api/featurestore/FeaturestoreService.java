@@ -45,6 +45,7 @@ import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
+import io.hops.hopsworks.common.dao.user.activity.ActivityFlag;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
@@ -73,7 +74,6 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.logging.Level;
@@ -268,21 +268,22 @@ public class FeaturestoreService {
     Jobs job = null;
     if (featuregroupJsonDTO.getJobName() != null)
       job = jobFacade.findByProjectAndName(project, featuregroupJsonDTO.getJobName());
-    String featureStr = featurestoreUtil.makeCreateTableColumnsStr(featuregroupJsonDTO.getFeatures());
+    String featureStr = featurestoreUtil.makeCreateTableColumnsStr(featuregroupJsonDTO.getFeatures(),
+        featuregroupJsonDTO.getDescription());
     try {
       featuregroupController.dropFeaturegroup(featuregroupJsonDTO.getName(),
           featuregroupJsonDTO.getVersion(), project, user, featurestore);
       FeaturegroupDTO featuregroupDTO = featuregroupController.createFeaturegroup(project, user, featurestore,
-          featuregroupJsonDTO.getName(), featureStr, featuregroupJsonDTO.getDescription(),
+          featuregroupJsonDTO.getName(), featureStr,
           featuregroupJsonDTO.getDependencies(), job, featuregroupJsonDTO.getVersion(),
           featuregroupJsonDTO.getFeatureCorrelationMatrix(), featuregroupJsonDTO.getDescriptiveStatistics(),
           featuregroupJsonDTO.getFeaturesHistogram(), featuregroupJsonDTO.getClusterAnalysis());
       activityFacade.persistActivity(ActivityFacade.CREATED_FEATUREGROUP + featuregroupDTO.getName(),
-          project, user, ActivityFacade.ActivityFlag.SERVICE);
+          project, user, ActivityFlag.SERVICE);
       GenericEntity<FeaturegroupDTO> featuregroupGeneric =
           new GenericEntity<FeaturegroupDTO>(featuregroupDTO) {};
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).entity(featuregroupGeneric).build();
-    } catch (IOException | SQLException e) {
+    } catch (SQLException e) {
       LOGGER.log(Level.SEVERE, RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATUREGROUP.getMessage(), e);
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATUREGROUP, Level.SEVERE,
           "project: " + project.getName() + ", featurestoreId: " + featurestoreId, e.getMessage(), e);
@@ -300,7 +301,7 @@ public class FeaturestoreService {
   @Path("/{featurestoreId}/featuregroups/{featuregroupId}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Get specific featuregroup from a specific featurestore",
       response = FeaturegroupDTO.class)
   public Response getFeatureGroupFromFeatureStore(
@@ -366,13 +367,13 @@ public class FeaturestoreService {
       featuregroupDTO = featuregroupController.
           deleteFeaturegroupWithIdAndFeaturestore(featurestore, featuregroupId, project, user);
       activityFacade.persistActivity(ActivityFacade.DELETED_FEATUREGROUP + featuregroupDTO.getName(),
-          project, user, ActivityFacade.ActivityFlag.SERVICE);
+          project, user, ActivityFlag.SERVICE);
       GenericEntity<FeaturegroupDTO> featuregroupGeneric =
           new GenericEntity<FeaturegroupDTO>(featuregroupDTO) {};
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK)
           .entity(featuregroupGeneric)
           .build();
-    } catch (IOException | SQLException e) {
+    } catch (SQLException e) {
       LOGGER.log(Level.SEVERE, RESTCodes.FeaturestoreErrorCode.COULD_NOT_DELETE_FEATUREGROUP.getMessage(), e);
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_DELETE_FEATUREGROUP, Level.SEVERE,
           "project: " + project.getName() + ", featurestoreId: " + featurestoreId +
@@ -423,7 +424,7 @@ public class FeaturestoreService {
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK)
           .entity(featuresdataGeneric)
           .build();
-    } catch (IOException | SQLException e) {
+    } catch (SQLException e) {
       LOGGER.log(Level.SEVERE, RESTCodes.FeaturestoreErrorCode.COULD_NOT_PREVIEW_FEATUREGROUP.getMessage(), e);
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_PREVIEW_FEATUREGROUP, Level.SEVERE,
           "project: " + project.getName() + ", featurestoreId: " + featurestoreId +
@@ -473,7 +474,7 @@ public class FeaturestoreService {
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK)
           .entity(schemaGeneric)
           .build();
-    } catch (IOException | SQLException e) {
+    } catch (SQLException e) {
       LOGGER.log(Level.SEVERE,
           RESTCodes.FeaturestoreErrorCode.COULD_NOT_FETCH_FEATUREGROUP_SHOW_CREATE_SCHEMA.getMessage(), e);
       throw new FeaturestoreException(
@@ -529,10 +530,11 @@ public class FeaturestoreService {
     Jobs job = null;
     if (oldFeaturegroupDTO.getJobId() != null)
       job = jobFacade.findByProjectAndId(project, oldFeaturegroupDTO.getJobId());
-    String featureStr = featurestoreUtil.makeCreateTableColumnsStr(oldFeaturegroupDTO.getFeatures());
+    String featureStr = featurestoreUtil.makeCreateTableColumnsStr(oldFeaturegroupDTO.getFeatures(),
+        oldFeaturegroupDTO.getDescription());
     try {
       featuregroupController.deleteFeaturegroupWithIdAndFeaturestore(featurestore, featuregroupId, project, user);
-    } catch (IOException | SQLException e) {
+    } catch (SQLException e) {
       LOGGER.log(Level.SEVERE, RESTCodes.FeaturestoreErrorCode.COULD_NOT_DELETE_FEATUREGROUP.getMessage(), e);
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_DELETE_FEATUREGROUP, Level.SEVERE,
           "project: " + project.getName() + ", featurestoreId: " + featurestoreId +
@@ -542,15 +544,14 @@ public class FeaturestoreService {
       List<String> dependencies = oldFeaturegroupDTO.getDependencies().stream().map(d ->
           d.getPath()).collect(Collectors.toList());
       FeaturegroupDTO newFeaturegroupDTO = featuregroupController.createFeaturegroup(project, user, featurestore,
-          oldFeaturegroupDTO.getName(), featureStr, oldFeaturegroupDTO.getDescription(),
-          dependencies,
+          oldFeaturegroupDTO.getName(), featureStr, dependencies,
           job, oldFeaturegroupDTO.getVersion(), oldFeaturegroupDTO.getFeatureCorrelationMatrix(),
           oldFeaturegroupDTO.getDescriptiveStatistics(), oldFeaturegroupDTO.getFeaturesHistogram(),
           oldFeaturegroupDTO.getClusterAnalysis());
       GenericEntity<FeaturegroupDTO> featuregroupGeneric =
           new GenericEntity<FeaturegroupDTO>(newFeaturegroupDTO) {};
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featuregroupGeneric).build();
-    } catch (IOException | SQLException e) {
+    } catch (SQLException e) {
       LOGGER.log(Level.SEVERE, RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATUREGROUP.getMessage(), e);
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATUREGROUP, Level.SEVERE,
           "project: " + project.getName() + ", featurestoreId: " + featurestoreId +
@@ -613,7 +614,7 @@ public class FeaturestoreService {
         featuregroupJsonDTO.isUpdateMetadata(), featuregroupJsonDTO.isUpdateStats(),
         featuregroupJsonDTO.getFeaturesHistogram(), featuregroupJsonDTO.getClusterAnalysis());
     activityFacade.persistActivity(ActivityFacade.EDITED_FEATUREGROUP +
-        updatedFeaturegroupDTO.getName(), project, user, ActivityFacade.ActivityFlag.SERVICE);
+        updatedFeaturegroupDTO.getName(), project, user, ActivityFlag.SERVICE);
     GenericEntity<FeaturegroupDTO> featuregroupGeneric =
         new GenericEntity<FeaturegroupDTO>(updatedFeaturegroupDTO) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featuregroupGeneric).build();
@@ -664,7 +665,7 @@ public class FeaturestoreService {
   @Path("/{featurestoreId}/trainingdatasets/{trainingdatasetid}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Get a training datasets with a specific id from a featurestore",
       response = TrainingDatasetDTO.class)
   public Response getTrainingDatasetForFeaturestore(
@@ -760,7 +761,7 @@ public class FeaturestoreService {
             trainingDatasetJsonDTO.getDescriptiveStatistics(), trainingDatasetJsonDTO.getFeaturesHistogram(),
             trainingDatasetJsonDTO.getFeatures(), trainingDatasetJsonDTO.getClusterAnalysis());
     activityFacade.persistActivity(ActivityFacade.CREATED_TRAINING_DATASET + trainingDatasetDTO.getName(),
-      project, user, ActivityFacade.ActivityFlag.SERVICE);
+      project, user, ActivityFlag.SERVICE);
     GenericEntity<TrainingDatasetDTO> trainingDatasetDTOGeneric =
         new GenericEntity<TrainingDatasetDTO>(trainingDatasetDTO) {};
     return noCacheResponse.getNoCacheResponseBuilder
@@ -811,7 +812,7 @@ public class FeaturestoreService {
         trainingDatasetDTO.getName(), trainingDatasetDTO.getVersion());
     dsUpdateOperations.deleteDatasetFile(project, user, trainingDatasetDirectoryName);
     activityFacade.persistActivity(ActivityFacade.DELETED_TRAINING_DATASET + trainingDatasetDTO.getName(),
-        project, user, ActivityFacade.ActivityFlag.SERVICE);
+        project, user, ActivityFlag.SERVICE);
     GenericEntity<TrainingDatasetDTO> trainingDatasetGeneric =
         new GenericEntity<TrainingDatasetDTO>(trainingDatasetDTO) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK)
@@ -885,7 +886,7 @@ public class FeaturestoreService {
           trainingDatasetJsonDTO.getDescriptiveStatistics(), trainingDatasetJsonDTO.getFeaturesHistogram(),
           trainingDatasetJsonDTO.getFeatures(), trainingDatasetJsonDTO.getClusterAnalysis());
       activityFacade.persistActivity(ActivityFacade.EDITED_TRAINING_DATASET + newTrainingDatasetDTO.getName(),
-        project, user, ActivityFacade.ActivityFlag.SERVICE);
+        project, user, ActivityFlag.SERVICE);
       GenericEntity<TrainingDatasetDTO> trainingDatasetGeneric =
         new GenericEntity<TrainingDatasetDTO>(newTrainingDatasetDTO) {
         };
@@ -900,7 +901,7 @@ public class FeaturestoreService {
         trainingDatasetJsonDTO.getFeatures(), trainingDatasetJsonDTO.isUpdateMetadata(),
         trainingDatasetJsonDTO.isUpdateStats(), trainingDatasetJsonDTO.getClusterAnalysis());
       activityFacade.persistActivity(ActivityFacade.EDITED_TRAINING_DATASET + trainingDatasetDTO.getName(),
-        project, user, ActivityFacade.ActivityFlag.SERVICE);
+        project, user, ActivityFlag.SERVICE);
       GenericEntity<TrainingDatasetDTO> trainingDatasetGeneric =
         new GenericEntity<TrainingDatasetDTO>(trainingDatasetDTO) {
         };
@@ -923,7 +924,7 @@ public class FeaturestoreService {
   @Path("/{featurestoreName}/metadata")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getFeaturestoreId(@PathParam("featurestoreName") String featurestoreName)
     throws FeaturestoreException {
     if (Strings.isNullOrEmpty(featurestoreName)) {

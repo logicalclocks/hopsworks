@@ -42,6 +42,7 @@ import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.common.dao.remote.oauth.OauthClient;
 import io.hops.hopsworks.common.dao.remote.oauth.OauthClientFacade;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.common.dao.user.security.ua.SecurityQuestion;
 import io.swagger.annotations.Api;
 
 import javax.ejb.EJB;
@@ -56,6 +57,7 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -127,6 +129,28 @@ public class VariablesService {
         = new GenericEntity<List<VersionsDTO.Version>>(list) { };
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(versions).build();
+  }
+  
+  @GET
+  @Path("/conda")
+  @Produces(MediaType.TEXT_PLAIN)
+  public Response getCondaDefaultRepo() {
+    String defaultRepo = settings.getCondaDefaultRepo();
+    if (settings.isAnacondaEnabled()) {
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(defaultRepo).build();
+    }
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.SERVICE_UNAVAILABLE).build();
+  }
+  
+  @GET
+  @Path("securityQuestions")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response getSecurityQuestions() {
+    List<SecurityQuestion> securityQuestions = Arrays.asList(SecurityQuestion.values());
+    Collections.shuffle(securityQuestions);
+    GenericEntity<List<SecurityQuestion>> questions = new GenericEntity<List<SecurityQuestion>>(securityQuestions) {
+    };
+    return Response.ok().entity(questions).build();
   }
 
 }

@@ -60,6 +60,8 @@ import javax.ejb.Asynchronous;
 import javax.ejb.DependsOn;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -72,9 +74,10 @@ import java.util.logging.Logger;
 
 @Stateless
 @DependsOn("Settings")
+@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 public class YarnExecutionFinalizer {
 
-  private static final Logger LOG = Logger.getLogger(YarnExecutionFinalizer.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(YarnExecutionFinalizer.class.getName());
 
   @EJB
   private ExecutionFacade executionFacade;
@@ -85,23 +88,13 @@ public class YarnExecutionFinalizer {
   @EJB
   private YarnClientService ycs;
 
-  /**
-   * Update the current state of the Execution entity to the given state.
-   * <p/>
-   * @param newState
-   */
-  private Execution updateState(JobState newState, Execution execution) {
-    return executionFacade.updateState(execution, newState);
-  }
-  
   @Asynchronous
   public Future<Execution> copyLogs(Execution exec) {
     DistributedFileSystemOps udfso = dfs.getDfsOps(exec.getHdfsUser());
     ApplicationId applicationId = ApplicationId.fromString(exec.getAppId());
-    YarnClientWrapper yarnClientWrapper = ycs.getYarnClientSuper(settings
-        .getConfiguration());
-    YarnMonitor monitor = new YarnMonitor(applicationId, yarnClientWrapper,
-        ycs);
+    YarnClientWrapper yarnClientWrapper = ycs.getYarnClientSuper(settings.getConfiguration());
+    YarnMonitor monitor = new YarnMonitor(applicationId, yarnClientWrapper, ycs);
+
     try {
       String defaultOutputPath;
       switch (exec.getJob().getJobType()) {
@@ -119,35 +112,29 @@ public class YarnExecutionFinalizer {
           defaultOutputPath = "Logs/";
       }
       String stdOutFinalDestination =
-          Utils.getHdfsRootPath(exec.getJob().getProject().getName()) +
+          Utils.getProjectPath(exec.getJob().getProject().getName()) +
               defaultOutputPath;
       String stdErrFinalDestination =
-          Utils.getHdfsRootPath(exec.getJob().getProject().getName()) +
+          Utils.getProjectPath(exec.getJob().getProject().getName()) +
               defaultOutputPath;
   
-      String stdOutPath =
-          settings.getAggregatedLogPath(exec.getHdfsUser(), exec.getAppId());
+      String stdOutPath = settings.getAggregatedLogPath(exec.getHdfsUser(), exec.getAppId());
       try {
-        stdOutFinalDestination =
-          stdOutFinalDestination + exec.getAppId() + File.separator +
-            "stdout.log";
+        stdOutFinalDestination = stdOutFinalDestination + exec.getAppId() + File.separator + "stdout.log";
         String[] desiredOutLogTypes = {"out"};
-        YarnLogUtil
-          .copyAggregatedYarnLogs(udfso, stdOutPath, stdOutFinalDestination,
+
+        YarnLogUtil.copyAggregatedYarnLogs(udfso, stdOutPath, stdOutFinalDestination,
             desiredOutLogTypes, monitor);
-  
-        stdErrFinalDestination =
-          stdErrFinalDestination + exec.getAppId() + File.separator +
-            "stderr.log";
+
+        stdErrFinalDestination = stdErrFinalDestination + exec.getAppId() + File.separator + "stderr.log";
         String[] desiredErrLogTypes = {"err", ".log"};
-        YarnLogUtil
-          .copyAggregatedYarnLogs(udfso, stdOutPath, stdErrFinalDestination,
-            desiredErrLogTypes, monitor);
+        YarnLogUtil.copyAggregatedYarnLogs(udfso, stdOutPath, stdErrFinalDestination,
+                desiredErrLogTypes, monitor);
       } catch (IOException | InterruptedException | YarnException ex) {
-        LOG.severe("error while aggregation logs" + ex.toString());
+        LOGGER.log(Level.SEVERE,"error while aggregation logs" + ex.toString());
       }
-      Execution execution = updateExecutionSTDPaths(stdOutFinalDestination,
-          stdErrFinalDestination, exec);
+      Execution execution = updateExecutionSTDPaths(stdOutFinalDestination, stdErrFinalDestination, exec);
+      finalize(exec, exec.getState());
       return new AsyncResult<>(execution);
     } finally {
       dfs.closeDfsClient(udfso);
@@ -157,32 +144,29 @@ public class YarnExecutionFinalizer {
 
   @Asynchronous
   public void finalize(Execution exec, JobState jobState) {
-    //The execution won't exist in the database, if the job has been deleting
+    //The execution won't exist in the database, if the job has been deleted.
     if (executionFacade.findById(exec.getId()) != null) {
       long executionStop = System.currentTimeMillis();
       exec = executionFacade.updateExecutionStop(exec, executionStop);
+      executionFacade.updateState(exec, jobState);
     }
+
     try {
-      // TODO(Antonis) In the future this call should be async as well
-      // Network traffic in a transaction is not good
       removeAllNecessary(exec);
     } catch (IOException ex) {
-      LOG.log(Level.WARNING,
-          "Exception while cleaning after job:{0}, with appId:{1}, some cleaning is probably needed {2}", new Object[]{
-            exec.getJob().getName(), exec.getAppId(), ex.getMessage()});
+      LOGGER.log(Level.WARNING,
+          "Exception while cleaning after job:{0}, with appId:{1}, some cleaning is probably needed {2}",
+          new Object[]{exec.getJob().getName(), exec.getAppId(), ex.getMessage()});
     }
+
     if (exec.getJob().getJobType().equals(JobType.FLINK)) {
       cleanCerts(exec);
-    }
-    if (executionFacade.findById(exec.getId()) != null) {
-      updateState(jobState, exec);
     }
   }
 
   private Execution updateExecutionSTDPaths(String stdoutPath, String stderrPath, Execution exec) {
     exec = executionFacade.updateStdErrPath(exec, stderrPath);
-    exec = executionFacade.updateStdOutPath(exec, stdoutPath);
-    return exec;
+    return executionFacade.updateStdOutPath(exec, stdoutPath);
   }
 
   public void removeAllNecessary(Execution exec) throws IOException {

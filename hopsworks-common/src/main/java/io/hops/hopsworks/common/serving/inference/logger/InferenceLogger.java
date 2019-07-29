@@ -16,11 +16,11 @@
 
 package io.hops.hopsworks.common.serving.inference.logger;
 
-import io.hops.hopsworks.common.dao.serving.TfServing;
+import io.hops.hopsworks.common.dao.serving.Serving;
 
 public interface InferenceLogger {
 
-  void logInferenceRequest(TfServing tfServing,
+  void logInferenceRequest(Serving serving,
                            String inferenceRequest,
                            Integer responseHttpCode,
                            String inferenceResult) throws Exception;

@@ -174,7 +174,7 @@
     <script src="bower_components/angular-file-saver/dist/angular-file-saver.bundle.js"></script>
     <script src="bower_components/ng-file-upload/ng-file-upload-all.min.js"></script>
     <script src="bower_components/angular-google-chart/ng-google-chart.js"></script>
-    <script src="bower_components/apexcharts/dist/apexcharts.js"></script>
+    <script src="node_modules/apexcharts/dist/apexcharts.js"></script>
     
     <!-- endbower -->
     <!-- endbuild -->
@@ -192,13 +192,12 @@
     <script src="scripts/directives/hwcard.js"></script>
     <script src="scripts/directives/hwPanel.js"></script>
     <script src="scripts/directives/filemgr/directives.js"></script>
+    <script src="scripts/directives/showHidePassword.js"></script>
 
     <script src="scripts/controllers/dataSetCreatorCtrl.js"></script>
     <script src="scripts/controllers/datasetsCtrl.js"></script>
     <script src="scripts/controllers/fileUploadCtrl.js"></script>
     <script src="scripts/controllers/memberCtrl.js"></script>
-    <script src="scripts/controllers/historyCtrl.js"></script>
-    <script src="scripts/controllers/historyDetailCtrl.js"></script>
     <script src="scripts/controllers/homeCtrl.js"></script>
     <script src="scripts/controllers/loginCtrl.js"></script>
     <script src="scripts/controllers/mainCtrl.js"></script>
@@ -237,7 +236,7 @@
     <script src="scripts/controllers/uberCtrl.js"></script>
     <script src="scripts/controllers/kafkaCtrl.js"></script>
     <script src="scripts/controllers/transformGraphCtrl.js"></script>
-    <script src="scripts/controllers/pythonDepsCtrl.js"></script>
+    <script src="scripts/controllers/pythonCtrl.js"></script>
     <script src="scripts/controllers/experimentsCtrl.js"></script>
     <script src="scripts/controllers/selectProjectCtrl.js"></script>
     <script src="scripts/controllers/createTopicCtrl.js"></script>
@@ -286,6 +285,9 @@
     <script src="scripts/controllers/sparkConfigCtrl.js"></script>
     <script src="scripts/controllers/oauthCallbackCtrl.js"></script>
     <script src="scripts/controllers/errorCtrl.js"></script>
+    <script src="scripts/controllers/servingViewInfoCtrl.js"></script>
+    <script src="scripts/controllers/passwordRecoveryCtrl.js"></script>
+    <script src="scripts/controllers/qrRecoveryCtrl.js"></script>
 
     
     <!-- Services -->
@@ -309,7 +311,6 @@
     <script src="scripts/services/MetadataActionService.js"></script>
     <script src="scripts/services/TensorBoardService.js"></script>
     <script src="scripts/services/ServingService.js"></script>
-    <script src="scripts/services/HistoryService.js"></script>
     <script src="scripts/services/JobService.js"></script>
     <script src="scripts/services/RequestService.js"></script>
     <script src="scripts/services/MetadataRestService.js"></script>
@@ -326,7 +327,7 @@
     <script src="scripts/services/DelaClusterProjectService.js"></script>
     <script src="scripts/services/HopssiteService.js"></script>
     <script src="scripts/services/ClusterUtilService.js"></script>
-    <script src="scripts/services/PythonDepsService.js"></script>
+    <script src="scripts/services/PythonService.js"></script>
     <script src="scripts/services/KibanaService.js"></script>
     <script src="scripts/services/JupyterService.js"></script>
     <script src="scripts/services/CertService.js"></script>
@@ -335,6 +336,8 @@
     <script src="scripts/services/filemgr/filenavigator.js"></script>
     <script src="scripts/services/FeaturestoreService.js"></script>
     <script src="scripts/services/RStudioService.js"></script>    
+    <script src="scripts/services/MachineTypeService.js"></script>
+    <script src="scripts/services/DatasetBrowserService.js"></script>
     <!-- Providers -->
     <script src="scripts/providers/filemgr/config.js"></script>
     <!-- Entities -->

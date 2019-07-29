@@ -43,9 +43,9 @@
   <button class="close" ng-click="selectEnvYmlCtrl.close()" data-dismiss="modal" aria-hidden="true" type="button">&times;</button>
   <h2 class="modal-title">Create Anaconda environment from .yml file</h2>
 </div>
-<div class="modal-body" ng-controller="PythonDepsCtrl as pythonDepsCtrl">
+<div class="modal-body" ng-controller="PythonCtrl as pythonCtrl">
 
-  <div class="row" ng-if="pythonDepsCtrl.environmentTypes['CPU'] && pythonDepsCtrl.environmentTypes['GPU']">
+  <div class="row" ng-if="(pythonCtrl.environmentTypes['CPU'] && pythonCtrl.environmentTypes['GPU'])">
     <div class="col-md-2">
       <button id="selectCpuYmlButton" class="btn btn-primary" ng-click="selectEnvYmlCtrl.envMode = 'CPU'">
           <span>
@@ -58,7 +58,7 @@
     </div>
   </div>
 
-  <div class="row" ng-if="(pythonDepsCtrl.environmentTypes['CPU'] && !pythonDepsCtrl.environmentTypes['GPU']) || (!pythonDepsCtrl.environmentTypes['CPU'] && pythonDepsCtrl.environmentTypes['GPU'])">
+  <div class="row" ng-if="!(pythonCtrl.environmentTypes['CPU'] && pythonCtrl.environmentTypes['GPU'])">
     <div class="col-md-2">
       <button id="selectAllYmlButton" class="btn btn-primary" ng-click="selectEnvYmlCtrl.envMode = 'ALL'">
           <span>
@@ -71,7 +71,7 @@
     </div>
   </div>
 
-  <div class="row" ng-show="pythonDepsCtrl.environmentTypes['CPU'] && pythonDepsCtrl.environmentTypes['GPU']">
+  <div class="row" ng-show="(pythonCtrl.environmentTypes['CPU'] && pythonCtrl.environmentTypes['GPU'])">
     <div class="col-md-2">
       <button id="selectGpuYmlButton" class="btn btn-primary" ng-click="selectEnvYmlCtrl.envMode = 'GPU'">
           <span>
@@ -90,6 +90,7 @@
                                style="margin-left: 10px"></i></span>
   </div>
 
+  <button id="createEnvironment" class="btn btn-success" ng-click="selectEnvYmlCtrl.confirmSelection(pythonCtrl, false)" type="submit" style="margin-top:5px; margin-bottom:10px;">
 
   <div>
     <span>
@@ -116,13 +117,20 @@
         </td>
       </tr>
       <a href="selectFile.html"></a>
-      <tr ng-repeat="file in datasetsCtrl.files| filter:{status: true} | orderBy: 'name'" ng-class="{ 'highlight': datasetsCtrl.selected === {{ $index}}, 'expanded' : expanded }" ng-click="selectEnvYmlCtrl.selectEnvYml(pythonDepsCtrl, datasetsCtrl, file);">
+      <tr ng-repeat="file in datasetsCtrl.files| filter:{status: true} | orderBy: 'name'" ng-class="{ 'highlight': datasetsCtrl.selected === {{ $index}}, 'expanded' : expanded }" ng-click="selectEnvYmlCtrl.selectEnvYml(pythonCtrl, datasetsCtrl, file);">
         <td>
           <i ng-show="file.dir" class="glyphicon glyphicon-folder-close" style="padding-right: 10px; color: #757575;"></i>
           <i ng-show="!file.dir" class="glyphicon glyphicon-file" style="padding-right: 10px; color: #757575;"></i> {{file.name}}
         </td>
       </tr>
       </tbody>
+      <tfoot>
+      <tr>
+        <td>
+          <div class="loader loader-sm" ng-show="datasetsCtrl.working" style="position: static;"></div>
+        </td>
+      </tr>
+      </tfoot>
     </table>
   </div>
 </div>

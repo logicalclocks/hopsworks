@@ -95,7 +95,8 @@ public class ChangeEncryptionPasswordBean implements Serializable {
       HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
       String userEmail = request.getUserPrincipal().getName();
       certificatesMgmService.checkPassword(currentPassword, userEmail);
-      certificatesMgmService.resetMasterEncryptionPassword(newPassword, userEmail);
+      Integer opId = certificatesMgmService.initUpdateOperation();
+      certificatesMgmService.resetMasterEncryptionPassword(opId, newPassword, userEmail);
       MessagesController.addInfoMessage("Changing password...", "Check your Inbox for completion status");
     } catch (EncryptionMasterPasswordException ex) {
       MessagesController.addErrorMessage(ex.getMessage());

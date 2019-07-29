@@ -74,7 +74,10 @@ import javax.xml.bind.annotation.XmlRootElement;
           = "SELECT h FROM HdfsLeDescriptors h WHERE h.httpAddress = :httpAddress"),
   @NamedQuery(name = "HdfsLeDescriptors.findByPartitionVal",
           query
-          = "SELECT h FROM HdfsLeDescriptors h WHERE h.hdfsLeDescriptorsPK.partitionVal = :partitionVal")})
+          = "SELECT h FROM HdfsLeDescriptors h WHERE h.hdfsLeDescriptorsPK.partitionVal = :partitionVal"),
+  @NamedQuery(name = "HdfsLeDescriptors.findLeader",
+      query = "SELECT h FROM HdfsLeDescriptors h WHERE h.hdfsLeDescriptorsPK.id = " +
+          "(SELECT MIN(h2.hdfsLeDescriptorsPK.id) FROM HdfsLeDescriptors h2)")})
 public class HdfsLeDescriptors implements Serializable {
 
   private static final long serialVersionUID = 1L;
@@ -126,17 +129,6 @@ public class HdfsLeDescriptors implements Serializable {
 
   public void setCounter(long counter) {
     this.counter = counter;
-  }
-
-  public String getHostname() {
-    if (rpcAddresses == null) {
-      return "";
-    }
-    int pos = rpcAddresses.indexOf(",");
-    if (pos == -1) {
-      return "";
-    }
-    return rpcAddresses.substring(0, pos);
   }
   
   public String getRpcAddresses() {

@@ -45,9 +45,11 @@ import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
+import io.hops.hopsworks.common.dao.user.activity.ActivityFlag;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.UserGroupInformationService;
+import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.jobs.configuration.JobType;
 import io.hops.hopsworks.common.jobs.execution.ExecutionController;
@@ -118,10 +120,8 @@ public class SparkController {
 
     //If it is a notebook we need to convert it to a .py file every time the job is run
     if(appPath.endsWith(".ipynb")) {
-      String outPath = "hdfs:///" + Settings.DIR_ROOT + "/" + job.getProject().getName() + "/" +
-        Settings.PROJECT_STAGING_DIR;
-      StringBuilder pathBuilder = new StringBuilder(outPath).append("/job_tmp_" + job.getName() + ".py");
-      String pyAppPath = pathBuilder.toString();
+      String outPath = "hdfs://" + Utils.getProjectPath(job.getProject().getName()) + Settings.PROJECT_STAGING_DIR;
+      String pyAppPath = outPath + "/job_tmp_" + job.getName() + ".py";
       sparkConfig.setAppPath(pyAppPath);
       jupyterController.convertIPythonNotebook(username, appPath, job.getProject(), pyAppPath);
     }
@@ -155,7 +155,7 @@ public class SparkController {
     Execution jh = sparkjob.requestExecutionId();
     submitter.startExecution(sparkjob);
     activityFacade.persistActivity(ActivityFacade.RAN_JOB + job.getName(), job.getProject(), user.asUser(),
-        ActivityFacade.ActivityFlag.JOB);
+      ActivityFlag.JOB);
     return jh;
   }
   
@@ -181,9 +181,10 @@ public class SparkController {
   }
   
   public SparkJobConfiguration inspectProgram(String path, DistributedFileSystemOps udfso) throws JobException {
-    SparkJobConfiguration config = new SparkJobConfiguration();
+    SparkJobConfiguration config;
     //If the main program is in a jar, try to set main class from it
     if (path.endsWith(".jar")) {
+      config = new SparkJobConfiguration();
       try (JarInputStream jis = new JarInputStream(udfso.open(path))) {
         Manifest mf = jis.getManifest();
         if (mf != null) {
@@ -197,6 +198,7 @@ public class SparkController {
           "Failed to inspect jar at:" + path, ex.getMessage(), ex);
       }
     } else {
+      config = new SparkJobConfiguration(ExperimentType.EXPERIMENT);
       config.setMainClass(Settings.SPARK_PY_MAINCLASS);
     }
     config.setAppPath(path);

@@ -1,3 +1,4 @@
+# coding: utf-8
 =begin
  Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
  are released under the following license:
@@ -112,6 +113,16 @@ describe "On #{ENV['OS']}" do
           expect_json(errorCode: 110028)
           expect_status(400)
         end
+
+        it 'Logs dataset should have HOT storage policy' do
+          logs_storage_policy = get_storage_policy("/Projects/#{@project[:projectname]}/Logs")
+          expect(logs_storage_policy).to include("HOT")
+        end
+
+        it '/Project dir should have DB storage policy' do
+          projects_storage_policy = get_storage_policy("/Projects/")
+          expect(projects_storage_policy).to include("DB")
+        end
       end
     end
     describe "#access" do
@@ -134,6 +145,118 @@ describe "On #{ENV['OS']}" do
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent"
           expect_json_types :array
           expect_status(200)
+        end
+        it "should fail to return dataset list from Projects if path contains ../" do
+          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent/Logs/../../../Projects"
+          expect_status(400)
+          expect_json(errorCode: 110018)
+          reset_session
+        end
+        it "should fail to check if a dataset is a dir for a project if path contains ../" do
+          project = get_project
+          newUser = create_user
+          create_session(newUser[:email],"Pass123")
+          projectname = "project_#{short_random_id}"
+          project1 = create_project_by_name(projectname)
+          get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/isDir/Logs/../../../Projects/#{project[:projectname]}/Logs/README.md"
+          expect_status(400)
+          expect_json(errorCode: 110018)
+          reset_session
+        end
+        it "should fail to count file blocks to a project if path contains ../" do
+          project = get_project
+          newUser = create_user
+          create_session(newUser[:email],"Pass123")
+          projectname = "project_#{short_random_id}"
+          project1 = create_project_by_name(projectname)
+          get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/countFileBlocks/Logs/../../../Projects/#{project[:projectname]}/Logs/README.md"
+          expect_status(200)# Always returns 200 but if file does not exist blocks = -1
+          expect(response).to include("-1")
+          reset_session
+        end
+        it "should fail to upload file to a project if path contains ../" do
+          project = get_project
+          newUser = create_user
+          create_session(newUser[:email],"Pass123")
+          projectname = "project_#{short_random_id}"
+          project1 = create_project_by_name(projectname)
+          file = URI.encode_www_form({templateId: -1, flowChunkNumber: 1, flowChunkSize: 1048576,
+                                      flowCurrentChunkSize: 3195, flowTotalSize: 3195,
+                                      flowIdentifier: "3195-someFiletxt", flowFilename: "someFile.txt",
+                                      flowRelativePath: "someFile.txt", flowTotalChunks: 1})
+          get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/upload/Logs/../../../Projects/#{project[:projectname]}/Logs/?#{file}", {content_type: "multipart/form-data"}
+          expect_status(204)# will upload to project1/dataset/getContent/Logs/Projects/project/Logs/
+          expect(response).to be_empty
+          get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/getContent/Logs/Projects/#{project[:projectname]}/Logs/"
+          ds = json_body.detect { |d| d[:name] == "someFile.txt" }
+          expect(ds).to be_present
+          reset_session
+        end
+        it "should fail to return dataset list from Projects if path contains .." do
+          project = get_project
+          newUser = create_user
+          create_session(newUser[:email],"Pass123")
+          projectname = "project_#{short_random_id}"
+          project1 = create_project_by_name(projectname)
+          get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/getContent/Logs/../../../Projects/#{project[:projectname]}/"
+          expect_status(400)
+          expect_json(errorCode: 110018)
+          reset_session
+        end
+        it "should fail to return dataset list from Projects if path contains ../../Projects/../../Projects" do
+          project = get_project
+          newUser = create_user
+          create_session(newUser[:email],"Pass123")
+          projectname = "project_#{short_random_id}"
+          project1 = create_project_by_name(projectname)
+          get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/getContent/Logs/../../Projects/../../Projects/#{project[:projectname]}/"
+          expect_status(400)
+          expect_json(errorCode: 110018)
+          reset_session
+        end
+        it "should fail to return file from other Projects if path contains .." do
+          project = get_project
+          newUser = create_user
+          create_session(newUser[:email],"Pass123")
+          projectname = "project_#{short_random_id}"
+          project1 = create_project_by_name(projectname)
+          get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/getFile/Logs/../../../Projects/#{project[:projectname]}/Logs/README.md"
+          expect_status(400)
+          expect_json(errorCode: 110018)
+          reset_session
+        end
+        it "should fail to check if file exists from another project if path contains ../" do
+          project = get_project
+          newUser = create_user
+          create_session(newUser[:email],"Pass123")
+          projectname = "project_#{short_random_id}"
+          project1 = create_project_by_name(projectname)
+          get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/fileExists/Logs/../../../Projects/#{project[:projectname]}/Logs/README.md"
+          expect_status(400)
+          expect_json(errorCode: 110018)
+          reset_session
+        end
+        it "should fail to preview a file from another project if path contains ../" do
+          project = get_project
+          newUser = create_user
+          create_session(newUser[:email],"Pass123")
+          projectname = "project_#{short_random_id}"
+          project1 = create_project_by_name(projectname)
+          get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/filePreview/Logs/../../../Projects/#{project[:projectname]}/Logs/README.md"
+          expect_status(400)
+          expect_json(errorCode: 110018)
+          reset_session
+        end
+        it "should fail to check for download a file from another project if path contains ../" do
+          project = get_project
+          newUser = create_user
+          create_session(newUser[:email],"Pass123")
+          projectname = "project_#{short_random_id}"
+          project1 = create_project_by_name(projectname)
+          get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/checkFileForDownload/Logs/../../../Projects/#{project[:projectname]}/Logs/README.md"
+          expect_status(404)
+          expect_json(errorCode: 110008)
+          reset_session
         end
       end
     end
@@ -161,6 +284,32 @@ describe "On #{ENV['OS']}" do
           create_session(member[:email],"Pass123")
           delete "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/Logs"
           expect_status(500)
+          reset_session
+        end
+
+        it "should fail to delete dataset in another project with .. in path" do
+          project = get_project
+          newUser = create_user
+          create_session(newUser[:email],"Pass123")
+          projectname = "project_#{short_random_id}"
+          project1 = create_project_by_name(projectname)
+          delete "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/file/Logs/../../../Projects/#{project[:projectname]}/Logs/README.md"
+          expect_status(200)#returns 200 if file not found
+          expect(test_file("/Projects/#{project[:projectname]}/Logs/README.md")).to eq(true)
+          reset_session
+        end
+
+        it "should fail to delete corrupted(owned by glassfish and size=0) file in another project with .. in path" do
+          project = get_project
+          newUser = create_user
+          create_session(newUser[:email],"Pass123")
+          projectname = "project_#{short_random_id}"
+          project1 = create_project_by_name(projectname)
+          hopsworks_user = getHopsworksUser()
+          touchz("/Projects/#{project[:projectname]}/Logs/corrupted.txt", hopsworks_user, hopsworks_user)
+          delete "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/corrupted/Logs/../../../Projects/#{project[:projectname]}/Logs/corrupted.txt"
+          expect_status(500)# throws INODE_DELETION_ERROR with 500 status
+          expect_json(errorCode: 110007)
           reset_session
         end
       end
@@ -267,6 +416,14 @@ describe "On #{ENV['OS']}" do
           expect_json(successMessage: "The Dataset was successfully shared.")
           expect_status(200)
         end
+        it "should share a HiveDB" do
+          projectname = "project_#{short_random_id}"
+          project = create_project_by_name(projectname)
+          share_dataset(@project, "#{@project[:projectname].downcase}.db", project, type="HIVEDB")
+          datasets = get_all_datasets(project)
+          shared_ds = datasets.detect { |e| e[:name] == "#{@project[:projectname].downcase}::#{@project[:projectname].downcase}.db" }
+          expect(shared_ds).not_to be_nil
+        end
         it "should appear as pending for datasets not requested" do
           projectname = "project_#{short_random_id}"
           project = create_project_by_name(projectname)
@@ -295,7 +452,8 @@ describe "On #{ENV['OS']}" do
           permissions = "GROUP_WRITABLE_SB"
           ds = create_dataset_by_name(@project, dsname)
           share_dataset(@project, dsname, project)
-          put "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/permissions", {name: dsname, permissions: permissions }
+          put "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/permissions",
+              {name: "#{@project[:projectname]}::#{dsname}", permissions: permissions}
           expect_status(400)
         end
         it "should fail to write on a non editable shared dataset" do
@@ -304,7 +462,11 @@ describe "On #{ENV['OS']}" do
           dsname = "dataset_#{short_random_id}"
           ds = create_dataset_by_name(@project, dsname)
           share_dataset(@project, dsname, project)
-          post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset", {name: "#{dsname + "/testdir"}"}
+          # Accept dataset
+          get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/accept/#{ds[:inode_id]}"
+          # try to write
+          post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset",
+               {name: "#{@project[:projectname]}::#{dsname}/testdir"}
           expect_status(403)
         end
         it "should write in an editable shared dataset" do
@@ -320,12 +482,25 @@ describe "On #{ENV['OS']}" do
           get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/accept/#{ds[:inode_id]}"
           # Create a directory - from the "target" project
           post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset",
-               {name: "#{@project[:projectname] + "::" + dsname + "/testdir"}"}
+               {name: "#{"#{@project[:projectname]}::#{dsname}/testdir"}"}
           expect_status(200)
           # Check if the directory is present
           get_datasets_in(@project, dsname)
           ds = json_body.detect { |d| d[:name] == "testdir"}
           expect(ds).to be_present
+        end
+        it "should be able to see content shared dataset with a name that already exist in the target project" do
+          projectname = "project_#{short_random_id}"
+          project = create_project_by_name(projectname)
+          dsname = "dataset_#{short_random_id}"
+          create_dataset_by_name(project, dsname)
+          ds = create_dataset_by_name(@project, dsname)
+          request_dataset_access(project, ds[:inode_id])
+          share_dataset(@project, dsname, project)
+          get_datasets_in(project, "#{@project[:projectname]}::#{dsname}")
+          expect_status(200)
+          get_datasets_in(project, dsname)
+          expect_status(200)
         end
       end
     end
@@ -444,9 +619,7 @@ describe "On #{ENV['OS']}" do
           readme = json_body.detect { |inode| inode[:name] == "README.md" }
 
           # Copy README.md to the subdirectory
-          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/copy",
-               {destPath: "/Projects/#{@project[:projectname]}/#{dirname}/README.md",
-                inodeId: readme[:id]}
+          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/copy", {destPath: "/Projects/#{@project[:projectname]}/#{dirname}/README.md", inodeId: readme[:id]}
           expect_status(200)
 
           # Log in as project owner, if the project owner is in the dataset group, it should be able to preview
@@ -509,6 +682,29 @@ describe "On #{ENV['OS']}" do
             ds = json_body.detect { |d| d[:name] == "testDir" }
             !ds.nil?
           end
+        end
+
+        it "should fail to zip a dataset from other projects if path contains ../" do
+          project = get_project
+          newUser = create_user
+          create_session(newUser[:email],"Pass123")
+          projectname = "project_#{short_random_id}"
+          project1 = create_project_by_name(projectname)
+          get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/zip/Logs/../../../Projects/#{project[:projectname]}/Logs/README.md"
+          expect_status(404)
+          expect_json(errorCode: 110008)
+          reset_session
+        end
+        it "should fail to unzip a dataset from other projects if path contains ../" do
+          project = get_project
+          newUser = create_user
+          create_session(newUser[:email],"Pass123")
+          projectname = "project_#{short_random_id}"
+          project1 = create_project_by_name(projectname)
+          get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/unzip/Logs/../../../Projects/#{project[:projectname]}/Logs/README.md.zip"
+          expect_status(404)
+          expect_json(errorCode: 110008)
+          reset_session
         end
       end
     end

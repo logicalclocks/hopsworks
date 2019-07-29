@@ -31,6 +31,7 @@ angular.module('hopsWorksApp')
             self.jars = [];
             self.archives = [];
             self.files = [];
+            self.projectId = $routeParams.projectID;
 
             self.loc = $location.url().split('#')[0];
 
@@ -62,7 +63,6 @@ angular.module('hopsWorksApp')
                     self.setMode(self.jobConfig.experimentType);
                 } else if (self.jobConfig['spark.dynamicAllocation.enabled'] && self.jobConfig['spark.dynamicAllocation.enabled'] === true) {
                     self.setMode('SPARK_DYNAMIC');
-                    self.jobConfig['spark.dynamicAllocation.enabled']=true;
                 } else {
                     self.setMode('SPARK_STATIC');
                     self.jobConfig['spark.dynamicAllocation.enabled']=false;
@@ -245,7 +245,7 @@ angular.module('hopsWorksApp')
 
             this.selectFile = function(reason) {
 
-                ModalService.selectFile('lg', self.selectFileRegexes[reason.toUpperCase()],
+                ModalService.selectFile('lg', self.projectId, self.selectFileRegexes[reason.toUpperCase()],
                     self.selectFileErrorMsgs[reason.toUpperCase()], false).then(
                     function(success) {
                         self.onFileSelected(reason, "hdfs://" + success);
@@ -387,6 +387,15 @@ angular.module('hopsWorksApp')
 
             self.changeDistributionStrategy = function() {
                 self.jobConfig.distributionStrategy = self.distributionStrategySelected.name;
+            };
+
+            self.autoExpand = function(e) {
+                  var element = typeof e === 'object' ? e.target : document.getElementById(e);
+                  var scrollHeight = element.scrollHeight; // replace 60 by the sum of padding-top and padding-bottom
+                  var currentElemHeight = element.style.height.slice(0, -2);
+                  if(currentElemHeight < scrollHeight) {
+                    element.style.height = scrollHeight + "px";
+                  }
             };
         }
     ]);

@@ -138,7 +138,7 @@ public class ProjectsAdmin {
       ProjectDTO projectDTO) throws DatasetException, GenericException, KafkaException, ProjectException, UserException,
       ServiceException, HopsSecurityException, FeaturestoreException {
     Users user = jWTHelper.getUserPrincipal(sc);
-    if (user == null || !user.getEmail().equals(Settings.SITE_EMAIL)) {
+    if (user == null || !user.getEmail().equals(settings.getAdminEmail())) {
       throw new UserException(RESTCodes.UserErrorCode.AUTHENTICATION_FAILURE, Level.WARNING,
           "Unauthorized or unknown user tried to create a Project as another user");
     }

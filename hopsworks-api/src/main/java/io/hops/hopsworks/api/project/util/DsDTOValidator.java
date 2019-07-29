@@ -41,9 +41,11 @@ package io.hops.hopsworks.api.project.util;
 
 import io.hops.hopsworks.common.dao.dataset.DataSetDTO;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
-import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
+import io.hops.hopsworks.common.dao.dataset.DatasetType;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dataset.DatasetController;
+import io.hops.hopsworks.common.hdfs.Utils;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.restutils.RESTCodes;
 
@@ -53,11 +55,11 @@ import java.util.logging.Level;
 
 @Stateless
 public class DsDTOValidator {
-
-  @EJB
-  private DatasetFacade datasetFacade;
+  
   @EJB
   private DatasetController datasetController;
+  @EJB
+  private Settings settings;
 
   /**
    * Validate a DataSetDTO object passed by the frontend.
@@ -72,10 +74,8 @@ public class DsDTOValidator {
    * @return The dataset object
    * in case the dataset has not been found or operations cannot be done on it
    */
-  public Dataset validateDTO(Project project, DataSetDTO dto,
-                             boolean validatePrjIds) throws DatasetException {
-    if (dto == null || dto.getName() == null || dto.getName().
-            isEmpty()) {
+  public Dataset validateDTO(Project project, DataSetDTO dto, boolean validatePrjIds) throws DatasetException {
+    if (dto == null || dto.getName() == null || dto.getName().isEmpty()) {
       throw new IllegalArgumentException("Either dto or dto name were not provided");
     }
 
@@ -87,12 +87,23 @@ public class DsDTOValidator {
     }
 
     // Check if the dataset exists and user can share it
-    Dataset ds = datasetFacade.findByNameAndProjectId(project, dto.getName());
+    Dataset ds;
+    if (dto.getType() == null || DatasetType.DATASET.equals(dto.getType())) {
+      String parentPath = null;
+      String dsName = dto.getName();
+      if (dsName.contains(Settings.SHARED_FILE_SEPARATOR)) {
+        String[] parts = dsName.split(Settings.SHARED_FILE_SEPARATOR);
+        parentPath = Utils.getProjectPath(parts[0]);
+        dsName = parts[1];
+      }
+      ds = datasetController.getByProjectAndDsName(project, parentPath, dsName);
+    } else { // hive or feature store
+      ds = datasetController.getByProjectAndDsName(project, this.settings.getHiveWarehouse(), dto.getName());
+    }
 
     if (ds == null) {
       throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_FOUND, Level.FINE);
-    } else if (ds.isShared() ||
-        (ds.isPublicDs() && (!datasetController.getOwningProject(ds).equals(project)))) {
+    } else if (ds.isShared() || (ds.isPublicDs() && (!datasetController.getOwningProject(ds).equals(project)))) {
       throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OWNER_ERROR, Level.FINE);
     }
 

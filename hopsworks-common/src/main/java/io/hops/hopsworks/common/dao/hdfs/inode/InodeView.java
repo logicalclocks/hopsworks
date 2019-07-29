@@ -40,6 +40,7 @@
 package io.hops.hopsworks.common.dao.hdfs.inode;
 
 import io.hops.hopsworks.common.dao.dataset.Dataset;
+import io.hops.hopsworks.common.dao.dataset.DatasetType;
 import io.hops.hopsworks.common.util.Settings;
 import org.apache.hadoop.fs.permission.FsPermission;
 
@@ -78,6 +79,7 @@ public final class InodeView {
   // FSM states: STAGING, ZIPPING, UNZIPPING, UPLOADING, CHOWNING, SUCCESS, FAILED
   private String zipState = "NONE";
   private String publicId;
+  private DatasetType type;
 
   public InodeView() {
   }
@@ -132,6 +134,7 @@ public final class InodeView {
     this.accessTime = new Date(ds.getInode().getAccessTime().longValue());
     this.shared = ds.isShared();
     this.owningProjectName = parent.inodePK.getName();
+    this.type = ds.getType();
     if (this.shared) {
       switch (ds.getType()) {
         case DATASET:
@@ -139,6 +142,7 @@ public final class InodeView {
           break;
         case HIVEDB:
           this.owningProjectName = this.name.substring(0, this.name.lastIndexOf("."));
+          break;
         case FEATURESTORE:
           this.owningProjectName = this.name.substring(0, this.name.lastIndexOf("_"));
       }
@@ -371,7 +375,15 @@ public final class InodeView {
   public void setPublicId(String publicId) {
     this.publicId = publicId;
   }
-
+  
+  public DatasetType getType() {
+    return type;
+  }
+  
+  public void setType(DatasetType type) {
+    this.type = type;
+  }
+  
   @Override
   public int hashCode() {
     int hash = 7;

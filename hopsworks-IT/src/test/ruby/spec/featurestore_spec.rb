@@ -35,7 +35,7 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json[0].key?("projectName")).to be true
           expect(parsed_json[0].key?("featurestoreName")).to be true
           expect(parsed_json[0]["projectName"] == project.projectname).to be true
-          expect(parsed_json[0]["featurestoreName"] == project.projectname + "_featurestore").to be true
+          expect(parsed_json[0]["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
         end
 
         it "should be able to get a featurestore with a particular id" do
@@ -48,7 +48,7 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json.key?("projectName")).to be true
           expect(parsed_json.key?("featurestoreName")).to be true
           expect(parsed_json["projectName"] == project.projectname).to be true
-          expect(parsed_json["featurestoreName"] == project.projectname + "_featurestore").to be true
+          expect(parsed_json["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
         end
       end
     end
@@ -69,7 +69,20 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json.key?("id")).to be true
           expect(parsed_json.key?("featurestoreName")).to be true
           expect(parsed_json.key?("name")).to be true
-          expect(parsed_json["featurestoreName"] == project.projectname + "_featurestore").to be true
+          expect(parsed_json["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
+          expect(parsed_json["name"] == featuregroup_name).to be true
+        end
+
+        it "should be able to add a featuregroup with hive partitioning to the featurestore" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          json_result, featuregroup_name = create_featuregroup_with_partition(project.id, featurestore_id)
+          parsed_json = JSON.parse(json_result)
+          expect_status(201)
+          expect(parsed_json.key?("id")).to be true
+          expect(parsed_json.key?("featurestoreName")).to be true
+          expect(parsed_json.key?("name")).to be true
+          expect(parsed_json["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
           expect(parsed_json["name"] == featuregroup_name).to be true
         end
 
@@ -180,7 +193,7 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json[0].key?("id")).to be true
           expect(parsed_json[0].key?("featurestoreName")).to be true
           expect(parsed_json[0].key?("name")).to be true
-          expect(parsed_json[0]["featurestoreName"] == project.projectname + "_featurestore").to be true
+          expect(parsed_json[0]["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
           expect(parsed_json[0]["name"] == featuregroup_name).to be true
         end
 
@@ -201,7 +214,7 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json.key?("featurestoreId")).to be true
           expect(parsed_json.key?("name")).to be true
           expect(parsed_json["featurestoreId"] == featurestore_id).to be true
-          expect(parsed_json["featurestoreName"] == project.projectname + "_featurestore").to be true
+          expect(parsed_json["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
           expect(parsed_json["name"] == featuregroup_name).to be true
           expect(parsed_json["id"] == featuregroup_id).to be true
         end
@@ -224,7 +237,7 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json.key?("id")).to be true
           expect(parsed_json.key?("featurestoreName")).to be true
           expect(parsed_json.key?("name")).to be true
-          expect(parsed_json["featurestoreName"] == project.projectname + "_featurestore").to be true
+          expect(parsed_json["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
           expect(parsed_json["name"] == training_dataset_name).to be true
         end
 
@@ -296,7 +309,7 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json[0].key?("id")).to be true
           expect(parsed_json[0].key?("featurestoreName")).to be true
           expect(parsed_json[0].key?("name")).to be true
-          expect(parsed_json[0]["featurestoreName"] == project.projectname + "_featurestore").to be true
+          expect(parsed_json[0]["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
           expect(parsed_json[0]["name"] == training_dataset_name).to be true
         end
 
@@ -317,82 +330,10 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json.key?("featurestoreId")).to be true
           expect(parsed_json.key?("name")).to be true
           expect(parsed_json["featurestoreId"] == featurestore_id).to be true
-          expect(parsed_json["featurestoreName"] == project.projectname + "_featurestore").to be true
+          expect(parsed_json["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
           expect(parsed_json["name"] == training_dataset_name).to be true
           expect(parsed_json["id"] == training_dataset_id).to be true
         end
-      end
-    end
-
-    describe "create feature store tour project and run example feature engineering job" do
-      before :all do
-        with_valid_tour_project("featurestore")
-      end
-
-      it "should have copied a sample .jar job, notebooks and data to the project's datasets" do
-        project = get_project
-
-        # Check TestJob dataset
-        get_datasets_in(project, "TestJob")
-        inode_list = JSON.parse(response.body)
-        expect_status(200)
-        expect(find_inode_in_dataset(inode_list, "hops-examples-featurestore")).to be true
-        expect(find_inode_in_dataset(inode_list, "data")).to be true
-
-        # Check Jupyter dataset
-        get_datasets_in(project, "Jupyter")
-        inode_list = JSON.parse(response.body)
-        expect_status(200)
-        expect(inode_list.empty?).to be false
-
-      end
-
-      it "should have created an example feature engineering job when the tour was started" do
-        project = get_project
-        get_job(project.id, get_featurestore_tour_job_name, nil)
-        parsed_json = JSON.parse(response.body)
-        expect_status(200)
-        expect(parsed_json["name"] == get_featurestore_tour_job_name).to be true
-      end
-
-      it "should have started the example feature engineering job when the tour was created" do
-        project = get_project
-        get_executions(project.id, get_featurestore_tour_job_name, "")
-        parsed_json = JSON.parse(response.body)
-        expect_status(200)
-        expect(parsed_json["items"].count == 1).to be true
-      end
-
-      it "the example feature engineering job should complete successfully, and after completion there should be 4 feature groups created in the project's feature store" do
-        project = get_project
-
-        # Check that the job was created and started and extracts its id
-        get_executions(project.id, get_featurestore_tour_job_name, "")
-        parsed_json = JSON.parse(response.body)
-        expect_status(200)
-        expect(parsed_json["items"].count == 1).to be true
-        execution = parsed_json["items"][0]
-
-        # Wait for execution to complete
-        wait_for_execution(2000) do
-          get_execution(project.id, get_featurestore_tour_job_name, execution["id"])
-          execution_dto = JSON.parse(response.body)
-          not is_execution_active(execution_dto)
-        end
-
-        # Check that the execution completed successfully
-        get_execution(project.id, get_featurestore_tour_job_name, execution["id"])
-        execution_dto = JSON.parse(response.body)
-        expect(execution_dto["state"] == "FINISHED").to be true
-        expect(execution_dto["finalStatus"] == "SUCCEEDED").to be true
-
-        # Check that the job created 4 feature groups
-        featurestore_id = get_featurestore_id(project.id)
-        get_featuregroups_endpoint= "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups"
-        get get_featuregroups_endpoint
-        parsed_json = JSON.parse(response.body)
-        expect_status(200)
-        expect(parsed_json.length >= 4).to be true
       end
     end
   end

@@ -41,11 +41,11 @@
 
 angular.module('hopsWorksApp')
         .controller('NewJobCtrl', ['$routeParams', 'growl', 'JobService',
-          '$location', 'ModalService', 'StorageService', '$scope', 'TourService', 'HistoryService',
-            'KafkaService', 'ProjectService', 'PythonDepsService', '$timeout',
+          '$location', 'ModalService', 'StorageService', '$scope', 'TourService',
+            'KafkaService', 'ProjectService', 'PythonService', '$timeout',
           function ($routeParams, growl, JobService,
                   $location, ModalService, StorageService, $scope, TourService,
-                  HistoryService, KafkaService, ProjectService, PythonDepsService, $timeout) {
+                  KafkaService, ProjectService, PythonService, $timeout) {
 
             var self = this;
             self.tourService = TourService;
@@ -540,7 +540,7 @@ angular.module('hopsWorksApp')
               var filename = getFileName(path);
 
               if (reason.toUpperCase() === "PYSPARK") {
-                PythonDepsService.enabled(self.projectId).then(
+                PythonService.enabled(self.projectId).then(
                     function (success) {
                     },
                     function (error) {
@@ -554,7 +554,7 @@ angular.module('hopsWorksApp')
                 case "SPARK":
                 case "PYSPARK":
                   self.sparkState.selectedJar = filename;
-                  JobService.getInspection(self.projectId, reason.toLowerCase(), path).then(
+                  JobService.getInspection(self.projectId, reason.toLowerCase(), "hdfs://" + path).then(
                           function (success) {
                             $scope.jobConfig = success.data;
                             self.runConfig = $scope.jobConfig;
@@ -601,7 +601,7 @@ angular.module('hopsWorksApp')
                   break;
                 case "FLINK":
                   self.flinkState.selectedJar = filename;
-                  JobService.getInspection(self.projectId, reason.toLowerCase(), path).then(
+                  JobService.getInspection(self.projectId, reason.toLowerCase(), "hdfs:///" + path).then(
                           function (success) {
                             self.runConfig = success.data;
                             self.mainFileSelected(filename);
@@ -625,10 +625,10 @@ angular.module('hopsWorksApp')
              * @returns {undefined}
              */
             this.selectFile = function (reason, parameter) {
-              ModalService.selectFile('lg', self.selectFileRegexes[reason],
+              ModalService.selectFile('lg', self.projectId, self.selectFileRegexes[reason],
                       self.selectFileErrorMsgs["PYSPARK"], false).then(
                       function (success) {
-                        self.onFileSelected(reason, "hdfs://" + success);
+                        self.onFileSelected(reason, success);
                       }, function (error) {
                 //The user changed their mind.
               });
@@ -640,10 +640,10 @@ angular.module('hopsWorksApp')
              * @returns {undefined}
              */
             this.selectDir = function (reason, parameter) {
-              ModalService.selectDir('lg', self.selectFileRegexes[reason],
+              ModalService.selectDir('lg', self.projectId, self.selectFileRegexes[reason],
                       self.selectFileErrorMsgs["PYSPARK"]).then(
                       function (success) {
-                        self.onFileSelected(reason, "hdfs://" + success);
+                        self.onFileSelected(reason, success);
                       }, function (error) {
                 //The user changed their mind.
               });
@@ -761,11 +761,6 @@ angular.module('hopsWorksApp')
                       !angular.isUndefined(jobDetails.selectedJar) && !angular.isUndefined(jobDetails.jobType)) {
 
                 self.configAlert = false;
-                HistoryService.getHeuristics(jobDetails).then(
-                        function (success) {
-                          self.autoConfigResult = success.data;
-                          console.log(self.autoConfigResult);
-                        });
               } else {
                 self.configAlert = true;
                 self.isSpin = false;

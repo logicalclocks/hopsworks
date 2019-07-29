@@ -40,8 +40,6 @@
 package io.hops.hopsworks.common.dao.jobhistory;
 
 import io.hops.hopsworks.common.dao.jobs.FilesToRemove;
-import io.hops.hopsworks.common.dao.jobs.JobInputFile;
-import io.hops.hopsworks.common.dao.jobs.JobOutputFile;
 import io.hops.hopsworks.common.jobs.jobhistory.JobFinalStatus;
 import io.hops.hopsworks.common.jobs.jobhistory.JobState;
 import java.io.Serializable;
@@ -203,63 +201,15 @@ public class Execution implements Serializable {
   @ManyToOne(optional = false)
   private Users user;
 
-  @OneToMany(cascade = CascadeType.ALL,
-          mappedBy = "execution")
-  private Collection<JobOutputFile> jobOutputFileCollection;
-
-  @OneToMany(cascade = CascadeType.ALL,
-          mappedBy = "execution")
-  private Collection<JobInputFile> jobInputFileCollection;
-  
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "execution")
   private Collection<FilesToRemove> filesToRemove;
 
   public Execution() {
   }
 
-  public Execution(JobState state, Jobs job, Users user, String hdfsUser) {
-    this(state, job, user, new Date(), hdfsUser);
-  }
-
-  public Execution(JobState state, Jobs job, Users user,
-          Date submissionTime, String hdfsUser) {
-    this(state, job, user, submissionTime, null, null, hdfsUser);
-  }
-
-  public Execution(JobState state, Jobs job, Users user,
-          String stdoutPath,
-          String stderrPath, String hdfsUser) {
-    this(state, job, user, new Date(), stdoutPath, stderrPath, hdfsUser);
-  }
-
-  public Execution(JobState state, Jobs job, Users user,
-          Date submissionTime,
-          String stdoutPath, String stderrPath, String hdfsUser) {
-    this(state, job, user, submissionTime, stdoutPath, stderrPath, null,hdfsUser);
-  }
-
-  public Execution(JobState state, Jobs job, Users user,
-          String stdoutPath,
-          String stderrPath, Collection<JobInputFile> input,
-          JobFinalStatus finalStatus, float progress, String hdfsUser) {
-    this(state, job, user, new Date(), stdoutPath, stderrPath, input,
-            finalStatus, progress, hdfsUser);
-  }
-
-  public Execution(Execution t) {
-    this(t.state, t.job, t.user, t.submissionTime, t.stdoutPath, t.stderrPath,
-            t.jobInputFileCollection, t.hdfsUser);
-    this.id = t.id;
-    this.appId = t.appId;
-    this.jobOutputFileCollection = t.jobOutputFileCollection;
-    this.executionStart = t.executionStart;
-    this.executionStop = t.executionStop;
-    this.filesToRemove = t.filesToRemove;
-  }
-
-  public Execution(JobState state, Jobs job, Users user,
-          Date submissionTime,
-          String stdoutPath, String stderrPath, Collection<JobInputFile> input, String hdfsUser) {
+  public Execution(JobState state, Jobs job, Users user, Date submissionTime, String stdoutPath, String stderrPath,
+    JobFinalStatus finalStatus, float progress,
+    String hdfsUser) {
     this.submissionTime = submissionTime;
     this.state = state;
     this.stdoutPath = stdoutPath;
@@ -267,22 +217,6 @@ public class Execution implements Serializable {
     this.job = job;
     this.user = user;
     this.hdfsUser = hdfsUser;
-    this.jobInputFileCollection = input;
-    this.executionStart = -1;
-  }
-
-  public Execution(JobState state, Jobs job, Users user,
-          Date submissionTime,
-          String stdoutPath, String stderrPath, Collection<JobInputFile> input,
-          JobFinalStatus finalStatus, float progress, String hdfsUser) {
-    this.submissionTime = submissionTime;
-    this.state = state;
-    this.stdoutPath = stdoutPath;
-    this.stderrPath = stderrPath;
-    this.job = job;
-    this.user = user;
-    this.hdfsUser = hdfsUser;
-    this.jobInputFileCollection = input;
     this.finalStatus = finalStatus;
     this.progress = progress;
     this.executionStart = -1;
@@ -341,7 +275,6 @@ public class Execution implements Serializable {
 
   public void setExecutionStart(long executionStart) {
     this.executionStart = executionStart;
-    this.executionStop = executionStart;
   }
 
   public void setExecutionStop(long executionStop) {
@@ -438,22 +371,4 @@ public class Execution implements Serializable {
     return toRemove;
   }
   
-  public Collection<JobOutputFile> getJobOutputFileCollection() {
-    return jobOutputFileCollection;
-  }
-
-  public void setJobOutputFileCollection(
-          Collection<JobOutputFile> jobOutputFileCollection) {
-    this.jobOutputFileCollection = jobOutputFileCollection;
-  }
-
-  public Collection<JobInputFile> getJobInputFileCollection() {
-    return jobInputFileCollection;
-  }
-
-  public void setJobInputFileCollection(
-          Collection<JobInputFile> jobInputFileCollection) {
-    this.jobInputFileCollection = jobInputFileCollection;
-  }
-
 }

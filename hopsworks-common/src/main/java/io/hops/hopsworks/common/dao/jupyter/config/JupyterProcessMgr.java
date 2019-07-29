@@ -44,38 +44,34 @@ import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
 import io.hops.hopsworks.common.dao.jupyter.JupyterSettings;
 import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.restutils.RESTCodes;
-import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.integrations.LocalhostStereotype;
+import io.hops.hopsworks.common.jupyter.TokenGenerator;
 import io.hops.hopsworks.common.util.OSProcessExecutor;
 import io.hops.hopsworks.common.util.ProcessDescriptor;
 import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import javax.ejb.ConcurrencyManagement;
-import javax.ejb.ConcurrencyManagementType;
-import javax.ejb.DependsOn;
 import javax.ejb.EJB;
-import javax.ejb.Singleton;
+import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * *
@@ -84,12 +80,12 @@ import java.util.regex.Pattern;
  * The bash script has several commands with parameters that can be exceuted.
  * This class provides a Java interface for executing the commands.
  */
-@Singleton
-@ConcurrencyManagement(ConcurrencyManagementType.CONTAINER)
-@DependsOn("Settings")
-public class JupyterProcessMgr {
+@Stateless
+@LocalhostStereotype
+public class JupyterProcessMgr implements JupyterManager {
 
   private static final Logger LOGGER = Logger.getLogger(JupyterProcessMgr.class.getName());
+  private static final int TOKEN_LENGTH = 48;
 
   @EJB
   private Settings settings;
@@ -113,28 +109,28 @@ public class JupyterProcessMgr {
   public void preDestroy() {
   }
   
+  @Override
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-  public JupyterDTO startServerAsJupyterUser(Project project, String secretConfig, String hdfsUser, String realName,
-      JupyterSettings js, String allowOrigin) throws ServiceException {
+  public JupyterDTO startJupyterServer(Project project, String secretConfig, String hdfsUser, Users user,
+    JupyterSettings js, String allowOrigin) throws ServiceException {
     
     String prog = settings.getHopsworksDomainDir() + "/bin/jupyter.sh";
     
     Integer port = ThreadLocalRandom.current().nextInt(40000, 59999);
+    String realName = user.getFname() + " " + user.getLname();
     JupyterPaths jp = jupyterConfigFilesGenerator.generateConfiguration(project, secretConfig, hdfsUser, realName,
-        hdfsLeFacade.getSingleEndpoint(), js, port, allowOrigin);
+        hdfsLeFacade.getRPCEndpoint(), js, port, allowOrigin);
     String secretDir = settings.getStagingDir() + Settings.PRIVATE_DIRS + js.getSecret();
-    String logfile = jp.getLogDirPath() + "/" + hdfsUser + "-" + port + ".log";
-    
-    String token = null;
+
+    String token = TokenGenerator.generateToken(TOKEN_LENGTH);
     Long pid = 0l;
     
     // The Jupyter Notebook is running at: http://localhost:8888/?token=c8de56fa4deed24899803e93c227592aef6538f93025fe01
-    boolean foundToken = false;
     int maxTries = 5;
-    
+
     // kill any running servers for this user, clear cached entries
-    while (!foundToken && maxTries > 0) {
-      
+    while (maxTries > 0) {
+
       // use pidfile to kill any running servers
       ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
           .addCommand("/usr/bin/sudo")
@@ -149,12 +145,13 @@ public class JupyterProcessMgr {
           .addCommand(secretDir)
           .addCommand(jp.getCertificatesDir())
           .addCommand(hdfsUser)
+          .addCommand(token)
           .redirectErrorStream(true)
           .setCurrentWorkingDirectory(new File(jp.getNotebookPath()))
           .setWaitTimeout(20L, TimeUnit.SECONDS)
           .build();
-      
-      
+
+
       String pidfile = jp.getRunDirPath() + "/jupyter.pid";
       try {
         ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
@@ -164,61 +161,36 @@ public class JupyterProcessMgr {
           LOGGER.log(Level.SEVERE, errorMsg);
           throw new IOException(errorMsg);
         }
-        // The logfile should now contain the token we need to read and save.
-        final BufferedReader br = new BufferedReader(new InputStreamReader(
-            new FileInputStream(logfile), Charset.forName("UTF8")));
-        String line;
-        // [I 11:59:16.597 NotebookApp] The Jupyter Notebook is running at:
-        // http://localhost:8888/?token=c8de56fa4deed24899803e93c227592aef6538f93025fe01
-        String pattern = "(.*)token=(.*)";
-        Pattern r = Pattern.compile(pattern);
-        
-        int linesRead = 0;
-        while (((line = br.readLine()) != null) && !foundToken && linesRead
-            < 10000) {
-          LOGGER.info(line);
-          linesRead++;
-          Matcher m = r.matcher(line);
-          if (m.find()) {
-            token = m.group(2);
-            foundToken = true;
-          }
-        }
-        br.close();
-        
         // Read the pid for Jupyter Notebook
         String pidContents = com.google.common.io.Files.readFirstLine(
             new File(pidfile), Charset.defaultCharset());
         pid = Long.parseLong(pidContents);
-        
+
+        return new JupyterDTO(port, token, pid, secretConfig, jp.getCertificatesDir());
       } catch (Exception ex) {
         LOGGER.log(Level.SEVERE, "Problem executing shell script to start Jupyter server", ex);
         maxTries--;
       }
     }
-    
-    if (!foundToken) {
-      String errorMsg = "Could not read Jupyter token";
-      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_START_ERROR, Level.SEVERE, errorMsg,
-          errorMsg + " for project " + project);
-    }
-    
-    return new JupyterDTO(port, token, pid, secretConfig, jp.getCertificatesDir());
+
+    String errorMsg = "Failed to start Jupyter";
+    throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_START_ERROR, Level.SEVERE, errorMsg,
+      errorMsg + " for project " + project);
   }
 
-  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-  public String getJupyterHome(String hdfsUser, Project project, String secret) throws ServiceException {
-    if (project == null || secret == null) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_HOME_ERROR, Level.WARNING, "user: " + hdfsUser);
-    }
-    return settings.getJupyterDir() + File.separator
-        + Settings.DIR_ROOT + File.separator + project.getName()
-        + File.separator + hdfsUser + File.separator + secret;
+  @Override
+  public void waitForStartup(Project project, Users user) throws TimeoutException {
+    // Nothing to do as the start is blocking
   }
-  
+
+  public void stopOrphanedJupyterServer(Long pid, Integer port) throws ServiceException {
+    stopJupyterServer(null, null, "Orphaned", "", pid, port);
+  }
+
+  @Override
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-  public void killServerJupyterUser(String hdfsUsername, String jupyterHomePath, Long pid, Integer port)
-    throws ServiceException {
+  public void stopJupyterServer(Project project, Users user, String hdfsUsername, String jupyterHomePath, Long pid,
+      Integer port) throws ServiceException {
     if (jupyterHomePath == null || pid == null || port == null) {
       throw new IllegalArgumentException("Invalid arguments when stopping the Jupyter Server.");
     }
@@ -265,40 +237,20 @@ public class JupyterProcessMgr {
 
   }
 
+  @Override
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public void projectCleanup(Project project) {
-    String prog = settings.getHopsworksDomainDir() + "/bin/jupyter-project-cleanup.sh";
-    int exitValue;
-    ProcessDescriptor.Builder pdBuilder = new ProcessDescriptor.Builder()
-        .addCommand("/usr/bin/sudo")
-        .addCommand(prog)
-        .addCommand(project.getName());
-    if (!LOGGER.isLoggable(Level.FINE)) {
-      pdBuilder.ignoreOutErrStreams(true);
-    }
-
-    try {
-      ProcessResult processResult = osProcessExecutor.execute(pdBuilder.build());
-      LOGGER.log(Level.FINE, processResult.getStdout());
-      exitValue = processResult.getExitCode();
-    } catch (IOException ex) {
-      LOGGER.log(Level.SEVERE, "Problem cleaning up project: "
-          + project.getName() + ": {0}", ex.toString());
-      exitValue = -2;
-    }
-
-    if (exitValue != 0) {
-      LOGGER.log(Level.WARNING, "Problem remove project's jupyter folder: "
-          + project.getName());
-    }
+    projectCleanup(settings, LOGGER, osProcessExecutor, project);
   }
 
+  @Override
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-  public boolean pingServerJupyterUser(Long pid) {
-    int exitValue = executeJupyterCommand("ping", pid.toString());
+  public boolean pingServerJupyterUser(JupyterProject jupyterProject) {
+    int exitValue = executeJupyterCommand("ping", String.valueOf(jupyterProject.getPid()));
     return exitValue == 0;
   }
 
+  @Override
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public List<JupyterProject> getAllNotebooks() {
     List<JupyterProject> allNotebooks = jupyterFacade.getAllNotebookServers();

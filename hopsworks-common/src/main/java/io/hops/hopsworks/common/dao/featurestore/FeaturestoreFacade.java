@@ -59,7 +59,7 @@ public class FeaturestoreFacade extends AbstractFacade<Featurestore> {
   /**
    * Retrieves the featurestores for a particular project from the database
    *
-   * @param project
+   * @param project the project to get featurestores for
    * @return list of featurestores for the project
    */
   public List<Featurestore> findByProject(Project project) {
@@ -71,8 +71,8 @@ public class FeaturestoreFacade extends AbstractFacade<Featurestore> {
   /**
    * Retrieves a featurestore with a specific Id from the database
    *
-   * @param id
-   * @return
+   * @param id if of the featurestore
+   * @return featurestore entity with the given id
    */
   public Featurestore findById(Integer id) {
     try {
@@ -112,13 +112,13 @@ public class FeaturestoreFacade extends AbstractFacade<Featurestore> {
   /**
    * Gets the Hive DatabaseId for the featureStore by querying the metastore
    *
-   * @param featurestoreName
+   * @param featurestoreName name of the featurestore
    * @return hive database id
    */
   public Long getHiveDatabaseId(String featurestoreName) {
     try {
-      return (Long) em.createNativeQuery("SELECT `DB_ID` FROM metastore.`DBS` WHERE NAME='"
-          + featurestoreName + "';").getSingleResult();
+      return (Long) em.createNativeQuery("SELECT `DB_ID` FROM metastore.`DBS` " +
+        "WHERE NAME = ?1;").setParameter(1, featurestoreName.toLowerCase()).getSingleResult();
     } catch (NoResultException e) {
       return null;
     }
@@ -127,13 +127,13 @@ public class FeaturestoreFacade extends AbstractFacade<Featurestore> {
   /**
    * Gets the Hive Database-Description for the featureStore by querying the metastore
    *
-   * @param hiveDbId
+   * @param hiveDbId id of the hive database in the metastore
    * @return hive database description
    */
   public String getHiveDatabaseDescription(Long hiveDbId) {
     try {
-      return (String) em.createNativeQuery("SELECT `DESC` FROM metastore.`DBS` WHERE `DB_ID`="
-          + hiveDbId.toString() + ";").getSingleResult();
+      return (String) em.createNativeQuery("SELECT `DESC` FROM metastore.`DBS` " +
+        "WHERE `DB_ID` = ?1;").setParameter(1, hiveDbId).getSingleResult();
     } catch (NoResultException e) {
       return null;
     }
@@ -148,9 +148,9 @@ public class FeaturestoreFacade extends AbstractFacade<Featurestore> {
   public Long getFeaturestoreInodeId(Long hiveDbId){
     try {
       return (Long) em.createNativeQuery("SELECT i.`id` FROM metastore.`DBS` d " +
-          "JOIN metastore.`SDS` s JOIN hops.`hdfs_inodes` i ON d.`SD_ID`=s.`SD_ID` " +
-          "AND s.`PARTITION_ID`=i.`partition_id` AND s.`PARENT_ID`=i.`parent_id` AND s.`NAME`=i.`name`" +
-          " WHERE `DB_ID`=" + hiveDbId +";").getSingleResult();
+        "JOIN metastore.`SDS` s JOIN hops.`hdfs_inodes` i ON d.`SD_ID`=s.`SD_ID` " +
+        "AND s.`PARTITION_ID`=i.`partition_id` AND s.`PARENT_ID`=i.`parent_id` AND s.`NAME`=i.`name`" +
+        " WHERE `DB_ID` = ?1;").setParameter(1, hiveDbId).getSingleResult();
     } catch (NoResultException e) {
       return null;
     }
@@ -159,13 +159,13 @@ public class FeaturestoreFacade extends AbstractFacade<Featurestore> {
   /**
    * Gets the Hive Database name for the featurestore by querying the metastore with the dbId
    *
-   * @param hiveDbId
+   * @param hiveDbId id of the hive database in the metastore
    * @return hive database name
    */
   public String getHiveDbName(Long hiveDbId) {
     try {
       return (String) em.createNativeQuery("SELECT `NAME` FROM metastore.`DBS` " +
-          "WHERE `DB_ID`=" + hiveDbId.toString() + ";").getSingleResult();
+        "WHERE `DB_ID`= ?1;").setParameter(1, hiveDbId).getSingleResult();
     } catch (NoResultException e) {
       return null;
     }
@@ -174,14 +174,14 @@ public class FeaturestoreFacade extends AbstractFacade<Featurestore> {
   /**
    * Gets the Hive Database HDFS path
    *
-   * @param hiveDbId
+   * @param hiveDbId id of the hive database in the metastore
    * @return hdfs path to the hive database
    */
   public String getHiveDbHdfsPath(Long hiveDbId) {
     try {
       return (String) em.createNativeQuery("SELECT s.`LOCATION` FROM metastore.`DBS` d " +
-          "JOIN metastore.`SDS` s ON d.`SD_ID` = s.`SD_ID` WHERE d.`DB_ID`="+ hiveDbId.toString() + ";")
-          .getSingleResult();
+        "JOIN metastore.`SDS` s ON d.`SD_ID` = s.`SD_ID` WHERE d.`DB_ID` = ?1;")
+        .setParameter(1, hiveDbId).getSingleResult();
     } catch (NoResultException e) {
       return null;
     }

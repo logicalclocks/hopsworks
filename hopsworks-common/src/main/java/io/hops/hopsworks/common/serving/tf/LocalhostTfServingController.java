@@ -17,268 +17,89 @@
 package io.hops.hopsworks.common.serving.tf;
 
 import com.google.common.io.Files;
+import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.serving.TfServing;
-import io.hops.hopsworks.common.dao.serving.TfServingFacade;
+import io.hops.hopsworks.common.dao.serving.Serving;
+import io.hops.hopsworks.common.dao.serving.ServingFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.exceptions.KafkaException;
-import io.hops.hopsworks.exceptions.ProjectException;
-import io.hops.hopsworks.restutils.RESTCodes;
-import io.hops.hopsworks.exceptions.ServiceException;
-import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
-import io.hops.hopsworks.common.serving.KafkaServingHelper;
+import io.hops.hopsworks.exceptions.ServingException;
 import io.hops.hopsworks.common.util.OSProcessExecutor;
 import io.hops.hopsworks.common.util.ProcessDescriptor;
 import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.enterprise.inject.Alternative;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static io.hops.hopsworks.common.hdfs.HdfsUsersController.USER_NAME_DELIMITER;
+import static io.hops.hopsworks.common.serving.LocalhostServingController.PID_STOPPED;
+import static io.hops.hopsworks.common.serving.LocalhostServingController.SERVING_DIRS;
 
-@Alternative
+/**
+ * Localhost Tensorflow Serving Controller
+ *
+ * Launches/Kills a local tensorflow-serving-server for serving tensorflow Models
+ */
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-public class LocalhostTfServingController implements TfServingController {
+public class LocalhostTfServingController {
 
   private final static Logger logger = Logger.getLogger(LocalhostTfServingController.class.getName());
 
-  public static final String SERVING_DIRS = "/serving/";
-  public static final Integer PID_STOPPED = -2;
-
   @EJB
-  private TfServingFacade tfServingFacade;
+  private ServingFacade servingFacade;
   @EJB
   private Settings settings;
   @EJB
   private CertificateMaterializer certificateMaterializer;
   @EJB
-  private KafkaServingHelper kafkaServingHelper;
-  @EJB
   private OSProcessExecutor osProcessExecutor;
-
-  @Override
-  public List<TfServingWrapper> getTfServings(Project project) throws TfServingException {
-    List<TfServing> tfServingList = tfServingFacade.findForProject(project);
-
-    List<TfServingWrapper> tfServingWrapperList = new ArrayList<>();
-    for (TfServing tfServing : tfServingList) {
-      tfServingWrapperList.add(getTfServingInternal(tfServing));
-    }
-
-    return tfServingWrapperList;
-  }
-
-  @Override
-  public TfServingWrapper getTfServing(Project project, Integer id) throws TfServingException {
-    TfServing tfServing = tfServingFacade.findByProjectAndId(project, id);
-    if (tfServing == null) {
-      return null;
-    }
-
-    return getTfServingInternal(tfServing);
-  }
-
-  @Override
-  public void deleteTfServings(Project project) throws TfServingException {
-    List<TfServing> tfServingList = tfServingFacade.findForProject(project);
-    for (TfServing tfServing : tfServingList) {
-      // Acquire lock
-      tfServingFacade.acquireLock(project, tfServing.getId());
-
-      TfServingStatusEnum status = getTfServingStatus(tfServing);
-
-      // getTfServingStatus returns STARTING if the PID is set to -2 and there is a lock.
-      // If we reached this point, we just acquired a lock
-      if (!status.equals(TfServingStatusEnum.STARTING)) {
-        killTfServingInstance(project, tfServing, false);
-      }
-      tfServingFacade.delete(tfServing);
-    }
-  }
-
-  @Override
-  public void deleteTfServing(Project project, Integer id) throws TfServingException {
-    TfServing tfServing = tfServingFacade.acquireLock(project, id);
-    TfServingStatusEnum status = getTfServingStatus(tfServing);
-
-    // getTfServingStatus returns STARTING if the PID is set to -2 and there is a lock.
-    // If we reached this point, we just acquired a lock
-    if (!status.equals(TfServingStatusEnum.STARTING)) {
-      killTfServingInstance(project, tfServing, false);
-    }
-    tfServingFacade.delete(tfServing);
-  }
-
-  @Override
-  public void checkDuplicates(Project project, TfServingWrapper tfServingWrapper) throws TfServingException {
-    TfServing serving = tfServingFacade.findByProjectModelName(project,
-        tfServingWrapper.getTfServing().getModelName());
-    if (serving != null && !serving.getId().equals(tfServingWrapper.getTfServing().getId())) {
-      // There is already an entry for this project
-      throw new TfServingException(RESTCodes.TfServingErrorCode.DUPLICATEDENTRY, Level.FINE);
-    }
-  }
-
-  @Override
-  public void createOrUpdate(Project project, Users user, TfServingWrapper newTfServingWrapper)
-      throws KafkaException, UserException, ProjectException, ServiceException, TfServingException {
-
-    TfServing serving = newTfServingWrapper.getTfServing();
-    if (serving.getId() == null) {
-      // Create request
-      serving.setCreated(new Date());
-      serving.setCreator(user);
-      serving.setProject(project);
-
-      UUID uuid = UUID.randomUUID();
-      serving.setLocalDir(uuid.toString());
-      serving.setLocalPid(PID_STOPPED);
-      serving.setInstances(1);
-
-      // Setup the Kafka topic for logging
-      kafkaServingHelper.setupKafkaServingTopic(project, newTfServingWrapper, serving, null);
-
-      tfServingFacade.merge(serving);
-    } else {
-      TfServing oldDbTfServing = tfServingFacade.acquireLock(project, serving.getId());
-
-      // Get the status of the current instance
-      TfServingStatusEnum status = getTfServingStatus(oldDbTfServing);
-
-      // Setup the Kafka topic for logging
-      kafkaServingHelper.setupKafkaServingTopic(project, newTfServingWrapper, serving, oldDbTfServing);
-
-      // Update the object in the database
-      TfServing dbTfServing = tfServingFacade.updateDbObject(serving, project);
-
-      if (status == TfServingStatusEnum.RUNNING || status == TfServingStatusEnum.UPDATING) {
-        if (!oldDbTfServing.getModelName().equals(dbTfServing.getModelName()) ||
-            !oldDbTfServing.getModelPath().equals(dbTfServing.getModelPath()) ||
-            oldDbTfServing.isBatchingEnabled() != dbTfServing.isBatchingEnabled() ||
-            oldDbTfServing.getVersion() > dbTfServing.getVersion()) {
-          // To update the name and/or the model path we need to restart the server and/or the version as been
-          // reduced. We need to restart the server
-          restartTfServingInstance(project, user, oldDbTfServing, dbTfServing);
-        } else {
-          // To update the version call the script and download the new version in the directory
-          // the server polls for new versions and it will pick it up.
-          updateModelVersion(project, user, dbTfServing);
-        }
-      } else {
-        // The instance is not running, nothing else to do. Just release the lock.
-        tfServingFacade.releaseLock(project, serving.getId());
-      }
-    }
-  }
-
-  @Override
-  public void startOrStop(Project project, Users user, Integer tfServingId, TfServingCommands command)
-      throws TfServingException {
-
-    TfServing tfServing = tfServingFacade.acquireLock(project, tfServingId);
-
-    TfServingStatusEnum currentStatus = getTfServingStatus(tfServing);
-
-    // getTfServingStatus returns STARTING if the PID is set to -2 and there is a lock.
-    // If we reached this point, we just acquired a lock
-    if (currentStatus == TfServingStatusEnum.STARTING
-        && command == TfServingCommands.START) {
-      startTfServingInstance(project, user, tfServing);
-
-      // getTfServingStatus returns UPDATING if the PID is different than -2 and there is a lock.
-      // If we reached this point, we just acquired a lock
-    } else if (currentStatus == TfServingStatusEnum.UPDATING &&
-        command == TfServingCommands.STOP) {
-      killTfServingInstance(project, tfServing, true);
-    } else {
-      // Release lock before throwing the exception
-      tfServingFacade.releaseLock(project, tfServingId);
-
-      String userMsg = "Instance is already " + (command == TfServingCommands.START ? "started" : "stopped");
-      throw new TfServingException(RESTCodes.TfServingErrorCode.LIFECYCLEERROR, Level.FINE, userMsg);
-    }
-  }
-
-  @Override
+  @EJB
+  private InodeFacade inodeFacade;
+  
   public int getMaxNumInstances() {
     return 1;
   }
-
-  @Override
+  
   public String getClassName() {
     return LocalhostTfServingController.class.getName();
   }
-
-  private TfServingWrapper getTfServingInternal(TfServing tfServing) {
-    TfServingWrapper tfServingWrapper = new TfServingWrapper(tfServing);
-
-    TfServingStatusEnum status = getTfServingStatus(tfServing);
-    tfServingWrapper.setStatus(status);
-    switch (status) {
-      case STOPPED:
-      case STARTING:
-      case UPDATING:
-        tfServingWrapper.setAvailableReplicas(0);
-        break;
-      case RUNNING:
-        tfServingWrapper.setAvailableReplicas(1);
-        tfServingWrapper.setNodePort(tfServing.getLocalPort());
-
-    }
-
-    tfServingWrapper.setKafkaTopicDTO(kafkaServingHelper.buildTopicDTO(tfServing));
-
-    return tfServingWrapper;
-  }
-
-  private TfServingStatusEnum getTfServingStatus(TfServing tfServing) {
-    // Compute status
-    if (tfServing.getLocalPid().equals(PID_STOPPED) && tfServing.getLockIP() == null) {
-      // The Pid is not in the database, and nobody has the lock, the instance is stopped
-      return TfServingStatusEnum.STOPPED;
-    } else if (tfServing.getLocalPid().equals(PID_STOPPED)) {
-      // The Pid is -1, but someone has the lock, the instance is starting
-      return TfServingStatusEnum.STARTING;
-    } else if (!tfServing.getLocalPid().equals(PID_STOPPED) && tfServing.getLockIP() == null){
-      // The Pid is in the database and nobody as the lock. Instance is running
-      return TfServingStatusEnum.RUNNING;
-    } else {
-      // Someone is updating the instance.
-      return TfServingStatusEnum.UPDATING;
-    }
-  }
-
-  private void updateModelVersion(Project project, Users user, TfServing tfServing) throws TfServingException {
+  
+  /**
+   * Updates the model version that is being served of an existing tfserving instance. The new model is copied to the
+   * secret directory where the serving instance is running and then the server will automatically pick up the new
+   * version.
+   *
+   * @param project the project of the serving instance
+   * @param user the user making the request
+   * @param serving the serving instance to update the model version for
+   * @throws ServingException
+   */
+  public void updateModelVersion(Project project, Users user, Serving serving) throws ServingException {
     // TFServing polls for new version of the model in the directory
     // if a new version is downloaded it starts serving it
     String script = settings.getHopsworksDomainDir() + "/bin/tfserving.sh";
 
-    Path secretDir = Paths.get(settings.getStagingDir(), SERVING_DIRS, tfServing.getLocalDir());
+    Path secretDir = Paths.get(settings.getStagingDir(), SERVING_DIRS, serving.getLocalDir());
   
     ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
         .addCommand("/usr/bin/sudo")
         .addCommand(script)
         .addCommand("update")
-        .addCommand(tfServing.getModelName())
-        .addCommand(Paths.get(tfServing.getModelPath(), tfServing.getVersion().toString()).toString())
+        .addCommand(serving.getName())
+        .addCommand(Paths.get(serving.getArtifactPath(), serving.getVersion().toString()).toString())
         .addCommand(secretDir.toString())
         .addCommand(project.getName() + USER_NAME_DELIMITER + user.getUsername())
         .ignoreOutErrStreams(true)
@@ -291,85 +112,101 @@ public class LocalhostTfServingController implements TfServingController {
       try {
         certificateMaterializer.materializeCertificatesLocal(user.getUsername(), project.getName());
       } catch (IOException e) {
-        throw new TfServingException(RESTCodes.TfServingErrorCode.LIFECYCLEERRORINT, Level.SEVERE, null,
+        throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERRORINT, Level.SEVERE, null,
           e.getMessage(), e);
       } finally {
-        tfServingFacade.releaseLock(project, tfServing.getId());
+        servingFacade.releaseLock(project, serving.getId());
       }
     }
 
     try {
       osProcessExecutor.execute(processDescriptor);
     } catch (IOException ex) {
-      throw new TfServingException(RESTCodes.TfServingErrorCode.UPDATEERROR, Level.SEVERE,
-        "tfServing id: " + tfServing.getId(), ex.getMessage(), ex);
+      throw new ServingException(RESTCodes.ServingErrorCode.UPDATEERROR, Level.SEVERE,
+        "serving id: " + serving.getId(), ex.getMessage(), ex);
     } finally {
       if (settings.getHopsRpcTls()) {
         certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());
       }
 
-      tfServingFacade.releaseLock(project, tfServing.getId());
+      servingFacade.releaseLock(project, serving.getId());
     }
   }
-
-  private void killTfServingInstance(Project project, TfServing tfServing, boolean releaseLock)
-      throws TfServingException {
-
+  
+  /**
+   * Stops a Tensorflow serving instance by killing the process with the corresponding PID
+   *
+   * @param project the project where the tensorflow serving instance is running
+   * @param serving the serving instance to stop
+   * @param releaseLock boolean flag deciding whether to release the lock afterwards.
+   * @throws ServingException
+   */
+  public void killServingInstance(Project project, Serving serving, boolean releaseLock)
+      throws ServingException {
     String script = settings.getHopsworksDomainDir() + "/bin/tfserving.sh";
-
-    Path secretDir = Paths.get(settings.getStagingDir(), SERVING_DIRS + tfServing.getLocalDir());
+    
+    Path secretDir = Paths.get(settings.getStagingDir(), SERVING_DIRS + serving.getLocalDir());
 
     ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
         .addCommand("/usr/bin/sudo")
         .addCommand(script)
         .addCommand("kill")
-        .addCommand(String.valueOf(tfServing.getLocalPid()))
-        .addCommand(String.valueOf(tfServing.getLocalPort()))
+        .addCommand(String.valueOf(serving.getLocalPid()))
+        .addCommand(String.valueOf(serving.getLocalPort()))
         .addCommand(secretDir.toString())
         .ignoreOutErrStreams(true)
         .build();
 
+    logger.log(Level.INFO, processDescriptor.toString());
     try {
       osProcessExecutor.execute(processDescriptor);
     } catch (IOException ex) {
-      throw new TfServingException(RESTCodes.TfServingErrorCode.LIFECYCLEERROR, Level.SEVERE,
-        "tfServing id: " + tfServing.getId(), ex.getMessage(), ex);
+      throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERROR, Level.SEVERE,
+        "serving id: " + serving.getId(), ex.getMessage(), ex);
     }
 
-    tfServing.setLocalPid(PID_STOPPED);
-    tfServing.setLocalPort(-1);
-    tfServingFacade.updateDbObject(tfServing, project);
+    serving.setLocalPid(PID_STOPPED);
+    serving.setLocalPort(-1);
+    servingFacade.updateDbObject(serving, project);
 
     if (releaseLock) {
-      // During the restart the lock is needed until the tfServing instance is actually restarted.
+      // During the restart the lock is needed until the serving instance is actually restarted.
       // The startTfServingInstance method is responsible of releasing the lock on the db entry
       // During the termination phase, this method is responsible of releasing the lock
       // In case of termination + deletion, we don't release the lock as the entry will be removed from the db.
-      tfServingFacade.releaseLock(project, tfServing.getId());
+      servingFacade.releaseLock(project, serving.getId());
     }
   }
-
-  private void startTfServingInstance(Project project, Users user, TfServing tfServing) throws TfServingException{
-
+  
+  /**
+   * Starts a Tensorflow serving instance. Executes the tfserving bash script to launch a tensorflow serving
+   * server as serving-user and localize the tf-model from HDFS server. It records the PID of the server for monitoring.
+   *
+   * @param project the project to start the serving in
+   * @param user the user starting the serving
+   * @param serving the serving instance to start (tfserving servingtype)
+   * @throws ServingException
+   */
+  public void startServingInstance(Project project, Users user, Serving serving) throws ServingException {
     String script = settings.getHopsworksDomainDir() + "/bin/tfserving.sh";
 
     // TODO(Fabio) this is bad as we don't know if the port is used or not
     Integer grpcPort = ThreadLocalRandom.current().nextInt(40000, 59999);
     Integer restPort = ThreadLocalRandom.current().nextInt(40000, 59999);
 
-    Path secretDir = Paths.get(settings.getStagingDir(), SERVING_DIRS + tfServing.getLocalDir());
+    Path secretDir = Paths.get(settings.getStagingDir(), SERVING_DIRS + serving.getLocalDir());
 
     ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
         .addCommand("/usr/bin/sudo")
         .addCommand(script)
         .addCommand("start")
-        .addCommand(tfServing.getModelName())
-        .addCommand(Paths.get(tfServing.getModelPath(), tfServing.getVersion().toString()).toString())
+        .addCommand(serving.getName())
+        .addCommand(Paths.get(serving.getArtifactPath(), serving.getVersion().toString()).toString())
         .addCommand(String.valueOf(grpcPort))
         .addCommand(String.valueOf(restPort))
         .addCommand(secretDir.toString())
         .addCommand(project.getName() + USER_NAME_DELIMITER + user.getUsername())
-        .addCommand(tfServing.isBatchingEnabled() ? "1" : "0")
+        .addCommand(serving.isBatchingEnabled() ? "1" : "0")
         .addCommand(project.getName().toLowerCase())
         .setWaitTimeout(2L, TimeUnit.MINUTES)
         .ignoreOutErrStreams(true)
@@ -381,22 +218,22 @@ public class LocalhostTfServingController implements TfServingController {
       try {
         certificateMaterializer.materializeCertificatesLocal(user.getUsername(), project.getName());
       } catch (IOException e) {
-        throw new TfServingException(RESTCodes.TfServingErrorCode.LIFECYCLEERRORINT, Level.SEVERE, null,e.getMessage(),
-          e);
+        throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERRORINT, Level.SEVERE,
+            null, e.getMessage(), e);
       } finally {
-        // Release lock on the tfServing entry
-        tfServingFacade.releaseLock(project, tfServing.getId());
+        // Release lock on the serving entry
+        servingFacade.releaseLock(project, serving.getId());
       }
     }
-    
+
     try {
       ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
-      
+
       if (processResult.getExitCode() != 0) {
         // Startup process failed for some reason
-        tfServing.setLocalPid(PID_STOPPED);
-        tfServingFacade.updateDbObject(tfServing, project);
-        throw new TfServingException(RESTCodes.TfServingErrorCode.LIFECYCLEERRORINT, Level.INFO);
+        serving.setLocalPid(PID_STOPPED);
+        servingFacade.updateDbObject(serving, project);
+        throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERRORINT, Level.INFO);
       }
 
       // Read the pid for TensorFlow Serving server
@@ -404,32 +241,23 @@ public class LocalhostTfServingController implements TfServingController {
       String pidContents = Files.readFirstLine(pidFilePath.toFile(), Charset.defaultCharset());
 
       // Update the info in the db
-      tfServing.setLocalPid(Integer.valueOf(pidContents));
-      tfServing.setLocalPort(restPort);
-      tfServingFacade.updateDbObject(tfServing, project);
+      serving.setLocalPid(Integer.valueOf(pidContents));
+      serving.setLocalPort(restPort);
+      servingFacade.updateDbObject(serving, project);
     } catch (Exception ex) {
       // Startup process failed for some reason
-      tfServing.setLocalPid(PID_STOPPED);
-      tfServingFacade.updateDbObject(tfServing, project);
+      serving.setLocalPid(PID_STOPPED);
+      servingFacade.updateDbObject(serving, project);
 
-      throw new TfServingException(RESTCodes.TfServingErrorCode.LIFECYCLEERRORINT, Level.SEVERE, null,
+      throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERRORINT, Level.SEVERE, null,
           ex.getMessage(), ex);
 
     } finally {
       if (settings.getHopsRpcTls()) {
         certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());
       }
-      // release lock on the tfServing entry
-      tfServingFacade.releaseLock(project, tfServing.getId());
+      // release lock on the serving entry
+      servingFacade.releaseLock(project, serving.getId());
     }
-  }
-
-  private void restartTfServingInstance(Project project, Users user, TfServing currentInstance,
-                                        TfServing newInstance) throws TfServingException {
-    // Kill current TfServing instance
-    killTfServingInstance(project, currentInstance, false);
-
-    // Start new TfServing instance
-    startTfServingInstance(project, user, newInstance);
   }
 }

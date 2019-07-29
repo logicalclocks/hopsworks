@@ -52,10 +52,7 @@
     <class>io.hops.hopsworks.common.dao.jobhistory.YarnAppResult</class>
     <class>io.hops.hopsworks.common.dao.jobhistory.YarnApplicationattemptstate</class>
     <class>io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstate</class>
-    <class>io.hops.hopsworks.common.dao.jobs.JobInputFile</class>
-    <class>io.hops.hopsworks.common.dao.jobs.JobOutputFile</class>
     <class>io.hops.hopsworks.common.dao.jobs.FilesToRemove</class>
-    <class>io.hops.hopsworks.common.dao.jobs.JobsHistory</class>
     <class>io.hops.hopsworks.common.dao.jobs.quota.YarnPriceMultiplicator</class>
     <class>io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsDailyCost</class>
     <class>io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuota</class>
@@ -102,12 +99,12 @@
     <class>io.hops.hopsworks.common.dao.remote.user.RemoteUser</class>
     <class>io.hops.hopsworks.common.dao.remote.oauth.OauthClient</class>
     <class>io.hops.hopsworks.common.dao.remote.oauth.OauthLoginState</class>
-    <class>io.hops.hopsworks.common.dao.pythonDeps.PythonDep</class>
-    <class>io.hops.hopsworks.common.dao.pythonDeps.AnacondaRepo</class>
-    <class>io.hops.hopsworks.common.dao.pythonDeps.CondaCommands</class>
+    <class>io.hops.hopsworks.common.dao.python.PythonDep</class>
+    <class>io.hops.hopsworks.common.dao.python.AnacondaRepo</class>
+    <class>io.hops.hopsworks.common.dao.python.CondaCommands</class>
     <class>io.hops.hopsworks.common.dao.tensorflow.TensorBoard</class>
     <class>io.hops.hopsworks.common.dao.tensorflow.TfLibMapping</class>
-    <class>io.hops.hopsworks.common.dao.serving.TfServing</class>
+    <class>io.hops.hopsworks.common.dao.serving.Serving</class>
     <class>io.hops.hopsworks.common.dao.jupyter.JupyterProject</class>
     <class>io.hops.hopsworks.common.dao.jupyter.JupyterSettings</class>
     <class>io.hops.hopsworks.common.dao.ndb.NdbBackup</class>
@@ -126,7 +123,8 @@
     <class>io.hops.hopsworks.common.dao.featurestore.stats.FeaturestoreStatistic</class>
     <class>io.hops.hopsworks.common.dao.featurestore.dependencies.FeaturestoreDependency</class>
     <class>io.hops.hopsworks.common.dao.featurestore.trainingdataset.feature.TrainingDatasetFeature</class>
-    <class>io.hops.hopsworks.common.dao.airflow.AirflowMaterial</class>
+    <class>io.hops.hopsworks.common.dao.maggy.MaggyDriver</class>
+    <class>io.hops.hopsworks.common.dao.airflow.MaterializedJWT</class>
     <!-- Converters -->
     <class>io.hops.hopsworks.common.dao.user.cluster.RegistrationStatusConverter</class>
     <class>io.hops.hopsworks.common.jobs.configuration.JobConfigurationConverter</class>
@@ -136,9 +134,12 @@
     <class>io.hops.hopsworks.common.dao.rstudio.RStudioProject</class>
     <class>io.hops.hopsworks.common.dao.rstudio.RStudioSettings</class>
 
+    <class>io.hops.hopsworks.ca.dao.ConfEntry</class>
 
     <class>io.hops.hopsworks.jwt.dao.InvalidJwt</class>
     <class>io.hops.hopsworks.jwt.dao.JwtSigningKey</class>
+
+    <class>io.hops.hopsworks.common.dao.user.security.secrets.Secret</class>
 
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <shared-cache-mode>NONE</shared-cache-mode>

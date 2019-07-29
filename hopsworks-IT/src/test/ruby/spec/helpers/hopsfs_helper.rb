@@ -13,10 +13,14 @@
  You should have received a copy of the GNU Affero General Public License along with this program.
  If not, see <https://www.gnu.org/licenses/>.
 =end
+
+require 'open3'
+
 module HopsFSHelper
 
   @@hdfs_user = Variables.find_by(id: "hdfs_user").value
   @@hadoop_home = Variables.find_by(id: "hadoop_dir").value
+  @@hopsworks_user = Variables.find_by(id: "hopsworks_user").value
 
   def mkdir(path, owner, group, mode)
     system "sudo su #{@@hdfs_user} /bin/bash -c \"#{@@hadoop_home}/bin/hdfs dfs -mkdir -p #{path}\""
@@ -64,6 +68,30 @@ module HopsFSHelper
     system "sudo su #{@@hdfs_user} /bin/bash -c \"#{@@hadoop_home}/bin/hdfs dfs -rm #{path}\""
     if $?.exitstatus > 0
       raise "Failed to chmod directory: #{path} "
+    end
+  end
+
+  def get_storage_policy(path)
+    cmd = "sudo su #{@@hdfs_user} /bin/bash -c \"#{@@hadoop_home}/bin/hdfs storagepolicies -getStoragePolicy -path #{path}\""
+    policy = ""
+    Open3.popen3(cmd) do |_, stdout, _, _|
+      policy = stdout.read
+    end
+    policy
+  end
+
+  def getHopsworksUser
+    @@hopsworks_user
+  end
+
+  def touchz(path, owner, group)
+    system "sudo su #{@@hdfs_user} /bin/bash -c \"#{@@hadoop_home}/bin/hdfs dfs -touchz #{path}\""
+    if $?.exitstatus > 0
+      raise "Failed to create file: #{path}"
+    end
+    system "sudo su #{@@hdfs_user} /bin/bash -c \"#{@@hadoop_home}/bin/hdfs dfs -chown #{owner}:#{group} #{path}\""
+    if $?.exitstatus > 0
+      raise "Failed to change owner: #{path}"
     end
   end
 end

@@ -52,6 +52,7 @@ import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 
+import io.hops.hopsworks.common.dao.user.activity.ActivityFlag;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -146,8 +147,7 @@ public class FlinkController {
     }
     Execution execution = flinkjob.requestExecutionId();
     submitter.startExecution(flinkjob);
-    activityFacade.persistActivity(ActivityFacade.RAN_JOB, job.getProject(),
-      user.asUser(), ActivityFacade.ActivityFlag.JOB);
+    activityFacade.persistActivity(ActivityFacade.RAN_JOB, job.getProject(), user.asUser(), ActivityFlag.JOB);
     
     return execution;
   }
@@ -217,7 +217,7 @@ public class FlinkController {
       //Set Flink config params
       config.setFlinkConfDir(settings.getFlinkConfDir());
       config.setFlinkConfFile(settings.getFlinkConfFile());
-      config.setJarPath(path);
+      config.setJarPath("hdfs://" + path);
       return config;
     } catch (IOException ex) {
       throw new JobException(RESTCodes.JobErrorCode.JAR_INSPECTION_ERROR, Level.SEVERE,

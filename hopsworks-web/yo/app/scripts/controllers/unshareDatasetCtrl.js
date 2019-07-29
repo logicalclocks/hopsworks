@@ -38,15 +38,15 @@
  */
 
 angular.module('hopsWorksApp')
-    .controller('UnshareDatasetCtrl', ['$scope','$uibModalInstance', 'DataSetService', '$routeParams', 'growl', 'ProjectService', 'dsName',
-        function ($scope, $uibModalInstance, DataSetService, $routeParams, growl, ProjectService, dsName) {
+    .controller('UnshareDatasetCtrl', ['$scope','$uibModalInstance', 'DataSetService', '$routeParams', 'growl', 'ProjectService', 'dsName', 'dsType',
+        function ($scope, $uibModalInstance, DataSetService, $routeParams, growl, ProjectService, dsName, dsType) {
 
             var self = this;
 
             self.datasets = [];
             self.projects = [];
-            self.dataSet = {'name': dsName, 'description': "", 'projectId': $routeParams.projectID, 'permissions':'OWNER_ONLY'};
-            self.dataSets = {'name': dsName, 'description': "", 'projectIds': [], 'permissions':'OWNER_ONLY'};
+            self.dataSet = {'name': dsName, 'description': "", 'projectId': $routeParams.projectID, 'permissions':'OWNER_ONLY', type: dsType};
+            self.dataSets = {'name': dsName, 'description': "", 'projectIds': [], 'permissions':'OWNER_ONLY', type: dsType};
             self.pId = $routeParams.projectID;
             var dataSetService = DataSetService(self.pId);
 

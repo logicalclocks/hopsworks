@@ -44,13 +44,13 @@
   <parent>
     <groupId>io.hops</groupId>
     <artifactId>hopsworks</artifactId>
-    <version>0.10.0-SNAPSHOT</version>
+    <version>1.0.0-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
 
   <groupId>io.hops.hopsworks</groupId>
   <artifactId>hopsworks-common</artifactId>
-  <version>0.10.0-SNAPSHOT</version>
+  <version>1.0.0-SNAPSHOT</version>
   <packaging>ejb</packaging>
   <description>Hopsworks common</description>
   <name>hopsworks-common</name>
@@ -137,11 +137,6 @@
           <artifactId>netty-all</artifactId>
         </exclusion>
       </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>io.hops</groupId>
-      <artifactId>hops-tensorflow</artifactId>
-      <version>0.0.1</version>
     </dependency>
     <dependency>
       <groupId>org.apache.kafka</groupId>
@@ -299,8 +294,12 @@
     <dependency>
       <groupId>io.hops.hive</groupId>
       <artifactId>hive-jdbc</artifactId>
-      <version>2.3.0</version>
+      <version>3.0.0.1</version>
       <exclusions>
+        <exclusion>
+          <groupId>org.eclipse.jetty</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
         <exclusion>
           <groupId>com.sun.jersey</groupId>
           <artifactId>jersey-core</artifactId>
@@ -336,6 +335,18 @@
         <exclusion>
           <groupId>com.fasterxml.jackson.core</groupId>
           <artifactId>jackson-databind</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.fasterxml.jackson.core</groupId>
+          <artifactId>jackson-core</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.fasterxml.jackson.core</groupId>
+          <artifactId>jackson-annotations</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.logging.log4j</groupId>
+          <artifactId>*</artifactId>
         </exclusion>
       </exclusions>
     </dependency>

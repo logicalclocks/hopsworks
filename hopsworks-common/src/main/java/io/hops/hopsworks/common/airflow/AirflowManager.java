@@ -20,9 +20,9 @@ import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import io.hops.hopsworks.common.dao.airflow.AirflowDag;
 import io.hops.hopsworks.common.dao.airflow.AirflowDagFacade;
-import io.hops.hopsworks.common.dao.airflow.AirflowMaterial;
-import io.hops.hopsworks.common.dao.airflow.AirflowMaterialFacade;
-import io.hops.hopsworks.common.dao.airflow.AirflowMaterialID;
+import io.hops.hopsworks.common.dao.airflow.MaterializedJWT;
+import io.hops.hopsworks.common.dao.airflow.MaterializedJWTFacade;
+import io.hops.hopsworks.common.dao.airflow.MaterializedJWTID;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.BbcGroup;
@@ -30,8 +30,10 @@ import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
+import io.hops.hopsworks.common.util.DateUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.AirflowException;
+import io.hops.hopsworks.jwt.Constants;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.jwt.JWTController;
 import io.hops.hopsworks.jwt.SignatureAlgorithm;
@@ -67,16 +69,16 @@ import java.nio.file.attribute.PosixFileAttributeView;
 import java.nio.file.attribute.PosixFilePermission;
 import java.security.GeneralSecurityException;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
@@ -128,7 +130,7 @@ public class AirflowManager {
   @EJB
   private CertificateMaterializer certificateMaterializer;
   @EJB
-  private AirflowMaterialFacade airflowMaterialFacade;
+  private MaterializedJWTFacade materializedJWTFacade;
   @EJB
   private UserFacade userFacade;
   @EJB
@@ -166,11 +168,11 @@ public class AirflowManager {
    */
   private void recover() {
     LOG.log(Level.FINE, "Starting Airflow manager recovery");
-    List<AirflowMaterial> failed2recover = new ArrayList<>();
+    List<MaterializedJWT> failed2recover = new ArrayList<>();
     Project project = null;
     Users user = null;
     // Get last known state from storage
-    for (AirflowMaterial material : airflowMaterialFacade.findAll()) {
+    for (MaterializedJWT material : materializedJWTFacade.findAll4Airflow()) {
       LOG.log(Level.FINEST, "Recovering material: " + material.getIdentifier().getProjectId() + " - "
         + material.getIdentifier().getUserId());
       project = projectFacade.find(material.getIdentifier().getProjectId());
@@ -192,7 +194,7 @@ public class AirflowManager {
         token = FileUtils.readFileToString(tokenFile.toFile(), Charset.defaultCharset());
         DecodedJWT decoded = jwtController.verifyToken(token, settings.getJWTIssuer());
         airflowJWT = new AirflowJWT(user.getUsername(), project.getId(), project.getName(),
-            date2LocalDateTime(decoded.getExpiresAt()), user.getUid());
+            DateUtils.date2LocalDateTime(decoded.getExpiresAt()), user.getUid());
         airflowJWT.tokenFile = tokenFile;
         airflowJWT.token = token;
         LOG.log(Level.FINE, "Successfully read existing JWT from local filesystem for " + materialIdentifier);
@@ -200,16 +202,20 @@ public class AirflowManager {
         // JWT does not exist in the filesystem or we cannot read them or it is not valid any longer
         // We will create a new one
         //TODO(Antonis): Not very good that audience is hardcoded, but it is not accessible from hopsworks-common
-        String[] audience = new String[]{"job"};
-        LocalDateTime expirationDate = getNow().plus(settings.getJWTLifetimeMs(), ChronoUnit.MILLIS);
+        String[] audience = new String[]{"api"};
+        LocalDateTime expirationDate = DateUtils.getNow().plus(settings.getJWTLifetimeMs(), ChronoUnit.MILLIS);
         String[] roles = getUserRoles(user);
         try {
           LOG.log(Level.FINEST, "JWT for " + materialIdentifier + " does not exist in the local FS or it is not "
               + "valid any longer, creating new one...");
+          Map<String, Object> claims = new HashMap<>(3);
+          claims.put(Constants.RENEWABLE, false);
+          claims.put(Constants.EXPIRY_LEEWAY, settings.getJWTExpLeewaySec());
+          claims.put(Constants.ROLES, roles);
           token = jwtController.createToken(settings.getJWTSigningKeyName(), false, settings.getJWTIssuer(),
-              audience, localDateTime2Date(expirationDate), localDateTime2Date(getNow()), user.getUsername(),
-              false, settings.getJWTExpLeewaySec(), roles,
-              SignatureAlgorithm.valueOf(settings.getJWTSignatureAlg()));
+              audience, DateUtils.localDateTime2Date(expirationDate),
+              DateUtils.localDateTime2Date(DateUtils.getNow()), user.getUsername(),
+              claims, SignatureAlgorithm.valueOf(settings.getJWTSignatureAlg()));
           airflowJWT = new AirflowJWT(user.getUsername(), project.getId(), project.getName(),
               expirationDate, user.getUid());
           airflowJWT.tokenFile = tokenFile;
@@ -265,8 +271,8 @@ public class AirflowManager {
     }
     
     // Remove failed material from persistent storage
-    for (AirflowMaterial failed : failed2recover) {
-      airflowMaterialFacade.delete(failed.getIdentifier());
+    for (MaterializedJWT failed : failed2recover) {
+      materializedJWTFacade.delete(failed.getIdentifier());
     }
   }
   
@@ -292,21 +298,27 @@ public class AirflowManager {
   @Lock(LockType.READ)
   @AccessTimeout(value = 1, unit = TimeUnit.SECONDS)
   public void prepareSecurityMaterial(Users user, Project project, String[] audience) throws AirflowException {
-    AirflowMaterialID materialID = new AirflowMaterialID(project.getId(), user.getUid());
-    if (!airflowMaterialFacade.exists(materialID)) {
-      LocalDateTime expirationDate = getNow().plus(settings.getJWTLifetimeMs(), ChronoUnit.MILLIS);
+    MaterializedJWTID materialID = new MaterializedJWTID(project.getId(), user.getUid(),
+        MaterializedJWTID.USAGE.AIRFLOW);
+    if (!materializedJWTFacade.exists(materialID)) {
+      LocalDateTime expirationDate = DateUtils.getNow().plus(settings.getJWTLifetimeMs(), ChronoUnit.MILLIS);
       AirflowJWT airflowJWT = new AirflowJWT(user.getUsername(), project.getId(), project.getName(), expirationDate,
           user.getUid());
       try {
         String[] roles = getUserRoles(user);
-        AirflowMaterial airflowMaterial = new AirflowMaterial(new AirflowMaterialID(project.getId(), user.getUid()));
-        airflowMaterialFacade.persist(airflowMaterial);
+        MaterializedJWT airflowMaterial = new MaterializedJWT(new MaterializedJWTID(project.getId(), user.getUid(),
+            MaterializedJWTID.USAGE.AIRFLOW));
+        materializedJWTFacade.persist(airflowMaterial);
+        Map<String, Object> claims = new HashMap<>(3);
+        claims.put(Constants.RENEWABLE, false);
+        claims.put(Constants.EXPIRY_LEEWAY, settings.getJWTExpLeewaySec());
+        claims.put(Constants.ROLES, roles);
         String token = jwtController.createToken(settings.getJWTSigningKeyName(), false, settings.getJWTIssuer(),
-            audience, localDateTime2Date(expirationDate), localDateTime2Date(getNow()), user.getUsername(),
-            false, settings.getJWTExpLeewaySec(), roles,
-            SignatureAlgorithm.valueOf(settings.getJWTSignatureAlg()));
+            audience, DateUtils.localDateTime2Date(expirationDate),
+            DateUtils.localDateTime2Date(DateUtils.getNow()), user.getUsername(),
+            claims, SignatureAlgorithm.valueOf(settings.getJWTSignatureAlg()));
         String projectAirflowDir = getProjectSecretsDirectory(user.getUsername()).toString();
-        airflowJWT.tokenFile = Paths.get(projectAirflowDir,getTokenFileName(project.getName(), user.getUsername()));
+        airflowJWT.tokenFile = Paths.get(projectAirflowDir, getTokenFileName(project.getName(), user.getUsername()));
         
         airflowJWT.token = token;
         writeTokenToFile(airflowJWT);
@@ -349,7 +361,7 @@ public class AirflowManager {
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   @Timeout
   public void monitorSecurityMaterial(Timer timer) {
-    LocalDateTime now = getNow();
+    LocalDateTime now = DateUtils.getNow();
     // Clean unused token files and X.509 certificates
     cleanStaleSecurityMaterial();
   
@@ -363,9 +375,9 @@ public class AirflowManager {
       if (airflowJWT.maybeRenew(now)) {
         try {
           LocalDateTime expirationDateTime = now.plus(settings.getJWTLifetimeMs(), ChronoUnit.MILLIS);
-          Date expirationDate = localDateTime2Date(expirationDateTime);
+          Date expirationDate = DateUtils.localDateTime2Date(expirationDateTime);
           String token = jwtController.renewToken(airflowJWT.token, expirationDate,
-              Date.from(now.toInstant(ZoneOffset.UTC)));
+              DateUtils.localDateTime2Date(DateUtils.getNow()), true, new HashMap<>(3));
           
           AirflowJWT renewedJWT = new AirflowJWT(airflowJWT.username, airflowJWT.projectId, airflowJWT.projectName,
               expirationDateTime, airflowJWT.uid);
@@ -392,20 +404,6 @@ public class AirflowManager {
       }
     }
     airflowJWTs.addAll(newTokens2Add);
-  }
-  
-  private LocalDateTime getNow() {
-    return LocalDateTime.now();
-  }
-  
-  private Date localDateTime2Date(LocalDateTime time) {
-    return Date.from(time.toInstant(ZoneOffset.UTC));
-  }
-  
-  private LocalDateTime date2LocalDateTime(Date time) {
-    return time.toInstant()
-        .atZone(ZoneId.systemDefault())
-        .toLocalDateTime();
   }
   
   public Path getProjectDagDirectory(Integer projectID) {
@@ -438,8 +436,8 @@ public class AirflowManager {
         LinkOption.NOFOLLOW_LINKS).setGroup(airflowGroup);
   }
   
-  private void deleteAirflowMaterial(AirflowMaterialID identifier) {
-    airflowMaterialFacade.delete(identifier);
+  private void deleteAirflowMaterial(MaterializedJWTID identifier) {
+    materializedJWTFacade.delete(identifier);
   }
   
   private String getTokenFileName(String projectName, String username) {
@@ -461,8 +459,9 @@ public class AirflowManager {
     while (airflowJWTsIt.hasNext()) {
       AirflowJWT nextElement = airflowJWTsIt.next();
       try {
-        AirflowMaterialID materialId = new AirflowMaterialID(nextElement.projectId, nextElement.uid);
-        AirflowMaterial airflowMaterial = airflowMaterialFacade.findById(materialId);
+        MaterializedJWTID materialId = new MaterializedJWTID(nextElement.projectId, nextElement.uid,
+            MaterializedJWTID.USAGE.AIRFLOW);
+        MaterializedJWT airflowMaterial = materializedJWTFacade.findById(materialId);
         boolean shouldDelete = true;
         
         if (airflowMaterial != null) {

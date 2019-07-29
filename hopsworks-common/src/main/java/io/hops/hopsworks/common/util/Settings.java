@@ -76,6 +76,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -131,24 +132,26 @@ public class Settings implements Serializable {
   }
 
   public static final String AGENT_EMAIL = "kagent@hops.io";
-  public static final String SITE_EMAIL = "admin@kth.se";
   /**
    * Global Variables taken from the DB
    */
+  private static final String VARIABLE_ADMIN_EMAIL = "admin_email";
   private static final String VARIABLE_PYPI_REST_ENDPOINT = "pypi_rest_endpoint";
   private static final String VARIABLE_PYTHON_KERNEL = "python_kernel";
   private static final String VARIABLE_HADOOP_VERSION = "hadoop_version";
   private static final String VARIABLE_JAVA_HOME = "JAVA_HOME";
   private static final String VARIABLE_HOPSWORKS_IP = "hopsworks_ip";
-  private static final String VARIABLE_HOPSWORKS_PORT = "hopsworks_port";
   private static final String VARIABLE_KIBANA_IP = "kibana_ip";
   private static final String VARIABLE_LIVY_IP = "livy_ip";
   private static final String VARIABLE_JHS_IP = "jhs_ip";
   private static final String VARIABLE_RM_IP = "rm_ip";
   private static final String VARIABLE_RM_PORT = "rm_port";
+  private static final String VARIABLE_LOCALHOST = "localhost";
+  private static final String VARIABLE_CLOUD= "cloud";
   private static final String VARIABLE_LOGSTASH_IP = "logstash_ip";
   private static final String VARIABLE_LOGSTASH_PORT = "logstash_port";
-  private static final String VARIABLE_LOGSTASH_PORT_SERVING = "logstash_port_serving";
+  private static final String VARIABLE_LOGSTASH_PORT_TF_SERVING = "logstash_port_tf_serving";
+  private static final String VARIABLE_LOGSTASH_PORT_SKLEARN_SERVING = "logstash_port_sklearn_serving";
   private static final String VARIABLE_OOZIE_IP = "oozie_ip";
   private static final String VARIABLE_SPARK_HISTORY_SERVER_IP
       = "spark_history_server_ip";
@@ -160,6 +163,8 @@ public class Settings implements Serializable {
   private static final String VARIABLE_YARN_SUPERUSER = "yarn_user";
   private static final String VARIABLE_HDFS_SUPERUSER = "hdfs_user";
   private static final String VARIABLE_HOPSWORKS_USER = "hopsworks_user";
+  private static final String VARIABLE_JUPYTER_GROUP = "jupyter_group";
+  private static final String VARIABLE_JUPYTER_USER = "jupyter_user";
   private static final String VARIABLE_AIRFLOW_USER = "airflow_user";
   private static final String VARIABLE_STAGING_DIR = "staging_dir";
   private static final String VARIABLE_AIRFLOW_DIR = "airflow_dir";
@@ -184,6 +189,8 @@ public class Settings implements Serializable {
   private static final String VARIABLE_HIVE_SUPERUSER = "hive_superuser";
   private static final String VARIABLE_HIVE_WAREHOUSE = "hive_warehouse";
   private static final String VARIABLE_HIVE_SCRATCHDIR = "hive_scratchdir";
+  private static final String VARIABLE_HIVE_SCRATCHDIR_DELAY = "hive_scratchdir_delay";
+  private static final String VARIABLE_HIVE_SCRATCHDIR_CLEANER_INTERVAL = "hive_scratchdir_cleaner_interval";
   private static final String VARIABLE_HIVE_DEFAULT_QUOTA = "hive_default_quota";
   private static final String VARIABLE_HIVE_LLAP_SLIDER_DIR = "hive_llap_slider_dir";
   private static final String VARIABLE_HIVE_LLAP_LOCAL_DIR = "hive_llap_local_dir";
@@ -202,8 +209,6 @@ public class Settings implements Serializable {
   private static final String VARIABLE_DRELEPHANT_DB = "drelephant_db";
   private static final String VARIABLE_DRELEPHANT_PORT = "drelephant_port";
   private static final String VARIABLE_YARN_WEB_UI_IP = "yarn_ui_ip";
-  private static final String VARIABLE_HDFS_WEB_UI_IP = "hdfs_ui_ip";
-  private static final String VARIABLE_HDFS_WEB_UI_PORT = "hdfs_ui_port";
   private static final String VARIABLE_YARN_WEB_UI_PORT = "yarn_ui_port";
   private static final String VARIABLE_FILE_PREVIEW_IMAGE_SIZE
       = "file_preview_image_size";
@@ -223,7 +228,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_ANACONDA_DIR = "anaconda_dir";
   private static final String VARIABLE_ANACONDA_ENABLED = "anaconda_enabled";
   private static final String VARIABLE_ANACONDA_DEFAULT_REPO = "conda_default_repo";
-  
+
   private static final String VARIABLE_DOWNLOAD_ALLOWED = "download_allowed";
   private static final String VARIABLE_SUPPORT_EMAIL_ADDR = "support_email_addr";
   private static final String VARIABLE_HOPSUTIL_VERSION = "hopsutil_version";
@@ -233,13 +238,17 @@ public class Settings implements Serializable {
   private static final String VARIABLE_INFLUXDB_PORT = "influxdb_port";
   private static final String VARIABLE_INFLUXDB_USER = "influxdb_user";
   private static final String VARIABLE_INFLUXDB_PW = "influxdb_pw";
-  private static final String VARIABLE_ANACONDA_ENV = "anaconda_env";
+  private static final String VARIABLE_KAGENT_USER = "kagent_user";
+  private static final String VARIABLE_KAGENT_LIVENESS_MONITOR_ENABLED = "kagent_liveness_monitor_enabled";
+  private static final String VARIABLE_KAGENT_LIVENESS_THRESHOLD = "kagent_liveness_threshold";
+  private static final String VARIABLE_SERVICE_RESTART_SCRIPT = "service_restart_script";
+  private static final String VARIABLE_SERVICE_START_SCRIPT = "service_start_script";
+  private static final String VARIABLE_SERVICE_STOP_SCRIPT = "service_stop_script";
   private static final String VARIABLE_RESOURCE_DIRS = "resources";
   private static final String VARIABLE_CERTS_DIRS = "certs_dir";
   private static final String VARIABLE_MAX_STATUS_POLL_RETRY = "max_status_poll_retry";
   private static final String VARIABLE_CERT_MATER_DELAY = "cert_mater_delay";
   private static final String VARIABLE_WHITELIST_USERS_LOGIN = "whitelist_users";
-  private static final String VARIABLE_RECOVERY_PATH = "recovery_endpoint";
   private static final String VARIABLE_VERIFICATION_PATH = "verification_endpoint";
   private static final String VARIABLE_ALERT_EMAIL_ADDRS = "alert_email_addrs";
   private static final String VARIABLE_FIRST_TIME_LOGIN = "first_time_login";
@@ -274,11 +283,15 @@ public class Settings implements Serializable {
   private static final String VARIABLE_HOPSWORKS_REST_LOG_LEVEL = "hopsworks_rest_log_level";
 
   /*
-   * -------------------- TfServing ---------------
+   * -------------------- Serving ---------------
    */
-  private static final String VARIABLE_TF_SERVING_MONITOR_INT = "tf_serving_monitor_int";
-  private static final String VARIABLE_TF_SERVING_CONNECTION_POOL_SIZE = "tf_serving_connection_pool_size";
-  private static final String VARIABLE_TF_SERVING_MAX_ROUTE_CONNECTIONS = "tf_serving_max_route_connections";
+  private static final String VARIABLE_SERVING_MONITOR_INT = "serving_monitor_int";
+
+  /*
+   * -------------------- Serving ---------------
+   */
+  private static final String VARIABLE_SERVING_CONNECTION_POOL_SIZE = "serving_connection_pool_size";
+  private static final String VARIABLE_SERVING_MAX_ROUTE_CONNECTIONS = "serving_max_route_connections";
 
   /*
    * -------------------- Kubernetes ---------------
@@ -296,6 +309,20 @@ public class Settings implements Serializable {
   private static final String VARIABLE_KUBE_REGISTRY = "kube_registry";
   private static final String VARIABLE_KUBE_MAX_SERVING = "kube_max_serving_instances";
 
+  // Container image versions
+  private static final String VARIABLE_KUBE_TF_IMG_VERSION = "kube_tf_img_version";
+  private static final String VARIABLE_KUBE_SKLEARN_IMG_VERSION = "kube_sklearn_img_version";
+  private static final String VARIABLE_KUBE_FILEBEAT_IMG_VERSION = "kube_filebeat_img_version";
+  private static final String VARIABLE_KUBE_JUPYTER_IMG_VERSION = "kube_jupyter_img_version";
+
+  private static final String VARIABLE_KUBE_API_MAX_ATTEMPTS = "kube_api_max_attempts";
+
+  /*
+   * -------------------- Jupyter ---------------
+   */
+  private static final String VARIABLE_JUPYTER_HOST = "jupyter_host";
+  private static final String VARIABLE_JUPYTER_ORIGIN_SCHEME = "jupyter_origin_scheme";
+
   // JWT Variables
   private static final String VARIABLE_JWT_SIGNATURE_ALGORITHM = "jwt_signature_algorithm";
   private static final String VARIABLE_JWT_LIFETIME_MS = "jwt_lifetime_ms";
@@ -303,7 +330,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_JWT_SIGNING_KEY_NAME = "jwt_signing_key_name";
   private static final String VARIABLE_JWT_ISSUER_KEY = "jwt_issuer";
 
-  private static final String VARIABLE_SERVICE_JWT = "service_jwt";
+  private static final String VARIABLE_SERVICE_MASTER_JWT = "service_master_jwt";
   private static final String VARIABLE_SERVICE_JWT_LIFETIME_MS = "service_jwt_lifetime_ms";
   private static final String VARIABLE_SERVICE_JWT_EXP_LEEWAY_SEC = "service_jwt_exp_leeway_sec";
 
@@ -447,11 +474,17 @@ public class Settings implements Serializable {
 
   private void populateCache() {
     if (!cached) {
+      ADMIN_EMAIL = setVar(VARIABLE_ADMIN_EMAIL, ADMIN_EMAIL);
+      LOCALHOST = setBoolVar(VARIABLE_LOCALHOST, LOCALHOST);
+      CLOUD = setStrVar(VARIABLE_CLOUD, CLOUD);
       PYTHON_KERNEL = setBoolVar(VARIABLE_PYTHON_KERNEL, PYTHON_KERNEL);
       JAVA_HOME = setVar(VARIABLE_JAVA_HOME, JAVA_HOME);
       TWOFACTOR_AUTH = setVar(VARIABLE_TWOFACTOR_AUTH, TWOFACTOR_AUTH);
       TWOFACTOR_EXCLUDE = setVar(VARIABLE_TWOFACTOR_EXCLUD, TWOFACTOR_EXCLUDE);
       HOPSWORKS_USER = setVar(VARIABLE_HOPSWORKS_USER, HOPSWORKS_USER);
+      JUPYTER_USER = setVar(VARIABLE_JUPYTER_USER, JUPYTER_USER);
+      JUPYTER_GROUP = setVar(VARIABLE_JUPYTER_GROUP, JUPYTER_GROUP);
+      JUPYTER_ORIGIN_SCHEME = setVar(VARIABLE_JUPYTER_ORIGIN_SCHEME, JUPYTER_ORIGIN_SCHEME);
       AIRFLOW_USER = setVar(VARIABLE_AIRFLOW_USER, AIRFLOW_USER);
       HDFS_SUPERUSER = setVar(VARIABLE_HDFS_SUPERUSER, HDFS_SUPERUSER);
       YARN_SUPERUSER = setVar(VARIABLE_YARN_SUPERUSER, YARN_SUPERUSER);
@@ -472,6 +505,9 @@ public class Settings implements Serializable {
       HIVE_LLAP_SLIDER_DIR = setStrVar(VARIABLE_HIVE_LLAP_SLIDER_DIR, HIVE_LLAP_SLIDER_DIR);
       HIVE_LLAP_LOCAL_FS_DIR = setStrVar(VARIABLE_HIVE_LLAP_LOCAL_DIR, HIVE_LLAP_LOCAL_FS_DIR);
       HIVE_SCRATCHDIR = setStrVar(VARIABLE_HIVE_SCRATCHDIR, HIVE_SCRATCHDIR);
+      HIVE_SCRATCHDIR_DELAY = setStrVar(VARIABLE_HIVE_SCRATCHDIR_DELAY, HIVE_SCRATCHDIR_DELAY);
+      HIVE_SCRATCHDIR_CLEANER_INTERVAL = setStrVar(VARIABLE_HIVE_SCRATCHDIR_CLEANER_INTERVAL,
+          HIVE_SCRATCHDIR_CLEANER_INTERVAL);
       HIVE_DB_DEFAULT_QUOTA = setStrVar(VARIABLE_HIVE_DEFAULT_QUOTA, HIVE_DB_DEFAULT_QUOTA);
       ALERT_EMAIL_ADDRS = setStrVar(VARIABLE_ALERT_EMAIL_ADDRS, "");
       HADOOP_VERSION = setVar(VARIABLE_HADOOP_VERSION, HADOOP_VERSION);
@@ -490,12 +526,12 @@ public class Settings implements Serializable {
       ELASTIC_REST_PORT = setIntVar(VARIABLE_ELASTIC_REST_PORT, ELASTIC_REST_PORT);
       ELASTIC_LOGS_INDEX_EXPIRATION = setLongVar(VARIABLE_ELASTIC_LOGS_INDEX_EXPIRATION, ELASTIC_LOGS_INDEX_EXPIRATION);
       HOPSWORKS_IP = setIpVar(VARIABLE_HOPSWORKS_IP, HOPSWORKS_IP);
-      HOPSWORKS_PORT = setIntVar(VARIABLE_HOPSWORKS_PORT, HOPSWORKS_PORT);
       RM_IP = setIpVar(VARIABLE_RM_IP, RM_IP);
       RM_PORT = setIntVar(VARIABLE_RM_PORT, RM_PORT);
       LOGSTASH_IP = setIpVar(VARIABLE_LOGSTASH_IP, LOGSTASH_IP);
       LOGSTASH_PORT = setIntVar(VARIABLE_LOGSTASH_PORT, LOGSTASH_PORT);
-      LOGSTASH_PORT_SERVING = setIntVar(VARIABLE_LOGSTASH_PORT_SERVING, LOGSTASH_PORT_SERVING);
+      LOGSTASH_PORT_TF_SERVING = setIntVar(VARIABLE_LOGSTASH_PORT_TF_SERVING, LOGSTASH_PORT_TF_SERVING);
+      LOGSTASH_PORT_SKLEARN_SERVING = setIntVar(VARIABLE_LOGSTASH_PORT_SKLEARN_SERVING, LOGSTASH_PORT_SKLEARN_SERVING);
       JHS_IP = setIpVar(VARIABLE_JHS_IP, JHS_IP);
       LIVY_IP = setIpVar(VARIABLE_LIVY_IP, LIVY_IP);
       OOZIE_IP = setIpVar(VARIABLE_OOZIE_IP, OOZIE_IP);
@@ -520,8 +556,6 @@ public class Settings implements Serializable {
       YARN_DEFAULT_QUOTA = setIntVar(VARIABLE_YARN_DEFAULT_QUOTA,
           YARN_DEFAULT_QUOTA);
       YARN_WEB_UI_IP = setIpVar(VARIABLE_YARN_WEB_UI_IP, YARN_WEB_UI_IP);
-      HDFS_WEB_UI_IP = setIpVar(VARIABLE_HDFS_WEB_UI_IP, HDFS_WEB_UI_IP);
-      HDFS_WEB_UI_PORT = setIntVar(VARIABLE_HDFS_WEB_UI_PORT, HDFS_WEB_UI_PORT);
       YARN_WEB_UI_PORT = setIntVar(VARIABLE_YARN_WEB_UI_PORT, YARN_WEB_UI_PORT);
       HDFS_DEFAULT_QUOTA_MBs = setDirVar(VARIABLE_HDFS_DEFAULT_QUOTA,
           HDFS_DEFAULT_QUOTA_MBs);
@@ -535,10 +569,19 @@ public class Settings implements Serializable {
       CUDA_DIR = setDirVar(VARIABLE_CUDA_DIR, CUDA_DIR);
       ANACONDA_USER = setStrVar(VARIABLE_ANACONDA_USER, ANACONDA_USER);
       ANACONDA_DIR = setDirVar(VARIABLE_ANACONDA_DIR, ANACONDA_DIR);
-      ANACONDA_ENV = setStrVar(VARIABLE_ANACONDA_ENV, ANACONDA_ENV);
       ANACONDA_DEFAULT_REPO = setStrVar(VARIABLE_ANACONDA_DEFAULT_REPO, ANACONDA_DEFAULT_REPO);
       ANACONDA_ENABLED = Boolean.parseBoolean(setStrVar(
           VARIABLE_ANACONDA_ENABLED, ANACONDA_ENABLED.toString()));
+      KAGENT_USER = setStrVar(VARIABLE_KAGENT_USER, KAGENT_USER);
+      KAGENT_LIVENESS_MONITOR_ENABLED = setBoolVar(VARIABLE_KAGENT_LIVENESS_MONITOR_ENABLED,
+          KAGENT_LIVENESS_MONITOR_ENABLED);
+      KAGENT_LIVENESS_THRESHOLD = setStrVar(VARIABLE_KAGENT_LIVENESS_THRESHOLD, KAGENT_LIVENESS_THRESHOLD);
+      SERVICE_RESTART_SCRIPT = setStrVar(VARIABLE_SERVICE_RESTART_SCRIPT,
+          SERVICE_RESTART_SCRIPT);
+      SERVICE_START_SCRIPT = setStrVar(VARIABLE_SERVICE_START_SCRIPT,
+          SERVICE_START_SCRIPT);
+      SERVICE_STOP_SCRIPT = setStrVar(VARIABLE_SERVICE_STOP_SCRIPT,
+          SERVICE_STOP_SCRIPT);
       DOWNLOAD_ALLOWED = Boolean.parseBoolean(setStrVar(VARIABLE_DOWNLOAD_ALLOWED, DOWNLOAD_ALLOWED.toString()));
       INFLUXDB_IP = setStrVar(VARIABLE_INFLUXDB_IP, INFLUXDB_IP);
       INFLUXDB_PORT = setStrVar(VARIABLE_INFLUXDB_PORT, INFLUXDB_PORT);
@@ -553,7 +596,6 @@ public class Settings implements Serializable {
           CERTIFICATE_MATERIALIZER_DELAY);
       WHITELIST_USERS_LOGIN = setStrVar(VARIABLE_WHITELIST_USERS_LOGIN,
           WHITELIST_USERS_LOGIN);
-      RECOVERY_PATH = setStrVar(VARIABLE_RECOVERY_PATH, RECOVERY_PATH);
       FIRST_TIME_LOGIN = setStrVar(VARIABLE_FIRST_TIME_LOGIN, FIRST_TIME_LOGIN);
       VERIFICATION_PATH = setStrVar(VARIABLE_VERIFICATION_PATH, VERIFICATION_PATH);
       serviceKeyRotationEnabled = setBoolVar(SERVICE_KEY_ROTATION_ENABLED_KEY, serviceKeyRotationEnabled);
@@ -597,11 +639,12 @@ public class Settings implements Serializable {
           setStrVar(VARIABLE_PREINSTALLED_PYTHON_LIBRARY_NAMES, DEFAULT_PREINSTALLED_PYTHON_LIBRARY_NAMES),
           ",");
 
-      TF_SERVING_MONITOR_INT = setStrVar(VARIABLE_TF_SERVING_MONITOR_INT, TF_SERVING_MONITOR_INT);
-      TF_SERVING_CONNECTION_POOL_SIZE = setIntVar(VARIABLE_TF_SERVING_CONNECTION_POOL_SIZE,
-        TF_SERVING_CONNECTION_POOL_SIZE);
-      TF_SERVING_MAX_ROUTE_CONNECTIONS = setIntVar(VARIABLE_TF_SERVING_MAX_ROUTE_CONNECTIONS,
-        TF_SERVING_MAX_ROUTE_CONNECTIONS);
+      SERVING_MONITOR_INT = setStrVar(VARIABLE_SERVING_MONITOR_INT, SERVING_MONITOR_INT);
+
+      SERVING_CONNECTION_POOL_SIZE = setIntVar(VARIABLE_SERVING_CONNECTION_POOL_SIZE,
+        SERVING_CONNECTION_POOL_SIZE);
+      SERVING_MAX_ROUTE_CONNECTIONS = setIntVar(VARIABLE_SERVING_MAX_ROUTE_CONNECTIONS,
+        SERVING_MAX_ROUTE_CONNECTIONS);
 
       KUBE_USER = setStrVar(VARIABLE_KUBE_USER, KUBE_USER);
       KUBEMASTER_URL = setStrVar(VARIABLE_KUBEMASTER_URL, KUBEMASTER_URL);
@@ -615,6 +658,13 @@ public class Settings implements Serializable {
       KUBE_KEYSTORE_KEY = setStrVar(VARIABLE_KUBE_KEYSTORE_KEY, KUBE_KEYSTORE_KEY);
       KUBE_REGISTRY = setStrVar(VARIABLE_KUBE_REGISTRY, KUBE_REGISTRY);
       KUBE_MAX_SERVING_INSTANCES = setIntVar(VARIABLE_KUBE_MAX_SERVING, KUBE_MAX_SERVING_INSTANCES);
+      KUBE_TF_IMG_VERSION = setVar(VARIABLE_KUBE_TF_IMG_VERSION, KUBE_TF_IMG_VERSION);
+      KUBE_SKLEARN_IMG_VERSION = setVar(VARIABLE_KUBE_SKLEARN_IMG_VERSION, KUBE_SKLEARN_IMG_VERSION);
+      KUBE_FILEBEAT_IMG_VERSION = setVar(VARIABLE_KUBE_FILEBEAT_IMG_VERSION, KUBE_FILEBEAT_IMG_VERSION);
+      KUBE_JUPYTER_IMG_VERSION = setVar(VARIABLE_KUBE_JUPYTER_IMG_VERSION, KUBE_JUPYTER_IMG_VERSION);
+      KUBE_API_MAX_ATTEMPTS = setIntVar(VARIABLE_KUBE_API_MAX_ATTEMPTS, KUBE_API_MAX_ATTEMPTS);
+
+      JUPYTER_HOST = setStrVar(VARIABLE_JUPYTER_HOST, JUPYTER_HOST);
 
       JWT_SIGNATURE_ALGORITHM = setStrVar(VARIABLE_JWT_SIGNATURE_ALGORITHM, JWT_SIGNATURE_ALGORITHM);
       JWT_LIFETIME_MS = setLongVar(VARIABLE_JWT_LIFETIME_MS, JWT_LIFETIME_MS);
@@ -622,9 +672,10 @@ public class Settings implements Serializable {
       JWT_SIGNING_KEY_NAME = setStrVar(VARIABLE_JWT_SIGNING_KEY_NAME, JWT_SIGNING_KEY_NAME);
       JWT_ISSUER = setStrVar(VARIABLE_JWT_ISSUER_KEY, JWT_ISSUER);
 
-      SERVICE_JWT = setStrVar(VARIABLE_SERVICE_JWT, SERVICE_JWT);
       SERVICE_JWT_LIFETIME_MS = setLongVar(VARIABLE_SERVICE_JWT_LIFETIME_MS, SERVICE_JWT_LIFETIME_MS);
       SERVICE_JWT_EXP_LEEWAY_SEC = setIntVar(VARIABLE_SERVICE_JWT_EXP_LEEWAY_SEC, SERVICE_JWT_EXP_LEEWAY_SEC);
+
+      populateServiceJWTCache();
 
       CONNECTION_KEEPALIVE_TIMEOUT = setIntVar(VARIABLE_CONNECTION_KEEPALIVE_TIMEOUT, CONNECTION_KEEPALIVE_TIMEOUT);
 
@@ -790,14 +841,6 @@ public class Settings implements Serializable {
 
   //PySpark properties
   public static final String SPARK_APP_NAME_ENV = "spark.app.name";
-  public static final String SPARK_EXECUTORENV_PYTHONPATH = "spark.executorEnv.PYTHONPATH";
-  public static final String SPARK_APPMASTERENV_PATH = "spark.yarn.appMasterEnv.PATH";
-  public static final String SPARK_APPMASTERENV_PYTHONPATH = "spark.yarn.appMasterEnv.PYTHONPATH";
-  public static final String SPARK_EXECUTORENV_LD_LIBRARY_PATH = "spark.executorEnv.LD_LIBRARY_PATH";
-  public static final String SPARK_EXECUTORENV_LD_LIBRARY_PYTHONPATH = "spark.executorEnv.PYTHONPATH";
-  public static final String SPARK_EXECUTORENV_HDFS_USER = "spark.executorEnv.HDFS_USER";
-  public static final String SPARK_EXECUTORENV_HADOOP_USER_NAME = "spark.executorEnv.HADOOP_USER_NAME";
-  public static final String SPARK_EXECUTORENV_JOB_NAME = "spark.executorEnv.JOB_NAME";
 
   public static final String SPARK_YARN_IS_PYTHON_ENV = "spark.yarn.isPython";
 
@@ -905,7 +948,7 @@ public class Settings implements Serializable {
     checkCache();
     return AIRFLOW_DIR;
   }
-  
+
   private String AIRFLOW_USER = "airflow";
   public synchronized String getAirflowUser() {
     checkCache();
@@ -980,6 +1023,20 @@ public class Settings implements Serializable {
     return HIVE_SCRATCHDIR;
   }
 
+  private String HIVE_SCRATCHDIR_DELAY = "7d";
+
+  public synchronized String getHiveScratchdirDelay() {
+    checkCache();
+    return HIVE_SCRATCHDIR_DELAY;
+  }
+
+  private String HIVE_SCRATCHDIR_CLEANER_INTERVAL = "24h";
+
+  public synchronized String getHiveScratchdirCleanerInterval() {
+    checkCache();
+    return HIVE_SCRATCHDIR_CLEANER_INTERVAL;
+  }
+
   private String HIVE_DB_DEFAULT_QUOTA = "50000";
 
   public synchronized Long getHiveDbDefaultQuota() {
@@ -987,29 +1044,11 @@ public class Settings implements Serializable {
     return Long.parseLong(HIVE_DB_DEFAULT_QUOTA);
   }
 
-  private String HOPSWORKS_EXTERNAL_IP = "127.0.0.1";
-
-  public synchronized String getHopsworksExternalIp() {
-    checkCache();
-    return HOPSWORKS_EXTERNAL_IP;
-  }
-
-  public synchronized void setHopsworksExternalIp(String ip) {
-    HOPSWORKS_EXTERNAL_IP = ip;
-  }
-
   private String HOPSWORKS_IP = "127.0.0.1";
 
   public synchronized String getHopsworksIp() {
     checkCache();
     return HOPSWORKS_IP;
-  }
-
-  private Integer HOPSWORKS_PORT = 8080;
-
-  public synchronized Integer getHopsworksPort() {
-    checkCache();
-    return HOPSWORKS_PORT;
   }
 
   private String CERTS_DIR = "/srv/hops/certs-dir";
@@ -1089,11 +1128,6 @@ public class Settings implements Serializable {
   private String HDFS_WEB_UI_IP = "127.0.0.1";
   private int HDFS_WEB_UI_PORT = 50070;
 
-  public synchronized String getHDFSWebUIAddress() {
-    checkCache();
-    return HDFS_WEB_UI_IP + ":" + HDFS_WEB_UI_PORT;
-  }
-
   private String HDFS_DEFAULT_QUOTA_MBs = "200000";
 
   public synchronized long getHdfsDefaultQuotaInMBs() {
@@ -1167,7 +1201,7 @@ public class Settings implements Serializable {
   public static final String ENV_KEY_YARN_CONF = "YARN_CONF_DIR";
   public static final String ENV_KEY_SPARK_CONF_DIR = "SPARK_CONF_DIR";
   //YARN constants
-  public static final int YARN_DEFAULT_APP_MASTER_MEMORY = 1024;
+  public static final int YARN_DEFAULT_APP_MASTER_MEMORY = 2048;
   public static final String YARN_DEFAULT_OUTPUT_PATH = "Logs/Yarn/";
   public static final String HADOOP_COMMON_HOME_KEY = "HADOOP_COMMON_HOME";
   public static final String HADOOP_HOME_KEY = "HADOOP_HOME";
@@ -1187,6 +1221,7 @@ public class Settings implements Serializable {
   public static final String SPARK_LOCRSC_APP_JAR = "__app__.jar";
 
   public static final String HOPS_TOUR_DATASET = "TestJob";
+  public static final String HOPS_DL_TOUR_DATASET = "TourData";
   public static final String HOPS_TOUR_DATASET_JUPYTER = "Jupyter";
   public static final String JUPYTER_SPARKMAGIC_PREFIX = "jupyter-sparkmagic-session-";
   // Distribution-defined classpath to add to processes
@@ -1206,23 +1241,21 @@ public class Settings implements Serializable {
       = "org.apache.flink.yarn.ApplicationMaster";
   public static final int FLINK_APP_MASTER_MEMORY = 768;
 
-  //TensorFlow constants
-  public static final String TENSORFLOW_DEFAULT_OUTPUT_PATH = "Logs/TensorFlow/";
-  private static final String TENSORFLOW_JAR = "hops-tensorflow-0.0.1.jar";
-  //Used to pass the project user to yarn containers for tensorflow
-  public static final String HADOOP_USER_NAME = "HADOOP_USER_NAME";
-  public static final String YARNTF_HOME_DIR = "YARNTF_HOME_DIR";
-  public static final String YARNTF_STAGING_DIR = ".yarntfStaging";
-  public static final String HOPS_DEEP_LEARNING_TOUR_DATA = "tensorflow_demo";
+  public static final String HOPS_DEEP_LEARNING_TOUR_DATA = "tensorflow_demo/data";
+  public static final String HOPS_DEEP_LEARNING_TOUR_NOTEBOOKS = "tensorflow_demo/notebooks";
 
   //Featurestore constants
   public static final String HOPS_FEATURESTORE_TOUR_DATA = "featurestore_demo";
   public static final String HOPS_FEATURESTORE_TOUR_JOB_CLASS = "io.hops.examples.featurestore.Main";
   public static final String HOPS_FEATURESTORE_TOUR_JOB_NAME = "featurestore_tour_job";
+  public static final String HOPS_FEATURESTORE_TOUR_JOB_INPUT_PARAM = "--input ";
 
-  public String getTensorFlowJarPath(String tfUser) {
-    return "hdfs:///user/" + tfUser + "/" + TENSORFLOW_JAR;
-  }
+  //Serving constants
+  public static final String INFERENCE_SCHEMANAME = "inferenceschema";
+  public static final int INFERENCE_SCHEMAVERSION = 2;
+
+  //Kafka constants
+  public static final Set<String> KAFKA_SCHEMA_BLACKLIST = new HashSet<>(Arrays.asList(INFERENCE_SCHEMANAME));
 
   public synchronized String getLocalFlinkJarPath() {
     return getFlinkDir() + "/flink.jar";
@@ -1310,19 +1343,13 @@ public class Settings implements Serializable {
     return HADOOP_CLASSPATH_GLOB;
   }
 
-  public String getHdfsRootPath(String projectName) {
-    return "/" + DIR_ROOT + "/" + projectName;
-  }
-
   /**
    * Static final fields are allowed in session beans:
    * http://stackoverflow.com/questions/9141673/static-variables-restriction-in-session-beans
    */
   //Directory names in HDFS
   public static final String DIR_ROOT = "Projects";
-  public static final String DIR_SAMPLES = "Samples";
-  public static final String DIR_RESULTS = "Results";
-  public static final String DIR_META_TEMPLATES = File.separator + DIR_ROOT + File.separator + "Resources"
+  public static final String DIR_META_TEMPLATES = File.separator + DIR_ROOT + File.separator + "Uploads"
       + File.separator;
   public static final String PROJECT_STAGING_DIR = "Resources";
 
@@ -1464,11 +1491,18 @@ public class Settings implements Serializable {
     return LOGSTASH_PORT;
   }
 
-  private int LOGSTASH_PORT_SERVING = 5045;
+  private int LOGSTASH_PORT_TF_SERVING = 5045;
 
-  public synchronized Integer getLogstashPortServing() {
+  public synchronized Integer getLogstashPortTfServing() {
     checkCache();
-    return LOGSTASH_PORT_SERVING;
+    return LOGSTASH_PORT_TF_SERVING;
+  }
+  
+  private int LOGSTASH_PORT_SKLEARN_SERVING = 5047;
+  
+  public synchronized Integer getLogstashPortSkLearnServing() {
+    checkCache();
+    return LOGSTASH_PORT_SKLEARN_SERVING;
   }
 
   // Livy Server`
@@ -1536,6 +1570,27 @@ public class Settings implements Serializable {
     return JUPYTER_DIR;
   }
 
+  private String JUPYTER_USER = "jupyter";
+
+  public synchronized String getJupyterUser() {
+    checkCache();
+    return JUPYTER_USER;
+  }
+
+  private String JUPYTER_GROUP = "jupyter";
+
+  public synchronized String getJupyterGroup() {
+    checkCache();
+    return JUPYTER_GROUP;
+  }
+
+  private String JUPYTER_ORIGIN_SCHEME = "https";
+
+  public synchronized String getJupyterOriginScheme() {
+    checkCache();
+    return JUPYTER_ORIGIN_SCHEME;
+  }
+
   private long JUPYTER_WS_PING_INTERVAL_MS = 10000L;
 
   public synchronized long getJupyterWSPingInterval() {
@@ -1599,26 +1654,19 @@ public class Settings implements Serializable {
     return getAnacondaDir() + File.separator + "envs" + File.separator + condaEnv;
   }
 
-  private String ANACONDA_ENV = "kagent";
-
-  public synchronized String getAnacondaEnv() {
-    checkCache();
-    return ANACONDA_ENV;
-  }
-
   private Boolean ANACONDA_ENABLED = true;
 
   public synchronized Boolean isAnacondaEnabled() {
     checkCache();
     return ANACONDA_ENABLED;
   }
-  
+
   private Boolean DOWNLOAD_ALLOWED = true;
   public synchronized Boolean isDownloadAllowed() {
     checkCache();
     return DOWNLOAD_ALLOWED;
   }
-  
+
 //  private String CONDA_CHANNEL_URL = "https://repo.continuum.io/pkgs/free/linux-64/";
   private String CONDA_CHANNEL_URL = "default";
 
@@ -1627,15 +1675,60 @@ public class Settings implements Serializable {
     return CONDA_CHANNEL_URL;
   }
 
+  /**
+   * kagent liveness monitor settings
+   */
+  private String KAGENT_USER = "kagent";
+  public synchronized String getKagentUser() {
+    checkCache();
+    return KAGENT_USER;
+  }
+
+  private boolean KAGENT_LIVENESS_MONITOR_ENABLED = false;
+  public synchronized boolean isKagentLivenessMonitorEnabled() {
+    checkCache();
+    return KAGENT_LIVENESS_MONITOR_ENABLED;
+  }
+
+  private String KAGENT_LIVENESS_THRESHOLD = "10s";
+  public synchronized String getKagentLivenessThreshold() {
+    checkCache();
+    return KAGENT_LIVENESS_THRESHOLD;
+  }
+
+  private String SERVICE_RESTART_SCRIPT = "/srv/hops/kagent/kagent/bin/restart-service.sh";
+  public synchronized String getServiceRestartScript() {
+    checkCache();
+    return SERVICE_RESTART_SCRIPT;
+  }
+
+  private String SERVICE_START_SCRIPT = "/srv/hops/kagent/kagent/bin/start-service.sh";
+  public synchronized String getServiceStartScript() {
+    checkCache();
+    return SERVICE_START_SCRIPT;
+  }
+
+  private String SERVICE_STOP_SCRIPT = "/srv/hops/kagent/kagent/bin/stop-service.sh";
+  public synchronized String getServiceStopScript() {
+    checkCache();
+    return SERVICE_STOP_SCRIPT;
+  }
+
   private String HOPSWORKS_REST_ENDPOINT = "hopsworks0:8181";
 
   public synchronized String getRestEndpoint() {
     checkCache();
+    
+    if (isLocalHost()) {
+      return "https://localhost:" +
+        HOPSWORKS_REST_ENDPOINT.substring(HOPSWORKS_REST_ENDPOINT.lastIndexOf(":") + 1);
+    }
+    
     return "https://" + HOPSWORKS_REST_ENDPOINT;
   }
 
   private RESTLogLevel HOPSWORKS_REST_LOG_LEVEL = RESTLogLevel.PROD;
-  
+
   public synchronized RESTLogLevel getHopsworksRESTLogLevel() {
     checkCache();
     return HOPSWORKS_REST_LOG_LEVEL;
@@ -1663,11 +1756,18 @@ public class Settings implements Serializable {
     ADMIN_PWD = "changed";
   }
 
+  private String ADMIN_EMAIL = "admin@hopsworks.ai";
+
+  public synchronized String getAdminEmail() {
+    checkCache();
+    return ADMIN_EMAIL;
+  }
+
   public synchronized boolean isDefaultAdminPasswordChanged() {
     if (ADMIN_PWD.compareTo(DEFAULT_ADMIN_PWD) != 0) {
       return true;
     }
-    Users user = userFacade.findByEmail("admin@kth.se");
+    Users user = userFacade.findByEmail(ADMIN_EMAIL);
     if (user != null) {
       ADMIN_PWD = user.getPassword();
     }
@@ -1773,7 +1873,8 @@ public class Settings implements Serializable {
   public static final int IS_ONLINE = 1;
   public static final int IS_OFFLINE = 0;
 
-  public static final int ALLOWED_FALSE_LOGINS = 20;
+  public static final int ALLOWED_FALSE_LOGINS = 5;
+  public static final int ALLOWED_AGENT_FALSE_LOGINS = 20;
 
   //hopsworks user prefix username prefix
   public static final String USERNAME_PREFIX = "meb";
@@ -1800,6 +1901,7 @@ public class Settings implements Serializable {
   public static final String SERVER_TRUSTSTORE_PROPERTY = "server.truststore";
   public static final String KAFKA_CONSUMER_GROUPS = "hopsworks.kafka.consumergroups";
   public static final String HOPSWORKS_REST_ENDPOINT_PROPERTY = "hopsworks.restendpoint";
+  public static final String HOPSUTIL_INSECURE_PROPERTY = "hopsutil.insecure";
   public static final String HOPSWORKS_ELASTIC_ENDPOINT_PROPERTY = "hopsworks.elastic.endpoint";
 
   private int FILE_PREVIEW_IMAGE_SIZE = 10000000;
@@ -2019,10 +2121,6 @@ public class Settings implements Serializable {
     em.detach(variable);
   }
 
-  public String getProjectPath(String projectName) {
-    return File.separator + DIR_ROOT + File.separator + projectName;
-  }
-
   Configuration conf;
 
   public Configuration getConfiguration() throws IllegalStateException {
@@ -2239,18 +2337,16 @@ public class Settings implements Serializable {
     return "hops-examples-featurestore-" + HOPS_EXAMPLES_VERSION + ".jar";
   }
 
-  private String RECOVERY_PATH = "hopsworks-api/api/auth/recover";
-
-  public synchronized String getRecoveryEndpoint() {
+  private String VERIFICATION_PATH = "/hopsworks-admin/security/validate_account.xhtml";
+  
+  public synchronized String getEmailVerificationEndpoint() {
     checkCache();
-    return HOPSWORKS_IP + ":" + HOPSWORKS_PORT + "/" + RECOVERY_PATH;
+    return VERIFICATION_PATH;
   }
-
-  private String VERIFICATION_PATH = "hopsworks-api/api/auth/verify";
 
   public synchronized String getVerificationEndpoint() {
     checkCache();
-    return HOPSWORKS_IP + ":" + HOPSWORKS_PORT + "/" + VERIFICATION_PATH;
+    return getRestEndpoint() + "/" + VERIFICATION_PATH;
   }
 
   //Dela START
@@ -2311,6 +2407,16 @@ public class Settings implements Serializable {
     DELA_PUBLIC_HOPSWORK_PORT = setStrVar(VARIABLE_DELA_PUBLIC_HOPSWORKS_PORT, DELA_PUBLIC_HOPSWORK_PORT);
     PUBLIC_HTTPS_PORT = setStrVar(VARIABLE_PUBLIC_HTTPS_PORT, PUBLIC_HTTPS_PORT);
     DELA_CLUSTER_ID = setStrVar(VARIABLE_DELA_CLUSTER_ID, DELA_CLUSTER_ID);
+  }
+
+  private void populateServiceJWTCache() {
+    SERVICE_MASTER_JWT = setStrVar(VARIABLE_SERVICE_MASTER_JWT, SERVICE_MASTER_JWT);
+    RENEW_TOKENS = new String[NUM_OF_SERVICE_RENEW_TOKENS];
+    for (int i = 0; i < NUM_OF_SERVICE_RENEW_TOKENS; i++) {
+      String variableKey = String.format(SERVICE_RENEW_TOKEN_VARIABLE_TEMPLATE, i);
+      String token = setStrVar(variableKey, "");
+      RENEW_TOKENS[i] = token;
+    }
   }
 
   public synchronized Boolean isDelaEnabled() {
@@ -2697,12 +2803,12 @@ public class Settings implements Serializable {
     checkCache();
     return LDAP_AUTH;
   }
-  
+
   public synchronized  boolean isKrbEnabled() {
     checkCache();
     return IS_KRB_ENABLED;
   }
-  
+
   public synchronized  boolean isLdapEnabled() {
     checkCache();
     return IS_LDAP_ENABLED;
@@ -2742,12 +2848,12 @@ public class Settings implements Serializable {
     checkCache();
     return LDAP_GROUP_SEARCH_FILTER;
   }
-  
+
   public synchronized String getKrbUserSearchFilter() {
     checkCache();
     return LDAP_KRB_USER_SEARCH_FILTER;
   }
-  
+
   public synchronized String getLdapAttrBinary() {
     checkCache();
     return LDAP_ATTR_BINARY;
@@ -2924,7 +3030,7 @@ public class Settings implements Serializable {
   private Set<String> PROVIDED_PYTHON_LIBRARY_NAMES;
   private static final String VARIABLE_PROVIDED_PYTHON_LIBRARY_NAMES = "provided_python_lib_names";
   private static final String DEFAULT_PROVIDED_PYTHON_LIBRARY_NAMES =
-      "hops, pandas, tensorflow-serving-api, hopsfacets, mmlspark, numpy";
+      "hops, pandas, tensorflow-serving-api, mmlspark, numpy";
 
   public synchronized Set<String> getProvidedPythonLibraryNames() {
     checkCache();
@@ -3187,24 +3293,61 @@ public class Settings implements Serializable {
     checkCache();
     return KUBE_MAX_SERVING_INSTANCES;
   }
-
-  private String TF_SERVING_MONITOR_INT = "30s";
-
-  public synchronized String getTFServingMonitorInt() {
+  
+  private Integer KUBE_API_MAX_ATTEMPTS = 12;
+  public synchronized Integer getKubeAPIMaxAttempts() {
     checkCache();
-    return TF_SERVING_MONITOR_INT;
+    return KUBE_API_MAX_ATTEMPTS;
   }
 
-  private int TF_SERVING_CONNECTION_POOL_SIZE = 40;
-  public synchronized int getTFServingConnectionPoolSize() {
+  private String KUBE_TF_IMG_VERSION = "0.10.0";
+  public synchronized String getKubeTfImgVersion() {
     checkCache();
-    return TF_SERVING_CONNECTION_POOL_SIZE;
+    return KUBE_TF_IMG_VERSION;
   }
 
-  private int TF_SERVING_MAX_ROUTE_CONNECTIONS = 10;
-  public synchronized int getTFServingMaxRouteConnections() {
+  private String KUBE_SKLEARN_IMG_VERSION = "0.10.0";
+  public synchronized String getKubeSKLearnImgVersion() {
     checkCache();
-    return TF_SERVING_MAX_ROUTE_CONNECTIONS;
+    return KUBE_SKLEARN_IMG_VERSION;
+  }
+
+  private String KUBE_FILEBEAT_IMG_VERSION = "0.10.0";
+  public synchronized String getKubeFilebeatImgVersion() {
+    checkCache();
+    return KUBE_FILEBEAT_IMG_VERSION;
+  }
+
+  private String KUBE_JUPYTER_IMG_VERSION = "0.10.0";
+  public synchronized String getJupyterImgVersion() {
+    checkCache();
+    return KUBE_JUPYTER_IMG_VERSION;
+  }
+
+  private String SERVING_MONITOR_INT = "30s";
+
+  public synchronized String getServingMonitorInt() {
+    checkCache();
+    return SERVING_MONITOR_INT;
+  }
+
+  private int SERVING_CONNECTION_POOL_SIZE = 40;
+  public synchronized int getServingConnectionPoolSize() {
+    checkCache();
+    return SERVING_CONNECTION_POOL_SIZE;
+  }
+
+  private int SERVING_MAX_ROUTE_CONNECTIONS = 10;
+  public synchronized int getServingMaxRouteConnections() {
+    checkCache();
+    return SERVING_MAX_ROUTE_CONNECTIONS;
+  }
+
+  private String JUPYTER_HOST = "localhost";
+
+  public synchronized String getJupyterHost() {
+    checkCache();
+    return JUPYTER_HOST;
   }
 
   private String JWT_SIGNATURE_ALGORITHM = "HS512";
@@ -3246,28 +3389,50 @@ public class Settings implements Serializable {
     checkCache();
     return JWT_SIGNING_KEY_NAME;
   }
-  
+
   public synchronized String getJWTIssuer() {
     checkCache();
     return JWT_ISSUER;
   }
 
-  private String SERVICE_JWT = "";
-  public synchronized String getServiceJWT(){
+  private String SERVICE_MASTER_JWT = "";
+  public synchronized String getServiceMasterJWT() {
     checkCache();
-    return SERVICE_JWT;
+    return SERVICE_MASTER_JWT;
   }
 
-  public synchronized void setServiceJWT(String JWT) {
-    updateVariableInternal(VARIABLE_SERVICE_JWT, JWT);
+  public synchronized void setServiceMasterJWT(String JWT) {
+    updateVariableInternal(VARIABLE_SERVICE_MASTER_JWT, JWT);
     em.flush();
-    SERVICE_JWT = JWT;
+    SERVICE_MASTER_JWT = JWT;
+  }
+
+  private final int NUM_OF_SERVICE_RENEW_TOKENS = 5;
+  private final static String SERVICE_RENEW_TOKEN_VARIABLE_TEMPLATE = "service_renew_token_%d";
+  private String[] RENEW_TOKENS = new String[0];
+  public synchronized String[] getServiceRenewJWTs() {
+    checkCache();
+    return RENEW_TOKENS;
+  }
+
+  public synchronized void setServiceRenewJWTs(String[] renewTokens) {
+    for (int i = 0; i < renewTokens.length; i++) {
+      String variableKey = String.format(SERVICE_RENEW_TOKEN_VARIABLE_TEMPLATE, i);
+      updateVariableInternal(variableKey, renewTokens[i]);
+    }
+    RENEW_TOKENS = renewTokens;
   }
 
   private int CONNECTION_KEEPALIVE_TIMEOUT = 30;
   public synchronized int getConnectionKeepAliveTimeout() {
     checkCache();
     return CONNECTION_KEEPALIVE_TIMEOUT;
+  }
+
+  private int MAGGY_CLEANUP_INTERVAL = 24 * 60 * 1000;
+  public synchronized int getMaggyCleanupInterval() {
+    checkCache();
+    return MAGGY_CLEANUP_INTERVAL;
   }
 
   public String getHiveSiteSparkHdfsPath() {
@@ -3287,18 +3452,6 @@ public class Settings implements Serializable {
     checkCache();
     return FEATURESTORE_DB_DEFAULT_STORAGE_FORMAT;
   }
-
-  private String TF_SPARK_CONNECTOR_VERSION = "2.11-1.12.0";
-
-  public synchronized String getTfSparkConnectorFilename() {
-    checkCache();
-    return "spark-tensorflow-connector_" + TF_SPARK_CONNECTOR_VERSION + ".jar";
-  }
-
-  public String getTfSparkConnectorPath() {
-    return "hdfs:///user/" + getSparkUser() + "/" + getTfSparkConnectorFilename();
-  }
-
   
   private String RSTUDIO_DIR = "/srv/hops/rstudio";
 
@@ -3319,6 +3472,27 @@ public class Settings implements Serializable {
   public synchronized String getCranRepoUrl() {
     checkCache();
     return CRAN_REPO_URL;
+  
+  private Boolean LOCALHOST = false;
+  
+  public synchronized Boolean isLocalHost() {
+    checkCache();
+    return LOCALHOST;
+  }
+  
+  private String CLOUD = "";
+  
+  public synchronized String getCloudProvider() {
+    checkCache();
+    return CLOUD;
+  }
+  
+  public Boolean isCloud() {
+    return !getCloudProvider().isEmpty();
+  }
+  
+  public Boolean isHopsUtilInsecure() {
+    return isCloud() || isLocalHost();
   }
   
 }

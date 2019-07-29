@@ -40,32 +40,32 @@
 package io.hops.hopsworks.common.jobs;
 
 import com.google.common.base.Strings;
-import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
+import io.hops.hopsworks.common.dao.jobs.description.Jobs;
+import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
+import io.hops.hopsworks.common.dao.user.activity.ActivityFlag;
+import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
+import io.hops.hopsworks.common.hdfs.DistributedFsService;
+import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.jobs.configuration.JobConfiguration;
+import io.hops.hopsworks.common.jobs.configuration.JobType;
+import io.hops.hopsworks.common.jobs.configuration.ScheduleDTO;
+import io.hops.hopsworks.common.jobs.execution.ExecutionController;
+import io.hops.hopsworks.common.jobs.flink.FlinkController;
+import io.hops.hopsworks.common.jobs.spark.SparkController;
+import io.hops.hopsworks.exceptions.JobException;
+import io.hops.hopsworks.restutils.RESTCodes;
+import org.eclipse.persistence.exceptions.DatabaseException;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.xml.bind.JAXBException;
-
-import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
-import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
-import io.hops.hopsworks.common.hdfs.DistributedFsService;
-import io.hops.hopsworks.common.hdfs.HdfsUsersController;
-import io.hops.hopsworks.common.jobs.configuration.JobConfiguration;
-import io.hops.hopsworks.common.jobs.configuration.ScheduleDTO;
-import io.hops.hopsworks.common.jobs.execution.ExecutionController;
-import io.hops.hopsworks.common.jobs.flink.FlinkController;
-import io.hops.hopsworks.common.jobs.configuration.JobType;
-import io.hops.hopsworks.common.jobs.spark.SparkController;
-import io.hops.hopsworks.exceptions.JobException;
-import io.hops.hopsworks.restutils.RESTCodes;
-import org.eclipse.persistence.exceptions.DatabaseException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Stateless
 public class JobController {
@@ -107,7 +107,7 @@ public class JobController {
     }
   
     activityFacade.persistActivity(ActivityFacade.CREATED_JOB + getJobNameForActivity(job.getName()), project, user,
-      ActivityFacade.ActivityFlag.JOB);
+      ActivityFlag.JOB);
     return job;
   }
   @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -117,7 +117,7 @@ public class JobController {
       job.getJobConfig().setSchedule(schedule);
       scheduler.scheduleJobPeriodic(job);
       activityFacade.persistActivity(ActivityFacade.SCHEDULED_JOB + getJobNameForActivity(job.getName()), project, user,
-        ActivityFacade.ActivityFlag.JOB);
+        ActivityFlag.JOB);
     } else {
       throw new JobException(RESTCodes.JobErrorCode.JOB_SCHEDULE_UPDATE, Level.WARNING,
         "Schedule is not updated in the database for jobid: " + job.getId());
@@ -147,7 +147,7 @@ public class JobController {
       jobFacade.removeJob(job);
       LOGGER.log(Level.FINE, "Deleted job name ={0} job id ={1}", new Object[]{job.getName(), job.getId()});
       activityFacade.persistActivity(ActivityFacade.DELETED_JOB + job.getName(), job.getProject(), user.getEmail(),
-        ActivityFacade.ActivityFlag.JOB);
+        ActivityFlag.JOB);
     } catch (DatabaseException ex) {
       LOGGER.log(Level.SEVERE, "Job cannot be deleted job name ={0} job id ={1}",
         new Object[]{job.getName(), job.getId()});

@@ -40,7 +40,6 @@
 package io.hops.hopsworks.api.util;
 
 import io.hops.hopsworks.api.filter.NoCacheResponse;
-import io.hops.hopsworks.common.dao.hdfs.HdfsLeDescriptors;
 import io.hops.hopsworks.common.dao.hdfs.HdfsLeDescriptorsFacade;
 import io.swagger.annotations.Api;
 
@@ -73,10 +72,7 @@ public class EndpointService {
   @Produces(MediaType.APPLICATION_JSON)
   public Response findEndpoint() {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
-    HdfsLeDescriptors hdfsLeDescriptors = hdfsLeDescriptorsFacade.findEndpoint();
-    
-    json.setData(hdfsLeDescriptors.getHostname());
-    
+    json.setData(hdfsLeDescriptorsFacade.getRPCEndpoint());
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }
 }

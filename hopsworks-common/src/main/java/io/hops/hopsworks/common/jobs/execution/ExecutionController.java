@@ -47,12 +47,15 @@ import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationAttemptStateFacade;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstate;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
-import io.hops.hopsworks.common.dao.jobs.JobsHistoryFacade;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.jobs.description.YarnAppUrlsDTO;
+import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuota;
+import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuotaFacade;
+import io.hops.hopsworks.common.dao.project.PaymentType;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
+import io.hops.hopsworks.common.dao.user.activity.ActivityFlag;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -118,8 +121,6 @@ public class ExecutionController {
   @EJB
   private ActivityFacade activityFacade;
   @EJB
-  private JobsHistoryFacade jobHistoryFac;
-  @EJB
   private HdfsUsersController hdfsUsersController;
   @EJB
   private DistributedFsService dfs;
@@ -133,6 +134,8 @@ public class ExecutionController {
   private YarnApplicationAttemptStateFacade appAttemptStateFacade;
   @EJB
   private YarnApplicationstateFacade yarnApplicationstateFacade;
+  @EJB
+  private YarnProjectsQuotaFacade yarnProjectsQuotaFacade;
   @EJB
   private AsynchronousJobExecutor async;
 
@@ -154,7 +157,15 @@ public class ExecutionController {
           "Cannot start an execution while another one for the same job has not finished.");
       }
     }
-    
+
+    // A user should not be able to start a job if the project is prepaid and it doesn't have quota.
+    if(job.getProject().getPaymentType().equals(PaymentType.PREPAID)){
+      YarnProjectsQuota projectQuota = yarnProjectsQuotaFacade.findByProjectName(job.getProject().getName());
+      if(projectQuota == null || projectQuota.getQuotaRemaining() <= 0){
+        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_QUOTA_ERROR, Level.FINE);
+      }
+    }
+
     Execution exec;
     switch (job.getJobType()) {
       case FLINK:
@@ -174,9 +185,8 @@ public class ExecutionController {
         Inode inode = inodes.getInodeAtPath(pathOfInode);
         String inodeName = inode.getInodePK().getName();
 
-        jobHistoryFac.persist(user, job, execId, exec.getAppId());
-        activityFacade.persistActivity(ActivityFacade.EXECUTED_JOB + inodeName, job.getProject(), user, ActivityFacade.
-            ActivityFlag.JOB);
+        activityFacade.persistActivity(ActivityFacade.EXECUTED_JOB + inodeName, job.getProject(), user,
+          ActivityFlag.JOB);
         break;
       case PYSPARK:
         if(!job.getProject().getConda()){

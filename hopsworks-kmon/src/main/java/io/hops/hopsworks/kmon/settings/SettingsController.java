@@ -40,6 +40,7 @@
 package io.hops.hopsworks.kmon.settings;
 
 import java.io.Serializable;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
@@ -49,13 +50,13 @@ import io.hops.hopsworks.common.dao.host.Status;
 @SessionScoped
 public class SettingsController implements Serializable {
 
-  private static final Logger logger = Logger.getLogger(
+  private static final Logger LOGGER = Logger.getLogger(
           SettingsController.class.getName());
   private String name;
   private int logLines;
 
   public SettingsController() {
-    logger.info("SettingsController");
+    LOGGER.log(Level.FINE, "SettingsController");
     name = "Hopsworks";
     logLines = 2;
   }

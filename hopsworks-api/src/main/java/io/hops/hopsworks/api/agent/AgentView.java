@@ -19,7 +19,7 @@ package io.hops.hopsworks.api.agent;
 
 import io.hops.hopsworks.common.agent.AgentController;
 import io.hops.hopsworks.common.dao.command.SystemCommand;
-import io.hops.hopsworks.common.dao.pythonDeps.CondaCommands;
+import io.hops.hopsworks.common.dao.python.CondaCommands;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -65,6 +65,8 @@ public class AgentView {
   private List<CondaCommandView> condaCommands;
   @XmlElement(name = "conda-report")
   private List<String> condaReport;
+  @XmlElement(name = "recover")
+  private Boolean recover;
   
   public AgentView() {
   }
@@ -231,6 +233,15 @@ public class AgentView {
     this.condaReport = condaReport;
   }
   
+  @ApiModelProperty(value = "Flag to indicate if kagent needs to recover after a restart")
+  private Boolean getRecover() {
+    return recover;
+  }
+  
+  private void setRecover(Boolean recover) {
+    this.recover = recover;
+  }
+  
   public AgentController.AgentHeartbeatDTO toAgentHeartbeatDTO() {
     final List<AgentController.AgentServiceDTO> services = new ArrayList<>();
     if (this.services != null) {
@@ -255,7 +266,7 @@ public class AgentView {
     
     return new AgentController.AgentHeartbeatDTO(hostId, agentTime, load1, load5, load15, numGpus, diskUsed,
         diskCapacity, memoryUsed, memoryCapacity, cores, privateIp, services, systemCommands, condaCommands,
-        condaReport);
+        condaReport, recover);
   }
   
   @Override

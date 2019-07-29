@@ -53,8 +53,19 @@ import io.hops.hopsworks.common.util.Settings;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.NONE)
 public class SparkJobConfiguration extends YarnJobConfiguration {
-  
+
+  /**
+   * Creates a SparkJobConfiguration object corresponding to Spark Dynamic allocation
+   */
   public SparkJobConfiguration() {
+  }
+
+  /**
+   * Creates a SparkJobConfiguration object with provided ExperimentType
+   * @param experimentType
+   */
+  public SparkJobConfiguration(ExperimentType experimentType) {
+    this.experimentType = experimentType;
   }
   
   @XmlElement
@@ -91,7 +102,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
   private int numPs = 0;
 
   @XmlElement(name="spark.dynamicAllocation.enabled")
-  private boolean dynamicAllocationEnabled = false;
+  private boolean dynamicAllocationEnabled = true;
 
   @XmlElement(name="spark.dynamicAllocation.minExecutors")
   private int dynamicAllocationMinExecutors = Settings.SPARK_MIN_EXECS;

@@ -24,6 +24,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * DTO containing the metadata of a featurestore.
@@ -36,7 +37,7 @@ public class FeaturestoreMetadataDTO {
   private FeaturestoreDTO featurestore;
   private List<FeaturegroupDTO> featuregroups;
   private List<TrainingDatasetDTO> trainingDatasets;
-
+  
   public FeaturestoreMetadataDTO() {
   }
   
@@ -44,15 +45,30 @@ public class FeaturestoreMetadataDTO {
     List<FeaturegroupDTO> featuregroups,
     List<TrainingDatasetDTO> trainingDatasets) {
     this.featurestore = featurestore;
-    this.featuregroups = featuregroups;
-    this.trainingDatasets = trainingDatasets;
+    // We do not need to send all of the statistics information over the wire for the Python/Scala clients
+    this.featuregroups = featuregroups.stream().map(fg -> {
+        fg.setClusterAnalysis(null);
+        fg.setDescriptiveStatistics(null);
+        fg.setFeaturesHistogram(null);
+        fg.setFeatureCorrelationMatrix(null);
+        return fg;
+      }
+    ).collect(Collectors.toList());
+    this.trainingDatasets = trainingDatasets.stream().map(td -> {
+        td.setClusterAnalysis(null);
+        td.setDescriptiveStatistics(null);
+        td.setFeaturesHistogram(null);
+        td.setFeatureCorrelationMatrix(null);
+        return td;
+      }
+    ).collect(Collectors.toList());
   }
   
   @XmlElement
   public List<FeaturegroupDTO> getFeaturegroups() {
     return featuregroups;
   }
-
+  
   @XmlElement
   public List<TrainingDatasetDTO> getTrainingDatasets() {
     return trainingDatasets;
@@ -66,7 +82,7 @@ public class FeaturestoreMetadataDTO {
   public void setFeaturegroups(List<FeaturegroupDTO> featuregroups) {
     this.featuregroups = featuregroups;
   }
-
+  
   public void setTrainingDatasets(List<TrainingDatasetDTO> trainingDatasets) {
     this.trainingDatasets = trainingDatasets;
   }

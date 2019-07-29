@@ -45,10 +45,10 @@
 angular.module('hopsWorksApp')
         .controller('ProjectCtrl', ['$scope', '$rootScope', '$location', '$routeParams', '$route', '$timeout', '$window', 'UtilsService',
           'growl', 'ProjectService', 'ModalService', 'ActivityService', '$cookies', 'DataSetService',
-          'UserService', 'TourService', 'PythonDepsService', 'StorageService', 'CertService', 'VariablesService', 'FileSaver', 'Blob',
+          'UserService', 'TourService', 'PythonService', 'StorageService', 'CertService', 'VariablesService', 'FileSaver', 'Blob',
           'AirflowService', '$http',
         function ($scope, $rootScope, $location, $routeParams, $route, $timeout, $window, UtilsService, growl, ProjectService,
-                  ModalService, ActivityService, $cookies, DataSetService, UserService, TourService, PythonDepsService,
+                  ModalService, ActivityService, $cookies, DataSetService, UserService, TourService, PythonService,
                     StorageService, CertService, VariablesService, FileSaver, Blob, AirflowService, $http) {
 
             var self = this;
@@ -330,10 +330,11 @@ angular.module('hopsWorksApp')
               }
 
               self.enabling = true;
-              PythonDepsService.enabled(self.projectId).then(
+              PythonService.enabled(self.projectId).then(
                   function (success) {
+                      var version = success.data.count > 0? success.data.items[0].pythonVersion : "0.0";
                       // Check if jupyter is installed
-                      PythonDepsService.libInstalled(self.projectId, "hdfscontents").then(
+                      PythonService.getLibrary(self.projectId, version,"hdfscontents").then(
                           function(success) {
                               self.goToUrl('jupyter');
                           },
@@ -375,6 +376,7 @@ angular.module('hopsWorksApp')
             };
 
             self.goToPython = function () {
+              self.toggleKibanaNavBar();
               self.goToUrl('python');
             };
 
@@ -407,10 +409,6 @@ angular.module('hopsWorksApp')
 
             self.goToMetadataDesigner = function () {
               self.goToUrl('metadata');
-            };
-
-            self.goToHistory = function () {
-              $location.path('history/' + self.projectId + '/history');
             };
 
             /**

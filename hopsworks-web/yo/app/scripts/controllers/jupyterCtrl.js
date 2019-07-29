@@ -41,9 +41,9 @@
 angular.module('hopsWorksApp')
     .controller('JupyterCtrl', ['$scope', '$routeParams', '$route',
         'growl', 'ModalService', '$interval', 'JupyterService', 'StorageService', '$location',
-        '$timeout', '$window', '$sce', 'PythonDepsService', 'TourService',
+        '$timeout', '$window', '$sce', 'PythonService', 'TourService',
         function($scope, $routeParams, $route, growl, ModalService, $interval, JupyterService,
-            StorageService, $location, $timeout, $window, $sce, PythonDepsService, TourService) {
+            StorageService, $location, $timeout, $window, $sce, PythonService, TourService) {
 
             var self = this;
             self.connectedStatus = false;
@@ -64,6 +64,7 @@ angular.module('hopsWorksApp')
             self.config = {};
             self.numNotEnabledEnvs = 0;
             self.opsStatus = {};
+            self.pythonVersion;
 
             self.dirs = [{
                 id: 1,
@@ -136,16 +137,6 @@ angular.module('hopsWorksApp')
                 self.livySessions(self.projectId);
             };
 
-            $scope.autoExpand = function(e) {
-                var element = typeof e === 'object' ? e.target : document.getElementById(e);
-                var scrollHeight = element.scrollHeight; // replace 60 by the sum of padding-top and padding-bottom
-                element.style.height = scrollHeight + "px";
-            };
-
-            function expand() {
-                $scope.autoExpand('TextArea');
-            }
-
             self.livySessions = function(projectId) {
                 JupyterService.livySessions(projectId).then(
                     function(success) {
@@ -166,8 +157,9 @@ angular.module('hopsWorksApp')
             };
 
             self.checkCondaEnabled = function() {
-                PythonDepsService.enabled(self.projectId).then(
+                PythonService.enabled(self.projectId).then(
                     function(success) {
+                        self.pythonVersion = success.data.count > 0? success.data.items[0].pythonVersion : "0.0";
                         self.condaEnabled = true;
                     },
                     function(error) {
@@ -176,40 +168,42 @@ angular.module('hopsWorksApp')
             };
 
             var getCondaCommands = function() {
-                PythonDepsService.status(self.projectId).then(
-                    function(success) {
-                        self.opsStatus = success.data;
-                        self.tempEnvs = 0;
-                        var i = 0;
-                        for (i = 0; i < self.opsStatus.length; i++) {
-                            if ((self.opsStatus[i].op === "CREATE" || self.opsStatus[i].op === "YML")
-                            && (self.opsStatus[i].status === "NEW" || self.opsStatus[i].status === "ONGOING")) {
-                                self.tempEnvs += 1;
-                                break;
+                PythonService.getEnvironments(self.projectId).then(
+                    function (success) {
+                        var envs = success.data.items;
+                        var count = success.data.count;
+                        var opsStatusList = [];
+                        for (var i = 0; i < count; i++) {
+                            if (typeof envs[i].commands !== 'undefined' && envs[i].commands.count > 0) {
+                                opsStatusList.push(envs[i]);
                             }
                         }
-                        self.checkCondaEnabled();
-                        self.numNotEnabledEnvs = self.tempEnvs;
+                        self.pythonVersion = count > 0? envs[0].pythonVersion : "0.0";
+                        self.opsStatus = opsStatusList;
+                        self.numNotEnabledEnvs = opsStatusList.length;
+                    }, function (error) {
 
-                    },
-                    function(error) {
-
-                    }
-                );
+                    });
             };
 
             getCondaCommands();
 
             var checkJupyterInstalled = function() {
                 // Use hdfscontents as a proxy to now if jupyter has been installed correctly or not
-                PythonDepsService.libInstalled(self.projectId, "hdfscontents").then(
-                    function(success) {
-                        self.jupyterInstalled = true;
-                    },
-                    function(error) {
-                        self.jupyterInstalled = false;
-                    }
-                );
+                PythonService.getEnvironments(self.projectId).then(
+                    function (success) {
+                        self.pythonVersion = success.data.count > 0? success.data.items[0].pythonVersion : "0.0";
+                        PythonService.getLibrary(self.projectId, self.pythonVersion, "hdfscontents").then(
+                            function(success) {
+                                self.jupyterInstalled = true;
+                            },
+                            function(error) {
+                                self.jupyterInstalled = false;
+                            }
+                        );
+                    }, function (error) {
+
+                    });
             };
 
             checkJupyterInstalled();
@@ -304,21 +298,18 @@ angular.module('hopsWorksApp')
 
                         if (self.jupyterSettings.project.name.startsWith("demo_deep_learning")) {
                             //Activate anaconda
-                            PythonDepsService.enabled(self.projectId).then(
+                            PythonService.enabled(self.projectId).then(
                                 function(success) {},
                                 function(error) {
-                                    growl.info("Anaconda environment with python 2.7 was selected for the project", {
+                                    growl.warning("Anaconda environment is not enabled for the project", {
                                         ttl: 10000
                                     });
-                                    PythonDepsService.enable(self.projectId, "2.7", "true").then(
+                                    PythonService.createEnvironmentFromVersion(self.projectId, "3.6", "true").then(
                                         function(success) {
                                             checkJupyterInstalled();
                                         },
                                         function(error) {
-                                            growl.error("Could not enable Anaconda", {
-                                                title: 'Error',
-                                                ttl: 5000
-                                            });
+                                            growl.error("Could not enable Anaconda", {title: 'Error', ttl: 5000});
                                         });
                                 });
 

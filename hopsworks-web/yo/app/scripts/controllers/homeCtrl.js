@@ -108,7 +108,7 @@ angular.module('hopsWorksApp')
                   loadProjects(result);
                 },
                 function (error) {
-                  growl.info(error.data.errorMsg, {title: error.data.errorMsg, ttl: 2000});
+                  console.log(error);
                 });
             };
             
@@ -146,11 +146,7 @@ angular.module('hopsWorksApp')
                       self.tourService.setDefaultTourState();
                     }
                   }, function (error) {
-                      if (typeof error.data.usrMsg !== 'undefined') {
-                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
-                      } else {
-                          growl.error("", {title: error.data.errorMsg, ttl: 8000});
-                      }
+                      console.log("Load Tours State", error);
                   });
             };
 
@@ -232,8 +228,10 @@ angular.module('hopsWorksApp')
                   updateUIAfterChange(false);
                 }, function (error) {
                   if (typeof error.data !== 'undefined' && typeof error.data.usrMsg !== 'undefined') {
-                    growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
-                  } 
+                    growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
+                  } else {
+                    growl.error("", {title: error.data.errorMsg, ttl: 5000});
+                  }
               });
             };
 

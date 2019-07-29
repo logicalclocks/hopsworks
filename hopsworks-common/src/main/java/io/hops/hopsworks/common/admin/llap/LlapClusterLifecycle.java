@@ -39,13 +39,22 @@
 
 package io.hops.hopsworks.common.admin.llap;
 
+import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
 import io.hops.hopsworks.common.dao.util.VariablesFacade;
+import io.hops.hopsworks.common.util.OSProcessExecutor;
+import io.hops.hopsworks.common.util.ProcessDescriptor;
+import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.yarn.YarnClientService;
+import io.hops.hopsworks.common.yarn.YarnClientWrapper;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
+import org.apache.hadoop.yarn.api.records.ApplicationReport;
+import org.apache.hadoop.yarn.api.records.QueueInfo;
+import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 
+import javax.annotation.PostConstruct;
 import javax.ejb.Asynchronous;
 import javax.ejb.ConcurrencyManagement;
 import javax.ejb.ConcurrencyManagementType;
@@ -55,14 +64,15 @@ import javax.ejb.LockType;
 import javax.ejb.Singleton;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.lang.reflect.Field;
+import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Singleton
 @ConcurrencyManagement(ConcurrencyManagementType.CONTAINER)
@@ -76,8 +86,23 @@ public class LlapClusterLifecycle {
   private LlapClusterFacade llapClusterFacade;
   @EJB
   private YarnClientService yarnClientService;
+  @EJB
+  private OSProcessExecutor osProcessExecutor;
+  @EJB
+  private YarnApplicationstateFacade yarnApplicationstateFacade;
 
-  private static final Logger logger = Logger.getLogger(LlapClusterLifecycle.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(LlapClusterLifecycle.class.getName());
+
+  private Set<String> applicationTypeSet = null;
+  private EnumSet<YarnApplicationState> applicationStateEnumSet = null;
+  private Set<String> hiveUser = new HashSet<>();
+
+  @PostConstruct
+  private void init() {
+    applicationTypeSet = new HashSet<>(Arrays.asList("org-apache-slider"));
+    applicationStateEnumSet = yarnApplicationstateFacade.getRunningStates();
+    hiveUser.add(settings.getHiveSuperUser());
+  }
 
   @Lock(LockType.WRITE)
   @Asynchronous
@@ -99,85 +124,52 @@ public class LlapClusterLifecycle {
     // Script path
     String startScript = settings.getHopsworksDomainDir() + "/bin/start-llap.sh";
 
-    // Regex for appId
-    Pattern appIdPattern = Pattern.compile("application_[0-9]*_[0-9]*");
-    String llapAppId = null;
+    ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
+        .addCommand("/usr/bin/sudo")
+        .addCommand("-u")
+        .addCommand(settings.getHiveSuperUser())
+        .addCommand(startScript)
+        .addCommand(String.valueOf(nInstances))
+        .addCommand(String.valueOf(execMemory))
+        .addCommand(String.valueOf(cacheMemory))
+        .addCommand(String.valueOf(nExecutors))
+        .addCommand(String.valueOf(nIOThreads))
+        .redirectErrorStream(true)
+        .setWaitTimeout(5L, TimeUnit.MINUTES)
+        .build();
 
-    String[] command = {"/usr/bin/sudo", "-u", settings.getHiveSuperUser(),
-        startScript,
-        String.valueOf(nInstances),
-        String.valueOf(execMemory),
-        String.valueOf(cacheMemory),
-        String.valueOf(nExecutors),
-        String.valueOf(nIOThreads)};
-
-    StringBuilder processOutput = new StringBuilder();
-
-    ProcessBuilder pb = new ProcessBuilder(command);
-    pb.redirectErrorStream(true);
+    YarnClientWrapper yarnClientWrapper = null;
     try {
-      // Start the script
-      Process proc = pb.start();
-
-      // Get the pid of the process and store it in the database
-      long pid = getProcessPid(proc);
-      variablesFacade.storeVariable(Settings.VARIABLE_LLAP_START_PROC, String.valueOf(pid));
-
-      // Parse the output
-      BufferedReader br = new BufferedReader(new InputStreamReader(proc.getInputStream()));
-      String line;
-      while ((line = br.readLine()) != null ) {
-        // Store output for logging in case of exception
-        processOutput.append(line).append('\n');
-
-        // Look for application_clustertimestamp_appid in the output of the script
-        Matcher matcher = appIdPattern.matcher(line);
-        if (matcher.find()){
-          llapAppId = matcher.group();
-        }
+      ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
+      if (processResult.getExitCode() != 0) {
+        LOGGER.log(Level.INFO, "LLAP output: " + processResult.getStdout());
       }
 
-      if (llapAppId == null) {
-        // For some reason the script failed to start the llap Cluster.
-        // Dump the output of the script in the logs.
-        logger.log(Level.SEVERE, "Could not start Hive LLAP cluster. Script output: " +
-            processOutput.toString());
+      // Store the appId in the database
+      yarnClientWrapper = yarnClientService.getYarnClientSuper(settings.getConfiguration());
+      YarnClient yarnClient = yarnClientWrapper.getYarnClient();
+
+      Set<String> queueSet = new HashSet<>();
+      List<QueueInfo> queueInfoList = yarnClient.getAllQueues();
+      queueInfoList.forEach(queue -> queueSet.add(queue.getQueueName()));
+
+      List<ApplicationReport> appReports = yarnClient.getApplications(
+          queueSet, hiveUser, applicationTypeSet, applicationStateEnumSet);
+
+      // Search for LLAP application
+      if (!appReports.isEmpty()) {
+        variablesFacade.storeVariable(Settings.VARIABLE_LLAP_APP_ID, appReports.get(0).getApplicationId().toString());
       }
-    } catch (Exception ex) {
-      logger.log(Level.SEVERE, "Could not start Hive LLAP cluster. Script output: " +
-          processOutput.toString(), ex);
-    }
+    } catch (IOException | YarnException e) {
+      LOGGER.log(Level.SEVERE, "Error starting LLAP", e);
+    } finally {
+      // Process ended, clean the db
+      variablesFacade.storeVariable(Settings.VARIABLE_LLAP_START_PROC, "-1");
 
-    // Store the appId in the database
-    if (llapAppId != null) {
-      variablesFacade.storeVariable(Settings.VARIABLE_LLAP_APP_ID, llapAppId);
+      yarnClientService.closeYarnClient(yarnClientWrapper);
     }
-
-    // Process ended, clean the db
-    variablesFacade.storeVariable(Settings.VARIABLE_LLAP_START_PROC, "-1");
   }
 
-    /**
-   * This only works on Linux systems. From Java 9, you can just call
-   * p.getPid();
-   * http://stackoverflow.com/questions/4750470/how-to-get-pid-of-process-ive-just-started-within-java-program
-   *
-   * @param proc
-   * @return
-   */
-  private long getProcessPid(Process proc) {
-    long pid = -1;
-
-    try {
-      Field f = proc.getClass().getDeclaredField("pid");
-      f.setAccessible(true);
-      pid = f.getLong(proc);
-      f.setAccessible(false);
-    } catch (Exception e) {
-      pid = -1;
-    }
-    return pid;
-  }
 
   @Lock(LockType.WRITE)
   public boolean stopCluster() {
@@ -191,7 +183,7 @@ public class LlapClusterLifecycle {
     try {
       yarnClient.killApplication(appId);
     } catch (IOException | YarnException e) {
-      logger.log(Level.SEVERE, "Could not kill llap cluster with appId: " + appId.toString(), e);
+      LOGGER.log(Level.SEVERE, "Could not kill llap cluster with appId: " + appId.toString(), e);
       return false;
     } finally {
       try {

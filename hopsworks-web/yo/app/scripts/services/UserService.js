@@ -51,6 +51,9 @@ angular.module('hopsWorksApp')
               changeLoginCredentials: function (newCredentials) {
                 return $http.post('/api/users/credentials', TransformRequest.jQueryStyle(newCredentials));
               },
+              changeSecurityQA: function (securityQA) {
+                return $http.post('/api/users/securityQA', TransformRequest.jQueryStyle(securityQA));
+              },
               allUsers: function () {
                 return $http.get('/api/users');
               },
@@ -68,6 +71,25 @@ angular.module('hopsWorksApp')
               },
               getQR: function (pwd) {
                 return $http.post('/api/users/getQRCode', "password=" + pwd);
+              },
+              add_secret: function(secret) {
+                var httpRequest = {
+                  method: "POST",
+                  url: "/api/users/secrets",
+                  headers: {"Content-Type": "application/json"},
+                  data: secret,
+                  dataType: "json"
+                }
+                return $http(httpRequest)
+              },
+              load_secrets: function () {
+                return $http.get("/api/users/secrets")
+              },
+              delete_secret: function (secretName) {
+                return $http.delete("/api/users/secrets/" + secretName);
+              },
+              delete_all_secrets: function () {
+                return $http.delete("/api/users/secrets");
               }
             };
           }]);

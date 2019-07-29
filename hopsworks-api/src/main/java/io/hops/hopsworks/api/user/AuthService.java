@@ -38,6 +38,7 @@
  */
 package io.hops.hopsworks.api.user;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jwt.JWTHelper;
@@ -48,8 +49,11 @@ import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
 import io.hops.hopsworks.common.dao.user.security.audit.UserAuditActions;
+import io.hops.hopsworks.common.util.DateUtils;
+import io.hops.hopsworks.exceptions.HopsSecurityException;
+import io.hops.hopsworks.jwt.JWTController;
+import io.hops.hopsworks.jwt.JsonWebToken;
 import io.hops.hopsworks.restutils.RESTCodes;
-import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.common.user.AuthController;
 import io.hops.hopsworks.common.user.UserStatusValidator;
@@ -73,16 +77,23 @@ import javax.security.auth.login.LoginException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.security.GeneralSecurityException;
 import java.security.NoSuchAlgorithmException;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import static javax.ws.rs.core.HttpHeaders.AUTHORIZATION;
@@ -112,6 +123,8 @@ public class AuthService {
   private JWTHelper jWTHelper;
   @EJB
   private Settings settings;
+  @EJB
+  private JWTController jwtController;
 
   @GET
   @Path("session")
@@ -183,6 +196,101 @@ public class AuthService {
     return Response.ok().build();
   }
 
+  @POST
+  @Path("/service")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response serviceLogin(@FormParam("email") String email, @FormParam("password") String password,
+      @Context HttpServletRequest request)
+    throws LoginException, UserException, GeneralSecurityException, SigningKeyNotFoundException,
+      DuplicateSigningKeyException, HopsSecurityException {
+    if (Strings.isNullOrEmpty(email)) {
+      throw new IllegalArgumentException("Email cannot be null or empty");
+    }
+    if (Strings.isNullOrEmpty(password)) {
+      throw new IllegalArgumentException("Password cannot be null or empty");
+    }
+    Users user = userFacade.findByEmail(email);
+    if (user == null) {
+      throw new LoginException("Could not find registered user with email " + email);
+    }
+    if (!needLogin(request, user)) {
+      return Response.ok().build();
+    }
+    if (!userController.isUserInRole(user, "AGENT")) {
+      throw new HopsSecurityException(RESTCodes.SecurityErrorCode.REST_ACCESS_CONTROL, Level.FINE,
+          "Users are not allowed to access this endpoint, use auth/login instead",
+          "User " + user.getUsername() + " tried to login but they don't have AGENT role");
+    }
+    request.getSession();
+    
+    Collection roles = user.getBbcGroupCollection();
+    if (roles == null || roles.isEmpty()) {
+      throw new UserException(RESTCodes.UserErrorCode.NO_ROLE_FOUND, Level.FINE);
+    }
+    
+    statusValidator.checkStatus(user.getStatus());
+    String saltedPassword = authController.preCustomRealmLoginCheck(user, password, null, request);
+    
+    try {
+      request.login(user.getEmail(), saltedPassword);
+    } catch (ServletException ex) {
+      authController.registerAuthenticationFailure(user, request);
+      throw new UserException(RESTCodes.UserErrorCode.AUTHENTICATION_FAILURE, Level.FINE, null, ex.getMessage(), ex);
+    }
+  
+    // First generate the one-time tokens for renewal of master token
+    String renewalKeyName = jwtController.getServiceOneTimeJWTSigningKeyname(user.getUsername(),
+        request.getRemoteHost());
+    LocalDateTime masterExpiration = DateUtils.getNow().plus(settings.getServiceJWTLifetimeMS(), ChronoUnit.MILLIS);
+    LocalDateTime notBefore = jwtController.computeNotBefore4ServiceRenewalTokens(masterExpiration);
+    LocalDateTime expiresAt = notBefore.plus(settings.getServiceJWTLifetimeMS(), ChronoUnit.MILLIS);
+    List<String> userRoles = userController.getUserRoles(user);
+    
+    JsonWebToken renewalJWTSpec = new JsonWebToken();
+    renewalJWTSpec.setSubject(user.getUsername());
+    renewalJWTSpec.setIssuer(settings.getJWTIssuer());
+    renewalJWTSpec.setAudience(JWTHelper.SERVICE_RENEW_JWT_AUDIENCE);
+    renewalJWTSpec.setKeyId(renewalKeyName);
+    renewalJWTSpec.setNotBefore(DateUtils.localDateTime2Date(notBefore));
+    renewalJWTSpec.setExpiresAt(DateUtils.localDateTime2Date(expiresAt));
+    
+    Map<String, Object> claims = new HashMap<>(4);
+    claims.put(Constants.RENEWABLE, false);
+    claims.put(Constants.EXPIRY_LEEWAY, 3600);
+    claims.put(Constants.ROLES, userRoles.toArray(new String[1]));
+    
+    String[] oneTimeRenewalTokens = jwtController.generateOneTimeTokens4ServiceJWTRenewal(renewalJWTSpec, claims,
+        settings.getJWTSigningKeyName());
+  
+    // Then generate the master service token
+    try {
+      String signingKeyID = jwtController.getSignKeyID(oneTimeRenewalTokens[0]);
+      claims.clear();
+      // The rest of JWT claims will be added by JWTHelper
+      claims.put(Constants.RENEWABLE, false);
+      claims.put(Constants.SERVICE_JWT_RENEWAL_KEY_ID, signingKeyID);
+      String token = jWTHelper.createToken(user, settings.getJWTIssuer(), claims);
+      
+      ServiceJWTDTO renewTokensResponse = new ServiceJWTDTO();
+      renewTokensResponse.setRenewTokens(oneTimeRenewalTokens);
+      return Response.ok().header(AUTHORIZATION, Constants.BEARER + token).entity(renewTokensResponse).build();
+    } catch (Exception ex) {
+      jwtController.deleteSigningKey(renewalKeyName);
+      throw ex;
+    }
+  }
+  
+  @DELETE
+  @Path("/service")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response serviceLogout(@Context HttpServletRequest request) throws UserException, InvalidationException {
+    if (jWTHelper.validToken(request, settings.getJWTIssuer())) {
+      jwtController.invalidateServiceToken(jWTHelper.getAuthToken(request), settings.getJWTSigningKeyName());
+    }
+    logoutAndInvalidateSession(request);
+    return Response.ok().build();
+  }
+  
   @GET
   @Path("isAdmin")
   @Produces(MediaType.APPLICATION_JSON)
@@ -212,51 +320,70 @@ public class AuthService {
       json.setSuccessMessage("We registered your account request. Please validate you email and we will "
           + "review your account within 48 hours.");
     }
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+    return Response.ok(json).build();
   }
 
   @POST
-  @Path("recoverPassword")
+  @Path("/recover/password")
   @Produces(MediaType.APPLICATION_JSON)
   public Response recoverPassword(@FormParam("email") String email,
       @FormParam("securityQuestion") String securityQuestion,
       @FormParam("securityAnswer") String securityAnswer,
-      @Context HttpServletRequest req) throws UserException, ServiceException {
+      @Context HttpServletRequest req) throws UserException, MessagingException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
-    userController.recoverPassword(email, securityQuestion, securityAnswer, req);
-    json.setSuccessMessage(ResponseMessages.PASSWORD_RESET_SUCCESSFUL);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+    userController.sendPasswordRecoveryEmail(email, securityQuestion, securityAnswer, req);
+    json.setSuccessMessage(ResponseMessages.PASSWORD_RESET);
+    return Response.ok(json).build();
   }
-
-  @GET
-  @Path("/validation/{key}")
+  
+  @POST
+  @Path("/recover/qrCode")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response validateUserEmail(@Context HttpServletRequest req, @PathParam("key") String key)
-      throws UserException {
-    authController.validateKey(key, req);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
+  public Response recoverQRCode(@FormParam("email") String email, @FormParam("password") String password,
+    @Context HttpServletRequest req) throws UserException, MessagingException {
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
+    userController.sendQRRecoveryEmail(email, password, req);
+    json.setSuccessMessage(ResponseMessages.QR_CODE_RESET);
+    return Response.ok(json).build();
+  }
+  
+  @POST
+  @Path("/reset/validate")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response validatePasswordRecovery(@FormParam("key") String key, @Context HttpServletRequest req)
+    throws UserException {
+    userController.checkRecoveryKey(key, req);
+    return Response.ok().build();
+  }
+  
+  @POST
+  @Path("/reset/password")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response passwordRecovery(@FormParam("key") String key, @FormParam("newPassword") String newPassword,
+    @FormParam("confirmPassword") String confirmPassword, @Context HttpServletRequest req) throws UserException,
+    MessagingException {
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
+    userController.changePassword(key, newPassword, confirmPassword, req);
+    json.setSuccessMessage(ResponseMessages.PASSWORD_CHANGED);
+    return Response.ok(json).build();
+  }
+  
+  @POST
+  @Path("/reset/qrCode")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response qrCodeRecovery(@FormParam("key") String key, @Context HttpServletRequest req)
+    throws UserException, MessagingException {
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
+    json.setQRCode(userController.recoverQRCode(key, req));
+    return Response.ok(json).build();
   }
 
   @POST
-  @Path("/validation/{key}")
+  @Path("/validate/email")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response validateUserMail(@Context HttpServletRequest req, @PathParam("key") String key) throws UserException {
-    authController.validateKey(key, req);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
-  }
-
-  @POST
-  @Path("/recovery")
-  @Produces(MediaType.TEXT_PLAIN)
-  public Response sendNewValidationKey(@Context HttpServletRequest req,
-      @FormParam("email") String email) throws MessagingException {
-    Users u = userFacade.findByEmail(email);
-    if (u == null || statusValidator.isBlockedAccount(u)) {
-      //if account blocked then ignore the request
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
-    }
-    authController.sendNewValidationKey(u, req);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
+  public Response validateUserMail(@FormParam("key") String key, @Context HttpServletRequest req) throws UserException {
+    authController.validateEmail(key, req);
+    return Response.ok().build();
   }
 
   private void logoutAndInvalidateSession(HttpServletRequest req) throws UserException, InvalidationException {
@@ -296,7 +423,8 @@ public class AuthService {
 
     json.setSessionID(req.getSession().getId());
     json.setData(user.getEmail());
-    String token = jWTHelper.createToken(user, settings.getJWTIssuer());
+    // JWT claims will be added by JWTHelper
+    String token = jWTHelper.createToken(user, settings.getJWTIssuer(), null);
     return Response.ok().header(AUTHORIZATION, Constants.BEARER + token).entity(json).build();
   }
 

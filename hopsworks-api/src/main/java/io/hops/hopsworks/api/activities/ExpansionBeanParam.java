@@ -43,7 +43,9 @@ public class ExpansionBeanParam {
   public Set<ResourceRequest> getResources(){
     Set<ResourceRequest> expansions = new HashSet<>();
     for(ActivityExpansions activityExpansion : this.expansions){
-      expansions.add(activityExpansion.getResourceRequest());
+      if (activityExpansion != null) {
+        expansions.add(activityExpansion.getResourceRequest());
+      }
     }
     return expansions;
   }

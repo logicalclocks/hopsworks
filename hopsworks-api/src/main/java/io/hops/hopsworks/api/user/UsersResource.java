@@ -52,15 +52,17 @@ import io.hops.hopsworks.common.dao.user.BbcGroup;
 import io.hops.hopsworks.common.dao.user.BbcGroupFacade;
 import io.hops.hopsworks.common.dao.user.UserProjectDTO;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.dao.user.security.secrets.SecretPlaintext;
 import io.hops.hopsworks.common.project.ProjectController;
+import io.hops.hopsworks.common.security.secrets.SecretsController;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.exceptions.ProjectException;
+import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.Authorization;
 import org.apache.commons.codec.binary.Base64;
 
 import javax.ejb.EJB;
@@ -68,14 +70,19 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -90,9 +97,7 @@ import javax.ws.rs.core.UriInfo;
 @JWTRequired(acceptedTokens = {Audience.API},
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
 @Api(value = "Users",
-    description = "Users service",
-    authorizations = {
-      @Authorization(value = "Cauth-Realm")})
+    description = "Users service")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class UsersResource {
 
@@ -112,6 +117,10 @@ public class UsersResource {
   private JWTHelper jWTHelper;
   @EJB
   private UsersBuilder usersBuilder;
+  @EJB
+  private SecretsController secretsController;
+  @EJB
+  private SecretsBuilder secretsBuilder;
 
   @GET
   @Produces(MediaType.APPLICATION_JSON)
@@ -176,7 +185,7 @@ public class UsersResource {
     user = userController.updateProfile(user, firstName, lastName, phoneNumber, toursState, req);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.USERS);
     UserProfileDTO userDTO = usersBuilder.buildFull(uriInfo, resourceRequest, user);
-    return Response.ok().entity(userDTO).build();
+    return Response.created(userDTO.getHref()).entity(userDTO).build();
   }
 
   @POST
@@ -195,6 +204,77 @@ public class UsersResource {
     return Response.ok().entity(json).build();
   }
 
+  @POST
+  @Path("secrets")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  @ApiOperation(value = "Stores a secret for user")
+  public Response addSecret(SecretDTO secret, @Context SecurityContext sc) throws UserException {
+    Users user = jWTHelper.getUserPrincipal(sc);
+    secretsController.add(user, secret.getName(), secret.getSecret(), secret.getVisibility(),
+        secret.getProjectIdScope());
+    
+    RESTApiJsonResponse response = new RESTApiJsonResponse();
+    response.setSuccessMessage("Added new secret");
+    return Response.ok().entity(response).build();
+  }
+  
+  @GET
+  @Path("secrets")
+  @Produces(MediaType.APPLICATION_JSON)
+  @ApiOperation(value = "Retrieves all secrets' names of a user", response = SecretDTO.class)
+  public Response getAllSecrets(@Context SecurityContext sc) throws UserException {
+    Users user = jWTHelper.getUserPrincipal(sc);
+    List<SecretPlaintext> secrets = secretsController.getAllForUser(user);
+    SecretDTO dto = secretsBuilder.build(secrets, false);
+    return Response.ok().entity(dto).build();
+  }
+  
+  @GET
+  @Path("secrets/shared")
+  @Produces(MediaType.APPLICATION_JSON)
+  @ApiOperation(value = "Gets the value of a shared secret", response = SecretDTO.class)
+  public Response getSharedSecret(@QueryParam("name") String secretName, @QueryParam("owner") String ownerUsername,
+      @Context SecurityContext sc)
+      throws UserException, ServiceException, ProjectException {
+    Users caller = jWTHelper.getUserPrincipal(sc);
+    SecretPlaintext secret = secretsController.getShared(caller, ownerUsername, secretName);
+    SecretDTO dto = secretsBuilder.build(Arrays.asList(secret), true);
+    return Response.ok().entity(dto).build();
+  }
+  
+  @GET
+  @Path("secrets/{secretName}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @ApiOperation(value = "Gets the value of a private secret", response = SecretDTO.class)
+  public Response getSecret(@PathParam("secretName") String name, @Context SecurityContext sc) throws UserException {
+    Users user = jWTHelper.getUserPrincipal(sc);
+    SecretPlaintext secret = secretsController.get(user, name);
+    SecretDTO dto = secretsBuilder.build(Arrays.asList(secret), true);
+    return Response.ok().entity(dto).build();
+  }
+  
+  @DELETE
+  @Path("secrets/{secretName}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @ApiOperation(value = "Deletes a secret by its name")
+  public Response deleteSecret(@PathParam("secretName") String name, @Context SecurityContext sc)
+    throws UserException {
+    Users user = jWTHelper.getUserPrincipal(sc);
+    secretsController.delete(user, name);
+    return Response.ok().build();
+  }
+  
+  @DELETE
+  @Path("secrets")
+  @Produces(MediaType.APPLICATION_JSON)
+  @ApiOperation(value = "Deletes all secrets of a user")
+  public Response deleteAllSecrets(@Context SecurityContext sc) throws UserException {
+    Users user = jWTHelper.getUserPrincipal(sc);
+    secretsController.deleteAll(user);
+    return Response.ok().build();
+  }
+  
   @POST
   @Path("securityQA")
   @Produces(MediaType.APPLICATION_JSON)

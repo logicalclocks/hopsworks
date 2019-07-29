@@ -30,17 +30,20 @@ import io.hops.hopsworks.common.dao.kagent.HostServices;
 import io.hops.hopsworks.common.dao.kagent.HostServicesFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.common.dao.pythonDeps.AnacondaRepo;
-import io.hops.hopsworks.common.dao.pythonDeps.CondaCommands;
-import io.hops.hopsworks.common.dao.pythonDeps.PythonDep;
-import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade;
+import io.hops.hopsworks.common.dao.python.AnacondaRepo;
+import io.hops.hopsworks.common.dao.python.CondaCommandFacade;
+import io.hops.hopsworks.common.dao.python.CondaCommands;
+import io.hops.hopsworks.common.dao.python.LibraryFacade;
+import io.hops.hopsworks.common.dao.python.PythonDep;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
+import io.hops.hopsworks.common.python.commands.CommandsController;
+import io.hops.hopsworks.common.python.library.LibraryController;
+import io.hops.hopsworks.common.util.ProcessDescriptor;
+import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.common.util.EmailBean;
 import io.hops.hopsworks.common.util.OSProcessExecutor;
-import io.hops.hopsworks.common.util.ProcessDescriptor;
-import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.common.util.Settings;
 
 import javax.ejb.EJB;
@@ -73,7 +76,13 @@ public class AgentController {
   @EJB
   private HostServicesFacade hostServicesFacade;
   @EJB
-  private PythonDepsFacade pythonDepsFacade;
+  private CondaCommandFacade condaCommandFacade;
+  @EJB
+  private CommandsController commandsController;
+  @EJB
+  private LibraryFacade libraryFacade;
+  @EJB
+  private LibraryController libraryController;
   @EJB
   private ProjectFacade projectFacade;
   @EJB
@@ -82,6 +91,9 @@ public class AgentController {
   private AlertEJB alertFacade;
   @EJB
   private OSProcessExecutor osProcessExecutor;
+  @EJB
+  private AgentLivenessMonitor agentLivenessMonitor;
+
   
   public String register(String hostId, String password) {
     Hosts host = hostsFacade.findByHostname(hostId);
@@ -105,12 +117,17 @@ public class AgentController {
         "hostId: " + heartbeat.hostId);
     }
     
+    agentLivenessMonitor.alive(host);
     updateHostMetrics(host, heartbeat);
     updateServices(heartbeat);
     processCondaCommands(heartbeat);
     processSystemCommands(heartbeat);
     if (heartbeat.condaReport != null && !heartbeat.condaReport.isEmpty()) {
       issueCondaEnvsGCCommand(host, heartbeat.condaReport);
+    }
+    
+    if (heartbeat.recover != null && heartbeat.recover) {
+      recoverUnfinishedCommands(host);
     }
     
     final HeartbeatReplyDTO response = new HeartbeatReplyDTO();
@@ -145,11 +162,36 @@ public class AgentController {
     }
   }
   
+  private void recoverUnfinishedCommands(final Hosts host) {
+    recoverCondaCommands(host);
+    recoverSystemCommands(host);
+  }
+  
+  private void recoverCondaCommands(Hosts host) {
+    final List<CondaCommands> allUnfinished = condaCommandFacade.findUnfinishedByHost(host);
+    for (CondaCommands command : allUnfinished) {
+      try {
+        commandsController
+          .updateCondaCommandStatus(command.getId(), CondaCommandFacade.CondaStatus.NEW, command.getArg());
+      } catch (ServiceException ex) {
+        LOG.log(Level.WARNING, "Could not recover command with ID: " + command.getId() + " for host " + host);
+      }
+    }
+  }
+
+  private void recoverSystemCommands(Hosts host) {
+    final List<SystemCommand> allUnfinished = systemCommandFacade.findUnfinishedByHost(host);
+    for (SystemCommand command : allUnfinished) {
+      command.setStatus(SystemCommandFacade.STATUS.NEW);
+      systemCommandFacade.update(command);
+    }
+  }
+  
   private void addNewCommandsToResponse(final Hosts host, final HeartbeatReplyDTO response) {
     final List<CondaCommands> newCondaCommands = new ArrayList<>();
-    final List<CondaCommands> allCondaCommands = pythonDepsFacade.findByHost(host);
+    final List<CondaCommands> allCondaCommands = condaCommandFacade.findByHost(host);
     for (final CondaCommands cc : allCondaCommands) {
-      if (cc.getStatus().equals(PythonDepsFacade.CondaStatus.NEW)) {
+      if (cc.getStatus().equals(CondaCommandFacade.CondaStatus.NEW)) {
         newCondaCommands.add(cc);
         cc.setHostId(host);
       }
@@ -218,15 +260,15 @@ public class AgentController {
     }
     for (CondaCommands cc : heartbeatDTO.condaCommands) {
       final String projectName = cc.getProj();
-      final PythonDepsFacade.CondaOp opType = cc.getOp();
+      final CondaCommandFacade.CondaOp opType = cc.getOp();
       final String channelUrl = cc.getChannelUrl();
       final String lib = cc.getLib() != null ? cc.getLib() : "";
       final String version = cc.getVersion() != null ? cc.getVersion() : "";
       final String args = cc.getArg() != null ? cc.getArg() : "";
-      final PythonDepsFacade.CondaStatus status = cc.getStatus();
+      final CondaCommandFacade.CondaStatus status = cc.getStatus();
       Integer commandId = cc.getId();
       
-      CondaCommands command = pythonDepsFacade.findCondaCommand(commandId);
+      CondaCommands command = condaCommandFacade.findCondaCommand(commandId);
       // If the command object does not exist, then the project
       // has probably been removed. We needed to send a compensating action if
       // this action was successful.
@@ -234,28 +276,28 @@ public class AgentController {
       // Command would be null when we are deleting a Project and kagent reports that the
       // REMOVE operation has changed state from ONGOING to SUCCESS
       if (command != null) {
-        pythonDepsFacade.updateCondaCommandStatus(
+        commandsController.updateCondaCommandStatus(
           commandId, status, command.getInstallType(), command.getMachineType(),
           args, projectName, opType, lib, version, channelUrl);
         
-        if ((command.getOp().equals(PythonDepsFacade.CondaOp.CREATE)
-              || command.getOp().equals(PythonDepsFacade.CondaOp.YML))
-            && (status.equals(PythonDepsFacade.CondaStatus.SUCCESS)
-              || status.equals(PythonDepsFacade.CondaStatus.FAILED))) {
+        if ((command.getOp().equals(CondaCommandFacade.CondaOp.CREATE)
+              || command.getOp().equals(CondaCommandFacade.CondaOp.YML))
+            && (status.equals(CondaCommandFacade.CondaStatus.SUCCESS)
+              || status.equals(CondaCommandFacade.CondaStatus.FAILED))) {
           // Sync only on Hopsworks server
           if (settings.getHopsworksIp().equals(command.getHostId().getHostIp())) {
             final Project projectId = command.getProjectId();
             final String envStr = listCondaEnvironment(projectName);
-            final Collection<PythonDep> pythonDeps = synchronizeDependencies(
-                projectId, envStr, projectId.getPythonDepCollection(), status);
+            final Collection<PythonDep> pythonDeps = synchronizeDependencies(projectId, envStr,
+              projectId.getPythonDepCollection(), status);
             // Insert all deps in current listing
-            pythonDepsFacade.addPythonDepsForProject(projectId, pythonDeps);
+            libraryController.addPythonDepsForProject(projectId, pythonDeps);
           }
         }
         
         // An upgrade results in an unknown version installed, query local conda
         // env to figure it out
-        if (command.getOp().equals(PythonDepsFacade.CondaOp.UPGRADE)) {
+        if (command.getOp().equals(CondaCommandFacade.CondaOp.UPGRADE)) {
           command.setVersion(getLocalLibraryVersion(command.getLib(),
               command.getVersion(), projectName));
           if (settings.getHopsworksIp().equals(command.getHostId().getHostIp())) {
@@ -270,9 +312,9 @@ public class AgentController {
                   
                   for (final PythonDep dep : deps) {
                     if (dep.getDependency().equals(command.getLib())) {
-                      PythonDep newDep = pythonDepsFacade.getDep(dep.getRepoUrl(), dep.getMachineType(),
+                      PythonDep newDep = libraryFacade.getDep(dep.getRepoUrl(), dep.getMachineType(),
                           command.getInstallType(), command.getLib(), localVersion, true, false,
-                          PythonDepsFacade.CondaStatus.FAILED);
+                          CondaCommandFacade.CondaStatus.FAILED);
                       deps.remove(dep);
                       deps.add(newDep);
                       projectFacade.update(projectId);
@@ -340,7 +382,7 @@ public class AgentController {
    * @return
    */
   public Collection<PythonDep> synchronizeDependencies(Project project, String condaListStr,
-      Collection<PythonDep> currentlyInstalledPyDeps, PythonDepsFacade.CondaStatus status) throws ServiceException {
+      Collection<PythonDep> currentlyInstalledPyDeps, CondaCommandFacade.CondaStatus status) throws ServiceException {
     
     Collection<PythonDep> deps = new ArrayList();
     
@@ -359,41 +401,45 @@ public class AgentController {
       String version = split[1];
       
       if (settings.getPreinstalledPythonLibraryNames().contains(libraryName)) {
-        AnacondaRepo repo = pythonDepsFacade.getRepo("PyPi", true);
+        AnacondaRepo repo = libraryFacade.getRepo("PyPi", true);
         
-        PythonDep pyDep = pythonDepsFacade.getDep(repo, PythonDepsFacade.MachineType.ALL,
-            PythonDepsFacade.CondaInstallType.PIP, libraryName, version, true, true, status);
+        PythonDep pyDep = libraryFacade.getDep(repo, LibraryFacade.MachineType.ALL,
+          CondaCommandFacade.CondaInstallType.PIP, libraryName, version, true, true, status);
         deps.add(pyDep);
         continue;
       }
 
       //Special case for tensorflow
-      if (libraryName.equals("tensorflow") || libraryName.equals("tensorflow-gpu")) {
-        AnacondaRepo repo = pythonDepsFacade.getRepo("PyPi", true);
+      if (libraryName.equals("tensorflow") || libraryName.equals("tensorflow-gpu") || libraryName.equals("tensorflow" +
+        "-rocm")) {
+        AnacondaRepo repo = libraryFacade.getRepo("PyPi", true);
         if(cpuHost != null) {
-          PythonDep tensorflowCPU = pythonDepsFacade.getDep(repo, PythonDepsFacade.MachineType.CPU,
-            PythonDepsFacade.CondaInstallType.PIP, "tensorflow", version, true, true, status);
+          PythonDep tensorflowCPU = libraryFacade.getDep(repo, LibraryFacade.MachineType.CPU,
+            CondaCommandFacade.CondaInstallType.PIP, "tensorflow", version, true, true, status);
           deps.add(tensorflowCPU);
         }
         if(gpuHost != null) {
-          PythonDep tensorflowGPU = pythonDepsFacade.getDep(repo, PythonDepsFacade.MachineType.GPU,
-            PythonDepsFacade.CondaInstallType.PIP, "tensorflow-gpu", version, true, true, status);
-          deps.add(tensorflowGPU);
+          PythonDep tensorflowCudaGPU = libraryFacade.getDep(repo, LibraryFacade.MachineType.GPU,
+            CondaCommandFacade.CondaInstallType.PIP, "tensorflow-gpu", version, true, true, status);
+          deps.add(tensorflowCudaGPU);
+          PythonDep tensorflowROCmGPU = libraryFacade.getDep(repo, LibraryFacade.MachineType.GPU,
+            CondaCommandFacade.CondaInstallType.PIP, "tensorflow-rocm", version, true, true, status);
+          deps.add(tensorflowROCmGPU);
         }
         continue;
       }
 
       //Special case for pytorch
       if (libraryName.equals("pytorch") || libraryName.equals("pytorch-cpu")) {
-        AnacondaRepo repo = pythonDepsFacade.getRepo("pytorch", true);
+        AnacondaRepo repo = libraryFacade.getRepo("pytorch", true);
         if(cpuHost != null) {
-          PythonDep pytorchCPU = pythonDepsFacade.getDep(repo, PythonDepsFacade.MachineType.CPU,
-            PythonDepsFacade.CondaInstallType.CONDA, "pytorch-cpu", version, true, false, status);
+          PythonDep pytorchCPU = libraryFacade.getDep(repo, LibraryFacade.MachineType.CPU,
+            CondaCommandFacade.CondaInstallType.CONDA, "pytorch-cpu", version, true, false, status);
           deps.add(pytorchCPU);
         }
         if(gpuHost != null) {
-          PythonDep pytorchGPU = pythonDepsFacade.getDep(repo, PythonDepsFacade.MachineType.GPU,
-            PythonDepsFacade.CondaInstallType.CONDA, "pytorch", version, true, false, status);
+          PythonDep pytorchGPU = libraryFacade.getDep(repo, LibraryFacade.MachineType.GPU,
+            CondaCommandFacade.CondaInstallType.CONDA, "pytorch", version, true, false, status);
           deps.add(pytorchGPU);
         }
         continue;
@@ -401,24 +447,24 @@ public class AgentController {
 
       //Special case for torchvision
       if (libraryName.equals("torchvision") || libraryName.equals("torchvision-cpu")) {
-        AnacondaRepo repo = pythonDepsFacade.getRepo("pytorch", true);
+        AnacondaRepo repo = libraryFacade.getRepo("pytorch", true);
         if(cpuHost != null) {
-          PythonDep torchvisionCPU = pythonDepsFacade.getDep(repo, PythonDepsFacade.MachineType.CPU,
-            PythonDepsFacade.CondaInstallType.CONDA, "torchvision-cpu", version, true, false, status);
+          PythonDep torchvisionCPU = libraryFacade.getDep(repo, LibraryFacade.MachineType.CPU,
+            CondaCommandFacade.CondaInstallType.CONDA, "torchvision-cpu", version, true, false, status);
           deps.add(torchvisionCPU);
         }
         if(gpuHost != null) {
-          PythonDep torchvisionGPU = pythonDepsFacade.getDep(repo, PythonDepsFacade.MachineType.GPU,
-            PythonDepsFacade.CondaInstallType.CONDA, "torchvision", version, true, false, status);
+          PythonDep torchvisionGPU = libraryFacade.getDep(repo, LibraryFacade.MachineType.GPU,
+            CondaCommandFacade.CondaInstallType.CONDA, "torchvision", version, true, false, status);
           deps.add(torchvisionGPU);
         }
         continue;
       }
       
       if (settings.getProvidedPythonLibraryNames().contains(libraryName)) {
-        AnacondaRepo repo = pythonDepsFacade.getRepo("PyPi", true);
-        PythonDep pyDep = pythonDepsFacade.getDep(repo, PythonDepsFacade.MachineType.ALL,
-            PythonDepsFacade.CondaInstallType.PIP, libraryName, version, true, false, status);
+        AnacondaRepo repo = libraryFacade.getRepo("PyPi", true);
+        PythonDep pyDep = libraryFacade.getDep(repo, LibraryFacade.MachineType.ALL,
+          CondaCommandFacade.CondaInstallType.PIP, libraryName, version, true, false, status);
         deps.add(pyDep);
       } else {
         for (PythonDep pyDep : currentlyInstalledPyDeps) {
@@ -510,12 +556,13 @@ public class AgentController {
     private final List<SystemCommand> systemCommands;
     private final List<CondaCommands> condaCommands;
     private final List<String> condaReport;
+    private final Boolean recover;
     
     public AgentHeartbeatDTO(final String hostId, final Long agentTime, final Double load1, final Double load5,
         final Double load15, final Integer numGpus, final Long diskUsed, final Long diskCapacity,
         final Long memoryUsed, final Long memoryCapacity, final Integer cores, final String privateIp,
         final List<AgentServiceDTO> services, final List<SystemCommand> systemCommands,
-        final List<CondaCommands> condaCommands, final List<String> condaReport) {
+        final List<CondaCommands> condaCommands, final List<String> condaReport, Boolean recover) {
       this.hostId = hostId;
       this.agentTime = agentTime;
       this.load1 = load1;
@@ -532,6 +579,7 @@ public class AgentController {
       this.systemCommands = systemCommands;
       this.condaCommands = condaCommands;
       this.condaReport = condaReport;
+      this.recover = recover;
     }
   
     public String getHostId() {
@@ -592,6 +640,10 @@ public class AgentController {
   
     public List<CondaCommands> getCondaCommands() {
       return condaCommands;
+    }
+  
+    public Boolean getRecover() {
+      return recover;
     }
   }
   

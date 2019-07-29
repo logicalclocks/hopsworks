@@ -40,13 +40,16 @@
 'use strict'
 
 angular.module('hopsWorksApp')
-        .controller('ProfileCtrl', ['UserService', '$location', '$scope', 'md5', 'growl', '$uibModalInstance','$cookies',
-          function (UserService, $location, $scope, md5, growl, $uibModalInstance, $cookies) {
+        .controller('ProfileCtrl', ['UserService', '$location', '$scope', 'md5', 'growl', '$uibModalInstance','$cookies', 'ProjectService', 'SecurityQuestions',
+          function (UserService, $location, $scope, md5, growl, $uibModalInstance, $cookies, ProjectService, SecurityQuestions) {
 
             var self = this;
             self.working = false;
             self.credentialWorking = false;
             self.twoFactorWorking = false;
+            self.secretsWorking = false;
+            self.securityQAWorking = false;
+            self.qrCodeWorking = false;
             self.noPassword = false;
             self.otp = $cookies.get('otp');
             self.emailHash = '';
@@ -65,11 +68,30 @@ angular.module('hopsWorksApp')
               newPassword: '',
               confirmedPassword: ''
             };
+
+            self.securityQA = {
+                oldPassword: '',
+                securityQuestion: '',
+                securityAnswer: ''
+            };
             
+            self.secrets = [];
+
+            self.secret = {
+              name: '',
+              secret: '',
+              visibility: 'PRIVATE',
+              scope: -1
+            };
+
             self.twoFactorAuth = {
               password: '',
               twoFactor: ''
             };
+
+            SecurityQuestions.getQuestions().then(function(success) {
+               self.securityQuestions = success.data;
+            });
 
             self.profile = function () {
               UserService.profile().then(
@@ -103,39 +125,179 @@ angular.module('hopsWorksApp')
               });
             };
 
-            self.changeLoginCredentials = function () {
+            self.credentialsMsg = {
+              successMessage: '',
+              errorMessage:''
+            };
+            self.changeLoginCredentials = function (form) {
+              self.credentialsMsg = {
+                successMessage: '',
+                errorMessage:''
+              };
               self.credentialWorking = true;
-              if ($scope.credentialsForm.$valid) {
+              if (form.$valid) {
                 UserService.changeLoginCredentials(self.loginCredes).then(
                         function (success) {
                           self.credentialWorking = false;
-                          growl.success("Your password is now updated.", {title: 'Success', ttl: 5000, referenceId: 1});
+                          self.loginCredes.oldPassword= '';
+                          self.loginCredes.newPassword= '';
+                          self.loginCredes.confirmedPassword= '';
+                          form.$setPristine();
+                          self.credentialsMsg.successMessage = success.data.successMessage;
                         }, function (error) {
                           self.credentialWorking = false;
-                          self.errorMsg = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : "";
-                          growl.error(self.errorMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 1});
+                          setErrorMsg(error, self.credentialsMsg);
                 });
               }
             };
-            
-            self.changeTwoFactor = function() {
+
+            self.load_secrets = function () {
+              self.secretsWorking = true;
+              UserService.load_secrets().then(
+                function (success) {
+                  self.secrets = success.data.items
+                  if (!self.secrets) {
+                    self.secrets = []
+                  }
+                  self.secretsWorking = false;
+                }, function (error) {
+                  self.secretsWorking = false;
+                  self.errorMsg = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : "";
+                  growl.error(self.errorMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 1});
+                }
+              );
+            }
+
+            self.delete_secret = function (secret) {
+              self.secretsWorking = true;
+              UserService.delete_secret(secret.name).then(
+                function (success) {
+                  self.load_secrets();
+                  self.secretsWorking = false;
+                }, function (error) {
+                  self.secretsWorking = false;
+                  self.errorMsg = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : "";
+                  growl.error(self.errorMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 1});
+                }
+              );
+            }
+
+            self.selected_secret_project_vis
+
+            self.add_secret = function(isFormValid) {
+              self.secretsWorking = true;
+              if (isFormValid) {
+                if (self.secret.visibility.toUpperCase() === 'PROJECT') {
+                  if (!self.selected_secret_project_vis) {
+                    growl.error('Visibility is Project but no project has been selected',
+                      {title: 'Could not add Secret', ttl: 5000, referenceId: 1})
+                      return;
+                  }
+                  self.secret.scope = self.selected_secret_project_vis.id
+                }
+                UserService.add_secret(self.secret).then(
+                  function (success) {
+                    self.load_secrets();
+                    self.secretsWorking = false;
+                    growl.success("Added new secret", {title: 'Success', ttl: 3000, referenceId: 1});
+                  }, function (error) {
+                    self.secretsWorking = false;
+                    self.errorMsg = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : "";
+                    growl.error(self.errorMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 1});
+                  }
+                );
+              }
+            };
+
+            self.user_projects = [];
+            self.project_visibility_selected = function () {
+              self.user_projects = []
+              ProjectService.projects().$promise.then(
+                function(success) {
+                  for (var i = 0; i < success.length; i++) {
+                    var name = success[i].project.name
+                    var id = success[i].project.id
+                    var project = {
+                      name: name,
+                      id: id
+                    }
+                    self.user_projects.push(project)
+                  }
+                }, function(error) {
+                  self.errorMsg = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : "";
+                  growl.error(self.errorMsg, {title: error.data.errorMsg, ttl: 3000, referenceId: 1});
+                }
+              )
+            }
+
+            self.private_visibility_selected = function () {
+              self.user_projects = []
+            }
+
+            self.delete_all_secrets = function() {
+              UserService.delete_all_secrets().then(
+                function (success) {
+                  self.secrets = []
+                }, function (error) {
+                  self.errorMsg = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : "";
+                  growl.error(self.errorMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 1});
+                }
+              );
+            };
+
+            self.securityQAMsg = {
+                successMessage: '',
+                errorMessage:''
+            };
+            self.changeSecurityQA = function (form) {
+                self.securityQAMsg = {
+                    successMessage: '',
+                    errorMessage:''
+                };
+                self.securityQAWorking = true;
+                if (form.$valid) {
+                    UserService.changeSecurityQA(self.securityQA).then(
+                      function (success) {
+                          self.securityQAWorking = false;
+                          self.securityQA.oldPassword = '';
+                          self.securityQA.securityQuestion= '';
+                          self.securityQA.securityAnswer= '';
+                          form.$setPristine();
+                          self.securityQAMsg.successMessage = success.data.successMessage;
+                      }, function (error) {
+                          self.securityQAWorking = false;
+                          setErrorMsg(error, self.securityQAMsg);
+                      });
+                }
+            };
+
+            self.twoFactorAuthMsg = {
+                successMessage: '',
+                errorMessage:''
+            };
+            self.changeTwoFactor = function(form) {
+              self.twoFactorAuthMsg = {
+                  successMessage: '',
+                  errorMessage:''
+              };
+
               if (self.twoFactorAuth.twoFactor !== self.master.twoFactor) {
                 self.twoFactorWorking = true;
                 UserService.changeTwoFactor(self.twoFactorAuth).then(
                         function (success) {
                           self.twoFactorWorking = false;
                           self.twoFactorAuth.password = '';
+                          form.$setPristine();
                           if (success.data.QRCode !== undefined) {
                             self.close();
                             $location.path("/qrCode/profile/" + success.data.QRCode);
                           } else if (success.data.successMessage !== undefined) { 
                             self.master.twoFactor = false;
-                            growl.success(success.data.successMessage, {title: 'Success', ttl: 5000, referenceId: 1});
+                            self.twoFactorAuthMsg.successMessage = success.data.successMessage;
                           }
                         }, function (error) {
-                          self.twoFactorWorking = false;
-                          self.errorMsg = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : "";
-                          growl.error(self.errorMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 1});
+                           self.twoFactorWorking = false;
+                           setErrorMsg(error, self.twoFactorAuthMsg);
                 });
               }
             };
@@ -147,21 +309,25 @@ angular.module('hopsWorksApp')
                     return;
                 }
                 self.noPassword = false;
-                self.twoFactorWorking = true;
+                self.qrCodeWorking = true;
                 UserService.getQR(self.twoFactorAuth.password).then(
                         function (success) {
-                          self.twoFactorWorking = false;
+                          self.qrCodeWorking = false;
                           self.twoFactorAuth.password = '';
                           if (success.data.QRCode !== undefined) {
                             self.close();
                             $location.path("/qrCode/profile/" + success.data.QRCode);
                           } 
                         }, function (error) {
-                          self.twoFactorWorking = false;
-                          self.errorMsg = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : "";
-                          growl.error(self.errorMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 1});
+                          self.qrCodeWorking = false;
+                          setErrorMsg(error, self.twoFactorAuthMsg);
                 });
             };
+
+            var setErrorMsg = function (error, msg) {
+                var errorMsg = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : error.data.errorMsg;
+                msg.errorMessage = errorMsg;
+            }
             
             self.externalAccountType = function () {
                 return self.user.accountType !== 'M_ACCOUNT_TYPE';

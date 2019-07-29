@@ -17,8 +17,8 @@
 package io.hops.hopsworks.api.serving;
 
 import io.hops.hopsworks.api.filter.NoCacheResponse;
-import io.hops.hopsworks.common.serving.KafkaServingHelper;
-import io.hops.hopsworks.common.serving.tf.TfServingController;
+import io.hops.hopsworks.common.serving.ServingController;
+import io.hops.hopsworks.common.util.Settings;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
@@ -39,16 +39,15 @@ public class ServingConfResource {
 
   @EJB
   private NoCacheResponse noCacheResponse;
-
   @Inject
-  private TfServingController tfServingController;
+  private ServingController servingController;
 
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Get UI configuration for serving", response = ServingConf.class)
   public Response getConfiguration() {
-    ServingConf servingConf = new ServingConf(tfServingController.getMaxNumInstances(),
-        KafkaServingHelper.SCHEMANAME, KafkaServingHelper.SCHEMAVERSION);
+    ServingConf servingConf = new ServingConf(servingController.getMaxNumInstances(),
+        Settings.INFERENCE_SCHEMANAME, Settings.INFERENCE_SCHEMAVERSION);
     GenericEntity<ServingConf> servingConfDTOGenericEntity =
         new GenericEntity<ServingConf>(servingConf) { };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(servingConfDTOGenericEntity).build();
