@@ -230,7 +230,8 @@
             </table>
         </div>
 
-        <div uib-accordion-group class="panel-default">
+        <div uib-accordion-group class="panel-default"
+             ng-if="featuregroupViewInfoCtrl.featuregroup.featuregroupType === featuregroupViewInfoCtrl.cachedFeaturegroupType">
             <div uib-accordion-heading>
                 <i class="fa fa-info-circle" tooltip-placement="auto left"
                    uib-tooltip='Hopsworks Jobs that update the feature group in some way'></i>

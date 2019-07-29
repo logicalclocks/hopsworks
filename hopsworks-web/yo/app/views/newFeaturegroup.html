@@ -347,7 +347,8 @@
                                         <div class="col-sm-12" style="margin-bottom: 20px">
                                             <div class="col-sm-3">
                                                 <i class="fa fa-info-circle" tooltip-placement="auto left"
-                                                   uib-tooltip='Specify a SQL Query to compute the Feature Group'></i>
+                                                   uib-tooltip='Specify a SQL Query to compute the Feature Group,
+                                                   this will be used to automatically configure a Spark job to compute the feature group'></i>
                                                 <label class="control-label"
                                                        style="margin-left:20px; margin-top: 5px;">SQL
                                                     Query: </label>
@@ -519,14 +520,27 @@
                                     </span>
                                 </div>
                                 <div class="row">
-                                    <div class="col-sm-1">
-                                        <button ng-click="newFeaturegroupCtrl.createCachedFeaturegroup()"
-                                                class="btn btn-default btn-success"
-                                                ng-if="newFeaturegroupCtrl.featuregroupOperation === 'CREATE' || newFeaturegroupCtrl.featuregroupOperation === 'NEW_VERSION'"
-                                        >
-                                            Create
-                                            <i ng-if="newFeaturegroupCtrl.cachedFgWorking" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
-                                        </button>
+                                    <div class="col-sm-6">
+                                        <div class="form-group"
+                                             ng-if="newFeaturegroupCtrl.featuregroupOperation === 'CREATE' || newFeaturegroupCtrl.featuregroupOperation === 'NEW_VERSION'">
+                                            <button ng-click="newFeaturegroupCtrl.createCachedFeaturegroup()"
+                                                    class="btn btn-default btn-success"
+                                            >
+                                                Create
+                                                <i ng-if="newFeaturegroupCtrl.cachedFgWorking" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
+                                            </button>
+                                            <md-checkbox class="md-primary"
+                                                         ng-checked="newFeaturegroupCtrl.configureJob"
+                                                         ng-click="newFeaturegroupCtrl.setConfigureJob()"
+                                                         aria-label="If this box is checked, a Spark job for creating
+                                                         the Feature Group will be configured automatically using the provided SQL string"
+                                                         style="margin-left:20px;"
+                                                         dir="rtl"
+                                                         ng-if="newFeaturegroupCtrl.cachedSqlQuery && newFeaturegroupCtrl.cachedSqlQuery != undefined && newFeaturegroupCtrl.cachedSqlQuery != null"
+                                            >
+                                                <span>Configure Spark Job for creating the training dataset</span>
+                                            </md-checkbox>
+                                        </div>
                                         <button ng-click="newFeaturegroupCtrl.updateCachedFeaturegroup()"
                                                 class="btn btn-default btn-success"
                                                 ng-if="newFeaturegroupCtrl.featuregroupOperation === 'UPDATE'"
@@ -539,7 +553,7 @@
                                           ng-show="newFeaturegroupCtrl.cachedFeaturegroupWrong_values === -1" >
                                         There are errors in your input configuration, see error messages above.
                                     </div>
-                                    <div class="col-sm-7">
+                                    <div class="col-sm-2">
                                     </div>
                                 </div>
                             </div>
@@ -939,7 +953,7 @@
                                             Create
                                             <i ng-if="newFeaturegroupCtrl.onDemandFgWorking" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
                                         </button>
-                                        <button ng-click="newFeaturegroupCtrl.updateCachedFeaturegroup()"
+                                        <button ng-click="newFeaturegroupCtrl.updateOnDemandFeaturegroup()"
                                                 class="btn btn-default btn-success"
                                                 ng-if="newFeaturegroupCtrl.featuregroupOperation === 'UPDATE'"
                                         >

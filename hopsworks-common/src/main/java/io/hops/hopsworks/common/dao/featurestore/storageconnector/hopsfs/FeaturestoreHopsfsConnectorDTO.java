@@ -23,7 +23,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
- * DTO containing the human-readable information of a HopsFS connection for a feature store, can be converted to JSON or
+ * DTO containing the human-readable information of a HOPSFS connection for a feature store, can be converted to JSON or
  * XML representation using jaxb.
  */
 @XmlRootElement
@@ -39,7 +39,7 @@ public class FeaturestoreHopsfsConnectorDTO extends FeaturestoreStorageConnector
   public FeaturestoreHopsfsConnectorDTO(FeaturestoreHopsfsConnector featurestoreHopsfsConnector) {
     super(featurestoreHopsfsConnector.getId(), featurestoreHopsfsConnector.getDescription(),
         featurestoreHopsfsConnector.getName(), featurestoreHopsfsConnector.getFeaturestore().getId(),
-        FeaturestoreStorageConnectorType.HopsFS);
+        FeaturestoreStorageConnectorType.HOPSFS);
     this.hopsfsPath = null;
     this.datasetName = featurestoreHopsfsConnector.getHopsfsDataset().getName();
   }

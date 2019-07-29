@@ -31,8 +31,10 @@
             <uib-tabset active="featurestoreSelectedTab">
                 <uib-tab index="0" heading="Feature Groups"
                          uib-tooltip="A Feature Group is a Logical Grouping of Features."
-                         class="fs-tab">
-                    <h2 style="margin-bottom: 30px; color:#555">
+                         class="fs-tab"
+                         id="featuregroupsTab"
+                >
+                    <h2 style="margin-bottom: 30px; color:#555" id="featuregroupsHeading">
                         Feature Groups
                         <button type="button" ng-click="featurestoreCtrl.showCreateFeaturegroupForm()"
                                 class="btn btn-default btn-success control-label pull-right"
@@ -192,6 +194,7 @@
                 <uib-tab index="1" heading="Training Datasets"
                          class="fs-tab"
                          uib-tooltip="A Training Dataset is an immutable dataset for Machine Learning Experiments."
+                         id="trainingDatasetsTab"
                 >
                     <h2 style="margin-bottom: 30px; color:#555">
                         Training Datasets
@@ -258,6 +261,12 @@
                                 ng-click="featurestoreCtrl.trainingDatasetsSort('trainingDatasetType')"
                                 class="fs-table">
                                 Storage Type
+                                <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                   uib-tooltip="The storage type of the training dataset.
+                                               By default training datasets are stored in HopsFS inside a project-private directory.
+                                               In addition, training datasets can be configured as 'External' and stored in an
+                                               S3 bucket that is configured through an S3 storage connector."
+                                   style="margin-left: 10px"></i>
                                 <span class="glyphicon sort-icon"
                                       ng-show="featurestoreCtrl.trainingDatasetsSortKey == 'trainingDatasetType'"
                                       ng-class="{'glyphicon-chevron-up':featurestoreCtrl.trainingDatasetsReverse,'glyphicon-chevron-down':!featurestoreCtrl.trainingDatasetsReverse}"></span>
@@ -364,6 +373,7 @@
                 <uib-tab index="2" heading="Feature Search"
                          class="fs-tab"
                          uib-tooltip="Search for features in feature groups and training datasets by name."
+                         id="featuresTab"
                 >
 
                     <div>
@@ -548,6 +558,7 @@
                 <uib-tab index="3" heading="Feature Store Details" class="fs-tab"
                          uib-tooltip="View Details of the Feature Store."
                          select="featurestoreCtrl.overviewTab()"
+                         id="overviewTab"
                 >
 
                     <h2 style="margin-bottom: 30px; color:#555">
@@ -687,6 +698,7 @@
                 <uib-tab index="4" heading="Storage Connectors"
                          class="fs-tab"
                          uib-tooltip="Connectors (e.g JDBC, HopsFS or S3)."
+                         id="connectorsTab"
                 >
                     <h2 style="margin-bottom: 30px; color:#555">
                         Storage Connectors
@@ -809,5 +821,89 @@
                 </uib-tab>
             </uib-tabset>
         </div>
+        <tour class="ng-scope" step="featurestoreCtrl.tourService.currentStep_TourNine"
+              post-tour="closeTour()"
+              ng-if="featurestoreCtrl.tourService.activeTour === 'featurestore'
+          && (featurestoreCtrl.tourService.informAndTips
+              || featurestoreCtrl.tourService.tipsOnly) && !featurestoreCtrl.loading && !projectCtrl.loading">
+            <virtual-step
+                    ng-if="featurestoreCtrl.tourService.activeTour === 'featurestore'"
+                    class="ng-scope"
+                    tourtip="This is the feature store registry where you can list and search for
+                    features/feature groups/training datasets in the feature store as well as edit their metadata."
+                    tourtip-step="0"
+                    tourtip-element="#featuregroupsHeading"
+                    tourtip-placement="bottom"
+                    tourtip-next-label="Next"
+                    on-proceed=""
+            ></virtual-step>
+            <virtual-step
+                    ng-if="featurestoreCtrl.tourService.activeTour === 'featurestore'"
+                    class="ng-scope"
+                    tourtip="This tab displays the available feature groups in the feature store.
+                    A feature group is a logical grouping of a set of features."
+                    tourtip-step="1"
+                    tourtip-element="#featuregroupsTab"
+                    tourtip-placement="bottom"
+                    tourtip-next-label="Next"
+                    on-proceed="featurestoreCtrl.goToTab(1)"
+            ></virtual-step>
+            <virtual-step
+                    ng-if="featurestoreCtrl.tourService.activeTour === 'featurestore'"
+                    class="ng-scope"
+                    tourtip="This tab displays the available training datasets in the feature store.
+                    A training dataset is an immutable dataset of a set of features to use in machine
+                    learning experiments.
+                    A training dataset can contain features from multiple different feature groups."
+                    tourtip-step="2"
+                    tourtip-element="#trainingDatasetsTab"
+                    tourtip-placement="bottom"
+                    tourtip-next-label="Next"
+                    on-proceed="featurestoreCtrl.goToTab(2)"
+            ></virtual-step>
+            <virtual-step
+                    ng-if="featurestoreCtrl.tourService.activeTour === 'featurestore'"
+                    class="ng-scope"
+                    tourtip="This tab allows you to search for individual features in feature groups and
+                    training datasets."
+                    tourtip-step="3"
+                    tourtip-element="#featuresTab"
+                    tourtip-placement="bottom"
+                    tourtip-next-label="Next"
+                    on-proceed="featurestoreCtrl.goToTab(3)"
+            ></virtual-step>
+            <virtual-step
+                    ng-if="featurestoreCtrl.tourService.activeTour === 'featurestore'"
+                    class="ng-scope"
+                    tourtip="This tab gives you an overview of the Feature Store."
+                    tourtip-step="4"
+                    tourtip-element="#overviewTab"
+                    tourtip-placement="bottom"
+                    tourtip-next-label="Next"
+                    on-proceed="featurestoreCtrl.goToTab(4)"
+            ></virtual-step>
+            <virtual-step
+                    ng-if="featurestoreCtrl.tourService.activeTour === 'featurestore'"
+                    class="ng-scope"
+                    tourtip="This tab lists the storage connectors for the Feature Store."
+                    tourtip-step="5"
+                    tourtip-element="#connectorsTab"
+                    tourtip-placement="bottom"
+                    tourtip-next-label="Next"
+                    on-proceed="featurestoreCtrl.goToTab(0)"
+            ></virtual-step>
+            <virtual-step
+                    ng-if="featurestoreCtrl.tourService.activeTour === 'featurestore'"
+                    class="ng-scope"
+                    tourtip="You can find the feature store datasets here."
+                    tourtip-step="6"
+                    tourtip-element="#datasetsTab"
+                    tourtip-placement="bottom"
+                    tourtip-next-label="Next"
+                    on-proceed="featurestoreCtrl.goToUrl('datasets')"
+                    tourtip-offset-vertical="-18"
+                    tourtip-offset-horizontal="-13"
+            ></virtual-step>
+        </tour>
     </div>
 </div>

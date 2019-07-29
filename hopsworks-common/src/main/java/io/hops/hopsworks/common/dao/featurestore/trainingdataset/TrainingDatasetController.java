@@ -82,7 +82,7 @@ public class TrainingDatasetController {
   @EJB
   private ExternalTrainingDatasetController externalTrainingDatasetController;
   @EJB
-  FeaturestoreJobController featurestoreJobController;
+  private FeaturestoreJobController featurestoreJobController;
 
   /**
    * Gets all trainingDatasets for a particular featurestore and project
@@ -205,8 +205,8 @@ public class TrainingDatasetController {
    */
   private List<Jobs> getJobs(List<FeaturestoreJobDTO> jobDTOs, Project project) {
     if(jobDTOs != null){
-      return jobDTOs.stream().filter(jobDTO -> jobDTO != null && jobDTO.getJobName() != null
-          && !jobDTO.getJobName().isEmpty()).map(jobDTO -> jobDTO.getJobName()).distinct().map(jobName ->
+      return jobDTOs.stream().filter(jobDTO -> jobDTO != null && !Strings.isNullOrEmpty(jobDTO.getJobName()))
+           .map(jobDTO -> jobDTO.getJobName()).distinct().map(jobName ->
           jobFacade.findByProjectAndName(project, jobName)).collect(Collectors.toList());
     } else {
       return new ArrayList<>();

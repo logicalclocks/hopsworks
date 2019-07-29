@@ -37,6 +37,7 @@ angular.module('hopsWorksApp')
             self.newJobName = self.projectId + "_newjob";
 
             //State
+            self.configureJob = true;
             self.cachedPhase = 0;
             self.onDemandPhase = 0;
             self.cachedFgWorking = false;
@@ -777,13 +778,13 @@ angular.module('hopsWorksApp')
             }
 
             /**
-             * Function called when the "update feature group" button is pressed for a cached feature group.
-             * Validates parameters and then sends a POST or PUT request to the backend to update the featuregroup
+             * Function called when the "update feature group" button is pressed for an on-demand feature group.
+             * Validates parameters and then sends a PUT request to the backend to update the featuregroup
              */
             self.updateOnDemandFeaturegroup = function () {
-                self.validateCachedFeaturegroupInputs()
-                if (self.cachedFeaturegroupWrong_values === -1) {
-                    self.cachedFgWorking = false;
+                self.validateOnDemandFeaturegroupInputs()
+                if (self.onDemandFeaturegroupWrong_values === -1) {
+                    self.onDemandFgWorking = false;
                     return;
                 }
 
@@ -801,7 +802,7 @@ angular.module('hopsWorksApp')
 
                 FeaturestoreService.updateFeaturegroupMetadata(self.projectId, self.featurestore, self.oldFeaturegroupId, featuregroupJson).then(
                     function (success) {
-                        self.cachedFgWorking = false;
+                        self.onDemandFgWorking = false;
                         self.exitToFeaturestore()
                         growl.success("Feature group updated", {title: 'Success', ttl: 1000});
                     }, function (error) {
@@ -809,7 +810,7 @@ angular.module('hopsWorksApp')
                             title: 'Failed to update feature group',
                             ttl: 15000
                         });
-                        self.cachedFgWorking = false;
+                        self.onDemandFgWorking = false;
                     });
                 growl.info("Updating featuregroup...", {title: 'Updating', ttl: 1000})
             }
@@ -891,7 +892,8 @@ angular.module('hopsWorksApp')
                     "type": self.cachedFeaturegroupDTOType,
                     "jobs": []
                 }
-                if (self.cachedSqlQuery != null && self.cachedSqlQuery && self.cachedSqlQuery != undefined) {
+                if (self.cachedSqlQuery != null && self.cachedSqlQuery && self.cachedSqlQuery != undefined
+                    && self.configureJob) {
                     var jobName = "create_featuregroup_" + self.cachedFeaturegroupName + "_" + new Date().getTime()
                     var operation = ""
                     var hiveDatabase = ""
@@ -1120,6 +1122,18 @@ angular.module('hopsWorksApp')
             self.init = function () {
                 self.preProcessConnectors()
                 self.initVariables()
+            }
+
+            /**
+             * Boolean parameter indicating whether a spark job should be configured for creating the new training
+             * dataset
+             */
+            self.setConfigureJob = function() {
+                if(self.configureJob){
+                    self.configureJob = false
+                } else {
+                    self.configureJob = true
+                }
             }
 
             self.init()

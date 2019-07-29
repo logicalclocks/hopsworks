@@ -126,11 +126,11 @@ public class FeaturestoreStorageConnectorService {
   /**
    * Endpoint for getting all storage connectors of a specific type in a featurestore
    *
-   * @param connectorType type of the storage connector, e.g S3, JDBC or HopsFS
+   * @param connectorType type of the storage connector, e.g S3, JDBC or HOPSFS
    * @return a JSON representation of all the storage connectors with the provided type in the feature store
    */
   @GET
-  @Path("/{connectorType : JDBC|S3|HopsFS}")
+  @Path("/{connectorType : JDBC|S3|HOPSFS}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
@@ -152,13 +152,13 @@ public class FeaturestoreStorageConnectorService {
   /**
    * Endpoint for getting a storage connector with a particular type and id in a feature store
    *
-   * @param connectorType type of the storage connector, e.g S3, JDBC or HopsFS
+   * @param connectorType type of the storage connector, e.g S3, JDBC or HOPSFS
    * @param connectorId the id of the storage connector
    * @return a JSON representation of the connector
    * @throws FeaturestoreException
    */
   @GET
-  @Path("/{connectorType : JDBC|S3|HopsFS}/{connectorId}")
+  @Path("/{connectorType : JDBC|S3|HOPSFS}/{connectorId}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
@@ -183,12 +183,12 @@ public class FeaturestoreStorageConnectorService {
   /**
    * Endpoint for creating a storage connector with a particular type in a feature store
    *
-   * @param connectorType type of the storage connector, e.g S3, JDBC or HopsFS
+   * @param connectorType type of the storage connector, e.g S3, JDBC or HOPSFS
    * @return a JSON representation of the connector
    * @throws FeaturestoreException
    */
   @POST
-  @Path("/{connectorType : JDBC|S3|HopsFS}")
+  @Path("/{connectorType : JDBC|S3|HOPSFS}")
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
@@ -220,13 +220,13 @@ public class FeaturestoreStorageConnectorService {
   /**
    * Endpoint for deleting a storage connector with a particular type and id in a feature store
    *
-   * @param connectorType type of the storage connector, e.g S3, JDBC or HopsFS
+   * @param connectorType type of the storage connector, e.g S3, JDBC or HOPSFS
    * @param connectorId the id of the storage connector
    * @return a JSON representation of the deleted connector
    * @throws FeaturestoreException
    */
   @DELETE
-  @Path("/{connectorType : JDBC|S3|HopsFS}/{connectorId}")
+  @Path("/{connectorType : JDBC|S3|HOPSFS}/{connectorId}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
@@ -258,13 +258,13 @@ public class FeaturestoreStorageConnectorService {
   /**
    * Endpoint for updating a storage connector with a particular type and id in a feature store
    *
-   * @param connectorType type of the storage connector, e.g S3, JDBC or HopsFS
+   * @param connectorType type of the storage connector, e.g S3, JDBC or HOPSFS
    * @param connectorId the id of the storage connector
    * @return a JSON representation of the updated connector
    * @throws FeaturestoreException
    */
   @PUT
-  @Path("/{connectorType : JDBC|S3|HopsFS}/{connectorId}")
+  @Path("/{connectorType : JDBC|S3|HOPSFS}/{connectorId}")
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})

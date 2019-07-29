@@ -26,12 +26,12 @@
             <span style="float: right;margin-top: 7px;" class="fa fa-times-circle fa-2x"
                   ng-click="newTrainingDatasetCtrl.exitToFeaturestore()"
                   uib-tooltip="Clear state and go back to Feature Store main page."
-                  ng-if="newTrainingDatasetCtrl.selectFeatureStage"
+                  ng-if="newTrainingDatasetCtrl.selectFeatureStage || newTrainingDatasetCtrl.trainingDatasetOperation === 'UPDATE'"
             > </span>
             <span style="float: right;margin-top: 7px;" class="fa fa-times-circle fa-2x"
                   ng-click="newTrainingDatasetCtrl.exitToFeatureSearch()"
                   uib-tooltip="Go back to the feature selection stage"
-                  ng-if="!newTrainingDatasetCtrl.selectFeatureStage"
+                  ng-if="!newTrainingDatasetCtrl.selectFeatureStage && newTrainingDatasetCtrl.trainingDatasetOperation !== 'UPDATE'"
             > </span>
             <div ng-if="newTrainingDatasetCtrl.selectFeatureStage">
                 <h2 style="margin-bottom: 30px;color:#555"
@@ -304,7 +304,9 @@
                     <div uib-accordion close-others="false">
 
                         <div uib-accordion-group class="panel-default"
-                             is-open="newTrainingDatasetCtrl.td_accordion0.isOpen">
+                             is-open="newTrainingDatasetCtrl.td_accordion0.isOpen"
+                             ng-if="newTrainingDatasetCtrl.trainingDatasetOperation !== 'UPDATE'"
+                        >
                             <div uib-accordion-heading>
                                 <i class="fa fa-info-circle" tooltip-placement="auto left"
                                    uib-tooltip='Query Plan for creating the Training Dataset'></i>
@@ -629,6 +631,113 @@
                         </div>
 
                         <div uib-accordion-group class="panel-default"
+                             is-open="newTrainingDatasetCtrl.td_accordion6.isOpen"
+                             ng-show="newTrainingDatasetCtrl.td_accordion6.visible"
+                             id="featuregroupSchemaDiv">
+                            <div uib-accordion-heading>
+                                <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                   uib-tooltip='The schema of a training dataset is inferred upon creation.'></i>
+                                <span style="margin-left: 20px">
+                                    {{newTrainingDatasetCtrl.td_accordion6.title}}
+                                    {{newTrainingDatasetCtrl.td_accordion6.value}}
+                                    </span>
+                            </div>
+                            <div data-ng-repeat="feature in newTrainingDatasetCtrl.trainingDataset.features track by $index">
+                                <div class="view-info">
+                                    <div class="col-md-12">
+                                        <div class="col-sm-12" style="margin-bottom: 20px">
+                                            <div class="col-sm-3">
+                                                <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                                   uib-tooltip='The name of the feature'></i>
+                                                <label style="margin-left:10px" class="control-label">Feature
+                                                    name:</label>
+                                            </div>
+                                            <div class="col-sm-9">
+                                                <input type="text" class="form-control"
+                                                       placeholder="Enter a feature name"
+                                                       value="{{feature.name}}"
+                                                       ng-model="newTrainingDatasetCtrl.trainingDataset.features[$index].name">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="view-info">
+                                    <div class="col-md-12">
+                                        <div class="col-sm-12" style="margin-bottom: 20px">
+                                            <div class="col-sm-3">
+                                                <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                                   uib-tooltip='The data type of the feature'></i>
+                                                <label style="margin-left:10px">
+                                                    <button style="margin-top: 5px;" id="selectArchiveButton"
+                                                            class="btn btn-sm btn-default"
+                                                            ng-click="newTrainingDatasetCtrl.selectFeatureType(newTrainingDatasetCtrl.trainingDataset.features[$index])">
+                                                        <span>Feature type:</span>
+                                                    </button>
+                                                </label>
+                                            </div>
+                                            <div class="col-sm-9">
+                                                <input type="text" class="form-control"
+                                                       ng-model="newTrainingDatasetCtrl.trainingDataset.features[$index].type"
+                                                       placeholder="Select a feature type" readonly>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="view-info">
+                                    <div class="col-md-12">
+                                        <div class="col-sm-12">
+                                            <div class="col-sm-3">
+                                                <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                                   uib-tooltip='The feature description'></i>
+                                                <label style="margin-left:10px" class="control-label">Feature
+                                                    description:</label>
+                                            </div>
+                                            <div class="col-sm-9">
+                                                <input type="text" class="form-control"
+                                                       placeholder="Enter a feature description"
+                                                       value="{{feature.description}}"
+                                                       ng-model="newTrainingDatasetCtrl.trainingDataset.features[$index].description">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="view-info">
+                                    <div class="col-md-12">
+                                        <div class="col-sm-12" style="margin-bottom: 20px">
+                                            <div class="col-sm-3">
+                                            </div>
+                                            <div class="col-sm-9">
+                                                <button class="col-sm-2 btn btn-sm btn-danger glyphicon glyphicon-trash"
+                                                        uib-tooltip="delete"
+                                                        ng-click="newTrainingDatasetCtrl.removeFeature($index)">
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="view-info">
+                                <div class="col-md-12">
+                                    <div class="col-sm-12" style="margin-bottom: 20px">
+                                        <div class="col-sm-3">
+                                            <button type="button"
+                                                    ng-click="newTrainingDatasetCtrl.addNewFeature()"
+                                                    class="col-sm-10 btn btn-sm btn-default btn-success control-label"
+                                                    style="margin-bottom:10px">
+                                                Add Feature<i style="margin-left: 10px"
+                                                              class="glyphicon glyphicon-plus">
+                                            </i>
+                                            </button>
+                                        </div>
+                                        <div class="col-sm-9">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div uib-accordion-group class="panel-default"
                              is-open="newTrainingDatasetCtrl.td_accordion4.isOpen"
                              ng-show="newTrainingDatasetCtrl.td_accordion4.visible"
                         >
@@ -648,15 +757,26 @@
                                     </span>
                             </div>
                             <div class="row">
-                                <div class="col-sm-1">
-                                    <button ng-click="newTrainingDatasetCtrl.createTrainingDataset()"
-                                            class="btn btn-default btn-success"
-                                            ng-if="newTrainingDatasetCtrl.trainingDatasetOperation === 'CREATE' || newTrainingDatasetCtrl.trainingDatasetOperation === 'NEW_VERSION'"
-                                    >
-                                        Create
-                                        <i ng-if="newTrainingDatasetCtrl.working" style="margin-top: 2px"
-                                           class="fa fa-spinner fa-spin pull-right"></i>
-                                    </button>
+                                <div class="col-sm-6">
+                                    <div class="form-group"
+                                         ng-if="newTrainingDatasetCtrl.trainingDatasetOperation === 'CREATE' || newTrainingDatasetCtrl.trainingDatasetOperation === 'NEW_VERSION'">
+                                        <button ng-click="newTrainingDatasetCtrl.createTrainingDataset()"
+                                                class="btn btn-default btn-success"
+                                        >
+                                            Create
+                                            <i ng-if="newTrainingDatasetCtrl.working" style="margin-top: 2px"
+                                               class="fa fa-spinner fa-spin pull-right"></i>
+                                        </button>
+                                        <md-checkbox class="md-primary"
+                                                     ng-checked="newTrainingDatasetCtrl.configureJob"
+                                                     ng-click="newTrainingDatasetCtrl.setConfigureJob()"
+                                                     aria-label="If this box is checked, a Spark job for creating the Training Dataset will be configured automatically"
+                                                     style="margin-left:20px;"
+                                                     dir="rtl"
+                                        >
+                                            <span>Configure Spark Job for creating the training dataset</span>
+                                        </md-checkbox>
+                                    </div>
                                     <button ng-click="newTrainingDatasetCtrl.updateTrainingDatasetMetadata()"
                                             class="btn btn-default btn-success"
                                             ng-if="newTrainingDatasetCtrl.trainingDatasetOperation === 'UPDATE'"
@@ -670,7 +790,7 @@
                                      ng-show="newTrainingDatasetCtrl.trainingDatasetWrong_values === -1">
                                     There are errors in your input configuration, see error messages above.
                                 </div>
-                                <div class="col-sm-7">
+                                <div class="col-sm-2">
                                 </div>
                             </div>
                         </div>

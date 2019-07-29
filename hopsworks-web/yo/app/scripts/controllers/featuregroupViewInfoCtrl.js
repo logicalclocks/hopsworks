@@ -105,12 +105,6 @@ angular.module('hopsWorksApp')
                 }
                 self.sampleColumns = columns
                 self.sample = samples
-                console.log("sampleColumns:")
-                console.log(self.sampleColumns)
-                console.log("sample:")
-                console.log(self.sample)
-                console.log("rawsample:")
-                console.log(rawSample)
             }
 
             /**

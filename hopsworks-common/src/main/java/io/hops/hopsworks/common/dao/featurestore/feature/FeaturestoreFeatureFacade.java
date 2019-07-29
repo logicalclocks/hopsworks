@@ -24,6 +24,7 @@ import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.validation.ConstraintViolationException;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -55,6 +56,29 @@ public class FeaturestoreFeatureFacade extends AbstractFacade<FeaturestoreFeatur
       LOGGER.log(Level.WARNING, "Could not persist the new FeaturestoreFeature", cve);
       throw cve;
     }
+  }
+  
+  /**
+   * Bulk delete of features
+   *
+   * @param ids list of ids of the features to delete
+   */
+  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+  public void deleteListOfFeatures(List<Integer> ids) {
+    if(!ids.isEmpty()) {
+      em.createNamedQuery("FeaturestoreFeature.deleteByListOfIds", FeaturestoreFeature.class)
+        .setParameter("ids", ids).executeUpdate();
+    }
+  }
+  
+  /**
+   * A transaction to persist a list of features in the database
+   *
+   * @param featurestoreFeatures list of features to persist
+   */
+  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+  public void persist(List<FeaturestoreFeature> featurestoreFeatures) {
+    featurestoreFeatures.stream().forEach(f -> persist(f));
   }
 
   /**

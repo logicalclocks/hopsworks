@@ -109,7 +109,7 @@ public class OnDemandFeaturegroupController {
     onDemandFeaturegroupFacade.updateMetadata(onDemandFeaturegroup);
     
     //Update feature metadata in feature_store_feature table
-    if(onDemandFeaturegroupDTO.getFeatures() == null && !onDemandFeaturegroup.getFeatures().isEmpty()) {
+    if(onDemandFeaturegroupDTO.getFeatures() != null && !onDemandFeaturegroupDTO.getFeatures().isEmpty()) {
       verifyOnDemandFeaturegroupFeatures(onDemandFeaturegroupDTO.getFeatures());
       featurestoreFeatureController.updateOnDemandFeaturegroupFeatures(onDemandFeaturegroup,
         onDemandFeaturegroupDTO.getFeatures());

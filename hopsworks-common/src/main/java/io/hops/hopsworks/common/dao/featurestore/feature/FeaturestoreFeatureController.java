@@ -21,6 +21,8 @@ import io.hops.hopsworks.common.dao.featurestore.trainingdataset.TrainingDataset
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -39,6 +41,7 @@ public class FeaturestoreFeatureController {
    * @param trainingDataset the training dataset to update
    * @param features the new features
    */
+  @TransactionAttribute(TransactionAttributeType.NEVER)
   public void updateTrainingDatasetFeatures(
       TrainingDataset trainingDataset, List<FeatureDTO> features) {
     if(features == null) {
@@ -53,8 +56,10 @@ public class FeaturestoreFeatureController {
    *
    * @param featurestoreFeatures list of features to remove
    */
+  @TransactionAttribute(TransactionAttributeType.NEVER)
   private void removeFeatures(List<FeaturestoreFeature> featurestoreFeatures) {
-    featurestoreFeatures.stream().forEach(tdf ->  featurestoreFeatureFacade.remove(tdf));
+    featurestoreFeatureFacade.deleteListOfFeatures(featurestoreFeatures.stream().map(
+      f -> f.getId()).collect(Collectors.toList()));
   }
 
   /**
@@ -63,11 +68,12 @@ public class FeaturestoreFeatureController {
    * @param trainingDataset the traning dataset that the features are linked to
    * @param features the list of features to insert
    */
+  @TransactionAttribute(TransactionAttributeType.NEVER)
   private void insertTrainingDatasetFeatures(
       TrainingDataset trainingDataset, List<FeatureDTO> features) {
     List<FeaturestoreFeature> featurestoreFeatures = convertFeaturesToTrainingDatasetFeatures(
         trainingDataset, features);
-    featurestoreFeatures.forEach(tdf -> featurestoreFeatureFacade.persist(tdf));
+    featurestoreFeatureFacade.persist(featurestoreFeatures);
   }
 
   /**
@@ -113,11 +119,12 @@ public class FeaturestoreFeatureController {
    * @param onDemandFeaturegroup the on-demand feature group that the features are linked to
    * @param features the list of features to insert
    */
+  @TransactionAttribute(TransactionAttributeType.NEVER)
   private void insertOnDemandFeaturegroupFeatures(
     OnDemandFeaturegroup onDemandFeaturegroup, List<FeatureDTO> features) {
     List<FeaturestoreFeature> featurestoreFeatures = convertFeaturesToOnDemandFeaturegroupFeatures(
       onDemandFeaturegroup, features);
-    featurestoreFeatures.forEach(tdf -> featurestoreFeatureFacade.persist(tdf));
+    featurestoreFeatureFacade.persist(featurestoreFeatures);
   }
   
   /**

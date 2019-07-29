@@ -62,6 +62,7 @@ angular.module('hopsWorksApp')
             self.cards = [];
             self.projectMembers = [];
             self.tourService = TourService;
+            self.tourService.currentStep_TourNine = -1; //Feature store Tour
             self.location = $location;
             self.cloak = true;
             self.isClosed = true;

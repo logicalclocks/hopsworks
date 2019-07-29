@@ -56,7 +56,7 @@ public class HopsfsTrainingDatasetController {
     verifyHopsfsTrainingDatasetInput(hopsfsTrainingDatasetDTO);
     //Get Inode
     Inode inode = inodeFacade.findById(hopsfsTrainingDatasetDTO.getInodeId());
-    //Get HopsFS Connector
+    //Get HOPSFS Connector
     FeaturestoreHopsfsConnector featurestoreHopsfsConnector = featurestoreHopsfsConnectorFacade.find(
       hopsfsTrainingDatasetDTO.getHopsfsConnectorId());
     HopsfsTrainingDataset hopsfsTrainingDataset = new HopsfsTrainingDataset();
@@ -90,7 +90,7 @@ public class HopsfsTrainingDatasetController {
       featurestoreHopsfsConnectorFacade.find(hopsfsConnectorId);
     if(featurestoreHopsfsConnector == null) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.HOPSFS_CONNECTOR_NOT_FOUND, Level.FINE,
-        "HopsFS connector with id: " + hopsfsConnectorId + " was not found");
+        "HOPSFS connector with id: " + hopsfsConnectorId + " was not found");
     }
   }
   
@@ -143,7 +143,7 @@ public class HopsfsTrainingDatasetController {
   }
   
   /**
-   * No extra metadata to update for HopsFS training dataset, the added metadata is linked to the inode, and to update
+   * No extra metadata to update for HOPSFS training dataset, the added metadata is linked to the inode, and to update
    * the inode the trainingdataset should be deleted and re-created.
    *
    * @param hopsfsTrainingDatasetDTO metadata DTO

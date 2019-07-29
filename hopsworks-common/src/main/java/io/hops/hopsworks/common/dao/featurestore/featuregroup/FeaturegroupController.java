@@ -39,6 +39,7 @@ import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.restutils.RESTCodes;
+import org.apache.parquet.Strings;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -196,8 +197,8 @@ public class FeaturegroupController {
    */
   private List<Jobs> getJobs(List<FeaturestoreJobDTO> jobDTOs, Project project) {
     if(jobDTOs != null) {
-      return jobDTOs.stream().filter(jobDTO -> jobDTO != null && jobDTO.getJobName() != null
-          && !jobDTO.getJobName().isEmpty()).map(jobDTO -> jobDTO.getJobName()).distinct().map(jobName ->
+      return jobDTOs.stream().filter(jobDTO -> jobDTO != null && !Strings.isNullOrEmpty(jobDTO.getJobName()))
+          .map(jobDTO -> jobDTO.getJobName()).distinct().map(jobName ->
           jobFacade.findByProjectAndName(project, jobName)).collect(Collectors.toList());
     } else {
       return new ArrayList<>();
@@ -234,7 +235,7 @@ public class FeaturegroupController {
   /**
    * Retrieves a featuregroup with a particular id from a particular featurestore
    *
-   * @param id           if of the featuregroup
+   * @param id           id of the featuregroup
    * @param featurestore the featurestore that the featuregroup belongs to
    * @return XML/JSON DTO of the featuregroup
    */

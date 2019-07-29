@@ -45,7 +45,7 @@ public class FeaturestoreHopsfsConnectorController {
   private DatasetController datasetController;
   
   /**
-   * Creates a HopsFS storage connector for a feature store
+   * Creates a HOPSFS storage connector for a feature store
    *
    * @param featurestore the featurestore
    * @param featurestoreHopsfsConnectorDTO the input data to use when creating the connector
@@ -68,7 +68,7 @@ public class FeaturestoreHopsfsConnectorController {
   }
 
   /**
-   * Updates a HopsFS storage connector for a feature store
+   * Updates a HOPSFS storage connector for a feature store
    *
    * @param featurestore the featurestore
    * @param featurestoreHopsfsConnectorDTO the input data to use when updating the connector
@@ -104,16 +104,16 @@ public class FeaturestoreHopsfsConnectorController {
   }
   
   /**
-   * Creates a default HopsFS storage backend for storing training datasets
+   * Creates a default HOPSFS storage backend for storing training datasets
    *
    * @param featurestore the featurestore
-   * @param hopsfsDataset the HopsFS dataset
+   * @param hopsfsDataset the HOPSFS dataset
    * @throws FeaturestoreException
    */
   public void createHopsFsBackendForFeaturestoreConnector(Featurestore featurestore, Dataset hopsfsDataset)
     throws FeaturestoreException {
     String name = hopsfsDataset.getName();
-    String description = "HopsFS backend for storing Training Datasets of the Hopsworks Feature Store";
+    String description = "HOPSFS backend for storing Training Datasets of the Hopsworks Feature Store";
     FeaturestoreHopsfsConnectorDTO featurestoreHopsfsConnectorDTO = new FeaturestoreHopsfsConnectorDTO();
     featurestoreHopsfsConnectorDTO.setName(name);
     featurestoreHopsfsConnectorDTO.setDescription(description);
@@ -122,7 +122,7 @@ public class FeaturestoreHopsfsConnectorController {
   }
   
   /**
-   * Removes a HopsFS storage backend with a particular Id
+   * Removes a HOPSFS storage backend with a particular Id
    *
    * @param featurestoreHopsfsId the id
    * @returns DTO of the deleted entity
@@ -180,7 +180,7 @@ public class FeaturestoreHopsfsConnectorController {
       if(featurestore.getHopsfsConnections().stream()
           .anyMatch(hopsfsCon -> hopsfsCon.getName().equalsIgnoreCase(name))) {
         throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_NAME, Level.FINE,
-            ", the storage connector name should be unique, there already exists a HopsFS connector " +
+            ", the storage connector name should be unique, there already exists a HOPSFS connector " +
             "with the same name ");
       }
     }
@@ -231,7 +231,7 @@ public class FeaturestoreHopsfsConnectorController {
   }
   
   /**
-   * Validates user input for creating a new HopsFS connector in a featurestore
+   * Validates user input for creating a new HOPSFS connector in a featurestore
    *
    * @param featurestore the featurestore
    * @param featurestoreHopsfsConnectorDTO the input data to use when creating the connector
@@ -250,7 +250,7 @@ public class FeaturestoreHopsfsConnectorController {
   }
 
   /**
-   * Gets all HopsFS connectors for a particular featurestore and project
+   * Gets all HOPSFS connectors for a particular featurestore and project
    *
    * @param featurestore featurestore to query for hopsfs connectors
    * @return list of XML/JSON DTOs of the hopsfs connectors

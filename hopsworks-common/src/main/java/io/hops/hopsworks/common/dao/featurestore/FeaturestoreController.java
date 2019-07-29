@@ -276,22 +276,21 @@ public class FeaturestoreController {
    * @throws FeaturestoreException
    */
   private void writeToHDFS(Project project, Users user, Path path2file, String content) throws FeaturestoreException {
-    String hdfsUsername = hdfsUsersController.getHdfsUserName(project, user);
     DistributedFileSystemOps udfso = null;
     try {
+      String hdfsUsername = hdfsUsersController.getHdfsUserName(project, user);
       udfso = distributedFsService.getDfsOps(hdfsUsername);
       try (FSDataOutputStream outStream = udfso.create(path2file)) {
-        outStream.writeChars(content);
+        outStream.writeBytes(content);
         outStream.hflush();
-      } catch (IOException ex) {
-        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_UTIL_ARGS_FAILURE,
-            Level.WARNING, "Failed to write featurestore util args to HDFS",  ex.getMessage(), ex);
       }
+    } catch (IOException ex) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_UTIL_ARGS_FAILURE,
+        Level.WARNING, "Failed to write featurestore util args to HDFS",  ex.getMessage(), ex);
     } finally {
       if (udfso != null) {
         distributedFsService.closeDfsClient(udfso);
       }
     }
   }
-
 }

@@ -42,7 +42,7 @@ public class FeaturestoreJobController {
   public void insertJobs(TrainingDataset trainingDataset, List<Jobs> jobs){
     if(jobs != null){
       jobs.stream().forEach(job -> {
-        if(isJobExists((List) trainingDataset.getJobs(), job)) {
+        if(!isJobExists((List) trainingDataset.getJobs(), job)) {
           FeaturestoreJob featurestoreJob = new FeaturestoreJob();
           featurestoreJob.setTrainingDataset(trainingDataset);
           featurestoreJob.setJob(job);

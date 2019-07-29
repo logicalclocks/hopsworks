@@ -57,7 +57,7 @@ public class FeaturestoreHopsfsConnectorFacade extends AbstractFacade<Featuresto
       em.persist(featurestoreHopsfsConnector);
       em.flush();
     } catch (ConstraintViolationException cve) {
-      LOGGER.log(Level.WARNING, "Could not persist the new HopsFS connector", cve);
+      LOGGER.log(Level.WARNING, "Could not persist the new HOPSFS connector", cve);
       throw cve;
     }
   }

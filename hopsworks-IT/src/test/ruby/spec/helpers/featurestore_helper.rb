@@ -43,7 +43,7 @@ module FeaturestoreHelper
     create_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups"
     json_data = {
         name: featuregroup_name,
-        jobName: nil,
+        jobs: [],
         features: features,
         description: "testfeaturegroupdescription",
         version: 1,
@@ -173,7 +173,7 @@ module FeaturestoreHelper
     end
     json_data = {
         name: featuregroup_name,
-        jobName: nil,
+        jobs: [],
         features: [
             {
                 type: "INT",
@@ -206,7 +206,7 @@ module FeaturestoreHelper
     end
     json_data = {
         name: featuregroup_name,
-        jobName: nil,
+        jobs: [],
         features: [
             {
                 type: "INT",
@@ -233,7 +233,7 @@ module FeaturestoreHelper
     update_featuregroup_metadata_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s + "?updateMetadata=true"
     json_data = {
         name: "",
-        jobName: nil,
+        jobs: [],
         features: [],
         description: "",
         version: featuregroup_version,
@@ -251,7 +251,7 @@ module FeaturestoreHelper
     update_training_dataset_metadata_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/trainingdatasets/" + training_dataset_id.to_s + "?updateMetadata=true"
     json_data = {
         name: "new_dataset_name",
-        jobName: nil,
+        jobs: [],
         description: "new_testtrainingdatasetdescription",
         version: 1,
         dataFormat: dataFormat,
@@ -271,7 +271,7 @@ module FeaturestoreHelper
     update_training_dataset_metadata_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/trainingdatasets/" + training_dataset_id.to_s + "?updateMetadata=true"
     json_data = {
         name: name,
-        jobName: nil,
+        jobs: [],
         description: "new_testtrainingdatasetdescription",
         version: 1,
         dataFormat: "parquet",
@@ -301,7 +301,7 @@ module FeaturestoreHelper
     end
     json_data = {
         name: training_dataset_name,
-        jobName: nil,
+        jobs: [],
         description: "testtrainingdatasetdescription",
         version: 1,
         dataFormat: data_format,
@@ -322,7 +322,7 @@ module FeaturestoreHelper
     training_dataset_name = "training_dataset_#{random_id}"
     json_data = {
         name: training_dataset_name,
-        jobName: nil,
+        jobs: [],
         description: "testtrainingdatasetdescription",
         version: 1,
         dataFormat: "tfrecords",
@@ -346,7 +346,7 @@ module FeaturestoreHelper
     featuregroup_name = "featuregroup_#{random_id}"
     json_data = {
         name: featuregroup_name,
-        jobName: nil,
+        jobs: [],
         features: [
             {
                 type: "INT",

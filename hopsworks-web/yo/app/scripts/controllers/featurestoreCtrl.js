@@ -247,7 +247,7 @@ angular.module('hopsWorksApp')
                     && self.storageConnectorsLoaded && self.settingsLoaded) {
                     var tabIndex = StorageService.get(self.projectId + "_featurestore_tab")
                     if(tabIndex != null && tabIndex != undefined && tabIndex != false){
-                        $scope.featurestoreSelectedTab = tabIndex
+                        self.goToTab(tabIndex)
                     }
                     StorageService.store(self.projectId + "_featurestore_tab", 0);
                     self.loading = false;
@@ -1195,6 +1195,15 @@ angular.module('hopsWorksApp')
                     }, function (error) {
                     });
             };
+
+            /**
+             * Utility function for switching tabs
+             *
+             * @param tabIndex
+             */
+            self.goToTab = function(tabIndex) {
+                $scope.featurestoreSelectedTab = tabIndex
+            }
 
             self.init()
         }

@@ -42,7 +42,9 @@ import java.io.Serializable;
 @NamedQueries({
     @NamedQuery(name = "FeaturestoreFeature.findAll", query = "SELECT fsf FROM FeaturestoreFeature fsf"),
     @NamedQuery(name = "FeaturestoreFeature.findById",
-        query = "SELECT fsf FROM FeaturestoreFeature fsf WHERE fsf.id = :id")})
+        query = "SELECT fsf FROM FeaturestoreFeature fsf WHERE fsf.id = :id"),
+    @NamedQuery(name = "FeaturestoreFeature.deleteByListOfIds",
+        query = "DELETE FROM FeaturestoreFeature WHERE id IN :ids")})
 public class FeaturestoreFeature implements Serializable {
   private static final long serialVersionUID = 1L;
   @Id

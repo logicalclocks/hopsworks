@@ -23,7 +23,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 public enum FeaturestoreStorageConnectorType {
   @JsonProperty("HopsFS")
-  HopsFS,
+  HOPSFS,
   @JsonProperty("JDBC")
   JDBC,
   @JsonProperty("S3")

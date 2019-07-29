@@ -2611,7 +2611,7 @@ public class ProjectController {
   }
 
   /**
-   * For HopsFS quotas, both the namespace and the space quotas should be not null
+   * For HOPSFS quotas, both the namespace and the space quotas should be not null
    * at the same time.
    *
    * @param newProjectState

@@ -59,7 +59,7 @@ public class FeaturestoreClientSettingsDTO {
   public static String ON_DEMAND_FEATUREGROUP_TYPE = FeaturegroupType.ON_DEMAND_FEATURE_GROUP.name();
   public static String CACHED_FEATUREGROUP_TYPE = FeaturegroupType.CACHED_FEATURE_GROUP.name();
   public static String JDBC_CONNECTOR_TYPE = FeaturestoreStorageConnectorType.JDBC.name();
-  public static String HOPSFS_CONNECTOR_TYPE = FeaturestoreStorageConnectorType.HopsFS.name();
+  public static String HOPSFS_CONNECTOR_TYPE = FeaturestoreStorageConnectorType.HOPSFS.name();
   public static String S3_CONNECTOR_TYPE = FeaturestoreStorageConnectorType.S3.name();
   public static String CACHED_FEATUREGROUP_DTO_TYPE = "cachedFeaturegroupDTO";
   public static String ON_DEMAND_FEATUREGROUP_DTO_TYPE = "onDemandFeaturegroupDTO";
