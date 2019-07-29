@@ -131,39 +131,28 @@ public class LibraryController {
       }
       String key = libVersion[0];
       String value = libVersion[1];
-      // if the key starts with a letter, it is a library name, otherwise it's a version number
-      // Output searching for 'pandas' looks like this:
+      // Output searching for 'dropbox' looks like this:
       // Loading,channels:
-      // pandas-datareader,0.2.0
-      // 0.2.0,py34_0
-      //....
-      // pandasql,0.3.1
-      // 0.3.1,np16py27_0
-      //....
-      // 0.4.2,np18py33_0
-      //
-      // Skip the first line
-      if (key.compareToIgnoreCase("Loading") == 0 || value.compareToIgnoreCase("channels:") == 0) {
-        continue;
-        // Skip No, match line
-      } else if (key.equalsIgnoreCase("no") && value.equalsIgnoreCase("match")) {
-        continue;
-      }
-  
-      // First row is sometimes empty
-      if (key.isEmpty()) {
+      // #,Name
+      // dropbox,1.5.1
+      // dropbox,8.4.0
+      // ...
+      // or for '4ti2'
+      // Loading,channels:
+      // #,Name
+      // 4ti2,1.6.9
+      // or for something with no match
+      // Loading,channels:
+      // No,match
+      // Skip the first line, Skip No, match line, First row is sometimes empty
+      if (key.isEmpty() || (key.equalsIgnoreCase("Loading") && value.equalsIgnoreCase("channels:")) ||
+        (key.equalsIgnoreCase("#") && value.equalsIgnoreCase("Name")) || (key.equalsIgnoreCase("no") &&
+        value.equalsIgnoreCase("match"))) {
         continue;
       }
-      if (key.contains("Name") || key.contains("#")) {
-        continue;
-      }
-      char c = key.charAt(0);
-      if (c >= 'a' && c <= 'z') {
-        foundLib = key;
-        foundVersion = value;
-      } else {
-        foundVersion = key;
-      }
+
+      foundLib = key;
+      foundVersion = value;
       if (!libVersions.containsKey(foundLib)) {
         List<LibraryVersionDTO> versions = new LinkedList<>();
         versions.add(new LibraryVersionDTO(foundVersion));
