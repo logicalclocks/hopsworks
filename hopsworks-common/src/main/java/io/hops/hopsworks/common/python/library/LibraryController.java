@@ -145,9 +145,10 @@ public class LibraryController {
       // Loading,channels:
       // No,match
       // Skip the first line, Skip No, match line, First row is sometimes empty
-      if (key.isEmpty() || (key.equalsIgnoreCase("Loading") && value.equalsIgnoreCase("channels:")) ||
-        (key.equalsIgnoreCase("#") && value.equalsIgnoreCase("Name")) || (key.equalsIgnoreCase("no") &&
-        value.equalsIgnoreCase("match"))) {
+      if (key.isEmpty() ||
+        (key.equalsIgnoreCase("Loading") && value.equalsIgnoreCase("channels:")) ||
+        (key.equalsIgnoreCase("#") && value.equalsIgnoreCase("Name")) ||
+        (key.equalsIgnoreCase("no") && value.equalsIgnoreCase("match"))) {
         continue;
       }
 
