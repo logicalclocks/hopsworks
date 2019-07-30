@@ -101,7 +101,7 @@ describe "On #{ENV['OS']}" do
           expect_status(204)
         end
 
-        it 'should sign a certificate with - in the hostname' do
+        it 'should sign a certificate with - in the hostname', vm: true do
           subject = "/C=SE/ST=Stockholm/L=SE/O=SE/OU=1/CN=test-hello-hello/emailAddress=agent@hops.io"
           post "#{ENV['HOPSWORKS_CA']}/certificate/host", {csr: generate_csr(subject)}
           expect_status(200)
@@ -109,6 +109,16 @@ describe "On #{ENV['OS']}" do
           # Check that the certificate is on the local fs. this assumes you are running the
           # tests on a proper vm
           check_certificate_exists(@certs_dir + "/intermediate/", "test-hello-hello__1", subject)
+        end
+
+        it 'should sign a certificate with : in the cn - used for K8s certificates', vm: true do
+          subject = "/C=SE/ST=Stockholm/L=SE/O=SE/OU=1/CN=hello:hello/emailAddress=agent@hops.io"
+          post "#{ENV['HOPSWORKS_CA']}/certificate/host", {csr: generate_csr(subject)}
+          expect_status(200)
+
+          # Check that the certificate is on the local fs. this assumes you are running the
+          # tests on a proper vm
+          check_certificate_exists(@certs_dir + "/intermediate/", "hello:hello__1", subject)
         end
       end
 
