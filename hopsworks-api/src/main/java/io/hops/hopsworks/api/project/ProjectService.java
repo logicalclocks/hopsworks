@@ -754,8 +754,7 @@ public class ProjectService {
   }
 
   @Path("{projectId}/serving")
-  public ServingService servingService(@PathParam("projectId") Integer id, @Context HttpServletRequest req) {
-    Users user = jWTHelper.getUserPrincipal(req);
+  public ServingService servingService(@PathParam("projectId") Integer id) {
     this.servingService.setProjectId(id);
     return this.servingService;
   }
