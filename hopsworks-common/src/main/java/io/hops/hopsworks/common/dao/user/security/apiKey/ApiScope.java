@@ -20,7 +20,8 @@ public enum ApiScope {
   DATASET_VIEW,
   DATASET_CREATE,
   DATASET_DELETE,
-  INFERENCE;
+  INFERENCE,
+  FEATURESTORE;
   
   public static ApiScope fromString(String param) {
     return valueOf(param.toUpperCase());
