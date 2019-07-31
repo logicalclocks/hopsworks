@@ -123,6 +123,17 @@ angular.module('hopsWorksApp')
                 console.log("isDelaEnabled", error);
               });
             };
+            var checkRStudioEnabled = function () {
+
+            }
+
+            var init = function () {
+              //checkDelaEnabled();
+              checkRStudioEnabled();
+            }
+
+            init();
+
             //checkDelaEnabled(); // check 
             self.userNotification = '';
             var getUserNotification = function () {

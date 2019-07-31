@@ -262,6 +262,7 @@
     </init-param>
     <load-on-startup>2</load-on-startup>
   </servlet>
+
   <servlet>
     <servlet-name>Bootstrap</servlet-name>
     <servlet-class>io.hops.hopsworks.rest.application.config.Bootstrap</servlet-class>

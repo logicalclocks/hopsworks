@@ -39,6 +39,7 @@
 
 package io.hops.hopsworks.common.util;
 
+import io.hops.hopsworks.common.dao.rstudio.RStudioConfigFilesGenerator;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -61,6 +62,12 @@ public class ConfigFileGenerator {
   public static final String SPARKMAGIC_CONFIG_TEMPLATE
           = TEMPLATE_ROOT + File.separator + "jupyter" + File.separator
           + "config_template.json";  
+  public static final String RSTUDIO_SESSION_CONF
+          = TEMPLATE_ROOT + File.separator + "rstudio" + File.separator
+          + RStudioConfigFilesGenerator.RSTUDIO_SESSION_CONFIG;
+  public static final String RSTUDIO_SESSION_SCRIPT
+          = TEMPLATE_ROOT + File.separator + "rstudio" + File.separator
+          + RStudioConfigFilesGenerator.RSTUDIO_SESSION_SCRIPT;
 
   /**
    * @param filePath

@@ -340,6 +340,12 @@ public class Settings implements Serializable {
   private static final String VARIABLE_FEATURESTORE_DEFAULT_QUOTA = "featurestore_default_quota";
   private static final String VARIABLE_FEATURESTORE_DEFAULT_STORAGE_FORMAT = "featurestore_default_storage_format";
 
+  // RStudio
+  private static final String VARIABLE_RSTUDIO_USER = "rstudio_user";
+  private static final String VARIABLE_RSTUDIO_DIR = "rstudio_dir";
+  private static final String VARIABLE_CRAN_REPO_URL = "rstudio_cran_repo_url";
+  
+
   private String setVar(String varName, String defaultValue) {
     Variables userName = findById(varName);
     if (userName != null && userName.getValue() != null && (!userName.getValue().isEmpty())) {
@@ -677,6 +683,10 @@ public class Settings implements Serializable {
       FEATURESTORE_DB_DEFAULT_STORAGE_FORMAT =
           setStrVar(VARIABLE_FEATURESTORE_DEFAULT_STORAGE_FORMAT, FEATURESTORE_DB_DEFAULT_STORAGE_FORMAT);
 
+      RSTUDIO_USER = setStrVar(VARIABLE_RSTUDIO_USER, RSTUDIO_USER);
+      CRAN_REPO_URL = setStrVar(VARIABLE_CRAN_REPO_URL, CRAN_REPO_URL);
+      RSTUDIO_DIR = setDirVar(VARIABLE_RSTUDIO_DIR, RSTUDIO_DIR);
+      
       cached = true;
     }
   }
@@ -3442,6 +3452,26 @@ public class Settings implements Serializable {
     checkCache();
     return FEATURESTORE_DB_DEFAULT_STORAGE_FORMAT;
   }
+  
+  private String RSTUDIO_DIR = "/srv/hops/rstudio";
+
+  public synchronized String getRStudioDir() {
+    checkCache();
+    return RSTUDIO_DIR;
+  }
+
+  private String RSTUDIO_USER = "rstudio";
+
+  public synchronized String getRStudioUser() {
+    checkCache();
+    return RSTUDIO_USER;
+  }
+
+  private String CRAN_REPO_URL = "https://ftp.acc.umu.se/mirror/CRAN/";
+
+  public synchronized String getCranRepoUrl() {
+    checkCache();
+    return CRAN_REPO_URL;
   
   private Boolean LOCALHOST = false;
   

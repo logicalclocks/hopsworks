@@ -50,6 +50,7 @@ import io.hops.hopsworks.api.jobs.JobsResource;
 import io.hops.hopsworks.api.jobs.KafkaService;
 import io.hops.hopsworks.api.jupyter.JupyterService;
 import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.api.rstudio.RStudioService;
 import io.hops.hopsworks.api.python.PythonResource;
 import io.hops.hopsworks.api.serving.ServingService;
 import io.hops.hopsworks.api.serving.inference.InferenceResource;
@@ -197,6 +198,8 @@ public class ProjectService {
   private ProjectActivitiesResource activitiesResource;
   @Inject
   private FeaturestoreService featurestoreService;
+  @Inject
+  private RStudioService rstudioService;
 
   private final static Logger LOGGER = Logger.getLogger(ProjectService.class.getName());
 
@@ -821,6 +824,12 @@ public class ProjectService {
   public FeaturestoreService featurestoreService(@PathParam("projectId") Integer projectId) {
     featurestoreService.setProjectId(projectId);
     return featurestoreService;
+  }
+  
+  @Path("{id}/rstudio")
+  public RStudioService rstudioService(@PathParam("id") Integer id, @Context HttpServletRequest req) {
+    rstudioService.setProjectId(id);
+    return rstudioService;
   }
 
 }
