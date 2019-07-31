@@ -14,7 +14,7 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.common.exception;
+package io.hops.hopsworks.exceptions;
 
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.restutils.RESTException;
@@ -27,16 +27,16 @@ public class PythonException extends RESTException {
     super(code, level);
   }
 
-  public PythonException(RESTCodes.JobErrorCode code, Level level, String usrMsg) {
+  public PythonException(RESTCodes.PythonErrorCode code, Level level, String usrMsg) {
     super(code, level, usrMsg);
   }
 
-  public PythonException(RESTCodes.JobErrorCode code, Level level, String usrMsg, String devMsg) {
+  public PythonException(RESTCodes.PythonErrorCode code, Level level, String usrMsg, String devMsg) {
     super(code, level, usrMsg, devMsg);
   }
-
-  public PythonException(RESTCodes.JobErrorCode code, Level level, String usrMsg, String devMsg,
-                      Throwable throwable) {
+  
+  public PythonException(RESTCodes.PythonErrorCode code, Level level, String usrMsg, String devMsg,
+    Throwable throwable) {
     super(code, level, usrMsg, devMsg, throwable);
   }
 
