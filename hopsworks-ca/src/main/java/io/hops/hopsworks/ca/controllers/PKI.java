@@ -70,7 +70,7 @@ public class PKI {
   private final static long TEN_YEARS = 3650;
   private static final Map<String, TimeUnit> TIME_SUFFIXES;
 
-  private static final Pattern SUBJECT_PATTERN = Pattern.compile("(([\\w\\.]+\\s?)=(\\s?[\\w\\.\\-@~\\+\\?%]+))");
+  private static final Pattern SUBJECT_PATTERN = Pattern.compile("(([\\w\\.]+\\s?)=(\\s?[\\w\\.\\-@~\\+\\?%:]+))");
   private static final String SUBJECT = "subject=";
 
   private static final String CERTIFICATE_TYPE_NOT_RECOGNIZED_ERR = "Certificate type not recognized";
