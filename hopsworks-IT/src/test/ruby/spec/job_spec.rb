@@ -405,4 +405,51 @@ describe "On #{ENV['OS']}" do
       end
     end
   end
+  describe 'with Api key' do
+    before(:all) do
+      with_valid_tour_project("spark")
+      create_sparktour_job(@project, job_spark_1, "jar", nil)
+      @key = create_api_key('jobKey', %w(JOB))
+      @invalid_key = create_api_key('jobKey_invalid', %w(DATASET_VIEW DATASET_CREATE DATASET_DELETE INFERENCE))
+    end
+    after :all do
+      clean_jobs(@project[:id])
+    end
+    context 'with invalid scope' do
+      before(:all) do
+        set_api_key_to_header(@invalid_key)
+      end
+      it 'should fail to access job' do
+        get_jobs(@project[:id], "")
+        expect_json(errorCode: 320004)
+        expect_status(403)
+      end
+      it 'should fail to create job' do
+        create_sparktour_job(@project, job_spark_1, "jar", nil)
+        expect_json(errorCode: 320004)
+        expect_status(403)
+      end
+      it 'should fail to delete' do
+        delete_job(@project[:id], job_spark_1)
+        expect_status(403)
+      end
+    end
+    context 'with valid scope' do
+      before(:all) do
+        set_api_key_to_header(@key)
+      end
+      it 'should get jobs' do
+        get_jobs(@project[:id], "")
+        expect_status(200)
+      end
+      it 'should create' do
+        create_sparktour_job(@project, "test_api_job", "jar", nil)
+        expect_status(201)
+      end
+      it 'should delete' do
+        delete_job(@project[:id], "test_api_job")
+        expect_status(204)
+      end
+    end
+  end
 end

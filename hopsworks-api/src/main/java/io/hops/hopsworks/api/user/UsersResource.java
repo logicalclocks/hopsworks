@@ -41,6 +41,7 @@ package io.hops.hopsworks.api.user;
 import io.hops.hopsworks.api.activities.UserActivitiesResource;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.api.user.apiKey.ApiKeyResource;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.api.ResourceRequest;
@@ -113,6 +114,8 @@ public class UsersResource {
   private ProjectTeamFacade projectTeamFacade;
   @Inject
   private UserActivitiesResource activitiesResource;
+  @Inject
+  private ApiKeyResource apiKeyResource;
   @EJB
   private JWTHelper jWTHelper;
   @EJB
@@ -358,6 +361,11 @@ public class UsersResource {
   @Path("activities")
   public UserActivitiesResource activities() {
     return this.activitiesResource;
+  }
+  
+  @Path("apiKey")
+  public ApiKeyResource apiKey() {
+    return this.apiKeyResource;
   }
 
 }

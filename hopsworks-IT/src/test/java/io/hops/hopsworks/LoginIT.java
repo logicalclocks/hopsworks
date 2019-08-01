@@ -146,9 +146,11 @@ public class LoginIT {
     driver.findElement(LOGIN_INPUT_OTP).sendKeys("12345");
     driver.findElement(LOGIN_FORM).submit();
     By error = By.id("second-factor-error");
+    By errorClose = By.id("second-factor-error-close");
     Helpers
       .assertEqualsElementText("An argument was not provided or it was malformed.", error, verificationErrors, driver);
     driver.findElement(LOGIN_INPUT_OTP).clear();
+    driver.findElement(errorClose).click();
     driver.findElement(LOGIN_INPUT_OTP).sendKeys("123456");
     driver.findElement(LOGIN_FORM).submit();
     Helpers.assertEqualsElementText("Authentication failed, invalid credentials", error, verificationErrors, driver);

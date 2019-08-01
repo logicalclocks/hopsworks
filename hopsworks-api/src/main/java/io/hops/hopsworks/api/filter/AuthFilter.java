@@ -17,33 +17,36 @@ package io.hops.hopsworks.api.filter;
 
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import io.hops.hopsworks.api.filter.apiKey.ApiKeyFilter;
+import io.hops.hopsworks.api.filter.util.HopsworksSecurityContext;
+import io.hops.hopsworks.api.filter.util.Subject;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.common.util.Settings;
-import io.hops.hopsworks.restutils.JsonResponse;
-import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.jwt.AlgorithmFactory;
 import io.hops.hopsworks.jwt.JWTController;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.jwt.exception.SigningKeyNotFoundException;
 import io.hops.hopsworks.jwt.filter.JWTFilter;
-import java.io.IOException;
-import java.lang.reflect.Method;
-import java.security.Principal;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.logging.Logger;
+import io.hops.hopsworks.restutils.JsonResponse;
+import io.hops.hopsworks.restutils.RESTCodes;
+
 import javax.annotation.Priority;
 import javax.ejb.EJB;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.ext.Provider;
+import java.io.IOException;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Provider
 @JWTRequired
@@ -72,8 +75,13 @@ public class AuthFilter extends JWTFilter {
   }
 
   @Override
-  public void preJWTFilter(ContainerRequestContext requestContext) throws IOException {
-
+  public boolean preJWTFilter(ContainerRequestContext requestContext) throws IOException {
+    String authorizationHeader = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
+    if (authorizationHeader != null && authorizationHeader.startsWith(ApiKeyFilter.API_KEY)) {
+      LOGGER.log(Level.INFO, "{0}found, leaving JWT interceptor", ApiKeyFilter.API_KEY);
+      return false;
+    }
+    return true;
   }
 
   @Override
@@ -83,11 +91,7 @@ public class AuthFilter extends JWTFilter {
 
   @Override
   public Set<String> allowedRoles() {
-    Class<?> resourceClass = resourceInfo.getResourceClass();
-    Method method = resourceInfo.getResourceMethod();
-    JWTRequired methodRolesAnnotation = method.getAnnotation(JWTRequired.class);
-    JWTRequired classRolesAnnotation = resourceClass.getAnnotation(JWTRequired.class);
-    JWTRequired rolesAnnotation = methodRolesAnnotation != null ? methodRolesAnnotation : classRolesAnnotation;
+    JWTRequired rolesAnnotation = getAnnotation();
     if (rolesAnnotation == null) {
       return null;
     }
@@ -97,22 +101,29 @@ public class AuthFilter extends JWTFilter {
 
   @Override
   public Set<String> acceptedTokens() {
-    Class<?> resourceClass = resourceInfo.getResourceClass();
-    Method method = resourceInfo.getResourceMethod();
-    JWTRequired methodAcceptedTokens = method.getAnnotation(JWTRequired.class);
-    JWTRequired classAcceptedTokens = resourceClass.getAnnotation(JWTRequired.class);
-    JWTRequired acceptedTokens = methodAcceptedTokens != null ? methodAcceptedTokens : classAcceptedTokens;
+    JWTRequired acceptedTokens = getAnnotation();
     if (acceptedTokens == null) {
       return null;
     }
     Set<String> acceptedTokensSet = new HashSet<>(Arrays.asList(acceptedTokens.acceptedTokens()));
     return acceptedTokensSet;
   }
+  
+  private JWTRequired getAnnotation() {
+    Class<?> resourceClass = resourceInfo.getResourceClass();
+    Method method = resourceInfo.getResourceMethod();
+    JWTRequired methodAcceptedTokens = method.getAnnotation(JWTRequired.class);
+    JWTRequired classAcceptedTokens = resourceClass.getAnnotation(JWTRequired.class);
+    JWTRequired annotation = methodAcceptedTokens != null ? methodAcceptedTokens : classAcceptedTokens;
+    return annotation;
+  }
 
   @Override
   public void postJWTFilter(ContainerRequestContext requestContext, DecodedJWT jwt) throws IOException {
     String scheme = requestContext.getUriInfo().getRequestUri().getScheme();
-    requestContext.setSecurityContext(new JWTSecurityContext(jwt, scheme));
+    String[] roles = jwtController.getRolesClaim(jwt);
+    Subject subject = new Subject(jwt.getSubject(), new ArrayList<>(Arrays.asList(roles)));
+    requestContext.setSecurityContext(new HopsworksSecurityContext(subject, scheme));
   }
 
   @Override
@@ -136,47 +147,4 @@ public class AuthFilter extends JWTFilter {
     jsonResponse.setErrorMsg(msg);
     return jsonResponse;
   }
-
-  private class JWTSecurityContext implements SecurityContext {
-
-    private final String scheme;
-    private final DecodedJWT jwt;
-
-    public JWTSecurityContext(DecodedJWT jwt, String scheme) {
-      this.scheme = scheme;
-      this.jwt = jwt;
-    }
-
-    @Override
-    public Principal getUserPrincipal() {
-      if (this.jwt == null) {
-        return null;
-      }
-      return () -> this.jwt.getSubject();
-    }
-
-    @Override
-    public boolean isUserInRole(String role) {
-      String[] roles = jwtController.getRolesClaim(jwt);
-      if (roles != null) {
-        List<String> rolesList = new ArrayList<>(Arrays.asList(roles));
-        if (!rolesList.isEmpty()) {
-          return rolesList.contains(role);
-        }
-      }
-      return false;
-    }
-
-    @Override
-    public boolean isSecure() {
-      return "https".equals(this.scheme);
-    }
-
-    @Override
-    public String getAuthenticationScheme() {
-      return SecurityContext.BASIC_AUTH;
-    }
-
-  }
-
 }

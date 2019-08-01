@@ -51,7 +51,7 @@ angular.module('hopsWorksApp')
                   delete config.headers['Authorization'];
                   RESOURCE_SERVER = getRemoteUserAuthApiLocationBase();
                 }
-                var RESOURCE_NAME = 'api';
+                var RESOURCE_NAME = 'api/';
                 var KIBANA_NAME = "kibana";
                 var PYTHON_NAME = "python";
 

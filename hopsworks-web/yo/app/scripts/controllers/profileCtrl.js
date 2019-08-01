@@ -40,21 +40,24 @@
 'use strict'
 
 angular.module('hopsWorksApp')
-        .controller('ProfileCtrl', ['UserService', '$location', '$scope', 'md5', 'growl', '$uibModalInstance','$cookies', 'ProjectService', 'SecurityQuestions',
-          function (UserService, $location, $scope, md5, growl, $uibModalInstance, $cookies, ProjectService, SecurityQuestions) {
+        .controller('ProfileCtrl', ['UserService', '$location', '$scope', 'md5', 'growl', '$cookies', 'ProjectService', 'SecurityQuestions', 'ModalService', 'ApiKeyService',
+          function (UserService, $location, $scope, md5, growl, $cookies, ProjectService, SecurityQuestions, ModalService, ApiKeyService) {
 
             var self = this;
+            self.pageLoading = true;
             self.working = false;
             self.credentialWorking = false;
             self.twoFactorWorking = false;
             self.secretsWorking = false;
             self.securityQAWorking = false;
             self.qrCodeWorking = false;
+            self.apiKeyWorking = false;
             self.noPassword = false;
             self.otp = $cookies.get('otp');
             self.emailHash = '';
             self.master = {};
             self.masterTwoFactor = {};
+            self.tab = $location.search()['tab'];
             self.user = {
               firstname: '',
               lastname: '',
@@ -89,11 +92,25 @@ angular.module('hopsWorksApp')
               twoFactor: ''
             };
 
+            self.key = {name: '', scope: []};
+            self.keyScopes = [];
+            self.keys = [];
+
             SecurityQuestions.getQuestions().then(function(success) {
                self.securityQuestions = success.data;
             });
+            var showError = function(error) {
+                var errorMsg = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : "";
+                growl.error(errorMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 1});
+            };
+
+            var showSuccess = function (success, msg) {
+                var successMsg = (typeof success.data.successMessage !== 'undefined')? success.data.successMessage : msg;
+                growl.success(successMsg, {title: 'Success', ttl: 5000, referenceId: 1});
+            };
 
             self.profile = function () {
+              self.pageLoading = true;
               UserService.profile().then(
                       function (success) {
                         self.user = success.data;
@@ -101,9 +118,12 @@ angular.module('hopsWorksApp')
                         self.master = angular.copy(self.user);
                         self.twoFactorAuth.twoFactor = self.master.twoFactor;
                         self.user.numRemainingProjects = self.user.maxNumProjects-self.user.numCreatedProjects;
+                        checkTab();
+                        self.pageLoading = false;
                       },
                       function (error) {
                         self.errorMsg = error.data.errorMsg;
+                        self.pageLoading = false;
                       });
             };
 
@@ -120,8 +140,7 @@ angular.module('hopsWorksApp')
                         $scope.profileForm.$setPristine();
                       }, function (error) {
                         self.working = false;
-                        self.errorMsg = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : "";
-                        growl.error(self.errorMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 1});
+                        showError(error);
               });
             };
 
@@ -146,7 +165,7 @@ angular.module('hopsWorksApp')
                           self.credentialsMsg.successMessage = success.data.successMessage;
                         }, function (error) {
                           self.credentialWorking = false;
-                          setErrorMsg(error, self.credentialsMsg);
+                          showError(error);
                 });
               }
             };
@@ -162,11 +181,10 @@ angular.module('hopsWorksApp')
                   self.secretsWorking = false;
                 }, function (error) {
                   self.secretsWorking = false;
-                  self.errorMsg = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : "";
-                  growl.error(self.errorMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 1});
+                  showError(error);
                 }
               );
-            }
+            };
 
             self.delete_secret = function (secret) {
               self.secretsWorking = true;
@@ -176,13 +194,12 @@ angular.module('hopsWorksApp')
                   self.secretsWorking = false;
                 }, function (error) {
                   self.secretsWorking = false;
-                  self.errorMsg = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : "";
-                  growl.error(self.errorMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 1});
+                  showError(error);
                 }
               );
-            }
+            };
 
-            self.selected_secret_project_vis
+            self.selected_secret_project_vis;
 
             self.add_secret = function(isFormValid) {
               self.secretsWorking = true;
@@ -202,8 +219,7 @@ angular.module('hopsWorksApp')
                     growl.success("Added new secret", {title: 'Success', ttl: 3000, referenceId: 1});
                   }, function (error) {
                     self.secretsWorking = false;
-                    self.errorMsg = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : "";
-                    growl.error(self.errorMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 1});
+                    showError(error);
                   }
                 );
               }
@@ -211,36 +227,34 @@ angular.module('hopsWorksApp')
 
             self.user_projects = [];
             self.project_visibility_selected = function () {
-              self.user_projects = []
+              self.user_projects = [];
               ProjectService.projects().$promise.then(
                 function(success) {
                   for (var i = 0; i < success.length; i++) {
-                    var name = success[i].project.name
-                    var id = success[i].project.id
+                    var name = success[i].project.name;
+                    var id = success[i].project.id;
                     var project = {
                       name: name,
                       id: id
-                    }
+                    };
                     self.user_projects.push(project)
                   }
                 }, function(error) {
-                  self.errorMsg = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : "";
-                  growl.error(self.errorMsg, {title: error.data.errorMsg, ttl: 3000, referenceId: 1});
+                   showError(error);
                 }
               )
-            }
+            };
 
             self.private_visibility_selected = function () {
               self.user_projects = []
-            }
+            };
 
             self.delete_all_secrets = function() {
               UserService.delete_all_secrets().then(
                 function (success) {
                   self.secrets = []
                 }, function (error) {
-                  self.errorMsg = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : "";
-                  growl.error(self.errorMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 1});
+                    showError(error);
                 }
               );
             };
@@ -266,7 +280,7 @@ angular.module('hopsWorksApp')
                           self.securityQAMsg.successMessage = success.data.successMessage;
                       }, function (error) {
                           self.securityQAWorking = false;
-                          setErrorMsg(error, self.securityQAMsg);
+                          showError(error);
                       });
                 }
             };
@@ -296,8 +310,8 @@ angular.module('hopsWorksApp')
                             self.twoFactorAuthMsg.successMessage = success.data.successMessage;
                           }
                         }, function (error) {
-                           self.twoFactorWorking = false;
-                           setErrorMsg(error, self.twoFactorAuthMsg);
+                          self.twoFactorWorking = false;
+                          showError(error);
                 });
               }
             };
@@ -315,19 +329,13 @@ angular.module('hopsWorksApp')
                           self.qrCodeWorking = false;
                           self.twoFactorAuth.password = '';
                           if (success.data.QRCode !== undefined) {
-                            self.close();
                             $location.path("/qrCode/profile/" + success.data.QRCode);
                           } 
                         }, function (error) {
                           self.qrCodeWorking = false;
-                          setErrorMsg(error, self.twoFactorAuthMsg);
+                          showError(error);
                 });
             };
-
-            var setErrorMsg = function (error, msg) {
-                var errorMsg = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : error.data.errorMsg;
-                msg.errorMessage = errorMsg;
-            }
             
             self.externalAccountType = function () {
                 return self.user.accountType !== 'M_ACCOUNT_TYPE';
@@ -338,8 +346,159 @@ angular.module('hopsWorksApp')
               $scope.profileForm.$setPristine();
             };
 
-            self.close = function () {
-              $uibModalInstance.dismiss('cancel');
+            var getScopes = function () {
+                ApiKeyService.getScopes().then(function (success) {
+                    self.keyScopes = success.data;
+                }, function (error) {
+                });
+            };
+            getScopes();
+
+            self.load_apiKeys = function () {
+                ApiKeyService.getAll().then(function (success) {
+                    self.keys = success.data.items;
+                }, function (error) {
+                });
+
+            };
+
+            self.activeTab = undefined;
+            var checkTab = function () {
+              var userTabs = ["profile", "credentials", "security", "secrets", "apiKeys"];
+              if (self.otp === 'true') {
+                  userTabs.push("twoFactor");
+              }
+              var remoteUserTabs = ["profile", "secrets", "apiKeys"];
+              var tabs = self.externalAccountType() ? remoteUserTabs : userTabs;
+              if (typeof self.tab !== "undefined" && tabs.includes(self.tab)) {
+                  self.activeTab = self.tab;
+                  if ("secrets" === self.activeTab) {
+                      self.load_secrets();
+                  } else if ("apiKeys" === self.activeTab) {
+                      self.load_apiKeys();
+                  }
+              } else {
+                  self.activeTab = 'profile';
+              }
+            };
+
+            $scope.$watch("profileCtrl.activeTab", function() {
+              if (typeof self.activeTab !== 'undefined') {
+                  $location.search('tab', self.activeTab);
+              }
+            });
+
+            var resetForm = function (form) {
+                form.$setPristine();
+                self.key = {name: '', scope: []};
+                for(var i = 0; i < self.keyScopes.length; i++){
+                    self.keyScopes[i].selected = false;
+                }
+            };
+
+            self.newApiKey = function (form) {
+                if (form.$valid) {
+                    self.apiKeyWorking = true;
+                    for(var i = 0; i < self.keyScopes.length; i++){
+                        if (self.keyScopes[i].selected) {
+                            self.key.scope.push(self.keyScopes[i].value);
+                        }
+                    }
+                    ApiKeyService.create(self.key).then(function (success) {
+                        resetForm(form);
+                        ModalService.showApiKey('md', success.data).then(function (success) {
+                            self.load_apiKeys();
+                        }, function (error) {
+                            self.load_apiKeys();
+                        });
+                        self.apiKeyWorking = false;
+                    }, function (error) {
+                        self.apiKeyWorking = false;
+                        showError(error);
+                    });
+
+                }
+                self.apiKeyWorking = false;
+            };
+
+            self.scopeSelected = function () {
+                for(var i = 0; i < self.keyScopes.length; i++){
+                    if (self.keyScopes[i].selected) {
+                        return true;
+                    }
+                }
+                return false;
+            };
+
+            self.edit = function (key) {
+                var editKey = {name: key.name, prefix: key.prefix, scope: []};
+                for(var i = 0; i < self.keyScopes.length; i++){
+                    if (key.scope.includes(self.keyScopes[i].value)) {
+                        editKey.scope.push({name: self.keyScopes[i].value, selected: true});
+                    } else {
+                        editKey.scope.push({name: self.keyScopes[i].value, selected: false});
+                    }
+                }
+                ModalService.editApiKey('md', editKey).then (function (success) {
+                    var key = {name: success.name, scope: []};
+                    for(var i = 0; i < success.scope.length; i++){
+                        if (success.scope[i].selected) {
+                            key.scope.push(success.scope[i].name);
+                        }
+                    }
+                    ApiKeyService.edit(key).then(function (success) {
+                        self.load_apiKeys();
+                        showSuccess(success, key.name + " edited successfully");
+                    }, function (error) {
+                        showError(error);
+                    });
+                }, function (error) {
+
+                });
+            };
+
+            self.delete = function (key) {
+                ModalService.confirm('sm', 'Confirm', 'Are you sure you want to delete this key? \n This action is' +
+                    ' not reversible.').then( function (success) {
+                        ApiKeyService.delete(key.name).then(function (success) {
+                            self.load_apiKeys();
+                            showSuccess(success, key.name + " deleted successfully");
+                        }, function (error) {
+                            showError(error);
+                        });
+                    }, function (error) {
+
+                    });
+            };
+
+            self.deleteAll = function () {
+                ModalService.confirm('sm', 'Confirm', 'Are you sure you want to delete all keys? \n This action is' +
+                    ' not reversible.').then(function (success) {
+                        ApiKeyService.deleteAll().then(function (success) {
+                            self.load_apiKeys();
+                            showSuccess(success, "All keys deleted successfully");
+                        }, function (error) {
+                            showError(error);
+                        });
+                    }, function (error) {
+
+                    });
+            };
+
+            self.searchBy = "name";
+            self.searchByName = undefined;
+            self.searchTerm = undefined;
+            self.search = function() {
+              if ("name" === self.searchBy) {
+                  self.searchByName = self.searchTerm;
+              } else {
+                  ApiKeyService.getByPrefix(self.searchTerm).then(function (success) {
+                      self.searchByName = success.data.name;
+                  }, function (error) {
+                      showError(error);
+                      self.searchByName = undefined;
+                  });
+              }
             };
 
           }]);

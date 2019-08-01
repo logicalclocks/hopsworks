@@ -195,23 +195,38 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
             },
-            profile: function (size) {
+            editApiKey: function (size, key) {
                 var modalInstance = $uibModal.open({
-                    templateUrl: 'views/profile.html',
-                    controller: 'ProfileCtrl as profileCtrl',
+                    templateUrl: 'views/apiKeyModal.html',
+                    controller: 'ApiKeyCtrl as apiKeyCtrl',
                     size: size,
                     resolve: {
-                        auth: ['$q', '$location', 'AuthService',
-                            function ($q, $location, AuthService) {
-                                return AuthService.session().then(
-                                    function (success) {
-                                    },
-                                    function (err) {
-                                        $location.path('/login');
-                                        $location.replace();
-                                        return $q.reject(err);
-                                    });
-                            }]
+                        auth: ['$q','AuthGuardService',
+                            function ($q, AuthGuardService) {
+                                return AuthGuardService.guardSession($q);
+                            }],
+                        key: function () {
+                            return key;
+                        }
+                    }
+                });
+                return modalInstance.result;
+            },
+            showApiKey: function (size, key) {
+                var modalInstance = $uibModal.open({
+                    templateUrl: 'views/apiKeyModal.html',
+                    controller: 'ApiKeyCtrl as apiKeyCtrl',
+                    size: size,
+                    backdrop  : 'static',
+                    keyboard  : false,
+                    resolve: {
+                        auth: ['$q','AuthGuardService',
+                            function ($q, AuthGuardService) {
+                                return AuthGuardService.guardSession($q);
+                            }],
+                        key: function () {
+                            return key;
+                        }
                     }
                 });
                 return modalInstance.result;

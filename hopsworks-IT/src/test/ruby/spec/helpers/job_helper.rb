@@ -18,9 +18,9 @@ module JobHelper
   def create_sparktour_job(project, job_name, type, job_conf)
 
     # need to enable python for conversion .ipynb to .py works
-    get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/python/environments"
+    get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/python/environments"
     if response.code == 404
-       post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/python/environments/2.7?action=create&pythonKernelEnable=true"
+       post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/python/environments/2.7?action=create&pythonKernelEnable=true"
        expect_status(201)
     end
 
@@ -47,16 +47,16 @@ module JobHelper
         }
       end
 
-      put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jobs/#{job_name}", job_conf
+      put "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jobs/#{job_name}", job_conf
 
     elsif type.eql? "py"
 
-      if !test_file("/Projects/#{@project[:projectname]}/Resources/" + job_name + ".ipynb")
+      if !test_file("/Projects/#{project[:projectname]}/Resources/" + job_name + ".ipynb")
         copy("/user/hdfs/tensorflow_demo/notebooks/Experiment/TensorFlow/minimal_mnist_classifier_on_hops.ipynb",
-              "/Projects/#{@project[:projectname]}/Resources/" + job_name + ".ipynb", @user[:username], "#{@project[:projectname]}__Resources", 750, "#{@project[:projectname]}")
+              "/Projects/#{project[:projectname]}/Resources/" + job_name + ".ipynb", @user[:username], "#{project[:projectname]}__Resources", 750, "#{project[:projectname]}")
       end
 
-      get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/convertIPythonNotebook/Resources/" + job_name + ".ipynb"
+      get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jupyter/convertIPythonNotebook/Resources/" + job_name + ".ipynb"
       expect_status(200)
       if job_conf.nil?
         job_conf = {
@@ -80,13 +80,13 @@ module JobHelper
         }
       end
 
-      put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jobs/#{job_name}", job_conf
+      put "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jobs/#{job_name}", job_conf
       expect_status(201)
 
     else
-        if !test_file("/Projects/#{@project[:projectname]}/Resources/" + job_name + ".ipynb")
+        if !test_file("/Projects/#{project[:projectname]}/Resources/" + job_name + ".ipynb")
           copy("/user/hdfs/tensorflow_demo/notebooks/Experiment/TensorFlow/minimal_mnist_classifier_on_hops.ipynb",
-          "/Projects/#{@project[:projectname]}/Resources/" + job_name + ".ipynb", @user[:username], "#{@project[:projectname]}__Resources", 750, "#{@project[:projectname]}")
+          "/Projects/#{project[:projectname]}/Resources/" + job_name + ".ipynb", @user[:username], "#{project[:projectname]}__Resources", 750, "#{project[:projectname]}")
         end
 
         job_conf = {
@@ -109,7 +109,7 @@ module JobHelper
           "spark.dynamicAllocation.initialExecutors":1
         }
 
-        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jobs/#{job_name}", job_conf
+        put "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jobs/#{job_name}", job_conf
         expect_status(201)
     end
   end
