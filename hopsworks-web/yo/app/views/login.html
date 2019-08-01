@@ -155,8 +155,8 @@
                             <i class="fa fa-spinner fa-spin"></i>
                             Verifying
                         </div>
-                        <div class="alert alert-danger" role="alert" ng-show="loginCtrl.errorMessage">
-                            <button type="button" class="close" aria-label="Close"
+                        <div class="alert alert-danger" role="alert" ng-if="loginCtrl.errorMessage">
+                            <button id="second-factor-error-close" type="button" class="close" aria-label="Close"
                                     ng-click="loginCtrl.errorMessage = ''">
                                 <span aria-hidden="true">&times;</span>
                             </button>

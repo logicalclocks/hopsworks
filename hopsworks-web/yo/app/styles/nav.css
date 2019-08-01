@@ -229,3 +229,25 @@ ul.dropdown-messages .dropdown-header {
          margin: 0 -150px 0 -150px;
       }
    }
+
+#profile-sidebar > .list-group-item.active {
+    color: #555;
+    text-decoration: none;
+    background-color: #f5f5f5;
+    border-color: #ddd;
+}
+
+#profile-sidebar > .list-group-item {
+    cursor: pointer;
+}
+
+#profile-content div .row.form-actions {
+    padding: 0px;
+    background-color: #f5f5f5;
+    margin-top: 50px;
+}
+
+#profile-content div .breadcrumb {
+    font-weight: bold;
+    font-size: large;
+}

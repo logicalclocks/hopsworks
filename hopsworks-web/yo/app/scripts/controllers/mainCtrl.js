@@ -111,7 +111,6 @@ angular.module('hopsWorksApp')
             var checkDelaEnabled = function () {
               
               HopssiteService.getServiceInfo("dela").then(function (success) {
-                console.log("isDelaEnabled", success);
                 self.delaServiceInfo = success.data;
                 if (self.delaServiceInfo.status === 1) {
                   $rootScope['isDelaEnabled'] = true;
@@ -129,13 +128,12 @@ angular.module('hopsWorksApp')
               self.userNotification = '';
               BannerService.findUserBanner().then(
                       function (success) {
-                        console.log(success);
                         if (success.data.successMessage) {
                           self.userNotification = success.data.successMessage;
                         }
                       }, function (error) {
-                console.log(error);
-                self.userNotification = '';
+                        console.log(error);
+                        self.userNotification = '';
               });
             };
             getUserNotification();
@@ -212,7 +210,6 @@ angular.module('hopsWorksApp')
 
             self.hitEnter = function (event) {
               var code = event.which || event.keyCode || event.charCode;
-              console.log("hitEnter", code);
               if (angular.equals(code, 13) && !self.searching) {
                 self.searchResult = [];
                 self.search();

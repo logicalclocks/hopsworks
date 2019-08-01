@@ -95,13 +95,13 @@
                         <i class="fa fa-spinner fa-spin"></i>
                         Sending
                     </div>
-                    <div ng-show="recoverCtrl.successMessage" class="alert  alert-success text-center ng-binding ng-hide">
+                    <div class="alert alert-success text-center" ng-if="recoverCtrl.successMessage">
                         <button type="button" class="close" aria-label="Close" ng-click="recoverCtrl.successMessage = ''">
                             <span aria-hidden="true">&times;</span>
                         </button>
                         <p id="mobileRecovery-success-msg">{{recoverCtrl.successMessage}}</p>
                     </div>
-                    <div class="alert alert-danger text-center ng-binding ng-hide" ng-show="recoverCtrl.errorMessage">
+                    <div class="alert alert-danger text-center" ng-if="recoverCtrl.errorMessage">
                         <button type="button" class="close" aria-label="Close" ng-click="recoverCtrl.errorMessage = ''">
                             <span aria-hidden="true">&times;</span>
                         </button>
@@ -161,13 +161,13 @@
                         <i class="fa fa-spinner fa-spin"></i>
                         Sending
                     </div>
-                    <div ng-show="recoverCtrl.successMessage" class="alert  alert-success text-center ng-binding ng-hide">
+                    <div class="alert  alert-success text-center" ng-if="recoverCtrl.successMessage">
                         <button type="button" class="close" aria-label="Close" ng-click="recoverCtrl.successMessage = ''">
                             <span aria-hidden="true">&times;</span>
                         </button>
                         <p id="recovery-success-msg">{{recoverCtrl.successMessage}}</p>
                     </div>
-                    <div class="alert alert-danger text-center ng-binding ng-hide" ng-show="recoverCtrl.errorMessage">
+                    <div class="alert alert-danger text-center" ng-if="recoverCtrl.errorMessage">
                         <button type="button" class="close" aria-label="Close" ng-click="recoverCtrl.errorMessage = ''">
                             <span aria-hidden="true">&times;</span>
                         </button>

@@ -39,6 +39,10 @@
 
 package io.hops.hopsworks.common.dao.user.security.ua;
 
+import io.hops.hopsworks.common.dao.user.security.apiKey.ApiScope;
+
+import java.util.Date;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 public class UserAccountsEmailMessages {
@@ -110,15 +114,17 @@ public class UserAccountsEmailMessages {
   /*
    * Default accpount acitvation period
    */
-  public final static int ACCOUNT_ACITVATION_PERIOD = 48;
+  public final static int ACCOUNT_ACTIVATION_PERIOD = 48;
 
   public final static String GREETINGS_HEADER = "Hello";
 
   /*
    * Account deactivation
    */
-  public final static String ACCOUNT_DEACTIVATED
-          = "Your Hopsworks account has expired";
+  public final static String ACCOUNT_DEACTIVATED = "Your Hopsworks account has expired";
+  
+  public final static String API_KEY_CREATED_SUBJECT = "Api key created";
+  public final static String API_KEY_DELETED_SUBJECT = "Api key deleted";
 
   /**
    * Build an email message for mobile users upon registration.
@@ -137,7 +143,7 @@ public class UserAccountsEmailMessages {
     String l2
             = "Please click on the following link to verify your email address. We"
             + " will activate your account within "
-            + ACCOUNT_ACITVATION_PERIOD
+            + ACCOUNT_ACTIVATION_PERIOD
             + " hours after validating your email address.\n\n\n";
 
     String url = path + "/hopsworks-admin/security/validate_account.xhtml?key=" + key;
@@ -164,7 +170,7 @@ public class UserAccountsEmailMessages {
 
     String l1 = GREETINGS_HEADER + ",\n\n" + "We received an account request for Hopsworks on your behalf.\n\n";
     String l2 = "Please click on the following link to verify your email address. We will activate your account within "
-            + ACCOUNT_ACITVATION_PERIOD + " hours after validating your email address.\n\n\n";
+            + ACCOUNT_ACTIVATION_PERIOD + " hours after validating your email address.\n\n\n";
 
     String url = path + "?key=" + key;
 
@@ -312,7 +318,7 @@ public class UserAccountsEmailMessages {
 
     String message;
     String l1 = GREETINGS_HEADER + ",\n\n"
-            + "We receieved an account deactivation request and your Hopsworks "
+            + "We received an account deactivation request and your Hopsworks "
             + "account has been deactivated.\n\n";
     String l2 = "If you have any questions please contact "
             + HOPSWORKS_SUPPORT_EMAIL;
@@ -401,7 +407,7 @@ public class UserAccountsEmailMessages {
     String l1 = GREETINGS_HEADER + ",\n\n"
             + "We received an account request for Hopsworks on your behalf.\n\n";
     String l2 = "Please click on the following link to verify your email address. Within"
-            + ACCOUNT_ACITVATION_PERIOD
+            + ACCOUNT_ACTIVATION_PERIOD
             + " hours of getting this email.\n\n\n";
 
     String url = path + "/hopsworks-cluster/api/cluster/register/confirm/" + key;
@@ -421,7 +427,7 @@ public class UserAccountsEmailMessages {
     String l1 = GREETINGS_HEADER + ",\n\n"
             + "We received a cluster remove request for Hops.site on your behalf.\n\n";
     String l2 = "Please click on the link below to verify your email address. Within"
-            + ACCOUNT_ACITVATION_PERIOD
+            + ACCOUNT_ACTIVATION_PERIOD
             + " hours of getting this email.\n\n\n";
 
     String url = path + "/hopsworks-cluster/api/cluster/unregister/confirm/" + key;
@@ -431,6 +437,43 @@ public class UserAccountsEmailMessages {
 
     message = l1 + l2 + l3 + l4;
 
+    return message;
+  }
+  
+  public static String buildApiKeyCreatedMessage(String keyName, Date createdOn, String email, Set<ApiScope> scopes) {
+    String message;
+    String l1 = GREETINGS_HEADER + ",\n\n"
+      + "You have successfully created an api key for your Hopsworks Account " + email + " named \"" + keyName +
+      "\" on " + createdOn + ".\n" +
+      "This api key will allow you to access your Hopsworks account from a device or application that can not login " +
+      "with a username and password. Attaching this api key on a request authentication header will allow you to " +
+      "access any hopsworks service in the scope: " + scopes + ".\n";
+    String l2 = "Don't recognize this activity? please contact " + HOPSWORKS_SUPPORT_EMAIL;
+  
+    message = l1 + l2;
+    return message;
+  }
+  
+  public static String buildApiKeyDeletedMessage(String keyName, Date deletedOn, String email) {
+    String message;
+    String l1 = GREETINGS_HEADER + ",\n\n"
+      + "You have deleted an api key created for your Hopsworks Account " + email + " named \"" + keyName +
+      "\" on " + deletedOn + ".\n";
+      
+    String l2 = "Don't recognize this activity? please contact " + HOPSWORKS_SUPPORT_EMAIL;
+  
+    message = l1 + l2;
+    return message;
+  }
+  
+  public static String buildApiKeyDeletedAllMessage(Date deletedOn, String email) {
+    String message;
+    String l1 = GREETINGS_HEADER + ",\n\n"
+      + "You have deleted all api keys created for your Hopsworks Account " + email + " on " + deletedOn + ".\n";
+    
+    String l2 = "Don't recognize this activity? please contact " + HOPSWORKS_SUPPORT_EMAIL;
+    
+    message = l1 + l2;
     return message;
   }
 

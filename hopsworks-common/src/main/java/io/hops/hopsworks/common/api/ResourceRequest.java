@@ -155,7 +155,8 @@ public class ResourceRequest {
     COMMANDS,
     MACHINETYPES,
     LIBRARIES,
-    DATASETREQUESTS;
+    DATASETREQUESTS,
+    APIKEY;
     
     public static Name fromString(String name) {
       return valueOf(name.toUpperCase());

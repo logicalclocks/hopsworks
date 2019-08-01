@@ -125,6 +125,8 @@
     <class>io.hops.hopsworks.common.dao.featurestore.trainingdataset.feature.TrainingDatasetFeature</class>
     <class>io.hops.hopsworks.common.dao.maggy.MaggyDriver</class>
     <class>io.hops.hopsworks.common.dao.airflow.MaterializedJWT</class>
+    <class>io.hops.hopsworks.common.dao.user.security.apiKey.ApiKey</class>
+    <class>io.hops.hopsworks.common.dao.user.security.apiKey.ApiKeyScope</class>
     <!-- Converters -->
     <class>io.hops.hopsworks.common.dao.user.cluster.RegistrationStatusConverter</class>
     <class>io.hops.hopsworks.common.jobs.configuration.JobConfigurationConverter</class>

@@ -13,9 +13,9 @@ import io.hops.hopsworks.common.dao.user.BbcGroup;
 import io.hops.hopsworks.common.dao.user.BbcGroupFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.security.ua.SecurityUtils;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountType;
+import io.hops.hopsworks.common.security.utils.SecurityUtils;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.exceptions.UserException;
@@ -55,6 +55,8 @@ public class RemoteUserAuthController {
   private BbcGroupFacade groupFacade;
   @EJB
   private RemoteUserGroupMapper remoteUserGroupMapper;
+  @EJB
+  private SecurityUtils securityUtils;
 
   /**
    * Checks if the user is a remote user and returns the user password with salt
@@ -145,7 +147,7 @@ public class RemoteUserAuthController {
     if (u != null) {
       throw new LoginException("Failed to login. A user with the chosen email already exists.");
     }
-    String authKey = SecurityUtils.getRandomPassword(16);
+    String authKey = securityUtils.generateSecureRandomString(16);
     Users user =
       userController.createNewRemoteUser(email, userDTO.getGivenName(), userDTO.getSurname(), authKey, status);
     List<String> groups = remoteUserGroupMapper.getMappedGroups(userDTO.getGroups(), type);

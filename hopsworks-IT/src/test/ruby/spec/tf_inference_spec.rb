@@ -185,5 +185,37 @@ describe "On #{ENV['OS']}" do
         end
       end
     end
+    describe 'with Api key' do
+      before(:all) do
+        with_valid_project
+        with_tf_serving(@project[:id], @project[:projectname], @user[:username])
+        start_serving(@project, @serving)
+        @key = create_api_key('inferenceKey', %w(INFERENCE))
+        @invalid_key = create_api_key('inferenceKey_invalid', %w(JOB DATASET_VIEW DATASET_CREATE DATASET_DELETE))
+        reset_session
+      end
+      context 'with invalid scope' do
+        before(:all) do
+          set_api_key_to_header(@invalid_key)
+        end
+        it 'should fail to access inference end-point' do
+          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict"
+          expect_json(errorCode: 320004)
+          expect_status(403)
+        end
+      end
+      context 'with valid scope' do
+        before(:all) do
+          set_api_key_to_header(@key)
+        end
+        it 'should succeeds to infer' do
+          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
+              signature_name: 'predict_images',
+              instances: test_data
+          }
+          expect_status(200)
+        end
+      end
+    end
   end
 end

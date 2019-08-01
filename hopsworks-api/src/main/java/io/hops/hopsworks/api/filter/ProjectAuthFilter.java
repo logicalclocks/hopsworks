@@ -15,11 +15,11 @@
  */
 package io.hops.hopsworks.api.filter;
 
-import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
+import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.restutils.JsonResponse;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -56,9 +56,9 @@ public class ProjectAuthFilter implements ContainerRequestFilter {
 
   @EJB
   private ProjectFacade projectBean;
-
+  
   @EJB
-  private JWTHelper jWTHelper;
+  private UserFacade userFacade;
 
   @Context
   private ResourceInfo resourceInfo;
@@ -105,17 +105,25 @@ public class ProjectAuthFilter implements ContainerRequestFilter {
     Set<String> rolesSet;
     rolesSet = new HashSet<>(Arrays.asList(rolesAnnotation.value()));
 
-    Users user = jWTHelper.getUserPrincipal(requestContext);
-    if (requestContext.getSecurityContext().getUserPrincipal() == null && user == null) {
+    if (requestContext.getSecurityContext().getUserPrincipal() == null) {
       LOGGER.log(Level.WARNING, "Authentication not done. No user found.");
       jsonResponse.setErrorCode(RESTCodes.SecurityErrorCode.EJB_ACCESS_LOCAL.getCode());
       jsonResponse.setErrorMsg(RESTCodes.SecurityErrorCode.EJB_ACCESS_LOCAL.getMessage());
       requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).entity(jsonResponse).build());
       return;
     }
-
-    String email = user != null ? user.getEmail() : requestContext.getSecurityContext().getUserPrincipal().getName();
-    userRole = projectTeamBean.findCurrentRole(project, email);
+    String username = requestContext.getSecurityContext().getUserPrincipal().getName();
+    Users user = userFacade.findByUsername(username);
+    
+    if (user == null) {
+      LOGGER.log(Level.WARNING, "User not found.");
+      jsonResponse.setErrorCode(RESTCodes.SecurityErrorCode.EJB_ACCESS_LOCAL.getCode());
+      jsonResponse.setErrorMsg(RESTCodes.SecurityErrorCode.EJB_ACCESS_LOCAL.getMessage());
+      requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).entity(jsonResponse).build());
+      return;
+    }
+    
+    userRole = projectTeamBean.findCurrentRole(project, user);
 
     //If the resource is allowed for all roles check if user is a member of the project. 
     if (userRole != null && !userRole.isEmpty() && rolesSet.contains(AllowedProjectRoles.ANYONE)) {
