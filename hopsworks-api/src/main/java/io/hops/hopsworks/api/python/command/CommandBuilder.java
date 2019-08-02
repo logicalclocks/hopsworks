@@ -20,7 +20,7 @@ import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.python.CondaCommandFacade;
 import io.hops.hopsworks.common.dao.python.CondaCommands;
-import io.hops.hopsworks.common.exception.PythonException;
+import io.hops.hopsworks.exceptions.PythonException;
 import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;

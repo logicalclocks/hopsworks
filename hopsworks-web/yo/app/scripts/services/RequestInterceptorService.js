@@ -51,17 +51,14 @@ angular.module('hopsWorksApp')
                   delete config.headers['Authorization'];
                   RESOURCE_SERVER = getRemoteUserAuthApiLocationBase();
                 }
-                var RESOURCE_NAME = 'api/';
-                var KIBANA_NAME = "kibana";
-                var PYTHON_NAME = "python";
+                var RESOURCE_NAME = '/api/';
+                var KIBANA_NAME = "/kibana";
 
-                var isApi = config.url.indexOf(RESOURCE_NAME);
-                var isKibana = config.url.startsWith("/"+KIBANA_NAME);
-                var isCross = config.url.indexOf('http');
-                var isPython = config.url.indexOf("/"+PYTHON_NAME);
-                var hasChannel = config.url.indexOf('channel=http');
+                var isApi = config.url.startsWith(RESOURCE_NAME) ||
+                            config.url.startsWith(KIBANA_NAME);
+                var isFullUrl = config.url.startsWith('http');
                 
-                if (((isApi !== -1 || isKibana) && isCross === -1) || (isPython !== -1 && isApi !== -1 && hasChannel !== -1)) {
+                if (!isFullUrl && isApi) {
                   config.url = RESOURCE_SERVER + config.url;
                   return config || $q.when(config);
                 } else {

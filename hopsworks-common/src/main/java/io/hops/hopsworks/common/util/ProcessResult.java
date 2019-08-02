@@ -68,4 +68,14 @@ public class ProcessResult {
   public String getStderr() {
     return stderr;
   }
+  
+  @Override
+  public String toString() {
+    return "ProcessResult{" +
+      "exitCode=" + exitCode +
+      ", stdout='" + stdout + '\'' +
+      ", stderr='" + stderr + '\'' +
+      ", processExited=" + processExited +
+      '}';
+  }
 }

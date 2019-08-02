@@ -124,7 +124,7 @@ public class LibraryFacade extends AbstractFacade<PythonDep> {
       }
     }
     // update status if changed
-    if (!dep.getStatus().equals(status)) {
+    if (dep != null && !dep.getStatus().equals(status)) {
       dep.setStatus(status);
       em.merge(dep);
     }
