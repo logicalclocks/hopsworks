@@ -177,6 +177,27 @@ describe "On #{ENV['OS']}" do
             expect(dropbox[:versions].count).to be >= 1
           end
 
+          it 'should not fail if library is not found (conda)' do
+            @project = create_env_and_update_project(@project, python_version, true)
+            search_library(@project[:id], @project[:python_version], 'conda', 'pretty-sure-not-to-exist', conda_channel)
+            expect_status(204)
+          end
+
+          it 'should not fail if library is not found (pip)' do
+            @project = create_env_and_update_project(@project, python_version, true)
+            search_library(@project[:id], @project[:python_version], 'pip', 'pretty-sure-not-to-exist', conda_channel)
+            expect_status(204)
+          end
+
+          it 'should not fail if library starts with number' do
+            @project = create_env_and_update_project(@project, python_version, true)
+            search_library(@project[:id], @project[:python_version], 'conda', '4ti2', 'conda-forge')
+            expect_status(200)
+            expect(json_body.count).to be >= 1
+            lib_name = json_body[:items].detect { |library| library[:library] == "4ti2" }
+            expect(lib_name[:versions].count).to be >= 1
+          end
+
           it 'should fail to install library if package manager not set' do
             @project = create_env_and_update_project(@project, python_version, true)
             install_library(@project[:id], @project[:python_version], 'dropbox', '', '9.0.0', 'CPU', conda_channel)
