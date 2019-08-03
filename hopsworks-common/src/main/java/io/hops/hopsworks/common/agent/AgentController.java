@@ -17,12 +17,9 @@
 package io.hops.hopsworks.common.agent;
 
 import com.google.gson.Gson;
-import io.hops.hopsworks.common.dao.alert.Alert;
-import io.hops.hopsworks.common.dao.alert.AlertEJB;
 import io.hops.hopsworks.common.dao.command.HeartbeatReplyDTO;
 import io.hops.hopsworks.common.dao.command.SystemCommand;
 import io.hops.hopsworks.common.dao.command.SystemCommandFacade;
-import io.hops.hopsworks.common.dao.host.Health;
 import io.hops.hopsworks.common.dao.host.Hosts;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.dao.host.Status;
@@ -35,7 +32,6 @@ import io.hops.hopsworks.common.dao.python.CondaCommandFacade;
 import io.hops.hopsworks.common.dao.python.CondaCommands;
 import io.hops.hopsworks.common.dao.python.LibraryFacade;
 import io.hops.hopsworks.common.dao.python.PythonDep;
-import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
 import io.hops.hopsworks.common.python.commands.CommandsController;
 import io.hops.hopsworks.common.python.library.LibraryController;
 import io.hops.hopsworks.common.util.ProcessDescriptor;
@@ -50,7 +46,6 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.mail.MessagingException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -87,8 +82,6 @@ public class AgentController {
   private ProjectFacade projectFacade;
   @EJB
   private SystemCommandFacade systemCommandFacade;
-  @EJB
-  private AlertEJB alertFacade;
   @EJB
   private OSProcessExecutor osProcessExecutor;
   @EJB
@@ -153,15 +146,6 @@ public class AgentController {
     systemCommandFacade.persist(gcCommand);
   }
   
-  public void alert(Alert alert, String hostId) throws ServiceException {
-    Hosts host = hostsFacade.findByHostname(hostId);
-    alert.setHost(host);
-    alertFacade.persistAlert(alert);
-    if (!settings.getAlertEmailAddrs().isEmpty()) {
-      emailAlert(UserAccountsEmailMessages.ALERT_SERVICE_DOWN, alert.toString());
-    }
-  }
-  
   private void recoverUnfinishedCommands(final Hosts host) {
     recoverCondaCommands(host);
     recoverSystemCommands(host);
@@ -217,17 +201,8 @@ public class AgentController {
     host.setLoad5(heartbeat.load5);
     host.setLoad15(heartbeat.load15);
     host.setNumGpus(heartbeat.numGpus);
-    Long previousDiskUsed = host.getDiskUsed() == null ? 0L : host.getDiskUsed();
     host.setDiskUsed(heartbeat.diskUsed);
     host.setDiskCapacity(heartbeat.diskCapacity);
-  
-    if (((float) previousDiskUsed) / host.getDiskCapacity() < 0.8 && ((float) host.getDiskUsed()) / host.
-        getDiskCapacity() > 0.8) {
-      String subject = "alert: hard drive full on " + host.getHostname();
-      String body = host.getHostname() + " hard drive utilisation is " + host.getDiskUsageInfo();
-      emailAlert(subject, body);
-    }
-  
     host.setMemoryUsed(heartbeat.memoryUsed);
     host.setMemoryCapacity(heartbeat.memoryCapacity);
     host.setPrivateIp(heartbeat.privateIp);
@@ -237,23 +212,8 @@ public class AgentController {
   
   private void updateServices(AgentHeartbeatDTO heartbeat) throws ServiceException {
     List<HostServices> updatedHostServices = hostServicesFacade.updateHostServices(heartbeat);
-    for (HostServices updatedHostService : updatedHostServices) {
-      notifyHostServiceHealth(updatedHostService);
-    }
   }
-  
-  private void notifyHostServiceHealth(HostServices hostService) throws ServiceException {
-    final Health previousHealthReport = hostService.getHealth();
-    if (!hostService.getHealth().equals(previousHealthReport)
-        && hostService.getHealth().equals(Health.Bad)) {
-      final String subject = "alert: " + hostService.getGroup() + "." + hostService.getService() + "@" + hostService.
-          getHost().getHostname();
-      final String body = hostService.getGroup() + "." + hostService.getService() + "@" + hostService.getHost().
-          getHostname() + " transitioned from state " + previousHealthReport + " to " + hostService.getHealth();
-      emailAlert(subject, body);
-    }
-  }
-  
+
   private void processCondaCommands(AgentHeartbeatDTO heartbeatDTO) throws ServiceException {
     if (heartbeatDTO.condaCommands == null) {
       return;
@@ -525,15 +485,6 @@ public class AgentController {
     } else {
       command.setStatus(status);
       systemCommandFacade.update(command);
-    }
-  }
-  
-  private void emailAlert(String subject, String body) throws ServiceException {
-    try {
-      emailBean.sendEmails(settings.getAlertEmailAddrs(), subject, body);
-    } catch (MessagingException e) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.EMAIL_SENDING_FAILURE, Level.SEVERE, null, e.getMessage(),
-        e);
     }
   }
   
