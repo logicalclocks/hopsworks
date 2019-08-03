@@ -172,37 +172,6 @@ public class WebCommunication {
     return fetchLog(url, agentPassword);
   }
 
-  public List<NodesTableItem> getNdbinfoNodesTable(String hostAddress,
-      String agentPassword) throws GenericException {
-    List<NodesTableItem> resultList = new ArrayList<NodesTableItem>();
-
-    String url = createUrl("mysql", hostAddress, "ndbinfo", "nodes");
-    String jsonString = fetchContent(url, agentPassword);
-    InputStream stream = new ByteArrayInputStream(jsonString.getBytes(          StandardCharsets.UTF_8));
-    try {
-      JsonArray json = Json.createReader(stream).readArray();
-      if (json.get(0).equals("Error")) {
-        resultList.add(new NodesTableItem(null, json.getString(1), null, null,
-                null));
-        return resultList;
-      }
-      for (int i = 0; i < json.size(); i++) {
-        JsonArray node = json.getJsonArray(i);
-        Integer nodeId = node.getInt(0);
-        Long uptime = node.getJsonNumber(1).longValue();
-        String status = node.getString(2);
-        Integer startPhase = node.getInt(3);
-        Integer configGeneration = node.getInt(4);
-        resultList.add(new NodesTableItem(nodeId, status, uptime, startPhase,
-                configGeneration));
-      }
-    } catch (Exception ex) {
-      logger.log(Level.SEVERE, "Exception: {0}", ex);
-      resultList.add(new NodesTableItem(null, "Error", null, null, null));
-    }
-    return resultList;
-  }
-
   public String executeRun(String hostAddress, String agentPassword,
           String cluster, String group, String service, String command,
           String[] params) throws Exception {

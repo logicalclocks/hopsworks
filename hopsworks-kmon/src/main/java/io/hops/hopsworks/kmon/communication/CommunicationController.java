@@ -259,23 +259,4 @@ public class CommunicationController {
       return ex.getMessage();
     }
   }
-
-  public List<NodesTableItem> getNdbinfoNodesTable() throws Exception {
-
-    // Finds host of mysqld
-    // Role=mysqld , Service=MySQLCluster, Cluster=cluster
-    final String ROLE = "mysqld";
-    List<NodesTableItem> results;
-    try {
-      String id = hostServicesFacade.findServices(cluster, group, ROLE).get(0).getHost().getHostname();
-      Hosts h = findHostByName(hostname);
-      String ip = h.getPublicOrPrivateIp();
-      String agentPassword = h.getAgentPassword();
-      results = web.getNdbinfoNodesTable(ip, agentPassword);
-    } catch (Exception ex) {
-      results = new ArrayList<>();
-    }
-    return results;
-  }
-
 }

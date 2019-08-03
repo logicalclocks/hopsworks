@@ -105,26 +105,9 @@ public class GroupStatusController {
     return groupServices;
   }
 
-  public boolean renderTerminalLink() {
-    return group.equalsIgnoreCase(GroupType.HDFS.toString())
-        || group.equalsIgnoreCase(GroupType.NDB.toString());
-  }
-
   public boolean renderInstancesLink() {
 //    return !group.equalsIgnoreCase(GroupType.Spark.toString());
     return true;
-  }
-
-  public boolean renderNdbInfoTable() {
-    return group.equals(GroupType.NDB.toString());
-  }
-
-  public boolean renderLog() {
-    return group.equals(GroupType.NDB.toString());
-  }
-
-  public boolean renderConfiguration() {
-    return group.equals(GroupType.NDB.toString());
   }
 
   private void loadServices() {
