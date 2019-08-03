@@ -39,7 +39,6 @@
 
 package io.hops.hopsworks.kmon.group;
 
-import io.hops.hopsworks.kmon.struct.GroupType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;

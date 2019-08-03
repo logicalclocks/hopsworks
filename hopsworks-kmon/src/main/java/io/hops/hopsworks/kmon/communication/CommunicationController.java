@@ -52,7 +52,6 @@ import javax.faces.bean.RequestScoped;
 import io.hops.hopsworks.common.dao.host.Hosts;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.dao.kagent.HostServicesFacade;
-import io.hops.hopsworks.common.util.NodesTableItem;
 import io.hops.hopsworks.kmon.group.ServiceInstancesController;
 import io.hops.hopsworks.kmon.struct.InstanceInfo;
 import java.util.concurrent.Future;
@@ -148,16 +147,6 @@ public class CommunicationController {
       throws Exception {
     String id = hostServicesFacade.findServices(cluster, group, service).get(0).getHost().getHostname();
     return findHostByName(id);
-  }
-
-  public String mySqlClusterConfig() throws Exception {
-    // Finds hostname of mgmserver
-    // Role=mgmserver , Service=MySQLCluster, Cluster=cluster
-    String mgmserverRole = "ndb_mgmd";
-    Hosts h = findHostByService(cluster, group, mgmserverRole);
-    String ip = h.getPublicOrPrivateIp();
-    String agentPassword = h.getAgentPassword();
-    return web.getConfig(ip, agentPassword, cluster, group, mgmserverRole);
   }
 
   public String getServiceLog(int lines) {
