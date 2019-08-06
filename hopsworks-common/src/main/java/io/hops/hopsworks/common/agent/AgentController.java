@@ -23,7 +23,6 @@ import io.hops.hopsworks.common.dao.command.SystemCommandFacade;
 import io.hops.hopsworks.common.dao.host.Hosts;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.dao.host.Status;
-import io.hops.hopsworks.common.dao.kagent.HostServices;
 import io.hops.hopsworks.common.dao.kagent.HostServicesFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
@@ -38,7 +37,6 @@ import io.hops.hopsworks.common.util.ProcessDescriptor;
 import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.exceptions.ServiceException;
-import io.hops.hopsworks.common.util.EmailBean;
 import io.hops.hopsworks.common.util.OSProcessExecutor;
 import io.hops.hopsworks.common.util.Settings;
 
@@ -64,8 +62,6 @@ public class AgentController {
   
   @EJB
   private HostsFacade hostsFacade;
-  @EJB
-  private EmailBean emailBean;
   @EJB
   private Settings settings;
   @EJB
@@ -197,21 +193,14 @@ public class AgentController {
   
   private void updateHostMetrics(final Hosts host, final AgentHeartbeatDTO heartbeat) throws ServiceException {
     host.setLastHeartbeat(new Date().getTime());
-    host.setLoad1(heartbeat.load1);
-    host.setLoad5(heartbeat.load5);
-    host.setLoad15(heartbeat.load15);
     host.setNumGpus(heartbeat.numGpus);
-    host.setDiskUsed(heartbeat.diskUsed);
-    host.setDiskCapacity(heartbeat.diskCapacity);
-    host.setMemoryUsed(heartbeat.memoryUsed);
-    host.setMemoryCapacity(heartbeat.memoryCapacity);
     host.setPrivateIp(heartbeat.privateIp);
     host.setCores(heartbeat.cores);
     hostsFacade.storeHost(host);
   }
   
   private void updateServices(AgentHeartbeatDTO heartbeat) throws ServiceException {
-    List<HostServices> updatedHostServices = hostServicesFacade.updateHostServices(heartbeat);
+    hostServicesFacade.updateHostServices(heartbeat);
   }
 
   private void processCondaCommands(AgentHeartbeatDTO heartbeatDTO) throws ServiceException {

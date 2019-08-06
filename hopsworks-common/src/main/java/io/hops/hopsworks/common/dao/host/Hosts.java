@@ -130,27 +130,6 @@ public class Hosts implements Serializable {
   @Column(name = "last_heartbeat")
   private Long lastHeartbeat;
 
-  @Column(name = "load1")
-  private Double load1;
-
-  @Column(name = "load5")
-  private Double load5;
-
-  @Column(name = "load15")
-  private Double load15;
-
-  @Column(name = "disk_capacity")
-  private Long diskCapacity;
-
-  @Column(name = "disk_used")
-  private Long diskUsed;
-
-  @Column(name = "memory_capacity")
-  private Long memoryCapacity;
-
-  @Column(name = "memory_used")
-  private Long memoryUsed;
-
   @Column(name = "num_gpus")
   private Integer numGpus = 0;
 
@@ -234,62 +213,6 @@ public class Hosts implements Serializable {
     this.lastHeartbeat = lastHeartbeat;
   }
   
-  public Double getLoad1() {
-    return load1;
-  }
-  
-  public void setLoad1(Double load1) {
-    this.load1 = load1;
-  }
-  
-  public Double getLoad5() {
-    return load5;
-  }
-  
-  public void setLoad5(Double load5) {
-    this.load5 = load5;
-  }
-  
-  public Double getLoad15() {
-    return load15;
-  }
-  
-  public void setLoad15(Double load15) {
-    this.load15 = load15;
-  }
-  
-  public Long getDiskCapacity() {
-    return diskCapacity;
-  }
-  
-  public void setDiskCapacity(Long diskCapacity) {
-    this.diskCapacity = diskCapacity;
-  }
-  
-  public Long getDiskUsed() {
-    return diskUsed;
-  }
-  
-  public void setDiskUsed(Long diskUsed) {
-    this.diskUsed = diskUsed;
-  }
-  
-  public Long getMemoryCapacity() {
-    return memoryCapacity;
-  }
-  
-  public void setMemoryCapacity(Long memoryCapacity) {
-    this.memoryCapacity = memoryCapacity;
-  }
-  
-  public Long getMemoryUsed() {
-    return memoryUsed;
-  }
-  
-  public void setMemoryUsed(Long memoryUsed) {
-    this.memoryUsed = memoryUsed;
-  }
-  
   public Integer getNumGpus() {
     return numGpus;
   }
@@ -347,18 +270,6 @@ public class Hosts implements Serializable {
   
   // hosts.xhtml
   @JsonIgnore
-  public String getDiskUsageInfo() {
-    return FormatUtils.storage(diskUsed) + " / " + FormatUtils.storage(diskCapacity);
-  }
-  
-  // hosts.xhtml
-  @JsonIgnore
-  public String getMemoryUsageInfo() {
-    return FormatUtils.storage(memoryUsed) + " / " + FormatUtils.storage(memoryCapacity);
-  }
-  
-  // hosts.xhtml
-  @JsonIgnore
   public Health getHealth() {
     int hostTimeout = HEARTBEAT_INTERVAL * 2 + 1;
     if (lastHeartbeat == null) {
@@ -370,19 +281,7 @@ public class Hosts implements Serializable {
     }
     return Health.Bad;
   }
-  
-  // hosts.xhtml
-  @JsonIgnore
-  public MemoryInfo getDiskInfo() {
-    return new MemoryInfo(diskCapacity, diskUsed);
-  }
-  
-  // hosts.xhtml
-  @JsonIgnore
-  public MemoryInfo getMemoryInfo() {
-    return new MemoryInfo(memoryCapacity, memoryUsed);
-  }
-  
+
   // hosts.xhtml
   @JsonIgnore
   public String getLastHeartbeatFormatted() {
@@ -390,39 +289,6 @@ public class Hosts implements Serializable {
       return "";
     }
     return FormatUtils.time(((new Date()).getTime() - lastHeartbeat));
-  }
-  
-  // hosts.xhtml
-  @JsonIgnore
-  public String getDiskPriority() {
-    if (usagePercentage(diskUsed, diskCapacity) > 75) {
-      return "priorityHigh";
-    } else if (usagePercentage(diskUsed, diskCapacity) > 25) {
-      return "priorityMed";
-    }
-    return "priorityLow";
-  }
-  
-  // hosts.xhtml
-  @JsonIgnore
-  public String getMemoryPriority() {
-    if (usagePercentage(memoryUsed, memoryCapacity) > 75) {
-      return "priorityHigh";
-    } else if (usagePercentage(memoryUsed, memoryCapacity) > 25) {
-      return "priorityMed";
-    }
-    return "priorityLow";
-  }
-  // hosts.xhtml
-  @JsonIgnore
-  public String getDiskUsagePercentageString() {
-    return String.format("%1.1f", usagePercentage(diskUsed, diskCapacity)) + "%";
-  }
-
-  // hosts.xhtml
-  @JsonIgnore
-  public String getMemoryUsagePercentageString() {
-    return String.format("%1.1f", usagePercentage(memoryUsed, memoryCapacity)) + "%";
   }
   
   private double usagePercentage(double used, double capacity) {
