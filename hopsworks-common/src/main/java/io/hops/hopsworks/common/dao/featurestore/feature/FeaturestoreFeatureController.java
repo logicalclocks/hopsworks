@@ -30,6 +30,7 @@ import java.util.stream.Collectors;
  * Class controlling the interaction with the training_dataset_feature table and required business logic
  */
 @Stateless
+@TransactionAttribute(TransactionAttributeType.NEVER)
 public class FeaturestoreFeatureController {
   @EJB
   private FeaturestoreFeatureFacade featurestoreFeatureFacade;
@@ -41,7 +42,6 @@ public class FeaturestoreFeatureController {
    * @param trainingDataset the training dataset to update
    * @param features the new features
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   public void updateTrainingDatasetFeatures(
       TrainingDataset trainingDataset, List<FeatureDTO> features) {
     if(features == null) {
@@ -56,7 +56,6 @@ public class FeaturestoreFeatureController {
    *
    * @param featurestoreFeatures list of features to remove
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   private void removeFeatures(List<FeaturestoreFeature> featurestoreFeatures) {
     featurestoreFeatureFacade.deleteListOfFeatures(featurestoreFeatures.stream().map(
       f -> f.getId()).collect(Collectors.toList()));
@@ -68,7 +67,6 @@ public class FeaturestoreFeatureController {
    * @param trainingDataset the traning dataset that the features are linked to
    * @param features the list of features to insert
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   private void insertTrainingDatasetFeatures(
       TrainingDataset trainingDataset, List<FeatureDTO> features) {
     List<FeaturestoreFeature> featurestoreFeatures = convertFeaturesToTrainingDatasetFeatures(
@@ -119,7 +117,6 @@ public class FeaturestoreFeatureController {
    * @param onDemandFeaturegroup the on-demand feature group that the features are linked to
    * @param features the list of features to insert
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   private void insertOnDemandFeaturegroupFeatures(
     OnDemandFeaturegroup onDemandFeaturegroup, List<FeatureDTO> features) {
     List<FeaturestoreFeature> featurestoreFeatures = convertFeaturesToOnDemandFeaturegroupFeatures(
