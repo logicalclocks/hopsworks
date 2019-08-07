@@ -54,15 +54,12 @@ import javax.faces.bean.RequestScoped;
 import io.hops.hopsworks.common.agent.AgentLivenessMonitor;
 import io.hops.hopsworks.common.dao.host.Health;
 import io.hops.hopsworks.common.dao.host.Hosts;
-import io.hops.hopsworks.common.dao.host.HostsFacade;
+import io.hops.hopsworks.common.dao.kagent.HostServices;
 import io.hops.hopsworks.common.util.RemoteCommandResult;
 import io.hops.hopsworks.exceptions.ServiceException;
-import io.hops.hopsworks.kmon.struct.InstanceFullInfo;
-import io.hops.hopsworks.common.dao.host.Status;
+import io.hops.hopsworks.kmon.struct.InstanceInfo;
 import io.hops.hopsworks.common.dao.kagent.HostServicesFacade;
-import io.hops.hopsworks.common.dao.kagent.HostServicesInfo;
 import io.hops.hopsworks.common.util.FormatUtils;
-import io.hops.hopsworks.common.util.Settings;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
@@ -72,24 +69,17 @@ import javax.faces.context.FacesContext;
 public class ServicesController {
 
   @EJB
-  private Settings settings;
-  @EJB
   private HostServicesFacade hostServicesFacade;
   @EJB
   private AgentLivenessMonitor agentLivenessMonitor;
-  @EJB
-  private HostsFacade hostsFacade;
   @ManagedProperty("#{param.hostname}")
   private String hostname;
   @ManagedProperty("#{param.service}")
   private String service;
   @ManagedProperty("#{param.group}")
   private String group;
-  @ManagedProperty("#{param.cluster}")
-  private String cluster;
-  private List<InstanceFullInfo> instanceInfoList = new ArrayList<>();
+  private List<InstanceInfo> instanceInfoList = new ArrayList<>();
   private String health;
-//  private boolean renderWebUi;
   private boolean found;
   private static final Logger logger = Logger.getLogger(ServicesController.class.
       getName());
@@ -106,22 +96,15 @@ public class ServicesController {
     instanceInfoList.clear();
     logger.info("init ServicesController");
     try {
-      HostServicesInfo serviceHost = hostServicesFacade.findHostServices(cluster, group, service,
-          hostname);
+      HostServices serviceHost = hostServicesFacade.find(hostname, group, service);
       String ip = serviceHost.getHost().getPublicOrPrivateIp();
-      InstanceFullInfo info = new InstanceFullInfo(serviceHost.getHostServices().
-          getCluster(),
-          serviceHost.getHostServices().getService(), serviceHost.getHostServices().getService(),
-          serviceHost.getHostServices().getHost().getHostname(), ip, 0,
-          //          roleHost.getGroup().getWebPort(),
-          serviceHost.getStatus(), serviceHost.getHealth().toString());
-      info.setPid(serviceHost.getHostServices().getPid());
-      String upTime = serviceHost.getHealth() == Health.Good ? FormatUtils.time(
-          serviceHost.getHostServices().getUptime() * 1000) : "";
+      InstanceInfo info =
+          new InstanceInfo(serviceHost.getGroup(), serviceHost.getService(), serviceHost.getHost().getHostname(),
+              ip, serviceHost.getStatus(), serviceHost.getHealth().toString());
+      info.setPid(serviceHost.getPid());
+      String upTime = serviceHost.getHealth() == Health.Good ? FormatUtils.time(serviceHost.getUptime() * 1000) : "";
       info.setUptime(upTime);
       instanceInfoList.add(info);
-//      renderWebUi = roleHost.getGroup().getWebPort() != null && roleHost.
-//              getGroup().getWebPort() != 0;
       health = serviceHost.getHealth().toString();
       found = true;
     } catch (Exception ex) {
@@ -161,14 +144,6 @@ public class ServicesController {
     this.hostname = hostname;
   }
 
-  public void setCluster(String cluster) {
-    this.cluster = cluster;
-  }
-
-  public String getCluster() {
-    return cluster;
-  }
-
   public boolean isFound() {
     return found;
   }
@@ -177,35 +152,9 @@ public class ServicesController {
     this.found = found;
   }
 
-//  public boolean getRenderWebUi() {
-//    return renderWebUi;
-//  }
-  public List<InstanceFullInfo> getInstanceFullInfo() {
+  public List<InstanceInfo> getInstanceFullInfo() {
     loadServices();
     return instanceInfoList;
-  }
-
-  public String serviceLongName() {
-    if (!instanceInfoList.isEmpty()) {
-      return instanceInfoList.get(0).getName();
-    }
-    return null;
-  }
-
-  public boolean disableStart() {
-    if (!instanceInfoList.isEmpty() && instanceInfoList.get(0).getStatus()
-        == Status.Stopped) {
-      return false;
-    }
-    return true;
-  }
-
-  public boolean disableStop() {
-    if (!instanceInfoList.isEmpty() && instanceInfoList.get(0).getStatus()
-        == Status.Started) {
-      return false;
-    }
-    return true;
   }
 
   public void restartKagents(List<Hosts> hosts) {

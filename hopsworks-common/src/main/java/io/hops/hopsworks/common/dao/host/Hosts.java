@@ -79,24 +79,16 @@ import org.codehaus.jackson.annotate.JsonIgnore;
           query = "SELECT h FROM Hosts h WHERE h.hostname = :hostname"),
   @NamedQuery(name = "Hosts.findBy-HostIp",
           query = "SELECT h FROM Hosts h WHERE h.hostIp = :hostIp"),
-  @NamedQuery(name = "Hosts.findBy-Cluster.Group.Service.Status",
-          query
-          = "SELECT h FROM Hosts h, HostServices r WHERE h = r.host AND r.cluster "
-          + "= :cluster AND r.group = :group AND r.service = :service AND r.status = :status"),
-  @NamedQuery(name = "Hosts.findBy-Cluster.Group.Service",
-          query
-          = "SELECT h FROM Hosts h, HostServices r WHERE h = r.host AND r.cluster "
-          + "= :cluster AND r.group = :group AND r.service = :service"),})
+  @NamedQuery(name = "Host.Count", query = "SELECT count(h.id) FROM Hosts h"),
+  @NamedQuery(name = "Host.TotalCores", query = "SELECT SUM(h.cores) FROM Hosts h"),
+  @NamedQuery(name = "Host.TotalGPUs", query = "SELECT SUM(h.numGpus) FROM Hosts h"),
+  @NamedQuery(name = "Host.TotalMemoryCapacity", query = "SELECT SUM(h.memoryCapacity) FROM Hosts h")})
 public class Hosts implements Serializable {
 
   private static final int HEARTBEAT_INTERVAL = 10;
 
   private static final long serialVersionUID = 1L;
 
-  public static int getHeartbeatInterval(){
-    return HEARTBEAT_INTERVAL;
-  }
-  
   @Id
   @GeneratedValue(strategy = GenerationType.SEQUENCE)
   @Basic(optional = false)
@@ -129,6 +121,9 @@ public class Hosts implements Serializable {
 
   @Column(name = "last_heartbeat")
   private Long lastHeartbeat;
+
+  @Column(name = "memory_capacity")
+  private Long memoryCapacity;
 
   @Column(name = "num_gpus")
   private Integer numGpus = 0;
@@ -212,7 +207,15 @@ public class Hosts implements Serializable {
   public void setLastHeartbeat(Long lastHeartbeat) {
     this.lastHeartbeat = lastHeartbeat;
   }
-  
+
+  public Long getMemoryCapacity() {
+    return memoryCapacity;
+  }
+
+  public void setMemoryCapacity(Long memoryCapacity) {
+    this.memoryCapacity = memoryCapacity;
+  }
+
   public Integer getNumGpus() {
     return numGpus;
   }
@@ -290,11 +293,7 @@ public class Hosts implements Serializable {
     }
     return FormatUtils.time(((new Date()).getTime() - lastHeartbeat));
   }
-  
-  private double usagePercentage(double used, double capacity) {
-    return (used / capacity) * 100d;
-  }
-  
+
   @Override
   public String toString() {
     return this.hostIp + "(" + this.hostname + ")";

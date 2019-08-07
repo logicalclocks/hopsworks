@@ -41,22 +41,21 @@ package io.hops.hopsworks.kmon.struct;
 
 import io.hops.hopsworks.common.dao.host.Status;
 import io.hops.hopsworks.common.dao.host.Health;
-import io.hops.hopsworks.common.dao.kagent.HostServicesInfo;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+
+import io.hops.hopsworks.common.dao.kagent.HostServices;
 import io.hops.hopsworks.common.util.FormatUtils;
 
 public class ClusterInfo {
 
-  private String name;
   private Long numberOfHosts;
   private Long totalCores;
   private Long totalGPUs;
   private Long totalMemoryCapacity;
-  private Long totalDiskCapacity;
   private Set<String> groups = new HashSet<>();
   private Set<String> services = new HashSet<>();
   private Set<String> badServices = new HashSet<>();
@@ -64,11 +63,10 @@ public class ClusterInfo {
   private Map<String, String> servicesGroupsMap = new TreeMap<>();
   private Integer started, stopped, timedOut;
 
-  public ClusterInfo(String name) {
+  public ClusterInfo() {
     started = 0;
     stopped = 0;
     timedOut = 0;
-    this.name = name;
   }
 
   public void setNumberOfHosts(Long numberOfHosts) {
@@ -77,10 +75,6 @@ public class ClusterInfo {
 
   public Long getNumberOfHosts() {
     return numberOfHosts;
-  }
-
-  public String getName() {
-    return name;
   }
 
   public String[] getGroups() {
@@ -153,27 +147,25 @@ public class ClusterInfo {
     return statusMap;
   }
 
-  public void addServices(List<HostServicesInfo> serviceHostList) {
-    for (HostServicesInfo serviceHost : serviceHostList) {
-      groups.add(serviceHost.getHostServices().getGroup());
-      if (serviceHost.getHostServices().getService().toString().equals("")) {
+  public void addServices(List<HostServices> serviceHostList) {
+    for (HostServices serviceHost : serviceHostList) {
+      groups.add(serviceHost.getGroup());
+      if (serviceHost.getService().equals("")) {
         continue;
       }
-      services.add(serviceHost.getHostServices().getService());
-      servicesGroupsMap.put(serviceHost.getHostServices().getService(), serviceHost.getHostServices().
-          getGroup());
+      services.add(serviceHost.getService());
+      servicesGroupsMap.put(serviceHost.getService(), serviceHost.getGroup());
       if (serviceHost.getStatus() == Status.Started) {
         started += 1;
       } else {
-        badServices.add(serviceHost.getHostServices().getService());
-        badServices.add(serviceHost.getHostServices().getService());
+        badServices.add(serviceHost.getService());
         if (serviceHost.getStatus() == Status.Stopped) {
           stopped += 1;
         } else if (serviceHost.getStatus() == Status.TimedOut) {
           timedOut += 1;
         }
       }
-      addService(serviceHost.getHostServices().getService());
+      addService(serviceHost.getService());
     }
   }
 
@@ -195,16 +187,5 @@ public class ClusterInfo {
 
   public void setTotalMemoryCapacity(Long totalMemoryCapacity) {
     this.totalMemoryCapacity = totalMemoryCapacity;
-  }
-
-  public String getTotalDiskCapacity() {
-    if (totalDiskCapacity == null) {
-      return "N/A";
-    }
-    return FormatUtils.storage(totalDiskCapacity);
-  }
-
-  public void setTotalDiskCapacity(Long totalDiskCapacity) {
-    this.totalDiskCapacity = totalDiskCapacity;
   }
 }

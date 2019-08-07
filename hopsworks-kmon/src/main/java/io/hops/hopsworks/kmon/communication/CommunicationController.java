@@ -39,7 +39,6 @@
 
 package io.hops.hopsworks.kmon.communication;
 
-import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.common.util.WebCommunication;
 import java.util.ArrayList;
 import java.util.List;
@@ -51,7 +50,6 @@ import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
 import io.hops.hopsworks.common.dao.host.Hosts;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
-import io.hops.hopsworks.common.dao.kagent.HostServicesFacade;
 import io.hops.hopsworks.kmon.group.ServiceInstancesController;
 import io.hops.hopsworks.kmon.struct.InstanceInfo;
 import java.util.concurrent.Future;
@@ -66,15 +64,11 @@ public class CommunicationController {
   @EJB
   private HostsFacade hostEJB;
   @EJB
-  private HostServicesFacade hostServicesFacade;
-  @EJB
   private WebCommunication web;
 
   @ManagedProperty(value = "#{serviceInstancesController}")
   private ServiceInstancesController serviceInstancesController;
 
-  @ManagedProperty("#{param.cluster}")
-  private String cluster;
   @ManagedProperty("#{param.group}")
   private String group; 
   @ManagedProperty("#{param.service}")
@@ -84,10 +78,10 @@ public class CommunicationController {
 
   private List<InstanceInfo> instances;
 
-  private static final Logger logger = Logger.getLogger(CommunicationController.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(CommunicationController.class.getName());
 
   public CommunicationController() {
-    logger.info("CommunicationController: hostname: " + hostname + " ; cluster: " + cluster + "; group: " + group
+    LOGGER.log(Level.FINE, "CommunicationController: hostname: " + hostname + " ; group: " + group
         + " ; service: " + service);
   }
 
@@ -111,14 +105,6 @@ public class CommunicationController {
     this.group = group;
   }
 
-  public void setCluster(String cluster) {
-    this.cluster = cluster;
-  }
-
-  public String getCluster() {
-    return cluster;
-  }
-
   public String getHostname() {
     return hostname;
   }
@@ -130,35 +116,11 @@ public class CommunicationController {
     this.hostname = hostname;
   }
 
-  public void setServiceInstancesController(ServiceInstancesController serviceInstancesController) {
-    this.serviceInstancesController = serviceInstancesController;
-  }
-
   private Hosts findHostByName(String hostname) throws Exception {
     try {
-      Hosts host = hostEJB.findByHostname(hostname);
-      return host;
+      return hostEJB.findByHostname(hostname);
     } catch (Exception ex) {
       throw new RuntimeException("Hostname " + hostname + " not found.");
-    }
-  }
-
-  private Hosts findHostByService(String cluster, String group, String service)
-      throws Exception {
-    String id = hostServicesFacade.findServices(cluster, group, service).get(0).getHost().getHostname();
-    return findHostByName(id);
-  }
-
-  public String getServiceLog(int lines) {
-    try {
-      Hosts h = findHostByName(hostname);
-      String ip = h.getPublicOrPrivateIp();
-      String agentPassword = h.getAgentPassword();
-      return web.getServiceLog(ip, agentPassword, cluster, group, service, lines);
-    } catch (GenericException ex) {
-      return ex.getDevMsg();
-    } catch (Exception ex) {
-      return ex.getMessage();
     }
   }
 
@@ -197,7 +159,7 @@ public class CommunicationController {
   }
 
   public void serviceStopAll() {
-    logger.log(Level.SEVERE, "serviceStopAll 1");
+    LOGGER.log(Level.SEVERE, "serviceStopAll 1");
     uiMsg(serviceOperationAll("stopService"));
   }
 
@@ -211,7 +173,7 @@ public class CommunicationController {
           Hosts h = findHostByName(instance.getHost());
           String ip = h.getPublicOrPrivateIp();
           String agentPassword = h.getAgentPassword();
-          results.add(web.asyncServiceOp(operation, ip, agentPassword, cluster, group, service));
+          results.add(web.asyncServiceOp(operation, ip, agentPassword, group, service));
         } catch (Exception ex) {
           result = result + ex.getMessage() + "\n";
         }
@@ -232,18 +194,7 @@ public class CommunicationController {
       Hosts h = findHostByName(hostname);
       String ip = h.getPublicOrPrivateIp();
       String agentPassword = h.getAgentPassword();
-      return web.serviceOp(operation, ip, agentPassword, cluster, group, service);
-    } catch (Exception ex) {
-      return ex.getMessage();
-    }
-  }
-
-  public String getAgentLog(int lines) {
-    try {
-      Hosts h = findHostByName(hostname);
-      String ip = h.getPublicOrPrivateIp();
-      String agentPassword = h.getAgentPassword();
-      return web.getAgentLog(ip, agentPassword, lines);
+      return web.serviceOp(operation, ip, agentPassword, group, service);
     } catch (Exception ex) {
       return ex.getMessage();
     }

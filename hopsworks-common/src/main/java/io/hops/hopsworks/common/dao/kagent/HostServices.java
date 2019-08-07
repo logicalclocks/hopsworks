@@ -62,113 +62,26 @@ import javax.validation.constraints.Size;
 @Entity
 @Table(name = "hopsworks.host_services")
 @NamedQueries({
-  @NamedQuery(name = "HostServices.findAll",
-      query = "SELECT r from HostServices r")
-  ,
-  @NamedQuery(name = "HostServices.findClusters",
-      query = "SELECT DISTINCT r.cluster FROM HostServices r")
-  ,
-  @NamedQuery(name = "HostServices.findGroupsBy-Cluster",
-      query
-      = "SELECT DISTINCT r.group FROM HostServices r WHERE r.cluster = :cluster")
-  ,
+  @NamedQuery(name = "HostServices.findAll", query = "SELECT r from HostServices r"),
+  @NamedQuery(name = "HostServices.findGroups", query = "SELECT DISTINCT r.group FROM HostServices r"),
   @NamedQuery(name = "HostServices.find",
-      query
-      = "SELECT r FROM HostServices r WHERE r.cluster = :cluster AND r.group = :group "
-      + "AND r.service = :service AND r.host.hostname = :hostname")
-  ,
+      query = "SELECT r FROM HostServices r WHERE r.group = :group "
+      + "AND r.service = :service AND r.host.hostname = :hostname"),
   @NamedQuery(name = "HostServices.findOnHost",
-      query
-      = "SELECT r FROM HostServices r WHERE r.group = :group "
-      + "AND r.service = :service AND r.host.hostname = :hostname")
-  ,
+      query = "SELECT r FROM HostServices r " +
+          "WHERE r.group = :group AND r.service = :service AND r.host.hostname = :hostname"),
   @NamedQuery(name = "HostServices.findBy-Hostname",
-      query
-      = "SELECT r FROM HostServices r WHERE r.host.hostname = :hostname ORDER BY r.cluster, r.group, r.service")
-  ,
-  @NamedQuery(name = "HostServices.findBy-Cluster-Group-Service",
-      query
-      = "SELECT r FROM HostServices r WHERE r.cluster = :cluster AND r.group = :group "
-      + "AND r.service = :service")
-  ,
-  @NamedQuery(name = "HostServices.findBy-Group",
-      query = "SELECT r FROM HostServices r WHERE r.group = :group ")
-  ,
+      query = "SELECT r FROM HostServices r WHERE r.host.hostname = :hostname ORDER BY r.group, r.service"),
+  @NamedQuery(name = "HostServices.findBy-Group", query = "SELECT r FROM HostServices r WHERE r.group = :group "),
   @NamedQuery(name = "HostServices.findBy-Group-Service",
-      query = "SELECT r FROM HostServices r WHERE r.group = :group AND r.service = :service")
-  ,
-  @NamedQuery(name = "HostServices.findBy-Service",
-      query
-      = "SELECT r FROM HostServices r WHERE r.service = :service")
-  ,
+      query = "SELECT r FROM HostServices r WHERE r.group = :group AND r.service = :service"),
+  @NamedQuery(name = "HostServices.findBy-Service", query = "SELECT r FROM HostServices r WHERE r.service = :service"),
   @NamedQuery(name = "HostServices.Count",
-      query
-      = "SELECT COUNT(r) FROM HostServices r WHERE r.cluster = :cluster AND r.group = :group "
-      + "AND r.service = :service")
-  ,
-  @NamedQuery(name = "HostServices.Count-hosts",
-      query
-      = "SELECT count(DISTINCT r.host) FROM HostServices r WHERE r.cluster = :cluster")
-  ,
+      query = "SELECT COUNT(r) FROM HostServices r WHERE r.group = :group AND r.service = :service"),
   @NamedQuery(name = "HostServices.Count-services",
-      query
-      = "SELECT COUNT(r) FROM HostServices r WHERE r.cluster = :cluster AND r.group = :group")
-  ,
-  @NamedQuery(name = "HostServices.findHostServicesBy-Cluster",
-      query
-      = "SELECT NEW io.hops.hopsworks.common.dao.kagent.HostServicesInfo(r, h) FROM HostServices r, Hosts h "
-      + "WHERE r.host = h AND r.cluster = :cluster")
-  ,
-  @NamedQuery(name = "HostServices.findHostServicesBy-Cluster-Group",
-      query
-      = "SELECT NEW io.hops.hopsworks.common.dao.kagent.HostServicesInfo(r, h) FROM HostServices r, Hosts h "
-      + "WHERE r.host.hostname = h.hostname AND r.cluster = :cluster AND r.group = :group")
-  ,
-  @NamedQuery(name = "HostServices.findHostServicesBy-Cluster-Group-Service",
-      query
-      = "SELECT NEW io.hops.hopsworks.common.dao.kagent.HostServicesInfo(r, h) FROM HostServices r, Hosts h "
-      + "WHERE r.host = h AND r.cluster = :cluster AND r.group = :group " + "AND r.service = :service")
-  ,
-  @NamedQuery(name = "HostServices.findHostServicesBy-Cluster-Group-Service-Host",
-      query
-      = "SELECT NEW io.hops.hopsworks.common.dao.kagent.HostServicesInfo(r, h) FROM HostServices r, Hosts h "
-      + "WHERE r.host = h AND r.cluster = :cluster AND r.group = :group "
-      + "AND r.service = :service AND r.host.hostname = :hostname")
-  ,
+      query = "SELECT COUNT(r) FROM HostServices r WHERE r.group = :group"),
   @NamedQuery(name = "HostServices.DeleteBy-Hostname",
-      query = "DELETE FROM HostServices r WHERE r.host.hostname = :hostname")
-  ,
-  @NamedQuery(name = "HostServices.find.ClusterBy-Ip.WebPort",
-      query
-      = "SELECT r.cluster FROM Hosts h, HostServices r WHERE h = r.host AND "
-      + "(h.privateIp = :ip OR h.publicIp = :ip)")
-  ,
-  //TODO fix this: Hotname may be wrong. mysql nodes change hostname. May use hostid ?    
-  @NamedQuery(name = "HostServices.find.PrivateIpBy-Cluster.Hostname.WebPort",
-      query
-      = "SELECT h.privateIp FROM Hosts h, HostServices r WHERE h = r.host AND r.cluster = :cluster "
-      + "AND (h.hostname = :hostname OR h.hostIp = :hostname)")
-  ,
-  @NamedQuery(name = "HostServices.TotalCores",
-      query
-      = "SELECT SUM(h2.cores) FROM Hosts h2 WHERE h2.hostname IN (SELECT h.hostname FROM HostServices r, Hosts h "
-      + "WHERE r.host = h AND r.cluster = :cluster GROUP BY h.hostname)")
-  ,
-  @NamedQuery(name = "HostServices.TotalGPUs",
-      query
-      = "SELECT SUM(h2.numGpus) FROM Hosts h2 WHERE h2.hostname IN (SELECT h.hostname FROM HostServices r, Hosts h "
-      + "WHERE r.host = h AND r.cluster = :cluster GROUP BY h.hostname)")
-  ,
-  @NamedQuery(name = "HostServices.TotalMemoryCapacity",
-      query
-      = "SELECT SUM(h2.memoryCapacity) FROM Hosts h2 WHERE h2.hostname IN "
-      + "(SELECT h.hostname FROM HostServices r, Hosts h WHERE r.host = h AND r.cluster "
-      + "= :cluster GROUP BY h.hostname)")
-  ,
-  @NamedQuery(name = "HostServices.TotalDiskCapacity",
-      query
-      = "SELECT SUM(h2.diskCapacity) FROM Hosts h2 WHERE h2.hostname IN (SELECT h.hostname FROM HostServices r, "
-      + "Hosts h WHERE r.host = h AND r.cluster = :cluster GROUP BY h.hostname)"),})
+      query = "DELETE FROM HostServices r WHERE r.host.hostname = :hostname")})
 public class HostServices implements Serializable {
 
   private static final long serialVersionUID = 1L;
@@ -181,14 +94,7 @@ public class HostServices implements Serializable {
   private Integer pid;
   @Basic(optional = false)
   @NotNull
-  @Size(min = 1,
-      max = 48)
-  @Column(name = "cluster")
-  private String cluster;
-  @Basic(optional = false)
-  @NotNull
-  @Size(min = 1,
-      max = 48)
+  @Size(min = 1, max = 48)
   @Column(name = "group_name")
   private String group;
   @Basic(optional = false)
@@ -204,8 +110,6 @@ public class HostServices implements Serializable {
   private Status status;
   @Column(name = "uptime")
   private long uptime;
-  @Column(name = "webport")
-  private Integer webport;
   @Column(name = "startTime")
   private long startTime;
   @Column(name = "stopTime")
@@ -222,9 +126,8 @@ public class HostServices implements Serializable {
     this.id = id;
   }
 
-  public HostServices(Long id, String cluster, String service, String group, Status status, Hosts host) {
+  public HostServices(Long id, String service, String group, Status status, Hosts host) {
     this.id = id;
-    this.cluster = cluster;
     this.service = service;
     this.group = group;
     this.status = status;
@@ -237,14 +140,6 @@ public class HostServices implements Serializable {
 
   public void setId(Long id) {
     this.id = id;
-  }
-
-  public String getCluster() {
-    return cluster;
-  }
-
-  public void setCluster(String cluster) {
-    this.cluster = cluster;
   }
 
   public Integer getPid() {
@@ -285,14 +180,6 @@ public class HostServices implements Serializable {
 
   public void setUptime(long uptime) {
     this.uptime = uptime;
-  }
-
-  public Integer getWebport() {
-    return webport;
-  }
-
-  public void setWebport(Integer webport) {
-    this.webport = webport;
   }
 
   public long getStartTime() {

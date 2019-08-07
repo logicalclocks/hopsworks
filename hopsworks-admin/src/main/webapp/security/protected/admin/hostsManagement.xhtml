@@ -88,17 +88,6 @@
 
 
                 <div class="ui-g">
-                  <!--<div class="ui-g-12 ui-md-2" style="float:left"><h3>Anaconda for New Nodes</h3></div>-->
-<!--                  <div class="ui-g-12 ui-md-8 ui-g-nopad">
-                    <div class="ui-g-12">
-                      <h:outputText value="Anaconda package:  #{nodesBean.anacondaLastSynchronized()}"
-                                    style="float:left"/>
-                    </div>
-                    <div class="ui-g-12">
-                      <h:outputText value="Gpu Anaconda package: #{nodesBean.anacondaGpuLastSynchronized()}"
-                                    style="float:left"/>
-                    </div>
-                  </div>-->
 
                   <div class="ui-g-12 ui-md-2">
                     <p:commandButton value="Rotate host keys"
@@ -216,6 +205,38 @@
                       <f:facet name="output"><h:selectBooleanCheckbox value="#{node.condaEnabled}" disabled="true"/></f:facet>
                       <f:facet name="input"><p:selectBooleanCheckbox value="#{node.condaEnabled}"/></f:facet>
                     </p:cellEditor>
+                  </p:column>
+
+                  <p:column headerText="Health" filterBy="#{node.health}" styleClass="Health-#{node.health}">
+                      <div align="center">
+                          <h:outputText value="#{node.health}" />
+                      </div>
+                  </p:column>
+
+                  <p:column headerText="Last Heartbeat" sortBy="#{node.lastHeartbeat}">
+                      <div align="center">
+                          <h:outputText value="#{node.lastHeartbeatFormatted} ago"
+                              rendered="#{not empty node.lastHeartbeatFormatted}" />
+                      </div>
+                  </p:column>
+
+                  <p:column headerText="Cores">
+                      <div align="center">
+                          <h:outputText value="#{node.cores}" rendered="#{not empty node.cores}" />
+                      </div>
+                  </p:column>
+
+                  <p:column headerText="Memory">
+                      <div align="center">
+                          <h:outputText value="#{nodesBean.formatMemoryCapacity(node)}"
+                                        rendered="#{not empty node.memoryCapacity}" />
+                      </div>
+                  </p:column>
+
+                  <p:column headerText="# GPUs">
+                      <div align="center">
+                          <h:outputText value="#{node.numGpus}" rendered="#{not empty node.numGpus}" />
+                      </div>
                   </p:column>
 
                   <p:column style="width:32px">

@@ -104,53 +104,6 @@
                             <h:outputText value="#{host.privateIp}" />
                         </div>
                     </p:column>
-
-                    <p:column headerText="Health" filterBy="#{host.health}" styleClass="Health-#{host.health}">
-                        <div align="center">
-                            <h:outputText value="#{host.health}" />
-                        </div>
-                    </p:column>
-
-                    <p:column headerText="Last Heartbeat" sortBy="#{host.lastHeartbeat}">
-                        <div align="center">
-                            <h:outputText value="#{host.lastHeartbeatFormatted} ago"
-                                rendered="#{not empty host.lastHeartbeatFormatted}" />
-                        </div>
-                    </p:column>
-
-                    <p:column headerText="Disk Usage">
-                        <div class="CapacityUsage #{host.diskInfo.priority}">
-                            <span class="reading">#{host.diskInfo.usageInfo}</span>
-                            <span class="bar" style="width: #{host.getDiskInfo().usagePercentageString};"></span>
-                        </div>
-                    </p:column>
-
-                    <p:column headerText="Physical Memory">
-                        <div class="CapacityUsage #{host.memoryInfo.priority}">
-                            <span class="reading">#{host.memoryInfo.usageInfo}</span>
-                            <span class="bar" style="width: #{host.getMemoryInfo().usagePercentageString};"></span>
-                        </div>
-                    </p:column>
-
-                    <p:column headerText="Cores">
-                        <div align="center">
-                            <h:outputText value="#{host.cores}" rendered="#{not empty host.cores}" />
-                        </div>
-                    </p:column>
-
-                    <p:column headerText="# GPUs">
-                        <div align="center">
-                            <h:outputText value="#{host.numGpus}" rendered="#{not empty host.numGpus}" />
-                        </div>
-                    </p:column>
-
-                    <p:column headerText="Load Average">
-                        <p:dataTable styleClass="innerDataTable" var="host_inner" value="#{host}">
-                            <p:column>#{host_inner.load1}</p:column>
-                            <p:column>#{host_inner.load5}</p:column>
-                            <p:column>#{host_inner.load15}</p:column>
-                        </p:dataTable>
-                    </p:column>
                 </p:dataTable>
             </h:form>
 

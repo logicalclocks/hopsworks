@@ -53,7 +53,6 @@ import java.util.Arrays;
 import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import java.util.logging.Level;
@@ -78,6 +77,18 @@ public class HostServicesFacade {
   public HostServicesFacade() {
   }
 
+  public HostServices find(String hostname, String group, String service) {
+    TypedQuery<HostServices> query = em.createNamedQuery("HostServices.find", HostServices.class)
+        .setParameter("hostname", hostname).setParameter("group", group).setParameter("service", service);
+    List results = query.getResultList();
+    if (results.isEmpty()) {
+      return null;
+    } else if (results.size() == 1) {
+      return (HostServices) results.get(0);
+    }
+    throw new NonUniqueResultException();
+  }
+
   public List<HostServices> findAll() {
     TypedQuery<HostServices> query = em.createNamedQuery("HostServices.findAll", HostServices.class);
     return query.getResultList();
@@ -89,166 +100,32 @@ public class HostServicesFacade {
     return query.getResultList();
   }
 
-  public List<HostServices> findGroups(String group, String service) {
-    TypedQuery<HostServices> query = em.createNamedQuery("HostServices.findBy-Group-Service", HostServices.class)
-        .setParameter("group", group).setParameter("service", service);
-    return query.getResultList();
-  }
-
-  public List<String> findClusters() {
-    TypedQuery<String> query = em.createNamedQuery("HostServices.findClusters",
-        String.class);
-    return query.getResultList();
-  }
-
-  public List<String> findGroups(String cluster) {
-    TypedQuery<String> query = em.
-        createNamedQuery("HostServices.findGroupsBy-Cluster", String.class)
-        .setParameter("cluster", cluster);
-    return query.getResultList();
-  }
-
-  public List<HostServices> findServiceOnHost(String hostname, String group, String service) {
-    TypedQuery<HostServices> query = em.createNamedQuery("HostServices.findOnHost", HostServices.class)
-        .setParameter("hostname", hostname).setParameter("group", group).setParameter("service", service);
-    return query.getResultList();
-  }
-
-  public HostServices find(String hostname, String cluster, String group, String service) {
-    TypedQuery<HostServices> query = em.createNamedQuery("HostServices.find", HostServices.class)
-        .setParameter("hostname", hostname).setParameter("cluster", cluster)
-        .setParameter("group", group).setParameter("service", service);
-    List results = query.getResultList();
-    if (results.isEmpty()) {
-      return null;
-    } else if (results.size() == 1) {
-      return (HostServices) results.get(0);
-    }
-    throw new NonUniqueResultException();
+  public List<String> findGroups() {
+    return em.createNamedQuery("HostServices.findGroups", String.class).getResultList();
   }
 
   public List<HostServices> findHostServiceByHostname(String hostname) {
-    TypedQuery<HostServices> query = em.createNamedQuery("HostServices.findBy-Hostname",
-        HostServices.class)
+    TypedQuery<HostServices> query = em.createNamedQuery("HostServices.findBy-Hostname", HostServices.class)
         .setParameter("hostname", hostname);
     return query.getResultList();
   }
 
-  public List<HostServices> findServices(String cluster, String group, String service) {
-    TypedQuery<HostServices> query = em.createNamedQuery(
-        "HostServices.findBy-Cluster-Group-Service", HostServices.class)
-        .setParameter("cluster", cluster).setParameter("group", group).
-        setParameter("service", service);
-    return query.getResultList();
-  }
-
   public List<HostServices> findServices(String service) {
-    TypedQuery<HostServices> query = em.createNamedQuery(
-        "HostServices.findBy-Service", HostServices.class)
+    TypedQuery<HostServices> query = em.createNamedQuery("HostServices.findBy-Service", HostServices.class)
         .setParameter("service", service);
     return query.getResultList();
   }
 
-  public Long count(String cluster, String group, String service) {
+  public Long count(String group, String service) {
     TypedQuery<Long> query = em.createNamedQuery("HostServices.Count", Long.class)
-        .setParameter("cluster", cluster).setParameter("group", group)
-        .setParameter("service", service);
+        .setParameter("group", group).setParameter("service", service);
     return query.getSingleResult();
   }
 
-  public Long countHosts(String cluster) {
-    TypedQuery<Long> query = em.createNamedQuery("HostServices.Count-hosts", Long.class)
-        .setParameter("cluster", cluster);
-    return query.getSingleResult();
-  }
-
-  public Long countServices(String cluster, String group) {
+  public Long countServices(String group) {
     TypedQuery<Long> query = em.createNamedQuery("HostServices.Count-services", Long.class)
-        .setParameter("cluster", cluster).setParameter("group", group);
+        .setParameter("group", group);
     return query.getSingleResult();
-  }
-
-  public Long totalCores(String cluster) {
-    TypedQuery<Long> query = em.createNamedQuery("HostServices.TotalCores",
-        Long.class)
-        .setParameter("cluster", cluster);
-    return query.getSingleResult();
-  }
-
-  public Long totalGPUs(String cluster) {
-    TypedQuery<Long> query = em.createNamedQuery("HostServices.TotalGPUs",
-        Long.class)
-        .setParameter("cluster", cluster);
-    return query.getSingleResult();
-  }
-
-  public Long totalMemoryCapacity(String cluster) {
-    TypedQuery<Long> query = em.createNamedQuery("HostServices.TotalMemoryCapacity",
-        Long.class)
-        .setParameter("cluster", cluster);
-    return query.getSingleResult();
-  }
-
-  public Long totalDiskCapacity(String cluster) {
-    TypedQuery<Long> query = em.createNamedQuery("HostServices.TotalDiskCapacity",
-        Long.class)
-        .setParameter("cluster", cluster);
-    return query.getSingleResult();
-  }
-
-  public List<HostServicesInfo> findHostServicesByCluster(String cluster) {
-    TypedQuery<HostServicesInfo> query = em.createNamedQuery(
-        "HostServices.findHostServicesBy-Cluster", HostServicesInfo.class)
-        .setParameter("cluster", cluster);
-    return query.getResultList();
-  }
-
-  public List<HostServicesInfo> findHostServicesByGroup(String cluster, String group) {
-    TypedQuery<HostServicesInfo> query = em.createNamedQuery(
-        "HostServices.findHostServicesBy-Cluster-Group", HostServicesInfo.class)
-        .setParameter("cluster", cluster).setParameter("group", group);
-    return query.getResultList();
-  }
-
-  public List<HostServicesInfo> findHostServices(String cluster, String group,
-      String service) {
-    TypedQuery<HostServicesInfo> query = em.createNamedQuery(
-        "HostServices.findHostServicesBy-Cluster-Group-Service", HostServicesInfo.class)
-        .setParameter("cluster", cluster).setParameter("group", group)
-        .setParameter("service", service);
-    return query.getResultList();
-  }
-  
-  public HostServicesInfo findHostServices(String cluster, String group, String service,
-    String hostname) {
-    TypedQuery<HostServicesInfo> query = em.
-      createNamedQuery("HostServices.findHostServicesBy-Cluster-Group-Service-Host",
-        HostServicesInfo.class)
-      .setParameter("cluster", cluster).setParameter("group", group)
-      .setParameter("service", service).setParameter("hostname", hostname);
-    try {
-      return query.getSingleResult();
-    } catch (NoResultException ex) {
-      return null;
-    }
-  }
-
-  public String findCluster(String ip) {
-    TypedQuery<String> query = em.createNamedQuery(
-        "HostServices.find.ClusterBy-Ip.WebPort", String.class)
-        .setParameter("ip", ip);
-    return query.getSingleResult();
-  }
-
-  public String findPrivateIp(String cluster, String hostname) {
-    TypedQuery<String> query = em.createNamedQuery(
-        "HostServices.find.PrivateIpBy-Cluster.Hostname.WebPort", String.class)
-        .setParameter("cluster", cluster).setParameter("hostname", hostname);
-    try {
-      return query.getSingleResult();
-    } catch (NoResultException ex) {
-      return null;
-    }
   }
 
   public void persist(HostServices hostService) {
@@ -257,10 +134,8 @@ public class HostServicesFacade {
 
   public void store(HostServices service) {
     TypedQuery<HostServices> query = em.createNamedQuery("HostServices.find", HostServices.class)
-        .setParameter("hostname", service.getHost().getHostname()).setParameter("cluster",
-        service.getCluster())
-        .setParameter("group", service.getGroup()).setParameter("service",
-        service.getService());
+        .setParameter("hostname", service.getHost().getHostname())
+        .setParameter("group", service.getGroup()).setParameter("service", service.getService());
     List<HostServices> s = query.getResultList();
 
     if (s.size() > 0) {
@@ -275,17 +150,17 @@ public class HostServicesFacade {
     em.createNamedQuery("HostServices.DeleteBy-Hostname").setParameter("hostname", hostname).executeUpdate();
   }
 
-  public String serviceOp(String group, String serviceName, Action action) throws GenericException {
-    return webOp(action, findGroups(group, serviceName));
+  public String groupOp(String group, Action action) throws GenericException {
+    return webOp(action, findGroupServices(group));
   }
 
   public String serviceOp(String service, Action action) throws GenericException {
-    return webOp(action, findGroupServices(service));
+    return webOp(action, findServices(service));
   }
 
   public String serviceOnHostOp(String group, String serviceName, String hostname,
       Action action) throws GenericException {
-    return webOp(action, findServiceOnHost(hostname, group, serviceName));
+    return webOp(action, Arrays.asList(find(hostname, group, serviceName)));
   }
 
   private String webOp(Action operation, List<HostServices> services) throws GenericException {
@@ -306,7 +181,7 @@ public class HostServicesFacade {
         String agentPassword = h.getAgentPassword();
         try {
           result += service.toString() + " " + web.serviceOp(operation.value(), ip, agentPassword,
-              service.getCluster(), service.getGroup(), service.getService());
+              service.getGroup(), service.getService());
           success = true;
         } catch (GenericException ex) {
           if (services.size() == 1) {
@@ -328,11 +203,6 @@ public class HostServicesFacade {
     return result;
   }
 
-  private Hosts findHostById(String hostname) {
-    Hosts host = hostEJB.findByHostname(hostname);
-    return host;
-  }
-
   public List<HostServices> updateHostServices(AgentController.AgentHeartbeatDTO heartbeat) throws ServiceException {
     Hosts host = hostEJB.findByHostname(heartbeat.getHostId());
     if (host == null) {
@@ -341,22 +211,19 @@ public class HostServicesFacade {
     }
     final List<HostServices> hostServices = new ArrayList<>(heartbeat.getServices().size());
     for (final AgentController.AgentServiceDTO service : heartbeat.getServices()) {
-      final String cluster = service.getCluster();
       final String name = service.getService();
       final String group = service.getGroup();
       HostServices hostService = null;
       try {
-        hostService = find(heartbeat.getHostId(), cluster, group, name);
+        hostService = find(heartbeat.getHostId(), group, name);
       } catch (Exception ex) {
-        LOGGER.log(Level.WARNING, "Could not find service for " + heartbeat.getHostId() + "/"
-            + cluster + "/" + group + "/" + name);
+        LOGGER.log(Level.WARNING, "Could not find service for " + heartbeat.getHostId() + "/" + group + "/" + name);
         continue;
       }
       
       if (hostService == null) {
         hostService = new HostServices();
         hostService.setHost(host);
-        hostService.setCluster(cluster);
         hostService.setGroup(group);
         hostService.setService(name);
         hostService.setStartTime(heartbeat.getAgentTime());

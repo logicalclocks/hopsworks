@@ -54,15 +54,13 @@ import io.hops.hopsworks.kmon.struct.InstanceInfo;
 import io.hops.hopsworks.kmon.struct.GroupType;
 import io.hops.hopsworks.common.dao.host.Status;
 import io.hops.hopsworks.common.dao.kagent.HostServicesFacade;
-import io.hops.hopsworks.common.dao.kagent.HostServicesInfo;
+import io.hops.hopsworks.common.dao.kagent.HostServices;
 import io.hops.hopsworks.kmon.utils.FilterUtils;
 
 @ManagedBean
 @RequestScoped
 public class ServiceInstancesController {
 
-  @ManagedProperty("#{param.cluster}")
-  private String cluster;
   @ManagedProperty("#{param.group}")
   private String group;
   @ManagedProperty("#{param.service}")
@@ -74,13 +72,7 @@ public class ServiceInstancesController {
   private static final SelectItem[] statusOptions;
   private static final SelectItem[] healthOptions;
   private List<InstanceInfo> filteredInstances = new ArrayList<>();
-  private static final Logger logger = Logger.getLogger(ServiceInstancesController.class.getName());
-
-  private enum groupsWithMetrics {
-    HDFS,
-    YARN
-  };
-//   private CookieTools cookie = new CookieTools();
+  private static final Logger LOGGER = Logger.getLogger(ServiceInstancesController.class.getName());
 
   static {
     statusOptions = FilterUtils.createFilterOptions(Status.values());
@@ -88,9 +80,8 @@ public class ServiceInstancesController {
   }
 
   public ServiceInstancesController() {
-    logger.info("ServiceInstancesController: status: " + status + " ; cluster: " + cluster + "; group: " + group
+    LOGGER.log(Level.FINE, "ServiceInstancesController: status: " + status + " ; " + group
         + " ; service: " + service);
-
   }
 
   public String getService() {
@@ -107,49 +98,6 @@ public class ServiceInstancesController {
 
   public void setGroup(String group) {
     this.group = group;
-  }
-
-  public boolean isYarnService() {
-    if (group != null) {
-      try {
-        if (GroupType.valueOf(group).equals(GroupType.YARN)) {
-          return true;
-        }
-      } catch (IllegalArgumentException ex) {
-      }
-    }
-    return false;
-  }
-
-  public boolean isHDFSService() {
-    if (group != null) {
-      try {
-        if (GroupType.valueOf(group).equals(GroupType.HDFS)) {
-          return true;
-        }
-      } catch (IllegalArgumentException ex) {
-      }
-    }
-    return false;
-  }
-
-  public boolean getServiceWithMetrics() {
-    if (group != null) {
-      try {
-        groupsWithMetrics.valueOf(group);
-        return true;
-      } catch (IllegalArgumentException ex) {
-      }
-    }
-    return false;
-  }
-
-  public void setCluster(String cluster) {
-    this.cluster = cluster;
-  }
-
-  public String getCluster() {
-    return cluster;
   }
 
   public String getStatus() {
@@ -180,7 +128,7 @@ public class ServiceInstancesController {
     try {
       return FilterUtils.createFilterOptions(GroupServiceMapper.getServicesArray(GroupType.valueOf(group)));
     } catch (Exception ex) {
-      logger.log(Level.WARNING,"Service not found. Returning no option. Error message: {0}", ex.getMessage());
+      LOGGER.log(Level.WARNING,"Service not found. Returning no option. Error message: {0}", ex.getMessage());
       return new SelectItem[]{};
     }
   }
@@ -189,35 +137,24 @@ public class ServiceInstancesController {
 //      With prettyfaces, parameters (clusters, service, service) will not be null.
 //      Without prettyfaces, parameters will be null when filter is changed, they
 //      should be stored in cookie
-    List<InstanceInfo> instances = new ArrayList<InstanceInfo>();
-    List<HostServicesInfo> serviceHostList = new ArrayList<HostServicesInfo>();
-    if (cluster != null && group != null && service != null && status != null) {
-      for (HostServicesInfo hostServicesInfo : hostServicesFacade.findHostServices(cluster, group, service)) {
+    List<InstanceInfo> instances = new ArrayList<>();
+    List<HostServices> serviceHostList = new ArrayList<>();
+    if (group != null && service != null && status != null) {
+      for (HostServices hostServicesInfo : hostServicesFacade.findServices(service)) {
         if (hostServicesInfo.getStatus() == Status.valueOf(status)) {
           serviceHostList.add(hostServicesInfo);
         }
       }
-//         cookie.write("cluster", cluster);
-//         cookie.write("service", service);         
-    } else if (cluster != null && group != null && service != null && service.compareTo("null") != 0) {
-      serviceHostList = hostServicesFacade.findHostServices(cluster, group, service);
-//         cookie.write("cluster", cluster);
-//         cookie.write("service", service);    
-    } else if (cluster != null && group != null) {
-      serviceHostList = hostServicesFacade.findHostServicesByGroup(cluster, group);
-//         cookie.write("cluster", cluster);
-//         cookie.write("service", service);          
-    } else if (cluster != null) {
-      serviceHostList = hostServicesFacade.findHostServicesByCluster(cluster);
-//         cookie.write("cluster", cluster);
-//         cookie.write("service", service);             
+    } else if (group != null && service != null && service.compareTo("null") != 0) {
+      serviceHostList = hostServicesFacade.findServices(service);
+    } else if (group != null) {
+      serviceHostList = hostServicesFacade.findGroupServices(group);
+    } else {
+      serviceHostList = hostServicesFacade.findAll();
     }
-//      else {
-//         roleHostList = roleEjb.findRoleHost(cookie.read("cluster"), cookie.read("service"));
-//      }     
-    for (HostServicesInfo hsi : serviceHostList) {
-      instances.add(new InstanceInfo(hsi.getHostServices().getCluster(), hsi.getHostServices().
-          getGroup(), hsi.getHostServices().getService(), hsi.getHost().getHostname(), 
+
+    for (HostServices hsi : serviceHostList) {
+      instances.add(new InstanceInfo(hsi.getGroup(), hsi.getService(), hsi.getHost().getHostname(),
           hsi.getStatus(), hsi.getHealth().toString()));
     }
     filteredInstances.addAll(instances);

@@ -43,6 +43,7 @@ import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.dao.python.CondaCommandFacade;
 import io.hops.hopsworks.common.dao.python.CondaCommands;
 import io.hops.hopsworks.common.security.CertificatesMgmService;
+import io.hops.hopsworks.common.util.FormatUtils;
 import io.hops.hopsworks.common.util.OSProcessExecutor;
 import io.hops.hopsworks.common.util.ProcessDescriptor;
 import io.hops.hopsworks.common.util.ProcessResult;
@@ -347,10 +348,14 @@ public class NodesBean implements Serializable {
   }
 
   public boolean isOutput() {
-    if (this.output == null || this.output.isEmpty()) {
-      return false;
+    return !(this.output == null || this.output.isEmpty());
+  }
+
+  public String formatMemoryCapacity(Hosts host) {
+    if (host.getMemoryCapacity() == null) {
+      return "N/A";
     }
-    return true;
+    return FormatUtils.storage(host.getMemoryCapacity());
   }
 
 }

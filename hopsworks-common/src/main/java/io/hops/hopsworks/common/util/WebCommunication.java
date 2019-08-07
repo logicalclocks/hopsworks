@@ -123,74 +123,51 @@ public class WebCommunication {
    * @param operation start | stop | restart
    * @param hostAddress
    * @param agentPassword
-   * @param cluster
    * @param service
    * @param service
    * @return
    */
   public String serviceOp(String operation, String hostAddress,
-      String agentPassword, String cluster, String group, String service) throws GenericException {
-    String url = createUrl(operation, hostAddress, cluster, group, service);
+      String agentPassword, String group, String service) throws GenericException {
+    String url = createUrl(operation, hostAddress, group, service);
     return fetchContent(url, agentPassword);
   }
 
   @Asynchronous
   public Future<String> asyncServiceOp(String operation, String hostAddress,
-      String agentPassword, String cluster, String group, String service) throws GenericException {
-    String url = createUrl(operation, hostAddress, cluster, group, service);
+      String agentPassword, String group, String service) throws GenericException {
+    String url = createUrl(operation, hostAddress, group, service);
     return new AsyncResult<>(fetchContent(url, agentPassword));
   }
   
   public String getConfig(String hostAddress, String agentPassword,
-      String cluster, String group, String service) throws GenericException {
-    String url = createUrl("config", hostAddress, cluster, group, service);
+      String group, String service) throws GenericException {
+    String url = createUrl("config", hostAddress, group, service);
     return fetchContent(url, agentPassword);
   }
 
-  public String getServiceLog(String hostAddress, String agentPassword,
-      String cluster, String group, String service, int lines) throws GenericException {
-    String url = createUrl("log", hostAddress, cluster, group, service, String.
-            valueOf(lines));
-    return fetchLog(url, agentPassword);
-  }
-
-  public String getGroupLog(String hostAddress, String agentPassword,
-      String cluster, String group, int lines) throws GenericException {
-    String url = createUrl("log", hostAddress, cluster, group, String.valueOf(
-            lines));
-    return fetchLog(url, agentPassword);
-  }
-
-  public String getAgentLog(String hostAddress, String agentPassword, int lines) throws GenericException {
-    String url = createUrl("agentlog", hostAddress, String.valueOf(lines));
-    return fetchLog(url, agentPassword);
-  }
-
   public String executeRun(String hostAddress, String agentPassword,
-          String cluster, String group, String service, String command,
-          String[] params) throws Exception {
-    return execute("execute/run", hostAddress, agentPassword, cluster, group,
-            service, command, params);
+                           String group, String service, String command,
+                           String[] params) throws Exception {
+    return execute("execute/run", hostAddress, agentPassword, group, service, command, params);
   }
 
   public String executeStart(String hostAddress, String agentPassword,
-          String cluster, String group, String service, String command,
-          String[] params) throws Exception {
-    return execute("execute/start", hostAddress, agentPassword, cluster, group,
-            service, command, params);
+                             String group, String service, String command,
+                             String[] params) throws Exception {
+    return execute("execute/start", hostAddress, agentPassword, group, service, command, params);
   }
 
   public String executeContinue(String hostAddress, String agentPassword,
-          String cluster, String group, String service, String command,
-          String[] params) throws Exception {
-    return execute("execute/continue", hostAddress, agentPassword, cluster,
-            group, service, command, params);
+                                String group, String service, String command,
+                                String[] params) throws Exception {
+    return execute("execute/continue", hostAddress, agentPassword, group, service, command, params);
   }
 
   private String execute(String path, String hostAddress, String agentPassword,
-          String cluster, String group, String service, String command,
+          String group, String service, String command,
           String[] params) throws Exception {
-    String url = createUrl(path, hostAddress, cluster, group, service, command);
+    String url = createUrl(path, hostAddress, group, service, command);
     String optionsAndParams = "";
     for (String param : params) {
       optionsAndParams += optionsAndParams.isEmpty() ? param : " " + param;
@@ -246,12 +223,6 @@ public class WebCommunication {
       logger.log(Level.SEVERE, null, e);
       throw new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR, Level.SEVERE, null, e.getMessage(), e);
     }
-  }
-
-  private String fetchLog(String url, String agentPassword) throws GenericException {
-    String log = fetchContent(url, agentPassword);
-    log = FormatUtils.stdoutToHtml(log);
-    return log;
   }
 
   private Response getWebResource(String url, String agentPassword) throws NoSuchAlgorithmException,
