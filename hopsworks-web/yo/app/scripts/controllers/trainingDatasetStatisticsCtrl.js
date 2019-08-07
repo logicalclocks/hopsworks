@@ -18,8 +18,10 @@
  * Controller for the training dataset-statistics-view
  */
 angular.module('hopsWorksApp')
-    .controller('trainingDatasetStatisticsCtrl', ['$uibModalInstance', '$scope', 'FeaturestoreService', 'ModalService', 'growl', 'projectId', 'trainingDataset',
-        function ($uibModalInstance, $scope, FeaturestoreService, ModalService, growl, projectId, trainingDataset) {
+    .controller('trainingDatasetStatisticsCtrl', ['$uibModalInstance', '$scope', 'FeaturestoreService', 'ModalService',
+        'growl', 'projectId', 'trainingDataset', 'projectName', 'featurestore', 'settings',
+        function ($uibModalInstance, $scope, FeaturestoreService, ModalService, growl, projectId,
+                  trainingDataset, projectName, featurestore, settings) {
 
             /**
              * Initialize controller state
@@ -27,6 +29,9 @@ angular.module('hopsWorksApp')
             var self = this;
             self.projectId = projectId;
             self.trainingDataset = trainingDataset;
+            self.projectName = projectName;
+            self.featurestore = featurestore
+            self.settings = settings;
 
             /**
              * Function for preprocessing the spark descriptive statistics to a format that is suitable to
@@ -343,6 +348,18 @@ angular.module('hopsWorksApp')
                 var statisticData = {"plotOptions" : self.clusterAnalysisPlotOptions, "plotData": self.clusterAnalysisPlotData}
                 ModalService.viewFeaturestoreStatistic('lg', self.projectId, trainingDataset, statisticType, statisticData, true).then(
                     function (success) {
+                    }, function (error) {
+                    });
+            }
+
+            /**
+             * Opens the modal for updating featuregroup statistics
+             */
+            self.updateStatistics = function(){
+                ModalService.updateFeaturestoreStatistic('lg', self.projectId, trainingDataset, true, self.projectName,
+                    self.featurestore, self.settings).then(
+                    function (success) {
+                        $uibModalInstance.close(success)
                     }, function (error) {
                     });
             }

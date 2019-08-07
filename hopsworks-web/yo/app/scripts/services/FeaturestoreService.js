@@ -23,32 +23,34 @@ angular.module('hopsWorksApp')
             return {
 
                 /**
-                 * Utility function that returns the supported data formats in the feature store
-                 * @returns list of supported data formats for training datasets
+                 * Utility function that formats a date into a string (MMM Do YY)
+                 *
+                 * @param inputDate the date to format
+                 * @returns a formatted date string
                  */
-                dataFormats: function() {
-                    return [
-                        "csv", "tfrecords", "parquet", "tsv", "hdf5", "npy", "orc", "avro", "image", "petastorm"
-                    ]
+                formatDate: function(inputDate) {
+                    return moment(inputDate).format('MMM Do YY')
                 },
 
                 /**
-                 * Utility function that returns the regexp for training dataset names
+                 * Utility function for formatting a date into a time string (HH:mm)
                  *
-                 * @returns {RegExp} for training datasets
+                 * @param inputDate the date to format
+                 * @returns {*} a formatted time string
                  */
-                trainingDatasetRegExp: function() {
-                    return /^[a-zA-Z0-9_]+$/
+                formatTime: function(inputDate) {
+                    return moment(inputDate).format('HH:mm')
                 },
 
                 /**
-                 * Utility function that returns the regexp hive table and column names
-                 *
-                 * @returns {RegExp} for hive
+                 * Utility function for formatting a date into a dateAndtime string ('MMMM Do YYYY, h:mm a')
+                 * @param inputDate
+                 * @returns {*} a formatted date and time string
                  */
-                hiveRegExp: function() {
-                    return /^[a-zA-Z0-9_]+$/;
+                formatDateAndTime: function(inputDate) {
+                    return moment(inputDate).format('MMMM Do YYYY, h:mm a');
                 },
+
 
                 /**
                  * Sends a POST request to the backend for creating a feature group
@@ -86,9 +88,10 @@ angular.module('hopsWorksApp')
                  * @param featurestore the featurestore linked to the training dataset
                  * @returns {HttpPromise}
                  */
-                updateTrainingDataset: function(projectId, trainingDatasetId, trainingDatasetJson, featurestore) {
+                updateTrainingDatasetMetadata: function(projectId, trainingDatasetId, trainingDatasetJson, featurestore) {
                     return $http.put('/api/project/' + projectId + '/featurestores/' +
-                        featurestore.featurestoreId + "/trainingdatasets/" + trainingDatasetId,
+                        featurestore.featurestoreId + "/trainingdatasets/" + trainingDatasetId +
+                        "?updateMetadata=true&updateStats=false",
                         JSON.stringify(trainingDatasetJson), {headers: {'Content-Type': 'application/json'}});
                 },
 
@@ -200,8 +203,92 @@ angular.module('hopsWorksApp')
                  */
                 updateFeaturegroupMetadata: function(projectId, featurestore, featuregroupId, featuregroupJson) {
                     return $http.put('/api/project/' + projectId + '/featurestores/' +
-                        featurestore.featurestoreId + "/featuregroups/" + featuregroupId,
+                        featurestore.featurestoreId + "/featuregroups/" + featuregroupId +
+                        "?updateMetadata=true&updateStats=false",
                         JSON.stringify(featuregroupJson), {headers: {'Content-Type': 'application/json'}});
+                },
+
+                /**
+                 * GET request for all storage connectors for a particular featurestore
+                 *
+                 * @param projectId project of the active user
+                 * @param featurestore featurestore to get storage connectors from
+                 * @returns {HttpPromise}
+                 */
+                getStorageConnectors: function(projectId, featurestore) {
+                    return $http.get('/api/project/' + projectId + '/featurestores/' +
+                        featurestore.featurestoreId + "/storageconnectors");
+                },
+
+                /**
+                 * GET request for the settings of Hopsworks featurestores
+                 *
+                 * @param projectId project of the active user
+                 * @returns {HttpPromise}
+                 */
+                getFeaturestoreSettings: function(projectId) {
+                    return $http.get('/api/project/' + projectId + '/featurestores/settings');
+                },
+
+                /**
+                 * Sends a POST request to the backend for creating a new storage connector
+                 *
+                 * @param projectId project where the featuregroup will be created
+                 * @param storageConnectorJson the JSON payload
+                 * @param featurestore featurestore where the connector will be created
+                 * @param storageConnectorType the type of the storage connector
+                 *
+                 * @returns {HttpPromise}
+                 */
+                createStorageConnector: function(projectId, storageConnectorJson, featurestore, storageConnectorType) {
+                    return $http.post('/api/project/' + projectId + '/featurestores/' +
+                        featurestore.featurestoreId + "/storageconnectors/" + storageConnectorType,
+                        JSON.stringify(storageConnectorJson), {headers: {'Content-Type': 'application/json'}});
+                },
+
+                /**
+                 * Sends a PUT request to the backend for updating a storage connector
+                 *
+                 * @param projectId project where the featuregroup will be created
+                 * @param storageConnectorJson the JSON payload
+                 * @param featurestore featurestore where the connector will be created
+                 * @param storageConnectorId the id of the connector
+                 * @param storageConnectorType the type of the storage connector
+                 *
+                 * @returns {HttpPromise}
+                 */
+                updateStorageConnector: function(projectId, storageConnectorJson, featurestore, storageConnectorType,
+                                                 storageConnectorId) {
+                    return $http.put('/api/project/' + projectId + '/featurestores/' +
+                        featurestore.featurestoreId + "/storageconnectors/" + storageConnectorType + "/"
+                        + storageConnectorId,
+                        JSON.stringify(storageConnectorJson), {headers: {'Content-Type': 'application/json'}});
+                },
+
+                /**
+                 * Sends a DELETE request to the backend for deleting a Storage connector
+                 *
+                 * @param projectId the project of the featurestore
+                 * @param featurestore the featurestore
+                 * @param storageConnectorId the id of the connector
+                 * @param storageConnectorType the type of the storage connector
+                 * @returns {HttpPromise}
+                 */
+                deleteStorageConnector: function(projectId, featurestore, storageConnectorId, storageConnectorType) {
+                    return $http.delete('/api/project/' + projectId + '/featurestores/' +
+                        featurestore.featurestoreId + "/storageconnectors/" + storageConnectorType + "/" +
+                        storageConnectorId);
+                },
+                /**
+                 * Sends a POST request to the backend for writing args for featurestore util job to HDFS
+                 *
+                 * @param projectId project of the featurestore
+                 * @param utilArgsJson the JSON payload
+                 * @returns {HttpPromise}
+                 */
+                writeUtilArgstoHdfs: function(projectId, utilArgsJson) {
+                    return $http.post('/api/project/' + projectId + '/featurestores/util',
+                        JSON.stringify(utilArgsJson), {headers: {'Content-Type': 'application/json'}});
                 }
             };
           }]);

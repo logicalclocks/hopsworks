@@ -16,9 +16,14 @@
 
 package io.hops.hopsworks.api.featurestore.util;
 
+import io.hops.hopsworks.common.constants.auth.AllowedRoles;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
-import io.hops.hopsworks.common.dao.featurestore.feature.FeatureDTO;
+import io.hops.hopsworks.common.dao.featurestore.Featurestore;
+import io.hops.hopsworks.common.dao.featurestore.FeaturestoreEntityDTO;
+import io.hops.hopsworks.common.dao.featurestore.storageconnector.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
+import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
@@ -26,10 +31,7 @@ import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
-import java.util.List;
 import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 /**
  * Utility functions for the featurestore service
@@ -39,74 +41,8 @@ public class FeaturestoreUtil {
 
   @EJB
   private DatasetController datasetController;
-  private static final Logger LOGGER = Logger.getLogger(FeaturestoreUtil.class.getName());
-  /**
-   * Returns a String with Columns from a JSON featuregroup
-   * that can be used for a HiveQL CREATE TABLE statement
-   *
-   * @param features list of featureDTOs
-   * @param featuregroupDoc description of the featuregroup
-   * @return feature schema string for creating hive table
-   */
-  public String makeCreateTableColumnsStr(List<FeatureDTO> features, String featuregroupDoc)
-      throws FeaturestoreException {
-    StringBuilder schemaStringBuilder = new StringBuilder();
-    StringBuilder partitionStringBuilder = new StringBuilder();
-    List<FeatureDTO> primaryKeys = features.stream().filter(f -> f.getPrimary()).collect(Collectors.toList());
-    if(primaryKeys.isEmpty()){
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.NO_PRIMARY_KEY_SPECIFIED, Level.SEVERE,
-          "Out of the " + features.size() + " features provided, none is marked as primary");
-    }
-    FeatureDTO primaryKey = primaryKeys.get(0);
-    if(primaryKey.getPartition()){
-      LOGGER.fine("The primary key column: " + primaryKey.getName() +
-          " was specified as a partition column, which is not " +
-              "allowed. Primary key columns can not be partitioned; Ignoring this partition request.");
-    }
-    schemaStringBuilder.append("(");
-    int numPartitions = features.stream().filter(f -> f.getPartition()).collect(Collectors.toList()).size();
-    partitionStringBuilder.append("PARTITIONED BY (");
-    Boolean firstPartition = true;
-    for (int i = 0; i < features.size(); i++) {
-      FeatureDTO feature = features.get(i);
-      if(!feature.getPartition() || feature.getPrimary()){
-        schemaStringBuilder.append("`");
-        schemaStringBuilder.append(feature.getName());
-        schemaStringBuilder.append("` ");
-        schemaStringBuilder.append(feature.getType());
-        schemaStringBuilder.append(" COMMENT '");
-        schemaStringBuilder.append(feature.getDescription());
-        schemaStringBuilder.append("'");
-        schemaStringBuilder.append(", ");
-      } else {
-        if(!firstPartition){
-          partitionStringBuilder.append(",");
-        } else {
-          firstPartition = false;
-        }
-        partitionStringBuilder.append("`");
-        partitionStringBuilder.append(feature.getName());
-        partitionStringBuilder.append("` ");
-        partitionStringBuilder.append(feature.getType());
-        partitionStringBuilder.append(" COMMENT '");
-        partitionStringBuilder.append(feature.getDescription());
-        partitionStringBuilder.append("'");
-      }
-      if (i == features.size() - 1){
-        schemaStringBuilder.append("PRIMARY KEY (`");
-        schemaStringBuilder.append(primaryKey.getName());
-        schemaStringBuilder.append("`) DISABLE NOVALIDATE) COMMENT '");
-        schemaStringBuilder.append(featuregroupDoc);
-        schemaStringBuilder.append("' ");
-        if(numPartitions > 0){
-          partitionStringBuilder.append(")");
-          schemaStringBuilder.append(" ");
-          schemaStringBuilder.append(partitionStringBuilder.toString());
-        }
-      }
-    }
-    return schemaStringBuilder.toString();
-  }
+  @EJB
+  private ProjectTeamFacade projectTeamFacade;
 
   /**
    * Helper function that gets the Dataset where all the training dataset in the featurestore resides within the project
@@ -139,5 +75,81 @@ public class FeaturestoreUtil {
    */
   public String getTrainingDatasetPath(String trainingDatasetsFolderPath, String trainingDatasetName, Integer version){
     return trainingDatasetsFolderPath + "/" + trainingDatasetName + "_" + version;
+  }
+
+  /**
+   * Verify that the user is allowed to execute the requested operation based on his/hers project role
+   * <p>
+   * Only data owners are allowed to update/delete feature groups/training datasets
+   * created by someone else in the project
+   *
+   * @param featurestoreEntityDTO the featurestore entity that the operation concerns (feature group or training
+   *                              dataset)
+   * @param featurestore the featurestore that the operation concerns
+   * @param project the project of the featurestore
+   * @param user the user requesting the operation
+   * @throws FeaturestoreException
+   */
+  public void verifyUserRole(FeaturestoreEntityDTO featurestoreEntityDTO,
+                             Featurestore featurestore, Users user, Project project)
+      throws FeaturestoreException {
+    String userRole = projectTeamFacade.findCurrentRole(project, user);
+    if (!featurestoreEntityDTO.getCreator().equals(user.getEmail()) &&
+        !userRole.equalsIgnoreCase(AllowedRoles.DATA_OWNER)) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.UNAUTHORIZED_FEATURESTORE_OPERATION, Level.FINE,
+          "project: " + project.getName() + ", featurestoreId: " + featurestore.getId() +
+              ", featuregroupId: " + featurestoreEntityDTO.getId() + ", userRole:" + userRole +
+              ", creator of the featuregroup: " + featurestoreEntityDTO.getCreator());
+    }
+  }
+
+  /**
+   * Verify that the user is allowed to execute the requested operation based on his/hers project role.
+   *
+   * Only data owners are allowed to delete storage connectors for the feature store
+   *
+   * @param featurestore the featurestore that the operation concerns
+   * @param user the user making the request
+   * @param project the project of the featurestore
+   * @param storageConnectorDTO the storage connector taht the operation concerns
+   * @throws FeaturestoreException
+   */
+  public void verifyUserRole(Featurestore featurestore, Users user, Project project, FeaturestoreStorageConnectorDTO
+      storageConnectorDTO)
+      throws FeaturestoreException {
+    String userRole = projectTeamFacade.findCurrentRole(project, user);
+    if (!userRole.equalsIgnoreCase(AllowedRoles.DATA_OWNER)) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.UNAUTHORIZED_FEATURESTORE_OPERATION, Level.FINE,
+          "project: " + project.getName() + ", featurestoreId: " + featurestore.getId() +
+              ", storageConnectorId: " + storageConnectorDTO.getId() + ", userRole:" + userRole);
+    }
+  }
+
+  /**
+   * Return default updateMetadata query parameter value if not specified
+   *
+   * @param updateMetadata the query parameter provided by the user
+   * @return the default value
+   */
+  public Boolean updateMetadataGetOrDefault(Boolean updateMetadata) {
+    if(updateMetadata == null){
+      return false;
+    } else {
+      return updateMetadata;
+    }
+  }
+
+  /**
+   * Return default updateStats query parameter value if not specified
+   *
+   * @param updateStats the query parameter provided by the user
+   * @return the default value
+   */
+  public Boolean updateStatsGetOrDefault(Boolean updateStats) {
+    if(updateStats == null){
+      return false;
+    } else {
+      return updateStats;
+    }
   }
 }

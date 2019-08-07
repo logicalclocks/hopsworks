@@ -724,8 +724,9 @@ public class ProjectController {
         }
         break;
       case FEATURESTORE:
-        addServiceFeaturestore(project, user, dfso);
+        //Note: Order matters here. Training Dataset should be created before the Featurestore
         addServiceDataset(project, user, Settings.ServiceDataset.TRAININGDATASETS, dfso, udfso);
+        addServiceFeaturestore(project, user, dfso);
         //Enable Jobs service at the same time as featurestore
         if (!projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.JOBS)) {
           if (!projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.JUPYTER)) {
@@ -843,8 +844,11 @@ public class ProjectController {
       hiveController.createDatabase(featurestoreName,
           "Featurestore database for project: " + project.getName());
       //Store featurestore metadata in Hopsworks
-      Featurestore featurestore = featurestoreController.createProjectFeatureStore(project, featurestoreName);
-      //Create Hops Dataset of the HiveDb
+      Dataset trainingDatasets = datasetController.getByProjectAndDsName(project,
+          null, project.getName() + "_" + Settings.ServiceDataset.TRAININGDATASETS.getName());
+      Featurestore featurestore = featurestoreController.createProjectFeatureStore(project, featurestoreName,
+        trainingDatasets);
+      //Create Hopsworks Dataset of the HiveDb
       hiveController.createDatasetDb(project, user, dfso, featurestoreName, DatasetType.FEATURESTORE, featurestore);
     } catch (SQLException | IOException ex) {
       LOGGER.log(Level.SEVERE, RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATURESTORE.getMessage(), ex);
@@ -2323,9 +2327,9 @@ public class ProjectController {
               "files for guide projects", -1, false, true, true, dfso);
           // Get the JAR from /user/<super user>
           String featurestoreExampleJarSrc = "/user/" + settings.getSparkUser() + "/"
-              + settings.getHopsExamplesFeaturestoreFilename();
+              + settings.getHopsExamplesFeaturestoreTourFilename();
           String featurestoreExampleJarDst = projectPath
-              + Settings.HOPS_TOUR_DATASET + "/" + settings.getHopsExamplesFeaturestoreFilename();
+              + Settings.HOPS_TOUR_DATASET + "/" + settings.getHopsExamplesFeaturestoreTourFilename();
           // Get the sample data and notebooks from /user/<super user>/featurestore_demo/
           String featurestoreExampleDataSrc = "/user/" + settings.getHdfsSuperUser() + "/" +
               Settings.HOPS_FEATURESTORE_TOUR_DATA + "/data";
@@ -2607,7 +2611,7 @@ public class ProjectController {
   }
 
   /**
-   * For HopsFS quotas, both the namespace and the space quotas should be not null
+   * For HOPSFS quotas, both the namespace and the space quotas should be not null
    * at the same time.
    *
    * @param newProjectState

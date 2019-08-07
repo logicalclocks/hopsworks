@@ -1236,9 +1236,10 @@ public class Settings implements Serializable {
 
   //Featurestore constants
   public static final String HOPS_FEATURESTORE_TOUR_DATA = "featurestore_demo";
-  public static final String HOPS_FEATURESTORE_TOUR_JOB_CLASS = "io.hops.examples.featurestore.Main";
+  public static final String HOPS_FEATURESTORE_TOUR_JOB_CLASS = "io.hops.examples.featurestore_tour.Main";
   public static final String HOPS_FEATURESTORE_TOUR_JOB_NAME = "featurestore_tour_job";
   public static final String HOPS_FEATURESTORE_TOUR_JOB_INPUT_PARAM = "--input ";
+
 
   //Serving constants
   public static final String INFERENCE_SCHEMANAME = "inferenceschema";
@@ -1487,9 +1488,9 @@ public class Settings implements Serializable {
     checkCache();
     return LOGSTASH_PORT_TF_SERVING;
   }
-  
+
   private int LOGSTASH_PORT_SKLEARN_SERVING = 5047;
-  
+
   public synchronized Integer getLogstashPortSkLearnServing() {
     checkCache();
     return LOGSTASH_PORT_SKLEARN_SERVING;
@@ -1708,12 +1709,12 @@ public class Settings implements Serializable {
 
   public synchronized String getRestEndpoint() {
     checkCache();
-    
+
     if (isLocalHost()) {
       return "https://localhost:" +
         HOPSWORKS_REST_ENDPOINT.substring(HOPSWORKS_REST_ENDPOINT.lastIndexOf(":") + 1);
     }
-    
+
     return "https://" + HOPSWORKS_REST_ENDPOINT;
   }
 
@@ -2322,13 +2323,23 @@ public class Settings implements Serializable {
     return "hops-examples-spark-" + HOPS_EXAMPLES_VERSION + ".jar";
   }
 
-  public synchronized String getHopsExamplesFeaturestoreFilename() {
+  public synchronized String getHopsExamplesFeaturestoreTourFilename() {
     checkCache();
-    return "hops-examples-featurestore-" + HOPS_EXAMPLES_VERSION + ".jar";
+    return "hops-examples-featurestore-tour-" + HOPS_EXAMPLES_VERSION + ".jar";
+  }
+
+  public synchronized String getHopsExamplesFeaturestoreUtil4JFilename() {
+    checkCache();
+    return "hops-examples-featurestore-util4j-" + HOPS_EXAMPLES_VERSION + ".jar";
+  }
+
+  public synchronized String getHopsExamplesFeaturestoreUtilPythonFilename() {
+    checkCache();
+    return "featurestore_util.py";
   }
 
   private String VERIFICATION_PATH = "/hopsworks-admin/security/validate_account.xhtml";
-  
+
   public synchronized String getEmailVerificationEndpoint() {
     checkCache();
     return VERIFICATION_PATH;
@@ -3289,7 +3300,7 @@ public class Settings implements Serializable {
     checkCache();
     return KUBE_MAX_SERVING_INSTANCES;
   }
-  
+
   private Integer KUBE_API_MAX_ATTEMPTS = 12;
   public synchronized Integer getKubeAPIMaxAttempts() {
     checkCache();
@@ -3448,27 +3459,27 @@ public class Settings implements Serializable {
     checkCache();
     return FEATURESTORE_DB_DEFAULT_STORAGE_FORMAT;
   }
-  
+
   private Boolean LOCALHOST = false;
-  
+
   public synchronized Boolean isLocalHost() {
     checkCache();
     return LOCALHOST;
   }
-  
+
   private String CLOUD = "";
-  
+
   public synchronized String getCloudProvider() {
     checkCache();
     return CLOUD;
   }
-  
+
   public Boolean isCloud() {
     return !getCloudProvider().isEmpty();
   }
-  
+
   public Boolean isHopsUtilInsecure() {
     return isCloud() || isLocalHost();
   }
-  
+
 }

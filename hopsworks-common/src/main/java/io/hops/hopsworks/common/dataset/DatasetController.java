@@ -320,7 +320,7 @@ public class DatasetController {
 
     /*
      * TODO: Currently there is no change permission recursively operation
-     * available in HopsFS client. So we build all the path of the tree and
+     * available in HOPSFS client. So we build all the path of the tree and
      * we call the set permission on each one
      */
     // Set permission/ownership for the root

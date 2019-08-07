@@ -18,6 +18,8 @@ package io.hops.hopsworks.common.dao.featurestore.app;
 
 import io.hops.hopsworks.common.dao.featurestore.FeaturestoreDTO;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.FeaturegroupDTO;
+import io.hops.hopsworks.common.dao.featurestore.settings.FeaturestoreClientSettingsDTO;
+import io.hops.hopsworks.common.dao.featurestore.storageconnector.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.common.dao.featurestore.trainingdataset.TrainingDatasetDTO;
 
 import javax.xml.bind.annotation.XmlElement;
@@ -31,19 +33,22 @@ import java.util.stream.Collectors;
  * Can be converted to JSON or XML representation using jaxb.
  */
 @XmlRootElement
-@XmlType(propOrder = {"featurestore", "featuregroups", "trainingDatasets"})
+@XmlType(propOrder = {"featurestore", "featuregroups", "trainingDatasets", "settings", "storageConnectors"})
 public class FeaturestoreMetadataDTO {
   
   private FeaturestoreDTO featurestore;
   private List<FeaturegroupDTO> featuregroups;
   private List<TrainingDatasetDTO> trainingDatasets;
+  private FeaturestoreClientSettingsDTO settings;
+  private List<FeaturestoreStorageConnectorDTO> storageConnectors;
   
   public FeaturestoreMetadataDTO() {
   }
   
   public FeaturestoreMetadataDTO(FeaturestoreDTO featurestore,
-    List<FeaturegroupDTO> featuregroups,
-    List<TrainingDatasetDTO> trainingDatasets) {
+    List<FeaturegroupDTO> featuregroups, List<TrainingDatasetDTO> trainingDatasets,
+    FeaturestoreClientSettingsDTO featurestoreClientSettingsDTO,
+    List<FeaturestoreStorageConnectorDTO> storageConnectors) {
     this.featurestore = featurestore;
     // We do not need to send all of the statistics information over the wire for the Python/Scala clients
     this.featuregroups = featuregroups.stream().map(fg -> {
@@ -62,6 +67,8 @@ public class FeaturestoreMetadataDTO {
         return td;
       }
     ).collect(Collectors.toList());
+    this.settings = featurestoreClientSettingsDTO;
+    this.storageConnectors = storageConnectors;
   }
   
   @XmlElement
@@ -79,6 +86,16 @@ public class FeaturestoreMetadataDTO {
     return featurestore;
   }
   
+  @XmlElement
+  public FeaturestoreClientSettingsDTO getSettings() {
+    return settings;
+  }
+  
+  @XmlElement
+  public List<FeaturestoreStorageConnectorDTO> getStorageConnectors() {
+    return storageConnectors;
+  }
+  
   public void setFeaturegroups(List<FeaturegroupDTO> featuregroups) {
     this.featuregroups = featuregroups;
   }
@@ -91,12 +108,23 @@ public class FeaturestoreMetadataDTO {
     this.featurestore = featurestore;
   }
   
+  public void setSettings(FeaturestoreClientSettingsDTO settings) {
+    this.settings = settings;
+  }
+  
+  public void setStorageConnectors(
+    List<FeaturestoreStorageConnectorDTO> storageConnectors) {
+    this.storageConnectors = storageConnectors;
+  }
+  
   @Override
   public String toString() {
     return "FeaturestoreMetadataDTO{" +
       "featurestore=" + featurestore +
       ", featuregroups=" + featuregroups +
       ", trainingDatasets=" + trainingDatasets +
+      ", settings=" + settings +
+      ", storageConnectors=" + storageConnectors +
       '}';
   }
 }

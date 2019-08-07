@@ -17,48 +17,39 @@
 package io.hops.hopsworks.common.dao.featurestore.featuregroup;
 
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
-import io.hops.hopsworks.common.dao.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.dao.featurestore.FeaturestoreFacade;
-import io.hops.hopsworks.common.dao.featurestore.dependencies.FeaturestoreDependencyController;
-import io.hops.hopsworks.common.dao.featurestore.feature.FeatureDTO;
+import io.hops.hopsworks.common.dao.featurestore.featuregroup.cached_featuregroup.CachedFeaturegroup;
+import io.hops.hopsworks.common.dao.featurestore.featuregroup.cached_featuregroup.CachedFeaturegroupController;
+import io.hops.hopsworks.common.dao.featurestore.featuregroup.cached_featuregroup.CachedFeaturegroupDTO;
+import io.hops.hopsworks.common.dao.featurestore.featuregroup.cached_featuregroup.RowValueQueryResult;
+import io.hops.hopsworks.common.dao.featurestore.featuregroup.on_demand_featuregroup.OnDemandFeaturegroup;
+import io.hops.hopsworks.common.dao.featurestore.featuregroup.on_demand_featuregroup.OnDemandFeaturegroupController;
+import io.hops.hopsworks.common.dao.featurestore.featuregroup.on_demand_featuregroup.OnDemandFeaturegroupDTO;
+import io.hops.hopsworks.common.dao.featurestore.jobs.FeaturestoreJobController;
+import io.hops.hopsworks.common.dao.featurestore.jobs.FeaturestoreJobDTO;
+import io.hops.hopsworks.common.dao.featurestore.settings.FeaturestoreClientSettingsDTO;
 import io.hops.hopsworks.common.dao.featurestore.stats.FeaturestoreStatisticController;
-import io.hops.hopsworks.common.dao.featurestore.stats.cluster_analysis.ClusterAnalysisDTO;
-import io.hops.hopsworks.common.dao.featurestore.stats.desc_stats.DescriptiveStatsDTO;
-import io.hops.hopsworks.common.dao.featurestore.stats.feature_correlation.FeatureCorrelationMatrixDTO;
-import io.hops.hopsworks.common.dao.featurestore.stats.feature_distributions.FeatureDistributionsDTO;
-import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
+import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
-import io.hops.hopsworks.common.security.CertificateMaterializer;
-import io.hops.hopsworks.common.util.Settings;
-import io.hops.hopsworks.exceptions.CryptoPasswordNotFoundException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.restutils.RESTCodes;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.parquet.Strings;
 
-import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /**
@@ -69,80 +60,21 @@ public class FeaturegroupController {
   @EJB
   private FeaturegroupFacade featuregroupFacade;
   @EJB
-  private FeaturestoreFacade featurestoreFacade;
-  @EJB
   private HdfsUsersFacade hdfsUsersFacade;
   @EJB
   private HdfsUsersController hdfsUsersController;
   @EJB
-  private Settings settings;
-  @EJB
-  private CertificateMaterializer certificateMaterializer;
-  @EJB
-  private FeaturestoreController featurestoreController;
-  @EJB
   private FeaturestoreStatisticController featurestoreStatisticController;
   @EJB
-  private FeaturestoreDependencyController featurestoreDependencyController;
+  private CachedFeaturegroupController cachedFeaturegroupController;
   @EJB
-  private InodeFacade inodeFacade;
-
-  private static final Logger LOGGER = Logger.getLogger(FeaturegroupController.class.getName());
-  private static final String HIVE_DRIVER = "org.apache.hive.jdbc.HiveDriver";
-
-
-  @PostConstruct
-  public void init() {
-    try {
-      // Load Hive JDBC Driver
-      Class.forName(HIVE_DRIVER);
-    } catch (ClassNotFoundException e) {
-      LOGGER.log(Level.SEVERE, "Could not load the Hive driver: " + HIVE_DRIVER, e);
-    }
-  }
-
-  /**
-   * Initializes a JDBC connection (thrift RPC) to HS2 using SSL with a given project user and database
-   *
-   * @param databaseName name of the Hive database to open a connection to
-   * @param project      the project of the user making the request
-   * @param user         the user making the request
-   * @return conn the JDBC connection
-   * @throws FeaturestoreException
-   */
-  private Connection initConnection(String databaseName, Project project, Users user) throws FeaturestoreException {
-    try {
-      //Materialize certs
-      certificateMaterializer.materializeCertificatesLocal(user.getUsername(), project.getName());
-
-      //Read password
-      String password = String.copyValueOf(
-        certificateMaterializer.getUserMaterial(user.getUsername(), project.getName()).getPassword());
-
-      // Create connection url
-      String hiveEndpoint = settings.getHiveServerHostName(false);
-      String jdbcString = "jdbc:hive2://" + hiveEndpoint + "/" + databaseName + ";" +
-          "auth=noSasl;ssl=true;twoWay=true;" +
-          "sslTrustStore=" + certificateMaterializer.getUserTransientTruststorePath(project, user) + ";" +
-          "trustStorePassword=" + password + ";" +
-          "sslKeyStore=" + certificateMaterializer.getUserTransientKeystorePath(project, user) + ";" +
-          "keyStorePassword=" + password;
-
-      return DriverManager.getConnection(jdbcString);
-    } catch (FileNotFoundException | CryptoPasswordNotFoundException e) {
-      LOGGER.log(Level.SEVERE, "Could not find user certificates for authenticating with Hive: " +
-          e);
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.CERTIFICATES_NOT_FOUND, Level.SEVERE,
-          "project: " + project.getName() + ", hive database: " + databaseName, e.getMessage(), e);
-    } catch (SQLException | IOException e) {
-      LOGGER.log(Level.SEVERE, "Error initiating Hive connection: " +
-          e);
-      certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_INITIATE_HIVE_CONNECTION, Level.SEVERE,
-          "project: " + project.getName() + ", hive database: " + databaseName, e.getMessage(), e);
-    }
-  }
-
+  private OnDemandFeaturegroupController onDemandFeaturegroupController;
+  @EJB
+  private FeaturestoreFacade featurestoreFacade;
+  @EJB
+  private FeaturestoreJobController featurestoreJobController;
+  @EJB
+  private JobFacade jobFacade;
 
   /**
    * Gets all featuregroups for a particular featurestore and project, using the userCerts to query Hive
@@ -150,215 +82,286 @@ public class FeaturegroupController {
    * @param featurestore featurestore to query featuregroups for
    * @return list of XML/JSON DTOs of the featuregroups
    */
+  @TransactionAttribute(TransactionAttributeType.NEVER)
   public List<FeaturegroupDTO> getFeaturegroupsForFeaturestore(Featurestore featurestore) {
     List<Featuregroup> featuregroups = featuregroupFacade.findByFeaturestore(featurestore);
     return featuregroups.stream().map(fg -> convertFeaturegrouptoDTO(fg)).collect(Collectors.toList());
   }
 
   /**
-   * Executes "SHOW CREATE TABLE" on the hive table of the featuregroup formats it as a string and returns it
+   * Clears the contents of a feature group (obviously only works for cached feature groups)
    *
-   * @param featuregroupDTO the featuregroup to get the schema for
-   * @param project         the project of the user making the request
+   * @param featurestore    the featurestore of the feature group
+   * @param featuregroupDTO data about the featuregroup to clear
    * @param user            the user making the request
-   * @param featurestore    the featurestore where the featuregroup resides
-   * @return                JSON/XML DTO with the schema
-   * @throws SQLException
-   * @throws FeaturestoreException
-   * @throws HopsSecurityException
-   */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
-  public RowValueQueryResult getSchema(
-      FeaturegroupDTO featuregroupDTO, Project project, Users user,
-      Featurestore featurestore)
-      throws SQLException, FeaturestoreException, HopsSecurityException {
-    String sqlSchema = parseSqlSchemaResult(getSQLSchemaForFeaturegroup(featuregroupDTO, project, user, featurestore));
-    ColumnValueQueryResult column = new ColumnValueQueryResult("schema", sqlSchema);
-    List<ColumnValueQueryResult> columns = new ArrayList<>();
-    columns.add(column);
-    return new RowValueQueryResult(columns);
-  }
-
-  /**
-   * Converts a featuregroup entity to a Featuregroup DTO
-   *
-   * @param featuregroup featuregroup entity
-   * @return JSON/XML DTO of the featuregroup
-   */
-  private FeaturegroupDTO convertFeaturegrouptoDTO(Featuregroup featuregroup) {
-    FeaturegroupDTO featuregroupDTO = new FeaturegroupDTO(featuregroup);
-    List<FeatureDTO> featureDTOs = featuregroupFacade.getHiveFeatures(featuregroup.getHiveTblId());
-    String primaryKeyName = featuregroupFacade.getHiveTablePrimaryKey(featuregroup.getHiveTblId());
-    featureDTOs.stream().filter(f -> f.getName().equals(primaryKeyName))
-        .collect(Collectors.toList()).get(0).setPrimary(true);
-    featuregroupDTO.setFeatures(featureDTOs);
-    String featuregroupName = featuregroupFacade.getHiveTableName(featuregroup.getHiveTblId());
-    int versionLength = featuregroup.getVersion().toString().length();
-    //Remove the _version suffix
-    featuregroupName = featuregroupName.substring(0, featuregroupName.length() - (1 + versionLength));
-    featuregroupDTO.setName(featuregroupName);
-    String featurestoreName = featurestoreFacade.getHiveDbName(featuregroup.getFeaturestore().getHiveDbId());
-    featuregroupDTO.setFeaturestoreName(featurestoreName);
-    List<String> hdfsStorePaths = featuregroupFacade.getHiveTableHdfsPaths(featuregroup.getHiveTblId());
-    featuregroupDTO.setHdfsStorePaths(hdfsStorePaths);
-    String docComment = featuregroupFacade.getHiveTableComment(featuregroup.getHiveTblId());
-    featuregroupDTO.setDescription(docComment);
-    Long inodeId = featuregroupFacade.getFeaturegroupInodeId(featuregroup.getHiveTblId());
-    featuregroupDTO.setInodeId(inodeId);
-    featuregroupDTO.setDependencies((List) featuregroup.getDependencies(), inodeFacade);
-    return featuregroupDTO;
-  }
-
-  /**
-   * SHOW CREATE TABLE tblName in Hive returns a table with a single column but multiple rows (cut by String length)
-   * this utility method converts the list of rows into a single long string indented with "\n" between rows.
-   *
-   * @param rows rows result from running SHOW CREATE TABLE
-   * @return String representation of SHOW CREATE TABLE in Hive
-   */
-  private String parseSqlSchemaResult(List<RowValueQueryResult> rows) {
-    return StringUtils.join(rows.stream().map
-            (row -> StringUtils.join(row.getColumns().stream().map
-                    (column -> column.getValue()).collect(Collectors.toList()),
-                "")).collect(Collectors.toList()),
-        "\n");
-  }
-
-  /**
-   * Gets the featuregroup Hive table name
-   *
-   * @param featuregroupName name of the featuregroup
-   * @param version          version of the featuregroup
-   * @return                 the hive table name of the featuregroup (featuregroup_version)
-   */
-  private String getTblName(String featuregroupName, Integer version) {
-    return featuregroupName + "_" + version.toString();
-  }
-
-  /**
-   * Creates a new featuregroup: Create Hive Table and store metadata in Hopsworks
-   *
-   * @param project                  the project of the user making the request
-   * @param user                     the user who creates the featuregroup
-   * @param featurestore             the featurestore that the featuregroup belongs to
-   * @param featuregroupName         the name of the new featuregroup
-   * @param features                 string of features separated with comma
-   * @param dependencies             dependencies to create the featuregroup (e.g input datasets to feature engineering)
-   * @param job                      (optional) job to compute this feature group
-   * @param version                  version of the featuregroup
-   * @param featureCorrelationMatrix feature correlation data
-   * @param descriptiveStatistics    descriptive statistics data
-   * @param featuresHistogram        feature distributions data
-   * @param clusterAnalysis          cluster analysis JSON
-   * @return                         a DTO representing the created featuregroup
+   * @return a DTO representation of the cleared feature group
    * @throws FeaturestoreException
    * @throws HopsSecurityException
    * @throws SQLException
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
-  public FeaturegroupDTO createFeaturegroup(
-      Project project, Users user, Featurestore featurestore,
-      String featuregroupName, String features,
-      List<String> dependencies, Jobs job, Integer version,
-      FeatureCorrelationMatrixDTO featureCorrelationMatrix, DescriptiveStatsDTO descriptiveStatistics,
-      FeatureDistributionsDTO featuresHistogram,
-      ClusterAnalysisDTO clusterAnalysis)
-      throws SQLException, FeaturestoreException, HopsSecurityException {
-    //Create Hive Table
-    String db = featurestoreController.getFeaturestoreDbName(featurestore.getProject());
-    String tableName = getTblName(featuregroupName, version);
-    String query = "CREATE TABLE " + db + ".`" + tableName + "` " +
-        features + " STORED AS " +
-        settings.getFeaturestoreDbDefaultStorageFormat();
-    executeUpdateHiveQuery(query, db, project, user);
-    String hdfsUsername = hdfsUsersController.getHdfsUserName(project, user);
+  public FeaturegroupDTO clearFeaturegroup(Featurestore featurestore, FeaturegroupDTO featuregroupDTO, Users user)
+      throws FeaturestoreException, HopsSecurityException, SQLException {
+    switch (featuregroupDTO.getFeaturegroupType()) {
+      case CACHED_FEATURE_GROUP:
+        deleteFeaturegroupIfExists(featurestore, featuregroupDTO, user);
+        return createFeaturegroup(featurestore, featuregroupDTO, user);
+      case ON_DEMAND_FEATURE_GROUP:
+        throw new FeaturestoreException(
+            RESTCodes.FeaturestoreErrorCode.CLEAR_OPERATION_NOT_SUPPORTED_FOR_ON_DEMAND_FEATUREGROUPS,
+            Level.FINE, "featuregroupId: " + featuregroupDTO.getId());
+      default:
+        throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_TYPE.getMessage()
+            + ", Recognized Feature group types are: " + FeaturegroupType.ON_DEMAND_FEATURE_GROUP + ", and: " +
+            FeaturegroupType.CACHED_FEATURE_GROUP + ". The provided feature group type was not recognized: "
+            + featuregroupDTO.getFeaturegroupType());
+    }
+  }
 
-    //Get HiveTblId of the newly created table from the metastore
-    Long hiveTblId = featuregroupFacade.getHiveTableId(tableName, featurestore.getHiveDbId());
-
-    //Store featuregroup metadata in Hopsworks
+  /**
+   * Creates a new feature group in a featurestore
+   *
+   * @param featurestore    the featurestore where the new feature group will be created
+   * @param featuregroupDTO input data about the feature group to create
+   * @param user            the user making the request
+   * @return a DTO representation of the created feature group
+   * @throws FeaturestoreException
+   * @throws HopsSecurityException
+   * @throws SQLException
+   */
+  @TransactionAttribute(TransactionAttributeType.NEVER)
+  public FeaturegroupDTO createFeaturegroup(Featurestore featurestore, FeaturegroupDTO featuregroupDTO, Users user)
+      throws FeaturestoreException, HopsSecurityException, SQLException {
+    
+    //Verify basic feature group input information
+    verifyFeaturegroupUserInput(featuregroupDTO, featurestore);
+    
+    //Verify statistics input (more detailed input verification is delegated to lower level controllers)
+    verifyStatisticsInput(featuregroupDTO);
+    
+    //Extract metadata
+    String hdfsUsername = hdfsUsersController.getHdfsUserName(featurestore.getProject(), user);
     HdfsUsers hdfsUser = hdfsUsersFacade.findByName(hdfsUsername);
+  
+    //Persist specific feature group metadata (cached fg or on-demand fg)
+    OnDemandFeaturegroup onDemandFeaturegroup = null;
+    CachedFeaturegroup cachedFeaturegroup = null;
+    switch (featuregroupDTO.getFeaturegroupType()) {
+      case CACHED_FEATURE_GROUP:
+        cachedFeaturegroup = cachedFeaturegroupController.createCachedFeaturegroup(featurestore,
+          (CachedFeaturegroupDTO) featuregroupDTO, user);
+        break;
+      case ON_DEMAND_FEATURE_GROUP:
+        onDemandFeaturegroup =
+          onDemandFeaturegroupController.createOnDemandFeaturegroup((OnDemandFeaturegroupDTO) featuregroupDTO);
+        break;
+      default:
+        throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_TYPE.getMessage()
+          + ", Recognized Feature group types are: " + FeaturegroupType.ON_DEMAND_FEATURE_GROUP + ", and: " +
+          FeaturegroupType.CACHED_FEATURE_GROUP + ". The provided feature group type was not recognized: "
+          + featuregroupDTO.getFeaturegroupType());
+    }
+    
+    //Persist basic feature group metadata
     Featuregroup featuregroup = new Featuregroup();
     featuregroup.setFeaturestore(featurestore);
     featuregroup.setHdfsUserId(hdfsUser.getId());
-    featuregroup.setJob(job);
     featuregroup.setCreated(new Date());
     featuregroup.setCreator(user);
-    featuregroup.setVersion(version);
-    featuregroup.setHiveTblId(hiveTblId);
+    featuregroup.setVersion(featuregroupDTO.getVersion());
+    featuregroup.setFeaturegroupType(featuregroupDTO.getFeaturegroupType());
+    featuregroup.setCachedFeaturegroup(cachedFeaturegroup);
+    featuregroup.setOnDemandFeaturegroup(onDemandFeaturegroup);
     featuregroupFacade.persist(featuregroup);
-    featurestoreDependencyController.updateFeaturestoreDependencies(featuregroup, null, dependencies);
+
+    // Store statistics
     featurestoreStatisticController.updateFeaturestoreStatistics(featuregroup, null,
-      featureCorrelationMatrix, descriptiveStatistics, featuresHistogram, clusterAnalysis);
+        featuregroupDTO.getFeatureCorrelationMatrix(), featuregroupDTO.getDescriptiveStatistics(),
+        featuregroupDTO.getFeaturesHistogram(), featuregroupDTO.getClusterAnalysis());
+  
+    //Get jobs
+    List<Jobs> jobs = getJobs(featuregroupDTO.getJobs(), featurestore.getProject());
+    
+    //Store jobs
+    featurestoreJobController.insertJobs(featuregroup, jobs);
+    
     return convertFeaturegrouptoDTO(featuregroup);
+  }
+  
+  /**
+   * Lookup jobs by list of jobNames
+   *
+   * @param jobDTOs the DTOs with the job names
+   * @param project the project that owns the jobs
+   * @return a list of job entities
+   */
+  private List<Jobs> getJobs(List<FeaturestoreJobDTO> jobDTOs, Project project) {
+    if(jobDTOs != null) {
+      return jobDTOs.stream().filter(jobDTO -> jobDTO != null && !Strings.isNullOrEmpty(jobDTO.getJobName()))
+          .map(jobDTO -> jobDTO.getJobName()).distinct().map(jobName ->
+          jobFacade.findByProjectAndName(project, jobName)).collect(Collectors.toList());
+    } else {
+      return new ArrayList<>();
+    }
+  }
+
+  /**
+   * Convert a featuregroup entity to a DTO representation
+   *
+   * @param featuregroup the entity to convert
+   * @return a DTO representation of the entity
+   */
+  private FeaturegroupDTO convertFeaturegrouptoDTO(Featuregroup featuregroup) {
+    String featurestoreName = featurestoreFacade.getHiveDbName(featuregroup.getFeaturestore().getHiveDbId());
+    switch (featuregroup.getFeaturegroupType()) {
+      case CACHED_FEATURE_GROUP:
+        CachedFeaturegroupDTO cachedFeaturegroupDTO =
+          cachedFeaturegroupController.convertCachedFeaturegroupToDTO(featuregroup);
+        cachedFeaturegroupDTO.setFeaturestoreName(featurestoreName);
+        return cachedFeaturegroupDTO;
+      case ON_DEMAND_FEATURE_GROUP:
+        OnDemandFeaturegroupDTO onDemandFeaturegroupDTO = new
+          OnDemandFeaturegroupDTO(featuregroup);
+        onDemandFeaturegroupDTO.setFeaturestoreName(featurestoreName);
+        return onDemandFeaturegroupDTO;
+      default:
+        throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_TYPE.getMessage()
+            + ", Recognized Feature group types are: " + FeaturegroupType.ON_DEMAND_FEATURE_GROUP + ", and: " +
+            FeaturegroupType.CACHED_FEATURE_GROUP + ". The provided feature group type was not recognized: "
+            + featuregroup.getFeaturegroupType());
+    }
   }
 
   /**
    * Retrieves a featuregroup with a particular id from a particular featurestore
    *
-   * @param id           if of the featuregroup
+   * @param id           id of the featuregroup
    * @param featurestore the featurestore that the featuregroup belongs to
    * @return XML/JSON DTO of the featuregroup
    */
-  public FeaturegroupDTO getFeaturegroupWithIdAndFeaturestore(Featurestore featurestore, Integer id)
-      throws FeaturestoreException {
-    Featuregroup featuregroup = featuregroupFacade.findByIdAndFeaturestore(id, featurestore);
-    if (featuregroup == null) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_NOT_FOUND,
-          Level.FINE, "featuregroupId: " + id);
+  public FeaturegroupDTO getFeaturegroupWithIdAndFeaturestore(Featurestore featurestore, Integer id) {
+    Featuregroup featuregroup = verifyFeaturegroupId(id, featurestore);
+    return convertFeaturegrouptoDTO(featuregroup);
+  }
+
+  /**
+   * Updates metadata for a featuregroup
+   *
+   * @param featurestore    the featurestore where the featuregroup resides
+   * @param featuregroupDTO the updated featuregroup metadata
+   * @return DTO of the updated feature group
+   * @throws FeaturestoreException
+   */
+  @TransactionAttribute(TransactionAttributeType.NEVER)
+  public FeaturegroupDTO updateFeaturegroupMetadata(
+      Featurestore featurestore, FeaturegroupDTO featuregroupDTO) throws FeaturestoreException {
+    Featuregroup featuregroup = verifyFeaturegroupId(featuregroupDTO.getId(), featurestore);
+    //Get jobs
+    List<Jobs> jobs = getJobs(featuregroupDTO.getJobs(), featurestore.getProject());
+    //Store jobs
+    featurestoreJobController.insertJobs(featuregroup, jobs);
+    //Update on-demand feature group metadata
+    if (featuregroup.getFeaturegroupType() == FeaturegroupType.ON_DEMAND_FEATURE_GROUP) {
+      onDemandFeaturegroupController.updateOnDemandFeaturegroupMetadata(featuregroup.getOnDemandFeaturegroup(),
+        (OnDemandFeaturegroupDTO) featuregroupDTO);
     }
     return convertFeaturegrouptoDTO(featuregroup);
   }
 
   /**
-   * Updates metadata about a featuregroup (since only metadata is changed, the Hive table does not need
-   * to be modified)
+   * Updates stats for a featuregroup
    *
-   * @param featurestore             the featurestore where the featuregroup resides
-   * @param id                       the id of the featuregroup
-   * @param job                      the new job to associate with the featuregroup
-   * @param dependencies             the new dependencies to associate with the featuregroup
-   * @param featureCorrelationMatrix base64 string with feature correlation matrix
-   * @param descriptiveStatistics    JSON string with descriptive statistics
-   * @param updateMetadata           boolean flag whether to update featuregroup metadata
-   * @param updateStats              boolean flag whether to update featuregroup stats
-   * @param featuresHistogram        base64 string with histogram figures for features
-   * @param clusterAnalysis          cluster analysis JSON string
-   * @return
+   * @param featurestore    the featurestore where the featuregroup resides
+   * @param featuregroupDTO a DTO containing the updated featuregroup stats
+   * @return DTO of the updated feature group
    * @throws FeaturestoreException
    */
+
   @TransactionAttribute(TransactionAttributeType.NEVER)
-  public FeaturegroupDTO updateFeaturegroupMetadata(
-      Featurestore featurestore, Integer id, Jobs job, List<String> dependencies,
-      FeatureCorrelationMatrixDTO featureCorrelationMatrix,
-      DescriptiveStatsDTO descriptiveStatistics, boolean updateMetadata, boolean updateStats,
-      FeatureDistributionsDTO featuresHistogram,
-      ClusterAnalysisDTO clusterAnalysis)
-      throws FeaturestoreException {
-    Featuregroup featuregroup = featuregroupFacade.findByIdAndFeaturestore(id, featurestore);
-    if (featuregroup == null) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_NOT_FOUND,
-          Level.FINE, "featuregroupId: " + id);
+  public FeaturegroupDTO updateFeaturegroupStats(
+      Featurestore featurestore, FeaturegroupDTO featuregroupDTO) {
+    Featuregroup featuregroup = verifyFeaturegroupId(featuregroupDTO.getId(), featurestore);
+    verifyStatisticsInput(featuregroupDTO);
+    featurestoreStatisticController.updateFeaturestoreStatistics(featuregroup, null,
+      featuregroupDTO.getFeatureCorrelationMatrix(), featuregroupDTO.getDescriptiveStatistics(),
+      featuregroupDTO.getFeaturesHistogram(), featuregroupDTO.getClusterAnalysis());
+    return convertFeaturegrouptoDTO(featuregroup);
+  }
+
+  /**
+   * Verifies statistics user input for a feature group
+   *
+   * @param featuregroupDTO DTO containing the feature group statistics
+   */
+  public void verifyStatisticsInput(FeaturegroupDTO featuregroupDTO) {
+    if (featuregroupDTO.getFeatureCorrelationMatrix() != null &&
+        featuregroupDTO.getFeatureCorrelationMatrix().getFeatureCorrelations().size() >
+            FeaturestoreClientSettingsDTO.FEATURESTORE_STATISTICS_MAX_CORRELATIONS) {
+      throw new IllegalArgumentException(
+          RESTCodes.FeaturestoreErrorCode.CORRELATION_MATRIX_EXCEED_MAX_SIZE.getMessage());
     }
-    Featuregroup updatedFeaturegroup = featuregroup;
-    if (updateMetadata) {
-      updatedFeaturegroup =
-          featuregroupFacade.updateFeaturegroupMetadata(featuregroup, job);
-      featurestoreDependencyController.updateFeaturestoreDependencies(updatedFeaturegroup, null,
-        dependencies);
+  }
+
+  /**
+   * Deletes a featuregroup with a particular id or name from a featurestore
+   *
+   * @param featurestore    the featurestore that the featuregroup belongs to
+   * @param featuregroupDTO DTO representation of the feature group to delete
+   * @param user            the user making the request
+   * @return JSON/XML DTO of the deleted featuregroup
+   * @throws SQLException
+   * @throws FeaturestoreException
+   * @throws HopsSecurityException
+   */
+  @TransactionAttribute(TransactionAttributeType.NEVER)
+  public FeaturegroupDTO deleteFeaturegroupIfExists(
+      Featurestore featurestore, FeaturegroupDTO featuregroupDTO, Users user)
+      throws SQLException, FeaturestoreException, HopsSecurityException {
+    Featuregroup featuregroup = null;
+    if (featuregroupDTO.getId() != null) {
+      featuregroup = verifyFeaturegroupId(featuregroupDTO.getId(), null);
+    } else {
+      if (featuregroupDTO.getId() == null) {
+        List<Featuregroup> featuregroups = featuregroupFacade.findByFeaturestore(featurestore);
+        featuregroups = featuregroups.stream().filter(fg -> {
+          FeaturegroupDTO convertedFeaturegroupDTO = convertFeaturegrouptoDTO(fg);
+          return convertedFeaturegroupDTO.getName().equals(featuregroupDTO.getName()) &&
+              convertedFeaturegroupDTO.getVersion() == featuregroupDTO.getVersion();
+        }).collect(Collectors.toList());
+        if (!featuregroups.isEmpty())
+          featuregroup = featuregroups.get(0);
+      } else {
+        featuregroup = featuregroupFacade.findById(featuregroupDTO.getId());
+      }
     }
-    if (updateStats) {
-      featurestoreStatisticController.updateFeaturestoreStatistics(featuregroup, null,
-        featureCorrelationMatrix, descriptiveStatistics, featuresHistogram, clusterAnalysis);
+
+    if (featuregroup != null) {
+      FeaturegroupDTO convertedFeaturegroupDTO = convertFeaturegrouptoDTO(featuregroup);
+      switch (featuregroup.getFeaturegroupType()) {
+        case CACHED_FEATURE_GROUP:
+          //Delete hive_table will cascade to cached_featuregroup_table which will cascade to feature_group table
+          cachedFeaturegroupController.dropHiveFeaturegroup(convertedFeaturegroupDTO, featurestore, user);
+          break;
+        case ON_DEMAND_FEATURE_GROUP:
+          //Delete on_demand_feature_group will cascade will cascade to feature_group table
+          onDemandFeaturegroupController.removeOnDemandFeaturegroup(featuregroup.getOnDemandFeaturegroup());
+          break;
+        default:
+          throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_TYPE, Level.FINE,
+              ", Recognized Feature group types are: " + FeaturegroupType.ON_DEMAND_FEATURE_GROUP + ", and: " +
+              FeaturegroupType.CACHED_FEATURE_GROUP + ". The provided feature group type was not recognized: "
+              + featuregroup.getFeaturegroupType());
+      }
+      return convertedFeaturegroupDTO;
+    } else {
+      return null;
     }
-    return convertFeaturegrouptoDTO(updatedFeaturegroup);
   }
 
   /**
    * Previews a given featuregroup by doing a SELECT LIMIT query on the Hive Table
    *
    * @param featuregroupDTO DTO of the featuregroup to preview
-   * @param project         the project of the user making the request
    * @param featurestore    the feature store where the feature group resides
    * @param user            the user making the request
    * @return list of feature-rows from the Hive table where the featuregroup is stored
@@ -368,241 +371,95 @@ public class FeaturegroupController {
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public List<RowValueQueryResult> getFeaturegroupPreview(
-      FeaturegroupDTO featuregroupDTO, Featurestore featurestore, Project project, Users user)
-      throws SQLException, FeaturestoreException, HopsSecurityException {
-    String tbl = getTblName(featuregroupDTO.getName(), featuregroupDTO.getVersion());
-    String query = "SELECT * FROM " + tbl + " LIMIT 20";
-    String db = featurestoreController.getFeaturestoreDbName(featurestore.getProject());
-    return executeReadHiveQuery(query, db, project, user);
+      FeaturegroupDTO featuregroupDTO, Featurestore featurestore, Users user) throws SQLException,
+      FeaturestoreException, HopsSecurityException {
+    switch (featuregroupDTO.getFeaturegroupType()) {
+      case CACHED_FEATURE_GROUP:
+        return cachedFeaturegroupController.getFeaturegroupPreview(featuregroupDTO, featurestore, user);
+      case ON_DEMAND_FEATURE_GROUP:
+        throw new FeaturestoreException(
+            RESTCodes.FeaturestoreErrorCode.PREVIEW_NOT_SUPPORTED_FOR_ON_DEMAND_FEATUREGROUPS,
+            Level.FINE, "featuregroupId: " + featuregroupDTO.getId());
+      default:
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_TYPE, Level.FINE,
+            ", Recognized Feature group types are: " + FeaturegroupType.ON_DEMAND_FEATURE_GROUP + ", and: " +
+            FeaturegroupType.CACHED_FEATURE_GROUP + ". The provided feature group type was not recognized: "
+            + featuregroupDTO.getFeaturegroupType());
+    }
   }
 
   /**
-   * Gets the SQL schema that was used to create the Hive table for a featuregroup
+   * Executes "SHOW CREATE TABLE" on the hive table of the featuregroup formats it as a string and returns it
    *
-   * @param featuregroupDTO DTO of the featuregroup
-   * @param project         the project of the user making the request
+   * @param featuregroupDTO the featuregroup to get the schema for
    * @param user            the user making the request
    * @param featurestore    the featurestore where the featuregroup resides
+   * @return JSON/XML DTO with the schema
    * @throws SQLException
    * @throws FeaturestoreException
    * @throws HopsSecurityException
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
-  private List<RowValueQueryResult> getSQLSchemaForFeaturegroup(
-      FeaturegroupDTO featuregroupDTO,
-      Project project, Users user, Featurestore featurestore)
+  public RowValueQueryResult getDDLSchema(FeaturegroupDTO featuregroupDTO, Users user, Featurestore featurestore)
       throws SQLException, FeaturestoreException, HopsSecurityException {
-    String tbl = getTblName(featuregroupDTO.getName(), featuregroupDTO.getVersion());
-    String query = "SHOW CREATE TABLE " + tbl;
-    String db = featurestoreController.getFeaturestoreDbName(featurestore.getProject());
-    return executeReadHiveQuery(query, db, project, user);
-  }
-
-  /**
-   * Gets a featuregroup in a specific project and featurestore with the given name and version
-   *
-   * @param project          the project of the user making the request
-   * @param featurestore     the featurestore where the featuregroup resides
-   * @param featuregroupName the name of the featuregroup
-   * @param version          version of the featuregroup
-   * @return
-   * @throws FeaturestoreException
-   */
-  public FeaturegroupDTO getFeaturegroupByFeaturestoreAndName(
-      Project project, Featurestore featurestore, String featuregroupName, int version) throws FeaturestoreException {
-    List<Featuregroup> featuregroups = featuregroupFacade.findByFeaturestore(featurestore);
-    List<FeaturegroupDTO> featuregroupDTOS =
-        featuregroups.stream().map(fg -> convertFeaturegrouptoDTO(fg)).collect(Collectors.toList());
-    List<FeaturegroupDTO> featuregroupsDTOWithName =
-        featuregroupDTOS.stream().filter(fg -> fg.getName().equals(featuregroupName) &&
-            fg.getVersion().intValue() == version)
-            .collect(Collectors.toList());
-    if (featuregroupsDTOWithName.size() != 1) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_NOT_FOUND,
-          Level.FINE, "featurestoreId: " + featurestore.getId() + " , project: " + project.getName() +
-          " featuregroupName: " + featuregroupName);
+    switch (featuregroupDTO.getFeaturegroupType()) {
+      case CACHED_FEATURE_GROUP:
+        return cachedFeaturegroupController.getDDLSchema(featuregroupDTO, user, featurestore);
+      case ON_DEMAND_FEATURE_GROUP:
+        throw new FeaturestoreException(
+            RESTCodes.FeaturestoreErrorCode.CANNOT_FETCH_HIVE_SCHEMA_FOR_ON_DEMAND_FEATUREGROUPS,
+            Level.FINE, "featuregroupId: " + featuregroupDTO.getId());
+      default:
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_TYPE, Level.FINE,
+            ", Recognized Feature group types are: " + FeaturegroupType.ON_DEMAND_FEATURE_GROUP + ", and: " +
+            FeaturegroupType.CACHED_FEATURE_GROUP + ". The provided feature group type was not recognized: "
+            + featuregroupDTO.getFeaturegroupType());
     }
-    //Featuregroup name corresponds to Hive table inside the featurestore so uniqueness is enforced by Hive
-    return featuregroupsDTOWithName.get(0);
   }
-
+  
   /**
-   * Deletes a featuregroup with a particular id from a particular featurestore
+   * Verifies the id of a feature group
    *
-   * @param featurestore the featurestore that the featuregroup belongs to
-   * @param id           if of the featuregroup
-   * @param project      the project of the user making the request
-   * @param user         the user making the request
-   * @return JSON/XML DTO of the deleted featuregroup
-   * @throws SQLException
-   * @throws FeaturestoreException
-   * @throws HopsSecurityException
+   * @param featuregroupId the id of the feature group
+   * @param featurestore the featurestore to query
+   * @return the featuregroup with the id if it passed the validation
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
-  public FeaturegroupDTO deleteFeaturegroupWithIdAndFeaturestore(
-      Featurestore featurestore, Integer id, Project project, Users user)
-      throws SQLException, FeaturestoreException, HopsSecurityException {
-    Featuregroup featuregroup = featuregroupFacade.findByIdAndFeaturestore(id, featurestore);
+  private Featuregroup verifyFeaturegroupId(Integer featuregroupId, Featurestore featurestore) {
+    Featuregroup featuregroup = null;
+    if(featurestore != null){
+      featuregroup = featuregroupFacade.findByIdAndFeaturestore(featuregroupId, featurestore);
+    } else {
+      featuregroup = featuregroupFacade.findById(featuregroupId);
+    }
     if (featuregroup == null) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_NOT_FOUND, Level.SEVERE,
-          "Could not find feature group with id: " + id + " in feature store:" + featurestore +
-              " , project: " + project.getName());
+      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_NOT_FOUND +
+        "featuregroupId: " + featuregroupId);
     }
-    FeaturegroupDTO featuregroupDTO = convertFeaturegrouptoDTO(featuregroup);
-    dropFeaturegroup(featuregroupDTO.getName(), featuregroup.getVersion(), project, user, featurestore);
-    return featuregroupDTO;
+    return featuregroup;
   }
 
   /**
-   * Runs a DROP TABLE statement on a featuregroup of a featurestore hive DB
+   * Verify user input
    *
-   * @param featuregroupName name of the featuregroup to delete
-   * @param version          version of the featuregroup to delete
-   * @param project          the project of the user making the request
-   * @param user             the user making the request
-   * @param featurestore     the featurestore where the featuregroup resides
-   * @throws SQLException
-   * @throws FeaturestoreException
-   * @throws HopsSecurityException
-   */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
-  public void dropFeaturegroup(
-      String featuregroupName, Integer version,
-      Project project, Users user, Featurestore featurestore) throws SQLException,
-      FeaturestoreException, HopsSecurityException {
-    String db = featurestoreController.getFeaturestoreDbName(featurestore.getProject());
-    String tableName = getTblName(featuregroupName, version);
-    String query = "DROP TABLE IF EXISTS `" + tableName + "`";
-    executeUpdateHiveQuery(query, db, project, user);
-  }
-
-  /**
-   * Opens a JDBC connection to HS2 using the given database and project-user and then executes an update
-   * SQL query
-   *
-   * @param query        the update query
-   * @param databaseName the name of the Hive database
-   * @param project      the project of the user making the request
-   * @param user         the user making the request
-   * @throws SQLException
-   * @throws FeaturestoreException
-   * @throws HopsSecurityException
-   */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
-  private void executeUpdateHiveQuery(String query, String databaseName, Project project, Users user)
-      throws SQLException, FeaturestoreException, HopsSecurityException {
-    //Re-create the connection every time since the connection is database and user-specific
-    Statement stmt = null;
-    Connection conn = null;
-    try {
-      conn = initConnection(databaseName, project, user);
-      // Create database
-      stmt = conn.createStatement();
-      stmt.executeUpdate(query);
-    } catch (SQLException e) {
-      //Hive throws a generic HiveSQLException not a specific AuthorizationException
-      if (e.getMessage().toLowerCase().contains("permission denied"))
-        throw new HopsSecurityException(RESTCodes.SecurityErrorCode.HDFS_ACCESS_CONTROL, Level.FINE,
-            "project: " + project.getName() +
-                ", hive database: " + databaseName + " hive query: " + query, e.getMessage(), e);
-      else
-        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.HIVE_UPDATE_STATEMENT_ERROR, Level.SEVERE,
-            "project: " + project.getName() +
-                ", hive database: " + databaseName + " hive query: " + query,
-            e.getMessage(), e);
-    } finally {
-      if (stmt != null) {
-        stmt.close();
-      }
-      closeConnection(conn, user, project);
-    }
-  }
-
-  /**
-   * Parses a ResultSet from a Hive query into a list of RowValueQueryResultDTOs
-   *
-   * @param rs resultset to parse
-   * @return list of parsed rows
-   * @throws SQLException
-   */
-  private List<RowValueQueryResult> parseResultset(ResultSet rs) throws SQLException {
-    ResultSetMetaData rsmd = rs.getMetaData();
-    int columnsNumber = rsmd.getColumnCount();
-    List<RowValueQueryResult> rows = new ArrayList<>();
-    while (rs.next()) {
-      List<ColumnValueQueryResult> columnValues = new ArrayList<>();
-      for (int i = 1; i <= columnsNumber; i++) {
-        String columnName = rsmd.getColumnName(i);
-        Object columnValue = rs.getObject(i);
-        String columnStrValue = (columnValue == null ? null : columnValue.toString());
-        ColumnValueQueryResult featuredataDTO = new ColumnValueQueryResult(columnName, columnStrValue);
-        columnValues.add(featuredataDTO);
-      }
-      rows.add(new RowValueQueryResult(columnValues));
-    }
-    return rows;
-  }
-
-  /**
-   * Opens a JDBC connection to HS2 using the given database and project-user and then executes a regular
-   * SQL query
-   *
-   * @param query        the read query
-   * @param databaseName the name of the Hive database
-   * @param project      the project that owns the Hive database
-   * @param user         the user making the request
-   * @return parsed resultset
-   * @throws SQLException
-   * @throws HopsSecurityException
+   * @param featuregroupDTO the provided user input
+   * @param featurestore    the feature store to perform the operation against
    * @throws FeaturestoreException
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
-  private List<RowValueQueryResult> executeReadHiveQuery(
-      String query, String databaseName, Project project, Users user)
-      throws SQLException, FeaturestoreException, HopsSecurityException {
-    Connection conn = null;
-    Statement stmt = null;
-    List<RowValueQueryResult> resultList = null;
-    try {
-      //Re-create the connection every time since the connection is database and user-specific
-      conn = initConnection(databaseName, project, user);
-      stmt = conn.createStatement();
-      ResultSet rs = stmt.executeQuery(query);
-      resultList = parseResultset(rs);
-    } catch (SQLException e) {
-      //Hive throws a generic HiveSQLException not a specific AuthorizationException
-      if (e.getMessage().toLowerCase().contains("permission denied"))
-        throw new HopsSecurityException(RESTCodes.SecurityErrorCode.HDFS_ACCESS_CONTROL, Level.FINE,
-            "project: " + project.getName() +
-                ", hive database: " + databaseName + " hive query: " + query, e.getMessage(), e);
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.HIVE_READ_QUERY_ERROR, Level.SEVERE,
-          "project: " + project.getName() + ", hive database: " + databaseName + " hive query: " + query,
-          e.getMessage(), e);
-    } finally {
-      if (stmt != null) {
-        stmt.close();
-      }
-      closeConnection(conn, user, project);
+  public void verifyFeaturegroupUserInput(FeaturegroupDTO featuregroupDTO, Featurestore featurestore)
+    throws FeaturestoreException {
+    if (featurestore == null) {
+      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_NOT_FOUND.getMessage());
     }
-    return resultList;
-  }
-
-  /**
-   * Checks if the JDBC connection to HS2 is open, and if so closes it.
-   *
-   * @param conn the JDBC connection
-   * @param user the user using the connection
-   * @param project the project where the connection is used
-   */
-  private void closeConnection(Connection conn, Users user, Project project) {
-    try {
-      if (conn != null) {
-        conn.close();
-      }
-    } catch (SQLException e) {
-      LOGGER.log(Level.WARNING, "Error closing Hive JDBC connection: " +  e);
-    } finally {
-      certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());
+    if (featuregroupDTO.getFeaturegroupType() != FeaturegroupType.CACHED_FEATURE_GROUP &&
+        featuregroupDTO.getFeaturegroupType() != FeaturegroupType.ON_DEMAND_FEATURE_GROUP) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_TYPE, Level.FINE,
+          ", Recognized Feature group types are: " + FeaturegroupType.ON_DEMAND_FEATURE_GROUP + ", and: " +
+          FeaturegroupType.CACHED_FEATURE_GROUP + ". The provided feature group type was not recognized: "
+          + featuregroupDTO.getFeaturegroupType());
+    }
+    if (featuregroupDTO.getVersion() == null) {
+      throw new IllegalArgumentException(
+          RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_VERSION_NOT_PROVIDED.getMessage());
     }
   }
 }

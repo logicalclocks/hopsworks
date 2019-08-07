@@ -17,15 +17,18 @@
 package io.hops.hopsworks.common.dao.featurestore.featuregroup;
 
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
-import io.hops.hopsworks.common.dao.featurestore.dependencies.FeaturestoreDependency;
+import io.hops.hopsworks.common.dao.featurestore.featuregroup.cached_featuregroup.CachedFeaturegroup;
+import io.hops.hopsworks.common.dao.featurestore.featuregroup.on_demand_featuregroup.OnDemandFeaturegroup;
+import io.hops.hopsworks.common.dao.featurestore.jobs.FeaturestoreJob;
 import io.hops.hopsworks.common.dao.featurestore.stats.FeaturestoreStatistic;
-import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.user.Users;
 
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -34,6 +37,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -67,9 +71,6 @@ public class Featuregroup implements Serializable {
   @JoinColumn(name = "feature_store_id", referencedColumnName = "id")
   @ManyToOne(optional = false)
   private Featurestore featurestore;
-  @JoinColumn(name = "job_id", referencedColumnName = "id")
-  @ManyToOne(optional = false)
-  private Jobs job;
   @Basic(optional = false)
   @NotNull
   @Column(name = "hdfs_user_id")
@@ -83,17 +84,22 @@ public class Featuregroup implements Serializable {
   private Users creator;
   @Basic(optional = false)
   @NotNull
-  @Column(name = "hive_tbl_id")
-  private Long hiveTblId;
-  @Basic(optional = false)
-  @NotNull
   @Column(name = "version")
   private Integer version;
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "featuregroup")
   private Collection<FeaturestoreStatistic> statistics;
+  @NotNull
+  @Enumerated(EnumType.ORDINAL)
+  @Column(name = "feature_group_type")
+  private FeaturegroupType featuregroupType = FeaturegroupType.CACHED_FEATURE_GROUP;
+  @JoinColumn(name = "on_demand_feature_group_id", referencedColumnName = "id")
+  @OneToOne
+  private OnDemandFeaturegroup onDemandFeaturegroup;
+  @JoinColumn(name = "cached_feature_group_id", referencedColumnName = "id")
+  @OneToOne
+  private CachedFeaturegroup cachedFeaturegroup;
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "featuregroup")
-  private Collection<FeaturestoreDependency> dependencies;
-
+  private Collection<FeaturestoreJob> jobs;
 
   public static long getSerialVersionUID() {
     return serialVersionUID;
@@ -139,22 +145,6 @@ public class Featuregroup implements Serializable {
     this.creator = creator;
   }
 
-  public Jobs getJob() {
-    return job;
-  }
-
-  public void setJob(Jobs job) {
-    this.job = job;
-  }
-
-  public Long getHiveTblId() {
-    return hiveTblId;
-  }
-
-  public void setHiveTblId(Long hiveTblId) {
-    this.hiveTblId = hiveTblId;
-  }
-
   public Integer getVersion() {
     return version;
   }
@@ -170,35 +160,53 @@ public class Featuregroup implements Serializable {
   public void setStatistics(Collection<FeaturestoreStatistic> statistics) {
     this.statistics = statistics;
   }
-
-  public Collection<FeaturestoreDependency> getDependencies() {
-    return dependencies;
+  
+  public FeaturegroupType getFeaturegroupType() {
+    return featuregroupType;
+  }
+  
+  public void setFeaturegroupType(FeaturegroupType featuregroupType) {
+    this.featuregroupType = featuregroupType;
   }
 
-  public void setDependencies(Collection<FeaturestoreDependency> dependencies) {
-    this.dependencies = dependencies;
+  public OnDemandFeaturegroup getOnDemandFeaturegroup() {
+    return onDemandFeaturegroup;
   }
 
+  public void setOnDemandFeaturegroup(OnDemandFeaturegroup onDemandFeaturegroup) {
+    this.onDemandFeaturegroup = onDemandFeaturegroup;
+  }
+
+  public CachedFeaturegroup getCachedFeaturegroup() {
+    return cachedFeaturegroup;
+  }
+
+  public void setCachedFeaturegroup(CachedFeaturegroup cachedFeaturegroup) {
+    this.cachedFeaturegroup = cachedFeaturegroup;
+  }
+  
+  public Collection<FeaturestoreJob> getJobs() {
+    return jobs;
+  }
+  
+  public void setJobs(Collection<FeaturestoreJob> jobs) {
+    this.jobs = jobs;
+  }
+  
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
     if (!(o instanceof Featuregroup)) return false;
 
     Featuregroup that = (Featuregroup) o;
-
-    if (id != null)
-      if (!id.equals(that.id)) return false;
-    if (job != null)
-      if (!job.equals(that.job)) return false;
+    if (id != null && !id.equals(that.id)) return false;
     if (!featurestore.equals(that.featurestore)) return false;
     if (!hdfsUserId.equals(that.hdfsUserId)) return false;
     if (!version.equals(that.version)) return false;
-    if (!hiveTblId.equals(that.hiveTblId)) return false;
-    if (dependencies != null)
-      if (!dependencies.equals(that.dependencies)) return false;
-    if (created != null)
-      if (!created.equals(that.created)) return false;
+    if (created != null && !created.equals(that.created)) return false;
     if (!creator.equals(that.creator)) return false;
+    if (featuregroupType != null ? !featuregroupType.equals(that.featuregroupType) :
+      that.featuregroupType != null) return false;
     return featurestore.equals(that.featurestore);
   }
 
@@ -207,12 +215,10 @@ public class Featuregroup implements Serializable {
     int result = id != null ? id.hashCode() : 0;
     result = 31 * result + featurestore.hashCode();
     result = 31 * result + hdfsUserId.hashCode();
-    result = 31 * result + hiveTblId.hashCode();
     result = 31 * result + version.hashCode();
     result = 31 * result + (created != null ? created.hashCode() : 0);
-    result = 31 * result + (job != null ? job.hashCode() : 0);
-    result = 31 * result + (dependencies != null ? dependencies.hashCode() : 0);
     result = 31 * result + creator.hashCode();
+    result = 31 * result + (featuregroupType != null ? featuregroupType.hashCode() : 0);
     return result;
   }
 }

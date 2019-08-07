@@ -334,7 +334,6 @@ angular.module('hopsWorksApp')
                 self.tourService.currentStep_TourThree = 2;
                 self.tourService.createdJobName = self.jobname;
               }
-
               JobService.putJob(self.projectId, self.runConfig).then(
                       function (success) {
                         $location.path('project/' + self.projectId + '/jobs');
@@ -633,6 +632,7 @@ angular.module('hopsWorksApp')
                 //The user changed their mind.
               });
             };
+
             /**
              * Open a dialog for directory selection.
              * @param {String} reason Goal for which the file is selected. (JobType or "LIBRARY").

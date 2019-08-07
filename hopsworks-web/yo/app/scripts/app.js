@@ -76,8 +76,7 @@ angular.module('hopsWorksApp', [
   'nvd3',
   'ui.toggle',
   'ngFileSaver',
-  'ngFileUpload',
-  'googlechart'
+  'ngFileUpload'
 ])
         .config(['$routeProvider', '$httpProvider', '$compileProvider', 'flowFactoryProvider', 'accordionConfig',
           function ($routeProvider, $httpProvider, $compileProvider, flowFactoryProvider, accordionConfig) {
@@ -444,6 +443,36 @@ angular.module('hopsWorksApp', [
                             }]
                     }
                 })
+                .when('/project/:projectID/newfeaturegroup', {
+                    templateUrl: 'views/newFeaturegroup.html',
+                    controller: 'ProjectCtrl as projectCtrl',
+                    resolve: {
+                        auth: ['$q', '$route', 'AuthGuardService',
+                            function ($q, $route, AuthGuardService) {
+                                return AuthGuardService.guardProject($q, $route.current.params.projectID);
+                            }]
+                    }
+                })
+                .when('/project/:projectID/newtrainingdataset', {
+                    templateUrl: 'views/newTrainingDataset.html',
+                    controller: 'ProjectCtrl as projectCtrl',
+                    resolve: {
+                        auth: ['$q', '$route', 'AuthGuardService',
+                            function ($q, $route, AuthGuardService) {
+                                return AuthGuardService.guardProject($q, $route.current.params.projectID);
+                            }]
+                    }
+                })
+                .when('/project/:projectID/newstorageconnector', {
+                    templateUrl: 'views/newStorageConnector.html',
+                    controller: 'ProjectCtrl as projectCtrl',
+                    resolve: {
+                        auth: ['$q', '$route', 'AuthGuardService',
+                            function ($q, $route, AuthGuardService) {
+                                return AuthGuardService.guardProject($q, $route.current.params.projectID);
+                            }]
+                    }
+                })
                 .otherwise({
                   redirectTo: '/'
                 });
@@ -567,12 +596,90 @@ angular.module('hopsWorksApp', [
             var result = fileManagerConfig.useBinarySizePrefixes ? binaryByteUnits[i] : decimalByteUnits[i];
             return Math.max(fileSizeInBytes, 0.1).toFixed(1) + ' ' + result;
           };
-        }])        
-        .run(['$rootScope', '$routeParams', '$http', function ($rootScope, $routeParams, $http) {
+        }])
+        .filter('dateRangeFilterFeaturegroups', ['$filter', function() {
+            return function(items, fromDate, toDate) {
+                var filtered = [];
+                //var from_date = Date.parse(fromDate);
+                //var to_date = Date.parse(toDate);
+                angular.forEach(items, function(item) {
+                    var createdDate = new Date(item.versionToGroups[item.activeVersion].created)
+                    if(createdDate > fromDate && createdDate < toDate) {
+                        filtered.push(item);
+                    }
+                });
+                return filtered;
+            };
+        }])
+        .filter('dateRangeFilterFeatures', ['$filter', function() {
+            return function(items, fromDate, toDate) {
+                var filtered = [];
+                //var from_date = Date.parse(fromDate);
+                // var to_date = Date.parse(toDate);
+                angular.forEach(items, function(item) {
+                    var createdDate = new Date(item.date)
+                    if(createdDate > fromDate && createdDate < toDate) {
+                        filtered.push(item);
+                    }
+                });
+                return filtered;
+            };
+        }])
+        .filter('featuresNotInFeaturegroupsFilter', ['$filter', function() {
+        return function(item) {
+            var filtered = [];
+            return filtered;
+        };
+        }])
+        .filter('featureSearchFilterByFg', ['$filter', function() {
+            return function(items, searchText) {
+                var filtered = [];
+                angular.forEach(items, function(item) {
+                    if(item.featuregroup != null) {
+                        if (item.featuregroup.name.indexOf(searchText) >= 0 ) {
+                            filtered.push(item);
+                        }
+                    } else {
+                        if (item.trainingDataset.name.indexOf(searchText) >= 0 ) {
+                            filtered.push(item);
+                        }
+                    }
+                });
+                return filtered;
+            };
+        }])
+        .filter('featureSearchFilterByFgVersion', ['$filter', function() {
+            return function(items, searchText) {
+                var filtered = [];
+                angular.forEach(items, function(item) {
+                    if(searchText != ''){
+                        if (item.version.toString() == searchText ) {
+                            filtered.push(item);
+                        }
+                    } else {
+                        filtered.push(item);
+                    }
+                });
+                return filtered;
+            };
+        }])
+        .run(['$rootScope', '$routeParams', '$http', 'JobService', function ($rootScope, $routeParams, $http, JobService) {
             var token = localStorage.getItem("token");
             if (token) {
               $http.defaults.headers.common.Authorization = token;
             }
+            $rootScope.$on( "$routeChangeStart", function(event, next, current) {
+                //Featurestore --> Job redirects with stateful filter, but for all other pages the filter should be reset
+                if(next != null && current != null && next["$$route"] && next["$$route"].templateUrl &&
+                    current["$$route"] && current["$$route"].templateUrl &&
+                    next["$$route"].templateUrl.includes("jobs.html")
+                    && !current["$$route"].templateUrl.includes("featurestore.html")
+                    && !current["$$route"].templateUrl.includes("newFeaturegroup.html")
+                    && !current["$$route"].templateUrl.includes("newTrainingDataset.html")
+                ){
+                    JobService.setJobFilter("")
+                }
+            });
             $rootScope.$on('$routeChangeSuccess',
                     function (e, current, pre) {
                       if ($routeParams.projectID === undefined) {
