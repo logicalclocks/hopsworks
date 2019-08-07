@@ -78,6 +78,7 @@ import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.JsonUtil;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.ObjectNode;
@@ -91,8 +92,10 @@ import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonString;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -101,7 +104,6 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.StringReader;
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -110,6 +112,8 @@ import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ws.rs.core.SecurityContext;
+import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.core.UriInfo;
 
 @Path("/metadata")
 @Stateless
@@ -585,50 +589,62 @@ public class MetadataService {
             build();
 
   }
-
-  @POST
-  @Path("attachSchemaless")
+  
+  @ApiOperation( value = "Create or Update a schemaless metadata for a path.")
+  @PUT
+  @Path("schemaless/{xattrName}/{path: .+}")
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public Response attachSchemalessMetadata(String metaObj) throws DatasetException, MetadataException {
-    processSchemalessMetadata(metaObj, false);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.ACCEPTED).build();
-  }
-
-  @POST
-  @Path("detachSchemaless")
-  @Consumes(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public Response detachSchemalessMetadata(String metaObj) throws DatasetException, MetadataException {
-    processSchemalessMetadata(metaObj, true);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.ACCEPTED).build();
-  }
-
-  private void processSchemalessMetadata(String metaObj, boolean detach)
-    throws DatasetException, MetadataException {
-    JsonObject jsonObj = Json.createReader(new StringReader(metaObj)).
-      readObject();
-    if (!jsonObj.containsKey("path")) {
-      throw new IllegalArgumentException("missing path field in metaObj");
-    }
+  public Response attachSchemalessMetadata(@Context SecurityContext sc, @Context
+      UriInfo uriInfo, @PathParam("xattrName") String xattrName, @PathParam("path") String path,
+      String metaObj) throws DatasetException,
+      MetadataException {
+    Users user = jWTHelper.getUserPrincipal(sc);
   
-    String inodePath = jsonObj.getString("path");
-    if (detach) {
-      metadataController.removeSchemaLessMetadata(inodePath);
-      return;
-    }
-  
-    if (!jsonObj.containsKey("metadata")) {
-      throw new IllegalArgumentException("missing metadata field in metaObj");
-    }
-  
-    JsonObject metadata = jsonObj.getJsonObject("metadata");
-    StringWriter writer = new StringWriter();
-    Json.createWriter(writer).writeObject(metadata);
-    String metadataJsonString = writer.toString();
-    if (metadataJsonString.length() > 12000) {
+    if (metaObj.length() > 13500 || xattrName.length() > 255) {
       throw new MetadataException(RESTCodes.MetadataErrorCode.METADATA_MAX_SIZE_EXCEEDED, Level.FINE);
     }
-    metadataController.addSchemaLessMetadata(inodePath, metadataJsonString);
+    Response.Status status = Response.Status.CREATED;
+    String metadata = metadataController.getSchemalessMetadata(user, path,
+        xattrName);
+    if(metadata != null){
+      status = Response.Status.OK;
+    }
+    
+    metadataController.addSchemaLessMetadata(user, path, xattrName,
+        metaObj);
+    
+    UriBuilder builder = uriInfo.getAbsolutePathBuilder();
+    if(status == Response.Status.CREATED) {
+      return Response.created(builder.build()).build();
+    } else {
+      return Response.ok(builder.build()).build();
+    }
+  }
+  
+  @ApiOperation( value = "Get the schemaless metadata attached to a path.")
+  @GET
+  @Path("schemaless/{xattrName}/{path: .+}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  public Response getSchemalessMetadata(@Context SecurityContext sc,
+      @PathParam("xattrName") String xattrName,
+      @PathParam("path") String path) throws DatasetException, MetadataException {
+    Users user = jWTHelper.getUserPrincipal(sc);
+    String metadata = metadataController.getSchemalessMetadata(user, path,
+        xattrName);
+    return Response.accepted().entity(metadata).build();
+  }
+  
+  @ApiOperation( value = "Delete the schemaless metadata attached to a path.")
+  @DELETE
+  @Path("schemaless/{xattrName}/{path: .+}")
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  public Response detachSchemalessMetadata(@Context SecurityContext sc,
+      @PathParam("xattrName") String xattrName,
+      @PathParam("path") String path) throws DatasetException, MetadataException {
+    Users user = jWTHelper.getUserPrincipal(sc);
+    metadataController.removeSchemaLessMetadata(user, path, xattrName);
+    return Response.noContent().build();
   }
 }

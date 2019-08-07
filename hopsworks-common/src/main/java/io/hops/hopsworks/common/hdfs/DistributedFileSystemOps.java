@@ -51,6 +51,7 @@ import java.security.PrivilegedExceptionAction;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.ContentSummary;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -728,5 +729,38 @@ public class DistributedFileSystemOps {
 
   public void setStoragePolicy(Path path, StoragePolicy storagePolicy) throws IOException {
     dfs.setStoragePolicy(path, storagePolicy.toString());
+  }
+  
+  /**
+   * Attach an extended attribute with a name to a file/directory in the given
+   * path
+   * @param path
+   * @param name
+   * @param value
+   * @throws IOException
+   */
+  public void setXAttr(Path path, String name, byte[] value)
+      throws IOException {
+    dfs.setXAttr(path,  name, value);
+  }
+  
+  /**
+   * Remove an extended attribute using its name from a given file/directory.
+   * @param path
+   * @param name
+   * @throws IOException
+   */
+  public void removeXAttr(Path path, String name) throws IOException {
+    dfs.removeXAttr(path, name);
+  }
+  
+  /**
+   * Get the extended attribute using its name for a given file/directory.
+   * @param path
+   * @param name
+   * @throws IOException
+   */
+  public byte[] getXAttr(Path path, String name) throws IOException {
+    return dfs.getXAttr(path, name);
   }
 }

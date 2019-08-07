@@ -79,7 +79,6 @@
     <class>io.hops.hopsworks.common.dao.metadata.MTable</class>
     <class>io.hops.hopsworks.common.dao.metadata.Metadata</class>
     <class>io.hops.hopsworks.common.dao.metadata.RawData</class>
-    <class>io.hops.hopsworks.common.dao.metadata.SchemalessMetadata</class>
     <class>io.hops.hopsworks.common.dao.metadata.Template</class>
     <class>io.hops.hopsworks.common.dao.metadata.TupleToFile</class>
     <class>io.hops.hopsworks.common.dao.project.Project</class>

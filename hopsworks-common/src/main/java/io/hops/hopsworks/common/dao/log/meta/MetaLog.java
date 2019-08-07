@@ -52,8 +52,6 @@ import javax.validation.constraints.NotNull;
 import io.hops.hopsworks.common.dao.log.operation.OperationType;
 import io.hops.hopsworks.common.dao.metadata.Metadata;
 import io.hops.hopsworks.common.dao.metadata.MetadataPK;
-import io.hops.hopsworks.common.dao.metadata.SchemalessMetadata;
-import io.hops.hopsworks.common.dao.metadata.SchemalessMetadataPK;
 
 @Entity
 @Table(name = "hopsworks.meta_log")
@@ -70,24 +68,19 @@ public class MetaLog implements Serializable {
 
   @Basic(optional = false)
   @NotNull
-  @Column(name = "meta_pk1")
-  private Integer metaPk1;
+  @Column(name = "meta_id")
+  private Integer metaId;
 
   @Basic(optional = false)
   @NotNull
-  @Column(name = "meta_pk2")
-  private Long metaPk2;
+  @Column(name = "meta_field_id")
+  private Integer metaFieldId;
 
   @Basic(optional = false)
   @NotNull
-  @Column(name = "meta_pk3")
-  private Long metaPk3;
-
-  @Basic(optional = false)
-  @NotNull
-  @Column(name = "meta_type")
-  private MetaType metaType;
-
+  @Column(name = "meta_tuple_id")
+  private Integer metaTupleId;
+  
   @Basic(optional = false)
   @NotNull
   @Column(name = "meta_op_type")
@@ -98,20 +91,10 @@ public class MetaLog implements Serializable {
   }
 
   public MetaLog(Metadata metaData, OperationType opType) {
-    this.metaType = MetaType.SchemaBased;
     MetadataPK pk = metaData.getMetadataPK();
-    this.metaPk1 = pk.getId();
-    this.metaPk2 = (long) pk.getFieldid();
-    this.metaPk3 = (long) pk.getTupleid();
-    this.metaOpType = opType;
-  }
-
-  public MetaLog(SchemalessMetadata metaData, OperationType opType) {
-    this.metaType = MetaType.SchemaLess;
-    SchemalessMetadataPK pk = metaData.getPK();
-    this.metaPk1 = pk.getId();
-    this.metaPk2 = pk.getInodeId();
-    this.metaPk3 = pk.getInodeParentId();
+    this.metaId = pk.getId();
+    this.metaFieldId = pk.getFieldid();
+    this.metaTupleId = pk.getTupleid();
     this.metaOpType = opType;
   }
 
@@ -123,38 +106,30 @@ public class MetaLog implements Serializable {
     this.id = id;
   }
 
-  public Integer getMetaPk1() {
-    return metaPk1;
+  public Integer getMetaId() {
+    return metaId;
   }
 
-  public void setMetaPk1(Integer metaPk1) {
-    this.metaPk1 = metaPk1;
+  public void setMetaId(Integer metaId) {
+    this.metaId = metaId;
   }
 
-  public Long getMetaPk2() {
-    return metaPk2;
+  public Integer getMetaFieldId() {
+    return metaFieldId;
   }
 
-  public void setMetaPk2(Long metaPk2) {
-    this.metaPk2 = metaPk2;
+  public void setMetaFieldId(Integer metaFieldId) {
+    this.metaFieldId = metaFieldId;
   }
 
-  public Long getMetaPk3() {
-    return metaPk3;
+  public Integer getMetaTupleId() {
+    return metaTupleId;
   }
 
-  public void setMetaPk3(Long metaPk3) {
-    this.metaPk3 = metaPk3;
+  public void setMetaTupleId(Integer metaTupleId) {
+    this.metaTupleId = metaTupleId;
   }
-
-  public MetaType getMetaType() {
-    return metaType;
-  }
-
-  public void setMetaType(MetaType metaType) {
-    this.metaType = metaType;
-  }
-
+  
   public OperationType getMetaOpType() {
     return metaOpType;
   }
