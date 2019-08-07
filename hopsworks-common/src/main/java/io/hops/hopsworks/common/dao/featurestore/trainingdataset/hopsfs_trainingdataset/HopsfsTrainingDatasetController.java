@@ -16,12 +16,12 @@
 
 package io.hops.hopsworks.common.dao.featurestore.trainingdataset.hopsfs_trainingdataset;
 
-import io.hops.hopsworks.common.dao.featurestore.settings.FeaturestoreClientSettingsDTO;
 import io.hops.hopsworks.common.dao.featurestore.storageconnector.hopsfs.FeaturestoreHopsfsConnector;
 import io.hops.hopsworks.common.dao.featurestore.storageconnector.hopsfs.FeaturestoreHopsfsConnectorFacade;
 import io.hops.hopsworks.common.dao.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
+import io.hops.hopsworks.common.featorestore.FeaturestoreConstants;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.restutils.RESTCodes;
 
@@ -102,10 +102,10 @@ public class HopsfsTrainingDatasetController {
    */
   private void verifyHopsfsTrainingDatasetName(String hopsfsTrainingDatasetName) throws FeaturestoreException {
     if(hopsfsTrainingDatasetName.length() >
-      FeaturestoreClientSettingsDTO.HOPSFS_TRAINING_DATASET_NAME_MAX_LENGTH) {
+      FeaturestoreConstants.HOPSFS_TRAINING_DATASET_NAME_MAX_LENGTH) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_NAME, Level.FINE,
         ", the name of a hopsfs training dataset should be less than "
-          + FeaturestoreClientSettingsDTO.HOPSFS_TRAINING_DATASET_NAME_MAX_LENGTH + " characters");
+          + FeaturestoreConstants.HOPSFS_TRAINING_DATASET_NAME_MAX_LENGTH + " characters");
     }
   }
 

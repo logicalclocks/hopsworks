@@ -19,10 +19,10 @@ package io.hops.hopsworks.common.dao.featurestore.storageconnector.hopsfs;
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
-import io.hops.hopsworks.common.dao.featurestore.settings.FeaturestoreClientSettingsDTO;
 import io.hops.hopsworks.common.dao.featurestore.storageconnector.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
+import io.hops.hopsworks.common.featorestore.FeaturestoreConstants;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.restutils.RESTCodes;
 
@@ -170,10 +170,10 @@ public class FeaturestoreHopsfsConnectorController {
     }
 
     if(name.length() >
-        FeaturestoreClientSettingsDTO.STORAGE_CONNECTOR_NAME_MAX_LENGTH) {
+      FeaturestoreConstants.STORAGE_CONNECTOR_NAME_MAX_LENGTH) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_NAME, Level.FINE,
           ", the name should be less than " +
-          FeaturestoreClientSettingsDTO.STORAGE_CONNECTOR_NAME_MAX_LENGTH + " characters.");
+            FeaturestoreConstants.STORAGE_CONNECTOR_NAME_MAX_LENGTH + " characters.");
     }
 
     if(!edit){
@@ -205,10 +205,10 @@ public class FeaturestoreHopsfsConnectorController {
    */
   private void verifyHopsfsConnectorDescription(String description) throws FeaturestoreException {
     if(description.length() >
-        FeaturestoreClientSettingsDTO.STORAGE_CONNECTOR_DESCRIPTION_MAX_LENGTH) {
+      FeaturestoreConstants.STORAGE_CONNECTOR_DESCRIPTION_MAX_LENGTH) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_DESCRIPTION, Level.FINE,
               ", the description should be less than: "
-              + FeaturestoreClientSettingsDTO.STORAGE_CONNECTOR_DESCRIPTION_MAX_LENGTH);
+              + FeaturestoreConstants.STORAGE_CONNECTOR_DESCRIPTION_MAX_LENGTH);
     }
   }
 
