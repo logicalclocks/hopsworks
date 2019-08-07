@@ -1,0 +1,103 @@
+<!--
+  ~ This file is part of Hopsworks
+  ~ Copyright (C) 2018, Logical Clocks AB. All rights reserved
+  ~
+  ~ Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+  ~ the GNU Affero General Public License as published by the Free Software Foundation,
+  ~ either version 3 of the License, or (at your option) any later version.
+  ~
+  ~ Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+  ~ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+  ~ PURPOSE.  See the GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License along with this program.
+  ~ If not, see <https://www.gnu.org/licenses/>.
+  -->
+
+<div class="modal-header">
+    <button class="close" ng-click="updateFeaturestoreStatisticModalCtrl.close()" data-dismiss="modal" aria-hidden="true"
+            type="button">&times;
+    </button>
+    <h2 class="modal-title" ng-if="!updateFeaturestoreStatisticModalCtrl.trainingDataset">Update Statistics for Feature group:
+        {{updateFeaturestoreStatisticModalCtrl.featuregroup.name}}</h2>
+    <h2 class="modal-title" ng-if="updateFeaturestoreStatisticModalCtrl.trainingDataset">Update Statistics for Training Dataset:
+        {{updateFeaturestoreStatisticModalCtrl.featuregroup.name}}</h2>
+</div>
+
+<div class="modal-body" style="overflow: auto">
+    <div class="row">
+        <div class="col-sm-1"></div>
+        <div class="col-sm-10">
+            <p style="font-weight: bold;">Select which statistics to update:</p>
+            <div class="form-group">
+                <md-checkbox class="md-primary"
+                             ng-checked="updateFeaturestoreStatisticModalCtrl.featureCorrelations"
+                             ng-click="updateFeaturestoreStatisticModalCtrl.setFeatureCorrelations()"
+                             aria-label="Update Feature Correlations"
+                             dir="rtl"
+                >
+                    Feature Correlations
+                </md-checkbox>
+                <br>
+                <md-checkbox class="md-primary"
+                             ng-checked="updateFeaturestoreStatisticModalCtrl.descriptiveStats"
+                             ng-click="updateFeaturestoreStatisticModalCtrl.setDescriptiveStats()"
+                             aria-label="Update Descriptive Statistics"
+                             dir="rtl"
+                >
+                    Descriptive Statistics
+                </md-checkbox>
+                <br>
+                <md-checkbox class="md-primary"
+                             ng-checked="updateFeaturestoreStatisticModalCtrl.featureHistograms"
+                             ng-click="updateFeaturestoreStatisticModalCtrl.setFeatureHistograms()"
+                             aria-label="Update Feature Histograms"
+                             dir="rtl"
+                >
+                    Feature Histograms
+                </md-checkbox>
+                <br>
+                <md-checkbox class="md-primary"
+                             ng-checked="updateFeaturestoreStatisticModalCtrl.clusterAnalysis"
+                             ng-click="updateFeaturestoreStatisticModalCtrl.setClusterAnalysis()"
+                             aria-label="Update Cluster Analysis"
+                             dir="rtl"
+                >
+                    Cluster Analysis
+                </md-checkbox>
+                <br>
+            </div>
+        </div>
+        <div class="col-sm-1"></div>
+    </div>
+    <div class="modal-footer" style="padding-bottom: 1px; padding-right: 1px" id="updateFeaturegroupStatisticsWnd">
+        <button class="btn btn-sm btn-default" type="button" ng-click="updateFeaturestoreStatisticModalCtrl.close()">Cancel
+        </button>
+        <button class="btn btn-sm btn-primary" id="createFeaturegroupBtn2"
+                ng-if="updateFeaturestoreStatisticModalCtrl.trainingDataset"
+                ng-click="updateFeaturestoreStatisticModalCtrl.updateStatistics()"
+                uib-tooltip="This operation will create a Spark job for updating the Training Dataset statistics."
+        >
+            Update
+            <i class="fa fa-info-circle"
+               tooltip-placement="auto left"
+               uib-tooltip=""
+               style="margin-left: 10px"></i>
+
+            <i ng-if="updateFeaturestoreStatisticModalCtrl.working" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
+        </button>
+        <button class="btn btn-sm btn-primary" id="createFeaturegroupBtn"
+                ng-if="!updateFeaturestoreStatisticModalCtrl.trainingDataset"
+                ng-click="updateFeaturestoreStatisticModalCtrl.updateStatistics()"
+                uib-tooltip="This operation will create a Spark job for updating the Feature Group statistics."
+        >
+            Update
+            <i class="fa fa-info-circle"
+               tooltip-placement="auto left"
+               uib-tooltip=""
+               style="margin-left: 10px"></i>
+
+            <i ng-if="updateFeaturestoreStatisticModalCtrl.working" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
+        </button>
+    </div>
+</div>

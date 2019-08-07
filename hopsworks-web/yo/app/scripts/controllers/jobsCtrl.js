@@ -49,7 +49,7 @@ angular.module('hopsWorksApp')
 
             var self = this;
             self.tourService = TourService;
-            self.tourService.currentStep_TourNine = 10; //Feature Store Tour
+            self.tourService.currentStep_TourNine = 11; //Feature Store Tour
             self.projectId = $routeParams.projectID;
             self.jobs = []; // Will contain all the jobs.
             self.runningStates = ['INITIALIZING', 'RUNNING', 'ACCEPTED', 'NEW', 'NEW_SAVING', 'SUBMITTED',
@@ -331,8 +331,8 @@ angular.module('hopsWorksApp')
                             }
                         });
                         self.getAllJobsStatusIsPending = false;
-                        if(self.tourService.currentStep_TourNine === 10){
-                            self.tourService.currentStep_TourNine = 11 //Feature Store tour
+                        if(self.tourService.currentStep_TourNine === 11){
+                            self.tourService.currentStep_TourNine = 12 //Feature Store tour
                         }
                         if(typeof toDimTable !== 'undefined' && toDimTable){
                             self.dimTable = false;
@@ -342,8 +342,8 @@ angular.module('hopsWorksApp')
                             self.dimTable = false;
                         }
                         self.getAllJobsStatusIsPending = false;
-                        if(self.tourService.currentStep_TourNine === 10){
-                            self.tourService.currentStep_TourNine = 11 //Feature Store tour
+                        if(self.tourService.currentStep_TourNine === 11){
+                            self.tourService.currentStep_TourNine = 12 //Feature Store tour
                         }
                         if (typeof error.data.usrMsg !== 'undefined') {
                             growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});

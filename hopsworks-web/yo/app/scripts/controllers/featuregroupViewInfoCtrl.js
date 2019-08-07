@@ -19,35 +19,111 @@
  */
 angular.module('hopsWorksApp')
     .controller('featuregroupViewInfoCtrl', ['$uibModalInstance', '$scope', 'FeaturestoreService', 'ProjectService',
-        'growl', 'projectId', 'featuregroup', 'featurestore',
-        function ($uibModalInstance, $scope, FeaturestoreService, ProjectService, growl, projectId, featuregroup, featurestore) {
+        'JobService', '$location', 'growl', 'projectId', 'featuregroup', 'featurestore', 'settings',
+        function ($uibModalInstance, $scope, FeaturestoreService, ProjectService, JobService, $location, growl,
+                  projectId, featuregroup, featurestore, settings) {
 
             /**
              * Initialize controller state
              */
             var self = this;
+
+            //Controller Input
             self.projectId = projectId;
             self.featuregroup = featuregroup;
             self.featurestore = featurestore;
+            self.settings = settings;
+
+            //Controller State
             self.sampleWorking = false;
             self.sizeWorking = false;
             self.size = "Not fetched"
             self.schema ="Not fetched";
-            self.code = ""
-            self.table = []
+            self.pythonCode = ""
+            self.scalaCode = ""
+            self.schemaWorking = false;
+            self.sampleWorking = false;
+            self.schema ="Not fetched"
+            self.sampleColumns = []
+            self.sample = []
+            self.notFetchedSample = true;
+
+            //Constants
+            self.cachedFeaturegroupType = self.settings.cachedFeaturegroupType
+            self.onDemandFeaturegroupType = self.settings.onDemandFeaturegroupType
 
             /**
-             * Get the API code to retrieve the featuregroup
+             * Get the API code to retrieve the featuregroup with the Python API
              */
-            self.getCode = function (featuregroup, featurestore) {
+            self.getPythonCode = function (featuregroup) {
                 var codeStr = "from hops import featurestore\n"
-                codeStr = codeStr + "featurestore.get_featuregroup(\n"
-                codeStr = codeStr + "'" + featuregroup.name + "'"
-                codeStr = codeStr + ",\nfeaturestore="
-                codeStr = codeStr + "'" + featurestore.featurestoreName + "'"
-                codeStr = codeStr + ",\nfeaturegroup_version="
-                codeStr = codeStr + featuregroup.version
-                codeStr = codeStr + ")"
+                codeStr = codeStr + "featurestore.get_featuregroup('" + featuregroup.name + "')"
+                return codeStr
+            };
+
+            /**
+             * Fetches a preview of the feature group from Hopsworks
+             */
+            self.fetchSample = function () {
+                if(self.sampleWorking){
+                    return
+                }
+                self.sampleWorking = true
+                FeaturestoreService.getFeaturegroupSample(self.projectId, self.featurestore, self.featuregroup).then(
+                    function (success) {
+                        self.sampleWorking = false;
+                        self.notFetchedSample = false;
+                        self.preprocessSample(success.data);
+                    }, function (error) {
+                        growl.error(error.data.errorMsg, {title: 'Failed to fetch data sample', ttl: 5000});
+                        self.sampleWorking = false;
+                    });
+            };
+
+            /**
+             * Function for preprocessing the sample returned from the backend before visualizing it to the user
+             *
+             * @param rawSample the sample returned by the backend
+             */
+            self.preprocessSample = function (rawSample) {
+                var columns = []
+                var samples = []
+                var sampleRow;
+                var i;
+                var j;
+                if(rawSample.length > 0){
+                    for (i = 0; i < rawSample[0].columns.length; i++) {
+                        columns.push(self.removeTableNameFromColName(rawSample[0].columns[i].name))
+                    }
+                }
+                for (i = 0; i < rawSample.length; i++) {
+                    sampleRow = {}
+                    for (j = 0; j < rawSample[i].columns.length; j++) {
+                        sampleRow[self.removeTableNameFromColName(rawSample[i].columns[j].name)] = rawSample[i].columns[j].value
+                    }
+                    samples.push(sampleRow)
+                }
+                self.sampleColumns = columns
+                self.sample = samples
+            }
+
+            /**
+             * Previews are prepended with table name and a dot. Remove this prefix to make the UI more readable
+             *
+             * @param colName the colName to preprocess
+             * @returns truncated colName
+             */
+            self.removeTableNameFromColName = function(colName) {
+                return colName.replace(self.featuregroup.name + "_" + self.featuregroup.version + ".", "")
+            }
+
+
+            /**
+             * Get the API code to retrieve the featuregroup with the Scala API
+             */
+            self.getScalaCode = function (featuregroup) {
+                var codeStr = "import io.hops.util.Hops\n"
+                codeStr = codeStr + "Hops.getFeaturegroup('" + featuregroup.name + "').read()"
                 return codeStr
             };
 
@@ -79,6 +155,15 @@ angular.module('hopsWorksApp')
             };
 
             /**
+             * Called when the launch-job button is pressed
+             */
+            self.launchJob = function (jobName) {
+                JobService.setJobFilter(jobName);
+                self.close();
+                self.goToUrl("jobs")
+            };
+
+            /**
              * Send async request to hopsworks to calculate the inode size of the featuregroup
              * this can potentially be a long running operation if the directory is deeply nested
              */
@@ -87,7 +172,7 @@ angular.module('hopsWorksApp')
                     return
                 }
                 self.sizeWorking = true
-                var request = {id: self.projectId, type: "inode", inodeId: self.featuregroup.inodeId};
+                var request = {type: "inode", inodeId: self.featuregroup.inodeId};
                 ProjectService.getMoreInodeInfo(request).$promise.then(function (success) {
                     self.sizeWorking = false;
                     self.size = self.sizeOnDisk(success.size)
@@ -101,16 +186,18 @@ angular.module('hopsWorksApp')
              * Initialization function
              */
             self.init= function () {
-                self.code = self.getCode(self.featuregroup, self.featurestore)
-                self.table.push({"property": "Id", "value": self.featuregroup.id})
-                self.table.push({"property": "Name", "value": self.featuregroup.name})
-                self.table.push({"property": "Version", "value": self.featuregroup.version})
-                self.table.push({"property": "Description", "value": self.featuregroup.description})
-                self.table.push({"property": "Featurestore", "value": self.featuregroup.featurestoreName})
-                self.table.push({"property": "HDFS path", "value": self.featuregroup.hdfsStorePaths[0]})
-                self.table.push({"property": "Creator", "value": self.featuregroup.creator})
-                self.table.push({"property": "Created", "value": self.formatDate(self.featuregroup.created)})
-                self.table.push({"property": "API Retrieval Code", "value": self.code})
+                self.formatCreated = self.formatDate(self.featuregroup.created)
+                self.pythonCode = self.getPythonCode(self.featuregroup)
+                self.scalaCode = self.getScalaCode(self.featuregroup)
+                self.featuregroupType = ""
+                if(self.featuregroup.featuregroupType === self.onDemandFeaturegroupType){
+                    self.featuregroupType = "ON DEMAND"
+                } else {
+                    self.featuregroupType = "CACHED"
+                    self.fetchSchema()
+                    self.fetchSize()
+                    self.fetchSample()
+                }
             };
 
             /**
@@ -130,6 +217,26 @@ angular.module('hopsWorksApp')
              */
             self.close = function () {
                 $uibModalInstance.dismiss('cancel');
+            };
+
+            /**
+             * Format javascript date as string (YYYY-mm-dd HH:MM:SS)
+             *
+             * @param javaDate date to format
+             * @returns {string} formatted string
+             */
+            $scope.formatDate = function (javaDate) {
+                var d = new Date(javaDate);
+                return d.getFullYear().toString() + "-" + ((d.getMonth() + 1).toString().length == 2 ? (d.getMonth() + 1).toString() : "0" + (d.getMonth() + 1).toString()) + "-" + (d.getDate().toString().length == 2 ? d.getDate().toString() : "0" + d.getDate().toString()) + " " + (d.getHours().toString().length == 2 ? d.getHours().toString() : "0" + d.getHours().toString()) + ":" + ((parseInt(d.getMinutes() / 5) * 5).toString().length == 2 ? (parseInt(d.getMinutes() / 5) * 5).toString() : "0" + (parseInt(d.getMinutes() / 5) * 5).toString()) + ":00";
+            };
+
+            /**
+             * Helper function for redirecting to another project page
+             *
+             * @param serviceName project page
+             */
+            self.goToUrl = function (serviceName) {
+                $location.path('project/' + self.projectId + '/' + serviceName);
             };
 
             self.init()

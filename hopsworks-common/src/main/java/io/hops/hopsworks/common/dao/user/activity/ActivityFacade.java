@@ -83,6 +83,10 @@ public class ActivityFacade extends AbstractFacade<Activity> {
   public static final String CREATED_NEW_VERSION_OF_FEATUREGROUP = " created a new version of a feature group named ";
   public static final String EDITED_FEATUREGROUP = " edited feature group named ";
   public static final String EDITED_TRAINING_DATASET = " edited training dataset named ";
+  public static final String ADDED_FEATURESTORE_STORAGE_CONNECTOR = " added a storage connector for the featurestore " +
+      "with name: ";
+  public static final String REMOVED_FEATURESTORE_STORAGE_CONNECTOR = " added a storage connector for " +
+      "the featurestore with name: ";
   // Flag constants
   public static final String FLAG_PROJECT = "PROJECT";
   public static final String FLAG_DATASET = "DATASET";

@@ -16,10 +16,16 @@
 
 package io.hops.hopsworks.common.dao.featurestore.featuregroup;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.hops.hopsworks.common.dao.featurestore.FeaturestoreEntityDTO;
+import io.hops.hopsworks.common.dao.featurestore.featuregroup.cached_featuregroup.CachedFeaturegroupDTO;
+import io.hops.hopsworks.common.dao.featurestore.featuregroup.on_demand_featuregroup.OnDemandFeaturegroupDTO;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlSeeAlso;
 import java.util.List;
 
 /**
@@ -27,38 +33,42 @@ import java.util.List;
  * using jaxb.
  */
 @XmlRootElement
+@XmlSeeAlso({CachedFeaturegroupDTO.class, OnDemandFeaturegroupDTO.class})
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY)
+@JsonSubTypes({
+    @JsonSubTypes.Type(value = CachedFeaturegroupDTO.class, name = "CachedFeaturegroupDTO"),
+    @JsonSubTypes.Type(value = OnDemandFeaturegroupDTO.class, name = "HopsfsTrainingDatasetDTO")})
 public class FeaturegroupDTO extends FeaturestoreEntityDTO {
 
-  private List<String> hdfsStorePaths;
+  private FeaturegroupType featuregroupType;
 
   public FeaturegroupDTO() {
-    super(null, null, null, null, null, null,
-        null);
   }
 
   public FeaturegroupDTO(Featuregroup featuregroup) {
     super(featuregroup.getFeaturestore().getId(), featuregroup.getCreated(),
         featuregroup.getCreator(), featuregroup.getVersion(),
-        (List) featuregroup.getStatistics(), featuregroup.getJob(),
+        (List) featuregroup.getStatistics(), (List) featuregroup.getJobs(),
         featuregroup.getId());
-    this.hdfsStorePaths = null;
+    this.featuregroupType = featuregroup.getFeaturegroupType();
   }
 
   @XmlElement
-  public List<String> getHdfsStorePaths() {
-    return hdfsStorePaths;
+  public FeaturegroupType getFeaturegroupType() {
+    return featuregroupType;
   }
-
-
-  public void setHdfsStorePaths(List<String> hdfsStorePaths) {
-    this.hdfsStorePaths = hdfsStorePaths;
+  
+  public void setFeaturegroupType(FeaturegroupType featuregroupType) {
+    this.featuregroupType = featuregroupType;
   }
 
   @Override
   public String toString() {
     return "FeaturegroupDTO{" +
-        ", hdfsStorePaths=" + hdfsStorePaths +
+        "featuregroupType=" + featuregroupType +
         '}';
   }
+
 
 }

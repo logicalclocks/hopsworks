@@ -30,6 +30,7 @@ import java.util.List;
 @XmlRootElement
 @XmlType(propOrder = {"featureName", "frequencyDistribution", "statisticType"})
 public class FeatureDistributionDTO extends FeaturestoreStatisticValue {
+  
 
   private String featureName;
   private List<HistogramBinDTO> frequencyDistribution;

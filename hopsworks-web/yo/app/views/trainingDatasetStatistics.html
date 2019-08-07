@@ -27,65 +27,92 @@
   <div class="row">
     <div class="col-sm-1"></div>
     <div class="col-sm-10">
-      <table class="table table-hover" style="margin-left: 10px; overflow: auto"
-             ng-if="!trainingDatasetStatisticsCtrl.noStats">
-        <thead style="border:none;">
-        <th style="width: 10%">Name</th>
-        <th style="width: 20%">Statistic Type</th>
-        <th style="width: 20%">Link</th>
-        </thead>
-        <tbody>
-        <tr ng-if="trainingDatasetStatisticsCtrl.featureMatrix != null">
-          <td>Training dataset: {{trainingDatasetStatisticsCtrl.trainingDataset.name}}</td>
-          <td>Feature Correlations</td>
-          <td>
-            <button type="button"
-                    ng-click="trainingDatasetStatisticsCtrl.showCorrelationMatrix()"
-                    class="btn-sm btn-primary glyphicon glyphicon-eye-open"
-                    uib-tooltip="Show feature correlation matrix"
-            >
+      <table class="table table-hover fs-table" ng-if="!trainingDatasetStatisticsCtrl.noStats"
+             style="margin-left:auto;margin-right:auto">
+        <tbody class="table-hover fs-table">
+        <tr class="fs-table">
+          <td class="fs-table" ng-click="trainingDatasetStatisticsCtrl.updateStatistics()">
+            <span style="font-weight:700"> Update Statistics</span>
+          </td>
+          <td class="fs-table">
+            <button class="btn btn-success"
+                    uib-tooltip="Update Statistics"
+                    ng-click="trainingDatasetStatisticsCtrl.updateStatistics()">
+              <i class="glyphicon glyphicon-refresh" aria-hidden="true"></i>
             </button>
           </td>
         </tr>
-        <tr ng-if="trainingDatasetStatisticsCtrl.clusterAnalysis != null">
-          <td>Training dataset: {{trainingDatasetStatisticsCtrl.trainingDataset.name}}</td>
-          <td>Cluster Analysis</td>
-          <td>
-            <button type="button"
-                    ng-click="trainingDatasetStatisticsCtrl.showClusterAnalysis()"
-                    class="btn-sm btn-primary glyphicon glyphicon-eye-open"
-                    uib-tooltip="Show cluster analysis for this training dataset"
-            >
+        <tr class="fs-table" ng-if="trainingDatasetStatisticsCtrl.featureMatrix != null">
+          <td class="fs-table" ng-click="trainingDatasetStatisticsCtrl.showCorrelationMatrix()">Feature
+            Correlations</td>
+          <td class="fs-table">
+            <button class="btn btn-primary"
+                    style="background-color: rgb(51, 122, 183)"
+                    uib-tooltip="View correlation matrix"
+                    ng-click="trainingDatasetStatisticsCtrl.showCorrelationMatrix()">
+              <i class="fa fa-bar-chart" aria-hidden="true"></i>
             </button>
           </td>
         </tr>
-        <tr ng-if="trainingDatasetStatisticsCtrl.preProcessedStats.length > 0">
-          <td>Training dataset: {{trainingDatasetStatisticsCtrl.trainingDataset.name}}</td>
-          <td>Descriptive Statistics</td>
-          <td>
-            <button type="button"
-                    ng-click="trainingDatasetStatisticsCtrl.showDescriptiveStatistics()"
-                    class="btn-sm btn-primary glyphicon glyphicon-eye-open"
+        <tr class="fs-table" ng-if="trainingDatasetStatisticsCtrl.clusterAnalysis != null">
+          <td class="fs-table" ng-click="trainingDatasetStatisticsCtrl.showClusterAnalysis()">Feature Cluster
+            Analysis</td>
+          <td class="fs-table">
+            <button class="btn btn-primary"
+                    style="background-color: rgb(51, 122, 183)"
+                    uib-tooltip="View cluster analysis"
+                    ng-click="trainingDatasetStatisticsCtrl.showClusterAnalysis()">
+              <i class="fa fa-bar-chart" aria-hidden="true"></i>
+            </button>
+          </td>
+        </tr>
+        <tr class="fs-table" ng-if="trainingDatasetStatisticsCtrl.preProcessedStats.length > 0">
+          <td class="fs-table" ng-click="trainingDatasetStatisticsCtrl.showDescriptiveStatistics()">Descriptive
+            Statistics</td>
+          <td class="fs-table">
+            <button class="btn btn-primary"
+                    style="background-color: rgb(51, 122, 183)"
                     uib-tooltip="View descriptive statistics"
-            >
+                    ng-click="trainingDatasetStatisticsCtrl.showDescriptiveStatistics()">
+              <i class="fa fa-bar-chart" aria-hidden="true"></i>
             </button>
           </td>
         </tr>
-        <tr data-ng-repeat="histogram in trainingDatasetStatisticsCtrl.featureHistograms.featureDistributions">
-          <td>Feature: {{trainingDatasetStatisticsCtrl.histogramFeatures[$index]}}</td>
-          <td>Frequency Distribution</td>
-          <td>
-            <button type="button"
-                    ng-click="trainingDatasetStatisticsCtrl.showFeatureHistogram(trainingDatasetStatisticsCtrl.histogramPlotsOptions[$index], trainingDatasetStatisticsCtrl.histogramPlotsData[$index])"
-                    class="btn-sm btn-primary glyphicon glyphicon-eye-open"
-                    uib-tooltip="Show histogram for feature">
+        <tr class="fs-table"
+            data-ng-repeat="histogram in trainingDatasetStatisticsCtrl.featureHistograms.featureDistributions track by $index">
+          <td ng-click="trainingDatasetStatisticsCtrl.showFeatureHistogram(trainingDatasetStatisticsCtrl.histogramPlotsOptions[$index], trainingDatasetStatisticsCtrl.histogramPlotsData[$index])">
+            Feature Distribution (feature: {{trainingDatasetStatisticsCtrl.histogramFeatures[$index]}})
+          </td>
+          <td class="fs-table">
+            <button class="btn btn-primary"
+                    style="background-color: rgb(51, 122, 183)"
+                    uib-tooltip="View feature distribution"
+                    ng-click="trainingDatasetStatisticsCtrl.showFeatureHistogram(trainingDatasetStatisticsCtrl.histogramPlotsOptions[$index], trainingDatasetStatisticsCtrl.histogramPlotsData[$index])">
+              <i class="fa fa-bar-chart" aria-hidden="true"></i>
+            </button>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+      <table class="table table-hover fs-table" ng-if="trainingDatasetStatisticsCtrl.noStats"
+             style="margin-left:auto;margin-right:auto">
+        <tbody class="table-hover fs-table">
+        <tr class="fs-table">
+          <td class="fs-table" ng-click="trainingDatasetStatisticsCtrl.updateStatistics()">
+            <span style="font-weight:700"> Update Statistics</span>
+          </td>
+          <td class="fs-table">
+            <button class="btn btn-success"
+                    uib-tooltip="Update Statistics"
+                    ng-click="trainingDatasetStatisticsCtrl.updateStatistics()">
+              <i class="glyphicon glyphicon-refresh" aria-hidden="true"></i>
             </button>
           </td>
         </tr>
         </tbody>
       </table>
       <h3 style="margin-left: 10px" ng-if="trainingDatasetStatisticsCtrl.noStats">
-      No statistics have been computed for this training dataset</h3>
+        No statistics have been computed for this training dataset </h3>
     </div>
     <div class="col-sm-1">
     </div>

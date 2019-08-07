@@ -95,7 +95,7 @@ public class ServingView implements Serializable {
     this.name = name;
   }
 
-  @ApiModelProperty(value = "HopsFS directory path containing the model (tf) or python script (sklearn)")
+  @ApiModelProperty(value = "HOPSFS directory path containing the model (tf) or python script (sklearn)")
   public String getArtifactPath() {
     return artifactPath;
   }
