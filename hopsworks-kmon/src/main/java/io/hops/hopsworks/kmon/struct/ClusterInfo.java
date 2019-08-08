@@ -118,20 +118,6 @@ public class ClusterInfo {
     return Health.Bad;
   }
 
-  public Health groupHealth(String group) {
-    if (badServices.contains(group)) {
-      return Health.Bad;
-    }
-    return Health.Good;
-  }
-
-  public Health serviceHealth(String service) {
-    if (badServices.contains(service)) {
-      return Health.Bad;
-    }
-    return Health.Good;
-  }
-
   public Map getStatus() {
 
     Map<Status, Integer> statusMap = new TreeMap<Status, Integer>();

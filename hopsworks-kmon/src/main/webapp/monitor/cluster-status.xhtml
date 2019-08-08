@@ -83,26 +83,6 @@
 
       <p:outputPanel rendered="#{clusterStatusController.found}">         
 
-        <!-- Second Toolbar-->
-        <h:form>  
-          <p:toolbar styleClass="SecondToolbar#{clusterStatusController.clusterHealth}">  
-            <p:toolbarGroup align="left">  
-              <p:commandLink  action="#{urlController.clusterStatus(clusterStatusController.cluster)}" ajax="false">
-                <h:outputText value="#{clusterStatusController.cluster}"/>
-              </p:commandLink>
-
-            </p:toolbarGroup>  
-
-            <p:toolbarGroup align="right">  
-              <p:menuButton value="Actions" disabled="true">  
-                <p:menuitem value="Start..." url="???" /> 
-                <p:menuitem value="Stop..." url="???" /> 
-              </p:menuButton>  
-            </p:toolbarGroup>  
-
-          </p:toolbar>  
-        </h:form>
-
         <p:spacer width="1" height="10" />
 
         <h:form styleClass="styleInfoPanel">

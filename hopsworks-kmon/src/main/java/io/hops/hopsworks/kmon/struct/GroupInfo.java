@@ -74,7 +74,7 @@ public class GroupInfo {
 
   public Map getStatus() {
 
-    Map<Status, Integer> statusMap = new TreeMap<Status, Integer>();
+    Map<Status, Integer> statusMap = new TreeMap<>();
     if (started > 0) {
       statusMap.put(Status.Started, started);
     }
@@ -106,7 +106,7 @@ public class GroupInfo {
     return Health.Good;
   }
 
-  public Health addServices(List<HostServices> services) {
+  public void addServices(List<HostServices> services) {
     for (HostServices serviceHostInfo : services) {
       if (serviceHostInfo.getService().equals("")) {
         continue;
@@ -125,7 +125,6 @@ public class GroupInfo {
       addService(serviceHostInfo.getService());
     }
     health = (stopped + timedOut > 0) ? Health.Bad : Health.Good;
-    return health;
   }
 
   private void addService(String service) {

@@ -86,12 +86,4 @@ public class ServiceInstancesInfo {
       healthMap.put(health, 1);
     }
   }
-
-  public Health getOverallHealth() {
-    if (healthMap.containsKey(Health.Bad)) {
-      return Health.Bad;
-    } else {
-      return Health.Good;
-    }
-  }
 }

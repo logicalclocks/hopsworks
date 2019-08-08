@@ -40,7 +40,10 @@
 package io.hops.hopsworks.kmon.group;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
@@ -102,22 +105,23 @@ public class GroupStatusController {
     groupServices.addAll(createGroupInstancesInfo(group));
   }
 
-  private List<ServiceInstancesInfo> createGroupInstancesInfo(String group) {
+  private Collection<ServiceInstancesInfo> createGroupInstancesInfo(String group) {
     List<HostServices> serviceHosts = hostServicesFacade.findGroupServices(group);
+    Map<String, ServiceInstancesInfo> serviceInstancesInfoMap = new HashMap<>();
 
-    List<ServiceInstancesInfo> groupInstancesInfo = new ArrayList<>();
-    for (HostServices serviceHost : serviceHosts) {
-      ServiceInstancesInfo serviceInstancesInfo = new ServiceInstancesInfo(serviceHost.getService());
-      serviceInstancesInfo.addInstanceInfo(serviceHost.getStatus(), serviceHost.getHealth());
+    for (HostServices hostService : serviceHosts) {
+      if (!serviceInstancesInfoMap.containsKey(hostService.getService())) {
+        serviceInstancesInfoMap.put(hostService.getService(), new ServiceInstancesInfo(hostService.getService()));
+      }
 
-      groupInstancesInfo.add(serviceInstancesInfo);
+      serviceInstancesInfoMap.get(hostService).addInstanceInfo(hostService.getStatus(), hostService.getHealth());
 
-      if (serviceInstancesInfo.getOverallHealth() == Health.Bad) {
+      if (hostService.getHealth() == Health.Bad) {
         health = Health.Bad;
       }
     }
 
-    return groupInstancesInfo;
+    return serviceInstancesInfoMap.values();
   }
 
 }

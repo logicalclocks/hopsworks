@@ -47,15 +47,10 @@ import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
-import javax.faces.model.SelectItem;
-import io.hops.hopsworks.kmon.service.GroupServiceMapper;
-import io.hops.hopsworks.common.dao.host.Health;
 import io.hops.hopsworks.kmon.struct.InstanceInfo;
-import io.hops.hopsworks.kmon.struct.GroupType;
 import io.hops.hopsworks.common.dao.host.Status;
 import io.hops.hopsworks.common.dao.kagent.HostServicesFacade;
 import io.hops.hopsworks.common.dao.kagent.HostServices;
-import io.hops.hopsworks.kmon.utils.FilterUtils;
 
 @ManagedBean
 @RequestScoped
@@ -69,15 +64,8 @@ public class ServiceInstancesController {
   private String status;
   @EJB
   private HostServicesFacade hostServicesFacade;
-  private static final SelectItem[] statusOptions;
-  private static final SelectItem[] healthOptions;
   private List<InstanceInfo> filteredInstances = new ArrayList<>();
   private static final Logger LOGGER = Logger.getLogger(ServiceInstancesController.class.getName());
-
-  static {
-    statusOptions = FilterUtils.createFilterOptions(Status.values());
-    healthOptions = FilterUtils.createFilterOptions(Health.values());
-  }
 
   public ServiceInstancesController() {
     LOGGER.log(Level.FINE, "ServiceInstancesController: status: " + status + " ; " + group
@@ -106,31 +94,6 @@ public class ServiceInstancesController {
 
   public void setStatus(String status) {
     this.status = status;
-  }
-
-  public List<InstanceInfo> getFilteredInstances() {
-    return filteredInstances;
-  }
-
-  public void setFilteredInstances(List<InstanceInfo> filteredInstances) {
-    this.filteredInstances = filteredInstances;
-  }
-
-  public SelectItem[] getStatusOptions() {
-    return statusOptions;
-  }
-
-  public SelectItem[] getHealthOptions() {
-    return healthOptions;
-  }
-
-  public SelectItem[] getServiceOptions() {
-    try {
-      return FilterUtils.createFilterOptions(GroupServiceMapper.getServicesArray(GroupType.valueOf(group)));
-    } catch (Exception ex) {
-      LOGGER.log(Level.WARNING,"Service not found. Returning no option. Error message: {0}", ex.getMessage());
-      return new SelectItem[]{};
-    }
   }
 
   public List<InstanceInfo> getInstances() {
