@@ -551,23 +551,17 @@ public class AgentController {
   }
 
   public static class AgentServiceDTO {
-    private final String cluster;
     private final String service;
     private final String group;
     private final Integer pid;
     private final Status status;
 
-    public AgentServiceDTO(final String cluster, final String service, final String group,
+    public AgentServiceDTO(final String service, final String group,
                            final Integer pid, final Status status) {
-      this.cluster = cluster;
       this.service = service;
       this.group = group;
       this.pid = pid;
       this.status = status;
-    }
-
-    public String getCluster() {
-      return cluster;
     }
 
     public String getService() {

@@ -26,22 +26,12 @@ import javax.xml.bind.annotation.XmlRootElement;
 @ApiModel(value = "Status report for running services on host")
 @XmlRootElement
 public class ServiceView {
-  private String cluster;
   private String service;
   private String group;
   private Integer pid;
   private Status status;
   
   public ServiceView() {
-  }
-  
-  @ApiModelProperty(value = "Name of the cluster", required = true)
-  public String getCluster() {
-    return cluster;
-  }
-  
-  public void setCluster(String cluster) {
-    this.cluster = cluster;
   }
   
   @ApiModelProperty(value = "Service name", required = true)
@@ -81,6 +71,6 @@ public class ServiceView {
   }
   
   public AgentController.AgentServiceDTO toAgentServiceDTO() {
-    return new AgentController.AgentServiceDTO(cluster, service, group, pid, status);
+    return new AgentController.AgentServiceDTO(service, group, pid, status);
   }
 }
