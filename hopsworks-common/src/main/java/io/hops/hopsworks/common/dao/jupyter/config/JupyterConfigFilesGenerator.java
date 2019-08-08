@@ -249,14 +249,6 @@ public class JupyterConfigFilesGenerator {
     replacementMap.put("executor_cores", finalSparkConfiguration.get(Settings.SPARK_EXECUTOR_CORES_ENV));
     replacementMap.put("executor_memory", finalSparkConfiguration.get(Settings.SPARK_EXECUTOR_MEMORY_ENV));
     replacementMap.put("hdfs_user", hdfsUser);
-    if (sparkJobConfiguration.getExperimentType() != null) {
-      replacementMap.put("spark_magic_name", Settings.JUPYTER_SPARKMAGIC_PREFIX +
-        sparkJobConfiguration.getExperimentType());
-    } else if (sparkJobConfiguration.isDynamicAllocationEnabled()) {
-      replacementMap.put("spark_magic_name", Settings.JUPYTER_SPARKMAGIC_PREFIX + "sparkDynamic");
-    } else {
-      replacementMap.put("spark_magic_name", Settings.JUPYTER_SPARKMAGIC_PREFIX + "sparkStatic");
-    }
     replacementMap.put("yarn_queue", sparkJobConfiguration.getAmQueue());
     replacementMap.put("hadoop_home", this.settings.getHadoopSymbolicLinkDir());
     replacementMap.put("hadoop_version", this.settings.getHadoopVersion());
