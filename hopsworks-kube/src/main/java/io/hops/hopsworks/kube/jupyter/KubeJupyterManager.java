@@ -124,7 +124,7 @@ public class KubeJupyterManager implements JupyterManager {
   
     JupyterPaths jupyterPaths = jupyterConfigFilesGenerator.generateJupyterPaths(project, hdfsUser, secretConfig);
     String kubeProjectUser = kubeClientService.getKubeProjectUsername(project, user);
-    String pythonKernelName = jupyterConfigFilesGenerator.pythonKernelName();
+    String pythonKernelName = jupyterConfigFilesGenerator.pythonKernelName(project.getPythonVersion());
     String secretDir = settings.getStagingDir() + Settings.PRIVATE_DIRS + jupyterSettings.getSecret();
   
     String token = TokenGenerator.generateToken(TOKEN_LENGTH);
