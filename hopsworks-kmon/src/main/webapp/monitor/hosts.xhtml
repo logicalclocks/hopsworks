@@ -65,20 +65,7 @@
         <p:panel header="Hosts">
             <h:form id="hosts_f">
                 <p:growl id="msgs" showDetail="true" autoUpdate="true" />
-                
-                <div align="right" style="margin: 10px">
-                    <p:commandButton value="Start kagent" style="float:center"
-                        action="#{servicesController.startKagents(hostsBean.selectedHosts)}" update="@form">
-                    </p:commandButton>
 
-                    <p:commandButton value="Stop kagent" style="float:center"
-                        action="#{servicesController.stopKagents(hostsBean.selectedHosts)}" update="@form">
-                    </p:commandButton>
-
-                    <p:commandButton value="Restart kagent" style="float:center"
-                        action="#{servicesController.restartKagents(hostsBean.selectedHosts)}" update="@form">
-                    </p:commandButton>
-                </div>
 
                 <p:dataTable id="hosts_dt" var="host" value="#{hostsBean.lazyHosts}" widgetVar="hostsTable"
                     emptyMessage="No hosts found" rowKey="#{host.hostname}" resizableCOlumns="true" liveResize="true"

@@ -87,18 +87,34 @@
                 <p:growl id="growl" showDetail="true" sticky="true"/>
 
 
-                <div class="ui-g">
+                <div align="right" style="margin: 10px">
+                    <p:commandButton value="Start kagent" style="float:center"
+                        action="#{servicesController.startKagents(hostsBean.selectedHosts)}" update="@form">
+                    </p:commandButton>
 
-                  <div class="ui-g-12 ui-md-2">
+                    <p:commandButton value="Stop kagent" style="float:center"
+                        action="#{servicesController.stopKagents(hostsBean.selectedHosts)}" update="@form">
+                    </p:commandButton>
+
+                    <p:commandButton value="Restart kagent" style="float:center"
+                        action="#{servicesController.restartKagents(hostsBean.selectedHosts)}" update="@form">
+                    </p:commandButton>
+
                     <p:commandButton value="Rotate host keys"
-                                     style="float:right" 
+                                     style="float:right"
                                      actionListener="#{nodesBean.rotateKeys}"
                                      icon="ui-icon-arrowrefresh-1-w"
                                      update=":manageClusterNodes:growl">
                     </p:commandButton>
+                </div>
+
+                <!--<div class="ui-g">
+
+                  <div class="ui-g-12 ui-md-2">
+
                   </div>
 
-                </div>
+                </div> -->
 
                 <p:dataTable id="nodesTable" var="node"
                              value="#{nodesBean.allNodes}"
