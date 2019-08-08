@@ -114,7 +114,8 @@ public class GroupStatusController {
         serviceInstancesInfoMap.put(hostService.getService(), new ServiceInstancesInfo(hostService.getService()));
       }
 
-      serviceInstancesInfoMap.get(hostService).addInstanceInfo(hostService.getStatus(), hostService.getHealth());
+      serviceInstancesInfoMap.get(hostService.getService())
+          .addInstanceInfo(hostService.getStatus(), hostService.getHealth());
 
       if (hostService.getHealth() == Health.Bad) {
         health = Health.Bad;

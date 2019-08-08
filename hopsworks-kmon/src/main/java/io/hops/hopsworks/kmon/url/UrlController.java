@@ -110,6 +110,10 @@ public class UrlController {
     return "group-status?faces-redirect=true&group=" + group;
   }
 
+  public String clusterStatus() {
+    return "cluster-status";
+  }
+
   public String groupInstances() {
     String url = "service-instances?faces-redirect=true";
     if (hostname != null) {
