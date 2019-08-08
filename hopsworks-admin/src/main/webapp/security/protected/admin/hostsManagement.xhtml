@@ -89,15 +89,15 @@
 
                 <div align="right" style="margin: 10px">
                     <p:commandButton value="Start kagent" style="float:center"
-                        action="#{servicesController.startKagents(hostsBean.selectedHosts)}" update="@form">
+                        action="#{nodesBean.startKagents(nodesBean.selectedHosts)}" update="@form">
                     </p:commandButton>
 
                     <p:commandButton value="Stop kagent" style="float:center"
-                        action="#{servicesController.stopKagents(hostsBean.selectedHosts)}" update="@form">
+                        action="#{nodesBean.stopKagents(nodesBean.selectedHosts)}" update="@form">
                     </p:commandButton>
 
                     <p:commandButton value="Restart kagent" style="float:center"
-                        action="#{servicesController.restartKagents(hostsBean.selectedHosts)}" update="@form">
+                        action="#{nodesBean.restartKagents(nodesBean.selectedHosts)}" update="@form">
                     </p:commandButton>
 
                     <p:commandButton value="Rotate host keys"
@@ -129,8 +129,8 @@
                              {RowsPerPageDropdown}"
                              rowsPerPageTemplate="10,25,50,100,250"
                              rowKey="#{node.hostname}"
-                             selectionMode="single"
-                             selection="#{nodesBean.toBeDeletedNode}">
+                             selectionMode="multiple"
+                             selection="#{nodesBean.selectedHosts}">
 
                   <f:facet name="header">
                     <h:outputText value="Cluster Nodes"
