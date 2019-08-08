@@ -67,8 +67,11 @@
       <!--Navigation Bar - Begin -->
       <h:form styleClass="styleNav">
         <p:panelGrid>  
-          <p:row>  
+          <p:row>
             <p:column>
+              <p:commandLink action="#{urlController.clusterStatus()}" ajax="false">
+                <h:outputText value="Cluster" />
+              </p:commandLink>
               <h:outputText value=" &raquo; "/>
               <p:commandLink action="#{urlController.groupStatus}" ajax="false">  
                 <h:outputText value="#{serviceInstancesController.group}" />

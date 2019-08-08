@@ -67,8 +67,7 @@
           <p:row>  
             <p:column>
               <p:commandLink action="#{urlController.clusterStatus()}" ajax="false">
-                <h:outputText value="#{commandController.cluster}" />
-                <f:param name="cluster" value="#{commandController.cluster}"/>
+                <h:outputText value="Cluster" />
               </p:commandLink>
               <h:outputText value=" &raquo; "/>
               <p:commandLink action="#{urlController.groupStatus}" ajax="false">  

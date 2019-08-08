@@ -60,14 +60,9 @@
         <p:panelGrid>  
           <p:row>  
             <p:column>
-              <p:commandLink id="groups" action="clusters" ajax="false">  
-                <h:outputText value="Clusters" />
+              <p:commandLink id="groups" action="#{urlController.clusterStatus()}" ajax="false">
+                <h:outputText value="Cluster" />
               </p:commandLink> 
-              <h:outputText value=" &raquo; "/>
-              <p:commandLink action="#{urlController.clusterStatus(commandController.cluster)}" ajax="false">  
-                <h:outputText value="#{commandController.cluster}" />  
-                <f:param name="cluster" value="#{commandController.cluster}"/>
-              </p:commandLink>                   
             </p:column>
           </p:row>
         </p:panelGrid>
