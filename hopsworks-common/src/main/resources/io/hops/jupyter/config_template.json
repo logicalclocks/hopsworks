@@ -50,7 +50,6 @@
     "executorCores": %%executor_cores%%,
     "executorMemory": "%%executor_memory%%",
     "proxyUser": "%%hdfs_user%%",
-    "name": "%%spark_magic_name%%",
     "queue": "%%yarn_queue%%",
     "conf": {
 %%spark_configuration%%

@@ -94,16 +94,13 @@ public class LivyController {
       return sessions;
     }
 
-    List<ProjectTeam> projectTeam;
-    projectTeam = teambean.findMembersByProject(project);
-    String hdfsUsername;
-    YarnApplicationstate appStates;
+    List<ProjectTeam> projectTeam = teambean.findMembersByProject(project);
     for (ProjectTeam member : projectTeam) {
-      hdfsUsername = hdfsUserBean.getHdfsUserName(project, member.getUser());
+      String hdfsUsername = hdfsUserBean.getHdfsUserName(project, member.getUser());
       for (LivyMsg.Session s : sessionList.getSessions()) {
-        if (hdfsUsername != null && hdfsUsername.equals(s.getProxyUser())) {
-          appStates = appStateBean.findByAppId(s.getAppId());
-          if (appStates == null || !appStates.getAppname().startsWith(Settings.JUPYTER_SPARKMAGIC_PREFIX)) {
+        if (hdfsUsername.equals(s.getProxyUser())) {
+          YarnApplicationstate appStates = appStateBean.findByAppId(s.getAppId());
+          if (appStates == null) {
             continue;
           }
           s.setOwner(member.getUser().getEmail());
@@ -143,14 +140,12 @@ public class LivyController {
     if (sessionList == null || sessionList.getSessions() == null || sessionList.getSessions().length == 0) {
       return sessions;
     }
-    YarnApplicationstate appStates;
     String hdfsUsername = hdfsUserBean.getHdfsUserName(project, user);
 
     for (LivyMsg.Session s : sessionList.getSessions()) {
-      if (hdfsUsername != null && hdfsUsername.equals(s.getProxyUser())) {
-        appStates = appStateBean.findByAppId(s.getAppId());
-        if (appStates == null ||
-          !appStates.getAppname().startsWith(Settings.JUPYTER_SPARKMAGIC_PREFIX)) {
+      if (hdfsUsername.equals(s.getProxyUser())) {
+        YarnApplicationstate appStates = appStateBean.findByAppId(s.getAppId());
+        if (appStates == null) {
           continue;
         }
         s.setOwner(user.getEmail());
