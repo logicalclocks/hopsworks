@@ -1213,7 +1213,6 @@ public class Settings implements Serializable {
   public static final String HOPS_TOUR_DATASET = "TestJob";
   public static final String HOPS_DL_TOUR_DATASET = "TourData";
   public static final String HOPS_TOUR_DATASET_JUPYTER = "Jupyter";
-  public static final String JUPYTER_SPARKMAGIC_PREFIX = "jupyter-sparkmagic-session-";
   // Distribution-defined classpath to add to processes
   public static final String SPARK_AM_MAIN
       = "org.apache.spark.deploy.yarn.ApplicationMaster";
