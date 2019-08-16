@@ -437,6 +437,22 @@ public class KafkaFacade {
         .setParameter("project", project)
         .executeUpdate();
   }
+  
+  public void removeAclForProject(Integer projectId) throws ProjectException {
+    Project project = em.find(Project.class, projectId);
+    if (project == null) {
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId:" + projectId);
+    }
+    removeAclForProject(project);
+  }
+  
+  public void removeAclForProject(Project project) {
+    em.createNamedQuery("TopicAcls.findAll", TopicAcls.class)
+      .getResultList()
+      .stream()
+      .filter(acl -> acl.getPrincipal().split(PROJECT_DELIMITER)[0].equals(project.getName()))
+      .forEach(acl -> em.remove(acl));
+  }
 
   public TopicDefaultValueDTO topicDefaultValues() throws InterruptedException, IOException, KeeperException {
 
@@ -668,6 +684,16 @@ public class KafkaFacade {
     }
 
     em.remove(ta);
+  }
+  
+  public void removeAclFromTopic(String topicName, Project project) {
+    em.createNamedQuery(
+      "TopicAcls.findByTopicName", TopicAcls.class)
+      .setParameter("topicName", topicName)
+      .getResultList()
+      .stream()
+      .filter(acl -> acl.getPrincipal().split(PROJECT_DELIMITER)[0].equals(project.getName()))
+      .forEach(acl -> em.remove(acl));
   }
 
   public TopicAcls getTopicAcl(String topicName,
@@ -953,5 +979,6 @@ public class KafkaFacade {
     });
     return partitionDetails;
   }
+  
 
 }
