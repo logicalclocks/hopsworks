@@ -73,7 +73,7 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json.key?("datasetName")).to be true
           expect(parsed_json.key?("hopsfsPath")).to be true
           expect(parsed_json["name"] == connector_name).to be true
-          expect(parsed_json["storageConnectorType"] == "HopsFS").to be true
+          expect(parsed_json["storageConnectorType"] == "HOPSFS").to be true
           expect(parsed_json["datasetName"] == "Resources").to be true
         end
 
@@ -157,7 +157,7 @@ describe "On #{ENV['OS']}" do
           parsed_json = JSON.parse(json_result)
           expect_status(201)
           connector_id = parsed_json["id"]
-          delete_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/storageconnectors/HopsFS/" + connector_id.to_s
+          delete_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/storageconnectors/HOPSFS/" + connector_id.to_s
           delete delete_connector_endpoint
           parsed_json = JSON.parse(response.body)
           expect_status(200)
@@ -212,7 +212,7 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json2.key?("datasetName")).to be true
           expect(parsed_json2.key?("hopsfsPath")).to be true
           expect(parsed_json2["name"] == connector_name2).to be true
-          expect(parsed_json2["storageConnectorType"] == "HopsFS").to be true
+          expect(parsed_json2["storageConnectorType"] == "HOPSFS").to be true
           expect(parsed_json2["datasetName"] == "Experiments").to be true
         end
 

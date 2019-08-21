@@ -18,8 +18,8 @@ package io.hops.hopsworks.common.dao.featurestore.storageconnector.jdbc;
 
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
-import io.hops.hopsworks.common.dao.featurestore.settings.FeaturestoreClientSettingsDTO;
 import io.hops.hopsworks.common.dao.featurestore.storageconnector.FeaturestoreStorageConnectorDTO;
+import io.hops.hopsworks.common.featorestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -180,9 +180,9 @@ public class FeaturestoreJdbcConnectorController {
               ", the storage connector name cannot be empty");
     }
     if(name.length() >
-        FeaturestoreClientSettingsDTO.STORAGE_CONNECTOR_NAME_MAX_LENGTH) {
+        FeaturestoreConstants.STORAGE_CONNECTOR_NAME_MAX_LENGTH) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_NAME, Level.FINE,
-          ", the name should be less than " + FeaturestoreClientSettingsDTO.STORAGE_CONNECTOR_NAME_MAX_LENGTH
+          ", the name should be less than " + FeaturestoreConstants.STORAGE_CONNECTOR_NAME_MAX_LENGTH
           + " characters, the provided name was: " + name);
     }
     if(!edit){
@@ -213,11 +213,11 @@ public class FeaturestoreJdbcConnectorController {
    */
   private void verifyJdbcConnectorDescription(String description) throws FeaturestoreException {
     if(description.length() >
-        FeaturestoreClientSettingsDTO.STORAGE_CONNECTOR_DESCRIPTION_MAX_LENGTH){
+      FeaturestoreConstants.STORAGE_CONNECTOR_DESCRIPTION_MAX_LENGTH){
       throw new FeaturestoreException(
           RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_DESCRIPTION, Level.FINE,
               ", the description should be less than: " +
-              FeaturestoreClientSettingsDTO.STORAGE_CONNECTOR_DESCRIPTION_MAX_LENGTH);
+                FeaturestoreConstants.STORAGE_CONNECTOR_DESCRIPTION_MAX_LENGTH);
     }
   }
 
@@ -230,10 +230,10 @@ public class FeaturestoreJdbcConnectorController {
   private void verifyJdbcConnectorConnectionString(String connectionString) throws FeaturestoreException {
     if(Strings.isNullOrEmpty(connectionString)
         || connectionString.length()
-        > FeaturestoreClientSettingsDTO.JDBC_STORAGE_CONNECTOR_CONNECTIONSTRING_MAX_LENGTH) {
+        > FeaturestoreConstants.JDBC_STORAGE_CONNECTOR_CONNECTIONSTRING_MAX_LENGTH) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_JDBC_CONNECTION_STRING, Level.FINE,
           ", the JDBC connection string should not be empty and not exceed: " +
-          FeaturestoreClientSettingsDTO.JDBC_STORAGE_CONNECTOR_CONNECTIONSTRING_MAX_LENGTH + " characters");
+            FeaturestoreConstants.JDBC_STORAGE_CONNECTOR_CONNECTIONSTRING_MAX_LENGTH + " characters");
     }
   }
 
@@ -246,11 +246,11 @@ public class FeaturestoreJdbcConnectorController {
   private void verifyJdbcConnectorArguments(String arguments) throws FeaturestoreException {
     if(!Strings.isNullOrEmpty(arguments)
         && arguments.length() >
-        FeaturestoreClientSettingsDTO.JDBC_STORAGE_CONNECTOR_ARGUMENTS_MAX_LENGTH) {
+      FeaturestoreConstants.JDBC_STORAGE_CONNECTOR_ARGUMENTS_MAX_LENGTH) {
       throw new FeaturestoreException(
           RESTCodes.FeaturestoreErrorCode.ILLEGAL_JDBC_CONNECTION_ARGUMENTS, Level.FINE,
               ", the JDBC connection arguments should not exceed: " +
-              FeaturestoreClientSettingsDTO.JDBC_STORAGE_CONNECTOR_ARGUMENTS_MAX_LENGTH + " characters");
+                FeaturestoreConstants.JDBC_STORAGE_CONNECTOR_ARGUMENTS_MAX_LENGTH + " characters");
     }
   }
   

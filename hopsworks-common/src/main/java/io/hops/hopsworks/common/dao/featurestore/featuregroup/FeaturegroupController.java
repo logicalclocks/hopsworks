@@ -27,7 +27,6 @@ import io.hops.hopsworks.common.dao.featurestore.featuregroup.on_demand_featureg
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.on_demand_featuregroup.OnDemandFeaturegroupDTO;
 import io.hops.hopsworks.common.dao.featurestore.jobs.FeaturestoreJobController;
 import io.hops.hopsworks.common.dao.featurestore.jobs.FeaturestoreJobDTO;
-import io.hops.hopsworks.common.dao.featurestore.settings.FeaturestoreClientSettingsDTO;
 import io.hops.hopsworks.common.dao.featurestore.stats.FeaturestoreStatisticController;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
@@ -35,6 +34,7 @@ import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.featorestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
@@ -296,7 +296,7 @@ public class FeaturegroupController {
   public void verifyStatisticsInput(FeaturegroupDTO featuregroupDTO) {
     if (featuregroupDTO.getFeatureCorrelationMatrix() != null &&
         featuregroupDTO.getFeatureCorrelationMatrix().getFeatureCorrelations().size() >
-            FeaturestoreClientSettingsDTO.FEATURESTORE_STATISTICS_MAX_CORRELATIONS) {
+          FeaturestoreConstants.FEATURESTORE_STATISTICS_MAX_CORRELATIONS) {
       throw new IllegalArgumentException(
           RESTCodes.FeaturestoreErrorCode.CORRELATION_MATRIX_EXCEED_MAX_SIZE.getMessage());
     }

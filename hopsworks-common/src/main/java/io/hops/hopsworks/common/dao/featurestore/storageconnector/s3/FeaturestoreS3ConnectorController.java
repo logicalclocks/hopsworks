@@ -18,8 +18,8 @@ package io.hops.hopsworks.common.dao.featurestore.storageconnector.s3;
 
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
-import io.hops.hopsworks.common.dao.featurestore.settings.FeaturestoreClientSettingsDTO;
 import io.hops.hopsworks.common.dao.featurestore.storageconnector.FeaturestoreStorageConnectorDTO;
+import io.hops.hopsworks.common.featorestore.FeaturestoreConstants;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.restutils.RESTCodes;
 
@@ -156,9 +156,9 @@ public class FeaturestoreS3ConnectorController {
               ", the storage connector name cannot be empty");
     }
     if(name.length() >
-        FeaturestoreClientSettingsDTO.STORAGE_CONNECTOR_NAME_MAX_LENGTH) {
+      FeaturestoreConstants.STORAGE_CONNECTOR_NAME_MAX_LENGTH) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_NAME, Level.FINE,
-          ", the name should be less than " + FeaturestoreClientSettingsDTO.STORAGE_CONNECTOR_NAME_MAX_LENGTH + " " +
+          ", the name should be less than " + FeaturestoreConstants.STORAGE_CONNECTOR_NAME_MAX_LENGTH + " " +
             "characters.");
     }
     if(!edit){
@@ -177,11 +177,11 @@ public class FeaturestoreS3ConnectorController {
    */
   private void verifyS3ConnectorDescription(String description) throws FeaturestoreException {
     if(description.length()
-        > FeaturestoreClientSettingsDTO.STORAGE_CONNECTOR_DESCRIPTION_MAX_LENGTH){
+        > FeaturestoreConstants.STORAGE_CONNECTOR_DESCRIPTION_MAX_LENGTH){
       throw new FeaturestoreException(
           RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_DESCRIPTION, Level.FINE,
               ", the description should be less than: " +
-              FeaturestoreClientSettingsDTO.STORAGE_CONNECTOR_DESCRIPTION_MAX_LENGTH);
+                FeaturestoreConstants.STORAGE_CONNECTOR_DESCRIPTION_MAX_LENGTH);
     }
   }
 
@@ -194,10 +194,10 @@ public class FeaturestoreS3ConnectorController {
   private void verifyS3ConnectorBucket(String bucket) throws FeaturestoreException {
     if(Strings.isNullOrEmpty(bucket) ||
         bucket.length() >
-            FeaturestoreClientSettingsDTO.S3_STORAGE_CONNECTOR_BUCKET_MAX_LENGTH) {
+          FeaturestoreConstants.S3_STORAGE_CONNECTOR_BUCKET_MAX_LENGTH) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_S3_CONNECTOR_BUCKET, Level.FINE,
           ", the S3 bucket string should not be empty and not exceed: " +
-          FeaturestoreClientSettingsDTO.S3_STORAGE_CONNECTOR_BUCKET_MAX_LENGTH + " characters");
+            FeaturestoreConstants.S3_STORAGE_CONNECTOR_BUCKET_MAX_LENGTH + " characters");
     }
   }
 
@@ -210,10 +210,10 @@ public class FeaturestoreS3ConnectorController {
   private void verifyS3ConnectorAccessKey(String accessKey) throws FeaturestoreException {
     if(!Strings.isNullOrEmpty(accessKey) &&
         accessKey.length()
-            > FeaturestoreClientSettingsDTO.S3_STORAGE_CONNECTOR_ACCESSKEY_MAX_LENGTH) {
+            > FeaturestoreConstants.S3_STORAGE_CONNECTOR_ACCESSKEY_MAX_LENGTH) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_S3_CONNECTOR_ACCESS_KEY, Level.FINE,
           ", the S3 access key should not exceed: " +
-            FeaturestoreClientSettingsDTO.S3_STORAGE_CONNECTOR_ACCESSKEY_MAX_LENGTH + " characters");
+            FeaturestoreConstants.S3_STORAGE_CONNECTOR_ACCESSKEY_MAX_LENGTH + " characters");
     }
   }
 
@@ -226,10 +226,10 @@ public class FeaturestoreS3ConnectorController {
   private void verifyS3ConnectorSecretKey(String secretKey) throws FeaturestoreException {
     if(!Strings.isNullOrEmpty(secretKey) &&
         secretKey.length() >
-            FeaturestoreClientSettingsDTO.S3_STORAGE_CONNECTOR_SECRETKEY_MAX_LENGTH) {
+          FeaturestoreConstants.S3_STORAGE_CONNECTOR_SECRETKEY_MAX_LENGTH) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_S3_CONNECTOR_SECRET_KEY, Level.FINE,
           ", the S3 secret key should not exceed: " +
-          FeaturestoreClientSettingsDTO.S3_STORAGE_CONNECTOR_SECRETKEY_MAX_LENGTH + " characters");
+            FeaturestoreConstants.S3_STORAGE_CONNECTOR_SECRETKEY_MAX_LENGTH + " characters");
     }
   }
 
