@@ -19,13 +19,13 @@ package io.hops.hopsworks.common.dao.featurestore;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetType;
 import io.hops.hopsworks.common.dao.featurestore.app.FeaturestoreUtilJobDTO;
-import io.hops.hopsworks.common.dao.featurestore.settings.FeaturestoreClientSettingsDTO;
 import io.hops.hopsworks.common.dao.featurestore.storageconnector.hopsfs.FeaturestoreHopsfsConnectorController;
 import io.hops.hopsworks.common.dao.featurestore.storageconnector.jdbc.FeaturestoreJdbcConnectorController;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFlag;
+import io.hops.hopsworks.common.featorestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -74,7 +74,7 @@ public class FeaturestoreController {
   private static JAXBContext featurestoreUtilJobArgsJaxbContext = null;
   private static Marshaller featurestoreUtilJobArgsMarshaller = null;
   private static final String FEATURESTORE_UTIL_ARGS_PATH = Path.SEPARATOR + Settings.DIR_ROOT + Path.SEPARATOR
-      + "%s" + Path.SEPARATOR + FeaturestoreClientSettingsDTO.FEATURESTORE_UTIL_4J_ARGS_DATASET + Path.SEPARATOR + "%s";
+      + "%s" + Path.SEPARATOR + FeaturestoreConstants.FEATURESTORE_UTIL_4J_ARGS_DATASET + Path.SEPARATOR + "%s";
   private static final String HDFS_FILE_PATH = "hdfs://%s";
   
 

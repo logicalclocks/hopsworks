@@ -17,10 +17,10 @@
 package io.hops.hopsworks.common.dao.featurestore.trainingdataset.external_trainingdataset;
 
 import com.google.common.base.Strings;
-import io.hops.hopsworks.common.dao.featurestore.settings.FeaturestoreClientSettingsDTO;
 import io.hops.hopsworks.common.dao.featurestore.storageconnector.s3.FeaturestoreS3Connector;
 import io.hops.hopsworks.common.dao.featurestore.storageconnector.s3.FeaturestoreS3ConnectorFacade;
 import io.hops.hopsworks.common.dao.featurestore.trainingdataset.TrainingDataset;
+import io.hops.hopsworks.common.featorestore.FeaturestoreConstants;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.restutils.RESTCodes;
 
@@ -87,10 +87,10 @@ public class ExternalTrainingDatasetController {
         ", the name of an external training dataset should not be empty ");
     }
     if(name.length() >
-      FeaturestoreClientSettingsDTO.EXTERNAL_TRAINING_DATASET_NAME_MAX_LENGTH) {
+      FeaturestoreConstants.EXTERNAL_TRAINING_DATASET_NAME_MAX_LENGTH) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_NAME, Level.FINE,
         ", the name of an external training dataset should be less than "
-        + FeaturestoreClientSettingsDTO.EXTERNAL_TRAINING_DATASET_NAME_MAX_LENGTH + " characters");
+        + FeaturestoreConstants.EXTERNAL_TRAINING_DATASET_NAME_MAX_LENGTH + " characters");
     }
     
   }
@@ -127,7 +127,7 @@ public class ExternalTrainingDatasetController {
     externalTrainingDatasetDTO.setName(trainingDataset.getExternalTrainingDataset().getName());
     externalTrainingDatasetDTO.setLocation(
       "s3a://" + trainingDataset.getExternalTrainingDataset().getFeaturestoreS3Connector().getBucket() + "/" +
-        FeaturestoreClientSettingsDTO.S3_BUCKET_TRAINING_DATASETS_FOLDER + "/" +
+        FeaturestoreConstants.S3_BUCKET_TRAINING_DATASETS_FOLDER + "/" +
         trainingDataset.getExternalTrainingDataset().getName() + "_" + trainingDataset.getVersion());
     return externalTrainingDatasetDTO;
   }

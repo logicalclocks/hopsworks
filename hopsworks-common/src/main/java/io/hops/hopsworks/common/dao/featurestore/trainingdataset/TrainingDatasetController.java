@@ -24,7 +24,6 @@ import io.hops.hopsworks.common.dao.featurestore.feature.FeatureDTO;
 import io.hops.hopsworks.common.dao.featurestore.feature.FeaturestoreFeatureController;
 import io.hops.hopsworks.common.dao.featurestore.jobs.FeaturestoreJobController;
 import io.hops.hopsworks.common.dao.featurestore.jobs.FeaturestoreJobDTO;
-import io.hops.hopsworks.common.dao.featurestore.settings.FeaturestoreClientSettingsDTO;
 import io.hops.hopsworks.common.dao.featurestore.stats.FeaturestoreStatisticController;
 import io.hops.hopsworks.common.dao.featurestore.trainingdataset.external_trainingdataset.ExternalTrainingDataset;
 import io.hops.hopsworks.common.dao.featurestore.trainingdataset.external_trainingdataset.ExternalTrainingDatasetController;
@@ -40,6 +39,7 @@ import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dataset.DatasetController;
+import io.hops.hopsworks.common.featorestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
@@ -426,7 +426,7 @@ public class TrainingDatasetController {
   private void verifyStatisticsInput(TrainingDatasetDTO trainingDatasetDTO) {
     if (trainingDatasetDTO.getFeatureCorrelationMatrix() != null &&
       trainingDatasetDTO.getFeatureCorrelationMatrix().getFeatureCorrelations().size() >
-        FeaturestoreClientSettingsDTO.FEATURESTORE_STATISTICS_MAX_CORRELATIONS) {
+        FeaturestoreConstants.FEATURESTORE_STATISTICS_MAX_CORRELATIONS) {
       throw new IllegalArgumentException(
         RESTCodes.FeaturestoreErrorCode.CORRELATION_MATRIX_EXCEED_MAX_SIZE.getMessage());
     }
@@ -500,11 +500,11 @@ public class TrainingDatasetController {
    * @throws FeaturestoreException
    */
   private void verifyTrainingDatasetDataFormat(String dataFormat) throws FeaturestoreException {
-    if (!FeaturestoreClientSettingsDTO.TRAINING_DATASET_DATA_FORMATS.contains(dataFormat)) {
+    if (!FeaturestoreConstants.TRAINING_DATASET_DATA_FORMATS.contains(dataFormat)) {
       throw new FeaturestoreException(
         RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_DATA_FORMAT, Level.FINE, ", the recognized " +
           "training dataset formats are: " +
-          StringUtils.join(FeaturestoreClientSettingsDTO.TRAINING_DATASET_DATA_FORMATS) + ". The provided data " +
+          StringUtils.join(FeaturestoreConstants.TRAINING_DATASET_DATA_FORMATS) + ". The provided data " +
           "format:" + dataFormat + " was not recognized.");
     }
   }
@@ -518,11 +518,11 @@ public class TrainingDatasetController {
   private void verifyTrainingDatasetDescriptiopn(String description) throws FeaturestoreException {
     if(!Strings.isNullOrEmpty(description) &&
       description.length()
-        > FeaturestoreClientSettingsDTO.TRAINING_DATASET_DESCRIPTION_MAX_LENGTH){
+        > FeaturestoreConstants.TRAINING_DATASET_DESCRIPTION_MAX_LENGTH){
       throw new FeaturestoreException(
         RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_DESCRIPTION, Level.FINE,
         ", the description of a training dataset should be less than "
-        + FeaturestoreClientSettingsDTO.TRAINING_DATASET_DESCRIPTION_MAX_LENGTH + " " + "characters");
+        + FeaturestoreConstants.TRAINING_DATASET_DESCRIPTION_MAX_LENGTH + " " + "characters");
     }
   }
   
@@ -536,22 +536,22 @@ public class TrainingDatasetController {
     if (featureDTOS != null && !featureDTOS.isEmpty()) {
       if(!featureDTOS.stream().filter(f -> {
         return (Strings.isNullOrEmpty(f.getName()) || f.getName().length() >
-          FeaturestoreClientSettingsDTO.TRAINING_DATASET_FEATURE_NAME_MAX_LENGTH);
+          FeaturestoreConstants.TRAINING_DATASET_FEATURE_NAME_MAX_LENGTH);
       }).collect(Collectors.toList()).isEmpty()){
         throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_NAME, Level.FINE,
           ", the feature name in a training dataset group should be less than "
-            + FeaturestoreClientSettingsDTO.TRAINING_DATASET_FEATURE_NAME_MAX_LENGTH + " characters");
+            + FeaturestoreConstants.TRAINING_DATASET_FEATURE_NAME_MAX_LENGTH + " characters");
       }
       if(!featureDTOS.stream().filter(f -> {
         if(Strings.isNullOrEmpty(f.getDescription())){
           f.setDescription("-");
         }
         return (f.getDescription().length() >
-          FeaturestoreClientSettingsDTO.TRAINING_DATASET_FEATURE_DESCRIPTION_MAX_LENGTH);
+          FeaturestoreConstants.TRAINING_DATASET_FEATURE_DESCRIPTION_MAX_LENGTH);
       }).collect(Collectors.toList()).isEmpty()) {
         throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_DESCRIPTION, Level.FINE,
           ", the feature description in a training dataset should be less than "
-          + FeaturestoreClientSettingsDTO.TRAINING_DATASET_FEATURE_DESCRIPTION_MAX_LENGTH + " characters");
+          + FeaturestoreConstants.TRAINING_DATASET_FEATURE_DESCRIPTION_MAX_LENGTH + " characters");
       }
     }
   }

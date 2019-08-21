@@ -58,7 +58,7 @@ module FeaturestoreHelper
   def create_hopsfs_connector(project_id, featurestore_id, datasetName = "Resources")
     type = "featurestoreHopsfsConnectorDTO"
     storageConnectorType = "HopsFS"
-    create_hopsfs_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/storageconnectors/HopsFS"
+    create_hopsfs_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/storageconnectors/HOPSFS"
     hopsfs_connector_name = "hopsfs_connector_#{random_id}"
     json_data = {
         name: hopsfs_connector_name,
@@ -75,7 +75,7 @@ module FeaturestoreHelper
   def update_hopsfs_connector(project_id, featurestore_id, connector_id, datasetName = "Resources")
     type = "featurestoreHopsfsConnectorDTO"
     storageConnectorType = "HopsFS"
-    update_hopsfs_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/storageconnectors/HopsFS/" + connector_id.to_s
+    update_hopsfs_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/storageconnectors/HOPSFS/" + connector_id.to_s
     hopsfs_connector_name = "hopsfs_connector_#{random_id}"
     json_data = {
         name: hopsfs_connector_name,
