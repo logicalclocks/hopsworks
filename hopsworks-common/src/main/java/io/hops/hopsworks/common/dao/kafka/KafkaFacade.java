@@ -913,6 +913,7 @@ public class KafkaFacade {
           + HopsUtils.getProjectKeystoreName(project.getName(), user.getUsername()));
       props.setProperty(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, certPassword);
       props.setProperty(SslConfigs.SSL_KEY_PASSWORD_CONFIG, certPassword);
+      props.setProperty(SslConfigs.SSL_ENDPOINT_IDENTIFICATION_ALGORITHM_CONFIG, "");
       try (KafkaConsumer<Integer, String> consumer = new KafkaConsumer<>(props)) {
         List<PartitionInfo> partitions = consumer.partitionsFor(topicName);
         for (PartitionInfo partition : partitions) {
