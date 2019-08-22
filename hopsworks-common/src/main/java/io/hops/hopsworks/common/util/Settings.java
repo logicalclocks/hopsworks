@@ -149,6 +149,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_RM_IP = "rm_ip";
   private static final String VARIABLE_RM_PORT = "rm_port";
   private static final String VARIABLE_LOCALHOST = "localhost";
+  private static final String VARIABLE_REQUESTS_VERIFY = "requests_verify";
   private static final String VARIABLE_CLOUD= "cloud";
   private static final String VARIABLE_AWS_INSTANCE_ROLE = "";
   private static final String VARIABLE_LOGSTASH_IP = "logstash_ip";
@@ -473,6 +474,7 @@ public class Settings implements Serializable {
       LOCALHOST = setBoolVar(VARIABLE_LOCALHOST, LOCALHOST);
       CLOUD = setStrVar(VARIABLE_CLOUD, CLOUD);
       IAM_ROLE_CONFIGURED = setBoolVar(VARIABLE_AWS_INSTANCE_ROLE, IAM_ROLE_CONFIGURED);
+      REQUESTS_VERIFY = setBoolVar(VARIABLE_REQUESTS_VERIFY, REQUESTS_VERIFY);
       PYTHON_KERNEL = setBoolVar(VARIABLE_PYTHON_KERNEL, PYTHON_KERNEL);
       JAVA_HOME = setVar(VARIABLE_JAVA_HOME, JAVA_HOME);
       TWOFACTOR_AUTH = setVar(VARIABLE_TWOFACTOR_AUTH, TWOFACTOR_AUTH);
@@ -1827,6 +1829,7 @@ public class Settings implements Serializable {
   public static final String K_CERTIFICATE = "k_certificate";
   public static final String T_CERTIFICATE = "t_certificate";
   private static final String CA_TRUSTSTORE_NAME = "cacerts.jks";
+  public static final String CA_TRUSTSTORE_PEM_NAME = "cacerts.pem";
   public static final String DOMAIN_CA_TRUSTSTORE = "domain_ca_truststore";
   //Glassfish truststore, used by hopsutil to initialize https connection to Hopsworks
   public static final String CRYPTO_MATERIAL_PASSWORD = "material_passwd";
@@ -1901,6 +1904,10 @@ public class Settings implements Serializable {
 
   public String getGlassfishTrustStoreHdfs() {
     return "hdfs:///user/" + getSparkUser() + "/" + CA_TRUSTSTORE_NAME;
+  }
+  
+  public String getGlassfishTrustStorePemHdfs() {
+    return "hdfs:///user/" + getSparkUser() + "/" + CA_TRUSTSTORE_PEM_NAME;
   }
 
   public String getGlassfishTrustStore() {
@@ -3498,6 +3505,17 @@ public class Settings implements Serializable {
   public synchronized String getFeaturestoreJdbcUrl() {
     checkCache();
     return FEATURESTORE_JDBC_URL;
+  }
+  
+  private Boolean REQUESTS_VERIFY = false;
+  
+  /**
+   * Whether to verify HTTP requests in hops-util-py. Accepted values are "true", "false"
+   *
+   */
+  public synchronized Boolean getRequestsVerify() {
+    checkCache();
+    return REQUESTS_VERIFY;
   }
 
 }
