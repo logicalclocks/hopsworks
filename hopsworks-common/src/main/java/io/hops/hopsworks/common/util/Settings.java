@@ -1738,13 +1738,6 @@ public class Settings implements Serializable {
     return FIRST_TIME_LOGIN;
   }
 
-  private final String DEFAULT_ADMIN_PWD = "12fa520ec8f65d3a6feacfa97a705e622e1fea95b80b521ec016e43874dfed5a";
-  private String ADMIN_PWD = DEFAULT_ADMIN_PWD;
-
-  public synchronized void setAdminPasswordChanged() {
-    // Just use a dummy password here, no need to store the actual password - enough to say it is different from 'admin'
-    ADMIN_PWD = "changed";
-  }
 
   private String ADMIN_EMAIL = "admin@hopsworks.ai";
 
@@ -1752,16 +1745,14 @@ public class Settings implements Serializable {
     checkCache();
     return ADMIN_EMAIL;
   }
-
+  
   public synchronized boolean isDefaultAdminPasswordChanged() {
-    if (ADMIN_PWD.compareTo(DEFAULT_ADMIN_PWD) != 0) {
-      return true;
-    }
     Users user = userFacade.findByEmail(ADMIN_EMAIL);
     if (user != null) {
-      ADMIN_PWD = user.getPassword();
+      String DEFAULT_ADMIN_PWD = "12fa520ec8f65d3a6feacfa97a705e622e1fea95b80b521ec016e43874dfed5a";
+      return DEFAULT_ADMIN_PWD.equals(user.getPassword());
     }
-    return ADMIN_PWD.compareTo(DEFAULT_ADMIN_PWD) != 0;
+    return false;
   }
 
   private String HOPSWORKS_DEFAULT_SSL_MASTER_PASSWORD = "adminpw";

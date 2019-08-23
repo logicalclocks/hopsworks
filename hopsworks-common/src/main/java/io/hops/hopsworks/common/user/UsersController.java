@@ -367,10 +367,6 @@ public class UsersController {
         throw new UserException(RESTCodes.UserErrorCode.PASSWORD_RESET_UNSUCCESSFUL, Level.SEVERE, null,
           ex.getMessage(), ex);
       }
-      if (user.getEmail().compareTo(settings.getAdminEmail()) == 0) {
-        settings.setAdminPasswordChanged();
-      }
-    
     }
   }
 
