@@ -971,6 +971,8 @@ public class ProjectController {
     if (!project.getOwner().equals(user) && !usersController.isUserInRole(user, "HOPS_ADMIN")) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_REMOVAL_NOT_ALLOWED, Level.FINE);
     }
+    
+    kafkaFacade.removeAclForProject(projectId);
 
     cleanup(project, sessionId);
   }

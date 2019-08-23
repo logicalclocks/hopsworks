@@ -259,6 +259,7 @@ public class KafkaService {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
 
     kafkaFacade.unShareTopic(topicName, project.getId());
+    kafkaFacade.removeAclFromTopic(topicName, project);
     json.setSuccessMessage("Topic has been removed from shared.");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }
@@ -272,6 +273,7 @@ public class KafkaService {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
 
     kafkaFacade.unShareTopic(topicName, project.getId());
+    kafkaFacade.removeAclFromTopic(topicName, project);
     json.setSuccessMessage("Topic has been removed from shared.");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }
