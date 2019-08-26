@@ -27,9 +27,9 @@ import java.util.Date;
  */
 @XmlRootElement
 @XmlType(propOrder = {"featurestoreId", "featurestoreName", "featurestoreDescription",
-    "created", "hdfsStorePath", "projectName", "projectId", "inodeId"})
+  "created", "hdfsStorePath", "projectName", "projectId", "inodeId"})
 public class FeaturestoreDTO {
-
+  
   private Integer featurestoreId;
   private String featurestoreName;
   private Date created;
@@ -38,11 +38,12 @@ public class FeaturestoreDTO {
   private Integer projectId;
   private String featurestoreDescription;
   private Long inodeId;
-  private String onlineDbPassword;
-    
+  private String doOnlineDbPassword;
+  private String dsOnlineDbPassword;
+  
   public FeaturestoreDTO() {
   }
-
+  
   public FeaturestoreDTO(Featurestore featurestore) {
     this.featurestoreId = featurestore.getId();
     this.created = featurestore.getCreated();
@@ -52,85 +53,94 @@ public class FeaturestoreDTO {
     this.featurestoreDescription = null;
     this.featurestoreName = null;
     this.inodeId = null;
-    this.onlineDbPassword = null;
+    this.doOnlineDbPassword = null;
   }
-
+  
   @XmlElement
   public String getHdfsStorePath() {
     return hdfsStorePath;
   }
-
+  
+  public void setHdfsStorePath(String hdfsStorePath) {
+    this.hdfsStorePath = hdfsStorePath;
+  }
+  
   @XmlElement
   public String getFeaturestoreName() {
     return featurestoreName;
   }
-
+  
+  public void setFeaturestoreName(String featurestoreName) {
+    this.featurestoreName = featurestoreName;
+  }
+  
   @XmlElement
   public Integer getFeaturestoreId() {
     return featurestoreId;
   }
-
+  
   @XmlElement
   public Date getCreated() {
     return created;
   }
-
+  
   @XmlElement
   public String getProjectName() {
     return projectName;
   }
-
+  
   @XmlElement
   public Integer getProjectId() {
     return projectId;
   }
-
+  
   @XmlElement(nillable = true)
   public String getFeaturestoreDescription() {
     return featurestoreDescription;
   }
-
+  
+  public void setFeaturestoreDescription(String featurestoreDescription) {
+    this.featurestoreDescription = featurestoreDescription;
+  }
+  
   @XmlElement
   public Long getInodeId() {
     return inodeId;
   }
-
-  @XmlElement
-  public String getOnlineDbPassword() {
-    return onlineDbPassword;
-  }
-    
-  public void setFeaturestoreDescription(String featurestoreDescription) {
-    this.featurestoreDescription = featurestoreDescription;
-  }
-
-  public void setFeaturestoreName(String featurestoreName) {
-    this.featurestoreName = featurestoreName;
-  }
-
-  public void setHdfsStorePath(String hdfsStorePath) {
-    this.hdfsStorePath = hdfsStorePath;
-  }
-
+  
   public void setInodeId(Long inodeId) {
     this.inodeId = inodeId;
   }
-
-  public void setOnlineDbPassword(String onlineDbPassword) {
-    this.onlineDbPassword = onlineDbPassword;
+  
+  @XmlElement
+  public String getDoOnlineDbPassword() {
+    return doOnlineDbPassword;
   }
-    
+  
+  public void setDoOnlineDbPassword(String doOnlineDbPassword) {
+    this.doOnlineDbPassword = doOnlineDbPassword;
+  }
+  
+  @XmlElement
+  public String getDsOnlineDbPassword() {
+    return dsOnlineDbPassword;
+  }
+  
+  public void setDsOnlineDbPassword(String dsOnlineDbPassword) {
+    this.dsOnlineDbPassword = dsOnlineDbPassword;
+  }
+  
   @Override
   public String toString() {
     return "FeaturestoreDTO{" +
-        "featurestoreId=" + featurestoreId +
-        ", featurestoreName='" + featurestoreName + '\'' +
-        ", created='" + created + '\'' +
-        ", hdfsStorePath='" + hdfsStorePath + '\'' +
-        ", projectName='" + projectName + '\'' +
-        ", projectId=" + projectId +
-        ", featurestoreDescription='" + featurestoreDescription + '\'' +
-        ", inodeId=" + inodeId +
-        '}';
+      "featurestoreId=" + featurestoreId +
+      ", featurestoreName='" + featurestoreName + '\'' +
+      ", created='" + created + '\'' +
+      ", hdfsStorePath='" + hdfsStorePath + '\'' +
+      ", projectName='" + projectName + '\'' +
+      ", projectId=" + projectId +
+      ", featurestoreDescription='" + featurestoreDescription + '\'' +
+      ", inodeId=" + inodeId +
+      '}';
   }
 }

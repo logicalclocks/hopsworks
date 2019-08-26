@@ -230,6 +230,11 @@ angular.module('hopsWorksApp')
                     return $http.get('/api/project/' + projectId + '/featurestores/settings');
                 },
 
+                enableOnlineFeaturestore: function(projectId) {
+                    return $http.get('/api/project/' + projectId + '/featurestores/enableonline');
+                },
+
+
                 /**
                  * Sends a POST request to the backend for creating a new storage connector
                  *
