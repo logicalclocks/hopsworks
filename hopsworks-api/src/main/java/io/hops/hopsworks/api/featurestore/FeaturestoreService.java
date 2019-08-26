@@ -76,7 +76,6 @@ import java.util.List;
 @Api(value = "Featurestore service", description = "A service that manages project's feature stores")
 public class FeaturestoreService {
   
-  
   @EJB
   private NoCacheResponse noCacheResponse;
   @EJB
@@ -105,8 +104,7 @@ public class FeaturestoreService {
   /**
    * Set the project of the featurestore (provided by parent resource)
    *
-   * @param projectId
-   *   the id of the project
+   * @param projectId the id of the project
    */
   public void setProjectId(Integer projectId) {
     this.project = projectFacade.find(projectId);
@@ -135,8 +133,7 @@ public class FeaturestoreService {
   /**
    * Endpoint for getting a featurestore with a particular Id
    *
-   * @param featurestoreId
-   *   the id of the featurestore
+   * @param featurestoreId the id of the featurestore
    * @return JSON representation of the featurestore
    */
   @GET
@@ -162,8 +159,7 @@ public class FeaturestoreService {
   
   /**
    * Endpoint for getting a featurestore's settings
-   * *
-   *
+   **
    * @return JSON representation of the featurestore settings
    */
   @GET
@@ -192,8 +188,7 @@ public class FeaturestoreService {
   /**
    * Endpoint for getting a featurestore by name. This method will be removed after HOPSWORKS-860.
    *
-   * @param featurestoreName
-   *   the name of the featurestore
+   * @param featurestoreName the name of the featurestore
    * @return JSON representation of the featurestore
    */
   @GET
@@ -223,8 +218,7 @@ public class FeaturestoreService {
    * that needs feature store metadata for query planning. This endpoint means that the client do not have to do
    * 3 requests to get all metadata (featurestore, featuregroups, training datasets)
    *
-   * @param featurestoreName
-   *   featurestoreName
+   * @param featurestoreName featurestoreName
    * @return a JSON representation of the featurestore metadata
    * @throws FeaturestoreException
    */
@@ -252,26 +246,21 @@ public class FeaturestoreService {
       new FeaturestoreMetadataDTO(featurestoreDTO, featuregroups, trainingDatasets,
         new FeaturestoreClientSettingsDTO(), storageConnectors);
     GenericEntity<FeaturestoreMetadataDTO> featurestoreMetadataGeneric =
-      new GenericEntity<FeaturestoreMetadataDTO>(featurestoreMetadataDTO) {
-      };
+      new GenericEntity<FeaturestoreMetadataDTO>(featurestoreMetadataDTO) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK)
       .entity(featurestoreMetadataGeneric)
       .build();
   }
   
-  
   /**
    * Feature Groups sub-resource
    *
-   * @param featurestoreId
-   *   id of the featurestore
+   * @param featurestoreId id of the featurestore
    * @return the feature groups service
    * @throws FeaturestoreException
    */
   @Path("/{featurestoreId}/featuregroups")
-  public FeaturegroupService featuregroupService(
-    @PathParam("featurestoreId")
-      Integer featurestoreId)
+  public FeaturegroupService featuregroupService(@PathParam("featurestoreId") Integer featurestoreId)
     throws FeaturestoreException {
     featuregroupService.setProject(project);
     if (featurestoreId == null) {
@@ -284,15 +273,12 @@ public class FeaturestoreService {
   /**
    * Training Datasets sub-resource
    *
-   * @param featurestoreId
-   *   id of the featurestore
+   * @param featurestoreId id of the featurestore
    * @return the training dataset service
    * @throws FeaturestoreException
    */
   @Path("/{featurestoreId}/trainingdatasets")
-  public TrainingDatasetService trainingDatasetService(
-    @PathParam("featurestoreId")
-      Integer featurestoreId)
+  public TrainingDatasetService trainingDatasetService(@PathParam("featurestoreId") Integer featurestoreId)
     throws FeaturestoreException {
     trainingDatasetService.setProject(project);
     if (featurestoreId == null) {
@@ -305,15 +291,13 @@ public class FeaturestoreService {
   /**
    * Storage Connectors sub-resource
    *
-   * @param featurestoreId
-   *   id of the featurestore
+   * @param featurestoreId id of the featurestore
    * @return the storage connector service
    * @throws FeaturestoreException
    */
   @Path("/{featurestoreId}/storageconnectors")
   public FeaturestoreStorageConnectorService storageConnectorService(
-    @PathParam("featurestoreId")
-      Integer featurestoreId) throws FeaturestoreException {
+    @PathParam("featurestoreId") Integer featurestoreId) throws FeaturestoreException {
     featurestoreStorageConnectorService.setProject(project);
     if (featurestoreId == null) {
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ID_NOT_PROVIDED.getMessage());
@@ -322,11 +306,9 @@ public class FeaturestoreService {
     return featurestoreStorageConnectorService;
   }
   
-  
   /**
    * Endpoint for uploading job-arguments to hdfs for featurestore utility jobs
-   * *
-   *
+   **
    * @return HDFS path to the uploaded arguments
    */
   @POST
@@ -336,11 +318,9 @@ public class FeaturestoreService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Upload json input for featurestore-util jobs")
-  public Response newFeaturestoreUtil(
-    @Context
-      SecurityContext sc, FeaturestoreUtilJobDTO featurestoreUtilJobDTO)
+  public Response newFeaturestoreUtil(@Context SecurityContext sc, FeaturestoreUtilJobDTO featurestoreUtilJobDTO)
     throws FeaturestoreException, JAXBException {
-    if (featurestoreUtilJobDTO == null) {
+    if(featurestoreUtilJobDTO == null){
       throw new IllegalArgumentException("Input JSON for creating a new Feature Store Util Job cannot be null");
     }
     Users user = jWTHelper.getUserPrincipal(sc);
