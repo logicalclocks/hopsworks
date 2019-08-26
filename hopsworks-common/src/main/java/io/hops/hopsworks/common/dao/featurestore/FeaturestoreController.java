@@ -16,7 +16,6 @@
 
 package io.hops.hopsworks.common.dao.featurestore;
 
-import io.hops.hopsworks.common.constants.auth.AllowedRoles;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetType;
 import io.hops.hopsworks.common.dao.featurestore.app.FeaturestoreUtilJobDTO;
@@ -177,7 +176,7 @@ public class FeaturestoreController {
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public int createOnlineFeatureStoreDB(Project project, Users user) {
-
+    
     String role = getRole(project, user);
     String onlineFsPassword = securityUtils.generateSecureRandomString();
     String dbuser = onlineDbUsername(project, user);
