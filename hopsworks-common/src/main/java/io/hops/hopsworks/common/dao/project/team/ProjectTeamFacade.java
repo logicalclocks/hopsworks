@@ -370,6 +370,11 @@ public class ProjectTeamFacade {
       member.setTimestamp(new Date());
       em.merge(member);
     }
+    if (teamRole.compareTo(ProjectRoleTypes.UNDER_REMOVAL) == 0) {
+      if (projectServiceFacade.isServiceEnabledForProject(project, ProjectServiceEnum.FEATURESTORE)) {
+        featurestoreController.dropOnlineFeatureStore(project);
+      }
+    }
     return teamMembers;
   }
   
