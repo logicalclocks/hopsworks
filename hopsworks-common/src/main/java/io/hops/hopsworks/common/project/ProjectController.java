@@ -846,7 +846,7 @@ public class ProjectController {
       //Store featurestore metadata in Hopsworks
       Dataset trainingDatasets = datasetController.getByProjectAndDsName(project,
           null, project.getName() + "_" + Settings.ServiceDataset.TRAININGDATASETS.getName());
-      Featurestore featurestore = featurestoreController.createProjectFeatureStore(project, featurestoreName,
+      Featurestore featurestore = featurestoreController.createProjectFeatureStore(project, user, featurestoreName,
         trainingDatasets);
       //Create Hopsworks Dataset of the HiveDb
       hiveController.createDatasetDb(project, user, dfso, featurestoreName, DatasetType.FEATURESTORE, featurestore);

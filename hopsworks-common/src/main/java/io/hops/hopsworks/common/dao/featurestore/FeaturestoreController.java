@@ -16,21 +16,30 @@
 
 package io.hops.hopsworks.common.dao.featurestore;
 
+import io.hops.hopsworks.common.constants.auth.AllowedRoles;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetType;
 import io.hops.hopsworks.common.dao.featurestore.app.FeaturestoreUtilJobDTO;
 import io.hops.hopsworks.common.dao.featurestore.storageconnector.hopsfs.FeaturestoreHopsfsConnectorController;
 import io.hops.hopsworks.common.dao.featurestore.storageconnector.jdbc.FeaturestoreJdbcConnectorController;
 import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFlag;
+import io.hops.hopsworks.common.dao.user.security.secrets.VisibilityType;
 import io.hops.hopsworks.common.featorestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.security.secrets.SecretsController;
+import io.hops.hopsworks.common.security.utils.SecurityUtils;
+import io.hops.hopsworks.common.util.OSProcessExecutor;
+import io.hops.hopsworks.common.util.ProcessDescriptor;
+import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
@@ -46,11 +55,18 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.nio.file.Files;
+import java.nio.file.attribute.PosixFilePermission;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /**
@@ -58,6 +74,13 @@ import java.util.stream.Collectors;
  */
 @Stateless
 public class FeaturestoreController {
+  private static final Logger LOGGER = Logger.getLogger(FeaturestoreController.class.getName());
+  
+  private static final String FEATURESTORE_UTIL_ARGS_PATH = Path.SEPARATOR + Settings.DIR_ROOT + Path.SEPARATOR
+    + "%s" + Path.SEPARATOR + FeaturestoreConstants.FEATURESTORE_UTIL_4J_ARGS_DATASET + Path.SEPARATOR + "%s";
+  private static final String HDFS_FILE_PATH = "hdfs://%s";
+  private static JAXBContext featurestoreUtilJobArgsJaxbContext = null;
+  private static Marshaller featurestoreUtilJobArgsMarshaller = null;
   @EJB
   private FeaturestoreFacade featurestoreFacade;
   @EJB
@@ -70,18 +93,22 @@ public class FeaturestoreController {
   private HdfsUsersController hdfsUsersController;
   @EJB
   private DistributedFsService distributedFsService;
-
-  private static JAXBContext featurestoreUtilJobArgsJaxbContext = null;
-  private static Marshaller featurestoreUtilJobArgsMarshaller = null;
-  private static final String FEATURESTORE_UTIL_ARGS_PATH = Path.SEPARATOR + Settings.DIR_ROOT + Path.SEPARATOR
-      + "%s" + Path.SEPARATOR + FeaturestoreConstants.FEATURESTORE_UTIL_4J_ARGS_DATASET + Path.SEPARATOR + "%s";
-  private static final String HDFS_FILE_PATH = "hdfs://%s";
+  @EJB
+  private Settings settings;
+  @EJB
+  private OSProcessExecutor osProcessExecutor;
+  @EJB
+  private SecurityUtils securityUtils;
+  @EJB
+  private SecretsController secretsController;
+  @EJB
+  private ProjectTeamFacade projectTeamBean;
   
-
   /**
    * Retrieves a list of all featurestores for a particular project
    *
-   * @param project the project to retrieve featurestores for
+   * @param project
+   *   the project to retrieve featurestores for
    * @return a list of DTOs for the featurestores
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -89,71 +116,206 @@ public class FeaturestoreController {
     List<Featurestore> featurestores = getProjectFeaturestores(project);
     return featurestores.stream().map(fs -> convertFeaturestoretoDTO(fs)).collect(Collectors.toList());
   }
-
+  
   /**
    * Helper function that lists all featurestores in the project (including featurestores shared with the project)
    *
-   * @param project the project to list featurestores for
+   * @param project
+   *   the project to list featurestores for
    * @return a list of featurestore entities
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
-  private List<Featurestore> getProjectFeaturestores(Project project){
+  private List<Featurestore> getProjectFeaturestores(Project project) {
     Collection<Dataset> dsInProject = project.getDatasetCollection();
     Collection<Dataset> featurestoresDsInproject =
-        dsInProject.stream().filter(ds -> ds.getType() == DatasetType.FEATURESTORE).collect(Collectors.toList());
+      dsInProject.stream().filter(ds -> ds.getType() == DatasetType.FEATURESTORE).collect(Collectors.toList());
     return featurestoresDsInproject.stream().map(ds -> ds.getFeaturestore()).collect(Collectors.toList());
   }
+  
+  
+  /**
+   * @param args
+   *   add|rm|update, databasename, db_user, [db_passwords_file|
+   * @return exist status of the local process that calls the DB
+   */
+  private int onlineFeatureStoreDB(String... args) {
+    int exitValue;
+    String prog = this.settings.getHopsworksDomainDir() + "/bin/featurestore-online-db.sh";
+    
+    ProcessDescriptor.Builder pdBuilder = new ProcessDescriptor.Builder()
+      .addCommand("/usr/bin/sudo")
+      .addCommand(prog);
+    
+    for (String arg : args) {
+      pdBuilder.addCommand(arg);
+    }
+    pdBuilder.setWaitTimeout(20L, TimeUnit.SECONDS);
+    if (!LOGGER.isLoggable(Level.FINE)) {
+      pdBuilder.ignoreOutErrStreams(true);
+    }
+    
+    try {
+      ProcessResult processResult = osProcessExecutor.execute(pdBuilder.build());
+      LOGGER.log(Level.FINE, processResult.getStdout());
+      exitValue = processResult.getExitCode();
+    } catch (IOException ex) {
+      LOGGER.log(Level.SEVERE,
+        "Problem checking if Jupyter Notebook server is running: {0}", ex);
+      exitValue = -2;
+    }
+    return exitValue;
+  }
+  
+  
+  /**
+   * @param project
+   *   project of the new featurestore
+   * @param user
+   *   user creating the new featurestore
+   * @return 0 if success, non-zero for error
+   * @throws FeaturestoreException
+   */
+  @TransactionAttribute(TransactionAttributeType.NEVER)
+  public int createOnlineFeatureStoreDB(Project project, Users user) {
 
+    String role = getRole(project, user);
+    String onlineFsPassword = securityUtils.generateSecureRandomString();
+    String dbuser = onlineDbUsername(project, user);
+    try {
+      secretsController.add(user, dbuser, onlineFsPassword, VisibilityType.PRIVATE, project.getId());
+    } catch (UserException e) {
+      LOGGER.log(Level.SEVERE, "Problem adding online featurestore password to hopsworks secretsmgr");
+      return -33;
+    }
+    Set<PosixFilePermission> perms = new HashSet<>();
+    perms.add(PosixFilePermission.OWNER_READ);
+    perms.add(PosixFilePermission.OWNER_WRITE);
+    perms.add(PosixFilePermission.OWNER_EXECUTE);
+    java.nio.file.Path path = null;
+    try {
+      path = java.nio.file.Paths.get("/tmp/" + dbuser);
+      if (!path.toFile().exists()) {
+        if (!path.toFile().createNewFile()) {
+          LOGGER.log(Level.SEVERE, "Problem creating file: " + path);
+          return -22;
+        }
+      }
+      PrintWriter out = new PrintWriter(path.toFile());
+      out.println(onlineFsPassword);
+      out.flush();
+      out.close();
+      
+      Files.setPosixFilePermissions(path, perms);
+      
+    } catch (IOException e) {
+      e.printStackTrace();
+      return -11;
+    }
+    
+    
+    String[] args = new String[5];
+    args[0] = "add";
+    args[1] = project.getName();
+    args[2] = onlineDbUsername(project, user);
+    args[3] = role;
+    args[4] = path.toString();
+    return onlineFeatureStoreDB(args);
+  }
+  
+  private String getRole(Project project, Users user) {
+    return projectTeamBean.findCurrentRole(project, user);
+  }
+  
+  private String onlineDbUsername(Project project, Users user) {
+    return project.getName() + "_" + user.getUsername();
+  }
+  
+  
+  @TransactionAttribute(TransactionAttributeType.NEVER)
+  public int updateRoleOnlineFeatureStoreDB(Project project, Users user, String role) {
+    String[] args = new String[5];
+    args[0] = "update";
+    args[1] = project.getName();
+    args[2] = onlineDbUsername(project, user);
+    args[3] = role;
+    return onlineFeatureStoreDB(args);
+  }
+  
+  
+  private int rmOnlineFeatureStore(Project project, String user) {
+    String[] args = new String[5];
+    args[0] = "rm";
+    args[1] = project.getName();
+    args[2] = user;
+    return onlineFeatureStoreDB(args);
+  }
+  
+  @TransactionAttribute(TransactionAttributeType.NEVER)
+  public int rmUserFromOnlineFeatureStore(Project project, Users user) {
+    return rmOnlineFeatureStore(project, user.getUsername());
+  }
+  
+  @TransactionAttribute(TransactionAttributeType.NEVER)
+  public int dropOnlineFeatureStore(Project project) {
+    return rmOnlineFeatureStore(project, "all");
+  }
+  
+  
   /**
    * Retrieves a featurestore for a project with a specific name
    *
-   * @param project          the project to retrieve featurestores for
-   * @param featurestoreName the name of the featurestore
+   * @param project
+   *   the project to retrieve featurestores for
+   * @param featurestoreName
+   *   the name of the featurestore
    * @return a list of DTOs for the featurestores
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public FeaturestoreDTO getFeaturestoreForProjectWithName(Project project, String featurestoreName)
-      throws FeaturestoreException {
+    throws FeaturestoreException {
     List<Featurestore> featurestores = getProjectFeaturestores(project);
     List<FeaturestoreDTO> featurestoreDTOs =
-        featurestores.stream().map(fs -> convertFeaturestoretoDTO(fs)).collect(Collectors.toList());
+      featurestores.stream().map(fs -> convertFeaturestoretoDTO(fs)).collect(Collectors.toList());
     List<FeaturestoreDTO> featurestoresDTOWithName =
-        featurestoreDTOs.stream().filter(fs -> fs.getFeaturestoreName().equals(featurestoreName))
-            .collect(Collectors.toList());
+      featurestoreDTOs.stream().filter(fs -> fs.getFeaturestoreName().equals(featurestoreName))
+        .collect(Collectors.toList());
     if (featurestoresDTOWithName.size() != 1) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_NOT_FOUND,
-          Level.FINE, "featurestoreName: " + featurestoreName + " , project: " + project.getName());
+        Level.FINE, "featurestoreName: " + featurestoreName + " , project: " + project.getName());
     }
     //Featurestore name corresponds to Hive databases so uniqueness is enforced by Hive
     return featurestoresDTOWithName.get(0);
   }
-
+  
   /**
    * Gets a featurestore with a particular featurestoreId from the list of featurestores for this project
    *
-   * @param project the project to look for the featurestore in
-   * @param featurestoreId the featurestoreId of the featurestore
+   * @param project
+   *   the project to look for the featurestore in
+   * @param featurestoreId
+   *   the featurestoreId of the featurestore
    * @return a DTO representation of the featurestore
    * @throws FeaturestoreException
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public FeaturestoreDTO getFeaturestoreForProjectWithId(Project project, Integer featurestoreId)
-      throws FeaturestoreException {
+    throws FeaturestoreException {
     List<Featurestore> featurestores = getProjectFeaturestores(project);
     List<Featurestore> featurestoresWithId =
-        featurestores.stream().filter(fs -> fs.getId().equals(featurestoreId)).collect(Collectors.toList());
+      featurestores.stream().filter(fs -> fs.getId().equals(featurestoreId)).collect(Collectors.toList());
     if (featurestoresWithId.size() != 1) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_NOT_FOUND,
-          Level.FINE, "featurestoreId: " + featurestoreId + " , project: " + project.getName());
+        Level.FINE, "featurestoreId: " + featurestoreId + " , project: " + project.getName());
     }
     return convertFeaturestoretoDTO(featurestoresWithId.get(0));
   }
-
-
+  
+  
   /**
    * Retrieves a featurestore with a particular Id from the database
    *
-   * @param id the id of the featurestore
+   * @param id
+   *   the id of the featurestore
    * @return featurestore entity with the given id
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -161,23 +323,29 @@ public class FeaturestoreController {
     Featurestore featurestore = featurestoreFacade.findById(id);
     if (featurestore == null) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_NOT_FOUND,
-          Level.FINE, "featurestoreId: " + id);
+        Level.FINE, "featurestoreId: " + id);
     }
     return featurestore;
   }
-
+  
   /**
    * Creates a new featurestore in the database
    *
-   * @param project                 project of the new featurestore
-   * @param featurestoreName        the name of the new featurestore
-   * @param trainingDatasetsFolder  the Hopsworks dataset where training datasets are stored by default
+   * @param project
+   *   project of the new featurestore
+   * @param user
+   *   user creating the new featurestore
+   * @param featurestoreName
+   *   the name of the new featurestore
+   * @param trainingDatasetsFolder
+   *   the Hopsworks dataset where training datasets are stored by default
    * @return the created featurestore
    * @throws FeaturestoreException
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
-  public Featurestore createProjectFeatureStore(Project project, String featurestoreName, Dataset
+  public Featurestore createProjectFeatureStore(Project project, Users user, String featurestoreName, Dataset
     trainingDatasetsFolder) throws FeaturestoreException {
+    
     //Get HiveDbId for the newly created Hive featurestore DB
     Long hiveDbId = featurestoreFacade.getHiveDatabaseId(featurestoreName);
     //Store featurestore metadata in Hopsworks
@@ -187,7 +355,7 @@ public class FeaturestoreController {
     featurestore.setCreated(new Date());
     featurestoreFacade.persist(featurestore);
     activityFacade.persistActivity(ActivityFacade.CREATED_FEATURESTORE +
-        featurestoreName, project, project.getOwner(), ActivityFlag.SERVICE);
+      featurestoreName, project, project.getOwner(), ActivityFlag.SERVICE);
     featurestoreJdbcConnectorController.createDefaultJdbcConnectorForFeaturestore(featurestore,
       getFeaturestoreDbName(project), "JDBC connection to Hopsworks Project Feature Store Hive Database");
     activityFacade.persistActivity(ActivityFacade.ADDED_FEATURESTORE_STORAGE_CONNECTOR +
@@ -200,14 +368,18 @@ public class FeaturestoreController {
       trainingDatasetsFolder);
     activityFacade.persistActivity(ActivityFacade.ADDED_FEATURESTORE_STORAGE_CONNECTOR +
       trainingDatasetsFolder.getName(), project, project.getOwner(), ActivityFlag.SERVICE);
+    
+    createOnlineFeatureStoreDB(project, user);
+    
     return featurestore;
   }
-
+  
   /**
    * Converts a featurestore entity to a Featurestore DTO, supplements the featurestore entity
    * with Hive metadata and remove foreign keys that are less interesting for users.
    *
-   * @param featurestore the featurestore entity
+   * @param featurestore
+   *   the featurestore entity
    * @return a DTO representation of the featurestore
    */
   public FeaturestoreDTO convertFeaturestoretoDTO(Featurestore featurestore) {
@@ -222,7 +394,7 @@ public class FeaturestoreController {
     featurestoreDTO.setInodeId(inodeId);
     return featurestoreDTO;
   }
-
+  
   /**
    * Gets the featurestore Hive DB name of a project
    *
@@ -232,47 +404,54 @@ public class FeaturestoreController {
   public String getFeaturestoreDbName(Project project) {
     return project.getName() + "_featurestore";
   }
-
-
+  
+  
   /**
    * Writes JSON input for featurestore Util Job to HDFS as a JSON file
    *
-   * @param user           user making the request
-   * @param project        project of the user
-   * @param featurestoreUtilJobDTO     the JSON DTO
+   * @param user
+   *   user making the request
+   * @param project
+   *   project of the user
+   * @param featurestoreUtilJobDTO
+   *   the JSON DTO
    * @return HDFS path where the JSON file was written
    * @throws FeaturestoreException
    * @throws JAXBException
    */
   public String writeUtilArgsToHdfs(Users user, Project project, FeaturestoreUtilJobDTO featurestoreUtilJobDTO)
-      throws FeaturestoreException, JAXBException {
-    if(featurestoreUtilJobArgsMarshaller == null){
+    throws FeaturestoreException, JAXBException {
+    if (featurestoreUtilJobArgsMarshaller == null) {
       try {
         featurestoreUtilJobArgsJaxbContext =
-            JAXBContextFactory.createContext(new Class[]{FeaturestoreUtilJobDTO.class}, null);
+          JAXBContextFactory.createContext(new Class[]{FeaturestoreUtilJobDTO.class}, null);
         featurestoreUtilJobArgsMarshaller = featurestoreUtilJobArgsJaxbContext.createMarshaller();
         featurestoreUtilJobArgsMarshaller.setProperty(MarshallerProperties.JSON_INCLUDE_ROOT, false);
         featurestoreUtilJobArgsMarshaller.setProperty(MarshallerProperties.MEDIA_TYPE, MediaType.APPLICATION_JSON);
       } catch (JAXBException e) {
         throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_INITIALIZATION_ERROR,
-            Level.SEVERE, "Error initialization feature store controller");
+          Level.SEVERE, "Error initialization feature store controller");
       }
     }
     StringWriter sw = new StringWriter();
     featurestoreUtilJobArgsMarshaller.marshal(featurestoreUtilJobDTO, sw);
     Path hdfsPath = new Path(String.format(FEATURESTORE_UTIL_ARGS_PATH, project.getName(),
-        featurestoreUtilJobDTO.getFileName()));
+      featurestoreUtilJobDTO.getFileName()));
     writeToHDFS(project, user, hdfsPath, sw.toString());
     return String.format(HDFS_FILE_PATH, hdfsPath.toString());
   }
-
+  
   /**
    * Writes a string to a new file in HDFS
    *
-   * @param project              project of the user
-   * @param user                 user making the request
-   * @param path2file            the hdfs path
-   * @param content              the content to write
+   * @param project
+   *   project of the user
+   * @param user
+   *   user making the request
+   * @param path2file
+   *   the hdfs path
+   * @param content
+   *   the content to write
    * @throws FeaturestoreException
    */
   private void writeToHDFS(Project project, Users user, Path path2file, String content) throws FeaturestoreException {
@@ -286,7 +465,7 @@ public class FeaturestoreController {
       }
     } catch (IOException ex) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_UTIL_ARGS_FAILURE,
-        Level.WARNING, "Failed to write featurestore util args to HDFS",  ex.getMessage(), ex);
+        Level.WARNING, "Failed to write featurestore util args to HDFS", ex.getMessage(), ex);
     } finally {
       if (udfso != null) {
         distributedFsService.closeDfsClient(udfso);

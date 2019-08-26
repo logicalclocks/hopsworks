@@ -38,9 +38,6 @@ import io.hops.hopsworks.common.dao.featurestore.trainingdataset.TrainingDataset
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.util.OSProcessExecutor;
-import io.hops.hopsworks.common.util.ProcessDescriptor;
-import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
@@ -68,11 +65,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.xml.bind.JAXBException;
-import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * A Stateless RESTful service for the featurestore service on Hopsworks.
@@ -83,9 +76,6 @@ import java.util.logging.Logger;
 @Api(value = "Featurestore service", description = "A service that manages project's feature stores")
 public class FeaturestoreService {
   
-  private static final Logger LOGGER = Logger.getLogger(FeaturestoreService.class.getName());
-  @EJB
-  private OSProcessExecutor osProcessExecutor;
   
   @EJB
   private NoCacheResponse noCacheResponse;
@@ -269,57 +259,6 @@ public class FeaturestoreService {
       .build();
   }
   
-  @GET
-  @Path("/enableonline")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response enableOnlineFeaturestore()
-    throws FeaturestoreException {
-    Integer exitValue = enableFeatureStore();
-    //    GenericEntity<FeaturestoreMetadataDTO> onlineGeneric =
-    //      new GenericEntity<FeaturestoreMetadataDTO>(exitValue) {};
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK)
-      //      .entity(onlineGeneric)
-      .build();
-  }
-  
-  
-  private int enableFeatureStore() {
-    int exitValue;
-    Integer id = 1;
-    String prog = this.settings.getHopsworksDomainDir() + "/bin/featurestore-online-db.sh";
-    
-    ProcessDescriptor.Builder pdBuilder = new ProcessDescriptor.Builder()
-      .addCommand("/usr/bin/sudo")
-      .addCommand(prog);
-    
-    String args[] = new String[5];
-    args[0] = "add";
-    args[1] = this.project.getName();
-    args[2] = this.project.getName();
-    args[3] = "password";
-    args[4] = "encrypted";
-    
-    for (String arg : args) {
-      pdBuilder.addCommand(arg);
-    }
-    pdBuilder.setWaitTimeout(20L, TimeUnit.SECONDS);
-    if (!LOGGER.isLoggable(Level.FINE)) {
-      pdBuilder.ignoreOutErrStreams(true);
-    }
-    
-    try {
-      ProcessResult processResult = osProcessExecutor.execute(pdBuilder.build());
-      LOGGER.log(Level.FINE, processResult.getStdout());
-      exitValue = processResult.getExitCode();
-    } catch (IOException ex) {
-      LOGGER.log(Level.SEVERE,
-        "Problem checking if Jupyter Notebook server is running: {0}", ex);
-      exitValue = -2;
-    }
-    return exitValue;
-  }
   
   /**
    * Feature Groups sub-resource
