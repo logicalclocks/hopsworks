@@ -179,7 +179,7 @@ public class FeaturestoreService {
         + settings.getSparkUser() + org.apache.hadoop.fs.Path.SEPARATOR
         + settings.getHopsExamplesFeaturestoreUtilPythonFilename());
     GenericEntity<FeaturestoreClientSettingsDTO> featurestoreClientSettingsDTOGeneric =
-      new GenericEntity<FeaturestoreClientSettingsDTO>(new FeaturestoreClientSettingsDTO()) {
+      new GenericEntity<FeaturestoreClientSettingsDTO>(featurestoreClientSettingsDTO) {
       };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featurestoreClientSettingsDTOGeneric)
         .build();
