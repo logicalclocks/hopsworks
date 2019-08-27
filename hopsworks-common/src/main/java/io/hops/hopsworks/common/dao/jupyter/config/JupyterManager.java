@@ -89,7 +89,7 @@ public interface JupyterManager {
 
   void projectCleanup(Project project);
   
-  boolean pingServerJupyterUser(JupyterProject jupyterProject);
+  boolean ping(JupyterProject jupyterProject);
   
   List<JupyterProject> getAllNotebooks();
 }

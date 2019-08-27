@@ -250,7 +250,7 @@ public class JupyterService {
       throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_SERVERS_NOT_FOUND, Level.FINE);
     }
     // Check to make sure the jupyter notebook server is running
-    boolean running = jupyterManager.pingServerJupyterUser(jp);
+    boolean running = jupyterManager.ping(jp);
     // if the notebook is not running but we have a database entry for it,
     // we should remove the DB entry (and restart the notebook server).
     if (!running) {
