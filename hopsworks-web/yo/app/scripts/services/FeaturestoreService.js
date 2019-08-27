@@ -29,7 +29,7 @@ angular.module('hopsWorksApp')
                  * @returns a formatted date string
                  */
                 formatDate: function(inputDate) {
-                    return moment(inputDate).format('MMM Do YY')
+                    return moment(inputDate).format('MMM Do YY');
                 },
 
                 /**
@@ -39,7 +39,7 @@ angular.module('hopsWorksApp')
                  * @returns {*} a formatted time string
                  */
                 formatTime: function(inputDate) {
-                    return moment(inputDate).format('HH:mm')
+                    return moment(inputDate).format('HH:mm');
                 },
 
                 /**
@@ -229,11 +229,6 @@ angular.module('hopsWorksApp')
                 getFeaturestoreSettings: function(projectId) {
                     return $http.get('/api/project/' + projectId + '/featurestores/settings');
                 },
-
-                enableOnlineFeaturestore: function(projectId) {
-                    return $http.get('/api/project/' + projectId + '/featurestores/enableonline');
-                },
-
 
                 /**
                  * Sends a POST request to the backend for creating a new storage connector

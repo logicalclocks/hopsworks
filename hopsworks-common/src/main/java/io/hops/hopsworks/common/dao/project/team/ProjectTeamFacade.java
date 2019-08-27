@@ -58,21 +58,21 @@ import java.util.List;
 
 @Stateless
 public class ProjectTeamFacade {
-  
+
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
   @EJB
   private FeaturestoreController featurestoreController;
   @EJB
   private ProjectServiceFacade projectServiceFacade;
-  
+
   public ProjectTeamFacade() {
   }
-  
+
   protected EntityManager getEntityManager() {
     return em;
   }
-  
+
   /**
    * Count the number of members in this project with the given role.
    * <p/>
@@ -88,11 +88,10 @@ public class ProjectTeamFacade {
     query.setParameter("teamRole", role);
     return query.getSingleResult().intValue();
   }
-  
+
   /**
    * Count the number of members in this project.
    * <p/>
-   *
    * @param project
    * @return
    */
@@ -102,11 +101,10 @@ public class ProjectTeamFacade {
     query.setParameter("project", project);
     return query.getSingleResult().intValue();
   }
-  
+
   /**
    * Find all team members in project 'name' with role 'role'.
    * <p/>
-   *
    * @param project
    * @param role
    * @return A list of Users entities that have the role <i>role</i> in Project
@@ -120,12 +118,11 @@ public class ProjectTeamFacade {
     }
     return retList;
   }
-  
+
   /**
    * Get all the ProjectTeam entries for users in the role <i>role</i> in
    * Project <i>project</i>.
    * <p/>
-   *
    * @param project
    * @param role
    * @return
@@ -138,31 +135,29 @@ public class ProjectTeamFacade {
     q.setParameter("teamRole", role);
     return q.getResultList();
   }
-  
+
   /**
    * Find all the ProjectTeam entries for members in Project <i>project</i> that
    * have the role Researcher.
    * <p/>
-   *
    * @param project
    * @return
    */
   public List<ProjectTeam> findResearchMembersByName(Project project) {
     return findProjectTeamByProjectAndRole(project, "Researcher");
   }
-  
+
   /**
    * Find all the ProjectTeam entries for members in Project <i>project</i> that
    * have the role Guest.
    * <p/>
-   *
    * @param project
    * @return
    */
   public List<ProjectTeam> findGuestMembersByName(Project project) {
     return findProjectTeamByProjectAndRole(project, "Guest");
   }
-  
+
   /**
    * Get all the ProjectTeam entries for the given project.
    * <p/>
@@ -177,11 +172,10 @@ public class ProjectTeamFacade {
     query.setParameter("project", project);
     return query.getResultList();
   }
-  
+
   /**
    * Find all ProjectTeam entries containing the given Users as member.
    * <p/>
-   *
    * @param member
    * @return
    */
@@ -190,11 +184,10 @@ public class ProjectTeamFacade {
       ProjectTeam.class).setParameter("user", member);
     return query.getResultList();
   }
-  
+
   /**
    * Count the number of studies this user is a member of.
    * <p/>
-   *
    * @param user
    * @return
    */
@@ -204,12 +197,11 @@ public class ProjectTeamFacade {
     query.setParameter("user", user);
     return query.getSingleResult().intValue();
   }
-  
+
   /**
    * Count the number of studies the user with this email address is a member
    * of.
    * <p/>
-   *
    * @param email
    * @return
    * @deprecated Use countByMember(User user) instead.
@@ -221,11 +213,10 @@ public class ProjectTeamFacade {
     Users user = query.getSingleResult();
     return countByMember(user);
   }
-  
+
   /**
    * Get the current role of Users <i>user</i> in Project <i>project</i>.
    * <p/>
-   *
    * @param project
    * @param user
    * @return The current role of the user in the project, or null if the user is
@@ -242,11 +233,10 @@ public class ProjectTeamFacade {
       return null;
     }
   }
-  
+
   /**
    * Get the current role of Users <i>user</i> in Project <i>project</i>.
    * <p/>
-   *
    * @param project
    * @param user
    * @return The current role of the user in the project, or null if the user is
@@ -263,10 +253,10 @@ public class ProjectTeamFacade {
       return null;
     }
   }
-  
+
   public void persistProjectTeam(ProjectTeam team) {
     em.persist(team);
-    
+
     // If the FeatureStore is enabled, add this user to the online FS DB
     Project project = team.getProject();
     if (projectServiceFacade.isServiceEnabledForProject(project, ProjectServiceEnum.FEATURESTORE)) {
@@ -274,8 +264,8 @@ public class ProjectTeamFacade {
       featurestoreController.rmUserFromOnlineFeatureStore(project, user);
     }
   }
-  
-  /*
+
+  /**
    * merges an update to project team
    * @param team
    */
@@ -284,12 +274,11 @@ public class ProjectTeamFacade {
       em.merge(team);
     }
   }
-  
+
   /**
    * Remove the ProjectTeam entry for Users <i>user</i> in Project
    * <i>project</i>.
    * <p/>
-   *
    * @param project
    * @param user
    */
@@ -303,12 +292,11 @@ public class ProjectTeamFacade {
       }
     }
   }
-  
+
   /**
    * Remove the ProjectTeam entry for the Users with email <i>email</i> in
    * Project <i>project</i>.
    * <p/>
-   *
    * @param project
    * @param email
    * @deprecated Use removeProjectTeam(Project project, User user) instead.
@@ -319,11 +307,10 @@ public class ProjectTeamFacade {
     query.setParameter("email", email);
     removeProjectTeam(project, query.getSingleResult());
   }
-  
+
   /**
    * Update the team role of Users <i>user</i> in Project <i>project</i>.
    * <p/>
-   *
    * @param project
    * @param user
    * @param teamRole
@@ -339,12 +326,11 @@ public class ProjectTeamFacade {
       }
     }
   }
-  
+
   /**
    * Update the team role of the Users with email <i>email</i> in Project
    * <i>project</i>.
    * <p/>
-   *
    * @param project
    * @param email
    * @param teamRole
@@ -355,11 +341,10 @@ public class ProjectTeamFacade {
     query.setParameter("email", email);
     updateTeamRole(project, query.getSingleResult(), teamRole);
   }
-  
+
   /**
    * Update the team role of all users in Project <i>project</i>.
    * <p/>
-   *
    * @param project
    * @param teamRole
    */
@@ -377,12 +362,11 @@ public class ProjectTeamFacade {
     }
     return teamMembers;
   }
-  
+
   /**
    * Find the ProjectTeam entry for Project <i>project</i> and Users
    * <i>user</i>.
    * <p/>
-   *
    * @param project
    * @param user
    * @return
@@ -391,11 +375,10 @@ public class ProjectTeamFacade {
     return em.find(ProjectTeam.class, new ProjectTeam(project, user).
       getProjectTeamPK());
   }
-  
+
   /**
    * Check if the Users <i>user</i> is a member of the Project <i>project</i>.
    * <p/>
-   *
    * @param project
    * @param user
    * @return
@@ -407,11 +390,10 @@ public class ProjectTeamFacade {
     q.setParameter("user", user);
     return q.getResultList().size() > 0;
   }
-  
+
   /**
    * Check if the Users <i>user</i> is a member of the Project <i>project</i>.
    * <p/>
-   *
    * @param project
    * @param user
    * @return
@@ -422,11 +404,10 @@ public class ProjectTeamFacade {
     q.setParameter("email", user);
     return isUserMemberOfProject(project, q.getSingleResult());
   }
-  
+
   /**
    * Find the ProjectTeam entry for the given project and user.
    * <p/>
-   *
    * @param project
    * @param user
    * @return The ProjectTeam entry, null if it does not exist.
@@ -443,7 +424,7 @@ public class ProjectTeamFacade {
       return null;
     }
   }
-  
+
   public Users findUserByEmail(String userEmail) {
     TypedQuery<Users> q = em.createNamedQuery(
       "Users.findByEmail", Users.class);
@@ -454,5 +435,5 @@ public class ProjectTeamFacade {
       return null;
     }
   }
-  
+
 }

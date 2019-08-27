@@ -38,8 +38,6 @@ public class FeaturestoreDTO {
   private Integer projectId;
   private String featurestoreDescription;
   private Long inodeId;
-  private String doOnlineDbPassword;
-  private String dsOnlineDbPassword;
   
   public FeaturestoreDTO() {
   }
@@ -53,7 +51,6 @@ public class FeaturestoreDTO {
     this.featurestoreDescription = null;
     this.featurestoreName = null;
     this.inodeId = null;
-    this.doOnlineDbPassword = null;
   }
   
   @XmlElement
@@ -110,24 +107,6 @@ public class FeaturestoreDTO {
   
   public void setInodeId(Long inodeId) {
     this.inodeId = inodeId;
-  }
-  
-  @XmlElement
-  public String getDoOnlineDbPassword() {
-    return doOnlineDbPassword;
-  }
-  
-  public void setDoOnlineDbPassword(String doOnlineDbPassword) {
-    this.doOnlineDbPassword = doOnlineDbPassword;
-  }
-  
-  @XmlElement
-  public String getDsOnlineDbPassword() {
-    return dsOnlineDbPassword;
-  }
-  
-  public void setDsOnlineDbPassword(String dsOnlineDbPassword) {
-    this.dsOnlineDbPassword = dsOnlineDbPassword;
   }
   
   @Override
