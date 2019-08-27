@@ -1315,6 +1315,8 @@ public class RESTCodes {
         Response.Status.BAD_REQUEST),
     FEATURESTORE_INITIALIZATION_ERROR(61, "Featurestore Initialization Error", Response.Status.INTERNAL_SERVER_ERROR),
     FEATURESTORE_UTIL_ARGS_FAILURE(62, "Could not write featurestore util args to HDFS",
+        Response.Status.INTERNAL_SERVER_ERROR),
+    FEATURESTORE_ONLINE_SECRETS_ERROR(63, "Could not get JDBC connection for the online featurestore",
         Response.Status.INTERNAL_SERVER_ERROR);
     
     

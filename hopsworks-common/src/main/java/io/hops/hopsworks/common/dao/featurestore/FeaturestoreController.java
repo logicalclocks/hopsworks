@@ -225,10 +225,13 @@ public class FeaturestoreController {
     return projectTeamBean.findCurrentRole(project, user);
   }
   
-  private String onlineDbUsername(Project project, Users user) {
+  
+  public String onlineDbUsername(Project project, Users user) {
     return project.getName() + "_" + user.getUsername();
   }
-  
+  public String onlineDbUsername(Project project, String user) {
+    return project.getName() + "_" + user;
+  }
   
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public int updateRoleOnlineFeatureStoreDB(Project project, Users user, String role) {
@@ -245,7 +248,7 @@ public class FeaturestoreController {
     String[] args = new String[5];
     args[0] = "rm";
     args[1] = project.getName();
-    args[2] = user;
+    args[2] = onlineDbUsername(project, user);
     return onlineFeatureStoreDB(args);
   }
   
