@@ -340,7 +340,7 @@ public class ProjectController {
       try {
         projectCreationFutures.add(certificatesController.generateCertificates(project, owner));
       } catch (Exception ex) {
-        cleanup(project, sessionId, projectCreationFutures);
+        cleanup(project, sessionId, projectCreationFutures, true, owner);
         throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_CREATION_ERROR, Level.SEVERE,
           "project: " + project.getName() +
             "owner: " + owner.getUsername(), ex.getMessage(), ex);
@@ -348,7 +348,7 @@ public class ProjectController {
 
       String username = hdfsUsersController.getHdfsUserName(project, owner);
       if (username == null || username.isEmpty()) {
-        cleanup(project, sessionId, projectCreationFutures);
+        cleanup(project, sessionId, projectCreationFutures, true, owner);
         throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.SEVERE,
           "project: " + project.getName() + "owner: " + owner.getUsername());
       }
@@ -360,7 +360,7 @@ public class ProjectController {
       try {
         mkProjectDIR(projectName, dfso);
       } catch (IOException | EJBException ex) {
-        cleanup(project, sessionId, projectCreationFutures);
+        cleanup(project, sessionId, projectCreationFutures, true, owner);
         throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_FOLDER_NOT_CREATED, Level.SEVERE,
           "project: " + projectName, ex.getMessage(), ex);
       }
@@ -369,7 +369,7 @@ public class ProjectController {
       try {
         setProjectInode(project, dfso);
       } catch (IOException | EJBException ex) {
-        cleanup(project, sessionId, projectCreationFutures);
+        cleanup(project, sessionId, projectCreationFutures, true, owner);
         throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_INODE_CREATION_ERROR,
           Level.SEVERE, "project: " + projectName, ex.getMessage(), ex);
       }
@@ -380,7 +380,7 @@ public class ProjectController {
         setProjectOwnerAndQuotas(project, settings.getHdfsDefaultQuotaInMBs(),
             dfso, owner);
       } catch (IOException | EJBException ex) {
-        cleanup(project, sessionId, projectCreationFutures);
+        cleanup(project, sessionId, projectCreationFutures, true, owner);
         throw new ProjectException(RESTCodes.ProjectErrorCode.QUOTA_ERROR, Level.SEVERE,
           "project: " + project.getName(), ex.getMessage(), ex);
       }
@@ -903,12 +903,15 @@ public class ProjectController {
   }
 
   //Set the project owner as project master in ProjectTeam table
-  private void addProjectOwner(Integer project_id, String userName) {
-    ProjectTeamPK stp = new ProjectTeamPK(project_id, userName);
+  private void addProjectOwner(Project project, Users user) {
+    ProjectTeamPK stp = new ProjectTeamPK(project.getId(), user.getEmail());
     ProjectTeam st = new ProjectTeam(stp);
     st.setTeamRole(ProjectRoleTypes.DATA_OWNER.getRole());
     st.setTimestamp(new Date());
-    projectTeamFacade.persistProjectTeam(st);
+    st.setProject(project);
+    st.setUser(user);
+    project.getProjectTeamCollection().add(st);
+    projectFacade.update(project);
   }
 
   //create project in HDFS
@@ -1490,9 +1493,14 @@ public class ProjectController {
       List<Future<?>> projectCreationFutures) throws GenericException {
     cleanup(project, sessionId, projectCreationFutures, true);
   }
-
+  
   public void cleanup(Project project, String sessionId,
-      List<Future<?>> projectCreationFutures, boolean decreaseCreatedProj)
+      List<Future<?>> projectCreationFutures, boolean decreaseCreatedProj) throws GenericException {
+    cleanup(project, sessionId, projectCreationFutures, true, null);
+  }
+  
+  public void cleanup(Project project, String sessionId,
+      List<Future<?>> projectCreationFutures, boolean decreaseCreatedProj, Users owner)
     throws GenericException {
 
     if (project == null) {
@@ -1536,13 +1544,13 @@ public class ProjectController {
 
         List<HdfsUsers> usersToClean = getUsersToClean(project);
         List<HdfsGroups> groupsToClean = getGroupsToClean(project);
-        removeProjectInt(project, usersToClean, groupsToClean, projectCreationFutures, decreaseCreatedProj);
+        removeProjectInt(project, usersToClean, groupsToClean, projectCreationFutures, decreaseCreatedProj, owner);
 
         removeCertificatesFromMaterializer(project);
         break;
       } catch (Exception ex) {
         nbTry++;
-        if (nbTry < 3) {
+        if (nbTry < 2) {
           try {
             Thread.sleep(nbTry * 1000);
           } catch (InterruptedException ex1) {
@@ -1559,7 +1567,7 @@ public class ProjectController {
 
   private void removeProjectInt(Project project, List<HdfsUsers> usersToClean,
       List<HdfsGroups> groupsToClean, List<Future<?>> projectCreationFutures,
-      boolean decreaseCreatedProj)
+      boolean decreaseCreatedProj, Users owner)
     throws IOException, InterruptedException, ExecutionException,
     HopsSecurityException, ServiceException, ProjectException, GenericException, TensorBoardException {
     DistributedFileSystemOps dfso = null;
@@ -1596,13 +1604,18 @@ public class ProjectController {
       if (projectCreationFutures != null) {
         for (Future f : projectCreationFutures) {
           if (f != null) {
-            f.get();
+            try {
+              f.get();
+            } catch (ExecutionException ex) {
+              LOGGER.log(Level.SEVERE, "Error while waiting for ProjectCreationFutures to finish for Project "
+                  + project.getName(), ex);
+            }
           }
         }
       }
 
       try {
-        certificatesController.revokeProjectCertificates(project);
+        certificatesController.revokeProjectCertificates(project, owner);
       } catch (HopsSecurityException ex) {
         if (ex.getErrorCode() != RESTCodes.CAErrorCode.CERTNOTFOUND) {
           LOGGER.log(Level.SEVERE, "Could not delete certificates during cleanup for project " + project.getName()
@@ -1794,7 +1807,10 @@ public class ProjectController {
             //this makes sure that the member is added to the project sent as the
             //first param b/c the securty check was made on the parameter sent as path.
             projectTeam.getProjectTeamPK().setProjectId(project.getId());
-            projectTeamFacade.persistProjectTeam(projectTeam);
+            projectTeam.setProject(project);
+            projectTeam.setUser(newMember);
+            project.getProjectTeamCollection().add(projectTeam);
+            projectFacade.update(project);
             hdfsUsersController.addNewProjectMember(project, projectTeam);
 
             //Add user to kafka topics ACLs by default
@@ -1935,7 +1951,7 @@ public class ProjectController {
     //Add the activity information
     logActivity(ActivityFacade.NEW_PROJECT + project.getName(), user, project, ActivityFlag.PROJECT);
     //update role information in project
-    addProjectOwner(project.getId(), user.getEmail());
+    addProjectOwner(project, user);
     LOGGER.log(Level.FINE, "{0} - project created successfully.", project.
         getName());
   }
