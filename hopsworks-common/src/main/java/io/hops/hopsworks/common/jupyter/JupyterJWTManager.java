@@ -181,7 +181,7 @@ public class JupyterJWTManager {
       }
       
       // Check if Jupyter is still running
-      if (!jupyterManager.pingServerJupyterUser(jupyterProject)) {
+      if (!jupyterManager.ping(jupyterProject)) {
         LOG.log(Level.FINEST, "Jupyter server is not running for " + materializedJWT.getIdentifier()
           + " Skip recovering...");
         failed2recover.add(materializedJWT);

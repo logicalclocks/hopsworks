@@ -47,12 +47,20 @@ import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.integrations.LocalhostStereotype;
 import io.hops.hopsworks.common.jupyter.TokenGenerator;
+import io.hops.hopsworks.common.proxies.client.HttpClient;
 import io.hops.hopsworks.common.util.OSProcessExecutor;
 import io.hops.hopsworks.common.util.ProcessDescriptor;
 import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.restutils.RESTCodes;
+import org.apache.http.HttpHost;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.utils.URIBuilder;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -63,6 +71,8 @@ import javax.ejb.TransactionAttributeType;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
@@ -86,6 +96,8 @@ public class JupyterProcessMgr implements JupyterManager {
 
   private static final Logger LOGGER = Logger.getLogger(JupyterProcessMgr.class.getName());
   private static final int TOKEN_LENGTH = 48;
+  private static final String JUPYTER_HOST_TEMPLATE = "http://%s:%d";
+  private static final String PING_PATH = "/hopsworks-api/jupyter/%d/api/status";
 
   @EJB
   private Settings settings;
@@ -99,10 +111,14 @@ public class JupyterProcessMgr implements JupyterManager {
   private JupyterConfigFilesGenerator jupyterConfigFilesGenerator;
   @EJB
   private OSProcessExecutor osProcessExecutor;
-
-
+  @EJB
+  private HttpClient httpClient;
+  
+  private String jupyterHost;
+  
   @PostConstruct
   public void init() {
+    jupyterHost = settings.getJupyterHost();
   }
 
   @PreDestroy
@@ -242,12 +258,29 @@ public class JupyterProcessMgr implements JupyterManager {
   public void projectCleanup(Project project) {
     projectCleanup(settings, LOGGER, osProcessExecutor, project);
   }
-
+  
   @Override
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-  public boolean pingServerJupyterUser(JupyterProject jupyterProject) {
-    int exitValue = executeJupyterCommand("ping", String.valueOf(jupyterProject.getPid()));
-    return exitValue == 0;
+  public boolean ping(JupyterProject jupyterProject) {
+    Integer jupyterPort = jupyterProject.getPort();
+    HttpHost host = HttpHost.create(String.format(JUPYTER_HOST_TEMPLATE, jupyterHost, jupyterPort));
+    String pingPath = String.format(PING_PATH, jupyterPort);
+    try {
+      URI authPath = new URIBuilder(pingPath).addParameter("token", jupyterProject.getToken()).build();
+      HttpGet httpRequest = new HttpGet(authPath);
+      return httpClient.execute(host, httpRequest, new ResponseHandler<Boolean>() {
+        @Override
+        public Boolean handleResponse(HttpResponse response) throws ClientProtocolException, IOException {
+          int status = response.getStatusLine().getStatusCode();
+          return status == HttpStatus.SC_OK;
+        }
+      });
+    } catch (URISyntaxException ex) {
+      LOGGER.log(Level.SEVERE, "Could not parse URI to ping Jupyter server", ex);
+      return false;
+    } catch (IOException ex) {
+      return false;
+    }
   }
 
   @Override
