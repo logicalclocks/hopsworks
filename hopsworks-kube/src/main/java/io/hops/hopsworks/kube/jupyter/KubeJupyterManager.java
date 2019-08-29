@@ -435,7 +435,7 @@ public class KubeJupyterManager implements JupyterManager {
   }
   
   @Override
-  public boolean pingServerJupyterUser(JupyterProject jupyterProject) {
+  public boolean ping(JupyterProject jupyterProject) {
     String hdfsUser = hdfsUsersFacade.find(jupyterProject.getHdfsUserId()).getName();
     Project project = projectFacade.findByName(hdfsUsersController.getProjectName(hdfsUser));
     Users user = userFacade.findByUsername(hdfsUsersController.getUserName(hdfsUser));
