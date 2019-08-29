@@ -112,4 +112,8 @@ public class HttpClient {
   public <T> T execute(HttpRequest request, ResponseHandler<T> handler) throws IOException {
     return client.execute(host, request, handler);
   }
+  
+  public <T> T execute(HttpHost host, HttpRequest request, ResponseHandler<T> handler) throws IOException {
+    return client.execute(host, request, handler);
+  }
 }
