@@ -21,7 +21,8 @@ public enum ApiScope {
   DATASET_CREATE,
   DATASET_DELETE,
   INFERENCE,
-  FEATURESTORE;
+  FEATURESTORE,
+  PROJECT;
   
   public static ApiScope fromString(String param) {
     return valueOf(param.toUpperCase());

@@ -46,6 +46,7 @@ import io.hops.hopsworks.api.featurestore.FeaturestoreService;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
+import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.jobs.JobsResource;
 import io.hops.hopsworks.api.jobs.KafkaService;
 import io.hops.hopsworks.api.jupyter.JupyterService;
@@ -74,6 +75,7 @@ import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFlag;
+import io.hops.hopsworks.common.dao.user.security.apiKey.ApiScope;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.FilePreviewDTO;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
@@ -225,6 +227,7 @@ public class ProjectService {
   @Path("/getProjectInfo/{projectName}")
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.PROJECT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @Produces(MediaType.APPLICATION_JSON)
   public Response getProjectByName(@PathParam("projectName") String projectName) throws ProjectException {
     ProjectDTO proj = projectController.getProjectByName(projectName);
