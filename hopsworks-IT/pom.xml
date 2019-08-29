@@ -56,7 +56,7 @@
     <cargo.version>1.6.4</cargo.version>
     <glassfish.version>4.1.2</glassfish.version>
     <!--test lib versions-->
-    <selenium.version>3.14.0</selenium.version>
+    <selenium.version>3.141.59</selenium.version>
     <commons.lang3.version>3.8.1</commons.lang3.version>
     <plugin.failsafe.version>2.16</plugin.failsafe.version>
     <!-- Glassfish conf -->
