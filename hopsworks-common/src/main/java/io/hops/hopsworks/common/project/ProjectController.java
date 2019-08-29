@@ -1535,6 +1535,9 @@ public class ProjectController {
         removeProjectInt(project, usersToClean, groupsToClean, projectCreationFutures, decreaseCreatedProj);
         
         removeCertificatesFromMaterializer(project);
+        //Delete online featurestore database
+        featurestoreController.dropOnlineFeatureStore(project.getName());
+        
         break;
       } catch (Exception ex) {
         nbTry++;
@@ -1627,6 +1630,9 @@ public class ProjectController {
       //Delete Hive database - will automatically cleanup all the Hive's metadata
       hiveController.dropDatabases(project, dfso, false);
 
+      //Delete online featurestore database
+      featurestoreController.dropOnlineFeatureStore(project.getName());
+      
       //Delete elasticsearch template for this project
       removeElasticsearch(project);
 

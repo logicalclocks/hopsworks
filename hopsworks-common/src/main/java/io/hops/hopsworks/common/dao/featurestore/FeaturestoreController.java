@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.common.dao.featurestore;
 
+import io.hops.hopsworks.common.constants.auth.AllowedRoles;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetType;
 import io.hops.hopsworks.common.dao.featurestore.app.FeaturestoreUtilJobDTO;
@@ -146,7 +147,9 @@ public class FeaturestoreController {
       .addCommand(prog);
     
     for (String arg : args) {
-      pdBuilder.addCommand(arg);
+      if (arg != null) {
+        pdBuilder.addCommand(arg);
+      }
     }
     pdBuilder.setWaitTimeout(20L, TimeUnit.SECONDS);
     if (!LOGGER.isLoggable(Level.FINE)) {
@@ -175,7 +178,7 @@ public class FeaturestoreController {
    * @throws FeaturestoreException
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
-  public int createOnlineFeatureStoreDB(Project project, Users user) {
+  public int addUserOnlineFeatureStoreDB(Project project, Users user) {
     
     String role = getRole(project, user);
     String onlineFsPassword = securityUtils.generateSecureRandomString();
@@ -222,15 +225,25 @@ public class FeaturestoreController {
   }
   
   private String getRole(Project project, Users user) {
-    return projectTeamBean.findCurrentRole(project, user);
+    String role = projectTeamBean.findCurrentRole(project, user);
+    
+    // The role name has a space in it, and i don't want a space as i will pass this role as an argument
+    // to the bash script to create the online DB user. Convert role to string without spaces.
+    if (role.compareToIgnoreCase(AllowedRoles.DATA_OWNER) == 0) {
+      role = "DATA_OWNER";
+    } else if (role.compareToIgnoreCase(AllowedRoles.DATA_SCIENTIST) == 0) { 
+      role = "DATA_SCIENTIST";
+    }
+    return role;
   }
   
   
   public String onlineDbUsername(Project project, Users user) {
-    return project.getName() + "_" + user.getUsername();
+    return onlineDbUsername(project.getName(), user.getUsername());
   }
-  public String onlineDbUsername(Project project, String user) {
-    return project.getName() + "_" + user;
+  
+  private String onlineDbUsername(String project, String user) {
+    return project  + "_" + user;
   }
   
   @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -244,21 +257,25 @@ public class FeaturestoreController {
   }
   
   
-  private int rmOnlineFeatureStore(Project project, String user) {
+  private int rmOnlineFeatureStore(String project, String user) {
     String[] args = new String[5];
     args[0] = "rm";
-    args[1] = project.getName();
-    args[2] = onlineDbUsername(project, user);
+    args[1] = project;
+    if (user.compareTo("all") == 0) {
+      args[2] = user;
+    } else {
+      args[2] = onlineDbUsername(project, user);
+    }
     return onlineFeatureStoreDB(args);
   }
   
   @TransactionAttribute(TransactionAttributeType.NEVER)
-  public int rmUserFromOnlineFeatureStore(Project project, Users user) {
+  public int rmUserFromOnlineFeatureStore(String project, Users user) {
     return rmOnlineFeatureStore(project, user.getUsername());
   }
   
   @TransactionAttribute(TransactionAttributeType.NEVER)
-  public int dropOnlineFeatureStore(Project project) {
+  public int dropOnlineFeatureStore(String project) {
     return rmOnlineFeatureStore(project, "all");
   }
   
@@ -371,7 +388,7 @@ public class FeaturestoreController {
     activityFacade.persistActivity(ActivityFacade.ADDED_FEATURESTORE_STORAGE_CONNECTOR +
       trainingDatasetsFolder.getName(), project, project.getOwner(), ActivityFlag.SERVICE);
     
-    createOnlineFeatureStoreDB(project, user);
+    addUserOnlineFeatureStoreDB(project, user);
     
     return featurestore;
   }

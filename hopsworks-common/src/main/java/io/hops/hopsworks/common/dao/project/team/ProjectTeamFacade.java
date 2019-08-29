@@ -261,7 +261,7 @@ public class ProjectTeamFacade {
     Project project = team.getProject();
     if (projectServiceFacade.isServiceEnabledForProject(project, ProjectServiceEnum.FEATURESTORE)) {
       Users user = team.getUser();
-      featurestoreController.rmUserFromOnlineFeatureStore(project, user);
+      featurestoreController.addUserOnlineFeatureStoreDB(project, user);
     }
   }
 
@@ -288,7 +288,7 @@ public class ProjectTeamFacade {
       em.remove(team);
       // If the FeatureStore is enabled, remove this user from the online FS DB
       if (projectServiceFacade.isServiceEnabledForProject(project, ProjectServiceEnum.FEATURESTORE)) {
-        featurestoreController.rmUserFromOnlineFeatureStore(project, user);
+        featurestoreController.rmUserFromOnlineFeatureStore(project.getName(), user);
       }
     }
   }
@@ -354,11 +354,6 @@ public class ProjectTeamFacade {
       member.setTeamRole(teamRole.getRole());
       member.setTimestamp(new Date());
       em.merge(member);
-    }
-    if (teamRole.compareTo(ProjectRoleTypes.UNDER_REMOVAL) == 0) {
-      if (projectServiceFacade.isServiceEnabledForProject(project, ProjectServiceEnum.FEATURESTORE)) {
-        featurestoreController.dropOnlineFeatureStore(project);
-      }
     }
     return teamMembers;
   }
