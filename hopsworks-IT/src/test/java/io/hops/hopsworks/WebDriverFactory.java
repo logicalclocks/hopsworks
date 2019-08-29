@@ -42,7 +42,7 @@ public class WebDriverFactory {
 
   private static final Logger LOGGER = Logger.getLogger(WebDriverFactory.class.getName());
   private static final String GECKODRIVER_VERSION = "0.23.0";
-  private static final String CHROMEDRIVER_VERSION = "2.42";
+  private static final String CHROMEDRIVER_VERSION = "76.0.3809.68";
   private static final String GECKODRIVER = "geckodriver";
   private static final String CHROMEDRIVER = "chromedriver";
   private static final String GECKODRIVER_URL = "https://github.com/mozilla/geckodriver/releases/download/v"
