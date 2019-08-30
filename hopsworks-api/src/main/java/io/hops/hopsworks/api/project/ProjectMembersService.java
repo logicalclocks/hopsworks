@@ -45,6 +45,7 @@ import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
+import io.hops.hopsworks.common.dao.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
@@ -91,6 +92,8 @@ public class ProjectMembersService {
   private ProjectController projectController;
   @EJB
   private ProjectTeamFacade projectTeamFacade;
+  @EJB
+  private FeaturestoreController featurestoreController;
   @EJB
   private NoCacheResponse noCacheResponse;
   @EJB
@@ -184,6 +187,7 @@ public class ProjectMembersService {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_OWNER_ROLE_NOT_ALLOWED, Level.FINE);
     }
     projectController.updateMemberRole(project, user, email, role);
+    featurestoreController.addUserOnlineFeatureStoreDB(project, user);
 
     json.setSuccessMessage(ResponseMessages.MEMBER_ROLE_UPDATED);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
