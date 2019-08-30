@@ -187,7 +187,7 @@ public class ProjectMembersService {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_OWNER_ROLE_NOT_ALLOWED, Level.FINE);
     }
     projectController.updateMemberRole(project, user, email, role);
-    featurestoreController.addUserOnlineFeatureStoreDB(project, user);
+    featurestoreController.updateRoleOnlineFeatureStoreDB(project, user);
 
     json.setSuccessMessage(ResponseMessages.MEMBER_ROLE_UPDATED);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(

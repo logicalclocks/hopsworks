@@ -247,7 +247,8 @@ public class FeaturestoreController {
   }
   
   @TransactionAttribute(TransactionAttributeType.NEVER)
-  public int updateRoleOnlineFeatureStoreDB(Project project, Users user, String role) {
+  public int updateRoleOnlineFeatureStoreDB(Project project, Users user) {
+    String role = getRole(project, user);    
     String[] args = new String[5];
     args[0] = "update";
     args[1] = project.getName();

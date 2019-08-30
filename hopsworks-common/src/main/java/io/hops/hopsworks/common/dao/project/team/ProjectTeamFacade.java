@@ -321,9 +321,6 @@ public class ProjectTeamFacade {
       team.setTeamRole(teamRole);
       team.setTimestamp(new Date());
       em.merge(team);
-      if (projectServiceFacade.isServiceEnabledForProject(project, ProjectServiceEnum.FEATURESTORE)) {
-        featurestoreController.updateRoleOnlineFeatureStoreDB(project, user, teamRole);
-      }
     }
   }
 
@@ -354,9 +351,6 @@ public class ProjectTeamFacade {
       member.setTeamRole(teamRole.getRole());
       member.setTimestamp(new Date());
       em.merge(member);
-      if (projectServiceFacade.isServiceEnabledForProject(project, ProjectServiceEnum.FEATURESTORE)) {
-        featurestoreController.updateRoleOnlineFeatureStoreDB(project, member.getUser(), teamRole.getRole());
-      }
     }
     return teamMembers;
   }
