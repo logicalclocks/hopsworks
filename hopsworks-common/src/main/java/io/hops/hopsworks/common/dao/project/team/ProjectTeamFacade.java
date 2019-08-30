@@ -286,10 +286,6 @@ public class ProjectTeamFacade {
     ProjectTeam team = findByPrimaryKey(project, user);
     if (team != null) {
       em.remove(team);
-      // If the FeatureStore is enabled, remove this user from the online FS DB
-      if (projectServiceFacade.isServiceEnabledForProject(project, ProjectServiceEnum.FEATURESTORE)) {
-        featurestoreController.rmUserFromOnlineFeatureStore(project.getName(), user);
-      }
     }
   }
 
