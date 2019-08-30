@@ -130,26 +130,9 @@ public class CommandsController {
         LOGGER.log(Level.SEVERE, null, ex);
       }
     }
-    
   }
-  
-  public void blockingCondaOp(int hostId, CondaCommandFacade.CondaOp op,
-    CondaCommandFacade.CondaInstallType condaInstallType,
-    LibraryFacade.MachineType machineType, Project proj, String channelUrl,
-    String lib, String version) throws ServiceException {
-    Hosts host = hostsFacade.find(hostId);
-    
-    AnacondaRepo repo = libraryFacade.getRepo(channelUrl, false);
-    PythonDep dep = libraryFacade.getDep(repo, machineType, condaInstallType, lib, version, false,
-      false, CondaCommandFacade.CondaStatus.SUCCESS);
-    Future<?> f = kagentExecutorService.submit(new CondaTask(this.web, proj, host, op, dep));
-    try {
-      f.get(100, TimeUnit.SECONDS);
-    } catch (InterruptedException | ExecutionException | TimeoutException ex) {
-      LOGGER.log(Level.SEVERE, null, ex);
-    }
-  }
-  
+
+
   public PythonDep condaOp(CondaCommandFacade.CondaOp op, CondaCommandFacade.CondaInstallType installType,
     LibraryFacade.MachineType machineType, Project proj, String channelUrl, String lib, String version)
     throws ServiceException, GenericException {
@@ -164,8 +147,7 @@ public class CommandsController {
       // 1. test if anacondaRepoUrl exists. If not, add it.
       AnacondaRepo repo = libraryFacade.getRepo(channelUrl, true);
       // 2. Test if pythonDep exists. If not, add it.
-      dep = libraryFacade.getDep(repo, machineType, installType, lib, version, true, false,
-        CondaCommandFacade.CondaStatus.ONGOING);
+      dep = libraryFacade.getOrCreateDep(repo, machineType, installType, lib, version, true, false);
       
       // 3. Add the python library to the join table for the project
       Collection<PythonDep> depsInProj = proj.getPythonDepCollection();
@@ -226,10 +208,10 @@ public class CommandsController {
             }
           }
           if (finished) {
-            PythonDep dep = libraryFacade.getDep(libraryFacade.getRepo(cc.getChannelUrl(), false),
-              cc.getMachineType(), cc.getInstallType(), cc.getLib(), cc.getVersion(), true, false,
-              condaStatus);
+            PythonDep dep = libraryFacade.getOrCreateDep(libraryFacade.getRepo(cc.getChannelUrl(), false),
+              cc.getMachineType(), cc.getInstallType(), cc.getLib(), cc.getVersion(), true, false);
             Collection<PythonDep> deps = cc.getProjectId().getPythonDepCollection();
+
             if (opType.equals(CondaCommandFacade.CondaOp.INSTALL)) {
               deps.remove(dep);
               deps.add(dep);
@@ -241,10 +223,6 @@ public class CommandsController {
           }
         }
       } else {
-        if (CondaCommandFacade.CondaStatus.FAILED.equals(condaStatus)) {
-          libraryFacade.getDep(libraryFacade.getRepo(cc.getChannelUrl(), false), cc.getMachineType(),
-            cc.getInstallType(), cc.getLib(), cc.getVersion(), false, false, condaStatus);
-        }
         cc.setStatus(condaStatus);
         cc.setArg(arg);
         condaCommandFacade.update(cc);

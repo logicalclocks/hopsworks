@@ -105,9 +105,8 @@ public class LibraryController {
   public PythonDep addLibrary(Project proj, CondaCommandFacade.CondaInstallType installType,
     LibraryFacade.MachineType machineType, String channelUrl, String dependency, String version) throws ServiceException
     , GenericException {
-    PythonDep dep = commandsController.condaOp(CondaCommandFacade.CondaOp.INSTALL, installType, machineType, proj,
+    return commandsController.condaOp(CondaCommandFacade.CondaOp.INSTALL, installType, machineType, proj,
       channelUrl, dependency, version);
-    return dep;
   }
   
   public void uninstallLibrary(Project proj, CondaCommandFacade.CondaInstallType installType,
