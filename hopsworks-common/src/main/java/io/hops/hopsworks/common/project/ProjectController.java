@@ -1823,6 +1823,8 @@ public class ProjectController {
               hdfsUsersController.removeProjectMember(newMember, project);
               throw new EJBException("Could not create certificates for user");
             }
+            
+            featurestoreController.addUserOnlineFeatureStoreDB(project, projectTeam.getUser());
 
             LOGGER.log(Level.FINE, "{0} - member added to project : {1}.",
               new Object[]{newMember.getEmail(),

@@ -143,6 +143,7 @@ public class ProjectMembersService {
     if (project != null) {
       //add new members of the project
       failedMembers = projectController.addMembers(project, user, members.getProjectTeam());
+      
     }
 
     if (members.getProjectTeam().size() > 1) {
@@ -226,6 +227,9 @@ public class ProjectMembersService {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_OWNER_NOT_ALLOWED, Level.FINE);
     }
     projectController.removeMemberFromTeam(project, reqUser, email);
+    
+    featurestoreController.rmUserFromOnlineFeatureStore(project.getName(), reqUser);
+    
     json.setSuccessMessage(ResponseMessages.MEMBER_REMOVED_FROM_TEAM);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }
