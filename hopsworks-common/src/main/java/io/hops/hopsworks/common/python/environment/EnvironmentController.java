@@ -125,9 +125,8 @@ public class EnvironmentController {
 
   public void synchronizeDependencies(Project project) throws ServiceException {
     final String envStr = agentController.listCondaEnvironment(projectUtils.getCurrentCondaEnvironment(project));
-    final Collection<PythonDep> pythonDeps = agentController.synchronizeDependencies(
-        project, envStr, project.getPythonDepCollection(),
-        CondaCommandFacade.CondaStatus.SUCCESS);
+    final Collection<PythonDep> pythonDeps = agentController.synchronizeDependencies(envStr,
+        project.getPythonDepCollection());
     // Insert all deps in current listing
     libraryController.addPythonDepsForProject(project, pythonDeps);
   }

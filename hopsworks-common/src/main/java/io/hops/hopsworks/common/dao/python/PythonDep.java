@@ -118,11 +118,6 @@ public class PythonDep implements Serializable {
   @ManyToOne(optional = false)
   private AnacondaRepo repoUrl;
 
-  @Column(name = "status")
-  @Enumerated(EnumType.ORDINAL)
-  private CondaCommandFacade.CondaStatus status
-          = CondaCommandFacade.CondaStatus.NEW;
-
   @Column(name = "install_type")
   @Enumerated(EnumType.ORDINAL)
   private CondaCommandFacade.CondaInstallType installType;
@@ -186,14 +181,6 @@ public class PythonDep implements Serializable {
 
   public CondaCommandFacade.CondaInstallType getInstallType() {
     return installType;
-  }
-
-  public void setStatus(CondaCommandFacade.CondaStatus status) {
-    this.status = status;
-  }
-
-  public CondaCommandFacade.CondaStatus getStatus() {
-    return status;
   }
 
   public void setMachineType(LibraryFacade.MachineType machineType) {

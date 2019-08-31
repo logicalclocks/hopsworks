@@ -280,19 +280,17 @@ public class AgentController {
           commandId, status, command.getInstallType(), command.getMachineType(),
           args, projectName, opType, lib, version, channelUrl);
         
-        if ((command.getOp().equals(CondaCommandFacade.CondaOp.CREATE)
-              || command.getOp().equals(CondaCommandFacade.CondaOp.YML))
-            && (status.equals(CondaCommandFacade.CondaStatus.SUCCESS)
-              || status.equals(CondaCommandFacade.CondaStatus.FAILED))) {
+        if (command.getOp().equals(CondaCommandFacade.CondaOp.YML) &&
+            settings.getHopsworksIp().equals(command.getHostId().getHostIp()) &&
+            (status.equals(CondaCommandFacade.CondaStatus.SUCCESS) ||
+                status.equals(CondaCommandFacade.CondaStatus.FAILED))) {
           // Sync only on Hopsworks server
-          if (settings.getHopsworksIp().equals(command.getHostId().getHostIp())) {
-            final Project projectId = command.getProjectId();
-            final String envStr = listCondaEnvironment(projectName);
-            final Collection<PythonDep> pythonDeps = synchronizeDependencies(projectId, envStr,
-              projectId.getPythonDepCollection(), status);
-            // Insert all deps in current listing
-            libraryController.addPythonDepsForProject(projectId, pythonDeps);
-          }
+          final Project projectId = command.getProjectId();
+          final String envStr = listCondaEnvironment(projectName);
+          final Collection<PythonDep> pythonDeps = synchronizeDependencies(envStr,
+              projectId.getPythonDepCollection());
+          // Insert all deps in current listing
+          libraryController.addPythonDepsForProject(projectId, pythonDeps);
         }
         
         // An upgrade results in an unknown version installed, query local conda
@@ -312,9 +310,8 @@ public class AgentController {
                   
                   for (final PythonDep dep : deps) {
                     if (dep.getDependency().equals(command.getLib())) {
-                      PythonDep newDep = libraryFacade.getDep(dep.getRepoUrl(), dep.getMachineType(),
-                          command.getInstallType(), command.getLib(), localVersion, true, false,
-                          CondaCommandFacade.CondaStatus.FAILED);
+                      PythonDep newDep = libraryFacade.getOrCreateDep(dep.getRepoUrl(), dep.getMachineType(),
+                          command.getInstallType(), command.getLib(), localVersion, true, false);
                       deps.remove(dep);
                       deps.add(newDep);
                       projectFacade.update(projectId);
@@ -381,8 +378,9 @@ public class AgentController {
    * @param currentlyInstalledPyDeps
    * @return
    */
-  public Collection<PythonDep> synchronizeDependencies(Project project, String condaListStr,
-      Collection<PythonDep> currentlyInstalledPyDeps, CondaCommandFacade.CondaStatus status) throws ServiceException {
+  public Collection<PythonDep> synchronizeDependencies(String condaListStr,
+                                                       Collection<PythonDep> currentlyInstalledPyDeps)
+      throws ServiceException {
     
     Collection<PythonDep> deps = new ArrayList();
     
@@ -403,8 +401,8 @@ public class AgentController {
       if (settings.getPreinstalledPythonLibraryNames().contains(libraryName)) {
         AnacondaRepo repo = libraryFacade.getRepo("PyPi", true);
         
-        PythonDep pyDep = libraryFacade.getDep(repo, LibraryFacade.MachineType.ALL,
-          CondaCommandFacade.CondaInstallType.PIP, libraryName, version, true, true, status);
+        PythonDep pyDep = libraryFacade.getOrCreateDep(repo, LibraryFacade.MachineType.ALL,
+          CondaCommandFacade.CondaInstallType.PIP, libraryName, version, true, true);
         deps.add(pyDep);
         continue;
       }
@@ -414,16 +412,16 @@ public class AgentController {
         "-rocm")) {
         AnacondaRepo repo = libraryFacade.getRepo("PyPi", true);
         if(cpuHost != null) {
-          PythonDep tensorflowCPU = libraryFacade.getDep(repo, LibraryFacade.MachineType.CPU,
-            CondaCommandFacade.CondaInstallType.PIP, "tensorflow", version, true, true, status);
+          PythonDep tensorflowCPU = libraryFacade.getOrCreateDep(repo, LibraryFacade.MachineType.CPU,
+            CondaCommandFacade.CondaInstallType.PIP, "tensorflow", version, true, true);
           deps.add(tensorflowCPU);
         }
         if(gpuHost != null) {
-          PythonDep tensorflowCudaGPU = libraryFacade.getDep(repo, LibraryFacade.MachineType.GPU,
-            CondaCommandFacade.CondaInstallType.PIP, "tensorflow-gpu", version, true, true, status);
+          PythonDep tensorflowCudaGPU = libraryFacade.getOrCreateDep(repo, LibraryFacade.MachineType.GPU,
+            CondaCommandFacade.CondaInstallType.PIP, "tensorflow-gpu", version, true, true);
           deps.add(tensorflowCudaGPU);
-          PythonDep tensorflowROCmGPU = libraryFacade.getDep(repo, LibraryFacade.MachineType.GPU,
-            CondaCommandFacade.CondaInstallType.PIP, "tensorflow-rocm", version, true, true, status);
+          PythonDep tensorflowROCmGPU = libraryFacade.getOrCreateDep(repo, LibraryFacade.MachineType.GPU,
+            CondaCommandFacade.CondaInstallType.PIP, "tensorflow-rocm", version, true, true);
           deps.add(tensorflowROCmGPU);
         }
         continue;
@@ -433,13 +431,13 @@ public class AgentController {
       if (libraryName.equals("pytorch") || libraryName.equals("pytorch-cpu")) {
         AnacondaRepo repo = libraryFacade.getRepo("pytorch", true);
         if(cpuHost != null) {
-          PythonDep pytorchCPU = libraryFacade.getDep(repo, LibraryFacade.MachineType.CPU,
-            CondaCommandFacade.CondaInstallType.CONDA, "pytorch-cpu", version, true, false, status);
+          PythonDep pytorchCPU = libraryFacade.getOrCreateDep(repo, LibraryFacade.MachineType.CPU,
+            CondaCommandFacade.CondaInstallType.CONDA, "pytorch-cpu", version, true, false);
           deps.add(pytorchCPU);
         }
         if(gpuHost != null) {
-          PythonDep pytorchGPU = libraryFacade.getDep(repo, LibraryFacade.MachineType.GPU,
-            CondaCommandFacade.CondaInstallType.CONDA, "pytorch", version, true, false, status);
+          PythonDep pytorchGPU = libraryFacade.getOrCreateDep(repo, LibraryFacade.MachineType.GPU,
+            CondaCommandFacade.CondaInstallType.CONDA, "pytorch", version, true, false);
           deps.add(pytorchGPU);
         }
         continue;
@@ -449,13 +447,13 @@ public class AgentController {
       if (libraryName.equals("torchvision") || libraryName.equals("torchvision-cpu")) {
         AnacondaRepo repo = libraryFacade.getRepo("pytorch", true);
         if(cpuHost != null) {
-          PythonDep torchvisionCPU = libraryFacade.getDep(repo, LibraryFacade.MachineType.CPU,
-            CondaCommandFacade.CondaInstallType.CONDA, "torchvision-cpu", version, true, false, status);
+          PythonDep torchvisionCPU = libraryFacade.getOrCreateDep(repo, LibraryFacade.MachineType.CPU,
+            CondaCommandFacade.CondaInstallType.CONDA, "torchvision-cpu", version, true, false);
           deps.add(torchvisionCPU);
         }
         if(gpuHost != null) {
-          PythonDep torchvisionGPU = libraryFacade.getDep(repo, LibraryFacade.MachineType.GPU,
-            CondaCommandFacade.CondaInstallType.CONDA, "torchvision", version, true, false, status);
+          PythonDep torchvisionGPU = libraryFacade.getOrCreateDep(repo, LibraryFacade.MachineType.GPU,
+            CondaCommandFacade.CondaInstallType.CONDA, "torchvision", version, true, false);
           deps.add(torchvisionGPU);
         }
         continue;
@@ -463,8 +461,8 @@ public class AgentController {
       
       if (settings.getProvidedPythonLibraryNames().contains(libraryName)) {
         AnacondaRepo repo = libraryFacade.getRepo("PyPi", true);
-        PythonDep pyDep = libraryFacade.getDep(repo, LibraryFacade.MachineType.ALL,
-          CondaCommandFacade.CondaInstallType.PIP, libraryName, version, true, false, status);
+        PythonDep pyDep = libraryFacade.getOrCreateDep(repo, LibraryFacade.MachineType.ALL,
+          CondaCommandFacade.CondaInstallType.PIP, libraryName, version, true, false);
         deps.add(pyDep);
       } else {
         for (PythonDep pyDep : currentlyInstalledPyDeps) {
