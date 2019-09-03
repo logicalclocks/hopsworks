@@ -149,9 +149,7 @@ public class ExecutionController {
     List<Execution> jobExecs = execFacade.findByJob(job);
     if(!jobExecs.isEmpty()) {
       //Sort descending based on executionId
-      jobExecs.sort((lhs, rhs) -> {
-        return lhs.getId() > rhs.getId() ? -1 : (lhs.getId() < rhs.getId()) ? 1 : 0;
-      });
+      jobExecs.sort((lhs, rhs) -> rhs.getId().compareTo(lhs.getId()));
       if(!jobExecs.get(0).getState().isFinalState()){
         throw new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_INVALID_STATE, Level.FINE,
           "Cannot start an execution while another one for the same job has not finished.");
@@ -175,7 +173,6 @@ public class ExecutionController {
         if (exec == null) {
           throw new IllegalArgumentException("Problem getting execution object for: " + job.getJobType());
         }
-        int execId = exec.getId();
         SparkJobConfiguration config = (SparkJobConfiguration) job.getJobConfig();
         String path = config.getAppPath();
         String patternString = REMOTE_PROTOCOL + "(.*)\\s";

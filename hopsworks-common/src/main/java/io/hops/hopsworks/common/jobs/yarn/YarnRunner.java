@@ -108,19 +108,15 @@ public class YarnRunner {
   private int parallelism;
   private YarnClusterDescriptor flinkCluster;
   private String appJarPath;
-  private final String amJarLocalName;
-  private final String amJarPath;
   private final String amQueue;
   private int amMemory;
   private int amVCores;
   private String appName;
   private final String amMainClass;
   private String amArgs;
-  private final Map<String, LocalResourceDTO> amLocalResourcesToCopy;
   private final Map<String, LocalResourceDTO> amLocalResourcesOnHDFS;
   private final Map<String, String> amEnvironment;
   private String localResourcesBasePath;
-  private final boolean shouldCopyAmJarToLocalResources;
   private final List<String> filesToBeCopied;
   private final List<YarnSetupCommand> commands;
   private final List<String> javaOptions;
@@ -129,7 +125,6 @@ public class YarnRunner {
   private final AsynchronousJobExecutor services;
   private DistributedFileSystemOps dfsClient;
   private YarnClient yarnClient;
-  private String jobUser;
   
   private boolean readyToSubmit = false;
   private ApplicationSubmissionContext appContext;
@@ -385,11 +380,6 @@ public class YarnRunner {
     if (amArgs != null) {
       amArgs = amArgs.replace(APPID_PLACEHOLDER, id);
     }
-    for (Entry<String, LocalResourceDTO> entry : amLocalResourcesToCopy.
-        entrySet()) {
-      entry.getValue().setName(entry.getValue().getName().
-          replace(APPID_PLACEHOLDER, id));
-    }
     for (Entry<String, String> entry : amEnvironment.entrySet()) {
       entry.setValue(entry.getValue().replace(APPID_PLACEHOLDER, id));
     }
@@ -424,53 +414,11 @@ public class YarnRunner {
 
   private Map<String, LocalResource> addAllToLocalResources() throws IOException, URISyntaxException {
     Map<String, LocalResource> localResources = new HashMap<>();
-    //If an AM jar has been specified: include that one
-    if (shouldCopyAmJarToLocalResources && amJarLocalName != null
-        && !amJarLocalName.isEmpty() && amJarPath != null
-        && !amJarPath.isEmpty()) {
-      if (amJarPath.startsWith("hdfs:")) {
-        amLocalResourcesOnHDFS.put(amJarLocalName, new LocalResourceDTO(
-            amJarLocalName, amJarPath,
-            LocalResourceVisibility.PUBLIC.toString(),
-            LocalResourceType.FILE.toString(), null));
-      } else {
-        amLocalResourcesToCopy.put(amJarLocalName,
-            new LocalResourceDTO(amJarLocalName, amJarPath,
-                LocalResourceVisibility.PUBLIC.toString(),
-                LocalResourceType.FILE.toString(), null));
-      }
-    }
     //Construct basepath
     FileSystem fs = dfsClient.getFilesystem();
     String hdfsPrefix = conf.get("fs.defaultFS");
     String basePath = hdfsPrefix + localResourcesBasePath;
     logger.log(Level.FINER, "Base path: {0}", basePath);
-    //For all local resources with local path: copy and add local resource
-    for (Entry<String, LocalResourceDTO> entry : amLocalResourcesToCopy.
-        entrySet()) {
-      logger.log(Level.FINE, "LocalResourceDTO to upload is :{0}", entry.
-          toString());
-      String key = entry.getKey();
-      String source = entry.getValue().getPath();
-      String filename = Utils.getFileName(source);
-      Path dst = new Path(basePath + File.separator + filename);
-      fs.copyFromLocalFile(new Path(source), dst);
-      logger.log(Level.INFO, "Copying from: {0} to: {1}",
-          new Object[]{source,
-            dst});
-      FileStatus scFileStat = fs.getFileStatus(dst);
-      LocalResource scRsrc = LocalResource.newInstance(ConverterUtils.
-          getYarnUrlFromPath(dst),
-          LocalResourceType.
-              valueOf(entry.getValue().getType().toUpperCase()),
-          LocalResourceVisibility.valueOf(entry.getValue().getVisibility().
-              toUpperCase()),
-          scFileStat.getLen(),
-          scFileStat.getModificationTime(),
-          entry.getValue().getPattern());
-      localResources.put(key, scRsrc);
-
-    }
     //For all local resources with hdfs path: add local resource
     for (Entry<String, LocalResourceDTO> entry : amLocalResourcesOnHDFS.
         entrySet()) {
@@ -632,8 +580,6 @@ public class YarnRunner {
   //------------------------- CONSTRUCTOR -------------------------------------
   //---------------------------------------------------------------------------
   private YarnRunner(Builder builder) {
-    this.amJarLocalName = builder.amJarLocalName;
-    this.amJarPath = builder.amJarPath;
     this.jobType = builder.jobType;
     this.parallelism = builder.parallelism;
     this.flinkCluster = builder.flinkCluster;
@@ -644,16 +590,12 @@ public class YarnRunner {
     this.appName = builder.appName;
     this.amMainClass = builder.amMainClass;
     this.amArgs = builder.amArgs;
-    this.amLocalResourcesToCopy = builder.amLocalResourcesToCopy;
     this.amLocalResourcesOnHDFS = builder.amLocalResourcesOnHDFS;
     this.amEnvironment = builder.amEnvironment;
     this.localResourcesBasePath = builder.localResourcesBasePath;
     this.yarnClient = builder.yarnClient;
     this.dfsClient = builder.dfsClient;
-    this.jobUser = builder.jobUser;
     this.conf = builder.conf;
-    this.shouldCopyAmJarToLocalResources
-        = builder.shouldAddAmJarToLocalResources;
     this.filesToBeCopied = builder.filesToBeCopied;
     this.commands = builder.commands;
     this.javaOptions = builder.javaOptions;
@@ -692,9 +634,7 @@ public class YarnRunner {
     private String amMainClass;
     //Path to the application master jar
     private String amJarPath;
-    //The name of the application master jar in the local resources
-    private String amJarLocalName;
-    //Which job type is running 
+    //Which job type is running
     private JobType jobType;
     //Flink parallelism
     private int parallelism;
@@ -711,12 +651,8 @@ public class YarnRunner {
     private String appName = "Hopsworks-Yarn";
     //Arguments to pass on in invocation of Application master
     private String amArgs;
-    //List of paths to resources that should be copied to application master
-    private Map<String, LocalResourceDTO> amLocalResourcesToCopy
-        = new HashMap<>();
     //List of paths to resources that are already in HDFS, but AM should know about
-    private Map<String, LocalResourceDTO> amLocalResourcesOnHDFS
-        = new HashMap<>();
+    private Map<String, LocalResourceDTO> amLocalResourcesOnHDFS = new HashMap<>();
     //Application master environment
     private Map<String, String> amEnvironment = new HashMap<>();
     //Path where the application master expects its local resources to be (added to fs.getHomeDirectory)
@@ -737,7 +673,6 @@ public class YarnRunner {
     //YarnClient
     private YarnClient yarnClient;
     private DistributedFileSystemOps dfsClient;
-    private String jobUser;
     
     private String serviceDir;
     private AsynchronousJobExecutor services;
@@ -749,7 +684,6 @@ public class YarnRunner {
 
     public Builder(String amJarPath, String amJarLocalName) {
       this.amJarPath = amJarPath;
-      this.amJarLocalName = amJarLocalName;
     }
     
     /**
@@ -774,11 +708,6 @@ public class YarnRunner {
       return this;
     }
 
-    public Builder setJobUser(String jobUser) {
-      this.jobUser = jobUser;
-      return this;
-    }
-    
     /**
      * Sets the arguments to be passed to the Application Master.
      * <p/>
@@ -814,22 +743,6 @@ public class YarnRunner {
 
     public Builder appName(String appName) {
       this.appName = appName;
-      return this;
-    }
-
-    public Builder amMainClass(String amMainClass) {
-      this.amMainClass = amMainClass;
-      return this;
-    }
-
-    public Builder amJar(String amJarPath, String amJarLocalName) {
-      this.amJarLocalName = amJarLocalName;
-      this.amJarPath = amJarPath;
-      return this;
-    }
-
-    public Builder addAmJarToLocalResources(boolean value) {
-      this.shouldAddAmJarToLocalResources = value;
       return this;
     }
 
@@ -902,22 +815,7 @@ public class YarnRunner {
       this.localResourcesBasePath = basePath;
       return this;
     }
-
-    /**
-     * Add a local resource that should be added to the AM container. The name
-     * is the key as used in the LocalResources
-     * map passed to the container. The source is the local path to the file.
-     * The file will be copied into HDFS under
-     * the path
-     * <i>localResourcesBasePath</i>/<i>filename</i> and the source file will be
-     * removed.
-     *
-     * @param dto
-     * @return
-     */
-    public Builder addLocalResource(LocalResourceDTO dto) {
-      return addLocalResource(dto, true);
-    }
+    
 
     /**
      * Add a local resource that should be added to the AM container. The name
@@ -934,12 +832,12 @@ public class YarnRunner {
      * @return
      */
     public Builder addLocalResource(LocalResourceDTO dto,
-        boolean removeAfterCopy) {
-      if (dto.getPath().startsWith("hdfs")) {
-        amLocalResourcesOnHDFS.put(dto.getName(), dto);
-      } else {
-        amLocalResourcesToCopy.put(dto.getName(), dto);
+      boolean removeAfterCopy) {
+      if (!dto.getPath().startsWith("hdfs")) {
+        throw new IllegalArgumentException("Dependencies need to be stored in Datasets, local file system is not " +
+          "supported");
       }
+      amLocalResourcesOnHDFS.put(dto.getName(), dto);
       if (removeAfterCopy) {
         filesToRemove.add(dto.getPath());
       }

@@ -41,23 +41,24 @@ package io.hops.hopsworks.common.jobs.spark;
 
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.jobhistory.Execution;
-import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
+import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFlag;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
+import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.UserGroupInformationService;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.jobs.configuration.JobType;
-import io.hops.hopsworks.common.jobs.execution.ExecutionController;
 import io.hops.hopsworks.common.jobs.yarn.YarnJobsMonitor;
 import io.hops.hopsworks.common.jupyter.JupyterController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.JobException;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -93,11 +94,9 @@ public class SparkController {
   @EJB
   private Settings settings;
   @EJB
-  private ExecutionController executionController;
-  @EJB
   private JupyterController jupyterController;
   @EJB
-  private JobFacade jobFacade;
+  private DistributedFsService dfs;
 
   /**
    * Start the Spark job as the given user.
@@ -110,7 +109,7 @@ public class SparkController {
    * Spark job.
    */
   public Execution startJob(final Jobs job, final Users user)
-    throws ServiceException, GenericException, JobException {
+    throws ServiceException, GenericException, JobException, ProjectException {
     //First: some parameter checking.
     sanityCheck(job, user);
     String username = hdfsUsersBean.getHdfsUserName(job.getProject(), user);
@@ -159,7 +158,7 @@ public class SparkController {
     return jh;
   }
   
-  private void sanityCheck(Jobs job, Users user) {
+  private void sanityCheck(Jobs job, Users user) throws GenericException, ProjectException {
     if (job == null) {
       throw new IllegalArgumentException("Trying to start job but job is not provided");
     } else if (user == null) {
@@ -178,6 +177,9 @@ public class SparkController {
             || path.endsWith(".ipynb"))) {
       throw new IllegalArgumentException("Path does not point to a .jar, .py or .ipynb file.");
     }
+  
+    inspectDependencies(job.getProject(), user, (SparkJobConfiguration) job.getJobConfig());
+    
   }
   
   public SparkJobConfiguration inspectProgram(String path, DistributedFileSystemOps udfso) throws JobException {
@@ -204,5 +206,56 @@ public class SparkController {
     config.setAppPath(path);
     return config;
   }
-
+  
+  public void inspectDependencies(Project project, Users user, SparkJobConfiguration jobConf)
+    throws ProjectException, GenericException {
+    DistributedFileSystemOps udfso = null;
+    try {
+      if (!Strings.isNullOrEmpty(jobConf.getArchives())
+        || !Strings.isNullOrEmpty(jobConf.getFiles())
+        || !Strings.isNullOrEmpty(jobConf.getJars())
+        || !Strings.isNullOrEmpty(jobConf.getPyFiles())) {
+        
+        udfso = dfs.getDfsOps(hdfsUsersBean.getHdfsUserName(project, user));
+        if (!Strings.isNullOrEmpty(jobConf.getArchives())) {
+          for (String filePath : jobConf.getArchives().split(",")) {
+            if (!Strings.isNullOrEmpty(filePath) && !udfso.exists(filePath)) {
+              throw new ProjectException(RESTCodes.ProjectErrorCode.FILE_NOT_FOUND, Level.FINEST,
+                "Attached archive does not exist: " + filePath);
+            }
+          }
+        }
+        if (!Strings.isNullOrEmpty(jobConf.getFiles())) {
+          for (String filePath : jobConf.getFiles().split(",")) {
+            if (!Strings.isNullOrEmpty(filePath) && !udfso.exists(filePath)) {
+              throw new ProjectException(RESTCodes.ProjectErrorCode.FILE_NOT_FOUND, Level.FINEST,
+                "Attached file does not exist: " + filePath);
+            }
+          }
+        }
+        if (!Strings.isNullOrEmpty(jobConf.getJars())) {
+          for (String filePath : jobConf.getJars().split(",")) {
+            if (!Strings.isNullOrEmpty(filePath) && !udfso.exists(filePath)) {
+              throw new ProjectException(RESTCodes.ProjectErrorCode.FILE_NOT_FOUND, Level.FINEST,
+                "Attached JAR file does not exist: " + filePath);
+            }
+          }
+        }
+        if (!Strings.isNullOrEmpty(jobConf.getPyFiles())) {
+          for (String filePath : jobConf.getPyFiles().split(",")) {
+            if (!Strings.isNullOrEmpty(filePath) && !udfso.exists(filePath)) {
+              throw new ProjectException(RESTCodes.ProjectErrorCode.FILE_NOT_FOUND, Level.FINEST,
+                "Attached Python file does not exist: " + filePath);
+            }
+          }
+        }
+      }
+    } catch (IOException ex) {
+      throw new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR, Level.INFO, null, null, ex);
+    } finally {
+      if (udfso != null) {
+        dfs.closeDfsClient(udfso);
+      }
+    }
+  }
 }
