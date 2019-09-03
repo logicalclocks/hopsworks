@@ -100,19 +100,16 @@
                         </div>
                         <div class="form-group has-feedback row">
                             <div class="col-xs-12 col-sm-12 col-md-12">
-                                <div><label class="text-muted">Number of active projects:
-                                </label>&nbsp;&nbsp;{{profileCtrl.user.numActiveProjects}}
+                                <div>
+                                    <label class="text-muted">You have already created</label>
+                                    {{profileCtrl.user.numCreatedProjects}}
+                                    <label class="text-muted"> project(s) out of a maximum of</label>
+                                    {{profileCtrl.user.maxNumProjects}}
                                 </div>
                                 <div>
                                     <label class="text-muted">You can still create</label>
                                     {{profileCtrl.user.numRemainingProjects}}&nbsp;
                                     <label class="text-muted"> project(s)</label>
-                                </div>
-                                <div>
-                                    <label class="text-muted">You have created</label>
-                                    {{profileCtrl.user.numCreatedProjects}}
-                                    <label class="text-muted"> project(s) out of a maximum of</label>
-                                    {{profileCtrl.user.maxNumProjects}}
                                 </div>
                             </div>
                         </div>

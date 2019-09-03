@@ -508,7 +508,8 @@ public class ProjectController {
     }
     if (projectFacade.numProjectsLimitReached(user)) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.NUM_PROJECTS_LIMIT_REACHED,
-        Level.FINE, "user: " + user.getUsername());
+        Level.FINE, "projects already created: " + user.getNumCreatedProjects() + ", out of a maximum: " +
+          user.getMaxNumProjects());
     } else if (projectFacade.projectExists(projectName)) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_EXISTS, Level.FINE, "project: " + projectName);
     }
