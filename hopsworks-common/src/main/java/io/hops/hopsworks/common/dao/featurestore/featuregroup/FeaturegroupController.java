@@ -163,16 +163,8 @@ public class FeaturegroupController {
     }
     
     //Persist basic feature group metadata
-    Featuregroup featuregroup = new Featuregroup();
-    featuregroup.setFeaturestore(featurestore);
-    featuregroup.setHdfsUserId(hdfsUser.getId());
-    featuregroup.setCreated(new Date());
-    featuregroup.setCreator(user);
-    featuregroup.setVersion(featuregroupDTO.getVersion());
-    featuregroup.setFeaturegroupType(featuregroupDTO.getFeaturegroupType());
-    featuregroup.setCachedFeaturegroup(cachedFeaturegroup);
-    featuregroup.setOnDemandFeaturegroup(onDemandFeaturegroup);
-    featuregroupFacade.persist(featuregroup);
+    Featuregroup featuregroup = persistFeaturegroupMetadata(featurestore, hdfsUser, user, featuregroupDTO,
+      cachedFeaturegroup, onDemandFeaturegroup);
 
     // Store statistics
     featurestoreStatisticController.updateFeaturestoreStatistics(featuregroup, null,
@@ -445,7 +437,7 @@ public class FeaturegroupController {
    * @param featurestore    the feature store to perform the operation against
    * @throws FeaturestoreException
    */
-  public void verifyFeaturegroupUserInput(FeaturegroupDTO featuregroupDTO, Featurestore featurestore)
+  private void verifyFeaturegroupUserInput(FeaturegroupDTO featuregroupDTO, Featurestore featurestore)
     throws FeaturestoreException {
     if (featurestore == null) {
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_NOT_FOUND.getMessage());
@@ -461,5 +453,87 @@ public class FeaturegroupController {
       throw new IllegalArgumentException(
           RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_VERSION_NOT_PROVIDED.getMessage());
     }
+  }
+  
+  /**
+   * Synchronizes an already created Hive table with the Feature Store metadata
+   *
+   * @param featurestore the featurestore of the feature group
+   * @param featuregroupDTO the feature group DTO
+   * @param user the Hopsworks user making the request
+   * @return a DTO of the created feature group
+   * @throws FeaturestoreException
+   */
+  @TransactionAttribute(TransactionAttributeType.NEVER)
+  public FeaturegroupDTO syncHiveTableWithFeaturestore(Featurestore featurestore, FeaturegroupDTO featuregroupDTO,
+    Users user) throws FeaturestoreException {
+    //Verify basic feature group input information
+    verifyFeaturegroupUserInput(featuregroupDTO, featurestore);
+  
+    //Verify statistics input (more detailed input verification is delegated to lower level controllers)
+    verifyStatisticsInput(featuregroupDTO);
+  
+    //Extract metadata
+    String hdfsUsername = hdfsUsersController.getHdfsUserName(featurestore.getProject(), user);
+    HdfsUsers hdfsUser = hdfsUsersFacade.findByName(hdfsUsername);
+  
+    CachedFeaturegroup cachedFeaturegroup = null;
+    switch (featuregroupDTO.getFeaturegroupType()) {
+      case CACHED_FEATURE_GROUP:
+        cachedFeaturegroup = cachedFeaturegroupController.syncHiveTableWithFeaturestore(featurestore,
+          (CachedFeaturegroupDTO) featuregroupDTO);
+        break;
+      case ON_DEMAND_FEATURE_GROUP:
+        throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_TYPE.getMessage()
+          + ", Only cached feature groups can be synced from an existing Hive table, not on-demand feature groups.");
+      default:
+        throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_TYPE.getMessage()
+          + ", Recognized Feature group types are: " + FeaturegroupType.ON_DEMAND_FEATURE_GROUP + ", and: " +
+          FeaturegroupType.CACHED_FEATURE_GROUP + ". The provided feature group type was not recognized: "
+          + featuregroupDTO.getFeaturegroupType());
+    }
+  
+    //Persist basic feature group metadata
+    Featuregroup featuregroup = persistFeaturegroupMetadata(featurestore, hdfsUser, user, featuregroupDTO,
+      cachedFeaturegroup, null);
+  
+    // Store statistics
+    featurestoreStatisticController.updateFeaturestoreStatistics(featuregroup, null,
+      featuregroupDTO.getFeatureCorrelationMatrix(), featuregroupDTO.getDescriptiveStatistics(),
+      featuregroupDTO.getFeaturesHistogram(), featuregroupDTO.getClusterAnalysis());
+  
+    //Get jobs
+    List<Jobs> jobs = getJobs(featuregroupDTO.getJobs(), featurestore.getProject());
+  
+    //Store jobs
+    featurestoreJobController.insertJobs(featuregroup, jobs);
+    
+    return featuregroupDTO;
+  }
+  
+  /**
+   * Persists metadata of a new feature group in the feature_group table
+   *
+   * @param featurestore the featurestore of the feature group
+   * @param hdfsUser the HDFS user making the request
+   * @param user the Hopsworks user making the request
+   * @param featuregroupDTO DTO of the feature group
+   * @param cachedFeaturegroup the cached feature group that the feature group is linked to (if any)
+   * @param onDemandFeaturegroup the on-demand feature group that the feature group is linked to (if any)
+   * @return the created entity
+   */
+  private Featuregroup persistFeaturegroupMetadata(Featurestore featurestore, HdfsUsers hdfsUser, Users user,
+    FeaturegroupDTO featuregroupDTO, CachedFeaturegroup cachedFeaturegroup, OnDemandFeaturegroup onDemandFeaturegroup) {
+    Featuregroup featuregroup = new Featuregroup();
+    featuregroup.setFeaturestore(featurestore);
+    featuregroup.setHdfsUserId(hdfsUser.getId());
+    featuregroup.setCreated(new Date());
+    featuregroup.setCreator(user);
+    featuregroup.setVersion(featuregroupDTO.getVersion());
+    featuregroup.setFeaturegroupType(featuregroupDTO.getFeaturegroupType());
+    featuregroup.setCachedFeaturegroup(cachedFeaturegroup);
+    featuregroup.setOnDemandFeaturegroup(onDemandFeaturegroup);
+    featuregroupFacade.persist(featuregroup);
+    return featuregroup;
   }
 }

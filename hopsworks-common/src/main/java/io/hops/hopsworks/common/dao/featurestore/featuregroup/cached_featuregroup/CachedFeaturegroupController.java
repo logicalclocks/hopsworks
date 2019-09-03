@@ -215,7 +215,7 @@ public class CachedFeaturegroupController {
       Featurestore featurestore, CachedFeaturegroupDTO cachedFeaturegroupDTO, Users user)
       throws FeaturestoreException, HopsSecurityException, SQLException {
     //Verify User Input
-    verifyCachedFeaturegroupUserInput(cachedFeaturegroupDTO);
+    verifyCachedFeaturegroupUserInput(cachedFeaturegroupDTO, false);
     //Create Hive Table
     String featureStr = makeCreateTableColumnsStr(cachedFeaturegroupDTO.getFeatures(),
         cachedFeaturegroupDTO.getDescription());
@@ -228,13 +228,12 @@ public class CachedFeaturegroupController {
     } catch(Exception e) { //Retry once
       executeUpdateHiveQuery(query, db, featurestore.getProject(), user);
     }
+    
     //Get HiveTblId of the newly created table from the metastore
     Long hiveTblId = cachedFeaturegroupFacade.getHiveTableId(tableName, featurestore.getHiveDbId());
+    
     //Persist cached feature group
-    CachedFeaturegroup cachedFeaturegroup = new CachedFeaturegroup();
-    cachedFeaturegroup.setHiveTableId(hiveTblId);
-    cachedFeaturegroupFacade.persist(cachedFeaturegroup);
-    return cachedFeaturegroup;
+    return persistCachedFeaturegroupMetadata(hiveTblId);
   }
 
   /**
@@ -461,7 +460,7 @@ public class CachedFeaturegroupController {
    * @param cachedFeaturegroupDTO the user input data for creating the feature group
    * @throws FeaturestoreException
    */
-  public void verifyCachedFeaturegroupUserInput(CachedFeaturegroupDTO cachedFeaturegroupDTO)
+  public void verifyCachedFeaturegroupUserInput(CachedFeaturegroupDTO cachedFeaturegroupDTO, Boolean sync)
     throws FeaturestoreException {
 
     Pattern namePattern = Pattern.compile(FeaturestoreConstants.FEATURESTORE_REGEX);
@@ -481,27 +480,30 @@ public class CachedFeaturegroupController {
           ", the descritpion of a cached feature group should be less than "
           + FeaturestoreConstants.CACHED_FEATUREGROUP_DESCRIPTION_MAX_LENGTH + " characters");
     }
-    
-    if(!cachedFeaturegroupDTO.getFeatures().stream().filter(f -> {
-      return (Strings.isNullOrEmpty(f.getName()) || !namePattern.matcher(f.getName()).matches() || f.getName().length()
-        > FeaturestoreConstants.CACHED_FEATUREGROUP_FEATURE_NAME_MAX_LENGTH);
-    }).collect(Collectors.toList()).isEmpty()) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_NAME, Level.FINE,
-        ", the feature name in a cached feature group should be less than "
-          + FeaturestoreConstants.CACHED_FEATUREGROUP_FEATURE_NAME_MAX_LENGTH + " characters and match " +
-          "the regular expression: " +  FeaturestoreConstants.FEATURESTORE_REGEX);
-    }
-  
-    if(!cachedFeaturegroupDTO.getFeatures().stream().filter(f -> {
-      if(Strings.isNullOrEmpty(f.getDescription())){
-        f.setDescription("-");
+    //Only need to verify the DDL when creating table from Scratch and not Syncing
+    if(!sync){
+      if(!cachedFeaturegroupDTO.getFeatures().stream().filter(f -> {
+        return (Strings.isNullOrEmpty(f.getName()) ||
+          !namePattern.matcher(f.getName()).matches() || f.getName().length()
+          > FeaturestoreConstants.CACHED_FEATUREGROUP_FEATURE_NAME_MAX_LENGTH);
+      }).collect(Collectors.toList()).isEmpty()) {
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_NAME, Level.FINE,
+          ", the feature name in a cached feature group should be less than "
+            + FeaturestoreConstants.CACHED_FEATUREGROUP_FEATURE_NAME_MAX_LENGTH + " characters and match " +
+            "the regular expression: " +  FeaturestoreConstants.FEATURESTORE_REGEX);
       }
-      return (f.getDescription().length() >
-        FeaturestoreConstants.CACHED_FEATUREGROUP_FEATURE_DESCRIPTION_MAX_LENGTH);
-    }).collect(Collectors.toList()).isEmpty()) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_DESCRIPTION, Level.FINE,
-        ", the feature description in a cached feature group should be less than "
-        + FeaturestoreConstants.CACHED_FEATUREGROUP_FEATURE_DESCRIPTION_MAX_LENGTH + " characters");
+  
+      if(!cachedFeaturegroupDTO.getFeatures().stream().filter(f -> {
+        if(Strings.isNullOrEmpty(f.getDescription())){
+          f.setDescription("-");
+        }
+        return (f.getDescription().length() >
+          FeaturestoreConstants.CACHED_FEATUREGROUP_FEATURE_DESCRIPTION_MAX_LENGTH);
+      }).collect(Collectors.toList()).isEmpty()) {
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_DESCRIPTION, Level.FINE,
+          ", the feature description in a cached feature group should be less than "
+            + FeaturestoreConstants.CACHED_FEATUREGROUP_FEATURE_DESCRIPTION_MAX_LENGTH + " characters");
+      }
     }
   }
 
@@ -579,5 +581,46 @@ public class CachedFeaturegroupController {
     }
     return schemaStringBuilder.toString();
   }
-
+  
+  /**
+   * Synchronizes an already created Hive table with the Feature Store metadata
+   *
+   * @param featurestore the featurestore of the feature group
+   * @param cachedFeaturegroupDTO the feature group DTO
+   * @return a DTO of the created feature group
+   * @throws FeaturestoreException
+   */
+  @TransactionAttribute(TransactionAttributeType.NEVER)
+  public CachedFeaturegroup syncHiveTableWithFeaturestore(Featurestore featurestore,
+    CachedFeaturegroupDTO cachedFeaturegroupDTO) throws FeaturestoreException {
+    //Verify User Input
+    verifyCachedFeaturegroupUserInput(cachedFeaturegroupDTO, true);
+  
+    //Get Hive Table Metadata
+    String tableName = getTblName(cachedFeaturegroupDTO.getName(), cachedFeaturegroupDTO.getVersion());
+    Long hiveTblId = cachedFeaturegroupFacade.getHiveTableId(tableName, featurestore.getHiveDbId());
+    if(hiveTblId == null){
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.SYNC_TABLE_NOT_FOUND, Level.FINE,
+        ", tried to sync hive table with name: " + tableName + " with the feature store, but the table was not found " +
+          "in the Hive metastore");
+    }
+  
+    //Persist cached feature group
+    return persistCachedFeaturegroupMetadata(hiveTblId);
+  }
+  
+  
+  /**
+   * Persists metadata of a new cached feature group in the cached_feature_group table
+   *
+   * @param hiveTblId the id of the Hive table in the Hive metastore
+   * @return Entity of the created cached feature group
+   */
+  private CachedFeaturegroup persistCachedFeaturegroupMetadata(Long hiveTblId) {
+    CachedFeaturegroup cachedFeaturegroup = new CachedFeaturegroup();
+    cachedFeaturegroup.setHiveTableId(hiveTblId);
+    cachedFeaturegroupFacade.persist(cachedFeaturegroup);
+    return cachedFeaturegroup;
+  }
+  
 }
