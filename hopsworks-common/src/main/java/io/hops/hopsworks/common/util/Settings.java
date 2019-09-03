@@ -231,7 +231,6 @@ public class Settings implements Serializable {
 
   private static final String VARIABLE_DOWNLOAD_ALLOWED = "download_allowed";
   private static final String VARIABLE_SUPPORT_EMAIL_ADDR = "support_email_addr";
-  private static final String VARIABLE_HOPSUTIL_VERSION = "hopsutil_version";
   private static final String VARIABLE_HOPSEXAMPLES_VERSION = "hopsexamples_version";
 
   private static final String VARIABLE_INFLUXDB_IP = "influxdb_ip";
@@ -488,7 +487,6 @@ public class Settings implements Serializable {
       FLINK_USER = setVar(VARIABLE_FLINK_USER, FLINK_USER);
       FLINK_DIR = setDirVar(VARIABLE_FLINK_DIR, FLINK_DIR);
       STAGING_DIR = setDirVar(VARIABLE_STAGING_DIR, STAGING_DIR);
-      HOPSUTIL_VERSION = setVar(VARIABLE_HOPSUTIL_VERSION, HOPSUTIL_VERSION);
       HOPS_EXAMPLES_VERSION = setVar(VARIABLE_HOPSEXAMPLES_VERSION, HOPS_EXAMPLES_VERSION);
       HIVE_SERVER_HOSTNAME = setStrVar(VARIABLE_HIVE_SERVER_HOSTNAME,
           HIVE_SERVER_HOSTNAME);
@@ -2293,17 +2291,6 @@ public class Settings implements Serializable {
   public synchronized String getPyPiRESTEndpoint() {
     checkCache();
     return PYPI_REST_ENDPOINT;
-  }
-
-  private String HOPSUTIL_VERSION = "0.3.0";
-
-  public String getHopsUtilHdfsPath() {
-    return "hdfs:///user/" + getSparkUser() + "/" + getHopsUtilFilename();
-  }
-
-  public synchronized String getHopsUtilFilename() {
-    checkCache();
-    return "hops-util-" + HOPSUTIL_VERSION + ".jar";
   }
 
   private String HOPS_EXAMPLES_VERSION = "0.3.0";

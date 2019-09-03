@@ -342,9 +342,6 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
             // Glassfish domain truststore
             .append(settings.getGlassfishTrustStoreHdfs()).append("#").append(Settings.DOMAIN_CA_TRUSTSTORE)
             .append(",")
-            // Add HopsUtil
-            .append(settings.getHopsUtilHdfsPath())
-            .append(",")
             // Add Hive-site.xml for SparkSQL
             .append(settings.getHiveSiteSparkHdfsPath());
 
@@ -353,8 +350,6 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
       .append("{{PWD}}")
       .append(File.pathSeparator)
       .append(settings.getHopsLeaderElectionJarPath())
-      .append(File.pathSeparator)
-      .append(settings.getHopsUtilFilename())
       .append(File.pathSeparator)
       .append(settings.getSparkDir() + "/jars/*");
 
