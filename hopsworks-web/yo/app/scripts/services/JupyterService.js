@@ -40,7 +40,7 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .factory('JupyterService', ['$http', function ($http) {
+        .factory('JupyterService', ['$http', 'TransformRequest', function ($http, TransformRequest) {
             return {
               getAll: function (projectId) {
                 return $http.get('/api/project/' + projectId + '/jupyter');
@@ -90,8 +90,49 @@ angular.module('hopsWorksApp')
               },
               convertIPythonNotebook: function (projectId, fileName) {
                 return $http.get('/api/project/' + projectId + '/jupyter/convertIPythonNotebook/' + fileName);
+              },
+              getGitRemoteBranches: function (projectId, repoConf) {
+                var request = {
+                  method: "GET",
+                  url: "/api/project/" + projectId + "/jupyter/git/branches",
+                  params: repoConf
+                }
+                return $http(request);
+              },
+              gitCloneOrPull: function (projectId) {
+                var request = {
+                  method: "POST",
+                  url: "/api/project/" + projectId + "/jupyter/git/init",
+                  headers : {
+                    'Content-Type': 'application/json'
+                  }
+                };
+                return $http(request);
+              },
+              gitCommit: function (projectId, message) {
+                var request = {
+                  method: "POST",
+                  url: "/api/project/" + projectId + "/jupyter/git/commit",
+                  params: {message: message},
+                  headers : {
+                    'Content-Type': 'application/json'
+                  }
+                };
+                return $http(request);
+              },
+              gitPush: function (projectId) {
+                var request = {
+                  method: "POST",
+                  url: "/api/project/" + projectId + "/jupyter/git/push",
+                  headers : {
+                    'Content-Type': 'application/json'
+                  }
+                };
+                return $http(request);
+              },
+              gitStatus: function (projectId) {
+                return $http.get("/api/project/" + projectId + "/jupyter/git/status");
               }
-
             };
           }]);
 

@@ -133,6 +133,7 @@
                     <span style="margin-left: 10px;">{{jupyterCtrl.jupyterSettings.privateDir}}</span>
                   </div>
                 </div>
+
                 <div>
                   <br>
                   <div>
@@ -167,6 +168,53 @@
                 </div>
               </div>
             </div>
+
+            <!-- Jupyter Git section-->
+            <div ng-if="jupyterCtrl.jupyterSettings.gitAvailable && jupyterCtrl.jupyterSettings.gitBackend"
+              class="col-md-4 panel panel-default jupyter-left" id="git">
+              <div class="panel-heading">
+                <div>
+                  <span style="font-weight: bold;" id="header">Git repository</span>
+                  <i ng-if="jupyterCtrl.gitWorking"style="margin-top: 2px"
+                      class="fa fa-spinner fa-spin"></i>
+                </div>
+              </div>
+              <div class="panel-body">
+                <div>Status:
+                  <span style="margin-left: 58px;">{{jupyterCtrl.gitRepoStatus.status}}</span>
+                  <i ng-if="jupyterCtrl.gitRepoStatus.status.toUpperCase() !== 'CLEAN'"
+                    class="fa fa-exclamation-triangle"></i>
+                </div>
+                <div>Active branch:
+                  <span style="margin-left: 16px;">{{jupyterCtrl.gitRepoStatus.activeBranch}}</span>
+                </div>
+                <div>Untracked files:
+                  <span style="margin-left: 10px;">{{jupyterCtrl.gitRepoStatus.untrackedFiles}}</span>
+                </div>
+                <div>Last commit:
+                  <span style="margin-left: 25px;">{{jupyterCtrl.gitRepoStatus.lastCommit}}</span>
+                <hr>
+                </div>
+                <div class="row">
+                  <div class="col-md-3" style="padding-right: 0;">
+                    <button ng-click="jupyterCtrl.gitCloneOrPull()" class="btn btn-default" type="button">Pull</button>  
+                    <button ng-click="jupyterCtrl.gitPush()" class="btn btn-default" type="button">Push</button>  
+                    <button ng-click="jupyterCtrl.gitStatus()" class="btn btn-default" type="button">Status</button>
+                  </div>
+                  
+                  <div class="col-md-8">
+                    <div class="input-group">
+                      <span class="input-group-btn">
+                        <button ng-click="jupyterCtrl.gitCommit()" class="btn btn-warning" type="button">Commit</button>
+                      </span>
+                      <input ng-model="jupyterCtrl.gitCommitMessage" type="text" class="form-control" placeholder="Commit message">
+                    </div><!-- /input-group -->
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- End of Jupyter Git section -->
+
             <div class="col-md-4 panel panel-default jupyter-left" id="applications">
               <div class="panel-heading" >
                 <div>

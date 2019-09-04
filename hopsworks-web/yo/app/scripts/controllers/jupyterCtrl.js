@@ -41,9 +41,9 @@
 angular.module('hopsWorksApp')
     .controller('JupyterCtrl', ['$scope', '$routeParams', '$route',
         'growl', 'ModalService', '$interval', 'JupyterService', 'StorageService', '$location',
-        '$timeout', '$window', '$sce', 'PythonService', 'TourService',
+        '$timeout', '$window', '$sce', 'PythonService', 'TourService', 'UserService',
         function($scope, $routeParams, $route, growl, ModalService, $interval, JupyterService,
-            StorageService, $location, $timeout, $window, $sce, PythonService, TourService) {
+            StorageService, $location, $timeout, $window, $sce, PythonService, TourService, UserService) {
 
             var self = this;
             self.connectedStatus = false;
@@ -88,6 +88,18 @@ angular.module('hopsWorksApp')
                     'name': '',
                     'id': self.projectId
                 }
+            };
+
+            self.third_party_api_keys = [];
+            self.git_api_key;
+            self.gitWorking = false;
+            self.gitNewHeadBranchPressed = false;
+            
+            self.gitRepoStatus = {
+                status: 'UNKNOWN',
+                untrackedFiles: -1,
+                activeBranch: 'UNKNOWN',
+                lastCommit: 'UNKNOWN'
             };
 
             self.changeShutdownLevel = function() {
@@ -232,10 +244,12 @@ angular.module('hopsWorksApp')
             };
             jupyterNotebookPoller();
 
-
             $scope.$on('$destroy', function () {
               $interval.cancel(self.condaPoller);
               $interval.cancel(self.notebookPoller);
+              if (typeof self.gitRepositoryPoller !== 'undefined') {
+                $interval.cancel(self.gitRepositoryPoller);
+              }
             });
 
             self.shutdown_levels = [
@@ -278,6 +292,9 @@ angular.module('hopsWorksApp')
                         self.config = success.data;
                         self.ui = "/hopsworks-api/jupyter/" + self.config.port + "/?token=" + self.config.token;
                         timeToShutdown();
+                        if (typeof self.gitRepositoryPoller === 'undefined') {
+                            gitRepositoryStatusPoller();
+                        }
                     },
                     function(error) {
                         self.tourService.currentStep_TourEight = 0;
@@ -330,6 +347,38 @@ angular.module('hopsWorksApp')
                         }
 
                         timeToShutdown();
+
+
+                        // Loading of API keys happen when you click on Git backend
+                        // but if it is already selected, user won't need to click it again
+                        if (self.jupyterSettings.gitAvailable) {
+                            if (typeof self.jupyterSettings.gitConfig === 'undefined') {
+                                self.jupyterSettings.gitConfig = {}
+                                self.jupyterSettings.gitConfig.startupAutoPull = true;
+                                self.jupyterSettings.gitConfig.shutdownAutoPush = true;
+                            }
+                            if (self.jupyterSettings.gitBackend) {
+                                self.load_third_party_api_keys(function () {
+                                    for (var i = 0; i < self.third_party_api_keys.length; i++) {
+                                        var api_key = self.third_party_api_keys[i]
+                                        if (api_key.name === self.jupyterSettings.gitConfig.apiKeyName) {
+                                            self.git_api_key = api_key
+                                        }
+                                    }
+                                });
+                                var repoConf = {
+                                    remoteURI: self.jupyterSettings.gitConfig.remoteGitURL,
+                                    keyName: self.jupyterSettings.gitConfig.apiKeyName
+                                };
+                                JupyterService.getGitRemoteBranches(self.projectId, repoConf).then(
+                                    function (success) {
+                                        self.jupyterSettings.gitConfig.branches = success.data.branches;
+                                    }, function (error) {
+                                        growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
+                                    }
+                                );
+                            }
+                        }
                     },
                     function(error) {
                         growl.error("Could not get Jupyter Notebook Server Settings.");
@@ -374,6 +423,9 @@ angular.module('hopsWorksApp')
                         $scope.sessions = null;
                         self.jupyterSettings.shutdownLevel = self.shutdown_levels[0].name;
                         self.shutdownLevelSelected = self.shutdown_levels[0];
+                        if (typeof self.gitRepositoryPoller !== 'undefined') {
+                            $interval.cancel(self.gitRepositoryPoller);
+                        }
                     },
                     function(error) {
                         growl.error("Could not stop the Jupyter Notebook Server.");
@@ -407,10 +459,170 @@ angular.module('hopsWorksApp')
                 $location.path('/#!/project/' + self.projectId + '/python');
             };
 
+            self.load_third_party_api_keys = function (callback) {
+                if (self.jupyterSettings.gitBackend) {
+                    UserService.load_secrets().then(
+                        function (success) {
+                            self.third_party_api_keys = success.data.items
+                            if (callback) {
+                                callback()
+                            }
+                        }, function (error) {
+                            self.errorMsg = (typeof error.data.usrMsg !== 'undefined') ? error.data.usrMsg : "";
+                            growl.error(self.errorMsg, { title: error.data.errorMsg, ttl: 5000, referenceId: 1 });
+                        }
+                    );
+                }
+            }
+
+
+            self.git_error = "";
+            self.git_api_key_selected = function() {
+                self.jupyterSettings.gitConfig.apiKeyName = self.git_api_key.name
+                var repoConf = {
+                    remoteURI: self.jupyterSettings.gitConfig.remoteGitURL,
+                    keyName: self.jupyterSettings.gitConfig.apiKeyName
+                };
+                self.gitWorking = true;
+                self.git_error = "";
+                JupyterService.getGitRemoteBranches(self.projectId, repoConf).then(
+                    function (success) {
+                        self.jupyterSettings.gitConfig.branches = success.data.branches;
+                        self.gitWorking = false;
+                    }, function (error) {
+                        self.gitWorking = false;
+                        if (error.data.usrMsg.indexOf("Could not parse remote") !== -1) {
+                            // Could not parse remote Git URL
+                            self.git_error = "URI_SYNTAX_ERROR";
+                        } else if (error.data.usrMsg.indexOf("Invalid API key") !== -1) {
+                            self.git_error = "API_KEY_ERROR";
+                        }
+                        growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
+                    }
+                );
+            }
+            
+            self.gitCloneOrPull = function() {
+                if (!self.jupyterSettings.gitAvailable || !self.jupyterSettings.gitBackend) {
+                    growl.error("Git backend is either not enabled or unavailable",
+                        {title: "Git operation could not complete", ttl: 5000, referenceId: 10});
+                    return;
+                }
+                self.gitWorking = true;
+                JupyterService.gitCloneOrPull(self.projectId).then(
+                    function(success) {
+                        self.gitRepoStatus = success.data;
+                        self.gitWorking = false;
+                        growl.info("Successfully updated local repository",
+                            {title: "Git operation succeed", ttl: 2000, referenceId: 10});
+                    }, function(error) {
+                        self.gitWorking = false;
+                        self.errorMsg = (typeof error.data.usrMsg !== 'undefined') ? error.data.usrMsg : "";
+                        growl.error(self.errorMsg, { title: error.data.errorMsg, ttl: 5000, referenceId: 10});
+                    }
+                );
+            }
+
+            self.gitCommit = function() {
+                if (!self.jupyterSettings.gitAvailable || !self.jupyterSettings.gitBackend) {
+                    growl.error("Git backend is either not enabled or unavailable",
+                        {title: "Git operation could not complete", ttl: 5000, referenceId: 10});
+                    return;
+                }
+                self.gitWorking = true;
+                if (typeof self.gitCommitMessage === 'undefined') {
+                    self.gitCommitMessage = "Commit_" + new Date()
+                }
+                JupyterService.gitCommit(self.projectId, self.gitCommitMessage).then(
+                    function(success) {
+                        self.gitRepoStatus = success.data;
+                        self.gitWorking = false;
+                        delete self.gitCommitMessage;
+                        growl.info("Successfully committed changes",
+                            {title: "Git operation succeed", ttl: 2000, referenceId: 10});
+                    }, function(error) {
+                        self.gitWorking = false;
+                        self.errorMsg = (typeof error.data.usrMsg !== 'undefined') ? error.data.usrMsg : "";
+                        growl.error(self.errorMsg, { title: error.data.errorMsg, ttl: 5000, referenceId: 10});
+                    }
+                );
+            }
+
+            self.gitPush = function() {
+                if (!self.jupyterSettings.gitAvailable || !self.jupyterSettings.gitBackend) {
+                    growl.error("Git backend is either not enabled or unavailable",
+                        {title: "Git operation could not complete", ttl: 5000, referenceId: 10});
+                    return;
+                }
+                self.gitWorking = true;
+                JupyterService.gitPush(self.projectId).then(
+                    function(success) {
+                        self.gitRepoStatus = success.data;
+                        self.gitWorking = false;
+                        var remote = self.jupyterSettings.gitConfig.remoteGitURL;
+                        var headBranch = self.jupyterSettings.gitConfig.headBranch;
+                        growl.info("Successfully pushed to " + remote + "/" + headBranch,
+                            {title: "Git operation succeed", ttl: 4000, referenceId: 10});
+                    }, function(error) {
+                        self.gitWorking = false;
+                        self.errorMsg = (typeof error.data.usrMsg !== 'undefined') ? error.data.usrMsg : "";
+                        growl.error(self.errorMsg, { title: error.data.errorMsg, ttl: 5000, referenceId: 10});
+                    }
+                );
+            }
+
+            self.gitStatus = function () {
+                if (!self.jupyterSettings.gitAvailable || !self.jupyterSettings.gitBackend) {
+                    growl.error("Git backend is either not enabled or unavailable",
+                        {title: "Git operation could not complete", ttl: 5000, referenceId: 10});
+                    return;
+                }
+                self.gitWorking = true;
+                JupyterService.gitStatus(self.projectId).then(
+                    function (success) {
+                        self.gitRepoStatus = success.data;
+                        self.gitWorking = false;
+                    }, function (error) {
+                        console.error("Could not get Git status, " + error.data.usrMsg);
+                        self.gitWorking = false;
+                    }
+                );
+            }
+
+            var gitRepositoryStatusPoller = function() {
+                if (self.jupyterSettings.gitAvailable && self.jupyterSettings.gitBackend) {
+                    self.gitRepositoryPoller = $interval(function() {
+                        self.gitWorking = true;
+                        JupyterService.gitStatus(self.projectId).then(
+                            function (success) {
+                                self.gitRepoStatus = success.data;
+                                self.gitWorking = false;
+                            }, function (error) {
+                                console.error("Could not reload Jupyter Git status, " + error.data.usrMsg);
+                                self.gitWorking = false;
+                            }
+                        )
+                    }, 30000);
+                }
+            }
+
             self.start = function() {
                 startLoading("Connecting to Jupyter...");
                 $scope.tgState = true;
 
+                if (!self.jupyterSettings.gitBackend) {
+                    delete self.jupyterSettings.gitConfig
+                }
+                if (self.jupyterSettings.gitAvailable && self.jupyterSettings.gitBackend) {
+                    // If user didn't select a branch, use the configured default - always the first
+                    // in the list of remote branches
+                    if (typeof self.jupyterSettings.gitConfig.baseBranch === 'undefined') {
+                        self.jupyterSettings.gitConfig.baseBranch = self.jupyterSettings.gitConfig.branches[0];
+                    }
+                    if (typeof self.jupyterSettings.gitConfig.headBranch === 'undefined') {
+                        self.jupyterSettings.gitConfig.headBranch = self.jupyterSettings.gitConfig.branches[0];
+                    }
+                }
                 JupyterService.start(self.projectId, self.jupyterSettings).then(
                     function(success) {
                         self.config = success.data;
@@ -422,6 +634,9 @@ angular.module('hopsWorksApp')
                         self.ui = "/hopsworks-api/jupyter/" + self.config.port + "/?token=" + self.config.token;
                         $window.open(self.ui, '_blank');
                         $timeout(stopLoading(), 5000);
+                        if (typeof self.gitRepositoryPoller === 'undefined') {
+                            gitRepositoryStatusPoller();
+                        }
                         if (self.tourService.currentStep_TourEight == 6 || self.tourService.currentStep_TourEight == 7) {
                             self.tourService.currentStep_TourEight = 8;
                         } else {
