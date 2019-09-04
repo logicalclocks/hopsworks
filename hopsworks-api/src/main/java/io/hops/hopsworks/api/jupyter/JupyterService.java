@@ -49,6 +49,7 @@ import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuotaFacade;
 import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
 import io.hops.hopsworks.common.dao.jupyter.JupyterSettings;
 import io.hops.hopsworks.common.dao.jupyter.JupyterSettingsFacade;
+import io.hops.hopsworks.common.dao.jupyter.config.GitConfig;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterDTO;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterManager;
@@ -62,6 +63,9 @@ import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.jupyter.JupyterController;
 import io.hops.hopsworks.common.jupyter.JupyterJWTManager;
+import io.hops.hopsworks.common.jupyter.JupyterNbVCSController;
+import io.hops.hopsworks.common.jupyter.NullJupyterNbVCSController;
+import io.hops.hopsworks.common.jupyter.RepositoryStatus;
 import io.hops.hopsworks.common.livy.LivyController;
 import io.hops.hopsworks.common.livy.LivyMsg;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
@@ -89,6 +93,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
@@ -102,6 +107,7 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
@@ -146,6 +152,8 @@ public class JupyterService {
   private JupyterController jupyterController;
   @EJB
   private JupyterJWTManager jupyterJWTManager;
+  @Inject
+  private JupyterNbVCSController jupyterNbVCSController;
 
   private Integer projectId;
   // No @EJB annotation for Project, it's injected explicitly in ProjectService.
@@ -234,6 +242,8 @@ public class JupyterService {
     if (settings.isPythonKernelEnabled()) {
       js.setPrivateDir(settings.getStagingDir() + Settings.PRIVATE_DIRS + js.getSecret());
     }
+    
+    js.setGitAvailable(jupyterNbVCSController.isGitAvailable());
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(js).build();
   }
 
@@ -264,7 +274,7 @@ public class JupyterService {
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(jp).build();
   }
-
+  
   @POST
   @Path("/start")
   @Consumes(MediaType.APPLICATION_JSON)
@@ -274,7 +284,7 @@ public class JupyterService {
   public Response startNotebookServer(JupyterSettings jupyterSettings, @Context HttpServletRequest req,
       @Context SecurityContext sc, @Context UriInfo uriInfo) throws ProjectException, HopsSecurityException,
     ServiceException {
-
+    
     Users hopsworksUser = jWTHelper.getUserPrincipal(sc);
     String hdfsUser = hdfsUsersController.getHdfsUserName(project, hopsworksUser);
 
@@ -348,9 +358,18 @@ public class JupyterService {
         LOGGER.log(Level.SEVERE, "Failed to save Jupyter notebook settings", e);
         jupyterController.shutdown(project, hdfsUser, hopsworksUser, configSecret, dto.getPid(), dto.getPort());
       }
-
+      
       if (jp == null) {
         throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_SAVE_SETTINGS_ERROR, Level.SEVERE);
+      }
+      if (jupyterSettings.isGitBackend() && jupyterSettings.getGitConfig().getStartupAutoPull()) {
+        try {
+          jupyterNbVCSController.cloneOrPullRemoteRepository(jp);
+        } catch (ServiceException ex) {
+          jupyterController.shutdownQuietly(project, hdfsUser, hopsworksUser, configSecret, dto.getPid(),
+              dto.getPort());
+          throw ex;
+        }
       }
     } else {
       throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_SERVER_ALREADY_RUNNING, Level.FINE);
@@ -375,7 +394,130 @@ public class JupyterService {
     jupyterController.shutdown(project, hdfsUsername, user, jp.getSecret(), jp.getPid(), jp.getPort());
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
-
+  
+  @GET
+  @Path("/git/branches")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response getRemoteGitBranches(@QueryParam("remoteURI") String remoteURI,
+      @QueryParam("keyName") String apiKeyName, @Context SecurityContext sc)
+      throws ServiceException {
+    Users user = jWTHelper.getUserPrincipal(sc);
+    Set<String> remoteBranches = jupyterNbVCSController.getRemoteBranches(user, apiKeyName, remoteURI);
+    GitConfig config = new GitConfig();
+    config.setBranches(remoteBranches);
+    return Response.ok(config).build();
+  }
+  
+  @POST
+  @Path("/git/init")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  public Response cloneOrPullJupyterPath(@Context SecurityContext sc) throws ProjectException, ServiceException {
+    Users user = jWTHelper.getUserPrincipal(sc);
+    String projectUser = hdfsUsersController.getHdfsUserName(project, user);
+    JupyterProject jupyterProject = jupyterFacade.findByUser(projectUser);
+    if (jupyterProject == null) {
+      throw new ProjectException(RESTCodes.ProjectErrorCode.JUPYTER_SERVER_NOT_FOUND, Level.FINE,
+          "Could not found Jupyter server", "Could not found Jupyter server for Hopsworks user: " + projectUser);
+    }
+    if (!jupyterManager.ping(jupyterProject)) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_SERVERS_NOT_RUNNING, Level.FINE,
+          "Jupyter server is not running",
+          "Jupyter server for Hopsworks user: " + projectUser + " is not running");
+    }
+    JupyterSettings jupyterSettings = jupyterSettingsFacade.findByProjectUser(project.getId(), user.getEmail());
+    RepositoryStatus status = NullJupyterNbVCSController.EMPTY_REPOSITORY_STATUS;
+    if (jupyterSettings.isGitBackend()) {
+      status = jupyterNbVCSController.cloneOrPullRemoteRepository(jupyterProject);
+    }
+    return Response.ok(status).build();
+  }
+  
+  @POST
+  @Path("/git/commit")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  public Response commitJupyterNotebooks(@QueryParam("message") String message,
+      @Context SecurityContext sc) throws ProjectException, ServiceException {
+    Users user = jWTHelper.getUserPrincipal(sc);
+    String projectUser = hdfsUsersController.getHdfsUserName(project, user);
+    JupyterProject jupyterProject = jupyterFacade.findByUser(projectUser);
+    if (jupyterProject == null) {
+      throw new ProjectException(RESTCodes.ProjectErrorCode.JUPYTER_SERVER_NOT_FOUND, Level.FINE,
+          "Could not found Jupyter server", "Could not found Jupyter server for Hopsworks user: " + projectUser);
+    }
+    if (!jupyterManager.ping(jupyterProject)) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_SERVERS_NOT_RUNNING, Level.FINE,
+          "Jupyter server is not running",
+          "Jupyter server for Hopsworks user: " + projectUser + " is not running");
+    }
+    JupyterSettings jupyterSettings = jupyterSettingsFacade.findByProjectUser(project.getId(), user.getEmail());
+    RepositoryStatus status = NullJupyterNbVCSController.EMPTY_REPOSITORY_STATUS;
+    if (jupyterSettings.isGitBackend()) {
+      status = jupyterNbVCSController.commit(jupyterProject, user, message);
+    }
+    
+    return Response.ok(status).build();
+  }
+  
+  @POST
+  @Path("/git/push")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  public Response pushJupyterNotebooksToRemote(@Context SecurityContext sc)
+    throws ProjectException, ServiceException {
+    Users user = jWTHelper.getUserPrincipal(sc);
+    String projectUser = hdfsUsersController.getHdfsUserName(project, user);
+    JupyterProject jupyterProject = jupyterFacade.findByUser(projectUser);
+    if (jupyterProject == null) {
+      throw new ProjectException(RESTCodes.ProjectErrorCode.JUPYTER_SERVER_NOT_FOUND, Level.FINE,
+          "Could not found Jupyter server", "Could not found Jupyter server for Hopsworks user: " + projectUser);
+    }
+    if (!jupyterManager.ping(jupyterProject)) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_SERVERS_NOT_RUNNING, Level.FINE,
+          "Jupyter server is not running",
+          "Jupyter server for Hopsworks user: " + projectUser + " is not running");
+    }
+    JupyterSettings jupyterSettings = jupyterSettingsFacade.findByProjectUser(project.getId(), user.getEmail());
+    RepositoryStatus status = NullJupyterNbVCSController.EMPTY_REPOSITORY_STATUS;
+    if (jupyterSettings.isGitBackend()) {
+      status = jupyterNbVCSController.push(jupyterProject);
+    }
+    return Response.ok(status).build();
+  }
+  
+  @GET
+  @Path("/git/status")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  public Response getGitStatusOfJupyterRepo(@Context SecurityContext sc)
+      throws ProjectException, ServiceException {
+    Users user = jWTHelper.getUserPrincipal(sc);
+    String projectUser = hdfsUsersController.getHdfsUserName(project, user);
+    JupyterProject jupyterProject = jupyterFacade.findByUser(projectUser);
+    if (jupyterProject == null) {
+      throw new ProjectException(RESTCodes.ProjectErrorCode.JUPYTER_SERVER_NOT_FOUND, Level.FINE,
+          "Could not found Jupyter server", "Could not found Jupyter server for Hopsworks user: " + projectUser);
+    }
+    if (!jupyterManager.ping(jupyterProject)) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_SERVERS_NOT_RUNNING, Level.FINE,
+          "Jupyter server is not running",
+          "Jupyter server for Hopsworks user: " + projectUser + " is not running");
+    }
+    JupyterSettings jupyterSettings = jupyterSettingsFacade.findByProjectUser(project.getId(), user.getEmail());
+    RepositoryStatus status = NullJupyterNbVCSController.EMPTY_REPOSITORY_STATUS;
+    if (jupyterSettings.isGitBackend()) {
+      status = jupyterNbVCSController.status(jupyterProject);
+    }
+    return Response.ok(status).build();
+  }
+  
   @GET
   @Path("/convertIPythonNotebook/{path: .+}")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})

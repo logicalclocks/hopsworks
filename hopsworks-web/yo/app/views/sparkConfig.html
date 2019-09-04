@@ -226,6 +226,61 @@
                     </div>
                 </div>
 
+                <!-- Start Jupyter Git backed -->
+                <div class="row" ng-if="jupyterCtrl.jupyterSettings.gitAvailable">
+                    <div class="row clusterparams">
+                        <div class="text-right col-md-4">Git<i class="fa fa-info-circle"
+                            uib-tooltip="Clone notebooks from a remote Git repository. Check the Advanced section for more options!" style="margin-left: 10px"></i>
+                        </div>
+                        <div class="col-md-2 jupyter-left"><input type="checkbox" ng-init="false" ng-click="jupyterCtrl.load_third_party_api_keys()"
+                            ng-model="jupyterCtrl.jupyterSettings.gitBackend"></div>
+                    </div>
+                </div>
+
+                <div class="row" ng-if="jupyterCtrl.jupyterSettings.gitAvailable">
+                    <div ng-if="jupyterCtrl.jupyterSettings.gitBackend" class="row clusterparams">
+                        <div class="text-right col-md-4">GitHub repository URL<i class="fa fa-info-circle"
+                            uib-tooltip="HTTPs URL to clone repository" style="margin-left: 10px"></i></div>
+                        <div ng-class="(jupyterCtrl.git_error === 'URI_SYNTAX_ERROR') ? 'col-md-2 jupyter-left has-error' : 'col-md-2 jupyter-left'">
+                            <input type="text" ng-model="jupyterCtrl.jupyterSettings.gitConfig.remoteGitURL" class="form-control" placeholder="https://github.com/logicalclocks/hopsworks.git">
+                        </div>
+                    </div>
+                </div>
+                <div class="row" ng-show="jupyterCtrl.git_error === 'URI_SYNTAX_ERROR'">
+                    <div class="col-md-4 pull-left"></div>
+                    <div ng-show="jupyterCtrl.git_error === 'URI_SYNTAX_ERROR'" class="col-md-2 pull-left" style="font-weight: bold; color: orange;">
+                        <i class="fa fa-warning" style="color:orange;"></i>&nbsp;Could not parse repository URL, it should be like https://github.com/logicalclocks/hopsworks.git
+                    </div>
+                </div>
+
+                <div class="row" ng-if="jupyterCtrl.jupyterSettings.gitAvailable">
+                    <div ng-if="jupyterCtrl.jupyterSettings.gitBackend" class="row clusterparams">
+                        <div class="text-right col-md-4">API key<i class="fa fa-info-circle"
+                                    uib-tooltip="API key to communicate with remote Git repository. Add an API key by clicking on your Account settings
+                                    and then add them as your Secrets"
+                                    style="margin-left: 10px"></i>
+                        </div>
+                        <div ng-class="(jupyterCtrl.git_error === 'API_KEY_ERROR') ? 'col-md-2 jupyter-left has-error' : 'col-md-2 jupyter-left'">
+                            <ui-select ng-model="jupyterCtrl.git_api_key" theme="bootstrap"
+                                           on-select="jupyterCtrl.git_api_key_selected()" style="z-index:2";>
+                                <ui-select-match >
+                                    <span ng-bind="jupyterCtrl.git_api_key.name"></span>
+                                </ui-select-match>
+                                <ui-select-choices repeat="api_key in (jupyterCtrl.third_party_api_keys | filter: $select.search) track by api_key.name">
+                                    <span ng-bind="api_key.name | highlight: $select.search"></span>
+                                </ui-select-choices>
+                            </ui-select>
+                        </div>
+                    </div>
+                </div>
+                <div class="row" ng-show="jupyterCtrl.git_error === 'API_KEY_ERROR'">
+                    <div class="col-md-4 pull-left"></div>
+                    <div ng-show="jupyterCtrl.git_error === 'API_KEY_ERROR'" class="col-md-2 pull-left" style="font-weight: bold; color: orange;">
+                        <i class="fa fa-warning" style="color:orange;"></i>&nbsp;Invalid API key
+                    </div>
+                </div>
+                <!-- End Jupyter Git backed -->
+
             <div class="row">
                 <div ng-if="sparkConfigCtrl.jobConfig.experimentType === 'PARALLEL_EXPERIMENTS'" >
                     <div class="row clusterparams" ng-if="clusterUtilCtrl.allocatedGPUs !== 0 || clusterUtilCtrl.availableGPUs !== 0">
@@ -309,6 +364,81 @@
                                 <i class="fa fa-warning" style="color:orange;" uib-tooltip="Each Executor which runs the python code is allocated this number of GPUs. Make sure your code can actually use the configured number, otherwise the unused GPUs should be made available for other users."></i>&nbsp;You can only create notebooks inside a dataset - not in the '/' (root) directory.
                             </div>
                         </div>
+                        <!-- Start of Jupyter Git backed -->
+                        <div ng-if="jupyterCtrl.jupyterSettings.gitAvailable">
+                            <div class="row clusterparams" ng-if="jupyterCtrl.jupyterSettings.gitBackend">
+                                <div class="text-right col-md-4">Auto pull on startup<i class="fa fa-info-circle"
+                                    uib-tooltip="Automatically pull from Base branch on Jupyter startup" style="margin-left: 10px"></i>
+                                </div>
+                                <div class="col-md-2 jupyter-left"><input type="checkbox"
+                                    ng-model="jupyterCtrl.jupyterSettings.gitConfig.startupAutoPull"></div>
+                            </div>
+                        </div>
+                        <div ng-if="jupyterCtrl.jupyterSettings.gitAvailable">
+                            <div class="row clusterparams" ng-if="jupyterCtrl.jupyterSettings.gitBackend">
+                                <div class="text-right col-md-4">Auto push on shutdown<i class="fa fa-info-circle"
+                                        uib-tooltip="Automatically commit to Head and push any changes to remote Git repository on Jupyter Notebook server shutdown"
+                                        style="margin-left: 10px"></i>
+                                </div>
+                                <div class="col-md-2 jupyter-left"><input type="checkbox"
+                                        ng-model="jupyterCtrl.jupyterSettings.gitConfig.shutdownAutoPush"></div>
+                            </div>
+                        </div>
+                        <div ng-if="jupyterCtrl.jupyterSettings.gitAvailable">
+                            <div ng-if="jupyterCtrl.jupyterSettings.gitBackend" class="row clusterparams">
+                                <div class="text-right col-md-4">
+                                    <i ng-if="jupyterCtrl.gitWorking" style="margin-top: 2px"
+                                        class="fa fa-spinner fa-spin"></i>
+                                        Base branch<i class="fa fa-info-circle"
+                                                        uib-tooltip="Base branch to pull from. If not set it will pull from repository's default branch."
+                                                        style="margin-left: 10px"></i>
+                                </div>
+                                <div class="col-md-2 jupyter-left">
+                                    <ui-select ng-model="jupyterCtrl.jupyterSettings.gitConfig.baseBranch" theme="bootstrap"
+                                                style="z-index:1";>
+                                        <ui-select-match placeholder="Select branch...">
+                                            <span ng-bind="jupyterCtrl.jupyterSettings.gitConfig.baseBranch"></span>
+                                        </ui-select-match>
+                                        <ui-select-choices repeat="branch in (jupyterCtrl.jupyterSettings.gitConfig.branches | filter: $select.search) track by branch">
+                                            <span ng-bind="branch | highlight: $select.search"></span>
+                                        </ui-select-choices>
+                                    </ui-select>
+                                </div>
+                            </div>
+                        </div>
+                        <div ng-if="jupyterCtrl.jupyterSettings.gitAvailable">
+                            <div ng-if="jupyterCtrl.jupyterSettings.gitBackend" class="row clusterparams">
+                                <div class="text-right col-md-4">
+                                    <i ng-if="jupyterCtrl.gitWorking"style="margin-top: 2px"
+                                        class="fa fa-spinner fa-spin"></i>
+                                        Head branch<i class="fa fa-info-circle"
+                                                        uib-tooltip="Branch to save modifications. If not set it will commit changes to repository's default branch."
+                                                        style="margin-left: 10px"></i>
+                                </div>
+                                <div class="col-md-2 jupyter-left" ng-if="jupyterCtrl.gitNewHeadBranchPressed == false">
+                                    <ui-select ng-model="jupyterCtrl.jupyterSettings.gitConfig.headBranch" theme="bootstrap"
+                                                style="z-index:0";>
+                                        <ui-select-match placeholder="Select branch...">
+                                            <span ng-bind="jupyterCtrl.jupyterSettings.gitConfig.headBranch"></span>
+                                        </ui-select-match>
+                                        <ui-select-choices repeat="branch in (jupyterCtrl.jupyterSettings.gitConfig.branches | filter: $select.search) track by branch">
+                                            <span ng-bind="branch | highlight: $select.search"></span>
+                                        </ui-select-choices>
+                                    </ui-select>
+                                </div>
+                                <div class="col-md-2 jupyter-left" ng-if="jupyterCtrl.gitNewHeadBranchPressed == true">
+                                    <input type="text" ng-model="jupyterCtrl.jupyterSettings.gitConfig.headBranch" class="form-control" placeholder="Branch name">
+                                </div>
+    
+                                <div class="col-md-2 jupyter-right" ng-if="jupyterCtrl.gitNewHeadBranchPressed == false">
+                                    <button uib-tooltip='Create new HEAD branch'
+                                            class="btn btn-default" ng-click="jupyterCtrl.gitNewHeadBranchPressed = true">
+                                        <i class="fa fa-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    <!-- End of Jupyter Git backed -->
                     </div>
                 <div class="row" ng-if="sparkConfigCtrl.jobConfig.experimentType === 'PARALLEL_EXPERIMENTS' || sparkConfigCtrl.jobConfig.experimentType === 'EXPERIMENT'" >
                     <div class="row clusterparams">

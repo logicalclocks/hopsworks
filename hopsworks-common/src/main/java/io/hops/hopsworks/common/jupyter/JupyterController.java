@@ -99,6 +99,8 @@ public class JupyterController {
   private HdfsUsersFacade hdfsUsersFacade;
   @EJB
   private JupyterJWTManager jupyterJWTManager;
+  @Inject
+  private JupyterNbVCSController jupyterNbVCSController;
 
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public void convertIPythonNotebook(String hdfsUsername, String notebookPath, Project project, String pyPath)
@@ -179,6 +181,17 @@ public class JupyterController {
     // stop the server, remove the user in this project's local dirs
     // This method also removes the corresponding row for the Notebook process in the JupyterProject table.
     try {
+      JupyterProject jupyterProject = jupyterFacade.findByUser(hdfsUser);
+      JupyterSettings jupyterSettings = jupyterSettingsFacade.findByProjectUser(project.getId(), user.getEmail());
+      // If we fail to start Jupyter server, then we call this shutdown to clean up
+      // Do some sanity check before using jupyter settings
+      if (jupyterProject != null && jupyterSettings != null) {
+        if (jupyterSettings.isGitBackend() && jupyterSettings.getGitConfig().getShutdownAutoPush()) {
+          jupyterNbVCSController.commit(jupyterProject, user,
+              "Auto-generated commit message due to Jupyter Notebook server shutdown");
+          jupyterNbVCSController.push(jupyterProject);
+        }
+      }
       jupyterManager.stopJupyterServer(project, user, hdfsUser, jupyterHomePath, pid, port);
     } finally {
       String[] project_user = hdfsUser.split(HdfsUsersController.USER_NAME_DELIMITER);

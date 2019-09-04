@@ -5,7 +5,7 @@ c.HDFSContentsManager.root_dir='/Projects/%%project%%%%base_dir%%'
 c.HDFSContentsManager.hdfs_user = '%%hdfs_user%%'
 c.HDFSContentsManager.hadoop_client_env_opts = '-D fs.permissions.umask-mode=0002'
 
-c.NotebookApp.contents_manager_class='hdfscontents.hdfsmanager.HDFSContentsManager'
+c.NotebookApp.contents_manager_class = '%%contents_manager%%'
 
 c.NotebookApp.ip = '127.0.0.1'
 c.NotebookApp.open_browser = False
@@ -50,3 +50,8 @@ os.environ['HADOOP_USER_NAME'] = "%%hdfs_user%%"
 os.environ['JUPYTER_CERTS_DIR'] = "%%jupyter_certs_dir%%"
 os.environ['HOPSWORKS_PROJECT_ID'] = "%%hopsworks_project_id%%"
 os.environ['HADOOP_HOME'] = "%%hadoop_home%%"
+
+c.GitHandlersConfiguration.remote_git_url = "%%remote_git_url%%"
+c.GitHandlersConfiguration.api_key = "%%api_key%%"
+c.GitHandlersConfiguration.base_branch = "%%base_branch%%"
+c.GitHandlersConfiguration.head_branch = "%%head_branch%%"
