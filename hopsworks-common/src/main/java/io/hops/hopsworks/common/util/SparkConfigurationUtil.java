@@ -116,16 +116,6 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
       }
     }
 
-    String py4jArchive = settings.getPySparkLibsPath() + "/" + settings.getPy4JArchive();
-    String sparkjars = settings.getPySparkLibsPath() + "/" + settings.PYSPARK_ZIP;
-
-    StringBuilder pyFilesDist = new StringBuilder();
-    pyFilesDist.append(sparkjars).append(",").append(py4jArchive);
-
-    sparkProps.put(Settings.SPARK_YARN_DIST_PYFILES, new ConfigProperty(
-      Settings.SPARK_YARN_DIST_PYFILES, HopsUtils.APPEND_COMMA,
-      pyFilesDist.toString()));
-
     addToSparkEnvironment(sparkProps, "SPARK_HOME", settings.getSparkDir(), HopsUtils.IGNORE);
     addToSparkEnvironment(sparkProps, "SPARK_CONF_DIR", settings.getSparkConfDir(), HopsUtils.IGNORE);
     addToSparkEnvironment(sparkProps, "ELASTIC_ENDPOINT", settings.getElasticRESTEndpoint(), HopsUtils.IGNORE);

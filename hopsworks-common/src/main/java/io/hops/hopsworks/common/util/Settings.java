@@ -268,7 +268,6 @@ public class Settings implements Serializable {
   private static final String VARIABLE_TEZ_VERSION = "tez_version";
   private static final String VARIABLE_SLIDER_VERSION = "slider_version";
   private static final String VARIABLE_SPARK_VERSION = "spark_version";
-  private static final String VARIABLE_PY4J_ARCHIVE = "py4j_version";
   private static final String VARIABLE_FLINK_VERSION = "flink_version";
   private static final String VARIABLE_EPIPE_VERSION = "epipe_version";
   private static final String VARIABLE_DELA_VERSION = "dela_version";
@@ -485,7 +484,6 @@ public class Settings implements Serializable {
       YARN_SUPERUSER = setVar(VARIABLE_YARN_SUPERUSER, YARN_SUPERUSER);
       SPARK_USER = setVar(VARIABLE_SPARK_USER, SPARK_USER);
       SPARK_DIR = setDirVar(VARIABLE_SPARK_DIR, SPARK_DIR);
-      PY4J_ARCHIVE = setVar(VARIABLE_PY4J_ARCHIVE, PY4J_ARCHIVE);
       FLINK_USER = setVar(VARIABLE_FLINK_USER, FLINK_USER);
       FLINK_DIR = setDirVar(VARIABLE_FLINK_DIR, FLINK_DIR);
       STAGING_DIR = setDirVar(VARIABLE_STAGING_DIR, STAGING_DIR);
@@ -861,17 +859,9 @@ public class Settings implements Serializable {
   //PYSPARK constants
   public static final String SPARK_PY_MAINCLASS
       = "org.apache.spark.deploy.PythonRunner";
-  public static final String PYSPARK_ZIP = "pyspark.zip";
 
   //Hive config
   public static final String HIVE_SITE = "hive-site.xml";
-
-  private String PY4J_ARCHIVE = "py4j-0.10.7-src.zip";
-
-  public synchronized String getPy4JArchive() {
-    checkCache();
-    return PY4J_ARCHIVE;
-  }
 
   public synchronized String getSparkDir() {
     checkCache();
@@ -1273,18 +1263,6 @@ public class Settings implements Serializable {
 
   public String getFlinkDefaultClasspath(String flinkDir) {
     return flinkDefaultClasspath(flinkDir);
-  }
-
-  public String getLocalSparkJarPath() {
-    return getSparkDir() + "/spark.jar";
-  }
-
-  public String getHdfsSparkJarPath() {
-    return "hdfs:///user/" + getSparkUser() + "/spark-jars.zip";
-  }
-
-  public String getPySparkLibsPath() {
-    return getSparkDir() + "/python/lib/";
   }
 
   public String getSparkLog4JPath() {
