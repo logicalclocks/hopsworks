@@ -146,14 +146,18 @@ public class JupyterServerProxy {
     @Override
     public RepositoryStatus handleResponse(HttpResponse response) throws ClientProtocolException, IOException {
       int status = response.getStatusLine().getStatusCode();
+      String responseStr = EntityUtils.toString(response.getEntity(), Charset.defaultCharset());
       if (HttpStatus.SC_OK == status) {
-        return GSON_SERIALIZER.fromJson(EntityUtils.toString(response.getEntity(), Charset.defaultCharset()),
-            RepositoryStatus.ModifiableRepositoryStatus.class);
+        return GSON_SERIALIZER.fromJson(responseStr, RepositoryStatus.ModifiableRepositoryStatus.class);
       }
-      ResponseErrorContainer errorMessage = GSON_SERIALIZER.fromJson(EntityUtils.toString(response.getEntity(),
-          Charset.defaultCharset()),
-          ResponseErrorContainer.class);
-      throw new ClientProtocolException(errorMessage.toString());
+      try {
+        ResponseErrorContainer errorMessage = GSON_SERIALIZER.fromJson(responseStr, ResponseErrorContainer.class);
+        throw new ClientProtocolException(errorMessage.toString());
+      } catch (Exception ex) {
+        // It's a Jupyter internal error and we couldn't parse it
+        String errorMessage = "Status code: " + status + " Reason: " + responseStr;
+        throw new ClientProtocolException(errorMessage);
+      }
     }
   }
   
