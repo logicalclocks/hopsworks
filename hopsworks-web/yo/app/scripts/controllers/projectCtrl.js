@@ -768,58 +768,6 @@ angular.module('hopsWorksApp')
               )
             };
 
-            self.purgeAirflowDagsLocal = function () {
-              AirflowService.purgeAirflowDagsLocal(self.projectId).then(
-                      function (success) {
-                        growl.success(success.data.successMessage,
-                                {title: 'Success', ttl: 1000});
-
-                      }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
-
-              });              
-            };
-            
-            self.copyFromHdfs = function () {
-              
-              AirflowService.copyFromHdfsToAirflow(self.projectId).then(
-                      function (success) {
-                        growl.success(success.data.successMessage,
-                                {title: 'Success', ttl: 1000});
-
-                      }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
-
-              });
-            };
-
-            self.copyToHdfs = function () {
-              AirflowService.copyFromAirflowToHdfs(self.projectId).then(
-                      function (success) {
-                        growl.success("Copied from $AIRFLOW_HOME/dags to Resources/airflow/dags", // 
-                        {title: 'Success', ttl: 1000});
-
-                      }, function (error) {
-                growl.error("Problem copying from $AIRFLOW_HOME/dags to Resources/airflow/dags", 
-                {title: 'Error', ttl: 5000});
-
-              });
-            };
-
-            self.restartAirflow = function () {
-              AirflowService.restartAirflow(self.projectId).then(
-                      function (success) {
-                        growl.success("Restarted the Airflow webserver.", 
-                        {title: 'Success', ttl: 3000});
-
-                      }, function (error) {
-                growl.error("Problem restarting Airflow webserver", 
-                {title: 'Error', ttl: 5000});
-
-              });
-            };
-
-
             var kibanaNavVarInitKey = "hopsworks.kibana.navbar.set";
             self.toggleKibanaNavBar = function () {
                 var kibanaNavBarInit = StorageService.get(kibanaNavVarInitKey);

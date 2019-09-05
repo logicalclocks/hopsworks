@@ -25,11 +25,6 @@ import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.exceptions.AirflowException;
-import io.hops.hopsworks.common.hdfs.HdfsUsersController;
-import io.hops.hopsworks.common.util.OSProcessExecutor;
-import io.hops.hopsworks.common.util.ProcessDescriptor;
-import io.hops.hopsworks.common.util.ProcessResult;
-import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.restutils.RESTCodes;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -64,28 +59,14 @@ public class AirflowService {
   private ProjectFacade projectFacade;
   @EJB
   private NoCacheResponse noCacheResponse;
-
-  @EJB
-  private Settings settings;
-  @EJB
-  private HdfsUsersController hdfsUsersController;
   @EJB
   private JWTHelper jwtHelper;
   @EJB
   private AirflowManager airflowJWTManager;
-  @EJB
-  private OSProcessExecutor osProcessExecutor;
 
   private Integer projectId;
   // No @EJB annotation for Project, it's injected explicitly in ProjectService.
   private Project project;
-
-  private static enum AirflowOp {
-    TO_HDFS,
-    FROM_HDFS,
-    PURGE_LOCAL,
-    RESTART_WEBSERVER
-  };
   
   private static final Set<PosixFilePermission> DAGS_PERM = new HashSet<>(8);
   static {
@@ -149,89 +130,4 @@ public class AirflowService {
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(secret).build();
   }
-
-  @GET
-  @Path("purgeAirflowDagsLocal")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response purgeAirflowDagsLocal(@Context SecurityContext sc) {
-    Users user = jwtHelper.getUserPrincipal(sc);
-    String projectUsername = hdfsUsersController.getHdfsUserName(project, user);
-    airflowOperation(AirflowOp.PURGE_LOCAL, projectUsername);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
-  }
-
-  @GET
-  @Path("restartWebserver")
-  @Produces(MediaType.APPLICATION_JSON)
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response restartAirflowWebserver(@Context SecurityContext sc) {
-    Users user = jwtHelper.getUserPrincipal(sc);
-    String projectUsername = hdfsUsersController.getHdfsUserName(project, user);
-    airflowOperation(AirflowOp.RESTART_WEBSERVER, projectUsername);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
-  }
-
-  @GET
-  @Path("copyFromAirflowToHdfs")
-  @Produces(MediaType.APPLICATION_JSON)
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response copyFromAirflowToHdfs(@Context SecurityContext sc) {
-    Users user = jwtHelper.getUserPrincipal(sc);
-    String projectUsername = hdfsUsersController.getHdfsUserName(project, user);
-    airflowOperation(AirflowOp.TO_HDFS, projectUsername);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
-  }
-
-  @GET
-  @Path("copyToAirflowFromHdfs")
-  @Produces(MediaType.APPLICATION_JSON)
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response copyToAirflowFromHdfs(@Context SecurityContext sc) {
-    Users user = jwtHelper.getUserPrincipal(sc);
-    String projectUsername = hdfsUsersController.getHdfsUserName(project, user);
-    airflowOperation(AirflowOp.FROM_HDFS, projectUsername);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
-
-  }
-
-  public void airflowOperation(AirflowOp op, String projectUsername) {
-
-    try {
-      String script = settings.getHopsworksDomainDir() + "/bin/airflowOps.sh";
-  
-      ProcessDescriptor.Builder pdBuilder = new ProcessDescriptor.Builder();
-      if (op.equals(AirflowOp.RESTART_WEBSERVER)) {
-        pdBuilder.addCommand("sudo");
-      }
-      pdBuilder.addCommand(script)
-          .addCommand(op.toString())
-          .addCommand(project.getName())
-          .addCommand(projectUsername)
-          .redirectErrorStream(true);
-  
-      ProcessDescriptor processDescriptor = pdBuilder.build();
-      LOGGER.log(Level.FINE, "Airflow command " + processDescriptor.toString());
-      
-      ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
-      
-      if (!processResult.processExited()) {
-        LOGGER.log(Level.WARNING, "Airflow command timed-out");
-        return;
-      }
-      if (processResult.getExitCode() == 0) {
-        LOGGER.log(Level.FINEST, "Airflow command: " + processResult.getStdout());
-        LOGGER.log(Level.FINE, "Successfully ran Airflow command: " + op);
-      } else {
-        LOGGER.log(Level.WARNING, "Problem running Airflow command: " + op);
-      }
-    } catch (Exception ex) {
-      Logger.getLogger(AirflowService.class.getName()).log(Level.SEVERE, "Problem with the command: " + op, ex);
-    }
-  }
-
 }
