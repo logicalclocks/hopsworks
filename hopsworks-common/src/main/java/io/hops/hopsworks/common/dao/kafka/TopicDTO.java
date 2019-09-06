@@ -39,11 +39,14 @@
 
 package io.hops.hopsworks.common.dao.kafka;
 
+import io.hops.hopsworks.common.api.RestDTO;
+
 import java.io.Serializable;
+import javax.ws.rs.core.UriInfo;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
-public class TopicDTO implements Serializable {
+public class TopicDTO extends RestDTO<TopicDTO> implements Serializable {
 
   private String name;
 
@@ -54,8 +57,14 @@ public class TopicDTO implements Serializable {
   private String schemaName;
 
   private int schemaVersion;
+  
+  private boolean isShared;
 
   public TopicDTO() {
+  }
+  
+  public TopicDTO(UriInfo uriInfo) {
+    this.setHref(uriInfo.getAbsolutePathBuilder().build());
   }
 
   public TopicDTO(String name) {
@@ -81,6 +90,16 @@ public class TopicDTO implements Serializable {
     this.numOfPartitions = numOfPartitions;
     this.schemaName = schemaName;
     this.schemaVersion = schemaVersion;
+  }
+  
+  public TopicDTO(String name, Integer numOfReplicas, Integer numOfPartitions,
+    String schemaName, int schemaVersion, boolean isShared) {
+    this.name = name;
+    this.numOfReplicas = numOfReplicas;
+    this.numOfPartitions = numOfPartitions;
+    this.schemaName = schemaName;
+    this.schemaVersion = schemaVersion;
+    this.isShared = isShared;
   }
 
   public String getName() {
@@ -121,5 +140,13 @@ public class TopicDTO implements Serializable {
 
   public void setSchemaVersion(int schemaVersion) {
     this.schemaVersion = schemaVersion;
+  }
+  
+  public boolean isShared() {
+    return isShared;
+  }
+  
+  public void setShared(boolean shared) {
+    isShared = shared;
   }
 }

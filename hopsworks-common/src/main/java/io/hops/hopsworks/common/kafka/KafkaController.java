@@ -49,16 +49,21 @@ import io.hops.hopsworks.common.dao.kafka.SharedTopics;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.exceptions.CryptoPasswordNotFoundException;
 import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.exceptions.ProjectException;
+import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.common.util.Settings;
+import org.apache.zookeeper.KeeperException;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
@@ -75,6 +80,53 @@ public class KafkaController {
   private CertsFacade userCerts;
   @EJB
   private Settings settings;
+  
+  public void createTopic(Project project, Users user, TopicDTO topicDto) throws KafkaException, ServiceException,
+    ProjectException, UserException, CryptoPasswordNotFoundException {
+    
+    if (topicDto == null) {
+      throw new IllegalArgumentException("topicDto was not provided.");
+    }
+    
+    String topicName = topicDto.getName();
+    
+    if (kafkaFacade.findTopicByName(topicDto.getName()).isPresent()) {
+      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_ALREADY_EXISTS, Level.FINE, "topic name: " + topicName);
+    }
+    
+    if (kafkaFacade.findTopicsByProject(project).size() > project.getKafkaMaxNumTopics()) {
+      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_LIMIT_REACHED, Level.FINE,
+        "topic name: " + topicName + ", project: " + project.getName());
+    }
+    
+    SchemaTopics schema =
+      kafkaFacade.findSchemaByNameAndVersion(topicDto.getSchemaName(), topicDto.getSchemaVersion()).orElseThrow(() ->
+        new KafkaException(RESTCodes.KafkaErrorCode.SCHEMA_NOT_FOUND, Level.FINE, "topic: " + topicName));
+    
+    //check if the replication factor is not greater than the
+    //number of running brokers
+    try {
+      Set<String> brokerEndpoints = settings.getBrokerEndpoints();
+      if (brokerEndpoints.size() < topicDto.getNumOfReplicas()) {
+        throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_REPLICATION_ERROR, Level.FINE,
+          "maximum: " + brokerEndpoints.size());
+      }
+    } catch (InterruptedException | IOException | KeeperException ex) {
+      throw new KafkaException(RESTCodes.KafkaErrorCode.KAFKA_GENERIC_ERROR, Level.SEVERE,
+        "project: " + project.getName(), ex.getMessage(), ex);
+    }
+    
+    kafkaFacade.createTopicInProject(project, user, topicDto, schema);
+  
+    //By default, all members of the project are granted full permissions
+    //on the topic
+    AclDTO aclDto = new AclDTO(project.getName(),
+      Settings.KAFKA_ACL_WILDCARD,
+      "allow", Settings.KAFKA_ACL_WILDCARD, Settings.KAFKA_ACL_WILDCARD,
+      Settings.KAFKA_ACL_WILDCARD);
+    kafkaFacade.addAclsToTopic(topicDto.getName(), project.getId(), aclDto);
+    
+  }
 
   public String getKafkaCertPaths(Project project) {
     UserCerts userCert = userCerts.findUserCert(project.getName(), project.

@@ -39,6 +39,7 @@
 
 package io.hops.hopsworks.rest.application.config;
 
+import io.hops.hopsworks.api.kafka.KafkaService;
 import io.swagger.annotations.Api;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -63,7 +64,7 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.api.jupyter.JupyterService.class);
     register(io.hops.hopsworks.api.serving.ServingService.class);
     register(io.hops.hopsworks.api.serving.inference.InferenceResource.class);
-    register(io.hops.hopsworks.api.jobs.KafkaService.class);
+    register(KafkaService.class);
     register(io.hops.hopsworks.api.project.DataSetService.class);
     register(io.hops.hopsworks.api.project.MessageService.class);
     register(io.hops.hopsworks.api.project.MetadataService.class);

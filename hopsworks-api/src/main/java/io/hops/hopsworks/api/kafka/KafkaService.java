@@ -37,12 +37,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package io.hops.hopsworks.api.jobs;
+package io.hops.hopsworks.api.kafka;
 
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.common.dao.kafka.AclDTO;
 import io.hops.hopsworks.common.dao.kafka.AclUserDTO;
@@ -57,6 +58,7 @@ import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.kafka.KafkaController;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.CryptoPasswordNotFoundException;
 import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServiceException;
@@ -69,6 +71,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -82,6 +85,7 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import javax.ws.rs.core.UriInfo;
 import java.io.IOException;
 import java.util.List;
 import java.util.logging.Level;
@@ -103,6 +107,8 @@ public class KafkaService {
   private KafkaController kafkaController;
   @EJB
   private JWTHelper jWTHelper;
+  @EJB
+  private KafkaBuilder kafkaBuilder;
 
   private Project project;
 
@@ -127,10 +133,20 @@ public class KafkaService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response getTopics() {
+  public Response getTopics(
+    @BeanParam Pagination pagination,
+    @BeanParam TopicsBeanParam topicsBeanParam,
+    @Context UriInfo uriInfo) {
     List<TopicDTO> listTopics = kafkaFacade.findTopicsByProject(project);
     GenericEntity<List<TopicDTO>> topics = new GenericEntity<List<TopicDTO>>(listTopics) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(topics).build();
+//    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.KAFKA);
+//    resourceRequest.setOffset(pagination.getOffset());
+//    resourceRequest.setLimit(pagination.getLimit());
+//    resourceRequest.setSort(topicsBeanParam.getSortBySet());
+//    resourceRequest.setFilter(topicsBeanParam.getFilter());
+//    TopicDTO topicDTO = kafkaBuilder.buildItemsTopic(uriInfo, Optional.of(resourceRequest), project);
+//    return Response.ok().entity(topicDTO).build();
   }
 
   @GET
@@ -157,28 +173,22 @@ public class KafkaService {
   }
 
   @POST
-  @Path("/topic/add")
+  @Path("/topics")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
+  @AllowedProjectRoles()
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response createTopic(TopicDTO topicDto) throws KafkaException, ProjectException, ServiceException,
-      UserException {
+  public Response createTopic(TopicDTO topicDto, @Context SecurityContext sc)
+    throws KafkaException, ProjectException, ServiceException, UserException, CryptoPasswordNotFoundException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
+    Users user = jWTHelper.getUserPrincipal(sc);
 
-    //create the topic in the database and the Kafka cluster
-    kafkaFacade.createTopicInProject(project.getId(), topicDto);
-    //By default, all members of the project are granted full permissions 
-    //on the topic
-    AclDTO aclDto = new AclDTO(project.getName(),
-            Settings.KAFKA_ACL_WILDCARD,
-            "allow", Settings.KAFKA_ACL_WILDCARD, Settings.KAFKA_ACL_WILDCARD,
-            Settings.KAFKA_ACL_WILDCARD);
-    kafkaFacade.addAclsToTopic(topicDto.getName(), project.getId(), aclDto);
+    kafkaController.createTopic(project, user, topicDto);
 
     json.setSuccessMessage("The Topic has been created.");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }
+  
 
   @DELETE
   @Path("/topic/{topic}/remove")

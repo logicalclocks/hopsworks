@@ -38,6 +38,8 @@
  */
 package io.hops.hopsworks.common.dao.kafka;
 
+import io.hops.hopsworks.common.api.ResourceRequest;
+import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
@@ -65,6 +67,8 @@ import org.apache.avro.Schema;
 import org.apache.avro.SchemaCompatibility;
 import org.apache.avro.SchemaParseException;
 import org.apache.kafka.clients.CommonClientConfigs;
+import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -118,7 +122,7 @@ public class KafkaFacade {
   private HdfsUsersController hdfsUsersController;
   @EJB
   private UserFacade userFacade;
-
+  
   private static final String COLON_SEPARATOR = ":";
   public static final String SLASH_SEPARATOR = "//";
   public static final String KAFKA_SECURITY_PROTOCOL = "SSL";
@@ -132,7 +136,29 @@ public class KafkaFacade {
 
   public KafkaFacade() {
   }
+  
+  private AdminClient getAdminClient(Project project, Users user) throws CryptoPasswordNotFoundException {
+    String projectSpecificUser = hdfsUsersController.getHdfsUserName(project,
+      user);
+    String certPassword = baseHadoopService.getProjectSpecificUserCertPassword(projectSpecificUser);
+    Properties props = new Properties();
+    props.setProperty(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, KAFKA_SECURITY_PROTOCOL);
+    props.setProperty(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG,
+      settings.getHopsworksTmpCertDir() + File.separator + HopsUtils.getProjectTruststoreName(project.getName(),
+        user.getUsername()));
+    props.setProperty(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, certPassword);
+    props.setProperty(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, settings.getHopsworksTmpCertDir() + File.separator
+      + HopsUtils.getProjectKeystoreName(project.getName(), user.getUsername()));
+    props.setProperty(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, certPassword);
+    props.setProperty(SslConfigs.SSL_KEY_PASSWORD_CONFIG, certPassword);
+    props.setProperty(SslConfigs.SSL_ENDPOINT_IDENTIFICATION_ALGORITHM_CONFIG, "");
+    return AdminClient.create(props);
+  }
 
+  public AbstractFacade.CollectionInfo findTopicsByProject(Project project, ResourceRequest resourceRequest) {
+    return null;
+  }
+  
   /**
    * Get all the Topics for the given project.
    *
@@ -228,45 +254,108 @@ public class KafkaFacade {
     }
     return projects;
   }
+  
+  public Optional<ProjectTopics> findTopicByName(String topicName) {
+    try {
+      return Optional.of(em.createNamedQuery("ProjectTopics.findByTopicName", ProjectTopics.class)
+        .setParameter("topicName", topicName)
+        .getSingleResult());
+    } catch (NoResultException e) {
+      return Optional.empty();
+    }
+  }
+  
+  public Optional<SchemaTopics> findSchemaByNameAndVersion(String schemaName, Integer schemaVersion) {
+    try {
+      return Optional.of(em.find(SchemaTopics.class,
+        new SchemaTopicsPK(schemaName, schemaVersion)));
+    } catch (NullPointerException e) {
+      return Optional.empty();
+    }
+  }
+  
+  private void createTopicInKafka(Project project, Users user, TopicDTO topicDTO) throws KafkaException,
+    CryptoPasswordNotFoundException {
+    
+    String topicName = topicDTO.getName();
+    AdminClient adminClient = getAdminClient(project, user);
+    
+    if (adminClient.describeTopics(Collections.singleton(topicDTO.getName())).values().size() != 0) {
+      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_ALREADY_EXISTS_IN_ZOOKEEPER, Level.INFO,
+        "topic name: " + topicName);
+    }
+    NewTopic newTopic =
+      new NewTopic(topicDTO.getName(), topicDTO.getNumOfPartitions(), topicDTO.getNumOfReplicas().shortValue());
+    adminClient.createTopics(Collections.singleton(newTopic));
+  }
 
+  public ProjectTopics createTopicInProject(Project project, Users user, TopicDTO topicDto, SchemaTopics schema)
+      throws KafkaException, CryptoPasswordNotFoundException {
+    
+    // create the topic in kafka
+    createTopicInKafka(project, user, topicDto);
+    /*
+     * What is the possibility of the program failing here? The topic is created
+     * on
+     * zookeeper, but not persisted onto db. User cannot access the topic,
+     * cannot
+     * create a topic of the same name. In such scenario, the zk timer should
+     * remove the topic from zk.
+     *
+     * One possibility is: schema has a global name space, it is not project
+     * specific.
+     * While the schema is selected by this topic, it could be deleted by
+     * another
+     * user. Hence the above schema query will be empty.
+     */
+    ProjectTopics pt = new ProjectTopics(topicDto.getName(), project, schema);
+
+    em.persist(pt);
+    em.flush();
+
+    return pt;
+    //add default topic acl for the existing project members
+    // addAclsToTopic(topicName, projectId, project.getName(), "*", "allow", "*", "*", "Data owner");
+  }
+  
   public ProjectTopics createTopicInProject(Integer projectId, TopicDTO topicDto)
     throws ProjectException, KafkaException, ServiceException {
-
+    
     if (projectId == null || topicDto == null) {
       throw new IllegalArgumentException("projectId or topicDto were not provided.");
     }
-
+    
     Project project = em.find(Project.class, projectId);
     if (project == null) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE);
     }
-
+    
     return createTopicInProject(project, topicDto);
   }
-
+  
   public ProjectTopics createTopicInProject(Project project, TopicDTO topicDto)
-      throws KafkaException, ServiceException {
-
+    throws KafkaException, ServiceException {
+    
     String topicName = topicDto.getName();
-
+    
     List<ProjectTopics> res = em.createNamedQuery("ProjectTopics.findByTopicName", ProjectTopics.class)
-        .setParameter("topicName", topicName)
-        .getResultList();
-
+      .setParameter("topicName", topicName)
+      .getResultList();
+    
     if (!res.isEmpty()) {
       throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_ALREADY_EXISTS, Level.FINE, "topic name: " + topicName);
     }
-
+    
     List<ProjectTopics> topicsInProject = em.createNamedQuery("ProjectTopics.findByProject", ProjectTopics.class)
-        .setParameter("project", project)
-        .getResultList();
-
+      .setParameter("project", project)
+      .getResultList();
+    
     if (topicsInProject != null && (topicsInProject.size() >= project.getKafkaMaxNumTopics())) {
       throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_LIMIT_REACHED, Level.FINE,
         "topic name: " + topicName + ", project: " +project.getName());
     }
-
-    //check if the replication factor is not greater than the 
+    
+    //check if the replication factor is not greater than the
     //number of running brokers
     try {
       Set<String> brokerEndpoints = settings.getBrokerEndpoints();
@@ -279,20 +368,20 @@ public class KafkaFacade {
         "project: " + project.getName(), ex.getMessage(), ex);
     }
     
-
-    // create the topic in kafka 
+    
+    // create the topic in kafka
     ZkClient zkClient = new ZkClient(getIp(settings.getZkConnectStr()).
-        getHostName(),
-        Settings.ZOOKEEPER_SESSION_TIMEOUT_MS, Settings.ZOOKEEPER_CONNECTION_TIMEOUT_MS, ZKStringSerializer$.MODULE$);
+      getHostName(),
+      Settings.ZOOKEEPER_SESSION_TIMEOUT_MS, Settings.ZOOKEEPER_CONNECTION_TIMEOUT_MS, ZKStringSerializer$.MODULE$);
     ZkConnection zkConnection = new ZkConnection(settings.getZkConnectStr());
     ZkUtils zkUtils = new ZkUtils(zkClient, zkConnection, false);
-
+    
     try {
       if (!AdminUtils.topicExists(zkUtils, topicName)) {
         AdminUtils.createTopic(zkUtils, topicName,
-            topicDto.getNumOfPartitions(),
-            topicDto.getNumOfReplicas(),
-            new Properties(), RackAwareMode.Enforced$.MODULE$);
+          topicDto.getNumOfPartitions(),
+          topicDto.getNumOfReplicas(),
+          new Properties(), RackAwareMode.Enforced$.MODULE$);
       }
     } catch (TopicExistsException ex) {
       throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_ALREADY_EXISTS_IN_ZOOKEEPER, Level.INFO,
@@ -305,15 +394,15 @@ public class KafkaFacade {
         LOGGER.log(Level.SEVERE, null, ex.getMessage());
       }
     }
-
+    
     SchemaTopics schema = em.find(SchemaTopics.class,
-        new SchemaTopicsPK(topicDto.getSchemaName(),
-            topicDto.getSchemaVersion()));
-  
+      new SchemaTopicsPK(topicDto.getSchemaName(),
+        topicDto.getSchemaVersion()));
+    
     if (schema == null) {
       throw new KafkaException(RESTCodes.KafkaErrorCode.SCHEMA_NOT_FOUND, Level.FINE, "topic: " + topicName);
     }
-
+    
     /*
      * What is the possibility of the program failing here? The topic is created
      * on
@@ -329,15 +418,15 @@ public class KafkaFacade {
      * user. Hence the above schema query will be empty.
      */
     ProjectTopics pt = new ProjectTopics(topicName, project, schema);
-
+    
     em.persist(pt);
     em.flush();
-
+    
     return pt;
     //add default topic acl for the existing project members
     // addAclsToTopic(topicName, projectId, project.getName(), "*", "allow", "*", "*", "Data owner");
   }
-
+  
   public void removeTopicFromProject(Project project, String topicName) throws KafkaException, ServiceException {
 
     ProjectTopics pt = null;
@@ -1009,4 +1098,81 @@ public class KafkaFacade {
     em.merge(pt);
     em.flush();
   }
+  
+  public enum TopicSorts {
+    NAME("NAME", "t.name", "ASC"),
+    SCHEMA_NAME("SCHEMA_NAME", "t.schemaName", "ASC");
+    
+    private final String value;
+    private final String sql;
+    private final String defaultParam;
+  
+    private TopicSorts(String value, String sql, String defaultParam) {
+      this.value = value;
+      this.sql = sql;
+      this.defaultParam = defaultParam;
+    }
+  
+    public String getValue() {
+      return value;
+    }
+  
+    public String getSql() {
+      return sql;
+    }
+  
+    public String getDefaultParam() {
+      return defaultParam;
+    }
+    
+    public String getJoin() {
+      return null;
+    }
+  
+    @Override
+    public String toString() {
+      return value;
+    }
+  }
+  
+  public enum TopicsFilters {
+    PROJECT_TOPICS("","","",""),
+    SHARED_TOPICS("","","",""),
+    ALL_TOPICS("","","","");
+
+    private final String value;
+    private final String sql;
+    private final String field;
+    private final String defaultParam;
+
+    private TopicsFilters(String value, String sql, String field, String defaultParam) {
+      this.value = value;
+      this.sql = sql;
+      this.field = field;
+      this.defaultParam = defaultParam;
+    }
+
+    public String getDefaultParam() {
+      return defaultParam;
+    }
+
+    public String getValue() {
+      return value;
+    }
+
+    public String getSql() {
+      return sql;
+    }
+
+    public String getField() {
+      return field;
+    }
+
+    @Override
+    public String toString() {
+      return value;
+    }
+
+  }
+
 }
